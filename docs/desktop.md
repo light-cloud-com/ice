@@ -1,0 +1,81 @@
+# Desktop App (`@ice-saas/desktop`)
+
+The ICE desktop app is an Electron application that shares the same UI components as the web SaaS but runs deploys locally — no backend server required.
+
+**Location:** `apps/desktop/`
+**Tech:** Electron 28, electron-vite, React 18
+
+## Architecture
+
+Standard 3-process Electron model:
+
+```
+┌─────────────────────────────────────────┐
+│              Main Process               │
+│  - BrowserWindow management             │
+│  - Splash screen (4s min display)       │
+│  - IPC handler registration             │
+│  - Native menu                          │
+│  - Embeds @ice-engine/core              │
+│  - Embeds provider plugins (GCP, etc.)  │
+│  - Runs deploys in-process              │
+├─────────────────────────────────────────┤
+│             Preload Script              │
+│  - contextBridge: exposes window.api    │
+│  - Implements IceAPI via IPC            │
+├─────────────────────────────────────────┤
+│           Renderer Process              │
+│  - React app using @ice-saas/ui         │
+│  - createIpcAdapter() → window.api      │
+│  - Same components as web SaaS          │
+└─────────────────────────────────────────┘
+```
+
+## IPC Bridge
+
+The key to sharing UI between web and desktop is the `IceAPI` interface:
+
+```typescript
+// Web: HTTP adapter
+setApiAdapter(createHttpApiAdapter())  // Axios → gateway
+
+// Desktop: IPC adapter
+setApiAdapter(createIpcAdapter())      // Electron IPC → main process
+```
+
+Both adapters implement the same interface, so UI components call `api.canvas.save()`, `api.deploy.plan()`, etc. without knowing the transport.
+
+## Main Process Modules
+
+| Module | Purpose |
+|---|---|
+| `index.ts` | Window management, splash screen, app lifecycle |
+| `ipc-handlers.ts` | Canvas, profile, auth IPC handlers |
+| `deploy-handler.ts` | Deploy-specific IPC, calls `@ice-engine/core` directly |
+| `github-service.ts` | GitHub integration (native, no backend) |
+| `menu.ts` | Native application menu |
+| `messages.ts` | IPC message type constants |
+
+## Local Deploys
+
+The desktop app directly embeds:
+- `@ice-engine/core` — for plan/apply
+- `@ice-saas/provider-gcp` — GCP deployer
+- `@ice-saas/provider-registry` — provider abstraction
+
+Deployments run entirely in-process without needing the gateway server. The user's local cloud credentials (e.g., `gcloud auth`) are used directly.
+
+## Build & Distribution
+
+Uses `electron-builder` for packaging:
+- **macOS:** DMG
+- **Windows:** NSIS installer
+- **Linux:** AppImage
+
+Build tool: `electron-vite` (Vite-based Electron build pipeline)
+
+## Dependencies
+
+- `@ice-engine/core`, `@ice-saas/blocks`, `@ice-saas/types`, `@ice-saas/ui`
+- `@ice-saas/provider-gcp`, `@ice-saas/provider-registry`
+- `electron`, `@electron-toolkit/utils`

@@ -1,0 +1,115 @@
+{
+  "name": "@ice-engine/core",
+  "version": "0.1.0",
+  "description": "ICE Engine core - Graph processing, validation, deployment, schema registry, and CLI",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "ice": "./dist/cli/bin/ice.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./graph": {
+      "types": "./dist/graph/index.d.ts",
+      "import": "./dist/graph/index.js"
+    },
+    "./providers": {
+      "types": "./dist/providers/index.d.ts",
+      "import": "./dist/providers/index.js"
+    },
+    "./types": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/types/index.js"
+    },
+    "./resources": {
+      "types": "./dist/resources/index.d.ts",
+      "import": "./dist/resources/index.js"
+    },
+    "./schemas": {
+      "types": "./dist/schemas/index.d.ts",
+      "import": "./dist/schemas/index.js"
+    },
+    "./schemas/db": {
+      "types": "./dist/schemas/db/index.d.ts",
+      "import": "./dist/schemas/db/index.js"
+    },
+    "./schemas/embedded": {
+      "types": "./dist/schemas/embedded/schema-registry.d.ts",
+      "import": "./dist/schemas/embedded/schema-registry.js"
+    }
+  },
+  "files": [
+    "dist",
+    "data",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "build:db": "npx tsx ../../tools/build-schema-db.ts ./data/ice-schemas.db",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@google-cloud/aiplatform": "^3.0.0",
+    "@google-cloud/asset": "^6.3.1",
+    "@google-cloud/bigquery": "^7.0.0",
+    "@google-cloud/compute": "^6.6.0",
+    "@google-cloud/container": "^5.0.0",
+    "@google-cloud/firestore": "^7.0.0",
+    "@google-cloud/functions": "^3.0.0",
+    "@google-cloud/logging": "^11.0.0",
+    "@google-cloud/pubsub": "^4.0.0",
+    "@google-cloud/run": "^3.2.0",
+    "@google-cloud/scheduler": "^4.0.0",
+    "@google-cloud/secret-manager": "^5.0.0",
+    "@google-cloud/storage": "^7.18.0",
+    "@viz-js/viz": "^3.24.0",
+    "better-sqlite3": "^11.0.0",
+    "chalk": "^5.3.0",
+    "commander": "^12.0.0",
+    "google-auth-library": "^10.6.1",
+    "js-yaml": "^4.1.1",
+    "ora": "^8.0.0",
+    "yaml": "^2.3.4"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "@aws-sdk/client-ec2": "^3.0.0",
+    "@aws-sdk/client-rds": "^3.0.0",
+    "@aws-sdk/client-s3": "^3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@aws-sdk/client-ec2": {
+      "optional": true
+    },
+    "@aws-sdk/client-rds": {
+      "optional": true
+    },
+    "@aws-sdk/client-s3": {
+      "optional": true
+    }
+  },
+  "keywords": [
+    "ice",
+    "infrastructure",
+    "graph",
+    "validation",
+    "schemas",
+    "cli",
+    "sqlite",
+    "knowledge-graph"
+  ],
+  "license": "MIT"
+}

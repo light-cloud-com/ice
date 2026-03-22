@@ -1,0 +1,43 @@
+{
+  "name": "ice-saas",
+  "version": "0.1.0",
+  "description": "ICE SaaS - Integrated Cloud Environment (Web + Backend)",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "packages/providers/*",
+    "services/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:web": "pnpm --filter @lightcloud/web dev",
+    "dev:gateway": "pnpm --filter @ice-saas/gateway dev",
+    "dev:saas": "concurrently \"pnpm dev:gateway\" \"pnpm dev:web\"",
+    "build:web": "pnpm --filter @lightcloud/web build",
+    "build:core": "pnpm --filter @ice-engine/core build",
+    "build:gateway": "pnpm --filter @ice-saas/gateway build",
+    "test:e2e": "playwright test --config e2e/playwright.config.ts",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
+    "clean": "pnpm -r clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.41.0",
+    "concurrently": "^8.2.0",
+    "prettier": "^3.2.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild",
+      "protobufjs"
+    ]
+  }
+}

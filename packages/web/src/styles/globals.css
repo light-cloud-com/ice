@@ -1,0 +1,341 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── ICE SaaS Design System ─────────────────────────────────────────────────
+ *
+ * Dual theme: light (Notion-inspired) + dark (WebStorm Dracula).
+ * Three surface levels. One accent per theme.
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+@layer base {
+  :root {
+    /* ── Light mode — "Warm Slate" ──
+     * Not sterile white. A warm, tinted palette with clear surface hierarchy.
+     * Inspired by Linear, Notion, Apple HIG light themes.
+     */
+
+    /* Backgrounds — Notion/Linear inspired light theme */
+    --ice-bg-base: #ffffff;           /* Content area — white */
+    --ice-bg-surface: #f2f3f5;        /* Sidebar — warm light gray */
+    --ice-bg-raised: #ffffff;         /* Cards, modals */
+    --ice-bg-overlay: #ffffff;        /* Dropdowns, popovers */
+    --ice-bg-hover: rgba(0, 0, 0, 0.04);
+    --ice-bg-active: rgba(0, 0, 0, 0.07);
+    --ice-bg-toolbar: #f7f7f8;        /* Toolbar */
+
+    /* Borders — clearly visible */
+    --ice-border: #e0e0e3;
+    --ice-border-strong: #cbccd0;
+
+    /* Text — high contrast */
+    --ice-text-primary: #11181c;
+    --ice-text-secondary: #444c56;
+    --ice-text-tertiary: #6e7781;
+
+    /* Accent — vivid blue */
+    --ice-accent: #2563eb;
+    --ice-accent-hover: #1d4ed8;
+    --ice-accent-muted: rgba(37, 99, 235, 0.12);
+
+    /* Status */
+    --ice-green: #16a34a;
+    --ice-green-muted: rgba(22, 163, 74, 0.10);
+    --ice-red: #dc2626;
+    --ice-red-muted: rgba(220, 38, 38, 0.08);
+    --ice-yellow: #b45309;
+
+    /* shadcn light */
+    --background: 0 0% 100%;
+    --foreground: 210 24% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 225 18% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 225 18% 12%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 94%;        /* warm light gray */
+    --secondary-foreground: 225 18% 15%;
+    --muted: 220 14% 94%;
+    --muted-foreground: 215 14% 34%;
+    --accent: 220 14% 94%;
+    --accent-foreground: 225 18% 15%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 7% 88%;
+    --input: 220 7% 88%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* ── Dark mode — WebStorm Dracula ──
+     * Exact WebStorm Dracula colors with steel-gray accent
+     */
+    --ice-bg-base: #2b2b2b;           /* Editor background */
+    --ice-bg-surface: #363636;        /* Tool windows, sidebar */
+    --ice-bg-raised: #45494a;         /* Cards, tabs, elevated */
+    --ice-bg-overlay: #4b4e50;        /* Dropdowns, popovers */
+    --ice-bg-hover: rgba(255, 255, 255, 0.07);
+    --ice-bg-active: #4e5254;         /* Selected item */
+    --ice-bg-toolbar: #3c3f41;        /* Toolbar matches sidebar */
+    --ice-border: #515253;            /* Subtle dividers */
+    --ice-border-strong: #6b6b6b;     /* Strong borders */
+    --ice-text-primary: #dcdfe4;      /* Near white — high contrast on dark bg */
+    --ice-text-secondary: #a0a8b4;    /* Mid gray */
+    --ice-text-tertiary: #6d737a;     /* Muted */
+    --ice-accent: #589df6;            /* WebStorm link/action blue */
+    --ice-accent-hover: #7db3f7;
+    --ice-accent-muted: rgba(88, 157, 246, 0.15);
+    --ice-green: #6a8759;             /* WebStorm string green */
+    --ice-green-muted: rgba(106, 135, 89, 0.20);
+    --ice-red: #cc7832;               /* WebStorm keyword orange */
+    --ice-red-muted: rgba(204, 120, 50, 0.15);
+    --ice-yellow: #ffc66d;            /* WebStorm function yellow */
+
+    /* shadcn dark — WebStorm */
+    --background: 0 0% 17%;
+    --foreground: 213 16% 72%;
+    --card: 200 3% 27%;
+    --card-foreground: 213 16% 72%;
+    --popover: 195 3% 30%;
+    --popover-foreground: 213 16% 72%;
+    --primary: 214 91% 60%;           /* Steel blue accent */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 200 3% 27%;
+    --secondary-foreground: 213 16% 72%;
+    --muted: 200 3% 27%;
+    --muted-foreground: 210 8% 50%;
+    --accent: 200 3% 27%;
+    --accent-foreground: 213 16% 72%;
+    --destructive: 27 64% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 1% 33%;
+    --input: 0 1% 33%;
+    --ring: 214 91% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: light dark;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    background: var(--ice-bg-base);
+    color: var(--ice-text-primary);
+    font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
+    font-weight: 500;
+    font-size: 13px;
+    line-height: 1.5;
+    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Scrollbars — subtle, theme-aware */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.22); }
+  .dark ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); }
+  .dark ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.14); }
+
+  ::selection { background: var(--ice-accent-muted); }
+
+  /* Focus ring — consistent */
+  :focus-visible {
+    outline: 1px solid var(--ice-accent);
+    outline-offset: -1px;
+  }
+
+  /* ── Font size accessibility ── */
+  html.font-small body { font-size: 13px; }
+  html.font-large body { font-size: 20px; }
+}
+
+@layer components {
+  /* ── Surfaces ─────────────────────────────────────────────────────────── */
+  .ice-surface { background: var(--ice-bg-surface); }
+  .ice-raised { background: var(--ice-bg-raised); }
+  .ice-overlay { background: var(--ice-bg-overlay); }
+
+  /* ── ICE Input ────────────────────────────────────────────────────────── */
+  .ice-input {
+    @apply w-full rounded-md px-3 py-2 text-sm transition-[border-color,box-shadow];
+    background: var(--ice-bg-raised);
+    border: 1px solid var(--ice-border);
+    color: var(--ice-text-primary);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+  .dark .ice-input {
+    background: var(--ice-bg-surface);
+    box-shadow: none;
+  }
+  .ice-input::placeholder { color: var(--ice-text-tertiary); }
+  .ice-input:focus {
+    border-color: var(--ice-accent);
+    outline: none;
+    box-shadow: 0 0 0 2px var(--ice-accent-muted), 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+  .ice-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* ── ICE Button ───────────────────────────────────────────────────────── */
+  .ice-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-[color,background-color,box-shadow,opacity];
+    cursor: pointer;
+  }
+  .ice-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .ice-btn-primary {
+    background: var(--ice-accent);
+    color: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+  }
+  .ice-btn-primary:hover:not(:disabled) {
+    background: var(--ice-accent-hover);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  }
+  .dark .ice-btn-primary {
+    box-shadow: none;
+  }
+  .dark .ice-btn-primary:hover:not(:disabled) {
+    box-shadow: none;
+  }
+
+  .ice-btn-ghost {
+    color: var(--ice-text-secondary);
+    background: transparent;
+  }
+  .ice-btn-ghost:hover:not(:disabled) {
+    background: var(--ice-bg-hover);
+    color: var(--ice-text-primary);
+  }
+
+  .ice-btn-danger {
+    color: var(--ice-red);
+    background: transparent;
+  }
+  .ice-btn-danger:hover:not(:disabled) {
+    background: var(--ice-red-muted);
+  }
+
+  /* ── ICE Card / Section ───────────────────────────────────────────────── */
+  .ice-card {
+    border-radius: 10px;
+    border: 1px solid var(--ice-border);
+    background: var(--ice-bg-raised);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+  .dark .ice-card {
+    box-shadow: none;
+  }
+  .ice-card-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--ice-border);
+  }
+  .ice-card-body {
+    padding: 20px 24px;
+  }
+
+  /* ── React Flow / Canvas ──────────────────────────────────────────────── */
+  .react-flow { background: var(--ice-bg-base) !important; }
+  .react-flow__background { background: var(--ice-bg-base) !important; }
+  .react-flow__minimap { @apply border border-border rounded-lg shadow-md; background: var(--ice-bg-raised); }
+  .react-flow__controls { @apply border border-border rounded-lg shadow-md; background: var(--ice-bg-raised); }
+  .react-flow__controls-button { background: var(--ice-bg-raised); @apply border-border hover:bg-muted; }
+  .react-flow__controls-button svg { @apply fill-foreground; }
+
+  .ice-node { @apply bg-card border-2 border-border rounded-lg shadow-sm transition-[border-color,box-shadow] duration-150; }
+  .ice-node:hover { @apply shadow-md; border-color: var(--ice-border-strong); }
+  .ice-node.selected { border-color: var(--ice-accent); @apply shadow-lg; box-shadow: 0 0 0 2px var(--ice-accent-muted); }
+  .ice-node.invalid { border-color: var(--ice-red); }
+
+  .react-flow__resize-control.handle { @apply opacity-0 transition-opacity; }
+  .react-flow__node:hover .react-flow__resize-control.handle,
+  .react-flow__node.selected .react-flow__resize-control.handle { @apply opacity-100; }
+
+  /* Edge styles — theme-aware */
+  .ice-edge-depends { stroke: var(--ice-accent); stroke-width: 2; }
+  .ice-edge-contains { stroke: var(--ice-border-strong); stroke-dasharray: 5, 5; }
+  .ice-edge-connects { stroke: var(--ice-green); stroke-width: 2; }
+  .ice-edge-references { stroke: #a855f7; stroke-dasharray: 3, 3; }
+
+  /* Drag preview */
+  .drag-preview { @apply bg-primary/10 border-2 border-dashed border-primary rounded-lg p-4; pointer-events: none; }
+  .palette-item { @apply flex items-center gap-2 p-2 rounded-md cursor-grab transition-colors hover:bg-muted active:cursor-grabbing; }
+
+  /* Status dots */
+  .status-dot { @apply w-2 h-2 rounded-full; }
+  .status-dot.creating { @apply bg-yellow-500 animate-pulse; }
+  .status-dot.available { @apply bg-green-500; }
+  .status-dot.updating { @apply bg-blue-500 animate-pulse; }
+  .status-dot.deleting { @apply bg-red-500 animate-pulse; }
+  .status-dot.failed { @apply bg-red-500; }
+
+  /* Resource category icons */
+  .resource-icon { @apply w-8 h-8 rounded-md flex items-center justify-center text-white font-bold text-sm; }
+  .resource-icon.network { @apply bg-network; }
+  .resource-icon.compute { @apply bg-compute; }
+  .resource-icon.data { @apply bg-data; }
+  .resource-icon.storage { @apply bg-storage; }
+  .resource-icon.iam { @apply bg-iam; }
+  .resource-icon.monitoring { @apply bg-monitoring; }
+}
+
+/* ── AI Canvas Entrance Animations ────────────────────────────────────────── */
+@keyframes ice-node-entrance {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes ice-edge-entrance {
+  0% {
+    opacity: 0;
+    stroke-dashoffset: 200;
+  }
+  100% {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+}
+
+@layer utilities {
+  .app-drag-region { -webkit-app-region: drag; app-region: drag; }
+  .app-no-drag { -webkit-app-region: no-drag; app-region: no-drag; }
+  .drag-none { -webkit-user-drag: none; user-drag: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  /* Sidebar right-edge shadow for light mode separation */
+  .ice-sidebar-shadow {
+    box-shadow: 1px 0 0 var(--ice-border), 2px 0 8px rgba(0, 0, 0, 0.03);
+  }
+  .dark .ice-sidebar-shadow {
+    box-shadow: 1px 0 0 var(--ice-border);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--ice-border); border-radius: 4px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--ice-border-strong); }
+}
+

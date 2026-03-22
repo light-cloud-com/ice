@@ -1,0 +1,39 @@
+{
+  "name": "@ice-saas/gateway",
+  "version": "0.1.0",
+  "description": "API Gateway - composes all services into a single Express app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@ice-saas/db": "workspace:*",
+    "@ice-saas/shared": "workspace:*",
+    "@ice-saas/service-iam": "workspace:*",
+    "@ice-saas/service-canvas": "workspace:*",
+    "@ice-saas/service-deploy": "workspace:*",
+    "@ice-saas/service-ai": "workspace:*",
+    "@ice-saas/service-engine": "workspace:*",
+    "@ice-saas/service-billing": "workspace:*",
+    "@ice-saas/service-credentials": "workspace:*",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "express-rate-limit": "^7.4.1",
+    "helmet": "^8.0.0",
+    "passport": "^0.7.0",
+    "socket.io": "^4.8.3"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.8",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.8.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}

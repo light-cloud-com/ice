@@ -1,0 +1,21 @@
+{
+  "name": "@ice-saas/service-canvas",
+  "version": "0.1.0",
+  "description": "Canvas service - canvas CRUD, environments, project-members",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": {
+    "@ice-saas/db": "workspace:*",
+    "@ice-saas/shared": "workspace:*",
+    "@ice-saas/service-iam": "workspace:*",
+    "@ice-saas/types": "workspace:*",
+    "express": "^4.21.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "typescript": "^5.6.3"
+  }
+}

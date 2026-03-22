@@ -1,0 +1,146 @@
+{
+  "common": {
+    "buttons": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "deploy": "Deploy",
+      "confirm": "Confirm",
+      "reset": "Reset",
+      "retry": "Retry",
+      "copy": "Copy",
+      "connect": "Connect",
+      "disconnect": "Disconnect"
+    },
+    "labels": {
+      "untitled": "Untitled",
+      "loading": "Loading...",
+      "valid": "Valid",
+      "modified": "(modified)",
+      "version": "ICE v0.1.0"
+    },
+    "errors": {
+      "required": "This field is required",
+      "network": "Something went wrong. Please try again."
+    }
+  },
+  "canvas": {
+    "title": "Infrastructure Canvas",
+    "empty-state": {
+      "title": "What are you building?",
+      "subtitle": "Pick a starting point — you can always change it later",
+      "blank-canvas": "Blank Canvas",
+      "pick-template": "Pick a template..."
+    },
+    "controls": {
+      "new-graph": "New Graph (Ctrl+N)",
+      "open": "Open (Ctrl+O)",
+      "save": "Save (Ctrl+S)",
+      "load-demo": "Load Demo Infrastructure",
+      "new-project": "New Project",
+      "undo": "Undo (Ctrl+Z)",
+      "redo": "Redo (Ctrl+Y)",
+      "auto-organize": "Auto-Organize Layout (Ctrl+Shift+O)",
+      "toggle-palette": "Toggle Palette (Ctrl+P)",
+      "toggle-properties": "Toggle Properties (Ctrl+I)",
+      "toggle-minimap": "Toggle Minimap (Ctrl+M)",
+      "split-right": "Split Right (side-by-side)",
+      "split-down": "Split Down (top-bottom)",
+      "close-split": "Close Split",
+      "switch-light": "Switch to Light Mode",
+      "switch-dark": "Switch to Dark Mode",
+      "cloud-providers": "Cloud Providers - Import from AWS/GCP/Azure"
+    }
+  },
+  "deploy": {
+    "title": "Deploy to GCP",
+    "buttons": {
+      "plan": "Plan",
+      "deploy": "Deploy",
+      "reset": "Reset",
+      "retry": "Retry Deploy",
+      "enable-api": "Enable API in GCP Console"
+    },
+    "status": {
+      "authenticating": "Authenticating",
+      "planning": "Planning",
+      "planned": "Plan Ready",
+      "deploying": "Deploying",
+      "success": "Deployed",
+      "error": "Error",
+      "cancelled": "Cancelled"
+    },
+    "config": {
+      "gcp-project-label": "GCP Project",
+      "gcp-project-placeholder": "my-gcp-project",
+      "region-label": "Region",
+      "environment-label": "Environment",
+      "env-development": "Development",
+      "env-staging": "Staging",
+      "env-production": "Production"
+    },
+    "card": {
+      "label": "Card:",
+      "deployable-resource": "deployable resource",
+      "skipped-non-gcp": "skipped — non-GCP",
+      "deployed-resource": "deployed resource"
+    },
+    "auth": {
+      "connecting": "Connecting to GCP...",
+      "browser-prompt": "A browser window will open for Google authentication. Complete the sign-in to continue."
+    },
+    "plan": {
+      "no-changes": "No changes detected. Infrastructure is up to date.",
+      "skip-action": "skip"
+    },
+    "errors": {
+      "api-not-enabled-title": "Required GCP APIs are not enabled",
+      "api-not-enabled-hint": "Some Google Cloud APIs need to be enabled before deployment. Click the button below to open the GCP Console, enable the API, then click Retry.",
+      "opens-console": "Opens GCP Console"
+    }
+  },
+  "integrations": {
+    "dropdown-title": "Integrations",
+    "connected": "Connected",
+    "disconnected": "Not connected",
+    "connecting": "Connecting...",
+    "error": "Error",
+    "github": {
+      "title": "GitHub",
+      "connect-title": "Connect to GitHub",
+      "pat-tab": "Personal Access Token",
+      "pat-label": "GitHub Token",
+      "pat-placeholder": "ghp_xxxxxxxxxxxxxxxxxxxx",
+      "pat-help": "Generate a token at github.com/settings/tokens with repo scope.",
+      "pat-connect": "Connect with Token",
+      "device-flow-tab": "Sign in with Browser",
+      "device-flow-button": "Sign in with GitHub",
+      "device-flow-instructions": "A browser window will open. Enter this code to authorize:",
+      "device-flow-waiting": "Waiting for authorization...",
+      "device-flow-copy": "Copy Code",
+      "device-flow-copied": "Copied!",
+      "repos-title": "Repositories",
+      "no-repos": "No repositories found",
+      "loading-repos": "Loading repositories...",
+      "branches": "branches",
+      "private": "private"
+    },
+    "repo-selector": {
+      "placeholder": "Search repositories...",
+      "no-repos": "No repositories found",
+      "loading": "Loading repos...",
+      "not-connected": "Connect GitHub to link repos",
+      "link-repo": "Link repo",
+      "clear": "Unlink"
+    }
+  },
+  "status-bar": {
+    "valid": "Valid",
+    "version": "ICE v0.1.0",
+    "connecting": "Connecting to GCP...",
+    "planning": "Planning...",
+    "deployed": "Deployed",
+    "deploy-failed": "Deploy failed",
+    "plan-ready": "Plan ready"
+  }
+}

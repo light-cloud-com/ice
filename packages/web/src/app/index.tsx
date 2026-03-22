@@ -9,7 +9,7 @@ import { store } from '@ui/store';
 import { setApiAdapter } from '@ui/shared/api/api-adapter';
 import { createHttpApiAdapter } from '@ui/shared/api/http-api-adapter';
 import { ThemeProvider } from '@ui/shared/hooks/use-theme';
-import App from './App';
+import App from './app';
 import '@fontsource-variable/jetbrains-mono';
 import '../styles/globals.css';
 

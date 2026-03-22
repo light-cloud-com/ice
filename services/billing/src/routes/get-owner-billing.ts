@@ -9,8 +9,8 @@ import prisma from '../../lib/prisma';
 interface AuthenticatedRequest extends Request {
   user: User;
 }
-import { getBillingSummary } from '../../services/billingService';
-import { getTrialStatus } from '../../services/trialService';
+import { getBillingSummary } from '../../services/billing-service';
+import { getTrialStatus } from '../../services/trial-service';
 import { TRIAL_CONFIG } from '../../const/trial';
 
 export interface OrganisationBillingSummary {

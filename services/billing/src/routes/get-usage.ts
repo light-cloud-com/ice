@@ -1,31 +1,30 @@
 /**
- * List Invoices
+ * Get Usage
  *
- * Returns paginated list of invoices for an organisation
+ * Returns usage breakdown for billing period
  */
 
 import { Request, Response } from 'express';
 import { User } from '@prisma/client';
-import { listInvoices as listInvoicesService } from '../../services/invoiceService';
-import { checkPermissions } from '../../utils/checkPermissions';
-import { errorHandler } from '../../errorHandler';
+import { getCurrentMonthUsage, getDailyUsageBreakdown } from '../../services/usage-tracking-service';
+import { checkPermissions } from '../../utils/check-permissions';
+import { errorHandler } from '../../error-handler';
 
 import prisma from '../../lib/prisma';
 interface AuthenticatedRequest extends Request {
   user: User;
   body: {
     targetOrganisationId: string;
-    limit?: number;
-    offset?: number;
-    status?: string;
+    includeDaily?: boolean;
+    days?: number;
   };
 }
 
 /**
  * @swagger
- * /api/billing/invoices:
+ * /api/billing/usage:
  *   post:
- *     summary: List invoices
+ *     summary: Get usage breakdown
  *     security:
  *       - bearerAuth: []
  *     tags: [Billing]
@@ -38,26 +37,23 @@ interface AuthenticatedRequest extends Request {
  *             properties:
  *               targetOrganisationId:
  *                 type: string
- *               limit:
+ *               includeDaily:
+ *                 type: boolean
+ *                 description: Include daily breakdown for charts
+ *               days:
  *                 type: number
- *                 default: 20
- *               offset:
- *                 type: number
- *                 default: 0
- *               status:
- *                 type: string
- *                 enum: [draft, pending, paid, failed, void]
+ *                 description: Number of days for daily breakdown (default 30)
  *             required:
  *               - targetOrganisationId
  *     responses:
  *       200:
- *         description: List of invoices
+ *         description: Usage data
  *       401:
  *         description: Unauthorized
  */
-export const listInvoices = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const getUsage = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const { targetOrganisationId, limit = 20, offset = 0, status } = req.body;
+    const { targetOrganisationId, includeDaily = false, days = 30 } = req.body;
 
     if (!targetOrganisationId) {
       errorHandler({ res, message: 'Organisation ID is required' });
@@ -91,26 +87,27 @@ export const listInvoices = async (req: AuthenticatedRequest, res: Response): Pr
       }
     }
 
-    const result = await listInvoicesService(targetOrganisationId, {
-      limit,
-      offset,
-      status,
-    });
+    // Get current month usage
+    const usage = await getCurrentMonthUsage(targetOrganisationId);
+
+    // Optionally get daily breakdown
+    let dailyBreakdown = null;
+    if (includeDaily) {
+      dailyBreakdown = await getDailyUsageBreakdown(targetOrganisationId, days);
+    }
 
     res.status(200).json({
       success: true,
-      data: result.invoices,
-      pagination: {
-        total: result.total,
-        limit,
-        offset,
+      data: {
+        ...usage,
+        daily: dailyBreakdown,
       },
     });
   } catch (error) {
-    console.error('Error listing invoices:', error);
+    console.error('Error getting usage:', error);
     errorHandler({
       res,
-      message: 'Failed to list invoices',
+      message: 'Failed to get usage data',
       error,
     });
   }

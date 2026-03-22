@@ -6,9 +6,9 @@
 
 import { Request, Response } from 'express';
 import { User, PrismaClient } from '@prisma/client';
-import { updateBillingSettings } from '../../services/billingService';
-import { checkPermissions } from '../../utils/checkPermissions';
-import { errorHandler } from '../../errorHandler';
+import { updateBillingSettings } from '../../services/billing-service';
+import { checkPermissions } from '../../utils/check-permissions';
+import { errorHandler } from '../../error-handler';
 import { Permission } from '../../const/permissions';
 
 import prisma from '../../lib/prisma';

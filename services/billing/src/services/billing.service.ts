@@ -24,7 +24,7 @@ import {
   HOURS_PER_MONTH,
   GCP_RATES,
 } from '../const/light-cloud-pricing';
-import { calculateBillableHours, hasScalingData } from './scalingTrackingService';
+import { calculateBillableHours, hasScalingData } from './scaling-tracking-service';
 
 // Types
 export interface BillingLineItem {

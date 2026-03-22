@@ -6,9 +6,9 @@
 
 import { Request, Response } from 'express';
 import { User } from '@prisma/client';
-import { getBillingSummary } from '../../services/billingService';
-import { checkPermissions } from '../../utils/checkPermissions';
-import { errorHandler } from '../../errorHandler';
+import { getBillingSummary } from '../../services/billing-service';
+import { checkPermissions } from '../../utils/check-permissions';
+import { errorHandler } from '../../error-handler';
 import { Permission } from '../../const/permissions';
 
 interface AuthenticatedRequest extends Request {

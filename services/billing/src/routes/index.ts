@@ -6,26 +6,26 @@
 
 import { Router } from 'express';
 import { requireAuth } from '@ice/shared';
-import { getCurrentBilling } from './getCurrentBilling';
-import { estimateCost } from './estimateCost';
-import { getUsage } from './getUsage';
-import { getUsageHistory } from './getUsageHistory';
-import { listInvoices } from './listInvoices';
-import { getInvoice } from './getInvoice';
-import { updatePaymentMethod, createSetupIntent, removePaymentMethod } from './updatePaymentMethod';
-import { updateSettings } from './updateSettings';
-import { updateBillingDetailsRoute, getBillingDetailsRoute } from './updateBillingDetails';
-import { stripeWebhook } from './stripeWebhook';
+import { getCurrentBilling } from './get-current-billing';
+import { estimateCost } from './estimate-cost';
+import { getUsage } from './get-usage';
+import { getUsageHistory } from './get-usage-history';
+import { listInvoices } from './list-invoices';
+import { getInvoice } from './get-invoice';
+import { updatePaymentMethod, createSetupIntent, removePaymentMethod } from './update-payment-method';
+import { updateSettings } from './update-settings';
+import { updateBillingDetailsRoute, getBillingDetailsRoute } from './update-billing-details';
+import { stripeWebhook } from './stripe-webhook';
 import {
   dailyUsageSnapshot,
   generateMonthlyInvoices,
   checkSpendingLimits,
   pollScalingEvents,
   checkTrialExpirations,
-} from './scheduledJobs';
-import { getOwnerBilling } from './getOwnerBilling';
-import { getOwnerInvoices } from './getOwnerInvoices';
-import { retryInvoice } from './retryInvoice';
+} from './scheduled-jobs';
+import { getOwnerBilling } from './get-owner-billing';
+import { getOwnerInvoices } from './get-owner-invoices';
+import { retryInvoice } from './retry-invoice';
 
 const router = Router();
 

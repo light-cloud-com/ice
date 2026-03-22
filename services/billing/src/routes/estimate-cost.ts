@@ -6,8 +6,8 @@
 
 import { Request, Response } from 'express';
 import { User } from '@prisma/client';
-import { estimateResourceCost } from '../../services/billingService';
-import { errorHandler } from '../../errorHandler';
+import { estimateResourceCost } from '../../services/billing-service';
+import { errorHandler } from '../../error-handler';
 
 interface AuthenticatedRequest extends Request {
   user: User;

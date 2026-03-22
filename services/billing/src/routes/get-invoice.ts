@@ -6,9 +6,9 @@
 
 import { Request, Response } from 'express';
 import { User, PrismaClient } from '@prisma/client';
-import { getInvoice as getInvoiceService } from '../../services/invoiceService';
-import { checkPermissions } from '../../utils/checkPermissions';
-import { errorHandler } from '../../errorHandler';
+import { getInvoice as getInvoiceService } from '../../services/invoice-service';
+import { checkPermissions } from '../../utils/check-permissions';
+import { errorHandler } from '../../error-handler';
 
 import prisma from '../../lib/prisma';
 interface AuthenticatedRequest extends Request {

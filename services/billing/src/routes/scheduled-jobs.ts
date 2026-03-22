@@ -9,10 +9,10 @@
  */
 
 import { Request, Response } from 'express';
-import { snapshotDailyUsage } from '../../services/usageTrackingService';
-import { generateAllMonthlyInvoices } from '../../services/invoiceService';
-import { pollAndRecordScalingEvents } from '../../services/scalingTrackingService';
-import { getExpiredTrials, convertTrialToPaid, expireTrial, hasPaymentMethod } from '../../services/trialService';
+import { snapshotDailyUsage } from '../../services/usage-tracking-service';
+import { generateAllMonthlyInvoices } from '../../services/invoice-service';
+import { pollAndRecordScalingEvents } from '../../services/scaling-tracking-service';
+import { getExpiredTrials, convertTrialToPaid, expireTrial, hasPaymentMethod } from '../../services/trial-service';
 
 import prisma from '../../lib/prisma';
 // API key check for scheduled jobs — always required

@@ -5,10 +5,10 @@
  */
 
 import { Response } from 'express';
-import { checkPermissions } from '../../utils/checkPermissions';
+import { checkPermissions } from '../../utils/check-permissions';
 import { errorMessages } from '../../const/messages';
-import { errorHandler } from '../../errorHandler';
-import { getDailyUsageHistory } from '../../services/billingService';
+import { errorHandler } from '../../error-handler';
+import { getDailyUsageHistory } from '../../services/billing-service';
 
 interface AuthenticatedRequest {
   user: { id: string; email: string };

@@ -7,9 +7,9 @@
 
 import { Request, Response } from 'express';
 import { User } from '@prisma/client';
-import { updateUserBillingDetails, getUserBillingDetails } from '../../services/stripeService';
-import { checkPermissions } from '../../utils/checkPermissions';
-import { errorHandler } from '../../errorHandler';
+import { updateUserBillingDetails, getUserBillingDetails } from '../../services/stripe-service';
+import { checkPermissions } from '../../utils/check-permissions';
+import { errorHandler } from '../../error-handler';
 import { Permission } from '../../const/permissions';
 import prisma from '../../lib/prisma';
 

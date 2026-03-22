@@ -5,7 +5,7 @@
  */
 
 import { Request, Response } from 'express';
-import { handleWebhookEvent } from '../../services/stripeService';
+import { handleWebhookEvent } from '../../services/stripe-service';
 
 /**
  * @swagger

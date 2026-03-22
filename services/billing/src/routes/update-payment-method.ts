@@ -14,9 +14,9 @@ import {
   removeUserPaymentMethod,
   getUserBilling,
   isStripeConfigured,
-} from '../../services/stripeService';
-import { checkPermissions } from '../../utils/checkPermissions';
-import { errorHandler } from '../../errorHandler';
+} from '../../services/stripe-service';
+import { checkPermissions } from '../../utils/check-permissions';
+import { errorHandler } from '../../error-handler';
 import { Permission } from '../../const/permissions';
 
 interface AuthenticatedRequest extends Request {

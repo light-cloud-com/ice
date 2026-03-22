@@ -115,7 +115,7 @@ Infrastructure deployment, CI/CD pipeline, and GitHub webhook processing.
 
 ### Key Services
 
-- **`deploy.service.ts`** — `planDeployment()` and `applyDeployment()`, delegates to `@ice-engine/core`
+- **`deploy.service.ts`** — `planDeployment()` and `applyDeployment()`, delegates to `@ice/core`
 - **`queue.service.ts`** — BullMQ `deploy` queue (Redis-backed), `startDeployWorker()`, `queueDeployment()`
 - **`build.service.ts`** — source code build steps for CI/CD pipeline
 - **`pipeline.service.ts`** — `DeploymentEvent` lifecycle, emits Socket.IO updates
@@ -161,7 +161,7 @@ See [AI System](ai-system.md) for detailed documentation.
 
 ## Engine Service (`services/engine`) {#engine}
 
-Serves schema and resource metadata from `@ice-engine/core` to the frontend.
+Serves schema and resource metadata from `@ice/core` to the frontend.
 
 ### Routes
 
@@ -190,7 +190,7 @@ Encrypted storage for cloud provider credentials and GitHub tokens.
 | GET | `/api/github/token` | Get GitHub token status |
 | GET | `/api/github/repos` | List GitHub repos |
 
-All credentials are AES-256 encrypted at rest via `@ice-saas/shared/crypto`.
+All credentials are AES-256 encrypted at rest via `@ice/shared/crypto`.
 
 ---
 

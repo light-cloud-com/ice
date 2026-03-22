@@ -5,10 +5,10 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Loader2 } from 'lucide-react';
-import { SvgCanvas } from '../../features/canvas/components/svg-canvas';
-import { createCard, importToActiveCard, setActiveCard } from '../../store/slices/cards-slice';
-import axiosInstance from '../../shared/api/axios-instance';
-import type { RootState, AppDispatch } from '../../store';
+import { SvgCanvas } from '@ice/ui/canvas';
+import { createCard, importToActiveCard, setActiveCard } from '@ui/store/slices/cards-slice';
+import axiosInstance from '@ui/shared/api/axios-instance';
+import type { RootState, AppDispatch } from '@ui/store';
 
 interface ProjectCanvasProps {
   projectId: string;

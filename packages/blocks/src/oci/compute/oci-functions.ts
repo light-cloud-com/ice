@@ -4,7 +4,7 @@
  * Application.OCIFunctions — Oracle Cloud serverless, Fn-based.
  */
 
-import { createBlueprintFromResource } from '@ice-engine/core/resources';
+import { createBlueprintFromResource } from '@ice/core/resources';
 import type { BlockBlueprint } from '../../types';
 
 export const ociFunctionsBlueprint: BlockBlueprint = createBlueprintFromResource('oci-functions', {

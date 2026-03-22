@@ -20,7 +20,7 @@ import {
   import_azure_to_graph,
   type AWSImportOptions,
   type AzureImportOptions,
-} from '@ice-engine/core';
+} from '@ice/core';
 
 // Secure credential store
 const credentialStore = new Store({
@@ -308,7 +308,7 @@ export function register_ipc_handlers(): void {
     if (!current_graph) {
       throw new Error('No graph loaded');
     }
-    // Stub: returns success until wired to @ice-engine/core validator
+    // Stub: returns success until wired to @ice/core validator
     return {
       valid: true,
       errors: [],

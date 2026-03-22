@@ -14,7 +14,7 @@
  */
 
 import { useMemo } from 'react';
-import type { CanvasNode } from '../../features/canvas/components/svg-canvas';
+import type { CanvasNode } from '../features/canvas/components/svg-canvas';
 
 interface EdgeLike {
   source: string;

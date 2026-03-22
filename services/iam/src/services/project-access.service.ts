@@ -6,7 +6,7 @@
  * Org members/viewers need explicit ProjectMember records.
  */
 
-import prisma from '@ice-saas/db';
+import prisma from '@ice/db';
 
 const ROLE_LEVEL: Record<string, number> = { viewer: 1, editor: 2, owner: 3 };
 const ORG_ADMIN_ROLES = new Set(['owner', 'admin']);

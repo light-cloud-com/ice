@@ -7,8 +7,8 @@ ICE SaaS is structured as a pnpm monorepo with three distinct layers: **shared p
 ```mermaid
 graph TD
     subgraph Clients
-        Web["Web SaaS<br/>@lightcloud/web"]
-        Desktop["Desktop Electron<br/>@ice-saas/desktop"]
+        Web["Web SaaS<br/>@ice/web"]
+        Desktop["Desktop Electron<br/>@ice/desktop"]
     end
 
     Web -->|"HTTP + Socket.IO"| Gateway
@@ -24,7 +24,7 @@ graph TD
         Billing[service-billing]
     end
 
-    Electron["Electron Main Process<br/>Embeds @ice-engine/core<br/>+ provider plugins<br/>Deploys locally"]
+    Electron["Electron Main Process<br/>Embeds @ice/core<br/>+ provider plugins<br/>Deploys locally"]
 
     Gateway --> PostgreSQL["PostgreSQL :5555"]
     Gateway --> Redis["Redis :6379"]
@@ -32,11 +32,11 @@ graph TD
 
 ## API Adapter Pattern
 
-Both web and desktop apps share the same UI components (`@ice-saas/ui`). The key abstraction is the `IceAPI` interface:
+Both web and desktop apps share the same UI components (`@ice/ui`). The key abstraction is the `IceAPI` interface:
 
 ```mermaid
 graph TD
-    UI["@ice-saas/ui<br/>Canvas, Panels, AI Chat<br/>api.canvas.save() / api.deploy.plan() / api.ai.intent()"]
+    UI["@ice/ui<br/>Canvas, Panels, AI Chat<br/>api.canvas.save() / api.deploy.plan() / api.ai.intent()"]
     UI -->|"IceAPI interface"| HTTP["HTTP Adapter<br/>(Axios) — Web SaaS"]
     UI -->|"IceAPI interface"| IPC["IPC Adapter<br/>(Electron IPC) — Desktop App"]
 ```
@@ -48,19 +48,19 @@ graph TD
 
 ```mermaid
 graph TD
-    types["@ice-saas/types<br/>(pure interfaces)"]
-    types --> db["@ice-saas/db<br/>(Prisma ORM)"]
-    types --> blockreg["@ice-saas/block-registry"]
-    types --> provreg["@ice-saas/provider-registry"]
-    types --> tmplreg["@ice-saas/template-registry"]
+    types["@ice/types<br/>(pure interfaces)"]
+    types --> db["@ice/db<br/>(Prisma ORM)"]
+    types --> blockreg["@ice/block-registry"]
+    types --> provreg["@ice/provider-registry"]
+    types --> tmplreg["@ice/template-registry"]
 
-    core["@ice-engine/core<br/>(standalone engine)"]
-    core --> blocks["@ice-saas/blocks"]
+    core["@ice/core<br/>(standalone engine)"]
+    core --> blocks["@ice/blocks"]
     blockreg --> blocks
-    blocks --> templates["@ice-saas/templates"]
+    blocks --> templates["@ice/templates"]
     tmplreg --> templates
 
-    db --> shared["@ice-saas/shared<br/>(auth, crypto, socket)"]
+    db --> shared["@ice/shared<br/>(auth, crypto, socket)"]
     shared --> iam[service-iam]
     shared --> canvas[service-canvas]
     shared --> deploy["service-deploy<br/>(+bullmq, +ioredis)"]
@@ -70,9 +70,9 @@ graph TD
     shared --> engine["service-engine<br/>(+core)"]
     engine --> gateway["apps/gateway<br/>(composes all)"]
 
-    ui["@ice-saas/ui<br/>(React components)"]
-    ui --> web["@lightcloud/web<br/>(web SaaS app)"]
-    ui --> desktop["@ice-saas/desktop<br/>(Electron app)"]
+    ui["@ice/ui<br/>(React components)"]
+    ui --> web["@ice/web<br/>(web SaaS app)"]
+    ui --> desktop["@ice/desktop<br/>(Electron app)"]
 ```
 
 ## Data Flow: Canvas to Deploy
@@ -81,7 +81,7 @@ graph TD
 2. Redux `cards` slice updates nodes/edges in memory
 3. Auto-save debounces (2s) → saves to localStorage + `POST /api/canvas/:id/card`
 4. User clicks "Deploy" → `POST /api/canvas/deploy/plan` with card data
-5. Deploy service runs `@ice-engine/core` plan engine → returns diff
+5. Deploy service runs `@ice/core` plan engine → returns diff
 6. User confirms → `POST /api/canvas/deploy/apply`
 7. Deploy job queued in BullMQ → worker processes
 8. Progress streamed via Socket.IO `deploy:{cardId}` room

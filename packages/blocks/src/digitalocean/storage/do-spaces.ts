@@ -4,7 +4,7 @@
  * Storage.DOSpaces — S3-compatible object storage.
  */
 
-import { createBlueprintFromResource } from '@ice-engine/core/resources';
+import { createBlueprintFromResource } from '@ice/core/resources';
 import type { BlockBlueprint } from '../../types';
 
 export const doSpacesBlueprint: BlockBlueprint = createBlueprintFromResource('do-spaces', {

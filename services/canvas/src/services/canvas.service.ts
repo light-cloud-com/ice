@@ -4,7 +4,7 @@
  * Extracted from routes/canvas.ts
  */
 
-import prisma from '@ice-saas/db';
+import prisma from '@ice/db';
 import { bootstrapProductionEnvironment } from './environment.service';
 
 // ── Projects & Folders ──────────────────────────────────────────────────────

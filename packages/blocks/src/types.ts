@@ -4,7 +4,7 @@
  * Blueprints define single flat resource cards (no nesting).
  * Groups are the only container type.
  *
- * NOTE: @ice-engine/core is authoritative for providers[], name,
+ * NOTE: @ice/core is authoritative for providers[], name,
  * description, and behavior via HIGH_LEVEL_CATEGORIES.
  * Use createBlueprintFromResource() to generate blueprints from schema data.
  */
@@ -26,7 +26,7 @@ export type Provider = 'aws' | 'gcp' | 'azure' | 'kubernetes' | 'alibaba' | 'oci
 export interface BlockBlueprint {
   /** Palette block type, e.g. 'static-site' */
   blockType: string;
-  /** Maps to HIGH_LEVEL_CATEGORIES resource ID in @ice-engine/core */
+  /** Maps to HIGH_LEVEL_CATEGORIES resource ID in @ice/core */
   resourceId: string;
   /** Human-readable name, e.g. 'Static Site' */
   name: string;

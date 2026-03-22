@@ -24,8 +24,8 @@ export const aiMlTemplate: ComposedTemplate = {
   tags: ['ML Pipeline', 'Python', 'Workers', 'Storage', 'SQS'],
   securityLevel: 'standard',
   environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-east-1', securityLevel: 'standard' },
-    { type: 'staging', name: 'Staging', region: 'us-east-1', securityLevel: 'basic' },
+    { type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' },
+    { type: 'staging', name: 'Staging', region: 'us-central1', securityLevel: 'basic' },
   ],
 
   groups: [

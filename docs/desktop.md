@@ -1,4 +1,4 @@
-# Desktop App (`@ice-saas/desktop`)
+# Desktop App (`@ice/desktop`)
 
 The ICE desktop app is an Electron application that shares the same UI components as the web SaaS but runs deploys locally — no backend server required.
 
@@ -16,7 +16,7 @@ block-beta
         A["BrowserWindow management"]
         B["Splash screen (4s min display)"]
         C["IPC handler registration + Native menu"]
-        D["Embeds @ice-engine/core + provider plugins"]
+        D["Embeds @ice/core + provider plugins"]
         E["Runs deploys in-process"]
     end
     block:preload["Preload Script"]
@@ -24,7 +24,7 @@ block-beta
         G["Implements IceAPI via IPC"]
     end
     block:renderer["Renderer Process"]
-        H["React app using @ice-saas/ui"]
+        H["React app using @ice/ui"]
         I["createIpcAdapter() → window.api"]
         J["Same components as web SaaS"]
     end
@@ -50,7 +50,7 @@ Both adapters implement the same interface, so UI components call `api.canvas.sa
 |---|---|
 | `index.ts` | Window management, splash screen, app lifecycle |
 | `ipc-handlers.ts` | Canvas, profile, auth IPC handlers |
-| `deploy-handler.ts` | Deploy-specific IPC, calls `@ice-engine/core` directly |
+| `deploy-handler.ts` | Deploy-specific IPC, calls `@ice/core` directly |
 | `github-service.ts` | GitHub integration (native, no backend) |
 | `menu.ts` | Native application menu |
 | `messages.ts` | IPC message type constants |
@@ -58,9 +58,9 @@ Both adapters implement the same interface, so UI components call `api.canvas.sa
 ## Local Deploys
 
 The desktop app directly embeds:
-- `@ice-engine/core` — for plan/apply
-- `@ice-saas/provider-gcp` — GCP deployer
-- `@ice-saas/provider-registry` — provider abstraction
+- `@ice/core` — for plan/apply
+- `@ice/provider-gcp` — GCP deployer
+- `@ice/provider-registry` — provider abstraction
 
 Deployments run entirely in-process without needing the gateway server. The user's local cloud credentials (e.g., `gcloud auth`) are used directly.
 
@@ -75,6 +75,6 @@ Build tool: `electron-vite` (Vite-based Electron build pipeline)
 
 ## Dependencies
 
-- `@ice-engine/core`, `@ice-saas/blocks`, `@ice-saas/types`, `@ice-saas/ui`
-- `@ice-saas/provider-gcp`, `@ice-saas/provider-registry`
+- `@ice/core`, `@ice/blocks`, `@ice/types`, `@ice/ui`
+- `@ice/provider-gcp`, `@ice/provider-registry`
 - `electron`, `@electron-toolkit/utils`

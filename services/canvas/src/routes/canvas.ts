@@ -14,15 +14,16 @@
  */
 
 import { Router, type Response } from 'express';
-import { requireAuth, requireProjectAccess, type AuthRequest } from '@ice-saas/shared';
+import { requireAuth, requireProjectAccess, type AuthRequest } from '@ice/shared';
 import * as canvasService from '../services/canvas.service';
-import { grantCreatorAccess } from '@ice-saas/service-iam';
+import { grantCreatorAccess } from '@ice/service-iam';
 
 const router = Router();
 router.use(requireAuth);
 
 function getOrgId(req: AuthRequest): string {
-  return req.body?.organisationId || req.organisationId || '';
+  // Always use the JWT-derived organisationId — never trust client-supplied value
+  return req.organisationId || '';
 }
 
 // ── Projects & Folders ──────────────────────────────────────────────────────

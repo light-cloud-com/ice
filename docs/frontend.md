@@ -2,7 +2,7 @@
 
 The web frontend is a React SPA built with Vite, using Redux Toolkit for state management and a custom SVG-based canvas for infrastructure design.
 
-## Web App (`@lightcloud/web`) {#web-app}
+## Web App (`@ice/web`) {#web-app}
 
 **Location:** `packages/web/`
 **Dev:** `pnpm dev:web` (Vite, port 5173)
@@ -66,7 +66,7 @@ block-beta
 | Slice | Manages |
 |---|---|
 | `cards` | Canvas nodes, edges, viewport, undo/redo stacks |
-| `graph` | `@ice-engine/core` graph instance |
+| `graph` | `@ice/core` graph instance |
 | `ui` | Palette visibility, split pane layout |
 | `selection` | Selected node/edge IDs |
 | `view` | View level (LOD) toggle |
@@ -104,7 +104,7 @@ The canvas is a **custom SVG implementation** — not React Flow. Key components
 
 ---
 
-## UI Library (`@ice-saas/ui`) {#ui-library}
+## UI Library (`@ice/ui`) {#ui-library}
 
 **Location:** `packages/ui/`
 
@@ -113,15 +113,15 @@ Shared React component library consumed by both web and desktop apps. Contains a
 ### Sub-path Exports
 
 ```typescript
-import { SvgCanvas, SvgUnifiedNode } from '@ice-saas/ui/canvas'
-import { DeployPanel } from '@ice-saas/ui/deploy'
-import { PropertiesPanel } from '@ice-saas/ui/properties'
-import { ResourcePalette } from '@ice-saas/ui/palette'
-import { PipelinePanel } from '@ice-saas/ui/pipeline'
-import { TemplatePicker } from '@ice-saas/ui/templates'
-import { EnvironmentTabBar } from '@ice-saas/ui/environments'
-import { AiChatPanel } from '@ice-saas/ui/ai'
-import { Button, Input, Dialog } from '@ice-saas/ui/primitives/button'
+import { SvgCanvas, SvgUnifiedNode } from '@ice/ui/canvas'
+import { DeployPanel } from '@ice/ui/deploy'
+import { PropertiesPanel } from '@ice/ui/properties'
+import { ResourcePalette } from '@ice/ui/palette'
+import { PipelinePanel } from '@ice/ui/pipeline'
+import { TemplatePicker } from '@ice/ui/templates'
+import { EnvironmentTabBar } from '@ice/ui/environments'
+import { AiChatPanel } from '@ice/ui/ai'
+import { Button, Input, Dialog } from '@ice/ui/primitives/button'
 ```
 
 ### Design System

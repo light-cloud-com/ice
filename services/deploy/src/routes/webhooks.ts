@@ -12,7 +12,7 @@
 
 import { Router, type Request, type Response } from 'express';
 import crypto from 'crypto';
-import prisma from '@ice-saas/db';
+import prisma from '@ice/db';
 import {
   matchRulesForPush,
   matchRulesForMerge,
@@ -33,16 +33,6 @@ const router = Router();
 
 router.post(
   '/github',
-  // Parse as raw buffer for HMAC verification
-  (req, res, next) => {
-    if (req.headers['content-type'] === 'application/json' && !req.body) {
-      // Body already parsed by express.json() — reconstruct for HMAC
-      // This path shouldn't normally hit if mounted before express.json()
-      next();
-    } else {
-      next();
-    }
-  },
   async (req: Request, res: Response) => {
     const event = req.headers['x-github-event'] as string;
     const deliveryId = req.headers['x-github-delivery'] as string;
@@ -51,6 +41,10 @@ router.post(
     if (!event || !deliveryId) {
       return res.status(400).json({ error: 'Missing GitHub event headers' });
     }
+
+    // Get the raw body buffer (provided by express.raw() in gateway)
+    const rawBody = Buffer.isBuffer(req.body) ? req.body : Buffer.from(JSON.stringify(req.body));
+    const payload = JSON.parse(rawBody.toString('utf8'));
 
     // ── Idempotency check ──
     try {
@@ -71,10 +65,10 @@ router.post(
 
       switch (event) {
         case 'push':
-          result = await handlePushEvent(req.body, signature);
+          result = await handlePushEvent(payload, rawBody, signature);
           break;
         case 'pull_request':
-          result = await handlePullRequestEvent(req.body, signature);
+          result = await handlePullRequestEvent(payload, rawBody, signature);
           break;
         case 'ping':
           result = 'pong';
@@ -105,7 +99,7 @@ router.post(
 
 // ─── Push Event Handler ─────────────────────────────────────────────────────
 
-async function handlePushEvent(payload: any, signature: string): Promise<string> {
+async function handlePushEvent(payload: any, rawBody: Buffer, signature: string): Promise<string> {
   const repo = payload.repository?.full_name;
   if (!repo) return 'no repository in payload';
 
@@ -126,15 +120,21 @@ async function handlePushEvent(payload: any, signature: string): Promise<string>
   const rules = await matchRulesForPush(repo, branch, commitSha);
   if (rules.length === 0) return `no matching rules for ${repo}:${branch}`;
 
-  // Verify signature against at least one matching rule
-  const body = JSON.stringify(payload);
+  // Verify HMAC signature against raw body — require a webhook secret on all rules
   const rulesWithSecrets = rules.filter((r) => r.webhook_secret);
-  const signatureValid = rulesWithSecrets.length === 0
-    ? true // No secrets configured at all — allow (local dev)
-    : rulesWithSecrets.some((rule) => {
-        if (!signature) return false; // Secret exists but no signature sent — reject
-        return verifySignature(body, signature, rule.webhook_secret!);
-      });
+  if (rulesWithSecrets.length === 0) {
+    console.warn(`No webhook secret configured for rules matching ${repo}. Rejecting.`);
+    return 'rejected: no webhook secret configured — set a webhook secret on your deployment rules';
+  }
+
+  if (!signature) {
+    console.warn(`No signature header for ${repo}`);
+    return 'rejected: missing x-hub-signature-256 header';
+  }
+
+  const signatureValid = rulesWithSecrets.some((rule) =>
+    verifySignature(rawBody, signature, rule.webhook_secret!),
+  );
 
   if (!signatureValid) {
     console.warn(`Invalid webhook signature for ${repo}`);
@@ -199,7 +199,7 @@ async function handlePushEvent(payload: any, signature: string): Promise<string>
 
 // ─── Pull Request Event Handler ─────────────────────────────────────────────
 
-async function handlePullRequestEvent(payload: any, signature: string): Promise<string> {
+async function handlePullRequestEvent(payload: any, _rawBody: Buffer, _signature: string): Promise<string> {
   const action = payload.action;
   const repo = payload.repository?.full_name;
   const prNumber = payload.pull_request?.number;
@@ -357,10 +357,10 @@ async function handlePullRequestEvent(payload: any, signature: string): Promise<
 
 // ─── HMAC Verification ──────────────────────────────────────────────────────
 
-function verifySignature(body: string, signature: string, secret: string): boolean {
+function verifySignature(body: Buffer, signature: string, secret: string): boolean {
   const expected = 'sha256=' + crypto
     .createHmac('sha256', secret)
-    .update(body, 'utf-8')
+    .update(body)
     .digest('hex');
 
   try {

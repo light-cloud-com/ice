@@ -11,8 +11,8 @@ import type {
   AiResponse,
   SerializedCanvas,
   AiStreamEvent,
-} from '@ice-saas/types';
-import { generateAiConnectionPrompt } from '@ice-saas/types';
+} from '@ice/types';
+import { generateAiConnectionPrompt } from '@ice/types';
 import type { Response } from 'express';
 import { buildSchemaContext } from './ai-schema-context.service';
 import {

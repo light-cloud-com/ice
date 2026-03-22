@@ -4,7 +4,7 @@
  * Database.DynamoDB — NoSQL key-value with single-digit ms latency.
  */
 
-import { createBlueprintFromResource } from '@ice-engine/core/resources';
+import { createBlueprintFromResource } from '@ice/core/resources';
 import type { BlockBlueprint } from '../../types';
 
 export const dynamodbBlueprint: BlockBlueprint = createBlueprintFromResource('dynamodb', {

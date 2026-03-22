@@ -9,8 +9,8 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Folder, FolderOpen, FileText, Loader2, Plus } from 'lucide-react';
-import axiosInstance from '../shared/api/axios-instance';
-import type { RootState } from '../store';
+import axiosInstance from '@ui/shared/api/axios-instance';
+import type { RootState } from '@ui/store';
 
 interface FolderItem {
   id: string;

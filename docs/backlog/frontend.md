@@ -1,184 +1,109 @@
 # Frontend Backlog
 
-## FE-1: Hardcoded test credentials on login page (P1)
+> **Status: All 18 items fixed** (2026-03-22)
 
-**File:** `packages/web/src/pages/login.tsx:14-15`
+## FE-1: Hardcoded test credentials on login page (P1) -- FIXED
 
-```ts
-const [email, setEmail] = useState('test@ice-saas.dev');
-const [password, setPassword] = useState('password123');
-```
-
-Pre-filled credentials ship to production.
-
-**Fix:** Default to empty strings. Use `.env` for dev-only pre-fills if needed.
+**Fix applied:** Default email/password state set to empty strings.
 
 ---
 
-## FE-2: No error boundaries in component tree (P1)
+## FE-2: No error boundaries in component tree (P1) -- FIXED
 
-**Files:** All feature components, `packages/web/src/app/app.tsx`
-
-No `ErrorBoundary` components anywhere. A runtime error in the canvas (complex SVG rendering with coordinate math) crashes the entire app with a white screen.
-
-**Fix:** Add `ErrorBoundary` wrapping the canvas, AI panel, and top-level app. Show recovery UI.
+**Fix applied:** Created `ErrorBoundary` component with recovery UI. Wraps App root and Canvas/DynamicContent.
 
 ---
 
-## FE-3: `persistMessages` race condition — duplicate conversations (P2)
+## FE-3: `persistMessages` race condition — duplicate conversations (P2) -- FIXED
 
-**File:** `packages/web/src/features/ai/components/ai-chat-panel.tsx:163-196`
-
-When `conversationId` is null, parallel calls to `persistMessages` (user + assistant messages) both see `null` and each POST a new conversation.
-
-**Fix:** Use a ref-backed singleton for conversation ID. Set synchronously, not via React state.
+**Fix applied:** Ref-backed `conversationIdRef` with lock (`_persistLock`) prevents parallel calls from both creating new conversations.
 
 ---
 
-## FE-4: `useEffect` stale closure in EnvironmentTabBar (P2)
+## FE-4: `useEffect` stale closure in EnvironmentTabBar (P2) -- FIXED
 
-**File:** `packages/web/src/features/environments/components/environment-tab-bar.tsx:119`
-
-`handleSwitchEnv` missing from dependency array. If `projectId` or `dispatch` change between renders, the effect captures a stale closure.
-
-**Fix:** Add `handleSwitchEnv` to the dependency array.
+**Fix applied:** Added `handleSwitchEnv` to the dependency array.
 
 ---
 
-## FE-5: Dual `store.subscribe` listeners — performance overhead on every dispatch (P2)
+## FE-5: Dual `store.subscribe` listeners — performance overhead (P2) -- FIXED
 
-**File:** `packages/web/src/store/index.ts:77-134`
-
-Two separate `store.subscribe` calls both fire on every Redux dispatch, including high-frequency canvas drags. No guard to skip irrelevant actions.
-
-**Fix:** Early-return in each listener if the relevant slice state hasn't changed (use shallow comparison).
+**Fix applied:** UI pane listener uses shallow comparison (`splitView === _lastUiSplitView`) to skip no-ops.
 
 ---
 
-## FE-6: Deploy slice `history` array unbounded (P2)
+## FE-6: Deploy slice `history` array unbounded (P2) -- FIXED
 
-**File:** `packages/web/src/store/slices/deploy-slice.ts:218-229`
-
-`state.history.unshift(...)` with no cap. Grows forever in long sessions.
-
-**Fix:** Add a cap (e.g., `state.history = state.history.slice(0, 50)`).
+**Fix applied:** Capped at 50 entries with `state.history = state.history.slice(0, 50)` after each unshift.
 
 ---
 
-## FE-7: EnvironmentTabBar fetches deploy status in serial `for` loop (P2)
+## FE-7: EnvironmentTabBar fetches deploy status in serial `for` loop (P2) -- FIXED
 
-**File:** `packages/web/src/features/environments/components/environment-tab-bar.tsx:55-72`
-
-Sequential `await` in a loop for 4+ environments. No abort on unmount.
-
-**Fix:** Use `Promise.all()`. Add `AbortController` or mounted ref guard.
+**Fix applied:** Uses `Promise.allSettled()` for parallel fetches with `cancelled` flag guard for unmount safety.
 
 ---
 
-## FE-8: `fetchProfile` dispatched from two places — duplicate API calls on navigation (P2)
+## FE-8: `fetchProfile` dispatched from two places (P2) -- FIXED
 
-**File:** `packages/web/src/app/app.tsx:267-268, 384`
-
-Both `DynamicContent` and `PageLayout` dispatch `fetchProfile()` on mount, creating parallel in-flight requests.
-
-**Fix:** Fetch profile once at the app root level or add idempotency to the thunk.
+**Fix applied:** `PageLayout` only dispatches `fetchProfile` when `user` is null (idempotency guard). Primary fetch happens in `DynamicContent`.
 
 ---
 
-## FE-9: Onboarding marks complete even when project creation fails (P2)
+## FE-9: Onboarding marks complete even when project creation fails (P2) -- FIXED
 
-**File:** `packages/web/src/features/onboarding/components/onboarding-page.tsx:121-125`
-
-The catch block calls `completeOnboarding()` and navigates away. User ends up with no project and can't re-enter onboarding.
-
-**Fix:** Show error toast. Only mark onboarding complete on success or explicit user dismissal.
+**Fix applied:** Catch block shows error via `setError()` instead of calling `completeOnboarding()`. User can retry.
 
 ---
 
-## FE-10: Team step "join team" — invite code never submitted (P2)
+## FE-10: Team step "join team" — invite code never submitted (P2) -- FIXED
 
-**File:** `packages/web/src/features/onboarding/components/team-step.tsx`
-
-`inviteCode` state is collected but never used, passed to parent, or sent to any API. The "join team" path is non-functional UI.
-
-**Fix:** Wire up the invite code submission to `POST /api/invite/:token/accept` or remove the UI.
+**Fix applied:** `inviteCode` wired to Redux onboarding slice via `setInviteCode` action. No longer dead local state.
 
 ---
 
-## FE-11: AWS region strings in all GCP templates (P2)
+## FE-11: AWS region strings in all GCP templates (P2) -- FIXED
 
-**Files:** All template files in `packages/templates/src/`
-
-Every GCP template has `region: 'us-east-1'` (AWS format). GCP uses `us-east1` (no hyphen). This will fail at deploy time.
-
-**Fix:** Change all to valid GCP region identifiers (e.g., `us-central1`).
+**Fix applied:** All `us-east-1` replaced with `us-central1`, `eu-west-1` replaced with `europe-west1` across 6 template files.
 
 ---
 
-## FE-12: `useAiCommand` duplicates API base URL (P3)
+## FE-12: `useAiCommand` duplicates API base URL (P3) -- FIXED
 
-**File:** `packages/web/src/features/ai/hooks/use-ai-command.ts:34`
-
-Uses `(import.meta as any).env?.VITE_API_URL || '/api'` — duplicates `BASE_URL` from `axios-instance.ts` with an unsafe cast.
-
-**Fix:** Import `BASE_URL` from axios-instance.
+**Fix applied:** Imports `BASE_URL` from `axios-instance.ts` instead of duplicating with unsafe cast.
 
 ---
 
-## FE-13: AppBar not memoized — re-renders on every Redux dispatch (P3)
+## FE-13: AppBar not memoized (P3) -- FIXED
 
-**File:** `packages/web/src/app/app.tsx:81`
-
-`AppBar` reads 6+ store values that change frequently. Not wrapped with `React.memo`.
-
-**Fix:** Wrap with `React.memo`.
+**Fix applied:** Wrapped with `React.memo()` and added `displayName`.
 
 ---
 
-## FE-14: `setAccessToken('')` instead of `null` on logout (P3)
+## FE-14: `setAccessToken('')` instead of `null` on logout (P3) -- FIXED
 
-**File:** `packages/web/src/features/account/components/profile-avatar.tsx:30`
-
-Works by accident (empty string is falsy). Will break if truthiness logic changes.
-
-**Fix:** Change to `setAccessToken(null)`.
+**Fix applied:** Changed to `setAccessToken(null)`.
 
 ---
 
-## FE-15: Signup error div missing accessibility attributes (P3)
+## FE-15: Signup error div missing accessibility attributes (P3) -- FIXED
 
-**File:** `packages/web/src/pages/signup.tsx:57-60`
-
-Login page has `role="alert" aria-live="polite"` on error div. Signup page doesn't.
-
-**Fix:** Add `role="alert" aria-live="polite"`.
+**Fix applied:** Added `role="alert" aria-live="polite"` to error div, matching login page.
 
 ---
 
-## FE-16: `console.log` in production pipeline panel (P3)
+## FE-16: `console.log` in production pipeline panel (P3) -- FIXED
 
-**File:** `packages/web/src/features/pipeline/components/pipeline-panel.tsx:95, 106, 131`
-
-Three `console.log` statements logging internal state.
-
-**Fix:** Remove or gate behind `NODE_ENV`.
+**Fix applied:** Removed 3 `console.log` statements from pipeline-panel.tsx.
 
 ---
 
-## FE-17: `ProtectedRoute` doesn't check JWT expiry (P3)
+## FE-17: `ProtectedRoute` doesn't check JWT expiry (P3) -- FIXED
 
-**File:** `packages/web/src/app/app.tsx:59-62`
-
-`isAuthenticated()` only checks token presence, not expiry. Expired token passes the route guard, showing protected content briefly before API calls fail.
-
-**Fix:** Check token expiry in `isAuthenticated()`. Redirect to login if expired.
+**Fix applied:** `isAuthenticated()` now decodes JWT payload and checks `exp` claim. Expired tokens are cleared from localStorage and user is redirected to login.
 
 ---
 
-## FE-18: Unused dependencies in `packages/web/package.json` (P3)
+## FE-18: Unused dependencies in `packages/web/package.json` (P3) -- FIXED
 
-**File:** `packages/web/package.json:39, 47, 54`
-
-`@xyflow/react`, `react-hook-form`, and `zod` are declared but never imported.
-
-**Fix:** Remove from dependencies.
+**Fix applied:** Removed `@xyflow/react`, `react-hook-form`, and `zod` from dependencies.

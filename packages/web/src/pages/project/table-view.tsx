@@ -7,8 +7,8 @@
 import React, { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { ArrowUpDown } from 'lucide-react';
-import type { RootState } from '../../store';
-import { selectActiveCard } from '../../store/slices/cards-slice';
+import type { RootState } from '@ui/store';
+import { selectActiveCard } from '@ui/store/slices/cards-slice';
 
 interface NodeRow {
   id: string;

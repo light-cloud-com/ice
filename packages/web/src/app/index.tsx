@@ -5,10 +5,10 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
-import { store } from '../store';
-import { setApiAdapter } from '../shared/api/api-adapter';
-import { createHttpApiAdapter } from '../shared/api/http-api-adapter';
-import { ThemeProvider } from '../shared/hooks/use-theme';
+import { store } from '@ui/store';
+import { setApiAdapter } from '@ui/shared/api/api-adapter';
+import { createHttpApiAdapter } from '@ui/shared/api/http-api-adapter';
+import { ThemeProvider } from '@ui/shared/hooks/use-theme';
 import App from './App';
 import '@fontsource-variable/jetbrains-mono';
 import '../styles/globals.css';

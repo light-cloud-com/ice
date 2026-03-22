@@ -4,7 +4,7 @@
  * Messaging.ServiceBus — enterprise messaging with queues + topics.
  */
 
-import { createBlueprintFromResource } from '@ice-engine/core/resources';
+import { createBlueprintFromResource } from '@ice/core/resources';
 import type { BlockBlueprint } from '../../types';
 
 export const serviceBusBlueprint: BlockBlueprint = createBlueprintFromResource('service-bus', {

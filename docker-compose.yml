@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:16-alpine
@@ -31,16 +29,18 @@ services:
     build: ./apps/gateway
     ports:
       - '5001:5001'
+    restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    env_file:
+      - path: .env
+        required: false
     environment:
       DATABASE_URL: postgresql://ice:icedev@postgres:5432/ice_saas
       REDIS_URL: redis://redis:6379
-      JWT_SECRET: dev-secret
-      CREDENTIAL_ENCRYPTION_KEY: dev-encryption-key
       FRONTEND_URL: http://localhost:5173
       PORT: 5001
 

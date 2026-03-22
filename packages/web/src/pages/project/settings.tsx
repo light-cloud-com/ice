@@ -6,13 +6,13 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Save, Loader2, Trash2, AlertTriangle } from 'lucide-react';
-import axiosInstance from '../../shared/api/axios-instance';
-import type { RootState } from '../../store';
-import { ProjectCollaborators } from '../../features/account/components/project-collaborators';
+import axiosInstance from '@ui/shared/api/axios-instance';
+import type { RootState } from '@ui/store';
+import { ProjectCollaborators } from '@ui/features/account/components/project-collaborators';
 import gcpIcon from 'devicon/icons/googlecloud/googlecloud-original.svg';
 import awsIcon from 'devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg';
 import azureIcon from 'devicon/icons/azure/azure-original.svg';
-import { cn } from '../../shared/utils/cn';
+import { cn } from '@ui/shared/utils/cn';
 
 const PROVIDERS = [
   { id: 'gcp', name: 'Google Cloud', icon: gcpIcon, regions: [

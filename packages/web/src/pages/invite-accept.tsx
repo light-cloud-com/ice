@@ -8,8 +8,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
-import { isAuthenticated } from '../shared/api/auth';
-import axiosInstance from '../shared/api/axios-instance';
+import { isAuthenticated } from '@ui/shared/api/auth';
+import axiosInstance from '@ui/shared/api/axios-instance';
 
 export const InviteAcceptPage: React.FC = () => {
   const { token } = useParams<{ token: string }>();

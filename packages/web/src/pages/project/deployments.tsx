@@ -18,16 +18,16 @@ import {
   Server,
   ChevronDown,
 } from 'lucide-react';
-import type { RootState, AppDispatch } from '../../store';
-import { selectActiveCard } from '../../store/slices/cards-slice';
+import type { RootState, AppDispatch } from '@ui/store';
+import { selectActiveCard } from '@ui/store/slices/cards-slice';
 import {
   fetchRulesForNode,
   fetchEventsForNode,
   type DeploymentEvent,
   type DeployStep,
-} from '../../store/slices/pipeline-slice';
-import axiosInstance from '../../shared/api/axios-instance';
-import { cn } from '../../shared/utils/cn';
+} from '@ui/store/slices/pipeline-slice';
+import axiosInstance from '@ui/shared/api/axios-instance';
+import { cn } from '@ui/shared/utils/cn';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

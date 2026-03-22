@@ -4,7 +4,7 @@
  * Database.Firestore — document DB with real-time sync.
  */
 
-import { createBlueprintFromResource } from '@ice-engine/core/resources';
+import { createBlueprintFromResource } from '@ice/core/resources';
 import type { BlockBlueprint } from '../../types';
 
 export const firestoreBlueprint: BlockBlueprint = createBlueprintFromResource('firestore', {

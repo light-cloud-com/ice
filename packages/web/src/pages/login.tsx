@@ -5,14 +5,14 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
-import { login } from '../shared/api/auth';
-import { OAuthButtons } from '../shared/components/oauth-buttons';
+import { login } from '@ui/shared/api/auth';
+import { OAuthButtons } from '@ui/shared/components/oauth-buttons';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [email, setEmail] = useState('test@ice-saas.dev');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 

@@ -1,8 +1,8 @@
 /**
- * Resource Service — Wired to @ice-engine/core high-level resources
+ * Resource Service — Wired to @ice/core high-level resources
  *
  * Serves real resource palette data from the ICE engine.
- * Uses dynamic imports since @ice-engine/core resolves from workspace root.
+ * Uses dynamic imports since @ice/core resolves from workspace root.
  */
 
 let _core: any = null;
@@ -11,7 +11,7 @@ async function getCore() {
   if (!_core) {
     try {
       // @ts-ignore — resolved at runtime via pnpm workspace
-      _core = await import('@ice-engine/core');
+      _core = await import('@ice/core');
     } catch {
       _core = {
         HIGH_LEVEL_CATEGORIES: [],

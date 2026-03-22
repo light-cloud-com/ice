@@ -16,7 +16,7 @@ import { join } from 'path';
 import { tmpdir } from 'os';
 import { pipeline as streamPipeline } from 'stream/promises';
 import { createWriteStream } from 'fs';
-import prisma from '@ice-saas/db';
+import prisma from '@ice/db';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -77,13 +77,19 @@ export async function buildFromSource(
     // ── Step 2: Install dependencies (with cache) ──
     const installCmd = config.installCommand || detectInstallCommand(buildDir);
     if (installCmd) {
-      // Restore cached node_modules if available
+      // Restore cached node_modules via hardlinks (fast, space-efficient)
       if (existsSync(cachedNodeModules)) {
         try {
-          execSync(`cp -r "${cachedNodeModules}" "${join(buildDir, 'node_modules')}"`, { stdio: 'pipe', timeout: 30000 });
-          await onLog('install', 'started', `Running: ${installCmd} (cached)`);
+          execSync(`cp -al "${cachedNodeModules}" "${join(buildDir, 'node_modules')}"`, { stdio: 'pipe', timeout: 30000 });
+          await onLog('install', 'started', `Running: ${installCmd} (cached via hardlinks)`);
         } catch {
-          await onLog('install', 'started', `Running: ${installCmd}`);
+          // Hardlinks failed (cross-device?), fall back to regular copy
+          try {
+            execSync(`cp -r "${cachedNodeModules}" "${join(buildDir, 'node_modules')}"`, { stdio: 'pipe', timeout: 60000 });
+            await onLog('install', 'started', `Running: ${installCmd} (cached)`);
+          } catch {
+            await onLog('install', 'started', `Running: ${installCmd}`);
+          }
         }
       } else {
         await onLog('install', 'started', `Running: ${installCmd}`);
@@ -94,11 +100,12 @@ export async function buildFromSource(
       });
       await onLog('install', 'completed', 'Dependencies installed');
 
-      // Save node_modules to cache for next build
+      // Save node_modules to cache for next build (using rsync for incremental updates)
       try {
         const buildNodeModules = join(buildDir, 'node_modules');
         if (existsSync(buildNodeModules)) {
-          execSync(`mkdir -p "${cacheDir}" && rm -rf "${cachedNodeModules}" && cp -r "${buildNodeModules}" "${cachedNodeModules}"`, { stdio: 'pipe', timeout: 60000 });
+          execSync(`mkdir -p "${cacheDir}"`, { stdio: 'pipe' });
+          execSync(`rsync -a --delete "${buildNodeModules}/" "${cachedNodeModules}/"`, { stdio: 'pipe', timeout: 120000 });
         }
       } catch { /* cache save is best-effort */ }
     }
@@ -199,16 +206,60 @@ async function downloadAndExtract(
 
 // ─── Run Command with Streaming Output ──────────────────────────────────────
 
+// Allowlist of safe commands that can be executed by the build service
+const ALLOWED_COMMANDS = new Set([
+  'npm', 'npx', 'yarn', 'pnpm', 'pip', 'go', 'make', 'cargo', 'dotnet', 'mvn', 'gradle',
+]);
+
+function validateAndParseCommand(command: string): { cmd: string; args: string[] } {
+  // Parse respecting quoted strings
+  const parts: string[] = [];
+  let current = '';
+  let inQuote = false;
+  let quoteChar = '';
+  for (const ch of command) {
+    if (inQuote) {
+      if (ch === quoteChar) { inQuote = false; } else { current += ch; }
+    } else if (ch === '"' || ch === "'") {
+      inQuote = true; quoteChar = ch;
+    } else if (ch === ' ' || ch === '\t') {
+      if (current) { parts.push(current); current = ''; }
+    } else {
+      current += ch;
+    }
+  }
+  if (current) parts.push(current);
+
+  const [cmd, ...args] = parts;
+  if (!cmd) throw new Error('Empty command');
+
+  // Block shell metacharacters in all parts
+  const SHELL_META = /[;&|`$(){}[\]<>!\n\\]/;
+  for (const part of parts) {
+    if (SHELL_META.test(part)) {
+      throw new Error(`Command contains disallowed shell metacharacter: "${part}"`);
+    }
+  }
+
+  // Validate command is in the allowlist
+  const baseName = cmd.split('/').pop()!;
+  if (!ALLOWED_COMMANDS.has(baseName)) {
+    throw new Error(`Command "${baseName}" is not in the allowed list. Allowed: ${[...ALLOWED_COMMANDS].join(', ')}`);
+  }
+
+  return { cmd, args };
+}
+
 function runCommand(
   command: string,
   cwd: string,
   onOutput: (line: string) => Promise<void>,
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    const [cmd, ...args] = command.split(' ');
+    const { cmd, args } = validateAndParseCommand(command);
     const proc = spawn(cmd, args, {
       cwd,
-      shell: true,
+      shell: false,
       stdio: ['ignore', 'pipe', 'pipe'],
       env: { ...process.env, CI: 'true', NODE_ENV: 'production' },
       timeout: 300000, // 5 minute timeout
@@ -264,7 +315,7 @@ async function getGitHubToken(userId: string): Promise<string | null> {
   });
   if (!record) return null;
   try {
-    const { decryptString } = await import('@ice-saas/shared');
+    const { decryptString } = await import('@ice/shared');
     return decryptString(record.access_token);
   } catch {
     return record.access_token;

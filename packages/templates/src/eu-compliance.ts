@@ -25,8 +25,8 @@ export const euComplianceTemplate: ComposedTemplate = {
   tags: ['GDPR', 'Encryption', 'EU-only', 'Audit Logs'],
   securityLevel: 'compliance',
   environmentPresets: [
-    { type: 'production', name: 'Production', region: 'eu-west-1', securityLevel: 'compliance' },
-    { type: 'staging', name: 'Staging', region: 'eu-west-1', securityLevel: 'strict' },
+    { type: 'production', name: 'Production', region: 'europe-west1', securityLevel: 'compliance' },
+    { type: 'staging', name: 'Staging', region: 'europe-west1', securityLevel: 'strict' },
   ],
 
   groups: [

@@ -4,7 +4,7 @@
  * Storage.OSS — Alibaba Cloud object storage with China-optimized CDN.
  */
 
-import { createBlueprintFromResource } from '@ice-engine/core/resources';
+import { createBlueprintFromResource } from '@ice/core/resources';
 import type { BlockBlueprint } from '../../types';
 
 export const ossBlueprint: BlockBlueprint = createBlueprintFromResource('oss', {

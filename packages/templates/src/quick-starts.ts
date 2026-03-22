@@ -20,7 +20,7 @@ export const quickStartWebsiteDb: ComposedTemplate = {
   tags: ['Next.js', 'PostgreSQL'],
   securityLevel: 'basic',
   environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-east-1', securityLevel: 'basic' },
+    { type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'basic' },
   ],
   blocks: [
     { blockType: 'public-traffic', label: 'Public Traffic', position: { x: 100, y: 200 } },
@@ -50,7 +50,7 @@ export const quickStartWebAppApi: ComposedTemplate = {
   tags: ['React', 'API', 'PostgreSQL'],
   securityLevel: 'basic',
   environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-east-1', securityLevel: 'basic' },
+    { type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'basic' },
   ],
   blocks: [
     { blockType: 'public-traffic', label: 'Public Traffic', position: { x: 100, y: 200 } },
@@ -89,7 +89,7 @@ export const quickStartApiOnly: ComposedTemplate = {
   tags: ['API', 'PostgreSQL'],
   securityLevel: 'basic',
   environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-east-1', securityLevel: 'basic' },
+    { type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'basic' },
   ],
   blocks: [
     { blockType: 'public-traffic', label: 'Public Traffic', position: { x: 100, y: 200 } },
@@ -121,7 +121,7 @@ export const quickStartDataPipeline: ComposedTemplate = {
   tags: ['SQS', 'Worker', 'Storage'],
   securityLevel: 'basic',
   environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-east-1', securityLevel: 'basic' },
+    { type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'basic' },
   ],
   blocks: [
     { blockType: 'sqs', label: 'SQS', position: { x: 200, y: 200 } },

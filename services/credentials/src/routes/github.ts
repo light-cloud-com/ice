@@ -12,7 +12,7 @@
  */
 
 import { Router, type Response } from 'express';
-import { requireAuth, type AuthRequest } from '@ice-saas/shared';
+import { requireAuth, type AuthRequest } from '@ice/shared';
 import * as githubService from '../services/github.service';
 
 const router = Router();

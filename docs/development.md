@@ -23,7 +23,7 @@ cp .env.example .env
 # Edit .env with your values (see README for required vars)
 
 # 5. Run database migrations
-pnpm --filter @ice-saas/db prisma migrate deploy
+pnpm --filter @ice/db prisma migrate deploy
 
 # 6. Start development
 pnpm dev:saas
@@ -51,9 +51,9 @@ Run commands in specific packages:
 
 ```bash
 # Run in a specific package
-pnpm --filter @ice-saas/db prisma studio
-pnpm --filter @lightcloud/web dev
-pnpm --filter @ice-saas/gateway build
+pnpm --filter @ice/db prisma studio
+pnpm --filter @ice/web dev
+pnpm --filter @ice/gateway build
 
 # Run across all packages
 pnpm -r typecheck
@@ -79,19 +79,19 @@ docker compose down -v   # Stop + delete volumes (reset data)
 
 ```bash
 # Apply migrations
-pnpm --filter @ice-saas/db prisma migrate deploy
+pnpm --filter @ice/db prisma migrate deploy
 
 # Create new migration
-pnpm --filter @ice-saas/db prisma migrate dev --name my_migration
+pnpm --filter @ice/db prisma migrate dev --name my_migration
 
 # Open Prisma Studio (GUI)
-pnpm --filter @ice-saas/db prisma studio
+pnpm --filter @ice/db prisma studio
 
 # Reset database
-pnpm --filter @ice-saas/db prisma migrate reset
+pnpm --filter @ice/db prisma migrate reset
 
 # Generate client after schema changes
-pnpm --filter @ice-saas/db prisma generate
+pnpm --filter @ice/db prisma generate
 ```
 
 ## Adding a New Block
@@ -99,7 +99,7 @@ pnpm --filter @ice-saas/db prisma generate
 1. Create the block file in `packages/blocks/src/<provider>/<category>/`:
 
 ```typescript
-import { defineBlock } from '@ice-saas/block-registry'
+import { defineBlock } from '@ice/block-registry'
 
 export const myBlock = defineBlock({
   id: '<provider>-<name>',

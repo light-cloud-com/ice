@@ -1,5 +1,5 @@
 {
-  "name": "@ice-saas/desktop",
+  "name": "@ice/desktop",
   "version": "0.1.0",
   "description": "ICE Desktop - Electron cross-platform app sharing UI with web",
   "private": true,
@@ -12,12 +12,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@ice-engine/core": "workspace:*",
-    "@ice-saas/blocks": "workspace:*",
-    "@ice-saas/types": "workspace:*",
-    "@ice-saas/ui": "workspace:*",
-    "@ice-saas/provider-gcp": "workspace:*",
-    "@ice-saas/provider-registry": "workspace:*"
+    "@ice/core": "workspace:*",
+    "@ice/blocks": "workspace:*",
+    "@ice/types": "workspace:*",
+    "@ice/ui": "workspace:*",
+    "@ice/provider-gcp": "workspace:*",
+    "@ice/provider-registry": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",

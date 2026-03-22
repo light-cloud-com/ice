@@ -11,8 +11,8 @@
 
 import crypto from 'crypto';
 import { Router, type Response } from 'express';
-import prisma from '@ice-saas/db';
-import { requireAuth, type AuthRequest } from '@ice-saas/shared';
+import prisma from '@ice/db';
+import { requireAuth, type AuthRequest } from '@ice/shared';
 import { sendOrgInviteEmail } from '../services/email.service';
 
 const router = Router();

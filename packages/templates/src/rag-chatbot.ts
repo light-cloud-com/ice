@@ -26,8 +26,8 @@ export const ragChatbotTemplate: ComposedTemplate = {
   tags: ['RAG', 'LLM', 'Vector DB', 'Next.js', 'Python'],
   securityLevel: 'standard',
   environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-east-1', securityLevel: 'standard' },
-    { type: 'staging', name: 'Staging', region: 'us-east-1', securityLevel: 'basic' },
+    { type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' },
+    { type: 'staging', name: 'Staging', region: 'us-central1', securityLevel: 'basic' },
   ],
 
   groups: [

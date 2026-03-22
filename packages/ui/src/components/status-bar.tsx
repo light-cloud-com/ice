@@ -24,11 +24,11 @@ import {
   Loader2,
   XCircle,
 } from 'lucide-react';
-import type { RootState } from '../../store';
-import { selectActiveCard } from '../../store/slices/cards-slice';
-import { STATUS_BAR } from '../../i18n/messages';
-import { IntegrationStatusDots } from '../../features/integrations';
-import { ViewLevelToggle } from '../../features/toolbar/components/view-level-toggle';
+import type { RootState } from '../store';
+import { selectActiveCard } from '../store/slices/cards-slice';
+import { STATUS_BAR } from '../i18n/messages';
+import { IntegrationStatusDots } from '../features/integrations';
+import { ViewLevelToggle } from '../features/toolbar/components/view-level-toggle';
 
 function parseCostRange(cost: string): number {
   const matches = cost.match(/\$(\d+)(?:[–-](\d+))?/);

@@ -214,7 +214,7 @@ const deploySlice = createSlice({
         DEPLOY_SLICE_MESSAGES.DEPLOY_COMPLETED((action.payload.duration_ms / 1000).toFixed(1))
       );
 
-      // Add to history
+      // Add to history (capped at 50 entries)
       state.history.unshift({
         id: `deploy-${Date.now()}`,
         timestamp: Date.now(),
@@ -226,6 +226,9 @@ const deploySlice = createSlice({
         success: true,
         duration_ms: action.payload.duration_ms,
       });
+      if (state.history.length > 50) {
+        state.history = state.history.slice(0, 50);
+      }
     },
     deployError(state, action: PayloadAction<string>) {
       state.status = 'error';

@@ -7,8 +7,8 @@
 
 import { Router, type Response } from 'express';
 import bcrypt from 'bcryptjs';
-import prisma from '@ice-saas/db';
-import { requireAuth, type AuthRequest } from '@ice-saas/shared';
+import prisma from '@ice/db';
+import { requireAuth, type AuthRequest } from '@ice/shared';
 
 const router = Router();
 router.use(requireAuth);

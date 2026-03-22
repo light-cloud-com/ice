@@ -24,11 +24,11 @@ export async function dryRunDeploy(
 
   try {
     // @ts-ignore — resolved at runtime via pnpm workspace
-    const core = await import('@ice-engine/core');
+    const core = await import('@ice/core');
     const { translate_card_to_graph } = core;
 
     if (!translate_card_to_graph) {
-      throw new Error('translate_card_to_graph not available in @ice-engine/core');
+      throw new Error('translate_card_to_graph not available in @ice/core');
     }
 
     const translation = (translate_card_to_graph as any)({

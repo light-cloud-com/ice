@@ -32,34 +32,29 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
 
       - run: pnpm install
 
-      - name: Setup backend
-        working-directory: backend
-        run: |
-          pnpm install
-          npx prisma migrate deploy
+      - name: Run Prisma migrations
+        run: ./packages/db/node_modules/.bin/prisma migrate deploy --schema packages/db/prisma/schema.prisma
         env:
           DATABASE_URL: postgresql://ice:test@localhost:5432/ice_test
 
-      - name: Start backend
-        working-directory: backend
-        run: pnpm dev &
+      - name: Start gateway
+        run: ./apps/gateway/node_modules/.bin/tsx apps/gateway/src/index.ts &
         env:
           DATABASE_URL: postgresql://ice:test@localhost:5432/ice_test
-          JWT_SECRET: test-secret
-          CREDENTIAL_ENCRYPTION_KEY: test-encryption-key
+          JWT_SECRET: ci-test-secret
+          CREDENTIAL_ENCRYPTION_KEY: ci-test-encryption-key-32chars!
           REDIS_URL: redis://localhost:6379
           PORT: 5001
           FRONTEND_URL: http://localhost:5173
+          NODE_ENV: test
 
       - name: Wait for backend
         run: |
@@ -73,7 +68,6 @@ jobs:
       - run: pnpm test:e2e
         env:
           CI: true
-          DATABASE_URL: postgresql://ice:test@localhost:5432/ice_test
 
       - uses: actions/upload-artifact@v4
         if: always()

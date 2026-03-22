@@ -1,6 +1,6 @@
-# ICE SaaS
+# ICE
 
-**Infrastructure Compiler Engine** — a visual infrastructure design and deployment platform by [Light Cloud](https://light-cloud.com).
+**Integrated Cloud Environment** — a visual infrastructure design and deployment platform by [Light Cloud](https://light-cloud.com).
 
 Design cloud infrastructure by dragging blocks onto a canvas, connect them, and deploy real resources to GCP, AWS, or Azure. An AI assistant (Claude) can modify the canvas via natural language. Ships as both a **web SaaS** and an **Electron desktop app** sharing the same UI.
 
@@ -16,7 +16,7 @@ docker compose up -d
 pnpm install
 
 # 3. Run database migrations
-pnpm --filter @ice-saas/db prisma migrate deploy
+pnpm --filter @ice/db prisma migrate deploy
 
 # 4. Start development
 pnpm dev:saas
@@ -56,18 +56,18 @@ ice-saas/
 
 | Package | Description |
 |---|---|
-| [`@ice-saas/types`](docs/packages.md#types) | Shared TypeScript interfaces — API contracts, event shapes |
-| [`@ice-saas/db`](docs/packages.md#db) | Prisma ORM client + schema (PostgreSQL) |
-| [`@ice-saas/shared`](docs/packages.md#shared) | Auth middleware, encryption, Socket.IO service |
-| [`@ice-engine/core`](docs/core-engine.md) | Graph engine, deploy orchestration, multi-cloud importers |
-| [`@ice-saas/block-registry`](docs/plugin-system.md#block-registry) | `defineBlock()` plugin registration API |
-| [`@ice-saas/provider-registry`](docs/plugin-system.md#provider-registry) | `defineProvider()` plugin registration API |
-| [`@ice-saas/template-registry`](docs/plugin-system.md#template-registry) | `defineTemplate()` plugin registration API |
-| [`@ice-saas/blocks`](docs/plugin-system.md#blocks) | All block definitions across 7 cloud providers |
-| [`@ice-saas/templates`](docs/plugin-system.md#templates) | Pre-built infrastructure template compositions |
-| [`@ice-saas/providers/*`](docs/plugin-system.md#providers) | Cloud provider deployer implementations (GCP, AWS, Azure) |
-| [`@ice-saas/ui`](docs/frontend.md#ui-library) | Shared React component library (canvas, panels, primitives) |
-| [`@lightcloud/web`](docs/frontend.md) | Web SaaS frontend (React + Vite) |
+| [`@ice/types`](docs/packages.md#types) | Shared TypeScript interfaces — API contracts, event shapes |
+| [`@ice/db`](docs/packages.md#db) | Prisma ORM client + schema (PostgreSQL) |
+| [`@ice/shared`](docs/packages.md#shared) | Auth middleware, encryption, Socket.IO service |
+| [`@ice/core`](docs/core-engine.md) | Graph engine, deploy orchestration, multi-cloud importers |
+| [`@ice/block-registry`](docs/plugin-system.md#block-registry) | `defineBlock()` plugin registration API |
+| [`@ice/provider-registry`](docs/plugin-system.md#provider-registry) | `defineProvider()` plugin registration API |
+| [`@ice/template-registry`](docs/plugin-system.md#template-registry) | `defineTemplate()` plugin registration API |
+| [`@ice/blocks`](docs/plugin-system.md#blocks) | All block definitions across 7 cloud providers |
+| [`@ice/templates`](docs/plugin-system.md#templates) | Pre-built infrastructure template compositions |
+| [`@ice/providers/*`](docs/plugin-system.md#providers) | Cloud provider deployer implementations (GCP, AWS, Azure) |
+| [`@ice/ui`](docs/frontend.md#ui-library) | Shared React component library (canvas, panels, primitives) |
+| [`@ice/web`](docs/frontend.md) | Web SaaS frontend (React + Vite) |
 
 ### Services (Backend)
 

@@ -5,7 +5,15 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret && process.env.NODE_ENV !== 'test') {
+    throw new Error('JWT_SECRET environment variable is required. Refusing to start with a default secret.');
+  }
+  return secret || 'test-secret';
+}
+
+const JWT_SECRET = getJwtSecret();
 
 export interface AuthRequest extends Request {
   userId?: string;
@@ -34,19 +42,22 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
 
 /**
  * Project-level access middleware.
- * Reads projectId from req.body.projectId or resolves from req.body.cardId.
+ * Reads projectId/cardId from req.body, req.params, or req.query (supports both POST and GET routes).
  */
 export function requireProjectAccess(minRole: 'viewer' | 'editor' | 'owner') {
   return async (req: AuthRequest, res: Response, next: NextFunction) => {
     // Lazy-import to avoid circular deps at startup
-    const prisma = (await import('@ice-saas/db')).default;
+    const prisma = (await import('@ice/db')).default;
 
-    let projectId = req.body?.projectId;
+    // Read projectId/cardId from body, params, or query (supports POST and GET routes)
+    let projectId = req.body?.projectId || req.params?.projectId || (req.query?.projectId as string);
+
+    const cardId = req.body?.cardId || req.params?.cardId || (req.query?.cardId as string);
 
     // Resolve from cardId if no projectId
-    if (!projectId && req.body?.cardId) {
+    if (!projectId && cardId) {
       const card = await prisma.canvasCard.findUnique({
-        where: { id: req.body.cardId },
+        where: { id: cardId },
         select: { project_id: true },
       });
       projectId = card?.project_id;
@@ -59,16 +70,23 @@ export function requireProjectAccess(minRole: 'viewer' | 'editor' | 'owner') {
     const ROLE_LEVEL: Record<string, number> = { viewer: 1, editor: 2, owner: 3 };
     const ORG_ADMIN_ROLES = new Set(['owner', 'admin']);
 
-    // Get the project's org to check org-level role
+    // BE-10: Single query — fetch project with org membership and project membership in one round trip
     const project = await prisma.canvasProject.findUnique({
       where: { id: projectId },
-      select: { organisation_id: true },
+      select: {
+        organisation_id: true,
+        members: {
+          where: { user_id: req.userId! },
+          select: { role: true },
+          take: 1,
+        },
+      },
     });
     if (!project) {
       return res.status(404).json({ message: 'Project not found' });
     }
 
-    // Org admins/owners always have full access
+    // Check org-level role (admins/owners bypass project-level check)
     const orgMember = await prisma.organisationMember.findUnique({
       where: { user_id_organisation_id: { user_id: req.userId!, organisation_id: project.organisation_id } },
     });
@@ -76,10 +94,8 @@ export function requireProjectAccess(minRole: 'viewer' | 'editor' | 'owner') {
       return next();
     }
 
-    // Check project-level membership
-    const pm = await prisma.projectMember.findUnique({
-      where: { project_id_user_id: { project_id: projectId, user_id: req.userId! } },
-    });
+    // Check project-level membership (already fetched with the project query)
+    const pm = project.members[0];
     if (!pm?.role || (ROLE_LEVEL[pm.role] || 0) < (ROLE_LEVEL[minRole] || 0)) {
       return res.status(403).json({ message: 'Insufficient project permissions' });
     }

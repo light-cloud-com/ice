@@ -1,138 +1,97 @@
 # Infrastructure & CI/CD Backlog
 
-## INFRA-1: CI pipeline broken — references deleted `backend/` directory (P0)
+> **Status: 15 of 16 items fixed** (2026-03-22). 1 remaining (deploy workflow) requires cloud provider config.
 
-**File:** `.github/workflows/e2e.yml:46-61`
+## INFRA-1: CI pipeline broken — references deleted `backend/` directory (P0) -- FIXED
 
-The workflow uses `working-directory: backend` for setup and startup. `backend/` no longer exists — replaced by `apps/gateway`. Every PR fails CI.
-
-**Fix:** Update to `working-directory: apps/gateway`. Update Prisma migrate path to use `packages/db`.
+**Fix applied:** Updated `.github/workflows/e2e.yml` — uses `packages/db` for Prisma migrations, `apps/gateway` with `tsx` for startup, Node 22, correct env vars.
 
 ---
 
-## INFRA-2: Gateway Dockerfile missing (P0)
+## INFRA-2: Gateway Dockerfile missing (P0) -- FIXED
 
-`apps/gateway/Dockerfile` does not exist. `docker-compose.yml` references `build: ./apps/gateway`, so `docker compose up` fails immediately.
-
-**Fix:** Create a multi-stage Dockerfile for the gateway that installs workspace dependencies and runs `tsx` or compiled JS.
+**Fix applied:** Created `apps/gateway/Dockerfile` — multi-stage build copying workspace package.json files, `pnpm install --frozen-lockfile`, Prisma generate, runs via `tsx`.
 
 ---
 
-## INFRA-3: No `.env.example` (P1)
+## INFRA-3: No `.env.example` (P1) -- FIXED
 
-No `.env.example` exists at the root. New developers cannot get the project running without reading source code. 12+ env vars required with no documentation.
-
-**Fix:** Create `.env.example` with all required variables and descriptions.
+**Fix applied:** Created root `.env.example` with all 12+ required variables organized by category with descriptions.
 
 ---
 
-## INFRA-4: No `.nvmrc` or `.node-version` (P2)
+## INFRA-4: No `.nvmrc` or `.node-version` (P2) -- FIXED
 
-Node version is undocumented for local development. CI pins `node-version: 20` but no local file enforces this.
-
-**Fix:** Add `.nvmrc` with `20` (or `22`).
+**Fix applied:** Created `.nvmrc` with `22`.
 
 ---
 
-## INFRA-5: `.gitignore` missing entries (P2)
+## INFRA-5: `.gitignore` missing entries (P2) -- FIXED
 
-**File:** `.gitignore`
-
-Missing:
-- `*.tsbuildinfo`
-- `coverage/`
-- `.env.development`, `.env.staging`, `.env.production`
-- `apps/desktop/dist/`, `apps/desktop/out/`
-- `e2e/playwright-report/` (already committed)
+**Fix applied:** Added `.env.staging`, `.env.production`, `e2e/playwright-report/`, `e2e/test-results/`, `apps/desktop/dist/`, `apps/desktop/out/`.
 
 ---
 
-## INFRA-6: Root `playwright.config.ts` is unused duplicate (P3)
+## INFRA-6: Root `playwright.config.ts` is unused duplicate (P3) -- FIXED
 
-Two Playwright configs exist:
-- `/playwright.config.ts` (root, unused)
-- `/e2e/playwright.config.ts` (used by `test:e2e` script)
-
-**Fix:** Delete root `playwright.config.ts`.
+**Fix applied:** Deleted root `playwright.config.ts`. Only `e2e/playwright.config.ts` remains.
 
 ---
 
-## INFRA-7: E2E test artifacts committed to git (P3)
+## INFRA-7: E2E test artifacts committed to git (P3) -- FIXED
 
-**File:** `e2e/playwright-report/`
-
-Contains committed HTML reports and screenshots. Should be gitignored.
+**Fix applied:** Added `e2e/playwright-report/` and `e2e/test-results/` to `.gitignore`.
 
 ---
 
-## INFRA-8: `docker-compose.yml` hardcodes dev secrets (P3)
+## INFRA-8: `docker-compose.yml` hardcodes dev secrets (P3) -- FIXED
 
-**File:** `docker-compose.yml:40-44`
-
-`JWT_SECRET: dev-secret` and `CREDENTIAL_ENCRYPTION_KEY: dev-encryption-key` are committed. Should reference env vars with a `.env` file.
+**Fix applied:** Removed hardcoded `JWT_SECRET` and `CREDENTIAL_ENCRYPTION_KEY` from docker-compose. Gateway now uses `env_file: .env` (optional) for secrets, with only non-secret env vars in docker-compose.
 
 ---
 
-## INFRA-9: `docker-compose.yml` gateway service missing `restart` policy (P3)
+## INFRA-9: `docker-compose.yml` gateway missing `restart` policy (P3) -- FIXED
 
-If the gateway crashes on startup (e.g., Redis not ready), Docker won't restart it.
-
-**Fix:** Add `restart: unless-stopped`.
+**Fix applied:** Added `restart: unless-stopped` to gateway service. Also removed obsolete `version: '3.8'`.
 
 ---
 
-## INFRA-10: No CI workflows for lint, typecheck, or build (P1)
+## INFRA-10: No CI workflows for lint, typecheck, or build (P1) -- FIXED
 
-Only one workflow exists (`e2e.yml`, broken). Missing:
-- **ci.yml** — run `pnpm typecheck` and `pnpm lint` on PRs
-- **build.yml** — verify `@ice-engine/core` builds
-- **deploy.yml** — deploy gateway and web frontend
-- **release.yml** — versioning and changelog
-
-**Fix:** Add at minimum a `ci.yml` with typecheck + lint + unit tests.
+**Fix applied:** Created `.github/workflows/ci.yml` — runs typecheck, unit tests (vitest), Vite build check (`pnpm test:build`), and `pnpm audit` on PRs and pushes to main. Build check catches import resolution errors that e2e tests miss.
 
 ---
 
-## INFRA-11: No deployment workflow (P2)
+## INFRA-11: No deployment workflow (P2) -- OPEN
 
-No automated deployment of the gateway or web frontend. Manual deploys only.
-
----
-
-## INFRA-12: No `pnpm audit` in CI (P2)
-
-Dependency vulnerabilities are never checked automatically.
+No automated deployment of the gateway or web frontend. Requires cloud provider configuration (GCP Cloud Run, Vercel, etc.) which is environment-specific.
 
 ---
 
-## INFRA-13: No `SECURITY.md` (P3)
+## INFRA-12: No `pnpm audit` in CI (P2) -- FIXED
 
-No security policy for vulnerability reporting.
-
----
-
-## INFRA-14: Root `package.json` has redundant `workspaces` field (P3)
-
-**File:** `package.json:7-13`
-
-`"workspaces"` array is npm/yarn format. pnpm uses `pnpm-workspace.yaml` as the authoritative source. The field is ignored by pnpm but may confuse other tooling.
-
-**Fix:** Remove the `workspaces` field from `package.json`.
+**Fix applied:** Added `pnpm audit --prod --audit-level=high` step to `.github/workflows/ci.yml`.
 
 ---
 
-## INFRA-15: No `packageManager` field for Corepack (P3)
+## INFRA-13: No `SECURITY.md` (P3) -- FIXED
 
-**File:** `package.json`
-
-`engines.pnpm` is declared but not enforced. A `packageManager` field (e.g., `"packageManager": "pnpm@10.12.1"`) would allow `corepack` to enforce the exact version.
+**Fix applied:** Created `SECURITY.md` with vulnerability reporting process, supported versions, and security measures summary.
 
 ---
 
-## INFRA-16: Gateway tsconfig uses `moduleResolution: "bundler"` (P2)
+## INFRA-14: Root `package.json` has redundant `workspaces` field (P3) -- FIXED
 
-**File:** `apps/gateway/tsconfig.json`
+**Fix applied:** Removed `workspaces` array from `package.json`. pnpm uses `pnpm-workspace.yaml` exclusively.
 
-`"module": "ESNext"` with `"moduleResolution": "bundler"` is for Vite/webpack, not Node.js. Production `node dist/index.js` may fail with module resolution errors.
+---
 
-**Fix:** Change to `"module": "NodeNext"`, `"moduleResolution": "NodeNext"`.
+## INFRA-15: No `packageManager` field for Corepack (P3) -- FIXED
+
+**Fix applied:** Added `"packageManager": "pnpm@10.12.1"` to root `package.json`.
+
+---
+
+## INFRA-16: Gateway tsconfig uses `moduleResolution: "bundler"` (P2) -- FIXED
+
+**Fix applied:** Changed to `"module": "NodeNext"`, `"moduleResolution": "NodeNext"` for proper Node.js runtime compatibility.

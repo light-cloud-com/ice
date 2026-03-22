@@ -5,7 +5,7 @@
  */
 
 import { Router } from 'express';
-import passport from 'passport';
+import { requireAuth } from '@ice/shared';
 import { getCurrentBilling } from './getCurrentBilling';
 import { estimateCost } from './estimateCost';
 import { getUsage } from './getUsage';
@@ -41,94 +41,94 @@ const router = Router();
 // Owner billing - get billing for all owned organisations
 router.post(
   '/owner-summary',
-  passport.authenticate('jwt', { session: false }),
+  requireAuth,
   (req, res) => getOwnerBilling(req as any, res)
 );
 
 // Owner invoices - get invoices for all owned organisations
 router.post(
   '/owner-invoices',
-  passport.authenticate('jwt', { session: false }),
+  requireAuth,
   (req, res) => getOwnerInvoices(req as any, res)
 );
 
 router.post(
   '/current',
-  passport.authenticate('jwt', { session: false }),
+  requireAuth,
   (req, res) => getCurrentBilling(req as any, res)
 );
 
 router.post(
   '/estimate',
-  passport.authenticate('jwt', { session: false }),
+  requireAuth,
   (req, res) => estimateCost(req as any, res)
 );
 
 router.post(
   '/usage',
-  passport.authenticate('jwt', { session: false }),
+  requireAuth,
   (req, res) => getUsage(req as any, res)
 );
 
 router.post(
   '/usage-history',
-  passport.authenticate('jwt', { session: false }),
+  requireAuth,
   (req, res) => getUsageHistory(req as any, res)
 );
 
 router.post(
   '/invoices',
-  passport.authenticate('jwt', { session: false }),
+  requireAuth,
   (req, res) => listInvoices(req as any, res)
 );
 
 router.post(
   '/invoice/:invoiceId',
-  passport.authenticate('jwt', { session: false }),
+  requireAuth,
   (req, res) => getInvoice(req as any, res)
 );
 
 // Retry payment for a pending invoice
 router.post(
   '/invoice/retry',
-  passport.authenticate('jwt', { session: false }),
+  requireAuth,
   (req, res) => retryInvoice(req as any, res)
 );
 
 router.post(
   '/payment-method/setup',
-  passport.authenticate('jwt', { session: false }),
+  requireAuth,
   (req, res) => createSetupIntent(req as any, res)
 );
 
 router.post(
   '/payment-method',
-  passport.authenticate('jwt', { session: false }),
+  requireAuth,
   (req, res) => updatePaymentMethod(req as any, res)
 );
 
 router.post(
   '/payment-method/remove',
-  passport.authenticate('jwt', { session: false }),
+  requireAuth,
   (req, res) => removePaymentMethod(req as any, res)
 );
 
 router.post(
   '/settings',
-  passport.authenticate('jwt', { session: false }),
+  requireAuth,
   (req, res) => updateSettings(req as any, res)
 );
 
 // Billing details (address, company info, tax)
 router.post(
   '/details',
-  passport.authenticate('jwt', { session: false }),
+  requireAuth,
   (req, res) => updateBillingDetailsRoute(req as any, res)
 );
 
 router.post(
   '/details/get',
-  passport.authenticate('jwt', { session: false }),
+  requireAuth,
   (req, res) => getBillingDetailsRoute(req as any, res)
 );
 

@@ -9,15 +9,15 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './ui/resizable';
-import { ResourcePalette } from '../../features/palette/components/resource-palette';
-import { PropertiesPanel } from '../../features/properties/components/properties-panel';
-import { AiChatPanel, AiChatCollapsedBar } from '../../features/ai/components/ai-chat-panel';
-import { SvgCanvas } from '../../features/canvas/components/svg-canvas';
+import { ResourcePalette } from '../features/palette/components/resource-palette';
+import { PropertiesPanel } from '../features/properties/components/properties-panel';
+import { AiChatPanel, AiChatCollapsedBar } from '../features/ai/components/ai-chat-panel';
+import { SvgCanvas } from '../features/canvas/components/svg-canvas';
 import { StatusBar } from './status-bar';
 import { InlineTableView } from './inline-table-view';
-import { createCard, importToActiveCard, setActiveCard } from '../../store/slices/cards-slice';
+import { createCard, importToActiveCard, setActiveCard } from '../store/slices/cards-slice';
 import axiosInstance from '../api/axios-instance';
-import type { RootState, AppDispatch } from '../../store';
+import type { RootState, AppDispatch } from '../store';
 
 interface MainLayoutProps {
   projectId?: string;

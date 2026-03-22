@@ -2,14 +2,14 @@
 
 ICE uses PostgreSQL via Prisma ORM. The schema is defined in `packages/db/prisma/schema.prisma`.
 
-**Package:** `@ice-saas/db`
+**Package:** `@ice/db`
 **Location:** `packages/db/`
 **ORM:** Prisma 6.17
 
 ## Usage
 
 ```typescript
-import prisma from '@ice-saas/db'
+import prisma from '@ice/db'
 
 const user = await prisma.user.findUnique({ where: { id } })
 ```
@@ -254,11 +254,11 @@ Debug log of every Claude API call.
 
 ```bash
 # Apply all pending migrations
-pnpm --filter @ice-saas/db prisma migrate deploy
+pnpm --filter @ice/db prisma migrate deploy
 
 # Create a new migration
-pnpm --filter @ice-saas/db prisma migrate dev --name description_here
+pnpm --filter @ice/db prisma migrate dev --name description_here
 
 # Reset database (destructive)
-pnpm --filter @ice-saas/db prisma migrate reset
+pnpm --filter @ice/db prisma migrate reset
 ```

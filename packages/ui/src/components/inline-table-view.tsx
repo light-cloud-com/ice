@@ -8,10 +8,10 @@
 import React, { useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
-import { selectActiveCard } from '../../store/slices/cards-slice';
-import { setSelectedNodes } from '../../store/slices/selection-slice';
-import { toggleProperties } from '../../store/slices/ui-slice';
-import type { RootState, AppDispatch } from '../../store';
+import { selectActiveCard } from '../store/slices/cards-slice';
+import { setSelectedNodes } from '../store/slices/selection-slice';
+import { toggleProperties } from '../store/slices/ui-slice';
+import type { RootState, AppDispatch } from '../store';
 
 type SortCol = 'label' | 'iceType' | 'category' | 'provider' | 'behavior';
 type SortDir = 'asc' | 'desc';

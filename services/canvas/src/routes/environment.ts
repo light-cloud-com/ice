@@ -11,7 +11,7 @@
  */
 
 import { Router, type Response } from 'express';
-import { requireAuth, type AuthRequest } from '@ice-saas/shared';
+import { requireAuth, type AuthRequest } from '@ice/shared';
 import * as envService from '../services/environment.service';
 
 const router = Router();

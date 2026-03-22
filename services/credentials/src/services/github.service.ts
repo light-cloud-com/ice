@@ -5,8 +5,8 @@
  * All functions take userId for per-user credential scoping.
  */
 
-import prisma from '@ice-saas/db';
-import { encryptString, decryptString } from '@ice-saas/shared';
+import prisma from '@ice/db';
+import { encryptString, decryptString } from '@ice/shared';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 

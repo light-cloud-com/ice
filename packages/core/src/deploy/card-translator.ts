@@ -85,7 +85,7 @@ const GCP_TYPE_MAP: Record<string, string> = {
   'Network.LoadBalancer': 'gcp.compute.globalForwardingRule',
   'Messaging.CloudPubSub': 'gcp.pubsub.topic',
   'Messaging.Queue': 'gcp.pubsub.topic',
-  'Messaging.Topic': 'gcp.dataflow.job',
+  'Messaging.Topic': 'gcp.pubsub.topic',
   'Messaging.RabbitMQ': 'gcp.container.cluster',
   'Security.Identity': 'gcp.identityplatform.config',
   'Security.Secret': 'gcp.secretmanager.secret',
@@ -98,11 +98,81 @@ const GCP_TYPE_MAP: Record<string, string> = {
   'Networking.Domain': 'gcp.run.domainMapping',
 };
 
+// =============================================================================
+// AWS iceType → deployer type mapping
+// =============================================================================
+
+const AWS_TYPE_MAP: Record<string, string> = {
+  'Application.StaticSite': 'aws.s3.bucket',
+  'Application.SSRSite': 'aws.ecs.service',
+  'Application.Container': 'aws.ecs.service',
+  'Application.BackendAPI': 'aws.ecs.service',
+  'Application.Worker': 'aws.ecs.service',
+  'Application.CronJob': 'aws.events.rule',
+  'Application.ServerlessFunction': 'aws.lambda.function',
+  'Database.PostgreSQL': 'aws.rds.dbInstance',
+  'Database.MySQL': 'aws.rds.dbInstance',
+  'Database.DynamoDB': 'aws.dynamodb.table',
+  'Database.Redis': 'aws.elasticache.cluster',
+  'Database.MongoDB': 'aws.docdb.cluster',
+  'Storage.Bucket': 'aws.s3.bucket',
+  'Storage.ObjectStorage': 'aws.s3.bucket',
+  'Network.Gateway': 'aws.apigateway.restApi',
+  'Network.Internet': 'aws.cloudfront.distribution',
+  'Network.LoadBalancer': 'aws.elbv2.loadBalancer',
+  'Messaging.Queue': 'aws.sqs.queue',
+  'Messaging.Topic': 'aws.sns.topic',
+  'Messaging.CloudPubSub': 'aws.sns.topic',
+  'Security.Identity': 'aws.cognito.userPool',
+  'Security.Secret': 'aws.secretsmanager.secret',
+  'Monitoring.Log': 'aws.cloudwatch.logGroup',
+  'AI.VectorDB': 'aws.opensearch.domain',
+  'AI.LLMGateway': 'aws.bedrock.endpoint',
+  'AI.ModelServing': 'aws.sagemaker.endpoint',
+  'Analytics.DataWarehouse': 'aws.redshift.cluster',
+};
+
+// =============================================================================
+// Azure iceType → deployer type mapping
+// =============================================================================
+
+const AZURE_TYPE_MAP: Record<string, string> = {
+  'Application.StaticSite': 'azure.storage.staticSite',
+  'Application.SSRSite': 'azure.appservice.webApp',
+  'Application.Container': 'azure.containerapp.containerApp',
+  'Application.BackendAPI': 'azure.appservice.webApp',
+  'Application.Worker': 'azure.containerapp.containerApp',
+  'Application.CronJob': 'azure.logicapp.workflow',
+  'Application.ServerlessFunction': 'azure.functions.functionApp',
+  'Database.PostgreSQL': 'azure.dbforpostgresql.server',
+  'Database.MySQL': 'azure.dbformysql.server',
+  'Database.CosmosDB': 'azure.cosmosdb.account',
+  'Database.Redis': 'azure.cache.redis',
+  'Database.MongoDB': 'azure.cosmosdb.account',
+  'Storage.Bucket': 'azure.storage.storageAccount',
+  'Storage.ObjectStorage': 'azure.storage.storageAccount',
+  'Network.Gateway': 'azure.apimanagement.service',
+  'Network.Internet': 'azure.cdn.profile',
+  'Network.LoadBalancer': 'azure.network.loadBalancer',
+  'Messaging.Queue': 'azure.servicebus.queue',
+  'Messaging.Topic': 'azure.servicebus.topic',
+  'Security.Identity': 'azure.activedirectory.application',
+  'Security.Secret': 'azure.keyvault.vault',
+  'Monitoring.Log': 'azure.monitor.logAnalyticsWorkspace',
+  'AI.VectorDB': 'azure.search.searchService',
+  'AI.LLMGateway': 'azure.openai.deployment',
+  'AI.ModelServing': 'azure.machinelearning.endpoint',
+  'Analytics.DataWarehouse': 'azure.synapse.workspace',
+};
+
 // iceTypes that are UI-only and should not be deployed
 const UI_ONLY_TYPES = new Set(['Log.Terminal']);
 
 // iceTypes that are external services (not GCP-managed)
 const EXTERNAL_TYPES = new Set(['Database.MongoDB']);
+
+// Providers that have no deployer support — blocks are design-only
+const DESIGN_ONLY_PROVIDERS = new Set(['alibaba', 'digitalocean', 'kubernetes']);
 
 // =============================================================================
 // Property extractors per GCP service type
@@ -425,6 +495,14 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
   const warnings: string[] = [];
   const skipped: SkippedNode[] = [];
 
+  // ENGINE-3: Warn if provider has no deployer support
+  if (DESIGN_ONLY_PROVIDERS.has(provider)) {
+    warnings.push(
+      `Provider "${provider}" is design-only — deployment is not yet supported. ` +
+      `Blocks can be used for architecture planning but will not be provisioned.`
+    );
+  }
+
   // Build the type map for the target provider
   const type_map = get_type_map(provider);
 
@@ -574,11 +652,9 @@ function get_type_map(provider: DeployProvider): Record<string, string> {
     case 'gcp':
       return GCP_TYPE_MAP;
     case 'aws':
-      // Stub: AWS type map not yet implemented
-      return {};
+      return AWS_TYPE_MAP;
     case 'azure':
-      // Stub: Azure type map not yet implemented
-      return {};
+      return AZURE_TYPE_MAP;
     default:
       return {};
   }

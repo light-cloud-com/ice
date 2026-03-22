@@ -11,10 +11,10 @@ import { useSelector, useDispatch } from 'react-redux';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { ChevronRight, ChevronDown, Building2, Check, Plus } from 'lucide-react';
 import { useResolvePath } from '../hooks/use-resolve-path';
-import { setSelectedOrg, type Organisation } from '../../store/slices/account-slice';
-import { CreateTeamModal } from '../../features/account/components';
+import { setSelectedOrg, type Organisation } from '../store/slices/account-slice';
+import { CreateTeamModal } from '../features/account/components';
 import { toSlug } from '../utils/slug';
-import type { RootState, AppDispatch } from '../../store';
+import type { RootState, AppDispatch } from '../store';
 
 const TOP_ROUTES: Record<string, string> = {
   settings: 'Settings',

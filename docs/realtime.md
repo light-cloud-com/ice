@@ -4,10 +4,10 @@ ICE uses Socket.IO for real-time communication between the gateway and web front
 
 ## Setup
 
-Socket.IO is initialized in the gateway and configured via `@ice-saas/shared/socket`:
+Socket.IO is initialized in the gateway and configured via `@ice/shared/socket`:
 
 ```typescript
-import { setupSocketService } from '@ice-saas/shared/socket'
+import { setupSocketService } from '@ice/shared/socket'
 
 const io = new Server(httpServer, { cors: { origin: FRONTEND_URL } })
 setupSocketService(io)

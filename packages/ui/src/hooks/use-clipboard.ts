@@ -8,15 +8,15 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import type { RootState, AppDispatch } from '../../store';
+import type { RootState, AppDispatch } from '../store';
 import {
   addNodeToCard,
   addEdgeToCard,
   deleteCardNode,
   type CardNode,
   type CardEdge,
-} from '../../store/slices/cards-slice';
-import { setSelectedNodes } from '../../store/slices/selection-slice';
+} from '../store/slices/cards-slice';
+import { setSelectedNodes } from '../store/slices/selection-slice';
 
 interface ClipboardData {
   type: 'ice-clipboard';

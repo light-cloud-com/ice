@@ -7,7 +7,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { DEMO_NODES, DEMO_EDGES } from '../../config/demo-data';
 import { autoLayout, type LayoutNode } from '../../shared/utils/auto-layout';
-import type { ExpandedBlueprint } from '../../config/blocks/types';
+import type { ExpandedBlueprint } from '../../config/blocks';
 
 // =============================================================================
 // Types

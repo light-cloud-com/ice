@@ -51,7 +51,8 @@ export const api_gateway_handler: GCPResourceHandler = {
     const start = Date.now();
 
     try {
-      const op = (await ctx.rest_client.post(
+      // Step 1: Create the API
+      const apiOp = (await ctx.rest_client.post(
         `${BASE_URL}/projects/${ctx.project}/locations/global/apis?apiId=${name}`,
         {
           displayName: name,
@@ -59,7 +60,45 @@ export const api_gateway_handler: GCPResourceHandler = {
         }
       )) as any;
 
-      if (op?.name) await wait_for_operation(ctx, op.name);
+      if (apiOp?.name) await wait_for_operation(ctx, apiOp.name);
+
+      // Step 2: Create API Config (requires an OpenAPI spec)
+      const configName = `${name}-config`;
+      if (properties.openapi_spec) {
+        const configOp = (await ctx.rest_client.post(
+          `${BASE_URL}/projects/${ctx.project}/locations/global/apis/${name}/configs?apiConfigId=${configName}`,
+          {
+            displayName: configName,
+            openapiDocuments: [{
+              document: {
+                path: 'openapi.yaml',
+                contents: Buffer.from(
+                  typeof properties.openapi_spec === 'string'
+                    ? properties.openapi_spec
+                    : JSON.stringify(properties.openapi_spec)
+                ).toString('base64'),
+              },
+            }],
+            labels: properties.labels || {},
+          }
+        )) as any;
+
+        if (configOp?.name) await wait_for_operation(ctx, configOp.name);
+
+        // Step 3: Create the Gateway
+        const gatewayName = `${name}-gw`;
+        const region = (properties.region as string) || ctx.region;
+        const gwOp = (await ctx.rest_client.post(
+          `${BASE_URL}/projects/${ctx.project}/locations/${region}/gateways?gatewayId=${gatewayName}`,
+          {
+            displayName: gatewayName,
+            apiConfig: `projects/${ctx.project}/locations/global/apis/${name}/configs/${configName}`,
+            labels: properties.labels || {},
+          }
+        )) as any;
+
+        if (gwOp?.name) await wait_for_operation(ctx, gwOp.name);
+      }
 
       return result(name, 'create', start, {
         provider_id: `projects/${ctx.project}/locations/global/apis/${name}`,

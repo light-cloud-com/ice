@@ -4,7 +4,7 @@
  * Database.DOManagedDB — DigitalOcean simple managed DB.
  */
 
-import { createBlueprintFromResource } from '@ice-engine/core/resources';
+import { createBlueprintFromResource } from '@ice/core/resources';
 import type { BlockBlueprint } from '../../types';
 
 export const doManagedDbBlueprint: BlockBlueprint = createBlueprintFromResource('do-managed-db', {

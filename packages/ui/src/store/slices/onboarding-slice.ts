@@ -103,6 +103,9 @@ const onboardingSlice = createSlice({
     setTeamName(state, action: PayloadAction<string>) {
       state.teamName = action.payload;
     },
+    setInviteCode(state, action: PayloadAction<string>) {
+      (state as any).inviteCode = action.payload;
+    },
     addInviteEmail(state, action: PayloadAction<string>) {
       if (action.payload.trim() && !state.inviteEmails.includes(action.payload.trim())) {
         state.inviteEmails.push(action.payload.trim());
@@ -158,6 +161,7 @@ export const {
   setDefaultRegion,
   setTeamMode,
   setTeamName,
+  setInviteCode,
   addInviteEmail,
   removeInviteEmail,
   setCloudConnected,

@@ -29,6 +29,9 @@ model User {
   github_token    GitHubToken?
   memberships          OrganisationMember[]
   project_memberships  ProjectMember[]
+  ai_audit_logs        AiAuditLog[]
+  deployments          CanvasDeployment[]
+  ai_conversations     AiConversation[]
 
   @@map("user")
 }
@@ -45,6 +48,7 @@ model Organisation {
   deployment_rules     DeploymentRule[]
   members              OrganisationMember[]
   invitations          Invitation[]
+  ai_audit_logs        AiAuditLog[]
 
   @@map("organisation")
 }
@@ -138,6 +142,8 @@ model CanvasProject {
   organisation         Organisation @relation(fields: [organisation_id], references: [id], onDelete: Cascade)
   creator              User         @relation(fields: [created_by], references: [id])
 
+  @@index([organisation_id])
+  @@index([parent_id])
   @@map("canvas_project")
 }
 
@@ -235,7 +241,10 @@ model CanvasDeployment {
   updated_at  DateTime @updatedAt
 
   deploy_jobs DeployJob[]
+  user        User?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
 
+  @@index([card_id, status, created_at(sort: Desc)])
+  @@index([user_id])
   @@map("canvas_deployment")
 }
 
@@ -255,6 +264,7 @@ model DeployJob {
 
   deployment CanvasDeployment @relation(fields: [deployment_id], references: [id], onDelete: Cascade)
 
+  @@index([status, started_at])
   @@map("deploy_job")
 }
 
@@ -285,6 +295,7 @@ model DeploymentRule {
 
   @@unique([card_id, node_id, branch_pattern])
   @@index([repository])
+  @@index([card_id])
   @@map("deployment_rule")
 }
 
@@ -325,6 +336,7 @@ model WebhookDelivery {
   result      String?                       // "deployed", "skipped", "error"
   created_at  DateTime @default(now())
 
+  @@index([created_at])
   @@map("webhook_delivery")
 }
 
@@ -341,6 +353,7 @@ model AiConversation {
   updated_at      DateTime @updatedAt
 
   messages AiMessage[]
+  user     User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([project_id, user_id])
   @@index([organisation_id])
@@ -367,6 +380,8 @@ model AiMessage {
 
 model AiAuditLog {
   id               String   @id @default(cuid())
+  user_id          String?
+  organisation_id  String?
   intent           String
   canvas_before    Json                        // { nodeCount, edgeCount, nodes, edges }
   operations       Json     @default("[]")     // AiCanvasOp[]
@@ -379,6 +394,11 @@ model AiAuditLog {
   error            String?
   created_at       DateTime @default(now())
 
+  user             User?         @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  organisation     Organisation? @relation(fields: [organisation_id], references: [id], onDelete: SetNull)
+
   @@index([created_at(sort: Desc)])
+  @@index([user_id])
+  @@index([organisation_id])
   @@map("ai_audit_log")
 }

@@ -5,7 +5,7 @@
  */
 
 import { Router, type Response } from 'express';
-import { requireAuth, type AuthRequest } from '@ice-saas/shared';
+import { requireAuth, type AuthRequest } from '@ice/shared';
 import * as providerService from '../services/provider.service';
 
 const router = Router();

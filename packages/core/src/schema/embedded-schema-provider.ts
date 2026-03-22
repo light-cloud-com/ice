@@ -226,8 +226,8 @@ export class EmbeddedSchemaProvider implements GraphSchemaProvider {
     }
 
     try {
-      // Dynamically import the schemas db module (consolidated from @ice-engine/schemas).
-      // The module may not export get_schema_registry yet (stub), so we type-check at runtime.
+      // Dynamically import the schemas db module.
+      // Graceful fallback: if the module or export doesn't exist, the provider runs without a registry.
       const schemas: Record<string, unknown> | null = await import('../schemas/db/index.js').catch(
         () => null
       );

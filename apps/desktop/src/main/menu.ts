@@ -385,34 +385,34 @@ export function create_application_menu(): void {
       submenu: [
         {
           label: 'Getting Started',
-          click: () => shell.openExternal('https://lightcloud.dev/docs/getting-started'),
+          click: () => shell.openExternal('https://light-cloud.com/docs/getting-started'),
         },
         {
           label: 'Documentation',
-          click: () => shell.openExternal('https://lightcloud.dev/docs'),
+          click: () => shell.openExternal('https://light-cloud.com/docs'),
         },
         {
           label: 'API Reference',
-          click: () => shell.openExternal('https://lightcloud.dev/api'),
+          click: () => shell.openExternal('https://light-cloud.com/api'),
         },
         { type: 'separator' },
         {
           label: 'Community Forum',
-          click: () => shell.openExternal('https://community.lightcloud.dev'),
+          click: () => shell.openExternal('https://community.light-cloud.com'),
         },
         {
           label: 'GitHub',
-          click: () => shell.openExternal('https://github.com/lightcloud/lightcloud'),
+          click: () => shell.openExternal('https://github.com/light-cloud-com/ice'),
         },
         { type: 'separator' },
         {
           label: 'Report Issue',
-          click: () => shell.openExternal('https://github.com/lightcloud/lightcloud/issues/new'),
+          click: () => shell.openExternal('https://github.com/light-cloud-com/ice/issues/new'),
         },
         {
           label: 'Request Feature',
           click: () =>
-            shell.openExternal('https://github.com/lightcloud/lightcloud/discussions/new'),
+            shell.openExternal('https://github.com/light-cloud-com/ice/discussions/new'),
         },
         { type: 'separator' },
         {

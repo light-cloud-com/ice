@@ -9,8 +9,8 @@
 
 import { Router, type Request, type Response, type NextFunction } from 'express';
 import passport from 'passport';
-import { generateToken, generateRefreshToken } from '@ice-saas/shared';
-import prisma from '@ice-saas/db';
+import { generateToken, generateRefreshToken } from '@ice/shared';
+import prisma from '@ice/db';
 
 const router = Router();
 
@@ -52,7 +52,7 @@ async function redirectWithToken(res: Response, user: any, req?: Request) {
     maxAge: 30 * 24 * 60 * 60 * 1000,
   });
 
-  res.redirect(`${getFrontendUrl(req)}/auth/callback?token=${accessToken}`);
+  res.redirect(`${getFrontendUrl(req)}/auth/callback#token=${accessToken}`);
 }
 
 function redirectWithError(res: Response, error: string, req?: Request) {

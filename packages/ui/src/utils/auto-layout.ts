@@ -11,11 +11,11 @@
  * 4. Maintain hierarchy (children positioned relative to parents)
  */
 
-import { isContainer as isContainerType } from '../../config/containment-rules';
+import { isContainer as isContainerType } from '../config/containment-rules';
 import {
   computeCompactNodeHeight,
   computeCompactNodeWidth,
-} from '../../features/canvas/components/nodes/svg-compact-node';
+} from '../features/canvas/components/nodes/svg-compact-node';
 
 // =============================================================================
 // Constants - Unified Node Sizes (Mac-style)

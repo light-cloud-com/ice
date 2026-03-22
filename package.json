@@ -4,20 +4,19 @@
   "description": "ICE SaaS - Integrated Cloud Environment (Web + Backend)",
   "private": true,
   "type": "module",
-  "workspaces": [
-    "packages/*",
-    "packages/providers/*",
-    "services/*",
-    "apps/*"
-  ],
+  "packageManager": "pnpm@10.12.1",
   "scripts": {
-    "dev:web": "pnpm --filter @lightcloud/web dev",
-    "dev:gateway": "pnpm --filter @ice-saas/gateway dev",
+    "dev:web": "pnpm --filter @ice/web dev",
+    "dev:gateway": "pnpm --filter @ice/gateway dev",
     "dev:saas": "concurrently \"pnpm dev:gateway\" \"pnpm dev:web\"",
-    "build:web": "pnpm --filter @lightcloud/web build",
-    "build:core": "pnpm --filter @ice-engine/core build",
-    "build:gateway": "pnpm --filter @ice-saas/gateway build",
+    "dev:all": "docker compose up -d redis postgres && concurrently -n gw,web -c blue,green \"pnpm dev:gateway\" \"pnpm dev:web\"",
+    "build": "pnpm -r --workspace-concurrency=1 build",
+    "build:web": "pnpm --filter @ice/web build",
+    "build:core": "pnpm --filter @ice/core build",
+    "build:gateway": "pnpm --filter @ice/gateway build",
+    "test:unit": "vitest run --root .",
     "test:e2e": "playwright test --config e2e/playwright.config.ts",
+    "test:build": "pnpm --filter @ice/web exec vite build",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
@@ -27,11 +26,12 @@
     "@playwright/test": "^1.41.0",
     "concurrently": "^8.2.0",
     "prettier": "^3.2.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.9"
   },
   "engines": {
-    "node": ">=18.0.0",
-    "pnpm": ">=8.0.0"
+    "node": ">=22.0.0",
+    "pnpm": ">=10.0.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

@@ -75,7 +75,7 @@ Every Claude API call is logged to `AiAuditLog`:
 
 ## Frontend Integration
 
-### Operation Executor (`@ice-saas/ui/ai`)
+### Operation Executor (`@ice/ui/ai`)
 
 The `operation-executor.ts` receives `AiCanvasOp[]` and dispatches Redux actions:
 

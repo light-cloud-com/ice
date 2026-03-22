@@ -113,11 +113,12 @@ function build_function_spec(
   properties: Record<string, unknown>,
   ctx: GCPHandlerContext
 ): Record<string, unknown> {
-  return {
+  const spec: Record<string, unknown> = {
     name,
     buildConfig: {
       runtime: properties.runtime || 'nodejs20',
       entryPoint: properties.entry_point || 'handler',
+      source: {} as Record<string, unknown>,
     },
     serviceConfig: {
       availableMemory: `${properties.memory_mb || 256}Mi`,
@@ -126,6 +127,35 @@ function build_function_spec(
     },
     labels: properties.labels || {},
   };
+
+  // ENGINE-9: Cloud Functions v2 requires a source — attach storage or repo source
+  const buildConfig = spec.buildConfig as Record<string, unknown>;
+  if (properties.source_bucket && properties.source_object) {
+    buildConfig.source = {
+      storageSource: {
+        bucket: properties.source_bucket,
+        object: properties.source_object,
+      },
+    };
+  } else if (properties.source_repo) {
+    buildConfig.source = {
+      repoSource: {
+        repoName: properties.source_repo,
+        branchName: (properties.source_branch as string) || 'main',
+        dir: (properties.source_dir as string) || '/',
+      },
+    };
+  } else {
+    // Default: inline source upload expected via the pipeline build step
+    buildConfig.source = {
+      storageSource: {
+        bucket: `${ctx.project}-gcf-source`,
+        object: `${name}/function-source.zip`,
+      },
+    };
+  }
+
+  return spec;
 }
 
 function extract_region(provider_id: string): string {

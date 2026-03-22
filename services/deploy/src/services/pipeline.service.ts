@@ -6,9 +6,9 @@
  */
 
 import crypto from 'crypto';
-import prisma from '@ice-saas/db';
-import { emitPipelineUpdate, emitCardPipelineUpdate } from '@ice-saas/shared';
-// github.service functionality available via @ice-saas/service-credentials if needed
+import prisma from '@ice/db';
+import { emitPipelineUpdate, emitCardPipelineUpdate } from '@ice/shared';
+// github.service functionality available via @ice/service-credentials if needed
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -690,7 +690,7 @@ async function getGitHubToken(userId: string): Promise<string | null> {
   const record = await prisma.gitHubToken.findUnique({ where: { user_id: userId } });
   if (!record) return null;
   try {
-    const { decryptString } = await import('@ice-saas/shared');
+    const { decryptString } = await import('@ice/shared');
     return decryptString(record.access_token);
   } catch {
     return record.access_token;

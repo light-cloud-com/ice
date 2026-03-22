@@ -7,7 +7,7 @@
 
 import { Queue, Worker, type Job } from 'bullmq';
 import IORedis from 'ioredis';
-import prisma from '@ice-saas/db';
+import prisma from '@ice/db';
 import { applyDeployment } from './deploy.service';
 import { updateEventProgress, failEvent, type DeployStep } from './pipeline.service';
 import { buildFromSource, cleanupBuild } from './build.service';
@@ -197,8 +197,8 @@ async function processPipelineJob(data: any) {
         await updateEventProgress(eventId, phase, stageLabel, mkStep(step, status, message));
       },
       // Stream individual build lines via Socket.IO + persist to DB
-      (line: string) => {
-        const { emitPipelineUpdate } = require('@ice-saas/shared');
+      async (line: string) => {
+        const { emitPipelineUpdate } = await import('@ice/shared');
         emitPipelineUpdate(nodeId, {
           nodeId,
           cardId,

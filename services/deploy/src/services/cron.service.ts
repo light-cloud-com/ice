@@ -7,7 +7,7 @@
  */
 
 import cron from 'node-cron';
-import prisma from '@ice-saas/db';
+import prisma from '@ice/db';
 
 export function startCronJobs() {
   // Every hour: clean expired refresh tokens
@@ -71,6 +71,21 @@ export function startCronJobs() {
       }
     } catch (err: any) {
       console.error('Cron: stuck job detection error:', err.message);
+    }
+  });
+
+  // DB-5: Daily at 4am: delete webhook delivery records older than 7 days
+  cron.schedule('0 4 * * *', async () => {
+    try {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const result = await prisma.webhookDelivery.deleteMany({
+        where: { created_at: { lt: sevenDaysAgo } },
+      });
+      if (result.count > 0) {
+        console.log(`Pruned ${result.count} old webhook delivery records`);
+      }
+    } catch (err: any) {
+      console.error('Cron: webhook delivery prune error:', err.message);
     }
   });
 

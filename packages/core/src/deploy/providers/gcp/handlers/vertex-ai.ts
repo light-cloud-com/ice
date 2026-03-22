@@ -52,8 +52,10 @@ export const vertex_ai_handler: GCPResourceHandler = {
     const region = (properties.region as string) || ctx.region;
     const base = `https://${region}-aiplatform.googleapis.com/v1`;
 
-    // Determine resource type from context
-    const is_index = name.includes('vector') || name.includes('index');
+    // Determine resource type from explicit property, fall back to name heuristic
+    const explicit_type = properties.vertex_type as string | undefined;
+    const is_index = explicit_type === 'index'
+      || (!explicit_type && (name.includes('vector') || name.includes('index')));
     const type = is_index ? 'gcp.aiplatform.index' : 'gcp.aiplatform.endpoint';
 
     try {

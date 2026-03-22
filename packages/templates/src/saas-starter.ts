@@ -25,9 +25,9 @@ export const saasStarterTemplate: ComposedTemplate = {
   tags: ['Next.js', 'PostgreSQL', 'Redis', 'Microservices', 'Observability'],
   securityLevel: 'standard',
   environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-east-1', securityLevel: 'standard' },
-    { type: 'staging', name: 'Staging', region: 'us-east-1', securityLevel: 'standard' },
-    { type: 'development', name: 'Development', region: 'us-east-1', securityLevel: 'basic' },
+    { type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' },
+    { type: 'staging', name: 'Staging', region: 'us-central1', securityLevel: 'standard' },
+    { type: 'development', name: 'Development', region: 'us-central1', securityLevel: 'basic' },
   ],
 
   groups: [

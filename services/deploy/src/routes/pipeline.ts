@@ -11,7 +11,7 @@
  */
 
 import { Router, type Response } from 'express';
-import { requireAuth, type AuthRequest } from '@ice-saas/shared';
+import { requireAuth, type AuthRequest } from '@ice/shared';
 import * as pipelineService from '../services/pipeline.service';
 
 const router = Router();
@@ -134,7 +134,7 @@ router.post('/trigger', async (req: AuthRequest, res: Response) => {
 
     // Queue the pipeline job
     const { getDeployQueue } = await import('../services/queue.service');
-    const rule = await (await import('@ice-saas/db')).default.deploymentRule.findUnique({
+    const rule = await (await import('@ice/db')).default.deploymentRule.findUnique({
       where: { id: ruleId },
     });
 
@@ -178,7 +178,7 @@ router.post('/retry', async (req: AuthRequest, res: Response) => {
     const { eventId } = req.body;
     if (!eventId) return res.status(400).json({ success: false, error: 'eventId is required' });
 
-    const prisma = (await import('@ice-saas/db')).default;
+    const prisma = (await import('@ice/db')).default;
     const oldEvent = await prisma.deploymentEvent.findUnique({
       where: { id: eventId },
       include: { rule: true },

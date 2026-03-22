@@ -11,23 +11,24 @@
  *   /team                     → Team management
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, memo } from 'react';
+import { ErrorBoundary } from '@ui/shared/components/error-boundary';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { LayoutGrid, Rocket, Sun, Moon, PenTool, Table2, PanelLeftClose, PanelLeft, Github, Undo2, Redo2 } from 'lucide-react';
-import { MainLayout } from '../shared/components/main-layout';
-import { ProjectWizard } from '../features/wizard';
-import { DebugOverlay } from '../features/debug/components/debug-overlay';
-import { useMenuActions } from '../shared/hooks/use-menu-actions';
-import { useTheme } from '../shared/hooks/use-theme';
-import { useResolvePath } from '../shared/hooks/use-resolve-path';
-import { initializeGraph } from '../store/slices/graph-slice';
-import { togglePalette } from '../store/slices/ui-slice';
-import { autoOrganizeCard, undoCardChange, redoCardChange, selectCanUndo, selectCanRedo } from '../store/slices/cards-slice';
-import { openDeployPanel } from '../store/slices/deploy-slice';
-import { fetchProfile } from '../store/slices/account-slice';
-import { setActiveProject } from '../store/slices/projects-slice';
-import { isAuthenticated } from '../shared/api/auth';
+import { MainLayout } from '@ui/shared/components/main-layout';
+import { ProjectWizard } from '@ui/features/wizard';
+import { DebugOverlay } from '@ui/features/debug/components/debug-overlay';
+import { useMenuActions } from '@ui/shared/hooks/use-menu-actions';
+import { useTheme } from '@ui/shared/hooks/use-theme';
+import { useResolvePath } from '@ui/shared/hooks/use-resolve-path';
+import { initializeGraph } from '@ui/store/slices/graph-slice';
+import { togglePalette } from '@ui/store/slices/ui-slice';
+import { autoOrganizeCard, undoCardChange, redoCardChange, selectCanUndo, selectCanRedo } from '@ui/store/slices/cards-slice';
+import { openDeployPanel } from '@ui/store/slices/deploy-slice';
+import { fetchProfile } from '@ui/store/slices/account-slice';
+import { setActiveProject } from '@ui/store/slices/projects-slice';
+import { isAuthenticated } from '@ui/shared/api/auth';
 import { LoginPage } from '../pages/login';
 import { SignupPage } from '../pages/signup';
 import { AuthCallbackPage } from '../pages/auth-callback';
@@ -36,23 +37,23 @@ import { ProjectCanvas } from '../pages/project/canvas';
 import { ProjectSettings } from '../pages/project/settings';
 import { ProjectDeployments } from '../pages/project/deployments';
 import { ProjectTableView } from '../pages/project/table-view';
-import { UserSettingsPage, TeamPage, ProfileAvatar } from '../features/account/components';
-import { OnboardingPage, OnboardingChecklist } from '../features/onboarding';
+import { UserSettingsPage, TeamPage, ProfileAvatar } from '@ui/features/account/components';
+import { OnboardingPage, OnboardingChecklist } from '@ui/features/onboarding';
 import { InviteAcceptPage } from '../pages/invite-accept';
-import { Breadcrumbs } from '../shared/components/breadcrumbs';
-import { GitHubConnectModal } from '../features/integrations/components/github-connect-modal';
-import { ProviderConnectModal } from '../features/integrations/components/provider-connect-modal';
-import { DeployPanel } from '../features/deploy/components/deploy-panel';
-import { EnvironmentTabBar } from '../features/environments/components/environment-tab-bar';
-import { PromoteModal } from '../features/environments/components/promote-modal';
-import { checkGitHubConnection } from '../store/slices/integrations-slice';
+import { Breadcrumbs } from '@ui/shared/components/breadcrumbs';
+import { GitHubConnectModal } from '@ui/features/integrations/components/github-connect-modal';
+import { ProviderConnectModal } from '@ui/features/integrations/components/provider-connect-modal';
+import { DeployPanel } from '@ui/features/deploy/components/deploy-panel';
+import { EnvironmentTabBar } from '@ui/features/environments/components/environment-tab-bar';
+import { PromoteModal } from '@ui/features/environments/components/promote-modal';
+import { checkGitHubConnection } from '@ui/store/slices/integrations-slice';
 import gcpIcon from 'devicon/icons/googlecloud/googlecloud-original.svg';
 import awsIcon from 'devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg';
 import azureIcon from 'devicon/icons/azure/azure-original.svg';
-import { cn } from '../shared/utils/cn';
-import logoDark from '../assets/logo-dark.png';
-import logoLight from '../assets/logo-light.png';
-import type { RootState, AppDispatch } from '../store';
+import { cn } from '@ui/shared/utils/cn';
+import logoDark from '@ui/assets/logo-dark.png';
+import logoLight from '@ui/assets/logo-light.png';
+import type { RootState, AppDispatch } from '@ui/store';
 
 // ── Auth ────────────────────────────────────────────────────────────────────
 
@@ -63,7 +64,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
 // ── App Bar ─────────────────────────────────────────────────────────────────
 
-const AppBar: React.FC = () => {
+const AppBar: React.FC = memo(() => {
   const { isDark, toggle, fontSize, increaseFontSize, decreaseFontSize } = useTheme();
   const dispatch = useDispatch<AppDispatch>();
   const deployIsOpen = useSelector((s: RootState) => s.deploy.isOpen);
@@ -155,7 +156,8 @@ const AppBar: React.FC = () => {
       <PromoteModal />
     </>
   );
-};
+});
+AppBar.displayName = 'AppBar';
 
 const BarBtn: React.FC<{ id?: string; icon: React.ElementType; onClick: () => void; tip?: string; className?: string; disabled?: boolean }> = ({ id, icon: I, onClick, tip, className, disabled }) => (
   <button id={id} onClick={onClick} aria-label={tip} title={tip} disabled={disabled} className={cn('p-1.5 rounded text-ice-text-3 hover:text-ice-text-1 hover:bg-ice-hover transition-[color,background-color]', disabled && 'opacity-30 pointer-events-none', className)}>
@@ -380,8 +382,10 @@ const DynamicContent: React.FC = () => {
 // ── Page layout for account pages ───────────────────────────────────────────
 
 const PageLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // FE-8: fetchProfile is dispatched once at DynamicContent level via account-slice thunk idempotency
   const dispatch = useDispatch<AppDispatch>();
-  useEffect(() => { dispatch(fetchProfile()); }, [dispatch]);
+  const user = useSelector((s: RootState) => s.account.user);
+  useEffect(() => { if (!user) dispatch(fetchProfile()); }, [dispatch, user]);
 
   return (
     <div className="h-full flex flex-col bg-ice-surface">
@@ -394,18 +398,20 @@ const PageLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 // ── Root ─────────────────────────────────────────────────────────────────────
 
 const App: React.FC = () => (
-  <BrowserRouter>
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
-      <Route path="/auth/callback" element={<AuthCallbackPage />} />
-      <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
-      <Route path="/invite/:token" element={<InviteAcceptPage />} />
-      <Route path="/settings" element={<ProtectedRoute><PageLayout><UserSettingsPage /></PageLayout></ProtectedRoute>} />
-      <Route path="/team" element={<ProtectedRoute><PageLayout><TeamPage /></PageLayout></ProtectedRoute>} />
-      <Route path="/*" element={<ProtectedRoute><DynamicContent /></ProtectedRoute>} />
-    </Routes>
-  </BrowserRouter>
+  <ErrorBoundary name="App">
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/auth/callback" element={<AuthCallbackPage />} />
+        <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
+        <Route path="/invite/:token" element={<InviteAcceptPage />} />
+        <Route path="/settings" element={<ProtectedRoute><PageLayout><UserSettingsPage /></PageLayout></ProtectedRoute>} />
+        <Route path="/team" element={<ProtectedRoute><PageLayout><TeamPage /></PageLayout></ProtectedRoute>} />
+        <Route path="/*" element={<ProtectedRoute><ErrorBoundary name="Canvas"><DynamicContent /></ErrorBoundary></ProtectedRoute>} />
+      </Routes>
+    </BrowserRouter>
+  </ErrorBoundary>
 );
 
 export default App;

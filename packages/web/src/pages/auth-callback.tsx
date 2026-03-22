@@ -7,7 +7,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
-import { setAccessToken, getCurrentUser } from '../shared/api/auth';
+import { setAccessToken, getCurrentUser } from '@ui/shared/api/auth';
 
 export const AuthCallbackPage: React.FC = () => {
   const navigate = useNavigate();
@@ -16,8 +16,16 @@ export const AuthCallbackPage: React.FC = () => {
 
   useEffect(() => {
     const handleCallback = async () => {
-      const token = searchParams.get('token');
-      const err = searchParams.get('error');
+      // Read token from URL fragment (#token=...) to prevent token leakage via logs/proxies
+      const hash = window.location.hash.substring(1); // remove leading #
+      const hashParams = new URLSearchParams(hash);
+      const token = hashParams.get('token') || searchParams.get('token');
+      const err = hashParams.get('error') || searchParams.get('error');
+
+      // Clear the hash from the URL to prevent token remaining in browser history
+      if (window.location.hash) {
+        window.history.replaceState(null, '', window.location.pathname);
+      }
 
       if (err) {
         setError(err);

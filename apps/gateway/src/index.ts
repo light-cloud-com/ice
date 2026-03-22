@@ -1,5 +1,5 @@
 /**
- * ICE SaaS Gateway — API Entry Point
+ * ICE Gateway — API Entry Point
  *
  * Composes all service routers into a single Express app with
  * shared middleware, Socket.IO, rate limiting, and Passport OAuth.
@@ -15,26 +15,31 @@ import { createServer } from 'http';
 import { Server as SocketServer } from 'socket.io';
 import { rateLimit } from 'express-rate-limit';
 
-import { setupSocketService } from '@ice-saas/shared';
-import { createIamRouter, configurePassportOAuth } from '@ice-saas/service-iam';
-import { createCanvasRouter } from '@ice-saas/service-canvas';
-import { createDeployRouter, startDeployWorker, startCronJobs } from '@ice-saas/service-deploy';
-import { createAiRouter } from '@ice-saas/service-ai';
-import { createEngineRouter } from '@ice-saas/service-engine';
-import { createCredentialsRouter } from '@ice-saas/service-credentials';
-import { createBillingRouter } from '@ice-saas/service-billing';
+import { setupSocketService } from '@ice/shared';
+import { createIamRouter, configurePassportOAuth } from '@ice/service-iam';
+import { createCanvasRouter } from '@ice/service-canvas';
+import { createDeployRouter, startDeployWorker, startCronJobs } from '@ice/service-deploy';
+import { createAiRouter } from '@ice/service-ai';
+import { createEngineRouter } from '@ice/service-engine';
+import { createCredentialsRouter } from '@ice/service-credentials';
+import { createBillingRouter } from '@ice/service-billing';
 
 const app = express();
 const httpServer = createServer(app);
 
 const PORT = parseInt(process.env.PORT || '5001', 10);
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+// BE-13: Parse and validate CORS origins once at startup
+const ALLOWED_ORIGINS = (process.env.FRONTEND_URL || 'http://localhost:5173')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
 
 // ─── Socket.IO ──────────────────────────────────────────────────────────────
 
 const io = new SocketServer(httpServer, {
   cors: {
-    origin: FRONTEND_URL.split(','),
+    origin: ALLOWED_ORIGINS,
     credentials: true,
   },
 });
@@ -43,19 +48,38 @@ setupSocketService(io);
 
 // ─── Middleware ──────────────────────────────────────────────────────────────
 
-app.use(helmet({ contentSecurityPolicy: false }));
+// BE-14: Scoped CSP for API gateway — no inline scripts needed
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'none'"],
+      frameAncestors: ["'none'"],
+    },
+  },
+}));
 app.use(cors({
-  origin: FRONTEND_URL.split(','),
+  origin: ALLOWED_ORIGINS,
   credentials: true,
 }));
 app.use(cookieParser());
+
+// Stripe webhook needs raw body for signature verification — mount before express.json()
+app.use('/api/billing/webhook/stripe', express.raw({ type: 'application/json' }));
+
+// GitHub webhook needs raw body for HMAC verification — mount before express.json()
+app.use('/api/webhooks/github', express.raw({ type: 'application/json' }));
+
 app.use(express.json({ limit: '10mb' }));
 
+// BE-8: Key by userId when authenticated, fall back to IP for anonymous requests
 const limiter = rateLimit({
   windowMs: 60 * 1000,
   max: 200,
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: (req) => {
+    return (req as any).userId || req.ip || 'unknown';
+  },
 });
 app.use(limiter);
 
@@ -78,7 +102,7 @@ app.use('/api', createDeployRouter());
 app.use('/api', createAiRouter());
 app.use('/api', createEngineRouter());
 app.use('/api', createCredentialsRouter());
-app.use('/api', createBillingRouter());
+createBillingRouter().then((r) => app.use('/api', r));
 
 // ─── Error handler ──────────────────────────────────────────────────────────
 
@@ -98,5 +122,30 @@ httpServer.listen(PORT, () => {
   startDeployWorker();
   startCronJobs();
 });
+
+// ─── Graceful Shutdown ─────────────────────────────────────────────────────
+
+function shutdown(signal: string) {
+  console.log(`\n${signal} received — shutting down gracefully...`);
+
+  // Stop accepting new connections
+  httpServer.close(() => {
+    console.log('HTTP server closed');
+  });
+
+  // Close Socket.IO connections
+  io.close(() => {
+    console.log('Socket.IO closed');
+  });
+
+  // Give in-flight requests time to complete (30s timeout)
+  setTimeout(() => {
+    console.log('Shutdown timeout — forcing exit');
+    process.exit(1);
+  }, 30_000).unref();
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
 
 export { io };

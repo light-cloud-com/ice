@@ -5,7 +5,7 @@
  * Fire-and-forget writes — never blocks the response.
  */
 
-import prisma from '@ice-saas/db';
+import prisma from '@ice/db';
 
 interface AuditEntry {
   id: string;

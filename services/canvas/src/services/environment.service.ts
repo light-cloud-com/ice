@@ -5,7 +5,7 @@
  * Other environments are clones that can diverge and be promoted back.
  */
 
-import prisma from '@ice-saas/db';
+import prisma from '@ice/db';
 
 const MAX_ENVIRONMENTS = 20;
 

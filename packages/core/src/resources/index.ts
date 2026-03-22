@@ -3,7 +3,7 @@
  *
  * This barrel file only exports modules that are safe to use in the
  * browser renderer (no Node.js APIs like fs, path, child_process).
- * Import as: import { ... } from '@ice-engine/core/resources'
+ * Import as: import { ... } from '@ice/core/resources'
  */
 
 // Cloud provider registry

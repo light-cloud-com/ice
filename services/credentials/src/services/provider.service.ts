@@ -4,8 +4,8 @@
  * Extracted from routes/providers.ts + encryption from lib/crypto.ts
  */
 
-import prisma from '@ice-saas/db';
-import { encryptCredentials, decryptCredentials } from '@ice-saas/shared';
+import prisma from '@ice/db';
+import { encryptCredentials, decryptCredentials } from '@ice/shared';
 
 export async function getCredentialStatus(orgId: string, provider: string) {
   const cred = await prisma.providerCredential.findUnique({
@@ -115,7 +115,7 @@ export async function validateGCPCredentials(credentials: Record<string, string>
 
       // Try live auth, but accept the key even if GCP is unreachable
       try {
-        // @ts-ignore — available via @ice-engine/core dependency
+        // @ts-ignore — available via @ice/core dependency
         const { GoogleAuth } = await import('google-auth-library');
         const auth = new GoogleAuth({
           credentials: parsed,

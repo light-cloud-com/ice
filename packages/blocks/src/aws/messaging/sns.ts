@@ -4,7 +4,7 @@
  * Messaging.SNS — pub/sub notifications.
  */
 
-import { createBlueprintFromResource } from '@ice-engine/core/resources';
+import { createBlueprintFromResource } from '@ice/core/resources';
 import type { BlockBlueprint } from '../../types';
 
 export const snsBlueprint: BlockBlueprint = createBlueprintFromResource('event-bus', {

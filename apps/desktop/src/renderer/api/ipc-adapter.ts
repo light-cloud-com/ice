@@ -4,7 +4,7 @@
  * Implements IceAPI interface using Electron IPC (window.api)
  * instead of HTTP requests used by the web app.
  */
-import type { IceAPI } from '@ice-saas/ui';
+import type { IceAPI } from '@ice/ui';
 
 declare global {
   interface Window {

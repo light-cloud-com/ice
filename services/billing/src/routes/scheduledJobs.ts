@@ -20,15 +20,15 @@ import {
 } from '../../services/trialService';
 
 import prisma from '../../lib/prisma';
-// Simple API key check for scheduled jobs
-// In production, use Cloud Scheduler with OIDC authentication
+// API key check for scheduled jobs — always required
 const verifySchedulerAuth = (req: Request): boolean => {
   const authHeader = req.headers.authorization;
   const schedulerKey = process.env.SCHEDULER_API_KEY;
 
-  // If no key is configured, allow local development
+  // Deny access if no key is configured — prevents unauthenticated access in production
   if (!schedulerKey) {
-    return true;
+    console.warn('[Billing] SCHEDULER_API_KEY not configured — all scheduled job requests will be rejected');
+    return false;
   }
 
   return authHeader === `Bearer ${schedulerKey}`;

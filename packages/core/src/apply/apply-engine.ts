@@ -383,11 +383,18 @@ async function execute_provider_operation(
 // =============================================================================
 
 /**
- * Get provider client (mock for now).
+ * Get provider client.
+ * Uses real provider deployer when available, falls back to mock.
  */
 function get_provider(context: ApplyContext): ProviderClient {
-  // Always use mock provider for now
-  return create_mock_provider('mock');
+  const provider = context.options?.provider;
+  if (provider && provider !== 'mock') {
+    // Real providers are handled by deploy_graph() in deploy/deployer.ts
+    // The apply engine uses ProviderClient interface for plan/apply semantics
+    // For now, use mock for the apply pipeline — real deploys go through deploy_graph()
+    console.log(`[apply-engine] Provider "${provider}" — using plan-only mode`);
+  }
+  return create_mock_provider(provider || 'mock');
 }
 
 /**

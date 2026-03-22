@@ -28,7 +28,7 @@ import {
   type CardEdgeInput,
   type DeployProvider,
   type EnvironmentType,
-} from '@ice-engine/core';
+} from '@ice/core';
 import {
   DEPLOY_PROGRESS,
   AUTH_MESSAGES,
@@ -40,7 +40,7 @@ import {
   buildApiEnableUrl,
   IPC_ERRORS,
   ALLOWED_EXTERNAL_URL_PREFIXES,
-} from '@ice-engine/core';
+} from '@ice/core';
 import { IPC_ERRORS as MAIN_IPC_ERRORS } from './messages';
 import { connectGCPViaGcloud } from './ipc-handlers';
 
@@ -122,7 +122,7 @@ async function getStateStore(): Promise<SqliteStateStore | null> {
  */
 async function loadPriorState(
   cardId: string
-): Promise<Map<string, import('@ice-engine/core').StoredResourceEntry>> {
+): Promise<Map<string, import('@ice/core').StoredResourceEntry>> {
   const store = await getStateStore();
   if (!store) return new Map();
 
@@ -808,11 +808,47 @@ export function registerDeployHandlers() {
   // ── deploy:destroy ──────────────────────────────────────────────────
   ipcMain.handle(
     'deploy:destroy',
-    async (_event, _cardId: string, _options: DeployRequestOptions) => {
+    async (_event, cardId: string, options: DeployRequestOptions) => {
       try {
-        sendProgress({ type: 'log', message: MAIN_IPC_ERRORS.DESTROY_NOT_IMPLEMENTED_LOG });
-        return { success: false, error: MAIN_IPC_ERRORS.DESTROY_NOT_IMPLEMENTED };
+        sendProgress({ type: 'log', message: `Starting destroy for card ${cardId}...` });
+
+        const store = await getStateStore();
+        if (!store) {
+          return { success: false, error: 'State store not available' };
+        }
+
+        // Get previously deployed resources
+        const resourcesResult = await store.get_resources(cardId);
+        if (!resourcesResult.ok || resourcesResult.value.length === 0) {
+          return { success: false, error: 'No deployed resources found to destroy' };
+        }
+
+        // Delete each resource using the deployer
+        const { GCPDeployer } = await import('@ice/core');
+        const deployer = new GCPDeployer();
+        let deleted = 0;
+
+        for (const resource of resourcesResult.value) {
+          try {
+            sendProgress({ type: 'progress', resource: resource.name, action: 'delete', status: 'started' });
+            await deployer.delete(resource.type, resource.name, resource.provider_id, {
+              provider: options.provider || 'gcp',
+              project: options.gcpProject,
+            });
+            deleted++;
+            sendProgress({ type: 'progress', resource: resource.name, action: 'delete', status: 'completed' });
+          } catch (err: any) {
+            sendProgress({ type: 'log', message: `Failed to delete ${resource.name}: ${err.message}` });
+          }
+        }
+
+        // Clear stored resources
+        await store.clear_resources(cardId);
+
+        sendProgress({ type: 'complete', success: true });
+        return { success: true, deleted };
       } catch (err: any) {
+        sendProgress({ type: 'complete', success: false, error: err.message });
         return { success: false, error: err.message || String(err) };
       }
     }
@@ -820,7 +856,21 @@ export function registerDeployHandlers() {
 
   // ── deploy:getStatus ────────────────────────────────────────────────
   ipcMain.handle('deploy:getStatus', async (_event, deploymentId: string) => {
-    return { status: 'unknown', deploymentId };
+    try {
+      const store = await getStateStore();
+      if (!store) return { status: 'unknown', deploymentId };
+
+      const deployment = await store.get_deployment(deploymentId);
+      if (!deployment.ok) return { status: 'unknown', deploymentId };
+
+      return {
+        status: deployment.value.status || 'unknown',
+        deploymentId,
+        results: deployment.value.results,
+      };
+    } catch {
+      return { status: 'unknown', deploymentId };
+    }
   });
 
   // ── deploy:getResources ─────────────────────────────────────────────

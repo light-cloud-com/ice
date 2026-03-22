@@ -2,7 +2,7 @@
  * Canvas Validation Service
  *
  * Validates canvas JSON (nodes + edges) against provider schemas
- * from @ice-engine/core. Returns structured validation results.
+ * from @ice/core. Returns structured validation results.
  */
 
 interface ValidationError {
@@ -36,7 +36,7 @@ async function getCachedResources() {
   }
   try {
     // @ts-ignore — resolved at runtime via pnpm workspace
-    const core = await import('@ice-engine/core');
+    const core = await import('@ice/core');
     const categories = core.HIGH_LEVEL_CATEGORIES || [];
     const data = core.getAllHighLevelResources?.() || [];
     _resourceCache = { data, categories, ts: Date.now() };

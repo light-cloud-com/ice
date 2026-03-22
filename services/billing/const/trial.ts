@@ -1,0 +1,5 @@
+export const TRIAL_CONFIG = {
+  DURATION_DAYS: 14,
+  MAX_BUILDS: 100,
+  MAX_DEPLOYMENTS: 50,
+};

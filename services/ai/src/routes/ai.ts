@@ -12,13 +12,13 @@
 
 import { Router, type Response } from 'express';
 import { rateLimit } from 'express-rate-limit';
-import { requireAuth, type AuthRequest } from '@ice-saas/shared';
+import { requireAuth, type AuthRequest } from '@ice/shared';
 import { processCanvasIntent, streamCanvasIntent } from '../services/ai.service';
 import { validateCanvas } from '../services/canvas-validation.service';
 import { dryRunDeploy } from '../services/deploy-dryrun.service';
 import { listAuditEntries, getAuditEntry } from '../services/ai-audit.service';
-import prisma from '@ice-saas/db';
-import type { AiCanvasIntentRequest } from '@ice-saas/types';
+import prisma from '@ice/db';
+import type { AiCanvasIntentRequest } from '@ice/types';
 
 const router = Router();
 

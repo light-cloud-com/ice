@@ -4,7 +4,7 @@
  * Application.FunctionCompute — Alibaba Cloud serverless functions.
  */
 
-import { createBlueprintFromResource } from '@ice-engine/core/resources';
+import { createBlueprintFromResource } from '@ice/core/resources';
 import type { BlockBlueprint } from '../../types';
 
 export const functionComputeBlueprint: BlockBlueprint = createBlueprintFromResource(

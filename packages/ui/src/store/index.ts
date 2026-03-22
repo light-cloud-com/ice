@@ -5,7 +5,8 @@
  * Web version: debounced auto-save to backend API instead of localStorage.
  */
 
-import { configureStore } from '@reduxjs/toolkit';
+import { configureStore, type Middleware } from '@reduxjs/toolkit';
+import { logStateChange } from '../shared/utils/action-logger';
 import graphReducer from './slices/graph-slice';
 import uiReducer from './slices/ui-slice';
 import selectionReducer from './slices/selection-slice';
@@ -21,6 +22,19 @@ import aiReducer from './slices/ai-slice';
 import pipelineReducer from './slices/pipeline-slice';
 import environmentsReducer from './slices/environments-slice';
 import onboardingReducer from './slices/onboarding-slice';
+
+// Action logger middleware — logs significant Redux dispatches for E2E observability
+const LOGGED_ACTION_PREFIXES = [
+  'deploy/', 'account/', 'integrations/', 'environments/', 'pipeline/',
+  'onboarding/', 'ai/', 'projects/',
+];
+const actionLoggerMiddleware: Middleware = () => (next) => (action: any) => {
+  const type = action?.type || '';
+  if (LOGGED_ACTION_PREFIXES.some((p) => type.startsWith(p))) {
+    logStateChange(type, action.payload);
+  }
+  return next(action);
+};
 
 export const store = configureStore({
   reducer: {
@@ -43,7 +57,7 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false,
-    }),
+    }).concat(actionLoggerMiddleware),
 });
 
 // Debounced auto-save: persist active card to localStorage + backend
@@ -105,14 +119,18 @@ store.subscribe(() => {
   }, 2000);
 });
 
-// Also persist UI pane state to localStorage (lightweight, no API needed)
+// FE-5: Persist UI pane state with shallow comparison to skip no-ops
 let _uiPersistTimeout: ReturnType<typeof setTimeout>;
+let _lastUiSplitView: any = null;
 store.subscribe(() => {
+  const splitView = store.getState().ui.splitView;
+  if (splitView === _lastUiSplitView) return; // skip if unchanged
+  _lastUiSplitView = splitView;
+
   clearTimeout(_uiPersistTimeout);
   _uiPersistTimeout = setTimeout(() => {
     try {
-      const state = store.getState();
-      localStorage.setItem('ice-ui-panes', JSON.stringify(state.ui.splitView));
+      localStorage.setItem('ice-ui-panes', JSON.stringify(splitView));
     } catch {
       /* ignore quota errors */
     }

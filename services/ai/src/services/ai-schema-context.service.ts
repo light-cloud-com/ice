@@ -1,7 +1,7 @@
 /**
  * AI Schema Context Service
  *
- * Builds compact schema descriptions from @ice-engine/core resources
+ * Builds compact schema descriptions from @ice/core resources
  * to inject into the AI system prompt. This helps Claude Sonnet generate
  * valid configurations with correct property types and values.
  */
@@ -25,7 +25,7 @@ async function getCachedSchemas(): Promise<{ data: Map<string, any>; categories:
   }
   try {
     // @ts-ignore — resolved at runtime via pnpm workspace
-    const core = await import('@ice-engine/core');
+    const core = await import('@ice/core');
     const categories = core.HIGH_LEVEL_CATEGORIES || [];
     const allResources = core.getAllHighLevelResources?.() || [];
     const data = new Map<string, any>();

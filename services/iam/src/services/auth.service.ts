@@ -5,8 +5,8 @@
  */
 
 import bcrypt from 'bcryptjs';
-import prisma from '@ice-saas/db';
-import { generateToken, generateRefreshToken } from '@ice-saas/shared';
+import prisma from '@ice/db';
+import { generateToken, generateRefreshToken } from '@ice/shared';
 
 export interface AuthResult {
   token: string;
@@ -57,10 +57,18 @@ export async function registerUser(name: string, email: string, password: string
   };
 }
 
+// Sentinel value stored for OAuth-only users — they cannot log in with a password
+const OAUTH_ONLY_SENTINEL = '@@oauth-only@@';
+
 export async function loginUser(email: string, password: string): Promise<AuthResult> {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
     throw new AuthError('Invalid credentials', 401);
+  }
+
+  // Block password login for OAuth-only accounts
+  if (user.password_hash === OAUTH_ONLY_SENTINEL || user.password_hash === '') {
+    throw new AuthError('This account uses social login. Please sign in with Google or GitHub.', 401);
   }
 
   const valid = await bcrypt.compare(password, user.password_hash);
@@ -87,13 +95,43 @@ export async function loginUser(email: string, password: string): Promise<AuthRe
   };
 }
 
-export async function refreshToken(token: string, payload: { userId: string; organisationId: string }): Promise<string> {
-  const stored = await prisma.refreshToken.findUnique({ where: { token } });
-  if (!stored || stored.expires_at < new Date()) {
-    throw new AuthError('Invalid refresh token', 401);
+export async function refreshToken(
+  token: string,
+  payload: { userId: string; organisationId: string; type?: string },
+): Promise<{ accessToken: string; refreshToken: string }> {
+  // BE-4: Validate the token has type: 'refresh' to prevent access tokens being used
+  if (payload.type !== 'refresh') {
+    throw new AuthError('Invalid token type', 401);
   }
 
-  return generateToken(payload.userId, payload.organisationId);
+  const stored = await prisma.refreshToken.findUnique({ where: { token } });
+  if (!stored) {
+    // BE-3: Reuse detection — if a token was already consumed (deleted), revoke all
+    // tokens for this user as a precaution (token family compromise)
+    await prisma.refreshToken.deleteMany({ where: { user_id: payload.userId } });
+    throw new AuthError('Refresh token reuse detected — all sessions revoked', 401);
+  }
+
+  if (stored.expires_at < new Date()) {
+    await prisma.refreshToken.delete({ where: { token } }).catch(() => {});
+    throw new AuthError('Refresh token expired', 401);
+  }
+
+  // BE-3: Rotate — delete old token and issue a new one
+  await prisma.refreshToken.delete({ where: { token } });
+
+  const newAccessToken = generateToken(payload.userId, payload.organisationId);
+  const newRefreshToken = generateRefreshToken(payload.userId, payload.organisationId);
+
+  await prisma.refreshToken.create({
+    data: {
+      token: newRefreshToken,
+      user_id: payload.userId,
+      expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    },
+  });
+
+  return { accessToken: newAccessToken, refreshToken: newRefreshToken };
 }
 
 export async function logoutUser(refreshTokenValue: string | undefined): Promise<void> {
@@ -103,6 +141,7 @@ export async function logoutUser(refreshTokenValue: string | undefined): Promise
 }
 
 export async function getProfile(userId: string) {
+  // BE-9: Single query with includes instead of 2-3 sequential queries
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: {
@@ -115,38 +154,32 @@ export async function getProfile(userId: string) {
       onboarding_step: true,
       default_provider: true,
       default_region: true,
+      memberships: {
+        include: { organisation: { select: { id: true, name: true } } },
+      },
+      organisation: { select: { id: true, name: true } },
     },
   });
   if (!user) throw new AuthError('User not found', 404);
 
-  // Get organisations from membership table (real roles)
-  const memberships = await prisma.organisationMember.findMany({
-    where: { user_id: user.id },
-    include: { organisation: { select: { id: true, name: true } } },
-  });
+  const memberOrgIds = new Set(user.memberships.map((m) => m.organisation_id));
+  const memberships = user.memberships.map((m) => ({
+    id: m.organisation.id,
+    name: m.organisation.name,
+    role: m.role,
+  }));
 
-  // Also include the user's default org if not in memberships
-  const memberOrgIds = new Set(memberships.map((m) => m.organisation_id));
-  let extraOrgs: { id: string; name: string; role: string }[] = [];
-  if (user.organisation_id && !memberOrgIds.has(user.organisation_id)) {
-    const org = await prisma.organisation.findUnique({
-      where: { id: user.organisation_id },
-      select: { id: true, name: true },
-    });
-    if (org) extraOrgs = [{ ...org, role: 'owner' }];
+  // Include default org if user isn't explicitly a member (legacy data)
+  if (user.organisation_id && !memberOrgIds.has(user.organisation_id) && user.organisation) {
+    memberships.push({ id: user.organisation.id, name: user.organisation.name, role: 'owner' });
   }
-
-  const organisations = [
-    ...memberships.map((m) => ({ id: m.organisation.id, name: m.organisation.name, role: m.role })),
-    ...extraOrgs,
-  ];
 
   return {
     id: user.id,
     email: user.email,
     name: user.name,
     avatar: user.avatar,
-    organisations,
+    organisations: memberships,
     onboardingCompleted: user.onboarding_completed,
     onboardingStep: user.onboarding_step,
     defaultProvider: user.default_provider,
@@ -166,7 +199,7 @@ export async function findOrCreateOAuthUser(
       data: { name: `${name}'s Team` },
     });
     user = await prisma.user.create({
-      data: { email, name, password_hash: '', avatar, organisation_id: org.id },
+      data: { email, name, password_hash: OAUTH_ONLY_SENTINEL, avatar, organisation_id: org.id },
     });
     await prisma.organisationMember.create({
       data: { user_id: user.id, organisation_id: org.id, role: 'owner' },

@@ -1,28 +1,26 @@
 /**
- * Deploy Service — Real deployment using @ice-engine/core deployers
+ * Deploy Service — Real deployment using @ice/core deployers
  *
  * Translates canvas card nodes → deployable graph → cloud provisioning.
  * Uses user's own cloud credentials (not Light Cloud's).
  */
 
-import prisma from '@ice-saas/db';
-import { emitDeployProgress } from '@ice-saas/shared';
-import * as providerService from '@ice-saas/service-credentials';
+import prisma from '@ice/db';
+import { emitDeployProgress } from '@ice/shared';
+import * as providerService from '@ice/service-credentials';
 import fs from 'fs';
 
-/** Clean up temp credentials file set during deploy */
-function cleanupTempCredentials() {
-  const tmpPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-  if (tmpPath && tmpPath.includes('ice-sa-')) {
-    try { fs.unlinkSync(tmpPath); } catch {}
-    delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+/** Clean up a specific temp credentials file */
+function cleanupTempCredentialsFile(filePath: string | undefined) {
+  if (filePath && filePath.includes('ice-sa-')) {
+    try { fs.unlinkSync(filePath); } catch {}
   }
 }
 
 // Dynamic imports for core engine (ESM) — resolved from workspace
 async function getCoreEngine(): Promise<any> {
   // @ts-ignore — resolved at runtime via pnpm workspace
-  return import('@ice-engine/core');
+  return import('@ice/core');
 }
 
 export async function planDeployment(
@@ -153,6 +151,7 @@ export async function applyDeployment(
   });
 
   const startTime = Date.now();
+  let tempCredentialsPath: string | undefined;
 
   emitDeployProgress(cardId, {
     type: 'log',
@@ -239,14 +238,14 @@ export async function applyDeployment(
           authClient = await auth.getClient();
 
           // Write temp credentials file for SDK clients
-          const fs = await import('fs');
+          const fsAsync = await import('fs');
           const os = await import('os');
           const path = await import('path');
-          const tmpPath = path.join(os.tmpdir(), `ice-sa-${Date.now()}.json`);
-          fs.writeFileSync(tmpPath, typeof key === 'string' ? key : JSON.stringify(parsed));
+          const tmpPath = path.join(os.tmpdir(), `ice-sa-${deployment.id}-${Date.now()}.json`);
+          fsAsync.writeFileSync(tmpPath, typeof key === 'string' ? key : JSON.stringify(parsed));
+          tempCredentialsPath = tmpPath;
           process.env.GOOGLE_APPLICATION_CREDENTIALS = tmpPath;
 
-          // Clean up after deploy (handled in finally-like pattern below)
           emitDeployProgress(cardId, {
             type: 'log',
             message: 'Authenticating via Service Account...',
@@ -284,7 +283,7 @@ export async function applyDeployment(
     // 5. Build current state from the last successful deployment (if any).
     // This enables update/skip semantics — without it, every deploy is "create all".
     // @ts-ignore — resolved at runtime via pnpm workspace
-    const { MutableGraph } = await import('@ice-engine/core/graph');
+    const { MutableGraph } = await import('@ice/core/graph');
     let currentGraph = new MutableGraph('current');
 
     const lastDeploy = await prisma.canvasDeployment.findFirst({
@@ -437,7 +436,6 @@ export async function applyDeployment(
     });
 
     await deployer.cleanup();
-    cleanupTempCredentials();
 
     // Build a meaningful error message from results
     let errorMsg: string | null = null;
@@ -471,7 +469,6 @@ export async function applyDeployment(
       result,
     };
   } catch (err: any) {
-    cleanupTempCredentials();
     console.error('Deploy error:', err.message, err.stack);
 
     const durationMs = Date.now() - startTime;
@@ -492,6 +489,12 @@ export async function applyDeployment(
     });
 
     return { success: false, deploymentId: deployment.id, duration_ms: durationMs, error: err.message };
+  } finally {
+    // Always clean up temp credentials file, even on crash
+    cleanupTempCredentialsFile(tempCredentialsPath);
+    if (process.env.GOOGLE_APPLICATION_CREDENTIALS === tempCredentialsPath) {
+      delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    }
   }
 }
 
@@ -525,6 +528,7 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
   });
 
   const startTime = Date.now();
+  let tempCredentialsPath: string | undefined;
 
   emitDeployProgress(cardId, {
     type: 'log',
@@ -568,6 +572,14 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
             scopes: ['https://www.googleapis.com/auth/cloud-platform'],
           });
           authClient = await auth.getClient();
+
+          // Write temp credentials file for SDK clients
+          const os = await import('os');
+          const path = await import('path');
+          const tmpPath = path.join(os.tmpdir(), `ice-sa-${destroyRecord.id}-${Date.now()}.json`);
+          fs.writeFileSync(tmpPath, typeof key === 'string' ? key : JSON.stringify(parsed));
+          tempCredentialsPath = tmpPath;
+          process.env.GOOGLE_APPLICATION_CREDENTIALS = tmpPath;
         } catch (err: any) {
           throw new Error(`Invalid service account key: ${err.message}`);
         }
@@ -656,6 +668,12 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
     });
 
     return { success: false, deploymentId: destroyRecord.id, error: err.message };
+  } finally {
+    // BE-12: Always clean up temp credentials file
+    cleanupTempCredentialsFile(tempCredentialsPath);
+    if (process.env.GOOGLE_APPLICATION_CREDENTIALS === tempCredentialsPath) {
+      delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    }
   }
 }
 

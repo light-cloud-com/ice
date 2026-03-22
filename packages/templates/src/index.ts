@@ -31,8 +31,8 @@ import { saasStarterTemplate } from './saas-starter';
 import { QUICK_STARTS } from './quick-starts';
 import type { ComposedTemplate, TemplateCategory } from './types';
 import { TEMPLATE_CATEGORIES } from './types';
-import { getBlueprint } from '@ice-saas/blocks';
-import type { Provider } from '@ice-saas/blocks';
+import { getBlueprint } from '@ice/blocks';
+import type { Provider } from '@ice/blocks';
 
 // =============================================================================
 // Registry

@@ -2,7 +2,7 @@
 
 ICE uses a registry-based plugin architecture for blocks, templates, and cloud providers. Each has a `define*()` API that registers definitions at import time.
 
-## Block Registry (`@ice-saas/block-registry`) {#block-registry}
+## Block Registry (`@ice/block-registry`) {#block-registry}
 
 **Location:** `packages/block-registry/`
 
@@ -11,7 +11,7 @@ Provides the `defineBlock()` function and an in-memory registry for block defini
 ### API
 
 ```typescript
-import { defineBlock, getBlock, getAllBlocks, getBlocksByProvider } from '@ice-saas/block-registry'
+import { defineBlock, getBlock, getAllBlocks, getBlocksByProvider } from '@ice/block-registry'
 
 const myBlock = defineBlock({
   id: 'gcp-cloud-run',
@@ -57,7 +57,7 @@ interface BlockDefinition {
 
 ---
 
-## Blocks (`@ice-saas/blocks`) {#blocks}
+## Blocks (`@ice/blocks`) {#blocks}
 
 **Location:** `packages/blocks/`
 
@@ -96,7 +96,7 @@ packages/blocks/src/
 
 ---
 
-## Provider Registry (`@ice-saas/provider-registry`) {#provider-registry}
+## Provider Registry (`@ice/provider-registry`) {#provider-registry}
 
 **Location:** `packages/provider-registry/`
 
@@ -105,7 +105,7 @@ Registration API for cloud provider deployer plugins.
 ### API
 
 ```typescript
-import { defineProvider, getProvider, getProviderRegistry } from '@ice-saas/provider-registry'
+import { defineProvider, getProvider, getProviderRegistry } from '@ice/provider-registry'
 
 defineProvider({
   id: 'gcp',
@@ -142,15 +142,15 @@ interface ProviderDeployer {
 
 | Package | Provider |
 |---|---|
-| `@ice-saas/provider-gcp` | Google Cloud Platform |
-| `@ice-saas/provider-aws` | Amazon Web Services |
-| `@ice-saas/provider-azure` | Microsoft Azure |
+| `@ice/provider-gcp` | Google Cloud Platform |
+| `@ice/provider-aws` | Amazon Web Services |
+| `@ice/provider-azure` | Microsoft Azure |
 
 Each implements the `ProviderDeployer` interface from the provider registry.
 
 ---
 
-## Template Registry (`@ice-saas/template-registry`) {#template-registry}
+## Template Registry (`@ice/template-registry`) {#template-registry}
 
 **Location:** `packages/template-registry/`
 
@@ -159,7 +159,7 @@ Registration API for infrastructure templates.
 ### API
 
 ```typescript
-import { defineTemplate, getTemplate, getAllTemplates } from '@ice-saas/template-registry'
+import { defineTemplate, getTemplate, getAllTemplates } from '@ice/template-registry'
 
 defineTemplate({
   id: 'full-stack-web',
@@ -177,7 +177,7 @@ defineTemplate({
 
 ---
 
-## Templates (`@ice-saas/templates`) {#templates}
+## Templates (`@ice/templates`) {#templates}
 
 **Location:** `packages/templates/`
 
@@ -217,7 +217,7 @@ const { nodes, edges } = expandComposedTemplate(template)
 ### Query API
 
 ```typescript
-import { searchTemplates, getTemplatesByCategory, filterByProvider } from '@ice-saas/templates'
+import { searchTemplates, getTemplatesByCategory, filterByProvider } from '@ice/templates'
 
 const results = searchTemplates('chatbot')
 const fullStack = getTemplatesByCategory('full-stack')

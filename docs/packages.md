@@ -2,7 +2,7 @@
 
 Detailed documentation for the shared library packages in `packages/`.
 
-## Types (`@ice-saas/types`) {#types}
+## Types (`@ice/types`) {#types}
 
 **Location:** `packages/types/`
 
@@ -23,22 +23,22 @@ Shared TypeScript interfaces — the single source of truth for all API contract
 
 ---
 
-## Database (`@ice-saas/db`) {#db}
+## Database (`@ice/db`) {#db}
 
 **Location:** `packages/db/`
 
 Prisma ORM client singleton and database schema.
 
 ```typescript
-import prisma from '@ice-saas/db'
-import { PrismaClient, Prisma } from '@ice-saas/db'
+import prisma from '@ice/db'
+import { PrismaClient, Prisma } from '@ice/db'
 ```
 
 See [Database Schema](database.md) for full model documentation.
 
 ---
 
-## Shared (`@ice-saas/shared`) {#shared}
+## Shared (`@ice/shared`) {#shared}
 
 **Location:** `packages/shared/`
 
@@ -46,12 +46,12 @@ Cross-cutting server-side utilities used by all services.
 
 ### Sub-path Exports
 
-#### `@ice-saas/shared/auth`
+#### `@ice/shared/auth`
 
 JWT-based auth middleware and token generation.
 
 ```typescript
-import { requireAuth, requireProjectAccess, generateToken } from '@ice-saas/shared/auth'
+import { requireAuth, requireProjectAccess, generateToken } from '@ice/shared/auth'
 
 // Validate JWT Bearer token
 router.use(requireAuth)
@@ -66,12 +66,12 @@ router.get('/project/:id', requireAuth, requireProjectAccess('editor'), handler)
 - `generateRefreshToken()` — creates refresh token
 - `AuthRequest` — Express Request type with `.user` attached
 
-#### `@ice-saas/shared/crypto`
+#### `@ice/shared/crypto`
 
 AES-256 encryption for credentials at rest.
 
 ```typescript
-import { encryptCredentials, decryptCredentials } from '@ice-saas/shared/crypto'
+import { encryptCredentials, decryptCredentials } from '@ice/shared/crypto'
 
 const encrypted = encryptCredentials({ projectId: '...', key: '...' })
 const decrypted = decryptCredentials(encrypted)
@@ -79,12 +79,12 @@ const decrypted = decryptCredentials(encrypted)
 
 Uses `crypto-js` with key from `CREDENTIAL_ENCRYPTION_KEY` env var.
 
-#### `@ice-saas/shared/socket`
+#### `@ice/shared/socket`
 
 Socket.IO room management and emit helpers.
 
 ```typescript
-import { setupSocketService, emitDeployProgress, emitCanvasUpdate } from '@ice-saas/shared/socket'
+import { setupSocketService, emitDeployProgress, emitCanvasUpdate } from '@ice/shared/socket'
 
 setupSocketService(io)  // Initialize all rooms
 

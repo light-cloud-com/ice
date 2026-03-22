@@ -4,7 +4,7 @@
  * Messaging.CloudPubSub — managed pub/sub, global.
  */
 
-import { createBlueprintFromResource } from '@ice-engine/core/resources';
+import { createBlueprintFromResource } from '@ice/core/resources';
 import type { BlockBlueprint } from '../../types';
 
 export const cloudPubsubBlueprint: BlockBlueprint = createBlueprintFromResource('cloud-pubsub', {

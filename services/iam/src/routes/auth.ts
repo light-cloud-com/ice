@@ -10,12 +10,12 @@
 
 import { Router, type Request, type Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { requireAuth, type AuthRequest } from '@ice-saas/shared';
+import { requireAuth, type AuthRequest } from '@ice/shared';
 import * as authService from '../services/auth.service';
 import { AuthError } from '../services/auth.service';
 
 const router = Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
+const JWT_SECRET = process.env.JWT_SECRET || (process.env.NODE_ENV === 'test' ? 'test-secret' : (() => { throw new Error('JWT_SECRET is required'); })());
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -67,12 +67,26 @@ router.post('/google/token', async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Missing access token' });
     }
 
-    // Verify token by fetching user info from Google
+    // Validate token audience matches our client ID to prevent token confusion attacks
+    const tokenInfoRes = await fetch(
+      `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(access_token)}`,
+    );
+    if (!tokenInfoRes.ok) {
+      return res.status(401).json({ message: 'Invalid Google access token' });
+    }
+    const tokenInfo = await tokenInfoRes.json() as { aud?: string; azp?: string };
+
+    const expectedClientId = process.env.GOOGLE_CLIENT_ID;
+    if (expectedClientId && tokenInfo.aud !== expectedClientId && tokenInfo.azp !== expectedClientId) {
+      return res.status(401).json({ message: 'Token audience mismatch — token was not issued for this application' });
+    }
+
+    // Fetch user profile
     const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
       headers: { Authorization: `Bearer ${access_token}` },
     });
     if (!userInfoRes.ok) {
-      return res.status(401).json({ message: 'Invalid Google access token' });
+      return res.status(401).json({ message: 'Failed to fetch Google user info' });
     }
     const profile = await userInfoRes.json() as {
       email: string;
@@ -96,7 +110,7 @@ router.post('/google/token', async (req: Request, res: Response) => {
     const token = jwt.sign({ userId: user.id, organisationId: orgId }, JWT_SECRET, { expiresIn: '1h' });
     const refreshToken = jwt.sign({ userId: user.id, organisationId: orgId, type: 'refresh' }, JWT_SECRET, { expiresIn: '30d' });
 
-    const prisma = (await import('@ice-saas/db')).default;
+    const prisma = (await import('@ice/db')).default;
     await prisma.refreshToken.create({
       data: {
         token: refreshToken,
@@ -122,13 +136,22 @@ router.post('/refresh', async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'No refresh token' });
     }
 
-    const payload = jwt.verify(refreshTokenValue, JWT_SECRET) as { userId: string; organisationId: string };
-    const token = await authService.refreshToken(refreshTokenValue, payload);
-    res.json({ token });
+    const payload = jwt.verify(refreshTokenValue, JWT_SECRET) as {
+      userId: string;
+      organisationId: string;
+      type?: string;
+    };
+    const result = await authService.refreshToken(refreshTokenValue, payload);
+
+    // Set the new rotated refresh token cookie
+    res.cookie('refreshToken', result.refreshToken, COOKIE_OPTIONS);
+    res.json({ token: result.accessToken });
   } catch (err: any) {
     if (err instanceof AuthError) {
+      res.clearCookie('refreshToken');
       return res.status(err.status).json({ message: err.message });
     }
+    res.clearCookie('refreshToken');
     res.status(401).json({ message: 'Invalid refresh token' });
   }
 });

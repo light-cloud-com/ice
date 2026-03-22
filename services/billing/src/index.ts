@@ -3,17 +3,17 @@ import { Router } from 'express';
 // Re-export services
 export { default as billingRoutes } from './routes/index.js';
 
-export function createBillingRouter(): Router {
+export async function createBillingRouter(): Promise<Router> {
   const router = Router();
-  // The billing routes from platform use their own Express router pattern
-  // Import and mount them here
   try {
-    const billingRoutes = require('./routes/index.js').default;
-    router.use('/billing', billingRoutes);
-  } catch {
-    // Billing routes may need adaptation from platform patterns
-    router.get('/billing/status', (_req, res) => {
-      res.json({ status: 'billing_service_initializing' });
+    const mod = await import('./routes/index.js');
+    router.use('/billing', mod.default);
+    console.log('[billing] Billing routes loaded');
+  } catch (err) {
+    console.error('[billing] FAILED to load billing routes — billing is non-functional:', (err as Error).message);
+    console.error('[billing] Stack:', (err as Error).stack);
+    router.all('/billing/*', (_req, res) => {
+      res.status(503).json({ error: 'Billing service failed to initialize' });
     });
   }
   return router;

@@ -6,28 +6,65 @@
  * - canvas collaboration (canvas:{projectId})
  * - pipeline status per node (pipeline:{nodeId})
  * - pipeline activity per card (card:{cardId})
+ *
+ * All connections require JWT authentication via handshake auth.
  */
 
 import { Server as SocketServer } from 'socket.io';
+import jwt from 'jsonwebtoken';
 
 let _io: SocketServer;
+
+interface SocketAuth {
+  userId: string;
+  organisationId: string;
+}
 
 export function setupSocketService(io: SocketServer) {
   _io = io;
 
+  // ── Authentication middleware — verify JWT on every connection ──
+  io.use((socket, next) => {
+    const token = socket.handshake.auth?.token as string | undefined;
+    if (!token) {
+      return next(new Error('Authentication required'));
+    }
+
+    const secret = process.env.JWT_SECRET;
+    if (!secret && process.env.NODE_ENV !== 'test') {
+      return next(new Error('Server misconfigured'));
+    }
+
+    try {
+      const payload = jwt.verify(token, secret || 'test-secret') as {
+        userId: string;
+        organisationId: string;
+      };
+      (socket.data as SocketAuth).userId = payload.userId;
+      (socket.data as SocketAuth).organisationId = payload.organisationId;
+      next();
+    } catch {
+      return next(new Error('Invalid or expired token'));
+    }
+  });
+
   io.on('connection', (socket) => {
     // Deploy progress room
     socket.on('subscribe:deploy', (cardId: string) => {
-      socket.join(`deploy:${cardId}`);
+      if (typeof cardId === 'string' && cardId.length > 0) {
+        socket.join(`deploy:${cardId}`);
+      }
     });
 
     socket.on('unsubscribe:deploy', (cardId: string) => {
       socket.leave(`deploy:${cardId}`);
     });
 
-    // Canvas collaboration room (future)
+    // Canvas collaboration room
     socket.on('subscribe:canvas', (projectId: string) => {
-      socket.join(`canvas:${projectId}`);
+      if (typeof projectId === 'string' && projectId.length > 0) {
+        socket.join(`canvas:${projectId}`);
+      }
     });
 
     socket.on('unsubscribe:canvas', (projectId: string) => {
@@ -36,7 +73,9 @@ export function setupSocketService(io: SocketServer) {
 
     // Pipeline: per-node status (full logs + progress)
     socket.on('subscribe:pipeline', (nodeId: string) => {
-      socket.join(`pipeline:${nodeId}`);
+      if (typeof nodeId === 'string' && nodeId.length > 0) {
+        socket.join(`pipeline:${nodeId}`);
+      }
     });
 
     socket.on('unsubscribe:pipeline', (nodeId: string) => {
@@ -45,7 +84,9 @@ export function setupSocketService(io: SocketServer) {
 
     // Pipeline: per-card activity (lightweight status for canvas badges)
     socket.on('subscribe:card-pipeline', (cardId: string) => {
-      socket.join(`card-pipeline:${cardId}`);
+      if (typeof cardId === 'string' && cardId.length > 0) {
+        socket.join(`card-pipeline:${cardId}`);
+      }
     });
 
     socket.on('unsubscribe:card-pipeline', (cardId: string) => {

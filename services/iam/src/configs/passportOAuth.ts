@@ -7,7 +7,7 @@
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as GitHubStrategy } from 'passport-github2';
-import prisma from '@ice-saas/db';
+import prisma from '@ice/db';
 import { findOrCreateOAuthUser } from '../services/auth.service';
 
 export function configurePassportOAuth() {
@@ -49,7 +49,10 @@ export function configurePassportOAuth() {
         },
         async (_accessToken: string, _refreshToken: string, profile: any, done: any) => {
           try {
-            const email = profile.emails?.[0]?.value || `${profile.username}@github.local`;
+            // Use GitHub user ID as the unique identifier to prevent email collisions.
+            // Two GitHub users with no public email would otherwise collide on a synthesized email.
+            const githubId = profile.id;
+            const email = profile.emails?.[0]?.value || `gh-${githubId}@github.oauth`;
             const name = profile.displayName || profile.username || 'GitHub User';
             const avatar = profile.photos?.[0]?.value || null;
             const user = await findOrCreateOAuthUser(email, name, avatar);

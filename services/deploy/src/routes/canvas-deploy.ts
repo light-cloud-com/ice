@@ -10,7 +10,7 @@
  */
 
 import { Router, type Response } from 'express';
-import { requireAuth, type AuthRequest } from '@ice-saas/shared';
+import { requireAuth, requireProjectAccess, type AuthRequest } from '@ice/shared';
 import * as deployService from '../services/deploy.service';
 
 const router = Router();
@@ -59,12 +59,12 @@ router.get('/status/:deploymentId', async (req: AuthRequest, res: Response) => {
   res.json(deployment);
 });
 
-router.get('/resources/:cardId', async (req: AuthRequest, res: Response) => {
+router.get('/resources/:cardId', requireProjectAccess('viewer'), async (req: AuthRequest, res: Response) => {
   const resources = await deployService.getDeployedResources(req.params.cardId as string);
   res.json({ success: true, resources });
 });
 
-router.get('/history/:cardId', async (req: AuthRequest, res: Response) => {
+router.get('/history/:cardId', requireProjectAccess('viewer'), async (req: AuthRequest, res: Response) => {
   const deployments = await deployService.getDeploymentHistory(req.params.cardId as string);
   res.json(deployments);
 });

@@ -1,4 +1,4 @@
-# Core Engine (`@ice-engine/core`)
+# Core Engine (`@ice/core`)
 
 The core engine is the computational heart of ICE. It handles graph processing, infrastructure diffing, deploy orchestration, and multi-cloud resource importing.
 
@@ -145,11 +145,11 @@ Each importer has a **type-mapper** that converts cloud-specific resource types 
 ## Sub-path Exports
 
 ```typescript
-import { MutableGraph } from '@ice-engine/core/graph'
-import { MockProvider } from '@ice-engine/core/providers'
-import { GraphNode, GraphEdge } from '@ice-engine/core/types'
-import { CloudBlocks } from '@ice-engine/core/resources'
-import { SchemaRegistry } from '@ice-engine/core/schemas'
+import { MutableGraph } from '@ice/core/graph'
+import { MockProvider } from '@ice/core/providers'
+import { GraphNode, GraphEdge } from '@ice/core/types'
+import { CloudBlocks } from '@ice/core/resources'
+import { SchemaRegistry } from '@ice/core/schemas'
 ```
 
 ## Key Dependencies

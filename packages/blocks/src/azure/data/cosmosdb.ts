@@ -4,7 +4,7 @@
  * Database.CosmosDB — multi-model with global distribution.
  */
 
-import { createBlueprintFromResource } from '@ice-engine/core/resources';
+import { createBlueprintFromResource } from '@ice/core/resources';
 import type { BlockBlueprint } from '../../types';
 
 export const cosmosdbBlueprint: BlockBlueprint = createBlueprintFromResource('cosmosdb', {

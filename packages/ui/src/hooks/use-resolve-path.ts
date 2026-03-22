@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import axiosInstance from '../api/axios-instance';
 import { toSlug } from '../utils/slug';
-import type { RootState } from '../../store';
+import type { RootState } from '../store';
 
 export interface ResolvedPath {
   loading: boolean;

@@ -50,13 +50,57 @@ export const load_balancer_handler: GCPResourceHandler = {
     const start = Date.now();
 
     try {
+      // Step 1: Create backend service (serverless NEG or instance group)
+      const backendName = `${name}-backend`;
+      const backendOp = (await ctx.rest_client.post(
+        `${BASE_URL}/projects/${ctx.project}/global/backendServices`,
+        {
+          name: backendName,
+          loadBalancingScheme: properties.scheme || 'EXTERNAL',
+          protocol: properties.backend_protocol || 'HTTP',
+          timeoutSec: properties.timeout_sec || 30,
+          labels: properties.labels || {},
+        }
+      )) as any;
+      if (backendOp?.name) await wait_for_compute_op(ctx, backendOp.name);
+
+      // Step 2: Create URL map
+      const urlMapName = `${name}-url-map`;
+      const urlMapOp = (await ctx.rest_client.post(
+        `${BASE_URL}/projects/${ctx.project}/global/urlMaps`,
+        {
+          name: urlMapName,
+          defaultService: `projects/${ctx.project}/global/backendServices/${backendName}`,
+        }
+      )) as any;
+      if (urlMapOp?.name) await wait_for_compute_op(ctx, urlMapOp.name);
+
+      // Step 3: Create target HTTP(S) proxy
+      const proxyName = `${name}-proxy`;
+      const isHttps = properties.protocol !== 'HTTP';
+      const proxyEndpoint = isHttps ? 'targetHttpsProxies' : 'targetHttpProxies';
+      const proxyBody: Record<string, any> = {
+        name: proxyName,
+        urlMap: `projects/${ctx.project}/global/urlMaps/${urlMapName}`,
+      };
+      if (isHttps && properties.ssl_certificate) {
+        proxyBody.sslCertificates = [properties.ssl_certificate];
+      }
+      const proxyOp = (await ctx.rest_client.post(
+        `${BASE_URL}/projects/${ctx.project}/global/${proxyEndpoint}`,
+        proxyBody
+      )) as any;
+      if (proxyOp?.name) await wait_for_compute_op(ctx, proxyOp.name);
+
+      // Step 4: Create forwarding rule
       const op = (await ctx.rest_client.post(
         `${BASE_URL}/projects/${ctx.project}/global/forwardingRules`,
         {
           name,
           loadBalancingScheme: properties.scheme || 'EXTERNAL',
-          portRange: String(properties.port_range || '443'),
-          IPProtocol: properties.protocol === 'HTTP' ? 'TCP' : 'TCP',
+          portRange: String(properties.port_range || (isHttps ? '443' : '80')),
+          IPProtocol: 'TCP',
+          target: `projects/${ctx.project}/global/${proxyEndpoint}/${proxyName}`,
           labels: properties.labels || {},
         }
       )) as any;
@@ -65,6 +109,7 @@ export const load_balancer_handler: GCPResourceHandler = {
 
       return result(name, 'create', start, {
         provider_id: `projects/${ctx.project}/global/forwardingRules/${name}`,
+        outputs: { backendService: backendName, urlMap: urlMapName, proxy: proxyName },
       });
     } catch (error) {
       return fail(name, 'create', start, error instanceof Error ? error.message : String(error));

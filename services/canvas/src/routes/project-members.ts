@@ -8,10 +8,10 @@
  */
 
 import { Router, type Response } from 'express';
-import { requireAuth, type AuthRequest } from '@ice-saas/shared';
-import * as projectAccess from '@ice-saas/service-iam';
-import { sendProjectInviteEmail } from '@ice-saas/service-iam';
-import prisma from '@ice-saas/db';
+import { requireAuth, type AuthRequest } from '@ice/shared';
+import * as projectAccess from '@ice/service-iam';
+import { sendProjectInviteEmail } from '@ice/service-iam';
+import prisma from '@ice/db';
 
 const router = Router();
 router.use(requireAuth);

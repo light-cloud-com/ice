@@ -1,0 +1,82 @@
+name: E2E
+
+on: [pull_request]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: ice_test
+          POSTGRES_USER: ice
+          POSTGRES_PASSWORD: test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install
+
+      - name: Setup backend
+        working-directory: backend
+        run: |
+          pnpm install
+          npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://ice:test@localhost:5432/ice_test
+
+      - name: Start backend
+        working-directory: backend
+        run: pnpm dev &
+        env:
+          DATABASE_URL: postgresql://ice:test@localhost:5432/ice_test
+          JWT_SECRET: test-secret
+          CREDENTIAL_ENCRYPTION_KEY: test-encryption-key
+          REDIS_URL: redis://localhost:6379
+          PORT: 5001
+          FRONTEND_URL: http://localhost:5173
+
+      - name: Wait for backend
+        run: |
+          for i in $(seq 1 30); do
+            curl -s http://localhost:5001/api/health && break
+            sleep 1
+          done
+
+      - run: npx playwright install chromium --with-deps
+
+      - run: pnpm test:e2e
+        env:
+          CI: true
+          DATABASE_URL: postgresql://ice:test@localhost:5432/ice_test
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/

@@ -11,36 +11,37 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "default": "./src/index.ts"
     },
     "./graph": {
       "types": "./dist/graph/index.d.ts",
-      "import": "./dist/graph/index.js"
+      "default": "./src/graph/index.ts"
     },
     "./providers": {
       "types": "./dist/providers/index.d.ts",
-      "import": "./dist/providers/index.js"
+      "default": "./src/deploy/providers/index.ts"
     },
     "./types": {
       "types": "./dist/types/index.d.ts",
-      "import": "./dist/types/index.js"
+      "default": "./src/types/index.ts"
     },
     "./resources": {
       "types": "./dist/resources/index.d.ts",
-      "import": "./dist/resources/index.js"
+      "default": "./src/resources/index.ts"
     },
     "./schemas": {
       "types": "./dist/schemas/index.d.ts",
-      "import": "./dist/schemas/index.js"
+      "default": "./src/schemas/index.ts"
     },
     "./schemas/db": {
       "types": "./dist/schemas/db/index.d.ts",
-      "import": "./dist/schemas/db/index.js"
+      "default": "./src/schemas/db/index.ts"
     },
     "./schemas/embedded": {
       "types": "./dist/schemas/embedded/schema-registry.d.ts",
-      "import": "./dist/schemas/embedded/schema-registry.js"
-    }
+      "default": "./src/schemas/embedded/schema-registry.ts"
+    },
+    "./src/*": "./src/*"
   },
   "files": [
     "dist",

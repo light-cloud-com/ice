@@ -46,36 +46,33 @@ graph TD
 
 ## Dependency Graph
 
-```
-@ice-saas/types                    (no deps — pure interfaces)
-       │
-       ├──► @ice-saas/db           (Prisma ORM)
-       ├──► @ice-saas/block-registry
-       ├──► @ice-saas/provider-registry
-       └──► @ice-saas/template-registry
-                │
-@ice-engine/core                   (standalone engine)
-       │
-       ├──► @ice-saas/blocks       (uses block-registry + core)
-       │        │
-       │        └──► @ice-saas/templates  (uses blocks + template-registry)
-       │
-@ice-saas/db ──► @ice-saas/shared  (auth, crypto, socket)
-                      │
-                      ├──► service-iam
-                      ├──► service-canvas
-                      ├──► service-deploy  (+bullmq, +ioredis)
-                      ├──► service-ai      (+anthropic SDK)
-                      ├──► service-credentials
-                      ├──► service-billing (+stripe)
-                      └──► service-engine  (+core)
-                               │
-                               └──► apps/gateway  (composes all)
+```mermaid
+graph TD
+    types["@ice-saas/types<br/>(pure interfaces)"]
+    types --> db["@ice-saas/db<br/>(Prisma ORM)"]
+    types --> blockreg["@ice-saas/block-registry"]
+    types --> provreg["@ice-saas/provider-registry"]
+    types --> tmplreg["@ice-saas/template-registry"]
 
-@ice-saas/ui                       (React components)
-       │
-       ├──► @lightcloud/web        (web SaaS app)
-       └──► @ice-saas/desktop      (Electron app)
+    core["@ice-engine/core<br/>(standalone engine)"]
+    core --> blocks["@ice-saas/blocks"]
+    blockreg --> blocks
+    blocks --> templates["@ice-saas/templates"]
+    tmplreg --> templates
+
+    db --> shared["@ice-saas/shared<br/>(auth, crypto, socket)"]
+    shared --> iam[service-iam]
+    shared --> canvas[service-canvas]
+    shared --> deploy["service-deploy<br/>(+bullmq, +ioredis)"]
+    shared --> ai["service-ai<br/>(+anthropic SDK)"]
+    shared --> creds[service-credentials]
+    shared --> billing["service-billing<br/>(+stripe)"]
+    shared --> engine["service-engine<br/>(+core)"]
+    engine --> gateway["apps/gateway<br/>(composes all)"]
+
+    ui["@ice-saas/ui<br/>(React components)"]
+    ui --> web["@lightcloud/web<br/>(web SaaS app)"]
+    ui --> desktop["@ice-saas/desktop<br/>(Electron app)"]
 ```
 
 ## Data Flow: Canvas to Deploy

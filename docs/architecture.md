@@ -1,6 +1,6 @@
 # Architecture Overview
 
-ICE SaaS is structured as a pnpm monorepo with three distinct layers: **shared packages**, **backend services**, and **runnable apps**.
+ICE is structured as a pnpm monorepo with three distinct layers: **shared packages**, **backend services**, and **runnable apps**.
 
 ## System Diagram
 
@@ -12,9 +12,9 @@ graph TD
     end
 
     Web -->|"HTTP + Socket.IO"| Gateway
-    Desktop -->|"IPC"| Electron
+    Desktop -->|"Embedded HTTP"| Gateway2["Embedded Gateway<br/>(same code)"]
 
-    subgraph Gateway["API Gateway — apps/gateway :5001"]
+    subgraph Gateway["API Gateway — apps/gateway"]
         IAM[service-iam]
         Canvas[service-canvas]
         Deploy[service-deploy]
@@ -24,86 +24,138 @@ graph TD
         Billing[service-billing]
     end
 
-    Electron["Electron Main Process<br/>Embeds @ice/core<br/>+ provider plugins<br/>Deploys locally"]
+    subgraph Gateway2["Embedded Gateway — desktop"]
+        IAM2[service-iam]
+        Canvas2[service-canvas]
+        Deploy2[service-deploy]
+        Engine2[service-engine]
+        Creds2[service-credentials]
+    end
 
-    Gateway --> PostgreSQL["PostgreSQL :5555"]
-    Gateway --> Redis["Redis :6379"]
+    Gateway --> PostgreSQL["PostgreSQL"]
+    Gateway --> Redis["Redis"]
+    Gateway2 --> SQLite["SQLite<br/>(local file)"]
+    Gateway2 --> MemQueue["In-Memory Queue"]
 ```
 
-## API Adapter Pattern
+## Desktop = Embedded Web App
 
-Both web and desktop apps share the same UI components (`@ice/ui`). The key abstraction is the `IceAPI` interface:
+The desktop app runs the **exact same code** as the web app — zero duplication:
+
+```mermaid
+graph TB
+    subgraph Electron["Electron App"]
+        subgraph Renderer["Renderer — Chromium"]
+            UI["@ice/ui — same components as web"]
+            HTTP["HTTP Adapter — axios to localhost"]
+        end
+        subgraph Main["Main Process"]
+            GW["@ice/gateway — Express server"]
+            Services["All backend services"]
+            DB["SQLite via Prisma"]
+            Queue["In-memory queue"]
+            Win["Window management + menus"]
+        end
+        Renderer -->|"HTTP localhost:15173"| Main
+    end
+```
+
+## Shared UI Architecture
+
+Both apps share `@ice/ui`. The web and desktop apps are thin shells:
 
 ```mermaid
 graph TD
-    UI["@ice/ui<br/>Canvas, Panels, AI Chat<br/>api.canvas.save() / api.deploy.plan() / api.ai.intent()"]
-    UI -->|"IceAPI interface"| HTTP["HTTP Adapter<br/>(Axios) — Web SaaS"]
-    UI -->|"IceAPI interface"| IPC["IPC Adapter<br/>(Electron IPC) — Desktop App"]
-```
+    UI["@ice/ui<br/>Features, Store, Shared Components,<br/>Hooks, Utils, Config, Assets"]
 
-- **Web:** `createHttpApiAdapter()` sends HTTP requests to the gateway via Axios
-- **Desktop:** `createIpcAdapter()` sends IPC messages to Electron's main process, which runs the engine directly
+    UI --> Web["@ice/web<br/>thin shell: routing + pages + styles"]
+    UI --> Desktop["@ice/desktop<br/>thin shell: Electron window + embedded gateway"]
+
+    Web -->|"Vite @ alias → ui/src"| UI
+    Desktop -->|"loads web from localhost"| UI
+```
 
 ## Dependency Graph
 
 ```mermaid
 graph TD
-    types["@ice/types<br/>(pure interfaces)"]
-    types --> db["@ice/db<br/>(Prisma ORM)"]
+    types["@ice/types"]
+    types --> db["@ice/db — Prisma"]
     types --> blockreg["@ice/block-registry"]
     types --> provreg["@ice/provider-registry"]
     types --> tmplreg["@ice/template-registry"]
 
-    core["@ice/core<br/>(standalone engine)"]
+    core["@ice/core — engine"]
     core --> blocks["@ice/blocks"]
     blockreg --> blocks
     blocks --> templates["@ice/templates"]
     tmplreg --> templates
 
-    db --> shared["@ice/shared<br/>(auth, crypto, socket)"]
+    db --> shared["@ice/shared — auth, crypto, socket"]
     shared --> iam[service-iam]
     shared --> canvas[service-canvas]
-    shared --> deploy["service-deploy<br/>(+bullmq, +ioredis)"]
-    shared --> ai["service-ai<br/>(+anthropic SDK)"]
+    shared --> deploy[service-deploy]
+    shared --> ai[service-ai]
     shared --> creds[service-credentials]
-    shared --> billing["service-billing<br/>(+stripe)"]
-    shared --> engine["service-engine<br/>(+core)"]
-    engine --> gateway["apps/gateway<br/>(composes all)"]
+    shared --> billing[service-billing]
+    shared --> engine[service-engine]
+    engine --> gateway["@ice/gateway"]
 
-    ui["@ice/ui<br/>(React components)"]
-    ui --> web["@ice/web<br/>(web SaaS app)"]
-    ui --> desktop["@ice/desktop<br/>(Electron app)"]
+    ui["@ice/ui — all React code"]
+    ui --> web["@ice/web"]
+    gateway --> desktop["@ice/desktop"]
+    ui --> desktop
 ```
 
 ## Data Flow: Canvas to Deploy
 
-1. User drags blocks onto canvas, connects them
-2. Redux `cards` slice updates nodes/edges in memory
-3. Auto-save debounces (2s) → saves to localStorage + `POST /api/canvas/:id/card`
-4. User clicks "Deploy" → `POST /api/canvas/deploy/plan` with card data
-5. Deploy service runs `@ice/core` plan engine → returns diff
-6. User confirms → `POST /api/canvas/deploy/apply`
-7. Deploy job queued in BullMQ → worker processes
-8. Progress streamed via Socket.IO `deploy:{cardId}` room
-9. Frontend `DeployPanel` displays real-time progress
-10. Deployment record saved to `CanvasDeployment` table
+```mermaid
+sequenceDiagram
+    participant User
+    participant Canvas as Canvas UI
+    participant Redux
+    participant API as Gateway API
+    participant Deploy as Deploy Service
+    participant Cloud as Cloud Provider
+
+    User->>Canvas: Drag blocks, connect edges
+    Canvas->>Redux: Update nodes/edges
+    Redux-->>API: Auto-save (debounced 2s)
+    User->>Canvas: Click Deploy
+    Canvas->>API: POST /deploy/plan
+    API->>Deploy: translate_card_to_graph()
+    Deploy-->>Canvas: Plan diff (create/update/delete)
+    User->>Canvas: Confirm
+    Canvas->>API: POST /deploy/apply
+    API->>Deploy: Queue job
+    Deploy->>Cloud: Provision resources
+    Deploy-->>Canvas: Progress via Socket.IO
+    Deploy-->>API: Save to CanvasDeployment
+```
 
 ## Data Flow: AI Intent
 
-1. User types intent in `AiChatPanel`
-2. Frontend serializes canvas state → `POST /api/ai/intent` (SSE)
-3. AI service builds system prompt with schema context (available blocks, connection rules)
-4. Claude API called with streaming
-5. Response parsed into `AiCanvasOp[]` (addNode, addEdge, deleteNode, etc.)
-6. Ops streamed back via SSE as `AiStreamEvent` messages
-7. Frontend `operation-executor.ts` dispatches each op to Redux
-8. Canvas updates in real-time as ops arrive
-9. Conversation + ops saved to `AiConversation` / `AiMessage` tables
-10. Audit log written to `AiAuditLog`
+```mermaid
+sequenceDiagram
+    participant User
+    participant Chat as AI Chat Panel
+    participant API as Gateway API
+    participant Claude as Claude API
+    participant Canvas as Canvas Redux
+
+    User->>Chat: Type intent
+    Chat->>API: POST /ai/intent (SSE)
+    API->>Claude: Stream with schema context
+    Claude-->>API: AiCanvasOp[] chunks
+    API-->>Chat: SSE events
+    Chat->>Canvas: Execute ops (addNode, addEdge...)
+    Canvas-->>User: Canvas updates in real-time
+    API-->>API: Save to AiConversation + AiAuditLog
+```
 
 ## Real-time Communication
 
-Socket.IO manages four room types:
+Socket.IO manages four room types (authenticated via JWT in handshake):
 
 | Room | Pattern | Purpose |
 |---|---|---|
@@ -116,15 +168,35 @@ Socket.IO manages four room types:
 
 - **Organisation** is the tenant boundary
 - Users belong to orgs via `OrganisationMember` (roles: owner, admin, member, viewer)
-- Projects belong to an org
-- Provider credentials are scoped per org
-- Project-level access adds finer-grained control via `ProjectMember`
+- Projects belong to an org; provider credentials are scoped per org
+- Project-level access via `ProjectMember`
+- **Desktop mode:** single local user, auth bypassed (`ICE_DESKTOP=true`)
 
 ## Environments
 
 Each project can have multiple environments (production, staging, development, PR):
 
 - Each `Environment` maps 1:1 to a `CanvasCard` (separate canvas per environment)
-- Production environment is protected (cannot be deleted)
-- PR environments are ephemeral — auto-created on GitHub `pull_request` webhook events
+- Production is protected (cannot be deleted)
+- PR environments are ephemeral — auto-created on GitHub webhook
 - Environment promotion copies canvas state between environments
+
+## Database Strategy
+
+```mermaid
+graph LR
+    subgraph Web["Web — Production"]
+        PG["PostgreSQL"]
+        RD["Redis + BullMQ"]
+    end
+    subgraph Desktop["Desktop — Local"]
+        SQ["SQLite file"]
+        MQ["In-Memory Queue"]
+    end
+    Prisma["Prisma ORM<br/>same schema, two providers"] --> PG
+    Prisma --> SQ
+```
+
+- **Same Prisma schema** — `schema.prisma` (PostgreSQL) and `schema.sqlite.prisma` (SQLite)
+- Zero raw SQL — all queries through Prisma, portable across providers
+- Desktop data: `~/Library/Application Support/@ice/desktop/ice-desktop.db`

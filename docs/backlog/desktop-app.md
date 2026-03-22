@@ -1,8 +1,8 @@
 # Desktop App (Electron) Backlog
 
-> **Status: 0 of 15 items fixed.** The desktop app is non-functional — it cannot build or run.
+> **Status: All 15 items resolved** (2026-03-22). Architecture redesigned: desktop now embeds the full web app + backend instead of maintaining separate IPC handlers.
 
-The ICE desktop app (`@ice/desktop`) is a standalone Electron application that deploys directly to cloud providers using local credentials (no backend needed). It shares UI components from `@ice/ui` but uses IPC instead of HTTP for all operations.
+The ICE desktop app (`@ice/desktop`) embeds the full gateway + services inside Electron. The renderer loads the web app from an embedded HTTP server. Same code as production — no IPC handlers, no code duplication.
 
 ## DESK-1: Missing dependencies — app cannot build (P0)
 

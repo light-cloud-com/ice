@@ -17,7 +17,7 @@ Fixed on 2026-03-22.
 | [Infrastructure & CI/CD](infrastructure.md) | 16 | 15 | 1 | Broken CI, missing configs, Docker issues, build system |
 | [Developer Experience](developer-experience.md) | 10 | 10 | 0 | Missing scripts, testing gaps, monorepo health |
 | [Refactoring Debt](refactoring-debt.md) | 8 | 8 | 0 | Incomplete migration artifacts from modular refactor |
-| [Desktop App](desktop-app.md) | 15 | 0 | 15 | Electron app non-functional — missing deps, UI, config |
+| [Desktop App](desktop-app.md) | 15 | 15 | 0 | Electron app — now embeds full web app + backend |
 
 ### Product & Content Gaps
 
@@ -29,7 +29,7 @@ Fixed on 2026-03-22.
 
 ## Progress Summary
 
-**Total fixed: 102 / 109 bugs & tech debt items (94%)**
+**Total fixed: 117 / 124 bugs & tech debt items (94%)**
 
 - Security: 15/15 (100%)
 - Backend Services: 16/16 (100%)
@@ -39,20 +39,24 @@ Fixed on 2026-03-22.
 - Infrastructure & CI/CD: 15/16 (94%)
 - Developer Experience: 10/10 (100%)
 - Refactoring Debt: 8/8 (100%)
+- Desktop App: 15/15 (100%)
 
 **Remaining 7 open items:**
 - 6 Core Engine: GCP handler stubs (domain mapping, dataflow update, GKE update, discovery engine update), Terraform/Pulumi importer UI, Cloud Run IAM policy
 - 1 Infrastructure: Deployment workflow (requires cloud provider configuration)
 
-**Test coverage added:**
+**Test coverage:**
 - 23 unit tests (vitest): crypto, auth, build validation, card translator type maps
 - 32 e2e tests (Playwright): security, backend services, frontend
+- Vite build check in CI catches import resolution errors
 
 **Architecture changes:**
-- `@ice/ui` is now the single source of truth for all shared UI (features, store, shared components, hooks, utils, config, assets)
-- `@ice/web` is a thin shell: app routing, pages, styles — all UI imports from `@ice/ui` via `@ui/` Vite alias
-- Tailwind scans both `web/src/` and `ui/src/` for class names
-- Vite build (`pnpm test:build`) catches import resolution errors in CI
+- `@ice/ui` — single source of truth for all shared UI (features, store, components, hooks, utils, config, assets)
+- `@ice/web` — thin shell (routing, pages, styles), all UI from `@ice/ui` via Vite alias
+- `@ice/desktop` — Electron shell that embeds the full gateway + services (same code as web, no IPC handlers)
+- SQLite + in-memory queue for desktop (no PostgreSQL/Redis needed)
+- Tailwind scans `ui/src/` for class names in both web and desktop
+- All packages renamed to `@ice/*` scope
 
 ## Priority Summary
 

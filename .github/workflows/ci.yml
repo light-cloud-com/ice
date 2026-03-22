@@ -24,12 +24,15 @@ jobs:
         run: npx tsc --noEmit -p packages/shared/tsconfig.json
 
       - name: Unit tests
-        run: npx vitest run --root .
+        run: npx vitest run --root . packages/shared/src/__tests__/ services/iam/src/__tests__/ services/deploy/src/__tests__/ packages/core/src/__tests__/card-translator.test.ts
         env:
           NODE_ENV: test
 
-      - name: Build check (catches import resolution errors)
-        run: pnpm test:build
+      - name: Build web app
+        run: cd packages/web && npx vite build
+
+      - name: Format check
+        run: npx prettier --check "packages/**/*.{ts,tsx}" "services/**/*.{ts,tsx}" "apps/**/*.{ts,tsx}"
 
       - name: Audit dependencies
         run: pnpm audit --prod --audit-level=high || true

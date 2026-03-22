@@ -25,7 +25,8 @@
     "test:build": "pnpm --filter @ice/web exec vite build",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
-    "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
+    "format": "prettier --write \"packages/**/*.{ts,tsx}\" \"services/**/*.{ts,tsx}\" \"apps/**/*.{ts,tsx}\" \"e2e/**/*.ts\"",
+    "format:check": "prettier --check \"packages/**/*.{ts,tsx}\" \"services/**/*.{ts,tsx}\" \"apps/**/*.{ts,tsx}\"",
     "clean": "pnpm -r clean && rm -rf node_modules"
   },
   "devDependencies": {

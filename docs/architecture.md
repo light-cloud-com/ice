@@ -4,68 +4,41 @@ ICE SaaS is structured as a pnpm monorepo with three distinct layers: **shared p
 
 ## System Diagram
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        Clients                              │
-│  ┌──────────────┐                    ┌──────────────────┐   │
-│  │  Web (SaaS)  │                    │ Desktop (Electron)│   │
-│  │  @lightcloud/ │                    │ @ice-saas/desktop│   │
-│  │  web          │                    │                  │   │
-│  └──────┬───────┘                    └────────┬─────────┘   │
-│         │ HTTP + Socket.IO                    │ IPC         │
-└─────────┼─────────────────────────────────────┼─────────────┘
-          │                                     │
-          ▼                                     ▼
-┌──────────────────┐              ┌──────────────────────────┐
-│   API Gateway    │              │  Electron Main Process   │
-│  apps/gateway    │              │  Embeds @ice-engine/core │
-│  Port 5001       │              │  + provider plugins      │
-│                  │              │  Deploys locally          │
-│  Composes:       │              └──────────────────────────┘
-│  ┌────────────┐  │
-│  │ service-iam│  │
-│  │ service-   │  │
-│  │  canvas    │  │
-│  │ service-   │  │
-│  │  deploy    │  │
-│  │ service-ai │  │
-│  │ service-   │  │
-│  │  engine    │  │
-│  │ service-   │  │
-│  │  creds     │  │
-│  │ service-   │  │
-│  │  billing   │  │
-│  └────────────┘  │
-└────────┬─────────┘
-         │
-    ┌────┴────┐
-    ▼         ▼
-┌────────┐ ┌───────┐
-│PostgreSQL│ │ Redis │
-│  :5555  │ │ :6379 │
-└─────────┘ └───────┘
+```mermaid
+graph TD
+    subgraph Clients
+        Web["Web SaaS<br/>@lightcloud/web"]
+        Desktop["Desktop Electron<br/>@ice-saas/desktop"]
+    end
+
+    Web -->|"HTTP + Socket.IO"| Gateway
+    Desktop -->|"IPC"| Electron
+
+    subgraph Gateway["API Gateway — apps/gateway :5001"]
+        IAM[service-iam]
+        Canvas[service-canvas]
+        Deploy[service-deploy]
+        AI[service-ai]
+        Engine[service-engine]
+        Creds[service-credentials]
+        Billing[service-billing]
+    end
+
+    Electron["Electron Main Process<br/>Embeds @ice-engine/core<br/>+ provider plugins<br/>Deploys locally"]
+
+    Gateway --> PostgreSQL["PostgreSQL :5555"]
+    Gateway --> Redis["Redis :6379"]
 ```
 
 ## API Adapter Pattern
 
 Both web and desktop apps share the same UI components (`@ice-saas/ui`). The key abstraction is the `IceAPI` interface:
 
-```
-┌──────────────────────────────────────┐
-│          @ice-saas/ui                │
-│  Canvas, Panels, AI Chat, etc.      │
-│  Calls: api.canvas.save(...)        │
-│         api.deploy.plan(...)        │
-│         api.ai.intent(...)          │
-└──────────────┬───────────────────────┘
-               │ IceAPI interface
-       ┌───────┴───────┐
-       ▼               ▼
-┌──────────────┐ ┌─────────────────┐
-│ HTTP Adapter │ │   IPC Adapter   │
-│ (Axios)      │ │ (Electron IPC)  │
-│ Web SaaS     │ │ Desktop App     │
-└──────────────┘ └─────────────────┘
+```mermaid
+graph TD
+    UI["@ice-saas/ui<br/>Canvas, Panels, AI Chat<br/>api.canvas.save() / api.deploy.plan() / api.ai.intent()"]
+    UI -->|"IceAPI interface"| HTTP["HTTP Adapter<br/>(Axios) — Web SaaS"]
+    UI -->|"IceAPI interface"| IPC["IPC Adapter<br/>(Electron IPC) — Desktop App"]
 ```
 
 - **Web:** `createHttpApiAdapter()` sends HTTP requests to the gateway via Axios

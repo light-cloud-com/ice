@@ -4,40 +4,12 @@ ICE integrates Claude (Anthropic) as an AI assistant that can modify canvas infr
 
 ## Pipeline
 
-```
-User types intent
-       │
-       ▼
-┌──────────────────┐
-│  Frontend        │
-│  Serialize canvas│ ──► POST /api/ai/intent (SSE)
-│  state to JSON   │
-└──────────────────┘
-       │
-       ▼
-┌──────────────────┐
-│  AI Service      │
-│  1. Build system │
-│     prompt with  │
-│     schema ctx   │
-│  2. Call Claude  │
-│     API (stream) │
-│  3. Parse JSON   │
-│     response     │
-│  4. Validate ops │
-└──────────────────┘
-       │
-       ▼ SSE stream of AiStreamEvent
-┌──────────────────┐
-│  Frontend        │
-│  operation-      │
-│  executor.ts     │
-│  Dispatches ops  │
-│  to Redux store  │
-└──────────────────┘
-       │
-       ▼
-  Canvas updates in real-time
+```mermaid
+graph TD
+    User["User types intent"] --> Serialize["Frontend<br/>Serialize canvas state to JSON"]
+    Serialize -->|"POST /api/ai/intent (SSE)"| Service["AI Service<br/>1. Build system prompt with schema ctx<br/>2. Call Claude API (stream)<br/>3. Parse JSON response<br/>4. Validate ops"]
+    Service -->|"SSE stream of AiStreamEvent"| Executor["Frontend — operation-executor.ts<br/>Dispatches ops to Redux store"]
+    Executor --> Canvas["Canvas updates in real-time"]
 ```
 
 ## Operation Schema

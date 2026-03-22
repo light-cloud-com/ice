@@ -29,22 +29,17 @@ The web frontend is a React SPA built with Vite, using Redux Toolkit for state m
 
 ### Layout
 
-```
-┌──────────────────────────────────────────────────┐
-│  AppBar (project name, view toggle, user menu)   │
-├────────┬──────────────────────────┬──────────────┤
-│Resource│                          │  Properties  │
-│Palette │      SVG Canvas          │    Panel     │
-│        │   (drag, connect,        │  (config,    │
-│(blocks,│    deploy blocks)        │   pipeline,  │
-│projects│                          │   deploy)    │
-│ tree)  │                          │              │
-│        ├──────────────────────────┤              │
-│        │  Environment Tab Bar     │              │
-│        ├──────────────────────────┤              │
-│        │  AI Chat Panel           │              │
-│        │  (collapsible)           │              │
-└────────┴──────────────────────────┴──────────────┘
+```mermaid
+block-beta
+    columns 3
+    AppBar["AppBar (project name, view toggle, user menu)"]:3
+    Palette["Resource Palette<br/>(blocks, projects tree)"]:1
+    block:center:1
+        Canvas["SVG Canvas<br/>(drag, connect, deploy blocks)"]
+        EnvBar["Environment Tab Bar"]
+        AiChat["AI Chat Panel (collapsible)"]
+    end
+    Properties["Properties Panel<br/>(config, pipeline, deploy)"]:1
 ```
 
 ### Feature Modules

@@ -9,26 +9,25 @@ The ICE desktop app is an Electron application that shares the same UI component
 
 Standard 3-process Electron model:
 
-```
-┌─────────────────────────────────────────┐
-│              Main Process               │
-│  - BrowserWindow management             │
-│  - Splash screen (4s min display)       │
-│  - IPC handler registration             │
-│  - Native menu                          │
-│  - Embeds @ice-engine/core              │
-│  - Embeds provider plugins (GCP, etc.)  │
-│  - Runs deploys in-process              │
-├─────────────────────────────────────────┤
-│             Preload Script              │
-│  - contextBridge: exposes window.api    │
-│  - Implements IceAPI via IPC            │
-├─────────────────────────────────────────┤
-│           Renderer Process              │
-│  - React app using @ice-saas/ui         │
-│  - createIpcAdapter() → window.api      │
-│  - Same components as web SaaS          │
-└─────────────────────────────────────────┘
+```mermaid
+block-beta
+    columns 1
+    block:main["Main Process"]
+        A["BrowserWindow management"]
+        B["Splash screen (4s min display)"]
+        C["IPC handler registration + Native menu"]
+        D["Embeds @ice-engine/core + provider plugins"]
+        E["Runs deploys in-process"]
+    end
+    block:preload["Preload Script"]
+        F["contextBridge: exposes window.api"]
+        G["Implements IceAPI via IPC"]
+    end
+    block:renderer["Renderer Process"]
+        H["React app using @ice-saas/ui"]
+        I["createIpcAdapter() → window.api"]
+        J["Same components as web SaaS"]
+    end
 ```
 
 ## IPC Bridge

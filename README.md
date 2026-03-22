@@ -1,6 +1,6 @@
 # ICE SaaS
 
-**Infrastructure Compiler Engine** — a visual infrastructure design and deployment platform by [Light Cloud](https://lightcloud.dev).
+**Infrastructure Compiler Engine** — a visual infrastructure design and deployment platform by [Light Cloud](https://light-cloud.com).
 
 Design cloud infrastructure by dragging blocks onto a canvas, connect them, and deploy real resources to GCP, AWS, or Azure. An AI assistant (Claude) can modify the canvas via natural language. Ships as both a **web SaaS** and an **Electron desktop app** sharing the same UI.
 
@@ -123,14 +123,16 @@ pnpm clean             # Remove all node_modules and build artifacts
 
 ## Tech Stack
 
-**Frontend:** React 18, Vite 5, Redux Toolkit, Tailwind CSS, Radix UI, Custom SVG Canvas
-**Backend:** Express, Prisma 6, PostgreSQL 16, Redis 7, BullMQ, Socket.IO
-**AI:** Anthropic Claude API (streaming SSE)
-**Desktop:** Electron 28, electron-vite, IPC bridge
-**Cloud:** Google Cloud SDKs, AWS SDK, Azure SDK
-**Testing:** Playwright, GitHub Actions CI
-**Infra:** Docker Compose (local dev), pnpm workspaces
+| Layer | Technologies |
+|---|---|
+| Frontend | React 18, Vite 5, Redux Toolkit, Tailwind CSS, Radix UI, Custom SVG Canvas |
+| Backend | Express, Prisma 6, PostgreSQL 16, Redis 7, BullMQ, Socket.IO |
+| AI | Anthropic Claude API (streaming SSE) |
+| Desktop | Electron 28, electron-vite, IPC bridge |
+| Cloud | Google Cloud SDK, AWS SDK, Azure SDK |
+| Testing | Playwright, GitHub Actions CI |
+| Infra | Docker Compose, pnpm workspaces |
 
 ## License
 
-Proprietary. All rights reserved.
+This project is licensed under the **ICE Source Available License v1.0** — a custom source-available license. You may view, modify, and redistribute the code for non-production purposes. Production use requires a commercial license, except for qualifying non-profit organisations serving marginalised communities. See [LICENSE](LICENSE) for full terms.

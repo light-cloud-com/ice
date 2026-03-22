@@ -94,18 +94,14 @@ The `MutableGraph` is the core data structure representing infrastructure as a d
 
 ## Plan / Apply Lifecycle
 
-```
-Canvas State ──► Plan Engine ──► Diff ──► Execution Plan
-                                              │
-                                              ▼
-                                         Apply Engine
-                                              │
-                                         ┌────┴────┐
-                                         ▼         ▼
-                                    GCP Deployer  AWS Deployer  ...
-                                         │
-                                    Resource Handlers
-                                    (Cloud Run, SQL, etc.)
+```mermaid
+graph LR
+    Canvas["Canvas State"] --> Plan["Plan Engine"] --> Diff["Diff"] --> Exec["Execution Plan"]
+    Exec --> Apply["Apply Engine"]
+    Apply --> GCP["GCP Deployer"]
+    Apply --> AWS["AWS Deployer"]
+    Apply --> More["..."]
+    GCP --> Handlers["Resource Handlers<br/>(Cloud Run, SQL, etc.)"]
 ```
 
 1. **Plan:** Compares desired state (canvas) against actual state (cloud) → produces a diff

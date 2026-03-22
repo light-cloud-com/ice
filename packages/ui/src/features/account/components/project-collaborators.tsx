@@ -55,7 +55,9 @@ export const ProjectCollaborators: React.FC<ProjectCollaboratorsProps> = ({ proj
     try {
       const res = await axiosInstance.post('/project-members/list', { projectId });
       setMembers(res.data);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     setLoading(false);
   }, [projectId]);
 
@@ -64,7 +66,9 @@ export const ProjectCollaborators: React.FC<ProjectCollaboratorsProps> = ({ proj
     try {
       const res = await axiosInstance.post('/users', { targetOrganisationId: selectedOrg.id, limit: 100 });
       setOrgMembers(res.data.items);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }, [selectedOrg]);
 
   useEffect(() => {
@@ -80,7 +84,9 @@ export const ProjectCollaborators: React.FC<ProjectCollaboratorsProps> = ({ proj
       setAddUserId('');
       setShowAdd(false);
       fetchMembers();
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     setAdding(false);
   };
 
@@ -88,20 +94,22 @@ export const ProjectCollaborators: React.FC<ProjectCollaboratorsProps> = ({ proj
     try {
       await axiosInstance.post('/project-members/update-role', { projectId, userId, role: newRole });
       fetchMembers();
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   };
 
   const handleRemove = async (userId: string) => {
     try {
       await axiosInstance.post('/project-members/remove', { projectId, userId });
       fetchMembers();
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   };
 
   // Members not already in the project
-  const availableToAdd = orgMembers.filter(
-    (om) => !members.some((m) => m.userId === om.id)
-  );
+  const availableToAdd = orgMembers.filter((om) => !members.some((m) => m.userId === om.id));
 
   if (loading) {
     return (
@@ -117,7 +125,9 @@ export const ProjectCollaborators: React.FC<ProjectCollaboratorsProps> = ({ proj
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-ice-sm font-medium text-ice-text-1">Project members</h3>
-          <p className="text-ice-xs text-ice-text-3">{members.length} member{members.length !== 1 ? 's' : ''}</p>
+          <p className="text-ice-xs text-ice-text-3">
+            {members.length} member{members.length !== 1 ? 's' : ''}
+          </p>
         </div>
         {availableToAdd.length > 0 && (
           <button
@@ -135,14 +145,12 @@ export const ProjectCollaborators: React.FC<ProjectCollaboratorsProps> = ({ proj
         <div className="p-3 rounded-lg bg-ice-raised border border-ice-border space-y-3">
           <div>
             <label className="block text-ice-xs font-medium text-ice-text-2 mb-1">Team member</label>
-            <select
-              value={addUserId}
-              onChange={(e) => setAddUserId(e.target.value)}
-              className="ice-input w-full"
-            >
+            <select value={addUserId} onChange={(e) => setAddUserId(e.target.value)} className="ice-input w-full">
               <option value="">Select a member...</option>
               {availableToAdd.map((m) => (
-                <option key={m.id} value={m.id}>{m.name} ({m.email})</option>
+                <option key={m.id} value={m.id}>
+                  {m.name} ({m.email})
+                </option>
               ))}
             </select>
           </div>
@@ -160,7 +168,7 @@ export const ProjectCollaborators: React.FC<ProjectCollaboratorsProps> = ({ proj
                       'flex w-full items-center gap-2 px-3 py-2 rounded-md border text-left transition-all text-ice-xs',
                       addRole === r.value
                         ? 'border-ice-accent bg-ice-accent/5'
-                        : 'border-ice-border hover:border-ice-text-3'
+                        : 'border-ice-border hover:border-ice-text-3',
                     )}
                   >
                     <Icon className={cn('w-3 h-3', addRole === r.value ? 'text-ice-accent' : 'text-ice-text-3')} />
@@ -172,7 +180,10 @@ export const ProjectCollaborators: React.FC<ProjectCollaboratorsProps> = ({ proj
             </div>
           </div>
           <div className="flex justify-end gap-2">
-            <button onClick={() => setShowAdd(false)} className="text-ice-xs text-ice-text-3 hover:text-ice-text-1 px-3 py-1.5">
+            <button
+              onClick={() => setShowAdd(false)}
+              className="text-ice-xs text-ice-text-3 hover:text-ice-text-1 px-3 py-1.5"
+            >
               Cancel
             </button>
             <button
@@ -208,7 +219,8 @@ export const ProjectCollaborators: React.FC<ProjectCollaboratorsProps> = ({ proj
               {/* Info */}
               <div className="flex-1 min-w-0">
                 <p className="text-ice-xs font-medium text-ice-text-1 truncate">
-                  {m.name}{isCurrentUser && <span className="text-ice-text-3 ml-1">(you)</span>}
+                  {m.name}
+                  {isCurrentUser && <span className="text-ice-text-3 ml-1">(you)</span>}
                 </p>
                 <p className="text-[10px] text-ice-text-3 truncate">{m.email}</p>
               </div>
@@ -221,7 +233,9 @@ export const ProjectCollaborators: React.FC<ProjectCollaboratorsProps> = ({ proj
                   className="text-ice-xs bg-ice-raised border border-ice-border rounded px-2 py-1 text-ice-text-1"
                 >
                   {ROLES.map((r) => (
-                    <option key={r.value} value={r.value}>{r.label}</option>
+                    <option key={r.value} value={r.value}>
+                      {r.label}
+                    </option>
                   ))}
                 </select>
               ) : (

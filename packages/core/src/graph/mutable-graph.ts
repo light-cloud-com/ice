@@ -60,7 +60,7 @@ export class MutableGraph implements Graph {
       annotations?: Record<string, unknown>;
       providers?: string[];
       regions?: string[];
-    } = {}
+    } = {},
   ) {
     const now = new Date().toISOString();
 
@@ -166,22 +166,18 @@ export class MutableGraph implements Graph {
       properties?: Record<string, unknown>;
       labels?: Record<string, string>;
       annotations?: Record<string, unknown>;
-    }
+    },
   ): boolean {
     const node = this._nodes.get(id);
     if (!node) return false;
 
     const updated: Node = {
       ...node,
-      properties: updates.properties
-        ? { ...node.properties, ...updates.properties }
-        : node.properties,
+      properties: updates.properties ? { ...node.properties, ...updates.properties } : node.properties,
       metadata: {
         ...node.metadata,
         updated_at: new Date().toISOString(),
-        labels: updates.labels
-          ? { ...node.metadata.labels, ...updates.labels }
-          : node.metadata.labels,
+        labels: updates.labels ? { ...node.metadata.labels, ...updates.labels } : node.metadata.labels,
         annotations: updates.annotations
           ? { ...node.metadata.annotations, ...updates.annotations }
           : node.metadata.annotations,
@@ -421,11 +417,7 @@ export class MutableGraph implements Graph {
   /**
    * Traverse the graph using BFS or DFS.
    */
-  traverse(
-    start: NodeId,
-    options: TraversalOptions,
-    callback: (node: Node, depth: number) => boolean | void
-  ): void {
+  traverse(start: NodeId, options: TraversalOptions, callback: (node: Node, depth: number) => boolean | void): void {
     const visited = new Set<NodeId>();
     const max_depth = options.max_depth ?? Infinity;
 
@@ -664,7 +656,7 @@ export function create_mutable_graph(
     labels?: Record<string, string>;
     providers?: string[];
     regions?: string[];
-  }
+  },
 ): MutableGraph {
   return new MutableGraph(name, options);
 }

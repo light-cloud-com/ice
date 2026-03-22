@@ -15,7 +15,7 @@ function result(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  overrides: Partial<ResourceDeployResult> = {}
+  overrides: Partial<ResourceDeployResult> = {},
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -32,7 +32,7 @@ function fail(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  error: string
+  error: string,
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -74,10 +74,7 @@ export const cloud_sql_handler: GCPResourceHandler = {
       };
 
       // Create the instance
-      const op = (await ctx.rest_client.post(
-        `${BASE_URL}/projects/${ctx.project}/instances`,
-        instance_body
-      )) as any;
+      const op = (await ctx.rest_client.post(`${BASE_URL}/projects/${ctx.project}/instances`, instance_body)) as any;
 
       // Wait for the operation to complete
       if (op?.name) {
@@ -124,7 +121,7 @@ export const cloud_sql_handler: GCPResourceHandler = {
 
       const op = (await ctx.rest_client.patch(
         `${BASE_URL}/projects/${ctx.project}/instances/${name}`,
-        patch_body
+        patch_body,
       )) as any;
 
       if (op?.name) {
@@ -141,9 +138,7 @@ export const cloud_sql_handler: GCPResourceHandler = {
     const start = Date.now();
 
     try {
-      const op = (await ctx.rest_client.delete(
-        `${BASE_URL}/projects/${ctx.project}/instances/${name}`
-      )) as any;
+      const op = (await ctx.rest_client.delete(`${BASE_URL}/projects/${ctx.project}/instances/${name}`)) as any;
 
       if (op?.name) {
         await wait_for_operation(ctx, op.name);
@@ -163,15 +158,13 @@ export const cloud_sql_handler: GCPResourceHandler = {
 async function wait_for_operation(
   ctx: GCPHandlerContext,
   operation_name: string,
-  timeout_ms: number = 900_000 // 15 minutes — Cloud SQL is slow
+  timeout_ms: number = 900_000, // 15 minutes — Cloud SQL is slow
 ): Promise<void> {
   const start = Date.now();
   const poll_interval = 5000;
 
   while (Date.now() - start < timeout_ms) {
-    const op = (await ctx.rest_client.get(
-      `${BASE_URL}/projects/${ctx.project}/operations/${operation_name}`
-    )) as any;
+    const op = (await ctx.rest_client.get(`${BASE_URL}/projects/${ctx.project}/operations/${operation_name}`)) as any;
 
     if (op?.status === 'DONE') {
       if (op.error) {

@@ -18,11 +18,14 @@ export const CanvasControls: React.FC = () => {
   const activePane = splitView.panes.find((p) => p.id === splitView.activePaneId);
   const viewport = activePane?.viewport || { panX: 0, panY: 0, scale: 1 };
 
-  const setViewport = useCallback((panX: number, panY: number, scale: number) => {
-    if (activePane) {
-      dispatch(setPaneViewport({ paneId: activePane.id, viewport: { panX, panY, scale } }));
-    }
-  }, [dispatch, activePane]);
+  const setViewport = useCallback(
+    (panX: number, panY: number, scale: number) => {
+      if (activePane) {
+        dispatch(setPaneViewport({ paneId: activePane.id, viewport: { panX, panY, scale } }));
+      }
+    },
+    [dispatch, activePane],
+  );
 
   const handleZoomIn = useCallback(() => {
     const newScale = Math.min(viewport.scale * 1.25, 3);
@@ -38,7 +41,10 @@ export const CanvasControls: React.FC = () => {
     if (!activeCard || activeCard.nodes.length === 0) return;
 
     const nodes = activeCard.nodes as Array<{ position: { x: number; y: number }; width: number; height: number }>;
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
 
     for (const n of nodes) {
       const x = n.position?.x ?? 0;
@@ -90,9 +96,7 @@ export const CanvasControls: React.FC = () => {
         <ZoomOut className="w-3.5 h-3.5" />
       </button>
 
-      <span className="text-ice-xs text-ice-text-3 font-mono w-10 text-center tabular-nums">
-        {zoomPercent}%
-      </span>
+      <span className="text-ice-xs text-ice-text-3 font-mono w-10 text-center tabular-nums">{zoomPercent}%</span>
 
       <button
         onClick={handleZoomIn}

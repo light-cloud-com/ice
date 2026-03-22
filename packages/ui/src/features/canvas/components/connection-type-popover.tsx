@@ -28,11 +28,7 @@ const RELATIONSHIP_OPTIONS = [
 
 const PROTOCOL_OPTIONS = ['HTTP', 'HTTPS', 'gRPC', 'TCP', 'UDP', 'WebSocket'];
 
-export const ConnectionTypePopover: React.FC<ConnectionTypePopoverProps> = ({
-  position,
-  onConfirm,
-  onDismiss,
-}) => {
+export const ConnectionTypePopover: React.FC<ConnectionTypePopoverProps> = ({ position, onConfirm, onDismiss }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [relationship, setRelationship] = useState<'connects_to' | 'depends_on'>('connects_to');
   const [protocol, setProtocol] = useState('');

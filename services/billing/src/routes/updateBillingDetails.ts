@@ -7,10 +7,7 @@
 
 import { Request, Response } from 'express';
 import { User } from '@prisma/client';
-import {
-  updateUserBillingDetails,
-  getUserBillingDetails,
-} from '../../services/stripeService';
+import { updateUserBillingDetails, getUserBillingDetails } from '../../services/stripeService';
 import { checkPermissions } from '../../utils/checkPermissions';
 import { errorHandler } from '../../errorHandler';
 import { Permission } from '../../const/permissions';
@@ -106,10 +103,7 @@ interface AuthenticatedRequest extends Request {
  *       401:
  *         description: Unauthorized
  */
-export const updateBillingDetailsRoute = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
+export const updateBillingDetailsRoute = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const {
       targetOrganisationId,
@@ -169,12 +163,7 @@ export const updateBillingDetailsRoute = async (
       return;
     }
 
-    if (
-      !address_street ||
-      !address_city ||
-      !address_post_code ||
-      !address_country
-    ) {
+    if (!address_street || !address_city || !address_post_code || !address_country) {
       errorHandler({
         res,
         message: 'Complete address is required',
@@ -232,10 +221,7 @@ export const updateBillingDetailsRoute = async (
     console.error('Error updating billing details:', error);
     errorHandler({
       res,
-      message:
-        error instanceof Error
-          ? error.message
-          : 'Failed to update billing details',
+      message: error instanceof Error ? error.message : 'Failed to update billing details',
       error,
     });
   }
@@ -250,10 +236,7 @@ export const updateBillingDetailsRoute = async (
  *       - bearerAuth: []
  *     tags: [Billing]
  */
-export const getBillingDetailsRoute = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
+export const getBillingDetailsRoute = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { targetOrganisationId } = req.body;
 

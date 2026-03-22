@@ -26,14 +26,7 @@ export const RESOURCE_CATEGORIES = {
   // ── Architecture-level (visible in Basic + Professional) ──────────────
 
   // Organizational groups
-  groups: [
-    'Group.Frontend',
-    'Group.Services',
-    'Group.Data',
-    'Group.Messaging',
-    'Group.Monitoring',
-    'Group.External',
-  ],
+  groups: ['Group.Frontend', 'Group.Services', 'Group.Data', 'Group.Messaging', 'Group.Monitoring', 'Group.External'],
 
   // Cloud Blocks (high-level containers for Level 2 resources)
   blocks: [
@@ -93,39 +86,19 @@ export const RESOURCE_CATEGORIES = {
   ],
 
   // Architecture-level networking (how traffic flows between services)
-  gateway: [
-    'Network.Gateway',
-    'Network.CDN',
-    'Network.LoadBalancer',
-    'Network.Internet',
-  ],
+  gateway: ['Network.Gateway', 'Network.CDN', 'Network.LoadBalancer', 'Network.Internet'],
 
   // Auth & secrets (architecture-level — every app needs these)
-  auth: [
-    'Security.Identity',
-    'Security.Secret',
-  ],
+  auth: ['Security.Identity', 'Security.Secret'],
 
   // Observability (architecture-level — logs, monitoring)
-  observability: [
-    'Monitoring.Log',
-    'Monitoring.Alert',
-    'Monitoring.Dashboard',
-    'Log.Terminal',
-  ],
+  observability: ['Monitoring.Log', 'Monitoring.Alert', 'Monitoring.Dashboard', 'Log.Terminal'],
 
   // AI/ML
-  ai: [
-    'AI.LLMGateway',
-    'AI.VectorDB',
-    'AI.ModelServing',
-  ],
+  ai: ['AI.LLMGateway', 'AI.VectorDB', 'AI.ModelServing'],
 
   // Analytics
-  analytics: [
-    'Analytics.DataWarehouse',
-    'Analytics.Search',
-  ],
+  analytics: ['Analytics.DataWarehouse', 'Analytics.Search'],
 
   // Source & Config (provider-agnostic)
   source: ['Source.Repository'],
@@ -134,12 +107,7 @@ export const RESOURCE_CATEGORIES = {
   // ── Infrastructure-level (Professional only) ─────────────────────────
 
   // Network infrastructure (VPCs, subnets, firewalls)
-  infrastructure: [
-    'Network.VPC',
-    'Network.Subnet',
-    'Network.Firewall',
-    'Network.DNS',
-  ],
+  infrastructure: ['Network.VPC', 'Network.Subnet', 'Network.Firewall', 'Network.DNS'],
 
   // IAM & policies (infrastructure-level security)
   iam: [
@@ -170,11 +138,19 @@ export const VIEW_LEVELS: Record<ViewLevel, ViewLevelConfig> = {
     description: 'Architecture view — services, data, connections & flow',
     tooltip: 'Basic View (press 1)',
     visibleCategories: [
-      'groups', 'blocks',
-      'compute', 'databases', 'storage', 'messaging',
-      'gateway', 'auth', 'observability',
-      'ai', 'analytics',
-      'source', 'config',
+      'groups',
+      'blocks',
+      'compute',
+      'databases',
+      'storage',
+      'messaging',
+      'gateway',
+      'auth',
+      'observability',
+      'ai',
+      'analytics',
+      'source',
+      'config',
     ],
     showEmptyContainers: false,
   },
@@ -184,12 +160,21 @@ export const VIEW_LEVELS: Record<ViewLevel, ViewLevelConfig> = {
     description: 'Infrastructure view — VPCs, networking, IAM & full detail',
     tooltip: 'Professional View (press 2)',
     visibleCategories: [
-      'groups', 'blocks',
-      'compute', 'databases', 'storage', 'messaging',
-      'gateway', 'auth', 'observability',
-      'ai', 'analytics',
-      'source', 'config',
-      'infrastructure', 'iam',
+      'groups',
+      'blocks',
+      'compute',
+      'databases',
+      'storage',
+      'messaging',
+      'gateway',
+      'auth',
+      'observability',
+      'ai',
+      'analytics',
+      'source',
+      'config',
+      'infrastructure',
+      'iam',
     ],
     showEmptyContainers: true,
   },
@@ -230,12 +215,7 @@ export function isTypeVisibleAtLevel(nodeType: string, viewLevel: ViewLevel): bo
 // Edge Style Configuration
 // =============================================================================
 
-export type EdgeStyleType =
-  | 'data_flow'
-  | 'data_flow_explicit'
-  | 'infrastructure'
-  | 'security'
-  | 'inferred';
+export type EdgeStyleType = 'data_flow' | 'data_flow_explicit' | 'infrastructure' | 'security' | 'inferred';
 
 export interface EdgeStyle {
   stroke: string;
@@ -289,7 +269,7 @@ export const EDGE_STYLES: Record<EdgeStyleType, EdgeStyle> = {
 export function getEdgeStyle(
   relationship: string,
   isInferred: boolean = false,
-  hasSecurityRule: boolean = false
+  hasSecurityRule: boolean = false,
 ): EdgeStyle {
   if (hasSecurityRule) {
     return EDGE_STYLES.security;
@@ -310,11 +290,7 @@ export function getEdgeStyle(
  * Check if an edge should be visible at a given view level.
  * Currently only Level 2 (all edges visible) is active.
  */
-export function isEdgeVisibleAtLevel(
-  edgeRelationship: string,
-  _isInferred: boolean,
-  viewLevel: ViewLevel
-): boolean {
+export function isEdgeVisibleAtLevel(edgeRelationship: string, _isInferred: boolean, viewLevel: ViewLevel): boolean {
   // Level 2 shows everything
   if (viewLevel === 2) return true;
 
@@ -360,10 +336,7 @@ export function getNodeCategory(nodeType: string): keyof typeof RESOURCE_CATEGOR
 
 export type EmptyContainerMode = 'collapse' | 'hide' | 'show';
 
-export const EMPTY_CONTAINER_MODES: Record<
-  EmptyContainerMode,
-  { label: string; description: string }
-> = {
+export const EMPTY_CONTAINER_MODES: Record<EmptyContainerMode, { label: string; description: string }> = {
   collapse: { label: 'Collapse', description: 'Show as collapsed pill' },
   hide: { label: 'Hide', description: 'Hide completely' },
   show: { label: 'Show', description: 'Show with empty state' },
@@ -407,7 +380,7 @@ export const LAYOUT = {
 export function calculateContainerSize(
   nodeType: string,
   visibleChildCount: number,
-  childrenAreContainers: boolean = false
+  childrenAreContainers: boolean = false,
 ): { width: number; height: number } {
   // Empty or collapsed
   if (visibleChildCount === 0) {
@@ -432,14 +405,11 @@ export function calculateContainerSize(
 
   const width = Math.max(
     LAYOUT.containerMinWidth,
-    Math.min(LAYOUT.containerMaxWidth, contentWidth + LAYOUT.containerPadding * 2)
+    Math.min(LAYOUT.containerMaxWidth, contentWidth + LAYOUT.containerPadding * 2),
   );
   const height = Math.max(
     LAYOUT.containerMinHeight,
-    Math.min(
-      LAYOUT.containerMaxHeight,
-      contentHeight + LAYOUT.headerHeight + LAYOUT.containerPadding * 2
-    )
+    Math.min(LAYOUT.containerMaxHeight, contentHeight + LAYOUT.headerHeight + LAYOUT.containerPadding * 2),
   );
 
   return { width, height };
@@ -451,7 +421,7 @@ export function calculateContainerSize(
 export function calculateChildPosition(
   parentType: string,
   childIndex: number,
-  childIsContainer: boolean = false
+  childIsContainer: boolean = false,
 ): { x: number; y: number } {
   const isVPC = parentType === 'Network.VPC';
   const childrenPerRow = isVPC ? LAYOUT.vpcChildrenPerRow : LAYOUT.subnetChildrenPerRow;
@@ -499,7 +469,7 @@ export function getEntityType(iceType: string): 'container' | 'block' | 'resourc
 export function getRenderingMode(
   iceType: string,
   entityType: string,
-  _viewLevel: number
+  _viewLevel: number,
 ): 'compact' | 'container' | 'region' | 'log' {
   // Log nodes always render as logs
   if (iceType.startsWith('Log.') || iceType === 'Observability.Logs') {
@@ -523,10 +493,7 @@ export function getRenderingMode(
 
 export const REGION_DETECTION = {
   properties: ['region', 'zone', 'location', 'availabilityZone', '_gcp_location'],
-  patterns: [
-    /(?:regions|locations|zones)\/([^/]+)/,
-    /(europe-\w+\d*|us-\w+\d*|asia-\w+\d*|australia-\w+\d*)/i,
-  ],
+  patterns: [/(?:regions|locations|zones)\/([^/]+)/, /(europe-\w+\d*|us-\w+\d*|asia-\w+\d*|australia-\w+\d*)/i],
   multiRegionMapping: {
     eu: 'europe-west1',
     us: 'us-central1',

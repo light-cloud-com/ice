@@ -85,7 +85,7 @@ const ENVIRONMENT_PRESETS: Record<string, Record<EnvironmentType, ServicePreset>
 export function apply_environment_overrides(
   properties: Record<string, unknown>,
   gcp_type: string,
-  environment: EnvironmentType
+  environment: EnvironmentType,
 ): Record<string, unknown> {
   const presets = ENVIRONMENT_PRESETS[gcp_type];
   if (!presets) return properties;

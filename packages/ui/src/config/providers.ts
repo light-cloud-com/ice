@@ -9,6 +9,4 @@ import { CLOUD_PROVIDERS } from '@ice/core/resources';
 
 export const ENABLED_PROVIDER_IDS = new Set(['aws', 'gcp', 'azure']);
 
-export const ENABLED_PROVIDERS = CLOUD_PROVIDERS.filter((p) =>
-  ENABLED_PROVIDER_IDS.has(p.id)
-);
+export const ENABLED_PROVIDERS = CLOUD_PROVIDERS.filter((p) => ENABLED_PROVIDER_IDS.has(p.id));

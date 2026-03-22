@@ -55,10 +55,7 @@ export const InviteAcceptPage: React.FC = () => {
             <p className="text-sm text-ice-text-2">
               You've been added to <span className="font-medium text-ice-text-1">{orgName}</span>.
             </p>
-            <button
-              onClick={() => navigate('/', { replace: true })}
-              className="ice-btn ice-btn-primary"
-            >
+            <button onClick={() => navigate('/', { replace: true })} className="ice-btn ice-btn-primary">
               Go to dashboard
             </button>
           </>

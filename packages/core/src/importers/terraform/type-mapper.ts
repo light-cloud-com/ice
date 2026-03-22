@@ -446,10 +446,7 @@ const PROPERTY_MAP: Record<string, Record<string, string>> = {
 /**
  * Map Terraform properties to ICE properties for a given resource type.
  */
-export function map_properties(
-  terraform_type: string,
-  attributes: Record<string, unknown>
-): Record<string, unknown> {
+export function map_properties(terraform_type: string, attributes: Record<string, unknown>): Record<string, unknown> {
   const property_map = PROPERTY_MAP[terraform_type];
 
   if (!property_map) {

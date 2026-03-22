@@ -84,16 +84,14 @@ export class SqliteStateStore implements ObservableStateStore {
   async initialize(): Promise<Result<void, IceError>> {
     try {
       // Dynamic import of better-sqlite3
-      const BetterSqlite3 = await import('better-sqlite3')
-        .then((m) => m.default || m)
-        .catch(() => null);
+      const BetterSqlite3 = await import('better-sqlite3').then((m) => m.default || m).catch(() => null);
 
       if (!BetterSqlite3) {
         return failure(
           new InternalError(
             'better-sqlite3 is not installed. Install it with: npm install better-sqlite3',
-            'INTERNAL_ERROR'
-          )
+            'INTERNAL_ERROR',
+          ),
         );
       }
 
@@ -119,12 +117,7 @@ export class SqliteStateStore implements ObservableStateStore {
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
       return failure(
-        new InternalError(
-          `Failed to initialize SQLite state store: ${err.message}`,
-          'INTERNAL_ERROR',
-          {},
-          err
-        )
+        new InternalError(`Failed to initialize SQLite state store: ${err.message}`, 'INTERNAL_ERROR', {}, err),
       );
     }
   }
@@ -139,9 +132,7 @@ export class SqliteStateStore implements ObservableStateStore {
       return success(undefined);
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
-      return failure(
-        new InternalError(`Failed to close state store: ${err.message}`, 'INTERNAL_ERROR', {}, err)
-      );
+      return failure(new InternalError(`Failed to close state store: ${err.message}`, 'INTERNAL_ERROR', {}, err));
     }
   }
 
@@ -162,16 +153,14 @@ export class SqliteStateStore implements ObservableStateStore {
   // Resource State Operations
   // ---------------------------------------------------------------------------
 
-  async get_resource(
-    graph_id: string,
-    node_id: NodeId
-  ): Promise<Result<StoredResourceState | null, IceError>> {
+  async get_resource(graph_id: string, node_id: NodeId): Promise<Result<StoredResourceState | null, IceError>> {
     try {
       this.ensure_initialized();
 
-      const row = this.db!.prepare(
-        'SELECT * FROM resources WHERE graph_id = ? AND node_id = ?'
-      ).get(graph_id, node_id) as ResourceRow | undefined;
+      const row = this.db!.prepare('SELECT * FROM resources WHERE graph_id = ? AND node_id = ?').get(
+        graph_id,
+        node_id,
+      ) as ResourceRow | undefined;
 
       if (!row) {
         return success(null);
@@ -188,7 +177,7 @@ export class SqliteStateStore implements ObservableStateStore {
       this.ensure_initialized();
 
       const rows = this.db!.prepare('SELECT * FROM resources WHERE graph_id = ? ORDER BY name').all(
-        graph_id
+        graph_id,
       ) as ResourceRow[];
 
       return success(rows.map((row) => this.row_to_resource(row)));
@@ -254,7 +243,7 @@ export class SqliteStateStore implements ObservableStateStore {
         resource.state.status,
         resource.created_at,
         new Date().toISOString(),
-        resource.version
+        resource.version,
       );
 
       this.emit_event('resource_created', resource.graph_id, resource.node_id);
@@ -282,7 +271,7 @@ export class SqliteStateStore implements ObservableStateStore {
             resource.state.status,
             resource.created_at,
             now,
-            resource.version
+            resource.version,
           );
         }
       });
@@ -303,10 +292,7 @@ export class SqliteStateStore implements ObservableStateStore {
     try {
       this.ensure_initialized();
 
-      this.db!.prepare('DELETE FROM resources WHERE graph_id = ? AND node_id = ?').run(
-        graph_id,
-        node_id
-      );
+      this.db!.prepare('DELETE FROM resources WHERE graph_id = ? AND node_id = ?').run(graph_id, node_id);
 
       this.emit_event('resource_deleted', graph_id, node_id);
       return success(undefined);
@@ -335,9 +321,7 @@ export class SqliteStateStore implements ObservableStateStore {
     try {
       this.ensure_initialized();
 
-      const row = this.db!.prepare('SELECT * FROM deployments WHERE id = ?').get(id) as
-        | DeploymentRow
-        | undefined;
+      const row = this.db!.prepare('SELECT * FROM deployments WHERE id = ?').get(id) as DeploymentRow | undefined;
 
       if (!row) {
         return success(null);
@@ -353,9 +337,9 @@ export class SqliteStateStore implements ObservableStateStore {
     try {
       this.ensure_initialized();
 
-      const rows = this.db!.prepare(
-        'SELECT * FROM deployments WHERE graph_id = ? ORDER BY started_at DESC'
-      ).all(graph_id) as DeploymentRow[];
+      const rows = this.db!.prepare('SELECT * FROM deployments WHERE graph_id = ? ORDER BY started_at DESC').all(
+        graph_id,
+      ) as DeploymentRow[];
 
       return success(rows.map((row) => this.row_to_deployment(row)));
     } catch (error) {
@@ -414,7 +398,7 @@ export class SqliteStateStore implements ObservableStateStore {
         deployment.success_count,
         deployment.failure_count,
         deployment.error_message ?? null,
-        deployment.version
+        deployment.version,
       );
 
       this.emit_event('deployment_started', deployment.graph_id, undefined, deployment.id);
@@ -428,7 +412,7 @@ export class SqliteStateStore implements ObservableStateStore {
     id: DeploymentId,
     status: DeploymentStatus,
     counts?: { success?: number; failure?: number },
-    error_message?: string
+    error_message?: string,
   ): Promise<Result<void, IceError>> {
     try {
       this.ensure_initialized();
@@ -446,15 +430,8 @@ export class SqliteStateStore implements ObservableStateStore {
               error_message = COALESCE(?, error_message),
               version = version + 1
           WHERE id = ?
-        `
-      ).run(
-        status,
-        completed_at,
-        counts?.success ?? null,
-        counts?.failure ?? null,
-        error_message ?? null,
-        id
-      );
+        `,
+      ).run(status, completed_at, counts?.success ?? null, counts?.failure ?? null, error_message ?? null, id);
 
       return success(undefined);
     } catch (error) {
@@ -470,7 +447,7 @@ export class SqliteStateStore implements ObservableStateStore {
     graph_id: string,
     owner: string,
     ttl_seconds: number,
-    deployment_id?: DeploymentId
+    deployment_id?: DeploymentId,
   ): Promise<Result<StateLock, IceError>> {
     try {
       this.ensure_initialized();
@@ -485,9 +462,9 @@ export class SqliteStateStore implements ObservableStateStore {
         this.db!.prepare('DELETE FROM locks WHERE expires_at < ?').run(now.toISOString());
 
         // Check for existing lock
-        const existing = this.db!.prepare('SELECT * FROM locks WHERE graph_id = ?').get(
-          graph_id
-        ) as LockRow | undefined;
+        const existing = this.db!.prepare('SELECT * FROM locks WHERE graph_id = ?').get(graph_id) as
+          | LockRow
+          | undefined;
 
         if (existing) {
           throw new Error(`Graph ${graph_id} is already locked by ${existing.owner}`);
@@ -498,15 +475,8 @@ export class SqliteStateStore implements ObservableStateStore {
           `
             INSERT INTO locks (id, graph_id, owner, acquired_at, expires_at, deployment_id)
             VALUES (?, ?, ?, ?, ?, ?)
-          `
-        ).run(
-          lock_id,
-          graph_id,
-          owner,
-          now.toISOString(),
-          expires_at.toISOString(),
-          deployment_id ?? null
-        );
+          `,
+        ).run(lock_id, graph_id, owner, now.toISOString(), expires_at.toISOString(), deployment_id ?? null);
 
         return {
           id: lock_id,
@@ -532,9 +502,10 @@ export class SqliteStateStore implements ObservableStateStore {
 
       const expires_at = new Date(Date.now() + ttl_seconds * 1000).toISOString();
 
-      const result = this.db!.prepare(
-        'UPDATE locks SET expires_at = ? WHERE id = ? RETURNING *'
-      ).get(expires_at, lock_id) as LockRow | undefined;
+      const result = this.db!.prepare('UPDATE locks SET expires_at = ? WHERE id = ? RETURNING *').get(
+        expires_at,
+        lock_id,
+      ) as LockRow | undefined;
 
       if (!result) {
         return failure(new InternalError(`Lock not found: ${lock_id}`, 'STATE_NOT_FOUND'));
@@ -571,10 +542,7 @@ export class SqliteStateStore implements ObservableStateStore {
       this.ensure_initialized();
 
       const now = new Date().toISOString();
-      const row = this.db!.prepare('SELECT 1 FROM locks WHERE graph_id = ? AND expires_at > ?').get(
-        graph_id,
-        now
-      );
+      const row = this.db!.prepare('SELECT 1 FROM locks WHERE graph_id = ? AND expires_at > ?').get(graph_id, now);
 
       return success(row !== undefined);
     } catch (error) {
@@ -587,10 +555,9 @@ export class SqliteStateStore implements ObservableStateStore {
       this.ensure_initialized();
 
       const now = new Date().toISOString();
-      const row = this.db!.prepare('SELECT * FROM locks WHERE graph_id = ? AND expires_at > ?').get(
-        graph_id,
-        now
-      ) as LockRow | undefined;
+      const row = this.db!.prepare('SELECT * FROM locks WHERE graph_id = ? AND expires_at > ?').get(graph_id, now) as
+        | LockRow
+        | undefined;
 
       if (!row) {
         return success(null);
@@ -606,10 +573,7 @@ export class SqliteStateStore implements ObservableStateStore {
   // Snapshot Operations
   // ---------------------------------------------------------------------------
 
-  async create_snapshot(
-    graph_id: string,
-    description?: string
-  ): Promise<Result<StateSnapshot, IceError>> {
+  async create_snapshot(graph_id: string, description?: string): Promise<Result<StateSnapshot, IceError>> {
     try {
       this.ensure_initialized();
 
@@ -618,16 +582,14 @@ export class SqliteStateStore implements ObservableStateStore {
 
       const transaction = this.db!.transaction(() => {
         // Get all resources
-        const resources = this.db!.prepare('SELECT * FROM resources WHERE graph_id = ?').all(
-          graph_id
-        ) as ResourceRow[];
+        const resources = this.db!.prepare('SELECT * FROM resources WHERE graph_id = ?').all(graph_id) as ResourceRow[];
 
         // Insert snapshot
         this.db!.prepare(
           `
             INSERT INTO snapshots (id, graph_id, created_at, description, resource_data)
             VALUES (?, ?, ?, ?, ?)
-          `
+          `,
         ).run(snapshot_id, graph_id, created_at, description ?? null, JSON.stringify(resources));
 
         return {
@@ -651,9 +613,7 @@ export class SqliteStateStore implements ObservableStateStore {
     try {
       this.ensure_initialized();
 
-      const row = this.db!.prepare('SELECT * FROM snapshots WHERE id = ?').get(id) as
-        | SnapshotRow
-        | undefined;
+      const row = this.db!.prepare('SELECT * FROM snapshots WHERE id = ?').get(id) as SnapshotRow | undefined;
 
       if (!row) {
         return success(null);
@@ -669,9 +629,9 @@ export class SqliteStateStore implements ObservableStateStore {
     try {
       this.ensure_initialized();
 
-      const rows = this.db!.prepare(
-        'SELECT * FROM snapshots WHERE graph_id = ? ORDER BY created_at DESC'
-      ).all(graph_id) as SnapshotRow[];
+      const rows = this.db!.prepare('SELECT * FROM snapshots WHERE graph_id = ? ORDER BY created_at DESC').all(
+        graph_id,
+      ) as SnapshotRow[];
 
       return success(rows.map((row) => this.row_to_snapshot(row)));
     } catch (error) {
@@ -684,9 +644,7 @@ export class SqliteStateStore implements ObservableStateStore {
       this.ensure_initialized();
 
       const transaction = this.db!.transaction(() => {
-        const snapshot = this.db!.prepare('SELECT * FROM snapshots WHERE id = ?').get(id) as
-          | SnapshotRow
-          | undefined;
+        const snapshot = this.db!.prepare('SELECT * FROM snapshots WHERE id = ?').get(id) as SnapshotRow | undefined;
 
         if (!snapshot) {
           throw new Error(`Snapshot not found: ${id}`);
@@ -709,7 +667,7 @@ export class SqliteStateStore implements ObservableStateStore {
             resource.status,
             resource.created_at,
             resource.updated_at,
-            resource.version
+            resource.version,
           );
         }
 
@@ -828,7 +786,7 @@ export class SqliteStateStore implements ObservableStateStore {
           status = excluded.status,
           updated_at = excluded.updated_at,
           version = version + 1
-      `)
+      `),
     );
 
     this.statements.set(
@@ -844,16 +802,11 @@ export class SqliteStateStore implements ObservableStateStore {
           failure_count = excluded.failure_count,
           error_message = COALESCE(excluded.error_message, error_message),
           version = version + 1
-      `)
+      `),
     );
   }
 
-  private emit_event(
-    type: StateChangeType,
-    graph_id: string,
-    node_id?: NodeId,
-    deployment_id?: DeploymentId
-  ): void {
+  private emit_event(type: StateChangeType, graph_id: string, node_id?: NodeId, deployment_id?: DeploymentId): void {
     const event: StateChangeEvent = {
       type,
       timestamp: new Date().toISOString(),
@@ -874,12 +827,7 @@ export class SqliteStateStore implements ObservableStateStore {
   private wrap_error(operation: string, error: unknown): Result<never, IceError> {
     const err = error instanceof Error ? error : new Error(String(error));
     return failure(
-      new InternalError(
-        `State store ${operation} failed: ${err.message}`,
-        'INTERNAL_ERROR',
-        { operation },
-        err
-      )
+      new InternalError(`State store ${operation} failed: ${err.message}`, 'INTERNAL_ERROR', { operation }, err),
     );
   }
 
@@ -987,9 +935,7 @@ interface SnapshotRow {
 /**
  * Create a SQLite state store.
  */
-export function create_sqlite_state_store(
-  options?: Partial<SqliteStateStoreOptions>
-): SqliteStateStore {
+export function create_sqlite_state_store(options?: Partial<SqliteStateStoreOptions>): SqliteStateStore {
   return new SqliteStateStore(options);
 }
 

@@ -21,7 +21,7 @@ import prisma from '@ice/db';
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 export interface BuildConfig {
-  repository: string;     // "owner/repo"
+  repository: string; // "owner/repo"
   branch: string;
   commitSha: string;
   installCommand: string | null;
@@ -80,12 +80,18 @@ export async function buildFromSource(
       // Restore cached node_modules via hardlinks (fast, space-efficient)
       if (existsSync(cachedNodeModules)) {
         try {
-          execSync(`cp -al "${cachedNodeModules}" "${join(buildDir, 'node_modules')}"`, { stdio: 'pipe', timeout: 30000 });
+          execSync(`cp -al "${cachedNodeModules}" "${join(buildDir, 'node_modules')}"`, {
+            stdio: 'pipe',
+            timeout: 30000,
+          });
           await onLog('install', 'started', `Running: ${installCmd} (cached via hardlinks)`);
         } catch {
           // Hardlinks failed (cross-device?), fall back to regular copy
           try {
-            execSync(`cp -r "${cachedNodeModules}" "${join(buildDir, 'node_modules')}"`, { stdio: 'pipe', timeout: 60000 });
+            execSync(`cp -r "${cachedNodeModules}" "${join(buildDir, 'node_modules')}"`, {
+              stdio: 'pipe',
+              timeout: 60000,
+            });
             await onLog('install', 'started', `Running: ${installCmd} (cached)`);
           } catch {
             await onLog('install', 'started', `Running: ${installCmd}`);
@@ -105,9 +111,14 @@ export async function buildFromSource(
         const buildNodeModules = join(buildDir, 'node_modules');
         if (existsSync(buildNodeModules)) {
           execSync(`mkdir -p "${cacheDir}"`, { stdio: 'pipe' });
-          execSync(`rsync -a --delete "${buildNodeModules}/" "${cachedNodeModules}/"`, { stdio: 'pipe', timeout: 120000 });
+          execSync(`rsync -a --delete "${buildNodeModules}/" "${cachedNodeModules}/"`, {
+            stdio: 'pipe',
+            timeout: 120000,
+          });
         }
-      } catch { /* cache save is best-effort */ }
+      } catch {
+        /* cache save is best-effort */
+      }
     }
 
     // ── Step 3: Build ──
@@ -123,9 +134,7 @@ export async function buildFromSource(
     }
 
     // ── Determine output path ──
-    const outputPath = config.outputDir
-      ? join(buildDir, config.outputDir)
-      : buildDir;
+    const outputPath = config.outputDir ? join(buildDir, config.outputDir) : buildDir;
 
     return {
       success: true,
@@ -133,7 +142,6 @@ export async function buildFromSource(
       outputPath: existsSync(outputPath) ? outputPath : buildDir,
       duration_ms: Date.now() - startTime,
     };
-
   } catch (err: any) {
     await onLog('error', 'failed', err.message);
     return {
@@ -161,12 +169,7 @@ export function cleanupBuild(buildDir: string) {
 
 // ─── Download & Extract ─────────────────────────────────────────────────────
 
-async function downloadAndExtract(
-  token: string,
-  repository: string,
-  ref: string,
-  targetDir: string,
-): Promise<void> {
+async function downloadAndExtract(token: string, repository: string, ref: string, targetDir: string): Promise<void> {
   const [owner, repo] = repository.split('/');
   const tarballUrl = `https://api.github.com/repos/${owner}/${repo}/tarball/${ref}`;
 
@@ -201,14 +204,28 @@ async function downloadAndExtract(
   }
 
   // Remove tarball
-  try { rmSync(tarPath); } catch { /* ignore */ }
+  try {
+    rmSync(tarPath);
+  } catch {
+    /* ignore */
+  }
 }
 
 // ─── Run Command with Streaming Output ──────────────────────────────────────
 
 // Allowlist of safe commands that can be executed by the build service
 const ALLOWED_COMMANDS = new Set([
-  'npm', 'npx', 'yarn', 'pnpm', 'pip', 'go', 'make', 'cargo', 'dotnet', 'mvn', 'gradle',
+  'npm',
+  'npx',
+  'yarn',
+  'pnpm',
+  'pip',
+  'go',
+  'make',
+  'cargo',
+  'dotnet',
+  'mvn',
+  'gradle',
 ]);
 
 function validateAndParseCommand(command: string): { cmd: string; args: string[] } {
@@ -219,11 +236,19 @@ function validateAndParseCommand(command: string): { cmd: string; args: string[]
   let quoteChar = '';
   for (const ch of command) {
     if (inQuote) {
-      if (ch === quoteChar) { inQuote = false; } else { current += ch; }
+      if (ch === quoteChar) {
+        inQuote = false;
+      } else {
+        current += ch;
+      }
     } else if (ch === '"' || ch === "'") {
-      inQuote = true; quoteChar = ch;
+      inQuote = true;
+      quoteChar = ch;
     } else if (ch === ' ' || ch === '\t') {
-      if (current) { parts.push(current); current = ''; }
+      if (current) {
+        parts.push(current);
+        current = '';
+      }
     } else {
       current += ch;
     }
@@ -250,11 +275,7 @@ function validateAndParseCommand(command: string): { cmd: string; args: string[]
   return { cmd, args };
 }
 
-function runCommand(
-  command: string,
-  cwd: string,
-  onOutput: (line: string) => Promise<void>,
-): Promise<void> {
+function runCommand(command: string, cwd: string, onOutput: (line: string) => Promise<void>): Promise<void> {
   return new Promise((resolve, reject) => {
     const { cmd, args } = validateAndParseCommand(command);
     const proc = spawn(cmd, args, {

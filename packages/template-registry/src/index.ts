@@ -47,7 +47,7 @@ export function getAllTemplates(): TemplateDefinition[] {
 }
 
 export function getTemplatesByProvider(provider: string): TemplateDefinition[] {
-  return getAllTemplates().filter(t => t.providers.includes(provider));
+  return getAllTemplates().filter((t) => t.providers.includes(provider));
 }
 
 export function clearTemplateRegistry(): void {

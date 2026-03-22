@@ -13,10 +13,7 @@ import type { GCPImportedResource, GCPImportWarning } from './types.js';
 /**
  * Infer dependencies between resources by scanning properties for self_link references.
  */
-export function infer_relationships(
-  resources: GCPImportedResource[],
-  warnings: GCPImportWarning[]
-): void {
+export function infer_relationships(resources: GCPImportedResource[], warnings: GCPImportWarning[]): void {
   // Build self_link lookup map
   const self_link_map = new Map<string, GCPImportedResource>();
   for (const resource of resources) {
@@ -51,11 +48,7 @@ export function infer_relationships(
 /**
  * Recursively scan properties for self_link references.
  */
-function scan_for_self_links(
-  obj: unknown,
-  self_link_map: Map<string, GCPImportedResource>,
-  deps: Set<string>
-): void {
+function scan_for_self_links(obj: unknown, self_link_map: Map<string, GCPImportedResource>, deps: Set<string>): void {
   if (obj === null || obj === undefined) return;
 
   if (typeof obj === 'string') {
@@ -130,7 +123,7 @@ function extract_partial_self_link(self_link: string): string | null {
  */
 export function get_relationship_type(
   source_kind: string,
-  target_kind: string
+  target_kind: string,
 ): 'depends_on' | 'references' | 'contains' {
   // Instance dependencies
   if (source_kind === 'compute#instance') {

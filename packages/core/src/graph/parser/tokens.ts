@@ -174,12 +174,7 @@ export function get_keyword_type(value: string): TokenType | undefined {
 /**
  * Create a token.
  */
-export function create_token(
-  type: TokenType,
-  value: string,
-  position: SourcePosition,
-  literal?: unknown
-): Token {
+export function create_token(type: TokenType, value: string, position: SourcePosition, literal?: unknown): Token {
   return {
     type,
     value,
@@ -196,7 +191,7 @@ export function create_position(
   column: number,
   offset: number,
   length: number,
-  file?: string
+  file?: string,
 ): SourcePosition {
   return { line, column, offset, length, file };
 }

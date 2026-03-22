@@ -55,7 +55,7 @@ export class ComputeService extends BaseGCPService {
       };
     } catch (error) {
       throw new Error(
-        `Failed to initialize GCP Compute client. Make sure @google-cloud/compute is installed: ${error instanceof Error ? error.message : String(error)}`
+        `Failed to initialize GCP Compute client. Make sure @google-cloud/compute is installed: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -71,9 +71,7 @@ export class ComputeService extends BaseGCPService {
       return {
         service: this.service_type,
         resources: [],
-        errors: [
-          this.create_error('INIT_ERROR', error instanceof Error ? error.message : String(error)),
-        ],
+        errors: [this.create_error('INIT_ERROR', error instanceof Error ? error.message : String(error))],
         warnings: [],
       };
     }
@@ -96,25 +94,17 @@ export class ComputeService extends BaseGCPService {
         });
 
         for (const instance of instances || []) {
-          resources.push(
-            this.create_resource(instance as Record<string, unknown>, 'compute#instance', zone)
-          );
+          resources.push(this.create_resource(instance as Record<string, unknown>, 'compute#instance', zone));
         }
       } catch (error: unknown) {
         const err = error as { code?: number; message?: string };
         if (err.code === 403 || err.code === 404) {
           warnings.push(
-            this.create_warning(
-              'ACCESS_DENIED',
-              `Cannot list instances in ${zone}: ${err.message || 'Access denied'}`
-            )
+            this.create_warning('ACCESS_DENIED', `Cannot list instances in ${zone}: ${err.message || 'Access denied'}`),
           );
         } else {
           errors.push(
-            this.create_error(
-              'API_ERROR',
-              `Failed to list instances in ${zone}: ${err.message || String(error)}`
-            )
+            this.create_error('API_ERROR', `Failed to list instances in ${zone}: ${err.message || String(error)}`),
           );
         }
       }
@@ -129,25 +119,17 @@ export class ComputeService extends BaseGCPService {
         });
 
         for (const disk of disks || []) {
-          resources.push(
-            this.create_resource(disk as Record<string, unknown>, 'compute#disk', zone)
-          );
+          resources.push(this.create_resource(disk as Record<string, unknown>, 'compute#disk', zone));
         }
       } catch (error: unknown) {
         const err = error as { code?: number; message?: string };
         if (err.code === 403 || err.code === 404) {
           warnings.push(
-            this.create_warning(
-              'ACCESS_DENIED',
-              `Cannot list disks in ${zone}: ${err.message || 'Access denied'}`
-            )
+            this.create_warning('ACCESS_DENIED', `Cannot list disks in ${zone}: ${err.message || 'Access denied'}`),
           );
         } else {
           errors.push(
-            this.create_error(
-              'API_ERROR',
-              `Failed to list disks in ${zone}: ${err.message || String(error)}`
-            )
+            this.create_error('API_ERROR', `Failed to list disks in ${zone}: ${err.message || String(error)}`),
           );
         }
       }
@@ -165,16 +147,9 @@ export class ComputeService extends BaseGCPService {
     } catch (error: unknown) {
       const err = error as { code?: number; message?: string };
       if (err.code === 403 || err.code === 404) {
-        warnings.push(
-          this.create_warning(
-            'ACCESS_DENIED',
-            `Cannot list networks: ${err.message || 'Access denied'}`
-          )
-        );
+        warnings.push(this.create_warning('ACCESS_DENIED', `Cannot list networks: ${err.message || 'Access denied'}`));
       } else {
-        errors.push(
-          this.create_error('API_ERROR', `Failed to list networks: ${err.message || String(error)}`)
-        );
+        errors.push(this.create_error('API_ERROR', `Failed to list networks: ${err.message || String(error)}`));
       }
     }
 
@@ -188,12 +163,7 @@ export class ComputeService extends BaseGCPService {
 
         for (const subnetwork of subnetworks || []) {
           resources.push(
-            this.create_resource(
-              subnetwork as Record<string, unknown>,
-              'compute#subnetwork',
-              undefined,
-              region
-            )
+            this.create_resource(subnetwork as Record<string, unknown>, 'compute#subnetwork', undefined, region),
           );
         }
       } catch (error: unknown) {
@@ -202,15 +172,12 @@ export class ComputeService extends BaseGCPService {
           warnings.push(
             this.create_warning(
               'ACCESS_DENIED',
-              `Cannot list subnetworks in ${region}: ${err.message || 'Access denied'}`
-            )
+              `Cannot list subnetworks in ${region}: ${err.message || 'Access denied'}`,
+            ),
           );
         } else {
           errors.push(
-            this.create_error(
-              'API_ERROR',
-              `Failed to list subnetworks in ${region}: ${err.message || String(error)}`
-            )
+            this.create_error('API_ERROR', `Failed to list subnetworks in ${region}: ${err.message || String(error)}`),
           );
         }
       }
@@ -223,26 +190,16 @@ export class ComputeService extends BaseGCPService {
       });
 
       for (const firewall of firewalls || []) {
-        resources.push(
-          this.create_resource(firewall as Record<string, unknown>, 'compute#firewall')
-        );
+        resources.push(this.create_resource(firewall as Record<string, unknown>, 'compute#firewall'));
       }
     } catch (error: unknown) {
       const err = error as { code?: number; message?: string };
       if (err.code === 403 || err.code === 404) {
         warnings.push(
-          this.create_warning(
-            'ACCESS_DENIED',
-            `Cannot list firewall rules: ${err.message || 'Access denied'}`
-          )
+          this.create_warning('ACCESS_DENIED', `Cannot list firewall rules: ${err.message || 'Access denied'}`),
         );
       } else {
-        errors.push(
-          this.create_error(
-            'API_ERROR',
-            `Failed to list firewall rules: ${err.message || String(error)}`
-          )
-        );
+        errors.push(this.create_error('API_ERROR', `Failed to list firewall rules: ${err.message || String(error)}`));
       }
     }
 

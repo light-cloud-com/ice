@@ -73,47 +73,54 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
       setEnvDeployStatus(statuses);
     };
     fetchStatuses();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [environments]);
 
   // Switch environment → load its card
-  const handleSwitchEnv = useCallback(async (env: Environment) => {
-    dispatch(setActiveEnvironment({ projectId, envId: env.id }));
+  const handleSwitchEnv = useCallback(
+    async (env: Environment) => {
+      dispatch(setActiveEnvironment({ projectId, envId: env.id }));
 
-    try {
-      // Check if card already loaded in Redux
-      const { store } = await import('../../../store');
-      const state = store.getState();
-      const existing = state.cards.cards.find((c: any) => c.id === env.card_id);
+      try {
+        // Check if card already loaded in Redux
+        const { store } = await import('../../../store');
+        const state = store.getState();
+        const existing = state.cards.cards.find((c: any) => c.id === env.card_id);
 
-      if (existing && existing.nodes.length > 0) {
-        // Card already in Redux — just switch to it
-        dispatch(setActiveCard(env.card_id));
-        return;
+        if (existing && existing.nodes.length > 0) {
+          // Card already in Redux — just switch to it
+          dispatch(setActiveCard(env.card_id));
+          return;
+        }
+
+        // Load from backend
+        const api = getApi();
+        const cardData = await api.graph.load(env.card_id);
+        if (!cardData) return;
+
+        // Create card in Redux if not exists
+        if (!existing) {
+          dispatch(createCard({ name: cardData.name || env.name, id: cardData.id, projectId }));
+        }
+        // Set active FIRST, then import content into it
+        dispatch(setActiveCard(cardData.id));
+        if (cardData.nodes?.length > 0 || cardData.edges?.length > 0) {
+          dispatch(
+            importToActiveCard({
+              nodes: cardData.nodes || [],
+              edges: cardData.edges || [],
+              skipAutoOrganize: true,
+            }),
+          );
+        }
+      } catch (err) {
+        console.error('Failed to load environment card:', err);
       }
-
-      // Load from backend
-      const api = getApi();
-      const cardData = await api.graph.load(env.card_id);
-      if (!cardData) return;
-
-      // Create card in Redux if not exists
-      if (!existing) {
-        dispatch(createCard({ name: cardData.name || env.name, id: cardData.id, projectId }));
-      }
-      // Set active FIRST, then import content into it
-      dispatch(setActiveCard(cardData.id));
-      if (cardData.nodes?.length > 0 || cardData.edges?.length > 0) {
-        dispatch(importToActiveCard({
-          nodes: cardData.nodes || [],
-          edges: cardData.edges || [],
-          skipAutoOrganize: true,
-        }));
-      }
-    } catch (err) {
-      console.error('Failed to load environment card:', err);
-    }
-  }, [projectId, dispatch]);
+    },
+    [projectId, dispatch],
+  );
 
   // Auto-switch to production on first load
   useEffect(() => {
@@ -128,18 +135,24 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
     setContextMenu({ envId, x: e.clientX, y: e.clientY });
   }, []);
 
-  const handleDelete = useCallback((envId: string) => {
-    setContextMenu(null);
-    dispatch(deleteEnvironment({ envId, projectId }));
-  }, [projectId, dispatch]);
+  const handleDelete = useCallback(
+    (envId: string) => {
+      setContextMenu(null);
+      dispatch(deleteEnvironment({ envId, projectId }));
+    },
+    [projectId, dispatch],
+  );
 
-  const handlePromote = useCallback((envId: string) => {
-    setContextMenu(null);
-    const prod = environments.find((e) => e.type === 'production');
-    if (prod) {
-      dispatch(compareEnvironments({ sourceEnvId: envId, targetEnvId: prod.id }));
-    }
-  }, [environments, dispatch]);
+  const handlePromote = useCallback(
+    (envId: string) => {
+      setContextMenu(null);
+      const prod = environments.find((e) => e.type === 'production');
+      if (prod) {
+        dispatch(compareEnvironments({ sourceEnvId: envId, targetEnvId: prod.id }));
+      }
+    },
+    [environments, dispatch],
+  );
 
   // Close context menu on click outside
   useEffect(() => {
@@ -153,7 +166,10 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
 
   return (
     <>
-      <div id="ice-env-bar" className="h-8 flex items-center gap-0.5 px-3 border-b border-ice-border bg-ice-base shrink-0">
+      <div
+        id="ice-env-bar"
+        className="h-8 flex items-center gap-0.5 px-3 border-b border-ice-border bg-ice-base shrink-0"
+      >
         {loading && environments.length === 0 ? (
           <div className="flex items-center gap-1.5 text-ice-xs text-ice-text-3">
             <Loader2 className="w-3 h-3 animate-spin" />
@@ -166,11 +182,15 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
               const isActive = env.id === activeEnvId;
               const deployStatus = envDeployStatus[env.id];
               const dotColor =
-                deployStatus?.status === 'success' ? 'bg-emerald-500' :
-                deployStatus?.status === 'deploying' ? 'bg-blue-500 animate-pulse' :
-                deployStatus?.status === 'failed' ? 'bg-red-500' :
-                deployStatus?.status === 'planning' || deployStatus?.status === 'queued' ? 'bg-amber-500 animate-pulse' :
-                'bg-ice-text-3/30';
+                deployStatus?.status === 'success'
+                  ? 'bg-emerald-500'
+                  : deployStatus?.status === 'deploying'
+                    ? 'bg-blue-500 animate-pulse'
+                    : deployStatus?.status === 'failed'
+                      ? 'bg-red-500'
+                      : deployStatus?.status === 'planning' || deployStatus?.status === 'queued'
+                        ? 'bg-amber-500 animate-pulse'
+                        : 'bg-ice-text-3/30';
 
               return (
                 <button
@@ -211,8 +231,7 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
                   {/* PR badge */}
                   {env.type === 'pr' && env.pr_number && (
                     <span className="flex items-center gap-0.5 text-[9px] text-purple-400">
-                      <GitPullRequest className="w-2.5 h-2.5" />
-                      #{env.pr_number}
+                      <GitPullRequest className="w-2.5 h-2.5" />#{env.pr_number}
                     </span>
                   )}
                 </button>
@@ -265,7 +284,9 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
                 {/* Promote button — only for non-production envs */}
                 {canPromote && (
                   <button
-                    onClick={() => dispatch(compareEnvironments({ sourceEnvId: activeEnv!.id, targetEnvId: prodEnv!.id }))}
+                    onClick={() =>
+                      dispatch(compareEnvironments({ sourceEnvId: activeEnv!.id, targetEnvId: prodEnv!.id }))
+                    }
                     className="flex items-center gap-1 px-2 py-1 text-ice-xs font-medium rounded text-amber-500 hover:bg-amber-500/10 transition-colors"
                     title={`Promote ${activeEnv!.name} to production`}
                   >
@@ -290,41 +311,37 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
       </div>
 
       {/* Context menu */}
-      {contextMenu && (() => {
-        const env = environments.find((e) => e.id === contextMenu.envId);
-        if (!env || env.is_protected) return null;
-        return (
-          <div
-            className="fixed z-[9999] bg-ice-surface border border-ice-border rounded-md shadow-lg py-1 min-w-[160px]"
-            style={{ left: contextMenu.x, top: contextMenu.y }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => handlePromote(contextMenu.envId)}
-              className="w-full flex items-center gap-2 px-3 py-1.5 text-ice-xs text-ice-text-2 hover:bg-ice-hover transition-colors"
+      {contextMenu &&
+        (() => {
+          const env = environments.find((e) => e.id === contextMenu.envId);
+          if (!env || env.is_protected) return null;
+          return (
+            <div
+              className="fixed z-[9999] bg-ice-surface border border-ice-border rounded-md shadow-lg py-1 min-w-[160px]"
+              style={{ left: contextMenu.x, top: contextMenu.y }}
+              onClick={(e) => e.stopPropagation()}
             >
-              <ArrowUpRight className="w-3.5 h-3.5" />
-              Promote to production
-            </button>
-            <div className="h-px bg-ice-border my-1" />
-            <button
-              onClick={() => handleDelete(contextMenu.envId)}
-              className="w-full flex items-center gap-2 px-3 py-1.5 text-ice-xs text-red-400 hover:bg-red-500/10 transition-colors"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              Delete environment
-            </button>
-          </div>
-        );
-      })()}
+              <button
+                onClick={() => handlePromote(contextMenu.envId)}
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-ice-xs text-ice-text-2 hover:bg-ice-hover transition-colors"
+              >
+                <ArrowUpRight className="w-3.5 h-3.5" />
+                Promote to production
+              </button>
+              <div className="h-px bg-ice-border my-1" />
+              <button
+                onClick={() => handleDelete(contextMenu.envId)}
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-ice-xs text-red-400 hover:bg-red-500/10 transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete environment
+              </button>
+            </div>
+          );
+        })()}
 
       {/* Create environment modal */}
-      {showCreate && (
-        <CreateEnvironmentModal
-          projectId={projectId}
-          onClose={() => setShowCreate(false)}
-        />
-      )}
+      {showCreate && <CreateEnvironmentModal projectId={projectId} onClose={() => setShowCreate(false)} />}
     </>
   );
 };

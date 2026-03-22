@@ -291,11 +291,8 @@ function convert_variable(name: string, variable: VariableYaml, file: string): V
   return {
     kind: 'VariableBlock',
     name: create_identifier(name, file),
-    default_value:
-      variable.default !== undefined ? convert_value(variable.default, file) : undefined,
-    description: variable.description
-      ? create_string_literal(variable.description, file)
-      : undefined,
+    default_value: variable.default !== undefined ? convert_value(variable.default, file) : undefined,
+    description: variable.description ? create_string_literal(variable.description, file) : undefined,
     sensitive: variable.sensitive,
     span,
   };

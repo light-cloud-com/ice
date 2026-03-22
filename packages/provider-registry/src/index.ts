@@ -55,7 +55,12 @@ export interface ResourceHandler {
   resourceType: string;
   requiredApis?: string[];
   create(name: string, props: Record<string, unknown>, ctx: ResourceContext): Promise<ResourceResult>;
-  update(name: string, props: Record<string, unknown>, current: Record<string, unknown>, ctx: ResourceContext): Promise<ResourceResult>;
+  update(
+    name: string,
+    props: Record<string, unknown>,
+    current: Record<string, unknown>,
+    ctx: ResourceContext,
+  ): Promise<ResourceResult>;
   delete(name: string, providerId: string, ctx: ResourceContext): Promise<ResourceResult>;
 }
 

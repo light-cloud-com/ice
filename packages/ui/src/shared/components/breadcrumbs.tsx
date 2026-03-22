@@ -98,7 +98,10 @@ export const Breadcrumbs: React.FC = () => {
             {isLast ? (
               <span className="text-ice-md text-ice-text-1 font-medium truncate">{crumb.label}</span>
             ) : (
-              <Link to={crumb.path} className="text-ice-md text-ice-text-3 hover:text-ice-text-2 transition-colors truncate">
+              <Link
+                to={crumb.path}
+                className="text-ice-md text-ice-text-3 hover:text-ice-text-2 transition-colors truncate"
+              >
                 {crumb.label}
               </Link>
             )}

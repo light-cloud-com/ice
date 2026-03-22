@@ -53,20 +53,12 @@ export type { DeployStateStore, StoredResourceEntry } from './state-bridge.js';
 export { create_deploy_state_adapter } from './state-store-adapter.js';
 
 // Environment-aware deployment
-export {
-  apply_environment_overrides,
-  get_environment_label,
-  get_cost_multiplier,
-} from './environment-config.js';
+export { apply_environment_overrides, get_environment_label, get_cost_multiplier } from './environment-config.js';
 
 export type { EnvironmentType } from './environment-config.js';
 
 // GCP Authentication
-export {
-  get_gcp_credentials,
-  validate_gcp_credentials,
-  list_gcp_projects,
-} from './providers/gcp/auth.js';
+export { get_gcp_credentials, validate_gcp_credentials, list_gcp_projects } from './providers/gcp/auth.js';
 
 export type {
   GCPAuthConfig as GCPDeployAuthConfig,

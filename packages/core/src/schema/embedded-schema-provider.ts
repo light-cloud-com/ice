@@ -45,13 +45,9 @@ interface SqliteSchemaRegistry {
   get_implementation(
     ice_type: string,
     source: 'terraform' | 'pulumi' | 'custom',
-    provider: string
+    provider: string,
   ): SqliteImplementation | null;
-  get_native_type(
-    ice_type: string,
-    source: 'terraform' | 'pulumi' | 'custom',
-    provider: string
-  ): string | null;
+  get_native_type(ice_type: string, source: 'terraform' | 'pulumi' | 'custom', provider: string): string | null;
   get_property(ice_type: string, property_name: string): SqliteProperty | null;
   get_required_properties(ice_type: string): SqliteProperty[];
   get_computed_properties(ice_type: string): SqliteProperty[];
@@ -175,18 +171,12 @@ export interface GraphSchemaProvider extends ObservableSchemaProvider {
   /**
    * Get dependencies for a resource type (resources it depends on).
    */
-  get_dependencies(
-    ice_type: IceType,
-    max_depth?: number
-  ): Promise<Result<ResourceSchema[], IceError>>;
+  get_dependencies(ice_type: IceType, max_depth?: number): Promise<Result<ResourceSchema[], IceError>>;
 
   /**
    * Get dependents for a resource type (resources that depend on it).
    */
-  get_dependents(
-    ice_type: IceType,
-    max_depth?: number
-  ): Promise<Result<ResourceSchema[], IceError>>;
+  get_dependents(ice_type: IceType, max_depth?: number): Promise<Result<ResourceSchema[], IceError>>;
 
   /**
    * Get cross-provider equivalents for a resource type.
@@ -228,9 +218,7 @@ export class EmbeddedSchemaProvider implements GraphSchemaProvider {
     try {
       // Dynamically import the schemas db module.
       // Graceful fallback: if the module or export doesn't exist, the provider runs without a registry.
-      const schemas: Record<string, unknown> | null = await import('../schemas/db/index.js').catch(
-        () => null
-      );
+      const schemas: Record<string, unknown> | null = await import('../schemas/db/index.js').catch(() => null);
 
       if (schemas && typeof schemas.get_schema_registry === 'function') {
         const factory = schemas.get_schema_registry as (dbPath?: string) => SqliteSchemaRegistry;
@@ -242,8 +230,8 @@ export class EmbeddedSchemaProvider implements GraphSchemaProvider {
         return failure(
           new InternalError(
             'Failed to initialize schema registry: @ice-engine/schemas/db not available',
-            'INTERNAL_ERROR'
-          )
+            'INTERNAL_ERROR',
+          ),
         );
       }
 
@@ -253,12 +241,7 @@ export class EmbeddedSchemaProvider implements GraphSchemaProvider {
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
       return failure(
-        new InternalError(
-          `Failed to initialize schema provider: ${err.message}`,
-          'INTERNAL_ERROR',
-          {},
-          err
-        )
+        new InternalError(`Failed to initialize schema provider: ${err.message}`, 'INTERNAL_ERROR', {}, err),
       );
     }
   }
@@ -288,9 +271,7 @@ export class EmbeddedSchemaProvider implements GraphSchemaProvider {
     const resource = this.registry.get(ice_type);
 
     if (!resource) {
-      return failure(
-        new InternalError(`Schema not found: ${ice_type}`, 'NOT_IMPLEMENTED', { ice_type })
-      );
+      return failure(new InternalError(`Schema not found: ${ice_type}`, 'NOT_IMPLEMENTED', { ice_type }));
     }
 
     return success(this.convert_resource_to_schema(resource));
@@ -363,7 +344,7 @@ export class EmbeddedSchemaProvider implements GraphSchemaProvider {
   get_implementation(
     ice_type: IceType,
     source: 'terraform' | 'pulumi',
-    provider: string
+    provider: string,
   ): ProviderImplementation | undefined {
     const impl = this.registry?.get_implementation(ice_type, source, provider);
 
@@ -382,11 +363,7 @@ export class EmbeddedSchemaProvider implements GraphSchemaProvider {
   /**
    * Get the native type for a provider.
    */
-  get_native_type(
-    ice_type: IceType,
-    source: 'terraform' | 'pulumi',
-    provider: string
-  ): string | undefined {
+  get_native_type(ice_type: IceType, source: 'terraform' | 'pulumi', provider: string): string | undefined {
     return this.registry?.get_native_type(ice_type, source, provider) ?? undefined;
   }
 
@@ -459,10 +436,7 @@ export class EmbeddedSchemaProvider implements GraphSchemaProvider {
   /**
    * Get dependencies for a resource type.
    */
-  async get_dependencies(
-    ice_type: IceType,
-    max_depth: number = 10
-  ): Promise<Result<ResourceSchema[], IceError>> {
+  async get_dependencies(ice_type: IceType, max_depth: number = 10): Promise<Result<ResourceSchema[], IceError>> {
     if (!this.registry) {
       return failure(new InternalError('Schema provider not initialized', 'INTERNAL_ERROR'));
     }
@@ -474,10 +448,7 @@ export class EmbeddedSchemaProvider implements GraphSchemaProvider {
   /**
    * Get dependents for a resource type.
    */
-  async get_dependents(
-    ice_type: IceType,
-    max_depth: number = 10
-  ): Promise<Result<ResourceSchema[], IceError>> {
+  async get_dependents(ice_type: IceType, max_depth: number = 10): Promise<Result<ResourceSchema[], IceError>> {
     if (!this.registry) {
       return failure(new InternalError('Schema provider not initialized', 'INTERNAL_ERROR'));
     }
@@ -614,7 +585,7 @@ export function create_embedded_schema_provider(db_path?: string): EmbeddedSchem
  * @deprecated Use create_embedded_schema_provider with db_path instead.
  */
 export function create_embedded_schema_provider_with_registry(
-  registry_factory: () => Promise<unknown>
+  registry_factory: () => Promise<unknown>,
 ): EmbeddedSchemaProvider {
   // For backwards compatibility, create a provider and let initialize handle it
   return new EmbeddedSchemaProvider();

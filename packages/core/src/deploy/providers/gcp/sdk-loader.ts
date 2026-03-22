@@ -83,8 +83,7 @@ export async function initialize_gcp_clients(project: string): Promise<Map<strin
   // Cloud Functions (v2 API — FunctionServiceClient is under .v2 namespace)
   const functions = await load_sdk('@google-cloud/functions');
   if (functions) {
-    const FunctionServiceClient =
-      functions.v2?.FunctionServiceClient ?? functions.FunctionServiceClient;
+    const FunctionServiceClient = functions.v2?.FunctionServiceClient ?? functions.FunctionServiceClient;
     if (FunctionServiceClient) {
       clients.set('functions', new FunctionServiceClient());
     }
@@ -175,10 +174,7 @@ export async function verify_gcp_auth(external_client?: unknown): Promise<any> {
  * If `external_auth_client` is provided, it is used instead of loading
  * google-auth-library (which may fail in bundled Electron contexts).
  */
-export async function create_rest_client(
-  _project: string,
-  external_auth_client?: unknown
-): Promise<GCPRestClient> {
+export async function create_rest_client(_project: string, external_auth_client?: unknown): Promise<GCPRestClient> {
   const auth_client = await verify_gcp_auth(external_auth_client);
 
   async function make_request(method: string, url: string, body?: unknown): Promise<unknown> {

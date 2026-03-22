@@ -6,10 +6,7 @@
 
 import { Request, Response } from 'express';
 import { User } from '@prisma/client';
-import {
-  getCurrentMonthUsage,
-  getDailyUsageBreakdown,
-} from '../../services/usageTrackingService';
+import { getCurrentMonthUsage, getDailyUsageBreakdown } from '../../services/usageTrackingService';
 import { checkPermissions } from '../../utils/checkPermissions';
 import { errorHandler } from '../../errorHandler';
 
@@ -54,10 +51,7 @@ interface AuthenticatedRequest extends Request {
  *       401:
  *         description: Unauthorized
  */
-export const getUsage = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
+export const getUsage = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { targetOrganisationId, includeDaily = false, days = 30 } = req.body;
 

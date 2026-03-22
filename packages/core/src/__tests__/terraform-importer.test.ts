@@ -453,9 +453,7 @@ describe('Terraform State Importer', () => {
       });
 
       expect(result.resources).toHaveLength(3); // 1 vpc + 2 subnets
-      expect(
-        result.resources.every((r) => ['aws_vpc', 'aws_subnet'].includes(r.terraform_type))
-      ).toBe(true);
+      expect(result.resources.every((r) => ['aws_vpc', 'aws_subnet'].includes(r.terraform_type))).toBe(true);
     });
 
     it('should filter by excluded types', () => {

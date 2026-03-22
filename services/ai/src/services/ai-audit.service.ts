@@ -87,23 +87,25 @@ export function finalizeAuditEntry(
  */
 export function writeAuditEntry(entry: AuditEntry): void {
   // Fire-and-forget
-  prisma.aiAuditLog.create({
-    data: {
-      id: entry.id,
-      intent: entry.intent,
-      canvas_before: entry.canvasBefore as any,
-      operations: entry.operations as any,
-      raw_response: entry.rawResponse,
-      parse_success: entry.parseSuccess,
-      schema_validation: entry.schemaValidation as any ?? undefined,
-      deploy_dry_run: entry.deployDryRun as any ?? undefined,
-      duration_ms: entry.durationMs,
-      model: entry.model,
-      error: entry.error ?? null,
-    },
-  }).catch(() => {
-    // Silently fail — audit logging should never break the request
-  });
+  prisma.aiAuditLog
+    .create({
+      data: {
+        id: entry.id,
+        intent: entry.intent,
+        canvas_before: entry.canvasBefore as any,
+        operations: entry.operations as any,
+        raw_response: entry.rawResponse,
+        parse_success: entry.parseSuccess,
+        schema_validation: (entry.schemaValidation as any) ?? undefined,
+        deploy_dry_run: (entry.deployDryRun as any) ?? undefined,
+        duration_ms: entry.durationMs,
+        model: entry.model,
+        error: entry.error ?? null,
+      },
+    })
+    .catch(() => {
+      // Silently fail — audit logging should never break the request
+    });
 }
 
 /**
@@ -141,8 +143,8 @@ export async function getAuditEntry(id: string): Promise<AuditEntry | null> {
       operations: row.operations as any[],
       rawResponse: row.raw_response,
       parseSuccess: row.parse_success,
-      schemaValidation: row.schema_validation as AuditEntry['schemaValidation'] ?? undefined,
-      deployDryRun: row.deploy_dry_run as AuditEntry['deployDryRun'] ?? undefined,
+      schemaValidation: (row.schema_validation as AuditEntry['schemaValidation']) ?? undefined,
+      deployDryRun: (row.deploy_dry_run as AuditEntry['deployDryRun']) ?? undefined,
       durationMs: row.duration_ms,
       model: row.model,
       error: row.error ?? undefined,

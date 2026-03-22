@@ -68,13 +68,7 @@ const selectionSlice = createSlice({
   },
 });
 
-export const {
-  setSelectedNodes,
-  setSelectedEdges,
-  selectAll,
-  clearSelection,
-  toggleNodeSelection,
-  setSelectionRect,
-} = selectionSlice.actions;
+export const { setSelectedNodes, setSelectedEdges, selectAll, clearSelection, toggleNodeSelection, setSelectionRect } =
+  selectionSlice.actions;
 
 export default selectionSlice.reducer;

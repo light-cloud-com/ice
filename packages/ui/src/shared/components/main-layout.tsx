@@ -142,20 +142,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ projectId, projectName, 
             {/* Center + Bottom panels */}
             <ResizablePanel defaultSize={75}>
               <ResizablePanelGroup direction="vertical" className="h-full" autoSaveId="ice-layout-v">
-                <ResizablePanel defaultSize={(showProperties || showAiChat) ? 55 : 100}>
-                  {canvasContent}
-                </ResizablePanel>
+                <ResizablePanel defaultSize={showProperties || showAiChat ? 55 : 100}>{canvasContent}</ResizablePanel>
 
                 {/* AI Chat — bottom panel (portrait) */}
                 {isCanvasView && showAiChat && (
                   <>
                     <ResizableHandle withHandle />
-                    <ResizablePanel
-                      defaultSize={25}
-                      minSize={15}
-                      maxSize={50}
-                      className="bg-ice-surface"
-                    >
+                    <ResizablePanel defaultSize={25} minSize={15} maxSize={50} className="bg-ice-surface">
                       <AiChatPanel />
                     </ResizablePanel>
                   </>
@@ -203,20 +196,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ projectId, projectName, 
           <ResizableHandle withHandle style={{ display: showPalette ? undefined : 'none' }} />
 
           {/* Center */}
-          <ResizablePanel defaultSize={(showProperties || showAiChat) ? 55 : 80}>
-            {canvasContent}
-          </ResizablePanel>
+          <ResizablePanel defaultSize={showProperties || showAiChat ? 55 : 80}>{canvasContent}</ResizablePanel>
 
           {/* Right side panels — AI + Properties stacked vertically */}
           {(showProperties || (isCanvasView && showAiChat)) && (
             <>
               <ResizableHandle withHandle />
-              <ResizablePanel
-                defaultSize={25}
-                minSize={18}
-                maxSize={45}
-                className="bg-ice-surface"
-              >
+              <ResizablePanel defaultSize={25} minSize={18} maxSize={45} className="bg-ice-surface">
                 {showProperties && isCanvasView && showAiChat ? (
                   // Both AI and Properties visible — stack vertically
                   <ResizablePanelGroup direction="vertical" autoSaveId="ice-right-panels">

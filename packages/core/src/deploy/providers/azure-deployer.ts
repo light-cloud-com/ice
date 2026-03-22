@@ -24,11 +24,7 @@ export class AzureDeployer implements ProviderDeployer {
       this.subscription_id = options.subscriptions[0];
     }
 
-    if (
-      options.resource_groups &&
-      options.resource_groups.length > 0 &&
-      options.resource_groups[0]
-    ) {
+    if (options.resource_groups && options.resource_groups.length > 0 && options.resource_groups[0]) {
       this.resource_group = options.resource_groups[0];
     }
 
@@ -42,10 +38,7 @@ export class AzureDeployer implements ProviderDeployer {
       try {
         const compute_module = '@azure/arm-compute';
         const compute = await Function('m', 'return import(m)')(compute_module);
-        this.compute_client = new compute.ComputeManagementClient(
-          this.credential,
-          this.subscription_id
-        );
+        this.compute_client = new compute.ComputeManagementClient(this.credential, this.subscription_id);
       } catch {
         // Compute client not available
       }
@@ -54,10 +47,7 @@ export class AzureDeployer implements ProviderDeployer {
       try {
         const storage_module = '@azure/arm-storage';
         const storage = await Function('m', 'return import(m)')(storage_module);
-        this.storage_client = new storage.StorageManagementClient(
-          this.credential,
-          this.subscription_id
-        );
+        this.storage_client = new storage.StorageManagementClient(this.credential, this.subscription_id);
       } catch {
         // Storage client not available
       }
@@ -71,9 +61,7 @@ export class AzureDeployer implements ProviderDeployer {
         // Web client not available
       }
     } catch (error) {
-      throw new Error(
-        `Failed to initialize Azure SDK: ${error instanceof Error ? error.message : String(error)}`
-      );
+      throw new Error(`Failed to initialize Azure SDK: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -85,7 +73,7 @@ export class AzureDeployer implements ProviderDeployer {
     type: string,
     name: string,
     properties: Record<string, unknown>,
-    options: Record<string, unknown>
+    options: Record<string, unknown>,
   ): Promise<ResourceDeployResult> {
     const start = Date.now();
 
@@ -138,7 +126,7 @@ export class AzureDeployer implements ProviderDeployer {
     provider_id: string,
     properties: Record<string, unknown>,
     current_properties: Record<string, unknown>,
-    options: Record<string, unknown>
+    options: Record<string, unknown>,
   ): Promise<ResourceDeployResult> {
     const start = Date.now();
 
@@ -187,7 +175,7 @@ export class AzureDeployer implements ProviderDeployer {
     type: string,
     name: string,
     provider_id: string,
-    options: Record<string, unknown>
+    options: Record<string, unknown>,
   ): Promise<ResourceDeployResult> {
     const start = Date.now();
 
@@ -235,10 +223,7 @@ export class AzureDeployer implements ProviderDeployer {
   // Virtual Machines
   // ============================================================================
 
-  private async create_virtual_machine(
-    name: string,
-    properties: Record<string, unknown>
-  ): Promise<string> {
+  private async create_virtual_machine(name: string, properties: Record<string, unknown>): Promise<string> {
     if (!this.compute_client) {
       throw new Error('Compute SDK not available. Install @azure/arm-compute');
     }
@@ -247,47 +232,43 @@ export class AzureDeployer implements ProviderDeployer {
     const vm_size = (properties.vm_size as string) || 'Standard_B1s';
     const resource_group = (properties.resource_group as string) || this.resource_group;
 
-    const result = await this.compute_client.virtualMachines.beginCreateOrUpdateAndWait(
-      resource_group,
-      name,
-      {
-        location,
-        hardwareProfile: {
-          vmSize: vm_size,
+    const result = await this.compute_client.virtualMachines.beginCreateOrUpdateAndWait(resource_group, name, {
+      location,
+      hardwareProfile: {
+        vmSize: vm_size,
+      },
+      storageProfile: {
+        imageReference: {
+          publisher: (properties.image_publisher as string) || 'Canonical',
+          offer: (properties.image_offer as string) || '0001-com-ubuntu-server-jammy',
+          sku: (properties.image_sku as string) || '22_04-lts',
+          version: 'latest',
         },
-        storageProfile: {
-          imageReference: {
-            publisher: (properties.image_publisher as string) || 'Canonical',
-            offer: (properties.image_offer as string) || '0001-com-ubuntu-server-jammy',
-            sku: (properties.image_sku as string) || '22_04-lts',
-            version: 'latest',
-          },
-          osDisk: {
-            createOption: 'FromImage',
-            managedDisk: {
-              storageAccountType: 'Standard_LRS',
-            },
+        osDisk: {
+          createOption: 'FromImage',
+          managedDisk: {
+            storageAccountType: 'Standard_LRS',
           },
         },
-        osProfile: {
-          computerName: name,
-          adminUsername: (properties.admin_username as string) || 'azureuser',
-          adminPassword: properties.admin_password as string,
-          linuxConfiguration: !properties.admin_password
-            ? {
-                disablePasswordAuthentication: true,
-                ssh: {
-                  publicKeys: properties.ssh_public_keys as any[],
-                },
-              }
-            : undefined,
-        },
-        networkProfile: {
-          networkInterfaces: properties.network_interfaces as any[],
-        },
-        tags: properties.tags as Record<string, string>,
-      }
-    );
+      },
+      osProfile: {
+        computerName: name,
+        adminUsername: (properties.admin_username as string) || 'azureuser',
+        adminPassword: properties.admin_password as string,
+        linuxConfiguration: !properties.admin_password
+          ? {
+              disablePasswordAuthentication: true,
+              ssh: {
+                publicKeys: properties.ssh_public_keys as any[],
+              },
+            }
+          : undefined,
+      },
+      networkProfile: {
+        networkInterfaces: properties.network_interfaces as any[],
+      },
+      tags: properties.tags as Record<string, string>,
+    });
 
     return result.id || '';
   }
@@ -295,7 +276,7 @@ export class AzureDeployer implements ProviderDeployer {
   private async update_virtual_machine(
     name: string,
     provider_id: string,
-    properties: Record<string, unknown>
+    properties: Record<string, unknown>,
   ): Promise<void> {
     if (!this.compute_client) {
       throw new Error('Compute SDK not available');
@@ -325,10 +306,7 @@ export class AzureDeployer implements ProviderDeployer {
   // Storage Accounts
   // ============================================================================
 
-  private async create_storage_account(
-    name: string,
-    properties: Record<string, unknown>
-  ): Promise<string> {
+  private async create_storage_account(name: string, properties: Record<string, unknown>): Promise<string> {
     if (!this.storage_client) {
       throw new Error('Storage SDK not available. Install @azure/arm-storage');
     }
@@ -337,16 +315,12 @@ export class AzureDeployer implements ProviderDeployer {
     const sku = (properties.sku as string) || 'Standard_LRS';
     const resource_group = (properties.resource_group as string) || this.resource_group;
 
-    const result = await this.storage_client.storageAccounts.beginCreateAndWait(
-      resource_group,
-      name,
-      {
-        location,
-        sku: { name: sku },
-        kind: (properties.kind as string) || 'StorageV2',
-        tags: properties.tags as Record<string, string>,
-      }
-    );
+    const result = await this.storage_client.storageAccounts.beginCreateAndWait(resource_group, name, {
+      location,
+      sku: { name: sku },
+      kind: (properties.kind as string) || 'StorageV2',
+      tags: properties.tags as Record<string, string>,
+    });
 
     return result.id || '';
   }
@@ -354,7 +328,7 @@ export class AzureDeployer implements ProviderDeployer {
   private async update_storage_account(
     name: string,
     provider_id: string,
-    properties: Record<string, unknown>
+    properties: Record<string, unknown>,
   ): Promise<void> {
     if (!this.storage_client) {
       throw new Error('Storage SDK not available');
@@ -395,9 +369,7 @@ export class AzureDeployer implements ProviderDeployer {
       siteConfig: {
         linuxFxVersion: properties.linux_fx_version as string,
         appSettings: properties.app_settings
-          ? Object.entries(properties.app_settings as Record<string, string>).map(
-              ([name, value]) => ({ name, value })
-            )
+          ? Object.entries(properties.app_settings as Record<string, string>).map(([name, value]) => ({ name, value }))
           : undefined,
       },
       tags: properties.tags as Record<string, string>,
@@ -406,11 +378,7 @@ export class AzureDeployer implements ProviderDeployer {
     return result.id || '';
   }
 
-  private async update_web_app(
-    name: string,
-    provider_id: string,
-    properties: Record<string, unknown>
-  ): Promise<void> {
+  private async update_web_app(name: string, provider_id: string, properties: Record<string, unknown>): Promise<void> {
     if (!this.web_client) {
       throw new Error('Web SDK not available');
     }
@@ -420,9 +388,7 @@ export class AzureDeployer implements ProviderDeployer {
     await this.web_client.webApps.update(resource_group, name, {
       siteConfig: {
         appSettings: properties.app_settings
-          ? Object.entries(properties.app_settings as Record<string, string>).map(
-              ([name, value]) => ({ name, value })
-            )
+          ? Object.entries(properties.app_settings as Record<string, string>).map(([name, value]) => ({ name, value }))
           : undefined,
       },
       tags: properties.tags as Record<string, string>,

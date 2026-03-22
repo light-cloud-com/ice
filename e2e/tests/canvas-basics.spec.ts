@@ -40,7 +40,7 @@ test.describe('Canvas Basics', () => {
 
     await authenticatedPage.mouse.move(
       paletteBounds.x + paletteBounds.width / 2,
-      paletteBounds.y + paletteBounds.height / 2
+      paletteBounds.y + paletteBounds.height / 2,
     );
     await authenticatedPage.mouse.down();
     await authenticatedPage.mouse.move(canvasBounds.x + 400, canvasBounds.y + 300, { steps: 10 });

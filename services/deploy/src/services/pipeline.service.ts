@@ -15,10 +15,10 @@ import { emitPipelineUpdate, emitCardPipelineUpdate } from '@ice/shared';
 export interface CreateRuleInput {
   cardId: string;
   nodeId: string;
-  repository: string;       // "owner/repo"
-  triggerType?: string;      // "push" | "merge"
-  branchPattern?: string;    // "main" | "develop" | "feature/*"
-  environment?: string;      // "production" | "staging" | "development"
+  repository: string; // "owner/repo"
+  triggerType?: string; // "push" | "merge"
+  branchPattern?: string; // "main" | "develop" | "feature/*"
+  environment?: string; // "production" | "staging" | "development"
   buildCommand?: string;
   installCommand?: string;
   outputDir?: string;
@@ -54,11 +54,7 @@ const GITHUB_HEADERS = {
 
 // ─── Rule CRUD ──────────────────────────────────────────────────────────────
 
-export async function createRule(
-  input: CreateRuleInput,
-  organisationId: string,
-  userId: string,
-) {
+export async function createRule(input: CreateRuleInput, organisationId: string, userId: string) {
   const webhookSecret = crypto.randomBytes(32).toString('hex');
 
   const rule = await prisma.deploymentRule.create({
@@ -81,11 +77,7 @@ export async function createRule(
 
   // Register webhook on GitHub (best-effort — don't fail rule creation)
   try {
-    const webhookId = await registerGitHubWebhook(
-      userId,
-      input.repository,
-      webhookSecret,
-    );
+    const webhookId = await registerGitHubWebhook(userId, input.repository, webhookSecret);
     if (webhookId) {
       await prisma.deploymentRule.update({
         where: { id: rule.id },
@@ -226,12 +218,7 @@ export async function createDeploymentEvent(
   });
 }
 
-export async function updateEventProgress(
-  eventId: string,
-  status: string,
-  stage: string,
-  step?: DeployStep,
-) {
+export async function updateEventProgress(eventId: string, status: string, stage: string, step?: DeployStep) {
   const event = await prisma.deploymentEvent.findUnique({ where: { id: eventId } });
   if (!event) return;
 
@@ -246,9 +233,7 @@ export async function updateEventProgress(
 
   if (status === 'success' || status === 'failed') {
     updates.completed_at = new Date();
-    updates.duration_seconds = Math.round(
-      (Date.now() - event.started_at.getTime()) / 1000,
-    );
+    updates.duration_seconds = Math.round((Date.now() - event.started_at.getTime()) / 1000);
   }
 
   const updated = await prisma.deploymentEvent.update({
@@ -303,11 +288,7 @@ export async function failEvent(eventId: string, error: string) {
 
 // ─── Webhook Matching ───────────────────────────────────────────────────────
 
-export async function matchRulesForPush(
-  repository: string,
-  branch: string,
-  commitSha: string,
-) {
+export async function matchRulesForPush(repository: string, branch: string, commitSha: string) {
   const rules = await prisma.deploymentRule.findMany({
     where: {
       repository,
@@ -319,10 +300,7 @@ export async function matchRulesForPush(
   return rules.filter((rule) => branchMatches(branch, rule.branch_pattern));
 }
 
-export async function matchRulesForMerge(
-  repository: string,
-  targetBranch: string,
-) {
+export async function matchRulesForMerge(repository: string, targetBranch: string) {
   const rules = await prisma.deploymentRule.findMany({
     where: {
       repository,
@@ -349,11 +327,7 @@ export async function shouldSkipDuplicate(ruleId: string, commitSha: string): Pr
 
 // ─── GitHub Webhook Registration ────────────────────────────────────────────
 
-async function registerGitHubWebhook(
-  userId: string,
-  repository: string,
-  secret: string,
-): Promise<number | null> {
+async function registerGitHubWebhook(userId: string, repository: string, secret: string): Promise<number | null> {
   const token = await getGitHubToken(userId);
   if (!token) return null;
 
@@ -394,11 +368,7 @@ async function registerGitHubWebhook(
   return hook.id;
 }
 
-async function unregisterGitHubWebhook(
-  userId: string,
-  repository: string,
-  webhookId: number,
-) {
+async function unregisterGitHubWebhook(userId: string, repository: string, webhookId: number) {
   const token = await getGitHubToken(userId);
   if (!token) return;
 
@@ -429,14 +399,7 @@ export async function detectFramework(
   const detectedFiles: string[] = [];
 
   // Check for key files
-  const filesToCheck = [
-    'package.json',
-    'Dockerfile',
-    'requirements.txt',
-    'go.mod',
-    'pom.xml',
-    'Cargo.toml',
-  ];
+  const filesToCheck = ['package.json', 'Dockerfile', 'requirements.txt', 'go.mod', 'pom.xml', 'Cargo.toml'];
 
   const fileContents: Record<string, string | null> = {};
   for (const file of filesToCheck) {
@@ -651,10 +614,9 @@ async function fetchFileContent(
   branch: string,
 ): Promise<string | null> {
   try {
-    const response = await fetch(
-      `${GITHUB_API}/repos/${owner}/${repo}/contents/${path}?ref=${branch}`,
-      { headers: { Authorization: `Bearer ${token}`, ...GITHUB_HEADERS } },
-    );
+    const response = await fetch(`${GITHUB_API}/repos/${owner}/${repo}/contents/${path}?ref=${branch}`, {
+      headers: { Authorization: `Bearer ${token}`, ...GITHUB_HEADERS },
+    });
     if (!response.ok) return null;
     const data = (await response.json()) as { content?: string; encoding?: string };
     if (data.content && data.encoding === 'base64') {
@@ -677,12 +639,18 @@ function branchMatches(branch: string, pattern: string): boolean {
 
 function statusToProgress(status: string): number {
   switch (status) {
-    case 'queued': return 0;
-    case 'building': return 33;
-    case 'deploying': return 66;
-    case 'success': return 100;
-    case 'failed': return 100;
-    default: return 0;
+    case 'queued':
+      return 0;
+    case 'building':
+      return 33;
+    case 'deploying':
+      return 66;
+    case 'success':
+      return 100;
+    case 'failed':
+      return 100;
+    default:
+      return 0;
   }
 }
 
@@ -709,10 +677,7 @@ function getWebhookCallbackUrl(): string {
  * find the project that owns that card, then find the environment
  * by name, and return its card_id. Falls back to the original cardId.
  */
-export async function resolveEnvironmentCardId(
-  ruleCardId: string,
-  environmentName: string,
-): Promise<string> {
+export async function resolveEnvironmentCardId(ruleCardId: string, environmentName: string): Promise<string> {
   try {
     const card = await prisma.canvasCard.findUnique({
       where: { id: ruleCardId },

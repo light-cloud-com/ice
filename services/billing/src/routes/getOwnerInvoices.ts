@@ -10,10 +10,7 @@ interface AuthenticatedRequest extends Request {
   user: User;
 }
 
-export const getOwnerInvoices = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
+export const getOwnerInvoices = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user.id;
 

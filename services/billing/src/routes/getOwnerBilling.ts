@@ -116,10 +116,7 @@ export interface OwnerBillingResponse {
   } | null;
 }
 
-export const getOwnerBilling = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
+export const getOwnerBilling = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user.id;
 
@@ -243,9 +240,7 @@ export const getOwnerBilling = async (
     }
 
     // Sort by name
-    organisationBillings.sort((a, b) =>
-      a.organisation.name.localeCompare(b.organisation.name)
-    );
+    organisationBillings.sort((a, b) => a.organisation.name.localeCompare(b.organisation.name));
 
     // Get trial status for the user
     const trialStatus = await getTrialStatus(userId);

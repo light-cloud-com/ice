@@ -223,17 +223,13 @@ export interface SchemaProvider {
   get_implementation(
     ice_type: IceType,
     source: 'terraform' | 'pulumi',
-    provider: string
+    provider: string,
   ): ProviderImplementation | undefined;
 
   /**
    * Get the native type for a provider.
    */
-  get_native_type(
-    ice_type: IceType,
-    source: 'terraform' | 'pulumi',
-    provider: string
-  ): string | undefined;
+  get_native_type(ice_type: IceType, source: 'terraform' | 'pulumi', provider: string): string | undefined;
 
   /**
    * Get property schema for a specific property.
@@ -338,12 +334,7 @@ export interface PropertyMapping {
 /**
  * Schema provider event types.
  */
-export type SchemaEventType =
-  | 'initialized'
-  | 'schema_added'
-  | 'schema_updated'
-  | 'schema_removed'
-  | 'error';
+export type SchemaEventType = 'initialized' | 'schema_added' | 'schema_updated' | 'schema_removed' | 'error';
 
 /**
  * Schema provider event.

@@ -59,12 +59,12 @@ export const PipelinePanel: React.FC = () => {
   const activeCard = useSelector(selectActiveCard);
 
   const key = cardId && nodeId ? `${cardId}:${nodeId}` : '';
-  const rules = useSelector((s: RootState) => key ? s.pipeline.rules[key] || [] : []);
-  const events = useSelector((s: RootState) => key ? s.pipeline.history[key] || [] : []);
+  const rules = useSelector((s: RootState) => (key ? s.pipeline.rules[key] || [] : []));
+  const events = useSelector((s: RootState) => (key ? s.pipeline.history[key] || [] : []));
   const rulesLoading = useSelector((s: RootState) => s.pipeline.rulesLoading);
   const historyLoading = useSelector((s: RootState) => s.pipeline.historyLoading);
   const activeLogs = useSelector((s: RootState) => s.pipeline.activeLogs);
-  const nodeStatus = useSelector((s: RootState) => nodeId ? s.pipeline.nodeStatus[nodeId] : null);
+  const nodeStatus = useSelector((s: RootState) => (nodeId ? s.pipeline.nodeStatus[nodeId] : null));
   const detectedFrameworks = useSelector((s: RootState) => s.pipeline.detectedFrameworks);
   const detectingFramework = useSelector((s: RootState) => s.pipeline.detectingFramework);
 
@@ -95,9 +95,7 @@ export const PipelinePanel: React.FC = () => {
   const detection = repository ? detectedFrameworks[repository] : null;
 
   // Branches from GitHub for this repo
-  const branches = useSelector((s: RootState) =>
-    repository ? s.integrations.github.branches[repository] || [] : []
-  );
+  const branches = useSelector((s: RootState) => (repository ? s.integrations.github.branches[repository] || [] : []));
 
   // ── Load data on open ──
   useEffect(() => {
@@ -112,7 +110,7 @@ export const PipelinePanel: React.FC = () => {
 
   // ── Auto-create default pipeline rule when rules load empty for a repo ──
   const [autoCreated, setAutoCreated] = useState(false);
-  const rulesLoadedOnce = useSelector((s: RootState) => key ? key in s.pipeline.rules : false);
+  const rulesLoadedOnce = useSelector((s: RootState) => (key ? key in s.pipeline.rules : false));
 
   useEffect(() => {
     if (!isPanelOpen || !cardId || !nodeId || !repository || autoCreated) return;
@@ -126,24 +124,38 @@ export const PipelinePanel: React.FC = () => {
         ? 'master'
         : branches[0]?.name || 'main';
 
-
     // Direct dispatch — don't go through handleAddRule to avoid stale closure
-    dispatch(createPipelineRule({
-      cardId,
-      nodeId,
-      repository,
-      branchPattern: defaultBranch,
-      environment: 'production',
-      buildCommand: detection?.buildCommand || undefined,
-      installCommand: detection?.installCommand || undefined,
-      outputDir: detection?.outputDirectory || undefined,
-      framework: detection?.framework || undefined,
-    })).then(() => {
-      dispatch(fetchRulesForNode({ cardId, nodeId }));
-    }).catch((err: any) => {
-      console.error('Auto-create pipeline rule failed:', err);
-    });
-  }, [isPanelOpen, cardId, nodeId, repository, rulesLoadedOnce, rules.length, autoCreated, branches, detection, dispatch]);
+    dispatch(
+      createPipelineRule({
+        cardId,
+        nodeId,
+        repository,
+        branchPattern: defaultBranch,
+        environment: 'production',
+        buildCommand: detection?.buildCommand || undefined,
+        installCommand: detection?.installCommand || undefined,
+        outputDir: detection?.outputDirectory || undefined,
+        framework: detection?.framework || undefined,
+      }),
+    )
+      .then(() => {
+        dispatch(fetchRulesForNode({ cardId, nodeId }));
+      })
+      .catch((err: any) => {
+        console.error('Auto-create pipeline rule failed:', err);
+      });
+  }, [
+    isPanelOpen,
+    cardId,
+    nodeId,
+    repository,
+    rulesLoadedOnce,
+    rules.length,
+    autoCreated,
+    branches,
+    detection,
+    dispatch,
+  ]);
 
   // Reset auto-created flag when panel closes
   useEffect(() => {
@@ -179,55 +191,67 @@ export const PipelinePanel: React.FC = () => {
 
   const [error, setError] = useState<string | null>(null);
 
-  const handleAddRule = useCallback(async (overrideBranch?: string, overrideEnv?: string) => {
-    if (!cardId || !nodeId || !repository) {
-      setError(!repository ? 'No repository linked. Select a repo on the GitHub Repo block first.' : 'Missing card or node context.');
-      return;
-    }
-    setError(null);
+  const handleAddRule = useCallback(
+    async (overrideBranch?: string, overrideEnv?: string) => {
+      if (!cardId || !nodeId || !repository) {
+        setError(
+          !repository
+            ? 'No repository linked. Select a repo on the GitHub Repo block first.'
+            : 'Missing card or node context.',
+        );
+        return;
+      }
+      setError(null);
 
-    // Pick the first unused branch, or fall back to the override / default
-    const usedBranches = new Set(rules.map((r) => r.branch_pattern));
-    let targetBranch = overrideBranch || 'main';
-    if (!overrideBranch && branches.length > 0) {
-      const unused = branches.find((b) => !usedBranches.has(b.name));
-      if (unused) targetBranch = unused.name;
-    }
+      // Pick the first unused branch, or fall back to the override / default
+      const usedBranches = new Set(rules.map((r) => r.branch_pattern));
+      let targetBranch = overrideBranch || 'main';
+      if (!overrideBranch && branches.length > 0) {
+        const unused = branches.find((b) => !usedBranches.has(b.name));
+        if (unused) targetBranch = unused.name;
+      }
 
-    // Auto-assign environment based on branch name
-    let targetEnv = overrideEnv || 'production';
-    if (!overrideEnv) {
-      const branchLower = targetBranch.toLowerCase();
-      if (branchLower === 'main' || branchLower === 'master') targetEnv = 'production';
-      else if (branchLower.includes('stag')) targetEnv = 'staging';
-      else targetEnv = 'development';
-    }
+      // Auto-assign environment based on branch name
+      let targetEnv = overrideEnv || 'production';
+      if (!overrideEnv) {
+        const branchLower = targetBranch.toLowerCase();
+        if (branchLower === 'main' || branchLower === 'master') targetEnv = 'production';
+        else if (branchLower.includes('stag')) targetEnv = 'staging';
+        else targetEnv = 'development';
+      }
 
-    try {
-      await dispatch(createPipelineRule({
-        cardId,
-        nodeId,
-        repository,
-        branchPattern: targetBranch,
-        environment: targetEnv,
-        buildCommand: detection?.buildCommand || undefined,
-        installCommand: detection?.installCommand || undefined,
-        outputDir: detection?.outputDirectory || undefined,
-        framework: detection?.framework || undefined,
-      })).unwrap();
-      dispatch(fetchRulesForNode({ cardId, nodeId }));
-    } catch (err: any) {
-      setError(typeof err === 'string' ? err : err?.message || 'Failed to create pipeline rule');
-    }
-  }, [cardId, nodeId, repository, detection, rules, branches, dispatch]);
+      try {
+        await dispatch(
+          createPipelineRule({
+            cardId,
+            nodeId,
+            repository,
+            branchPattern: targetBranch,
+            environment: targetEnv,
+            buildCommand: detection?.buildCommand || undefined,
+            installCommand: detection?.installCommand || undefined,
+            outputDir: detection?.outputDirectory || undefined,
+            framework: detection?.framework || undefined,
+          }),
+        ).unwrap();
+        dispatch(fetchRulesForNode({ cardId, nodeId }));
+      } catch (err: any) {
+        setError(typeof err === 'string' ? err : err?.message || 'Failed to create pipeline rule');
+      }
+    },
+    [cardId, nodeId, repository, detection, rules, branches, dispatch],
+  );
 
-  const handleTriggerDeploy = useCallback((ruleId: string) => {
-    dispatch(triggerManualDeploy({ ruleId }));
-    // Refresh events after a short delay
-    setTimeout(() => {
-      if (cardId && nodeId) dispatch(fetchEventsForNode({ cardId, nodeId }));
-    }, 1000);
-  }, [cardId, nodeId, dispatch]);
+  const handleTriggerDeploy = useCallback(
+    (ruleId: string) => {
+      dispatch(triggerManualDeploy({ ruleId }));
+      // Refresh events after a short delay
+      setTimeout(() => {
+        if (cardId && nodeId) dispatch(fetchEventsForNode({ cardId, nodeId }));
+      }, 1000);
+    },
+    [cardId, nodeId, dispatch],
+  );
 
   if (!isPanelOpen) return null;
 
@@ -247,9 +271,7 @@ export const PipelinePanel: React.FC = () => {
           <div className="flex items-center gap-2">
             <Zap className="w-4 h-4 text-amber-500" />
             <h2 className="text-sm font-semibold text-ice-text-1">{PIPELINE.PANEL_TITLE(nodeName)}</h2>
-            {nodeStatus && nodeStatus.status !== 'idle' && (
-              <StatusPill status={nodeStatus.status} />
-            )}
+            {nodeStatus && nodeStatus.status !== 'idle' && <StatusPill status={nodeStatus.status} />}
           </div>
           <button onClick={handleClose} className="p-1 rounded hover:bg-ice-hover transition-colors">
             <X className="w-4 h-4 text-ice-text-3" />
@@ -290,7 +312,7 @@ export const PipelinePanel: React.FC = () => {
 
           {/* Triggers Section */}
           <Section title={PIPELINE.TRIGGERS} icon={Zap}>
-            {(rulesLoading || (autoCreated && rules.length === 0)) ? (
+            {rulesLoading || (autoCreated && rules.length === 0) ? (
               <div className="flex items-center gap-2 text-sm text-ice-text-3">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 {repository ? 'Setting up pipeline...' : 'Loading...'}
@@ -318,23 +340,39 @@ export const PipelinePanel: React.FC = () => {
                     key={rule.id}
                     rule={rule}
                     branches={branches}
-                    onToggle={(enabled) => dispatch(updatePipelineRule({
-                      ruleId: rule.id,
-                      updates: { enabled },
-                    }))}
-                    onDelete={() => dispatch(deletePipelineRule({
-                      ruleId: rule.id,
-                      cardId: rule.card_id,
-                      nodeId: rule.node_id,
-                    }))}
-                    onChangeBranch={(branchPattern) => dispatch(updatePipelineRule({
-                      ruleId: rule.id,
-                      updates: { branchPattern },
-                    }))}
-                    onChangeEnvironment={(environment) => dispatch(updatePipelineRule({
-                      ruleId: rule.id,
-                      updates: { environment },
-                    }))}
+                    onToggle={(enabled) =>
+                      dispatch(
+                        updatePipelineRule({
+                          ruleId: rule.id,
+                          updates: { enabled },
+                        }),
+                      )
+                    }
+                    onDelete={() =>
+                      dispatch(
+                        deletePipelineRule({
+                          ruleId: rule.id,
+                          cardId: rule.card_id,
+                          nodeId: rule.node_id,
+                        }),
+                      )
+                    }
+                    onChangeBranch={(branchPattern) =>
+                      dispatch(
+                        updatePipelineRule({
+                          ruleId: rule.id,
+                          updates: { branchPattern },
+                        }),
+                      )
+                    }
+                    onChangeEnvironment={(environment) =>
+                      dispatch(
+                        updatePipelineRule({
+                          ruleId: rule.id,
+                          updates: { environment },
+                        }),
+                      )
+                    }
                   />
                 ))}
                 {repository && (
@@ -363,11 +401,14 @@ export const PipelinePanel: React.FC = () => {
           )}
 
           {/* Live Deploy Progress */}
-          {nodeStatus && (nodeStatus.status === 'building' || nodeStatus.status === 'deploying' || nodeStatus.status === 'queued') && (
-            <Section title="Active Deployment" icon={Loader2} iconClassName="animate-spin">
-              <ActiveDeployment status={nodeStatus} logs={activeLogs} />
-            </Section>
-          )}
+          {nodeStatus &&
+            (nodeStatus.status === 'building' ||
+              nodeStatus.status === 'deploying' ||
+              nodeStatus.status === 'queued') && (
+              <Section title="Active Deployment" icon={Loader2} iconClassName="animate-spin">
+                <ActiveDeployment status={nodeStatus} logs={activeLogs} />
+              </Section>
+            )}
 
           {/* Deployment History */}
           <Section title={PIPELINE.DEPLOYMENTS} icon={Clock}>
@@ -432,11 +473,7 @@ const StatusPill: React.FC<{ status: string }> = ({ status }) => {
     failed: { label: PIPELINE.STATUS_FAILED, className: 'bg-red-500/10 text-red-500' },
   };
   const c = config[status] || { label: status, className: 'bg-ice-hover text-ice-text-3' };
-  return (
-    <span className={cn('px-1.5 py-0.5 text-[10px] font-semibold rounded-full', c.className)}>
-      {c.label}
-    </span>
-  );
+  return <span className={cn('px-1.5 py-0.5 text-[10px] font-semibold rounded-full', c.className)}>{c.label}</span>;
 };
 
 interface BranchInfo {
@@ -458,12 +495,12 @@ const TriggerRow: React.FC<{
   const currentInList = branchNames.includes(rule.branch_pattern) || rule.branch_pattern === '*';
 
   return (
-    <div className={cn(
-      'flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors',
-      rule.enabled
-        ? 'border-ice-border bg-ice-raised'
-        : 'border-ice-border/50 bg-ice-base opacity-60',
-    )}>
+    <div
+      className={cn(
+        'flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors',
+        rule.enabled ? 'border-ice-border bg-ice-raised' : 'border-ice-border/50 bg-ice-base opacity-60',
+      )}
+    >
       {/* Toggle */}
       <button
         onClick={() => onToggle(!rule.enabled)}
@@ -472,14 +509,18 @@ const TriggerRow: React.FC<{
           rule.enabled ? 'bg-emerald-500' : 'bg-ice-border',
         )}
       >
-        <div className={cn(
-          'absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform',
-          rule.enabled ? 'left-3.5' : 'left-0.5',
-        )} />
+        <div
+          className={cn(
+            'absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform',
+            rule.enabled ? 'left-3.5' : 'left-0.5',
+          )}
+        />
       </button>
 
       {/* Trigger type + branch */}
-      <span className="text-ice-text-2 text-xs">{rule.trigger_type === 'merge' ? PIPELINE.MERGE_TO : PIPELINE.PUSH_TO}</span>
+      <span className="text-ice-text-2 text-xs">
+        {rule.trigger_type === 'merge' ? PIPELINE.MERGE_TO : PIPELINE.PUSH_TO}
+      </span>
       <select
         value={rule.branch_pattern}
         onChange={(e) => onChangeBranch(e.target.value)}
@@ -489,7 +530,8 @@ const TriggerRow: React.FC<{
           <>
             {branches.map((b) => (
               <option key={b.name} value={b.name}>
-                {b.name}{b.protected ? ' (protected)' : ''}
+                {b.name}
+                {b.protected ? ' (protected)' : ''}
               </option>
             ))}
             <option value="*">* (any branch)</option>
@@ -576,14 +618,8 @@ const ActiveDeployment: React.FC<{
             ) : (
               <Loader2 className="w-3 h-3 text-blue-400 animate-spin flex-shrink-0" />
             )}
-            <span className={cn(
-              log.status === 'failed' ? 'text-red-400' : 'text-slate-300',
-            )}>
-              {log.message}
-            </span>
-            {log.duration_ms && (
-              <span className="ml-auto text-slate-500">{(log.duration_ms / 1000).toFixed(1)}s</span>
-            )}
+            <span className={cn(log.status === 'failed' ? 'text-red-400' : 'text-slate-300')}>{log.message}</span>
+            {log.duration_ms && <span className="ml-auto text-slate-500">{(log.duration_ms / 1000).toFixed(1)}s</span>}
           </div>
         ))}
       </div>
@@ -616,17 +652,12 @@ const EventRow: React.FC<{ event: DeploymentEvent }> = ({ event }) => {
         <span className="text-ice-text-2 truncate flex-1">{event.commit_message}</span>
 
         {/* Metadata */}
-        <span className="text-ice-text-3 flex-shrink-0">
-          {event.rule?.environment || event.branch}
-        </span>
-        <span className="text-ice-text-3 flex-shrink-0">
-          {PIPELINE.AGO(event.started_at)}
-        </span>
+        <span className="text-ice-text-3 flex-shrink-0">{event.rule?.environment || event.branch}</span>
+        <span className="text-ice-text-3 flex-shrink-0">{PIPELINE.AGO(event.started_at)}</span>
 
-        <ChevronDown className={cn(
-          'w-3 h-3 text-ice-text-3 transition-transform flex-shrink-0',
-          showLogs && 'rotate-180',
-        )} />
+        <ChevronDown
+          className={cn('w-3 h-3 text-ice-text-3 transition-transform flex-shrink-0', showLogs && 'rotate-180')}
+        />
       </div>
 
       {/* Expanded logs */}
@@ -641,17 +672,11 @@ const EventRow: React.FC<{ event: DeploymentEvent }> = ({ event }) => {
               ) : (
                 <Circle className="w-3 h-3 text-slate-500 flex-shrink-0" />
               )}
-              <span className={cn(
-                log.status === 'failed' ? 'text-red-400' : 'text-slate-300',
-              )}>
-                {log.message}
-              </span>
+              <span className={cn(log.status === 'failed' ? 'text-red-400' : 'text-slate-300')}>{log.message}</span>
             </div>
           ))}
           {event.error && (
-            <div className="text-[11px] font-mono text-red-400 mt-1 pt-1 border-t border-slate-800">
-              {event.error}
-            </div>
+            <div className="text-[11px] font-mono text-red-400 mt-1 pt-1 border-t border-slate-800">{event.error}</div>
           )}
           {event.duration_seconds && (
             <div className="text-[11px] font-mono text-slate-500 mt-1">

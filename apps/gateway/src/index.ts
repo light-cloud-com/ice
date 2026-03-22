@@ -49,18 +49,22 @@ setupSocketService(io);
 // ─── Middleware ──────────────────────────────────────────────────────────────
 
 // BE-14: Scoped CSP for API gateway — no inline scripts needed
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'none'"],
-      frameAncestors: ["'none'"],
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'none'"],
+        frameAncestors: ["'none'"],
+      },
     },
-  },
-}));
-app.use(cors({
-  origin: ALLOWED_ORIGINS,
-  credentials: true,
-}));
+  }),
+);
+app.use(
+  cors({
+    origin: ALLOWED_ORIGINS,
+    credentials: true,
+  }),
+);
 app.use(cookieParser());
 
 // Stripe webhook needs raw body for signature verification — mount before express.json()

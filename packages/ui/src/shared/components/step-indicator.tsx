@@ -23,12 +23,7 @@ interface StepIndicatorProps {
   className?: string;
 }
 
-export const StepIndicator: React.FC<StepIndicatorProps> = ({
-  currentStep,
-  totalSteps,
-  labels,
-  className,
-}) => {
+export const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep, totalSteps, labels, className }) => {
   return (
     <div className={cn('flex items-center justify-center w-full px-4 py-3', className)}>
       {Array.from({ length: totalSteps }, (_, i) => {
@@ -46,7 +41,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
                   'flex items-center justify-center w-8 h-8 rounded-full text-xs font-semibold transition-all',
                   isDone && 'bg-ice-green text-ice-text-1',
                   isActive && 'bg-ice-accent text-ice-text-1 ring-2 ring-ice-accent/40',
-                  isPending && 'bg-ice-raised text-ice-text-2 border border-ice-border'
+                  isPending && 'bg-ice-raised text-ice-text-2 border border-ice-border',
                 )}
               >
                 {isDone ? <Check className="w-4 h-4" /> : step}
@@ -56,7 +51,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
                   'text-ice-xs font-medium whitespace-nowrap',
                   isDone && 'text-ice-green',
                   isActive && 'text-ice-accent',
-                  isPending && 'text-ice-text-2'
+                  isPending && 'text-ice-text-2',
                 )}
               >
                 {labels[i]}
@@ -68,7 +63,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({
               <div
                 className={cn(
                   'flex-1 h-0.5 mx-2 mt-[-16px] rounded-full transition-all',
-                  step < currentStep ? 'bg-ice-green' : 'bg-ice-border'
+                  step < currentStep ? 'bg-ice-green' : 'bg-ice-border',
                 )}
               />
             )}

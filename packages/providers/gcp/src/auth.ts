@@ -85,10 +85,7 @@ export async function get_gcp_credentials(config: GCPAuthConfig): Promise<any> {
       if (!config.oauth) {
         throw new Error(AUTH_MESSAGES.OAUTH_CREDENTIALS_REQUIRED);
       }
-      const client = new google_auth.OAuth2Client(
-        config.oauth.client_id,
-        config.oauth.client_secret
-      );
+      const client = new google_auth.OAuth2Client(config.oauth.client_id, config.oauth.client_secret);
       client.setCredentials({ refresh_token: config.oauth.refresh_token });
       return client;
     }
@@ -139,8 +136,7 @@ export async function list_gcp_projects(config: GCPAuthConfig): Promise<GCPProje
   try {
     const client = await get_gcp_credentials(config);
 
-    const url =
-      'https://cloudresourcemanager.googleapis.com/v1/projects?filter=lifecycleState%3AACTIVE';
+    const url = 'https://cloudresourcemanager.googleapis.com/v1/projects?filter=lifecycleState%3AACTIVE';
     const response = await client.request({ url });
     const data = response.data as any;
 

@@ -39,11 +39,9 @@ export interface CreatePlanOptions extends PlanOptions {
 export function create_plan(
   graph: MutableGraph,
   current_state: Map<string, ResourceState>,
-  options: CreatePlanOptions = {}
+  options: CreatePlanOptions = {},
 ): DeploymentPlan {
-  const plan_id = create_deployment_id(
-    `plan_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`
-  );
+  const plan_id = create_deployment_id(`plan_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`);
   const graph_id = options.graph_id ?? graph.id;
   const now = new Date().toISOString();
 
@@ -92,7 +90,7 @@ function compute_sync_changes(
   graph: MutableGraph,
   current_state: Map<string, ResourceState>,
   target_nodes: Set<NodeId> | null,
-  providers_used: Map<string, number>
+  providers_used: Map<string, number>,
 ): PlannedChange[] {
   const changes: PlannedChange[] = [];
 
@@ -120,7 +118,7 @@ function compute_sync_changes(
 function compute_destroy_changes(
   graph: MutableGraph,
   current_state: Map<string, ResourceState>,
-  target_nodes: Set<NodeId> | null
+  target_nodes: Set<NodeId> | null,
 ): PlannedChange[] {
   const changes: PlannedChange[] = [];
 
@@ -149,11 +147,7 @@ function compute_destroy_changes(
 /**
  * Compute the change required for a single node.
  */
-function compute_node_change(
-  node: Node,
-  current_state: ResourceState | undefined,
-  graph: MutableGraph
-): PlannedChange {
+function compute_node_change(node: Node, current_state: ResourceState | undefined, graph: MutableGraph): PlannedChange {
   const depends_on = graph.get_dependencies(node.id).map((n) => n.id);
 
   // No current state - need to create
@@ -218,10 +212,7 @@ function compute_node_change(
 /**
  * Order changes by their dependencies using execution layers.
  */
-function order_changes_by_dependencies(
-  graph: MutableGraph,
-  changes: PlannedChange[]
-): PlannedChange[] {
+function order_changes_by_dependencies(graph: MutableGraph, changes: PlannedChange[]): PlannedChange[] {
   // Build a map of node_id to change
   const change_map = new Map<NodeId, PlannedChange>();
   for (const change of changes) {
@@ -335,12 +326,7 @@ function build_provider_requirements(providers_used: Map<string, number>): Provi
  * Check if a plan has any changes.
  */
 export function plan_has_changes(plan: DeploymentPlan): boolean {
-  return (
-    plan.summary.create > 0 ||
-    plan.summary.update > 0 ||
-    plan.summary.replace > 0 ||
-    plan.summary.delete > 0
-  );
+  return plan.summary.create > 0 || plan.summary.update > 0 || plan.summary.replace > 0 || plan.summary.delete > 0;
 }
 
 /**
@@ -353,10 +339,7 @@ export function plan_has_destructive_changes(plan: DeploymentPlan): boolean {
 /**
  * Get changes of a specific action type.
  */
-export function get_changes_by_action(
-  plan: DeploymentPlan,
-  action: DeploymentAction
-): PlannedChange[] {
+export function get_changes_by_action(plan: DeploymentPlan, action: DeploymentAction): PlannedChange[] {
   return plan.changes.filter((c) => c.action === action);
 }
 

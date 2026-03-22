@@ -12,12 +12,7 @@ import { Request, Response } from 'express';
 import { snapshotDailyUsage } from '../../services/usageTrackingService';
 import { generateAllMonthlyInvoices } from '../../services/invoiceService';
 import { pollAndRecordScalingEvents } from '../../services/scalingTrackingService';
-import {
-  getExpiredTrials,
-  convertTrialToPaid,
-  expireTrial,
-  hasPaymentMethod,
-} from '../../services/trialService';
+import { getExpiredTrials, convertTrialToPaid, expireTrial, hasPaymentMethod } from '../../services/trialService';
 
 import prisma from '../../lib/prisma';
 // API key check for scheduled jobs — always required
@@ -49,10 +44,7 @@ const verifySchedulerAuth = (req: Request): boolean => {
  *       401:
  *         description: Unauthorized
  */
-export const dailyUsageSnapshot = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const dailyUsageSnapshot = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!verifySchedulerAuth(req)) {
       res.status(401).json({ error: 'Unauthorized' });
@@ -84,9 +76,7 @@ export const dailyUsageSnapshot = async (
       }
     }
 
-    console.log(
-      `[Billing Job] Daily snapshot complete: ${results.success}/${results.total} successful`
-    );
+    console.log(`[Billing Job] Daily snapshot complete: ${results.success}/${results.total} successful`);
 
     res.status(200).json({
       success: true,
@@ -117,10 +107,7 @@ export const dailyUsageSnapshot = async (
  *       401:
  *         description: Unauthorized
  */
-export const generateMonthlyInvoices = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const generateMonthlyInvoices = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!verifySchedulerAuth(req)) {
       res.status(401).json({ error: 'Unauthorized' });
@@ -132,7 +119,7 @@ export const generateMonthlyInvoices = async (
     const results = await generateAllMonthlyInvoices();
 
     console.log(
-      `[Billing Job] Invoice generation complete: ${results.generated} generated, ${results.skipped} skipped`
+      `[Billing Job] Invoice generation complete: ${results.generated} generated, ${results.skipped} skipped`,
     );
 
     res.status(200).json({
@@ -168,10 +155,7 @@ export const generateMonthlyInvoices = async (
  *       401:
  *         description: Unauthorized
  */
-export const checkSpendingLimits = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const checkSpendingLimits = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!verifySchedulerAuth(req)) {
       res.status(401).json({ error: 'Unauthorized' });
@@ -183,10 +167,7 @@ export const checkSpendingLimits = async (
     // Get all organisations with spending limits or budget alerts configured
     const billings = await prisma.billing.findMany({
       where: {
-        OR: [
-          { spending_limit: { not: null } },
-          { budget_alert_threshold: { not: null } },
-        ],
+        OR: [{ spending_limit: { not: null } }, { budget_alert_threshold: { not: null } }],
       },
       include: {
         organisation: {
@@ -206,11 +187,7 @@ export const checkSpendingLimits = async (
     for (const billing of billings) {
       // Calculate current spend (simplified - in production, use calculateCurrentCharges)
       const currentMonth = new Date();
-      const startOfMonth = new Date(
-        currentMonth.getFullYear(),
-        currentMonth.getMonth(),
-        1
-      );
+      const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
 
       const usageRecords = await prisma.usageRecord.findMany({
         where: {
@@ -301,10 +278,7 @@ export const checkSpendingLimits = async (
  *       401:
  *         description: Unauthorized
  */
-export const pollScalingEvents = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const pollScalingEvents = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!verifySchedulerAuth(req)) {
       res.status(401).json({ error: 'Unauthorized' });
@@ -316,7 +290,7 @@ export const pollScalingEvents = async (
     const results = await pollAndRecordScalingEvents();
 
     console.log(
-      `[Billing Job] Scaling poll complete: ${results.polled} polled, ${results.scaledUp} scaled up, ${results.scaledDown} scaled down`
+      `[Billing Job] Scaling poll complete: ${results.polled} polled, ${results.scaledUp} scaled up, ${results.scaledDown} scaled down`,
     );
 
     res.status(200).json({
@@ -351,10 +325,7 @@ export const pollScalingEvents = async (
  *       401:
  *         description: Unauthorized
  */
-export const checkTrialExpirations = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const checkTrialExpirations = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!verifySchedulerAuth(req)) {
       res.status(401).json({ error: 'Unauthorized' });
@@ -380,30 +351,23 @@ export const checkTrialExpirations = async (
           // Convert to paid - user has payment method
           await convertTrialToPaid(trial.userId);
           results.converted++;
-          console.log(
-            `[Billing Job] Trial converted to paid for user ${trial.userId} (${trial.email})`
-          );
+          console.log(`[Billing Job] Trial converted to paid for user ${trial.userId} (${trial.email})`);
           // TODO: Send conversion success email
         } else {
           // Expire trial - no payment method
           await expireTrial(trial.userId);
           results.expired++;
-          console.log(
-            `[Billing Job] Trial expired for user ${trial.userId} (${trial.email}) - no payment method`
-          );
+          console.log(`[Billing Job] Trial expired for user ${trial.userId} (${trial.email}) - no payment method`);
           // TODO: Send trial expired email with upgrade prompt
         }
       } catch (error: any) {
         results.errors.push(`${trial.userId}: ${error.message}`);
-        console.error(
-          `[Billing Job] Failed to process trial for user ${trial.userId}:`,
-          error
-        );
+        console.error(`[Billing Job] Failed to process trial for user ${trial.userId}:`, error);
       }
     }
 
     console.log(
-      `[Billing Job] Trial expiration check complete: ${results.converted} converted, ${results.expired} expired`
+      `[Billing Job] Trial expiration check complete: ${results.converted} converted, ${results.expired} expired`,
     );
 
     res.status(200).json({

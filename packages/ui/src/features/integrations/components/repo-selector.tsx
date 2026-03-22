@@ -43,7 +43,7 @@ export const RepoSelector: React.FC<RepoSelectorProps> = ({ value, onChange, com
         description: r.description || undefined,
         badge: r.private ? 'private' : undefined,
       })),
-    [repos]
+    [repos],
   );
 
   if (!isConnected) {

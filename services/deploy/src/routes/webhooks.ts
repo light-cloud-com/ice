@@ -31,71 +31,70 @@ const router = Router();
 // The raw body is required for signature verification.
 // We use express.raw() at the route level.
 
-router.post(
-  '/github',
-  async (req: Request, res: Response) => {
-    const event = req.headers['x-github-event'] as string;
-    const deliveryId = req.headers['x-github-delivery'] as string;
-    const signature = req.headers['x-hub-signature-256'] as string;
+router.post('/github', async (req: Request, res: Response) => {
+  const event = req.headers['x-github-event'] as string;
+  const deliveryId = req.headers['x-github-delivery'] as string;
+  const signature = req.headers['x-hub-signature-256'] as string;
 
-    if (!event || !deliveryId) {
-      return res.status(400).json({ error: 'Missing GitHub event headers' });
+  if (!event || !deliveryId) {
+    return res.status(400).json({ error: 'Missing GitHub event headers' });
+  }
+
+  // Get the raw body buffer (provided by express.raw() in gateway)
+  const rawBody = Buffer.isBuffer(req.body) ? req.body : Buffer.from(JSON.stringify(req.body));
+  const payload = JSON.parse(rawBody.toString('utf8'));
+
+  // ── Idempotency check ──
+  try {
+    await prisma.webhookDelivery.create({
+      data: { delivery_id: deliveryId, event, processed: false },
+    });
+  } catch (err: any) {
+    // Unique constraint violation = already processed
+    if (err.code === 'P2002') {
+      return res.status(200).json({ message: 'Already processed' });
+    }
+    throw err;
+  }
+
+  // ── Route by event type ──
+  try {
+    let result = 'ignored';
+
+    switch (event) {
+      case 'push':
+        result = await handlePushEvent(payload, rawBody, signature);
+        break;
+      case 'pull_request':
+        result = await handlePullRequestEvent(payload, rawBody, signature);
+        break;
+      case 'ping':
+        result = 'pong';
+        break;
+      default:
+        result = `unhandled event: ${event}`;
     }
 
-    // Get the raw body buffer (provided by express.raw() in gateway)
-    const rawBody = Buffer.isBuffer(req.body) ? req.body : Buffer.from(JSON.stringify(req.body));
-    const payload = JSON.parse(rawBody.toString('utf8'));
+    // Mark as processed
+    await prisma.webhookDelivery.update({
+      where: { delivery_id: deliveryId },
+      data: { processed: true, result },
+    });
 
-    // ── Idempotency check ──
-    try {
-      await prisma.webhookDelivery.create({
-        data: { delivery_id: deliveryId, event, processed: false },
-      });
-    } catch (err: any) {
-      // Unique constraint violation = already processed
-      if (err.code === 'P2002') {
-        return res.status(200).json({ message: 'Already processed' });
-      }
-      throw err;
-    }
+    res.status(200).json({ message: result });
+  } catch (err: any) {
+    console.error(`Webhook error (${event}):`, err);
 
-    // ── Route by event type ──
-    try {
-      let result = 'ignored';
-
-      switch (event) {
-        case 'push':
-          result = await handlePushEvent(payload, rawBody, signature);
-          break;
-        case 'pull_request':
-          result = await handlePullRequestEvent(payload, rawBody, signature);
-          break;
-        case 'ping':
-          result = 'pong';
-          break;
-        default:
-          result = `unhandled event: ${event}`;
-      }
-
-      // Mark as processed
-      await prisma.webhookDelivery.update({
-        where: { delivery_id: deliveryId },
-        data: { processed: true, result },
-      });
-
-      res.status(200).json({ message: result });
-    } catch (err: any) {
-      console.error(`Webhook error (${event}):`, err);
-
-      await prisma.webhookDelivery.update({
+    await prisma.webhookDelivery
+      .update({
         where: { delivery_id: deliveryId },
         data: { processed: true, result: `error: ${err.message}` },
-      }).catch(() => {});
+      })
+      .catch(() => {});
 
-      res.status(500).json({ error: err.message });
-    }
-  },
-);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // ─── Push Event Handler ─────────────────────────────────────────────────────
 
@@ -132,9 +131,7 @@ async function handlePushEvent(payload: any, rawBody: Buffer, signature: string)
     return 'rejected: missing x-hub-signature-256 header';
   }
 
-  const signatureValid = rulesWithSecrets.some((rule) =>
-    verifySignature(rawBody, signature, rule.webhook_secret!),
-  );
+  const signatureValid = rulesWithSecrets.some((rule) => verifySignature(rawBody, signature, rule.webhook_secret!));
 
   if (!signatureValid) {
     console.warn(`Invalid webhook signature for ${repo}`);
@@ -153,39 +150,36 @@ async function handlePushEvent(payload: any, rawBody: Buffer, signature: string)
     }
 
     // Create deployment event
-    const event = await createDeploymentEvent(
-      rule.id,
-      'push',
-      commitSha,
-      branch,
-      commitMessage,
-      commitAuthor,
-    );
+    const event = await createDeploymentEvent(rule.id, 'push', commitSha, branch, commitMessage, commitAuthor);
 
     // Queue the pipeline job
     try {
       const queue = getDeployQueue();
-      await queue.add('pipeline', {
-        type: 'pipeline',
-        eventId: event.id,
-        ruleId: rule.id,
-        cardId: rule.card_id,
-        nodeId: rule.node_id,
-        repository: rule.repository,
-        branch,
-        commitSha,
-        commitMessage,
-        commitAuthor,
-        environment: rule.environment,
-        buildCommand: rule.build_command,
-        installCommand: rule.install_command,
-        outputDir: rule.output_dir,
-        framework: rule.framework,
-      }, {
-        attempts: 1, // Pipeline deploys don't auto-retry
-        removeOnComplete: 100,
-        removeOnFail: 100,
-      });
+      await queue.add(
+        'pipeline',
+        {
+          type: 'pipeline',
+          eventId: event.id,
+          ruleId: rule.id,
+          cardId: rule.card_id,
+          nodeId: rule.node_id,
+          repository: rule.repository,
+          branch,
+          commitSha,
+          commitMessage,
+          commitAuthor,
+          environment: rule.environment,
+          buildCommand: rule.build_command,
+          installCommand: rule.install_command,
+          outputDir: rule.output_dir,
+          framework: rule.framework,
+        },
+        {
+          attempts: 1, // Pipeline deploys don't auto-retry
+          removeOnComplete: 100,
+          removeOnFail: 100,
+        },
+      );
 
       await updateEventProgress(event.id, 'queued', 'Queued for deployment');
       deployed++;
@@ -230,10 +224,7 @@ async function handlePullRequestEvent(payload: any, _rawBody: Buffer, _signature
         const existing = await findEnvironmentByName(projectId, envName);
         if (existing) continue; // Already exists (synchronize event)
 
-        const newEnv = await createEnvironment(
-          projectId, 'system', envName, 'pr',
-          undefined, prNumber, prBranch, repo,
-        );
+        const newEnv = await createEnvironment(projectId, 'system', envName, 'pr', undefined, prNumber, prBranch, repo);
         created++;
 
         // Queue a deploy for the new PR environment
@@ -244,26 +235,33 @@ async function handlePullRequestEvent(payload: any, _rawBody: Buffer, _signature
           for (const rule of prRules) {
             const commitSha = payload.pull_request?.head?.sha || 'HEAD';
             const event = await createDeploymentEvent(
-              rule.id, 'push', commitSha, prBranch,
+              rule.id,
+              'push',
+              commitSha,
+              prBranch,
               `PR #${prNumber}: ${payload.pull_request?.title || ''}`,
               payload.pull_request?.user?.login,
             );
             const queue = getDeployQueue();
-            await queue.add('pipeline', {
-              type: 'pipeline',
-              eventId: event.id,
-              ruleId: rule.id,
-              cardId: rule.card_id,
-              nodeId: rule.node_id,
-              repository: rule.repository,
-              branch: prBranch,
-              commitSha,
-              environment: envName,
-              buildCommand: rule.build_command,
-              installCommand: rule.install_command,
-              outputDir: rule.output_dir,
-              framework: rule.framework,
-            }, { attempts: 1, removeOnComplete: 100, removeOnFail: 100 });
+            await queue.add(
+              'pipeline',
+              {
+                type: 'pipeline',
+                eventId: event.id,
+                ruleId: rule.id,
+                cardId: rule.card_id,
+                nodeId: rule.node_id,
+                repository: rule.repository,
+                branch: prBranch,
+                commitSha,
+                environment: envName,
+                buildCommand: rule.build_command,
+                installCommand: rule.install_command,
+                outputDir: rule.output_dir,
+                framework: rule.framework,
+              },
+              { attempts: 1, removeOnComplete: 100, removeOnFail: 100 },
+            );
           }
         } catch (deployErr: any) {
           console.warn(`Failed to queue deploy for PR #${prNumber} env:`, deployErr);
@@ -312,38 +310,35 @@ async function handlePullRequestEvent(payload: any, _rawBody: Buffer, _signature
     const shouldSkip = await shouldSkipDuplicate(rule.id, commitSha);
     if (shouldSkip) continue;
 
-    const event = await createDeploymentEvent(
-      rule.id,
-      'merge',
-      commitSha,
-      targetBranch,
-      commitMessage,
-      commitAuthor,
-    );
+    const event = await createDeploymentEvent(rule.id, 'merge', commitSha, targetBranch, commitMessage, commitAuthor);
 
     try {
       const queue = getDeployQueue();
-      await queue.add('pipeline', {
-        type: 'pipeline',
-        eventId: event.id,
-        ruleId: rule.id,
-        cardId: rule.card_id,
-        nodeId: rule.node_id,
-        repository: rule.repository,
-        branch: targetBranch,
-        commitSha,
-        commitMessage,
-        commitAuthor,
-        environment: rule.environment,
-        buildCommand: rule.build_command,
-        installCommand: rule.install_command,
-        outputDir: rule.output_dir,
-        framework: rule.framework,
-      }, {
-        attempts: 1,
-        removeOnComplete: 100,
-        removeOnFail: 100,
-      });
+      await queue.add(
+        'pipeline',
+        {
+          type: 'pipeline',
+          eventId: event.id,
+          ruleId: rule.id,
+          cardId: rule.card_id,
+          nodeId: rule.node_id,
+          repository: rule.repository,
+          branch: targetBranch,
+          commitSha,
+          commitMessage,
+          commitAuthor,
+          environment: rule.environment,
+          buildCommand: rule.build_command,
+          installCommand: rule.install_command,
+          outputDir: rule.output_dir,
+          framework: rule.framework,
+        },
+        {
+          attempts: 1,
+          removeOnComplete: 100,
+          removeOnFail: 100,
+        },
+      );
 
       await updateEventProgress(event.id, 'queued', 'Queued for deployment');
       deployed++;
@@ -358,16 +353,10 @@ async function handlePullRequestEvent(payload: any, _rawBody: Buffer, _signature
 // ─── HMAC Verification ──────────────────────────────────────────────────────
 
 function verifySignature(body: Buffer, signature: string, secret: string): boolean {
-  const expected = 'sha256=' + crypto
-    .createHmac('sha256', secret)
-    .update(body)
-    .digest('hex');
+  const expected = 'sha256=' + crypto.createHmac('sha256', secret).update(body).digest('hex');
 
   try {
-    return crypto.timingSafeEqual(
-      Buffer.from(signature),
-      Buffer.from(expected),
-    );
+    return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
   } catch {
     return false;
   }

@@ -15,10 +15,7 @@ export const API_NOT_ENABLED_PATTERNS = [
   'API has not been enabled',
 ] as const;
 
-export const AUTH_MISSING_PATTERNS = [
-  'Could not load the default credentials',
-  'default credentials',
-] as const;
+export const AUTH_MISSING_PATTERNS = ['Could not load the default credentials', 'default credentials'] as const;
 
 export const AUTH_EXPIRED_PATTERNS = ['refresh token', 'expired', 'invalid_grant'] as const;
 
@@ -115,8 +112,7 @@ export const GCP_DEPLOYER_MESSAGES = {
   // Auto-enable API
   API_NOT_ENABLED_ATTEMPTING: (apiName: string) =>
     `API "${apiName}" is not enabled. Attempting to enable it automatically...`,
-  API_ENABLED_RETRYING: (apiName: string) =>
-    `API "${apiName}" enabled successfully. Retrying deployment...`,
+  API_ENABLED_RETRYING: (apiName: string) => `API "${apiName}" enabled successfully. Retrying deployment...`,
   API_NOT_ENABLED_MANUAL: (apiName: string, reason: string, consoleUrl: string) =>
     `API "${apiName}" is not enabled and auto-enable failed${reason ? ` (${reason})` : ''}. Enable it manually: ${consoleUrl}`,
   AUTO_ENABLE_FAILED: (apiName: string) =>
@@ -135,10 +131,8 @@ export const GCP_DEPLOYER_MESSAGES = {
 
 export const AUTH_MESSAGES = {
   // SDK availability
-  AUTH_LIB_NOT_INSTALLED_PNPM:
-    'google-auth-library is not installed. Run: pnpm add google-auth-library',
-  AUTH_LIB_NOT_INSTALLED_NPM:
-    'google-auth-library not installed. Run: npm install google-auth-library',
+  AUTH_LIB_NOT_INSTALLED_PNPM: 'google-auth-library is not installed. Run: pnpm add google-auth-library',
+  AUTH_LIB_NOT_INSTALLED_NPM: 'google-auth-library not installed. Run: npm install google-auth-library',
   AUTH_LIB_NOT_AVAILABLE: 'GCP auth library not available.',
 
   // Credential errors
@@ -192,19 +186,15 @@ export const DEPLOY_PROGRESS = {
     `Deploying ${count} resources to GCP project "${project}"${existingCount && existingCount > 0 ? ` (${existingCount} existing)` : ''}...`,
   CREATING_RESOURCE: (name: string, type: string) => `Creating ${name} (${type})...`,
   UPDATING_RESOURCE: (name: string, type: string) => `Updating ${name} (${type})...`,
-  CREATED_RESOURCE: (name: string, type: string, seconds: string) =>
-    `Created ${name} (${type}) in ${seconds}s`,
-  UPDATED_RESOURCE: (name: string, type: string, seconds: string) =>
-    `Updated ${name} (${type}) in ${seconds}s`,
+  CREATED_RESOURCE: (name: string, type: string, seconds: string) => `Created ${name} (${type}) in ${seconds}s`,
+  UPDATED_RESOURCE: (name: string, type: string, seconds: string) => `Updated ${name} (${type}) in ${seconds}s`,
   FAILED_TO_CREATE: (name: string, error: string) => `Failed to create ${name}: ${error}`,
   FAILED_TO_UPDATE: (name: string, error: string) => `Failed to update ${name}: ${error}`,
-  FAILED_TO_ACTION: (action: string, name: string, error: string) =>
-    `Failed to ${action} ${name}: ${error}`,
+  FAILED_TO_ACTION: (action: string, name: string, error: string) => `Failed to ${action} ${name}: ${error}`,
 
   // Deletes
   DELETING_RESOURCE: (name: string, type: string) => `Deleting ${name} (${type})...`,
-  DELETED_RESOURCE: (name: string, type: string, seconds: string) =>
-    `Deleted ${name} (${type}) in ${seconds}s`,
+  DELETED_RESOURCE: (name: string, type: string, seconds: string) => `Deleted ${name} (${type}) in ${seconds}s`,
   FAILED_TO_DELETE: (name: string, error: string) => `Failed to delete ${name}: ${error}`,
 
   // Completion

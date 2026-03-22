@@ -133,10 +133,7 @@ export function map_error<T, E, F>(result: Result<T, E>, fn: (error: E) => F): R
 /**
  * Chain result-returning operations.
  */
-export function flat_map<T, U, E>(
-  result: Result<T, E>,
-  fn: (value: T) => Result<U, E>
-): Result<U, E> {
+export function flat_map<T, U, E>(result: Result<T, E>, fn: (value: T) => Result<U, E>): Result<U, E> {
   if (result.ok) {
     return fn(result.value);
   }
@@ -151,10 +148,7 @@ export const and_then = flat_map;
 /**
  * Recover from a failure by trying an alternative.
  */
-export function or_else<T, E, F>(
-  result: Result<T, E>,
-  fn: (error: E) => Result<T, F>
-): Result<T, F> {
+export function or_else<T, E, F>(result: Result<T, E>, fn: (error: E) => Result<T, F>): Result<T, F> {
   if (!result.ok) {
     return fn(result.error);
   }
@@ -229,7 +223,7 @@ export function partition<T, E>(results: Result<T, E>[]): { successes: T[]; fail
  */
 export async function from_promise<T, E = Error>(
   promise: Promise<T>,
-  error_mapper?: (error: unknown) => E
+  error_mapper?: (error: unknown) => E,
 ): Promise<Result<T, E>> {
   try {
     const value = await promise;
@@ -245,10 +239,7 @@ export async function from_promise<T, E = Error>(
 /**
  * Wrap a function that may throw into a Result.
  */
-export function from_try<T, E = Error>(
-  fn: () => T,
-  error_mapper?: (error: unknown) => E
-): Result<T, E> {
+export function from_try<T, E = Error>(fn: () => T, error_mapper?: (error: unknown) => E): Result<T, E> {
   try {
     const value = fn();
     return success(value);

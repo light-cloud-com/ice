@@ -42,9 +42,7 @@ const ENTRY_TYPES = new Set([
 ]);
 
 /** Internal/placeholder domains that should NOT count as public */
-const INTERNAL_DOMAINS = new Set([
-  'public', 'internal', 'local', 'localhost', 'private',
-]);
+const INTERNAL_DOMAINS = new Set(['public', 'internal', 'local', 'localhost', 'private']);
 
 function isInternalDomain(domain: string): boolean {
   if (!domain) return true;
@@ -58,15 +56,34 @@ function isInternalDomain(domain: string): boolean {
 
 /** iceTypes that are NEVER public entry points (data stores, internal services) */
 const NEVER_EXPOSED_TYPES = new Set([
-  'Database.PostgreSQL', 'Database.MySQL', 'Database.MongoDB', 'Database.Redis',
-  'Database.Firestore', 'Database.BigTable', 'Database.Spanner', 'Database.DynamoDB',
-  'Storage.Bucket', 'Storage.Disk', 'Storage.FileStore',
-  'Messaging.Queue', 'Messaging.Topic', 'Messaging.PubSub',
-  'Messaging.RabbitMQ', 'Messaging.SQS', 'Messaging.SNS',
-  'Security.Secret', 'Security.Key', 'Security.IAMRole', 'Security.Policy',
-  'Monitoring.Log', 'Monitoring.Alert', 'Log.Terminal',
-  'Config.Environment', 'Source.Repository',
-  'Application.Worker', 'Application.CronJob',
+  'Database.PostgreSQL',
+  'Database.MySQL',
+  'Database.MongoDB',
+  'Database.Redis',
+  'Database.Firestore',
+  'Database.BigTable',
+  'Database.Spanner',
+  'Database.DynamoDB',
+  'Storage.Bucket',
+  'Storage.Disk',
+  'Storage.FileStore',
+  'Messaging.Queue',
+  'Messaging.Topic',
+  'Messaging.PubSub',
+  'Messaging.RabbitMQ',
+  'Messaging.SQS',
+  'Messaging.SNS',
+  'Security.Secret',
+  'Security.Key',
+  'Security.IAMRole',
+  'Security.Policy',
+  'Monitoring.Log',
+  'Monitoring.Alert',
+  'Log.Terminal',
+  'Config.Environment',
+  'Source.Repository',
+  'Application.Worker',
+  'Application.CronJob',
 ]);
 
 /**
@@ -151,7 +168,7 @@ function traceToVisibleNodes(
   hiddenEntryIds: string[],
   allNodes: CanvasNode[],
   visibleNodeIds: Set<string>,
-  edges: EdgeLike[]
+  edges: EdgeLike[],
 ): CanvasNode[] {
   // Build adjacency from edges (non-containment, outgoing)
   const adj = new Map<string, string[]>();
@@ -197,11 +214,7 @@ function traceToVisibleNodes(
  * Public traffic should flow: User → Frontend → Backend (via API Gateway),
  * never directly to backend services.
  */
-function filterToFrontend(
-  exposed: CanvasNode[],
-  allNodes: CanvasNode[],
-  edges: EdgeLike[]
-): CanvasNode[] {
+function filterToFrontend(exposed: CanvasNode[], allNodes: CanvasNode[], edges: EdgeLike[]): CanvasNode[] {
   // Find all Group.Frontend / Block.Frontend container IDs
   const frontendBlockIds = new Set(
     allNodes
@@ -209,7 +222,7 @@ function filterToFrontend(
         const iceType = (n.data?.iceType as string) || '';
         return iceType === 'Group.Frontend' || iceType === 'Block.Frontend';
       })
-      .map((n) => n.id)
+      .map((n) => n.id),
   );
 
   if (frontendBlockIds.size === 0) return exposed;
@@ -236,7 +249,7 @@ function filterToFrontend(
 export function useExposedServices(
   visibleNodes: CanvasNode[],
   edges: EdgeLike[],
-  allNodes?: CanvasNode[]
+  allNodes?: CanvasNode[],
 ): ExposedServiceInfo {
   return useMemo(() => {
     // First: try finding entry points among visible nodes
@@ -245,7 +258,7 @@ export function useExposedServices(
     // If no visible entry points but we have all nodes, trace through hidden ones
     if (exposed.length === 0 && allNodes && allNodes.length > visibleNodes.length) {
       const hiddenEntryPoints = findExposedNodes(allNodes, edges).filter(
-        (n) => !visibleNodes.some((v) => v.id === n.id)
+        (n) => !visibleNodes.some((v) => v.id === n.id),
       );
 
       if (hiddenEntryPoints.length > 0) {
@@ -254,7 +267,7 @@ export function useExposedServices(
           hiddenEntryPoints.map((n) => n.id),
           allNodes,
           visibleIds,
-          edges
+          edges,
         );
       }
     }

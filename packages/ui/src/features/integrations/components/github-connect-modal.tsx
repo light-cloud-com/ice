@@ -20,11 +20,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../../shared/compon
 import { cn } from '../../../shared/utils/cn';
 import { GITHUB } from '../../../i18n/messages';
 import type { RootState, AppDispatch } from '../../../store';
-import {
-  connectGitHubPAT,
-  startGitHubDeviceFlow,
-  disconnectGitHub,
-} from '../../../store/slices/integrations-slice';
+import { connectGitHubPAT, startGitHubDeviceFlow, disconnectGitHub } from '../../../store/slices/integrations-slice';
 
 interface GitHubConnectModalProps {
   isOpen: boolean;
@@ -84,17 +80,11 @@ export const GitHubConnectModal: React.FC<GitHubConnectModalProps> = ({ isOpen, 
           <div className="space-y-4">
             <div className="flex items-center gap-3 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
               {githubStatus.avatarUrl && (
-                <img
-                  src={githubStatus.avatarUrl}
-                  alt={githubStatus.username}
-                  className="w-10 h-10 rounded-full"
-                />
+                <img src={githubStatus.avatarUrl} alt={githubStatus.username} className="w-10 h-10 rounded-full" />
               )}
               <div className="flex-1">
                 <div className="font-medium text-sm">{githubStatus.username}</div>
-                <div className="text-xs text-muted-foreground">
-                  {GITHUB.CONNECTED_AS(githubStatus.username || '')}
-                </div>
+                <div className="text-xs text-muted-foreground">{GITHUB.CONNECTED_AS(githubStatus.username || '')}</div>
               </div>
               <Check className="w-5 h-5 text-emerald-500" />
             </div>
@@ -143,14 +133,10 @@ export const GitHubConnectModal: React.FC<GitHubConnectModalProps> = ({ isOpen, 
                 className={cn(
                   'w-full flex items-center justify-center gap-2 px-4 py-2 text-sm rounded-md font-medium transition-colors',
                   'bg-primary text-primary-foreground hover:bg-primary/90',
-                  'disabled:opacity-50 disabled:cursor-not-allowed'
+                  'disabled:opacity-50 disabled:cursor-not-allowed',
                 )}
               >
-                {isConnecting ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Github className="w-4 h-4" />
-                )}
+                {isConnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Github className="w-4 h-4" />}
                 {GITHUB.PAT_CONNECT}
               </button>
             </TabsContent>
@@ -164,14 +150,10 @@ export const GitHubConnectModal: React.FC<GitHubConnectModalProps> = ({ isOpen, 
                   className={cn(
                     'w-full flex items-center justify-center gap-2 px-4 py-2 text-sm rounded-md font-medium transition-colors',
                     'bg-[#24292f] dark:bg-[#f0f6fc] text-white dark:text-[#24292f] hover:bg-[#24292f]/90 dark:hover:bg-[#f0f6fc]/90',
-                    'disabled:opacity-50 disabled:cursor-not-allowed'
+                    'disabled:opacity-50 disabled:cursor-not-allowed',
                   )}
                 >
-                  {isConnecting ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Github className="w-4 h-4" />
-                  )}
+                  {isConnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Github className="w-4 h-4" />}
                   {GITHUB.DEVICE_FLOW_BUTTON}
                 </button>
               ) : (
@@ -186,11 +168,7 @@ export const GitHubConnectModal: React.FC<GitHubConnectModalProps> = ({ isOpen, 
                       className="p-2 rounded-md hover:bg-muted transition-colors"
                       title={GITHUB.DEVICE_FLOW_COPY}
                     >
-                      {copied ? (
-                        <Check className="w-4 h-4 text-emerald-500" />
-                      ) : (
-                        <Copy className="w-4 h-4" />
-                      )}
+                      {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
                     </button>
                   </div>
                   <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">

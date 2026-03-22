@@ -100,7 +100,7 @@ const DEFAULT_OPTIONS: Required<LayoutOptions> = {
 export function autoLayout(
   nodes: LayoutNode[],
   edges: Array<{ source: string; target: string; relationship?: string }>,
-  options: LayoutOptions = {}
+  options: LayoutOptions = {},
 ): LayoutNode[] {
   const opts = { ...DEFAULT_OPTIONS, ...options };
 
@@ -175,9 +175,7 @@ export function autoLayout(
       child.height = childSize.height;
     }
 
-    const containerPadding = isLargeContainer
-      ? opts.containerPadding + VPC_EXTRA_PADDING
-      : opts.containerPadding;
+    const containerPadding = isLargeContainer ? opts.containerPadding + VPC_EXTRA_PADDING : opts.containerPadding;
     const childGap = CHILD_GAP;
     const childrenPerRow = isVPC ? 3 : 2;
     let maxRowWidth = 0;
@@ -225,9 +223,7 @@ export function autoLayout(
     const isSubnet = iceType === 'Network.Subnet';
     const isLargeContainer = isVPC || isSubnet;
 
-    const containerPadding = isLargeContainer
-      ? opts.containerPadding + VPC_EXTRA_PADDING
-      : opts.containerPadding;
+    const containerPadding = isLargeContainer ? opts.containerPadding + VPC_EXTRA_PADDING : opts.containerPadding;
     const childGap = CHILD_GAP;
     const childrenPerRow = isVPC ? 3 : 2;
 
@@ -265,7 +261,7 @@ export function autoLayout(
       childrenMap,
       calculateNodeSize,
       positionChildren,
-      opts
+      opts,
     );
   }
 
@@ -285,7 +281,7 @@ function flowLayout(
   childrenMap: Map<string, string[]>,
   calculateNodeSize: (node: LayoutNode) => { width: number; height: number },
   positionChildren: (parent: LayoutNode) => void,
-  opts: Required<LayoutOptions>
+  opts: Required<LayoutOptions>,
 ): LayoutNode[] {
   const layoutResults: LayoutNode[] = [];
 
@@ -455,7 +451,7 @@ function gridLayout(
   childrenMap: Map<string, string[]>,
   calculateNodeSize: (node: LayoutNode) => { width: number; height: number },
   positionChildren: (parent: LayoutNode) => void,
-  opts: Required<LayoutOptions>
+  opts: Required<LayoutOptions>,
 ): LayoutNode[] {
   const layoutResults: LayoutNode[] = [];
 
@@ -508,7 +504,7 @@ function gridLayout(
     categoryNodes: LayoutNode[],
     startX: number,
     startY: number,
-    nodesPerRow: number
+    nodesPerRow: number,
   ): { maxY: number; maxX: number } => {
     let currentX = startX;
     let currentY = startY;
@@ -682,7 +678,7 @@ function getParentDepth(node: LayoutNode, allNodes: LayoutNode[]): number {
 export function rectsOverlap(
   r1: { x: number; y: number; width: number; height: number },
   r2: { x: number; y: number; width: number; height: number },
-  padding: number = 0
+  padding: number = 0,
 ): boolean {
   return !(
     r1.x + r1.width + padding < r2.x ||
@@ -700,7 +696,7 @@ export function findNonOverlappingPosition(
   existingNodes: Array<{ x: number; y: number; width: number; height: number }>,
   startX: number = 50,
   startY: number = 50,
-  gap: number = NODE_GAP
+  gap: number = NODE_GAP,
 ): { x: number; y: number } {
   // Try positions in a grid until we find a non-overlapping one
   for (let row = 0; row < 100; row++) {

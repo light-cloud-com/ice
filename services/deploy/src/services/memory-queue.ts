@@ -64,11 +64,7 @@ export class InMemoryQueue {
 }
 
 export class InMemoryWorker {
-  constructor(
-    _name: string,
-    processor: JobProcessor,
-    _opts: any = {},
-  ) {
+  constructor(_name: string, processor: JobProcessor, _opts: any = {}) {
     this._processor = processor;
   }
 

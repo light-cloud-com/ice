@@ -12,7 +12,7 @@ function result(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  overrides: Partial<ResourceDeployResult> = {}
+  overrides: Partial<ResourceDeployResult> = {},
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -29,7 +29,7 @@ function fail(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  error: string
+  error: string,
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -48,13 +48,7 @@ export const cloud_storage_handler: GCPResourceHandler = {
 
     try {
       const storage = ctx.clients.get('storage') as any;
-      if (!storage)
-        return fail(
-          name,
-          'create',
-          start,
-          sdk_not_available(SERVICE_NAMES.CLOUD_STORAGE, 'storage')
-        );
+      if (!storage) return fail(name, 'create', start, sdk_not_available(SERVICE_NAMES.CLOUD_STORAGE, 'storage'));
 
       const location = (properties.location as string) || 'US';
       const storage_class = (properties.storage_class as string) || 'STANDARD';
@@ -77,8 +71,7 @@ export const cloud_storage_handler: GCPResourceHandler = {
 
     try {
       const storage = ctx.clients.get('storage') as any;
-      if (!storage)
-        return fail(name, 'update', start, sdk_not_available_short(SERVICE_NAMES.CLOUD_STORAGE));
+      if (!storage) return fail(name, 'update', start, sdk_not_available_short(SERVICE_NAMES.CLOUD_STORAGE));
 
       const bucket = storage.bucket(name);
 
@@ -103,8 +96,7 @@ export const cloud_storage_handler: GCPResourceHandler = {
 
     try {
       const storage = ctx.clients.get('storage') as any;
-      if (!storage)
-        return fail(name, 'delete', start, sdk_not_available_short(SERVICE_NAMES.CLOUD_STORAGE));
+      if (!storage) return fail(name, 'delete', start, sdk_not_available_short(SERVICE_NAMES.CLOUD_STORAGE));
 
       const bucket = storage.bucket(name);
       await bucket.deleteFiles({ force: true });

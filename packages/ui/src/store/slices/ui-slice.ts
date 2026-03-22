@@ -163,7 +163,7 @@ const uiSlice = createSlice({
         position: { x: number; y: number };
         type: 'canvas' | 'node' | 'edge';
         targetId?: string;
-      }>
+      }>,
     ) => {
       state.contextMenu = {
         isOpen: true,

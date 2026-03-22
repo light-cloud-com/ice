@@ -78,7 +78,7 @@ describe('Error Hierarchy', () => {
     const error = new ValidationError(
       'Invalid input',
       [{ path: 'name', message: 'Required field' }],
-      'VALIDATION_FAILED'
+      'VALIDATION_FAILED',
     );
 
     expect(error).toBeInstanceOf(IceError);

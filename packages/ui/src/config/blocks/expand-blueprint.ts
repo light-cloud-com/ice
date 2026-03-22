@@ -40,10 +40,7 @@ export interface ExpandBlueprintOptions {
  * This is a **pure function** (aside from timestamp-based ID generation).
  * No Redux, no DOM — just data in, data out.
  */
-export function expandBlueprint(
-  blueprint: BlockBlueprint,
-  options: ExpandBlueprintOptions
-): ExpandedBlueprint {
+export function expandBlueprint(blueprint: BlockBlueprint, options: ExpandBlueprintOptions): ExpandedBlueprint {
   const { position, provider, parentContainerId } = options;
 
   // --- Resolve provider variant overrides ---

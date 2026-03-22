@@ -155,12 +155,9 @@ export async function listRepos(userId: string, page = 1, perPage = 30): Promise
   const token = await getToken(userId);
   if (!token) throw new Error('Not connected to GitHub');
 
-  const response = await fetch(
-    `${GITHUB_API}/user/repos?sort=updated&per_page=${perPage}&page=${page}&type=all`,
-    {
-      headers: { Authorization: `Bearer ${token}`, ...GITHUB_HEADERS },
-    }
-  );
+  const response = await fetch(`${GITHUB_API}/user/repos?sort=updated&per_page=${perPage}&page=${page}&type=all`, {
+    headers: { Authorization: `Bearer ${token}`, ...GITHUB_HEADERS },
+  });
 
   if (!response.ok) throw new Error(`Failed to list repos: ${response.status}`);
   return response.json() as Promise<GitHubRepo[]>;

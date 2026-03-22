@@ -56,9 +56,7 @@ function formatProperty(prop: any): string {
   let desc = `${name} (${type}, ${required})`;
 
   if (prop.options?.length) {
-    const values = prop.options
-      .map((o: any) => typeof o === 'string' ? `"${o}"` : `"${o.value || o.id}"`)
-      .join('|');
+    const values = prop.options.map((o: any) => (typeof o === 'string' ? `"${o}"` : `"${o.value || o.id}"`)).join('|');
     desc += `: ${values}`;
   }
   if (prop.default !== undefined) {
@@ -78,9 +76,7 @@ function formatResource(res: any): string {
 
   // Show provider implementations
   if (res.implementations?.length) {
-    const implDescs = res.implementations.map(
-      (impl: any) => `${impl.provider} → ${impl.name || impl.id}`,
-    );
+    const implDescs = res.implementations.map((impl: any) => `${impl.provider} → ${impl.name || impl.id}`);
     lines.push(`Providers: ${implDescs.join(', ')}`);
   }
 
@@ -114,9 +110,7 @@ export async function buildSchemaContext(options: SchemaContextOptions): Promise
     if (includedIds.has(id)) continue;
 
     // Check if resource has implementation for dominant provider
-    const hasProvider = res.implementations?.some(
-      (impl: any) => impl.provider === dominantProvider,
-    );
+    const hasProvider = res.implementations?.some((impl: any) => impl.provider === dominantProvider);
     if (hasProvider || !res.implementations?.length) {
       sections.push(formatResource(res));
       includedIds.add(id);

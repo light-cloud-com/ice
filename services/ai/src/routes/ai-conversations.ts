@@ -122,9 +122,7 @@ router.post('/conversations/:id/messages', async (req: AuthRequest, res: Respons
 
     // Auto-set title from first user message if not set
     const needsTitle = !conversation.title;
-    const firstUserMsg = needsTitle
-      ? messages.find((m: any) => m.role === 'user')
-      : null;
+    const firstUserMsg = needsTitle ? messages.find((m: any) => m.role === 'user') : null;
 
     const created = await prisma.aiMessage.createMany({
       data: messages.map((m: any) => ({

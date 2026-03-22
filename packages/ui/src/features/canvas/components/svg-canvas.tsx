@@ -50,28 +50,24 @@ import { useUndoRedo } from '../../../shared/hooks/use-undo-redo';
 import { CanvasGrid } from './canvas-grid';
 import { getIcon, DEFAULT_ICON, type Provider } from '../../../assets/icons';
 import { getBrandIcon } from '../../../assets/icons/brand-registry';
-import {
-  SvgCompactNode,
-  computeCompactNodeHeight,
-  computeCompactNodeWidth,
-} from './nodes/svg-compact-node';
+import { SvgCompactNode, computeCompactNodeHeight, computeCompactNodeWidth } from './nodes/svg-compact-node';
 import { receiveCardPipelineUpdate } from '../../../store/slices/pipeline-slice';
 import { SvgGroupNode } from './nodes/svg-group-node';
 import { SvgRegionLabel } from './nodes/svg-region-label';
 import { SvgLogNode } from './svg-log-node';
 import { SvgConnectionPath, EDGE_COLORS, type ConnectionTooltipInfo } from './svg-connection-path';
 import { SelectionFrame } from './selection-frame';
-import {
-  SvgUserNode,
-  USER_NODE_WIDTH,
-  USER_NODE_HEIGHT,
-  USER_NODE_ID,
-} from '../../../shared/components/svg-user-node';
+import { SvgUserNode, USER_NODE_WIDTH, USER_NODE_HEIGHT, USER_NODE_ID } from '../../../shared/components/svg-user-node';
 import { useExposedServices } from '../../../shared/hooks/use-exposed-services';
 import { CanvasContextMenu } from './context/canvas-context-menu';
 import { ControlsHelpModal } from './controls-help-modal';
 // ConnectionTypePopover removed — connections are fully auto-configured
-import { inferConnectionMeta, validateConnection, wouldCreateCycle, CATEGORY_TO_RELATIONSHIP } from '../utils/connection-rules';
+import {
+  inferConnectionMeta,
+  validateConnection,
+  wouldCreateCycle,
+  CATEGORY_TO_RELATIONSHIP,
+} from '../utils/connection-rules';
 import { EmptyCanvasOverlay } from './empty-canvas-overlay';
 import { isTypeVisibleAtLevel, isEdgeVisibleAtLevel } from '../../../config/visualization-config';
 import { canContain, isContainer } from '../../../config/containment-rules';
@@ -180,7 +176,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   // L3 (full): > 95% — default experience, all details visible
   // L2 (compact): 50-95% — bigger icon + label + status only, no metadata
   // L1 (iconic): < 50% — large centered icon + bold label + status dot
-  const lod = viewport.zoom > 0.95 ? 3 : viewport.zoom > 0.50 ? 2 : 1;
+  const lod = viewport.zoom > 0.95 ? 3 : viewport.zoom > 0.5 ? 2 : 1;
 
   // Canvas dimensions
   const [dimensions, setDimensions] = React.useState({ width: 800, height: 600 });
@@ -226,8 +222,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   const canvasNodes: LocalCanvasNode[] = useMemo(() => {
     return nodes.map((node) => {
       const iceType =
-        (node.data?.iceType as string) ||
-        (node.data?.blockType ? `Block.${node.data.blockType}` : 'Resource.Unknown');
+        (node.data?.iceType as string) || (node.data?.blockType ? `Block.${node.data.blockType}` : 'Resource.Unknown');
 
       const isGroup = iceType.startsWith('Group.') || node.type === 'container' || node.type === ('group' as any);
       const isBlock = iceType.startsWith('Block.') || node.type === 'block';
@@ -275,7 +270,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       const node = visibleNodes.find((n) => n.id === nodeId);
       return node?.data?.folded === true;
     },
-    [visibleNodes]
+    [visibleNodes],
   );
 
   // Check if any ancestor is folded (node should be hidden)
@@ -286,7 +281,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       if (isNodeFolded(node.parentId)) return true;
       return hasCollapsedAncestor(node.parentId);
     },
-    [visibleNodes, isNodeFolded]
+    [visibleNodes, isNodeFolded],
   );
 
   // Build remap for folded children: hidden node ID → first visible ancestor ID
@@ -333,10 +328,15 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     // Build a set of container node IDs — edges to/from containers are never rendered
     const containerIds = new Set(
       effectiveNodes
-        .filter((n) => n.type === 'container' || n.type === ('group' as any) ||
-          ((n.data?.iceType as string) || '').startsWith('Group.') ||
-          (n.data?.iceType as string) === 'Network.VPC' || (n.data?.iceType as string) === 'Network.Subnet')
-        .map((n) => n.id)
+        .filter(
+          (n) =>
+            n.type === 'container' ||
+            n.type === ('group' as any) ||
+            ((n.data?.iceType as string) || '').startsWith('Group.') ||
+            (n.data?.iceType as string) === 'Network.VPC' ||
+            (n.data?.iceType as string) === 'Network.Subnet',
+        )
+        .map((n) => n.id),
     );
 
     // First pass: remap and filter
@@ -399,9 +399,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   const exposedServices = useExposedServices(effectiveNodes, edges, canvasNodes);
 
   // Suppress virtual user traffic icon when an explicit Network.Internet block exists on canvas
-  const hasExplicitTrafficBlock = canvasNodes.some(
-    (n) => (n.data?.iceType as string) === 'Network.Internet'
-  );
+  const hasExplicitTrafficBlock = canvasNodes.some((n) => (n.data?.iceType as string) === 'Network.Internet');
   const showVirtualUserNode = !hasExplicitTrafficBlock;
 
   // Pinned position for user traffic node — independent of connected node positions.
@@ -428,9 +426,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   const userCanvasNode: LocalCanvasNode | null = useMemo(() => {
     const pos =
       userNodePos ||
-      (pinnedUserPos
-        ? { x: pinnedUserPos.x - USER_NODE_WIDTH / 2, y: pinnedUserPos.y - USER_NODE_HEIGHT / 2 }
-        : null);
+      (pinnedUserPos ? { x: pinnedUserPos.x - USER_NODE_WIDTH / 2, y: pinnedUserPos.y - USER_NODE_HEIGHT / 2 } : null);
     if (!pos) return null;
     return {
       id: USER_NODE_ID,
@@ -495,7 +491,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       }
       return descendants;
     },
-    [visibleNodes]
+    [visibleNodes],
   );
 
   // Get ALL descendant IDs including hidden children (searches canvasNodes, not visibleNodes).
@@ -510,17 +506,14 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       }
       return descendants;
     },
-    [canvasNodes]
+    [canvasNodes],
   );
 
   // Calculate bounds for a container based on its children's absolute positions.
   // Uses a nodeStates map to get pending changes that haven't been committed yet.
   // Expands the container when children extend beyond its current bounds.
   const calculateContainerBounds = useCallback(
-    (
-      containerId: string,
-      nodeStates: Map<string, { x: number; y: number; width: number; height: number }>
-    ) => {
+    (containerId: string, nodeStates: Map<string, { x: number; y: number; width: number; height: number }>) => {
       const container = visibleNodes.find((n) => n.id === containerId);
       if (!container) return null;
 
@@ -592,14 +585,14 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
           newY !== currentState.y,
       };
     },
-    [visibleNodes]
+    [visibleNodes],
   );
 
   // Recursively recalculate all ancestor containers
   const recalculateAncestorBounds = useCallback(
     (
       startNodeId: string,
-      nodeStates: Map<string, { x: number; y: number; width: number; height: number }>
+      nodeStates: Map<string, { x: number; y: number; width: number; height: number }>,
     ): Array<{
       id: string;
       position?: { x: number; y: number };
@@ -640,7 +633,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
       return updates;
     },
-    [visibleNodes, calculateContainerBounds]
+    [visibleNodes, calculateContainerBounds],
   );
 
   // Handle moving a node and all its children, then recursively update ancestors.
@@ -704,7 +697,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                 id: update.id,
                 width: update.size.width,
                 height: update.size.height,
-              })
+              }),
             );
           }
         }
@@ -729,7 +722,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
         setExitingGroupId(null);
       }
     },
-    [visibleNodes, canvasNodes, getAllDescendantIds, recalculateAncestorBounds, dispatch]
+    [visibleNodes, canvasNodes, getAllDescendantIds, recalculateAncestorBounds, dispatch],
   );
 
   // Calculate minimum size required for a container to fit its children
@@ -760,7 +753,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
       return { minWidth, minHeight };
     },
-    [visibleNodes]
+    [visibleNodes],
   );
 
   // Handle resizing a node, then recursively update ancestors
@@ -800,17 +793,15 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
               nodeId: update.id,
               x: update.position.x,
               y: update.position.y,
-            })
+            }),
           );
         }
         if (update.size) {
-          dispatch(
-            resizeCardNode({ id: update.id, width: update.size.width, height: update.size.height })
-          );
+          dispatch(resizeCardNode({ id: update.id, width: update.size.width, height: update.size.height }));
         }
       }
     },
-    [visibleNodes, calculateMinimumContainerSize, recalculateAncestorBounds, dispatch]
+    [visibleNodes, calculateMinimumContainerSize, recalculateAncestorBounds, dispatch],
   );
 
   // Handle delete selected nodes
@@ -849,14 +840,20 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     setConnTooltip(info);
   }, []);
 
-  const handleEdgeDelete = useCallback((connectionId: string) => {
-    dispatch(deleteCardEdge(connectionId));
-  }, [dispatch]);
+  const handleEdgeDelete = useCallback(
+    (connectionId: string) => {
+      dispatch(deleteCardEdge(connectionId));
+    },
+    [dispatch],
+  );
 
-  const handleEdgeSelect = useCallback((connectionId: string) => {
-    dispatch(setSelectedNodes([]));
-    dispatch(setSelectedEdges([connectionId]));
-  }, [dispatch]);
+  const handleEdgeSelect = useCallback(
+    (connectionId: string) => {
+      dispatch(setSelectedNodes([]));
+      dispatch(setSelectedEdges([connectionId]));
+    },
+    [dispatch],
+  );
 
   // Inline rename: double-click on any node label starts editing
   const handleNodeDoubleClick = useCallback((nodeId: string) => {
@@ -870,7 +867,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       }
       setRenamingNodeId(null);
     },
-    [dispatch]
+    [dispatch],
   );
 
   const handleRenameCancel = useCallback(() => {
@@ -893,9 +890,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
         if (isSourceRepo) {
           // Find all service nodes connected to this source via edges
-          const connectedEdges = cardEdges.filter(
-            (e) => e.source === nodeId || e.target === nodeId,
-          );
+          const connectedEdges = cardEdges.filter((e) => e.source === nodeId || e.target === nodeId);
           for (const edge of connectedEdges) {
             const serviceNodeId = edge.source === nodeId ? edge.target : edge.source;
             const serviceNode = cardNodes.find((n) => n.id === serviceNodeId);
@@ -909,7 +904,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
         }
       }
     },
-    [dispatch, card]
+    [dispatch, card],
   );
 
   // Select node to show pipeline in properties panel
@@ -918,7 +913,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       dispatch(setSelectedNodes([nodeId]));
       dispatch(setSelectedEdges([]));
     },
-    [dispatch]
+    [dispatch],
   );
 
   // Get pipeline statuses for all service nodes connected to a Source.Repository block
@@ -948,13 +943,15 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     let unsubCard: (() => void) | undefined;
     let cleanupCard: (() => void) | undefined;
 
-    import('../../../shared/api/api-adapter').then(({ getApi }) => {
-      const api = getApi();
-      unsubCard = api.subscribeCardPipeline?.(card!.id);
-      cleanupCard = api.onCardPipelineUpdate?.((event: any) => {
-        dispatch(receiveCardPipelineUpdate(event));
-      });
-    }).catch(() => {});
+    import('../../../shared/api/api-adapter')
+      .then(({ getApi }) => {
+        const api = getApi();
+        unsubCard = api.subscribeCardPipeline?.(card!.id);
+        cleanupCard = api.onCardPipelineUpdate?.((event: any) => {
+          dispatch(receiveCardPipelineUpdate(event));
+        });
+      })
+      .catch(() => {});
 
     return () => {
       unsubCard?.();
@@ -977,7 +974,8 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       if (groupNode) {
         const nodeIceType = (groupNode.data.iceType as string) || '';
         const isNodeContainer =
-          groupNode.type === 'container' || groupNode.type === ('group' as any) ||
+          groupNode.type === 'container' ||
+          groupNode.type === ('group' as any) ||
           nodeIceType === 'Network.VPC' ||
           nodeIceType === 'Network.Subnet';
         setDragOverGroupId(isNodeContainer ? groupId : null);
@@ -985,7 +983,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
         setDragOverGroupId(null);
       }
     },
-    [visibleNodes]
+    [visibleNodes],
   );
 
   // Handle drag end — re-parent node only when Ctrl/Cmd is held.
@@ -1013,7 +1011,8 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
           if (descendantIds.has(node.id)) continue;
           const nodeIceType = (node.data.iceType as string) || '';
           const isNodeContainer =
-            node.type === 'container' || node.type === ('group' as any) ||
+            node.type === 'container' ||
+            node.type === ('group' as any) ||
             nodeIceType === 'Network.VPC' ||
             nodeIceType === 'Network.Subnet';
           if (!isNodeContainer) continue;
@@ -1102,9 +1101,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
           const newH = Math.max(MIN_CONTAINER_HEIGHT, Math.max(curBottom, reqBottom) - newPY);
 
           if (newPX !== curLeft || newPY !== curTop) {
-            dispatch(
-              updateCardNodePositions([{ id: newParentId, position: { x: newPX, y: newPY } }])
-            );
+            dispatch(updateCardNodePositions([{ id: newParentId, position: { x: newPX, y: newPY } }]));
           }
           if (newW !== bestContainer.width || newH !== bestContainer.height) {
             dispatch(resizeCardNode({ id: newParentId, width: newW, height: newH }));
@@ -1115,7 +1112,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       setDragOverGroupId(null);
       setExitingGroupId(null);
     },
-    [visibleNodes, getDescendantIds, dispatch]
+    [visibleNodes, getDescendantIds, dispatch],
   );
 
   // Handle context menu
@@ -1123,7 +1120,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     (position: { x: number; y: number }, type: 'canvas' | 'node' | 'edge', targetId?: string) => {
       dispatch(openContextMenu({ position, type, targetId }));
     },
-    [dispatch]
+    [dispatch],
   );
 
   // Canvas interactions
@@ -1136,9 +1133,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       if (paneId) {
         dispatch(setPaneViewport({ paneId, viewport: { panX: vp.x, panY: vp.y, scale: vp.zoom } }));
       } else if (cardId) {
-        dispatch(
-          setCardViewportById({ cardId, viewport: { panX: vp.x, panY: vp.y, scale: vp.zoom } })
-        );
+        dispatch(setCardViewportById({ cardId, viewport: { panX: vp.x, panY: vp.y, scale: vp.zoom } }));
       } else {
         dispatch(setCardViewport({ panX: vp.x, panY: vp.y, scale: vp.zoom }));
       }
@@ -1205,7 +1200,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       }
       return null;
     },
-    [visibleNodes]
+    [visibleNodes],
   );
 
   // Handle drop from palette
@@ -1327,7 +1322,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       // Add node to active card
       dispatch(addNodeToCard(newNode));
     },
-    [screenToCanvas, findContainerAtPosition, nodes, dispatch]
+    [screenToCanvas, findContainerAtPosition, nodes, dispatch],
   );
 
   const handleDragOver = useCallback((event: React.DragEvent) => {
@@ -1363,20 +1358,13 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     const map = new Map<string, { index: number; count: number }>();
 
     // Helper: determine which side a connection uses on a node
-    const getSide = (
-      fromNode: LocalCanvasNode,
-      toNode: LocalCanvasNode
-    ): { exitSide: string; entrySide: string } => {
+    const getSide = (fromNode: LocalCanvasNode, toNode: LocalCanvasNode): { exitSide: string; entrySide: string } => {
       const dx = toNode.x + toNode.width / 2 - (fromNode.x + fromNode.width / 2);
       const dy = toNode.y + toNode.height / 2 - (fromNode.y + fromNode.height / 2);
       if (Math.abs(dx) > Math.abs(dy)) {
-        return dx > 0
-          ? { exitSide: 'right', entrySide: 'left' }
-          : { exitSide: 'left', entrySide: 'right' };
+        return dx > 0 ? { exitSide: 'right', entrySide: 'left' } : { exitSide: 'left', entrySide: 'right' };
       } else {
-        return dy > 0
-          ? { exitSide: 'bottom', entrySide: 'top' }
-          : { exitSide: 'top', entrySide: 'bottom' };
+        return dy > 0 ? { exitSide: 'bottom', entrySide: 'top' } : { exitSide: 'top', entrySide: 'bottom' };
       }
     };
 
@@ -1443,7 +1431,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
         currentPoint: canvasPos,
       });
     },
-    [screenToCanvas]
+    [screenToCanvas],
   );
 
   /** Track mouse during connection drawing */
@@ -1453,7 +1441,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       const canvasPos = screenToCanvas(e.clientX, e.clientY);
       setDrawingConnection((prev) => (prev ? { ...prev, currentPoint: canvasPos } : null));
     },
-    [drawingConnection, screenToCanvas]
+    [drawingConnection, screenToCanvas],
   );
 
   /** Complete connection drawing — find target node, create edge, show popover */
@@ -1489,15 +1477,21 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
           // Check both directions: which node is the "special" block, which is the service
           const specialType =
-            (srcType === 'Source.Repository' || sourceNode.data?.behavior === 'source') ? 'Source.Repository' :
-            srcType === 'Config.EnvVars' ? 'Config.EnvVars' :
-            (tgtType === 'Source.Repository' || targetNode.data?.behavior === 'source') ? 'Source.Repository' :
-            tgtType === 'Config.EnvVars' ? 'Config.EnvVars' :
-            null;
+            srcType === 'Source.Repository' || sourceNode.data?.behavior === 'source'
+              ? 'Source.Repository'
+              : srcType === 'Config.EnvVars'
+                ? 'Config.EnvVars'
+                : tgtType === 'Source.Repository' || targetNode.data?.behavior === 'source'
+                  ? 'Source.Repository'
+                  : tgtType === 'Config.EnvVars'
+                    ? 'Config.EnvVars'
+                    : null;
 
           if (specialType) {
-            const serviceNodeId = specialType === srcType || (specialType === 'Source.Repository' && sourceNode.data?.behavior === 'source')
-              ? targetNode.id : sourceNode.id;
+            const serviceNodeId =
+              specialType === srcType || (specialType === 'Source.Repository' && sourceNode.data?.behavior === 'source')
+                ? targetNode.id
+                : sourceNode.id;
             const cardEdges = card.edges as CardEdge[];
 
             // Find existing connections of the same special type to this service
@@ -1529,21 +1523,36 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
         // Validate — check for anti-patterns and duplicates
         const warnings = validateConnection(
-          srcIceType, tgtIceType,
+          srcIceType,
+          tgtIceType,
           cardEdgesArr.map((e) => ({ source: e.source, target: e.target })),
-          drawingConnection.sourceId, targetNode.id,
-          sourceNode?.type, targetNode.type,
+          drawingConnection.sourceId,
+          targetNode.id,
+          sourceNode?.type,
+          targetNode.type,
         );
 
         // Block hard errors (self-connection)
         if (warnings.some((w) => w.level === 'error')) {
-          console.warn('[Canvas] Connection blocked:', warnings.filter((w) => w.level === 'error').map((w) => w.message).join('; '));
+          console.warn(
+            '[Canvas] Connection blocked:',
+            warnings
+              .filter((w) => w.level === 'error')
+              .map((w) => w.message)
+              .join('; '),
+          );
           setDrawingConnection(null);
           return;
         }
 
         // Circular dependency check
-        if (wouldCreateCycle(drawingConnection.sourceId, targetNode.id, cardEdgesArr.map((e) => ({ source: e.source, target: e.target })))) {
+        if (
+          wouldCreateCycle(
+            drawingConnection.sourceId,
+            targetNode.id,
+            cardEdgesArr.map((e) => ({ source: e.source, target: e.target })),
+          )
+        ) {
           console.warn('[Canvas] Connection would create a circular dependency');
           // Still allow it — just log the warning (cycles aren't always wrong)
         }
@@ -1580,7 +1589,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
         // ── Pipeline: auto-configure when Source.Repository connects to a service ──
         if (sourceNode && targetNode) {
-          const sourceIsRepo = srcIceType === 'Source.Repository' || (sourceNode.data?.behavior === 'source');
+          const sourceIsRepo = srcIceType === 'Source.Repository' || sourceNode.data?.behavior === 'source';
           const targetIsService = targetNode.type === 'resource' && !tgtIceType.startsWith('Source.');
 
           // Source → Service: copy repo data to service and open pipeline
@@ -1597,7 +1606,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
           }
 
           // Service → Source (reversed direction): same behavior
-          const targetIsRepo = tgtIceType === 'Source.Repository' || (targetNode.data?.behavior === 'source');
+          const targetIsRepo = tgtIceType === 'Source.Repository' || targetNode.data?.behavior === 'source';
           const sourceIsService = sourceNode.type === 'resource' && !srcIceType.startsWith('Source.');
           if (targetIsRepo && sourceIsService) {
             const repo = (targetNode.data?.repository as string) || '';
@@ -1617,7 +1626,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
       setDrawingConnection(null);
     },
-    [drawingConnection, screenToCanvas, effectiveNodes, dispatch]
+    [drawingConnection, screenToCanvas, effectiveNodes, dispatch],
   );
 
   // Connection popover handlers removed — connections are auto-configured
@@ -1696,12 +1705,13 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
               })
               .map((node) => {
                 const regionAnimDelay = animatingNodes[node.id];
-                const regionAnimStyle: CSSProperties | undefined = regionAnimDelay !== undefined
-                  ? {
-                      animation: `ice-node-entrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${regionAnimDelay}ms both`,
-                      transformOrigin: `${node.x + node.width / 2}px ${node.y + node.height / 2}px`,
-                    }
-                  : undefined;
+                const regionAnimStyle: CSSProperties | undefined =
+                  regionAnimDelay !== undefined
+                    ? {
+                        animation: `ice-node-entrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${regionAnimDelay}ms both`,
+                        transformOrigin: `${node.x + node.width / 2}px ${node.y + node.height / 2}px`,
+                      }
+                    : undefined;
                 return regionAnimStyle ? (
                   <g key={`region-anim-${node.id}`} style={regionAnimStyle}>
                     <SvgRegionLabel key={`region-${node.id}`} node={node} />
@@ -1716,27 +1726,32 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
           <g className="connections-layer">
             {canvasConnections.map((conn) => {
               const isHighlighted =
-                (hoveredNodeId !== null &&
-                  (conn.from === hoveredNodeId || conn.to === hoveredNodeId)) ||
-                (selectedNodes.length > 0 &&
-                  (selectedNodes.includes(conn.from) || selectedNodes.includes(conn.to)));
+                (hoveredNodeId !== null && (conn.from === hoveredNodeId || conn.to === hoveredNodeId)) ||
+                (selectedNodes.length > 0 && (selectedNodes.includes(conn.from) || selectedNodes.includes(conn.to)));
               if (isHighlighted) return null; // rendered in top layer
               const srcPort = portMap.get(`${conn.id}:source`);
               const tgtPort = portMap.get(`${conn.id}:target`);
               const edgeAnimDelay = animatingEdges[conn.id];
-              const edgeAnimStyle: CSSProperties | undefined = edgeAnimDelay !== undefined
-                ? { animation: `ice-edge-entrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${edgeAnimDelay}ms both` }
-                : undefined;
+              const edgeAnimStyle: CSSProperties | undefined =
+                edgeAnimDelay !== undefined
+                  ? { animation: `ice-edge-entrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${edgeAnimDelay}ms both` }
+                  : undefined;
               // Check if this edge connects a Source.Repository to a node with active pipeline
               const srcNode = effectiveNodes.find((n) => n.id === conn.from);
               const tgtNode = effectiveNodes.find((n) => n.id === conn.to);
-              const srcIsSource = (srcNode?.data?.iceType as string) === 'Source.Repository' || srcNode?.data?.behavior === 'source';
-              const tgtIsSource = (tgtNode?.data?.iceType as string) === 'Source.Repository' || tgtNode?.data?.behavior === 'source';
+              const srcIsSource =
+                (srcNode?.data?.iceType as string) === 'Source.Repository' || srcNode?.data?.behavior === 'source';
+              const tgtIsSource =
+                (tgtNode?.data?.iceType as string) === 'Source.Repository' || tgtNode?.data?.behavior === 'source';
               const serviceNodeId = srcIsSource ? conn.to : tgtIsSource ? conn.from : null;
               const isPipelineEdge = !!(srcIsSource || tgtIsSource) && !!serviceNodeId;
               const pipelineStatus = serviceNodeId ? pipelineNodeStatus[serviceNodeId] : null;
-              const edgePipelineActive = isPipelineEdge && pipelineStatus != null &&
-                (pipelineStatus.status === 'queued' || pipelineStatus.status === 'building' || pipelineStatus.status === 'deploying');
+              const edgePipelineActive =
+                isPipelineEdge &&
+                pipelineStatus != null &&
+                (pipelineStatus.status === 'queued' ||
+                  pipelineStatus.status === 'building' ||
+                  pipelineStatus.status === 'deploying');
 
               const connectionEl = (
                 <SvgConnectionPath
@@ -1761,7 +1776,9 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                 <g key={`anim-edge-${conn.id}`} style={edgeAnimStyle}>
                   {connectionEl}
                 </g>
-              ) : connectionEl;
+              ) : (
+                connectionEl
+              );
             })}
           </g>
 
@@ -1783,9 +1800,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
               }
 
               const isLogNode =
-                iceType === 'Log.Terminal' ||
-                iceType === 'Observability.Logs' ||
-                iceType.startsWith('Log.');
+                iceType === 'Log.Terminal' || iceType === 'Observability.Logs' || iceType.startsWith('Log.');
               const isGroup = node.type === 'container' || node.type === ('group' as any);
               const isBlock = node.type === 'block';
 
@@ -1815,15 +1830,12 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                   <g key={`anim-${node.id}`} style={animStyle}>
                     {content}
                   </g>
-                ) : content;
+                ) : (
+                  content
+                );
 
                 return isLifted ? (
-                  <g
-                    key={node.id}
-                    transform={liftTransform}
-                    filter={liftFilter}
-                    opacity={liftOpacity}
-                  >
+                  <g key={node.id} transform={liftTransform} filter={liftFilter} opacity={liftOpacity}>
                     {animated}
                   </g>
                 ) : (
@@ -1846,13 +1858,21 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                   return pi?.icon || DEFAULT_ICON;
                 })();
 
-                const statusColor = node.data?.status === 'failed' || node.data?.status === 'error' ? '#ef4444'
-                  : node.data?.status === 'active' || node.data?.status === 'running' ? '#22c55e' : '#64748b';
+                const statusColor =
+                  node.data?.status === 'failed' || node.data?.status === 'error'
+                    ? '#ef4444'
+                    : node.data?.status === 'active' || node.data?.status === 'running'
+                      ? '#22c55e'
+                      : '#64748b';
                 const pipeStatus = pipelineNodeStatus[node.id];
-                const dotColor = pipeStatus?.status === 'success' ? '#22c55e'
-                  : pipeStatus?.status === 'failed' ? '#ef4444'
-                  : pipeStatus?.status === 'building' || pipeStatus?.status === 'deploying' ? '#3b82f6'
-                  : statusColor;
+                const dotColor =
+                  pipeStatus?.status === 'success'
+                    ? '#22c55e'
+                    : pipeStatus?.status === 'failed'
+                      ? '#ef4444'
+                      : pipeStatus?.status === 'building' || pipeStatus?.status === 'deploying'
+                        ? '#3b82f6'
+                        : statusColor;
                 const isNodeSelected = selectedNodes.includes(node.id);
                 const borderColor = isNodeSelected ? '#3b82f6' : 'var(--ice-border)';
 
@@ -1864,20 +1884,55 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
                   return wrapLift(
                     <g key={`${node.id}-lod1`} data-node-id={node.id} style={{ cursor: 'move' }}>
-                      {isNodeSelected && <rect x={node.x - 3} y={node.y - 3} width={W + 6} height={H + 6} rx={11} fill="none" stroke="#3b82f6" strokeWidth={2} opacity={0.5} />}
-                      <rect x={node.x} y={node.y} width={W} height={H} rx={8} fill="var(--ice-bg-surface)" stroke={borderColor} strokeWidth={isNodeSelected ? 2 : 1} />
+                      {isNodeSelected && (
+                        <rect
+                          x={node.x - 3}
+                          y={node.y - 3}
+                          width={W + 6}
+                          height={H + 6}
+                          rx={11}
+                          fill="none"
+                          stroke="#3b82f6"
+                          strokeWidth={2}
+                          opacity={0.5}
+                        />
+                      )}
+                      <rect
+                        x={node.x}
+                        y={node.y}
+                        width={W}
+                        height={H}
+                        rx={8}
+                        fill="var(--ice-bg-surface)"
+                        stroke={borderColor}
+                        strokeWidth={isNodeSelected ? 2 : 1}
+                      />
                       {/* Large centered icon */}
-                      <image x={node.x + (W - iconSize) / 2} y={node.y + H * 0.1} width={iconSize} height={iconSize}
-                        href={iconUrl} preserveAspectRatio="xMidYMid meet" />
+                      <image
+                        x={node.x + (W - iconSize) / 2}
+                        y={node.y + H * 0.1}
+                        width={iconSize}
+                        height={iconSize}
+                        href={iconUrl}
+                        preserveAspectRatio="xMidYMid meet"
+                      />
                       {/* Bold label below icon */}
-                      <text x={node.x + W / 2} y={node.y + H * 0.1 + iconSize + fontSize * 0.9} textAnchor="middle" dominantBaseline="middle"
-                        fill="var(--ice-text-primary)" fontSize={fontSize} fontWeight="700"
-                        fontFamily="'JetBrains Mono Variable', monospace" style={{ pointerEvents: 'none' }}>
-                        {(node.label || '').length > 10 ? (node.label || '').slice(0, 10) + '…' : (node.label || '')}
+                      <text
+                        x={node.x + W / 2}
+                        y={node.y + H * 0.1 + iconSize + fontSize * 0.9}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        fill="var(--ice-text-primary)"
+                        fontSize={fontSize}
+                        fontWeight="700"
+                        fontFamily="'JetBrains Mono Variable', monospace"
+                        style={{ pointerEvents: 'none' }}
+                      >
+                        {(node.label || '').length > 10 ? (node.label || '').slice(0, 10) + '…' : node.label || ''}
                       </text>
                       {/* Status dot */}
                       <circle cx={node.x + W / 2} cy={node.y + H - dotR * 2} r={dotR} fill={dotColor} opacity={0.9} />
-                    </g>
+                    </g>,
                   );
                 }
 
@@ -1888,25 +1943,72 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
                 return wrapLift(
                   <g key={`${node.id}-lod2`} data-node-id={node.id} style={{ cursor: 'move' }}>
-                    {isNodeSelected && <rect x={node.x - 3} y={node.y - 3} width={W + 6} height={H + 6} rx={11} fill="none" stroke="#3b82f6" strokeWidth={2} opacity={0.5} />}
-                    <rect x={node.x} y={node.y} width={W} height={H} rx={8} fill="var(--ice-bg-surface)" stroke={borderColor} strokeWidth={isNodeSelected ? 1.5 : 1} />
+                    {isNodeSelected && (
+                      <rect
+                        x={node.x - 3}
+                        y={node.y - 3}
+                        width={W + 6}
+                        height={H + 6}
+                        rx={11}
+                        fill="none"
+                        stroke="#3b82f6"
+                        strokeWidth={2}
+                        opacity={0.5}
+                      />
+                    )}
+                    <rect
+                      x={node.x}
+                      y={node.y}
+                      width={W}
+                      height={H}
+                      rx={8}
+                      fill="var(--ice-bg-surface)"
+                      stroke={borderColor}
+                      strokeWidth={isNodeSelected ? 1.5 : 1}
+                    />
                     {/* Larger icon */}
-                    <image x={node.x + 12} y={node.y + (H - iconSize) / 2 - 4} width={iconSize} height={iconSize}
-                      href={iconUrl} preserveAspectRatio="xMidYMid meet" />
+                    <image
+                      x={node.x + 12}
+                      y={node.y + (H - iconSize) / 2 - 4}
+                      width={iconSize}
+                      height={iconSize}
+                      href={iconUrl}
+                      preserveAspectRatio="xMidYMid meet"
+                    />
                     {/* Bigger label */}
-                    <text x={node.x + 12 + iconSize + 8} y={node.y + H / 2 - 6} dominantBaseline="middle"
-                      fill="var(--ice-text-primary)" fontSize={fontSize} fontWeight="600"
-                      fontFamily="'JetBrains Mono Variable', monospace" style={{ pointerEvents: 'none' }}>
-                      {(node.label || '').length > 12 ? (node.label || '').slice(0, 12) + '…' : (node.label || '')}
+                    <text
+                      x={node.x + 12 + iconSize + 8}
+                      y={node.y + H / 2 - 6}
+                      dominantBaseline="middle"
+                      fill="var(--ice-text-primary)"
+                      fontSize={fontSize}
+                      fontWeight="600"
+                      fontFamily="'JetBrains Mono Variable', monospace"
+                      style={{ pointerEvents: 'none' }}
+                    >
+                      {(node.label || '').length > 12 ? (node.label || '').slice(0, 12) + '…' : node.label || ''}
                     </text>
                     {/* Status dot + label */}
-                    <circle cx={node.x + 12 + iconSize + 8} cy={node.y + H / 2 + fontSize * 0.7} r={dotR} fill={dotColor} opacity={0.9} />
-                    <text x={node.x + 12 + iconSize + 8 + dotR * 2 + 4} y={node.y + H / 2 + fontSize * 0.7} dominantBaseline="middle"
-                      fill="var(--ice-text-secondary)" fontSize={Math.max(10, fontSize * 0.7)}
-                      fontFamily="ui-monospace, 'SFMono-Regular', monospace" opacity={0.7} style={{ pointerEvents: 'none' }}>
+                    <circle
+                      cx={node.x + 12 + iconSize + 8}
+                      cy={node.y + H / 2 + fontSize * 0.7}
+                      r={dotR}
+                      fill={dotColor}
+                      opacity={0.9}
+                    />
+                    <text
+                      x={node.x + 12 + iconSize + 8 + dotR * 2 + 4}
+                      y={node.y + H / 2 + fontSize * 0.7}
+                      dominantBaseline="middle"
+                      fill="var(--ice-text-secondary)"
+                      fontSize={Math.max(10, fontSize * 0.7)}
+                      fontFamily="ui-monospace, 'SFMono-Regular', monospace"
+                      opacity={0.7}
+                      style={{ pointerEvents: 'none' }}
+                    >
                       {(node.data?.status as string) || ''}
                     </text>
-                  </g>
+                  </g>,
                 );
               }
 
@@ -1917,7 +2019,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                     node={node}
                     isSelected={selectedNodes.includes(node.id)}
                     onToggleFold={(nodeId) => dispatch(toggleCardNodeFold(nodeId))}
-                  />
+                  />,
                 );
               }
 
@@ -1937,7 +2039,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                     onRenameCommit={(newLabel) => handleRenameCommit(node.id, newLabel)}
                     onRenameCancel={handleRenameCancel}
                     lod={lod}
-                  />
+                  />,
                 );
               }
 
@@ -1962,7 +2064,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                     connectedPipelineStatuses={getConnectedPipelineStatuses(node)}
                     lod={lod}
                     zoom={viewport.zoom}
-                  />
+                  />,
                 );
               }
 
@@ -1983,7 +2085,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                   pipelineStatus={pipelineNodeStatus[node.id]}
                   onPipelineClick={handlePipelineClick}
                   connectedPipelineStatuses={getConnectedPipelineStatuses(node)}
-                />
+                />,
               );
             })}
           </g>
@@ -2010,28 +2112,9 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
               const pathD = `M ${sourcePoint.x} ${sourcePoint.y} C ${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${currentPoint.x} ${currentPoint.y}`;
               return (
                 <g className="connection-preview" style={{ pointerEvents: 'none' }}>
-                  <path
-                    d={pathD}
-                    stroke="#22d3ee"
-                    strokeWidth={2}
-                    fill="none"
-                    strokeDasharray="8 4"
-                    opacity={0.7}
-                  />
-                  <circle
-                    cx={sourcePoint.x}
-                    cy={sourcePoint.y}
-                    r={4}
-                    fill="#22d3ee"
-                    opacity={0.9}
-                  />
-                  <circle
-                    cx={currentPoint.x}
-                    cy={currentPoint.y}
-                    r={4}
-                    fill="#22d3ee"
-                    opacity={0.6}
-                  />
+                  <path d={pathD} stroke="#22d3ee" strokeWidth={2} fill="none" strokeDasharray="8 4" opacity={0.7} />
+                  <circle cx={sourcePoint.x} cy={sourcePoint.y} r={4} fill="#22d3ee" opacity={0.9} />
+                  <circle cx={currentPoint.x} cy={currentPoint.y} r={4} fill="#22d3ee" opacity={0.6} />
                 </g>
               );
             })()}
@@ -2059,24 +2142,17 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
           {/* User traffic icon for exposed services — only when no explicit Network.Internet block */}
           {showVirtualUserNode && pinnedUserPos && (
-            <SvgUserNode
-              position={pinnedUserPos}
-              scale={viewport.zoom}
-              onPositionChange={setUserNodePos}
-            />
+            <SvgUserNode position={pinnedUserPos} scale={viewport.zoom} onPositionChange={setUserNodePos} />
           )}
 
           {/* Highlighted connections layer — ON TOP of nodes */}
           <g className="connections-highlighted-layer">
             {canvasConnections.map((conn) => {
               // The "active" node is the hovered node, or first selected node
-              const activeNodeId =
-                hoveredNodeId || (selectedNodes.length > 0 ? selectedNodes[0] : null);
+              const activeNodeId = hoveredNodeId || (selectedNodes.length > 0 ? selectedNodes[0] : null);
               const isHighlighted =
-                (hoveredNodeId !== null &&
-                  (conn.from === hoveredNodeId || conn.to === hoveredNodeId)) ||
-                (selectedNodes.length > 0 &&
-                  (selectedNodes.includes(conn.from) || selectedNodes.includes(conn.to)));
+                (hoveredNodeId !== null && (conn.from === hoveredNodeId || conn.to === hoveredNodeId)) ||
+                (selectedNodes.length > 0 && (selectedNodes.includes(conn.from) || selectedNodes.includes(conn.to)));
               if (!isHighlighted) return null; // already rendered behind nodes
 
               // Determine direction relative to the active node
@@ -2265,7 +2341,6 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
       {/* Context Menu overlay */}
       <CanvasContextMenu />
-
     </div>
   );
 };

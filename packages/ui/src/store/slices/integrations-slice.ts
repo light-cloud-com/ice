@@ -78,18 +78,15 @@ const initialState: IntegrationsState = {
 // Async Thunks
 // =============================================================================
 
-export const checkGitHubConnection = createAsyncThunk(
-  'integrations/checkGitHubConnection',
-  async () => {
-    const api = getApi();
-    const connected = await api.github.isConnected();
-    if (connected) {
-      const user = await api.github.getUser();
-      return user;
-    }
-    return null;
+export const checkGitHubConnection = createAsyncThunk('integrations/checkGitHubConnection', async () => {
+  const api = getApi();
+  const connected = await api.github.isConnected();
+  if (connected) {
+    const user = await api.github.getUser();
+    return user;
   }
-);
+  return null;
+});
 
 export const connectGitHubPAT = createAsyncThunk(
   'integrations/connectGitHubPAT',
@@ -104,7 +101,7 @@ export const connectGitHubPAT = createAsyncThunk(
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.error || err.message || 'Failed to connect');
     }
-  }
+  },
 );
 
 export const startGitHubDeviceFlow = createAsyncThunk(
@@ -127,26 +124,23 @@ export const startGitHubDeviceFlow = createAsyncThunk(
         verificationUri: result.verification_uri,
         deviceCode: result.device_code,
         interval: result.interval,
-      })
+      }),
     );
 
     dispatch(
       pollGitHubDeviceFlow({
         deviceCode: result.device_code,
         interval: result.interval,
-      })
+      }),
     );
 
     return result;
-  }
+  },
 );
 
 export const pollGitHubDeviceFlow = createAsyncThunk(
   'integrations/pollGitHubDeviceFlow',
-  async (
-    { deviceCode, interval }: { deviceCode: string; interval: number },
-    { rejectWithValue }
-  ) => {
+  async ({ deviceCode, interval }: { deviceCode: string; interval: number }, { rejectWithValue }) => {
     const api = getApi();
     try {
       const result = await api.github.pollDeviceFlow(deviceCode, interval);
@@ -157,7 +151,7 @@ export const pollGitHubDeviceFlow = createAsyncThunk(
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.error || err.message || 'Device flow failed');
     }
-  }
+  },
 );
 
 export const disconnectGitHub = createAsyncThunk('integrations/disconnectGitHub', async () => {
@@ -178,7 +172,7 @@ export const fetchGitHubRepos = createAsyncThunk(
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.error || err.message || 'Failed to fetch repos');
     }
-  }
+  },
 );
 
 export const fetchGitHubBranches = createAsyncThunk(
@@ -196,7 +190,7 @@ export const fetchGitHubBranches = createAsyncThunk(
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.error || err.message || 'Failed to fetch branches');
     }
-  }
+  },
 );
 
 // =============================================================================

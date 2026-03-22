@@ -62,11 +62,13 @@ test.describe('FE-17: JWT expiry check', () => {
   test('should redirect to login with expired token', async ({ page }) => {
     // Create an expired JWT (exp in the past)
     const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).replace(/=/g, '');
-    const payload = btoa(JSON.stringify({
-      userId: 'test',
-      organisationId: 'test',
-      exp: Math.floor(Date.now() / 1000) - 3600, // expired 1 hour ago
-    })).replace(/=/g, '');
+    const payload = btoa(
+      JSON.stringify({
+        userId: 'test',
+        organisationId: 'test',
+        exp: Math.floor(Date.now() / 1000) - 3600, // expired 1 hour ago
+      }),
+    ).replace(/=/g, '');
     const expiredToken = `${header}.${payload}.fake-sig`;
 
     await page.goto('/login', { waitUntil: 'domcontentloaded' });
@@ -79,10 +81,12 @@ test.describe('FE-17: JWT expiry check', () => {
 
   test('should clear expired token from localStorage', async ({ page }) => {
     const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).replace(/=/g, '');
-    const payload = btoa(JSON.stringify({
-      userId: 'test',
-      exp: Math.floor(Date.now() / 1000) - 3600,
-    })).replace(/=/g, '');
+    const payload = btoa(
+      JSON.stringify({
+        userId: 'test',
+        exp: Math.floor(Date.now() / 1000) - 3600,
+      }),
+    ).replace(/=/g, '');
     const expiredToken = `${header}.${payload}.fake-sig`;
 
     await page.goto('/login', { waitUntil: 'domcontentloaded' });

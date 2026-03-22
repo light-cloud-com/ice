@@ -16,12 +16,7 @@ import type {
 } from './types.js';
 import { get_ice_type, get_behavior, map_properties } from './type-mapper.js';
 import { infer_relationships, get_relationship_type } from './relationships.js';
-import {
-  ComputeService,
-  StorageService,
-  AssetInventoryService,
-  BaseGCPService,
-} from './services/index.js';
+import { ComputeService, StorageService, AssetInventoryService, BaseGCPService } from './services/index.js';
 import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph.js';
 import type { NodeInput, EdgeInput } from '../../types/graph.js';
 
@@ -112,9 +107,7 @@ export async function import_gcp(options: GCPImportOptions): Promise<GCPImportRe
 
     // Apply label filters
     if (Object.keys(opts.filter_labels).length > 0) {
-      const matches = Object.entries(opts.filter_labels).every(
-        ([key, value]) => resource.labels?.[key] === value
-      );
+      const matches = Object.entries(opts.filter_labels).every(([key, value]) => resource.labels?.[key] === value);
       if (!matches) continue;
     }
 
@@ -190,7 +183,7 @@ export async function import_gcp(options: GCPImportOptions): Promise<GCPImportRe
  */
 export async function import_gcp_to_graph(
   options: GCPImportOptions,
-  graph_name: string = 'gcp-import'
+  graph_name: string = 'gcp-import',
 ): Promise<{ graph: MutableGraph; result: GCPImportResult }> {
   const result = await import_gcp(options);
   const graph = gcp_result_to_graph(result, graph_name);
@@ -200,10 +193,7 @@ export async function import_gcp_to_graph(
 /**
  * Convert GCP import result to ICE graph.
  */
-export function gcp_result_to_graph(
-  result: GCPImportResult,
-  graph_name: string = 'gcp-import'
-): MutableGraph {
+export function gcp_result_to_graph(result: GCPImportResult, graph_name: string = 'gcp-import'): MutableGraph {
   const graph = create_mutable_graph(graph_name, {
     description: `Imported from GCP project ${result.metadata.project}`,
     labels: {
@@ -306,7 +296,7 @@ function create_service(
   project: string,
   regions: string[],
   zones: string[],
-  key_file?: string
+  key_file?: string,
 ): BaseGCPService | null {
   switch (service_type) {
     case 'all':

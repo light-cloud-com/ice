@@ -16,7 +16,7 @@ function result(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  overrides: Partial<ResourceDeployResult> = {}
+  overrides: Partial<ResourceDeployResult> = {},
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -33,7 +33,7 @@ function fail(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  error: string
+  error: string,
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -60,7 +60,7 @@ export const memorystore_handler: GCPResourceHandler = {
           redisVersion: properties.redis_version || 'REDIS_7_0',
           displayName: name,
           labels: properties.labels || {},
-        }
+        },
       )) as any;
 
       if (op?.name) await wait_for_operation(ctx, op.name);
@@ -94,7 +94,7 @@ export const memorystore_handler: GCPResourceHandler = {
       if (update_mask.length > 0) {
         const op = (await ctx.rest_client.patch(
           `${BASE_URL}/projects/${ctx.project}/locations/${region}/instances/${name}?updateMask=${update_mask.join(',')}`,
-          body
+          body,
         )) as any;
         if (op?.name) await wait_for_operation(ctx, op.name);
       }
@@ -111,7 +111,7 @@ export const memorystore_handler: GCPResourceHandler = {
 
     try {
       const op = (await ctx.rest_client.delete(
-        `${BASE_URL}/projects/${ctx.project}/locations/${region}/instances/${name}`
+        `${BASE_URL}/projects/${ctx.project}/locations/${region}/instances/${name}`,
       )) as any;
       if (op?.name) await wait_for_operation(ctx, op.name);
 
@@ -132,8 +132,7 @@ async function wait_for_operation(ctx: GCPHandlerContext, op_name: string): Prom
   while (Date.now() - start < 600_000) {
     const op = (await ctx.rest_client.get(`${BASE_URL}/${op_name}`)) as any;
     if (op?.done) {
-      if (op.error)
-        throw new Error(operation_failed(SERVICE_NAMES.MEMORYSTORE, JSON.stringify(op.error)));
+      if (op.error) throw new Error(operation_failed(SERVICE_NAMES.MEMORYSTORE, JSON.stringify(op.error)));
       return;
     }
     await new Promise((r) => setTimeout(r, 5000));

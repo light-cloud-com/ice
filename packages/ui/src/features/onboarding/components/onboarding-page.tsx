@@ -92,9 +92,7 @@ export const OnboardingPage: React.FC = () => {
 
       // Apply template if selected
       const allTemplates = [...QUICK_STARTS, ...COMPOSED_TEMPLATES];
-      const template = selectedTemplateId
-        ? allTemplates.find((t) => t.id === selectedTemplateId)
-        : null;
+      const template = selectedTemplateId ? allTemplates.find((t) => t.id === selectedTemplateId) : null;
 
       if (template) {
         const cardRes = await axiosInstance.post('/canvas/cards/create', {
@@ -151,11 +149,13 @@ export const OnboardingPage: React.FC = () => {
 
     if (currentStep === 3) {
       // Save provider/region chosen on the Cloud step
-      await dispatch(saveOnboardingStep({
-        step: 4,
-        defaultProvider: provider || undefined,
-        defaultRegion: region || undefined,
-      }));
+      await dispatch(
+        saveOnboardingStep({
+          step: 4,
+          defaultProvider: provider || undefined,
+          defaultRegion: region || undefined,
+        }),
+      );
     }
 
     if (currentStep === 4) {
@@ -198,13 +198,7 @@ export const OnboardingPage: React.FC = () => {
 
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-6 py-4">
-        <img
-          src={isDark ? logoDark : logoLight}
-          alt="ICE"
-          width={60}
-          height={18}
-          className="h-[18px] object-contain"
-        />
+        <img src={isDark ? logoDark : logoLight} alt="ICE" width={60} height={18} className="h-[18px] object-contain" />
         <button
           onClick={handleSkipAll}
           className="flex items-center gap-1 text-xs text-ice-text-3 hover:text-ice-text-1 transition-colors"

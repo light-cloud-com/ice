@@ -7,16 +7,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getApi } from '../../../shared/api/api-adapter';
-import {
-  FolderOpen,
-  FolderPlus,
-  FileText,
-  ChevronRight,
-  Search,
-  X,
-  RefreshCw,
-  PlayCircle,
-} from 'lucide-react';
+import { FolderOpen, FolderPlus, FileText, ChevronRight, Search, X, RefreshCw, PlayCircle } from 'lucide-react';
 import { cn } from '../../../shared/utils/cn';
 import {
   setRootDirectory,
@@ -34,12 +25,7 @@ import {
   type ProjectFile,
   type ProjectFolder,
 } from '../../../store/slices/project-list-slice';
-import {
-  createCard,
-  importToActiveCard,
-  type CardNode,
-  type CardEdge,
-} from '../../../store/slices/cards-slice';
+import { createCard, importToActiveCard, type CardNode, type CardEdge } from '../../../store/slices/cards-slice';
 import { openTabInPane } from '../../../store/slices/ui-slice';
 import type { RootState } from '../../../store';
 
@@ -76,7 +62,7 @@ const ProjectTreeItem: React.FC<ProjectTreeItemProps> = ({
     <div
       className={cn(
         'group relative flex items-center gap-2 py-1.5 px-2 rounded-md cursor-pointer',
-        'hover:bg-ice-hover transition-colors duration-150'
+        'hover:bg-ice-hover transition-colors duration-150',
       )}
       style={{ paddingLeft: `${depth * 16 + 8}px` }}
       onClick={(e) => {
@@ -98,30 +84,20 @@ const ProjectTreeItem: React.FC<ProjectTreeItemProps> = ({
       {/* Expand arrow for folders */}
       {type === 'folder' && (
         <ChevronRight
-          className={cn(
-            'w-3.5 h-3.5 text-ice-text-3 transition-transform duration-150',
-            expanded && 'rotate-90'
-          )}
+          className={cn('w-3.5 h-3.5 text-ice-text-3 transition-transform duration-150', expanded && 'rotate-90')}
         />
       )}
       {type === 'file' && <div className="w-3.5" />}
 
       {/* Icon */}
-      <Icon
-        className={cn(
-          'w-4 h-4 flex-shrink-0',
-          type === 'folder' ? 'text-amber-400/80' : 'text-ice-text-2'
-        )}
-      />
+      <Icon className={cn('w-4 h-4 flex-shrink-0', type === 'folder' ? 'text-amber-400/80' : 'text-ice-text-2')} />
 
       {/* Name */}
       <span className="flex-1 text-ice-base text-ice-text-1 truncate">{name}</span>
 
       {/* File count badge for folders */}
       {type === 'folder' && fileCount !== undefined && fileCount > 0 && (
-        <span className="text-ice-xs px-1.5 py-0.5 rounded bg-ice-active text-ice-text-2">
-          {fileCount}
-        </span>
+        <span className="text-ice-xs px-1.5 py-0.5 rounded bg-ice-active text-ice-text-2">{fileCount}</span>
       )}
     </div>
   );
@@ -355,9 +331,7 @@ export const ProjectList: React.FC = () => {
       {/* Header */}
       <div className="px-4 py-3 border-b border-ice-border">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-ice-sm font-medium text-ice-text-2 uppercase tracking-wider">
-            Projects
-          </span>
+          <span className="text-ice-sm font-medium text-ice-text-2 uppercase tracking-wider">Projects</span>
           <div className="flex items-center gap-1">
             {/* Open All button - only show when files exist */}
             {files.length > 0 && (
@@ -375,22 +349,15 @@ export const ProjectList: React.FC = () => {
               title="Add Folder"
               disabled={!rootDirectory}
             >
-              <FolderPlus
-                className={cn('w-4 h-4', rootDirectory ? 'text-ice-text-2' : 'text-ice-text-3')}
-              />
+              <FolderPlus className={cn('w-4 h-4', rootDirectory ? 'text-ice-text-2' : 'text-ice-text-3')} />
             </button>
             <button
               onClick={handleRefresh}
-              className={cn(
-                'p-1.5 rounded hover:bg-ice-active transition-colors',
-                isLoading && 'animate-spin'
-              )}
+              className={cn('p-1.5 rounded hover:bg-ice-active transition-colors', isLoading && 'animate-spin')}
               title="Refresh"
               disabled={!rootDirectory}
             >
-              <RefreshCw
-                className={cn('w-4 h-4', rootDirectory ? 'text-ice-text-2' : 'text-ice-text-3')}
-              />
+              <RefreshCw className={cn('w-4 h-4', rootDirectory ? 'text-ice-text-2' : 'text-ice-text-3')} />
             </button>
             <button
               onClick={handleSelectDirectory}
@@ -403,16 +370,11 @@ export const ProjectList: React.FC = () => {
         </div>
 
         {/* Search */}
-        <div
-          className={cn(
-            'relative transition-all duration-200',
-            isSearchFocused && 'transform scale-[1.01]'
-          )}
-        >
+        <div className={cn('relative transition-all duration-200', isSearchFocused && 'transform scale-[1.01]')}>
           <Search
             className={cn(
               'absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 transition-colors duration-200',
-              isSearchFocused ? 'text-ice-text-2' : 'text-ice-text-3'
+              isSearchFocused ? 'text-ice-text-2' : 'text-ice-text-3',
             )}
           />
           <input
@@ -428,7 +390,7 @@ export const ProjectList: React.FC = () => {
               'bg-ice-hover border border-ice-border',
               'text-ice-text-1 placeholder:text-ice-text-3',
               'focus:outline-none focus:bg-ice-active focus:border-ice-border-strong',
-              'transition-all duration-200'
+              'transition-all duration-200',
             )}
           />
           {searchQuery && (
@@ -451,9 +413,7 @@ export const ProjectList: React.FC = () => {
         ) : !rootDirectory ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-4">
             <FolderOpen className="w-12 h-12 text-ice-text-3 mb-3" />
-            <p className="text-ice-base text-ice-text-2 mb-4">
-              Select a directory to browse your projects
-            </p>
+            <p className="text-ice-base text-ice-text-2 mb-4">Select a directory to browse your projects</p>
             <div className="flex flex-col gap-2">
               <button
                 onClick={handleLoadExamples}
@@ -472,10 +432,7 @@ export const ProjectList: React.FC = () => {
         ) : (
           <>
             {/* Show current directory path */}
-            <div
-              className="px-2 py-1.5 mb-2 text-ice-xs text-ice-text-3 truncate"
-              title={rootDirectory}
-            >
+            <div className="px-2 py-1.5 mb-2 text-ice-xs text-ice-text-3 truncate" title={rootDirectory}>
               {rootDirectory}
             </div>
 
@@ -497,9 +454,7 @@ export const ProjectList: React.FC = () => {
             {/* Show message if no files or folders found */}
             {rootFolders.length === 0 && rootFiles.length === 0 && (
               <div className="px-2 py-4 text-center">
-                <p className="text-ice-sm text-ice-text-3">
-                  No .ice or .json files found in this directory
-                </p>
+                <p className="text-ice-sm text-ice-text-3">No .ice or .json files found in this directory</p>
               </div>
             )}
           </>

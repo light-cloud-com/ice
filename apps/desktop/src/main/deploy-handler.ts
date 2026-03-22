@@ -120,9 +120,7 @@ async function getStateStore(): Promise<SqliteStateStore | null> {
 /**
  * Load prior state for diffing. Returns empty map if state store is unavailable.
  */
-async function loadPriorState(
-  cardId: string
-): Promise<Map<string, import('@ice/core').StoredResourceEntry>> {
+async function loadPriorState(cardId: string): Promise<Map<string, import('@ice/core').StoredResourceEntry>> {
   const store = await getStateStore();
   if (!store) return new Map();
 
@@ -140,9 +138,7 @@ async function loadPriorState(
  * Returns the authenticated client on success (for passing to GCPDeployer),
  * or an error with `needsAuth: true` when credentials are missing/expired.
  */
-async function checkGcpAuth(): Promise<
-  { ok: true; client: any } | { ok: false; needsAuth: boolean; error: string }
-> {
+async function checkGcpAuth(): Promise<{ ok: true; client: any } | { ok: false; needsAuth: boolean; error: string }> {
   try {
     const googleAuth = await Function('m', 'return import(m)')('google-auth-library');
     if (!googleAuth?.GoogleAuth) {
@@ -166,9 +162,7 @@ async function checkGcpAuth(): Promise<
     return {
       ok: false,
       needsAuth: isAuthIssue,
-      error: isAuthIssue
-        ? AUTH_MESSAGES.CREDENTIALS_NOT_FOUND_OR_EXPIRED
-        : AUTH_MESSAGES.AUTH_ERROR(msg),
+      error: isAuthIssue ? AUTH_MESSAGES.CREDENTIALS_NOT_FOUND_OR_EXPIRED : AUTH_MESSAGES.AUTH_ERROR(msg),
     };
   }
 }
@@ -256,9 +250,7 @@ function translateCard(nodes: any[], edges: any[], options: DeployRequestOptions
 
 // ─── Helper: extract nodes array from Graph (ReadonlyMap) ───────────────────
 
-function graphNodesToArray(graph: {
-  nodes: ReadonlyMap<string, any>;
-}): Array<{
+function graphNodesToArray(graph: { nodes: ReadonlyMap<string, any> }): Array<{
   id: string;
   type: string;
   name: string;
@@ -306,13 +298,7 @@ export function registerDeployHandlers() {
   // ── deploy:plan ─────────────────────────────────────────────────────
   ipcMain.handle(
     'deploy:plan',
-    async (
-      _event,
-      cardId: string,
-      nodes: any[],
-      edges: any[],
-      options: DeployRequestOptions
-    ): Promise<PlanResult> => {
+    async (_event, cardId: string, nodes: any[], edges: any[], options: DeployRequestOptions): Promise<PlanResult> => {
       try {
         // Pre-flight auth check
         sendProgress({ type: 'log', message: DEPLOY_PROGRESS.CHECKING_CREDENTIALS });
@@ -411,19 +397,13 @@ export function registerDeployHandlers() {
         console.error('Deploy plan error:', err);
         return { success: false, error: err.message || String(err) };
       }
-    }
+    },
   );
 
   // ── deploy:apply ────────────────────────────────────────────────────
   ipcMain.handle(
     'deploy:apply',
-    async (
-      _event,
-      cardId: string,
-      nodes: any[],
-      edges: any[],
-      options: DeployRequestOptions
-    ): Promise<ApplyResult> => {
+    async (_event, cardId: string, nodes: any[], edges: any[], options: DeployRequestOptions): Promise<ApplyResult> => {
       const start = Date.now();
 
       try {
@@ -476,7 +456,7 @@ export function registerDeployHandlers() {
           message: DEPLOY_PROGRESS.DEPLOYING_RESOURCES(
             translation.deployable_count,
             options.gcpProject,
-            priorState.size > 0 ? priorState.size : undefined
+            priorState.size > 0 ? priorState.size : undefined,
           ),
         });
 
@@ -543,7 +523,7 @@ export function registerDeployHandlers() {
                 prior.provider_id,
                 node.properties,
                 prior.properties ?? {},
-                { region: options.region }
+                { region: options.region },
               );
             } else {
               result = await deployer.create(node.type, node.name, node.properties, {
@@ -610,12 +590,12 @@ export function registerDeployHandlers() {
                     ? DEPLOY_PROGRESS.UPDATED_RESOURCE(
                         node.name,
                         node.type,
-                        ((result.duration_ms || 0) / 1000).toFixed(1)
+                        ((result.duration_ms || 0) / 1000).toFixed(1),
                       )
                     : DEPLOY_PROGRESS.CREATED_RESOURCE(
                         node.name,
                         node.type,
-                        ((result.duration_ms || 0) / 1000).toFixed(1)
+                        ((result.duration_ms || 0) / 1000).toFixed(1),
                       ),
               });
 
@@ -641,7 +621,7 @@ export function registerDeployHandlers() {
                         duration_ms: result.duration_ms ?? 0,
                       },
                     ],
-                    cardId
+                    cardId,
                   );
                 } catch (stateErr: any) {
                   console.error(`Failed to persist state for ${node.name}:`, stateErr);
@@ -650,33 +630,21 @@ export function registerDeployHandlers() {
             } else {
               // Detect API-not-enabled errors and set api_enable_url on the result
               const lastResult = results[results.length - 1];
-              if (
-                lastResult &&
-                !lastResult.api_enable_url &&
-                result.error &&
-                isApiNotEnabledError(result.error)
-              ) {
+              if (lastResult && !lastResult.api_enable_url && result.error && isApiNotEnabledError(result.error)) {
                 const directUrl = extractApiEnableUrl(result.error);
                 if (directUrl) {
                   lastResult.api_enable_url = directUrl;
                 } else {
                   const apiName = extractApiName(result.error);
                   if (apiName) {
-                    lastResult.api_enable_url = buildApiEnableUrl(
-                      apiName,
-                      options.gcpProject || ''
-                    );
+                    lastResult.api_enable_url = buildApiEnableUrl(apiName, options.gcpProject || '');
                   }
                 }
               }
 
               sendProgress({
                 type: 'log',
-                message: DEPLOY_PROGRESS.FAILED_TO_ACTION(
-                  action,
-                  node.name,
-                  result.error || 'Unknown error'
-                ),
+                message: DEPLOY_PROGRESS.FAILED_TO_ACTION(action, node.name, result.error || 'Unknown error'),
               });
             }
           } catch (err: any) {
@@ -732,7 +700,7 @@ export function registerDeployHandlers() {
                   message: DEPLOY_PROGRESS.DELETED_RESOURCE(
                     name,
                     entry.ice_type,
-                    ((result.duration_ms || 0) / 1000).toFixed(1)
+                    ((result.duration_ms || 0) / 1000).toFixed(1),
                   ),
                 });
               } else {
@@ -782,10 +750,7 @@ export function registerDeployHandlers() {
           type: 'progress',
           progress: 100,
           resource: '',
-          message: DEPLOY_PROGRESS.DEPLOYMENT_COMPLETED(
-            allSuccess,
-            (duration_ms / 1000).toFixed(1)
-          ),
+          message: DEPLOY_PROGRESS.DEPLOYMENT_COMPLETED(allSuccess, (duration_ms / 1000).toFixed(1)),
         });
 
         return {
@@ -802,57 +767,54 @@ export function registerDeployHandlers() {
           duration_ms: Date.now() - start,
         };
       }
-    }
+    },
   );
 
   // ── deploy:destroy ──────────────────────────────────────────────────
-  ipcMain.handle(
-    'deploy:destroy',
-    async (_event, cardId: string, options: DeployRequestOptions) => {
-      try {
-        sendProgress({ type: 'log', message: `Starting destroy for card ${cardId}...` });
+  ipcMain.handle('deploy:destroy', async (_event, cardId: string, options: DeployRequestOptions) => {
+    try {
+      sendProgress({ type: 'log', message: `Starting destroy for card ${cardId}...` });
 
-        const store = await getStateStore();
-        if (!store) {
-          return { success: false, error: 'State store not available' };
-        }
-
-        // Get previously deployed resources
-        const resourcesResult = await store.get_resources(cardId);
-        if (!resourcesResult.ok || resourcesResult.value.length === 0) {
-          return { success: false, error: 'No deployed resources found to destroy' };
-        }
-
-        // Delete each resource using the deployer
-        const { GCPDeployer } = await import('@ice/core');
-        const deployer = new GCPDeployer();
-        let deleted = 0;
-
-        for (const resource of resourcesResult.value) {
-          try {
-            sendProgress({ type: 'progress', resource: resource.name, action: 'delete', status: 'started' });
-            await deployer.delete(resource.type, resource.name, resource.provider_id, {
-              provider: options.provider || 'gcp',
-              project: options.gcpProject,
-            });
-            deleted++;
-            sendProgress({ type: 'progress', resource: resource.name, action: 'delete', status: 'completed' });
-          } catch (err: any) {
-            sendProgress({ type: 'log', message: `Failed to delete ${resource.name}: ${err.message}` });
-          }
-        }
-
-        // Clear stored resources
-        await store.clear_resources(cardId);
-
-        sendProgress({ type: 'complete', success: true });
-        return { success: true, deleted };
-      } catch (err: any) {
-        sendProgress({ type: 'complete', success: false, error: err.message });
-        return { success: false, error: err.message || String(err) };
+      const store = await getStateStore();
+      if (!store) {
+        return { success: false, error: 'State store not available' };
       }
+
+      // Get previously deployed resources
+      const resourcesResult = await store.get_resources(cardId);
+      if (!resourcesResult.ok || resourcesResult.value.length === 0) {
+        return { success: false, error: 'No deployed resources found to destroy' };
+      }
+
+      // Delete each resource using the deployer
+      const { GCPDeployer } = await import('@ice/core');
+      const deployer = new GCPDeployer();
+      let deleted = 0;
+
+      for (const resource of resourcesResult.value) {
+        try {
+          sendProgress({ type: 'progress', resource: resource.name, action: 'delete', status: 'started' });
+          await deployer.delete(resource.type, resource.name, resource.provider_id, {
+            provider: options.provider || 'gcp',
+            project: options.gcpProject,
+          });
+          deleted++;
+          sendProgress({ type: 'progress', resource: resource.name, action: 'delete', status: 'completed' });
+        } catch (err: any) {
+          sendProgress({ type: 'log', message: `Failed to delete ${resource.name}: ${err.message}` });
+        }
+      }
+
+      // Clear stored resources
+      await store.clear_resources(cardId);
+
+      sendProgress({ type: 'complete', success: true });
+      return { success: true, deleted };
+    } catch (err: any) {
+      sendProgress({ type: 'complete', success: false, error: err.message });
+      return { success: false, error: err.message || String(err) };
     }
-  );
+  });
 
   // ── deploy:getStatus ────────────────────────────────────────────────
   ipcMain.handle('deploy:getStatus', async (_event, deploymentId: string) => {

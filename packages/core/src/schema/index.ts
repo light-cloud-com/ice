@@ -74,8 +74,4 @@ export type {
   ValidationWarning as CustomizationWarning,
 } from './customization-loader.js';
 
-export {
-  CustomizationLoader,
-  create_customization_loader,
-  get_base_db_path,
-} from './customization-loader.js';
+export { CustomizationLoader, create_customization_loader, get_base_db_path } from './customization-loader.js';

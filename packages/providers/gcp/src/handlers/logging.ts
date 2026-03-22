@@ -14,7 +14,7 @@ function result(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  overrides: Partial<ResourceDeployResult> = {}
+  overrides: Partial<ResourceDeployResult> = {},
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -31,7 +31,7 @@ function fail(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  error: string
+  error: string,
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -50,13 +50,11 @@ export const logging_handler: GCPResourceHandler = {
 
     try {
       const logging = ctx.clients.get('logging') as any;
-      if (!logging)
-        return fail(name, 'create', start, sdk_not_available(SERVICE_NAMES.LOGGING, 'logging'));
+      if (!logging) return fail(name, 'create', start, sdk_not_available(SERVICE_NAMES.LOGGING, 'logging'));
 
       const sink = logging.sink(name);
       await sink.create({
-        destination:
-          properties.destination || `logging.googleapis.com/projects/${ctx.project}/logs/${name}`,
+        destination: properties.destination || `logging.googleapis.com/projects/${ctx.project}/logs/${name}`,
         filter: properties.filter || '',
       });
 
@@ -73,8 +71,7 @@ export const logging_handler: GCPResourceHandler = {
 
     try {
       const logging = ctx.clients.get('logging') as any;
-      if (!logging)
-        return fail(name, 'update', start, sdk_not_available_short(SERVICE_NAMES.LOGGING));
+      if (!logging) return fail(name, 'update', start, sdk_not_available_short(SERVICE_NAMES.LOGGING));
 
       const sink = logging.sink(name);
       const metadata: any = {};
@@ -96,8 +93,7 @@ export const logging_handler: GCPResourceHandler = {
 
     try {
       const logging = ctx.clients.get('logging') as any;
-      if (!logging)
-        return fail(name, 'delete', start, sdk_not_available_short(SERVICE_NAMES.LOGGING));
+      if (!logging) return fail(name, 'delete', start, sdk_not_available_short(SERVICE_NAMES.LOGGING));
 
       const sink = logging.sink(name);
       await sink.delete();

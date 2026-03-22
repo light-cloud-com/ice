@@ -26,9 +26,14 @@ describe('Card Translator Type Maps', () => {
     it('should map all standard GCP iceTypes', async () => {
       const mod = await import('../deploy/card-translator.js');
       const gcpTypes = [
-        'Application.StaticSite', 'Application.Container', 'Application.ServerlessFunction',
-        'Database.PostgreSQL', 'Storage.Bucket', 'Messaging.CloudPubSub',
-        'Security.Secret', 'AI.VectorDB',
+        'Application.StaticSite',
+        'Application.Container',
+        'Application.ServerlessFunction',
+        'Database.PostgreSQL',
+        'Storage.Bucket',
+        'Messaging.CloudPubSub',
+        'Security.Secret',
+        'AI.VectorDB',
       ];
 
       for (const iceType of gcpTypes) {
@@ -47,8 +52,11 @@ describe('Card Translator Type Maps', () => {
     it('should map AWS iceTypes (ENGINE-1)', async () => {
       const mod = await import('../deploy/card-translator.js');
       const awsTypes = [
-        'Application.Container', 'Application.ServerlessFunction',
-        'Database.PostgreSQL', 'Storage.Bucket', 'Messaging.Queue',
+        'Application.Container',
+        'Application.ServerlessFunction',
+        'Database.PostgreSQL',
+        'Storage.Bucket',
+        'Messaging.Queue',
       ];
 
       for (const iceType of awsTypes) {

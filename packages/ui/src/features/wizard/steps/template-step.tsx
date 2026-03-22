@@ -79,9 +79,7 @@ export const TemplateStep: React.FC<TemplateStepProps> = ({
     <div className="space-y-3">
       <div>
         <h3 className="text-sm font-semibold text-ice-text-1 mb-1">Choose a Template</h3>
-        <p className="text-xs text-ice-text-2 mb-3">
-          Start from a pre-built template or a blank canvas
-        </p>
+        <p className="text-xs text-ice-text-2 mb-3">Start from a pre-built template or a blank canvas</p>
       </div>
 
       {/* Category tabs */}
@@ -92,7 +90,7 @@ export const TemplateStep: React.FC<TemplateStepProps> = ({
             'shrink-0 px-2.5 py-1 rounded-full text-ice-xs font-medium transition-all',
             activeCategory === 'all'
               ? 'bg-ice-accent-muted text-ice-accent ring-1 ring-ice-accent/40'
-              : 'bg-ice-surface text-ice-text-2 hover:text-ice-text-1 hover:bg-ice-hover'
+              : 'bg-ice-surface text-ice-text-2 hover:text-ice-text-1 hover:bg-ice-hover',
           )}
         >
           All
@@ -107,7 +105,7 @@ export const TemplateStep: React.FC<TemplateStepProps> = ({
                 'shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-ice-xs font-medium transition-all',
                 activeCategory === cat.id
                   ? 'ring-1 ring-opacity-40'
-                  : 'bg-ice-surface text-ice-text-2 hover:text-ice-text-1 hover:bg-ice-hover'
+                  : 'bg-ice-surface text-ice-text-2 hover:text-ice-text-1 hover:bg-ice-hover',
               )}
               style={
                 activeCategory === cat.id
@@ -147,7 +145,7 @@ export const TemplateStep: React.FC<TemplateStepProps> = ({
             'flex flex-col items-start gap-2 rounded-lg border p-3 text-left transition-all',
             selectedTemplateId === null
               ? 'border-ice-accent bg-ice-accent-muted'
-              : 'border-ice-border bg-ice-surface hover:border-ice-border-strong'
+              : 'border-ice-border bg-ice-surface hover:border-ice-border-strong',
           )}
         >
           <div className="flex items-center gap-2">
@@ -180,7 +178,7 @@ export const TemplateStep: React.FC<TemplateStepProps> = ({
                 noneSupported && 'opacity-50',
                 isSelected
                   ? 'border-ice-accent bg-ice-accent-muted'
-                  : 'border-ice-border bg-ice-surface hover:border-ice-border-strong'
+                  : 'border-ice-border bg-ice-surface hover:border-ice-border-strong',
               )}
             >
               <div className="flex items-center gap-2 w-full">
@@ -188,15 +186,11 @@ export const TemplateStep: React.FC<TemplateStepProps> = ({
                   <Icon className="h-3.5 w-3.5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <span className="text-xs font-semibold text-ice-text-1 block truncate">
-                    {template.name}
-                  </span>
+                  <span className="text-xs font-semibold text-ice-text-1 block truncate">{template.name}</span>
                   <span className="text-ice-xs text-ice-text-2">{template.estimatedCost}</span>
                 </div>
               </div>
-              <p className="text-ice-xs text-ice-text-2 leading-snug line-clamp-2">
-                {template.description}
-              </p>
+              <p className="text-ice-xs text-ice-text-2 leading-snug line-clamp-2">{template.description}</p>
               <div className="flex items-center gap-1 flex-wrap">
                 {catMeta && (
                   <span

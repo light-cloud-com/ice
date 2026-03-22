@@ -43,10 +43,7 @@ interface AuthenticatedRequest extends Request {
  *       401:
  *         description: Unauthorized
  */
-export const getInvoice = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
+export const getInvoice = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { invoiceId } = req.params;
 
@@ -74,11 +71,7 @@ export const getInvoice = async (
     // User can access if: they own the invoice, have permission, or are super admin
     const isInvoiceOwner = invoice.user_id === req.user.id;
 
-    if (
-      !isInvoiceOwner &&
-      !hasPermission.hasPermission &&
-      !hasPermission.isSuper
-    ) {
+    if (!isInvoiceOwner && !hasPermission.hasPermission && !hasPermission.isSuper) {
       const membership = await prisma.organisationUsers.findFirst({
         where: {
           user_id: req.user.id,

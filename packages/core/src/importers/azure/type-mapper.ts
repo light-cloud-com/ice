@@ -135,10 +135,7 @@ export function get_supported_types(): string[] {
 /**
  * Map Azure properties to ICE properties (snake_case).
  */
-export function map_properties(
-  azure_type: string,
-  properties: Record<string, unknown>
-): Record<string, unknown> {
+export function map_properties(azure_type: string, properties: Record<string, unknown>): Record<string, unknown> {
   const result: Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(properties)) {

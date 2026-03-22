@@ -41,12 +41,7 @@ export abstract class BaseGCPService {
   /**
    * Create a standardized GCP resource from API response.
    */
-  protected create_resource(
-    data: Record<string, unknown>,
-    kind: string,
-    zone?: string,
-    region?: string
-  ): GCPResource {
+  protected create_resource(data: Record<string, unknown>, kind: string, zone?: string, region?: string): GCPResource {
     return {
       self_link: (data.selfLink as string) || '',
       name: (data.name as string) || '',

@@ -7,14 +7,9 @@
 
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import {
-  Globe, Rocket, Server, Activity, FileBox,
-} from 'lucide-react';
+import { Globe, Rocket, Server, Activity, FileBox } from 'lucide-react';
 import { cn } from '../../../shared/utils/cn';
-import {
-  setProjectName,
-  setSelectedTemplateId,
-} from '../../../store/slices/onboarding-slice';
+import { setProjectName, setSelectedTemplateId } from '../../../store/slices/onboarding-slice';
 import { QUICK_STARTS } from '../../../config/templates/quick-starts';
 import { COMPOSED_TEMPLATES } from '../../../config/templates';
 import type { RootState, AppDispatch } from '../../../store';
@@ -59,9 +54,7 @@ export const FirstProjectStep: React.FC = () => {
     <div className="space-y-5">
       <div className="text-center">
         <h2 className="text-xl font-semibold text-ice-text-1">What are you building?</h2>
-        <p className="text-sm text-ice-text-2 mt-1">
-          Pick a starting point — you can always change it later
-        </p>
+        <p className="text-sm text-ice-text-2 mt-1">Pick a starting point — you can always change it later</p>
       </div>
 
       {/* Project name */}
@@ -91,15 +84,10 @@ export const FirstProjectStep: React.FC = () => {
                 'flex items-start gap-2.5 p-3 rounded-lg border text-left transition-all',
                 isSelected
                   ? 'border-ice-accent bg-ice-accent/5 ring-1 ring-ice-accent/30'
-                  : 'border-ice-border bg-ice-surface hover:border-ice-text-3'
+                  : 'border-ice-border bg-ice-surface hover:border-ice-text-3',
               )}
             >
-              <Icon
-                className={cn(
-                  'w-4 h-4 shrink-0 mt-0.5',
-                  isSelected ? 'text-ice-accent' : 'text-ice-text-2'
-                )}
-              />
+              <Icon className={cn('w-4 h-4 shrink-0 mt-0.5', isSelected ? 'text-ice-accent' : 'text-ice-text-2')} />
               <div className="min-w-0">
                 <p className="text-sm font-medium text-ice-text-1 truncate">{t.name}</p>
                 <p className="text-xs text-ice-text-2 line-clamp-2">{t.description}</p>
@@ -116,13 +104,13 @@ export const FirstProjectStep: React.FC = () => {
             'flex items-start gap-2.5 p-3 rounded-lg border text-left transition-all col-span-2',
             selectedTemplateId === null
               ? 'border-ice-accent bg-ice-accent/5 ring-1 ring-ice-accent/30'
-              : 'border-ice-border bg-ice-surface hover:border-ice-text-3'
+              : 'border-ice-border bg-ice-surface hover:border-ice-text-3',
           )}
         >
           <FileBox
             className={cn(
               'w-4 h-4 shrink-0 mt-0.5',
-              selectedTemplateId === null ? 'text-ice-accent' : 'text-ice-text-2'
+              selectedTemplateId === null ? 'text-ice-accent' : 'text-ice-text-2',
             )}
           />
           <div>

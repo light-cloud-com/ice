@@ -8,16 +8,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import {
-  Loader2,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Rocket,
-  GitBranch,
-  Server,
-  ChevronDown,
-} from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, Clock, Rocket, GitBranch, Server, ChevronDown } from 'lucide-react';
 import type { RootState, AppDispatch } from '@ui/store';
 import { selectActiveCard } from '@ui/store/slices/cards-slice';
 import {
@@ -61,10 +52,14 @@ export const ProjectDeployments: React.FC<{ projectId: string }> = ({ projectId 
   // ── Infrastructure deploys ──
   useEffect(() => {
     const cardId = activeCard?.id;
-    if (!cardId) { setInfraLoading(false); return; }
+    if (!cardId) {
+      setInfraLoading(false);
+      return;
+    }
 
     setInfraLoading(true);
-    axiosInstance.get(`/canvas/deploy/history/${cardId}`)
+    axiosInstance
+      .get(`/canvas/deploy/history/${cardId}`)
       .then((res) => setInfraDeploys(Array.isArray(res.data) ? res.data : []))
       .catch(() => setInfraDeploys([]))
       .finally(() => setInfraLoading(false));
@@ -73,16 +68,20 @@ export const ProjectDeployments: React.FC<{ projectId: string }> = ({ projectId 
   // ── Service deploys: find all service nodes on the card, fetch their events ──
   const serviceNodes = useMemo(() => {
     if (!activeCard) return [];
-    return (activeCard.nodes || []).filter((n: any) => {
-      const iceType = (n.data?.iceType as string) || '';
-      return n.type === 'resource' &&
-        !iceType.startsWith('Source.') &&
-        !iceType.startsWith('Config.') &&
-        !iceType.startsWith('Networking.');
-    }).map((n: any) => ({
-      id: n.id,
-      label: (n.data?.label as string) || n.id.slice(0, 8),
-    }));
+    return (activeCard.nodes || [])
+      .filter((n: any) => {
+        const iceType = (n.data?.iceType as string) || '';
+        return (
+          n.type === 'resource' &&
+          !iceType.startsWith('Source.') &&
+          !iceType.startsWith('Config.') &&
+          !iceType.startsWith('Networking.')
+        );
+      })
+      .map((n: any) => ({
+        id: n.id,
+        label: (n.data?.label as string) || n.id.slice(0, 8),
+      }));
   }, [activeCard]);
 
   useEffect(() => {
@@ -91,9 +90,7 @@ export const ProjectDeployments: React.FC<{ projectId: string }> = ({ projectId 
       return;
     }
     setServiceLoading(true);
-    const promises = serviceNodes.map((svc) =>
-      dispatch(fetchEventsForNode({ cardId: activeCard.id, nodeId: svc.id }))
-    );
+    const promises = serviceNodes.map((svc) => dispatch(fetchEventsForNode({ cardId: activeCard.id, nodeId: svc.id })));
     Promise.all(promises).finally(() => setServiceLoading(false));
   }, [activeCard?.id, serviceNodes.length]);
 
@@ -172,18 +169,18 @@ const TabButton: React.FC<{
     onClick={onClick}
     className={cn(
       'flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 transition-colors -mb-px',
-      active
-        ? 'border-emerald-500 text-ice-text-1'
-        : 'border-transparent text-ice-text-3 hover:text-ice-text-2',
+      active ? 'border-emerald-500 text-ice-text-1' : 'border-transparent text-ice-text-3 hover:text-ice-text-2',
     )}
   >
     <Icon className="w-3.5 h-3.5" />
     {label}
     {count > 0 && (
-      <span className={cn(
-        'text-xs px-1.5 py-0.5 rounded-full',
-        active ? 'bg-emerald-500/10 text-emerald-500' : 'bg-ice-hover text-ice-text-3',
-      )}>
+      <span
+        className={cn(
+          'text-xs px-1.5 py-0.5 rounded-full',
+          active ? 'bg-emerald-500/10 text-emerald-500' : 'bg-ice-hover text-ice-text-3',
+        )}
+      >
         {count}
       </span>
     )}
@@ -195,12 +192,18 @@ const TabButton: React.FC<{
 const InfraDeploymentList: React.FC<{ deployments: InfraDeployment[] }> = ({ deployments }) => {
   const statusIcon = (status: string) => {
     switch (status) {
-      case 'success': return <CheckCircle className="w-4 h-4 text-emerald-500" />;
-      case 'failed': return <XCircle className="w-4 h-4 text-red-500" />;
-      case 'deploying': return <Rocket className="w-4 h-4 text-blue-500 animate-pulse" />;
-      case 'planning': return <Clock className="w-4 h-4 text-amber-500 animate-pulse" />;
-      case 'cancelled': return <XCircle className="w-4 h-4 text-ice-text-3" />;
-      default: return <Clock className="w-4 h-4 text-amber-500" />;
+      case 'success':
+        return <CheckCircle className="w-4 h-4 text-emerald-500" />;
+      case 'failed':
+        return <XCircle className="w-4 h-4 text-red-500" />;
+      case 'deploying':
+        return <Rocket className="w-4 h-4 text-blue-500 animate-pulse" />;
+      case 'planning':
+        return <Clock className="w-4 h-4 text-amber-500 animate-pulse" />;
+      case 'cancelled':
+        return <XCircle className="w-4 h-4 text-ice-text-3" />;
+      default:
+        return <Clock className="w-4 h-4 text-amber-500" />;
     }
   };
 
@@ -224,12 +227,15 @@ const InfraDeploymentList: React.FC<{ deployments: InfraDeployment[] }> = ({ dep
             <span className="text-xs text-ice-text-3 ml-2">
               {d.provider} · {d.region} · {d.environment}
             </span>
-            {d.error && (
-              <p className="text-xs text-red-400 mt-0.5 truncate">{d.error}</p>
-            )}
+            {d.error && <p className="text-xs text-red-400 mt-0.5 truncate">{d.error}</p>}
           </div>
           <span className="text-xs text-ice-text-3 shrink-0">
-            {new Date(d.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+            {new Date(d.created_at).toLocaleDateString('en-GB', {
+              day: 'numeric',
+              month: 'short',
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
           </span>
           {d.duration_ms != null && d.duration_ms > 0 && (
             <span className="text-xs text-ice-text-3 tabular-nums shrink-0">{(d.duration_ms / 1000).toFixed(1)}s</span>
@@ -259,12 +265,18 @@ const ServiceDeploymentList: React.FC<{
 
   const statusIcon = (status: string) => {
     switch (status) {
-      case 'success': return <CheckCircle className="w-4 h-4 text-emerald-500" />;
-      case 'failed': return <XCircle className="w-4 h-4 text-red-500" />;
-      case 'building': return <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />;
-      case 'deploying': return <Rocket className="w-4 h-4 text-purple-500 animate-pulse" />;
-      case 'cancelled': return <XCircle className="w-4 h-4 text-ice-text-3" />;
-      default: return <Clock className="w-4 h-4 text-amber-500" />;
+      case 'success':
+        return <CheckCircle className="w-4 h-4 text-emerald-500" />;
+      case 'failed':
+        return <XCircle className="w-4 h-4 text-red-500" />;
+      case 'building':
+        return <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />;
+      case 'deploying':
+        return <Rocket className="w-4 h-4 text-purple-500 animate-pulse" />;
+      case 'cancelled':
+        return <XCircle className="w-4 h-4 text-ice-text-3" />;
+      default:
+        return <Clock className="w-4 h-4 text-amber-500" />;
     }
   };
 
@@ -290,48 +302,55 @@ const ServiceDeploymentList: React.FC<{
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="text-xs text-ice-text-3">{ev.rule?.environment || ev.branch}</span>
                   <span className="text-xs text-ice-text-3">{ev.branch}</span>
-                  {ev.commit_author && (
-                    <span className="text-xs text-ice-text-3">by {ev.commit_author}</span>
-                  )}
+                  {ev.commit_author && <span className="text-xs text-ice-text-3">by {ev.commit_author}</span>}
                 </div>
-                {ev.error && !isExpanded && (
-                  <p className="text-xs text-red-400 mt-0.5 truncate">{ev.error}</p>
-                )}
+                {ev.error && !isExpanded && <p className="text-xs text-red-400 mt-0.5 truncate">{ev.error}</p>}
               </div>
               <span className="text-xs text-ice-text-3 shrink-0">
-                {new Date(ev.started_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                {new Date(ev.started_at).toLocaleDateString('en-GB', {
+                  day: 'numeric',
+                  month: 'short',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
               </span>
               {ev.duration_seconds != null && ev.duration_seconds > 0 && (
                 <span className="text-xs text-ice-text-3 tabular-nums shrink-0">
-                  {ev.duration_seconds < 60 ? `${ev.duration_seconds}s` : `${Math.floor(ev.duration_seconds / 60)}m ${ev.duration_seconds % 60}s`}
+                  {ev.duration_seconds < 60
+                    ? `${ev.duration_seconds}s`
+                    : `${Math.floor(ev.duration_seconds / 60)}m ${ev.duration_seconds % 60}s`}
                 </span>
               )}
-              <ChevronDown className={cn(
-                'w-4 h-4 text-ice-text-3 transition-transform shrink-0',
-                isExpanded && 'rotate-180',
-              )} />
+              <ChevronDown
+                className={cn('w-4 h-4 text-ice-text-3 transition-transform shrink-0', isExpanded && 'rotate-180')}
+              />
             </div>
 
             {/* Expanded log viewer */}
             {isExpanded && (
               <div className="border-t border-ice-border bg-slate-950 px-4 py-3 space-y-1 max-h-48 overflow-y-auto">
-                {logs.length > 0 ? logs.map((log, i) => (
-                  <div key={i} className="flex items-center gap-2 text-xs font-mono">
-                    <span className={cn('shrink-0',
-                      log.status === 'completed' ? 'text-emerald-500' :
-                      log.status === 'failed' ? 'text-red-400' :
-                      'text-blue-400',
-                    )}>
-                      {log.status === 'completed' ? '\u2713' : log.status === 'failed' ? '\u2717' : '\u25CF'}
-                    </span>
-                    <span className={log.status === 'failed' ? 'text-red-400' : 'text-slate-300'}>
-                      {log.message}
-                    </span>
-                    {log.duration_ms != null && (
-                      <span className="ml-auto text-slate-500">{(log.duration_ms / 1000).toFixed(1)}s</span>
-                    )}
-                  </div>
-                )) : (
+                {logs.length > 0 ? (
+                  logs.map((log, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs font-mono">
+                      <span
+                        className={cn(
+                          'shrink-0',
+                          log.status === 'completed'
+                            ? 'text-emerald-500'
+                            : log.status === 'failed'
+                              ? 'text-red-400'
+                              : 'text-blue-400',
+                        )}
+                      >
+                        {log.status === 'completed' ? '\u2713' : log.status === 'failed' ? '\u2717' : '\u25CF'}
+                      </span>
+                      <span className={log.status === 'failed' ? 'text-red-400' : 'text-slate-300'}>{log.message}</span>
+                      {log.duration_ms != null && (
+                        <span className="ml-auto text-slate-500">{(log.duration_ms / 1000).toFixed(1)}s</span>
+                      )}
+                    </div>
+                  ))
+                ) : (
                   <div className="text-xs font-mono text-slate-500">No log steps recorded</div>
                 )}
                 {ev.error && (

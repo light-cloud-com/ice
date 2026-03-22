@@ -19,11 +19,7 @@ import {
   selectActiveCard,
   expandBlueprintToCard,
 } from '../../../../store/slices/cards-slice';
-import {
-  setSelectedNodes,
-  setSelectedEdges,
-  clearSelection,
-} from '../../../../store/slices/selection-slice';
+import { setSelectedNodes, setSelectedEdges, clearSelection } from '../../../../store/slices/selection-slice';
 import { getBlueprint, expandBlueprint } from '../../../../config/blocks';
 
 /** Fire a synthetic keyboard event so clipboard/undo hooks pick it up */
@@ -41,9 +37,7 @@ interface MenuItemProps {
 const MenuItem: React.FC<MenuItemProps> = ({ label, shortcut, danger, onClick }) => (
   <button
     className={`w-full flex items-center justify-between px-3 py-1.5 text-left text-xs rounded
-      ${
-        danger ? 'text-red-400 hover:bg-red-950/50' : 'text-ice-text-1 hover:bg-ice-hover'
-      } transition-colors`}
+      ${danger ? 'text-red-400 hover:bg-red-950/50' : 'text-ice-text-1 hover:bg-ice-hover'} transition-colors`}
     onClick={onClick}
   >
     <span>{label}</span>

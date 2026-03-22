@@ -155,7 +155,7 @@ export const ProjectTree: React.FC = () => {
         dispatch(setActiveCard(firstEnv.cardId));
       }
     },
-    [dispatch, panes]
+    [dispatch, panes],
   );
 
   const handleEnvClick = useCallback(
@@ -171,17 +171,14 @@ export const ProjectTree: React.FC = () => {
         dispatch(setActiveCard(env.cardId));
       }
     },
-    [dispatch, panes]
+    [dispatch, panes],
   );
 
-  const handleContextMenu = useCallback(
-    (e: React.MouseEvent, type: 'project' | 'folder', id: string) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setContextMenu({ x: e.clientX, y: e.clientY, type, id });
-    },
-    []
-  );
+  const handleContextMenu = useCallback((e: React.MouseEvent, type: 'project' | 'folder', id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({ x: e.clientX, y: e.clientY, type, id });
+  }, []);
 
   const handleStartRename = useCallback(
     (type: 'project' | 'folder', id: string) => {
@@ -200,7 +197,7 @@ export const ProjectTree: React.FC = () => {
         }
       }
     },
-    [projects, folders]
+    [projects, folders],
   );
 
   const handleFinishRename = useCallback(() => {
@@ -239,7 +236,7 @@ export const ProjectTree: React.FC = () => {
         dispatch(deleteFolder(id));
       }
     },
-    [dispatch, projects]
+    [dispatch, projects],
   );
 
   const handleCreateFolder = useCallback(() => {
@@ -292,7 +289,7 @@ export const ProjectTree: React.FC = () => {
         dispatch(moveFolder({ folderId: item.id, parentFolderId: targetFolderId }));
       }
     },
-    [dispatch]
+    [dispatch],
   );
 
   // ── Renderers ─────────────────────────────────────────────────────────────
@@ -307,9 +304,7 @@ export const ProjectTree: React.FC = () => {
         onClick={(e) => handleEnvClick(e, project, env)}
         className={cn(
           'flex items-center gap-2 px-2 py-1 cursor-pointer rounded-md mx-1 transition-colors',
-          isActiveEnv
-            ? 'bg-blue-500/10 text-ice-text-1'
-            : 'text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-2'
+          isActiveEnv ? 'bg-blue-500/10 text-ice-text-1' : 'text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-2',
         )}
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
       >
@@ -337,9 +332,7 @@ export const ProjectTree: React.FC = () => {
           onContextMenu={(e) => handleContextMenu(e, 'project', project.id)}
           className={cn(
             'group flex items-center gap-1.5 px-2 py-1.5 cursor-pointer rounded-md mx-1 transition-colors',
-            isActive
-              ? 'bg-blue-500/15 text-white'
-              : 'text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-1'
+            isActive ? 'bg-blue-500/15 text-white' : 'text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-1',
           )}
           style={{ paddingLeft: `${depth * 16 + 8}px` }}
         >
@@ -363,9 +356,7 @@ export const ProjectTree: React.FC = () => {
           )}
 
           {/* Project icon */}
-          <Layers
-            className={cn('w-3.5 h-3.5 shrink-0', isActive ? 'text-blue-400' : 'text-ice-text-3')}
-          />
+          <Layers className={cn('w-3.5 h-3.5 shrink-0', isActive ? 'text-blue-400' : 'text-ice-text-3')} />
 
           {/* Name or edit input */}
           {isEditing ? (
@@ -419,12 +410,8 @@ export const ProjectTree: React.FC = () => {
   const renderFolder = (folder: ProjectFolder, depth: number) => {
     const isEditing = editingId === folder.id;
     const isDragTarget = dragOverId === folder.id;
-    const childFolders = folders
-      .filter((f) => f.parentFolderId === folder.id)
-      .sort((a, b) => a.order - b.order);
-    const childProjects = projects
-      .filter((p) => p.folderId === folder.id)
-      .sort((a, b) => a.order - b.order);
+    const childFolders = folders.filter((f) => f.parentFolderId === folder.id).sort((a, b) => a.order - b.order);
+    const childProjects = projects.filter((p) => p.folderId === folder.id).sort((a, b) => a.order - b.order);
     const FolderIcon = folder.expanded ? FolderOpen : Folder;
     const ChevronIcon = folder.expanded ? ChevronDown : ChevronRight;
 
@@ -443,7 +430,7 @@ export const ProjectTree: React.FC = () => {
             'group flex items-center gap-1.5 px-2 py-1.5 cursor-pointer rounded-md mx-1 transition-colors',
             isDragTarget
               ? 'bg-green-500/15 text-green-400'
-              : 'text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-1'
+              : 'text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-1',
           )}
           style={{ paddingLeft: `${depth * 16 + 8}px` }}
         >
@@ -504,9 +491,7 @@ export const ProjectTree: React.FC = () => {
   };
 
   // Top-level items
-  const topFolders = folders
-    .filter((f) => f.parentFolderId === null)
-    .sort((a, b) => a.order - b.order);
+  const topFolders = folders.filter((f) => f.parentFolderId === null).sort((a, b) => a.order - b.order);
   const topProjects = projects.filter((p) => p.folderId === null).sort((a, b) => a.order - b.order);
 
   return (
@@ -517,7 +502,7 @@ export const ProjectTree: React.FC = () => {
           onClick={() => dispatch(openDialog('projectWizard'))}
           className={cn(
             'flex items-center gap-1.5 px-3 py-1.5 text-ice-sm font-medium rounded-md',
-            'bg-blue-500/15 text-blue-400 hover:bg-blue-500/25 transition-colors'
+            'bg-blue-500/15 text-blue-400 hover:bg-blue-500/25 transition-colors',
           )}
         >
           <Plus className="w-3 h-3" />
@@ -527,7 +512,7 @@ export const ProjectTree: React.FC = () => {
           onClick={handleCreateFolder}
           className={cn(
             'flex items-center gap-1.5 px-3 py-1.5 text-ice-sm font-medium rounded-md',
-            'bg-ice-hover text-ice-text-2 hover:bg-ice-active hover:text-ice-text-2 transition-colors'
+            'bg-ice-hover text-ice-text-2 hover:bg-ice-active hover:text-ice-text-2 transition-colors',
           )}
         >
           <FolderPlus className="w-3 h-3" />
@@ -547,10 +532,7 @@ export const ProjectTree: React.FC = () => {
       >
         {/* New folder inline input */}
         {creatingFolder !== null && (
-          <div
-            className="flex items-center gap-1.5 px-2 py-1.5 mx-1"
-            style={{ paddingLeft: '8px' }}
-          >
+          <div className="flex items-center gap-1.5 px-2 py-1.5 mx-1" style={{ paddingLeft: '8px' }}>
             <FolderOpen className="w-3.5 h-3.5 text-amber-400/70 shrink-0" />
             <input
               ref={newFolderRef}

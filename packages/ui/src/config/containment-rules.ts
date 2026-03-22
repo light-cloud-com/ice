@@ -104,12 +104,7 @@ export const CONTAINMENT_RULES: ContainmentRule[] = [
   },
   {
     parent: 'Block.Worker',
-    allowedChildren: [
-      'Application.Container',
-      'Application.Function',
-      'Messaging.Queue',
-      'Messaging.Topic',
-    ],
+    allowedChildren: ['Application.Container', 'Application.Function', 'Messaging.Queue', 'Messaging.Topic'],
     description: 'Worker block contains compute and messaging',
   },
   {
@@ -129,12 +124,7 @@ export const CONTAINMENT_RULES: ContainmentRule[] = [
   },
   {
     parent: 'Block.Gateway',
-    allowedChildren: [
-      'Network.Gateway',
-      'Network.LoadBalancer',
-      'Security.Certificate',
-      'Security.WAF',
-    ],
+    allowedChildren: ['Network.Gateway', 'Network.LoadBalancer', 'Security.Certificate', 'Security.WAF'],
     description: 'Gateway block contains API gateway and security',
   },
   {
@@ -154,12 +144,7 @@ export const CONTAINMENT_RULES: ContainmentRule[] = [
   },
   {
     parent: 'Block.Auth',
-    allowedChildren: [
-      'Security.Identity',
-      'Security.IAMRole',
-      'Security.Policy',
-      'Security.Certificate',
-    ],
+    allowedChildren: ['Security.Identity', 'Security.IAMRole', 'Security.Policy', 'Security.Certificate'],
     description: 'Auth block contains identity and access management resources',
   },
   {
@@ -179,12 +164,7 @@ export const CONTAINMENT_RULES: ContainmentRule[] = [
   },
   {
     parent: 'Block.NoSQLDatabase',
-    allowedChildren: [
-      'Database.MongoDB',
-      'Database.Firestore',
-      'Database.BigTable',
-      'Database.Redis',
-    ],
+    allowedChildren: ['Database.MongoDB', 'Database.Firestore', 'Database.BigTable', 'Database.Redis'],
     description: 'NoSQL database block contains document and key-value stores',
   },
   {
@@ -391,10 +371,7 @@ export function getContainerTypes(): ContainerType[] {
 /**
  * Validate if a node placement is valid based on containment rules
  */
-export function validatePlacement(
-  nodeType: string,
-  parentType: string | null
-): { valid: boolean; reason?: string } {
+export function validatePlacement(nodeType: string, parentType: string | null): { valid: boolean; reason?: string } {
   // If no parent, placement is always valid (top-level)
   if (!parentType) {
     return { valid: true };
@@ -423,11 +400,7 @@ export function validatePlacement(
  */
 export function getContainmentDepth(nodeType: string): number {
   // Groups, blocks, and VPCs are root level
-  if (
-    nodeType.startsWith('Group.') ||
-    nodeType.startsWith('Block.') ||
-    nodeType === 'Network.VPC'
-  ) {
+  if (nodeType.startsWith('Group.') || nodeType.startsWith('Block.') || nodeType === 'Network.VPC') {
     return 0;
   }
 
@@ -438,9 +411,7 @@ export function getContainmentDepth(nodeType: string): number {
 
   // Check if can be direct child of root containers
   const parents = getAllowedParents(nodeType);
-  const hasRootParent = parents.some(
-    (p) => p.startsWith('Group.') || p.startsWith('Block.') || p === 'Network.VPC'
-  );
+  const hasRootParent = parents.some((p) => p.startsWith('Group.') || p.startsWith('Block.') || p === 'Network.VPC');
 
   if (hasRootParent) {
     return 1;

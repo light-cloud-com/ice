@@ -52,11 +52,7 @@ export class DefaultProviderRegistry implements ProviderRegistry {
     // Get factory
     const factory = this.factories.get(config.provider);
     if (!factory) {
-      throw new ProviderError(
-        `Provider not registered: ${config.provider}`,
-        config.provider,
-        'PROVIDER_NOT_FOUND'
-      );
+      throw new ProviderError(`Provider not registered: ${config.provider}`, config.provider, 'PROVIDER_NOT_FOUND');
     }
 
     // Create client
@@ -207,11 +203,7 @@ export class ProviderManager {
   /**
    * Register a provider factory.
    */
-  register_provider(
-    name: ProviderName,
-    factory: ProviderFactory,
-    capabilities?: ProviderCapabilities
-  ): void {
+  register_provider(name: ProviderName, factory: ProviderFactory, capabilities?: ProviderCapabilities): void {
     this.registry.register(name, factory);
     if (capabilities) {
       this.registry.set_capabilities(name, capabilities);
@@ -241,8 +233,8 @@ export class ProviderManager {
           `Failed to get provider: ${err.message}`,
           'INTERNAL_ERROR',
           { provider: config.provider },
-          err
-        )
+          err,
+        ),
       );
     }
   }

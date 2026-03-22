@@ -35,7 +35,7 @@ export async function deploy_changes(
   diff: DiffResult,
   desired: Graph,
   deployer: ProviderDeployer,
-  options: DeployOptions
+  options: DeployOptions,
 ): Promise<DeployResult> {
   const opts = { ...DEFAULT_OPTIONS, ...options };
   const started_at = new Date().toISOString();
@@ -73,12 +73,7 @@ export async function deploy_changes(
       try {
         opts.on_progress?.(change.name, 'create', 'running');
         const node = get_node_by_name(desired, change.name);
-        const result = await deployer.create(
-          change.type,
-          change.name,
-          change.desired_properties || {},
-          { node }
-        );
+        const result = await deployer.create(change.type, change.name, change.desired_properties || {}, { node });
         results.push(result);
         opts.on_progress?.(change.name, 'create', result.success ? 'completed' : 'failed');
 
@@ -113,7 +108,7 @@ export async function deploy_changes(
           change.provider_id || '',
           change.desired_properties || {},
           change.current_properties || {},
-          { node }
+          { node },
         );
         results.push(result);
         opts.on_progress?.(change.name, 'update', result.success ? 'completed' : 'failed');
@@ -142,12 +137,7 @@ export async function deploy_changes(
 
       try {
         opts.on_progress?.(change.name, 'delete', 'running');
-        const result = await deployer.delete(
-          change.type,
-          change.name,
-          change.provider_id || '',
-          {}
-        );
+        const result = await deployer.delete(change.type, change.name, change.provider_id || '', {});
         results.push(result);
         opts.on_progress?.(change.name, 'delete', result.success ? 'completed' : 'failed');
 
@@ -194,7 +184,7 @@ export async function deploy_graph(
   desired: Graph,
   current: Graph,
   deployer: ProviderDeployer,
-  options: DeployOptions
+  options: DeployOptions,
 ): Promise<DeployResult> {
   // Compute diff first
   const diff = diff_graphs(desired, current, options.provider);
@@ -206,26 +196,18 @@ export async function deploy_graph(
 /**
  * Filter changes based on target/exclude patterns.
  */
-function filter_changes(
-  changes: ResourceChange[],
-  options: Partial<DeployOptions>
-): ResourceChange[] {
+function filter_changes(changes: ResourceChange[], options: Partial<DeployOptions>): ResourceChange[] {
   let filtered = changes.filter((c) => c.change_type !== 'no_change');
 
   if (options.target && options.target.length > 0) {
     filtered = filtered.filter((c) =>
-      options.target!.some(
-        (pattern) => matches_pattern(c.name, pattern) || matches_pattern(c.type, pattern)
-      )
+      options.target!.some((pattern) => matches_pattern(c.name, pattern) || matches_pattern(c.type, pattern)),
     );
   }
 
   if (options.exclude && options.exclude.length > 0) {
     filtered = filtered.filter(
-      (c) =>
-        !options.exclude!.some(
-          (pattern) => matches_pattern(c.name, pattern) || matches_pattern(c.type, pattern)
-        )
+      (c) => !options.exclude!.some((pattern) => matches_pattern(c.name, pattern) || matches_pattern(c.type, pattern)),
     );
   }
 
@@ -249,7 +231,7 @@ function matches_pattern(value: string, pattern: string): boolean {
 function order_by_dependencies(
   changes: ResourceChange[],
   graph: Graph,
-  direction: 'forward' | 'reverse'
+  direction: 'forward' | 'reverse',
 ): ResourceChange[] {
   // Build dependency map from graph edges
   const deps = new Map<string, Set<string>>();
@@ -321,10 +303,7 @@ function get_node_by_name(graph: Graph, name: string): Node | undefined {
 /**
  * Create a dry-run result for a change.
  */
-function dry_run_result(
-  change: ResourceChange,
-  action: 'create' | 'update' | 'delete'
-): ResourceDeployResult {
+function dry_run_result(change: ResourceChange, action: 'create' | 'update' | 'delete'): ResourceDeployResult {
   return {
     resource_id: change.id,
     name: change.name,

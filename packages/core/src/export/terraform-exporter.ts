@@ -186,10 +186,7 @@ export class TerraformExporter {
   /**
    * Export an ICE graph to Terraform configuration.
    */
-  async exportGraph(
-    graph: MutableGraph,
-    options: TerraformExportOptions
-  ): Promise<TerraformExportResult> {
+  async exportGraph(graph: MutableGraph, options: TerraformExportOptions): Promise<TerraformExportResult> {
     await this.initialize();
 
     const warnings: string[] = [];
@@ -287,7 +284,7 @@ export class TerraformExporter {
   private async nodeToResource(
     node: Node,
     options: TerraformExportOptions,
-    dependency_map: Map<string, string[]>
+    dependency_map: Map<string, string[]>,
   ): Promise<{
     success: boolean;
     resource?: TerraformResource;
@@ -295,11 +292,7 @@ export class TerraformExporter {
     unmapped?: boolean;
   }> {
     // Look up Terraform type from schema
-    const impl = this.schema_provider.get_implementation(
-      node.type as IceType,
-      'terraform',
-      options.provider
-    );
+    const impl = this.schema_provider.get_implementation(node.type as IceType, 'terraform', options.provider);
 
     if (!impl) {
       // Try fallback mapping
@@ -311,10 +304,7 @@ export class TerraformExporter {
             type: fallback,
             name: this.sanitizeName(node.name),
             properties: this.mapProperties(node.properties || {}, fallback),
-            depends_on: this.formatDependencies(
-              dependency_map.get(node.id) || [],
-              options.provider
-            ),
+            depends_on: this.formatDependencies(dependency_map.get(node.id) || [], options.provider),
           },
         };
       }
@@ -374,10 +364,7 @@ export class TerraformExporter {
   /**
    * Map ICE properties to Terraform properties.
    */
-  private mapProperties(
-    properties: Record<string, unknown>,
-    terraform_type: string
-  ): Record<string, unknown> {
+  private mapProperties(properties: Record<string, unknown>, terraform_type: string): Record<string, unknown> {
     const result: Record<string, unknown> = {};
 
     for (const [key, value] of Object.entries(properties)) {
@@ -566,8 +553,6 @@ export class TerraformExporter {
 /**
  * Create a Terraform exporter.
  */
-export function create_terraform_exporter(
-  schema_provider?: EmbeddedSchemaProvider
-): TerraformExporter {
+export function create_terraform_exporter(schema_provider?: EmbeddedSchemaProvider): TerraformExporter {
   return new TerraformExporter(schema_provider);
 }

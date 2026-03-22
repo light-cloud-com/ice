@@ -40,15 +40,16 @@ export async function querySchemas(query: { category?: string; search?: string; 
   }
   if (query.provider) {
     resources = resources.filter((r: any) =>
-      r.providers?.some?.((p: any) => (typeof p === 'string' ? p : p.id) === query.provider)
+      r.providers?.some?.((p: any) => (typeof p === 'string' ? p : p.id) === query.provider),
     );
   }
   if (query.search) {
     const q = query.search.toLowerCase();
-    resources = resources.filter((r: any) =>
-      r.name.toLowerCase().includes(q) ||
-      r.description?.toLowerCase().includes(q) ||
-      r.keywords?.some?.((k: string) => k.toLowerCase().includes(q))
+    resources = resources.filter(
+      (r: any) =>
+        r.name.toLowerCase().includes(q) ||
+        r.description?.toLowerCase().includes(q) ||
+        r.keywords?.some?.((k: string) => k.toLowerCase().includes(q)),
     );
   }
 

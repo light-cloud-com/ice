@@ -111,10 +111,7 @@ export class AssetInventoryService extends BaseGCPService {
     try {
       const module_name = '@google-cloud/asset';
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const asset_module: any = await Function(
-        'moduleName',
-        'return import(moduleName)'
-      )(module_name);
+      const asset_module: any = await Function('moduleName', 'return import(moduleName)')(module_name);
       const AssetServiceClient = asset_module.AssetServiceClient;
 
       const options: Record<string, unknown> = {
@@ -145,7 +142,7 @@ export class AssetInventoryService extends BaseGCPService {
       this.asset_client = new AssetServiceClient(options);
     } catch (error) {
       throw new Error(
-        `Failed to initialize GCP Asset client. Make sure @google-cloud/asset is installed: ${error instanceof Error ? error.message : String(error)}`
+        `Failed to initialize GCP Asset client. Make sure @google-cloud/asset is installed: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -159,9 +156,7 @@ export class AssetInventoryService extends BaseGCPService {
       return {
         service: this.service_type,
         resources: [],
-        errors: [
-          this.create_error('INIT_ERROR', error instanceof Error ? error.message : String(error)),
-        ],
+        errors: [this.create_error('INIT_ERROR', error instanceof Error ? error.message : String(error))],
         warnings: [],
       };
     }
@@ -228,9 +223,7 @@ export class AssetInventoryService extends BaseGCPService {
         const resourceId = `res-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
         const resourceName = resource_data.name || this.extract_name(asset.name || '');
 
-        console.log(
-          `[${debugId}] FOUND: [${resourceId}] type=${asset_type} kind=${kind} name=${resourceName}`
-        );
+        console.log(`[${debugId}] FOUND: [${resourceId}] type=${asset_type} kind=${kind} name=${resourceName}`);
 
         resources.push({
           self_link: resource_data.selfLink || asset.resource.resourceUrl || asset.name || '',
@@ -241,9 +234,7 @@ export class AssetInventoryService extends BaseGCPService {
           region,
           project: this.project,
           properties: clean_properties,
-          labels: (clean_properties.labels || resource_data.labels) as
-            | Record<string, string>
-            | undefined,
+          labels: (clean_properties.labels || resource_data.labels) as Record<string, string> | undefined,
           creation_timestamp: (clean_properties.creation_timestamp ||
             resource_data.creationTimestamp ||
             resource_data.createTime) as string | undefined,

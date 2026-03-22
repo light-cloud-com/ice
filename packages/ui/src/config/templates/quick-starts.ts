@@ -19,9 +19,7 @@ export const quickStartWebsiteDb: ComposedTemplate = {
   provider: 'gcp',
   tags: ['Next.js', 'PostgreSQL'],
   securityLevel: 'basic',
-  environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-east-1', securityLevel: 'basic' },
-  ],
+  environmentPresets: [{ type: 'production', name: 'Production', region: 'us-east-1', securityLevel: 'basic' }],
   blocks: [
     { blockType: 'public-traffic', label: 'Public Traffic', position: { x: 100, y: 200 } },
     {
@@ -49,9 +47,7 @@ export const quickStartWebAppApi: ComposedTemplate = {
   provider: 'gcp',
   tags: ['React', 'API', 'PostgreSQL'],
   securityLevel: 'basic',
-  environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-east-1', securityLevel: 'basic' },
-  ],
+  environmentPresets: [{ type: 'production', name: 'Production', region: 'us-east-1', securityLevel: 'basic' }],
   blocks: [
     { blockType: 'public-traffic', label: 'Public Traffic', position: { x: 100, y: 200 } },
     {
@@ -88,9 +84,7 @@ export const quickStartApiOnly: ComposedTemplate = {
   provider: 'gcp',
   tags: ['API', 'PostgreSQL'],
   securityLevel: 'basic',
-  environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-east-1', securityLevel: 'basic' },
-  ],
+  environmentPresets: [{ type: 'production', name: 'Production', region: 'us-east-1', securityLevel: 'basic' }],
   blocks: [
     { blockType: 'public-traffic', label: 'Public Traffic', position: { x: 100, y: 200 } },
     { blockType: 'gateway', label: 'Gateway', position: { x: 380, y: 200 } },
@@ -120,9 +114,7 @@ export const quickStartDataPipeline: ComposedTemplate = {
   provider: 'gcp',
   tags: ['SQS', 'Worker', 'Storage'],
   securityLevel: 'basic',
-  environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-east-1', securityLevel: 'basic' },
-  ],
+  environmentPresets: [{ type: 'production', name: 'Production', region: 'us-east-1', securityLevel: 'basic' }],
   blocks: [
     { blockType: 'sqs', label: 'SQS', position: { x: 200, y: 200 } },
     { blockType: 'worker', label: 'Worker', position: { x: 480, y: 200 } },

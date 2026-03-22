@@ -32,7 +32,7 @@ router.post('/list', async (req: AuthRequest, res: Response) => {
         avatar: m.user.avatar,
         role: m.role,
         grantedAt: m.granted_at,
-      }))
+      })),
     );
   } catch (err: any) {
     res.status(500).json({ message: 'Failed to list project members' });

@@ -35,10 +35,7 @@ export class StorageService extends BaseGCPService {
       // Use string variable to prevent TypeScript from trying to resolve the module
       const module_name = '@google-cloud/storage';
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const storage_module: any = await Function(
-        'moduleName',
-        'return import(moduleName)'
-      )(module_name);
+      const storage_module: any = await Function('moduleName', 'return import(moduleName)')(module_name);
       const Storage = storage_module.Storage;
 
       const options: Record<string, unknown> = {
@@ -52,7 +49,7 @@ export class StorageService extends BaseGCPService {
       this.storage_client = new Storage(options);
     } catch (error) {
       throw new Error(
-        `Failed to initialize GCP Storage client. Make sure @google-cloud/storage is installed: ${error instanceof Error ? error.message : String(error)}`
+        `Failed to initialize GCP Storage client. Make sure @google-cloud/storage is installed: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -68,9 +65,7 @@ export class StorageService extends BaseGCPService {
       return {
         service: this.service_type,
         resources: [],
-        errors: [
-          this.create_error('INIT_ERROR', error instanceof Error ? error.message : String(error)),
-        ],
+        errors: [this.create_error('INIT_ERROR', error instanceof Error ? error.message : String(error))],
         warnings: [],
       };
     }
@@ -92,8 +87,7 @@ export class StorageService extends BaseGCPService {
           const [metadata] = await bucket.getMetadata();
 
           resources.push({
-            self_link:
-              metadata.selfLink || `https://storage.googleapis.com/storage/v1/b/${bucket.name}`,
+            self_link: metadata.selfLink || `https://storage.googleapis.com/storage/v1/b/${bucket.name}`,
             name: bucket.name,
             id: metadata.id || bucket.name,
             kind: 'storage#bucket',
@@ -109,24 +103,17 @@ export class StorageService extends BaseGCPService {
             this.create_warning(
               'METADATA_ERROR',
               `Failed to get metadata for bucket ${bucket.name}: ${err.message || String(error)}`,
-              bucket.name
-            )
+              bucket.name,
+            ),
           );
         }
       }
     } catch (error: unknown) {
       const err = error as { code?: number; message?: string };
       if (err.code === 403 || err.code === 404) {
-        warnings.push(
-          this.create_warning(
-            'ACCESS_DENIED',
-            `Cannot list buckets: ${err.message || 'Access denied'}`
-          )
-        );
+        warnings.push(this.create_warning('ACCESS_DENIED', `Cannot list buckets: ${err.message || 'Access denied'}`));
       } else {
-        errors.push(
-          this.create_error('API_ERROR', `Failed to list buckets: ${err.message || String(error)}`)
-        );
+        errors.push(this.create_error('API_ERROR', `Failed to list buckets: ${err.message || String(error)}`));
       }
     }
 

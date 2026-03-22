@@ -92,7 +92,7 @@ export const CardTabs: React.FC = () => {
               'text-sm font-medium',
               isActive
                 ? 'bg-[#1f2937] text-ice-text-1 border border-ice-accent'
-                : 'bg-ice-surface text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-1 border border-transparent'
+                : 'bg-ice-surface text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-1 border border-transparent',
             )}
           >
             {/* Tab name or input */}
@@ -113,9 +113,7 @@ export const CardTabs: React.FC = () => {
 
             {/* Demo badge */}
             {card.isDemo && !isEditing && (
-              <span className="text-ice-xs px-1.5 py-0.5 rounded bg-ice-green/20 text-ice-green font-medium">
-                DEMO
-              </span>
+              <span className="text-ice-xs px-1.5 py-0.5 rounded bg-ice-green/20 text-ice-green font-medium">DEMO</span>
             )}
 
             {/* Action buttons - shown on hover or when active */}
@@ -124,7 +122,7 @@ export const CardTabs: React.FC = () => {
                 className={cn(
                   'flex items-center gap-0.5 ml-1',
                   isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
-                  'transition-opacity'
+                  'transition-opacity',
                 )}
               >
                 {/* Rename button */}
@@ -172,7 +170,7 @@ export const CardTabs: React.FC = () => {
           'flex items-center justify-center w-7 h-7 rounded-md',
           'bg-ice-surface text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-1',
           'border border-transparent hover:border-ice-border',
-          'transition-all'
+          'transition-all',
         )}
         title="Create new card"
       >

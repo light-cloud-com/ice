@@ -34,13 +34,7 @@ router.post('/create', async (req: AuthRequest, res: Response) => {
     if (!projectId || !name) {
       return res.status(400).json({ success: false, error: 'projectId and name required' });
     }
-    const env = await envService.createEnvironment(
-      projectId,
-      req.userId!,
-      name,
-      type || 'development',
-      region,
-    );
+    const env = await envService.createEnvironment(projectId, req.userId!, name, type || 'development', region);
     res.json({ success: true, environment: env });
   } catch (err: any) {
     res.status(400).json({ success: false, error: err.message });

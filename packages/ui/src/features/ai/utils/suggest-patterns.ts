@@ -25,15 +25,18 @@ interface PatternSuggestion {
  * Analyze the canvas and return contextual infrastructure suggestions.
  * Returns 3 most relevant suggestions based on what's missing.
  */
-export function suggestPatterns(
-  nodes: CanvasNode[],
-  edges: CanvasEdge[],
-): PatternSuggestion[] {
+export function suggestPatterns(nodes: CanvasNode[], edges: CanvasEdge[]): PatternSuggestion[] {
   if (nodes.length === 0) {
     // Empty canvas — suggest starting architectures
     return [
-      { label: 'Build a web app with database', intent: 'Build me a web application with a backend, database, and API gateway' },
-      { label: 'Create a microservices setup', intent: 'Create a microservices architecture with 3 services, a gateway, and shared database' },
+      {
+        label: 'Build a web app with database',
+        intent: 'Build me a web application with a backend, database, and API gateway',
+      },
+      {
+        label: 'Create a microservices setup',
+        intent: 'Create a microservices architecture with 3 services, a gateway, and shared database',
+      },
       { label: 'Add a serverless API', intent: 'Build a serverless API with a function, database, and auth' },
     ];
   }
@@ -42,46 +45,40 @@ export function suggestPatterns(
   const behaviors = new Set(nodes.map((n) => (n.data?.behavior as string) || '').filter(Boolean));
   const suggestions: PatternSuggestion[] = [];
 
-  const hasBackend = [...iceTypes].some((t) =>
-    t.includes('Backend') || t.includes('Container') || t.includes('Function') || t.includes('Worker')
-  ) || behaviors.has('scalable');
+  const hasBackend =
+    [...iceTypes].some(
+      (t) => t.includes('Backend') || t.includes('Container') || t.includes('Function') || t.includes('Worker'),
+    ) || behaviors.has('scalable');
 
-  const hasDatabase = [...iceTypes].some((t) =>
-    t.startsWith('Database.') || t.includes('PostgreSQL') || t.includes('MySQL') ||
-    t.includes('MongoDB') || t.includes('Warehouse')
+  const hasDatabase = [...iceTypes].some(
+    (t) =>
+      t.startsWith('Database.') ||
+      t.includes('PostgreSQL') ||
+      t.includes('MySQL') ||
+      t.includes('MongoDB') ||
+      t.includes('Warehouse'),
   );
 
-  const hasCache = [...iceTypes].some((t) =>
-    t.includes('Redis') || t.includes('Cache') || t.includes('Memcache')
+  const hasCache = [...iceTypes].some((t) => t.includes('Redis') || t.includes('Cache') || t.includes('Memcache'));
+
+  const hasAuth = [...iceTypes].some((t) => t.includes('Auth') || t.includes('IAM'));
+
+  const hasMonitoring = [...iceTypes].some(
+    (t) => t.includes('Log') || t.includes('Monitor') || t.includes('Observability'),
   );
 
-  const hasAuth = [...iceTypes].some((t) =>
-    t.includes('Auth') || t.includes('IAM')
+  const hasGateway = [...iceTypes].some((t) => t.includes('Gateway') || t.includes('LoadBalancer'));
+
+  const hasQueue = [...iceTypes].some(
+    (t) => t.includes('Queue') || t.includes('RabbitMQ') || t.includes('Kafka') || t.includes('Event'),
   );
 
-  const hasMonitoring = [...iceTypes].some((t) =>
-    t.includes('Log') || t.includes('Monitor') || t.includes('Observability')
-  );
+  const hasSecrets = [...iceTypes].some((t) => t.includes('Secret') || t.includes('Vault'));
 
-  const hasGateway = [...iceTypes].some((t) =>
-    t.includes('Gateway') || t.includes('LoadBalancer')
-  );
+  const hasRepo =
+    [...iceTypes].some((t) => t === 'Source.Repository' || t.includes('Repository')) || behaviors.has('source');
 
-  const hasQueue = [...iceTypes].some((t) =>
-    t.includes('Queue') || t.includes('RabbitMQ') || t.includes('Kafka') || t.includes('Event')
-  );
-
-  const hasSecrets = [...iceTypes].some((t) =>
-    t.includes('Secret') || t.includes('Vault')
-  );
-
-  const hasRepo = [...iceTypes].some((t) =>
-    t === 'Source.Repository' || t.includes('Repository')
-  ) || behaviors.has('source');
-
-  const hasVPC = [...iceTypes].some((t) =>
-    t === 'Network.VPC' || t.includes('VPC')
-  );
+  const hasVPC = [...iceTypes].some((t) => t === 'Network.VPC' || t.includes('VPC'));
 
   // Backend + Database but no cache → suggest cache
   if (hasBackend && hasDatabase && !hasCache) {

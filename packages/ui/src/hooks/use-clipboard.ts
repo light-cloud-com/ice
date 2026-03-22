@@ -118,7 +118,7 @@ export function useClipboard() {
       // Select the pasted nodes
       dispatch(setSelectedNodes(newIds));
     },
-    [dispatch]
+    [dispatch],
   );
 
   useEffect(() => {

@@ -15,7 +15,7 @@ function result(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  overrides: Partial<ResourceDeployResult> = {}
+  overrides: Partial<ResourceDeployResult> = {},
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -32,7 +32,7 @@ function fail(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  error: string
+  error: string,
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -51,10 +51,7 @@ export const identity_platform_handler: GCPResourceHandler = {
 
     try {
       // Enable Identity Platform for the project
-      await ctx.rest_client.post(
-        `${BASE_URL}/projects/${ctx.project}/identityPlatform:initializeAuth`,
-        {}
-      );
+      await ctx.rest_client.post(`${BASE_URL}/projects/${ctx.project}/identityPlatform:initializeAuth`, {});
 
       // Configure sign-in providers
       const providers = (properties.sign_in_providers as string[]) || ['email'];

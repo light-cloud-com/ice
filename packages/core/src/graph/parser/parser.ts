@@ -1034,18 +1034,7 @@ export class Parser {
 
     while (!this.is_at_end()) {
       // Synchronize at statement boundaries
-      if (
-        this.check(
-          'RESOURCE',
-          'DATA',
-          'VARIABLE',
-          'OUTPUT',
-          'PROVIDER',
-          'MODULE',
-          'LOCALS',
-          'IMPORT'
-        )
-      ) {
+      if (this.check('RESOURCE', 'DATA', 'VARIABLE', 'OUTPUT', 'PROVIDER', 'MODULE', 'LOCALS', 'IMPORT')) {
         return;
       }
 

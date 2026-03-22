@@ -48,7 +48,13 @@ export async function createProject(
     if (!parent) throw new Error('Parent folder not found');
   }
 
-  const slug = (name || 'untitled').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + Date.now().toString(36);
+  const slug =
+    (name || 'untitled')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '') +
+    '-' +
+    Date.now().toString(36);
 
   const project = await prisma.canvasProject.create({
     data: {
@@ -91,7 +97,10 @@ export async function getProject(projectId: string) {
   return project;
 }
 
-export async function updateProject(projectId: string, data: { name?: string; description?: string; provider?: string; region?: string }) {
+export async function updateProject(
+  projectId: string,
+  data: { name?: string; description?: string; provider?: string; region?: string },
+) {
   const updates: any = {};
   if (data.name !== undefined) updates.name = data.name;
   if (data.description !== undefined) updates.description = data.description;

@@ -49,11 +49,11 @@ export function getAllBlocks(): BlockDefinition[] {
 }
 
 export function getBlocksByCategory(category: string): BlockDefinition[] {
-  return getAllBlocks().filter(b => b.category === category);
+  return getAllBlocks().filter((b) => b.category === category);
 }
 
 export function getBlocksByProvider(provider: string): BlockDefinition[] {
-  return getAllBlocks().filter(b => b.providers.includes(provider));
+  return getAllBlocks().filter((b) => b.providers.includes(provider));
 }
 
 export function clearRegistry(): void {

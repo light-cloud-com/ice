@@ -124,14 +124,7 @@ const CARDS_VERSION_KEY = 'ice-cards-version';
 /**
  * Organizational iceTypes that migrated from Block.* to Group.*
  */
-const BLOCK_TO_GROUP_TYPES = new Set([
-  'Frontend',
-  'Services',
-  'Data',
-  'Messaging',
-  'Monitoring',
-  'External',
-]);
+const BLOCK_TO_GROUP_TYPES = new Set(['Frontend', 'Services', 'Data', 'Messaging', 'Monitoring', 'External']);
 
 /**
  * Migrate persisted node data:
@@ -192,7 +185,7 @@ function loadPersistedCards(): CardsState {
       if (parsed.cards && parsed.cards.length > 0) {
         // Refresh the demo card from source data (in case demo-data.ts changed)
         const cards = parsed.cards.map((c: any) =>
-          c.id === 'demo' ? demoCard : { ...c, nodes: migrateCardNodes(c.nodes || []) }
+          c.id === 'demo' ? demoCard : { ...c, nodes: migrateCardNodes(c.nodes || []) },
         );
         // Ensure demo card exists
         if (!cards.some((c: any) => c.id === 'demo')) {
@@ -231,11 +224,7 @@ const initialState: CardsState = {
 let _lastSnapshotAction = '';
 
 /** High-frequency actions that should be coalesced into one undo step */
-const COALESCE_ACTIONS = new Set([
-  'updateCardNodePosition',
-  'updateCardNodePositions',
-  'resizeCardNode',
-]);
+const COALESCE_ACTIONS = new Set(['updateCardNodePosition', 'updateCardNodePositions', 'resizeCardNode']);
 
 /**
  * Push a snapshot of the active card's current state onto its undo stack.
@@ -293,9 +282,7 @@ const cardsSlice = createSlice({
     // Create new card
     createCard: (
       state,
-      action: PayloadAction<
-        { name?: string; id?: string; projectId?: string; environmentId?: string } | undefined
-      >
+      action: PayloadAction<{ name?: string; id?: string; projectId?: string; environmentId?: string } | undefined>,
     ) => {
       const id = action.payload?.id || `card-${Date.now()}`;
       const existingNames = state.cards.map((c) => c.name);
@@ -334,8 +321,7 @@ const cardsSlice = createSlice({
 
       // If we deleted the active card, switch to another or clear
       if (state.activeCardId === cardId) {
-        state.activeCardId =
-          state.cards.length > 0 ? state.cards[Math.max(0, cardIndex - 1)].id : '';
+        state.activeCardId = state.cards.length > 0 ? state.cards[Math.max(0, cardIndex - 1)].id : '';
       }
     },
 
@@ -366,10 +352,7 @@ const cardsSlice = createSlice({
     },
 
     // Update edge data in active card
-    updateCardEdgeData: (
-      state,
-      action: PayloadAction<{ edgeId: string; data: Record<string, unknown> }>
-    ) => {
+    updateCardEdgeData: (state, action: PayloadAction<{ edgeId: string; data: Record<string, unknown> }>) => {
       pushSnapshot(state);
       const card = state.cards.find((c) => c.id === state.activeCardId);
       if (card) {
@@ -381,10 +364,7 @@ const cardsSlice = createSlice({
     },
 
     // Update node position in active card (L2 / canonical position)
-    updateCardNodePosition: (
-      state,
-      action: PayloadAction<{ nodeId: string; x: number; y: number }>
-    ) => {
+    updateCardNodePosition: (state, action: PayloadAction<{ nodeId: string; x: number; y: number }>) => {
       pushSnapshot(state, 'updateCardNodePosition');
       const card = state.cards.find((c) => c.id === state.activeCardId);
       if (card) {
@@ -399,7 +379,7 @@ const cardsSlice = createSlice({
     // Batch update node positions in active card (L2 / canonical position)
     updateCardNodePositions: (
       state,
-      action: PayloadAction<Array<{ id: string; position: { x: number; y: number } }>>
+      action: PayloadAction<Array<{ id: string; position: { x: number; y: number } }>>,
     ) => {
       pushSnapshot(state, 'updateCardNodePositions');
       const card = state.cards.find((c) => c.id === state.activeCardId);
@@ -415,10 +395,7 @@ const cardsSlice = createSlice({
     },
 
     // Resize node in active card
-    resizeCardNode: (
-      state,
-      action: PayloadAction<{ id: string; width: number; height: number }>
-    ) => {
+    resizeCardNode: (state, action: PayloadAction<{ id: string; width: number; height: number }>) => {
       pushSnapshot(state, 'resizeCardNode');
       const card = state.cards.find((c) => c.id === state.activeCardId);
       if (card) {
@@ -442,10 +419,7 @@ const cardsSlice = createSlice({
     },
 
     // Update a node's parent (for drag in/out of groups)
-    updateCardNodeParent: (
-      state,
-      action: PayloadAction<{ nodeId: string; parentId: string | null }>
-    ) => {
+    updateCardNodeParent: (state, action: PayloadAction<{ nodeId: string; parentId: string | null }>) => {
       pushSnapshot(state);
       const card = state.cards.find((c) => c.id === state.activeCardId);
       if (card) {
@@ -461,10 +435,7 @@ const cardsSlice = createSlice({
     },
 
     // Update a node's data fields (label, groupColor, etc.)
-    updateCardNodeData: (
-      state,
-      action: PayloadAction<{ nodeId: string; data: Record<string, unknown> }>
-    ) => {
+    updateCardNodeData: (state, action: PayloadAction<{ nodeId: string; data: Record<string, unknown> }>) => {
       pushSnapshot(state);
       const card = state.cards.find((c) => c.id === state.activeCardId);
       if (card) {
@@ -482,9 +453,7 @@ const cardsSlice = createSlice({
       if (card) {
         card.nodes = card.nodes.filter((n) => n.id !== action.payload);
         // Also remove edges connected to this node
-        card.edges = card.edges.filter(
-          (e) => e.source !== action.payload && e.target !== action.payload
-        );
+        card.edges = card.edges.filter((e) => e.source !== action.payload && e.target !== action.payload);
       }
     },
 
@@ -500,7 +469,7 @@ const cardsSlice = createSlice({
     // Import nodes/edges to active card (for cloud import) - auto-organizes by default
     importToActiveCard: (
       state,
-      action: PayloadAction<{ nodes: CardNode[]; edges: CardEdge[]; skipAutoOrganize?: boolean }>
+      action: PayloadAction<{ nodes: CardNode[]; edges: CardEdge[]; skipAutoOrganize?: boolean }>,
     ) => {
       pushSnapshot(state);
       const card = state.cards.find((c) => c.id === state.activeCardId);
@@ -570,10 +539,7 @@ const cardsSlice = createSlice({
     },
 
     // Update viewport for a specific card (used by split view)
-    setCardViewportById: (
-      state,
-      action: PayloadAction<{ cardId: string; viewport: CardViewport }>
-    ) => {
+    setCardViewportById: (state, action: PayloadAction<{ cardId: string; viewport: CardViewport }>) => {
       const card = state.cards.find((c) => c.id === action.payload.cardId);
       if (card) {
         card.viewport = action.payload.viewport;

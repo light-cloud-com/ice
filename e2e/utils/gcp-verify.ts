@@ -108,10 +108,10 @@ export function verifyBigQueryDataset(project: string, name: string): VerifyResu
  */
 export function listCloudRunServices(project: string, region: string): string[] {
   try {
-    const output = execSync(
-      `gcloud run services list --project=${project} --region=${region} --format="value(name)"`,
-      { encoding: 'utf-8', timeout: 30000 }
-    );
+    const output = execSync(`gcloud run services list --project=${project} --region=${region} --format="value(name)"`, {
+      encoding: 'utf-8',
+      timeout: 30000,
+    });
     return output.trim().split('\n').filter(Boolean);
   } catch {
     return [];
@@ -121,15 +121,11 @@ export function listCloudRunServices(project: string, region: string): string[] 
 /**
  * Get recent Cloud Run logs for a service.
  */
-export function getCloudRunLogs(
-  project: string,
-  serviceName: string,
-  limit = 20
-): Record<string, unknown>[] {
+export function getCloudRunLogs(project: string, serviceName: string, limit = 20): Record<string, unknown>[] {
   try {
     const output = execSync(
       `gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=${serviceName}" --project=${project} --limit=${limit} --format=json`,
-      { encoding: 'utf-8', timeout: 30000 }
+      { encoding: 'utf-8', timeout: 30000 },
     );
     return JSON.parse(output);
   } catch {

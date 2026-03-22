@@ -6,13 +6,7 @@
  * Disable: localStorage.removeItem('ice-debug')
  */
 
-type DebugPrefix =
-  | '[ICE:Canvas]'
-  | '[ICE:Layout]'
-  | '[ICE:Blueprint]'
-  | '[ICE:Drop]'
-  | '[ICE:Redux]'
-  | '[ICE:View]';
+type DebugPrefix = '[ICE:Canvas]' | '[ICE:Layout]' | '[ICE:Blueprint]' | '[ICE:Drop]' | '[ICE:Redux]' | '[ICE:View]';
 
 let _debugEnabled: boolean | null = null;
 
@@ -42,18 +36,9 @@ export function iceDebug(prefix: DebugPrefix, message: string, data?: unknown): 
   if (!isDebugEnabled()) return;
 
   if (data !== undefined) {
-    console.debug(
-      `%c${prefix}%c ${message}`,
-      'color: #8b5cf6; font-weight: bold',
-      'color: inherit',
-      data
-    );
+    console.debug(`%c${prefix}%c ${message}`, 'color: #8b5cf6; font-weight: bold', 'color: inherit', data);
   } else {
-    console.debug(
-      `%c${prefix}%c ${message}`,
-      'color: #8b5cf6; font-weight: bold',
-      'color: inherit'
-    );
+    console.debug(`%c${prefix}%c ${message}`, 'color: #8b5cf6; font-weight: bold', 'color: inherit');
   }
 }
 
@@ -68,7 +53,7 @@ export function logCanvasRender(data: {
 }): void {
   iceDebug(
     '[ICE:Canvas]',
-    `Render: ${data.visibleCount}/${data.nodeCount} nodes, ${data.edgeCount} edges, L${data.viewLevel}`
+    `Render: ${data.visibleCount}/${data.nodeCount} nodes, ${data.edgeCount} edges, L${data.viewLevel}`,
   );
 }
 
@@ -92,7 +77,7 @@ export function logBlueprint(data: {
   iceDebug(
     '[ICE:Blueprint]',
     `Expand: ${data.type} (${data.childCount} children, ${data.containerWidth}x${data.containerHeight})`,
-    data
+    data,
   );
 }
 
@@ -107,7 +92,7 @@ export function logDrop(data: {
   iceDebug(
     '[ICE:Drop]',
     `Drop: ${data.nodeType} at (${Math.round(data.position.x)}, ${Math.round(data.position.y)})`,
-    data
+    data,
   );
 }
 

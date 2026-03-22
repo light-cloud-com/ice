@@ -411,8 +411,7 @@ export function create_application_menu(): void {
         },
         {
           label: 'Request Feature',
-          click: () =>
-            shell.openExternal('https://github.com/light-cloud-com/ice/discussions/new'),
+          click: () => shell.openExternal('https://github.com/light-cloud-com/ice/discussions/new'),
         },
         { type: 'separator' },
         {

@@ -93,11 +93,7 @@ export class TypeMapper {
   /**
    * Map an ICE type to a native provider type.
    */
-  map_type(
-    ice_type: IceType,
-    source: 'terraform' | 'pulumi',
-    provider: string
-  ): MappedResource | null {
+  map_type(ice_type: IceType, source: 'terraform' | 'pulumi', provider: string): MappedResource | null {
     const impl = this.schema_provider.get_implementation(ice_type, source, provider);
 
     if (!impl) {
@@ -119,9 +115,7 @@ export class TypeMapper {
       }
     }
 
-    const mapped_properties = all_props.map((prop) =>
-      this.map_property(prop, source, required_set, computed_set)
-    );
+    const mapped_properties = all_props.map((prop) => this.map_property(prop, source, required_set, computed_set));
 
     return {
       ice_type,
@@ -140,7 +134,7 @@ export class TypeMapper {
     ice_type: IceType,
     properties: Record<string, unknown>,
     source: 'terraform' | 'pulumi',
-    provider: string
+    provider: string,
   ): Record<string, unknown> {
     const mapped = this.map_type(ice_type, source, provider);
 
@@ -173,7 +167,7 @@ export class TypeMapper {
     ice_type: IceType,
     native_properties: Record<string, unknown>,
     source: 'terraform' | 'pulumi',
-    provider: string
+    provider: string,
   ): Record<string, unknown> {
     const mapped = this.map_type(ice_type, source, provider);
 
@@ -200,11 +194,7 @@ export class TypeMapper {
   /**
    * Get the native type for an ICE type.
    */
-  get_native_type(
-    ice_type: IceType,
-    source: 'terraform' | 'pulumi',
-    provider: string
-  ): string | null {
+  get_native_type(ice_type: IceType, source: 'terraform' | 'pulumi', provider: string): string | null {
     return this.schema_provider.get_native_type(ice_type, source, provider) ?? null;
   }
 
@@ -222,7 +212,7 @@ export class TypeMapper {
     prop: PropertySchema,
     source: 'terraform' | 'pulumi',
     required_set: Set<string>,
-    computed_set: Set<string>
+    computed_set: Set<string>,
   ): MappedProperty {
     const native_name = this.convert_property_name(prop.name, source);
 
@@ -233,9 +223,7 @@ export class TypeMapper {
       required: required_set.has(prop.name),
       computed: computed_set.has(prop.name),
       sensitive: prop.sensitive,
-      nested: prop.nested_properties?.map((nested) =>
-        this.map_property(nested, source, new Set(), new Set())
-      ),
+      nested: prop.nested_properties?.map((nested) => this.map_property(nested, source, new Set(), new Set())),
     };
   }
 
@@ -258,11 +246,7 @@ export class TypeMapper {
   /**
    * Transform a value for the target provider.
    */
-  private transform_value(
-    value: unknown,
-    mapping: MappedProperty,
-    source: 'terraform' | 'pulumi'
-  ): TransformedValue {
+  private transform_value(value: unknown, mapping: MappedProperty, source: 'terraform' | 'pulumi'): TransformedValue {
     let transformed_value = value;
     let was_transformed = false;
 
@@ -317,11 +301,7 @@ export class TypeMapper {
   /**
    * Reverse transform a value from native format.
    */
-  private reverse_transform_value(
-    value: unknown,
-    mapping: MappedProperty,
-    source: 'terraform' | 'pulumi'
-  ): unknown {
+  private reverse_transform_value(value: unknown, mapping: MappedProperty, source: 'terraform' | 'pulumi'): unknown {
     // Handle nested objects
     if (mapping.nested && typeof value === 'object' && value !== null && !Array.isArray(value)) {
       const obj = value as Record<string, unknown>;
@@ -330,11 +310,7 @@ export class TypeMapper {
       for (const [key, val] of Object.entries(obj)) {
         const nested_mapping = mapping.nested.find((n) => n.native_name === key);
         if (nested_mapping) {
-          result[nested_mapping.ice_name] = this.reverse_transform_value(
-            val,
-            nested_mapping,
-            source
-          );
+          result[nested_mapping.ice_name] = this.reverse_transform_value(val, nested_mapping, source);
         } else {
           result[this.to_snake_case(key)] = val;
         }
@@ -351,11 +327,7 @@ export class TypeMapper {
           for (const [key, val] of Object.entries(item)) {
             const nested_mapping = mapping.nested?.find((n) => n.native_name === key);
             if (nested_mapping) {
-              result[nested_mapping.ice_name] = this.reverse_transform_value(
-                val,
-                nested_mapping,
-                source
-              );
+              result[nested_mapping.ice_name] = this.reverse_transform_value(val, nested_mapping, source);
             } else {
               result[this.to_snake_case(key)] = val;
             }

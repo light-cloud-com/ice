@@ -29,7 +29,9 @@ describe('Build Command Validation', () => {
     for (const cmd of allowedCommands) {
       const parts = cmd.split(' ');
       const baseName = parts[0].split('/').pop()!;
-      expect(['npm', 'npx', 'yarn', 'pnpm', 'pip', 'go', 'make', 'cargo', 'dotnet', 'mvn', 'gradle']).toContain(baseName);
+      expect(['npm', 'npx', 'yarn', 'pnpm', 'pip', 'go', 'make', 'cargo', 'dotnet', 'mvn', 'gradle']).toContain(
+        baseName,
+      );
     }
   });
 
@@ -53,9 +55,7 @@ describe('Build Command Validation', () => {
   });
 
   it('should reject commands not in the allowlist', () => {
-    const ALLOWED = new Set([
-      'npm', 'npx', 'yarn', 'pnpm', 'pip', 'go', 'make', 'cargo', 'dotnet', 'mvn', 'gradle',
-    ]);
+    const ALLOWED = new Set(['npm', 'npx', 'yarn', 'pnpm', 'pip', 'go', 'make', 'cargo', 'dotnet', 'mvn', 'gradle']);
 
     const blocked = ['curl', 'wget', 'rm', 'bash', 'sh', 'python', 'node', 'cat'];
     for (const cmd of blocked) {

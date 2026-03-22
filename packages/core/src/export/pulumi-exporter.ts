@@ -132,10 +132,7 @@ export class PulumiExporter {
   /**
    * Export an ICE graph to Pulumi program.
    */
-  async exportGraph(
-    graph: MutableGraph,
-    options: PulumiExportOptions
-  ): Promise<PulumiExportResult> {
+  async exportGraph(graph: MutableGraph, options: PulumiExportOptions): Promise<PulumiExportResult> {
     await this.initialize();
 
     const warnings: string[] = [];
@@ -214,14 +211,10 @@ export class PulumiExporter {
   private async nodeToResource(
     node: Node,
     options: PulumiExportOptions,
-    dependency_map: Map<string, string[]>
+    dependency_map: Map<string, string[]>,
   ): Promise<{ success: boolean; resource?: PulumiResource; error?: string; unmapped?: boolean }> {
     // Look up Pulumi type from schema
-    const impl = this.schema_provider.get_implementation(
-      node.type as IceType,
-      'pulumi',
-      options.provider
-    );
+    const impl = this.schema_provider.get_implementation(node.type as IceType, 'pulumi', options.provider);
 
     if (!impl) {
       // Try fallback mapping
@@ -555,9 +548,7 @@ export class PulumiExporter {
         lines.push(`// ${resource.name}`);
       }
 
-      lines.push(
-        `const ${this.sanitizeVarName(resource.name)} = new ${class_path}("${resource.name}", {`
-      );
+      lines.push(`const ${this.sanitizeVarName(resource.name)} = new ${class_path}("${resource.name}", {`);
 
       for (const [key, value] of Object.entries(resource.properties)) {
         if (value !== null && value !== undefined) {

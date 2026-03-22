@@ -112,9 +112,7 @@ export function useWizardState() {
 
   const toggleEnvironment = useCallback((index: number) => {
     setState((s) => {
-      const environments = s.environments.map((e, i) =>
-        i === index ? { ...e, enabled: !e.enabled } : e
-      );
+      const environments = s.environments.map((e, i) => (i === index ? { ...e, enabled: !e.enabled } : e));
       return { ...s, environments };
     });
   }, []);
@@ -128,9 +126,7 @@ export function useWizardState() {
 
   const setEnvironmentSecurity = useCallback((index: number, securityLevel: SecurityLevel) => {
     setState((s) => {
-      const environments = s.environments.map((e, i) =>
-        i === index ? { ...e, securityLevel } : e
-      );
+      const environments = s.environments.map((e, i) => (i === index ? { ...e, securityLevel } : e));
       return { ...s, environments };
     });
   }, []);

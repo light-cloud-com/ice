@@ -12,9 +12,7 @@ import type { RootState, AppDispatch } from '../../../store';
 
 export const DebugOverlay: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { panelOpen, lastAction, lastActionTime, renderDuration } = useSelector(
-    (state: RootState) => state.debug
-  );
+  const { panelOpen, lastAction, lastActionTime, renderDuration } = useSelector((state: RootState) => state.debug);
   const cards = useSelector((state: RootState) => state.cards);
   const selection = useSelector((state: RootState) => state.selection);
 
@@ -40,23 +38,18 @@ export const DebugOverlay: React.FC = () => {
   const nodeCount = activeCard?.nodes.length ?? 0;
   const edgeCount = activeCard?.edges.length ?? 0;
   const groupCount =
-    activeCard?.nodes.filter(
-      (n) => n.type === 'container' || ((n.data?.iceType as string) || '').startsWith('Group.')
-    ).length ?? 0;
+    activeCard?.nodes.filter((n) => n.type === 'container' || ((n.data?.iceType as string) || '').startsWith('Group.'))
+      .length ?? 0;
   const blockCount =
     activeCard?.nodes.filter(
-      (n) =>
-        (n.type === 'block' || ((n.data?.iceType as string) || '').startsWith('Block.')) &&
-        n.type !== 'container'
+      (n) => (n.type === 'block' || ((n.data?.iceType as string) || '').startsWith('Block.')) && n.type !== 'container',
     ).length ?? 0;
   const resourceCount = nodeCount - blockCount - groupCount;
 
   const selectedNodeIds = selection.selectedNodes ?? [];
   const selectedEdgeIds = selection.selectedEdges ?? [];
 
-  const lastActionAgo = lastActionTime
-    ? `${Math.round((Date.now() - lastActionTime) / 1000)}s ago`
-    : 'none';
+  const lastActionAgo = lastActionTime ? `${Math.round((Date.now() - lastActionTime) / 1000)}s ago` : 'none';
 
   if (!panelOpen) return null;
 
@@ -152,14 +145,8 @@ export const DebugOverlay: React.FC = () => {
         <Row label="Edges" value={String(edgeCount)} />
         <Row label="Active Card" value={activeCard?.name || cards.activeCardId || 'none'} />
         <Divider />
-        <Row
-          label="Selected Nodes"
-          value={selectedNodeIds.length > 0 ? selectedNodeIds.join(', ') : 'none'}
-        />
-        <Row
-          label="Selected Edges"
-          value={selectedEdgeIds.length > 0 ? selectedEdgeIds.join(', ') : 'none'}
-        />
+        <Row label="Selected Nodes" value={selectedNodeIds.length > 0 ? selectedNodeIds.join(', ') : 'none'} />
+        <Row label="Selected Edges" value={selectedEdgeIds.length > 0 ? selectedEdgeIds.join(', ') : 'none'} />
         <Divider />
         <Row label="Last Action" value={lastAction || 'none'} />
         <Row label="Action Time" value={lastActionAgo} />

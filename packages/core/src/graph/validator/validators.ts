@@ -270,11 +270,7 @@ export class PropertyValidator implements Validator {
 
     for (const node of graph.nodes.values()) {
       // Check that properties is an object
-      if (
-        typeof node.properties !== 'object' ||
-        node.properties === null ||
-        Array.isArray(node.properties)
-      ) {
+      if (typeof node.properties !== 'object' || node.properties === null || Array.isArray(node.properties)) {
         issues.push({
           severity: 'error',
           code: 'INVALID_PROPERTIES',
@@ -287,12 +283,7 @@ export class PropertyValidator implements Validator {
     return issues;
   }
 
-  private check_type(
-    node_id: string,
-    path: string,
-    value: unknown,
-    expected: string
-  ): ValidationIssue[] {
+  private check_type(node_id: string, path: string, value: unknown, expected: string): ValidationIssue[] {
     const issues: ValidationIssue[] = [];
     const actual = typeof value;
 
@@ -405,7 +396,7 @@ export class SensitiveDataValidator implements Validator {
     node_id: string,
     prefix: string,
     obj: Record<string, unknown>,
-    issues: ValidationIssue[]
+    issues: ValidationIssue[],
   ): void {
     for (const [key, value] of Object.entries(obj)) {
       const path = prefix ? `${prefix}.${key}` : key;
@@ -520,7 +511,7 @@ export function create_builtin_validators(schema_provider?: SchemaProvider): Val
  * Create a configured graph validator with all built-in validators.
  */
 export function create_configured_validator(
-  schema_provider?: SchemaProvider
+  schema_provider?: SchemaProvider,
 ): import('./base-validator.js').GraphValidator {
   const { create_graph_validator } = require('./base-validator.js');
   const validator = create_graph_validator();

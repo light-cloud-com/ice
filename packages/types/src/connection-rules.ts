@@ -64,7 +64,10 @@ export const CATEGORY_TO_RELATIONSHIP: Record<ConnectionCategory, string> = {
 // Used by inferConnectionMeta, validateConnection, and the AI prompt generator.
 
 export function isDatabase(t: string): boolean {
-  return t.startsWith('Database.') || /PostgreSQL|MySQL|MongoDB|DynamoDB|Firestore|CosmosDB|AutonomousDB|Tablestore|ManagedDB/i.test(t);
+  return (
+    t.startsWith('Database.') ||
+    /PostgreSQL|MySQL|MongoDB|DynamoDB|Firestore|CosmosDB|AutonomousDB|Tablestore|ManagedDB/i.test(t)
+  );
 }
 export function isCache(t: string): boolean {
   return /Redis|Cache|Memcache/i.test(t);
@@ -76,8 +79,11 @@ export function isStorage(t: string): boolean {
   return t.startsWith('Storage.') || /Bucket|S3|GCS|Blob|ObjectStorage|Spaces/i.test(t);
 }
 export function isBackend(t: string): boolean {
-  return /Backend|Container|Worker|Function|CronJob|Scheduled|AppPlatform|OCIFunctions/i.test(t) ||
-    t.startsWith('Application.') || t.startsWith('Compute.');
+  return (
+    /Backend|Container|Worker|Function|CronJob|Scheduled|AppPlatform|OCIFunctions/i.test(t) ||
+    t.startsWith('Application.') ||
+    t.startsWith('Compute.')
+  );
 }
 export function isFrontend(t: string): boolean {
   return /StaticSite|SSRSite|Frontend/i.test(t);
@@ -92,8 +98,7 @@ export function isSecrets(t: string): boolean {
   return /Secret|Vault/i.test(t) || t === 'Security.Secret';
 }
 export function isMonitoring(t: string): boolean {
-  return /Log|Monitor|Observability|Terminal/i.test(t) ||
-    t.startsWith('Monitoring.') || t.startsWith('Log.');
+  return /Log|Monitor|Observability|Terminal/i.test(t) || t.startsWith('Monitoring.') || t.startsWith('Log.');
 }
 export function isSearch(t: string): boolean {
   return /Search|Elasticsearch/i.test(t) || t === 'Analytics.Search';
@@ -124,8 +129,12 @@ export function isContainer(iceType: string, nodeType?: string): boolean {
 // ─── Default Ports ───────────────────────────────────────────────────────────
 
 export const DEFAULT_PORTS: Record<string, number> = {
-  PostgreSQL: 5432, MySQL: 3306, MongoDB: 27017,
-  Redis: 6379, RabbitMQ: 5672, Elasticsearch: 9200,
+  PostgreSQL: 5432,
+  MySQL: 3306,
+  MongoDB: 27017,
+  Redis: 6379,
+  RabbitMQ: 5672,
+  Elasticsearch: 9200,
 };
 
 export function getDefaultPort(iceType: string): number | undefined {
@@ -138,13 +147,23 @@ export function getDefaultPort(iceType: string): number | undefined {
 // ─── Default Env Var Names ───────────────────────────────────────────────────
 
 export const DEFAULT_ENV_VARS: Record<string, string> = {
-  PostgreSQL: 'DATABASE_URL', MySQL: 'DATABASE_URL', MongoDB: 'MONGODB_URI',
-  Redis: 'REDIS_URL', RabbitMQ: 'AMQP_URL',
-  SQS: 'SQS_QUEUE_URL', SNS: 'SNS_TOPIC_ARN', PubSub: 'PUBSUB_TOPIC',
-  ServiceBus: 'SERVICE_BUS_CONNECTION', Kafka: 'KAFKA_BROKER_URL',
-  Elasticsearch: 'ELASTICSEARCH_URL', Search: 'ELASTICSEARCH_URL',
-  VectorDB: 'VECTOR_DB_URL', LLM: 'LLM_API_URL',
-  Warehouse: 'DATA_WAREHOUSE_URL', Auth: 'AUTH_URL', Secret: 'SECRETS_ARN',
+  PostgreSQL: 'DATABASE_URL',
+  MySQL: 'DATABASE_URL',
+  MongoDB: 'MONGODB_URI',
+  Redis: 'REDIS_URL',
+  RabbitMQ: 'AMQP_URL',
+  SQS: 'SQS_QUEUE_URL',
+  SNS: 'SNS_TOPIC_ARN',
+  PubSub: 'PUBSUB_TOPIC',
+  ServiceBus: 'SERVICE_BUS_CONNECTION',
+  Kafka: 'KAFKA_BROKER_URL',
+  Elasticsearch: 'ELASTICSEARCH_URL',
+  Search: 'ELASTICSEARCH_URL',
+  VectorDB: 'VECTOR_DB_URL',
+  LLM: 'LLM_API_URL',
+  Warehouse: 'DATA_WAREHOUSE_URL',
+  Auth: 'AUTH_URL',
+  Secret: 'SECRETS_ARN',
 };
 
 export function getEnvVarName(iceType: string): string | undefined {
@@ -166,9 +185,12 @@ export function inferConnectionMeta(src: string, tgt: string): ConnectionMeta {
 
   // CONFIG
   if (isEnvConfig(tgt) && !isEnvConfig(src)) return { category: 'config', lineStyle: 'dotted', color: C.config };
-  if (isEnvConfig(src) && !isEnvConfig(tgt)) return { category: 'config', lineStyle: 'dotted', color: C.config, flip: true };
-  if (isSecrets(tgt) && !isSecrets(src)) return { category: 'config', lineStyle: 'dotted', color: C.config, envVarName: getEnvVarName(tgt) };
-  if (isSecrets(src) && !isSecrets(tgt)) return { category: 'config', lineStyle: 'dotted', color: C.config, envVarName: getEnvVarName(src), flip: true };
+  if (isEnvConfig(src) && !isEnvConfig(tgt))
+    return { category: 'config', lineStyle: 'dotted', color: C.config, flip: true };
+  if (isSecrets(tgt) && !isSecrets(src))
+    return { category: 'config', lineStyle: 'dotted', color: C.config, envVarName: getEnvVarName(tgt) };
+  if (isSecrets(src) && !isSecrets(tgt))
+    return { category: 'config', lineStyle: 'dotted', color: C.config, envVarName: getEnvVarName(src), flip: true };
 
   // DNS
   if (isDomain(src) && !isDomain(tgt)) return { category: 'dns', lineStyle: 'solid', color: C.dns };
@@ -176,27 +198,98 @@ export function inferConnectionMeta(src: string, tgt: string): ConnectionMeta {
 
   // TRAFFIC — stream
   if (isMonitoring(tgt)) return { category: 'traffic', trafficType: 'stream', lineStyle: 'thin', color: C.traffic };
-  if (isMonitoring(src) && !isMonitoring(tgt)) return { category: 'traffic', trafficType: 'stream', lineStyle: 'thin', color: C.traffic, flip: true };
+  if (isMonitoring(src) && !isMonitoring(tgt))
+    return { category: 'traffic', trafficType: 'stream', lineStyle: 'thin', color: C.traffic, flip: true };
 
   // TRAFFIC — subscribe
-  if (isQueue(src) && isBackend(tgt)) return { category: 'traffic', trafficType: 'subscribe', lineStyle: 'dotted', color: C.traffic, envVarName: getEnvVarName(src) };
+  if (isQueue(src) && isBackend(tgt))
+    return {
+      category: 'traffic',
+      trafficType: 'subscribe',
+      lineStyle: 'dotted',
+      color: C.traffic,
+      envVarName: getEnvVarName(src),
+    };
 
   // TRAFFIC — publish
-  if (isBackend(src) && isQueue(tgt)) return { category: 'traffic', trafficType: 'publish', lineStyle: 'dashed', color: C.traffic, port: getDefaultPort(tgt), envVarName: getEnvVarName(tgt) };
-  if (isBackend(src) && isDataWarehouse(tgt)) return { category: 'traffic', trafficType: 'publish', lineStyle: 'dashed', color: C.traffic, envVarName: getEnvVarName(tgt) };
+  if (isBackend(src) && isQueue(tgt))
+    return {
+      category: 'traffic',
+      trafficType: 'publish',
+      lineStyle: 'dashed',
+      color: C.traffic,
+      port: getDefaultPort(tgt),
+      envVarName: getEnvVarName(tgt),
+    };
+  if (isBackend(src) && isDataWarehouse(tgt))
+    return {
+      category: 'traffic',
+      trafficType: 'publish',
+      lineStyle: 'dashed',
+      color: C.traffic,
+      envVarName: getEnvVarName(tgt),
+    };
 
   // TRAFFIC — data
-  if (isBackend(src) && isDatabase(tgt)) return { category: 'traffic', trafficType: 'data', lineStyle: 'solid', color: C.traffic, port: getDefaultPort(tgt), envVarName: getEnvVarName(tgt) };
-  if (isBackend(src) && isCache(tgt)) return { category: 'traffic', trafficType: 'data', lineStyle: 'solid', color: C.traffic, port: 6379, envVarName: getEnvVarName(tgt) };
-  if (isBackend(src) && isStorage(tgt)) return { category: 'traffic', trafficType: 'data', lineStyle: 'solid', color: C.traffic, envVarName: getEnvVarName(tgt) };
-  if (isBackend(src) && isSearch(tgt)) return { category: 'traffic', trafficType: 'data', lineStyle: 'solid', color: C.traffic, port: 9200, envVarName: getEnvVarName(tgt) };
-  if (isBackend(src) && (isVectorDb(tgt) || isLLM(tgt))) return { category: 'traffic', trafficType: 'data', lineStyle: 'solid', color: C.traffic, envVarName: getEnvVarName(tgt) };
+  if (isBackend(src) && isDatabase(tgt))
+    return {
+      category: 'traffic',
+      trafficType: 'data',
+      lineStyle: 'solid',
+      color: C.traffic,
+      port: getDefaultPort(tgt),
+      envVarName: getEnvVarName(tgt),
+    };
+  if (isBackend(src) && isCache(tgt))
+    return {
+      category: 'traffic',
+      trafficType: 'data',
+      lineStyle: 'solid',
+      color: C.traffic,
+      port: 6379,
+      envVarName: getEnvVarName(tgt),
+    };
+  if (isBackend(src) && isStorage(tgt))
+    return {
+      category: 'traffic',
+      trafficType: 'data',
+      lineStyle: 'solid',
+      color: C.traffic,
+      envVarName: getEnvVarName(tgt),
+    };
+  if (isBackend(src) && isSearch(tgt))
+    return {
+      category: 'traffic',
+      trafficType: 'data',
+      lineStyle: 'solid',
+      color: C.traffic,
+      port: 9200,
+      envVarName: getEnvVarName(tgt),
+    };
+  if (isBackend(src) && (isVectorDb(tgt) || isLLM(tgt)))
+    return {
+      category: 'traffic',
+      trafficType: 'data',
+      lineStyle: 'solid',
+      color: C.traffic,
+      envVarName: getEnvVarName(tgt),
+    };
 
   // TRAFFIC — request
-  if ((isFrontend(src) || isGateway(src)) && isBackend(tgt)) return { category: 'traffic', trafficType: 'request', lineStyle: 'solid', color: C.traffic };
-  if (isGateway(src) && isFrontend(tgt)) return { category: 'traffic', trafficType: 'request', lineStyle: 'solid', color: C.traffic };
-  if (isBackend(src) && isAuth(tgt)) return { category: 'traffic', trafficType: 'request', lineStyle: 'solid', color: C.traffic, envVarName: getEnvVarName(tgt) };
-  if (isBackend(src) && isBackend(tgt)) return { category: 'traffic', trafficType: 'request', lineStyle: 'solid', color: C.traffic };
+  if ((isFrontend(src) || isGateway(src)) && isBackend(tgt))
+    return { category: 'traffic', trafficType: 'request', lineStyle: 'solid', color: C.traffic };
+  if (isGateway(src) && isFrontend(tgt))
+    return { category: 'traffic', trafficType: 'request', lineStyle: 'solid', color: C.traffic };
+  if (isBackend(src) && isAuth(tgt))
+    return {
+      category: 'traffic',
+      trafficType: 'request',
+      lineStyle: 'solid',
+      color: C.traffic,
+      envVarName: getEnvVarName(tgt),
+    };
+  if (isBackend(src) && isBackend(tgt))
+    return { category: 'traffic', trafficType: 'request', lineStyle: 'solid', color: C.traffic };
 
   // Default
   return { category: 'traffic', trafficType: 'request', lineStyle: 'solid', color: C.traffic };
@@ -205,22 +298,50 @@ export function inferConnectionMeta(src: string, tgt: string): ConnectionMeta {
 // ─── Validation ──────────────────────────────────────────────────────────────
 
 export function validateConnection(
-  src: string, tgt: string,
+  src: string,
+  tgt: string,
   existingEdges: Array<{ source: string; target: string }>,
-  srcId: string, tgtId: string,
-  srcNodeType?: string, tgtNodeType?: string,
+  srcId: string,
+  tgtId: string,
+  srcNodeType?: string,
+  tgtNodeType?: string,
 ): ConnectionWarning[] {
   const w: ConnectionWarning[] = [];
-  if (isContainer(src, srcNodeType)) w.push({ level: 'error', message: `${src.split('.').pop() || 'Container'} is a container — drop resources inside it, don't connect to it` });
-  if (isContainer(tgt, tgtNodeType)) w.push({ level: 'error', message: `${tgt.split('.').pop() || 'Container'} is a container — drop resources inside it, don't connect to it` });
-  if (isFrontend(src) && isDatabase(tgt)) w.push({ level: 'warning', message: 'Direct database access from frontend is a security risk', suggestion: 'Add a Backend between them' });
-  if (isFrontend(src) && isQueue(tgt)) w.push({ level: 'warning', message: 'Clients should not publish to queues directly', suggestion: 'Route through a Backend API' });
-  if (existingEdges.some(e => (e.source === srcId && e.target === tgtId) || (e.source === tgtId && e.target === srcId))) w.push({ level: 'warning', message: 'These blocks are already connected' });
+  if (isContainer(src, srcNodeType))
+    w.push({
+      level: 'error',
+      message: `${src.split('.').pop() || 'Container'} is a container — drop resources inside it, don't connect to it`,
+    });
+  if (isContainer(tgt, tgtNodeType))
+    w.push({
+      level: 'error',
+      message: `${tgt.split('.').pop() || 'Container'} is a container — drop resources inside it, don't connect to it`,
+    });
+  if (isFrontend(src) && isDatabase(tgt))
+    w.push({
+      level: 'warning',
+      message: 'Direct database access from frontend is a security risk',
+      suggestion: 'Add a Backend between them',
+    });
+  if (isFrontend(src) && isQueue(tgt))
+    w.push({
+      level: 'warning',
+      message: 'Clients should not publish to queues directly',
+      suggestion: 'Route through a Backend API',
+    });
+  if (
+    existingEdges.some((e) => (e.source === srcId && e.target === tgtId) || (e.source === tgtId && e.target === srcId))
+  )
+    w.push({ level: 'warning', message: 'These blocks are already connected' });
   if (srcId === tgtId) w.push({ level: 'error', message: 'A block cannot connect to itself' });
   return w;
 }
 
-export function wouldCreateCycle(srcId: string, tgtId: string, edges: Array<{ source: string; target: string }>): boolean {
+export function wouldCreateCycle(
+  srcId: string,
+  tgtId: string,
+  edges: Array<{ source: string; target: string }>,
+): boolean {
   const visited = new Set<string>();
   const queue = [tgtId];
   while (queue.length > 0) {
@@ -228,7 +349,9 @@ export function wouldCreateCycle(srcId: string, tgtId: string, edges: Array<{ so
     if (c === srcId) return true;
     if (visited.has(c)) continue;
     visited.add(c);
-    for (const e of edges) { if (e.source === c && !visited.has(e.target)) queue.push(e.target); }
+    for (const e of edges) {
+      if (e.source === c && !visited.has(e.target)) queue.push(e.target);
+    }
   }
   return false;
 }
@@ -273,11 +396,15 @@ NEVER create addEdge with source or target pointing to a VPC, Subnet, or Group.
 
 ### Auto-generated env vars
 When a service connects to a data store, an env var is auto-injected:
-${Object.entries(DEFAULT_ENV_VARS).map(([k, v]) => `- ${k} → ${v}`).join('\n')}
+${Object.entries(DEFAULT_ENV_VARS)
+  .map(([k, v]) => `- ${k} → ${v}`)
+  .join('\n')}
 - Storage/Bucket → STORAGE_BUCKET
 
 ### Auto-detected ports
-${Object.entries(DEFAULT_PORTS).map(([k, v]) => `- ${k} → ${v}`).join('\n')}
+${Object.entries(DEFAULT_PORTS)
+  .map(([k, v]) => `- ${k} → ${v}`)
+  .join('\n')}
 
 ### Direction normalization
 The arrow shows "who initiates." Auto-flip ensures:

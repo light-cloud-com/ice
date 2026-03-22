@@ -6,8 +6,14 @@
  */
 
 interface ValidationError {
-  type: 'missing_resource' | 'missing_property' | 'invalid_type' | 'invalid_option'
-    | 'invalid_edge_ref' | 'invalid_relationship' | 'invalid_parent';
+  type:
+    | 'missing_resource'
+    | 'missing_property'
+    | 'invalid_type'
+    | 'invalid_option'
+    | 'invalid_edge_ref'
+    | 'invalid_relationship'
+    | 'invalid_parent';
   nodeId?: string;
   edgeId?: string;
   field?: string;
@@ -49,10 +55,7 @@ async function getCachedResources() {
 
 const VALID_RELATIONSHIPS = new Set(['connects_to', 'depends_on', 'contains']);
 
-export async function validateCanvas(
-  nodes: any[],
-  edges: any[],
-): Promise<ValidationResult> {
+export async function validateCanvas(nodes: any[], edges: any[]): Promise<ValidationResult> {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
   const { data: resources, categories } = await getCachedResources();
@@ -140,7 +143,7 @@ export async function validateCanvas(
 
         // Check 4: Select/enum value validation
         if ((expectedType === 'select' || prop.options) && prop.options?.length > 0) {
-          const allowedValues = prop.options.map((o: any) => typeof o === 'string' ? o : o.value || o.id);
+          const allowedValues = prop.options.map((o: any) => (typeof o === 'string' ? o : o.value || o.id));
           if (!allowedValues.includes(value)) {
             errors.push({
               type: 'invalid_option',

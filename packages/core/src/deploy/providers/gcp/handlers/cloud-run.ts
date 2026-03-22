@@ -20,7 +20,7 @@ function result(
   type: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  overrides: Partial<ResourceDeployResult> = {}
+  overrides: Partial<ResourceDeployResult> = {},
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -38,7 +38,7 @@ function fail(
   type: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  error: string
+  error: string,
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -63,13 +63,7 @@ export const cloud_run_handler: GCPResourceHandler = {
       }
       return await create_service(name, properties, region, ctx, start);
     } catch (error) {
-      return fail(
-        name,
-        type,
-        'create',
-        start,
-        error instanceof Error ? error.message : String(error)
-      );
+      return fail(name, type, 'create', start, error instanceof Error ? error.message : String(error));
     }
   },
 
@@ -90,13 +84,7 @@ export const cloud_run_handler: GCPResourceHandler = {
       if (is_job) {
         const jobs_client = ctx.clients.get('run.jobs') as any;
         if (!jobs_client)
-          return fail(
-            name,
-            type,
-            'update',
-            start,
-            sdk_not_available_short(SERVICE_NAMES.CLOUD_RUN_JOBS)
-          );
+          return fail(name, type, 'update', start, sdk_not_available_short(SERVICE_NAMES.CLOUD_RUN_JOBS));
 
         const [operation] = await jobs_client.updateJob({
           job: {
@@ -128,13 +116,7 @@ export const cloud_run_handler: GCPResourceHandler = {
       } else {
         const services_client = ctx.clients.get('run.services') as any;
         if (!services_client)
-          return fail(
-            name,
-            type,
-            'update',
-            start,
-            sdk_not_available_short(SERVICE_NAMES.CLOUD_RUN)
-          );
+          return fail(name, type, 'update', start, sdk_not_available_short(SERVICE_NAMES.CLOUD_RUN));
 
         const invokerIamDisabled = properties.allow_unauthenticated !== false;
 
@@ -167,13 +149,7 @@ export const cloud_run_handler: GCPResourceHandler = {
         return result(name, type, 'update', start, { provider_id, outputs });
       }
     } catch (error) {
-      return fail(
-        name,
-        type,
-        'update',
-        start,
-        error instanceof Error ? error.message : String(error)
-      );
+      return fail(name, type, 'update', start, error instanceof Error ? error.message : String(error));
     }
   },
 
@@ -187,13 +163,7 @@ export const cloud_run_handler: GCPResourceHandler = {
       if (is_job) {
         const jobs_client = ctx.clients.get('run.jobs') as any;
         if (!jobs_client)
-          return fail(
-            name,
-            type,
-            'delete',
-            start,
-            sdk_not_available_short(SERVICE_NAMES.CLOUD_RUN_JOBS)
-          );
+          return fail(name, type, 'delete', start, sdk_not_available_short(SERVICE_NAMES.CLOUD_RUN_JOBS));
 
         const [operation] = await jobs_client.deleteJob({
           name: `projects/${ctx.project}/locations/${region}/jobs/${name}`,
@@ -202,13 +172,7 @@ export const cloud_run_handler: GCPResourceHandler = {
       } else {
         const services_client = ctx.clients.get('run.services') as any;
         if (!services_client)
-          return fail(
-            name,
-            type,
-            'delete',
-            start,
-            sdk_not_available_short(SERVICE_NAMES.CLOUD_RUN)
-          );
+          return fail(name, type, 'delete', start, sdk_not_available_short(SERVICE_NAMES.CLOUD_RUN));
 
         const [operation] = await services_client.deleteService({
           name: `projects/${ctx.project}/locations/${region}/services/${name}`,
@@ -218,13 +182,7 @@ export const cloud_run_handler: GCPResourceHandler = {
 
       return result(name, type, 'delete', start);
     } catch (error) {
-      return fail(
-        name,
-        type,
-        'delete',
-        start,
-        error instanceof Error ? error.message : String(error)
-      );
+      return fail(name, type, 'delete', start, error instanceof Error ? error.message : String(error));
     }
   },
 };
@@ -238,7 +196,7 @@ async function resolve_image(
   properties: Record<string, unknown>,
   region: string,
   ctx: GCPHandlerContext,
-  onLog?: (msg: string) => void
+  onLog?: (msg: string) => void,
 ): Promise<string> {
   const image = properties.image as string;
   const repository = properties.repository as string;
@@ -267,7 +225,7 @@ async function fetch_service_outputs(
   ctx: GCPHandlerContext,
   provider_id: string,
   properties: Record<string, unknown>,
-  deployedImage: string
+  deployedImage: string,
 ): Promise<Record<string, unknown>> {
   try {
     const svc = (await ctx.rest_client.get(`https://run.googleapis.com/v2/${provider_id}`)) as any;
@@ -288,29 +246,17 @@ async function create_service(
   properties: Record<string, unknown>,
   region: string,
   ctx: GCPHandlerContext,
-  start: number
+  start: number,
 ): Promise<ResourceDeployResult> {
   const services_client = ctx.clients.get('run.services') as any;
   if (!services_client)
-    return fail(
-      name,
-      'gcp.run.service',
-      'create',
-      start,
-      sdk_not_available(SERVICE_NAMES.CLOUD_RUN, 'run.services')
-    );
+    return fail(name, 'gcp.run.service', 'create', start, sdk_not_available(SERVICE_NAMES.CLOUD_RUN, 'run.services'));
 
   let image: string;
   try {
     image = await resolve_image(name, properties, region, ctx, ctx.on_log);
   } catch (err) {
-    return fail(
-      name,
-      'gcp.run.service',
-      'create',
-      start,
-      err instanceof Error ? err.message : String(err)
-    );
+    return fail(name, 'gcp.run.service', 'create', start, err instanceof Error ? err.message : String(err));
   }
 
   // invokerIamDisabled: Cloud Run v2 service property (schema: Cloud.Cloudrunv2service)
@@ -355,29 +301,17 @@ async function create_job(
   properties: Record<string, unknown>,
   region: string,
   ctx: GCPHandlerContext,
-  start: number
+  start: number,
 ): Promise<ResourceDeployResult> {
   const jobs_client = ctx.clients.get('run.jobs') as any;
   if (!jobs_client)
-    return fail(
-      name,
-      'gcp.run.job',
-      'create',
-      start,
-      sdk_not_available(SERVICE_NAMES.CLOUD_RUN_JOBS, 'run.jobs')
-    );
+    return fail(name, 'gcp.run.job', 'create', start, sdk_not_available(SERVICE_NAMES.CLOUD_RUN_JOBS, 'run.jobs'));
 
   let image: string;
   try {
     image = await resolve_image(name, properties, region, ctx, ctx.on_log);
   } catch (err) {
-    return fail(
-      name,
-      'gcp.run.job',
-      'create',
-      start,
-      err instanceof Error ? err.message : String(err)
-    );
+    return fail(name, 'gcp.run.job', 'create', start, err instanceof Error ? err.message : String(err));
   }
 
   const [operation] = await jobs_client.createJob({

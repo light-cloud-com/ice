@@ -47,10 +47,7 @@ interface AuthenticatedRequest extends Request {
  *       404:
  *         description: Invoice not found
  */
-export const retryInvoice = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
+export const retryInvoice = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { invoiceId } = req.body;
 

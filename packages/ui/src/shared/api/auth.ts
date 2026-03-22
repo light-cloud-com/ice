@@ -25,11 +25,7 @@ export async function login(email: string, password: string): Promise<LoginRespo
   return { token, user };
 }
 
-export async function register(
-  name: string,
-  email: string,
-  password: string
-): Promise<LoginResponse> {
+export async function register(name: string, email: string, password: string): Promise<LoginResponse> {
   const res = await axiosInstance.post('/auth/register', { name, email, password });
   const { token, user } = res.data;
   setAccessToken(token);

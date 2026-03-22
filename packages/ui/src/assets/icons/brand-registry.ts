@@ -172,15 +172,9 @@ reg(['sqlite', 'database.sqlite'], sqlite, 'SQLite');
 reg(['mariadb', 'database.mariadb'], mariadb, 'MariaDB');
 reg(['neo4j', 'database.neo4j'], neo4j, 'Neo4j');
 reg(
-  [
-    'elasticsearch',
-    'opensearch',
-    'database.elasticsearch',
-    'database.opensearch',
-    'analytics.opensearch',
-  ],
+  ['elasticsearch', 'opensearch', 'database.elasticsearch', 'database.opensearch', 'analytics.opensearch'],
   elasticsearch,
-  'Elasticsearch'
+  'Elasticsearch',
 );
 reg(['cassandra', 'database.cassandra'], cassandra, 'Cassandra');
 reg(['couchdb', 'couchbase', 'database.couchdb'], couchdb, 'CouchDB');
@@ -189,11 +183,7 @@ reg(['supabase', 'database.supabase'], supabase, 'Supabase');
 reg(['firestore', 'firebase', 'database.firestore'], firebase, 'Firebase');
 reg(['dynamodb', 'database.dynamodb'], dynamodb, 'DynamoDB');
 reg(['clickhouse', 'database.clickhouse'], clickhouse, 'ClickHouse');
-reg(
-  ['mssql', 'sqlserver', 'database.mssql', 'database.sqlserver'],
-  microsoftsqlserver,
-  'SQL Server'
-);
+reg(['mssql', 'sqlserver', 'database.mssql', 'database.sqlserver'], microsoftsqlserver, 'SQL Server');
 
 // ─── Runtimes / Languages ───────────────────────────────────────────────────
 reg(['node', 'nodejs', 'node.js'], nodejs, 'Node.js');

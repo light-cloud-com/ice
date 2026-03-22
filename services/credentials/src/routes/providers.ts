@@ -48,7 +48,7 @@ router.post('/gcp/oauth/exchange', async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ success: false, error: 'Failed to exchange authorization code' });
     }
 
-    const tokens = await tokenRes.json() as {
+    const tokens = (await tokenRes.json()) as {
       access_token: string;
       refresh_token?: string;
       expires_in: number;
@@ -66,7 +66,7 @@ router.post('/gcp/oauth/exchange', async (req: AuthRequest, res: Response) => {
         headers: { Authorization: `Bearer ${tokens.access_token}` },
       });
       if (userInfoRes.ok) {
-        const info = await userInfoRes.json() as { email?: string };
+        const info = (await userInfoRes.json()) as { email?: string };
         userEmail = info.email;
       }
 
@@ -75,7 +75,7 @@ router.post('/gcp/oauth/exchange', async (req: AuthRequest, res: Response) => {
         { headers: { Authorization: `Bearer ${tokens.access_token}` } },
       );
       if (projectsRes.ok) {
-        const data = await projectsRes.json() as { projects?: Array<{ projectId: string }> };
+        const data = (await projectsRes.json()) as { projects?: Array<{ projectId: string }> };
         projectId = data.projects?.[0]?.projectId;
       }
     } catch {

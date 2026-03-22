@@ -47,9 +47,7 @@ export const Combobox: React.FC<ComboboxProps> = ({
     if (!query) return options;
     const q = query.toLowerCase();
     return options.filter(
-      (o) =>
-        o.label.toLowerCase().includes(q) ||
-        (o.description && o.description.toLowerCase().includes(q))
+      (o) => o.label.toLowerCase().includes(q) || (o.description && o.description.toLowerCase().includes(q)),
     );
   }, [options, query]);
 
@@ -86,7 +84,7 @@ export const Combobox: React.FC<ComboboxProps> = ({
       setOpen(false);
       setQuery('');
     },
-    [onSelect]
+    [onSelect],
   );
 
   const handleKeyDown = useCallback(
@@ -121,7 +119,7 @@ export const Combobox: React.FC<ComboboxProps> = ({
           break;
       }
     },
-    [open, filtered, activeIndex, handleSelect]
+    [open, filtered, activeIndex, handleSelect],
   );
 
   // Position the dropdown using portal
@@ -196,15 +194,13 @@ export const Combobox: React.FC<ComboboxProps> = ({
                     </div>
                   )}
                   {!opt.description && opt.badge && (
-                    <span className="text-[8px] bg-ice-raised text-ice-text-2 px-1 py-0 rounded">
-                      {opt.badge}
-                    </span>
+                    <span className="text-[8px] bg-ice-raised text-ice-text-2 px-1 py-0 rounded">{opt.badge}</span>
                   )}
                 </div>
               ))}
           </div>
         </div>,
-        document.getElementById('ice-combobox-portal') || document.body
+        document.getElementById('ice-combobox-portal') || document.body,
       )
     : null;
 

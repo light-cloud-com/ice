@@ -24,9 +24,4 @@ export type {
 } from './types.js';
 
 // Export apply engine
-export {
-  apply_plan,
-  apply_succeeded,
-  get_failed_resources,
-  get_successful_resources,
-} from './apply-engine.js';
+export { apply_plan, apply_succeeded, get_failed_resources, get_successful_resources } from './apply-engine.js';

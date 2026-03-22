@@ -324,9 +324,7 @@ export const BLOCK_BLUEPRINTS: BlockBlueprint[] = [
 ];
 
 /** Fast lookup map: blockType → blueprint */
-const blueprintMap = new Map<string, BlockBlueprint>(
-  BLOCK_BLUEPRINTS.map((bp) => [bp.blockType, bp])
-);
+const blueprintMap = new Map<string, BlockBlueprint>(BLOCK_BLUEPRINTS.map((bp) => [bp.blockType, bp]));
 
 /**
  * Get a blueprint by its palette block type.

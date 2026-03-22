@@ -178,10 +178,7 @@ const DESIGN_ONLY_PROVIDERS = new Set(['alibaba', 'digitalocean', 'kubernetes'])
 // Property extractors per GCP service type
 // =============================================================================
 
-function extract_cloud_run_properties(
-  data: Record<string, unknown>,
-  region: string
-): Record<string, unknown> {
+function extract_cloud_run_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
   return {
     region,
     image: (data.image as string) || '',
@@ -198,10 +195,7 @@ function extract_cloud_run_properties(
   };
 }
 
-function extract_cloud_run_job_properties(
-  data: Record<string, unknown>,
-  region: string
-): Record<string, unknown> {
+function extract_cloud_run_job_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
   return {
     region,
     image: (data.image as string) || '',
@@ -216,10 +210,7 @@ function extract_cloud_run_job_properties(
   };
 }
 
-function extract_cloud_sql_properties(
-  data: Record<string, unknown>,
-  region: string
-): Record<string, unknown> {
+function extract_cloud_sql_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
   const ice_type = data.iceType as string;
   const is_postgres = ice_type === 'Database.PostgreSQL';
   const runtime = (data.runtime as string) || (is_postgres ? 'PostgreSQL 16' : 'MySQL 8.0');
@@ -229,9 +220,7 @@ function extract_cloud_sql_properties(
   return {
     region,
     tier: data.size || 'db-f1-micro',
-    database_version: is_postgres
-      ? `POSTGRES_${version_num}`
-      : `MYSQL_${version_num.replace('.', '_')}`,
+    database_version: is_postgres ? `POSTGRES_${version_num}` : `MYSQL_${version_num.replace('.', '_')}`,
     storage_size_gb: parse_storage_gb(data.storage as string) || 20,
     backup_enabled: true,
     port: data.port || (is_postgres ? 5432 : 3306),
@@ -239,10 +228,7 @@ function extract_cloud_sql_properties(
   };
 }
 
-function extract_cloud_functions_properties(
-  data: Record<string, unknown>,
-  region: string
-): Record<string, unknown> {
+function extract_cloud_functions_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
   return {
     region,
     runtime: normalize_runtime(data.runtime as string) || 'nodejs20',
@@ -255,10 +241,7 @@ function extract_cloud_functions_properties(
   };
 }
 
-function extract_cloud_scheduler_properties(
-  data: Record<string, unknown>,
-  region: string
-): Record<string, unknown> {
+function extract_cloud_scheduler_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
   const schedule_map: Record<string, string> = {
     daily: '0 0 * * *',
     hourly: '0 * * * *',
@@ -277,10 +260,7 @@ function extract_cloud_scheduler_properties(
   };
 }
 
-function extract_storage_bucket_properties(
-  data: Record<string, unknown>,
-  region: string
-): Record<string, unknown> {
+function extract_storage_bucket_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
   return {
     location: region.toUpperCase().split('-').slice(0, 1).join('') || 'US',
     storage_class: data.storageClass || 'STANDARD',
@@ -289,20 +269,14 @@ function extract_storage_bucket_properties(
   };
 }
 
-function extract_pubsub_properties(
-  data: Record<string, unknown>,
-  _region: string
-): Record<string, unknown> {
+function extract_pubsub_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
   return {
     message_retention_duration: data.retentionDuration || '604800s',
     labels: {},
   };
 }
 
-function extract_firestore_properties(
-  data: Record<string, unknown>,
-  region: string
-): Record<string, unknown> {
+function extract_firestore_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
   return {
     location_id: region,
     type: data.databaseType || 'FIRESTORE_NATIVE',
@@ -310,10 +284,7 @@ function extract_firestore_properties(
   };
 }
 
-function extract_memorystore_properties(
-  data: Record<string, unknown>,
-  region: string
-): Record<string, unknown> {
+function extract_memorystore_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
   return {
     region,
     tier: data.tier || 'BASIC',
@@ -324,30 +295,21 @@ function extract_memorystore_properties(
   };
 }
 
-function extract_secret_manager_properties(
-  data: Record<string, unknown>,
-  _region: string
-): Record<string, unknown> {
+function extract_secret_manager_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
   return {
     replication_type: data.replicationType || 'automatic',
     labels: {},
   };
 }
 
-function extract_identity_platform_properties(
-  data: Record<string, unknown>,
-  _region: string
-): Record<string, unknown> {
+function extract_identity_platform_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
   return {
     sign_in_providers: data.signInProviders || ['email', 'google'],
     mfa_enabled: data.mfaEnabled ?? false,
   };
 }
 
-function extract_bigquery_properties(
-  data: Record<string, unknown>,
-  region: string
-): Record<string, unknown> {
+function extract_bigquery_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
   return {
     location: region,
     default_table_expiration_ms: data.tableExpirationMs,
@@ -355,20 +317,14 @@ function extract_bigquery_properties(
   };
 }
 
-function extract_api_gateway_properties(
-  data: Record<string, unknown>,
-  region: string
-): Record<string, unknown> {
+function extract_api_gateway_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
   return {
     region,
     labels: {},
   };
 }
 
-function extract_load_balancer_properties(
-  data: Record<string, unknown>,
-  _region: string
-): Record<string, unknown> {
+function extract_load_balancer_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
   return {
     scheme: 'EXTERNAL',
     port_range: data.port || '443',
@@ -377,10 +333,7 @@ function extract_load_balancer_properties(
   };
 }
 
-function extract_logging_properties(
-  data: Record<string, unknown>,
-  _region: string
-): Record<string, unknown> {
+function extract_logging_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
   return {
     filter: data.filter || '',
     destination_type: data.destinationType || 'logging.googleapis.com',
@@ -388,10 +341,7 @@ function extract_logging_properties(
   };
 }
 
-function extract_vertex_ai_properties(
-  data: Record<string, unknown>,
-  region: string
-): Record<string, unknown> {
+function extract_vertex_ai_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
   return {
     region,
     display_name: data.label || 'vertex-endpoint',
@@ -399,10 +349,7 @@ function extract_vertex_ai_properties(
   };
 }
 
-function extract_dataflow_properties(
-  data: Record<string, unknown>,
-  region: string
-): Record<string, unknown> {
+function extract_dataflow_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
   return {
     region,
     template_type: data.templateType || 'streaming',
@@ -410,10 +357,7 @@ function extract_dataflow_properties(
   };
 }
 
-function extract_discovery_engine_properties(
-  data: Record<string, unknown>,
-  region: string
-): Record<string, unknown> {
+function extract_discovery_engine_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
   return {
     location: region,
     solution_type: 'SOLUTION_TYPE_SEARCH',
@@ -421,10 +365,7 @@ function extract_discovery_engine_properties(
   };
 }
 
-function extract_gke_properties(
-  data: Record<string, unknown>,
-  region: string
-): Record<string, unknown> {
+function extract_gke_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
   return {
     location: region,
     initial_node_count: data.nodeCount || 3,
@@ -433,10 +374,7 @@ function extract_gke_properties(
   };
 }
 
-function extract_domain_mapping_properties(
-  data: Record<string, unknown>,
-  region: string
-): Record<string, unknown> {
+function extract_domain_mapping_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
   return {
     domain: [data.subdomain, data.hostname].filter(Boolean).join('.') || (data.hostname as string) || '',
     hostname: (data.hostname as string) || '',
@@ -451,32 +389,30 @@ function extract_domain_mapping_properties(
 // Property extraction dispatcher
 // =============================================================================
 
-const PROPERTY_EXTRACTORS: Record<
-  string,
-  (data: Record<string, unknown>, region: string) => Record<string, unknown>
-> = {
-  'gcp.run.service': extract_cloud_run_properties,
-  'gcp.run.job': extract_cloud_run_job_properties,
-  'gcp.sql.databaseInstance': extract_cloud_sql_properties,
-  'gcp.cloudfunctions.function': extract_cloud_functions_properties,
-  'gcp.cloudscheduler.job': extract_cloud_scheduler_properties,
-  'gcp.storage.bucket': extract_storage_bucket_properties,
-  'gcp.pubsub.topic': extract_pubsub_properties,
-  'gcp.firestore.database': extract_firestore_properties,
-  'gcp.redis.instance': extract_memorystore_properties,
-  'gcp.secretmanager.secret': extract_secret_manager_properties,
-  'gcp.identityplatform.config': extract_identity_platform_properties,
-  'gcp.bigquery.dataset': extract_bigquery_properties,
-  'gcp.apigateway.api': extract_api_gateway_properties,
-  'gcp.compute.globalForwardingRule': extract_load_balancer_properties,
-  'gcp.logging.sink': extract_logging_properties,
-  'gcp.aiplatform.endpoint': extract_vertex_ai_properties,
-  'gcp.aiplatform.index': extract_vertex_ai_properties,
-  'gcp.dataflow.job': extract_dataflow_properties,
-  'gcp.discoveryengine.searchEngine': extract_discovery_engine_properties,
-  'gcp.container.cluster': extract_gke_properties,
-  'gcp.run.domainMapping': extract_domain_mapping_properties,
-};
+const PROPERTY_EXTRACTORS: Record<string, (data: Record<string, unknown>, region: string) => Record<string, unknown>> =
+  {
+    'gcp.run.service': extract_cloud_run_properties,
+    'gcp.run.job': extract_cloud_run_job_properties,
+    'gcp.sql.databaseInstance': extract_cloud_sql_properties,
+    'gcp.cloudfunctions.function': extract_cloud_functions_properties,
+    'gcp.cloudscheduler.job': extract_cloud_scheduler_properties,
+    'gcp.storage.bucket': extract_storage_bucket_properties,
+    'gcp.pubsub.topic': extract_pubsub_properties,
+    'gcp.firestore.database': extract_firestore_properties,
+    'gcp.redis.instance': extract_memorystore_properties,
+    'gcp.secretmanager.secret': extract_secret_manager_properties,
+    'gcp.identityplatform.config': extract_identity_platform_properties,
+    'gcp.bigquery.dataset': extract_bigquery_properties,
+    'gcp.apigateway.api': extract_api_gateway_properties,
+    'gcp.compute.globalForwardingRule': extract_load_balancer_properties,
+    'gcp.logging.sink': extract_logging_properties,
+    'gcp.aiplatform.endpoint': extract_vertex_ai_properties,
+    'gcp.aiplatform.index': extract_vertex_ai_properties,
+    'gcp.dataflow.job': extract_dataflow_properties,
+    'gcp.discoveryengine.searchEngine': extract_discovery_engine_properties,
+    'gcp.container.cluster': extract_gke_properties,
+    'gcp.run.domainMapping': extract_domain_mapping_properties,
+  };
 
 // =============================================================================
 // Main translation function
@@ -499,7 +435,7 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
   if (DESIGN_ONLY_PROVIDERS.has(provider)) {
     warnings.push(
       `Provider "${provider}" is design-only — deployment is not yet supported. ` +
-      `Blocks can be used for architecture planning but will not be provisioned.`
+        `Blocks can be used for architecture planning but will not be provisioned.`,
     );
   }
 
@@ -562,9 +498,7 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
     // Look up the deployer type
     const gcp_type = type_map[ice_type];
     if (!gcp_type) {
-      warnings.push(
-        `No ${provider} mapping for iceType "${ice_type}" (node: ${node.data.label || node.id}). Skipped.`
-      );
+      warnings.push(`No ${provider} mapping for iceType "${ice_type}" (node: ${node.data.label || node.id}). Skipped.`);
       skipped.push({
         nodeId: node.id,
         label: (node.data.label as string) || node.id,

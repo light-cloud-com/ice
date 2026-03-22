@@ -55,15 +55,7 @@ export type BlockStatus =
 /**
  * Provider type
  */
-export type CloudProvider =
-  | 'aws'
-  | 'gcp'
-  | 'azure'
-  | 'kubernetes'
-  | 'alibaba'
-  | 'oci'
-  | 'digitalocean'
-  | 'custom';
+export type CloudProvider = 'aws' | 'gcp' | 'azure' | 'kubernetes' | 'alibaba' | 'oci' | 'digitalocean' | 'custom';
 
 // =============================================================================
 // Block Definition
@@ -1236,7 +1228,7 @@ export function getBlockTemplate(name: string): BlockTemplate | undefined {
 export function createBlockFromTemplate(
   template: BlockTemplate,
   inputs: Record<string, unknown>,
-  provider: CloudProvider = 'aws'
+  provider: CloudProvider = 'aws',
 ): CloudBlock {
   const now = new Date().toISOString();
   const id = `block-${template.name}-${Date.now()}`;

@@ -179,8 +179,8 @@ const deploySlice = createSlice({
         DEPLOY_SLICE_MESSAGES.PLAN_READY(
           action.payload.creates.length,
           action.payload.updates.length,
-          action.payload.deletes.length
-        )
+          action.payload.deletes.length,
+        ),
       );
     },
 
@@ -193,10 +193,7 @@ const deploySlice = createSlice({
       state.error = null;
       state.logs.push(DEPLOY_SLICE_MESSAGES.DEPLOYING);
     },
-    setDeployProgress(
-      state,
-      action: PayloadAction<{ progress: number; resource: string; message: string }>
-    ) {
+    setDeployProgress(state, action: PayloadAction<{ progress: number; resource: string; message: string }>) {
       state.progress = action.payload.progress;
       state.currentResource = action.payload.resource;
       state.logs.push(action.payload.message);
@@ -210,9 +207,7 @@ const deploySlice = createSlice({
       state.status = 'success';
       state.progress = 100;
       state.currentResource = '';
-      state.logs.push(
-        DEPLOY_SLICE_MESSAGES.DEPLOY_COMPLETED((action.payload.duration_ms / 1000).toFixed(1))
-      );
+      state.logs.push(DEPLOY_SLICE_MESSAGES.DEPLOY_COMPLETED((action.payload.duration_ms / 1000).toFixed(1)));
 
       // Add to history (capped at 50 entries)
       state.history.unshift({

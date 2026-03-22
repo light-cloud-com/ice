@@ -152,11 +152,7 @@ export function UserSettingsPage() {
               disabled={profileLoading || !firstName.trim()}
               className="flex items-center gap-2 rounded-md bg-ice-accent px-4 py-2 text-sm font-medium text-ice-text-1 hover:bg-ice-accent-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {profileLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
+              {profileLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               Save profile
             </button>
           </div>
@@ -172,9 +168,7 @@ export function UserSettingsPage() {
 
         <form onSubmit={handlePasswordSave} className="space-y-4 px-6 py-5">
           <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-ice-text-2">
-              Current password
-            </span>
+            <span className="mb-1.5 block text-sm font-medium text-ice-text-2">Current password</span>
             <input
               type="password"
               value={currentPassword}
@@ -195,9 +189,7 @@ export function UserSettingsPage() {
           </label>
 
           <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-ice-text-2">
-              Confirm new password
-            </span>
+            <span className="mb-1.5 block text-sm font-medium text-ice-text-2">Confirm new password</span>
             <input
               type="password"
               value={confirmPassword}
@@ -224,11 +216,7 @@ export function UserSettingsPage() {
               disabled={passwordLoading || !currentPassword || !newPassword || !confirmPassword}
               className="flex items-center gap-2 rounded-md bg-ice-accent px-4 py-2 text-sm font-medium text-ice-text-1 hover:bg-ice-accent-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {passwordLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
+              {passwordLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               Change password
             </button>
           </div>

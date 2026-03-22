@@ -115,7 +115,7 @@ export const useCanvasMouseEvents = ({
       if (!snapToGrid || gridSize <= 0) return value;
       return Math.round(value / gridSize) * gridSize;
     },
-    [snapToGrid, gridSize]
+    [snapToGrid, gridSize],
   );
 
   /**
@@ -147,7 +147,7 @@ export const useCanvasMouseEvents = ({
         panY: newPanY,
       });
     },
-    [svgRef, viewState, onViewStateChange]
+    [svgRef, viewState, onViewStateChange],
   );
 
   /**
@@ -171,7 +171,7 @@ export const useCanvasMouseEvents = ({
 
       return null;
     },
-    [viewState.scale]
+    [viewState.scale],
   );
 
   /**
@@ -205,7 +205,7 @@ export const useCanvasMouseEvents = ({
       }
       return { node: null, resizeHandle: null };
     },
-    [nodes, getResizeHandle]
+    [nodes, getResizeHandle],
   );
 
   /**
@@ -294,7 +294,7 @@ export const useCanvasMouseEvents = ({
         });
       }
     },
-    [screenToCanvas, findNodeAtPosition, onSelect, onNodeResize, spacePressed]
+    [screenToCanvas, findNodeAtPosition, onSelect, onNodeResize, spacePressed],
   );
 
   /**
@@ -355,7 +355,7 @@ export const useCanvasMouseEvents = ({
         onNodeResize(dragState.draggedNodeId, newWidth, newHeight, newX, newY);
       }
     },
-    [dragState, viewState, screenToCanvas, onViewStateChange, onNodeMove, onNodeResize, snapValue]
+    [dragState, viewState, screenToCanvas, onViewStateChange, onNodeMove, onNodeResize, snapValue],
   );
 
   /**

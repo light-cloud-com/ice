@@ -181,8 +181,7 @@ const projectListSlice = createSlice({
 // Exports
 // =============================================================================
 
-export const { setRootDirectory, setScanResults, setLoading, toggleFolder, setSearchQuery } =
-  projectListSlice.actions;
+export const { setRootDirectory, setScanResults, setLoading, toggleFolder, setSearchQuery } = projectListSlice.actions;
 
 export default projectListSlice.reducer;
 
@@ -190,16 +189,11 @@ export default projectListSlice.reducer;
 // Selectors
 // =============================================================================
 
-export const selectRootDirectory = (state: { projectList: ProjectListState }) =>
-  state.projectList.rootDirectory;
-export const selectProjectFiles = (state: { projectList: ProjectListState }) =>
-  state.projectList.files;
-export const selectProjectFolders = (state: { projectList: ProjectListState }) =>
-  state.projectList.folders;
-export const selectProjectSearchQuery = (state: { projectList: ProjectListState }) =>
-  state.projectList.searchQuery;
-export const selectProjectListLoading = (state: { projectList: ProjectListState }) =>
-  state.projectList.isLoading;
+export const selectRootDirectory = (state: { projectList: ProjectListState }) => state.projectList.rootDirectory;
+export const selectProjectFiles = (state: { projectList: ProjectListState }) => state.projectList.files;
+export const selectProjectFolders = (state: { projectList: ProjectListState }) => state.projectList.folders;
+export const selectProjectSearchQuery = (state: { projectList: ProjectListState }) => state.projectList.searchQuery;
+export const selectProjectListLoading = (state: { projectList: ProjectListState }) => state.projectList.isLoading;
 
 // Get files filtered by search query
 export const selectFilteredFiles = (state: { projectList: ProjectListState }) => {

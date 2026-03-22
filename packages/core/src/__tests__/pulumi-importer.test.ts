@@ -387,12 +387,8 @@ describe('Type Mapper', () => {
     });
 
     it('should map Azure types', () => {
-      expect(get_ice_type('azure:compute/virtualMachine:VirtualMachine')).toBe(
-        'azure.compute.virtual_machine'
-      );
-      expect(get_ice_type('azure:network/virtualNetwork:VirtualNetwork')).toBe(
-        'azure.network.virtual_network'
-      );
+      expect(get_ice_type('azure:compute/virtualMachine:VirtualMachine')).toBe('azure.compute.virtual_machine');
+      expect(get_ice_type('azure:network/virtualNetwork:VirtualNetwork')).toBe('azure.network.virtual_network');
       expect(get_ice_type('azure:storage/account:Account')).toBe('azure.storage.storage_account');
     });
 
@@ -604,9 +600,7 @@ describe('Pulumi State Importer', () => {
       expect(result.success).toBe(true);
       expect(result.resources).toHaveLength(2);
 
-      const rg = result.resources.find(
-        (r) => r.pulumi_type === 'azure:core/resourceGroup:ResourceGroup'
-      );
+      const rg = result.resources.find((r) => r.pulumi_type === 'azure:core/resourceGroup:ResourceGroup');
       expect(rg).toBeDefined();
       expect(rg?.name).toBe('rg');
       expect(rg?.provider).toBe('azure');
@@ -627,11 +621,9 @@ describe('Pulumi State Importer', () => {
       });
 
       expect(result.resources).toHaveLength(3); // 1 vpc + 2 subnets
-      expect(
-        result.resources.every((r) =>
-          ['aws:ec2/vpc:Vpc', 'aws:ec2/subnet:Subnet'].includes(r.pulumi_type)
-        )
-      ).toBe(true);
+      expect(result.resources.every((r) => ['aws:ec2/vpc:Vpc', 'aws:ec2/subnet:Subnet'].includes(r.pulumi_type))).toBe(
+        true,
+      );
     });
 
     it('should filter by excluded types', () => {
@@ -639,9 +631,7 @@ describe('Pulumi State Importer', () => {
         exclude_types: ['aws:ec2/instance:Instance'],
       });
 
-      expect(
-        result.resources.find((r) => r.pulumi_type === 'aws:ec2/instance:Instance')
-      ).toBeUndefined();
+      expect(result.resources.find((r) => r.pulumi_type === 'aws:ec2/instance:Instance')).toBeUndefined();
     });
   });
 

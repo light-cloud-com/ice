@@ -16,7 +16,7 @@ import type { PropertyChange } from '../types/deployment.js';
 export function diff_properties(
   desired: Record<string, unknown>,
   current: Record<string, unknown>,
-  sensitive_keys: Set<string> = new Set()
+  sensitive_keys: Set<string> = new Set(),
 ): PropertyChange[] {
   const changes: PropertyChange[] = [];
 
@@ -48,7 +48,7 @@ export function diff_properties(
         const nested_changes = diff_properties(
           desired_value as Record<string, unknown>,
           current_value as Record<string, unknown>,
-          sensitive_keys
+          sensitive_keys,
         );
         for (const nested of nested_changes) {
           changes.push({

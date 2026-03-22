@@ -31,10 +31,7 @@ export class CanvasHelper {
       throw new Error('Could not find palette item or canvas');
     }
 
-    await this.page.mouse.move(
-      paletteBounds.x + paletteBounds.width / 2,
-      paletteBounds.y + paletteBounds.height / 2
-    );
+    await this.page.mouse.move(paletteBounds.x + paletteBounds.width / 2, paletteBounds.y + paletteBounds.height / 2);
     await this.page.mouse.down();
     await this.page.mouse.move(canvasBounds.x + targetX, canvasBounds.y + targetY, {
       steps: 10,
@@ -64,16 +61,11 @@ export class CanvasHelper {
       throw new Error('Could not find source or target port');
     }
 
-    await this.page.mouse.move(
-      sourceBounds.x + sourceBounds.width / 2,
-      sourceBounds.y + sourceBounds.height / 2
-    );
+    await this.page.mouse.move(sourceBounds.x + sourceBounds.width / 2, sourceBounds.y + sourceBounds.height / 2);
     await this.page.mouse.down();
-    await this.page.mouse.move(
-      targetBounds.x + targetBounds.width / 2,
-      targetBounds.y + targetBounds.height / 2,
-      { steps: 10 }
-    );
+    await this.page.mouse.move(targetBounds.x + targetBounds.width / 2, targetBounds.y + targetBounds.height / 2, {
+      steps: 10,
+    });
     await this.page.mouse.up();
   }
 

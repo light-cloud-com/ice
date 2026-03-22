@@ -25,8 +25,14 @@ import onboardingReducer from './slices/onboarding-slice';
 
 // Action logger middleware — logs significant Redux dispatches for E2E observability
 const LOGGED_ACTION_PREFIXES = [
-  'deploy/', 'account/', 'integrations/', 'environments/', 'pipeline/',
-  'onboarding/', 'ai/', 'projects/',
+  'deploy/',
+  'account/',
+  'integrations/',
+  'environments/',
+  'pipeline/',
+  'onboarding/',
+  'ai/',
+  'projects/',
 ];
 const actionLoggerMiddleware: Middleware = () => (next) => (action: any) => {
   const type = action?.type || '';
@@ -92,11 +98,16 @@ store.subscribe(() => {
 
       // Always persist to localStorage (works offline, before auth)
       try {
-        localStorage.setItem('ice-cards', JSON.stringify({
-          cards: state.cards.cards,
-          activeCardId,
-        }));
-      } catch { /* ignore quota errors */ }
+        localStorage.setItem(
+          'ice-cards',
+          JSON.stringify({
+            cards: state.cards.cards,
+            activeCardId,
+          }),
+        );
+      } catch {
+        /* ignore quota errors */
+      }
 
       // Persist to backend if authenticated (skip if previous save still in flight)
       if (_backendSaveInFlight) return;

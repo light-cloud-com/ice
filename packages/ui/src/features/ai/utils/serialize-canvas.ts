@@ -12,11 +12,32 @@ import { BLOCK_BLUEPRINTS } from '../../../config/blocks';
 
 /** Properties to include in the serialized node (skip noisy internal fields) */
 const RELEVANT_PROPERTIES = new Set([
-  'iceType', 'label', 'provider', 'behavior', 'runtime', 'port', 'domain',
-  'replicas', 'version', 'size', 'memory', 'cidr', 'zone', 'region',
-  'repository', 'image', 'protocol', 'description', 'status',
-  'minInstances', 'maxInstances', 'scalingMetric', 'scalingThreshold',
-  'estimatedCost', 'resourceId', 'blockTypeName',
+  'iceType',
+  'label',
+  'provider',
+  'behavior',
+  'runtime',
+  'port',
+  'domain',
+  'replicas',
+  'version',
+  'size',
+  'memory',
+  'cidr',
+  'zone',
+  'region',
+  'repository',
+  'image',
+  'protocol',
+  'description',
+  'status',
+  'minInstances',
+  'maxInstances',
+  'scalingMetric',
+  'scalingThreshold',
+  'estimatedCost',
+  'resourceId',
+  'blockTypeName',
 ]);
 
 /** Cached block type list (computed once) */

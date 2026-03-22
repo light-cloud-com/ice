@@ -88,13 +88,7 @@ export interface GCPImportedResource {
   readonly region?: string;
   readonly labels: Record<string, string>;
   /** Node behavior type matching high-level resource definitions */
-  readonly behavior?:
-    | 'scalable'
-    | 'container'
-    | 'singleton'
-    | 'streaming'
-    | 'stateful'
-    | 'connector';
+  readonly behavior?: 'scalable' | 'container' | 'singleton' | 'streaming' | 'stateful' | 'connector';
 }
 
 /**

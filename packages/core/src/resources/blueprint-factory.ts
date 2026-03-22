@@ -14,14 +14,7 @@ import { getAllHighLevelResources } from './high-level-resources.js';
 // Types
 // =============================================================================
 
-export type BlueprintProvider =
-  | 'aws'
-  | 'gcp'
-  | 'azure'
-  | 'kubernetes'
-  | 'alibaba'
-  | 'oci'
-  | 'digitalocean';
+export type BlueprintProvider = 'aws' | 'gcp' | 'azure' | 'kubernetes' | 'alibaba' | 'oci' | 'digitalocean';
 
 export interface BlueprintProviderVariant {
   /** Which provider this variant applies to */
@@ -88,15 +81,12 @@ export interface BlueprintOverrides {
  * @param resourceId - ID in HIGH_LEVEL_CATEGORIES (e.g., 'postgres-db')
  * @param overrides - UI-specific configuration
  */
-export function createBlueprintFromResource(
-  resourceId: string,
-  overrides: BlueprintOverrides
-): GeneratedBlueprint {
+export function createBlueprintFromResource(resourceId: string, overrides: BlueprintOverrides): GeneratedBlueprint {
   const resource = getAllHighLevelResources().find((r) => r.id === resourceId);
   if (!resource) {
     throw new Error(
       `[blueprint-factory] No high-level resource found for resourceId: "${resourceId}". ` +
-        `Check that the ID matches an entry in HIGH_LEVEL_CATEGORIES.`
+        `Check that the ID matches an entry in HIGH_LEVEL_CATEGORIES.`,
     );
   }
 

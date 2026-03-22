@@ -46,92 +46,97 @@ export function useAiCommand() {
   /**
    * Send an intent to the AI and stream back operations.
    */
-  const sendIntent = useCallback(async (intent: string) => {
-    if (isProcessing) return;
+  const sendIntent = useCallback(
+    async (intent: string) => {
+      if (isProcessing) return;
 
-    dispatch(startAiRequest(intent));
+      dispatch(startAiRequest(intent));
 
-    const state = store.getState();
-    const canvasContext = serializeCanvas(state);
-    const activeCard = selectActiveCard(state);
-    if (!activeCard) {
-      dispatch(setAiError('No active card'));
-      return;
-    }
-
-    const token = getAccessToken();
-
-    try {
-      const response = await fetch(`${API_BASE}/ai/canvas-intent`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          intent,
-          canvasContext,
-          cardId: activeCard.id,
-        }),
-      });
-
-      if (!response.ok) {
-        if (response.status === 503) {
-          dispatch(setAiError(
-            'AI_NOT_CONFIGURED: The AI assistant requires an Anthropic API key.\n\n' +
-            'To set up:\n' +
-            '1. Get an API key at https://console.anthropic.com/settings/keys\n' +
-            '2. Add ANTHROPIC_API_KEY=sk-ant-... to your .env file\n' +
-            '3. Restart the server'
-          ));
-          return;
-        }
-        const errorBody = await response.text();
-        let errorMsg = `Request failed: ${response.status}`;
-        try {
-          const parsed = JSON.parse(errorBody);
-          errorMsg = parsed.message || errorMsg;
-        } catch {
-          if (errorBody) errorMsg = errorBody;
-        }
-        dispatch(setAiError(errorMsg));
+      const state = store.getState();
+      const canvasContext = serializeCanvas(state);
+      const activeCard = selectActiveCard(state);
+      if (!activeCard) {
+        dispatch(setAiError('No active card'));
         return;
       }
 
-      const contentType = response.headers.get('content-type') || '';
+      const token = getAccessToken();
 
-      // SSE streaming path
-      if (contentType.includes('text/event-stream')) {
-        await processSSEStream(response, dispatch);
-      } else {
-        // Non-streaming JSON fallback
-        const data = await response.json();
-        console.log('[AI] Response received:', {
-          hasExplanation: !!data.explanation,
-          operationCount: data.operations?.length ?? 0,
-          suggestionsCount: data.suggestions?.length ?? 0,
-          responseKeys: Object.keys(data),
+      try {
+        const response = await fetch(`${API_BASE}/ai/canvas-intent`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({
+            intent,
+            canvasContext,
+            cardId: activeCard.id,
+          }),
         });
-        // Parse as flat AiResponse
-        const operations: AiCanvasOp[] = data.operations || [];
-        if (operations.length === 0) {
-          console.warn('[AI] No operations in response. Full response:', data);
+
+        if (!response.ok) {
+          if (response.status === 503) {
+            dispatch(
+              setAiError(
+                'AI_NOT_CONFIGURED: The AI assistant requires an Anthropic API key.\n\n' +
+                  'To set up:\n' +
+                  '1. Get an API key at https://console.anthropic.com/settings/keys\n' +
+                  '2. Add ANTHROPIC_API_KEY=sk-ant-... to your .env file\n' +
+                  '3. Restart the server',
+              ),
+            );
+            return;
+          }
+          const errorBody = await response.text();
+          let errorMsg = `Request failed: ${response.status}`;
+          try {
+            const parsed = JSON.parse(errorBody);
+            errorMsg = parsed.message || errorMsg;
+          } catch {
+            if (errorBody) errorMsg = errorBody;
+          }
+          dispatch(setAiError(errorMsg));
+          return;
         }
-        for (const op of operations) {
-          dispatch(addStreamedOperation(op));
+
+        const contentType = response.headers.get('content-type') || '';
+
+        // SSE streaming path
+        if (contentType.includes('text/event-stream')) {
+          await processSSEStream(response, dispatch);
+        } else {
+          // Non-streaming JSON fallback
+          const data = await response.json();
+          console.log('[AI] Response received:', {
+            hasExplanation: !!data.explanation,
+            operationCount: data.operations?.length ?? 0,
+            suggestionsCount: data.suggestions?.length ?? 0,
+            responseKeys: Object.keys(data),
+          });
+          // Parse as flat AiResponse
+          const operations: AiCanvasOp[] = data.operations || [];
+          if (operations.length === 0) {
+            console.warn('[AI] No operations in response. Full response:', data);
+          }
+          for (const op of operations) {
+            dispatch(addStreamedOperation(op));
+          }
+          if (data.explanation) {
+            dispatch(setExplanation(data.explanation));
+          }
+          if (data.suggestions) {
+            dispatch(setSuggestions(data.suggestions));
+          }
+          dispatch(finishStreaming());
         }
-        if (data.explanation) {
-          dispatch(setExplanation(data.explanation));
-        }
-        if (data.suggestions) {
-          dispatch(setSuggestions(data.suggestions));
-        }
-        dispatch(finishStreaming());
+      } catch (err) {
+        dispatch(setAiError((err as Error).message));
       }
-    } catch (err) {
-      dispatch(setAiError((err as Error).message));
-    }
-  }, [dispatch, isProcessing]);
+    },
+    [dispatch, isProcessing],
+  );
 
   /**
    * Execute the pending operations on the canvas with staggered entrance animations.
@@ -152,22 +157,20 @@ export function useAiCommand() {
     dispatch(setAnimatingEdges(nodeDelays.edges));
 
     // Clear animations after all have played
-    const maxDelay = Math.max(
-      ...Object.values(nodeDelays.nodes),
-      ...Object.values(nodeDelays.edges),
-      0
-    );
+    const maxDelay = Math.max(...Object.values(nodeDelays.nodes), ...Object.values(nodeDelays.edges), 0);
     setTimeout(() => {
       dispatch(clearAnimations());
     }, maxDelay + 600); // animation duration (400ms) + buffer
 
     const intent = store.getState().ai.currentIntent || '';
     const explanation = store.getState().ai.lastResponse?.explanation || '';
-    dispatch(addToHistory({
-      intent,
-      explanation,
-      operationCount: result.executedOps,
-    }));
+    dispatch(
+      addToHistory({
+        intent,
+        explanation,
+        operationCount: result.executedOps,
+      }),
+    );
 
     dispatch(clearPendingOperations());
 
@@ -185,11 +188,13 @@ export function useAiCommand() {
     const snapshot = store.getState().ai.lastCanvasSnapshot;
     if (!snapshot) return;
 
-    dispatch(importToActiveCard({
-      nodes: snapshot.nodes,
-      edges: snapshot.edges,
-      skipAutoOrganize: true,
-    }));
+    dispatch(
+      importToActiveCard({
+        nodes: snapshot.nodes,
+        edges: snapshot.edges,
+        skipAutoOrganize: true,
+      }),
+    );
     dispatch(clearCanvasSnapshot());
   }, [dispatch]);
 
@@ -214,10 +219,7 @@ export function useAiCommand() {
 /** Infrastructure layer priority for animation ordering */
 function getLayerPriority(op: AiCanvasOp): number {
   if (op.op === 'addNode' || op.op === 'addBlueprint') {
-    const iceType =
-      op.op === 'addNode'
-        ? ((op.node.data?.iceType as string) || '')
-        : (op.blockType || '');
+    const iceType = op.op === 'addNode' ? (op.node.data?.iceType as string) || '' : op.blockType || '';
     const nodeType = op.op === 'addNode' ? op.node.type : '';
 
     // Network containers first (the "backbone")
@@ -342,11 +344,7 @@ async function processSSEStream(response: Response, dispatch: AppDispatch) {
   }
 }
 
-function handleSSEEvent(
-  type: string,
-  data: Record<string, unknown>,
-  dispatch: AppDispatch,
-) {
+function handleSSEEvent(type: string, data: Record<string, unknown>, dispatch: AppDispatch) {
   switch (type) {
     case 'thinking':
       dispatch(setStreamingStatus((data.status as string) || 'Thinking...'));

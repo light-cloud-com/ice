@@ -51,7 +51,7 @@ function parse_repository(repository: string): { owner: string; repo: string } |
 export async function ensure_artifact_registry(
   ctx: GCPHandlerContext,
   region: string,
-  repoName: string = 'ice-images'
+  repoName: string = 'ice-images',
 ): Promise<void> {
   const parent = `projects/${ctx.project}/locations/${region}`;
   const url = `${ARTIFACT_REGISTRY_BASE}/${parent}/repositories?repositoryId=${repoName}`;
@@ -86,7 +86,7 @@ export async function build_from_source(
   repository: string,
   branch: string,
   imageUri: string,
-  onLog?: (message: string) => void
+  onLog?: (message: string) => void,
 ): Promise<string> {
   const buildsUrl = `${CLOUD_BUILD_BASE}/projects/${ctx.project}/builds`;
 

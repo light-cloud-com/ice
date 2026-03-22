@@ -26,7 +26,11 @@ export function ProfileAvatar() {
   const user = useSelector((s: RootState) => s.account.user);
 
   const handleLogout = useCallback(async () => {
-    try { await logout(); } catch { /* best-effort */ }
+    try {
+      await logout();
+    } catch {
+      /* best-effort */
+    }
     setAccessToken(null);
     dispatch(clearUser());
     navigate('/login');
@@ -42,11 +46,7 @@ export function ProfileAvatar() {
           className="flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-ice-hover text-ice-sm font-medium text-ice-text-2 hover:bg-ice-active transition-colors outline-none"
           aria-label="User menu"
         >
-          {user?.avatar ? (
-            <img src={user.avatar} alt="" className="h-7 w-7 rounded-full object-cover" />
-          ) : (
-            initials
-          )}
+          {user?.avatar ? <img src={user.avatar} alt="" className="h-7 w-7 rounded-full object-cover" /> : initials}
         </button>
       </DropdownMenu.Trigger>
 

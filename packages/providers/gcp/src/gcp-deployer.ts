@@ -8,12 +8,7 @@
 import type { DeployOptions, ResourceDeployResult, ProviderDeployer } from '../../types.js';
 import type { GCPHandlerContext, GCPResourceHandler } from './types.js';
 import { initialize_gcp_clients, create_rest_client } from './sdk-loader.js';
-import {
-  isApiNotEnabledError,
-  extractApiName,
-  GCP_DEPLOYER_MESSAGES,
-  buildApiEnableUrl,
-} from '../../messages.js';
+import { isApiNotEnabledError, extractApiName, GCP_DEPLOYER_MESSAGES, buildApiEnableUrl } from '../../messages.js';
 
 // Import handlers
 import { cloud_run_handler } from './handlers/cloud-run.js';
@@ -148,7 +143,7 @@ export class GCPDeployer implements ProviderDeployer {
     type: string,
     name: string,
     properties: Record<string, unknown>,
-    options: Record<string, unknown>
+    options: Record<string, unknown>,
   ): Promise<ResourceDeployResult> {
     return this.dispatch('create', type, name, properties, '', {}, options);
   }
@@ -159,24 +154,16 @@ export class GCPDeployer implements ProviderDeployer {
     provider_id: string,
     properties: Record<string, unknown>,
     current_properties: Record<string, unknown>,
-    options: Record<string, unknown>
+    options: Record<string, unknown>,
   ): Promise<ResourceDeployResult> {
-    return this.dispatch(
-      'update',
-      type,
-      name,
-      properties,
-      provider_id,
-      current_properties,
-      options
-    );
+    return this.dispatch('update', type, name, properties, provider_id, current_properties, options);
   }
 
   async delete(
     type: string,
     name: string,
     provider_id: string,
-    options: Record<string, unknown>
+    options: Record<string, unknown>,
   ): Promise<ResourceDeployResult> {
     return this.dispatch('delete', type, name, {}, provider_id, {}, options);
   }
@@ -192,7 +179,7 @@ export class GCPDeployer implements ProviderDeployer {
     properties: Record<string, unknown>,
     provider_id: string,
     current_properties: Record<string, unknown>,
-    _options: Record<string, unknown>
+    _options: Record<string, unknown>,
   ): Promise<ResourceDeployResult> {
     if (!this.ctx) {
       return {
@@ -220,14 +207,7 @@ export class GCPDeployer implements ProviderDeployer {
     }
 
     // First attempt
-    let result = await this.call_handler(
-      handler,
-      action,
-      name,
-      properties,
-      provider_id,
-      current_properties
-    );
+    let result = await this.call_handler(handler, action, name, properties, provider_id, current_properties);
 
     // Auto-enable API and retry on PERMISSION_DENIED / "API not enabled"
     if (!result.success && isApiNotEnabledError(result.error)) {
@@ -237,14 +217,7 @@ export class GCPDeployer implements ProviderDeployer {
         const enable_result = await this.enable_api(api_name);
         if (enable_result.ok) {
           this.on_log?.(GCP_DEPLOYER_MESSAGES.API_ENABLED_RETRYING(api_name));
-          result = await this.call_handler(
-            handler,
-            action,
-            name,
-            properties,
-            provider_id,
-            current_properties
-          );
+          result = await this.call_handler(handler, action, name, properties, provider_id, current_properties);
         } else {
           // Enrich the error with the console URL and enable instructions
           const project = this.ctx!.project;
@@ -252,7 +225,7 @@ export class GCPDeployer implements ProviderDeployer {
           result.error = GCP_DEPLOYER_MESSAGES.API_NOT_ENABLED_MANUAL(
             api_name,
             enable_result.reason || '',
-            console_url
+            console_url,
           );
           result.api_enable_url = console_url;
           this.on_log?.(GCP_DEPLOYER_MESSAGES.AUTO_ENABLE_FAILED(api_name));
@@ -269,7 +242,7 @@ export class GCPDeployer implements ProviderDeployer {
     name: string,
     properties: Record<string, unknown>,
     provider_id: string,
-    current_properties: Record<string, unknown>
+    current_properties: Record<string, unknown>,
   ): Promise<ResourceDeployResult> {
     switch (action) {
       case 'create':

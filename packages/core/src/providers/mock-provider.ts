@@ -236,8 +236,7 @@ export class MockProvider implements ProviderClient {
     const cloud_id = `mock-${this.provider}-${this.resource_counter}-${Date.now()}`;
     const now = new Date().toISOString();
 
-    const status: ResourceStatus =
-      action === 'create' || action === 'update' ? 'available' : 'deleted';
+    const status: ResourceStatus = action === 'create' || action === 'update' ? 'available' : 'deleted';
 
     return {
       cloud_id,
@@ -277,10 +276,7 @@ export function create_mock_provider_factory(options: MockProviderOptions = {}):
 /**
  * Create a mock provider for a specific provider type.
  */
-export function create_mock_provider(
-  provider: string,
-  options: MockProviderOptions = {}
-): ProviderClient {
+export function create_mock_provider(provider: string, options: MockProviderOptions = {}): ProviderClient {
   const config: ProviderConfig = {
     provider: provider as ProviderName,
     region: 'mock-region',

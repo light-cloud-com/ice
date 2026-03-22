@@ -249,7 +249,7 @@ export class CustomizationLoader {
           },
         },
         null,
-        2
+        2,
       );
       fs.writeFileSync(provider_example, content);
     }
@@ -333,7 +333,7 @@ relationships:
   }
 
   private async validate_provider_file(
-    file_path: string
+    file_path: string,
   ): Promise<{ errors: CustomizationError[]; warnings: ValidationWarning[] }> {
     const errors: CustomizationError[] = [];
     const warnings: ValidationWarning[] = [];
@@ -370,7 +370,7 @@ relationships:
   }
 
   private async validate_override_file(
-    file_path: string
+    file_path: string,
   ): Promise<{ errors: CustomizationError[]; warnings: ValidationWarning[] }> {
     const errors: CustomizationError[] = [];
     const warnings: ValidationWarning[] = [];
@@ -398,7 +398,7 @@ relationships:
   }
 
   private async validate_custom_resource_file(
-    file_path: string
+    file_path: string,
   ): Promise<{ errors: CustomizationError[]; warnings: ValidationWarning[] }> {
     const errors: CustomizationError[] = [];
     const warnings: ValidationWarning[] = [];
@@ -434,7 +434,7 @@ relationships:
   }
 
   private async validate_relationships_file(
-    file_path: string
+    file_path: string,
   ): Promise<{ errors: CustomizationError[]; warnings: ValidationWarning[] }> {
     const errors: CustomizationError[] = [];
     const warnings: ValidationWarning[] = [];
@@ -503,9 +503,7 @@ export function get_base_db_path(): string {
     // In development (relative to packages/core)
     path.join(__dirname, '..', '..', '..', '..', 'schemas', 'data', 'ice-schemas.db'),
     // When installed as a package
-    require
-      .resolve('@ice-engine/schemas/data/ice-schemas.db')
-      .replace('/index.js', '/data/ice-schemas.db'),
+    require.resolve('@ice-engine/schemas/data/ice-schemas.db').replace('/index.js', '/data/ice-schemas.db'),
   ];
 
   for (const p of possible_paths) {

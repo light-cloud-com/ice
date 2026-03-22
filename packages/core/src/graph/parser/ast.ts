@@ -440,20 +440,7 @@ export interface FunctionCall extends AstNode {
 /**
  * Binary expression operators.
  */
-export type BinaryOperator =
-  | '+'
-  | '-'
-  | '*'
-  | '/'
-  | '%'
-  | '=='
-  | '!='
-  | '<'
-  | '<='
-  | '>'
-  | '>='
-  | '&&'
-  | '||';
+export type BinaryOperator = '+' | '-' | '*' | '/' | '%' | '==' | '!=' | '<' | '<=' | '>' | '>=' | '&&' | '||';
 
 /**
  * Binary expression.
@@ -594,10 +581,7 @@ export interface NestedBlock {
 /**
  * Check if a node is of a specific kind.
  */
-export function is_node_kind<K extends AstNodeKind>(
-  node: AstNode,
-  kind: K
-): node is Extract<AstNode, { kind: K }> {
+export function is_node_kind<K extends AstNodeKind>(node: AstNode, kind: K): node is Extract<AstNode, { kind: K }> {
   return node.kind === kind;
 }
 
@@ -610,7 +594,7 @@ export function create_span(
   start_offset: number,
   end_line: number,
   end_column: number,
-  end_offset: number
+  end_offset: number,
 ): SourceSpan {
   return {
     start: {

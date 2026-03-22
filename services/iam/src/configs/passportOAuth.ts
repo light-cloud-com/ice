@@ -31,8 +31,8 @@ export function configurePassportOAuth() {
           } catch (err) {
             done(err as Error);
           }
-        }
-      )
+        },
+      ),
     );
   }
 
@@ -60,8 +60,8 @@ export function configurePassportOAuth() {
           } catch (err) {
             done(err as Error);
           }
-        }
-      )
+        },
+      ),
     );
   }
 

@@ -32,74 +32,72 @@ interface SvgUnifiedNodeProps {
 // =============================================================================
 
 // Category colors — distinctive header tints and accent colors per category
-const CATEGORY_COLORS: Record<
-  string,
-  { bg: string; headerBg: string; border: string; accent: string; text: string }
-> = {
-  Application: {
-    bg: 'var(--ice-bg-surface)',
-    headerBg: '#132844',
-    border: '#1e3a5f',
-    accent: '#3b82f6',
-    text: '#93c5fd',
-  },
-  Database: {
-    bg: 'var(--ice-bg-surface)',
-    headerBg: '#1c1540',
-    border: '#2d1f5e',
-    accent: '#8b5cf6',
-    text: '#c4b5fd',
-  },
-  Storage: {
-    bg: 'var(--ice-bg-surface)',
-    headerBg: '#0f2820',
-    border: '#1a4035',
-    accent: '#10b981',
-    text: '#6ee7b7',
-  },
-  Network: {
-    bg: 'var(--ice-bg-surface)',
-    headerBg: '#1f1430',
-    border: '#3b1e48',
-    accent: '#ec4899',
-    text: '#f9a8d4',
-  },
-  Security: {
-    bg: 'var(--ice-bg-surface)',
-    headerBg: '#231c0e',
-    border: '#3d2f1a',
-    accent: '#f59e0b',
-    text: '#fcd34d',
-  },
-  Messaging: {
-    bg: 'var(--ice-bg-surface)',
-    headerBg: '#161840',
-    border: '#252660',
-    accent: '#6366f1',
-    text: '#a5b4fc',
-  },
-  Monitoring: {
-    bg: 'var(--ice-bg-surface)',
-    headerBg: '#1a1f28',
-    border: '#2a3040',
-    accent: '#64748b',
-    text: '#94a3b8',
-  },
-  Block: {
-    bg: 'var(--ice-bg-surface)',
-    headerBg: '#141e30',
-    border: '#253548',
-    accent: '#3b82f6',
-    text: '#93c5fd',
-  },
-  default: {
-    bg: 'var(--ice-bg-surface)',
-    headerBg: '#1a1f28',
-    border: '#2a3040',
-    accent: '#475569',
-    text: '#94a3b8',
-  },
-};
+const CATEGORY_COLORS: Record<string, { bg: string; headerBg: string; border: string; accent: string; text: string }> =
+  {
+    Application: {
+      bg: 'var(--ice-bg-surface)',
+      headerBg: '#132844',
+      border: '#1e3a5f',
+      accent: '#3b82f6',
+      text: '#93c5fd',
+    },
+    Database: {
+      bg: 'var(--ice-bg-surface)',
+      headerBg: '#1c1540',
+      border: '#2d1f5e',
+      accent: '#8b5cf6',
+      text: '#c4b5fd',
+    },
+    Storage: {
+      bg: 'var(--ice-bg-surface)',
+      headerBg: '#0f2820',
+      border: '#1a4035',
+      accent: '#10b981',
+      text: '#6ee7b7',
+    },
+    Network: {
+      bg: 'var(--ice-bg-surface)',
+      headerBg: '#1f1430',
+      border: '#3b1e48',
+      accent: '#ec4899',
+      text: '#f9a8d4',
+    },
+    Security: {
+      bg: 'var(--ice-bg-surface)',
+      headerBg: '#231c0e',
+      border: '#3d2f1a',
+      accent: '#f59e0b',
+      text: '#fcd34d',
+    },
+    Messaging: {
+      bg: 'var(--ice-bg-surface)',
+      headerBg: '#161840',
+      border: '#252660',
+      accent: '#6366f1',
+      text: '#a5b4fc',
+    },
+    Monitoring: {
+      bg: 'var(--ice-bg-surface)',
+      headerBg: '#1a1f28',
+      border: '#2a3040',
+      accent: '#64748b',
+      text: '#94a3b8',
+    },
+    Block: {
+      bg: 'var(--ice-bg-surface)',
+      headerBg: '#141e30',
+      border: '#253548',
+      accent: '#3b82f6',
+      text: '#93c5fd',
+    },
+    default: {
+      bg: 'var(--ice-bg-surface)',
+      headerBg: '#1a1f28',
+      border: '#2a3040',
+      accent: '#475569',
+      text: '#94a3b8',
+    },
+  };
 
 // Type badge configuration
 const TYPE_BADGES: Record<string, { label: string; color: string }> = {
@@ -157,10 +155,7 @@ const PROVIDER_CONFIG: Record<string, { color: string; label: string }> = {
 };
 
 // Extract key properties based on resource type
-function getKeyProperties(
-  data: Record<string, unknown>,
-  _iceType: string
-): Array<{ label: string; value: string }> {
+function getKeyProperties(data: Record<string, unknown>, _iceType: string): Array<{ label: string; value: string }> {
   const props: Array<{ label: string; value: string }> = [];
 
   const propertyPriority = [
@@ -203,14 +198,7 @@ function getKeyProperties(
 // =============================================================================
 
 export const SvgUnifiedNode: React.FC<SvgUnifiedNodeProps> = memo(
-  ({
-    node,
-    isSelected,
-    childNodes = [],
-    viewLevel: _viewLevel = 1,
-    onToggleFold,
-    onResize: _onResize,
-  }) => {
+  ({ node, isSelected, childNodes = [], viewLevel: _viewLevel = 1, onToggleFold, onResize: _onResize }) => {
     const { x, y, width, height, data, label } = node;
     const [isHovered, setIsHovered] = useState(false);
     const [localFolded, setLocalFolded] = useState(false);
@@ -221,9 +209,7 @@ export const SvgUnifiedNode: React.FC<SvgUnifiedNodeProps> = memo(
     const status = (data.status as string) || 'active';
     const behavior = (data.behavior as string) || 'singleton';
     const isContainer =
-      behavior === 'container' ||
-      iceType.startsWith('Network.VPC') ||
-      iceType.startsWith('Network.Subnet');
+      behavior === 'container' || iceType.startsWith('Network.VPC') || iceType.startsWith('Network.Subnet');
     const isAggregated = (data.isAggregated as boolean) || false;
     const resourceIds = (data.resourceIds as string[]) || [];
     const provider = (data.provider as string) || '';
@@ -253,13 +239,10 @@ export const SvgUnifiedNode: React.FC<SvgUnifiedNodeProps> = memo(
     const titleSpace = nodeWidth - 40 - badgeWidth - 32;
     const titleMaxChars = Math.max(Math.floor(titleSpace / 7), 8);
     const displayLabel =
-      (label || '').length > titleMaxChars
-        ? (label || '').substring(0, titleMaxChars) + '\u2026'
-        : label || '';
+      (label || '').length > titleMaxChars ? (label || '').substring(0, titleMaxChars) + '\u2026' : label || '';
 
     // Icon URL
-    const iconUrl =
-      getIcon(iceType, (provider?.toLowerCase() || 'aws') as Provider)?.icon || DEFAULT_ICON;
+    const iconUrl = getIcon(iceType, (provider?.toLowerCase() || 'aws') as Provider)?.icon || DEFAULT_ICON;
 
     // Key properties
     const properties = getKeyProperties(data, iceType);
@@ -274,7 +257,7 @@ export const SvgUnifiedNode: React.FC<SvgUnifiedNodeProps> = memo(
           onToggleFold?.(node.id);
         }
       },
-      [isAggregated, localFolded, node.id, onToggleFold]
+      [isAggregated, localFolded, node.id, onToggleFold],
     );
 
     const [isResizing] = useState(false);
@@ -293,13 +276,7 @@ export const SvgUnifiedNode: React.FC<SvgUnifiedNodeProps> = memo(
             <rect x={x} y={y} width={nodeWidth} height={nodeHeight} rx={cornerRadius} />
           </clipPath>
           <filter id={`glow-${node.id}`} x="-15%" y="-15%" width="130%" height="140%">
-            <feDropShadow
-              dx="0"
-              dy="2"
-              stdDeviation="6"
-              floodColor={colors.accent}
-              floodOpacity="0.25"
-            />
+            <feDropShadow dx="0" dy="2" stdDeviation="6" floodColor={colors.accent} floodOpacity="0.25" />
           </filter>
         </defs>
 
@@ -389,11 +366,7 @@ export const SvgUnifiedNode: React.FC<SvgUnifiedNodeProps> = memo(
         </text>
 
         {/* Fold toggle chevron */}
-        <g
-          style={{ cursor: 'pointer' }}
-          onClick={handleToggleFold}
-          opacity={isHovered ? 0.8 : 0.35}
-        >
+        <g style={{ cursor: 'pointer' }} onClick={handleToggleFold} opacity={isHovered ? 0.8 : 0.35}>
           <rect x={badgeX - 22} y={y + 8} width={18} height={20} fill="transparent" />
           {folded ? (
             <path
@@ -620,13 +593,7 @@ export const SvgUnifiedNode: React.FC<SvgUnifiedNodeProps> = memo(
 
             {/* Resize handle */}
             <g className="resize-handle" style={{ cursor: 'se-resize' }}>
-              <rect
-                x={x + nodeWidth - 16}
-                y={y + nodeHeight - 16}
-                width={16}
-                height={16}
-                fill="transparent"
-              />
+              <rect x={x + nodeWidth - 16} y={y + nodeHeight - 16} width={16} height={16} fill="transparent" />
               <line
                 x1={x + nodeWidth - 4}
                 y1={y + nodeHeight - 10}
@@ -650,12 +617,7 @@ export const SvgUnifiedNode: React.FC<SvgUnifiedNodeProps> = memo(
         {/* Folded state: status bar + status dot */}
         {folded && (
           <g>
-            <circle
-              cx={badgeX - 30}
-              cy={y + 18}
-              r={3}
-              fill={STATUS_COLORS[status] || STATUS_COLORS.unknown}
-            />
+            <circle cx={badgeX - 30} cy={y + 18} r={3} fill={STATUS_COLORS[status] || STATUS_COLORS.unknown} />
             <rect
               x={x}
               y={y + headerHeight - 2}
@@ -669,7 +631,7 @@ export const SvgUnifiedNode: React.FC<SvgUnifiedNodeProps> = memo(
         )}
       </g>
     );
-  }
+  },
 );
 
 SvgUnifiedNode.displayName = 'SvgUnifiedNode';

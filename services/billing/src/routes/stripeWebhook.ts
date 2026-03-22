@@ -20,10 +20,7 @@ import { handleWebhookEvent } from '../../services/stripeService';
  *       400:
  *         description: Invalid webhook
  */
-export const stripeWebhook = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const stripeWebhook = async (req: Request, res: Response): Promise<void> => {
   try {
     const signature = req.headers['stripe-signature'] as string;
 
@@ -55,8 +52,7 @@ export const stripeWebhook = async (
     res.status(200).json({ received: true, type: result.type });
   } catch (error) {
     console.error('Stripe webhook error:', error);
-    const message =
-      error instanceof Error ? error.message : 'Webhook processing failed';
+    const message = error instanceof Error ? error.message : 'Webhook processing failed';
     res.status(400).json({ error: message });
   }
 };
@@ -71,11 +67,7 @@ export const stripeWebhook = async (
  * // ... other middleware
  * app.use('/api/billing', billingRoutes);
  */
-export const captureRawBody = (
-  req: Request,
-  _res: Response,
-  next: Function
-) => {
+export const captureRawBody = (req: Request, _res: Response, next: Function) => {
   let data = '';
   req.on('data', (chunk) => {
     data += chunk;

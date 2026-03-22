@@ -64,7 +64,7 @@ export function logAction(
   action: string,
   target: string,
   detail: Record<string, unknown> = {},
-  duration_ms?: number
+  duration_ms?: number,
 ): void {
   if (!isEnabled()) return;
 
@@ -92,7 +92,7 @@ export function logAction(
       `%c[ICE:Action]%c ${category}.${action} → ${target}`,
       'color: #22c55e; font-weight: bold',
       'color: inherit',
-      detail
+      detail,
     );
   }
 }
@@ -118,19 +118,13 @@ export function logApiCall(method: string, path: string, body?: unknown): void {
 /**
  * Log an API response (call from axios interceptor).
  */
-export function logApiResponse(
-  method: string,
-  path: string,
-  status: number,
-  data: unknown,
-  duration_ms: number
-): void {
+export function logApiResponse(method: string, path: string, status: number, data: unknown, duration_ms: number): void {
   logAction(
     'api',
     status >= 400 ? 'api_error' : 'api_response',
     `${method.toUpperCase()} ${path}`,
     { method, path, status, data: data ?? null },
-    duration_ms
+    duration_ms,
   );
 }
 

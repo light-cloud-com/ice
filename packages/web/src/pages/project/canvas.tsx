@@ -38,10 +38,12 @@ export const ProjectCanvas: React.FC<ProjectCanvasProps> = ({ projectId, project
           dispatch(createCard({ name: card.name, id: card.id, projectId }));
           if (card.nodes?.length > 0 || card.edges?.length > 0) {
             dispatch(setActiveCard(card.id));
-            dispatch(importToActiveCard({
-              nodes: card.nodes || [],
-              edges: card.edges || [],
-            }));
+            dispatch(
+              importToActiveCard({
+                nodes: card.nodes || [],
+                edges: card.edges || [],
+              }),
+            );
           } else {
             dispatch(setActiveCard(card.id));
           }

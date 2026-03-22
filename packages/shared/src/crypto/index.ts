@@ -10,7 +10,9 @@ import crypto from 'crypto';
 function getEncryptionKey(): string {
   const key = process.env.CREDENTIAL_ENCRYPTION_KEY;
   if (!key && process.env.NODE_ENV !== 'test') {
-    throw new Error('CREDENTIAL_ENCRYPTION_KEY environment variable is required. Refusing to start with a default key.');
+    throw new Error(
+      'CREDENTIAL_ENCRYPTION_KEY environment variable is required. Refusing to start with a default key.',
+    );
   }
   return key || 'test-encryption-key-min-32chars!!';
 }

@@ -34,12 +34,7 @@ const DEFAULT_OPTIONS: Required<DiffOptions> = {
  * @param provider - The cloud provider being targeted
  * @param options - Diff options
  */
-export function diff_graphs(
-  desired: Graph,
-  current: Graph,
-  provider: string,
-  options: DiffOptions = {}
-): DiffResult {
+export function diff_graphs(desired: Graph, current: Graph, provider: string, options: DiffOptions = {}): DiffResult {
   const opts = { ...DEFAULT_OPTIONS, ...options };
   const errors: DiffError[] = [];
   const warnings: DiffWarning[] = [];
@@ -84,11 +79,7 @@ export function diff_graphs(
       });
     } else {
       // Resource exists - check for updates
-      const property_changes = compare_properties(
-        current_node.properties,
-        desired_node.properties,
-        opts.detailed
-      );
+      const property_changes = compare_properties(current_node.properties, desired_node.properties, opts.detailed);
 
       const change_type: ChangeType = property_changes.length > 0 ? 'update' : 'no_change';
 
@@ -170,7 +161,7 @@ function should_include(node: Node, opts: Required<DiffOptions>): boolean {
   // Check target filter
   if (opts.target.length > 0) {
     const matches_target = opts.target.some(
-      (pattern) => matches_pattern(node.name, pattern) || matches_pattern(node.type, pattern)
+      (pattern) => matches_pattern(node.name, pattern) || matches_pattern(node.type, pattern),
     );
     if (!matches_target) return false;
   }
@@ -178,7 +169,7 @@ function should_include(node: Node, opts: Required<DiffOptions>): boolean {
   // Check exclude filter
   if (opts.exclude.length > 0) {
     const matches_exclude = opts.exclude.some(
-      (pattern) => matches_pattern(node.name, pattern) || matches_pattern(node.type, pattern)
+      (pattern) => matches_pattern(node.name, pattern) || matches_pattern(node.type, pattern),
     );
     if (matches_exclude) return false;
   }
@@ -203,7 +194,7 @@ function matches_pattern(value: string, pattern: string): boolean {
 function compare_properties(
   current: Record<string, unknown>,
   desired: Record<string, unknown>,
-  detailed: boolean
+  detailed: boolean,
 ): DiffPropertyChange[] {
   const changes: DiffPropertyChange[] = [];
 
@@ -224,7 +215,7 @@ function compare_properties(
           const nested_changes = compare_nested(
             old_value as Record<string, unknown>,
             new_value as Record<string, unknown>,
-            key
+            key,
           );
           changes.push(...nested_changes);
         } else {
@@ -245,7 +236,7 @@ function compare_properties(
 function compare_nested(
   current: Record<string, unknown>,
   desired: Record<string, unknown>,
-  prefix: string
+  prefix: string,
 ): DiffPropertyChange[] {
   const changes: DiffPropertyChange[] = [];
   const all_keys = new Set([...Object.keys(current), ...Object.keys(desired)]);
@@ -260,7 +251,7 @@ function compare_nested(
         const nested_changes = compare_nested(
           old_value as Record<string, unknown>,
           new_value as Record<string, unknown>,
-          path
+          path,
         );
         changes.push(...nested_changes);
       } else {
@@ -371,7 +362,7 @@ export function format_plan(result: DiffResult): string {
       lines.push(`  ~ ${change.type} "${change.name}"`);
       for (const prop_change of change.property_changes.slice(0, 5)) {
         lines.push(
-          `      ${prop_change.path}: ${format_value(prop_change.old_value)} → ${format_value(prop_change.new_value)}`
+          `      ${prop_change.path}: ${format_value(prop_change.old_value)} → ${format_value(prop_change.new_value)}`,
         );
       }
       if (change.property_changes.length > 5) {
@@ -392,7 +383,7 @@ export function format_plan(result: DiffResult): string {
   // Summary
   lines.push('─'.repeat(50));
   lines.push(
-    `Plan: ${result.summary.creates} to create, ${result.summary.updates} to update, ${result.summary.deletes} to delete`
+    `Plan: ${result.summary.creates} to create, ${result.summary.updates} to update, ${result.summary.deletes} to delete`,
   );
 
   return lines.join('\n');

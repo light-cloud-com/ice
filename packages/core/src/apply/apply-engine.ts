@@ -31,14 +31,12 @@ import type {
 export async function apply_plan(
   plan: DeploymentPlan,
   graph: MutableGraph,
-  options: ApplyOptions = {}
+  options: ApplyOptions = {},
 ): Promise<ApplyResult> {
   const start_time = Date.now();
 
   // Create deployment ID
-  const deployment_id = create_deployment_id(
-    `deploy_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`
-  );
+  const deployment_id = create_deployment_id(`deploy_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`);
 
   // Initialize context
   const context: ApplyContext = {
@@ -109,7 +107,7 @@ async function execute_layer(
   layer: ExecutionLayer,
   graph: MutableGraph,
   provider: ProviderClient,
-  context: ApplyContext
+  context: ApplyContext,
 ): Promise<boolean> {
   const { parallelism, dry_run, abort_on_error } = context.options;
 
@@ -135,9 +133,7 @@ async function execute_layer(
   for (let i = 0; i < changes_to_apply.length; i += parallelism) {
     const batch = changes_to_apply.slice(i, i + parallelism);
 
-    const results = await Promise.all(
-      batch.map((change) => execute_change(change, graph, provider, context))
-    );
+    const results = await Promise.all(batch.map((change) => execute_change(change, graph, provider, context)));
 
     for (const result of results) {
       context.results.push(result);
@@ -190,7 +186,7 @@ async function execute_change(
   change: PlannedChange,
   graph: MutableGraph,
   provider: ProviderClient,
-  context: ApplyContext
+  context: ApplyContext,
 ): Promise<ResourceApplyResult> {
   const { dry_run } = context.options;
   const start = Date.now();
@@ -255,12 +251,7 @@ async function execute_change(
 
   // Execute actual change
   try {
-    const result = await execute_provider_operation(
-      change.action,
-      node,
-      change.current_state,
-      provider
-    );
+    const result = await execute_provider_operation(change.action, node, change.current_state, provider);
 
     emit_progress(context, {
       type: 'resource_completed',
@@ -314,7 +305,7 @@ async function execute_provider_operation(
   action: DeploymentAction,
   node: Node,
   current_state: ResourceState | undefined,
-  provider: ProviderClient
+  provider: ProviderClient,
 ): Promise<{ success: boolean; state?: ResourceState; error?: any }> {
   switch (action) {
     case 'create':

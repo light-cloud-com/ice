@@ -42,10 +42,7 @@ export class ErrorBoundary extends Component<Props, State> {
               {this.state.error?.message || 'An unexpected error occurred'}
             </p>
           </div>
-          <button
-            onClick={this.handleReset}
-            className="ice-btn ice-btn-primary text-ice-sm flex items-center gap-1.5"
-          >
+          <button onClick={this.handleReset} className="ice-btn ice-btn-primary text-ice-sm flex items-center gap-1.5">
             <RotateCcw className="w-3.5 h-3.5" />
             Try again
           </button>

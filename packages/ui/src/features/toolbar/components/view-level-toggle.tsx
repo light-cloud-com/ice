@@ -61,9 +61,7 @@ export const ViewLevelToggle: React.FC = () => {
             title={`${levelConfig.tooltip}\n${levelConfig.description}`}
             className={cn(
               'flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors',
-              isActive
-                ? 'bg-primary text-primary-foreground'
-                : 'hover:bg-muted-foreground/10 text-muted-foreground'
+              isActive ? 'bg-primary text-primary-foreground' : 'hover:bg-muted-foreground/10 text-muted-foreground',
             )}
           >
             <LevelIcon className="w-3.5 h-3.5" />

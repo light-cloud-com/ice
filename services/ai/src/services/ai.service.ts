@@ -6,20 +6,11 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
-import type {
-  AiCanvasOp,
-  AiResponse,
-  SerializedCanvas,
-  AiStreamEvent,
-} from '@ice/types';
+import type { AiCanvasOp, AiResponse, SerializedCanvas, AiStreamEvent } from '@ice/types';
 import { generateAiConnectionPrompt } from '@ice/types';
 import type { Response } from 'express';
 import { buildSchemaContext } from './ai-schema-context.service';
-import {
-  createAuditEntry,
-  finalizeAuditEntry,
-  writeAuditEntry,
-} from './ai-audit.service';
+import { createAuditEntry, finalizeAuditEntry, writeAuditEntry } from './ai-audit.service';
 import { validateCanvas } from './canvas-validation.service';
 import { dryRunDeploy } from './deploy-dryrun.service';
 
@@ -78,28 +69,53 @@ function buildCloudArchitectPrompt(dominantProvider: string, blockTypes: string[
   // Group available blocks by category for the architect
   const categories: Record<string, string[]> = {};
   for (const bt of blockTypes) {
-    const prefix = bt.startsWith(dominantProvider + '-')
-      ? bt.slice(dominantProvider.length + 1)
-      : bt;
+    const prefix = bt.startsWith(dominantProvider + '-') ? bt.slice(dominantProvider.length + 1) : bt;
     // Derive category from block name
-    if (prefix.includes('backend') || prefix.includes('worker') || prefix.includes('function') || prefix.includes('scheduled') || prefix.includes('ssr') || prefix.includes('static'))
+    if (
+      prefix.includes('backend') ||
+      prefix.includes('worker') ||
+      prefix.includes('function') ||
+      prefix.includes('scheduled') ||
+      prefix.includes('ssr') ||
+      prefix.includes('static')
+    )
       (categories['Compute'] ??= []).push(bt);
-    else if (prefix.includes('postgres') || prefix.includes('mysql') || prefix.includes('mongo') || prefix.includes('redis') || prefix.includes('vector') || prefix.includes('warehouse') || prefix.includes('search'))
+    else if (
+      prefix.includes('postgres') ||
+      prefix.includes('mysql') ||
+      prefix.includes('mongo') ||
+      prefix.includes('redis') ||
+      prefix.includes('vector') ||
+      prefix.includes('warehouse') ||
+      prefix.includes('search')
+    )
       (categories['Databases & Cache'] ??= []).push(bt);
-    else if (prefix.includes('storage') || prefix.includes('cdn'))
-      (categories['Storage'] ??= []).push(bt);
-    else if (prefix.includes('gateway') || prefix.includes('loadbalancer') || prefix.includes('dns') || prefix.includes('cdn'))
+    else if (prefix.includes('storage') || prefix.includes('cdn')) (categories['Storage'] ??= []).push(bt);
+    else if (
+      prefix.includes('gateway') ||
+      prefix.includes('loadbalancer') ||
+      prefix.includes('dns') ||
+      prefix.includes('cdn')
+    )
       (categories['Networking'] ??= []).push(bt);
-    else if (prefix.includes('auth') || prefix.includes('secret') || prefix.includes('firewall') || prefix.includes('waf'))
+    else if (
+      prefix.includes('auth') ||
+      prefix.includes('secret') ||
+      prefix.includes('firewall') ||
+      prefix.includes('waf')
+    )
       (categories['Security'] ??= []).push(bt);
-    else if (prefix.includes('log') || prefix.includes('monitor'))
-      (categories['Observability'] ??= []).push(bt);
-    else if (prefix.includes('queue') || prefix.includes('rabbit') || prefix.includes('event') || prefix.includes('kafka'))
+    else if (prefix.includes('log') || prefix.includes('monitor')) (categories['Observability'] ??= []).push(bt);
+    else if (
+      prefix.includes('queue') ||
+      prefix.includes('rabbit') ||
+      prefix.includes('event') ||
+      prefix.includes('kafka')
+    )
       (categories['Messaging & Events'] ??= []).push(bt);
     else if (prefix.includes('llm') || prefix.includes('ml') || prefix.includes('ai'))
       (categories['AI/ML'] ??= []).push(bt);
-    else
-      (categories['Other'] ??= []).push(bt);
+    else (categories['Other'] ??= []).push(bt);
   }
 
   const categoryList = Object.entries(categories)
@@ -160,17 +176,22 @@ Always provide 3 actionable follow-up suggestions like:
 // =============================================================================
 
 async function buildSystemPrompt(canvas: SerializedCanvas, intent?: string): Promise<string> {
-  const nodesSummary = canvas.nodes.length > 0
-    ? canvas.nodes.map((n) => `  - ${n.id}: ${n.iceType} "${n.label}"${n.parentId ? ` (in ${n.parentId})` : ''}`).join('\n')
-    : '  (empty canvas)';
+  const nodesSummary =
+    canvas.nodes.length > 0
+      ? canvas.nodes
+          .map((n) => `  - ${n.id}: ${n.iceType} "${n.label}"${n.parentId ? ` (in ${n.parentId})` : ''}`)
+          .join('\n')
+      : '  (empty canvas)';
 
-  const edgesSummary = canvas.edges.length > 0
-    ? canvas.edges.map((e) => `  - ${e.source} → ${e.target}${e.relationship ? ` (${e.relationship})` : ''}`).join('\n')
-    : '  (no connections)';
+  const edgesSummary =
+    canvas.edges.length > 0
+      ? canvas.edges
+          .map((e) => `  - ${e.source} → ${e.target}${e.relationship ? ` (${e.relationship})` : ''}`)
+          .join('\n')
+      : '  (no connections)';
 
-  const selectedSummary = canvas.selectedNodeIds.length > 0
-    ? `Selected nodes: ${canvas.selectedNodeIds.join(', ')}`
-    : 'No nodes selected';
+  const selectedSummary =
+    canvas.selectedNodeIds.length > 0 ? `Selected nodes: ${canvas.selectedNodeIds.join(', ')}` : 'No nodes selected';
 
   // Detect the dominant provider from existing nodes (default: aws)
   const providerCounts: Record<string, number> = {};
@@ -181,9 +202,7 @@ async function buildSystemPrompt(canvas: SerializedCanvas, intent?: string): Pro
   const dominantProvider = Object.entries(providerCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'aws';
 
   // Build schema context from real resource definitions
-  const existingIceTypes = canvas.nodes
-    .map((n) => n.iceType)
-    .filter((t): t is string => !!t);
+  const existingIceTypes = canvas.nodes.map((n) => n.iceType).filter((t): t is string => !!t);
 
   const schemaContext = await buildSchemaContext({
     existingIceTypes,
@@ -223,7 +242,7 @@ Use the "clarification" field ONLY when you truly cannot proceed without user in
 You MUST ONLY use blockTypes from the list below. These are the ONLY blocks that exist. If a blockType is not in this list, it DOES NOT EXIST and MUST NOT be used. Any operation with an unknown blockType will be rejected.
 
 ### Available blockTypes for "${dominantProvider}":
-${canvas.availableBlockTypes.filter(t => t.startsWith(dominantProvider + '-') || !t.includes('-')).join(', ')}
+${canvas.availableBlockTypes.filter((t) => t.startsWith(dominantProvider + '-') || !t.includes('-')).join(', ')}
 
 ### Provider-agnostic blocks (work with any provider):
 github-repository, env-config
@@ -475,7 +494,7 @@ Build a complete architecture. ALWAYS add addEdge operations. Think about the da
   const skill = intent ? detectSkill(intent) : 'default';
   if (skill === 'cloud-architect') {
     const providerBlocks = canvas.availableBlockTypes.filter(
-      t => t.startsWith(dominantProvider + '-') || !t.includes('-')
+      (t) => t.startsWith(dominantProvider + '-') || !t.includes('-'),
     );
     basePrompt += buildCloudArchitectPrompt(dominantProvider, providerBlocks);
     console.log('[AI] Cloud Architect skill activated for intent:', intent?.slice(0, 80));
@@ -488,10 +507,7 @@ Build a complete architecture. ALWAYS add addEdge operations. Think about the da
 // Non-Streaming Response
 // =============================================================================
 
-export async function processCanvasIntent(
-  intent: string,
-  canvas: SerializedCanvas,
-): Promise<AiResponse> {
+export async function processCanvasIntent(intent: string, canvas: SerializedCanvas): Promise<AiResponse> {
   const client = getClient();
   const audit = createAuditEntry(intent, canvas);
   const startTime = Date.now();
@@ -527,7 +543,7 @@ export async function processCanvasIntent(
       intent,
       operationCount: parsed.operations.length,
       explanation: parsed.explanation?.slice(0, 100),
-      hasCloudOps: parsed.operations.some(op => op.op === 'addBlueprint' || op.op === 'addNode'),
+      hasCloudOps: parsed.operations.some((op) => op.op === 'addBlueprint' || op.op === 'addNode'),
       rawResponseLength: rawResponse.length,
     });
 
@@ -549,11 +565,7 @@ export async function processCanvasIntent(
 // Streaming Response (SSE)
 // =============================================================================
 
-export async function streamCanvasIntent(
-  intent: string,
-  canvas: SerializedCanvas,
-  res: Response,
-): Promise<void> {
+export async function streamCanvasIntent(intent: string, canvas: SerializedCanvas, res: Response): Promise<void> {
   const client = getClient();
   const audit = createAuditEntry(intent, canvas);
   const startTime = Date.now();
@@ -573,9 +585,7 @@ export async function streamCanvasIntent(
   const isArchitectMode = detectSkill(intent) === 'cloud-architect';
   sendEvent({
     type: 'thinking',
-    status: isArchitectMode
-      ? 'Designing your cloud architecture...'
-      : 'Analyzing your canvas...',
+    status: isArchitectMode ? 'Designing your cloud architecture...' : 'Analyzing your canvas...',
   });
 
   try {
@@ -654,12 +664,18 @@ async function runPostProcessing(
       rawResponse,
       parseSuccess: parsed.operations.length > 0 || !!parsed.explanation,
       durationMs: Date.now() - startTime,
-      schemaValidation: validation.status === 'fulfilled'
-        ? { valid: validation.value.valid, errorCount: validation.value.errors.length, errors: validation.value.errors }
-        : undefined,
-      deployDryRun: dryRun.status === 'fulfilled'
-        ? { success: dryRun.value.success, deployableCount: dryRun.value.deployableCount, error: dryRun.value.error }
-        : undefined,
+      schemaValidation:
+        validation.status === 'fulfilled'
+          ? {
+              valid: validation.value.valid,
+              errorCount: validation.value.errors.length,
+              errors: validation.value.errors,
+            }
+          : undefined,
+      deployDryRun:
+        dryRun.status === 'fulfilled'
+          ? { success: dryRun.value.success, deployableCount: dryRun.value.deployableCount, error: dryRun.value.error }
+          : undefined,
     });
   } catch {
     finalizeAuditEntry(audit, {
@@ -704,7 +720,12 @@ function parseAiResponse(text: string, allowedBlockTypes?: Set<string>): AiRespo
     };
   } catch (err) {
     // If JSON parsing fails, treat as explanation-only
-    console.error('[AI] Failed to parse AI response as JSON:', (err as Error).message, '\nRaw text:', text.slice(0, 300));
+    console.error(
+      '[AI] Failed to parse AI response as JSON:',
+      (err as Error).message,
+      '\nRaw text:',
+      text.slice(0, 300),
+    );
     return {
       explanation: text.slice(0, 200),
       operations: [],
@@ -713,16 +734,30 @@ function parseAiResponse(text: string, allowedBlockTypes?: Set<string>): AiRespo
 }
 
 const VALID_OPS = new Set([
-  'addNode', 'addEdge', 'updateNodeData', 'updateNodePosition',
-  'resizeNode', 'reparentNode', 'deleteNode', 'deleteEdge',
-  'updateEdgeData', 'autoOrganize', 'addBlueprint',
+  'addNode',
+  'addEdge',
+  'updateNodeData',
+  'updateNodePosition',
+  'resizeNode',
+  'reparentNode',
+  'deleteNode',
+  'deleteEdge',
+  'updateEdgeData',
+  'autoOrganize',
+  'addBlueprint',
 ]);
 
 // Valid addNode group iceTypes (containers, not resources)
 const VALID_GROUP_TYPES = new Set([
-  'Network.VPC', 'Network.Subnet',
-  'Group.Frontend', 'Group.Services', 'Group.Data',
-  'Group.Messaging', 'Group.Monitoring', 'Group.External', 'Group.Custom',
+  'Network.VPC',
+  'Network.Subnet',
+  'Group.Frontend',
+  'Group.Services',
+  'Group.Data',
+  'Group.Messaging',
+  'Group.Monitoring',
+  'Group.External',
+  'Group.Custom',
 ]);
 
 function validateOperations(ops: unknown[], allowedBlockTypes?: Set<string>): AiCanvasOp[] {

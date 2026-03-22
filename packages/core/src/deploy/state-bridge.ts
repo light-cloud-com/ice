@@ -50,7 +50,7 @@ export interface StoredResourceEntry {
  */
 export async function load_state_for_diff(
   store: DeployStateStore,
-  graph_id: string
+  graph_id: string,
 ): Promise<Map<string, StoredResourceEntry>> {
   const entries = await store.get_resources(graph_id);
   const map = new Map<string, StoredResourceEntry>();
@@ -68,10 +68,7 @@ export async function load_state_for_diff(
  * Enrich graph nodes with provider IDs from stored state.
  * This allows the diff engine to detect updates vs creates.
  */
-export function enrich_graph_with_state(
-  graph: Graph,
-  state: Map<string, StoredResourceEntry>
-): Map<string, string> {
+export function enrich_graph_with_state(graph: Graph, state: Map<string, StoredResourceEntry>): Map<string, string> {
   const provider_id_map = new Map<string, string>();
 
   for (const [_id, node] of graph.nodes) {
@@ -95,7 +92,7 @@ export function enrich_graph_with_state(
 export async function sync_deploy_result_to_state(
   store: DeployStateStore,
   result: DeployResult,
-  graph_id: string
+  graph_id: string,
 ): Promise<void> {
   const now = new Date().toISOString();
 
@@ -126,7 +123,7 @@ export async function sync_deploy_result_to_state(
 export async function sync_resource_results_to_state(
   store: DeployStateStore,
   results: ResourceDeployResult[],
-  graph_id: string
+  graph_id: string,
 ): Promise<void> {
   const now = new Date().toISOString();
 

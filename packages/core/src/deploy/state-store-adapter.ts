@@ -13,10 +13,7 @@ import { create_node_id } from '../types/graph.js';
  * Create a DeployStateStore adapter around a SqliteStateStore.
  * Unwraps Result types and converts between StoredResourceEntry ↔ StoredResourceState.
  */
-export function create_deploy_state_adapter(
-  store: SqliteStateStore,
-  graph_id: string
-): DeployStateStore {
+export function create_deploy_state_adapter(store: SqliteStateStore, graph_id: string): DeployStateStore {
   return {
     async upsert_resource(entry: StoredResourceEntry): Promise<void> {
       const now = new Date().toISOString();
@@ -27,8 +24,7 @@ export function create_deploy_state_adapter(
         name: entry.name,
         state: {
           cloud_id: entry.provider_id ?? '',
-          status:
-            entry.status === 'created' || entry.status === 'updated' ? 'available' : 'pending',
+          status: entry.status === 'created' || entry.status === 'updated' ? 'available' : 'pending',
           outputs: entry.outputs ?? {},
           created_at: entry.deployed_at,
           updated_at: now,
@@ -91,9 +87,7 @@ export function create_deploy_state_adapter(
   };
 }
 
-function resource_status_to_entry_status(
-  status: string
-): 'created' | 'updated' | 'deleted' | 'failed' {
+function resource_status_to_entry_status(status: string): 'created' | 'updated' | 'deleted' | 'failed' {
   switch (status) {
     case 'available':
       return 'created';

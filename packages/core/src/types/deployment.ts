@@ -132,13 +132,7 @@ export type DeploymentStatus =
 /**
  * Status of a single operation.
  */
-export type OperationStatus =
-  | 'pending'
-  | 'running'
-  | 'succeeded'
-  | 'failed'
-  | 'skipped'
-  | 'rolled_back';
+export type OperationStatus = 'pending' | 'running' | 'succeeded' | 'failed' | 'skipped' | 'rolled_back';
 
 /**
  * Result of a single operation.

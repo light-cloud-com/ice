@@ -24,21 +24,11 @@ import {
   HOURS_PER_MONTH,
   GCP_RATES,
 } from '../const/light-cloud-pricing';
-import {
-  calculateBillableHours,
-  hasScalingData,
-} from './scalingTrackingService';
+import { calculateBillableHours, hasScalingData } from './scalingTrackingService';
 
 // Types
 export interface BillingLineItem {
-  type:
-    | 'user'
-    | 'container'
-    | 'database'
-    | 'static_site'
-    | 'build_minutes'
-    | 'bandwidth'
-    | 'storage';
+  type: 'user' | 'container' | 'database' | 'static_site' | 'build_minutes' | 'bandwidth' | 'storage';
   name?: string;
   quantity: number;
   unit_price: number;
@@ -97,13 +87,11 @@ export async function calculateCurrentCharges(
     periodStart?: Date;
     periodEnd?: Date;
     asOfDate?: Date; // The "now" date for calculations (defaults to current time)
-  }
+  },
 ): Promise<BillingBreakdown> {
   const now = options?.asOfDate || new Date();
-  const periodStart =
-    options?.periodStart || new Date(now.getFullYear(), now.getMonth(), 1);
-  const periodEnd =
-    options?.periodEnd || new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const periodStart = options?.periodStart || new Date(now.getFullYear(), now.getMonth(), 1);
+  const periodEnd = options?.periodEnd || new Date(now.getFullYear(), now.getMonth() + 1, 0);
   const MIN_BILLING_HOURS = 1;
 
   // Check if organisation owner is on active trial
@@ -120,16 +108,9 @@ export async function calculateCurrentCharges(
     });
 
     // Check if owner is on active trial - we'll still calculate charges but mark as trial
-    if (
-      userBilling?.trial_status === 'active' &&
-      userBilling.trial_end_date &&
-      now < userBilling.trial_end_date
-    ) {
+    if (userBilling?.trial_status === 'active' && userBilling.trial_end_date && now < userBilling.trial_end_date) {
       isOnTrial = true;
-      trialDaysRemaining = Math.ceil(
-        (userBilling.trial_end_date.getTime() - now.getTime()) /
-          (1000 * 60 * 60 * 24)
-      );
+      trialDaysRemaining = Math.ceil((userBilling.trial_end_date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     }
   }
 
@@ -140,8 +121,7 @@ export async function calculateCurrentCharges(
   // Helper to calculate hours active this month
   const calculateHoursThisMonth = (createdAt: Date): number => {
     const effectiveStart = createdAt > periodStart ? createdAt : periodStart;
-    const hoursActive =
-      (now.getTime() - effectiveStart.getTime()) / (1000 * 60 * 60);
+    const hoursActive = (now.getTime() - effectiveStart.getTime()) / (1000 * 60 * 60);
     return Math.max(hoursActive, MIN_BILLING_HOURS);
   };
 
@@ -181,8 +161,14 @@ export async function calculateCurrentCharges(
 
       // Map memory to container size ID
       const memoryToSizeMap: Record<string, string> = {
-        '256Mi': 'nano', '512Mi': 'micro', '1Gi': 'small', '2Gi': 'medium',
-        '4Gi': 'large', '8Gi': 'xlarge', '16Gi': 'xxlarge', '32Gi': 'xxxlarge',
+        '256Mi': 'nano',
+        '512Mi': 'micro',
+        '1Gi': 'small',
+        '2Gi': 'medium',
+        '4Gi': 'large',
+        '8Gi': 'xlarge',
+        '16Gi': 'xxlarge',
+        '32Gi': 'xxxlarge',
       };
       const sizeId = memoryToSizeMap[memory] || 'micro';
       const containerSize = getContainerSize(sizeId);
@@ -202,11 +188,7 @@ export async function calculateCurrentCharges(
 
       const hasScaling = await hasScalingData(env.id);
       if (hasScaling) {
-        const scalingData = await calculateBillableHours(
-          env.id,
-          periodStart,
-          now
-        );
+        const scalingData = await calculateBillableHours(env.id, periodStart, now);
         hoursUsed = Math.max(scalingData.totalHours, MIN_BILLING_HOURS);
         scaleAwareBilling = true;
         billingMinInstances = scalingData.minInstances;
@@ -215,10 +197,7 @@ export async function calculateCurrentCharges(
 
         // Calculate hours saved (scaled to zero)
         const totalPossibleHours = calculateHoursThisMonth(env.created_at);
-        scaledToZeroHours = Math.max(
-          0,
-          Math.ceil(totalPossibleHours) - hoursUsed
-        );
+        scaledToZeroHours = Math.max(0, Math.ceil(totalPossibleHours) - hoursUsed);
       } else {
         // Fallback: legacy billing from created_at
         const hoursUsedRaw = calculateHoursThisMonth(env.created_at);
@@ -274,13 +253,9 @@ export async function calculateCurrentCharges(
           hourly_rate: adjustedHourlyRate,
           monthly_rate: Math.round(monthlyEstimate * 100) / 100,
           scale_to_zero: isScaleToZero,
-          max_monthly_rate: isScaleToZero
-            ? Math.round(adjustedHourlyRate * HOURS_PER_MONTH * 100) / 100
-            : undefined,
+          max_monthly_rate: isScaleToZero ? Math.round(adjustedHourlyRate * HOURS_PER_MONTH * 100) / 100 : undefined,
           scale_aware_billing: scaleAwareBilling,
-          scaled_to_zero_hours: scaleAwareBilling
-            ? scaledToZeroHours
-            : undefined,
+          scaled_to_zero_hours: scaleAwareBilling ? scaledToZeroHours : undefined,
           // Instance scaling info for per-instance billing
           min_instances: scaleAwareBilling ? billingMinInstances : undefined,
           max_instances: scaleAwareBilling ? billingMaxInstances : undefined,
@@ -419,10 +394,7 @@ export async function calculateCurrentCharges(
         });
       } else if (createEvent) {
         // Hourly billing for infrastructure - requires create event for duration
-        const hoursUsedRaw =
-          (deleteEvent.occurred_at.getTime() -
-            createEvent.occurred_at.getTime()) /
-          (1000 * 60 * 60);
+        const hoursUsedRaw = (deleteEvent.occurred_at.getTime() - createEvent.occurred_at.getTime()) / (1000 * 60 * 60);
         const hoursUsed = Math.max(Math.ceil(hoursUsedRaw), MIN_BILLING_HOURS); // Round up, min 1h
 
         // Backwards compatibility: old events stored monthly price, new events store hourly rate
@@ -469,10 +441,7 @@ export async function calculateCurrentCharges(
   });
 
   // Build minutes
-  const totalBuildMinutes = usageRecords.reduce(
-    (sum, r) => sum + r.build_minutes,
-    0
-  );
+  const totalBuildMinutes = usageRecords.reduce((sum, r) => sum + r.build_minutes, 0);
   if (totalBuildMinutes > 0) {
     usageItems.push({
       type: 'build_minutes',
@@ -484,10 +453,7 @@ export async function calculateCurrentCharges(
   }
 
   // Bandwidth (all bandwidth is now usage-based, no "included" amount)
-  const totalBandwidthBytes = usageRecords.reduce(
-    (sum, r) => sum + BigInt(r.bandwidth_bytes),
-    BigInt(0)
-  );
+  const totalBandwidthBytes = usageRecords.reduce((sum, r) => sum + BigInt(r.bandwidth_bytes), BigInt(0));
   const totalBandwidthGB = Number(totalBandwidthBytes) / (1024 * 1024 * 1024);
 
   if (totalBandwidthGB > 0) {
@@ -503,10 +469,7 @@ export async function calculateCurrentCharges(
   // ==================== CALCULATE TOTALS ====================
 
   const activeSubtotal = activeItems.reduce((sum, item) => sum + item.total, 0);
-  const deletedSubtotal = deletedItems.reduce(
-    (sum, item) => sum + item.total,
-    0
-  );
+  const deletedSubtotal = deletedItems.reduce((sum, item) => sum + item.total, 0);
   const usageSubtotal = usageItems.reduce((sum, item) => sum + item.total, 0);
   const total = activeSubtotal + deletedSubtotal + usageSubtotal;
 
@@ -514,8 +477,7 @@ export async function calculateCurrentCharges(
   // Deleted resources ARE included because they've already been charged and will appear on invoice
   const activeMonthlyRate = activeItems.reduce((sum, item) => {
     // Use monthly_rate from details if available, otherwise use unit_price
-    const monthlyRate =
-      (item.details?.monthly_rate as number) || item.unit_price;
+    const monthlyRate = (item.details?.monthly_rate as number) || item.unit_price;
     return sum + monthlyRate;
   }, 0);
   const projectedMonthly = activeMonthlyRate + deletedSubtotal + usageSubtotal;
@@ -555,7 +517,7 @@ export async function estimateResourceCost(
     region?: string;
     ha_enabled?: boolean;
     storageGb?: number;
-  }
+  },
 ): Promise<ResourceCostEstimate> {
   const now = new Date();
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -568,14 +530,22 @@ export async function estimateResourceCost(
 
   // Map memory to container size ID
   const memoryToSizeMap: Record<string, string> = {
-    '256Mi': 'nano', '512Mi': 'micro', '1Gi': 'small', '2Gi': 'medium',
-    '4Gi': 'large', '8Gi': 'xlarge', '16Gi': 'xxlarge', '32Gi': 'xxxlarge',
+    '256Mi': 'nano',
+    '512Mi': 'micro',
+    '1Gi': 'small',
+    '2Gi': 'medium',
+    '4Gi': 'large',
+    '8Gi': 'xlarge',
+    '16Gi': 'xxlarge',
+    '32Gi': 'xxxlarge',
   };
 
   // Map Cloud SQL tier to our tier ID
   const cloudSqlTierMap: Record<string, string> = {
-    'db-f1-micro': 'dev', 'db-g1-small': 'starter',
-    'db-custom-1-3840': 'pro', 'db-custom-2-7680': 'business',
+    'db-f1-micro': 'dev',
+    'db-g1-small': 'starter',
+    'db-custom-1-3840': 'pro',
+    'db-custom-2-7680': 'business',
     'db-custom-4-15360': 'enterprise',
   };
 
@@ -596,7 +566,7 @@ export async function estimateResourceCost(
       included.push('Custom domain', 'Scale-to-zero', 'Auto-scaling');
       addOnsAvailable.push(
         { name: 'Always-on (min 1 instance)', price: 0 }, // Now part of usage
-        { name: 'Tier 2 region', price: Math.round(hourlyRate * HOURS_PER_MONTH * 0.2) }
+        { name: 'Tier 2 region', price: Math.round(hourlyRate * HOURS_PER_MONTH * 0.2) },
       );
       break;
 
@@ -648,21 +618,29 @@ export async function recordPricingEvent(
   eventType: 'created' | 'upgraded' | 'downgraded' | 'deleted',
   sizeTier?: string,
   region?: string,
-  unitPrice?: number
+  unitPrice?: number,
 ): Promise<void> {
   // Calculate unit price if not provided (hourly rate for infra, monthly for users)
   let price = unitPrice;
 
   // Map memory to container size ID
   const memoryToSizeMap: Record<string, string> = {
-    '256Mi': 'nano', '512Mi': 'micro', '1Gi': 'small', '2Gi': 'medium',
-    '4Gi': 'large', '8Gi': 'xlarge', '16Gi': 'xxlarge', '32Gi': 'xxxlarge',
+    '256Mi': 'nano',
+    '512Mi': 'micro',
+    '1Gi': 'small',
+    '2Gi': 'medium',
+    '4Gi': 'large',
+    '8Gi': 'xlarge',
+    '16Gi': 'xxlarge',
+    '32Gi': 'xxxlarge',
   };
 
   // Map Cloud SQL tier to our tier ID
   const cloudSqlTierMap: Record<string, string> = {
-    'db-f1-micro': 'dev', 'db-g1-small': 'starter',
-    'db-custom-1-3840': 'pro', 'db-custom-2-7680': 'business',
+    'db-f1-micro': 'dev',
+    'db-g1-small': 'starter',
+    'db-custom-1-3840': 'pro',
+    'db-custom-2-7680': 'business',
     'db-custom-4-15360': 'enterprise',
   };
 
@@ -714,7 +692,7 @@ export async function recordPricingEvent(
  */
 export async function checkSpendingLimit(
   organisationId: string,
-  additionalCharge: number
+  additionalCharge: number,
 ): Promise<{
   allowed: boolean;
   limit: number | null;
@@ -755,7 +733,7 @@ export async function updateBillingSettings(
   settings: {
     spending_limit?: number | null;
     budget_alert_threshold?: number | null;
-  }
+  },
 ): Promise<void> {
   await prisma.billing.update({
     where: { organisation_id: organisationId },
@@ -785,12 +763,8 @@ export async function getBillingSummary(organisationId: string) {
         }
       : null,
     settings: {
-      spending_limit: billing?.spending_limit
-        ? Number(billing.spending_limit)
-        : null,
-      budget_alert_threshold: billing?.budget_alert_threshold
-        ? Number(billing.budget_alert_threshold)
-        : null,
+      spending_limit: billing?.spending_limit ? Number(billing.spending_limit) : null,
+      budget_alert_threshold: billing?.budget_alert_threshold ? Number(billing.budget_alert_threshold) : null,
     },
   };
 }
@@ -803,7 +777,7 @@ export async function getBillingSummary(organisationId: string) {
 export async function calculateHistoricalCharges(
   organisationId: string,
   periodStart: Date,
-  periodEnd: Date
+  periodEnd: Date,
 ): Promise<BillingLineItem[]> {
   const lineItems: BillingLineItem[] = [];
   const MIN_BILLING_HOURS = 1;
@@ -891,10 +865,8 @@ export async function calculateHistoricalCharges(
  */
 export async function getDailyUsageHistory(
   organisationId: string,
-  days: number = 30
-): Promise<
-  Array<{ date: string; cost: number; breakdown: Record<string, number> }>
-> {
+  days: number = 30,
+): Promise<Array<{ date: string; cost: number; breakdown: Record<string, number> }>> {
   const endDate = new Date();
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);
@@ -936,8 +908,7 @@ export async function getDailyUsageHistory(
 
   // Build a map of active resources by date
   const activeResources: Map<string, Set<string>> = new Map();
-  const resourcePrices: Map<string, { type: string; price: number }> =
-    new Map();
+  const resourcePrices: Map<string, { type: string; price: number }> = new Map();
 
   // Track resource lifecycle from events
   const resourceActiveRanges: Map<
@@ -977,14 +948,22 @@ export async function getDailyUsageHistory(
 
   // Map memory to container size ID
   const memoryToSizeMap: Record<string, string> = {
-    '256Mi': 'nano', '512Mi': 'micro', '1Gi': 'small', '2Gi': 'medium',
-    '4Gi': 'large', '8Gi': 'xlarge', '16Gi': 'xxlarge', '32Gi': 'xxxlarge',
+    '256Mi': 'nano',
+    '512Mi': 'micro',
+    '1Gi': 'small',
+    '2Gi': 'medium',
+    '4Gi': 'large',
+    '8Gi': 'xlarge',
+    '16Gi': 'xxlarge',
+    '32Gi': 'xxxlarge',
   };
 
   // Map Cloud SQL tier to our tier ID
   const cloudSqlTierMap: Record<string, string> = {
-    'db-f1-micro': 'dev', 'db-g1-small': 'starter',
-    'db-custom-1-3840': 'pro', 'db-custom-2-7680': 'business',
+    'db-f1-micro': 'dev',
+    'db-g1-small': 'starter',
+    'db-custom-1-3840': 'pro',
+    'db-custom-2-7680': 'business',
     'db-custom-4-15360': 'enterprise',
   };
 
@@ -1013,10 +992,7 @@ export async function getDailyUsageHistory(
         {
           start: env.created_at,
           end: null,
-          type:
-            env.application.deployment_type === 'container'
-              ? 'container'
-              : 'static_site',
+          type: env.application.deployment_type === 'container' ? 'container' : 'static_site',
           price: hourlyRate, // Now storing hourly rate
         },
       ]);
@@ -1070,10 +1046,7 @@ export async function getDailyUsageHistory(
       }
     }
 
-    const totalCost = Object.values(breakdown).reduce(
-      (sum, val) => sum + val,
-      0
-    );
+    const totalCost = Object.values(breakdown).reduce((sum, val) => sum + val, 0);
 
     result.push({
       date: dayStart.toISOString().split('T')[0],

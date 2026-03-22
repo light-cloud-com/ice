@@ -962,15 +962,12 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
       {
         id: 'dynamodb',
         name: 'DynamoDB',
-        description:
-          'NoSQL key-value and document database with single-digit millisecond performance',
+        description: 'NoSQL key-value and document database with single-digit millisecond performance',
         icon: 'Database',
         category: 'database',
         behavior: 'stateful' as NodeBehavior,
         providers: ['aws'],
-        implementations: [
-          { provider: 'aws', resource_type: 'aws:dynamodb:Table', display_name: 'DynamoDB Table' },
-        ],
+        implementations: [{ provider: 'aws', resource_type: 'aws:dynamodb:Table', display_name: 'DynamoDB Table' }],
         keywords: ['dynamodb', 'dynamo', 'nosql', 'key-value', 'document'],
         properties: [
           {
@@ -1224,16 +1221,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
             display_name: 'Azure AI Search',
           },
         ],
-        keywords: [
-          'vector',
-          'embedding',
-          'pinecone',
-          'weaviate',
-          'qdrant',
-          'pgvector',
-          'chromadb',
-          'milvus',
-        ],
+        keywords: ['vector', 'embedding', 'pinecone', 'weaviate', 'qdrant', 'pgvector', 'chromadb', 'milvus'],
         properties: [
           {
             name: 'name',
@@ -1277,15 +1265,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
             display_name: 'Synapse Analytics',
           },
         ],
-        keywords: [
-          'warehouse',
-          'redshift',
-          'bigquery',
-          'snowflake',
-          'clickhouse',
-          'analytics',
-          'olap',
-        ],
+        keywords: ['warehouse', 'redshift', 'bigquery', 'snowflake', 'clickhouse', 'analytics', 'olap'],
         properties: [
           {
             name: 'name',
@@ -1427,9 +1407,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         category: 'storage',
         behavior: 'stateful' as NodeBehavior,
         providers: ['alibaba'],
-        implementations: [
-          { provider: 'alibaba', resource_type: 'alibaba:oss:Bucket', display_name: 'OSS Bucket' },
-        ],
+        implementations: [{ provider: 'alibaba', resource_type: 'alibaba:oss:Bucket', display_name: 'OSS Bucket' }],
         keywords: ['oss', 'object', 'storage', 'alibaba', 'bucket'],
         properties: [
           {
@@ -1964,9 +1942,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         category: 'messaging',
         behavior: 'streaming' as NodeBehavior,
         providers: ['gcp'],
-        implementations: [
-          { provider: 'gcp', resource_type: 'gcp:pubsub:Topic', display_name: 'Pub/Sub Topic' },
-        ],
+        implementations: [{ provider: 'gcp', resource_type: 'gcp:pubsub:Topic', display_name: 'Pub/Sub Topic' }],
         keywords: ['pubsub', 'pub/sub', 'gcp', 'topic', 'subscription', 'messaging'],
         properties: [
           {
@@ -2387,7 +2363,7 @@ export function filterResourcesByProvider(provider: string): HighLevelResource[]
     return getAllHighLevelResources();
   }
   return getAllHighLevelResources().filter((resource) =>
-    resource.providers.includes(provider as 'aws' | 'gcp' | 'azure' | 'kubernetes')
+    resource.providers.includes(provider as 'aws' | 'gcp' | 'azure' | 'kubernetes'),
   );
 }
 

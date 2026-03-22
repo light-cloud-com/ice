@@ -21,10 +21,7 @@ router.use(requireAuth);
 
 router.get('/rules/:cardId/:nodeId', async (req: AuthRequest, res: Response) => {
   try {
-    const rules = await pipelineService.getRulesForNode(
-      req.params.cardId as string,
-      req.params.nodeId as string,
-    );
+    const rules = await pipelineService.getRulesForNode(req.params.cardId as string, req.params.nodeId as string);
     res.json({ success: true, rules });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
@@ -36,17 +33,14 @@ router.post('/rules', async (req: AuthRequest, res: Response) => {
     if (!req.body.cardId || !req.body.nodeId || !req.body.repository) {
       return res.status(400).json({
         success: false,
-        error: `Missing required fields: ${!req.body.cardId ? 'cardId ' : ''}${!req.body.nodeId ? 'nodeId ' : ''}${!req.body.repository ? 'repository' : ''}`.trim(),
+        error:
+          `Missing required fields: ${!req.body.cardId ? 'cardId ' : ''}${!req.body.nodeId ? 'nodeId ' : ''}${!req.body.repository ? 'repository' : ''}`.trim(),
       });
     }
     if (!req.organisationId) {
       return res.status(400).json({ success: false, error: 'No organisation context. Please re-login.' });
     }
-    const rule = await pipelineService.createRule(
-      req.body,
-      req.organisationId,
-      req.userId!,
-    );
+    const rule = await pipelineService.createRule(req.body, req.organisationId, req.userId!);
     res.json({ success: true, rule });
   } catch (err: any) {
     console.error('Pipeline rule creation failed:', err);
@@ -56,11 +50,7 @@ router.post('/rules', async (req: AuthRequest, res: Response) => {
 
 router.put('/rules/:ruleId', async (req: AuthRequest, res: Response) => {
   try {
-    const rule = await pipelineService.updateRule(
-      req.params.ruleId as string,
-      req.body,
-      req.organisationId!,
-    );
+    const rule = await pipelineService.updateRule(req.params.ruleId as string, req.body, req.organisationId!);
     res.json({ success: true, rule });
   } catch (err: any) {
     res.status(400).json({ success: false, error: err.message });
@@ -69,11 +59,7 @@ router.put('/rules/:ruleId', async (req: AuthRequest, res: Response) => {
 
 router.delete('/rules/:ruleId', async (req: AuthRequest, res: Response) => {
   try {
-    await pipelineService.deleteRule(
-      req.params.ruleId as string,
-      req.userId!,
-      req.organisationId!,
-    );
+    await pipelineService.deleteRule(req.params.ruleId as string, req.userId!, req.organisationId!);
     res.json({ success: true });
   } catch (err: any) {
     res.status(400).json({ success: false, error: err.message });
@@ -84,10 +70,7 @@ router.delete('/rules/:ruleId', async (req: AuthRequest, res: Response) => {
 
 router.get('/events/:cardId/:nodeId', async (req: AuthRequest, res: Response) => {
   try {
-    const events = await pipelineService.getEventsForNode(
-      req.params.cardId as string,
-      req.params.nodeId as string,
-    );
+    const events = await pipelineService.getEventsForNode(req.params.cardId as string, req.params.nodeId as string);
     res.json({ success: true, events });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
@@ -103,11 +86,7 @@ router.post('/detect-framework', async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ success: false, error: 'repository is required' });
     }
 
-    const detection = await pipelineService.detectFramework(
-      req.userId!,
-      repository,
-      branch,
-    );
+    const detection = await pipelineService.detectFramework(req.userId!, repository, branch);
     res.json({ success: true, detection });
   } catch (err: any) {
     res.status(400).json({ success: false, error: err.message });
@@ -134,7 +113,9 @@ router.post('/trigger', async (req: AuthRequest, res: Response) => {
 
     // Queue the pipeline job
     const { getDeployQueue } = await import('../services/queue.service');
-    const rule = await (await import('@ice/db')).default.deploymentRule.findUnique({
+    const rule = await (
+      await import('@ice/db')
+    ).default.deploymentRule.findUnique({
       where: { id: ruleId },
     });
 
@@ -143,27 +124,31 @@ router.post('/trigger', async (req: AuthRequest, res: Response) => {
     }
 
     const queue = getDeployQueue();
-    await queue.add('pipeline', {
-      type: 'pipeline',
-      eventId: event.id,
-      ruleId: rule.id,
-      cardId: rule.card_id,
-      nodeId: rule.node_id,
-      repository: rule.repository,
-      branch: branch || rule.branch_pattern,
-      commitSha: commitSha || 'HEAD',
-      commitMessage: commitMessage || 'Manual deploy',
-      commitAuthor: req.userId,
-      environment: rule.environment,
-      buildCommand: rule.build_command,
-      installCommand: rule.install_command,
-      outputDir: rule.output_dir,
-      framework: rule.framework,
-    }, {
-      attempts: 1,
-      removeOnComplete: 100,
-      removeOnFail: 100,
-    });
+    await queue.add(
+      'pipeline',
+      {
+        type: 'pipeline',
+        eventId: event.id,
+        ruleId: rule.id,
+        cardId: rule.card_id,
+        nodeId: rule.node_id,
+        repository: rule.repository,
+        branch: branch || rule.branch_pattern,
+        commitSha: commitSha || 'HEAD',
+        commitMessage: commitMessage || 'Manual deploy',
+        commitAuthor: req.userId,
+        environment: rule.environment,
+        buildCommand: rule.build_command,
+        installCommand: rule.install_command,
+        outputDir: rule.output_dir,
+        framework: rule.framework,
+      },
+      {
+        attempts: 1,
+        removeOnComplete: 100,
+        removeOnFail: 100,
+      },
+    );
 
     res.json({ success: true, event });
   } catch (err: any) {
@@ -184,23 +169,40 @@ router.post('/retry', async (req: AuthRequest, res: Response) => {
       include: { rule: true },
     });
     if (!oldEvent) return res.status(404).json({ success: false, error: 'Event not found' });
-    if (oldEvent.status !== 'failed') return res.status(400).json({ success: false, error: 'Can only retry failed events' });
+    if (oldEvent.status !== 'failed')
+      return res.status(400).json({ success: false, error: 'Can only retry failed events' });
 
     const rule = oldEvent.rule;
     const event = await pipelineService.createDeploymentEvent(
-      rule.id, 'manual', oldEvent.commit_sha, oldEvent.branch,
-      `Retry: ${oldEvent.commit_message || ''}`, req.userId,
+      rule.id,
+      'manual',
+      oldEvent.commit_sha,
+      oldEvent.branch,
+      `Retry: ${oldEvent.commit_message || ''}`,
+      req.userId,
     );
 
     const { getDeployQueue } = await import('../services/queue.service');
     const queue = getDeployQueue();
-    await queue.add('pipeline', {
-      type: 'pipeline', eventId: event.id, ruleId: rule.id,
-      cardId: rule.card_id, nodeId: rule.node_id, repository: rule.repository,
-      branch: oldEvent.branch, commitSha: oldEvent.commit_sha,
-      environment: rule.environment, buildCommand: rule.build_command,
-      installCommand: rule.install_command, outputDir: rule.output_dir, framework: rule.framework,
-    }, { attempts: 1, removeOnComplete: 100, removeOnFail: 100 });
+    await queue.add(
+      'pipeline',
+      {
+        type: 'pipeline',
+        eventId: event.id,
+        ruleId: rule.id,
+        cardId: rule.card_id,
+        nodeId: rule.node_id,
+        repository: rule.repository,
+        branch: oldEvent.branch,
+        commitSha: oldEvent.commit_sha,
+        environment: rule.environment,
+        buildCommand: rule.build_command,
+        installCommand: rule.install_command,
+        outputDir: rule.output_dir,
+        framework: rule.framework,
+      },
+      { attempts: 1, removeOnComplete: 100, removeOnFail: 100 },
+    );
 
     res.json({ success: true, event });
   } catch (err: any) {

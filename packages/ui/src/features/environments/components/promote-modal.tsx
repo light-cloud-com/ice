@@ -30,7 +30,10 @@ export const PromoteModal: React.FC = () => {
   for (const [pId, envs] of Object.entries(allEnvs)) {
     const source = envs.find((e) => e.id === pendingPromote.sourceEnvId);
     const target = envs.find((e) => e.id === pendingPromote.targetEnvId);
-    if (source) { sourceName = source.name; projectId = pId; }
+    if (source) {
+      sourceName = source.name;
+      projectId = pId;
+    }
     if (target) targetName = target.name;
   }
 
@@ -38,10 +41,12 @@ export const PromoteModal: React.FC = () => {
   const noChanges = totalChanges === 0;
 
   const handlePromote = async () => {
-    await dispatch(promoteEnvironment({
-      sourceEnvId: pendingPromote.sourceEnvId,
-      targetEnvId: pendingPromote.targetEnvId,
-    }));
+    await dispatch(
+      promoteEnvironment({
+        sourceEnvId: pendingPromote.sourceEnvId,
+        targetEnvId: pendingPromote.targetEnvId,
+      }),
+    );
     if (projectId) dispatch(fetchEnvironments(projectId));
   };
 
@@ -58,14 +63,14 @@ export const PromoteModal: React.FC = () => {
           <div className="flex items-center gap-2">
             <ArrowUpRight className="w-5 h-5 text-amber-500" />
             <h2 className="text-sm font-semibold text-ice-text-1">
-              Promote <span className="text-amber-500">{sourceName}</span> to <span className="text-emerald-500">{targetName}</span>
+              Promote <span className="text-amber-500">{sourceName}</span> to{' '}
+              <span className="text-emerald-500">{targetName}</span>
             </h2>
           </div>
           <p className="text-ice-xs text-ice-text-3 mt-1">
             {noChanges
               ? 'Both environments are identical. Nothing to promote.'
-              : `${totalChanges} change${totalChanges !== 1 ? 's' : ''} will be applied to ${targetName}.`
-            }
+              : `${totalChanges} change${totalChanges !== 1 ? 's' : ''} will be applied to ${targetName}.`}
           </p>
         </div>
 
@@ -123,11 +128,7 @@ export const PromoteModal: React.FC = () => {
               disabled={promoting}
               className="flex items-center gap-1.5 px-4 py-1.5 text-ice-sm font-medium rounded-md bg-amber-500 text-white hover:bg-amber-600 transition-colors disabled:opacity-50"
             >
-              {promoting ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <ArrowUpRight className="w-3.5 h-3.5" />
-              )}
+              {promoting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ArrowUpRight className="w-3.5 h-3.5" />}
               Promote to {targetName}
             </button>
           )}
@@ -146,9 +147,21 @@ const DiffRow: React.FC<{
   detail?: string;
 }> = ({ type, label, iceType, detail }) => {
   const config = {
-    added: { icon: Plus, color: 'text-emerald-500', border: 'border-l-emerald-500', bg: 'bg-emerald-500/5', tag: 'added' },
+    added: {
+      icon: Plus,
+      color: 'text-emerald-500',
+      border: 'border-l-emerald-500',
+      bg: 'bg-emerald-500/5',
+      tag: 'added',
+    },
     removed: { icon: Minus, color: 'text-red-500', border: 'border-l-red-500', bg: 'bg-red-500/5', tag: 'removed' },
-    modified: { icon: RefreshCw, color: 'text-amber-500', border: 'border-l-amber-500', bg: 'bg-amber-500/5', tag: 'changed' },
+    modified: {
+      icon: RefreshCw,
+      color: 'text-amber-500',
+      border: 'border-l-amber-500',
+      bg: 'bg-amber-500/5',
+      tag: 'changed',
+    },
   }[type];
 
   const Icon = config.icon;
@@ -158,7 +171,11 @@ const DiffRow: React.FC<{
       <Icon className={cn('w-3 h-3 shrink-0', config.color)} />
       <span className="font-medium text-ice-text-1">{label}</span>
       <span className="text-ice-text-3 font-mono">{iceType}</span>
-      {detail && <span className="text-ice-text-3 ml-auto truncate max-w-[120px]" title={detail}>{detail}</span>}
+      {detail && (
+        <span className="text-ice-text-3 ml-auto truncate max-w-[120px]" title={detail}>
+          {detail}
+        </span>
+      )}
       <span className={cn('ml-auto text-[10px] font-semibold uppercase', config.color)}>{config.tag}</span>
     </div>
   );

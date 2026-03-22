@@ -79,10 +79,7 @@ export function getActiveCategories(): TemplateCategory[] {
 }
 
 /** Search templates by query string (matches name, description, tags, category) */
-export function searchTemplates(
-  query: string,
-  templates: ComposedTemplate[] = ALL_TEMPLATES
-): ComposedTemplate[] {
+export function searchTemplates(query: string, templates: ComposedTemplate[] = ALL_TEMPLATES): ComposedTemplate[] {
   if (!query.trim()) return templates;
   const q = query.toLowerCase();
   return templates.filter(
@@ -90,7 +87,7 @@ export function searchTemplates(
       t.name.toLowerCase().includes(q) ||
       t.description.toLowerCase().includes(q) ||
       t.tags.some((tag) => tag.toLowerCase().includes(q)) ||
-      t.category.toLowerCase().includes(q)
+      t.category.toLowerCase().includes(q),
   );
 }
 
@@ -103,10 +100,7 @@ export interface TemplateCompatibility {
 }
 
 /** Check how many blocks in a template support the selected provider */
-export function getProviderCompatibility(
-  template: ComposedTemplate,
-  provider: Provider
-): TemplateCompatibility {
+export function getProviderCompatibility(template: ComposedTemplate, provider: Provider): TemplateCompatibility {
   let supported = 0;
   const unsupported: string[] = [];
   for (const block of template.blocks) {
@@ -121,9 +115,6 @@ export function getProviderCompatibility(
 }
 
 /** Filter templates with provider compatibility info */
-export function filterByProvider(
-  templates: ComposedTemplate[],
-  provider: Provider
-): TemplateCompatibility[] {
+export function filterByProvider(templates: ComposedTemplate[], provider: Provider): TemplateCompatibility[] {
   return templates.map((t) => getProviderCompatibility(t, provider));
 }

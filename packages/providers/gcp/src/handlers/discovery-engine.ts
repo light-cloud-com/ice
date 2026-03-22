@@ -16,7 +16,7 @@ function result(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  overrides: Partial<ResourceDeployResult> = {}
+  overrides: Partial<ResourceDeployResult> = {},
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -33,7 +33,7 @@ function fail(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  error: string
+  error: string,
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -60,7 +60,7 @@ export const discovery_engine_handler: GCPResourceHandler = {
           industryVertical: 'GENERIC',
           solutionTypes: [properties.solution_type || 'SOLUTION_TYPE_SEARCH'],
           contentConfig: 'CONTENT_REQUIRED',
-        }
+        },
       )) as any;
 
       if (ds_op?.name) await wait_for_operation(ctx, ds_op.name);
@@ -73,7 +73,7 @@ export const discovery_engine_handler: GCPResourceHandler = {
           solutionType: properties.solution_type || 'SOLUTION_TYPE_SEARCH',
           dataStoreIds: [`${name}-store`],
           searchEngineConfig: { searchTier: 'SEARCH_TIER_STANDARD' },
-        }
+        },
       )) as any;
 
       if (engine_op?.name) await wait_for_operation(ctx, engine_op.name);
@@ -111,8 +111,7 @@ async function wait_for_operation(ctx: GCPHandlerContext, op_name: string): Prom
   while (Date.now() - start < 300_000) {
     const op = (await ctx.rest_client.get(`${BASE_URL}/${op_name}`)) as any;
     if (op?.done) {
-      if (op.error)
-        throw new Error(operation_failed(SERVICE_NAMES.DISCOVERY_ENGINE, JSON.stringify(op.error)));
+      if (op.error) throw new Error(operation_failed(SERVICE_NAMES.DISCOVERY_ENGINE, JSON.stringify(op.error)));
       return;
     }
     await new Promise((r) => setTimeout(r, 5000));

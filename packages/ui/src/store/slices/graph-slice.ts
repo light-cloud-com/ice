@@ -153,7 +153,7 @@ const DEFAULT_OPTIONS: TransformOptions = {
 
 export function iceToCanvas(
   graph: SerializedGraph,
-  options: TransformOptions = DEFAULT_OPTIONS
+  options: TransformOptions = DEFAULT_OPTIONS,
 ): { nodes: CanvasNode[]; edges: CanvasEdge[] } {
   const { viewLevel, emptyContainerMode } = options;
   const viewConfig = VIEW_LEVELS[viewLevel];

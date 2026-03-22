@@ -105,7 +105,7 @@ export interface ParseSourceResult {
 export function parse_source(
   source: string,
   lexer_options?: Partial<LexerOptions>,
-  parser_options?: Partial<ParserOptions>
+  parser_options?: Partial<ParserOptions>,
 ): ParseSourceResult {
   const lexer = new Lexer(source, lexer_options);
   const lexer_result = lexer.tokenize();

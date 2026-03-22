@@ -41,11 +41,7 @@ export interface GCPRestClient {
  */
 export interface GCPResourceHandler {
   /** Create a new resource. Returns the deploy result with provider_id. */
-  create(
-    name: string,
-    properties: Record<string, unknown>,
-    ctx: GCPHandlerContext
-  ): Promise<ResourceDeployResult>;
+  create(name: string, properties: Record<string, unknown>, ctx: GCPHandlerContext): Promise<ResourceDeployResult>;
 
   /** Update an existing resource. */
   update(
@@ -53,7 +49,7 @@ export interface GCPResourceHandler {
     provider_id: string,
     properties: Record<string, unknown>,
     current_properties: Record<string, unknown>,
-    ctx: GCPHandlerContext
+    ctx: GCPHandlerContext,
   ): Promise<ResourceDeployResult>;
 
   /** Delete a resource. */

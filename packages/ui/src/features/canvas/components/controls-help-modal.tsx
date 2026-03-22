@@ -92,10 +92,7 @@ export const ControlsHelpModal: React.FC = () => {
               style={{ borderBottom: '1px solid var(--ice-border)' }}
             >
               <span className="text-xs font-semibold text-slate-300">Controls</span>
-              <button
-                onClick={() => setOpen(false)}
-                className="text-slate-500 hover:text-slate-300 text-xs"
-              >
+              <button onClick={() => setOpen(false)} className="text-slate-500 hover:text-slate-300 text-xs">
                 ESC
               </button>
             </div>
@@ -113,10 +110,7 @@ export const ControlsHelpModal: React.FC = () => {
                   <div className="flex flex-col gap-1">
                     {section.items.map((item) => (
                       <div key={item.keys} className="flex items-center justify-between gap-3">
-                        <span
-                          className="text-ice-sm font-mono shrink-0"
-                          style={{ color: 'var(--ice-text-tertiary)' }}
-                        >
+                        <span className="text-ice-sm font-mono shrink-0" style={{ color: 'var(--ice-text-tertiary)' }}>
                           {item.keys}
                         </span>
                         <span className="text-ice-sm text-right" style={{ color: 'var(--ice-text-secondary)' }}>

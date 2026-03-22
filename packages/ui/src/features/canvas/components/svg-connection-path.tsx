@@ -11,7 +11,12 @@
 
 import React, { memo, useMemo, useState, useCallback, useRef } from 'react';
 import type { CanvasNode, CanvasConnection } from './svg-canvas';
-import { inferConnectionMeta, CATEGORY_COLORS, CATEGORY_LABELS, type ConnectionCategory } from '../utils/connection-rules';
+import {
+  inferConnectionMeta,
+  CATEGORY_COLORS,
+  CATEGORY_LABELS,
+  type ConnectionCategory,
+} from '../utils/connection-rules';
 
 // ─── Tooltip info passed up to canvas ───────────────────────────────────────
 
@@ -81,13 +86,9 @@ function chooseSides(from: CanvasNode, to: CanvasNode): { exitSide: Side; entryS
   const dx = to.x + to.width / 2 - (from.x + from.width / 2);
   const dy = to.y + to.height / 2 - (from.y + from.height / 2);
   if (Math.abs(dx) > Math.abs(dy)) {
-    return dx > 0
-      ? { exitSide: 'right', entrySide: 'left' }
-      : { exitSide: 'left', entrySide: 'right' };
+    return dx > 0 ? { exitSide: 'right', entrySide: 'left' } : { exitSide: 'left', entrySide: 'right' };
   }
-  return dy > 0
-    ? { exitSide: 'bottom', entrySide: 'top' }
-    : { exitSide: 'top', entrySide: 'bottom' };
+  return dy > 0 ? { exitSide: 'bottom', entrySide: 'top' } : { exitSide: 'top', entrySide: 'bottom' };
 }
 
 function getEdgePoint(node: CanvasNode, side: Side, portIndex = 0, portCount = 1): Point {
@@ -108,7 +109,7 @@ function buildBezierPath(
   start: Point,
   end: Point,
   exitSide: Side,
-  entrySide: Side
+  entrySide: Side,
 ): { pathD: string; midX: number; midY: number } {
   const dx = end.x - start.x;
   const dy = end.y - start.y;
@@ -172,10 +173,7 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
     // Derive smart connection metadata from connected node iceTypes when not
     // explicitly stored on the edge. This makes existing edges render with
     // the correct visual style and env var label without needing data migration.
-    const fromNode = useMemo(
-      () => nodes.find((n) => n.id === connection.from),
-      [nodes, connection.from]
-    );
+    const fromNode = useMemo(() => nodes.find((n) => n.id === connection.from), [nodes, connection.from]);
     const toNode = useMemo(() => nodes.find((n) => n.id === connection.to), [nodes, connection.to]);
 
     const derivedMeta = useMemo(() => {
@@ -216,7 +214,7 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
           securityRule: d.securityRule != null ? String(d.securityRule) : undefined,
         };
       },
-      [connection, fromNode, toNode, relationship, bundleCount]
+      [connection, fromNode, toNode, relationship, bundleCount],
     );
 
     const handleMouseEnter = useCallback(() => {
@@ -233,7 +231,7 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
         if (!onConnectionHover) return;
         onConnectionHover(buildTooltip(e.clientX, e.clientY));
       },
-      [onConnectionHover, buildTooltip]
+      [onConnectionHover, buildTooltip],
     );
 
     // Calculate bezier path
@@ -263,7 +261,20 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
 
     const baseWidth = isThinEdge ? 0.6 : 1;
     const strokeWidth = lod <= 1 ? 0.5 : isSelected ? 2.5 : isHover || isHighlighted ? 2 : lod <= 2 ? 0.8 : baseWidth;
-    const strokeOpacity = lod <= 1 ? 0.3 : isSelected ? 0.7 : isHighlighted ? 0.6 : isHover ? 0.7 : lod <= 2 ? 0.25 : isThinEdge ? 0.12 : 0.15;
+    const strokeOpacity =
+      lod <= 1
+        ? 0.3
+        : isSelected
+          ? 0.7
+          : isHighlighted
+            ? 0.6
+            : isHover
+              ? 0.7
+              : lod <= 2
+                ? 0.25
+                : isThinEdge
+                  ? 0.12
+                  : 0.15;
     const showLabels = lod >= 3;
     const showArrow = lod >= 2 && hasArrow;
 
@@ -288,18 +299,23 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
               orient="auto"
               markerUnits="strokeWidth"
             >
-              <polygon
-                points="0 0, 5 1.75, 0 3.5"
-                fill={strokeColor}
-                opacity={isHover || isActive ? 0.8 : 0.4}
-              />
+              <polygon points="0 0, 5 1.75, 0 3.5" fill={strokeColor} opacity={isHover || isActive ? 0.8 : 0.4} />
             </marker>
           )}
         </defs>
 
         {/* Invisible wider path for easier hover targeting + click-to-select */}
-        <path d={pathD} stroke="transparent" strokeWidth={16} fill="none" style={{ cursor: 'pointer', pointerEvents: 'auto' }}
-          onClick={(e) => { e.stopPropagation(); onSelect?.(connection.id); }} />
+        <path
+          d={pathD}
+          stroke="transparent"
+          strokeWidth={16}
+          fill="none"
+          style={{ cursor: 'pointer', pointerEvents: 'auto' }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect?.(connection.id);
+          }}
+        />
 
         {/* Main bezier path */}
         <path
@@ -324,17 +340,13 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
             strokeLinecap="round"
             opacity={0.9}
           >
-            <animate
-              attributeName="stroke-dashoffset"
-              values="0;-40"
-              dur="1s"
-              repeatCount="indefinite"
-            />
+            <animate attributeName="stroke-dashoffset" values="0;-40" dur="1s" repeatCount="indefinite" />
           </path>
         )}
 
         {/* Edge label pill — protocol/port info (hidden at lower LOD) */}
-        {showLabels && !isHover &&
+        {showLabels &&
+          !isHover &&
           bundleCount <= 1 &&
           (() => {
             const envVarName = derivedEnvVar || undefined;
@@ -385,14 +397,7 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
         {/* Bundle count badge (hidden at lower LOD) */}
         {showLabels && bundleCount > 1 && (
           <g>
-            <circle
-              cx={midX}
-              cy={midY}
-              r={10}
-              fill="var(--ice-bg-raised)"
-              stroke={strokeColor}
-              strokeWidth={1}
-            />
+            <circle cx={midX} cy={midY} r={10} fill="var(--ice-bg-raised)" stroke={strokeColor} strokeWidth={1} />
             <text
               x={midX}
               y={midY}
@@ -410,7 +415,14 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
 
         {/* Delete button on hover (only at full LOD) */}
         {showLabels && isHover && bundleCount <= 1 && (
-          <g className="delete-button" style={{ cursor: 'pointer', pointerEvents: 'auto' }} onClick={(e) => { e.stopPropagation(); onDelete?.(connection.id); }}>
+          <g
+            className="delete-button"
+            style={{ cursor: 'pointer', pointerEvents: 'auto' }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete?.(connection.id);
+            }}
+          >
             <circle cx={midX} cy={midY} r={8} fill="#ef4444" opacity={0.9} />
             <line
               x1={midX - 2.5}
@@ -434,7 +446,7 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
         )}
       </g>
     );
-  }
+  },
 );
 
 SvgConnectionPath.displayName = 'SvgConnectionPath';

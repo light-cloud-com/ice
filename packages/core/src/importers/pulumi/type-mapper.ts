@@ -262,10 +262,8 @@ const TYPE_MAP: Record<string, string> = {
   'azure:compute/virtualMachine:VirtualMachine': 'azure.compute.virtual_machine',
   'azure-native:compute:VirtualMachine': 'azure.compute.virtual_machine',
   'azure:compute/linuxVirtualMachine:LinuxVirtualMachine': 'azure.compute.linux_virtual_machine',
-  'azure:compute/windowsVirtualMachine:WindowsVirtualMachine':
-    'azure.compute.windows_virtual_machine',
-  'azure:compute/virtualMachineScaleSet:VirtualMachineScaleSet':
-    'azure.compute.virtual_machine_scale_set',
+  'azure:compute/windowsVirtualMachine:WindowsVirtualMachine': 'azure.compute.windows_virtual_machine',
+  'azure:compute/virtualMachineScaleSet:VirtualMachineScaleSet': 'azure.compute.virtual_machine_scale_set',
   'azure:compute/availabilitySet:AvailabilitySet': 'azure.compute.availability_set',
   'azure:compute/managedDisk:ManagedDisk': 'azure.compute.managed_disk',
   'azure:compute/image:Image': 'azure.compute.image',
@@ -408,12 +406,10 @@ const TYPE_MAP: Record<string, string> = {
   'kubernetes:rbac.authorization.k8s.io/v1:Role': 'kubernetes.rbac.role',
   'kubernetes:rbac.authorization.k8s.io/v1:RoleBinding': 'kubernetes.rbac.role_binding',
   'kubernetes:rbac.authorization.k8s.io/v1:ClusterRole': 'kubernetes.rbac.cluster_role',
-  'kubernetes:rbac.authorization.k8s.io/v1:ClusterRoleBinding':
-    'kubernetes.rbac.cluster_role_binding',
+  'kubernetes:rbac.authorization.k8s.io/v1:ClusterRoleBinding': 'kubernetes.rbac.cluster_role_binding',
   'kubernetes:core/v1:Pod': 'kubernetes.core.pod',
   'kubernetes:apps/v1:ReplicaSet': 'kubernetes.apps.replica_set',
-  'kubernetes:autoscaling/v2:HorizontalPodAutoscaler':
-    'kubernetes.autoscaling.horizontal_pod_autoscaler',
+  'kubernetes:autoscaling/v2:HorizontalPodAutoscaler': 'kubernetes.autoscaling.horizontal_pod_autoscaler',
 };
 
 // =============================================================================

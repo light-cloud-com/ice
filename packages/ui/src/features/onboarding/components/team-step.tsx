@@ -9,10 +9,7 @@ import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Users, UserPlus } from 'lucide-react';
 import { cn } from '../../../shared/utils/cn';
-import {
-  setTeamMode,
-  setTeamName,
-} from '../../../store/slices/onboarding-slice';
+import { setTeamMode, setTeamName } from '../../../store/slices/onboarding-slice';
 import type { RootState, AppDispatch } from '../../../store';
 
 const TEAM_OPTIONS = [
@@ -57,15 +54,10 @@ export const TeamStep: React.FC = () => {
                 'flex w-full items-start gap-3 rounded-lg border px-4 py-3 text-left transition-all',
                 isSelected
                   ? 'border-ice-accent bg-ice-accent/5 ring-1 ring-ice-accent/30'
-                  : 'border-ice-border bg-ice-surface hover:border-ice-text-3'
+                  : 'border-ice-border bg-ice-surface hover:border-ice-text-3',
               )}
             >
-              <Icon
-                className={cn(
-                  'mt-0.5 w-4 h-4 shrink-0',
-                  isSelected ? 'text-ice-accent' : 'text-ice-text-2'
-                )}
-              />
+              <Icon className={cn('mt-0.5 w-4 h-4 shrink-0', isSelected ? 'text-ice-accent' : 'text-ice-text-2')} />
               <div>
                 <p className="text-sm font-medium text-ice-text-1">{opt.title}</p>
                 <p className="text-xs text-ice-text-2 mt-0.5">{opt.description}</p>
@@ -103,9 +95,7 @@ export const TeamStep: React.FC = () => {
             className="ice-input w-full"
             autoFocus
           />
-          <p className="text-xs text-ice-text-3 mt-1">
-            Ask your team admin for an invite code or link.
-          </p>
+          <p className="text-xs text-ice-text-3 mt-1">Ask your team admin for an invite code or link.</p>
         </div>
       )}
     </div>

@@ -45,10 +45,7 @@ interface AuthenticatedRequest extends Request {
  *       403:
  *         description: Insufficient permissions
  */
-export const getCurrentBilling = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
+export const getCurrentBilling = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { targetOrganisationId } = req.body;
 

@@ -54,13 +54,9 @@ interface AuthenticatedRequest extends Request {
  *       401:
  *         description: Unauthorized
  */
-export const updateSettings = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
+export const updateSettings = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const { targetOrganisationId, spending_limit, budget_alert_threshold } =
-      req.body;
+    const { targetOrganisationId, spending_limit, budget_alert_threshold } = req.body;
 
     if (!targetOrganisationId) {
       errorHandler({ res, message: 'Organisation ID is required' });
@@ -89,11 +85,7 @@ export const updateSettings = async (
     }
 
     // Validate values
-    if (
-      spending_limit !== undefined &&
-      spending_limit !== null &&
-      spending_limit < 0
-    ) {
+    if (spending_limit !== undefined && spending_limit !== null && spending_limit < 0) {
       errorHandler({
         res,
         message: 'Spending limit must be a positive number',
@@ -101,11 +93,7 @@ export const updateSettings = async (
       return;
     }
 
-    if (
-      budget_alert_threshold !== undefined &&
-      budget_alert_threshold !== null &&
-      budget_alert_threshold < 0
-    ) {
+    if (budget_alert_threshold !== undefined && budget_alert_threshold !== null && budget_alert_threshold < 0) {
       errorHandler({
         res,
         message: 'Budget alert threshold must be a positive number',
@@ -127,12 +115,8 @@ export const updateSettings = async (
     res.status(200).json({
       success: true,
       data: {
-        spending_limit: billing?.spending_limit
-          ? Number(billing.spending_limit)
-          : null,
-        budget_alert_threshold: billing?.budget_alert_threshold
-          ? Number(billing.budget_alert_threshold)
-          : null,
+        spending_limit: billing?.spending_limit ? Number(billing.spending_limit) : null,
+        budget_alert_threshold: billing?.budget_alert_threshold ? Number(billing.budget_alert_threshold) : null,
       },
     });
   } catch (error) {

@@ -61,9 +61,7 @@ export const ConnectGithubStep: React.FC = () => {
     <div className="space-y-5">
       <div className="text-center">
         <h2 className="text-xl font-semibold text-ice-text-1">Connect GitHub</h2>
-        <p className="text-sm text-ice-text-2 mt-1">
-          Link repositories to services on the canvas for CI/CD
-        </p>
+        <p className="text-sm text-ice-text-2 mt-1">Link repositories to services on the canvas for CI/CD</p>
       </div>
 
       {/* Connected state */}
@@ -75,9 +73,7 @@ export const ConnectGithubStep: React.FC = () => {
             <Github className="w-8 h-8 text-ice-text-1" />
           )}
           <div className="flex-1">
-            <div className="font-medium text-sm text-ice-text-1">
-              {githubStatus.username || 'GitHub'}
-            </div>
+            <div className="font-medium text-sm text-ice-text-1">{githubStatus.username || 'GitHub'}</div>
             <div className="text-xs text-ice-text-2">Connected</div>
           </div>
           <Check className="w-5 h-5 text-emerald-500" />
@@ -100,7 +96,7 @@ export const ConnectGithubStep: React.FC = () => {
                 'flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
                 activeTab === 'device'
                   ? 'bg-ice-surface text-ice-text-1 shadow-sm'
-                  : 'text-ice-text-2 hover:text-ice-text-1'
+                  : 'text-ice-text-2 hover:text-ice-text-1',
               )}
             >
               Sign in with Browser
@@ -112,7 +108,7 @@ export const ConnectGithubStep: React.FC = () => {
                 'flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
                 activeTab === 'pat'
                   ? 'bg-ice-surface text-ice-text-1 shadow-sm'
-                  : 'text-ice-text-2 hover:text-ice-text-1'
+                  : 'text-ice-text-2 hover:text-ice-text-1',
               )}
             >
               Personal Access Token
@@ -130,21 +126,15 @@ export const ConnectGithubStep: React.FC = () => {
                     'w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm rounded-md font-medium transition-colors',
                     'bg-[#24292f] dark:bg-[#f0f6fc] text-white dark:text-[#24292f]',
                     'hover:bg-[#24292f]/90 dark:hover:bg-[#f0f6fc]/90',
-                    'disabled:opacity-50 disabled:cursor-not-allowed'
+                    'disabled:opacity-50 disabled:cursor-not-allowed',
                   )}
                 >
-                  {isConnecting ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Github className="w-4 h-4" />
-                  )}
+                  {isConnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Github className="w-4 h-4" />}
                   Sign in with GitHub
                 </button>
               ) : (
                 <div className="space-y-3 text-center">
-                  <p className="text-sm text-ice-text-2">
-                    Enter this code in your browser to authorize:
-                  </p>
+                  <p className="text-sm text-ice-text-2">Enter this code in your browser to authorize:</p>
                   <div className="flex items-center justify-center gap-2">
                     <code className="px-4 py-3 text-2xl font-mono font-bold tracking-widest rounded-lg bg-ice-raised border border-ice-border text-ice-text-1">
                       {deviceFlow.userCode}
@@ -201,11 +191,7 @@ export const ConnectGithubStep: React.FC = () => {
                 disabled={!patToken.trim() || isConnecting}
                 className="ice-btn ice-btn-primary w-full"
               >
-                {isConnecting ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Github className="w-4 h-4" />
-                )}
+                {isConnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Github className="w-4 h-4" />}
                 Connect with Token
               </button>
             </div>
@@ -213,9 +199,7 @@ export const ConnectGithubStep: React.FC = () => {
         </>
       )}
 
-      <p className="text-xs text-ice-text-3 text-center">
-        You can link repositories to services on the canvas later.
-      </p>
+      <p className="text-xs text-ice-text-3 text-center">You can link repositories to services on the canvas later.</p>
     </div>
   );
 };

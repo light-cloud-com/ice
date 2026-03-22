@@ -16,7 +16,7 @@ function result(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  overrides: Partial<ResourceDeployResult> = {}
+  overrides: Partial<ResourceDeployResult> = {},
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -33,7 +33,7 @@ function fail(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  error: string
+  error: string,
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -56,7 +56,7 @@ export const api_gateway_handler: GCPResourceHandler = {
         {
           displayName: name,
           labels: properties.labels || {},
-        }
+        },
       )) as any;
 
       if (op?.name) await wait_for_operation(ctx, op.name);
@@ -76,7 +76,7 @@ export const api_gateway_handler: GCPResourceHandler = {
       if (properties.labels) {
         await ctx.rest_client.patch(
           `${BASE_URL}/projects/${ctx.project}/locations/global/apis/${name}?updateMask=labels`,
-          { labels: properties.labels }
+          { labels: properties.labels },
         );
       }
 
@@ -91,7 +91,7 @@ export const api_gateway_handler: GCPResourceHandler = {
 
     try {
       const op = (await ctx.rest_client.delete(
-        `${BASE_URL}/projects/${ctx.project}/locations/global/apis/${name}`
+        `${BASE_URL}/projects/${ctx.project}/locations/global/apis/${name}`,
       )) as any;
 
       if (op?.name) await wait_for_operation(ctx, op.name);
@@ -108,8 +108,7 @@ async function wait_for_operation(ctx: GCPHandlerContext, op_name: string): Prom
   while (Date.now() - start < 120_000) {
     const op = (await ctx.rest_client.get(`${BASE_URL}/${op_name}`)) as any;
     if (op?.done) {
-      if (op.error)
-        throw new Error(operation_failed(SERVICE_NAMES.API_GATEWAY, JSON.stringify(op.error)));
+      if (op.error) throw new Error(operation_failed(SERVICE_NAMES.API_GATEWAY, JSON.stringify(op.error)));
       return;
     }
     await new Promise((r) => setTimeout(r, 3000));

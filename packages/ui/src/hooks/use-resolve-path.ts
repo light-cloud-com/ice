@@ -55,7 +55,15 @@ export function useResolvePath(allSegments: string[]): ResolvedPath {
       pathSegments = allSegments.slice(1);
     } else {
       // First segment doesn't match any org — 404
-      setResult({ loading: false, type: 'notFound', id: null, name: '', subpage: 'canvas', breadcrumbs: [], orgPrefix });
+      setResult({
+        loading: false,
+        type: 'notFound',
+        id: null,
+        name: '',
+        subpage: 'canvas',
+        breadcrumbs: [],
+        orgPrefix,
+      });
       return;
     }
 
@@ -95,9 +103,7 @@ export function useResolvePath(allSegments: string[]): ResolvedPath {
           });
 
           const items = res.data as Array<{ id: string; name: string; slug: string; type: string }>;
-          const match = items.find(
-            (item) => item.slug === seg || toSlug(item.name) === seg
-          );
+          const match = items.find((item) => item.slug === seg || toSlug(item.name) === seg);
 
           if (!match) break;
 
@@ -137,7 +143,9 @@ export function useResolvePath(allSegments: string[]): ResolvedPath {
     };
 
     resolve();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [selectedOrg?.id, user?.organisations, allSegments.join('/')]);
 
   return result;

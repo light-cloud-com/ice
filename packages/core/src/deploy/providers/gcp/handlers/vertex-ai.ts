@@ -15,7 +15,7 @@ function result(
   type: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  overrides: Partial<ResourceDeployResult> = {}
+  overrides: Partial<ResourceDeployResult> = {},
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -33,7 +33,7 @@ function fail(
   type: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  error: string
+  error: string,
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -54,32 +54,29 @@ export const vertex_ai_handler: GCPResourceHandler = {
 
     // Determine resource type from explicit property, fall back to name heuristic
     const explicit_type = properties.vertex_type as string | undefined;
-    const is_index = explicit_type === 'index'
-      || (!explicit_type && (name.includes('vector') || name.includes('index')));
+    const is_index =
+      explicit_type === 'index' || (!explicit_type && (name.includes('vector') || name.includes('index')));
     const type = is_index ? 'gcp.aiplatform.index' : 'gcp.aiplatform.endpoint';
 
     try {
       if (is_index) {
         // Create a Vector Search index
-        const op = (await ctx.rest_client.post(
-          `${base}/projects/${ctx.project}/locations/${region}/indexes`,
-          {
-            displayName: properties.display_name || name,
-            description: `ICE managed index: ${name}`,
-            metadata: {
-              contentsDeltaUri: '',
-              config: {
-                dimensions: properties.dimensions || 768,
-                approximateNeighborsCount: properties.neighbors_count || 150,
-                algorithmConfig: {
-                  treeAhConfig: { leafNodeEmbeddingCount: 1000, leafNodesToSearchPercent: 10 },
-                },
+        const op = (await ctx.rest_client.post(`${base}/projects/${ctx.project}/locations/${region}/indexes`, {
+          displayName: properties.display_name || name,
+          description: `ICE managed index: ${name}`,
+          metadata: {
+            contentsDeltaUri: '',
+            config: {
+              dimensions: properties.dimensions || 768,
+              approximateNeighborsCount: properties.neighbors_count || 150,
+              algorithmConfig: {
+                treeAhConfig: { leafNodeEmbeddingCount: 1000, leafNodesToSearchPercent: 10 },
               },
             },
-            indexUpdateMethod: 'STREAM_UPDATE',
-            labels: properties.labels || {},
-          }
-        )) as any;
+          },
+          indexUpdateMethod: 'STREAM_UPDATE',
+          labels: properties.labels || {},
+        })) as any;
 
         if (op?.name) await wait_for_operation(ctx, region, op.name);
 
@@ -88,13 +85,10 @@ export const vertex_ai_handler: GCPResourceHandler = {
         });
       } else {
         // Create an endpoint (for LLM gateway or model serving)
-        const op = (await ctx.rest_client.post(
-          `${base}/projects/${ctx.project}/locations/${region}/endpoints`,
-          {
-            displayName: properties.display_name || name,
-            labels: properties.labels || {},
-          }
-        )) as any;
+        const op = (await ctx.rest_client.post(`${base}/projects/${ctx.project}/locations/${region}/endpoints`, {
+          displayName: properties.display_name || name,
+          labels: properties.labels || {},
+        })) as any;
 
         if (op?.name) await wait_for_operation(ctx, region, op.name);
 
@@ -103,21 +97,13 @@ export const vertex_ai_handler: GCPResourceHandler = {
         });
       }
     } catch (error) {
-      return fail(
-        name,
-        type,
-        'create',
-        start,
-        error instanceof Error ? error.message : String(error)
-      );
+      return fail(name, type, 'create', start, error instanceof Error ? error.message : String(error));
     }
   },
 
   async update(name, provider_id, properties, _current, ctx) {
     const start = Date.now();
-    const type = provider_id.includes('/indexes/')
-      ? 'gcp.aiplatform.index'
-      : 'gcp.aiplatform.endpoint';
+    const type = provider_id.includes('/indexes/') ? 'gcp.aiplatform.index' : 'gcp.aiplatform.endpoint';
     const region = extract_region(provider_id) || ctx.region;
     const base = `https://${region}-aiplatform.googleapis.com/v1`;
 
@@ -130,21 +116,13 @@ export const vertex_ai_handler: GCPResourceHandler = {
 
       return result(name, type, 'update', start, { provider_id });
     } catch (error) {
-      return fail(
-        name,
-        type,
-        'update',
-        start,
-        error instanceof Error ? error.message : String(error)
-      );
+      return fail(name, type, 'update', start, error instanceof Error ? error.message : String(error));
     }
   },
 
   async delete(name, provider_id, ctx) {
     const start = Date.now();
-    const type = provider_id.includes('/indexes/')
-      ? 'gcp.aiplatform.index'
-      : 'gcp.aiplatform.endpoint';
+    const type = provider_id.includes('/indexes/') ? 'gcp.aiplatform.index' : 'gcp.aiplatform.endpoint';
     const region = extract_region(provider_id) || ctx.region;
     const base = `https://${region}-aiplatform.googleapis.com/v1`;
 
@@ -154,13 +132,7 @@ export const vertex_ai_handler: GCPResourceHandler = {
 
       return result(name, type, 'delete', start);
     } catch (error) {
-      return fail(
-        name,
-        type,
-        'delete',
-        start,
-        error instanceof Error ? error.message : String(error)
-      );
+      return fail(name, type, 'delete', start, error instanceof Error ? error.message : String(error));
     }
   },
 };
@@ -170,18 +142,13 @@ function extract_region(provider_id: string): string {
   return match?.[1] ?? 'us-central1';
 }
 
-async function wait_for_operation(
-  ctx: GCPHandlerContext,
-  region: string,
-  op_name: string
-): Promise<void> {
+async function wait_for_operation(ctx: GCPHandlerContext, region: string, op_name: string): Promise<void> {
   const base = `https://${region}-aiplatform.googleapis.com/v1`;
   const start = Date.now();
   while (Date.now() - start < 600_000) {
     const op = (await ctx.rest_client.get(`${base}/${op_name}`)) as any;
     if (op?.done) {
-      if (op.error)
-        throw new Error(operation_failed(SERVICE_NAMES.VERTEX_AI, JSON.stringify(op.error)));
+      if (op.error) throw new Error(operation_failed(SERVICE_NAMES.VERTEX_AI, JSON.stringify(op.error)));
       return;
     }
     await new Promise((r) => setTimeout(r, 5000));

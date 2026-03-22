@@ -14,7 +14,7 @@ function result(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  overrides: Partial<ResourceDeployResult> = {}
+  overrides: Partial<ResourceDeployResult> = {},
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -31,7 +31,7 @@ function fail(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  error: string
+  error: string,
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -50,13 +50,7 @@ export const secret_manager_handler: GCPResourceHandler = {
 
     try {
       const client = ctx.clients.get('secretmanager') as any;
-      if (!client)
-        return fail(
-          name,
-          'create',
-          start,
-          sdk_not_available(SERVICE_NAMES.SECRET_MANAGER, 'secretmanager')
-        );
+      if (!client) return fail(name, 'create', start, sdk_not_available(SERVICE_NAMES.SECRET_MANAGER, 'secretmanager'));
 
       const replication_type = (properties.replication_type as string) || 'automatic';
       const replication =
@@ -86,8 +80,7 @@ export const secret_manager_handler: GCPResourceHandler = {
 
     try {
       const client = ctx.clients.get('secretmanager') as any;
-      if (!client)
-        return fail(name, 'update', start, sdk_not_available_short(SERVICE_NAMES.SECRET_MANAGER));
+      if (!client) return fail(name, 'update', start, sdk_not_available_short(SERVICE_NAMES.SECRET_MANAGER));
 
       if (properties.labels) {
         await client.updateSecret({
@@ -110,8 +103,7 @@ export const secret_manager_handler: GCPResourceHandler = {
 
     try {
       const client = ctx.clients.get('secretmanager') as any;
-      if (!client)
-        return fail(name, 'delete', start, sdk_not_available_short(SERVICE_NAMES.SECRET_MANAGER));
+      if (!client) return fail(name, 'delete', start, sdk_not_available_short(SERVICE_NAMES.SECRET_MANAGER));
 
       await client.deleteSecret({
         name: `projects/${ctx.project}/secrets/${name}`,

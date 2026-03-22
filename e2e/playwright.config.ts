@@ -7,10 +7,7 @@ export default defineConfig({
   fullyParallel: false,
   retries: 0,
   workers: 1,
-  reporter: [
-    ['html', { outputFolder: 'playwright-report', open: 'never' }],
-    ['list'],
-  ],
+  reporter: [['html', { outputFolder: 'playwright-report', open: 'never' }], ['list']],
   globalSetup: './global-setup.ts',
   globalTeardown: './global-teardown.ts',
   use: {
@@ -20,9 +17,7 @@ export default defineConfig({
     video: 'off',
     viewport: { width: 1440, height: 900 },
   },
-  projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-  ],
+  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
     command: 'cd ../packages/web && npx vite --port 5173',
     url: 'http://localhost:5173',

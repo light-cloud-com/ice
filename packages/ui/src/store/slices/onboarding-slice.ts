@@ -52,37 +52,28 @@ const initialState: OnboardingState = {
   selectedTemplateId: null,
 };
 
-export const fetchOnboardingStatus = createAsyncThunk(
-  'onboarding/fetchStatus',
-  async () => {
-    const res = await axiosInstance.get('/onboarding/status');
-    return res.data;
-  }
-);
+export const fetchOnboardingStatus = createAsyncThunk('onboarding/fetchStatus', async () => {
+  const res = await axiosInstance.get('/onboarding/status');
+  return res.data;
+});
 
 export const saveOnboardingStep = createAsyncThunk(
   'onboarding/saveStep',
   async (data: { step?: number; defaultProvider?: string; defaultRegion?: string }) => {
     const res = await axiosInstance.put('/onboarding/step', data);
     return res.data;
-  }
+  },
 );
 
-export const completeOnboarding = createAsyncThunk(
-  'onboarding/complete',
-  async () => {
-    const res = await axiosInstance.put('/onboarding/complete');
-    return res.data;
-  }
-);
+export const completeOnboarding = createAsyncThunk('onboarding/complete', async () => {
+  const res = await axiosInstance.put('/onboarding/complete');
+  return res.data;
+});
 
-export const skipOnboarding = createAsyncThunk(
-  'onboarding/skip',
-  async () => {
-    const res = await axiosInstance.put('/onboarding/skip');
-    return res.data;
-  }
-);
+export const skipOnboarding = createAsyncThunk('onboarding/skip', async () => {
+  const res = await axiosInstance.put('/onboarding/skip');
+  return res.data;
+});
 
 const onboardingSlice = createSlice({
   name: 'onboarding',

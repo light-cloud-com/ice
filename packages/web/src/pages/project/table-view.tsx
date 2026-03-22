@@ -47,8 +47,11 @@ export const ProjectTableView: React.FC<{ projectId: string }> = () => {
   }, [rows, sortCol, sortDir]);
 
   const toggleSort = (col: typeof sortCol) => {
-    if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
-    else { setSortCol(col); setSortDir('asc'); }
+    if (sortCol === col) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    else {
+      setSortCol(col);
+      setSortDir('asc');
+    }
   };
 
   return (
@@ -66,14 +69,29 @@ export const ProjectTableView: React.FC<{ projectId: string }> = () => {
           <table className="w-full">
             <thead>
               <tr className="bg-ice-raised text-ice-text-3 text-xs uppercase tracking-wider">
-                <th className="px-4 py-2 text-left cursor-pointer hover:text-ice-text-2" onClick={() => toggleSort('label')}>
-                  <span className="flex items-center gap-1">Name <ArrowUpDown className="w-3 h-3" /></span>
+                <th
+                  className="px-4 py-2 text-left cursor-pointer hover:text-ice-text-2"
+                  onClick={() => toggleSort('label')}
+                >
+                  <span className="flex items-center gap-1">
+                    Name <ArrowUpDown className="w-3 h-3" />
+                  </span>
                 </th>
-                <th className="px-4 py-2 text-left cursor-pointer hover:text-ice-text-2" onClick={() => toggleSort('iceType')}>
-                  <span className="flex items-center gap-1">Type <ArrowUpDown className="w-3 h-3" /></span>
+                <th
+                  className="px-4 py-2 text-left cursor-pointer hover:text-ice-text-2"
+                  onClick={() => toggleSort('iceType')}
+                >
+                  <span className="flex items-center gap-1">
+                    Type <ArrowUpDown className="w-3 h-3" />
+                  </span>
                 </th>
-                <th className="px-4 py-2 text-left cursor-pointer hover:text-ice-text-2" onClick={() => toggleSort('provider')}>
-                  <span className="flex items-center gap-1">Provider <ArrowUpDown className="w-3 h-3" /></span>
+                <th
+                  className="px-4 py-2 text-left cursor-pointer hover:text-ice-text-2"
+                  onClick={() => toggleSort('provider')}
+                >
+                  <span className="flex items-center gap-1">
+                    Provider <ArrowUpDown className="w-3 h-3" />
+                  </span>
                 </th>
                 <th className="px-4 py-2 text-left">Status</th>
               </tr>
@@ -86,11 +104,15 @@ export const ProjectTableView: React.FC<{ projectId: string }> = () => {
                   <td className="px-4 py-2.5 text-xs text-ice-text-2 uppercase">{r.provider}</td>
                   <td className="px-4 py-2.5">
                     {r.status && (
-                      <span className={`inline-flex items-center gap-1 text-xs ${
-                        r.status === 'active' || r.status === 'running' ? 'text-emerald-500' :
-                        r.status === 'failed' || r.status === 'error' ? 'text-red-500' :
-                        'text-ice-text-3'
-                      }`}>
+                      <span
+                        className={`inline-flex items-center gap-1 text-xs ${
+                          r.status === 'active' || r.status === 'running'
+                            ? 'text-emerald-500'
+                            : r.status === 'failed' || r.status === 'error'
+                              ? 'text-red-500'
+                              : 'text-ice-text-3'
+                        }`}
+                      >
                         <span className="w-1.5 h-1.5 rounded-full bg-current" />
                         {r.status}
                       </span>

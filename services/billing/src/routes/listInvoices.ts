@@ -55,10 +55,7 @@ interface AuthenticatedRequest extends Request {
  *       401:
  *         description: Unauthorized
  */
-export const listInvoices = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
+export const listInvoices = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { targetOrganisationId, limit = 20, offset = 0, status } = req.body;
 

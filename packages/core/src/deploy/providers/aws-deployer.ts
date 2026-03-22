@@ -47,9 +47,7 @@ export class AWSDeployer implements ProviderDeployer {
         // Lambda client not available
       }
     } catch (error) {
-      throw new Error(
-        `Failed to initialize AWS SDK: ${error instanceof Error ? error.message : String(error)}`
-      );
+      throw new Error(`Failed to initialize AWS SDK: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -64,7 +62,7 @@ export class AWSDeployer implements ProviderDeployer {
     type: string,
     name: string,
     properties: Record<string, unknown>,
-    options: Record<string, unknown>
+    options: Record<string, unknown>,
   ): Promise<ResourceDeployResult> {
     const start = Date.now();
 
@@ -117,7 +115,7 @@ export class AWSDeployer implements ProviderDeployer {
     provider_id: string,
     properties: Record<string, unknown>,
     current_properties: Record<string, unknown>,
-    options: Record<string, unknown>
+    options: Record<string, unknown>,
   ): Promise<ResourceDeployResult> {
     const start = Date.now();
 
@@ -166,7 +164,7 @@ export class AWSDeployer implements ProviderDeployer {
     type: string,
     name: string,
     provider_id: string,
-    options: Record<string, unknown>
+    options: Record<string, unknown>,
   ): Promise<ResourceDeployResult> {
     const start = Date.now();
 
@@ -214,10 +212,7 @@ export class AWSDeployer implements ProviderDeployer {
   // EC2
   // ============================================================================
 
-  private async create_ec2_instance(
-    name: string,
-    properties: Record<string, unknown>
-  ): Promise<string> {
+  private async create_ec2_instance(name: string, properties: Record<string, unknown>): Promise<string> {
     if (!this.ec2_client) {
       throw new Error('EC2 SDK not available. Install @aws-sdk/client-ec2');
     }
@@ -263,7 +258,7 @@ export class AWSDeployer implements ProviderDeployer {
     name: string,
     provider_id: string,
     properties: Record<string, unknown>,
-    current_properties: Record<string, unknown>
+    current_properties: Record<string, unknown>,
   ): Promise<void> {
     if (!this.ec2_client) {
       throw new Error('EC2 SDK not available');
@@ -309,10 +304,7 @@ export class AWSDeployer implements ProviderDeployer {
   // S3
   // ============================================================================
 
-  private async create_s3_bucket(
-    name: string,
-    properties: Record<string, unknown>
-  ): Promise<string> {
+  private async create_s3_bucket(name: string, properties: Record<string, unknown>): Promise<string> {
     if (!this.s3_client) {
       throw new Error('S3 SDK not available. Install @aws-sdk/client-s3');
     }
@@ -352,7 +344,7 @@ export class AWSDeployer implements ProviderDeployer {
   private async update_s3_bucket(
     name: string,
     provider_id: string,
-    properties: Record<string, unknown>
+    properties: Record<string, unknown>,
   ): Promise<void> {
     if (!this.s3_client) {
       throw new Error('S3 SDK not available');
@@ -407,10 +399,7 @@ export class AWSDeployer implements ProviderDeployer {
   // Lambda
   // ============================================================================
 
-  private async create_lambda_function(
-    name: string,
-    properties: Record<string, unknown>
-  ): Promise<string> {
+  private async create_lambda_function(name: string, properties: Record<string, unknown>): Promise<string> {
     if (!this.lambda_client) {
       throw new Error('Lambda SDK not available. Install @aws-sdk/client-lambda');
     }
@@ -426,9 +415,7 @@ export class AWSDeployer implements ProviderDeployer {
       Code: {
         S3Bucket: properties.s3_bucket as string,
         S3Key: properties.s3_key as string,
-        ZipFile: properties.zip_file
-          ? Buffer.from(properties.zip_file as string, 'base64')
-          : undefined,
+        ZipFile: properties.zip_file ? Buffer.from(properties.zip_file as string, 'base64') : undefined,
       },
       Description: properties.description as string,
       Timeout: (properties.timeout as number) || 30,
@@ -449,7 +436,7 @@ export class AWSDeployer implements ProviderDeployer {
   private async update_lambda_function(
     name: string,
     provider_id: string,
-    properties: Record<string, unknown>
+    properties: Record<string, unknown>,
   ): Promise<void> {
     if (!this.lambda_client) {
       throw new Error('Lambda SDK not available');

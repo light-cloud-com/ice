@@ -10,13 +10,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Plus, X, Pencil, Check, FolderOpen, Rocket } from 'lucide-react';
 import type { AppDispatch } from '../../../store';
 import { setActiveCard, renameCard, selectCards } from '../../../store/slices/cards-slice';
-import {
-  setPaneCard,
-  setActivePane,
-  closeSplit,
-  closeTabInPane,
-  openDialog,
-} from '../../../store/slices/ui-slice';
+import { setPaneCard, setActivePane, closeSplit, closeTabInPane, openDialog } from '../../../store/slices/ui-slice';
 import { selectProjects } from '../../../store/slices/projects-slice';
 import type { RootState } from '../../../store';
 import { SvgCanvas } from './svg-canvas';
@@ -29,17 +23,10 @@ interface CanvasPaneProps {
   showCloseButton: boolean;
 }
 
-export const CanvasPane: React.FC<CanvasPaneProps> = ({
-  paneId,
-  cardId,
-  isActive,
-  showCloseButton,
-}) => {
+export const CanvasPane: React.FC<CanvasPaneProps> = ({ paneId, cardId, isActive, showCloseButton }) => {
   const dispatch = useDispatch<AppDispatch>();
   const allCards = useSelector(selectCards);
-  const pane = useSelector((state: RootState) =>
-    state.ui.splitView.panes.find((p) => p.id === paneId)
-  );
+  const pane = useSelector((state: RootState) => state.ui.splitView.panes.find((p) => p.id === paneId));
   const projects = useSelector(selectProjects);
 
   // Only cards open in THIS pane
@@ -131,7 +118,7 @@ export const CanvasPane: React.FC<CanvasPaneProps> = ({
                   ? 'bg-[#1f2937] text-ice-text-1 border border-ice-accent'
                   : isActiveTab
                     ? 'bg-[#1f2937] text-ice-text-2 border border-ice-border'
-                    : 'bg-ice-surface text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-1 border border-transparent'
+                    : 'bg-ice-surface text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-1 border border-transparent',
               )}
             >
               {/* Tab name or input */}
@@ -158,7 +145,7 @@ export const CanvasPane: React.FC<CanvasPaneProps> = ({
                     env.type === 'production' && 'bg-green-500',
                     env.type === 'staging' && 'bg-yellow-500',
                     env.type === 'development' && 'bg-blue-500',
-                    env.type === 'pr' && 'bg-purple-500'
+                    env.type === 'pr' && 'bg-purple-500',
                   )}
                 />
               )}
@@ -176,7 +163,7 @@ export const CanvasPane: React.FC<CanvasPaneProps> = ({
                   className={cn(
                     'flex items-center gap-0.5 ml-1',
                     isActiveTab ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
-                    'transition-opacity'
+                    'transition-opacity',
                   )}
                 >
                   <button
@@ -223,7 +210,7 @@ export const CanvasPane: React.FC<CanvasPaneProps> = ({
             'flex items-center justify-center w-7 h-7 rounded-md',
             'bg-ice-surface text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-1',
             'border border-transparent hover:border-ice-border',
-            'transition-all'
+            'transition-all',
           )}
           title="New Project"
         >
@@ -238,7 +225,7 @@ export const CanvasPane: React.FC<CanvasPaneProps> = ({
               'flex items-center justify-center w-7 h-7 rounded-md',
               'bg-ice-surface text-ice-text-2 hover:bg-[#da3633]/20 hover:text-[#f85149]',
               'border border-transparent hover:border-[#da3633]/30',
-              'transition-all'
+              'transition-all',
             )}
             title="Close split"
           >
@@ -261,7 +248,7 @@ export const CanvasPane: React.FC<CanvasPaneProps> = ({
                   className={cn(
                     'flex items-center gap-2 px-4 py-2.5 rounded-lg',
                     'bg-ice-green hover:bg-[#2ea043] text-white text-sm font-medium',
-                    'transition-colors'
+                    'transition-colors',
                   )}
                 >
                   <Rocket className="w-4 h-4" />
@@ -281,7 +268,7 @@ export const CanvasPane: React.FC<CanvasPaneProps> = ({
                       'flex items-center gap-2 px-4 py-2.5 rounded-lg',
                       'bg-ice-raised hover:bg-ice-hover text-ice-text-1 text-sm font-medium',
                       'border border-ice-border hover:border-ice-border-strong',
-                      'transition-colors'
+                      'transition-colors',
                     )}
                   >
                     <FolderOpen className="w-4 h-4" />

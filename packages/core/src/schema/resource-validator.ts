@@ -5,12 +5,7 @@
  * Provides detailed validation errors with paths and suggestions.
  */
 
-import type {
-  IceType,
-  PropertySchema,
-  PropertyValidation,
-  SchemaProvider,
-} from './schema-provider.js';
+import type { IceType, PropertySchema, PropertyValidation, SchemaProvider } from './schema-provider.js';
 import type { Result } from '../types/result.js';
 import { success, failure } from '../types/result.js';
 import { ValidationError } from '../types/errors.js';
@@ -125,7 +120,7 @@ export class ResourceValidator {
   async validate(
     ice_type: IceType,
     properties: Record<string, unknown>,
-    options: ValidationOptions = {}
+    options: ValidationOptions = {},
   ): Promise<Result<ValidationResult, ValidationError>> {
     // Get the schema
     const schema_result = await this.schema_provider.get_schema(ice_type);
@@ -135,8 +130,8 @@ export class ResourceValidator {
         new ValidationError(
           `Schema not found: ${ice_type}`,
           [{ path: '', message: `Unknown resource type: ${ice_type}`, code: 'SCHEMA_NOT_FOUND' }],
-          'SCHEMA_NOT_FOUND'
-        )
+          'SCHEMA_NOT_FOUND',
+        ),
       );
     }
 
@@ -155,7 +150,7 @@ export class ResourceValidator {
         prop_schema,
         options,
         0,
-        max_depth
+        max_depth,
       );
       issues.push(...prop_issues);
     }
@@ -200,7 +195,7 @@ export class ResourceValidator {
     schema: PropertySchema,
     options: ValidationOptions,
     depth: number,
-    max_depth: number
+    max_depth: number,
   ): ValidationIssue[] {
     const issues: ValidationIssue[] = [];
 
@@ -246,7 +241,7 @@ export class ResourceValidator {
             nested_schema,
             options,
             depth + 1,
-            max_depth
+            max_depth,
           );
           issues.push(...nested_issues);
         }
@@ -266,7 +261,7 @@ export class ResourceValidator {
                 nested_schema,
                 options,
                 depth + 1,
-                max_depth
+                max_depth,
               );
               issues.push(...nested_issues);
             }
@@ -281,11 +276,7 @@ export class ResourceValidator {
   /**
    * Validate value type.
    */
-  private validate_type(
-    path: string,
-    value: unknown,
-    expected_type: string
-  ): ValidationIssue | null {
+  private validate_type(path: string, value: unknown, expected_type: string): ValidationIssue | null {
     const actual_type = this.get_type_name(value);
 
     switch (expected_type) {
@@ -366,11 +357,7 @@ export class ResourceValidator {
   /**
    * Validate value against constraints.
    */
-  private validate_constraints(
-    path: string,
-    value: unknown,
-    validation: PropertyValidation
-  ): ValidationIssue[] {
+  private validate_constraints(path: string, value: unknown, validation: PropertyValidation): ValidationIssue[] {
     const issues: ValidationIssue[] = [];
 
     // Enum validation
@@ -511,7 +498,7 @@ export class ResourceValidator {
     return new ValidationError(
       `Validation failed for ${result.ice_type}: ${result.errors.length} error(s)`,
       violations,
-      'VALIDATION_FAILED'
+      'VALIDATION_FAILED',
     );
   }
 
@@ -526,11 +513,7 @@ export class ResourceValidator {
   /**
    * Get validation issues for a specific property.
    */
-  async validate_property_value(
-    ice_type: IceType,
-    property_path: string,
-    value: unknown
-  ): Promise<ValidationIssue[]> {
+  async validate_property_value(ice_type: IceType, property_path: string, value: unknown): Promise<ValidationIssue[]> {
     const prop_schema = this.schema_provider.get_property_schema(ice_type, property_path);
 
     if (!prop_schema) {

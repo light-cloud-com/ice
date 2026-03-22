@@ -26,10 +26,7 @@ export async function getActionLog(page: Page): Promise<IceActionEvent[]> {
 /**
  * Get action log events filtered by category.
  */
-export async function getLogByCategory(
-  page: Page,
-  category: string
-): Promise<IceActionEvent[]> {
+export async function getLogByCategory(page: Page, category: string): Promise<IceActionEvent[]> {
   const log = await getActionLog(page);
   return log.filter((e) => e.category === category);
 }
@@ -37,13 +34,10 @@ export async function getLogByCategory(
 /**
  * Get all API call/response events, optionally filtered by path pattern.
  */
-export async function getApiCalls(
-  page: Page,
-  pathPattern?: string | RegExp
-): Promise<IceActionEvent[]> {
+export async function getApiCalls(page: Page, pathPattern?: string | RegExp): Promise<IceActionEvent[]> {
   const log = await getActionLog(page);
   const apiEvents = log.filter(
-    (e) => e.category === 'api' && (e.action === 'api_call' || e.action === 'api_response' || e.action === 'api_error')
+    (e) => e.category === 'api' && (e.action === 'api_call' || e.action === 'api_response' || e.action === 'api_error'),
   );
   if (!pathPattern) return apiEvents;
   const regex = typeof pathPattern === 'string' ? new RegExp(pathPattern) : pathPattern;
@@ -64,7 +58,7 @@ export async function getErrors(page: Page): Promise<IceActionEvent[]> {
 export async function waitForAction(
   page: Page,
   predicate: (event: IceActionEvent) => boolean,
-  timeout = 30000
+  timeout = 30000,
 ): Promise<IceActionEvent> {
   const startSeq = await page.evaluate(() => (window as any).__ICE_ACTION_SEQ__ || 0);
 
@@ -76,7 +70,7 @@ export async function waitForAction(
       return log.find((e: any) => e.seq >= seq && fn(e)) || null;
     },
     { startSeq, predicateStr: predicate.toString() },
-    { timeout }
+    { timeout },
   );
 
   return result.jsonValue();
@@ -85,23 +79,21 @@ export async function waitForAction(
 /**
  * Wait for an API response matching the given path.
  */
-export async function waitForApiResponse(
-  page: Page,
-  pathPattern: string,
-  timeout = 30000
-): Promise<IceActionEvent> {
-  return page.waitForFunction(
-    ({ pattern }) => {
-      const log = (window as any).__ICE_ACTION_LOG__ || [];
-      return log.find(
-        (e: any) =>
-          (e.action === 'api_response' || e.action === 'api_error') &&
-          e.target.includes(pattern)
-      ) || null;
-    },
-    { pattern: pathPattern },
-    { timeout }
-  ).then((r) => r.jsonValue());
+export async function waitForApiResponse(page: Page, pathPattern: string, timeout = 30000): Promise<IceActionEvent> {
+  return page
+    .waitForFunction(
+      ({ pattern }) => {
+        const log = (window as any).__ICE_ACTION_LOG__ || [];
+        return (
+          log.find(
+            (e: any) => (e.action === 'api_response' || e.action === 'api_error') && e.target.includes(pattern),
+          ) || null
+        );
+      },
+      { pattern: pathPattern },
+      { timeout },
+    )
+    .then((r) => r.jsonValue());
 }
 
 /**
@@ -109,9 +101,7 @@ export async function waitForApiResponse(
  */
 export async function getLastDeployResult(page: Page): Promise<IceActionEvent | null> {
   const log = await getActionLog(page);
-  const deployResponses = log.filter(
-    (e) => e.category === 'api' && e.target.includes('/canvas/deploy/apply')
-  );
+  const deployResponses = log.filter((e) => e.category === 'api' && e.target.includes('/canvas/deploy/apply'));
   return deployResponses.length > 0 ? deployResponses[deployResponses.length - 1]! : null;
 }
 

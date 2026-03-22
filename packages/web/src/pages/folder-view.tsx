@@ -90,11 +90,19 @@ export const FolderView: React.FC<FolderViewProps> = ({ folderId, folderName, ba
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-semibold text-ice-text-1">{folderName}</h1>
         <div className="flex gap-2">
-          <button id="ice-folder-btn-create-project" onClick={() => handleCreate('project')} className="ice-btn ice-btn-primary text-ice-md px-3 py-1.5">
+          <button
+            id="ice-folder-btn-create-project"
+            onClick={() => handleCreate('project')}
+            className="ice-btn ice-btn-primary text-ice-md px-3 py-1.5"
+          >
             <Plus className="w-3.5 h-3.5" />
             New Project
           </button>
-          <button id="ice-folder-btn-create-folder" onClick={() => handleCreate('folder')} className="ice-btn ice-btn-ghost text-ice-md px-3 py-1.5 border border-ice-border">
+          <button
+            id="ice-folder-btn-create-folder"
+            onClick={() => handleCreate('folder')}
+            className="ice-btn ice-btn-ghost text-ice-md px-3 py-1.5 border border-ice-border"
+          >
             <Folder className="w-3.5 h-3.5" />
             New Folder
           </button>
@@ -104,9 +112,7 @@ export const FolderView: React.FC<FolderViewProps> = ({ folderId, folderName, ba
       {items.length === 0 ? (
         <div className="text-center py-20">
           <FolderOpen className="w-12 h-12 text-ice-text-3 mx-auto mb-3" />
-          <p className="text-ice-text-3 text-sm">
-            {folderId ? 'This folder is empty' : 'No projects yet'}
-          </p>
+          <p className="text-ice-text-3 text-sm">{folderId ? 'This folder is empty' : 'No projects yet'}</p>
           <p className="text-ice-text-3 text-xs mt-1">Create a project or folder to get started</p>
         </div>
       ) : (

@@ -16,12 +16,12 @@
 // ============================================================================
 
 export const MARGINS = {
-  containers: 0.50,        // 50% margin on containers
-  databases: 0.50,         // 50% margin on databases
-  staticSiteStorage: 0.50, // 50% margin on static site storage
-  staticSiteBandwidth: 0.40, // 40% margin on bandwidth
-  databaseStorage: 0.00,   // 0% margin on DB storage (pass-through)
-  buildMinutes: 0.75,      // 75% margin on build minutes
+  containers: 0.5, // 50% margin on containers
+  databases: 0.5, // 50% margin on databases
+  staticSiteStorage: 0.5, // 50% margin on static site storage
+  staticSiteBandwidth: 0.4, // 40% margin on bandwidth
+  databaseStorage: 0.0, // 0% margin on DB storage (pass-through)
+  buildMinutes: 0.75, // 75% margin on build minutes
 };
 
 // ============================================================================
@@ -32,30 +32,30 @@ export const MARGINS = {
 export const GCP_RATES = {
   // Cloud Run Worker Pools (Tier 1 regions)
   cloudRun: {
-    cpuPerVcpuHour: 0.0404784,      // $0.000011244/s × 3600s
-    memoryPerGibHour: 0.004446,     // $0.000001235/s × 3600s
-    tier2Multiplier: 1.2,           // Tier 2 regions are 20% more
+    cpuPerVcpuHour: 0.0404784, // $0.000011244/s × 3600s
+    memoryPerGibHour: 0.004446, // $0.000001235/s × 3600s
+    tier2Multiplier: 1.2, // Tier 2 regions are 20% more
   },
 
   // Cloud SQL (Enterprise Edition, Zonal)
   cloudSql: {
-    microPerHour: 0.0122,           // db-f1-micro
-    smallPerHour: 0.035,            // db-g1-small
-    vcpuPerHour: 0.0496,            // Dedicated vCPU
-    memoryPerGibHour: 0.007,        // RAM per GiB
-    ssdPerGbHour: 0.000233,         // $0.17/month ÷ 730 hours
-    haMultiplier: 2.0,              // HA doubles the price
+    microPerHour: 0.0122, // db-f1-micro
+    smallPerHour: 0.035, // db-g1-small
+    vcpuPerHour: 0.0496, // Dedicated vCPU
+    memoryPerGibHour: 0.007, // RAM per GiB
+    ssdPerGbHour: 0.000233, // $0.17/month ÷ 730 hours
+    haMultiplier: 2.0, // HA doubles the price
   },
 
   // Firebase Hosting
   firebaseHosting: {
-    storagePerGbHour: 0.0000356,    // $0.026/month ÷ 730 hours
-    bandwidthPerGb: 0.15,           // Per GB transferred (not hourly)
+    storagePerGbHour: 0.0000356, // $0.026/month ÷ 730 hours
+    bandwidthPerGb: 0.15, // Per GB transferred (not hourly)
   },
 
   // Cloud Build
   cloudBuild: {
-    minutePrice: 0.006,             // e2-standard-2
+    minutePrice: 0.006, // e2-standard-2
   },
 };
 
@@ -83,7 +83,7 @@ export interface DatabaseTier {
   vCPUs: number | 'Shared';
   memoryGB: number;
   memoryLabel: string;
-  gcpCostPerHour: number;      // Compute only (storage separate)
+  gcpCostPerHour: number; // Compute only (storage separate)
   pricePerHour: number;
   isSharedCore: boolean;
   isProduction: boolean;
@@ -105,8 +105,7 @@ export interface Region {
 // ============================================================================
 
 function calculateContainerGcpCost(cpuCount: number, memoryGiB: number): number {
-  return (cpuCount * GCP_RATES.cloudRun.cpuPerVcpuHour) +
-         (memoryGiB * GCP_RATES.cloudRun.memoryPerGibHour);
+  return cpuCount * GCP_RATES.cloudRun.cpuPerVcpuHour + memoryGiB * GCP_RATES.cloudRun.memoryPerGibHour;
 }
 
 function applyMargin(gcpCost: number, margin: number): number {
@@ -220,8 +219,7 @@ function calculateDatabaseGcpCost(tier: string, vCPUs: number, memoryGB: number)
   if (tier === 'db-f1-micro') return GCP_RATES.cloudSql.microPerHour;
   if (tier === 'db-g1-small') return GCP_RATES.cloudSql.smallPerHour;
   // Dedicated instances: vCPU + memory
-  return (vCPUs * GCP_RATES.cloudSql.vcpuPerHour) +
-         (memoryGB * GCP_RATES.cloudSql.memoryPerGibHour);
+  return vCPUs * GCP_RATES.cloudSql.vcpuPerHour + memoryGB * GCP_RATES.cloudSql.memoryPerGibHour;
 }
 
 export const DATABASE_TIERS: DatabaseTier[] = [
@@ -336,8 +334,8 @@ export const BUILD_RATES = {
 // ============================================================================
 
 export const USER_PRICING = {
-  ownerFree: false,             // Owner is charged
-  pricePerUserMonth: 9,         // $/month per user (including owner)
+  ownerFree: false, // Owner is charged
+  pricePerUserMonth: 9, // $/month per user (including owner)
 };
 
 // ============================================================================
@@ -346,26 +344,114 @@ export const USER_PRICING = {
 
 export const REGIONS: Region[] = [
   // Tier 1 - Standard pricing
-  { id: 'us-central1', name: 'US Central', location: 'Iowa', tier: 'tier1', continent: 'americas', cloudRunSupported: true, cloudSqlSupported: true },
-  { id: 'us-east1', name: 'US East', location: 'South Carolina', tier: 'tier1', continent: 'americas', cloudRunSupported: true, cloudSqlSupported: true },
-  { id: 'us-west1', name: 'US West', location: 'Oregon', tier: 'tier1', continent: 'americas', cloudRunSupported: true, cloudSqlSupported: true },
-  { id: 'europe-west1', name: 'Europe West', location: 'Belgium', tier: 'tier1', continent: 'europe', cloudRunSupported: true, cloudSqlSupported: true },
-  { id: 'europe-west4', name: 'Europe West', location: 'Netherlands', tier: 'tier1', continent: 'europe', cloudRunSupported: true, cloudSqlSupported: true },
-  { id: 'asia-east1', name: 'Asia East', location: 'Taiwan', tier: 'tier1', continent: 'asia-pacific', cloudRunSupported: true, cloudSqlSupported: true },
+  {
+    id: 'us-central1',
+    name: 'US Central',
+    location: 'Iowa',
+    tier: 'tier1',
+    continent: 'americas',
+    cloudRunSupported: true,
+    cloudSqlSupported: true,
+  },
+  {
+    id: 'us-east1',
+    name: 'US East',
+    location: 'South Carolina',
+    tier: 'tier1',
+    continent: 'americas',
+    cloudRunSupported: true,
+    cloudSqlSupported: true,
+  },
+  {
+    id: 'us-west1',
+    name: 'US West',
+    location: 'Oregon',
+    tier: 'tier1',
+    continent: 'americas',
+    cloudRunSupported: true,
+    cloudSqlSupported: true,
+  },
+  {
+    id: 'europe-west1',
+    name: 'Europe West',
+    location: 'Belgium',
+    tier: 'tier1',
+    continent: 'europe',
+    cloudRunSupported: true,
+    cloudSqlSupported: true,
+  },
+  {
+    id: 'europe-west4',
+    name: 'Europe West',
+    location: 'Netherlands',
+    tier: 'tier1',
+    continent: 'europe',
+    cloudRunSupported: true,
+    cloudSqlSupported: true,
+  },
+  {
+    id: 'asia-east1',
+    name: 'Asia East',
+    location: 'Taiwan',
+    tier: 'tier1',
+    continent: 'asia-pacific',
+    cloudRunSupported: true,
+    cloudSqlSupported: true,
+  },
 
   // Tier 2 - 20% higher pricing
-  { id: 'europe-west2', name: 'Europe West', location: 'London', tier: 'tier2', continent: 'europe', cloudRunSupported: true, cloudSqlSupported: true },
-  { id: 'europe-west3', name: 'Europe West', location: 'Frankfurt', tier: 'tier2', continent: 'europe', cloudRunSupported: true, cloudSqlSupported: true },
-  { id: 'asia-northeast1', name: 'Asia Northeast', location: 'Tokyo', tier: 'tier2', continent: 'asia-pacific', cloudRunSupported: true, cloudSqlSupported: true },
-  { id: 'asia-southeast1', name: 'Asia Southeast', location: 'Singapore', tier: 'tier2', continent: 'asia-pacific', cloudRunSupported: true, cloudSqlSupported: true },
-  { id: 'australia-southeast1', name: 'Australia', location: 'Sydney', tier: 'tier2', continent: 'asia-pacific', cloudRunSupported: true, cloudSqlSupported: true },
+  {
+    id: 'europe-west2',
+    name: 'Europe West',
+    location: 'London',
+    tier: 'tier2',
+    continent: 'europe',
+    cloudRunSupported: true,
+    cloudSqlSupported: true,
+  },
+  {
+    id: 'europe-west3',
+    name: 'Europe West',
+    location: 'Frankfurt',
+    tier: 'tier2',
+    continent: 'europe',
+    cloudRunSupported: true,
+    cloudSqlSupported: true,
+  },
+  {
+    id: 'asia-northeast1',
+    name: 'Asia Northeast',
+    location: 'Tokyo',
+    tier: 'tier2',
+    continent: 'asia-pacific',
+    cloudRunSupported: true,
+    cloudSqlSupported: true,
+  },
+  {
+    id: 'asia-southeast1',
+    name: 'Asia Southeast',
+    location: 'Singapore',
+    tier: 'tier2',
+    continent: 'asia-pacific',
+    cloudRunSupported: true,
+    cloudSqlSupported: true,
+  },
+  {
+    id: 'australia-southeast1',
+    name: 'Australia',
+    location: 'Sydney',
+    tier: 'tier2',
+    continent: 'asia-pacific',
+    cloudRunSupported: true,
+    cloudSqlSupported: true,
+  },
 ];
 
 // ============================================================================
 // CONSTANTS
 // ============================================================================
 
-export const HOURS_PER_MONTH = 730;  // Standard billing month
+export const HOURS_PER_MONTH = 730; // Standard billing month
 export const HOURS_PER_DAY = 24;
 
 // ============================================================================
@@ -374,17 +460,17 @@ export const HOURS_PER_DAY = 24;
 
 /** Get container size by ID */
 export function getContainerSize(id: string): ContainerSize | undefined {
-  return CONTAINER_SIZES.find(s => s.id === id);
+  return CONTAINER_SIZES.find((s) => s.id === id);
 }
 
 /** Get database tier by ID */
 export function getDatabaseTier(id: string): DatabaseTier | undefined {
-  return DATABASE_TIERS.find(t => t.id === id);
+  return DATABASE_TIERS.find((t) => t.id === id);
 }
 
 /** Get region by ID */
 export function getRegion(id: string): Region | undefined {
-  return REGIONS.find(r => r.id === id);
+  return REGIONS.find((r) => r.id === id);
 }
 
 /**
@@ -394,7 +480,7 @@ export function calculateContainerCost(
   sizeId: string,
   hours: number,
   instanceCount: number = 1,
-  regionId?: string
+  regionId?: string,
 ): { gcpCost: number; price: number } {
   const size = getContainerSize(sizeId);
   if (!size) return { gcpCost: 0, price: 0 };
@@ -424,7 +510,7 @@ export function calculateDatabaseCost(
   tierId: string,
   hours: number,
   storageGb: number,
-  haEnabled: boolean = false
+  haEnabled: boolean = false,
 ): { gcpCost: number; price: number } {
   const tier = getDatabaseTier(tierId);
   if (!tier) return { gcpCost: 0, price: 0 };
@@ -443,8 +529,8 @@ export function calculateDatabaseCost(
 
   // HA doubles the compute (not storage)
   if (haEnabled) {
-    gcpCost = (computeGcpCost * GCP_RATES.cloudSql.haMultiplier) + storageGcpCost;
-    price = (computePrice * GCP_RATES.cloudSql.haMultiplier) + storagePrice;
+    gcpCost = computeGcpCost * GCP_RATES.cloudSql.haMultiplier + storageGcpCost;
+    price = computePrice * GCP_RATES.cloudSql.haMultiplier + storagePrice;
   }
 
   return { gcpCost, price };
@@ -456,7 +542,7 @@ export function calculateDatabaseCost(
 export function calculateStaticSiteCost(
   storageGb: number,
   bandwidthGb: number,
-  hours: number
+  hours: number,
 ): { gcpCost: number; price: number } {
   const storageGcpCost = STATIC_SITE_RATES.storage.gcpCostPerGbHour * storageGb * hours;
   const storagePrice = STATIC_SITE_RATES.storage.pricePerGbHour * storageGb * hours;
@@ -492,10 +578,7 @@ export function calculateUserCost(userCount: number): number {
 /**
  * Project monthly cost based on current usage
  */
-export function projectMonthlyCost(
-  currentSpend: number,
-  hoursElapsed: number
-): number {
+export function projectMonthlyCost(currentSpend: number, hoursElapsed: number): number {
   if (hoursElapsed === 0) return 0;
   const hourlyRate = currentSpend / hoursElapsed;
   return hourlyRate * HOURS_PER_MONTH;
@@ -546,11 +629,11 @@ export function getAllPricing() {
   return {
     margins: MARGINS,
     gcpRates: GCP_RATES,
-    containers: CONTAINER_SIZES.map(c => ({
+    containers: CONTAINER_SIZES.map((c) => ({
       ...c,
       monthlyEstimate: c.pricePerHour * HOURS_PER_MONTH,
     })),
-    databases: DATABASE_TIERS.map(d => ({
+    databases: DATABASE_TIERS.map((d) => ({
       ...d,
       monthlyEstimate: d.pricePerHour * HOURS_PER_MONTH,
     })),

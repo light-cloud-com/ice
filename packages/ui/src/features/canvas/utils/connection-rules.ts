@@ -20,9 +20,24 @@ export {
   DEFAULT_PORTS,
   DEFAULT_ENV_VARS,
   // Classification functions
-  isDatabase, isCache, isQueue, isStorage, isBackend, isFrontend,
-  isGateway, isAuth, isSecrets, isMonitoring, isSearch, isDataWarehouse,
-  isVectorDb, isLLM, isRepo, isEnvConfig, isDomain, isContainer,
+  isDatabase,
+  isCache,
+  isQueue,
+  isStorage,
+  isBackend,
+  isFrontend,
+  isGateway,
+  isAuth,
+  isSecrets,
+  isMonitoring,
+  isSearch,
+  isDataWarehouse,
+  isVectorDb,
+  isLLM,
+  isRepo,
+  isEnvConfig,
+  isDomain,
+  isContainer,
   // Core functions
   getDefaultPort,
   getEnvVarName,
@@ -59,20 +74,30 @@ export function analyzeCanvasPatterns(
 
   for (const [bId] of backends) {
     const connectedToDb = edges.some(
-      (e) => (e.source === bId && databases.some(([dId]) => dId === e.target)) ||
-             (e.target === bId && databases.some(([dId]) => dId === e.source))
+      (e) =>
+        (e.source === bId && databases.some(([dId]) => dId === e.target)) ||
+        (e.target === bId && databases.some(([dId]) => dId === e.source)),
     );
     if (!connectedToDb && databases.length === 0) {
-      suggestions.push({ nodeId: bId, message: 'This service has no data store. Does it need a database?', type: 'hint' });
+      suggestions.push({
+        nodeId: bId,
+        message: 'This service has no data store. Does it need a database?',
+        type: 'hint',
+      });
     }
   }
   for (const [dbId] of databases) {
     const connectedBackends = edges.filter(
-      (e) => (e.target === dbId && backends.some(([bId]) => bId === e.source)) ||
-             (e.source === dbId && backends.some(([bId]) => bId === e.target))
+      (e) =>
+        (e.target === dbId && backends.some(([bId]) => bId === e.source)) ||
+        (e.source === dbId && backends.some(([bId]) => bId === e.target)),
     );
     if (connectedBackends.length >= 2 && caches.length === 0) {
-      suggestions.push({ nodeId: dbId, message: 'Multiple services connect to this database. Consider adding a Redis cache.', type: 'hint' });
+      suggestions.push({
+        nodeId: dbId,
+        message: 'Multiple services connect to this database. Consider adding a Redis cache.',
+        type: 'hint',
+      });
     }
   }
   return suggestions;

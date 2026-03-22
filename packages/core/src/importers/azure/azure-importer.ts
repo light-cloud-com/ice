@@ -104,9 +104,7 @@ export async function import_azure(options: AzureImportOptions = {}): Promise<Az
 
     // Apply tag filters
     if (Object.keys(opts.filter_tags).length > 0) {
-      const matches = Object.entries(opts.filter_tags).every(
-        ([key, value]) => resource.tags?.[key] === value
-      );
+      const matches = Object.entries(opts.filter_tags).every(([key, value]) => resource.tags?.[key] === value);
       if (!matches) continue;
     }
 
@@ -152,7 +150,7 @@ export async function import_azure(options: AzureImportOptions = {}): Promise<Az
  */
 export async function import_azure_to_graph(
   options: AzureImportOptions = {},
-  graph_name: string = 'azure-import'
+  graph_name: string = 'azure-import',
 ): Promise<{ graph: MutableGraph; result: AzureImportResult }> {
   const result = await import_azure(options);
   const graph = azure_result_to_graph(result, graph_name);
@@ -162,10 +160,7 @@ export async function import_azure_to_graph(
 /**
  * Convert Azure import result to ICE graph.
  */
-export function azure_result_to_graph(
-  result: AzureImportResult,
-  graph_name: string = 'azure-import'
-): MutableGraph {
+export function azure_result_to_graph(result: AzureImportResult, graph_name: string = 'azure-import'): MutableGraph {
   const graph = create_mutable_graph(graph_name, {
     description: `Imported from Azure subscriptions: ${result.metadata.subscriptions.join(', ')}`,
     labels: {
@@ -266,7 +261,7 @@ async function init_azure_sdk(): Promise<AzureSdk> {
     };
   } catch (error) {
     throw new Error(
-      `Failed to initialize Azure SDK. Make sure Azure SDK packages are installed: ${error instanceof Error ? error.message : String(error)}`
+      `Failed to initialize Azure SDK. Make sure Azure SDK packages are installed: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 }
@@ -282,14 +277,13 @@ async function discover_with_resource_graph(
     resource_groups?: string[];
   },
   errors: AzureImportError[],
-  warnings: AzureImportWarning[]
+  warnings: AzureImportWarning[],
 ): Promise<AzureResource[]> {
   const resources: AzureResource[] = [];
 
   try {
     // Build Kusto query
-    let query =
-      'Resources | project id, name, type, location, resourceGroup, subscriptionId, properties, tags';
+    let query = 'Resources | project id, name, type, location, resourceGroup, subscriptionId, properties, tags';
 
     if (opts.resource_groups && opts.resource_groups.length > 0) {
       const rg_filter = opts.resource_groups.map((rg) => `"${rg}"`).join(', ');

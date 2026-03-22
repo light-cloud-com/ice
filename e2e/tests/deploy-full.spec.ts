@@ -32,50 +32,81 @@ test.describe('Deploy Full Flow', () => {
     });
 
     // Step 2: Open deploy panel
-    await reporter.step(page, 'Open deploy panel', 'click', async () => {
-      await page.click('#ice-appbar-btn-deploy');
-      await page.waitForSelector('#ice-deploy-panel', { timeout: 5000 });
-    }, '#ice-appbar-btn-deploy');
+    await reporter.step(
+      page,
+      'Open deploy panel',
+      'click',
+      async () => {
+        await page.click('#ice-appbar-btn-deploy');
+        await page.waitForSelector('#ice-deploy-panel', { timeout: 5000 });
+      },
+      '#ice-appbar-btn-deploy',
+    );
 
     // Step 3: Configure provider
-    await reporter.step(page, 'Select GCP provider', 'select', async () => {
-      const providerSelect = page.locator('#ice-deploy-select-provider');
-      if (await providerSelect.isVisible()) {
-        await providerSelect.selectOption('gcp');
-      }
-    }, '#ice-deploy-select-provider');
+    await reporter.step(
+      page,
+      'Select GCP provider',
+      'select',
+      async () => {
+        const providerSelect = page.locator('#ice-deploy-select-provider');
+        if (await providerSelect.isVisible()) {
+          await providerSelect.selectOption('gcp');
+        }
+      },
+      '#ice-deploy-select-provider',
+    );
 
     // Step 4: Set project ID
-    await reporter.step(page, 'Set GCP project', 'fill', async () => {
-      const projectInput = page.locator('#ice-deploy-input-project');
-      if (await projectInput.isVisible()) {
-        await projectInput.fill(GCP_PROJECT);
-      }
-    }, '#ice-deploy-input-project');
+    await reporter.step(
+      page,
+      'Set GCP project',
+      'fill',
+      async () => {
+        const projectInput = page.locator('#ice-deploy-input-project');
+        if (await projectInput.isVisible()) {
+          await projectInput.fill(GCP_PROJECT);
+        }
+      },
+      '#ice-deploy-input-project',
+    );
 
     // Step 5: Set region
-    await reporter.step(page, 'Set region', 'select', async () => {
-      const regionSelect = page.locator('#ice-deploy-select-region');
-      if (await regionSelect.isVisible()) {
-        await regionSelect.selectOption(GCP_REGION);
-      }
-    }, '#ice-deploy-select-region');
+    await reporter.step(
+      page,
+      'Set region',
+      'select',
+      async () => {
+        const regionSelect = page.locator('#ice-deploy-select-region');
+        if (await regionSelect.isVisible()) {
+          await regionSelect.selectOption(GCP_REGION);
+        }
+      },
+      '#ice-deploy-select-region',
+    );
 
     // Step 6: Plan
-    await reporter.step(page, 'Click Plan', 'click', async () => {
-      await page.click('#ice-deploy-btn-plan');
-      // Wait for plan API response
-      await page.waitForFunction(
-        () => {
-          const log = (window as any).__ICE_ACTION_LOG__ || [];
-          return log.some(
-            (e: any) => e.target.includes('/canvas/deploy/plan') && (e.action === 'api_response' || e.action === 'api_error')
-          );
-        },
-        {},
-        { timeout: 30000 }
-      );
-    }, '#ice-deploy-btn-plan');
+    await reporter.step(
+      page,
+      'Click Plan',
+      'click',
+      async () => {
+        await page.click('#ice-deploy-btn-plan');
+        // Wait for plan API response
+        await page.waitForFunction(
+          () => {
+            const log = (window as any).__ICE_ACTION_LOG__ || [];
+            return log.some(
+              (e: any) =>
+                e.target.includes('/canvas/deploy/plan') && (e.action === 'api_response' || e.action === 'api_error'),
+            );
+          },
+          {},
+          { timeout: 30000 },
+        );
+      },
+      '#ice-deploy-btn-plan',
+    );
 
     // Check plan result
     const planCalls = await getApiCalls(page, 'deploy/plan');
@@ -85,23 +116,31 @@ test.describe('Deploy Full Flow', () => {
     }
 
     // Step 7: Apply
-    await reporter.step(page, 'Click Apply', 'click', async () => {
-      const applyBtn = page.locator('#ice-deploy-btn-apply');
-      if (await applyBtn.isVisible()) {
-        await applyBtn.click();
-        // Wait for deploy to complete (may take a while)
-        await page.waitForFunction(
-          () => {
-            const log = (window as any).__ICE_ACTION_LOG__ || [];
-            return log.some(
-              (e: any) => e.target.includes('/canvas/deploy/apply') && (e.action === 'api_response' || e.action === 'api_error')
-            );
-          },
-          {},
-          { timeout: 120000 }
-        );
-      }
-    }, '#ice-deploy-btn-apply');
+    await reporter.step(
+      page,
+      'Click Apply',
+      'click',
+      async () => {
+        const applyBtn = page.locator('#ice-deploy-btn-apply');
+        if (await applyBtn.isVisible()) {
+          await applyBtn.click();
+          // Wait for deploy to complete (may take a while)
+          await page.waitForFunction(
+            () => {
+              const log = (window as any).__ICE_ACTION_LOG__ || [];
+              return log.some(
+                (e: any) =>
+                  e.target.includes('/canvas/deploy/apply') &&
+                  (e.action === 'api_response' || e.action === 'api_error'),
+              );
+            },
+            {},
+            { timeout: 120000 },
+          );
+        }
+      },
+      '#ice-deploy-btn-apply',
+    );
 
     // Step 8: Verify deploy result in action log
     const deployCalls = await getApiCalls(page, 'deploy/apply');
@@ -119,23 +158,31 @@ test.describe('Deploy Full Flow', () => {
       });
 
       // Step 10: Destroy via app UI
-      await reporter.step(page, 'Click Destroy', 'click', async () => {
-        const destroyBtn = page.locator('#ice-deploy-btn-destroy');
-        if (await destroyBtn.isVisible()) {
-          await destroyBtn.click();
-          // Wait for destroy to complete
-          await page.waitForFunction(
-            () => {
-              const log = (window as any).__ICE_ACTION_LOG__ || [];
-              return log.some(
-                (e: any) => e.target.includes('/canvas/deploy/destroy') && (e.action === 'api_response' || e.action === 'api_error')
-              );
-            },
-            {},
-            { timeout: 120000 }
-          );
-        }
-      }, '#ice-deploy-btn-destroy');
+      await reporter.step(
+        page,
+        'Click Destroy',
+        'click',
+        async () => {
+          const destroyBtn = page.locator('#ice-deploy-btn-destroy');
+          if (await destroyBtn.isVisible()) {
+            await destroyBtn.click();
+            // Wait for destroy to complete
+            await page.waitForFunction(
+              () => {
+                const log = (window as any).__ICE_ACTION_LOG__ || [];
+                return log.some(
+                  (e: any) =>
+                    e.target.includes('/canvas/deploy/destroy') &&
+                    (e.action === 'api_response' || e.action === 'api_error'),
+                );
+              },
+              {},
+              { timeout: 120000 },
+            );
+          }
+        },
+        '#ice-deploy-btn-destroy',
+      );
 
       // Step 11: Verify resources removed
       await reporter.step(page, 'Verify resources removed', 'gcloud', async () => {

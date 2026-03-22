@@ -13,7 +13,9 @@ import fs from 'fs';
 /** Clean up a specific temp credentials file */
 function cleanupTempCredentialsFile(filePath: string | undefined) {
   if (filePath && filePath.includes('ice-sa-')) {
-    try { fs.unlinkSync(filePath); } catch {}
+    try {
+      fs.unlinkSync(filePath);
+    } catch {}
   }
 }
 
@@ -23,13 +25,7 @@ async function getCoreEngine(): Promise<any> {
   return import('@ice/core');
 }
 
-export async function planDeployment(
-  cardId: string,
-  nodes: any[],
-  edges: any[],
-  options: any,
-  userId?: string,
-) {
+export async function planDeployment(cardId: string, nodes: any[], edges: any[], options: any, userId?: string) {
   try {
     const core = await getCoreEngine();
     const { translate_card_to_graph } = core;
@@ -84,15 +80,9 @@ export async function planDeployment(
   }
 }
 
-async function fallbackPlan(
-  cardId: string,
-  nodes: any[],
-  edges: any[],
-  options: any,
-  userId?: string,
-) {
+async function fallbackPlan(cardId: string, nodes: any[], edges: any[], options: any, userId?: string) {
   const deployableNodes = (nodes || []).filter(
-    (n: any) => n.type === 'resource' && n.data?.provider === (options?.provider || 'gcp')
+    (n: any) => n.type === 'resource' && n.data?.provider === (options?.provider || 'gcp'),
   );
 
   const plan = {
@@ -209,7 +199,7 @@ export async function applyDeployment(
       if (!accessToken) {
         throw new Error(
           'GCP OAuth token expired. Please reconnect via Cloud Providers settings.\n' +
-          'For Google Workspace accounts, we recommend using a Service Account Key instead.'
+            'For Google Workspace accounts, we recommend using a Service Account Key instead.',
         );
       }
 
@@ -320,8 +310,14 @@ export async function applyDeployment(
     const desiredNodes = translation.graph?.nodes?.values ? [...translation.graph.nodes.values()] : [];
     const currentNodes = currentGraph?.nodes?.values ? [...currentGraph.nodes.values()] : [];
     console.log(`Diff: desired=${desiredNodes.length} nodes, current=${currentNodes.length} nodes`);
-    console.log('Desired:', desiredNodes.map((n: any) => `${n.type}::${n.name}`));
-    console.log('Current:', currentNodes.map((n: any) => `${n.type}::${n.name}`));
+    console.log(
+      'Desired:',
+      desiredNodes.map((n: any) => `${n.type}::${n.name}`),
+    );
+    console.log(
+      'Current:',
+      currentNodes.map((n: any) => `${n.type}::${n.name}`),
+    );
 
     // Track progress across resources
     const totalResources = translation.deployable_count || 1;
@@ -350,9 +346,10 @@ export async function applyDeployment(
       },
       on_resource_result: (resourceResult: any) => {
         // Find the source canvas node for this resource
-        const sourceNode = nodes.find((n: any) =>
-          resourceResult.resource_id?.includes(n.id) ||
-          resourceResult.name?.includes(n.id?.split('-').slice(0, -1).join('-'))
+        const sourceNode = nodes.find(
+          (n: any) =>
+            resourceResult.resource_id?.includes(n.id) ||
+            resourceResult.name?.includes(n.id?.split('-').slice(0, -1).join('-')),
         );
         emitDeployProgress(cardId, {
           type: 'resource_result',
@@ -408,12 +405,16 @@ export async function applyDeployment(
           const resName = (res.name || '').toLowerCase();
           const resId = (res.resource_id || '').toLowerCase();
           // Match: resource name starts with label, or contains node id
-          return (label && resName.startsWith(label))
-            || (label && resId.startsWith(label))
-            || resName.includes(nodeId)
-            || resId.includes(nodeId);
+          return (
+            (label && resName.startsWith(label)) ||
+            (label && resId.startsWith(label)) ||
+            resName.includes(nodeId) ||
+            resId.includes(nodeId)
+          );
         });
-        console.log(`Resource result: ${res.name} → matched node: ${sourceNode?.id || 'NONE'} (label: ${sourceNode?.data?.label || '-'})`);
+        console.log(
+          `Resource result: ${res.name} → matched node: ${sourceNode?.id || 'NONE'} (label: ${sourceNode?.data?.label || '-'})`,
+        );
         emitDeployProgress(cardId, {
           type: 'resource_result',
           result: {
@@ -443,8 +444,7 @@ export async function applyDeployment(
       const resourceErrors = (result.resources || [])
         .filter((r: any) => !r.success && r.error)
         .map((r: any) => r.error);
-      const topLevelErrors = (result.errors || [])
-        .map((e: any) => e.message || e.error || String(e));
+      const topLevelErrors = (result.errors || []).map((e: any) => e.message || e.error || String(e));
       const allErrors = [...topLevelErrors, ...resourceErrors];
       errorMsg = allErrors.length > 0 ? allErrors.join('; ') : 'Deployment failed — check resource configuration';
     }
@@ -554,7 +554,7 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
       if (!accessToken) {
         throw new Error(
           'GCP OAuth token expired. Please reconnect via Cloud Providers settings.\n' +
-          'For Google Workspace accounts, we recommend using a Service Account Key instead.'
+            'For Google Workspace accounts, we recommend using a Service Account Key instead.',
         );
       }
       const { OAuth2Client } = await import('google-auth-library');
@@ -704,7 +704,11 @@ const RESOURCE_API_MAP: Record<string, string[]> = {
   'gcp.run.service': ['run.googleapis.com', 'artifactregistry.googleapis.com', 'cloudbuild.googleapis.com'],
   'gcp.run.job': ['run.googleapis.com', 'artifactregistry.googleapis.com', 'cloudbuild.googleapis.com'],
   'gcp.storage.bucket': ['storage.googleapis.com'],
-  'gcp.cloudfunctions.function': ['cloudfunctions.googleapis.com', 'cloudbuild.googleapis.com', 'artifactregistry.googleapis.com'],
+  'gcp.cloudfunctions.function': [
+    'cloudfunctions.googleapis.com',
+    'cloudbuild.googleapis.com',
+    'artifactregistry.googleapis.com',
+  ],
   'gcp.pubsub.topic': ['pubsub.googleapis.com'],
   'gcp.pubsub.subscription': ['pubsub.googleapis.com'],
   'gcp.secretmanager.secret': ['secretmanager.googleapis.com'],
@@ -722,14 +726,14 @@ const RESOURCE_API_MAP: Record<string, string[]> = {
 /** Always enable these APIs for any GCP deployment */
 const BASE_APIS = ['serviceusage.googleapis.com', 'cloudresourcemanager.googleapis.com'];
 
-async function autoEnableGCPApis(
-  project: string,
-  accessToken: string,
-  canvasNodes: any[],
-  log: (msg: string) => void,
-) {
+async function autoEnableGCPApis(project: string, accessToken: string, canvasNodes: any[], log: (msg: string) => void) {
   // Collect required APIs from the actual canvas resource nodes
-  console.log('autoEnableGCPApis called, nodes:', canvasNodes.length, 'node types:', canvasNodes.map((n: any) => `${n.data?.iceType}|${n.data?.resourceId}|${n.data?.blockTypeName}`));
+  console.log(
+    'autoEnableGCPApis called, nodes:',
+    canvasNodes.length,
+    'node types:',
+    canvasNodes.map((n: any) => `${n.data?.iceType}|${n.data?.resourceId}|${n.data?.blockTypeName}`),
+  );
   const requiredApis = new Set<string>(BASE_APIS);
 
   for (const node of canvasNodes) {
@@ -748,11 +752,17 @@ async function autoEnableGCPApis(
         iceType.toLowerCase().includes(service) ||
         blockType.toLowerCase().includes(service) ||
         // Also check for broader matches
-        (service === 'run' && (iceType.includes('Container') || blockType.includes('Service') || resourceId.includes('container'))) ||
-        (service === 'storage' && (iceType.includes('Storage') || blockType.includes('Static') || blockType.includes('Bucket') || resourceId.includes('static'))) ||
+        (service === 'run' &&
+          (iceType.includes('Container') || blockType.includes('Service') || resourceId.includes('container'))) ||
+        (service === 'storage' &&
+          (iceType.includes('Storage') ||
+            blockType.includes('Static') ||
+            blockType.includes('Bucket') ||
+            resourceId.includes('static'))) ||
         (service === 'cloudfunctions' && (iceType.includes('Function') || blockType.includes('Function'))) ||
         (service === 'pubsub' && (iceType.includes('PubSub') || iceType.includes('Messaging'))) ||
-        (service === 'sql' && (iceType.includes('SQL') || iceType.includes('PostgreSQL') || iceType.includes('MySQL'))) ||
+        (service === 'sql' &&
+          (iceType.includes('SQL') || iceType.includes('PostgreSQL') || iceType.includes('MySQL'))) ||
         (service === 'redis' && iceType.includes('Redis')) ||
         (service === 'secretmanager' && iceType.includes('Secret')) ||
         (service === 'bigquery' && iceType.includes('BigQuery')) ||
@@ -779,10 +789,8 @@ async function autoEnableGCPApis(
       log(`Warning: Could not check enabled APIs (${res.status}). Will try deploying anyway.`);
       return;
     }
-    const data = await res.json() as { services?: Array<{ config?: { name: string } }> };
-    enabledApis = new Set(
-      (data.services || []).map((s) => s.config?.name || '').filter(Boolean)
-    );
+    const data = (await res.json()) as { services?: Array<{ config?: { name: string } }> };
+    enabledApis = new Set((data.services || []).map((s) => s.config?.name || '').filter(Boolean));
     console.log('Enabled APIs count:', enabledApis.size);
   } catch (err: any) {
     console.error('Service Usage API fetch error:', err.message);
@@ -803,17 +811,14 @@ async function autoEnableGCPApis(
   // Enable APIs in parallel (batch)
   const enablePromises = toEnable.map(async (api) => {
     try {
-      const res = await fetch(
-        `https://serviceusage.googleapis.com/v1/projects/${project}/services/${api}:enable`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: '{}',
+      const res = await fetch(`https://serviceusage.googleapis.com/v1/projects/${project}/services/${api}:enable`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
         },
-      );
+        body: '{}',
+      });
       const responseText = await res.text();
       console.log(`Enable ${api}: status=${res.status}`, responseText.slice(0, 200));
       if (res.ok) {
@@ -822,7 +827,9 @@ async function autoEnableGCPApis(
       }
       // Detect billing errors and provide clear message
       if (responseText.includes('Billing account') || responseText.includes('billing')) {
-        log(`  Cannot enable ${api}: Billing is not enabled for this project. Link a billing account at https://console.cloud.google.com/billing/linkedaccount?project=${project}`);
+        log(
+          `  Cannot enable ${api}: Billing is not enabled for this project. Link a billing account at https://console.cloud.google.com/billing/linkedaccount?project=${project}`,
+        );
       } else {
         log(`  Failed to enable ${api}: ${responseText.slice(0, 200)}`);
       }

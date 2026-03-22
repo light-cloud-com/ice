@@ -15,7 +15,7 @@ function result(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  overrides: Partial<ResourceDeployResult> = {}
+  overrides: Partial<ResourceDeployResult> = {},
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -32,7 +32,7 @@ function fail(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  error: string
+  error: string,
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -63,7 +63,7 @@ export const dataflow_handler: GCPResourceHandler = {
 
       const response = (await ctx.rest_client.post(
         `${BASE_URL}/projects/${ctx.project}/locations/${region}/jobs`,
-        job_body
+        job_body,
       )) as any;
 
       return result(name, 'create', start, {
@@ -89,10 +89,9 @@ export const dataflow_handler: GCPResourceHandler = {
 
     try {
       // Cancel the job (drain for streaming, cancel for batch)
-      await ctx.rest_client.post(
-        `${BASE_URL}/projects/${ctx.project}/locations/${region}/jobs/${job_id}`,
-        { requestedState: 'JOB_STATE_CANCELLED' }
-      );
+      await ctx.rest_client.post(`${BASE_URL}/projects/${ctx.project}/locations/${region}/jobs/${job_id}`, {
+        requestedState: 'JOB_STATE_CANCELLED',
+      });
 
       return result(name, 'delete', start);
     } catch (error) {

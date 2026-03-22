@@ -67,21 +67,13 @@ export const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
                   'flex flex-col items-center gap-1.5 rounded-lg border p-2.5 transition-all text-center',
                   isSelected
                     ? 'border-ice-accent bg-ice-accent-muted ring-1 ring-ice-accent'
-                    : 'border-ice-border bg-ice-surface hover:border-ice-border-strong'
+                    : 'border-ice-border bg-ice-surface hover:border-ice-border-strong',
                 )}
               >
-                <span
-                  className="text-xs font-bold"
-                  style={{ color: isSelected ? opt.color : '#8b949e' }}
-                >
+                <span className="text-xs font-bold" style={{ color: isSelected ? opt.color : '#8b949e' }}>
                   {opt.shortName}
                 </span>
-                <span
-                  className={cn(
-                    'text-ice-2xs leading-tight',
-                    isSelected ? 'text-ice-text-2' : 'text-ice-text-3'
-                  )}
-                >
+                <span className={cn('text-ice-2xs leading-tight', isSelected ? 'text-ice-text-2' : 'text-ice-text-3')}>
                   {opt.name}
                 </span>
               </button>

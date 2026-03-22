@@ -187,11 +187,7 @@ export async function getProfile(userId: string) {
   };
 }
 
-export async function findOrCreateOAuthUser(
-  email: string,
-  name: string,
-  avatar: string | null
-) {
+export async function findOrCreateOAuthUser(email: string, name: string, avatar: string | null) {
   let user = await prisma.user.findFirst({ where: { email } });
 
   if (!user) {

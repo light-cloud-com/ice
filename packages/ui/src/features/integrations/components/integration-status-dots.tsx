@@ -30,9 +30,7 @@ export const IntegrationStatusDots: React.FC = () => {
   const integrations = useSelector((state: RootState) => state.integrations.integrations);
 
   // Only show providers that have ever been connected or are in non-default state
-  const visibleProviders = Object.entries(integrations).filter(
-    ([, info]) => info.status !== 'disconnected'
-  );
+  const visibleProviders = Object.entries(integrations).filter(([, info]) => info.status !== 'disconnected');
 
   if (visibleProviders.length === 0) return null;
 

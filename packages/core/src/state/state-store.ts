@@ -203,10 +203,7 @@ export interface StateStore {
   /**
    * Get a resource state by node ID.
    */
-  get_resource(
-    graph_id: string,
-    node_id: NodeId
-  ): Promise<Result<StoredResourceState | null, IceError>>;
+  get_resource(graph_id: string, node_id: NodeId): Promise<Result<StoredResourceState | null, IceError>>;
 
   /**
    * Get all resource states for a graph.
@@ -269,7 +266,7 @@ export interface StateStore {
     id: DeploymentId,
     status: DeploymentStatus,
     counts?: { success?: number; failure?: number },
-    error_message?: string
+    error_message?: string,
   ): Promise<Result<void, IceError>>;
 
   // ---------------------------------------------------------------------------
@@ -283,7 +280,7 @@ export interface StateStore {
     graph_id: string,
     owner: string,
     ttl_seconds: number,
-    deployment_id?: DeploymentId
+    deployment_id?: DeploymentId,
   ): Promise<Result<StateLock, IceError>>;
 
   /**

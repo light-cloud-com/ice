@@ -121,9 +121,7 @@ function createSplashWindow(): void {
     webPreferences: { nodeIntegration: false, contextIsolation: true },
   });
 
-  const splashPath = is.dev
-    ? join(__dirname, '../../src/main/splash.html')
-    : join(__dirname, 'splash.html');
+  const splashPath = is.dev ? join(__dirname, '../../src/main/splash.html') : join(__dirname, 'splash.html');
 
   if (existsSync(splashPath)) {
     splashWindow.loadFile(splashPath);

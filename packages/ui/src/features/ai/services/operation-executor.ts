@@ -149,10 +149,12 @@ function findChildPosition(
       const overlaps = siblings.some((s) => {
         const sw = s.width || NODE_WIDTH;
         const sh = s.height || NODE_HEIGHT;
-        return !(x + nodeWidth + NODE_GAP_X <= s.position.x ||
-                 x >= s.position.x + sw + NODE_GAP_X ||
-                 y + nodeHeight + NODE_GAP_Y <= s.position.y ||
-                 y >= s.position.y + sh + NODE_GAP_Y);
+        return !(
+          x + nodeWidth + NODE_GAP_X <= s.position.x ||
+          x >= s.position.x + sw + NODE_GAP_X ||
+          y + nodeHeight + NODE_GAP_Y <= s.position.y ||
+          y >= s.position.y + sh + NODE_GAP_Y
+        );
       });
 
       if (!overlaps) return { x, y };
@@ -171,11 +173,7 @@ function findChildPosition(
 // Blueprint Resolution
 // =============================================================================
 
-function resolveBlueprint(
-  op: AddBlueprintOp,
-  card: Card,
-  idMap: Map<string, string>,
-): CardNode | null {
+function resolveBlueprint(op: AddBlueprintOp, card: Card, idMap: Map<string, string>): CardNode | null {
   const blueprint = getBlueprint(op.blockType, op.provider);
   if (!blueprint) return null;
 
@@ -237,7 +235,10 @@ function autoResizeContainers(dispatch: AppDispatch, card: Card): void {
     if (children.length === 0) continue;
 
     // Find bounding box of children
-    let minX = Infinity, minY = Infinity, maxR = -Infinity, maxB = -Infinity;
+    let minX = Infinity,
+      minY = Infinity,
+      maxR = -Infinity,
+      maxB = -Infinity;
     for (const child of children) {
       minX = Math.min(minX, child.position.x);
       minY = Math.min(minY, child.position.y);
@@ -248,14 +249,14 @@ function autoResizeContainers(dispatch: AppDispatch, card: Card): void {
     // Required container bounds (children bbox + padding)
     const reqX = minX - RESIZE_PAD;
     const reqY = minY - RESIZE_PAD - RESIZE_HEADER;
-    const reqW = (maxR + RESIZE_PAD) - reqX;
-    const reqH = (maxB + RESIZE_PAD) - reqY;
+    const reqW = maxR + RESIZE_PAD - reqX;
+    const reqH = maxB + RESIZE_PAD - reqY;
 
     // Expand container to fit (don't shrink below current size or required)
     const newX = Math.min(container.position.x, reqX);
     const newY = Math.min(container.position.y, reqY);
-    const newW = Math.max(container.width || 280, reqW, (maxR + RESIZE_PAD) - newX);
-    const newH = Math.max(container.height || 160, reqH, (maxB + RESIZE_PAD) - newY);
+    const newW = Math.max(container.width || 280, reqW, maxR + RESIZE_PAD - newX);
+    const newH = Math.max(container.height || 160, reqH, maxB + RESIZE_PAD - newY);
 
     if (newX !== container.position.x || newY !== container.position.y) {
       dispatch(updateCardNodePositions([{ id: container.id, position: { x: newX, y: newY } }]));
@@ -351,19 +352,22 @@ export function executeAiOperations(
           const nodeH = op.node.height || defaultHeight;
 
           // Use shared positioning — avoids overlaps
-          const position = (op.node.position && op.node.position.x !== 0 && op.node.position.y !== 0)
-            ? op.node.position
-            : findPosition(currentCard, parentId, nodeW, nodeH);
+          const position =
+            op.node.position && op.node.position.x !== 0 && op.node.position.y !== 0
+              ? op.node.position
+              : findPosition(currentCard, parentId, nodeW, nodeH);
 
-          dispatch(addNodeToCard({
-            id: realId,
-            type: op.node.type,
-            position,
-            width: nodeW,
-            height: nodeH,
-            data: op.node.data,
-            ...(parentId ? { parentId } : {}),
-          }));
+          dispatch(
+            addNodeToCard({
+              id: realId,
+              type: op.node.type,
+              position,
+              width: nodeW,
+              height: nodeH,
+              data: op.node.data,
+              ...(parentId ? { parentId } : {}),
+            }),
+          );
           executedOps++;
           break;
         }
@@ -385,12 +389,14 @@ export function executeAiOperations(
           const edgeId = generateEdgeId();
           idMap.set(op.edge.id, edgeId);
 
-          dispatch(addEdgeToCard({
-            id: edgeId,
-            source: sourceId,
-            target: targetId,
-            data: op.edge.data,
-          }));
+          dispatch(
+            addEdgeToCard({
+              id: edgeId,
+              source: sourceId,
+              target: targetId,
+              data: op.edge.data,
+            }),
+          );
           executedOps++;
           break;
         }

@@ -7,12 +7,7 @@
 
 import type { ResourceDeployResult } from '../../../types.js';
 import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
-import {
-  SERVICE_NAMES,
-  sdk_not_available,
-  sdk_not_available_short,
-  HANDLER_MESSAGES,
-} from '../messages.js';
+import { SERVICE_NAMES, sdk_not_available, sdk_not_available_short, HANDLER_MESSAGES } from '../messages.js';
 
 const TYPE = 'gcp.container.cluster';
 
@@ -20,7 +15,7 @@ function result(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  overrides: Partial<ResourceDeployResult> = {}
+  overrides: Partial<ResourceDeployResult> = {},
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -37,7 +32,7 @@ function fail(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  error: string
+  error: string,
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -57,8 +52,7 @@ export const gke_handler: GCPResourceHandler = {
 
     try {
       const client = ctx.clients.get('container') as any;
-      if (!client)
-        return fail(name, 'create', start, sdk_not_available(SERVICE_NAMES.GKE, 'container'));
+      if (!client) return fail(name, 'create', start, sdk_not_available(SERVICE_NAMES.GKE, 'container'));
 
       const [operation] = await client.createCluster({
         parent: `projects/${ctx.project}/locations/${location}`,

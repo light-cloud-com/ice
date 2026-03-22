@@ -52,10 +52,7 @@ interface AuthenticatedRequest extends Request {
  *       401:
  *         description: Unauthorized
  */
-export const createSetupIntent = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
+export const createSetupIntent = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { targetOrganisationId } = req.body;
 
@@ -95,8 +92,7 @@ export const createSetupIntent = async (
     if (!userBilling?.stripe_customer_id) {
       errorHandler({
         res,
-        message:
-          'Please save billing details first before adding a payment method',
+        message: 'Please save billing details first before adding a payment method',
         statusCode: 400,
       });
       return;
@@ -147,10 +143,7 @@ export const createSetupIntent = async (
  *       401:
  *         description: Unauthorized
  */
-export const updatePaymentMethod = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
+export const updatePaymentMethod = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { targetOrganisationId, paymentMethodId } = req.body;
 
@@ -191,10 +184,7 @@ export const updatePaymentMethod = async (
     }
 
     // Attach payment method to user
-    const paymentMethod = await attachUserPaymentMethod(
-      req.user.id,
-      paymentMethodId
-    );
+    const paymentMethod = await attachUserPaymentMethod(req.user.id, paymentMethodId);
 
     res.status(200).json({
       success: true,
@@ -235,10 +225,7 @@ export const updatePaymentMethod = async (
  *       401:
  *         description: Unauthorized
  */
-export const removePaymentMethod = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
+export const removePaymentMethod = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { targetOrganisationId } = req.body;
 

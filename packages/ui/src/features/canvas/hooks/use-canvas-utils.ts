@@ -28,7 +28,7 @@ export const useCanvasUtils = (svgRef: RefObject<SVGSVGElement>, viewState: View
         y: (screenY - rect.top - viewState.panY) / viewState.scale,
       };
     },
-    [svgRef, viewState.panX, viewState.panY, viewState.scale]
+    [svgRef, viewState.panX, viewState.panY, viewState.scale],
   );
 
   /**
@@ -46,7 +46,7 @@ export const useCanvasUtils = (svgRef: RefObject<SVGSVGElement>, viewState: View
         y: canvasY * viewState.scale + viewState.panY + rect.top,
       };
     },
-    [svgRef, viewState.panX, viewState.panY, viewState.scale]
+    [svgRef, viewState.panX, viewState.panY, viewState.scale],
   );
 
   /**
@@ -61,7 +61,7 @@ export const useCanvasUtils = (svgRef: RefObject<SVGSVGElement>, viewState: View
         point.y <= element.y + element.height
       );
     },
-    []
+    [],
   );
 
   /**

@@ -92,10 +92,8 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, o
   const [copiedLine, setCopiedLine] = useState<string | null>(null);
   const logIdRef = useRef(0);
 
-  const serviceName =
-    (data.serviceName as string) || (label || '').toLowerCase().replace(/\s+/g, '-') || 'default';
-  const serviceMessages =
-    SAMPLE_MESSAGES[serviceName as keyof typeof SAMPLE_MESSAGES] || SAMPLE_MESSAGES.default;
+  const serviceName = (data.serviceName as string) || (label || '').toLowerCase().replace(/\s+/g, '-') || 'default';
+  const serviceMessages = SAMPLE_MESSAGES[serviceName as keyof typeof SAMPLE_MESSAGES] || SAMPLE_MESSAGES.default;
 
   // Dimensions
   const headerHeight = 32;
@@ -154,7 +152,7 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, o
           return newLogs.length > 200 ? newLogs.slice(-200) : newLogs;
         });
       },
-      1500 + Math.random() * 2000
+      1500 + Math.random() * 2000,
     );
 
     return () => clearInterval(interval);
@@ -174,7 +172,7 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, o
       setFolded(!folded);
       onToggleFold?.(node.id);
     },
-    [folded, node.id, onToggleFold]
+    [folded, node.id, onToggleFold],
   );
 
   // Handle scroll
@@ -198,19 +196,17 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, o
         return clamped;
       });
     },
-    [logs.length, maxVisibleLogs]
+    [logs.length, maxVisibleLogs],
   );
 
   // Copy all logs
   const handleCopyAll = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      const text = logs
-        .map((l) => `${l.timestamp} [${l.level.toUpperCase()}] ${l.message}`)
-        .join('\n');
+      const text = logs.map((l) => `${l.timestamp} [${l.level.toUpperCase()}] ${l.message}`).join('\n');
       navigator.clipboard.writeText(text).catch(() => {});
     },
-    [logs]
+    [logs],
   );
 
   // Copy single line
@@ -407,12 +403,7 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, o
         <g className="log-content">
           <defs>
             <clipPath id={`log-clip-${node.id}`}>
-              <rect
-                x={x + 4}
-                y={y + headerHeight + 2}
-                width={nodeWidth - 16}
-                height={logAreaHeight}
-              />
+              <rect x={x + 4} y={y + headerHeight + 2} width={nodeWidth - 16} height={logAreaHeight} />
             </clipPath>
           </defs>
 
@@ -481,13 +472,7 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, o
                   <text
                     x={x + 130}
                     y={logY + 10}
-                    fill={
-                      log.level === 'error'
-                        ? '#fca5a5'
-                        : log.level === 'warn'
-                          ? '#fcd34d'
-                          : TERMINAL.text
-                    }
+                    fill={log.level === 'error' ? '#fca5a5' : log.level === 'warn' ? '#fcd34d' : TERMINAL.text}
                     fontSize="10"
                     fontFamily="ui-monospace, 'SF Mono', monospace"
                     opacity={index === visibleLogs.length - 1 ? 1 : 0.85}
@@ -549,12 +534,7 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, o
               rx={0.5}
               opacity={0.6}
             >
-              <animate
-                attributeName="opacity"
-                values="0.6;0.2;0.6"
-                dur="2s"
-                repeatCount="indefinite"
-              />
+              <animate attributeName="opacity" values="0.6;0.2;0.6" dur="2s" repeatCount="indefinite" />
             </rect>
           )}
         </g>

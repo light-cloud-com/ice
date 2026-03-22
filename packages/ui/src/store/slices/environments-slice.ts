@@ -40,7 +40,7 @@ export interface EnvironmentDiff {
 
 export interface EnvironmentsState {
   byProject: Record<string, Environment[]>;
-  activeEnvId: Record<string, string>;  // projectId → envId
+  activeEnvId: Record<string, string>; // projectId → envId
   loading: boolean;
   pendingDiff: EnvironmentDiff | null;
   pendingPromote: { sourceEnvId: string; targetEnvId: string } | null;
@@ -139,7 +139,9 @@ const environmentsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchEnvironments.pending, (state) => { state.loading = true; })
+      .addCase(fetchEnvironments.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(fetchEnvironments.fulfilled, (state, action) => {
         state.loading = false;
         const { projectId, environments } = action.payload;
@@ -150,7 +152,9 @@ const environmentsSlice = createSlice({
           if (prod) state.activeEnvId[projectId] = prod.id;
         }
       })
-      .addCase(fetchEnvironments.rejected, (state) => { state.loading = false; })
+      .addCase(fetchEnvironments.rejected, (state) => {
+        state.loading = false;
+      })
 
       .addCase(createEnvironment.fulfilled, (state, action) => {
         const { projectId, environment } = action.payload;
@@ -177,13 +181,17 @@ const environmentsSlice = createSlice({
         };
       })
 
-      .addCase(promoteEnvironment.pending, (state) => { state.promoting = true; })
+      .addCase(promoteEnvironment.pending, (state) => {
+        state.promoting = true;
+      })
       .addCase(promoteEnvironment.fulfilled, (state) => {
         state.promoting = false;
         state.pendingDiff = null;
         state.pendingPromote = null;
       })
-      .addCase(promoteEnvironment.rejected, (state) => { state.promoting = false; });
+      .addCase(promoteEnvironment.rejected, (state) => {
+        state.promoting = false;
+      });
   },
 });
 

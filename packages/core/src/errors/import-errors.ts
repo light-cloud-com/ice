@@ -134,7 +134,7 @@ export interface ImportWarning {
  */
 export function classifyGCPError(
   error: { code?: number; message?: string; details?: unknown },
-  service?: string
+  service?: string,
 ): ImportError {
   const message = error.message || String(error);
 
@@ -153,8 +153,7 @@ export function classifyGCPError(
   ) {
     return {
       code: ImportErrorCode.AUTH_REAUTH_REQUIRED,
-      message:
-        'Authentication session expired. Please re-authenticate with: gcloud auth application-default login',
+      message: 'Authentication session expired. Please re-authenticate with: gcloud auth application-default login',
       recoverable: true,
       service,
       action: {
@@ -274,7 +273,7 @@ export function classifyAWSError(
     message?: string;
     $metadata?: { httpStatusCode?: number };
   },
-  service?: string
+  service?: string,
 ): ImportError {
   const message = error.message || String(error);
   const code = error.code || error.name || '';
@@ -404,7 +403,7 @@ export function classifyAWSError(
  */
 export function classifyAzureError(
   error: { code?: string; message?: string; statusCode?: number },
-  service?: string
+  service?: string,
 ): ImportError {
   const message = error.message || String(error);
   const code = error.code || '';

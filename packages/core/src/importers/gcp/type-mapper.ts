@@ -214,10 +214,7 @@ export function get_supported_kinds(): string[] {
  * Properties to keep for each resource type.
  * Only includes user-relevant properties, skips internal/metadata fields.
  */
-const CLEAN_PROPERTY_EXTRACTORS: Record<
-  string,
-  (props: Record<string, unknown>) => Record<string, unknown>
-> = {
+const CLEAN_PROPERTY_EXTRACTORS: Record<string, (props: Record<string, unknown>) => Record<string, unknown>> = {
   // VPC Network
   'compute#network': (props) => ({
     name: props.name,
@@ -395,18 +392,13 @@ function extractName(path: string | undefined): string | undefined {
  * Map GCP properties to clean ICE properties.
  * Uses extractors for high-level types, falls back to snake_case conversion.
  */
-export function map_properties(
-  gcp_kind: string,
-  properties: Record<string, unknown>
-): Record<string, unknown> {
+export function map_properties(gcp_kind: string, properties: Record<string, unknown>): Record<string, unknown> {
   // Use clean property extractor if available
   const extractor = CLEAN_PROPERTY_EXTRACTORS[gcp_kind];
   if (extractor) {
     const clean = extractor(properties);
     // Filter out undefined values
-    return Object.fromEntries(
-      Object.entries(clean).filter(([_, v]) => v !== undefined && v !== null)
-    );
+    return Object.fromEntries(Object.entries(clean).filter(([_, v]) => v !== undefined && v !== null));
   }
 
   // Fallback: simple camelCase to snake_case conversion
@@ -414,12 +406,7 @@ export function map_properties(
 
   for (const [gcp_key, value] of Object.entries(properties)) {
     // Skip internal fields
-    if (
-      gcp_key.startsWith('_') ||
-      gcp_key === 'kind' ||
-      gcp_key === 'etag' ||
-      gcp_key === 'selfLink'
-    ) {
+    if (gcp_key.startsWith('_') || gcp_key === 'kind' || gcp_key === 'etag' || gcp_key === 'selfLink') {
       continue;
     }
 

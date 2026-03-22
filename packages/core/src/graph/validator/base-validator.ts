@@ -137,7 +137,7 @@ export class ValidationContext {
   error(
     code: string,
     message: string,
-    details?: Partial<Omit<ValidationIssue, 'severity' | 'code' | 'message'>>
+    details?: Partial<Omit<ValidationIssue, 'severity' | 'code' | 'message'>>,
   ): void {
     this.add_issue('error', code, message, details);
   }
@@ -148,7 +148,7 @@ export class ValidationContext {
   warning(
     code: string,
     message: string,
-    details?: Partial<Omit<ValidationIssue, 'severity' | 'code' | 'message'>>
+    details?: Partial<Omit<ValidationIssue, 'severity' | 'code' | 'message'>>,
   ): void {
     this.add_issue('warning', code, message, details);
   }
@@ -156,11 +156,7 @@ export class ValidationContext {
   /**
    * Add an info message.
    */
-  info(
-    code: string,
-    message: string,
-    details?: Partial<Omit<ValidationIssue, 'severity' | 'code' | 'message'>>
-  ): void {
+  info(code: string, message: string, details?: Partial<Omit<ValidationIssue, 'severity' | 'code' | 'message'>>): void {
     this.add_issue('info', code, message, details);
   }
 
@@ -171,7 +167,7 @@ export class ValidationContext {
     severity: ValidationSeverity,
     code: string,
     message: string,
-    details?: Partial<Omit<ValidationIssue, 'severity' | 'code' | 'message'>>
+    details?: Partial<Omit<ValidationIssue, 'severity' | 'code' | 'message'>>,
   ): void {
     const max = this.options.max_issues ?? Infinity;
     if (this.issues.length >= max) return;
@@ -258,15 +254,11 @@ export class GraphValidator {
     let validators_to_run = Array.from(this.validators.values());
 
     if (options.only_validators && options.only_validators.length > 0) {
-      validators_to_run = validators_to_run.filter((v) =>
-        options.only_validators!.includes(v.name)
-      );
+      validators_to_run = validators_to_run.filter((v) => options.only_validators!.includes(v.name));
     }
 
     if (options.skip_validators && options.skip_validators.length > 0) {
-      validators_to_run = validators_to_run.filter(
-        (v) => !options.skip_validators!.includes(v.name)
-      );
+      validators_to_run = validators_to_run.filter((v) => !options.skip_validators!.includes(v.name));
     }
 
     // Run validators
@@ -327,7 +319,7 @@ export function create_graph_validator(): GraphValidator {
 export function create_validator(
   name: string,
   description: string,
-  validate_fn: (graph: MutableGraph, options?: ValidationOptions) => ValidationIssue[]
+  validate_fn: (graph: MutableGraph, options?: ValidationOptions) => ValidationIssue[],
 ): Validator {
   return {
     name,

@@ -58,10 +58,7 @@ interface AuthenticatedRequest extends Request {
  *       400:
  *         description: Invalid request
  */
-export const estimateCost = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
+export const estimateCost = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { resourceType, size, tier, region, ha_enabled } = req.body;
 

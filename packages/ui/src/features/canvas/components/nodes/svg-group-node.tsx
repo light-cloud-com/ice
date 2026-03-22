@@ -132,7 +132,7 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
         e.stopPropagation();
         onToggleFold?.(node.id);
       },
-      [node.id, onToggleFold]
+      [node.id, onToggleFold],
     );
 
     useEffect(() => {
@@ -147,25 +147,49 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
     if (lod <= 1) {
       return (
         <g className="svg-group-node lod-1" data-node-id={node.id} style={{ cursor: 'move' }}>
-          <rect x={x} y={y} width={nodeWidth} height={nodeHeight} rx={CORNER_RADIUS}
+          <rect
+            x={x}
+            y={y}
+            width={nodeWidth}
+            height={nodeHeight}
+            rx={CORNER_RADIUS}
             fill={gc ? `${gc}15` : 'rgba(15, 23, 42, 0.15)'}
-            stroke={gc || 'var(--ice-border)'} strokeWidth={1} strokeDasharray="4 2" opacity={0.6} />
+            stroke={gc || 'var(--ice-border)'}
+            strokeWidth={1}
+            strokeDasharray="4 2"
+            opacity={0.6}
+          />
         </g>
       );
     }
 
     // ─── LOD 2: Compact group — border + label only ──────────────────
     if (lod <= 2) {
-      const lbl = (label || '').length > 20 ? (label || '').slice(0, 20) + '\u2026' : (label || '');
+      const lbl = (label || '').length > 20 ? (label || '').slice(0, 20) + '\u2026' : label || '';
       return (
         <g className="svg-group-node lod-2" data-node-id={node.id} style={{ cursor: 'move' }}>
-          <rect x={x} y={y} width={nodeWidth} height={nodeHeight} rx={CORNER_RADIUS}
+          <rect
+            x={x}
+            y={y}
+            width={nodeWidth}
+            height={nodeHeight}
+            rx={CORNER_RADIUS}
             fill={gc ? `${gc}08` : 'rgba(15, 23, 42, 0.08)'}
-            stroke={isSelected ? (gc || 'var(--ice-border-strong)') : (gc || 'var(--ice-border)')}
-            strokeWidth={isSelected ? 1.5 : 1} strokeDasharray="6 3" />
-          <text x={x + 10} y={y + 14} dominantBaseline="middle"
-            fill={gc || 'var(--ice-text-secondary)'} fontSize="10" fontWeight="600"
-            fontFamily="'JetBrains Mono Variable', monospace" opacity={0.7} style={{ pointerEvents: 'none' }}>
+            stroke={isSelected ? gc || 'var(--ice-border-strong)' : gc || 'var(--ice-border)'}
+            strokeWidth={isSelected ? 1.5 : 1}
+            strokeDasharray="6 3"
+          />
+          <text
+            x={x + 10}
+            y={y + 14}
+            dominantBaseline="middle"
+            fill={gc || 'var(--ice-text-secondary)'}
+            fontSize="10"
+            fontWeight="600"
+            fontFamily="'JetBrains Mono Variable', monospace"
+            opacity={0.7}
+            style={{ pointerEvents: 'none' }}
+          >
             {lbl}
           </text>
         </g>
@@ -203,9 +227,7 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
     const groupBorderColor = userColor
       ? hexToBorder(userColor)
       : GROUP_BORDER_COLORS[typeSuffix] || 'var(--ice-border-strong)';
-    const groupTint = userColor
-      ? hexToTint(userColor)
-      : GROUP_TINT_COLORS[typeSuffix] || 'rgba(15, 23, 42, 0.15)';
+    const groupTint = userColor ? hexToTint(userColor) : GROUP_TINT_COLORS[typeSuffix] || 'rgba(15, 23, 42, 0.15)';
     const labelColor = userColor || 'var(--ice-text-tertiary)';
 
     const getBorderColor = () => {
@@ -285,9 +307,7 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
         />
 
         {/* Color indicator — small dot */}
-        {userColor && (
-          <circle cx={x + 14} cy={y + (folded ? 18 : 16)} r={4} fill={userColor} opacity={0.7} />
-        )}
+        {userColor && <circle cx={x + 14} cy={y + (folded ? 18 : 16)} r={4} fill={userColor} opacity={0.7} />}
 
         {/* Label */}
         {isRenaming ? (
@@ -364,13 +384,7 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
 
         {/* Fold chevron */}
         <g style={{ cursor: 'pointer' }} onClick={handleToggleFold} opacity={isHovered ? 0.8 : 0.4}>
-          <rect
-            x={x + nodeWidth - 40}
-            y={y + (folded ? 8 : 4)}
-            width={18}
-            height={20}
-            fill="transparent"
-          />
+          <rect x={x + nodeWidth - 40} y={y + (folded ? 8 : 4)} width={18} height={20} fill="transparent" />
           {folded ? (
             <path
               d={`M ${x + nodeWidth - 35} ${y + 14} l 5 4 -5 4`}
@@ -411,13 +425,7 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
         {/* Resize handle */}
         {!folded && (
           <g className="resize-handle" style={{ cursor: 'se-resize' }}>
-            <rect
-              x={x + nodeWidth - 16}
-              y={y + nodeHeight - 16}
-              width={16}
-              height={16}
-              fill="transparent"
-            />
+            <rect x={x + nodeWidth - 16} y={y + nodeHeight - 16} width={16} height={16} fill="transparent" />
             <line
               x1={x + nodeWidth - 4}
               y1={y + nodeHeight - 10}
@@ -438,7 +446,7 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
         )}
       </g>
     );
-  }
+  },
 );
 
 SvgGroupNode.displayName = 'SvgGroupNode';
@@ -658,13 +666,7 @@ const BlockNode: React.FC<BlockNodeProps> = memo(
 
         {/* Fold chevron */}
         <g style={{ cursor: 'pointer' }} onClick={onToggleFold} opacity={isHovered ? 0.8 : 0.4}>
-          <rect
-            x={x + nodeWidth - (childCount > 0 ? 36 : 24)}
-            y={y + 8}
-            width={18}
-            height={20}
-            fill="transparent"
-          />
+          <rect x={x + nodeWidth - (childCount > 0 ? 36 : 24)} y={y + 8} width={18} height={20} fill="transparent" />
           {folded ? (
             <path
               d={`M ${x + nodeWidth - (childCount > 0 ? 31 : 19)} ${y + 14} l 5 4 -5 4`}
@@ -705,13 +707,7 @@ const BlockNode: React.FC<BlockNodeProps> = memo(
         {/* Resize handle */}
         {!folded && (
           <g className="resize-handle" style={{ cursor: 'se-resize' }}>
-            <rect
-              x={x + nodeWidth - 16}
-              y={y + nodeHeight - 16}
-              width={16}
-              height={16}
-              fill="transparent"
-            />
+            <rect x={x + nodeWidth - 16} y={y + nodeHeight - 16} width={16} height={16} fill="transparent" />
             <line
               x1={x + nodeWidth - 4}
               y1={y + nodeHeight - 10}
@@ -732,7 +728,7 @@ const BlockNode: React.FC<BlockNodeProps> = memo(
         )}
       </g>
     );
-  }
+  },
 );
 
 BlockNode.displayName = 'BlockNode';

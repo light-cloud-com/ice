@@ -13,13 +13,7 @@ export type SecurityLevel = 'basic' | 'standard' | 'strict' | 'compliance';
 // =============================================================================
 
 /** Template categories for library organization */
-export type TemplateCategory =
-  | 'full-stack'
-  | 'backend'
-  | 'data-pipeline'
-  | 'ai-ml'
-  | 'compliance'
-  | 'quick-start';
+export type TemplateCategory = 'full-stack' | 'backend' | 'data-pipeline' | 'ai-ml' | 'compliance' | 'quick-start';
 
 export interface TemplateCategoryMeta {
   id: TemplateCategory;

@@ -14,7 +14,7 @@ function result(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  overrides: Partial<ResourceDeployResult> = {}
+  overrides: Partial<ResourceDeployResult> = {},
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -31,7 +31,7 @@ function fail(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  error: string
+  error: string,
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -51,13 +51,7 @@ export const cloud_scheduler_handler: GCPResourceHandler = {
 
     try {
       const client = ctx.clients.get('scheduler') as any;
-      if (!client)
-        return fail(
-          name,
-          'create',
-          start,
-          sdk_not_available(SERVICE_NAMES.CLOUD_SCHEDULER, 'scheduler')
-        );
+      if (!client) return fail(name, 'create', start, sdk_not_available(SERVICE_NAMES.CLOUD_SCHEDULER, 'scheduler'));
 
       const [job] = await client.createJob({
         parent: `projects/${ctx.project}/locations/${region}`,
@@ -87,8 +81,7 @@ export const cloud_scheduler_handler: GCPResourceHandler = {
 
     try {
       const client = ctx.clients.get('scheduler') as any;
-      if (!client)
-        return fail(name, 'update', start, sdk_not_available_short(SERVICE_NAMES.CLOUD_SCHEDULER));
+      if (!client) return fail(name, 'update', start, sdk_not_available_short(SERVICE_NAMES.CLOUD_SCHEDULER));
 
       await client.updateJob({
         job: {
@@ -110,8 +103,7 @@ export const cloud_scheduler_handler: GCPResourceHandler = {
 
     try {
       const client = ctx.clients.get('scheduler') as any;
-      if (!client)
-        return fail(name, 'delete', start, sdk_not_available_short(SERVICE_NAMES.CLOUD_SCHEDULER));
+      if (!client) return fail(name, 'delete', start, sdk_not_available_short(SERVICE_NAMES.CLOUD_SCHEDULER));
 
       await client.deleteJob({ name: provider_id });
 

@@ -15,7 +15,7 @@ function result(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  overrides: Partial<ResourceDeployResult> = {}
+  overrides: Partial<ResourceDeployResult> = {},
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -32,7 +32,7 @@ function fail(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  error: string
+  error: string,
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -63,7 +63,7 @@ export const cloud_functions_handler: GCPResourceHandler = {
       } else {
         const op = (await ctx.rest_client.post(
           `${BASE_URL}/projects/${ctx.project}/locations/${region}/functions?functionId=${name}`,
-          build_function_spec(name, properties, ctx)
+          build_function_spec(name, properties, ctx),
         )) as any;
         if (op?.name) await wait_for_operation(ctx, op.name);
       }
@@ -82,10 +82,7 @@ export const cloud_functions_handler: GCPResourceHandler = {
 
     try {
       const func_name = `projects/${ctx.project}/locations/${region}/functions/${name}`;
-      await ctx.rest_client.patch(
-        `${BASE_URL}/${func_name}`,
-        build_function_spec(name, properties, ctx)
-      );
+      await ctx.rest_client.patch(`${BASE_URL}/${func_name}`, build_function_spec(name, properties, ctx));
 
       return result(name, 'update', start, { provider_id });
     } catch (error) {
@@ -111,7 +108,7 @@ export const cloud_functions_handler: GCPResourceHandler = {
 function build_function_spec(
   name: string,
   properties: Record<string, unknown>,
-  ctx: GCPHandlerContext
+  ctx: GCPHandlerContext,
 ): Record<string, unknown> {
   const spec: Record<string, unknown> = {
     name,
@@ -166,12 +163,9 @@ function extract_region(provider_id: string): string {
 async function wait_for_operation(ctx: GCPHandlerContext, op_name: string): Promise<void> {
   const start = Date.now();
   while (Date.now() - start < 300_000) {
-    const op = (await ctx.rest_client.get(
-      `https://cloudfunctions.googleapis.com/v2/${op_name}`
-    )) as any;
+    const op = (await ctx.rest_client.get(`https://cloudfunctions.googleapis.com/v2/${op_name}`)) as any;
     if (op?.done) {
-      if (op.error)
-        throw new Error(operation_failed(SERVICE_NAMES.CLOUD_FUNCTIONS, JSON.stringify(op.error)));
+      if (op.error) throw new Error(operation_failed(SERVICE_NAMES.CLOUD_FUNCTIONS, JSON.stringify(op.error)));
       return;
     }
     await new Promise((resolve) => setTimeout(resolve, 3000));

@@ -50,16 +50,23 @@ export const Minimap: React.FC = () => {
 
   // Compute bounds and scale
   const { scale, offsetX, offsetY, bounds } = useMemo(() => {
-    if (nodes.length === 0) return { scale: 1, offsetX: 0, offsetY: 0, bounds: { minX: 0, minY: 0, maxX: 500, maxY: 300 } };
+    if (nodes.length === 0)
+      return { scale: 1, offsetX: 0, offsetY: 0, bounds: { minX: 0, minY: 0, maxX: 500, maxY: 300 } };
 
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
     for (const n of nodes) {
       minX = Math.min(minX, n.x);
       minY = Math.min(minY, n.y);
       maxX = Math.max(maxX, n.x + n.w);
       maxY = Math.max(maxY, n.y + n.h);
     }
-    minX -= PADDING; minY -= PADDING; maxX += PADDING; maxY += PADDING;
+    minX -= PADDING;
+    minY -= PADDING;
+    maxX += PADDING;
+    maxY += PADDING;
 
     const contentW = maxX - minX || 1;
     const contentH = maxY - minY || 1;
@@ -77,36 +84,41 @@ export const Minimap: React.FC = () => {
   const vpRect = useMemo(() => {
     const canvasW = window.innerWidth * 0.6;
     const canvasH = window.innerHeight * 0.7;
-    const x = (-viewport.panX) * scale + offsetX;
-    const y = (-viewport.panY) * scale + offsetY;
+    const x = -viewport.panX * scale + offsetX;
+    const y = -viewport.panY * scale + offsetY;
     const w = (canvasW / viewport.scale) * scale;
     const h = (canvasH / viewport.scale) * scale;
     return { x, y, w, h };
   }, [viewport, scale, offsetX, offsetY]);
 
-  const handleClick = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
+  const handleClick = useCallback(
+    (e: React.MouseEvent<SVGSVGElement>) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
 
-    // Convert minimap coords to canvas coords
-    const canvasX = (mx - offsetX) / scale;
-    const canvasY = (my - offsetY) / scale;
+      // Convert minimap coords to canvas coords
+      const canvasX = (mx - offsetX) / scale;
+      const canvasY = (my - offsetY) / scale;
 
-    const canvasW = window.innerWidth * 0.6;
-    const canvasH = window.innerHeight * 0.7;
+      const canvasW = window.innerWidth * 0.6;
+      const canvasH = window.innerHeight * 0.7;
 
-    if (activePane) {
-      dispatch(setPaneViewport({
-        paneId: activePane.id,
-        viewport: {
-          panX: -(canvasX - canvasW / viewport.scale / 2),
-          panY: -(canvasY - canvasH / viewport.scale / 2),
-          scale: viewport.scale,
-        },
-      }));
-    }
-  }, [scale, offsetX, offsetY, viewport, activePane, dispatch]);
+      if (activePane) {
+        dispatch(
+          setPaneViewport({
+            paneId: activePane.id,
+            viewport: {
+              panX: -(canvasX - canvasW / viewport.scale / 2),
+              panY: -(canvasY - canvasH / viewport.scale / 2),
+              scale: viewport.scale,
+            },
+          }),
+        );
+      }
+    },
+    [scale, offsetX, offsetY, viewport, activePane, dispatch],
+  );
 
   if (nodes.length === 0) return null;
 

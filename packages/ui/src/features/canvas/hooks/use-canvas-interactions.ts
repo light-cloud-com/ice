@@ -73,11 +73,7 @@ export interface UseCanvasInteractionsOptions {
   onSelect?: (ids: string[]) => void;
   onToggleSelect?: (id: string) => void;
   onBoxSelect?: (rect: { x: number; y: number; width: number; height: number } | null) => void;
-  onContextMenu?: (
-    position: { x: number; y: number },
-    type: 'canvas' | 'node' | 'edge',
-    targetId?: string
-  ) => void;
+  onContextMenu?: (position: { x: number; y: number }, type: 'canvas' | 'node' | 'edge', targetId?: string) => void;
   onDelete?: () => void;
   onDragOverGroup?: (groupId: string | null, draggedNodeId?: string | null) => void;
   onDragEnd?: (itemId: string, x: number, y: number, forceReparent?: boolean) => void;
@@ -172,7 +168,7 @@ export function useCanvasInteractions({
         y: (screenY - rect.top - vp.y) / vp.zoom,
       };
     },
-    [svgRef]
+    [svgRef],
   );
 
   // Hit testing
@@ -186,16 +182,11 @@ export function useCanvasInteractions({
         canvasY <= item.y + item.height
       );
     },
-    [resizeHandleSize]
+    [resizeHandleSize],
   );
 
   const isInItem = useCallback((item: CanvasItem, canvasX: number, canvasY: number): boolean => {
-    return (
-      canvasX >= item.x &&
-      canvasX <= item.x + item.width &&
-      canvasY >= item.y &&
-      canvasY <= item.y + item.height
-    );
+    return canvasX >= item.x && canvasX <= item.x + item.width && canvasY >= item.y && canvasY <= item.y + item.height;
   }, []);
 
   const findItemAtPosition = useCallback(
@@ -212,7 +203,7 @@ export function useCanvasInteractions({
       }
       return { item: null, isResize: false };
     },
-    [isInResizeHandle, isInItem]
+    [isInResizeHandle, isInItem],
   );
 
   // Mouse down
@@ -323,7 +314,7 @@ export function useCanvasInteractions({
         }
       }
     },
-    [screenToCanvas, findItemAtPosition, onSelect, onToggleSelect, onItemMove, onItemResize]
+    [screenToCanvas, findItemAtPosition, onSelect, onToggleSelect, onItemMove, onItemResize],
   );
 
   // Mouse move
@@ -409,7 +400,7 @@ export function useCanvasInteractions({
         }
       }
     },
-    [screenToCanvas, onViewportChange, onItemMove, onItemResize, onBoxSelect, onDragOverGroup]
+    [screenToCanvas, onViewportChange, onItemMove, onItemResize, onBoxSelect, onDragOverGroup],
   );
 
   // Mouse up
@@ -449,12 +440,7 @@ export function useCanvasInteractions({
           // Find all items that intersect with the box
           const selectedItemIds = itemsRef.current
             .filter((item) => {
-              return (
-                item.x + item.width > x &&
-                item.x < x + width &&
-                item.y + item.height > y &&
-                item.y < y + height
-              );
+              return item.x + item.width > x && item.x < x + width && item.y + item.height > y && item.y < y + height;
             })
             .map((item) => item.id);
 
@@ -467,7 +453,7 @@ export function useCanvasInteractions({
 
       stateRef.current = { ...INITIAL_STATE, dragItemOffsets: new Map() };
     },
-    [screenToCanvas, onSelect, onBoxSelect, onDragEnd, onDragOverGroup]
+    [screenToCanvas, onSelect, onBoxSelect, onDragEnd, onDragOverGroup],
   );
 
   // Wheel — zoom
@@ -489,7 +475,7 @@ export function useCanvasInteractions({
 
       onViewportChange({ x: newX, y: newY, zoom: newZoom });
     },
-    [svgRef, minZoom, maxZoom, onViewportChange]
+    [svgRef, minZoom, maxZoom, onViewportChange],
   );
 
   // Aux click — prevent middle-click auto-scroll
@@ -518,7 +504,7 @@ export function useCanvasInteractions({
         onContextMenu({ x: e.clientX, y: e.clientY }, 'canvas');
       }
     },
-    [screenToCanvas, findItemAtPosition, onContextMenu, onSelect]
+    [screenToCanvas, findItemAtPosition, onContextMenu, onSelect],
   );
 
   // Cursor

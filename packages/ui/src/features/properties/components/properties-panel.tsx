@@ -115,9 +115,7 @@ const CloseButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
   <div className="mb-3">
-    <div className="text-ice-xs font-semibold uppercase tracking-wider text-ice-text-3 mb-1.5 px-3">
-      {title}
-    </div>
+    <div className="text-ice-xs font-semibold uppercase tracking-wider text-ice-text-3 mb-1.5 px-3">{title}</div>
     <div className="px-3">{children}</div>
   </div>
 );
@@ -215,9 +213,7 @@ const StepperField: React.FC<{
       >
         −
       </button>
-      <span className="w-8 text-center text-ice-base text-ice-text-1 font-mono font-semibold">
-        {value}
-      </span>
+      <span className="w-8 text-center text-ice-base text-ice-text-1 font-mono font-semibold">{value}</span>
       <button
         onClick={() => onChange(Math.min(max, value + 1))}
         className="w-6 h-6 flex items-center justify-center rounded bg-ice-raised border border-ice-border text-ice-text-1 text-ice-base font-bold hover:bg-ice-hover transition-colors"
@@ -255,9 +251,7 @@ const ResourceInfoPanel: React.FC<{
   const hasNetwork = port || domain || inCount > 0 || outCount > 0;
 
   // Filter implementations to selected provider (or show all)
-  const relevantImpls = provider
-    ? implementations.filter((impl) => impl.provider === provider)
-    : implementations;
+  const relevantImpls = provider ? implementations.filter((impl) => impl.provider === provider) : implementations;
 
   const hasAnything = hasNetwork || relevantImpls.length > 0 || resourceDef?.description;
   if (!hasAnything) return null;
@@ -267,9 +261,7 @@ const ResourceInfoPanel: React.FC<{
       {/* IaC mapping */}
       {relevantImpls.length > 0 && (
         <div className="px-3 pt-2.5 pb-2">
-          <div className="text-ice-xs font-semibold uppercase tracking-wider text-ice-text-3 mb-1.5">
-            IaC Resource
-          </div>
+          <div className="text-ice-xs font-semibold uppercase tracking-wider text-ice-text-3 mb-1.5">IaC Resource</div>
           {relevantImpls.map((impl) => (
             <div key={`${impl.provider}-${impl.resource_type}`} className="mb-1">
               <div className="flex items-center gap-1.5">
@@ -278,9 +270,7 @@ const ResourceInfoPanel: React.FC<{
                 </span>
                 <span className="text-ice-xs text-ice-text-2">{impl.display_name}</span>
               </div>
-              <div className="text-ice-2xs text-ice-text-3 font-mono mt-0.5 truncate">
-                {impl.resource_type}
-              </div>
+              <div className="text-ice-2xs text-ice-text-3 font-mono mt-0.5 truncate">{impl.resource_type}</div>
             </div>
           ))}
         </div>
@@ -289,29 +279,18 @@ const ResourceInfoPanel: React.FC<{
       {/* Network — only real values */}
       {hasNetwork && (
         <div className="px-3 pb-2">
-          <div className="text-ice-xs font-semibold uppercase tracking-wider text-ice-text-3 mb-1.5">
-            Network
-          </div>
+          <div className="text-ice-xs font-semibold uppercase tracking-wider text-ice-text-3 mb-1.5">Network</div>
           {port && <InfoRow label="Port" value={port} color="text-ice-text-1" />}
           {domain && <InfoRow label="Domain" value={domain} />}
-          {inCount > 0 && (
-            <InfoRow label="Inbound" value={`${inCount} connection${inCount !== 1 ? 's' : ''}`} />
-          )}
-          {outCount > 0 && (
-            <InfoRow
-              label="Outbound"
-              value={`${outCount} connection${outCount !== 1 ? 's' : ''}`}
-            />
-          )}
+          {inCount > 0 && <InfoRow label="Inbound" value={`${inCount} connection${inCount !== 1 ? 's' : ''}`} />}
+          {outCount > 0 && <InfoRow label="Outbound" value={`${outCount} connection${outCount !== 1 ? 's' : ''}`} />}
         </div>
       )}
 
       {/* About — description from DB */}
       {resourceDef?.description && (
         <div className="px-3 pb-3">
-          <div className="text-ice-xs font-semibold uppercase tracking-wider text-ice-text-3 mb-1.5">
-            About
-          </div>
+          <div className="text-ice-xs font-semibold uppercase tracking-wider text-ice-text-3 mb-1.5">About</div>
           <p className="text-ice-xs text-ice-text-3 leading-relaxed">{resourceDef.description}</p>
           {resourceDef.providers.length > 0 && (
             <div className="flex items-center gap-1 mt-1.5 flex-wrap">
@@ -345,14 +324,15 @@ export const PropertiesPanel: React.FC = () => {
   const [resourceMap, setResourceMap] = useState<Map<string, ResourceDef>>(new Map());
 
   useEffect(() => {
-    getApi().resources
-      .getAll()
+    getApi()
+      .resources.getAll()
       .then((data: ResourceDef[] | ResourceCategory[]) => {
         const map = new Map<string, ResourceDef>();
         // Handle both flat array (from /resources/all) and nested categories
-        const resources = Array.isArray(data) && data.length > 0 && 'resources' in data[0]
-          ? (data as ResourceCategory[]).flatMap((cat) => cat.resources)
-          : (data as ResourceDef[]);
+        const resources =
+          Array.isArray(data) && data.length > 0 && 'resources' in data[0]
+            ? (data as ResourceCategory[]).flatMap((cat) => cat.resources)
+            : (data as ResourceDef[]);
         for (const r of resources) {
           // Key by multiple fields for reliable lookup
           const id = (r as any).id || r.ice_type;
@@ -370,20 +350,20 @@ export const PropertiesPanel: React.FC = () => {
   const selectedNodeId = selectedNodes[selectedNodes.length - 1] || null;
   const selectedNode: CardNode | undefined = useMemo(
     () => activeCard?.nodes.find((n) => n.id === selectedNodeId),
-    [activeCard, selectedNodeId]
+    [activeCard, selectedNodeId],
   );
 
   // Resolve active environment name
   const projectId = activeCard?.projectId || (selectedNode?.data?.projectId as string) || '';
-  const activeEnvId = useSelector((s: RootState) => projectId ? s.environments.activeEnvId[projectId] : undefined);
-  const activeEnvs = useSelector((s: RootState) => projectId ? s.environments.byProject[projectId] : undefined);
+  const activeEnvId = useSelector((s: RootState) => (projectId ? s.environments.activeEnvId[projectId] : undefined));
+  const activeEnvs = useSelector((s: RootState) => (projectId ? s.environments.byProject[projectId] : undefined));
   const activeEnvName = activeEnvs?.find((e: any) => e.id === activeEnvId)?.name || 'production';
 
   // Resolve selected edge
   const selectedEdgeId = selectedEdges[selectedEdges.length - 1] || null;
   const selectedEdge: CardEdge | undefined = useMemo(
     () => activeCard?.edges.find((e) => e.id === selectedEdgeId),
-    [activeCard, selectedEdgeId]
+    [activeCard, selectedEdgeId],
   );
 
   // Handlers for node data
@@ -392,7 +372,7 @@ export const PropertiesPanel: React.FC = () => {
       if (!selectedNodeId) return;
       dispatch(updateCardNodeData({ nodeId: selectedNodeId, data: { [field]: value } }));
     },
-    [dispatch, selectedNodeId]
+    [dispatch, selectedNodeId],
   );
 
   // Handlers for edge data
@@ -401,15 +381,13 @@ export const PropertiesPanel: React.FC = () => {
       if (!selectedEdgeId) return;
       dispatch(updateCardEdgeData({ edgeId: selectedEdgeId, data: { [field]: value } }));
     },
-    [dispatch, selectedEdgeId]
+    [dispatch, selectedEdgeId],
   );
 
   // Source tab state — "repo" or "image" (must be before any early returns for Rules of Hooks)
   const nodeRepo = (selectedNode?.data?.repository as string) || '';
   const nodeImage = (selectedNode?.data?.image as string) || '';
-  const [sourceTab, setSourceTab] = useState<'repo' | 'image'>(
-    nodeImage && !nodeRepo ? 'image' : 'repo'
-  );
+  const [sourceTab, setSourceTab] = useState<'repo' | 'image'>(nodeImage && !nodeRepo ? 'image' : 'repo');
 
   // Sync tab when switching nodes
   useEffect(() => {
@@ -441,10 +419,18 @@ export const PropertiesPanel: React.FC = () => {
     const edgeWarnings: Array<{ level: string; message: string; suggestion?: string }> = [];
     // Inline lightweight checks (avoiding importing from canvas utils in properties)
     if (/StaticSite|SSRSite|Frontend/i.test(srcIceType) && /Database|PostgreSQL|MySQL|MongoDB/i.test(tgtIceType)) {
-      edgeWarnings.push({ level: 'warning', message: 'Direct database access from frontend is a security risk', suggestion: 'Add a Backend service between them' });
+      edgeWarnings.push({
+        level: 'warning',
+        message: 'Direct database access from frontend is a security risk',
+        suggestion: 'Add a Backend service between them',
+      });
     }
     if (/StaticSite|SSRSite|Frontend/i.test(srcIceType) && /Queue|SQS|SNS|PubSub|RabbitMQ/i.test(tgtIceType)) {
-      edgeWarnings.push({ level: 'warning', message: 'Clients should not publish to queues directly', suggestion: 'Route through a Backend API' });
+      edgeWarnings.push({
+        level: 'warning',
+        message: 'Clients should not publish to queues directly',
+        suggestion: 'Route through a Backend API',
+      });
     }
 
     return (
@@ -452,9 +438,7 @@ export const PropertiesPanel: React.FC = () => {
         {/* Header */}
         <div className="px-3 py-3 border-b border-ice-border">
           <div className="flex items-center justify-between">
-            <div className="text-ice-xs uppercase tracking-wider text-ice-text-3 mb-1">
-              Connection
-            </div>
+            <div className="text-ice-xs uppercase tracking-wider text-ice-text-3 mb-1">Connection</div>
             <CloseButton onClick={() => dispatch(toggleProperties())} />
           </div>
           <div className="text-ice-base text-ice-text-1 font-medium truncate">
@@ -468,9 +452,7 @@ export const PropertiesPanel: React.FC = () => {
             {edgeWarnings.map((w, i) => (
               <div key={i} className="rounded border border-amber-500/30 bg-amber-500/5 px-2.5 py-2">
                 <div className="text-ice-xs text-amber-400 font-medium">{w.message}</div>
-                {w.suggestion && (
-                  <div className="text-ice-2xs text-ice-text-3 mt-0.5">{w.suggestion}</div>
-                )}
+                {w.suggestion && <div className="text-ice-2xs text-ice-text-3 mt-0.5">{w.suggestion}</div>}
               </div>
             ))}
           </div>
@@ -491,7 +473,8 @@ export const PropertiesPanel: React.FC = () => {
               </div>
               {((edgeData.connectionCategory as string) || (edgeData.relationship as string)) && (
                 <span className="text-[9px] text-ice-text-3 font-mono">
-                  {(edgeData.connectionCategory as string) || ((edgeData.relationship as string) || '').replace('_', ' ')}
+                  {(edgeData.connectionCategory as string) ||
+                    ((edgeData.relationship as string) || '').replace('_', ' ')}
                 </span>
               )}
             </div>
@@ -511,9 +494,8 @@ export const PropertiesPanel: React.FC = () => {
             const sourceId = selectedEdge.source;
             const envNode = activeCard.nodes.find((n) => {
               if ((n.data?.iceType as string) !== 'Config.EnvVars') return false;
-              return activeCard.edges.some((e) =>
-                (e.source === sourceId && e.target === n.id) ||
-                (e.target === sourceId && e.source === n.id)
+              return activeCard.edges.some(
+                (e) => (e.source === sourceId && e.target === n.id) || (e.target === sourceId && e.source === n.id),
               );
             });
             const vars = (envNode?.data?.variables as Array<{ name: string; value: string }>) || [];
@@ -539,9 +521,13 @@ export const PropertiesPanel: React.FC = () => {
                       }}
                       className="flex-1 min-w-0 px-1.5 py-1.5 text-ice-sm rounded-l border border-ice-border bg-ice-base text-amber-400 font-mono focus:outline-none focus:ring-1 focus:ring-blue-500"
                     >
-                      <option value="" className="text-ice-text-1">custom</option>
+                      <option value="" className="text-ice-text-1">
+                        custom
+                      </option>
                       {vars.map((v) => (
-                        <option key={v.name} value={v.name}>{v.name}</option>
+                        <option key={v.name} value={v.name}>
+                          {v.name}
+                        </option>
                       ))}
                     </select>
                     <span className="text-ice-text-3 text-ice-sm">=</span>
@@ -608,10 +594,8 @@ export const PropertiesPanel: React.FC = () => {
     // Scaling data
     const behavior = (selectedNode.data?.behavior as string) || '';
     const isScalable = behavior === 'scalable';
-    const minInstances =
-      selectedNode.data?.minInstances != null ? Number(selectedNode.data.minInstances) : null;
-    const maxInstances =
-      selectedNode.data?.maxInstances != null ? Number(selectedNode.data.maxInstances) : null;
+    const minInstances = selectedNode.data?.minInstances != null ? Number(selectedNode.data.minInstances) : null;
+    const maxInstances = selectedNode.data?.maxInstances != null ? Number(selectedNode.data.maxInstances) : null;
     const activeInstances =
       selectedNode.data?.activeInstances != null ? Number(selectedNode.data.activeInstances) : null;
     const scalingMetric = (selectedNode.data?.scalingMetric as string) || '';
@@ -620,9 +604,7 @@ export const PropertiesPanel: React.FC = () => {
 
     // Get icon
     const brandIcon =
-      getBrandIcon((selectedNode.data?.runtime as string) || '') ||
-      getBrandIcon(iceType) ||
-      getBrandIcon(label);
+      getBrandIcon((selectedNode.data?.runtime as string) || '') || getBrandIcon(iceType) || getBrandIcon(label);
     const providerIcon = getIcon(iceType, (provider?.toLowerCase() || 'aws') as Provider);
     const iconUrl = brandIcon?.url || providerIcon?.icon || DEFAULT_ICON;
 
@@ -645,7 +627,9 @@ export const PropertiesPanel: React.FC = () => {
                 const v = e.target.value.trim();
                 if (v && v !== label) updateNodeField('label', v);
               }}
-              onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+              }}
               className="flex-1 bg-transparent border-none text-ice-md text-ice-text-1 font-semibold outline-none focus:bg-ice-raised rounded px-1 -ml-1 transition-colors"
             />
             <CloseButton onClick={() => dispatch(toggleProperties())} />
@@ -672,7 +656,9 @@ export const PropertiesPanel: React.FC = () => {
         {/* ── Navigation Tabs ── */}
         {(() => {
           const hasDeployment = !!selectedNode.data?.provider_id;
-          const hasSource = (iceType.startsWith('Application.') || iceType === 'Network.Gateway' || iceType.startsWith('Block.')) && iceType !== 'Source.Repository';
+          const hasSource =
+            (iceType.startsWith('Application.') || iceType === 'Network.Gateway' || iceType.startsWith('Block.')) &&
+            iceType !== 'Source.Repository';
           const activeTab = propsTab;
 
           // Tabs are derived from the node's actual content — not hardcoded
@@ -716,7 +702,7 @@ export const PropertiesPanel: React.FC = () => {
                           ? tab.id === 'deploy'
                             ? 'text-ice-text-1 border-b-2 border-emerald-500'
                             : 'text-ice-text-1 border-b-2 border-ice-accent'
-                          : 'text-ice-text-3 hover:text-ice-text-2'
+                          : 'text-ice-text-3 hover:text-ice-text-2',
                       )}
                     >
                       {tab.dot && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}
@@ -738,7 +724,12 @@ export const PropertiesPanel: React.FC = () => {
                       {selectedNode.data?.url && (
                         <div>
                           <div className="text-ice-2xs text-ice-text-3 mb-0.5">URL</div>
-                          <a href={selectedNode.data.url as string} target="_blank" rel="noopener noreferrer" className="text-ice-xs text-blue-400 hover:underline break-all">
+                          <a
+                            href={selectedNode.data.url as string}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-ice-xs text-blue-400 hover:underline break-all"
+                          >
                             {selectedNode.data.url as string}
                           </a>
                         </div>
@@ -746,12 +737,16 @@ export const PropertiesPanel: React.FC = () => {
                       {selectedNode.data?.deployed_image && (
                         <div>
                           <div className="text-ice-2xs text-ice-text-3 mb-0.5">Image</div>
-                          <div className="text-ice-xs text-ice-text-2 font-mono break-all">{selectedNode.data.deployed_image as string}</div>
+                          <div className="text-ice-xs text-ice-text-2 font-mono break-all">
+                            {selectedNode.data.deployed_image as string}
+                          </div>
                         </div>
                       )}
                       <div>
                         <div className="text-ice-2xs text-ice-text-3 mb-0.5">Resource ID</div>
-                        <div className="text-ice-xs text-ice-text-2 font-mono break-all">{selectedNode.data.provider_id as string}</div>
+                        <div className="text-ice-xs text-ice-text-2 font-mono break-all">
+                          {selectedNode.data.provider_id as string}
+                        </div>
                       </div>
                       {selectedNode.data?.region && (
                         <div>
@@ -815,15 +810,38 @@ export const PropertiesPanel: React.FC = () => {
                       <span className="text-ice-sm text-ice-text-2 shrink-0">Active</span>
                       <div className="flex items-center gap-1.5">
                         <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                        <span className="text-ice-base text-emerald-400 font-mono font-semibold">{activeInstances} running</span>
+                        <span className="text-ice-base text-emerald-400 font-mono font-semibold">
+                          {activeInstances} running
+                        </span>
                       </div>
                     </div>
                   )}
-                  <StepperField label="Min instances" value={minInstances ?? 1} min={0} max={maxInstances ?? 99} onChange={(v) => updateNodeField('minInstances', v)} />
-                  <StepperField label="Max instances" value={maxInstances ?? 3} min={minInstances ?? 0} max={99} onChange={(v) => updateNodeField('maxInstances', v)} />
-                  <SelectField label="Scale on" value={scalingMetric} options={['cpu', 'memory', 'requests', 'queue_depth', 'custom']} onChange={(v) => updateNodeField('scalingMetric', v)} />
+                  <StepperField
+                    label="Min instances"
+                    value={minInstances ?? 1}
+                    min={0}
+                    max={maxInstances ?? 99}
+                    onChange={(v) => updateNodeField('minInstances', v)}
+                  />
+                  <StepperField
+                    label="Max instances"
+                    value={maxInstances ?? 3}
+                    min={minInstances ?? 0}
+                    max={99}
+                    onChange={(v) => updateNodeField('maxInstances', v)}
+                  />
+                  <SelectField
+                    label="Scale on"
+                    value={scalingMetric}
+                    options={['cpu', 'memory', 'requests', 'queue_depth', 'custom']}
+                    onChange={(v) => updateNodeField('scalingMetric', v)}
+                  />
                   {scalingMetric && scalingMetric !== 'custom' && (
-                    <NumberField label="Threshold (%)" value={scalingThreshold} onChange={(v) => updateNodeField('scalingThreshold', v)} />
+                    <NumberField
+                      label="Threshold (%)"
+                      value={scalingThreshold}
+                      onChange={(v) => updateNodeField('scalingThreshold', v)}
+                    />
                   )}
                 </Section>
               )}
@@ -832,10 +850,30 @@ export const PropertiesPanel: React.FC = () => {
               {activeTab === 'domain' && iceType === 'Networking.Domain' && (
                 <Section title="">
                   <div className="space-y-2">
-                    <TextField label="Hostname" value={(selectedNode?.data?.hostname as string) || ''} placeholder="app.example.com" onChange={(v) => updateNodeField('hostname', v)} />
-                    <TextField label="Subdomain" value={(selectedNode?.data?.subdomain as string) || ''} placeholder="www" onChange={(v) => updateNodeField('subdomain', v)} />
-                    <SelectField label="SSL Mode" value={(selectedNode?.data?.sslMode as string) || 'auto'} options={['auto', 'manual', 'none']} onChange={(v) => updateNodeField('sslMode', v)} />
-                    <TextField label="DNS Provider" value={(selectedNode?.data?.dnsProvider as string) || ''} placeholder="cloudflare, route53..." onChange={(v) => updateNodeField('dnsProvider', v)} />
+                    <TextField
+                      label="Hostname"
+                      value={(selectedNode?.data?.hostname as string) || ''}
+                      placeholder="app.example.com"
+                      onChange={(v) => updateNodeField('hostname', v)}
+                    />
+                    <TextField
+                      label="Subdomain"
+                      value={(selectedNode?.data?.subdomain as string) || ''}
+                      placeholder="www"
+                      onChange={(v) => updateNodeField('subdomain', v)}
+                    />
+                    <SelectField
+                      label="SSL Mode"
+                      value={(selectedNode?.data?.sslMode as string) || 'auto'}
+                      options={['auto', 'manual', 'none']}
+                      onChange={(v) => updateNodeField('sslMode', v)}
+                    />
+                    <TextField
+                      label="DNS Provider"
+                      value={(selectedNode?.data?.dnsProvider as string) || ''}
+                      placeholder="cloudflare, route53..."
+                      onChange={(v) => updateNodeField('dnsProvider', v)}
+                    />
                   </div>
                 </Section>
               )}
@@ -845,7 +883,14 @@ export const PropertiesPanel: React.FC = () => {
                 <Section title="">
                   <div className="space-y-2">
                     {[...incomingEdges, ...outgoingEdges].map((edge) => (
-                      <InlineConnectionEditor key={edge.id} edge={edge} thisNodeId={selectedNode!.id} nodes={activeCard.nodes} edges={activeCard.edges} dispatch={dispatch} />
+                      <InlineConnectionEditor
+                        key={edge.id}
+                        edge={edge}
+                        thisNodeId={selectedNode!.id}
+                        nodes={activeCard.nodes}
+                        edges={activeCard.edges}
+                        dispatch={dispatch}
+                      />
                     ))}
                   </div>
                 </Section>
@@ -860,15 +905,44 @@ export const PropertiesPanel: React.FC = () => {
                       {dbProperties.map((prop) => {
                         const value = selectedNode.data?.[prop.name];
                         if (prop.type === 'select' && prop.options) {
-                          return <SelectField key={prop.name} label={prop.label} value={value != null ? String(value) : ''} options={prop.options} onChange={(v) => updateNodeField(prop.name, v)} />;
+                          return (
+                            <SelectField
+                              key={prop.name}
+                              label={prop.label}
+                              value={value != null ? String(value) : ''}
+                              options={prop.options}
+                              onChange={(v) => updateNodeField(prop.name, v)}
+                            />
+                          );
                         }
                         if (prop.type === 'boolean') {
-                          return <BooleanField key={prop.name} label={prop.label} value={!!value} onChange={(v) => updateNodeField(prop.name, v)} />;
+                          return (
+                            <BooleanField
+                              key={prop.name}
+                              label={prop.label}
+                              value={!!value}
+                              onChange={(v) => updateNodeField(prop.name, v)}
+                            />
+                          );
                         }
                         if (prop.type === 'number') {
-                          return <NumberField key={prop.name} label={prop.label} value={value != null ? Number(value) : prop.default != null ? Number(prop.default) : ''} onChange={(v) => updateNodeField(prop.name, v)} />;
+                          return (
+                            <NumberField
+                              key={prop.name}
+                              label={prop.label}
+                              value={value != null ? Number(value) : prop.default != null ? Number(prop.default) : ''}
+                              onChange={(v) => updateNodeField(prop.name, v)}
+                            />
+                          );
                         }
-                        return <TextField key={prop.name} label={prop.label} value={value != null ? String(value) : ''} onChange={(v) => updateNodeField(prop.name, v)} />;
+                        return (
+                          <TextField
+                            key={prop.name}
+                            label={prop.label}
+                            value={value != null ? String(value) : ''}
+                            onChange={(v) => updateNodeField(prop.name, v)}
+                          />
+                        );
                       })}
                     </Section>
                   )}
@@ -908,22 +982,33 @@ export const PropertiesPanel: React.FC = () => {
                   {/* Environment Variables */}
                   {iceType === 'Config.EnvVars' && (
                     <EnvVarsEditor
-                      variables={(selectedNode?.data?.variables as Array<{ name: string; value: string; isSecret?: boolean }>) || []}
+                      variables={
+                        (selectedNode?.data?.variables as Array<{ name: string; value: string; isSecret?: boolean }>) ||
+                        []
+                      }
                       onChange={(vars) => updateNodeField('variables', vars)}
                     />
                   )}
-
 
                   {/* IaC Mapping */}
                   {implementations.length > 0 && (
                     <Section title="IaC Mapping">
                       <div className="space-y-0.5">
-                        {implementations.filter((impl) => !provider || impl.provider === provider).map((impl) => (
-                          <div key={`${impl.provider}-${impl.resource_type}`} className="flex items-center gap-1.5 py-0.5">
-                            <span className="text-ice-2xs bg-violet-950/40 text-violet-400 px-1 py-0.5 rounded font-mono uppercase">{impl.provider}</span>
-                            <span className="text-ice-xs text-ice-text-3 font-mono truncate">{impl.resource_type}</span>
-                          </div>
-                        ))}
+                        {implementations
+                          .filter((impl) => !provider || impl.provider === provider)
+                          .map((impl) => (
+                            <div
+                              key={`${impl.provider}-${impl.resource_type}`}
+                              className="flex items-center gap-1.5 py-0.5"
+                            >
+                              <span className="text-ice-2xs bg-violet-950/40 text-violet-400 px-1 py-0.5 rounded font-mono uppercase">
+                                {impl.provider}
+                              </span>
+                              <span className="text-ice-xs text-ice-text-3 font-mono truncate">
+                                {impl.resource_type}
+                              </span>
+                            </div>
+                          ))}
                       </div>
                     </Section>
                   )}
@@ -964,9 +1049,7 @@ export const PropertiesPanel: React.FC = () => {
           <div className="text-ice-xs uppercase tracking-wider text-ice-text-3 mb-1">Properties</div>
           <CloseButton onClick={() => dispatch(toggleProperties())} />
         </div>
-        <div className="text-ice-md text-ice-text-1 font-semibold">
-          {activeCard?.name || 'No Card'}
-        </div>
+        <div className="text-ice-md text-ice-text-1 font-semibold">{activeCard?.name || 'No Card'}</div>
       </div>
 
       <Section title="Overview">
@@ -987,24 +1070,26 @@ export const PropertiesPanel: React.FC = () => {
       </Section>
 
       {/* Canvas pattern suggestions */}
-      {activeCard && activeCard.nodes.length > 0 && (() => {
-        const hints = analyzeCanvasPatterns(
-          activeCard.nodes as Array<{ id: string; data?: Record<string, unknown> }>,
-          activeCard.edges.map((e) => ({ source: e.source, target: e.target })),
-        );
-        if (hints.length === 0) return null;
-        return (
-          <Section title="Suggestions">
-            <div className="space-y-1.5">
-              {hints.map((h, i) => (
-                <div key={i} className="rounded border border-blue-500/20 bg-blue-500/5 px-2.5 py-2">
-                  <div className="text-ice-xs text-blue-400">{h.message}</div>
-                </div>
-              ))}
-            </div>
-          </Section>
-        );
-      })()}
+      {activeCard &&
+        activeCard.nodes.length > 0 &&
+        (() => {
+          const hints = analyzeCanvasPatterns(
+            activeCard.nodes as Array<{ id: string; data?: Record<string, unknown> }>,
+            activeCard.edges.map((e) => ({ source: e.source, target: e.target })),
+          );
+          if (hints.length === 0) return null;
+          return (
+            <Section title="Suggestions">
+              <div className="space-y-1.5">
+                {hints.map((h, i) => (
+                  <div key={i} className="rounded border border-blue-500/20 bg-blue-500/5 px-2.5 py-2">
+                    <div className="text-ice-xs text-blue-400">{h.message}</div>
+                  </div>
+                ))}
+              </div>
+            </Section>
+          );
+        })()}
 
       {activeCard && activeCard.nodes.length === 0 && (
         <div className="flex-1 flex items-center justify-center px-6">
@@ -1056,9 +1141,7 @@ const PipelineSection: React.FC<{
     }
   }
 
-  const branches = useSelector((s: RootState) =>
-    repository ? s.integrations.github.branches[repository] || [] : []
-  );
+  const branches = useSelector((s: RootState) => (repository ? s.integrations.github.branches[repository] || [] : []));
 
   // Fetch rules + branches on mount
   useEffect(() => {
@@ -1076,14 +1159,21 @@ const PipelineSection: React.FC<{
     if (!repository || !rulesLoaded || autoCreated || rules.length > 0) return;
     setAutoCreated(true);
     const defaultBranch = branches.find((b) => b.name === 'main')
-      ? 'main' : branches.find((b) => b.name === 'master')
-        ? 'master' : branches[0]?.name || 'main';
+      ? 'main'
+      : branches.find((b) => b.name === 'master')
+        ? 'master'
+        : branches[0]?.name || 'main';
 
-    dispatch(createPipelineRule({
-      cardId, nodeId, repository,
-      branchPattern: defaultBranch,
-      environment: 'production',
-    })).then(() => dispatch(fetchRulesForNode({ cardId, nodeId })))
+    dispatch(
+      createPipelineRule({
+        cardId,
+        nodeId,
+        repository,
+        branchPattern: defaultBranch,
+        environment: 'production',
+      }),
+    )
+      .then(() => dispatch(fetchRulesForNode({ cardId, nodeId })))
       .catch((err: any) => console.error('[Pipeline] Auto-create failed:', err));
   }, [repository, rulesLoaded, rules.length, autoCreated, branches]);
 
@@ -1094,21 +1184,33 @@ const PipelineSection: React.FC<{
     const usedBranches = new Set(rules.map((r) => r.branch_pattern));
     const unused = branches.find((b) => !usedBranches.has(b.name));
     const branchName = unused?.name || 'develop';
-    const env = branchName === 'main' || branchName === 'master' ? 'production'
-      : branchName.includes('stag') ? 'staging' : 'development';
+    const env =
+      branchName === 'main' || branchName === 'master'
+        ? 'production'
+        : branchName.includes('stag')
+          ? 'staging'
+          : 'development';
 
-    dispatch(createPipelineRule({
-      cardId, nodeId, repository, branchPattern: branchName, environment: env,
-    })).then(() => dispatch(fetchRulesForNode({ cardId, nodeId })));
+    dispatch(
+      createPipelineRule({
+        cardId,
+        nodeId,
+        repository,
+        branchPattern: branchName,
+        environment: env,
+      }),
+    ).then(() => dispatch(fetchRulesForNode({ cardId, nodeId })));
   };
 
   const handleRetry = (eventId: string) => {
     import('../../../store/slices/pipeline-slice').then(({ default: _, ...mod }) => {
       // retryDeploy is on the API adapter, not a thunk — call it directly
       import('../../../shared/api/api-adapter').then(({ getApi }) => {
-        getApi().pipeline.retryDeploy(eventId).then(() => {
-          dispatch(fetchEventsForNode({ cardId, nodeId }));
-        });
+        getApi()
+          .pipeline.retryDeploy(eventId)
+          .then(() => {
+            dispatch(fetchEventsForNode({ cardId, nodeId }));
+          });
       });
     });
   };
@@ -1145,7 +1247,9 @@ const PipelineSection: React.FC<{
                 onClick={() => dispatch(updatePipelineRule({ ruleId: rule.id, updates: { enabled: !rule.enabled } }))}
                 className={`w-6 h-3.5 rounded-full relative shrink-0 transition-colors ${rule.enabled ? 'bg-emerald-500' : 'bg-ice-border'}`}
               >
-                <div className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-transform ${rule.enabled ? 'left-3' : 'left-0.5'}`} />
+                <div
+                  className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-transform ${rule.enabled ? 'left-3' : 'left-0.5'}`}
+                />
               </button>
 
               <span className="text-ice-text-3">push</span>
@@ -1153,13 +1257,17 @@ const PipelineSection: React.FC<{
               {/* Branch */}
               <select
                 value={rule.branch_pattern}
-                onChange={(e) => dispatch(updatePipelineRule({ ruleId: rule.id, updates: { branchPattern: e.target.value } }))}
+                onChange={(e) =>
+                  dispatch(updatePipelineRule({ ruleId: rule.id, updates: { branchPattern: e.target.value } }))
+                }
                 className="px-1 py-0.5 text-ice-xs rounded border border-ice-border bg-ice-base text-ice-text-1 font-mono max-w-[80px]"
               >
                 {branches.length > 0 ? (
                   <>
                     {branches.map((b) => (
-                      <option key={b.name} value={b.name}>{b.name}</option>
+                      <option key={b.name} value={b.name}>
+                        {b.name}
+                      </option>
                     ))}
                     <option value="*">*</option>
                   </>
@@ -1176,7 +1284,9 @@ const PipelineSection: React.FC<{
               {/* Environment */}
               <select
                 value={rule.environment}
-                onChange={(e) => dispatch(updatePipelineRule({ ruleId: rule.id, updates: { environment: e.target.value } }))}
+                onChange={(e) =>
+                  dispatch(updatePipelineRule({ ruleId: rule.id, updates: { environment: e.target.value } }))
+                }
                 className="px-1 py-0.5 text-ice-xs rounded border border-ice-border bg-ice-base text-ice-text-1 max-w-[85px]"
               >
                 <option value="production">production</option>
@@ -1186,7 +1296,9 @@ const PipelineSection: React.FC<{
 
               {/* Delete */}
               <button
-                onClick={() => dispatch(deletePipelineRule({ ruleId: rule.id, cardId: rule.card_id, nodeId: rule.node_id }))}
+                onClick={() =>
+                  dispatch(deletePipelineRule({ ruleId: rule.id, cardId: rule.card_id, nodeId: rule.node_id }))
+                }
                 className="ml-auto text-ice-text-3 hover:text-red-400 transition-colors"
                 title="Remove trigger"
               >
@@ -1196,10 +1308,7 @@ const PipelineSection: React.FC<{
           ))}
 
           {/* Add trigger */}
-          <button
-            onClick={handleAddRule}
-            className="text-ice-xs text-ice-text-3 hover:text-blue-400 transition-colors"
-          >
+          <button onClick={handleAddRule} className="text-ice-xs text-ice-text-3 hover:text-blue-400 transition-colors">
             + Add trigger
           </button>
         </div>
@@ -1218,55 +1327,72 @@ const PipelineSection: React.FC<{
                   className="flex items-center gap-1.5 text-ice-xs px-2 py-1.5 cursor-pointer hover:bg-ice-hover transition-colors"
                   onClick={() => setExpandedEventId(isExpanded ? null : ev.id)}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                    ev.status === 'success' ? 'bg-emerald-500' :
-                    ev.status === 'failed' ? 'bg-red-500' :
-                    ev.status === 'building' || ev.status === 'deploying' ? 'bg-blue-500 animate-pulse' :
-                    ev.status === 'cancelled' ? 'bg-ice-text-3' :
-                    'bg-ice-text-3'
-                  }`} />
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                      ev.status === 'success'
+                        ? 'bg-emerald-500'
+                        : ev.status === 'failed'
+                          ? 'bg-red-500'
+                          : ev.status === 'building' || ev.status === 'deploying'
+                            ? 'bg-blue-500 animate-pulse'
+                            : ev.status === 'cancelled'
+                              ? 'bg-ice-text-3'
+                              : 'bg-ice-text-3'
+                    }`}
+                  />
                   <span className="font-mono text-ice-text-2">{ev.commit_sha?.slice(0, 7)}</span>
                   <span className="text-ice-text-3 truncate flex-1">{ev.commit_message}</span>
                   <span className="text-ice-text-3 shrink-0">{formatAge(ev.started_at)}</span>
-                  <span className={`shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
-                    &#9662;
-                  </span>
+                  <span className={`shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''}`}>&#9662;</span>
                 </div>
 
                 {/* Expanded log viewer */}
                 {isExpanded && (
                   <div className="border-t border-ice-border bg-slate-950 px-2 py-1.5 space-y-0.5 max-h-28 overflow-y-auto">
-                    {logs.length > 0 ? logs.map((log, i) => (
-                      <div key={i} className="flex items-center gap-1 text-[10px] font-mono">
-                        <span className={`shrink-0 ${
-                          log.status === 'completed' ? 'text-emerald-500' :
-                          log.status === 'failed' ? 'text-red-400' :
-                          'text-blue-400'
-                        }`}>
-                          {log.status === 'completed' ? '\u2713' : log.status === 'failed' ? '\u2717' : '\u25CF'}
-                        </span>
-                        <span className={log.status === 'failed' ? 'text-red-400' : 'text-slate-300'}>
-                          {log.message}
-                        </span>
-                        {log.duration_ms != null && (
-                          <span className="ml-auto text-slate-500">{(log.duration_ms / 1000).toFixed(1)}s</span>
-                        )}
-                      </div>
-                    )) : (
+                    {logs.length > 0 ? (
+                      logs.map((log, i) => (
+                        <div key={i} className="flex items-center gap-1 text-[10px] font-mono">
+                          <span
+                            className={`shrink-0 ${
+                              log.status === 'completed'
+                                ? 'text-emerald-500'
+                                : log.status === 'failed'
+                                  ? 'text-red-400'
+                                  : 'text-blue-400'
+                            }`}
+                          >
+                            {log.status === 'completed' ? '\u2713' : log.status === 'failed' ? '\u2717' : '\u25CF'}
+                          </span>
+                          <span className={log.status === 'failed' ? 'text-red-400' : 'text-slate-300'}>
+                            {log.message}
+                          </span>
+                          {log.duration_ms != null && (
+                            <span className="ml-auto text-slate-500">{(log.duration_ms / 1000).toFixed(1)}s</span>
+                          )}
+                        </div>
+                      ))
+                    ) : (
                       <div className="text-[10px] font-mono text-slate-500">No logs recorded</div>
                     )}
                     {ev.error && (
-                      <div className="text-[10px] font-mono text-red-400 pt-1 border-t border-slate-800">{ev.error}</div>
+                      <div className="text-[10px] font-mono text-red-400 pt-1 border-t border-slate-800">
+                        {ev.error}
+                      </div>
                     )}
                     {ev.duration_seconds != null && (
                       <div className="text-[10px] font-mono text-slate-500 pt-0.5">
-                        {ev.duration_seconds < 60 ? `${ev.duration_seconds}s` : `${Math.floor(ev.duration_seconds / 60)}m ${ev.duration_seconds % 60}s`}
+                        {ev.duration_seconds < 60
+                          ? `${ev.duration_seconds}s`
+                          : `${Math.floor(ev.duration_seconds / 60)}m ${ev.duration_seconds % 60}s`}
                       </div>
                     )}
                     {/* Retry button for failed deploys */}
                     {ev.status === 'failed' && (
                       <button
-                        onClick={(e) => { e.stopPropagation(); handleRetry(ev.id); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRetry(ev.id);
+                        }}
                         className="mt-1 px-2 py-0.5 text-[10px] font-medium rounded bg-amber-600 text-white hover:bg-amber-700 transition-colors"
                       >
                         Retry
@@ -1318,9 +1444,7 @@ const ServiceSourceSection: React.FC<{
           <div className="flex items-center justify-between">
             <span className="text-ice-sm font-mono text-ice-text-1">{linkedRepo}</span>
           </div>
-          {linkedBranch && (
-            <div className="text-ice-xs text-ice-text-3 font-mono">&rarr; {linkedBranch}</div>
-          )}
+          {linkedBranch && <div className="text-ice-xs text-ice-text-3 font-mono">&rarr; {linkedBranch}</div>}
           {sourceBlockName && (
             <div className="text-ice-xs text-ice-text-3">
               Managed by <span className="text-ice-text-2 font-medium">{sourceBlockName}</span> block
@@ -1336,7 +1460,8 @@ const ServiceSourceSection: React.FC<{
       <div className="rounded border border-dashed border-ice-border px-2.5 py-3 text-center space-y-1.5">
         <div className="text-ice-sm text-ice-text-3">No source connected</div>
         <div className="text-ice-xs text-ice-text-3 leading-relaxed">
-          Add a <span className="text-ice-text-2 font-medium">GitHub Repo</span> block from the palette and connect it to this service to enable CI/CD.
+          Add a <span className="text-ice-text-2 font-medium">GitHub Repo</span> block from the palette and connect it
+          to this service to enable CI/CD.
         </div>
       </div>
     </Section>
@@ -1354,11 +1479,18 @@ const SourceRepositorySection: React.FC<{
   sourceNodeId: string;
   activeCard: any;
   activeEnvName: string;
-}> = ({ nodeRepo, nodeBranch, buildCommand, outputDirectory, onUpdateField, sourceNodeId, activeCard, activeEnvName }) => {
+}> = ({
+  nodeRepo,
+  nodeBranch,
+  buildCommand,
+  outputDirectory,
+  onUpdateField,
+  sourceNodeId,
+  activeCard,
+  activeEnvName,
+}) => {
   const dispatch = useDispatch<AppDispatch>();
-  const branches = useSelector((s: RootState) =>
-    nodeRepo ? s.integrations.github.branches[nodeRepo] || [] : []
-  );
+  const branches = useSelector((s: RootState) => (nodeRepo ? s.integrations.github.branches[nodeRepo] || [] : []));
   const pipelineNodeStatus = useSelector((s: RootState) => s.pipeline.nodeStatus);
 
   // Find connected service nodes (deploy targets)
@@ -1424,7 +1556,7 @@ const SourceRepositorySection: React.FC<{
 
   // Check if rules have loaded for at least one service
   const anyRulesLoaded = useSelector((s: RootState) =>
-    connectedServices.some((svc) => `${cardId}:${svc.id}` in s.pipeline.rules)
+    connectedServices.some((svc) => `${cardId}:${svc.id}` in s.pipeline.rules),
   );
 
   // Auto-create default rule for first connected service if none exist
@@ -1433,17 +1565,25 @@ const SourceRepositorySection: React.FC<{
     if (!nodeRepo || !anyRulesLoaded || autoCreated || allRules.length > 0 || connectedServices.length === 0) return;
     setAutoCreated(true);
     const defaultBranch = branches.find((b) => b.name === 'main')
-      ? 'main' : branches.find((b) => b.name === 'master')
-        ? 'master' : branches[0]?.name || 'main';
+      ? 'main'
+      : branches.find((b) => b.name === 'master')
+        ? 'master'
+        : branches[0]?.name || 'main';
     const targetService = connectedServices[0];
 
-    dispatch(createPipelineRule({
-      cardId, nodeId: targetService.id, repository: nodeRepo,
-      branchPattern: defaultBranch, environment: activeEnvName,
-      buildCommand: buildCommand || undefined,
-      installCommand: undefined,
-      outputDir: outputDirectory || undefined,
-    })).then(() => dispatch(fetchRulesForNode({ cardId, nodeId: targetService.id })))
+    dispatch(
+      createPipelineRule({
+        cardId,
+        nodeId: targetService.id,
+        repository: nodeRepo,
+        branchPattern: defaultBranch,
+        environment: activeEnvName,
+        buildCommand: buildCommand || undefined,
+        installCommand: undefined,
+        outputDir: outputDirectory || undefined,
+      }),
+    )
+      .then(() => dispatch(fetchRulesForNode({ cardId, nodeId: targetService.id })))
       .catch((err: any) => console.error('[Pipeline] Auto-create failed:', err));
   }, [nodeRepo, anyRulesLoaded, allRules.length, autoCreated, branches, connectedServices.length]);
 
@@ -1454,12 +1594,17 @@ const SourceRepositorySection: React.FC<{
     const unused = branches.find((b) => !usedBranches.has(b.name));
     const branchName = unused?.name || 'main';
 
-    dispatch(createPipelineRule({
-      cardId, nodeId: serviceId, repository: nodeRepo,
-      branchPattern: branchName, environment: activeEnvName,
-      buildCommand: buildCommand || undefined,
-      outputDir: outputDirectory || undefined,
-    })).then(() => dispatch(fetchRulesForNode({ cardId, nodeId: serviceId })));
+    dispatch(
+      createPipelineRule({
+        cardId,
+        nodeId: serviceId,
+        repository: nodeRepo,
+        branchPattern: branchName,
+        environment: activeEnvName,
+        buildCommand: buildCommand || undefined,
+        outputDir: outputDirectory || undefined,
+      }),
+    ).then(() => dispatch(fetchRulesForNode({ cardId, nodeId: serviceId })));
   };
 
   return (
@@ -1489,7 +1634,8 @@ const SourceRepositorySection: React.FC<{
             {branches.length > 0 ? (
               branches.map((b) => (
                 <option key={b.name} value={b.name}>
-                  {b.name}{b.protected ? ' (protected)' : ''}
+                  {b.name}
+                  {b.protected ? ' (protected)' : ''}
                 </option>
               ))
             ) : (
@@ -1507,75 +1653,91 @@ const SourceRepositorySection: React.FC<{
       {nodeRepo && (
         <Section title="Build">
           <div className="space-y-2">
-            <TextField label="Build command" value={buildCommand} placeholder="npm run build"
-              onChange={(v) => onUpdateField('buildCommand', v)} />
-            <TextField label="Output directory" value={outputDirectory} placeholder="dist"
-              onChange={(v) => onUpdateField('outputDirectory', v)} />
+            <TextField
+              label="Build command"
+              value={buildCommand}
+              placeholder="npm run build"
+              onChange={(v) => onUpdateField('buildCommand', v)}
+            />
+            <TextField
+              label="Output directory"
+              value={outputDirectory}
+              placeholder="dist"
+              onChange={(v) => onUpdateField('outputDirectory', v)}
+            />
           </div>
         </Section>
       )}
 
       {/* Triggers — filtered to active environment only */}
-      {nodeRepo && connectedServices.length > 0 && (() => {
-        const envRules = allRules.filter((r) => r.environment === activeEnvName);
+      {nodeRepo &&
+        connectedServices.length > 0 &&
+        (() => {
+          const envRules = allRules.filter((r) => r.environment === activeEnvName);
 
-        return (
-          <Section title={`Triggers · ${activeEnvName}`}>
-            {envRules.length === 0 && autoCreated && (
-              <div className="text-ice-xs text-ice-text-3 py-1">Setting up pipeline...</div>
-            )}
+          return (
+            <Section title={`Triggers · ${activeEnvName}`}>
+              {envRules.length === 0 && autoCreated && (
+                <div className="text-ice-xs text-ice-text-3 py-1">Setting up pipeline...</div>
+              )}
 
-            {envRules.length === 0 && !autoCreated && (
-              <div className="text-ice-xs text-ice-text-3 py-1">No triggers for this environment</div>
-            )}
+              {envRules.length === 0 && !autoCreated && (
+                <div className="text-ice-xs text-ice-text-3 py-1">No triggers for this environment</div>
+              )}
 
-            {/* One row per connected service — toggle + trigger type + branch (read-only) + service name */}
-            {connectedServices.map((svc) => {
-              const svcRule = envRules.find((r) => r.node_id === svc.id);
-              return (
-                <div
-                  key={svc.id}
-                  className={`flex items-center gap-1.5 text-ice-xs rounded border px-2 py-1.5 ${
-                    svcRule?.enabled ? 'border-ice-border bg-ice-raised' : 'border-ice-border/50 opacity-50'
-                  }`}
-                >
-                  <span className={`text-ice-xs ${!svcRule?.enabled ? 'text-ice-text-1' : 'text-ice-text-3'}`}>manual</span>
-
-                  {/* Toggle */}
-                  <button
-                    onClick={() => {
-                      if (svcRule) {
-                        dispatch(updatePipelineRule({ ruleId: svcRule.id, updates: { enabled: !svcRule.enabled } }));
-                      } else {
-                        handleAddRule(svc.id);
-                      }
-                    }}
-                    className={`w-6 h-3.5 rounded-full relative shrink-0 transition-colors ${svcRule?.enabled ? 'bg-emerald-500' : 'bg-ice-border'}`}
+              {/* One row per connected service — toggle + trigger type + branch (read-only) + service name */}
+              {connectedServices.map((svc) => {
+                const svcRule = envRules.find((r) => r.node_id === svc.id);
+                return (
+                  <div
+                    key={svc.id}
+                    className={`flex items-center gap-1.5 text-ice-xs rounded border px-2 py-1.5 ${
+                      svcRule?.enabled ? 'border-ice-border bg-ice-raised' : 'border-ice-border/50 opacity-50'
+                    }`}
                   >
-                    <div className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-transform ${svcRule?.enabled ? 'left-3' : 'left-0.5'}`} />
-                  </button>
+                    <span className={`text-ice-xs ${!svcRule?.enabled ? 'text-ice-text-1' : 'text-ice-text-3'}`}>
+                      manual
+                    </span>
 
-                  <span className={`text-ice-xs ${svcRule?.enabled ? 'text-emerald-500' : 'text-ice-text-3'}`}>auto</span>
-
-                  {/* Deploy button — always visible for manual trigger */}
-                  {svcRule && !svcRule.enabled && (
+                    {/* Toggle */}
                     <button
                       onClick={() => {
-                        import('../../../store/slices/pipeline-slice').then(({ triggerManualDeploy }) => {
-                          dispatch(triggerManualDeploy({ ruleId: svcRule.id }));
-                        });
+                        if (svcRule) {
+                          dispatch(updatePipelineRule({ ruleId: svcRule.id, updates: { enabled: !svcRule.enabled } }));
+                        } else {
+                          handleAddRule(svc.id);
+                        }
                       }}
-                      className="ml-auto px-2 py-0.5 text-ice-xs rounded bg-emerald-600 text-white hover:bg-emerald-700 transition-colors font-medium"
+                      className={`w-6 h-3.5 rounded-full relative shrink-0 transition-colors ${svcRule?.enabled ? 'bg-emerald-500' : 'bg-ice-border'}`}
                     >
-                      Deploy
+                      <div
+                        className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-transform ${svcRule?.enabled ? 'left-3' : 'left-0.5'}`}
+                      />
                     </button>
-                  )}
-                </div>
-              );
-            })}
-          </Section>
-        );
-      })()}
+
+                    <span className={`text-ice-xs ${svcRule?.enabled ? 'text-emerald-500' : 'text-ice-text-3'}`}>
+                      auto
+                    </span>
+
+                    {/* Deploy button — always visible for manual trigger */}
+                    {svcRule && !svcRule.enabled && (
+                      <button
+                        onClick={() => {
+                          import('../../../store/slices/pipeline-slice').then(({ triggerManualDeploy }) => {
+                            dispatch(triggerManualDeploy({ ruleId: svcRule.id }));
+                          });
+                        }}
+                        className="ml-auto px-2 py-0.5 text-ice-xs rounded bg-emerald-600 text-white hover:bg-emerald-700 transition-colors font-medium"
+                      >
+                        Deploy
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </Section>
+          );
+        })()}
 
       {/* No services connected hint */}
       {nodeRepo && connectedServices.length === 0 && (
@@ -1587,45 +1749,51 @@ const SourceRepositorySection: React.FC<{
       )}
 
       {/* Live build output — shows during active pipeline */}
-      {connectedServices.length > 0 && (() => {
-        const activeStatuses = connectedServices
-          .map((svc) => ({ svc, status: pipelineNodeStatus[svc.id] }))
-          .filter(({ status }) => status && (status.status === 'building' || status.status === 'deploying' || status.status === 'queued'));
+      {connectedServices.length > 0 &&
+        (() => {
+          const activeStatuses = connectedServices
+            .map((svc) => ({ svc, status: pipelineNodeStatus[svc.id] }))
+            .filter(
+              ({ status }) =>
+                status && (status.status === 'building' || status.status === 'deploying' || status.status === 'queued'),
+            );
 
-        if (activeStatuses.length === 0) return null;
+          if (activeStatuses.length === 0) return null;
 
-        return (
-          <Section title="Live Build">
-            <div className="rounded border border-ice-border bg-slate-950 p-2 max-h-32 overflow-y-auto font-mono text-[10px] leading-relaxed space-y-0.5">
-              {activeStatuses.map(({ svc, status }) => {
-                // Elapsed time since build started
-                const elapsed = status!.startedAt
-                  ? Math.round((Date.now() - new Date(status!.startedAt).getTime()) / 1000)
-                  : 0;
-                const timeStr = elapsed > 0 ? `${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, '0')}` : '';
-                const timeoutWarn = elapsed > 240; // warn at 4 min (5 min limit)
+          return (
+            <Section title="Live Build">
+              <div className="rounded border border-ice-border bg-slate-950 p-2 max-h-32 overflow-y-auto font-mono text-[10px] leading-relaxed space-y-0.5">
+                {activeStatuses.map(({ svc, status }) => {
+                  // Elapsed time since build started
+                  const elapsed = status!.startedAt
+                    ? Math.round((Date.now() - new Date(status!.startedAt).getTime()) / 1000)
+                    : 0;
+                  const timeStr =
+                    elapsed > 0 ? `${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, '0')}` : '';
+                  const timeoutWarn = elapsed > 240; // warn at 4 min (5 min limit)
 
-                return (
-                <div key={svc.id}>
-                  <div className="text-blue-400 flex items-center gap-1 mb-0.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse shrink-0" />
-                    {svc.label} — {status!.stage || status!.status}
-                    {timeStr && (
-                      <span className={`ml-auto ${timeoutWarn ? 'text-amber-400' : 'text-slate-500'}`}>
-                        {timeStr}{timeoutWarn ? ' (timeout soon)' : ''}
-                      </span>
-                    )}
-                  </div>
-                  {status!.stage && status!.stage.startsWith('[') && (
-                    <div className="text-slate-400 pl-3">{status!.stage}</div>
-                  )}
-                </div>
-                );
-              })}
-            </div>
-          </Section>
-        );
-      })()}
+                  return (
+                    <div key={svc.id}>
+                      <div className="text-blue-400 flex items-center gap-1 mb-0.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse shrink-0" />
+                        {svc.label} — {status!.stage || status!.status}
+                        {timeStr && (
+                          <span className={`ml-auto ${timeoutWarn ? 'text-amber-400' : 'text-slate-500'}`}>
+                            {timeStr}
+                            {timeoutWarn ? ' (timeout soon)' : ''}
+                          </span>
+                        )}
+                      </div>
+                      {status!.stage && status!.stage.startsWith('[') && (
+                        <div className="text-slate-400 pl-3">{status!.stage}</div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </Section>
+          );
+        })()}
 
       {/* Recent service deployments — grouped by service, with expandable logs */}
       {allEvents.length > 0 && (
@@ -1658,21 +1826,34 @@ const DeployHistory: React.FC<{ cardId: string }> = ({ cardId }) => {
       <div className="space-y-1">
         {history.map((d, i) => {
           const date = new Date(d.created_at);
-          const time = date.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+          const time = date.toLocaleString(undefined, {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          });
           const duration = d.duration_ms ? `${(d.duration_ms / 1000).toFixed(1)}s` : '';
           const isSuccess = d.status === 'success';
           const isFailed = d.status === 'failed';
           return (
             <div key={d.id || i} className="flex items-center gap-2 py-1 text-ice-xs">
-              <div className={cn(
-                'w-1.5 h-1.5 rounded-full shrink-0',
-                isSuccess ? 'bg-emerald-500' : isFailed ? 'bg-red-500' : 'bg-amber-500'
-              )} />
+              <div
+                className={cn(
+                  'w-1.5 h-1.5 rounded-full shrink-0',
+                  isSuccess ? 'bg-emerald-500' : isFailed ? 'bg-red-500' : 'bg-amber-500',
+                )}
+              />
               <span className="text-ice-text-2 truncate">{time}</span>
-              <span className={cn(
-                'text-ice-2xs px-1 py-0.5 rounded',
-                isSuccess ? 'text-emerald-400 bg-emerald-950/30' : isFailed ? 'text-red-400 bg-red-950/30' : 'text-amber-400 bg-amber-950/30'
-              )}>
+              <span
+                className={cn(
+                  'text-ice-2xs px-1 py-0.5 rounded',
+                  isSuccess
+                    ? 'text-emerald-400 bg-emerald-950/30'
+                    : isFailed
+                      ? 'text-red-400 bg-red-950/30'
+                      : 'text-amber-400 bg-amber-950/30',
+                )}
+              >
                 {d.status}
               </span>
               {duration && <span className="ml-auto text-ice-text-3 font-mono">{duration}</span>}
@@ -1710,7 +1891,7 @@ const InlineConnectionEditor: React.FC<{
       const connectedId = e.source === thisNodeId ? e.target : e.target === thisNodeId ? e.source : null;
       if (!connectedId) continue;
       const n = nodes.find((nd) => nd.id === connectedId);
-      if (n && ((n.data?.iceType as string) === 'Config.EnvVars')) return n;
+      if (n && (n.data?.iceType as string) === 'Config.EnvVars') return n;
     }
     return null;
   }, [edges, nodes, thisNodeId]);
@@ -1738,16 +1919,16 @@ const InlineConnectionEditor: React.FC<{
         <span className="text-ice-text-3 shrink-0">&rarr;</span>
         <span className="text-ice-text-2 truncate max-w-[70px]">{targetLabel}</span>
         {/* Port badge */}
-        {port && (
-          <span className="text-ice-2xs text-ice-text-3 font-mono shrink-0">:{port}</span>
-        )}
+        {port && <span className="text-ice-2xs text-ice-text-3 font-mono shrink-0">:{port}</span>}
         {/* Env var badge */}
         {showEnvVar && (
           <span className="text-ice-2xs font-mono text-amber-400 bg-amber-500/10 px-1 py-0.5 rounded shrink-0">
             {envVar}
           </span>
         )}
-        <span className={`ml-auto text-ice-text-3 text-[9px] transition-transform shrink-0 ${expanded ? 'rotate-180' : ''}`}>
+        <span
+          className={`ml-auto text-ice-text-3 text-[9px] transition-transform shrink-0 ${expanded ? 'rotate-180' : ''}`}
+        >
           &#9662;
         </span>
       </div>
@@ -1767,9 +1948,7 @@ const InlineConnectionEditor: React.FC<{
               <div className="w-8 h-px bg-ice-border relative">
                 <div className="absolute right-0 top-1/2 -translate-y-1/2 w-0 h-0 border-l-[4px] border-l-ice-text-3 border-y-[3px] border-y-transparent" />
               </div>
-              {connCategory && (
-                <span className="text-[9px] text-ice-text-3 font-mono">{connCategory}</span>
-              )}
+              {connCategory && <span className="text-[9px] text-ice-text-3 font-mono">{connCategory}</span>}
             </div>
             <div className="flex-1 text-center">
               <div className="text-ice-xs font-medium text-ice-text-1 truncate">{targetLabel}</div>
@@ -1798,9 +1977,13 @@ const InlineConnectionEditor: React.FC<{
                   }}
                   className="flex-1 min-w-0 px-1.5 py-1.5 text-ice-xs rounded-l border border-ice-border bg-ice-base text-amber-400 font-mono focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
-                  <option value="" className="text-ice-text-1">custom</option>
+                  <option value="" className="text-ice-text-1">
+                    custom
+                  </option>
                   {envVarsVariables.map((v) => (
-                    <option key={v.name} value={v.name}>{v.name}</option>
+                    <option key={v.name} value={v.name}>
+                      {v.name}
+                    </option>
                   ))}
                 </select>
                 <span className="text-ice-text-3 text-ice-xs">=</span>
@@ -1878,12 +2061,17 @@ const RepoDeployList: React.FC<{
                 className="flex items-center gap-1.5 text-ice-xs px-2 py-1.5 cursor-pointer hover:bg-ice-hover transition-colors"
                 onClick={() => setExpandedId(isExpanded ? null : ev.id)}
               >
-                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                  ev.status === 'success' ? 'bg-emerald-500' :
-                  ev.status === 'failed' ? 'bg-red-500' :
-                  ev.status === 'building' || ev.status === 'deploying' ? 'bg-blue-500 animate-pulse' :
-                  'bg-ice-text-3'
-                }`} />
+                <span
+                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                    ev.status === 'success'
+                      ? 'bg-emerald-500'
+                      : ev.status === 'failed'
+                        ? 'bg-red-500'
+                        : ev.status === 'building' || ev.status === 'deploying'
+                          ? 'bg-blue-500 animate-pulse'
+                          : 'bg-ice-text-3'
+                  }`}
+                />
                 <span className="font-mono text-ice-text-2">{ev.commit_sha?.slice(0, 7)}</span>
                 <span className="text-ice-text-3 truncate flex-1">{ev.commit_message}</span>
                 <span className="text-ice-text-3 shrink-0">{ev.rule?.environment || ev.branch}</span>
@@ -1896,23 +2084,29 @@ const RepoDeployList: React.FC<{
               {/* Expanded logs */}
               {isExpanded && (
                 <div className="border-t border-ice-border bg-slate-950 px-2 py-1.5 space-y-0.5 max-h-28 overflow-y-auto">
-                  {logs.length > 0 ? logs.map((log, i) => (
-                    <div key={i} className="flex items-center gap-1 text-[10px] font-mono">
-                      <span className={`shrink-0 ${
-                        log.status === 'completed' ? 'text-emerald-500' :
-                        log.status === 'failed' ? 'text-red-400' :
-                        'text-blue-400'
-                      }`}>
-                        {log.status === 'completed' ? '\u2713' : log.status === 'failed' ? '\u2717' : '\u25CF'}
-                      </span>
-                      <span className={log.status === 'failed' ? 'text-red-400' : 'text-slate-300'}>
-                        {log.message}
-                      </span>
-                      {log.duration_ms != null && (
-                        <span className="ml-auto text-slate-500">{(log.duration_ms / 1000).toFixed(1)}s</span>
-                      )}
-                    </div>
-                  )) : (
+                  {logs.length > 0 ? (
+                    logs.map((log, i) => (
+                      <div key={i} className="flex items-center gap-1 text-[10px] font-mono">
+                        <span
+                          className={`shrink-0 ${
+                            log.status === 'completed'
+                              ? 'text-emerald-500'
+                              : log.status === 'failed'
+                                ? 'text-red-400'
+                                : 'text-blue-400'
+                          }`}
+                        >
+                          {log.status === 'completed' ? '\u2713' : log.status === 'failed' ? '\u2717' : '\u25CF'}
+                        </span>
+                        <span className={log.status === 'failed' ? 'text-red-400' : 'text-slate-300'}>
+                          {log.message}
+                        </span>
+                        {log.duration_ms != null && (
+                          <span className="ml-auto text-slate-500">{(log.duration_ms / 1000).toFixed(1)}s</span>
+                        )}
+                      </div>
+                    ))
+                  ) : (
                     <div className="text-[10px] font-mono text-slate-500">No logs recorded</div>
                   )}
                   {ev.error && (
@@ -1920,7 +2114,9 @@ const RepoDeployList: React.FC<{
                   )}
                   {ev.duration_seconds != null && (
                     <div className="text-[10px] font-mono text-slate-500 pt-0.5">
-                      {ev.duration_seconds < 60 ? `${ev.duration_seconds}s` : `${Math.floor(ev.duration_seconds / 60)}m ${ev.duration_seconds % 60}s`}
+                      {ev.duration_seconds < 60
+                        ? `${ev.duration_seconds}s`
+                        : `${Math.floor(ev.duration_seconds / 60)}m ${ev.duration_seconds % 60}s`}
                     </div>
                   )}
                   {ev.status === 'failed' && (
@@ -1928,12 +2124,14 @@ const RepoDeployList: React.FC<{
                       onClick={(e) => {
                         e.stopPropagation();
                         import('../../../shared/api/api-adapter').then(({ getApi }) => {
-                          getApi().pipeline.retryDeploy(ev.id).then(() => {
-                            // Refresh events for the relevant service nodes
-                            for (const svc of connectedServices) {
-                              dispatch(fetchEventsForNode({ cardId, nodeId: svc.id }));
-                            }
-                          });
+                          getApi()
+                            .pipeline.retryDeploy(ev.id)
+                            .then(() => {
+                              // Refresh events for the relevant service nodes
+                              for (const svc of connectedServices) {
+                                dispatch(fetchEventsForNode({ cardId, nodeId: svc.id }));
+                              }
+                            });
                         });
                       }}
                       className="mt-1 px-2 py-0.5 text-[10px] font-medium rounded bg-amber-600 text-white hover:bg-amber-700 transition-colors"
@@ -1966,9 +2164,7 @@ const EnvVarsEditor: React.FC<{
   };
 
   const handleUpdate = (index: number, field: 'name' | 'value' | 'isSecret', val: unknown) => {
-    const updated = variables.map((v, i) =>
-      i === index ? { ...v, [field]: val } : v,
-    );
+    const updated = variables.map((v, i) => (i === index ? { ...v, [field]: val } : v));
     onChange(updated);
   };
 
@@ -2006,10 +2202,7 @@ const EnvVarsEditor: React.FC<{
             </button>
           </div>
         ))}
-        <button
-          onClick={handleAdd}
-          className="text-ice-xs text-ice-text-3 hover:text-blue-400 transition-colors"
-        >
+        <button onClick={handleAdd} className="text-ice-xs text-ice-text-3 hover:text-blue-400 transition-colors">
           + Add variable
         </button>
       </div>

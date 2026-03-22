@@ -68,8 +68,7 @@ export function InviteUserModal({ onClose, onInvited }: Props) {
       // Auto-close after a short delay
       setTimeout(() => onClose(), 1500);
     } catch (err: unknown) {
-      const msg =
-        err instanceof Error ? err.message : 'Failed to send invitation. Please try again.';
+      const msg = err instanceof Error ? err.message : 'Failed to send invitation. Please try again.';
       setError(msg);
     } finally {
       setLoading(false);
@@ -127,13 +126,9 @@ export function InviteUserModal({ onClose, onInvited }: Props) {
                         : 'border-ice-border bg-ice-base hover:border-ice-border-strong'
                     }`}
                   >
-                    <Icon
-                      className={`mt-0.5 h-4 w-4 shrink-0 ${isSelected ? 'text-ice-accent' : 'text-ice-text-2'}`}
-                    />
+                    <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${isSelected ? 'text-ice-accent' : 'text-ice-text-2'}`} />
                     <div>
-                      <p
-                        className={`text-sm font-medium ${isSelected ? 'text-ice-text-1' : 'text-ice-text-1'}`}
-                      >
+                      <p className={`text-sm font-medium ${isSelected ? 'text-ice-text-1' : 'text-ice-text-1'}`}>
                         {r.label}
                       </p>
                       <p className="mt-0.5 text-xs text-ice-text-2">{r.description}</p>
@@ -146,9 +141,7 @@ export function InviteUserModal({ onClose, onInvited }: Props) {
 
           {/* Error / success */}
           {error && (
-            <p className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">
-              {error}
-            </p>
+            <p className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</p>
           )}
           {success && (
             <p className="rounded-md border border-ice-green/30 bg-ice-green/10 px-3 py-2 text-sm text-ice-green">

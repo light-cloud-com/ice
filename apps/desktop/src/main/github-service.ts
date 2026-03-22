@@ -184,16 +184,13 @@ export class GitHubService {
     const token = this.getToken();
     if (!token) throw new Error('Not connected to GitHub');
 
-    const response = await fetch(
-      `${GITHUB_API}/user/repos?sort=updated&per_page=${perPage}&page=${page}&type=all`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/vnd.github+json',
-          'X-GitHub-Api-Version': '2022-11-28',
-        },
-      }
-    );
+    const response = await fetch(`${GITHUB_API}/user/repos?sort=updated&per_page=${perPage}&page=${page}&type=all`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to list repos: ${response.status}`);

@@ -15,7 +15,7 @@ function result(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  overrides: Partial<ResourceDeployResult> = {}
+  overrides: Partial<ResourceDeployResult> = {},
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -32,7 +32,7 @@ function fail(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  error: string
+  error: string,
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -50,21 +50,16 @@ export const firestore_handler: GCPResourceHandler = {
     const start = Date.now();
 
     try {
-      const op = (await ctx.rest_client.post(
-        `${BASE_URL}/projects/${ctx.project}/databases?databaseId=${name}`,
-        {
-          locationId: properties.location_id || ctx.region,
-          type: properties.type || 'FIRESTORE_NATIVE',
-        }
-      )) as any;
+      const op = (await ctx.rest_client.post(`${BASE_URL}/projects/${ctx.project}/databases?databaseId=${name}`, {
+        locationId: properties.location_id || ctx.region,
+        type: properties.type || 'FIRESTORE_NATIVE',
+      })) as any;
 
       if (op?.name) {
         // Poll for completion
         const poll_start = Date.now();
         while (Date.now() - poll_start < 120_000) {
-          const status = (await ctx.rest_client.get(
-            `https://firestore.googleapis.com/v1/${op.name}`
-          )) as any;
+          const status = (await ctx.rest_client.get(`https://firestore.googleapis.com/v1/${op.name}`)) as any;
           if (status?.done) break;
           await new Promise((r) => setTimeout(r, 3000));
         }

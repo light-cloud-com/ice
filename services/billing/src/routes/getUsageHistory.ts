@@ -18,10 +18,7 @@ interface AuthenticatedRequest {
   };
 }
 
-export const getUsageHistory = async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
+export const getUsageHistory = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { targetOrganisationId, days = 30 } = req.body;
 
@@ -55,10 +52,7 @@ export const getUsageHistory = async (
     }
 
     // Get usage history
-    const usageHistory = await getDailyUsageHistory(
-      targetOrganisationId,
-      Math.min(days, 90)
-    );
+    const usageHistory = await getDailyUsageHistory(targetOrganisationId, Math.min(days, 90));
 
     res.json({ history: usageHistory });
   } catch (error) {

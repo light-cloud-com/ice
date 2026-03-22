@@ -23,9 +23,7 @@ interface ReviewStepProps {
 
 export const ReviewStep: React.FC<ReviewStepProps> = ({ state }) => {
   const enabledEnvs = state.environments.filter((e) => e.enabled);
-  const template = state.selectedTemplateId
-    ? COMPOSED_TEMPLATES.find((t) => t.id === state.selectedTemplateId)
-    : null;
+  const template = state.selectedTemplateId ? COMPOSED_TEMPLATES.find((t) => t.id === state.selectedTemplateId) : null;
   const providerMeta = getCloudProvider(state.provider);
 
   return (
@@ -43,9 +41,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ state }) => {
         </div>
         <div className="pl-5.5">
           <p className="text-sm font-semibold text-ice-text-1">{state.projectName}</p>
-          {state.projectDescription && (
-            <p className="text-xs text-ice-text-2 mt-0.5">{state.projectDescription}</p>
-          )}
+          {state.projectDescription && <p className="text-xs text-ice-text-2 mt-0.5">{state.projectDescription}</p>}
           <div className="flex items-center gap-1 mt-1">
             <span
               className="text-ice-xs px-1.5 py-0.5 rounded font-medium"

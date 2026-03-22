@@ -32,9 +32,7 @@ router.post('/apply', async (req: AuthRequest, res: Response) => {
   res.setTimeout(10 * 60 * 1000);
   try {
     const { cardId, nodes, edges, options } = req.body;
-    const result = await deployService.applyDeployment(
-      cardId, nodes, edges, options, req.organisationId!, req.userId
-    );
+    const result = await deployService.applyDeployment(cardId, nodes, edges, options, req.organisationId!, req.userId);
     res.json(result);
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });

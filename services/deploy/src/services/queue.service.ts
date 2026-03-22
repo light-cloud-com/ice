@@ -76,19 +76,23 @@ export async function queueDeployment(
 
   // Add to queue
   const queue = getDeployQueue();
-  await queue.add('deploy', {
-    cardId,
-    nodes,
-    edges,
-    options,
-    orgId,
-    userId,
-    jobId: deployJob.id,
-    deploymentId: deployment.id,
-  }, {
-    attempts: 3,
-    backoff: { type: 'exponential', delay: 5000 },
-  });
+  await queue.add(
+    'deploy',
+    {
+      cardId,
+      nodes,
+      edges,
+      options,
+      orgId,
+      userId,
+      jobId: deployJob.id,
+      deploymentId: deployment.id,
+    },
+    {
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 5000 },
+    },
+  );
 
   return { success: true, deploymentId: deployment.id, jobId: deployJob.id };
 }
@@ -139,10 +143,12 @@ export function startDeployWorker() {
       const data = job.data as any;
       if (data.type === 'pipeline') return; // Pipeline jobs handle their own completion
       const { jobId } = data;
-      await prisma.deployJob.update({
-        where: { id: jobId },
-        data: { status: 'completed', completed_at: new Date() },
-      }).catch(() => {});
+      await prisma.deployJob
+        .update({
+          where: { id: jobId },
+          data: { status: 'completed', completed_at: new Date() },
+        })
+        .catch(() => {});
     });
 
     worker.on('failed', async (job: Job | undefined, err: Error) => {
@@ -153,10 +159,12 @@ export function startDeployWorker() {
         return;
       }
       const { jobId } = data;
-      await prisma.deployJob.update({
-        where: { id: jobId },
-        data: { status: 'failed', error: err.message },
-      }).catch(() => {});
+      await prisma.deployJob
+        .update({
+          where: { id: jobId },
+          data: { status: 'failed', error: err.message },
+        })
+        .catch(() => {});
     });
 
     console.log('Deploy worker started (concurrency: 3)');
@@ -170,8 +178,20 @@ export function startDeployWorker() {
 // ─── Pipeline Job Processor ─────────────────────────────────────────────────
 
 async function processPipelineJob(data: any) {
-  const { eventId, ruleId, cardId, nodeId, repository, branch, commitSha,
-    environment, buildCommand, installCommand, outputDir, framework } = data;
+  const {
+    eventId,
+    ruleId,
+    cardId,
+    nodeId,
+    repository,
+    branch,
+    commitSha,
+    environment,
+    buildCommand,
+    installCommand,
+    outputDir,
+    framework,
+  } = data;
 
   const mkStep = (name: string, status: 'started' | 'completed' | 'failed', message: string): DeployStep => ({
     step: name,
@@ -185,7 +205,12 @@ async function processPipelineJob(data: any) {
 
   try {
     // ── Step 1: Build from source (real clone + install + build) ──
-    await updateEventProgress(eventId, 'building', 'Downloading source...', mkStep('clone', 'started', `Cloning ${repository}@${branch}`));
+    await updateEventProgress(
+      eventId,
+      'building',
+      'Downloading source...',
+      mkStep('clone', 'started', `Cloning ${repository}@${branch}`),
+    );
 
     // Find a user who created this card's project (for GitHub token)
     const project = await prisma.canvasProject.findFirst({
@@ -205,12 +230,15 @@ async function processPipelineJob(data: any) {
       },
       project.created_by,
       async (step, status, message) => {
-        const phase = (step === 'clone' || step === 'install' || step === 'build') ? 'building' : 'building';
+        const phase = step === 'clone' || step === 'install' || step === 'build' ? 'building' : 'building';
         const stageLabel =
-          step === 'clone' ? 'Downloading source...' :
-          step === 'install' ? 'Installing dependencies...' :
-          step === 'build' ? 'Building application...' :
-          'Building...';
+          step === 'clone'
+            ? 'Downloading source...'
+            : step === 'install'
+              ? 'Installing dependencies...'
+              : step === 'build'
+                ? 'Building application...'
+                : 'Building...';
         await updateEventProgress(eventId, phase, stageLabel, mkStep(step, status, message));
       },
       // Stream individual build lines via Socket.IO + persist to DB
@@ -245,7 +273,12 @@ async function processPipelineJob(data: any) {
     }
 
     // ── Step 2: Deploy infrastructure ──
-    await updateEventProgress(eventId, 'deploying', 'Deploying infrastructure...', mkStep('deploy', 'started', `Deploying to ${environment}`));
+    await updateEventProgress(
+      eventId,
+      'deploying',
+      'Deploying infrastructure...',
+      mkStep('deploy', 'started', `Deploying to ${environment}`),
+    );
 
     // Resolve the correct environment card (Canvas Branching)
     const { resolveEnvironmentCardId } = await import('./pipeline.service');
@@ -298,8 +331,12 @@ async function processPipelineJob(data: any) {
     );
 
     // ── Step 3: Complete ──
-    await updateEventProgress(eventId, 'success', 'Deployment complete', mkStep('deploy', 'completed', `Deployed to ${environment} in ${Math.round(buildResult.duration_ms / 1000)}s`));
-
+    await updateEventProgress(
+      eventId,
+      'success',
+      'Deployment complete',
+      mkStep('deploy', 'completed', `Deployed to ${environment} in ${Math.round(buildResult.duration_ms / 1000)}s`),
+    );
   } catch (err: any) {
     await updateEventProgress(eventId, 'failed', `Failed: ${err.message}`, mkStep('error', 'failed', err.message));
     throw err;

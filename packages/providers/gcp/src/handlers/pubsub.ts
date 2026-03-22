@@ -13,7 +13,7 @@ function result(
   type: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  overrides: Partial<ResourceDeployResult> = {}
+  overrides: Partial<ResourceDeployResult> = {},
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -31,7 +31,7 @@ function fail(
   type: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  error: string
+  error: string,
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -51,8 +51,7 @@ export const pubsub_handler: GCPResourceHandler = {
 
     try {
       const pubsub = ctx.clients.get('pubsub') as any;
-      if (!pubsub)
-        return fail(name, type, 'create', start, sdk_not_available(SERVICE_NAMES.PUBSUB, 'pubsub'));
+      if (!pubsub) return fail(name, type, 'create', start, sdk_not_available(SERVICE_NAMES.PUBSUB, 'pubsub'));
 
       const [topic] = await pubsub.createTopic({
         name: `projects/${ctx.project}/topics/${name}`,
@@ -66,13 +65,7 @@ export const pubsub_handler: GCPResourceHandler = {
         provider_id: topic.name || `projects/${ctx.project}/topics/${name}`,
       });
     } catch (error) {
-      return fail(
-        name,
-        type,
-        'create',
-        start,
-        error instanceof Error ? error.message : String(error)
-      );
+      return fail(name, type, 'create', start, error instanceof Error ? error.message : String(error));
     }
   },
 
@@ -82,8 +75,7 @@ export const pubsub_handler: GCPResourceHandler = {
 
     try {
       const pubsub = ctx.clients.get('pubsub') as any;
-      if (!pubsub)
-        return fail(name, type, 'update', start, sdk_not_available_short(SERVICE_NAMES.PUBSUB));
+      if (!pubsub) return fail(name, type, 'update', start, sdk_not_available_short(SERVICE_NAMES.PUBSUB));
 
       const topic = pubsub.topic(name);
       if (properties.labels) {
@@ -92,13 +84,7 @@ export const pubsub_handler: GCPResourceHandler = {
 
       return result(name, type, 'update', start, { provider_id });
     } catch (error) {
-      return fail(
-        name,
-        type,
-        'update',
-        start,
-        error instanceof Error ? error.message : String(error)
-      );
+      return fail(name, type, 'update', start, error instanceof Error ? error.message : String(error));
     }
   },
 
@@ -108,21 +94,14 @@ export const pubsub_handler: GCPResourceHandler = {
 
     try {
       const pubsub = ctx.clients.get('pubsub') as any;
-      if (!pubsub)
-        return fail(name, type, 'delete', start, sdk_not_available_short(SERVICE_NAMES.PUBSUB));
+      if (!pubsub) return fail(name, type, 'delete', start, sdk_not_available_short(SERVICE_NAMES.PUBSUB));
 
       const topic = pubsub.topic(name);
       await topic.delete();
 
       return result(name, type, 'delete', start);
     } catch (error) {
-      return fail(
-        name,
-        type,
-        'delete',
-        start,
-        error instanceof Error ? error.message : String(error)
-      );
+      return fail(name, type, 'delete', start, error instanceof Error ? error.message : String(error));
     }
   },
 };

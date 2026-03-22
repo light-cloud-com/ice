@@ -15,18 +15,33 @@ import azureIcon from 'devicon/icons/azure/azure-original.svg';
 import { cn } from '@ui/shared/utils/cn';
 
 const PROVIDERS = [
-  { id: 'gcp', name: 'Google Cloud', icon: gcpIcon, regions: [
-    'us-central1', 'us-east1', 'us-west1', 'europe-west1', 'europe-west2',
-    'asia-east1', 'asia-southeast1', 'australia-southeast1',
-  ]},
-  { id: 'aws', name: 'AWS', icon: awsIcon, regions: [
-    'us-east-1', 'us-west-2', 'eu-west-1', 'eu-central-1',
-    'ap-southeast-1', 'ap-northeast-1', 'sa-east-1',
-  ]},
-  { id: 'azure', name: 'Azure', icon: azureIcon, regions: [
-    'eastus', 'westus2', 'westeurope', 'northeurope',
-    'southeastasia', 'australiaeast', 'brazilsouth',
-  ]},
+  {
+    id: 'gcp',
+    name: 'Google Cloud',
+    icon: gcpIcon,
+    regions: [
+      'us-central1',
+      'us-east1',
+      'us-west1',
+      'europe-west1',
+      'europe-west2',
+      'asia-east1',
+      'asia-southeast1',
+      'australia-southeast1',
+    ],
+  },
+  {
+    id: 'aws',
+    name: 'AWS',
+    icon: awsIcon,
+    regions: ['us-east-1', 'us-west-2', 'eu-west-1', 'eu-central-1', 'ap-southeast-1', 'ap-northeast-1', 'sa-east-1'],
+  },
+  {
+    id: 'azure',
+    name: 'Azure',
+    icon: azureIcon,
+    regions: ['eastus', 'westus2', 'westeurope', 'northeurope', 'southeastasia', 'australiaeast', 'brazilsouth'],
+  },
 ];
 
 interface ProjectSettingsProps {
@@ -55,13 +70,15 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
         setDescription(res.data.description || '');
         setProvider(res.data.provider || '');
         setRegion(res.data.region || '');
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
       setLoading(false);
     };
     load();
   }, [projectId]);
 
-  const selectedProvider = PROVIDERS.find(p => p.id === provider);
+  const selectedProvider = PROVIDERS.find((p) => p.id === provider);
   const regions = selectedProvider?.regions || [];
 
   const handleSave = async (e: React.FormEvent) => {
@@ -98,7 +115,13 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
           <div className="ice-card-body space-y-4">
             <label className="block">
               <span className="block text-ice-sm font-medium text-ice-text-2 mb-1.5">Name</span>
-              <input type="text" name="name" value={name} onChange={(e) => setName(e.target.value)} className="ice-input" />
+              <input
+                type="text"
+                name="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="ice-input"
+              />
             </label>
             <label className="block">
               <span className="block text-ice-sm font-medium text-ice-text-2 mb-1.5">Description</span>
@@ -135,7 +158,12 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
                     <button
                       key={p.id}
                       type="button"
-                      onClick={() => { if (!isLocked) { setProvider(p.id); setRegion(''); } }}
+                      onClick={() => {
+                        if (!isLocked) {
+                          setProvider(p.id);
+                          setRegion('');
+                        }
+                      }}
                       disabled={isLocked && !isSelected}
                       className={cn(
                         'flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-[border-color,background-color]',
@@ -170,21 +198,25 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
                 >
                   <option value="">Select a region&hellip;</option>
                   {regions.map((r) => (
-                    <option key={r} value={r}>{r}</option>
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
                   ))}
                 </select>
               </label>
             )}
 
-            {!provider && (
-              <p className="text-ice-sm text-ice-text-3">Select a provider to see available regions.</p>
-            )}
+            {!provider && <p className="text-ice-sm text-ice-text-3">Select a provider to see available regions.</p>}
           </div>
         </div>
 
         {/* Save */}
         {message && (
-          <p role="alert" aria-live="polite" className={`text-sm ${message.type === 'success' ? 'text-ice-green' : 'text-ice-red'}`}>
+          <p
+            role="alert"
+            aria-live="polite"
+            className={`text-sm ${message.type === 'success' ? 'text-ice-green' : 'text-ice-red'}`}
+          >
             {message.text}
           </p>
         )}
@@ -201,9 +233,7 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
       <div className="mt-8 ice-card">
         <div className="ice-card-header">
           <h2 className="text-ice-md font-semibold text-ice-text-1">Collaborators</h2>
-          <p className="text-ice-sm text-ice-text-3 mt-1">
-            Control who can view and edit this project
-          </p>
+          <p className="text-ice-sm text-ice-text-3 mt-1">Control who can view and edit this project</p>
         </div>
         <div className="ice-card-body">
           <ProjectCollaborators projectId={projectId} />
@@ -222,7 +252,8 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
           <div>
             <p className="text-ice-sm text-ice-text-1 font-medium">Delete this project</p>
             <p className="text-ice-xs text-ice-text-2 mt-1">
-              This will permanently delete the project, all its environments, canvas cards, and deployment history. This action cannot be undone.
+              This will permanently delete the project, all its environments, canvas cards, and deployment history. This
+              action cannot be undone.
             </p>
           </div>
           <div>
@@ -257,7 +288,7 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
               'flex items-center gap-2 px-4 py-2 text-ice-sm font-medium rounded-md transition-colors',
               confirmDelete === name
                 ? 'bg-ice-red text-white hover:bg-ice-red/90'
-                : 'bg-ice-raised text-ice-text-3 cursor-not-allowed'
+                : 'bg-ice-raised text-ice-text-3 cursor-not-allowed',
             )}
           >
             {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}

@@ -48,7 +48,7 @@ export const StatusBar: React.FC = () => {
   const panes = useSelector((state: RootState) => state.ui.splitView.panes);
   const activePane = panes.find((p) => p.id === activePaneId);
   const cardScale = activeCard?.viewport?.scale ?? 1;
-  const zoom = activePane?.viewport?.scale !== 1 ? activePane?.viewport?.scale ?? cardScale : cardScale;
+  const zoom = activePane?.viewport?.scale !== 1 ? (activePane?.viewport?.scale ?? cardScale) : cardScale;
 
   // Use active card for counts
   const nodeCount = activeCard?.nodes.length ?? 0;
@@ -118,8 +118,7 @@ export const StatusBar: React.FC = () => {
             <span>
               {selectedNodes.length > 0 && `${selectedNodes.length} selected`}
               {selectedNodes.length > 0 && selectedEdges.length > 0 && ', '}
-              {selectedEdges.length > 0 &&
-                `${selectedEdges.length} edge${selectedEdges.length !== 1 ? 's' : ''}`}
+              {selectedEdges.length > 0 && `${selectedEdges.length} edge${selectedEdges.length !== 1 ? 's' : ''}`}
             </span>
           </div>
           <StatusDivider />

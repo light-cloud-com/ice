@@ -179,9 +179,7 @@ export async function import_aws(options: AWSImportOptions = {}): Promise<AWSImp
 
     // Apply tag filters
     if (Object.keys(opts.filter_tags).length > 0) {
-      const matches = Object.entries(opts.filter_tags).every(
-        ([key, value]) => resource.tags?.[key] === value
-      );
+      const matches = Object.entries(opts.filter_tags).every(([key, value]) => resource.tags?.[key] === value);
       if (!matches) continue;
     }
 
@@ -219,9 +217,7 @@ export async function import_aws(options: AWSImportOptions = {}): Promise<AWSImp
 
   // Success if no fatal errors (NOT_ENABLED errors are non-fatal if we got resources via fallback)
   const fatalErrors = errors.filter(
-    (e) =>
-      e.code !== ImportErrorCode.RESOURCE_EXPLORER_NOT_ENABLED &&
-      e.code !== 'RESOURCE_EXPLORER_NOT_ENABLED'
+    (e) => e.code !== ImportErrorCode.RESOURCE_EXPLORER_NOT_ENABLED && e.code !== 'RESOURCE_EXPLORER_NOT_ENABLED',
   );
 
   return {
@@ -238,7 +234,7 @@ export async function import_aws(options: AWSImportOptions = {}): Promise<AWSImp
  */
 export async function import_aws_to_graph(
   options: AWSImportOptions = {},
-  graph_name: string = 'aws-import'
+  graph_name: string = 'aws-import',
 ): Promise<{ graph: MutableGraph; result: AWSImportResult }> {
   const result = await import_aws(options);
   const graph = aws_result_to_graph(result, graph_name);
@@ -248,10 +244,7 @@ export async function import_aws_to_graph(
 /**
  * Convert AWS import result to ICE graph.
  */
-export function aws_result_to_graph(
-  result: AWSImportResult,
-  graph_name: string = 'aws-import'
-): MutableGraph {
+export function aws_result_to_graph(result: AWSImportResult, graph_name: string = 'aws-import'): MutableGraph {
   const graph = create_mutable_graph(graph_name, {
     description: `Imported from AWS account ${result.metadata.account_id}`,
     labels: {
@@ -362,7 +355,7 @@ async function init_aws_sdk(profile?: string): Promise<AWSSdk> {
     };
   } catch (error) {
     throw new Error(
-      `Failed to initialize AWS SDK. Make sure AWS SDK v3 packages are installed: ${error instanceof Error ? error.message : String(error)}`
+      `Failed to initialize AWS SDK. Make sure AWS SDK v3 packages are installed: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 }
@@ -385,7 +378,7 @@ async function get_account_id(sdk: AWSSdk): Promise<string> {
 
 async function discover_with_resource_explorer(
   sdk: AWSSdk,
-  opts: Required<Omit<AWSImportOptions, 'profile'>>
+  opts: Required<Omit<AWSImportOptions, 'profile'>>,
 ): Promise<AWSResource[]> {
   const resources: AWSResource[] = [];
 
@@ -424,7 +417,7 @@ async function discover_with_resource_explorer(
 
 async function discover_with_config(
   sdk: AWSSdk,
-  opts: Required<Omit<AWSImportOptions, 'profile'>>
+  opts: Required<Omit<AWSImportOptions, 'profile'>>,
 ): Promise<AWSResource[]> {
   const resources: AWSResource[] = [];
 
@@ -436,8 +429,7 @@ async function discover_with_config(
 
   do {
     const command = new config_mod.SelectResourceConfigCommand({
-      Expression:
-        "SELECT resourceId, resourceType, arn, configuration, tags WHERE resourceType LIKE '%'",
+      Expression: "SELECT resourceId, resourceType, arn, configuration, tags WHERE resourceType LIKE '%'",
       Limit: 100,
       NextToken: next_token,
     });

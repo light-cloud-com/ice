@@ -85,8 +85,8 @@ export const TemplatePicker: React.FC = () => {
     setSearch('');
 
     import('../../../shared/api/api-adapter').then(({ getApi }) => {
-      getApi().templates
-        .loadToGraph({ name: template.name, nodes, edges })
+      getApi()
+        .templates.loadToGraph({ name: template.name, nodes, edges })
         .catch((err: unknown) => {
           console.warn('Failed to sync template to backend:', err);
         });
@@ -146,7 +146,7 @@ export const TemplatePicker: React.FC = () => {
                         className={cn(
                           'flex w-full items-start gap-2.5 rounded-sm px-2 py-2 text-left text-sm',
                           'outline-none transition-colors hover:bg-accent hover:text-accent-foreground',
-                          'focus:bg-accent focus:text-accent-foreground cursor-default'
+                          'focus:bg-accent focus:text-accent-foreground cursor-default',
                         )}
                       >
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary mt-0.5">
@@ -163,16 +163,10 @@ export const TemplatePicker: React.FC = () => {
                             {template.description}
                           </p>
                           <div className="flex items-center gap-1 mt-1">
-                            <span className="text-ice-xs text-muted-foreground">
-                              {template.blocks.length} blocks
-                            </span>
+                            <span className="text-ice-xs text-muted-foreground">{template.blocks.length} blocks</span>
                             <span className="text-muted-foreground/40 mx-0.5">&middot;</span>
                             {template.tags.slice(0, 4).map((tag) => (
-                              <Badge
-                                key={tag}
-                                variant="secondary"
-                                className="text-ice-2xs px-1 py-0 h-3.5"
-                              >
+                              <Badge key={tag} variant="secondary" className="text-ice-2xs px-1 py-0 h-3.5">
                                 {tag}
                               </Badge>
                             ))}

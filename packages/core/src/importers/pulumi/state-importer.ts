@@ -80,7 +80,7 @@ const DEFAULT_OPTIONS: Required<Omit<PulumiImportOptions, 'target_graph'>> = {
  */
 export async function import_pulumi_state(
   state_path: string,
-  options: PulumiImportOptions = {}
+  options: PulumiImportOptions = {},
 ): Promise<PulumiImportResult> {
   const errors: PulumiImportError[] = [];
   const warnings: PulumiImportWarning[] = [];
@@ -129,10 +129,7 @@ export async function import_pulumi_state(
 /**
  * Import Pulumi state from a JSON string.
  */
-export function import_pulumi_state_json(
-  json_content: string,
-  options: PulumiImportOptions = {}
-): PulumiImportResult {
+export function import_pulumi_state_json(json_content: string, options: PulumiImportOptions = {}): PulumiImportResult {
   const errors: PulumiImportError[] = [];
   const warnings: PulumiImportWarning[] = [];
 
@@ -165,14 +162,12 @@ export function import_pulumi_state_object(
   state_data: PulumiStackState | PulumiStackExport,
   options: PulumiImportOptions = {},
   errors: PulumiImportError[] = [],
-  warnings: PulumiImportWarning[] = []
+  warnings: PulumiImportWarning[] = [],
 ): PulumiImportResult {
   // Merge options with defaults, filtering out undefined values
   const opts = {
     ...DEFAULT_OPTIONS,
-    ...(Object.fromEntries(
-      Object.entries(options).filter(([_, v]) => v !== undefined)
-    ) as PulumiImportOptions),
+    ...(Object.fromEntries(Object.entries(options).filter(([_, v]) => v !== undefined)) as PulumiImportOptions),
   };
 
   const imported_resources: PulumiImportedResource[] = [];
@@ -283,7 +278,7 @@ export function import_pulumi_state_object(
 function import_resource(
   resource: PulumiResource,
   options: Required<Omit<PulumiImportOptions, 'target_graph'>>,
-  warnings: PulumiImportWarning[]
+  warnings: PulumiImportWarning[],
 ): PulumiImportedResource {
   const pulumi_type = resource.type;
   const ice_type = get_ice_type(pulumi_type);
@@ -347,7 +342,7 @@ function import_resource(
  */
 function process_properties(
   props: Record<string, unknown>,
-  options: Required<Omit<PulumiImportOptions, 'target_graph'>>
+  options: Required<Omit<PulumiImportOptions, 'target_graph'>>,
 ): Record<string, unknown> {
   const result: Record<string, unknown> = {};
 
@@ -461,10 +456,7 @@ function create_empty_metadata(): PulumiImportMetadata {
 /**
  * Convert imported resources to an ICE graph.
  */
-export function import_result_to_graph(
-  result: PulumiImportResult,
-  graph_name: string = 'pulumi-import'
-): MutableGraph {
+export function import_result_to_graph(result: PulumiImportResult, graph_name: string = 'pulumi-import'): MutableGraph {
   const graph = create_mutable_graph(graph_name, {
     description: `Imported from Pulumi stack ${result.metadata.stack}`,
     labels: {
@@ -549,7 +541,7 @@ export function import_result_to_graph(
  */
 export async function import_pulumi_to_graph(
   state_path: string,
-  options: PulumiImportOptions = {}
+  options: PulumiImportOptions = {},
 ): Promise<{ graph: MutableGraph; result: PulumiImportResult }> {
   const result = await import_pulumi_state(state_path, options);
   const graph = options.target_graph ?? import_result_to_graph(result);

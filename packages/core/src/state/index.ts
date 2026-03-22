@@ -22,8 +22,4 @@ export type {
 // SQLite state store
 export type { SqliteStateStoreOptions } from './sqlite-state-store.js';
 
-export {
-  SqliteStateStore,
-  create_sqlite_state_store,
-  create_memory_state_store,
-} from './sqlite-state-store.js';
+export { SqliteStateStore, create_sqlite_state_store, create_memory_state_store } from './sqlite-state-store.js';

@@ -17,10 +17,7 @@ import { checkGitHubConnection } from '../../../store/slices/integrations-slice'
 import { GitHubConnectModal } from './github-connect-modal';
 import { ProviderSettings } from '../../../shared/components/provider-settings';
 
-const STATUS_CONFIG: Record<
-  IntegrationStatus,
-  { color: string; icon: React.ElementType | null; label: string }
-> = {
+const STATUS_CONFIG: Record<IntegrationStatus, { color: string; icon: React.ElementType | null; label: string }> = {
   connected: { color: 'text-emerald-500', icon: Check, label: INTEGRATIONS.CONNECTED },
   disconnected: { color: 'text-muted-foreground', icon: null, label: INTEGRATIONS.DISCONNECTED },
   connecting: { color: 'text-orange-500', icon: Loader2, label: INTEGRATIONS.CONNECTING },
@@ -67,10 +64,7 @@ export const IntegrationDropdown: React.FC = () => {
         <button
           ref={buttonRef}
           onClick={() => setIsOpen(!isOpen)}
-          className={cn(
-            'flex items-center gap-1 p-1.5 rounded hover:bg-muted transition-colors',
-            isOpen && 'bg-muted'
-          )}
+          className={cn('flex items-center gap-1 p-1.5 rounded hover:bg-muted transition-colors', isOpen && 'bg-muted')}
           title={INTEGRATIONS.DROPDOWN_TITLE}
         >
           <Plug className="w-4 h-4" />
@@ -121,30 +115,22 @@ export const IntegrationDropdown: React.FC = () => {
                       <div className="flex-1 text-left">
                         <div className="font-medium">{config.name}</div>
                         <div className={cn('text-xs', statusConfig.color)}>
-                          {status === 'connected' && integration?.username
-                            ? integration.username
-                            : statusConfig.label}
+                          {status === 'connected' && integration?.username ? integration.username : statusConfig.label}
                         </div>
                       </div>
                       {StatusIcon && (
                         <StatusIcon
-                          className={cn(
-                            'w-3.5 h-3.5',
-                            statusConfig.color,
-                            status === 'connecting' && 'animate-spin'
-                          )}
+                          className={cn('w-3.5 h-3.5', statusConfig.color, status === 'connecting' && 'animate-spin')}
                         />
                       )}
-                      {status === 'disconnected' && (
-                        <div className="w-2 h-2 rounded-full bg-muted-foreground/30" />
-                      )}
+                      {status === 'disconnected' && <div className="w-2 h-2 rounded-full bg-muted-foreground/30" />}
                     </button>
                   );
                 })}
               </div>
             </div>
           </>,
-          document.body
+          document.body,
         )}
 
       {/* GitHub Connect Modal */}

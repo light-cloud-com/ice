@@ -97,7 +97,9 @@ export async function disconnectProvider(orgId: string, provider: string) {
   });
 }
 
-export async function validateGCPCredentials(credentials: Record<string, string>): Promise<{ valid: boolean; error?: string; projectId?: string }> {
+export async function validateGCPCredentials(
+  credentials: Record<string, string>,
+): Promise<{ valid: boolean; error?: string; projectId?: string }> {
   try {
     // If it's a service account key JSON, parse and validate structure
     const key = credentials.service_account_key || credentials.key;
@@ -146,12 +148,11 @@ export async function listGCPProjects(orgId: string): Promise<Array<{ id: string
     if (!accessToken) return creds.project_id ? [{ id: creds.project_id, name: creds.project_id }] : [];
 
     try {
-      const res = await fetch(
-        'https://cloudresourcemanager.googleapis.com/v1/projects?filter=lifecycleState:ACTIVE',
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-      );
+      const res = await fetch('https://cloudresourcemanager.googleapis.com/v1/projects?filter=lifecycleState:ACTIVE', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
       if (res.ok) {
-        const data = await res.json() as { projects?: Array<{ projectId: string; name: string }> };
+        const data = (await res.json()) as { projects?: Array<{ projectId: string; name: string }> };
         return (data.projects || []).map((p) => ({ id: p.projectId, name: p.name || p.projectId }));
       }
     } catch {
@@ -180,7 +181,10 @@ export async function listGCPProjects(orgId: string): Promise<Array<{ id: string
  * Get a valid GCP access token, refreshing if expired.
  * For OAuth-connected GCP credentials only.
  */
-export async function getValidGCPAccessToken(orgId: string, creds?: Record<string, string> | null): Promise<string | null> {
+export async function getValidGCPAccessToken(
+  orgId: string,
+  creds?: Record<string, string> | null,
+): Promise<string | null> {
   if (!creds) {
     creds = await getDecryptedCredentials(orgId, 'gcp');
   }
@@ -213,7 +217,7 @@ export async function getValidGCPAccessToken(orgId: string, creds?: Record<strin
       return null;
     }
 
-    const tokens = await res.json() as { access_token: string; expires_in: number };
+    const tokens = (await res.json()) as { access_token: string; expires_in: number };
 
     // Update stored credentials with new access token
     const updatedCreds = {

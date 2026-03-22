@@ -9,8 +9,18 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  Sparkles, Loader2, Check, Undo2, ArrowRight, Send, X,
-  ChevronUp, Plus, MessageSquare, ChevronDown, Trash2,
+  Sparkles,
+  Loader2,
+  Check,
+  Undo2,
+  ArrowRight,
+  Send,
+  X,
+  ChevronUp,
+  Plus,
+  MessageSquare,
+  ChevronDown,
+  Trash2,
 } from 'lucide-react';
 import type { AppDispatch, RootState } from '../../../store';
 import { clearAiState } from '../../../store/slices/ai-slice';
@@ -52,20 +62,31 @@ interface ConversationSummary {
 
 function formatDateTime(dateStr: string): string {
   const d = new Date(dateStr);
-  return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
-    + ' ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  return (
+    d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) +
+    ' ' +
+    d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+  );
 }
 
 function opSummary(op: AiCanvasOp): string {
   switch (op.op) {
-    case 'addBlueprint': return `Add ${op.label || op.blockType}`;
-    case 'addNode': return `Add ${(op.node.data?.label as string) || op.node.type}`;
-    case 'addEdge': return `Connect ${op.edge.source} → ${op.edge.target}`;
-    case 'updateNodeData': return `Update ${op.nodeId}`;
-    case 'deleteNode': return `Remove ${op.nodeId}`;
-    case 'deleteEdge': return `Remove connection`;
-    case 'autoOrganize': return 'Reorganize layout';
-    default: return `${op.op}`;
+    case 'addBlueprint':
+      return `Add ${op.label || op.blockType}`;
+    case 'addNode':
+      return `Add ${(op.node.data?.label as string) || op.node.type}`;
+    case 'addEdge':
+      return `Connect ${op.edge.source} → ${op.edge.target}`;
+    case 'updateNodeData':
+      return `Update ${op.nodeId}`;
+    case 'deleteNode':
+      return `Remove ${op.nodeId}`;
+    case 'deleteEdge':
+      return `Remove connection`;
+    case 'autoOrganize':
+      return 'Reorganize layout';
+    default:
+      return `${op.op}`;
   }
 }
 
@@ -115,7 +136,9 @@ export const AiChatPanel: React.FC = () => {
     try {
       const res = await axiosInstance.get(`/ai/conversations?projectId=${projectId}`);
       setConversations(res.data);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }, [projectId]);
 
   useEffect(() => {
@@ -139,10 +162,12 @@ export const AiChatPanel: React.FC = () => {
           suggestions: m.suggestions || undefined,
           applied: m.role === 'assistant' && m.operation_count > 0,
           timestamp: new Date(m.created_at).getTime(),
-        }))
+        })),
       );
       setShowHistory(false);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   // ── Start new conversation ────────────────────────────────────────────────
@@ -163,46 +188,49 @@ export const AiChatPanel: React.FC = () => {
   // ── Persist messages to backend ───────────────────────────────────────────
 
   const _persistLock = useRef(false);
-  const persistMessages = useCallback(async (msgs: ChatMessage[]) => {
-    if (!projectId || msgs.length === 0) return;
+  const persistMessages = useCallback(
+    async (msgs: ChatMessage[]) => {
+      if (!projectId || msgs.length === 0) return;
 
-    try {
-      let convId = conversationIdRef.current;
+      try {
+        let convId = conversationIdRef.current;
 
-      // Create conversation if needed (with lock to prevent duplicates)
-      if (!convId) {
-        if (_persistLock.current) return;
-        _persistLock.current = true;
-        try {
-          const res = await axiosInstance.post('/ai/conversations', {
-            projectId,
-            cardId: activeCard?.id || null,
-          });
-          convId = res.data.id;
-          conversationIdRef.current = convId;
-          setConversationId(convId);
-        } finally {
-          _persistLock.current = false;
+        // Create conversation if needed (with lock to prevent duplicates)
+        if (!convId) {
+          if (_persistLock.current) return;
+          _persistLock.current = true;
+          try {
+            const res = await axiosInstance.post('/ai/conversations', {
+              projectId,
+              cardId: activeCard?.id || null,
+            });
+            convId = res.data.id;
+            conversationIdRef.current = convId;
+            setConversationId(convId);
+          } finally {
+            _persistLock.current = false;
+          }
         }
+
+        // Append new messages
+        await axiosInstance.post(`/ai/conversations/${convId}/messages`, {
+          messages: msgs.map((m) => ({
+            role: m.role,
+            content: m.content,
+            operations: m.operations || null,
+            operationCount: m.operationCount || 0,
+            suggestions: m.suggestions || null,
+          })),
+        });
+
+        // Refresh conversation list (title may have been auto-set)
+        fetchConversations();
+      } catch (err) {
+        console.warn('Failed to persist AI messages:', err);
       }
-
-      // Append new messages
-      await axiosInstance.post(`/ai/conversations/${convId}/messages`, {
-        messages: msgs.map((m) => ({
-          role: m.role,
-          content: m.content,
-          operations: m.operations || null,
-          operationCount: m.operationCount || 0,
-          suggestions: m.suggestions || null,
-        })),
-      });
-
-      // Refresh conversation list (title may have been auto-set)
-      fetchConversations();
-    } catch (err) {
-      console.warn('Failed to persist AI messages:', err);
-    }
-  }, [conversationId, projectId, activeCard?.id, fetchConversations]);
+    },
+    [conversationId, projectId, activeCard?.id, fetchConversations],
+  );
 
   // ── Auto-scroll ───────────────────────────────────────────────────────────
 
@@ -240,8 +268,8 @@ export const AiChatPanel: React.FC = () => {
           assistantMsg.operationCount = result.executedOps;
           setMessages((prev) =>
             prev.map((m, i) =>
-              i === prev.length - 1 ? { ...m, applied: true, operationCount: result.executedOps } : m
-            )
+              i === prev.length - 1 ? { ...m, applied: true, operationCount: result.executedOps } : m,
+            ),
           );
         }
       }
@@ -295,7 +323,7 @@ export const AiChatPanel: React.FC = () => {
         handleSubmit();
       }
     },
-    [handleSubmit]
+    [handleSubmit],
   );
 
   const handleSuggestionClick = useCallback(
@@ -311,17 +339,22 @@ export const AiChatPanel: React.FC = () => {
       sendIntent(suggestion);
       persistMessages([userMsg]);
     },
-    [sendIntent, dispatch, persistMessages]
+    [sendIntent, dispatch, persistMessages],
   );
 
-  const handleDeleteConversation = useCallback(async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    try {
-      await axiosInstance.delete(`/ai/conversations/${id}`);
-      setConversations((prev) => prev.filter((c) => c.id !== id));
-      if (conversationId === id) startNewConversation();
-    } catch { /* ignore */ }
-  }, [conversationId, startNewConversation]);
+  const handleDeleteConversation = useCallback(
+    async (id: string, e: React.MouseEvent) => {
+      e.stopPropagation();
+      try {
+        await axiosInstance.delete(`/ai/conversations/${id}`);
+        setConversations((prev) => prev.filter((c) => c.id !== id));
+        if (conversationId === id) startNewConversation();
+      } catch {
+        /* ignore */
+      }
+    },
+    [conversationId, startNewConversation],
+  );
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -344,7 +377,7 @@ export const AiChatPanel: React.FC = () => {
             'relative p-1 rounded transition-colors',
             showHistory
               ? 'text-ice-accent bg-ice-accent/10'
-              : 'text-ice-text-3 hover:text-ice-text-1 hover:bg-ice-hover'
+              : 'text-ice-text-3 hover:text-ice-text-1 hover:bg-ice-hover',
           )}
           title="Chat history"
         >
@@ -376,14 +409,12 @@ export const AiChatPanel: React.FC = () => {
                 onClick={() => loadConversation(conv.id)}
                 className={cn(
                   'flex items-center gap-2 w-full px-3 py-2 text-left hover:bg-ice-hover transition-colors',
-                  conversationId === conv.id && 'bg-ice-hover'
+                  conversationId === conv.id && 'bg-ice-hover',
                 )}
               >
                 <MessageSquare className="w-3 h-3 text-ice-text-3 shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-ice-xs text-ice-text-1 truncate">
-                    {conv.title || 'Untitled conversation'}
-                  </p>
+                  <p className="text-ice-xs text-ice-text-1 truncate">{conv.title || 'Untitled conversation'}</p>
                   <p className="text-[10px] text-ice-text-3">
                     {conv._count.messages} msgs · {formatDateTime(conv.updated_at)}
                   </p>
@@ -403,41 +434,41 @@ export const AiChatPanel: React.FC = () => {
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-3 min-h-0">
-        {messages.length === 0 && !isProcessing && (() => {
-          const canvasNodes = activeCard?.nodes || [];
-          const canvasEdges = activeCard?.edges || [];
-          const patterns = suggestPatterns(canvasNodes as any, canvasEdges as any);
-          return (
-          <div className="flex flex-col items-center justify-center h-full text-center px-4 gap-3">
-            <Sparkles className="w-8 h-8 text-ice-text-3 opacity-40" />
-            <p className="text-ice-sm text-ice-text-3 leading-relaxed">
-              {canvasNodes.length === 0
-                ? 'Describe what you want to build and I\'ll add it to your canvas.'
-                : 'What would you like to improve or add next?'}
-            </p>
-            <div className="flex flex-wrap gap-1.5 justify-center">
-              {patterns.map((p) => (
-                <button
-                  key={p.label}
-                  onClick={() => handleSuggestionClick(p.intent)}
-                  className="px-2.5 py-1 text-ice-xs bg-ice-raised border border-ice-border rounded-full text-ice-text-2 hover:text-ice-text-1 hover:bg-ice-hover transition-colors"
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          );
-        })()}
+        {messages.length === 0 &&
+          !isProcessing &&
+          (() => {
+            const canvasNodes = activeCard?.nodes || [];
+            const canvasEdges = activeCard?.edges || [];
+            const patterns = suggestPatterns(canvasNodes as any, canvasEdges as any);
+            return (
+              <div className="flex flex-col items-center justify-center h-full text-center px-4 gap-3">
+                <Sparkles className="w-8 h-8 text-ice-text-3 opacity-40" />
+                <p className="text-ice-sm text-ice-text-3 leading-relaxed">
+                  {canvasNodes.length === 0
+                    ? "Describe what you want to build and I'll add it to your canvas."
+                    : 'What would you like to improve or add next?'}
+                </p>
+                <div className="flex flex-wrap gap-1.5 justify-center">
+                  {patterns.map((p) => (
+                    <button
+                      key={p.label}
+                      onClick={() => handleSuggestionClick(p.intent)}
+                      className="px-2.5 py-1 text-ice-xs bg-ice-raised border border-ice-border rounded-full text-ice-text-2 hover:text-ice-text-1 hover:bg-ice-hover transition-colors"
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
 
         {messages.map((msg) => (
           <div key={msg.id} className={cn('flex', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
             <div
               className={cn(
                 'max-w-[90%] rounded-lg px-3 py-2',
-                msg.role === 'user'
-                  ? 'bg-ice-accent/20 text-ice-text-1'
-                  : 'bg-ice-raised text-ice-text-1'
+                msg.role === 'user' ? 'bg-ice-accent/20 text-ice-text-1' : 'bg-ice-raised text-ice-text-1',
               )}
             >
               {msg.content.startsWith('AI_NOT_CONFIGURED:') ? (
@@ -449,11 +480,16 @@ export const AiChatPanel: React.FC = () => {
                   <div className="rounded border border-ice-border bg-ice-base px-2.5 py-2 space-y-1.5 text-ice-xs">
                     <div className="flex items-start gap-1.5">
                       <span className="text-ice-text-3 shrink-0">1.</span>
-                      <span className="text-ice-text-2">Get an API key at <span className="font-mono text-amber-400">console.anthropic.com</span></span>
+                      <span className="text-ice-text-2">
+                        Get an API key at <span className="font-mono text-amber-400">console.anthropic.com</span>
+                      </span>
                     </div>
                     <div className="flex items-start gap-1.5">
                       <span className="text-ice-text-3 shrink-0">2.</span>
-                      <span className="text-ice-text-2">Add <span className="font-mono text-amber-400">ANTHROPIC_API_KEY=sk-ant-...</span> to your <span className="font-mono">.env</span> file</span>
+                      <span className="text-ice-text-2">
+                        Add <span className="font-mono text-amber-400">ANTHROPIC_API_KEY=sk-ant-...</span> to your{' '}
+                        <span className="font-mono">.env</span> file
+                      </span>
                     </div>
                     <div className="flex items-start gap-1.5">
                       <span className="text-ice-text-3 shrink-0">3.</span>
@@ -552,9 +588,7 @@ export const AiChatPanel: React.FC = () => {
             disabled={!input.trim() || isProcessing}
             className={cn(
               'p-1 rounded transition-colors shrink-0',
-              input.trim() && !isProcessing
-                ? 'text-ice-accent hover:bg-ice-accent/20'
-                : 'text-ice-text-3 opacity-40'
+              input.trim() && !isProcessing ? 'text-ice-accent hover:bg-ice-accent/20' : 'text-ice-text-3 opacity-40',
             )}
           >
             <Send className="w-4 h-4" />

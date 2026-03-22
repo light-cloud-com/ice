@@ -11,9 +11,7 @@
 import Stripe from 'stripe';
 import prisma from '../lib/prisma';
 // Initialize Stripe (will be undefined if STRIPE_SECRET_KEY not set)
-const stripe = process.env.STRIPE_SECRET_KEY
-  ? new Stripe(process.env.STRIPE_SECRET_KEY)
-  : null;
+const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
 
 // Types
 export interface CreateCustomerData {
@@ -71,13 +69,9 @@ export function isStripeConfigured(): boolean {
 /**
  * Create or update a Stripe customer for an organisation
  */
-export async function createOrUpdateCustomer(
-  data: CreateCustomerData
-): Promise<string> {
+export async function createOrUpdateCustomer(data: CreateCustomerData): Promise<string> {
   if (!stripe) {
-    throw new Error(
-      'Stripe is not configured. Set STRIPE_SECRET_KEY environment variable.'
-    );
+    throw new Error('Stripe is not configured. Set STRIPE_SECRET_KEY environment variable.');
   }
 
   // Check if customer already exists
@@ -115,8 +109,7 @@ export async function createOrUpdateCustomer(
       organisation_id: data.organisationId,
       stripe_customer_id: customer.id,
       address_first_name: data.billingAddress?.name?.split(' ')[0] || '',
-      address_last_name:
-        data.billingAddress?.name?.split(' ').slice(1).join(' ') || '',
+      address_last_name: data.billingAddress?.name?.split(' ').slice(1).join(' ') || '',
       address_street: data.billingAddress?.line1 || '',
       address_street_number: '',
       address_city: data.billingAddress?.city || '',
@@ -134,9 +127,7 @@ export async function createOrUpdateCustomer(
 /**
  * Create a SetupIntent for adding a payment method
  */
-export async function createSetupIntent(
-  organisationId: string
-): Promise<{ clientSecret: string }> {
+export async function createSetupIntent(organisationId: string): Promise<{ clientSecret: string }> {
   if (!stripe) {
     throw new Error('Stripe is not configured');
   }
@@ -163,10 +154,7 @@ export async function createSetupIntent(
 /**
  * Attach a payment method to a customer and set as default
  */
-export async function attachPaymentMethod(
-  organisationId: string,
-  paymentMethodId: string
-): Promise<PaymentMethodInfo> {
+export async function attachPaymentMethod(organisationId: string, paymentMethodId: string): Promise<PaymentMethodInfo> {
   if (!stripe) {
     throw new Error('Stripe is not configured');
   }
@@ -216,9 +204,7 @@ export async function attachPaymentMethod(
 /**
  * Get the current payment method for an organisation
  */
-export async function getPaymentMethod(
-  organisationId: string
-): Promise<PaymentMethodInfo | null> {
+export async function getPaymentMethod(organisationId: string): Promise<PaymentMethodInfo | null> {
   const billing = await prisma.billing.findUnique({
     where: { organisation_id: organisationId },
   });
@@ -228,9 +214,7 @@ export async function getPaymentMethod(
   }
 
   try {
-    const paymentMethod = await stripe.paymentMethods.retrieve(
-      billing.stripe_payment_method_id
-    );
+    const paymentMethod = await stripe.paymentMethods.retrieve(billing.stripe_payment_method_id);
     const card = paymentMethod.card!;
 
     return {
@@ -248,9 +232,7 @@ export async function getPaymentMethod(
 /**
  * Remove payment method
  */
-export async function removePaymentMethod(
-  organisationId: string
-): Promise<void> {
+export async function removePaymentMethod(organisationId: string): Promise<void> {
   if (!stripe) {
     throw new Error('Stripe is not configured');
   }
@@ -283,7 +265,7 @@ export async function createStripeInvoice(
     description?: string;
     dueDate?: Date;
     autoCharge?: boolean;
-  }
+  },
 ): Promise<{
   invoiceId: string;
   hostedInvoiceUrl: string | null;
@@ -361,9 +343,7 @@ export async function chargeInvoice(stripeInvoiceId: string): Promise<{
 /**
  * Get invoice PDF URL
  */
-export async function getInvoicePdfUrl(
-  stripeInvoiceId: string
-): Promise<string | null> {
+export async function getInvoicePdfUrl(stripeInvoiceId: string): Promise<string | null> {
   if (!stripe) {
     return null;
   }
@@ -381,7 +361,7 @@ export async function getInvoicePdfUrl(
  */
 export async function handleWebhookEvent(
   payload: Buffer,
-  signature: string
+  signature: string,
 ): Promise<{ received: boolean; type: string }> {
   if (!stripe) {
     throw new Error('Stripe is not configured');
@@ -449,9 +429,7 @@ async function handleInvoicePaid(stripeInvoice: Stripe.Invoice): Promise<void> {
 /**
  * Handle invoice.payment_failed webhook
  */
-async function handleInvoicePaymentFailed(
-  stripeInvoice: Stripe.Invoice
-): Promise<void> {
+async function handleInvoicePaymentFailed(stripeInvoice: Stripe.Invoice): Promise<void> {
   const organisationId = stripeInvoice.metadata?.organisation_id;
   if (!organisationId) return;
 
@@ -467,9 +445,7 @@ async function handleInvoicePaymentFailed(
 /**
  * Get Stripe dashboard URL for an organisation's customer
  */
-export async function getCustomerDashboardUrl(
-  organisationId: string
-): Promise<string | null> {
+export async function getCustomerDashboardUrl(organisationId: string): Promise<string | null> {
   const billing = await prisma.billing.findUnique({
     where: { organisation_id: organisationId },
   });
@@ -486,21 +462,14 @@ export async function getCustomerDashboardUrl(
  * Update billing details for an organisation
  * Creates billing record if it doesn't exist
  */
-export async function updateBillingDetails(
-  organisationId: string,
-  details: BillingDetailsData
-): Promise<void> {
+export async function updateBillingDetails(organisationId: string, details: BillingDetailsData): Promise<void> {
   // Validate company name if is_company is true
   if (details.is_company && !details.company_name) {
     throw new Error('Company name is required for business customers');
   }
 
   // Build the full address for Stripe
-  const fullAddress = [
-    details.address_street,
-    details.address_street_number,
-    details.address_apartment_number,
-  ]
+  const fullAddress = [details.address_street, details.address_street_number, details.address_apartment_number]
     .filter(Boolean)
     .join(' ');
 
@@ -569,12 +538,8 @@ export async function updateBillingDetails(
 
       // Tax IDs must be managed separately via the Tax IDs API
       if (details.vat_number) {
-        const existingTaxIds = await stripe.customers.listTaxIds(
-          billing.stripe_customer_id
-        );
-        const hasVat = existingTaxIds.data.some(
-          (t) => t.type === 'eu_vat' && t.value === details.vat_number
-        );
+        const existingTaxIds = await stripe.customers.listTaxIds(billing.stripe_customer_id);
+        const hasVat = existingTaxIds.data.some((t) => t.type === 'eu_vat' && t.value === details.vat_number);
         if (!hasVat) {
           try {
             await stripe.customers.createTaxId(billing.stripe_customer_id, {
@@ -588,9 +553,7 @@ export async function updateBillingDetails(
       }
     } else {
       // Create new Stripe customer when billing details are saved
-      console.log(
-        `[Stripe] Creating new customer for organisation ${organisationId}`
-      );
+      console.log(`[Stripe] Creating new customer for organisation ${organisationId}`);
 
       // Get organisation details for customer name
       const org = await prisma.organisation.findUnique({
@@ -618,9 +581,7 @@ export async function updateBillingDetails(
         data: { stripe_customer_id: customer.id },
       });
 
-      console.log(
-        `[Stripe] Created customer ${customer.id} for organisation ${organisationId}`
-      );
+      console.log(`[Stripe] Created customer ${customer.id} for organisation ${organisationId}`);
 
       // Add VAT ID if provided
       if (details.vat_number) {
@@ -684,21 +645,14 @@ export async function getUserBilling(userId: string) {
  * Update user-level billing details
  * Creates billing record if it doesn't exist
  */
-export async function updateUserBillingDetails(
-  userId: string,
-  details: BillingDetailsData
-): Promise<void> {
+export async function updateUserBillingDetails(userId: string, details: BillingDetailsData): Promise<void> {
   // Validate company name if is_company is true
   if (details.is_company && !details.company_name) {
     throw new Error('Company name is required for business customers');
   }
 
   // Build the full address for Stripe
-  const fullAddress = [
-    details.address_street,
-    details.address_street_number,
-    details.address_apartment_number,
-  ]
+  const fullAddress = [details.address_street, details.address_street_number, details.address_apartment_number]
     .filter(Boolean)
     .join(' ');
 
@@ -756,9 +710,7 @@ export async function updateUserBillingDetails(
 
   // Create or update Stripe customer - REQUIRED for payment method to work
   if (!stripe) {
-    throw new Error(
-      'Payment processing is not configured. Please contact support.'
-    );
+    throw new Error('Payment processing is not configured. Please contact support.');
   }
 
   if (billing?.stripe_customer_id) {
@@ -777,12 +729,8 @@ export async function updateUserBillingDetails(
 
     // Tax IDs must be managed separately via the Tax IDs API
     if (details.vat_number) {
-      const existingTaxIds = await stripe.customers.listTaxIds(
-        billing.stripe_customer_id
-      );
-      const hasVat = existingTaxIds.data.some(
-        (t) => t.type === 'eu_vat' && t.value === details.vat_number
-      );
+      const existingTaxIds = await stripe.customers.listTaxIds(billing.stripe_customer_id);
+      const hasVat = existingTaxIds.data.some((t) => t.type === 'eu_vat' && t.value === details.vat_number);
       if (!hasVat) {
         try {
           await stripe.customers.createTaxId(billing.stripe_customer_id, {
@@ -868,9 +816,7 @@ export async function getUserBillingDetails(userId: string) {
 /**
  * Create a SetupIntent for adding a payment method (user-level)
  */
-export async function createUserSetupIntent(
-  userId: string
-): Promise<{ clientSecret: string }> {
+export async function createUserSetupIntent(userId: string): Promise<{ clientSecret: string }> {
   if (!stripe) {
     throw new Error('Stripe is not configured');
   }
@@ -880,9 +826,7 @@ export async function createUserSetupIntent(
   });
 
   if (!billing?.stripe_customer_id) {
-    throw new Error(
-      'No Stripe customer found. Please save billing details first.'
-    );
+    throw new Error('No Stripe customer found. Please save billing details first.');
   }
 
   const setupIntent = await stripe.setupIntents.create({
@@ -899,10 +843,7 @@ export async function createUserSetupIntent(
 /**
  * Attach a payment method to a user and set as default
  */
-export async function attachUserPaymentMethod(
-  userId: string,
-  paymentMethodId: string
-): Promise<PaymentMethodInfo> {
+export async function attachUserPaymentMethod(userId: string, paymentMethodId: string): Promise<PaymentMethodInfo> {
   if (!stripe) {
     throw new Error('Stripe is not configured');
   }
@@ -952,9 +893,7 @@ export async function attachUserPaymentMethod(
 /**
  * Get the current payment method for a user
  */
-export async function getUserPaymentMethod(
-  userId: string
-): Promise<PaymentMethodInfo | null> {
+export async function getUserPaymentMethod(userId: string): Promise<PaymentMethodInfo | null> {
   const billing = await prisma.userBilling.findUnique({
     where: { user_id: userId },
   });
@@ -964,9 +903,7 @@ export async function getUserPaymentMethod(
   }
 
   try {
-    const paymentMethod = await stripe.paymentMethods.retrieve(
-      billing.stripe_payment_method_id
-    );
+    const paymentMethod = await stripe.paymentMethods.retrieve(billing.stripe_payment_method_id);
     const card = paymentMethod.card!;
 
     return {
@@ -1018,7 +955,7 @@ export async function createUserStripeInvoice(
     dueDate?: Date;
     autoCharge?: boolean;
     invoiceNumber?: string; // Our LC-YYYY-NNNNNN invoice number
-  }
+  },
 ): Promise<{
   invoiceId: string;
   hostedInvoiceUrl: string | null;
@@ -1060,9 +997,7 @@ export async function createUserStripeInvoice(
   // Determine the email to use for the invoice
   const customerEmail = billing.billing_email || user?.email;
 
-  console.log(
-    `[Stripe] Creating invoice for customer ${billing.stripe_customer_id}, email: ${customerEmail}`
-  );
+  console.log(`[Stripe] Creating invoice for customer ${billing.stripe_customer_id}, email: ${customerEmail}`);
 
   // Update Stripe customer with latest billing details before creating invoice
   await stripe.customers.update(billing.stripe_customer_id, {
@@ -1095,9 +1030,7 @@ export async function createUserStripeInvoice(
   } catch (createError: any) {
     // If invoice number is taken, create without custom number
     if (createError.message?.includes('Invoice number is already set')) {
-      console.warn(
-        `[Stripe] Invoice number ${options?.invoiceNumber} already exists, using auto-generated number`
-      );
+      console.warn(`[Stripe] Invoice number ${options?.invoiceNumber} already exists, using auto-generated number`);
       invoice = await stripe.invoices.create({
         customer: billing.stripe_customer_id,
         description: `${options?.description} (${options?.invoiceNumber})`, // Include our number in description
@@ -1117,7 +1050,7 @@ export async function createUserStripeInvoice(
   // Add invoice items to this specific invoice (must be in draft state)
   for (const item of lineItems) {
     console.log(
-      `[Stripe] Adding invoice item: ${item.description}, amount: ${item.amount_cents} cents, type: ${item.type || 'unknown'}`
+      `[Stripe] Adding invoice item: ${item.description}, amount: ${item.amount_cents} cents, type: ${item.type || 'unknown'}`,
     );
 
     await stripe.invoiceItems.create({
@@ -1150,9 +1083,7 @@ export async function createUserStripeInvoice(
   if ((finalizedInvoice as any).amount_due > 0) {
     try {
       paidInvoice = await stripe.invoices.pay(invoice.id);
-      console.log(
-        `[Stripe] Invoice payment attempted, status: ${paidInvoice.status}`
-      );
+      console.log(`[Stripe] Invoice payment attempted, status: ${paidInvoice.status}`);
     } catch (payError: any) {
       console.error(`[Stripe] Invoice payment failed: ${payError.message}`);
       // Continue - invoice is created but payment failed
@@ -1162,9 +1093,7 @@ export async function createUserStripeInvoice(
   // Check if payment was successful - Stripe uses status 'paid', not a .paid property
   const isPaid = paidInvoice.status === 'paid';
 
-  console.log(
-    `[Stripe] Invoice final status: ${paidInvoice.status}, isPaid: ${isPaid}`
-  );
+  console.log(`[Stripe] Invoice final status: ${paidInvoice.status}, isPaid: ${isPaid}`);
 
   return {
     invoiceId: paidInvoice.id,

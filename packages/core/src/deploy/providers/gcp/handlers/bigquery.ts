@@ -14,7 +14,7 @@ function result(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  overrides: Partial<ResourceDeployResult> = {}
+  overrides: Partial<ResourceDeployResult> = {},
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -31,7 +31,7 @@ function fail(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  error: string
+  error: string,
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -50,8 +50,7 @@ export const bigquery_handler: GCPResourceHandler = {
 
     try {
       const bq = ctx.clients.get('bigquery') as any;
-      if (!bq)
-        return fail(name, 'create', start, sdk_not_available(SERVICE_NAMES.BIGQUERY, 'bigquery'));
+      if (!bq) return fail(name, 'create', start, sdk_not_available(SERVICE_NAMES.BIGQUERY, 'bigquery'));
 
       // Sanitize dataset ID — only letters, numbers, underscores
       const dataset_id = name.replace(/[^a-zA-Z0-9_]/g, '_');

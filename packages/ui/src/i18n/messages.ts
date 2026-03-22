@@ -43,8 +43,7 @@ export const DEPLOY_UI = {
 
   // Auth prompts
   CONNECTING_TO_GCP: 'Connecting to GCP...',
-  AUTH_BROWSER_PROMPT:
-    'A browser window will open for Google authentication. Complete the sign-in to continue.',
+  AUTH_BROWSER_PROMPT: 'A browser window will open for Google authentication. Complete the sign-in to continue.',
 
   // Plan display
   NO_CHANGES: 'No changes detected. Infrastructure is up to date.',
@@ -340,7 +339,7 @@ export const ONBOARDING = {
   STEP_PROJECT: 'Project',
 
   // Welcome step
-  WELCOME_TITLE: (name?: string) => name ? `Welcome to ICE, ${name}` : 'Welcome to ICE',
+  WELCOME_TITLE: (name?: string) => (name ? `Welcome to ICE, ${name}` : 'Welcome to ICE'),
   WELCOME_SUBTITLE: 'Design, deploy, and manage cloud infrastructure visually',
   PROVIDER_LABEL: 'Which cloud do you primarily use?',
   REGION_LABEL: 'Default region',

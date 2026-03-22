@@ -63,7 +63,7 @@ export function useMenuActions() {
             selectAll({
               nodes: nodes.map((n) => n.id),
               edges: edges.map((e) => e.id),
-            })
+            }),
           );
           break;
 

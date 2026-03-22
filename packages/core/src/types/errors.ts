@@ -12,14 +12,7 @@
 /**
  * Error code categories.
  */
-export type ErrorCategory =
-  | 'VALIDATION'
-  | 'GRAPH'
-  | 'PROVIDER'
-  | 'DEPLOYMENT'
-  | 'STATE'
-  | 'SECURITY'
-  | 'INTERNAL';
+export type ErrorCategory = 'VALIDATION' | 'GRAPH' | 'PROVIDER' | 'DEPLOYMENT' | 'STATE' | 'SECURITY' | 'INTERNAL';
 
 /**
  * All error codes.
@@ -160,7 +153,7 @@ export class ValidationError extends IceError {
     message: string,
     violations: ValidationViolation[] = [],
     code: ErrorCode = 'VALIDATION_FAILED',
-    context: Record<string, unknown> = {}
+    context: Record<string, unknown> = {},
   ) {
     super(message, { ...context, violations });
     this.code = code;
@@ -194,7 +187,7 @@ export class GraphError extends IceError {
     message: string,
     code: ErrorCode = 'GRAPH_INVALID',
     context: Record<string, unknown> = {},
-    cause?: Error
+    cause?: Error,
   ) {
     super(message, context, cause);
     this.code = code;
@@ -250,7 +243,7 @@ export class ProviderError extends IceError {
     status_code = 500,
     retryable = false,
     context: Record<string, unknown> = {},
-    cause?: Error
+    cause?: Error,
   ) {
     super(message, { provider, ...context }, cause);
     this.code = code;
@@ -271,7 +264,7 @@ export class AuthenticationError extends ProviderError {
       'PROVIDER_AUTH_FAILED',
       401,
       false,
-      context
+      context,
     );
   }
 }
@@ -311,7 +304,7 @@ export class DeploymentError extends IceError {
     affected_nodes: string[] = [],
     code: ErrorCode = 'DEPLOYMENT_FAILED',
     context: Record<string, unknown> = {},
-    cause?: Error
+    cause?: Error,
   ) {
     super(message, { affected_nodes, ...context }, cause);
     this.code = code;
@@ -338,7 +331,7 @@ export class SecurityError extends IceError {
     message: string,
     code: ErrorCode = 'SECURITY_VIOLATION',
     policy?: string,
-    context: Record<string, unknown> = {}
+    context: Record<string, unknown> = {},
   ) {
     super(message, { policy, ...context });
     this.code = code;
@@ -362,7 +355,7 @@ export class InternalError extends IceError {
     message: string,
     code: ErrorCode = 'INTERNAL_ERROR',
     context: Record<string, unknown> = {},
-    cause?: Error
+    cause?: Error,
   ) {
     super(message, context, cause);
     this.code = code;

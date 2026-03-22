@@ -55,27 +55,59 @@ export const SignupPage: React.FC = () => {
             </div>
 
             {error && (
-              <div role="alert" aria-live="polite" className="rounded-md px-3 py-2.5 text-sm bg-ice-red-muted text-ice-red border border-ice-red/20">
+              <div
+                role="alert"
+                aria-live="polite"
+                className="rounded-md px-3 py-2.5 text-sm bg-ice-red-muted text-ice-red border border-ice-red/20"
+              >
                 {error}
               </div>
             )}
 
             <label className="block">
               <span className="block text-sm font-medium text-ice-text-2 mb-1.5">Name</span>
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} required id="ice-signup-auth-input-name" className="ice-input" />
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                id="ice-signup-auth-input-name"
+                className="ice-input"
+              />
             </label>
 
             <label className="block">
               <span className="block text-sm font-medium text-ice-text-2 mb-1.5">Email</span>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required id="ice-signup-auth-input-email" className="ice-input" />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                id="ice-signup-auth-input-email"
+                className="ice-input"
+              />
             </label>
 
             <label className="block">
               <span className="block text-sm font-medium text-ice-text-2 mb-1.5">Password</span>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} placeholder="At least 8 characters" id="ice-signup-auth-input-password" className="ice-input" />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+                placeholder="At least 8 characters"
+                id="ice-signup-auth-input-password"
+                className="ice-input"
+              />
             </label>
 
-            <button type="submit" disabled={loading} id="ice-signup-auth-btn-submit" className="ice-btn ice-btn-primary w-full">
+            <button
+              type="submit"
+              disabled={loading}
+              id="ice-signup-auth-btn-submit"
+              className="ice-btn ice-btn-primary w-full"
+            >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
               Create account
             </button>
@@ -84,7 +116,11 @@ export const SignupPage: React.FC = () => {
 
         <p className="text-center text-sm text-ice-text-3">
           Already have an account?{' '}
-          <Link to="/login" id="ice-signup-auth-link-login" className="text-ice-accent hover:text-ice-accent-hover transition-colors">
+          <Link
+            to="/login"
+            id="ice-signup-auth-link-login"
+            className="text-ice-accent hover:text-ice-accent-hover transition-colors"
+          >
             Sign in
           </Link>
         </p>

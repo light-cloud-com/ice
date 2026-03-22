@@ -350,12 +350,7 @@ export class Lexer {
   /**
    * Scan a number literal.
    */
-  private scan_number(
-    start_pos: number,
-    start_line: number,
-    start_column: number,
-    negative: boolean
-  ): void {
+  private scan_number(start_pos: number, start_line: number, start_column: number, negative: boolean): void {
     // Integer part
     while (this.is_digit(this.peek())) {
       this.advance();
@@ -414,13 +409,7 @@ export class Lexer {
     } else {
       // Check if it looks like a type identifier (contains a dot or starts with uppercase)
       const is_type = value.includes('.') || /^[A-Z]/.test(value);
-      this.add_token(
-        is_type ? 'TYPE_IDENTIFIER' : 'IDENTIFIER',
-        value,
-        start_pos,
-        start_line,
-        start_column
-      );
+      this.add_token(is_type ? 'TYPE_IDENTIFIER' : 'IDENTIFIER', value, start_pos, start_line, start_column);
     }
   }
 
@@ -550,14 +539,7 @@ export class Lexer {
     const content = this.source.slice(content_start, content_end);
     const raw = this.source.slice(start_pos, this.pos);
 
-    this.add_token_with_literal(
-      'STRING',
-      raw,
-      start_pos,
-      start_line,
-      start_column,
-      content.trimEnd()
-    );
+    this.add_token_with_literal('STRING', raw, start_pos, start_line, start_column, content.trimEnd());
   }
 
   // ---------------------------------------------------------------------------
@@ -623,20 +605,8 @@ export class Lexer {
     return create_position(this.line, this.column, this.pos, length, this.options.file);
   }
 
-  private add_token(
-    type: TokenType,
-    value: string,
-    start_pos: number,
-    start_line: number,
-    start_column: number
-  ): void {
-    const position = create_position(
-      start_line,
-      start_column,
-      start_pos,
-      this.pos - start_pos,
-      this.options.file
-    );
+  private add_token(type: TokenType, value: string, start_pos: number, start_line: number, start_column: number): void {
+    const position = create_position(start_line, start_column, start_pos, this.pos - start_pos, this.options.file);
     this.tokens.push(create_token(type, value, position));
   }
 
@@ -646,15 +616,9 @@ export class Lexer {
     start_pos: number,
     start_line: number,
     start_column: number,
-    literal: unknown
+    literal: unknown,
   ): void {
-    const position = create_position(
-      start_line,
-      start_column,
-      start_pos,
-      this.pos - start_pos,
-      this.options.file
-    );
+    const position = create_position(start_line, start_column, start_pos, this.pos - start_pos, this.options.file);
     this.tokens.push(create_token(type, value, position, literal));
   }
 
@@ -667,9 +631,7 @@ export class Lexer {
 
     if (recoverable) {
       // Add error token and continue
-      this.tokens.push(
-        create_token('ERROR', this.source[this.pos - 1] ?? '', this.current_position(1))
-      );
+      this.tokens.push(create_token('ERROR', this.source[this.pos - 1] ?? '', this.current_position(1)));
     }
   }
 }

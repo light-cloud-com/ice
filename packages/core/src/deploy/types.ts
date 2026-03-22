@@ -131,7 +131,7 @@ export interface ProviderDeployer {
     type: string,
     name: string,
     properties: Record<string, unknown>,
-    options: Record<string, unknown>
+    options: Record<string, unknown>,
   ): Promise<ResourceDeployResult>;
 
   /** Update an existing resource */
@@ -141,7 +141,7 @@ export interface ProviderDeployer {
     provider_id: string,
     properties: Record<string, unknown>,
     current_properties: Record<string, unknown>,
-    options: Record<string, unknown>
+    options: Record<string, unknown>,
   ): Promise<ResourceDeployResult>;
 
   /** Delete a resource */
@@ -149,7 +149,7 @@ export interface ProviderDeployer {
     type: string,
     name: string,
     provider_id: string,
-    options: Record<string, unknown>
+    options: Record<string, unknown>,
   ): Promise<ResourceDeployResult>;
 
   /** Initialize the deployer */

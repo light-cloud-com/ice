@@ -15,7 +15,7 @@ function result(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  overrides: Partial<ResourceDeployResult> = {}
+  overrides: Partial<ResourceDeployResult> = {},
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -32,7 +32,7 @@ function fail(
   name: string,
   action: 'create' | 'update' | 'delete',
   start: number,
-  error: string
+  error: string,
 ): ResourceDeployResult {
   return {
     resource_id: name,
@@ -50,16 +50,13 @@ export const load_balancer_handler: GCPResourceHandler = {
     const start = Date.now();
 
     try {
-      const op = (await ctx.rest_client.post(
-        `${BASE_URL}/projects/${ctx.project}/global/forwardingRules`,
-        {
-          name,
-          loadBalancingScheme: properties.scheme || 'EXTERNAL',
-          portRange: String(properties.port_range || '443'),
-          IPProtocol: properties.protocol === 'HTTP' ? 'TCP' : 'TCP',
-          labels: properties.labels || {},
-        }
-      )) as any;
+      const op = (await ctx.rest_client.post(`${BASE_URL}/projects/${ctx.project}/global/forwardingRules`, {
+        name,
+        loadBalancingScheme: properties.scheme || 'EXTERNAL',
+        portRange: String(properties.port_range || '443'),
+        IPProtocol: properties.protocol === 'HTTP' ? 'TCP' : 'TCP',
+        labels: properties.labels || {},
+      })) as any;
 
       if (op?.name) await wait_for_compute_op(ctx, op.name);
 
@@ -76,10 +73,9 @@ export const load_balancer_handler: GCPResourceHandler = {
 
     try {
       if (properties.labels) {
-        await ctx.rest_client.post(
-          `${BASE_URL}/projects/${ctx.project}/global/forwardingRules/${name}/setLabels`,
-          { labels: properties.labels }
-        );
+        await ctx.rest_client.post(`${BASE_URL}/projects/${ctx.project}/global/forwardingRules/${name}/setLabels`, {
+          labels: properties.labels,
+        });
       }
 
       return result(name, 'update', start, { provider_id });
@@ -93,7 +89,7 @@ export const load_balancer_handler: GCPResourceHandler = {
 
     try {
       const op = (await ctx.rest_client.delete(
-        `${BASE_URL}/projects/${ctx.project}/global/forwardingRules/${name}`
+        `${BASE_URL}/projects/${ctx.project}/global/forwardingRules/${name}`,
       )) as any;
 
       if (op?.name) await wait_for_compute_op(ctx, op.name);
@@ -108,12 +104,9 @@ export const load_balancer_handler: GCPResourceHandler = {
 async function wait_for_compute_op(ctx: GCPHandlerContext, op_name: string): Promise<void> {
   const start = Date.now();
   while (Date.now() - start < 120_000) {
-    const op = (await ctx.rest_client.get(
-      `${BASE_URL}/projects/${ctx.project}/global/operations/${op_name}`
-    )) as any;
+    const op = (await ctx.rest_client.get(`${BASE_URL}/projects/${ctx.project}/global/operations/${op_name}`)) as any;
     if (op?.status === 'DONE') {
-      if (op.error)
-        throw new Error(operation_failed(SERVICE_NAMES.COMPUTE, JSON.stringify(op.error)));
+      if (op.error) throw new Error(operation_failed(SERVICE_NAMES.COMPUTE, JSON.stringify(op.error)));
       return;
     }
     await new Promise((r) => setTimeout(r, 3000));

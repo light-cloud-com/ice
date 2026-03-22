@@ -142,18 +142,21 @@ export const fetchRulesForNode = createAsyncThunk(
 
 export const createPipelineRule = createAsyncThunk(
   'pipeline/createRule',
-  async (input: {
-    cardId: string;
-    nodeId: string;
-    repository: string;
-    triggerType?: string;
-    branchPattern?: string;
-    environment?: string;
-    buildCommand?: string;
-    installCommand?: string;
-    outputDir?: string;
-    framework?: string;
-  }, { rejectWithValue }) => {
+  async (
+    input: {
+      cardId: string;
+      nodeId: string;
+      repository: string;
+      triggerType?: string;
+      branchPattern?: string;
+      environment?: string;
+      buildCommand?: string;
+      installCommand?: string;
+      outputDir?: string;
+      framework?: string;
+    },
+    { rejectWithValue },
+  ) => {
     try {
       const result = await getApi().pipeline.createRule(input);
       if (!result.success) return rejectWithValue(result.error);
@@ -249,21 +252,24 @@ const pipelineSlice = createSlice({
     },
 
     // Socket.IO: full pipeline update (for panel view)
-    receivePipelineUpdate(state, action: PayloadAction<{
-      nodeId: string;
-      cardId: string;
-      status: string;
-      deployment_stage?: string;
-      deployment_logs?: DeployStep[];
-      commit_sha?: string;
-      commit_message?: string;
-      commit_author?: string;
-      branch?: string;
-      progress?: number;
-      error?: string;
-      started_at?: string;
-      duration_seconds?: number;
-    }>) {
+    receivePipelineUpdate(
+      state,
+      action: PayloadAction<{
+        nodeId: string;
+        cardId: string;
+        status: string;
+        deployment_stage?: string;
+        deployment_logs?: DeployStep[];
+        commit_sha?: string;
+        commit_message?: string;
+        commit_author?: string;
+        branch?: string;
+        progress?: number;
+        error?: string;
+        started_at?: string;
+        duration_seconds?: number;
+      }>,
+    ) {
       const p = action.payload;
       state.nodeStatus[p.nodeId] = {
         status: p.status as PipelineStatus,
@@ -285,14 +291,17 @@ const pipelineSlice = createSlice({
     },
 
     // Socket.IO: lightweight card-level update (for canvas badges)
-    receiveCardPipelineUpdate(state, action: PayloadAction<{
-      nodeId: string;
-      status: string;
-      deployment_stage?: string;
-      commit_sha?: string;
-      commit_message?: string;
-      progress?: number;
-    }>) {
+    receiveCardPipelineUpdate(
+      state,
+      action: PayloadAction<{
+        nodeId: string;
+        status: string;
+        deployment_stage?: string;
+        commit_sha?: string;
+        commit_message?: string;
+        progress?: number;
+      }>,
+    ) {
       const p = action.payload;
       const existing = state.nodeStatus[p.nodeId] || { status: 'idle' };
       state.nodeStatus[p.nodeId] = {
@@ -312,7 +321,9 @@ const pipelineSlice = createSlice({
   extraReducers: (builder) => {
     builder
       // Rules
-      .addCase(fetchRulesForNode.pending, (state) => { state.rulesLoading = true; })
+      .addCase(fetchRulesForNode.pending, (state) => {
+        state.rulesLoading = true;
+      })
       .addCase(fetchRulesForNode.fulfilled, (state, action) => {
         state.rulesLoading = false;
         state.rules[action.payload.key] = action.payload.rules;
@@ -320,9 +331,10 @@ const pipelineSlice = createSlice({
       .addCase(fetchRulesForNode.rejected, (state, action) => {
         state.rulesLoading = false;
         // Set empty array so rulesLoadedOnce becomes true even on failure
-        const key = (action.meta.arg as any)?.cardId && (action.meta.arg as any)?.nodeId
-          ? `${(action.meta.arg as any).cardId}:${(action.meta.arg as any).nodeId}`
-          : null;
+        const key =
+          (action.meta.arg as any)?.cardId && (action.meta.arg as any)?.nodeId
+            ? `${(action.meta.arg as any).cardId}:${(action.meta.arg as any).nodeId}`
+            : null;
         if (key && !(key in state.rules)) state.rules[key] = [];
       })
 
@@ -343,25 +355,33 @@ const pipelineSlice = createSlice({
         const updated = action.payload;
         const key = `${updated.card_id}:${updated.node_id}`;
         if (state.rules[key]) {
-          state.rules[key] = state.rules[key].map((r) => r.id === updated.id ? updated : r);
+          state.rules[key] = state.rules[key].map((r) => (r.id === updated.id ? updated : r));
         }
       })
 
       // Events
-      .addCase(fetchEventsForNode.pending, (state) => { state.historyLoading = true; })
+      .addCase(fetchEventsForNode.pending, (state) => {
+        state.historyLoading = true;
+      })
       .addCase(fetchEventsForNode.fulfilled, (state, action) => {
         state.historyLoading = false;
         state.history[action.payload.key] = action.payload.events;
       })
-      .addCase(fetchEventsForNode.rejected, (state) => { state.historyLoading = false; })
+      .addCase(fetchEventsForNode.rejected, (state) => {
+        state.historyLoading = false;
+      })
 
       // Framework detection
-      .addCase(detectFramework.pending, (state) => { state.detectingFramework = true; })
+      .addCase(detectFramework.pending, (state) => {
+        state.detectingFramework = true;
+      })
       .addCase(detectFramework.fulfilled, (state, action) => {
         state.detectingFramework = false;
         state.detectedFrameworks[action.payload.repository] = action.payload.detection;
       })
-      .addCase(detectFramework.rejected, (state) => { state.detectingFramework = false; });
+      .addCase(detectFramework.rejected, (state) => {
+        state.detectingFramework = false;
+      });
   },
 });
 

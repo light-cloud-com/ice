@@ -28,7 +28,11 @@ export const OnboardingChecklist: React.FC = () => {
   const gcpStatus = useSelector((s: RootState) => s.integrations.integrations.gcp);
 
   const [dismissed, setDismissed] = useState(() => {
-    try { return localStorage.getItem(STORAGE_KEY) === 'true'; } catch { return false; }
+    try {
+      return localStorage.getItem(STORAGE_KEY) === 'true';
+    } catch {
+      return false;
+    }
   });
   const [collapsed, setCollapsed] = useState(true);
 
@@ -54,7 +58,11 @@ export const OnboardingChecklist: React.FC = () => {
 
   const handleDismiss = () => {
     setDismissed(true);
-    try { localStorage.setItem(STORAGE_KEY, 'true'); } catch { /* ignore */ }
+    try {
+      localStorage.setItem(STORAGE_KEY, 'true');
+    } catch {
+      /* ignore */
+    }
   };
 
   return (
@@ -93,27 +101,16 @@ export const OnboardingChecklist: React.FC = () => {
           {/* Items */}
           <div className="p-2 space-y-1">
             {items.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center gap-2 px-2 py-1.5 rounded text-xs"
-              >
+              <div key={item.id} className="flex items-center gap-2 px-2 py-1.5 rounded text-xs">
                 <div
                   className={cn(
                     'w-4 h-4 rounded-full flex items-center justify-center shrink-0',
-                    item.done
-                      ? 'bg-emerald-500'
-                      : 'border border-ice-border'
+                    item.done ? 'bg-emerald-500' : 'border border-ice-border',
                   )}
                 >
                   {item.done && <Check className="w-2.5 h-2.5 text-white" />}
                 </div>
-                <span
-                  className={cn(
-                    item.done ? 'text-ice-text-2 line-through' : 'text-ice-text-1'
-                  )}
-                >
-                  {item.label}
-                </span>
+                <span className={cn(item.done ? 'text-ice-text-2 line-through' : 'text-ice-text-1')}>{item.label}</span>
               </div>
             ))}
           </div>

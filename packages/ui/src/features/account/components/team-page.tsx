@@ -7,9 +7,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import {
-  UserPlus, Loader2, Shield, User, Eye, Pencil, Trash2, Clock, Mail,
-} from 'lucide-react';
+import { UserPlus, Loader2, Shield, User, Eye, Pencil, Trash2, Clock, Mail } from 'lucide-react';
 import type { RootState } from '../../../store';
 import axiosInstance from '../../../shared/api/axios-instance';
 import { InviteUserModal } from './invite-user-modal';
@@ -61,20 +59,26 @@ export function TeamPage() {
       ]);
       const data = membersRes.data;
       const items = Array.isArray(data) ? data : (data.items ?? []);
-      setMembers(items.map((u: any) => ({
-        id: u.id,
-        email: u.email,
-        name: u.name || u.email,
-        role: (u.role || 'member').toLowerCase(),
-        status: 'Active',
-        lastLogin: u.lastLogin,
-      })));
+      setMembers(
+        items.map((u: any) => ({
+          id: u.id,
+          email: u.email,
+          name: u.name || u.email,
+          role: (u.role || 'member').toLowerCase(),
+          status: 'Active',
+          lastLogin: u.lastLogin,
+        })),
+      );
       setInvites(invitesRes.data);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     setLoading(false);
   }, [selectedOrg]);
 
-  useEffect(() => { fetchMembers(); }, [fetchMembers]);
+  useEffect(() => {
+    fetchMembers();
+  }, [fetchMembers]);
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     if (!selectedOrg) return;
@@ -86,7 +90,9 @@ export function TeamPage() {
         targetOrganisationId: selectedOrg.id,
       });
       setMembers((prev) => prev.map((m) => (m.id === userId ? { ...m, role: newRole } : m)));
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     setActionLoading(null);
   };
 
@@ -99,7 +105,9 @@ export function TeamPage() {
         targetOrganisationId: selectedOrg.id,
       });
       setMembers((prev) => prev.filter((m) => m.id !== userId));
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     setActionLoading(null);
   };
 
@@ -116,9 +124,7 @@ export function TeamPage() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-ice-text-1">Team</h1>
-          <p className="mt-1 text-sm text-ice-text-3">
-            Manage members of {selectedOrg?.name ?? 'your organisation'}
-          </p>
+          <p className="mt-1 text-sm text-ice-text-3">Manage members of {selectedOrg?.name ?? 'your organisation'}</p>
         </div>
         {isAdmin && (
           <button
@@ -153,67 +159,70 @@ export function TeamPage() {
           </div>
         )}
 
-        {!loading && members.map((member) => {
-          const isSelf = member.id === currentUser?.id;
-          const roleMeta = getRoleMeta(member.role);
-          const Icon = roleMeta.icon;
+        {!loading &&
+          members.map((member) => {
+            const isSelf = member.id === currentUser?.id;
+            const roleMeta = getRoleMeta(member.role);
+            const Icon = roleMeta.icon;
 
-          return (
-            <div
-              key={member.id}
-              className="grid grid-cols-[1fr_140px_100px_60px] gap-4 border-b border-ice-border px-6 py-3 last:border-b-0 hover:bg-ice-surface/50 transition-colors items-center"
-            >
-              {/* Member info */}
-              <div className="min-w-0">
-                <p className="text-sm text-ice-text-1 truncate">
-                  {member.name}
-                  {isSelf && <span className="text-ice-text-3 ml-1 text-xs">(you)</span>}
-                </p>
-                <p className="text-xs text-ice-text-3 truncate">{member.email}</p>
-              </div>
+            return (
+              <div
+                key={member.id}
+                className="grid grid-cols-[1fr_140px_100px_60px] gap-4 border-b border-ice-border px-6 py-3 last:border-b-0 hover:bg-ice-surface/50 transition-colors items-center"
+              >
+                {/* Member info */}
+                <div className="min-w-0">
+                  <p className="text-sm text-ice-text-1 truncate">
+                    {member.name}
+                    {isSelf && <span className="text-ice-text-3 ml-1 text-xs">(you)</span>}
+                  </p>
+                  <p className="text-xs text-ice-text-3 truncate">{member.email}</p>
+                </div>
 
-              {/* Role selector */}
-              {isAdmin && !isSelf ? (
-                <select
-                  value={member.role}
-                  onChange={(e) => handleRoleChange(member.id, e.target.value)}
-                  disabled={actionLoading === member.id}
-                  className="text-sm bg-ice-raised border border-ice-border rounded px-2 py-1 text-ice-text-1"
-                >
-                  {ORG_ROLES.map((r) => (
-                    <option key={r.value} value={r.value}>{r.label}</option>
-                  ))}
-                </select>
-              ) : (
-                <span className={cn('flex items-center gap-1.5 text-sm', roleMeta.color)}>
-                  <Icon className="h-3.5 w-3.5" />
-                  {roleMeta.label}
-                </span>
-              )}
-
-              {/* Joined */}
-              <span className="text-sm text-ice-text-3">{formatDate(member.lastLogin)}</span>
-
-              {/* Actions */}
-              <div className="flex justify-end">
-                {isAdmin && !isSelf && (
-                  <button
-                    onClick={() => handleRemoveUser(member.id)}
+                {/* Role selector */}
+                {isAdmin && !isSelf ? (
+                  <select
+                    value={member.role}
+                    onChange={(e) => handleRoleChange(member.id, e.target.value)}
                     disabled={actionLoading === member.id}
-                    className="p-1 rounded text-ice-text-3 hover:text-ice-red hover:bg-ice-hover transition-colors"
-                    title="Remove"
+                    className="text-sm bg-ice-raised border border-ice-border rounded px-2 py-1 text-ice-text-1"
                   >
-                    {actionLoading === member.id ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <Trash2 className="h-3.5 w-3.5" />
-                    )}
-                  </button>
+                    {ORG_ROLES.map((r) => (
+                      <option key={r.value} value={r.value}>
+                        {r.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <span className={cn('flex items-center gap-1.5 text-sm', roleMeta.color)}>
+                    <Icon className="h-3.5 w-3.5" />
+                    {roleMeta.label}
+                  </span>
                 )}
+
+                {/* Joined */}
+                <span className="text-sm text-ice-text-3">{formatDate(member.lastLogin)}</span>
+
+                {/* Actions */}
+                <div className="flex justify-end">
+                  {isAdmin && !isSelf && (
+                    <button
+                      onClick={() => handleRemoveUser(member.id)}
+                      disabled={actionLoading === member.id}
+                      className="p-1 rounded text-ice-text-3 hover:text-ice-red hover:bg-ice-hover transition-colors"
+                      title="Remove"
+                    >
+                      {actionLoading === member.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-3.5 w-3.5" />
+                      )}
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
       </div>
 
       {/* Pending invitations */}
@@ -242,12 +251,7 @@ export function TeamPage() {
         </div>
       )}
 
-      {showInviteModal && (
-        <InviteUserModal
-          onClose={() => setShowInviteModal(false)}
-          onInvited={fetchMembers}
-        />
-      )}
+      {showInviteModal && <InviteUserModal onClose={() => setShowInviteModal(false)} onInvited={fetchMembers} />}
     </div>
   );
 }

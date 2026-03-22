@@ -14,9 +14,7 @@ import prisma from '@ice/db';
 
 const router = Router();
 
-const ALLOWED_ORIGINS = (process.env.FRONTEND_URL || 'http://localhost:5173')
-  .split(',')
-  .map((u) => u.trim());
+const ALLOWED_ORIGINS = (process.env.FRONTEND_URL || 'http://localhost:5173').split(',').map((u) => u.trim());
 
 function getFrontendUrl(req?: Request): string {
   // Try to redirect back to the origin the user came from

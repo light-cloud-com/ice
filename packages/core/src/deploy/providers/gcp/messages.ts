@@ -57,9 +57,7 @@ export const SDK_PACKAGES: Record<string, string> = {
  */
 export function sdk_not_available(serviceName: string, clientKey: string): string {
   const pkg = SDK_PACKAGES[clientKey];
-  return pkg
-    ? `${serviceName} SDK not available. Install ${pkg}`
-    : `${serviceName} SDK not available`;
+  return pkg ? `${serviceName} SDK not available. Install ${pkg}` : `${serviceName} SDK not available`;
 }
 
 /**
@@ -84,9 +82,7 @@ export function operation_failed(serviceName: string, errorJson: string): string
  * Generate an "operation timed out" error string.
  */
 export function operation_timed_out(serviceName: string, seconds?: number): string {
-  return seconds
-    ? `${serviceName} operation timed out after ${seconds}s`
-    : `${serviceName} operation timed out`;
+  return seconds ? `${serviceName} operation timed out after ${seconds}s` : `${serviceName} operation timed out`;
 }
 
 // =============================================================================
@@ -103,8 +99,7 @@ export const HANDLER_MESSAGES = {
   GKE_CREATION_ABORTED: (statusMessage: string) => `GKE cluster creation aborted: ${statusMessage}`,
 
   // Dataflow
-  DATAFLOW_NO_UPDATE:
-    'Dataflow jobs cannot be updated in-place; they must be drained and recreated',
+  DATAFLOW_NO_UPDATE: 'Dataflow jobs cannot be updated in-place; they must be drained and recreated',
 
   // Firestore
   FIRESTORE_LIMITED_UPDATE: 'Firestore databases have very limited update options',
@@ -116,16 +111,14 @@ export const HANDLER_MESSAGES = {
 
 export const BUILD_MESSAGES = {
   CREATING_ARTIFACT_REGISTRY: (region: string) => `Creating Artifact Registry in ${region}...`,
-  AR_CREATE_FAILED: (name: string, error: string) =>
-    `Failed to create Artifact Registry "${name}": ${error}`,
+  AR_CREATE_FAILED: (name: string, error: string) => `Failed to create Artifact Registry "${name}": ${error}`,
   INVALID_REPO_URL: (url: string) =>
     `Invalid GitHub repository: "${url}". Expected format: owner/repo or https://github.com/owner/repo`,
   SUBMITTING_BUILD: (owner: string, repo: string, branch: string) =>
     `Submitting Cloud Build for ${owner}/${repo}@${branch}...`,
   NO_BUILD_ID: 'Cloud Build submission did not return a build ID',
   BUILD_STARTED: (buildId: string) => `Cloud Build started: ${buildId}`,
-  BUILD_IN_PROGRESS: (status: string, seconds: number) =>
-    `Build ${status.toLowerCase()}... (${seconds}s)`,
+  BUILD_IN_PROGRESS: (status: string, seconds: number) => `Build ${status.toLowerCase()}... (${seconds}s)`,
   BUILD_SUCCEEDED: (imageUri: string) => `Build succeeded → ${imageUri}`,
   BUILD_FAILED: (status: string, logUrl: string) =>
     `Cloud Build failed with status ${status}${logUrl ? `. Logs: ${logUrl}` : ''}`,

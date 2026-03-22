@@ -108,10 +108,7 @@ export class UnifiedTypeResolver {
         for (const schema of schemas) {
           for (const impl of schema.implementations) {
             // Map native type to ICE type
-            const normalized_native = this.normalizeNativeType(
-              impl.native_type,
-              impl.source as ProviderSource
-            );
+            const normalized_native = this.normalizeNativeType(impl.native_type, impl.source as ProviderSource);
             this.native_to_ice.set(normalized_native, schema.ice_type);
 
             // Map ICE type to native implementations
@@ -172,7 +169,7 @@ export class UnifiedTypeResolver {
   resolveToNative(
     ice_type: IceType,
     target_source: 'terraform' | 'pulumi',
-    target_provider: string
+    target_provider: string,
   ): string | undefined {
     const ice_map = this.ice_to_native.get(ice_type);
     if (!ice_map) return undefined;
@@ -187,7 +184,7 @@ export class UnifiedTypeResolver {
   getImplementation(
     ice_type: IceType,
     source: 'terraform' | 'pulumi',
-    provider: string
+    provider: string,
   ): ProviderImplementation | undefined {
     return this.schema_provider.get_implementation(ice_type, source, provider);
   }
@@ -428,8 +425,6 @@ export async function initialize_type_resolver(): Promise<UnifiedTypeResolver> {
 /**
  * Create a new type resolver with custom schema provider.
  */
-export function create_type_resolver(
-  schema_provider?: EmbeddedSchemaProvider
-): UnifiedTypeResolver {
+export function create_type_resolver(schema_provider?: EmbeddedSchemaProvider): UnifiedTypeResolver {
   return new UnifiedTypeResolver(schema_provider);
 }

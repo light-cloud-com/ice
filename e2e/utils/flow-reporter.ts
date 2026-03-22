@@ -52,13 +52,7 @@ export class FlowReporter {
   /**
    * Record a test step.
    */
-  async step(
-    page: Page,
-    name: string,
-    action: string,
-    fn: () => Promise<void>,
-    selector?: string
-  ): Promise<void> {
+  async step(page: Page, name: string, action: string, fn: () => Promise<void>, selector?: string): Promise<void> {
     const start = Date.now();
     const step: FlowStep = { name, action, selector, status: 'pass', duration_ms: 0 };
 
@@ -82,7 +76,9 @@ export class FlowReporter {
       try {
         await page.screenshot({ path: screenshotPath });
         step.screenshot = screenshotName;
-      } catch { /* ignore screenshot errors */ }
+      } catch {
+        /* ignore screenshot errors */
+      }
 
       this.steps.push(step);
       throw err;

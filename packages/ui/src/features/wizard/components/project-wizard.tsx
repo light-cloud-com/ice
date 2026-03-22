@@ -71,7 +71,7 @@ export const ProjectWizard: React.FC = () => {
 
       // 2. Save provider & region to project
       if (state.provider) {
-        const firstEnv = state.environments.find(e => e.enabled);
+        const firstEnv = state.environments.find((e) => e.enabled);
         await axiosInstance.post('/canvas/projects/update', {
           projectId: project.id,
           provider: state.provider,
@@ -102,7 +102,7 @@ export const ProjectWizard: React.FC = () => {
       }
 
       // 4. Create additional environments from wizard config (production already created by backend)
-      const enabledEnvs = state.environments.filter(e => e.enabled && e.type !== 'production');
+      const enabledEnvs = state.environments.filter((e) => e.enabled && e.type !== 'production');
       for (const env of enabledEnvs) {
         try {
           await axiosInstance.post('/environments/create', {
@@ -128,7 +128,6 @@ export const ProjectWizard: React.FC = () => {
         // Fallback: reload current page to show the new project
         window.location.reload();
       }
-
     } catch (err) {
       console.error('Failed to create project:', err);
     }
@@ -207,7 +206,7 @@ export const ProjectWizard: React.FC = () => {
                 'flex items-center gap-1 text-xs font-medium px-4 py-1.5 rounded-md transition-colors',
                 canProceed
                   ? 'bg-ice-accent text-ice-text-1 hover:bg-ice-accent-hover'
-                  : 'bg-ice-raised text-ice-text-3 cursor-not-allowed'
+                  : 'bg-ice-raised text-ice-text-3 cursor-not-allowed',
               )}
             >
               Next

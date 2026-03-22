@@ -105,13 +105,8 @@ const projectsSlice = createSlice({
   reducers: {
     // ── Project CRUD ────────────────────────────────────────────────────────
 
-    createProject: (
-      state,
-      action: PayloadAction<Omit<Project, 'createdAt' | 'order' | 'expanded'>>
-    ) => {
-      const siblings = state.projects.filter(
-        (p) => p.folderId === (action.payload.folderId ?? null)
-      );
+    createProject: (state, action: PayloadAction<Omit<Project, 'createdAt' | 'order' | 'expanded'>>) => {
+      const siblings = state.projects.filter((p) => p.folderId === (action.payload.folderId ?? null));
       const project: Project = {
         ...action.payload,
         order: nextOrder(siblings),
@@ -142,16 +137,11 @@ const projectsSlice = createSlice({
       }
     },
 
-    moveProjectToFolder: (
-      state,
-      action: PayloadAction<{ projectId: string; folderId: string | null }>
-    ) => {
+    moveProjectToFolder: (state, action: PayloadAction<{ projectId: string; folderId: string | null }>) => {
       const project = state.projects.find((p) => p.id === action.payload.projectId);
       if (project) {
         project.folderId = action.payload.folderId;
-        const siblings = state.projects.filter(
-          (p) => p.folderId === action.payload.folderId && p.id !== project.id
-        );
+        const siblings = state.projects.filter((p) => p.folderId === action.payload.folderId && p.id !== project.id);
         project.order = nextOrder(siblings);
       }
     },
@@ -190,10 +180,7 @@ const projectsSlice = createSlice({
 
     // ── Folder CRUD ─────────────────────────────────────────────────────────
 
-    createFolder: (
-      state,
-      action: PayloadAction<{ name: string; parentFolderId?: string | null }>
-    ) => {
+    createFolder: (state, action: PayloadAction<{ name: string; parentFolderId?: string | null }>) => {
       const parentId = action.payload.parentFolderId ?? null;
       const siblings = state.folders.filter((f) => f.parentFolderId === parentId);
       const folder: ProjectFolder = {
@@ -236,10 +223,7 @@ const projectsSlice = createSlice({
       }
     },
 
-    moveFolder: (
-      state,
-      action: PayloadAction<{ folderId: string; parentFolderId: string | null }>
-    ) => {
+    moveFolder: (state, action: PayloadAction<{ folderId: string; parentFolderId: string | null }>) => {
       const folder = state.folders.find((f) => f.id === action.payload.folderId);
       if (folder) {
         // Prevent circular nesting
@@ -251,7 +235,7 @@ const projectsSlice = createSlice({
         }
         folder.parentFolderId = action.payload.parentFolderId;
         const siblings = state.folders.filter(
-          (f) => f.parentFolderId === action.payload.parentFolderId && f.id !== folder.id
+          (f) => f.parentFolderId === action.payload.parentFolderId && f.id !== folder.id,
         );
         folder.order = nextOrder(siblings);
       }
@@ -286,9 +270,7 @@ export default projectsSlice.reducer;
 
 export const selectProjects = (state: { projects: ProjectsState }) => state.projects.projects;
 export const selectFolders = (state: { projects: ProjectsState }) => state.projects.folders;
-export const selectActiveProjectId = (state: { projects: ProjectsState }) =>
-  state.projects.activeProjectId;
-export const selectActiveEnvironmentId = (state: { projects: ProjectsState }) =>
-  state.projects.activeEnvironmentId;
+export const selectActiveProjectId = (state: { projects: ProjectsState }) => state.projects.activeProjectId;
+export const selectActiveEnvironmentId = (state: { projects: ProjectsState }) => state.projects.activeEnvironmentId;
 export const selectActiveProject = (state: { projects: ProjectsState }) =>
   state.projects.projects.find((p) => p.id === state.projects.activeProjectId) || null;

@@ -41,7 +41,9 @@ export const AuthCallbackPage: React.FC = () => {
             navigate('/onboarding', { replace: true });
             return;
           }
-        } catch { /* fallback to home */ }
+        } catch {
+          /* fallback to home */
+        }
         navigate('/', { replace: true });
       } else {
         setError('No token received');

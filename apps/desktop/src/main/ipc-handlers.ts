@@ -487,20 +487,17 @@ export function register_ipc_handlers(): void {
   });
 
   // Create a new folder in the filesystem
-  ipcMain.handle(
-    'projects:createFolder',
-    async (_event, parentPath: string, folderName: string) => {
-      if (!parentPath || !folderName) return null;
-      try {
-        const newFolderPath = join(parentPath, folderName);
-        await mkdir(newFolderPath, { recursive: true });
-        return newFolderPath;
-      } catch (error) {
-        console.error('Failed to create folder:', error);
-        return null;
-      }
+  ipcMain.handle('projects:createFolder', async (_event, parentPath: string, folderName: string) => {
+    if (!parentPath || !folderName) return null;
+    try {
+      const newFolderPath = join(parentPath, folderName);
+      await mkdir(newFolderPath, { recursive: true });
+      return newFolderPath;
+    } catch (error) {
+      console.error('Failed to create folder:', error);
+      return null;
     }
-  );
+  });
 
   // =========================================
   // Schema Operations
@@ -564,40 +561,35 @@ export function register_ipc_handlers(): void {
     return categories_cache;
   });
 
-  ipcMain.handle(
-    'schema:query',
-    async (_event, query: { category?: string; search?: string; provider?: string }) => {
-      const all_schemas = await load_schemas();
-      let results = all_schemas;
+  ipcMain.handle('schema:query', async (_event, query: { category?: string; search?: string; provider?: string }) => {
+    const all_schemas = await load_schemas();
+    let results = all_schemas;
 
-      if (query.category) {
-        const category_lower = query.category.toLowerCase();
-        results = results.filter((s) => s.category?.toLowerCase() === category_lower);
-      }
-
-      if (query.search) {
-        const search_lower = query.search.toLowerCase();
-        results = results.filter(
-          (s) =>
-            s.ice_type.toLowerCase().includes(search_lower) ||
-            s.display_name.toLowerCase().includes(search_lower) ||
-            (s.description && s.description.toLowerCase().includes(search_lower))
-        );
-      }
-
-      if (query.provider) {
-        const provider_lower = query.provider.toLowerCase();
-        results = results.filter((s) =>
-          s.implementations.some((impl) =>
-            impl.provider_name.toLowerCase().includes(provider_lower)
-          )
-        );
-      }
-
-      // Limit results for performance (UI can paginate if needed)
-      return results.slice(0, 500);
+    if (query.category) {
+      const category_lower = query.category.toLowerCase();
+      results = results.filter((s) => s.category?.toLowerCase() === category_lower);
     }
-  );
+
+    if (query.search) {
+      const search_lower = query.search.toLowerCase();
+      results = results.filter(
+        (s) =>
+          s.ice_type.toLowerCase().includes(search_lower) ||
+          s.display_name.toLowerCase().includes(search_lower) ||
+          (s.description && s.description.toLowerCase().includes(search_lower)),
+      );
+    }
+
+    if (query.provider) {
+      const provider_lower = query.provider.toLowerCase();
+      results = results.filter((s) =>
+        s.implementations.some((impl) => impl.provider_name.toLowerCase().includes(provider_lower)),
+      );
+    }
+
+    // Limit results for performance (UI can paginate if needed)
+    return results.slice(0, 500);
+  });
 
   ipcMain.handle('schema:get', async (_event, ice_type: string) => {
     const schemas = await load_schemas();
@@ -664,17 +656,14 @@ export function register_ipc_handlers(): void {
   // Get underlying low-level resources for a high-level resource
   ipcMain.handle('resources:getLowLevel', async (_event, highLevelId: string) => {
     const allSchemas = await load_schemas();
-    const highLevelResource = HIGH_LEVEL_CATEGORIES.flatMap((c) => c.resources).find(
-      (r) => r.id === highLevelId
-    );
+    const highLevelResource = HIGH_LEVEL_CATEGORIES.flatMap((c) => c.resources).find((r) => r.id === highLevelId);
 
     if (!highLevelResource) return [];
 
     // Match low-level resources by keywords
     return allSchemas
       .filter((schema) => {
-        const searchText =
-          `${schema.ice_type} ${schema.display_name} ${schema.description || ''}`.toLowerCase();
+        const searchText = `${schema.ice_type} ${schema.display_name} ${schema.description || ''}`.toLowerCase();
         return highLevelResource.keywords.some((keyword) => searchText.includes(keyword));
       })
       .slice(0, 50); // Limit results
@@ -699,17 +688,14 @@ export function register_ipc_handlers(): void {
 
   // Get stored credentials for a provider
   ipcMain.handle('provider:getCredentials', async (_event, providerId: string) => {
-    const creds = credentialStore.get(`credentials.${providerId}`) as
-      | Record<string, string>
-      | undefined;
+    const creds = credentialStore.get(`credentials.${providerId}`) as Record<string, string> | undefined;
     if (!creds) return null;
 
     // Mask sensitive fields for display
     const masked = { ...creds };
     if (masked.secretAccessKey) masked.secretAccessKey = '********';
     if (masked.clientSecret) masked.clientSecret = '********';
-    if (masked.serviceAccountKey)
-      masked.serviceAccountKey = masked.serviceAccountKey.slice(0, 50) + '...';
+    if (masked.serviceAccountKey) masked.serviceAccountKey = masked.serviceAccountKey.slice(0, 50) + '...';
     return masked;
   });
 
@@ -720,7 +706,7 @@ export function register_ipc_handlers(): void {
       credentialStore.set(`credentials.${providerId}`, credentials);
       credentialStore.set(`connected.${providerId}`, true);
       return { success: true };
-    }
+    },
   );
 
   // Check if provider is connected
@@ -737,57 +723,52 @@ export function register_ipc_handlers(): void {
   });
 
   // Connect to provider and list projects
-  ipcMain.handle(
-    'provider:connect',
-    async (_event, providerId: string, credentials: Record<string, string>) => {
-      try {
-        let projects: ProviderProject[] = [];
+  ipcMain.handle('provider:connect', async (_event, providerId: string, credentials: Record<string, string>) => {
+    try {
+      let projects: ProviderProject[] = [];
 
-        if (providerId === 'gcp') {
-          // Use gcloud CLI to authenticate and list projects
-          const gcloudResult = await connectGCPViaGcloud();
-          if (!gcloudResult.success) {
-            return gcloudResult;
-          }
-          projects = gcloudResult.projects || [];
-          // Store that we're using gcloud auth
-          credentialStore.set(`credentials.${providerId}`, { authMethod: 'gcloud' });
-        } else if (providerId === 'aws') {
-          // Save credentials
-          credentialStore.set(`credentials.${providerId}`, credentials);
-          // For AWS, list available regions as "projects"
-          projects = [
-            {
-              id: credentials.region || 'us-east-1',
-              name: `AWS (${credentials.region || 'us-east-1'})`,
-              region: credentials.region || 'us-east-1',
-            },
-          ];
-        } else if (providerId === 'azure') {
-          credentialStore.set(`credentials.${providerId}`, credentials);
-          projects = [
-            {
-              id: credentials.subscriptionId,
-              name: `Subscription ${credentials.subscriptionId.slice(0, 8)}...`,
-            },
-          ];
-        } else if (providerId === 'kubernetes') {
-          credentialStore.set(`credentials.${providerId}`, credentials);
-          projects = [
-            { id: credentials.context, name: credentials.context, region: credentials.namespace },
-          ];
+      if (providerId === 'gcp') {
+        // Use gcloud CLI to authenticate and list projects
+        const gcloudResult = await connectGCPViaGcloud();
+        if (!gcloudResult.success) {
+          return gcloudResult;
         }
-
-        credentialStore.set(`connected.${providerId}`, true);
-        credentialStore.set(`projects.${providerId}`, projects);
-
-        return { success: true, projects };
-      } catch (error) {
-        console.error(`Failed to connect to ${providerId}:`, error);
-        return { success: false, error: String(error) };
+        projects = gcloudResult.projects || [];
+        // Store that we're using gcloud auth
+        credentialStore.set(`credentials.${providerId}`, { authMethod: 'gcloud' });
+      } else if (providerId === 'aws') {
+        // Save credentials
+        credentialStore.set(`credentials.${providerId}`, credentials);
+        // For AWS, list available regions as "projects"
+        projects = [
+          {
+            id: credentials.region || 'us-east-1',
+            name: `AWS (${credentials.region || 'us-east-1'})`,
+            region: credentials.region || 'us-east-1',
+          },
+        ];
+      } else if (providerId === 'azure') {
+        credentialStore.set(`credentials.${providerId}`, credentials);
+        projects = [
+          {
+            id: credentials.subscriptionId,
+            name: `Subscription ${credentials.subscriptionId.slice(0, 8)}...`,
+          },
+        ];
+      } else if (providerId === 'kubernetes') {
+        credentialStore.set(`credentials.${providerId}`, credentials);
+        projects = [{ id: credentials.context, name: credentials.context, region: credentials.namespace }];
       }
+
+      credentialStore.set(`connected.${providerId}`, true);
+      credentialStore.set(`projects.${providerId}`, projects);
+
+      return { success: true, projects };
+    } catch (error) {
+      console.error(`Failed to connect to ${providerId}:`, error);
+      return { success: false, error: String(error) };
     }
-  );
+  });
 
   // Get projects for a connected provider
   ipcMain.handle('provider:getProjects', async (_event, providerId: string) => {
@@ -797,10 +778,7 @@ export function register_ipc_handlers(): void {
   // Import infrastructure from provider
   ipcMain.handle('provider:import', async (_event, providerId: string, projectId: string) => {
     try {
-      const credentials = credentialStore.get(`credentials.${providerId}`) as Record<
-        string,
-        string
-      >;
+      const credentials = credentialStore.get(`credentials.${providerId}`) as Record<string, string>;
       if (!credentials) {
         throw new Error(`No credentials found for ${providerId}`);
       }
@@ -901,44 +879,41 @@ export function register_ipc_handlers(): void {
   // Template Operations
   // =========================================
 
-  ipcMain.handle(
-    'templates:loadToGraph',
-    async (_event, data: { name: string; nodes: any[]; edges: any[] }) => {
-      const graph = new SimpleGraph(data.name, '1.0.0');
+  ipcMain.handle('templates:loadToGraph', async (_event, data: { name: string; nodes: any[]; edges: any[] }) => {
+    const graph = new SimpleGraph(data.name, '1.0.0');
 
-      // Map from template node IDs to new graph node IDs
-      const idMap = new Map<string, string>();
+    // Map from template node IDs to new graph node IDs
+    const idMap = new Map<string, string>();
 
-      // Add all nodes
-      for (const node of data.nodes) {
-        const result = graph.add_node({
-          type: node.data?.iceType || 'Application.Container',
-          name: node.data?.label || node.id,
-          properties: node.data?.properties || {},
-        });
-        idMap.set(node.id, result.node.id);
-      }
-
-      // Add all edges (remap IDs)
-      for (const edge of data.edges) {
-        const sourceId = idMap.get(edge.source);
-        const targetId = idMap.get(edge.target);
-        if (sourceId && targetId) {
-          graph.add_edge({
-            source: sourceId,
-            target: targetId,
-            relationship: edge.data?.relationship || 'depends_on',
-          });
-        }
-      }
-
-      // Set as current graph
-      current_graph = graph;
-      current_file_path = null;
-
-      return graph.serialize();
+    // Add all nodes
+    for (const node of data.nodes) {
+      const result = graph.add_node({
+        type: node.data?.iceType || 'Application.Container',
+        name: node.data?.label || node.id,
+        properties: node.data?.properties || {},
+      });
+      idMap.set(node.id, result.node.id);
     }
-  );
+
+    // Add all edges (remap IDs)
+    for (const edge of data.edges) {
+      const sourceId = idMap.get(edge.source);
+      const targetId = idMap.get(edge.target);
+      if (sourceId && targetId) {
+        graph.add_edge({
+          source: sourceId,
+          target: targetId,
+          relationship: edge.data?.relationship || 'depends_on',
+        });
+      }
+    }
+
+    // Set as current graph
+    current_graph = graph;
+    current_file_path = null;
+
+    return graph.serialize();
+  });
 }
 
 // =========================================
@@ -995,17 +970,14 @@ export async function connectGCPViaGcloud(): Promise<{
     } catch {
       return {
         success: false,
-        error:
-          'gcloud CLI is not installed.\n\nInstall from: https://cloud.google.com/sdk/docs/install',
+        error: 'gcloud CLI is not installed.\n\nInstall from: https://cloud.google.com/sdk/docs/install',
       };
     }
 
     // Check if user is authenticated, if not - run gcloud auth login
     let account = '';
     try {
-      const { stdout } = await runCommand(
-        'gcloud auth list --filter=status:ACTIVE --format="value(account)"'
-      );
+      const { stdout } = await runCommand('gcloud auth list --filter=status:ACTIVE --format="value(account)"');
       account = stdout.trim();
     } catch {
       // Ignore error, account will be empty
@@ -1017,9 +989,7 @@ export async function connectGCPViaGcloud(): Promise<{
         // Run gcloud auth login - this opens a browser for OAuth (interactive)
         await runInteractiveCommand('gcloud', ['auth', 'login']);
         // Check again for account
-        const { stdout } = await runCommand(
-          'gcloud auth list --filter=status:ACTIVE --format="value(account)"'
-        );
+        const { stdout } = await runCommand('gcloud auth list --filter=status:ACTIVE --format="value(account)"');
         account = stdout.trim();
         if (!account) {
           return {
@@ -1066,10 +1036,7 @@ export async function connectGCPViaGcloud(): Promise<{
       projectsOutput = result.stdout;
     } catch (listError: any) {
       // If tokens expired, force re-authentication
-      if (
-        listError.message?.includes('Reauthentication') ||
-        listError.message?.includes('auth tokens')
-      ) {
+      if (listError.message?.includes('Reauthentication') || listError.message?.includes('auth tokens')) {
         console.log('Auth tokens expired, forcing re-authentication...');
         try {
           // Use interactive command for re-auth (opens browser)
@@ -1110,10 +1077,7 @@ export async function connectGCPViaGcloud(): Promise<{
 // =========================================
 
 // Use the core importers - no duplicated code
-async function importFromGCP(
-  _credentials: Record<string, string>,
-  projectId: string
-): Promise<SerializedGraph> {
+async function importFromGCP(_credentials: Record<string, string>, projectId: string): Promise<SerializedGraph> {
   console.log(`Starting GCP import for project: ${projectId}`);
 
   if (!projectId) {
@@ -1123,7 +1087,7 @@ async function importFromGCP(
   // Use the core GCP importer (uses ADC from gcloud auth application-default login)
   const { graph, result } = await import_gcp_to_graph(
     { project: projectId, services: ['all'], infer_dependencies: true },
-    `GCP Import - ${projectId}`
+    `GCP Import - ${projectId}`,
   );
 
   console.log(`GCP import complete: ${result.resources.length} resources found`);
@@ -1138,8 +1102,7 @@ async function importFromGCP(
 
   // Check for authentication errors and auto-trigger re-auth
   const authError = result.errors.find(
-    (e) =>
-      e.code === 'AUTH_REAUTH_REQUIRED' || e.code === 'AUTH_REQUIRED' || e.code === 'AUTH_EXPIRED'
+    (e) => e.code === 'AUTH_REAUTH_REQUIRED' || e.code === 'AUTH_REQUIRED' || e.code === 'AUTH_EXPIRED',
   );
 
   if (authError) {
@@ -1182,7 +1145,7 @@ async function importFromGCP(
 
   console.log(`\n[${serializeDebugId}] ========== GRAPH SERIALIZATION DEBUG ==========`);
   console.log(
-    `[${serializeDebugId}] Raw graph has ${serialized.nodes.length} nodes and ${serialized.edges.length} edges`
+    `[${serializeDebugId}] Raw graph has ${serialized.nodes.length} nodes and ${serialized.edges.length} edges`,
   );
 
   // Log all raw node types
@@ -1260,17 +1223,13 @@ async function importFromGCP(
   // Build VPC → Subnet → Resource containment
   const vpcs = highLevelNodes.filter((n: any) => n.type === 'Network.VPC');
   const subnets = highLevelNodes.filter((n: any) => n.type === 'Network.Subnet');
-  const otherResources = highLevelNodes.filter(
-    (n: any) => n.type !== 'Network.VPC' && n.type !== 'Network.Subnet'
-  );
+  const otherResources = highLevelNodes.filter((n: any) => n.type !== 'Network.VPC' && n.type !== 'Network.Subnet');
 
   // Create contains edges
   const containsEdges: any[] = [];
 
   // VPCs contain subnets (match by network property, self_link, or naming pattern)
-  console.log(
-    `[${serializeDebugId}] Building containment: ${vpcs.length} VPCs, ${subnets.length} subnets`
-  );
+  console.log(`[${serializeDebugId}] Building containment: ${vpcs.length} VPCs, ${subnets.length} subnets`);
 
   for (const vpc of vpcs) {
     // Get VPC identifiers
@@ -1322,9 +1281,7 @@ async function importFromGCP(
   for (const resource of otherResources) {
     // Skip global resources - they don't belong in any region
     if (globalTypes.has(resource.type)) {
-      console.log(
-        `[${serializeDebugId}] Skipping global resource: ${resource.name} (${resource.type})`
-      );
+      console.log(`[${serializeDebugId}] Skipping global resource: ${resource.name} (${resource.type})`);
       continue;
     }
 
@@ -1372,7 +1329,7 @@ async function importFromGCP(
       if (!resourceRegion) {
         // Try to match region pattern anywhere in the URL
         regionMatch = selfLink.match(
-          /(europe-\w+\d*|us-\w+\d*|asia-\w+\d*|australia-\w+\d*|northamerica-\w+\d*|southamerica-\w+\d*)/i
+          /(europe-\w+\d*|us-\w+\d*|asia-\w+\d*|australia-\w+\d*|northamerica-\w+\d*|southamerica-\w+\d*)/i,
         );
         if (regionMatch) {
           resourceRegion = regionMatch[1].toLowerCase();
@@ -1399,7 +1356,7 @@ async function importFromGCP(
     // Try to extract region from name (e.g., "run-sources-lc-console-staging-europe-west1")
     if (!resourceRegion && resource.name) {
       const regionMatch = resource.name.match(
-        /(europe-\w+\d*|us-\w+\d*|asia-\w+\d*|australia-\w+\d*|northamerica-\w+\d*|southamerica-\w+\d*)/i
+        /(europe-\w+\d*|us-\w+\d*|asia-\w+\d*|australia-\w+\d*|northamerica-\w+\d*|southamerica-\w+\d*)/i,
       );
       if (regionMatch) {
         resourceRegion = regionMatch[1].toLowerCase();
@@ -1413,7 +1370,7 @@ async function importFromGCP(
 
     if (!resourceRegion) {
       console.log(
-        `[${serializeDebugId}] No region for: ${resource.name} (${resource.type}) - props: ${JSON.stringify(Object.keys(resource.properties || {}))}`
+        `[${serializeDebugId}] No region for: ${resource.name} (${resource.type}) - props: ${JSON.stringify(Object.keys(resource.properties || {}))}`,
       );
       continue;
     }
@@ -1436,9 +1393,7 @@ async function importFromGCP(
     });
 
     if (matchingSubnet) {
-      console.log(
-        `[${serializeDebugId}] Placing ${resource.name} (${resource.type}) in subnet ${matchingSubnet.name}`
-      );
+      console.log(`[${serializeDebugId}] Placing ${resource.name} (${resource.type}) in subnet ${matchingSubnet.name}`);
       containsEdges.push({
         id: `${matchingSubnet.id}-contains-${resource.id}`,
         source: matchingSubnet.id,
@@ -1447,9 +1402,7 @@ async function importFromGCP(
         metadata: { created_at: now, labels: {} },
       });
     } else {
-      console.log(
-        `[${serializeDebugId}] No matching subnet for: ${resource.name} region=${resourceRegion}`
-      );
+      console.log(`[${serializeDebugId}] No matching subnet for: ${resource.name} region=${resourceRegion}`);
     }
   }
 
@@ -1459,9 +1412,7 @@ async function importFromGCP(
 
   // Build a set of resources that are contained in subnets
   const containedResourceIds = new Set(
-    containsEdges
-      .filter((e: any) => subnets.some((s: any) => s.id === e.source))
-      .map((e: any) => e.target)
+    containsEdges.filter((e: any) => subnets.some((s: any) => s.id === e.source)).map((e: any) => e.target),
   );
 
   // Count children per subnet
@@ -1492,8 +1443,7 @@ async function importFromGCP(
     const cols = Math.min(childCount, resourcesPerRowInSubnet);
     const rows = Math.ceil(childCount / resourcesPerRowInSubnet);
     // Width: buffer + resources + gaps + buffer
-    const width =
-      subnetInnerBuffer * 2 + cols * resourceNodeWidth + (cols - 1) * resourceGapInSubnet;
+    const width = subnetInnerBuffer * 2 + cols * resourceNodeWidth + (cols - 1) * resourceGapInSubnet;
     // Height: header + buffer + resources + gaps + buffer
     const height =
       subnetHeaderHeight +
@@ -1516,7 +1466,7 @@ async function importFromGCP(
   const emptySubnets = subnets.filter((s: any) => (subnetChildCounts[s.id] || 0) === 0);
 
   console.log(
-    `[${serializeDebugId}] Subnets with children: ${subnetsWithChildren.length}, empty: ${emptySubnets.length}`
+    `[${serializeDebugId}] Subnets with children: ${subnetsWithChildren.length}, empty: ${emptySubnets.length}`,
   );
 
   // Calculate VPC size based on subnets with children
@@ -1536,10 +1486,7 @@ async function importFromGCP(
 
   const activeSubnetRows = Math.ceil(subnetsWithChildren.length / subnetsPerRow);
   const vpcWidth = Math.max(800, subnetsPerRow * (maxSubnetWidth + subnetPadding) + vpcPadding * 2);
-  const vpcHeight = Math.max(
-    400,
-    vpcHeaderHeight + activeSubnetRows * (maxSubnetHeight + subnetPadding) + vpcPadding
-  );
+  const vpcHeight = Math.max(400, vpcHeaderHeight + activeSubnetRows * (maxSubnetHeight + subnetPadding) + vpcPadding);
 
   // Position VPCs at the top
   let vpcX = 50;
@@ -1592,8 +1539,7 @@ async function importFromGCP(
       const row = Math.floor(idx / resourcesPerRowInSubnet);
       // Use consistent spacing variables defined above
       const x = subnetInnerBuffer + col * (resourceNodeWidth + resourceGapInSubnet);
-      const y =
-        subnetHeaderHeight + subnetInnerBuffer + row * (resourceNodeHeight + resourceGapInSubnet);
+      const y = subnetHeaderHeight + subnetInnerBuffer + row * (resourceNodeHeight + resourceGapInSubnet);
       nodePositions[resource.id] = { x, y };
       // Set explicit size for resource nodes
       nodeSizes[resource.id] = { width: resourceNodeWidth, height: resourceNodeHeight };
@@ -1674,17 +1620,14 @@ async function importFromGCP(
   console.log(`[${serializeDebugId}] Final edges: ${finalResult.edges.length}`);
   console.log(`[${serializeDebugId}] Contains edges: ${containsEdges.length}`);
   console.log(
-    `[${serializeDebugId}] VPCs: ${vpcs.length}, Subnets: ${subnets.length}, Other: ${otherResources.length}`
+    `[${serializeDebugId}] VPCs: ${vpcs.length}, Subnets: ${subnets.length}, Other: ${otherResources.length}`,
   );
   console.log(`[${serializeDebugId}] ==========================================\n`);
 
   return finalResult;
 }
 
-async function importFromAWS(
-  credentials: Record<string, string>,
-  region: string
-): Promise<SerializedGraph> {
+async function importFromAWS(credentials: Record<string, string>, region: string): Promise<SerializedGraph> {
   console.log(`Starting AWS import for region: ${region}`);
 
   try {
@@ -1745,10 +1688,7 @@ async function importFromAWS(
   }
 }
 
-async function importFromAzure(
-  credentials: Record<string, string>,
-  subscriptionId: string
-): Promise<SerializedGraph> {
+async function importFromAzure(credentials: Record<string, string>, subscriptionId: string): Promise<SerializedGraph> {
   console.log(`Starting Azure import for subscription: ${subscriptionId}`);
 
   try {
@@ -1763,10 +1703,7 @@ async function importFromAzure(
       infer_dependencies: true,
     };
 
-    const { graph, result } = await import_azure_to_graph(
-      importOptions,
-      `Azure Import - ${subscriptionId}`
-    );
+    const { graph, result } = await import_azure_to_graph(importOptions, `Azure Import - ${subscriptionId}`);
 
     console.log(`Azure import complete: ${result.resources.length} resources found`);
 

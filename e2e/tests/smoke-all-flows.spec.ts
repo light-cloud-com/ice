@@ -22,18 +22,36 @@ test.describe('Smoke: All Flows', () => {
       await page.waitForSelector('#ice-login-auth-form', { timeout: 5000 });
     });
 
-    await reporter.step(page, 'Fill email', 'fill', async () => {
-      await page.fill('#ice-login-auth-input-email', 'test@ice-saas.dev');
-    }, '#ice-login-auth-input-email');
+    await reporter.step(
+      page,
+      'Fill email',
+      'fill',
+      async () => {
+        await page.fill('#ice-login-auth-input-email', 'test@ice-saas.dev');
+      },
+      '#ice-login-auth-input-email',
+    );
 
-    await reporter.step(page, 'Fill password', 'fill', async () => {
-      await page.fill('#ice-login-auth-input-password', 'password123');
-    }, '#ice-login-auth-input-password');
+    await reporter.step(
+      page,
+      'Fill password',
+      'fill',
+      async () => {
+        await page.fill('#ice-login-auth-input-password', 'password123');
+      },
+      '#ice-login-auth-input-password',
+    );
 
-    await reporter.step(page, 'Submit login', 'click', async () => {
-      await page.click('#ice-login-auth-btn-submit');
-      await page.waitForURL('**/*', { timeout: 10000 });
-    }, '#ice-login-auth-btn-submit');
+    await reporter.step(
+      page,
+      'Submit login',
+      'click',
+      async () => {
+        await page.click('#ice-login-auth-btn-submit');
+        await page.waitForURL('**/*', { timeout: 10000 });
+      },
+      '#ice-login-auth-btn-submit',
+    );
 
     await reporter.step(page, 'Verify logged in', 'assert', async () => {
       const token = await page.evaluate(() => localStorage.getItem('ice-token'));
@@ -69,7 +87,10 @@ test.describe('Smoke: All Flows', () => {
     await reporter.step(page, 'Create project and open canvas', 'api', async () => {
       const me = await apiClient.get('/auth/me');
       const orgName = me.organisations?.[0]?.name || '';
-      const orgSlug = orgName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const orgSlug = orgName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
       const project = await apiClient.post('/canvas/projects/create', { name: `Smoke Canvas ${Date.now()}` });
       await apiClient.post('/canvas/cards/create', { projectId: project.id, name: 'Main' });
       await page.goto(`/${orgSlug}/${project.slug}`, { waitUntil: 'domcontentloaded' });
@@ -81,14 +102,20 @@ test.describe('Smoke: All Flows', () => {
       expect(await palette.isVisible()).toBe(true);
     });
 
-    await reporter.step(page, 'Check search input', 'assert', async () => {
-      const search = page.locator('#ice-palette-search-input');
-      if (await search.isVisible()) {
-        await search.fill('backend');
-        await page.waitForTimeout(500);
-        await search.clear();
-      }
-    }, '#ice-palette-search-input');
+    await reporter.step(
+      page,
+      'Check search input',
+      'assert',
+      async () => {
+        const search = page.locator('#ice-palette-search-input');
+        if (await search.isVisible()) {
+          await search.fill('backend');
+          await page.waitForTimeout(500);
+          await search.clear();
+        }
+      },
+      '#ice-palette-search-input',
+    );
 
     await reporter.step(page, 'Check appbar buttons', 'assert', async () => {
       for (const id of ['#ice-appbar-btn-deploy', '#ice-appbar-btn-undo', '#ice-appbar-btn-redo']) {
@@ -106,30 +133,45 @@ test.describe('Smoke: All Flows', () => {
     await reporter.step(page, 'Create project and open canvas', 'setup', async () => {
       const me = await apiClient.get('/auth/me');
       const orgName = me.organisations?.[0]?.name || '';
-      const orgSlug = orgName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const orgSlug = orgName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
       const project = await apiClient.post('/canvas/projects/create', { name: `Deploy Test ${Date.now()}` });
       await apiClient.post('/canvas/cards/create', { projectId: project.id, name: 'Main' });
       await page.goto(`/${orgSlug}/${project.slug}`, { waitUntil: 'domcontentloaded' });
       await page.waitForSelector('#ice-canvas-svg', { timeout: 15000 });
     });
 
-    await reporter.step(page, 'Open deploy panel', 'click', async () => {
-      await page.click('#ice-appbar-btn-deploy');
-      await page.waitForSelector('#ice-deploy-panel', { timeout: 5000 });
-    }, '#ice-appbar-btn-deploy');
+    await reporter.step(
+      page,
+      'Open deploy panel',
+      'click',
+      async () => {
+        await page.click('#ice-appbar-btn-deploy');
+        await page.waitForSelector('#ice-deploy-panel', { timeout: 5000 });
+      },
+      '#ice-appbar-btn-deploy',
+    );
 
     await reporter.step(page, 'Verify deploy panel elements', 'assert', async () => {
       const panel = page.locator('#ice-deploy-panel');
       expect(await panel.isVisible()).toBe(true);
     });
 
-    await reporter.step(page, 'Close deploy panel', 'click', async () => {
-      const closeBtn = page.locator('#ice-deploy-btn-close');
-      if (await closeBtn.isVisible()) {
-        await closeBtn.click();
-        await page.waitForSelector('#ice-deploy-panel', { state: 'hidden', timeout: 3000 }).catch(() => {});
-      }
-    }, '#ice-deploy-btn-close');
+    await reporter.step(
+      page,
+      'Close deploy panel',
+      'click',
+      async () => {
+        const closeBtn = page.locator('#ice-deploy-btn-close');
+        if (await closeBtn.isVisible()) {
+          await closeBtn.click();
+          await page.waitForSelector('#ice-deploy-panel', { state: 'hidden', timeout: 3000 }).catch(() => {});
+        }
+      },
+      '#ice-deploy-btn-close',
+    );
 
     // Check action log for errors
     const errors = await getErrors(page);
@@ -146,7 +188,10 @@ test.describe('Smoke: All Flows', () => {
     await reporter.step(page, 'Create project and open canvas', 'setup', async () => {
       const me = await apiClient.get('/auth/me');
       const orgName = me.organisations?.[0]?.name || '';
-      const orgSlug = orgName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const orgSlug = orgName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
       const project = await apiClient.post('/canvas/projects/create', { name: `AI Test ${Date.now()}` });
       await apiClient.post('/canvas/cards/create', { projectId: project.id, name: 'Main' });
       await page.goto(`/${orgSlug}/${project.slug}`, { waitUntil: 'domcontentloaded' });

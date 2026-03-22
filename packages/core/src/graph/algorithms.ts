@@ -226,12 +226,7 @@ function find_cycle_in_subgraph(graph: MutableGraph, node_ids: NodeId[]): NodeId
 /**
  * Find all paths between two nodes.
  */
-export function find_all_paths(
-  graph: MutableGraph,
-  start: NodeId,
-  end: NodeId,
-  max_paths = 100
-): NodeId[][] {
+export function find_all_paths(graph: MutableGraph, start: NodeId, end: NodeId, max_paths = 100): NodeId[][] {
   const paths: NodeId[][] = [];
   const current_path: NodeId[] = [];
   const visited = new Set<NodeId>();
@@ -263,11 +258,7 @@ export function find_all_paths(
 /**
  * Find the shortest path between two nodes using BFS.
  */
-export function find_shortest_path(
-  graph: MutableGraph,
-  start: NodeId,
-  end: NodeId
-): NodeId[] | null {
+export function find_shortest_path(graph: MutableGraph, start: NodeId, end: NodeId): NodeId[] | null {
   if (start === end) return [start];
 
   const visited = new Set<NodeId>();

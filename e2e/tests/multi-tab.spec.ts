@@ -38,9 +38,7 @@ test.describe('Multi-Tab / Cards', () => {
       projectId: project.id,
     });
 
-    const nodes = [
-      { id: 'n1', type: 'resource', position: { x: 100, y: 100 }, data: { label: 'Test' } },
-    ];
+    const nodes = [{ id: 'n1', type: 'resource', position: { x: 100, y: 100 }, data: { label: 'Test' } }];
     const edges = [{ id: 'e1', source: 'n1', target: 'n2' }];
 
     const updated = await apiClient.post('/canvas/cards/update', {

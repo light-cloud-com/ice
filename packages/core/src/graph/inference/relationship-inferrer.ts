@@ -8,13 +8,7 @@
  * - Security group rules (network access)
  */
 
-import type {
-  Node,
-  NodeId,
-  EdgeRelationship,
-  InferenceConfidence,
-  InferenceSource,
-} from '../../types/graph.js';
+import type { Node, NodeId, EdgeRelationship, InferenceConfidence, InferenceSource } from '../../types/graph.js';
 
 // =============================================================================
 // Types
@@ -341,19 +335,14 @@ export class RelationshipInferrer {
     return undefined;
   }
 
-  private extract_policies(
-    properties: Record<string, unknown>
-  ): Array<{ action: string; resource: string }> {
+  private extract_policies(properties: Record<string, unknown>): Array<{ action: string; resource: string }> {
     const policies: Array<{ action: string; resource: string }> = [];
 
     // Check for policy documents
-    const policyDoc =
-      properties['policy'] || properties['inline_policy'] || properties['assume_role_policy'];
+    const policyDoc = properties['policy'] || properties['inline_policy'] || properties['assume_role_policy'];
     if (policyDoc && typeof policyDoc === 'object') {
       const doc = policyDoc as Record<string, unknown>;
-      const statements = (doc['Statement'] || doc['statements'] || []) as Array<
-        Record<string, unknown>
-      >;
+      const statements = (doc['Statement'] || doc['statements'] || []) as Array<Record<string, unknown>>;
 
       for (const stmt of statements) {
         const actions = Array.isArray(stmt['Action']) ? stmt['Action'] : [stmt['Action']];
@@ -399,9 +388,7 @@ export class RelationshipInferrer {
     return Array.from(this.nodes.values()).filter((node) => node.type === 'Security.SecurityGroup');
   }
 
-  private extract_security_rules(
-    properties: Record<string, unknown>
-  ): Array<{ port: number; protocol: string }> {
+  private extract_security_rules(properties: Record<string, unknown>): Array<{ port: number; protocol: string }> {
     const rules: Array<{ port: number; protocol: string }> = [];
 
     // Check for ingress/egress rules
@@ -443,7 +430,7 @@ export class RelationshipInferrer {
 
     const targetTypes = portToType[port] || [];
     return Array.from(this.nodes.values()).filter((node) =>
-      targetTypes.some((t) => node.type === t || node.type.startsWith(t))
+      targetTypes.some((t) => node.type === t || node.type.startsWith(t)),
     );
   }
 
@@ -468,7 +455,7 @@ export class RelationshipInferrer {
  */
 export function create_relationship_inferrer(
   nodes: Map<NodeId, Node>,
-  options?: Partial<InferenceOptions>
+  options?: Partial<InferenceOptions>,
 ): RelationshipInferrer {
   return new RelationshipInferrer(nodes, options);
 }
@@ -478,7 +465,7 @@ export function create_relationship_inferrer(
  */
 export function infer_relationships(
   nodes: Map<NodeId, Node>,
-  options?: Partial<InferenceOptions>
+  options?: Partial<InferenceOptions>,
 ): InferredRelationship[] {
   const inferrer = create_relationship_inferrer(nodes, options);
   return inferrer.infer_all();

@@ -44,7 +44,7 @@ export const EmptyCanvasOverlay: React.FC<EmptyCanvasOverlayProps> = ({ onDismis
       const { nodes, edges } = expandComposedTemplate(template);
       dispatch(importToActiveCard({ nodes, edges }));
     },
-    [dispatch]
+    [dispatch],
   );
 
   const handleBlank = useCallback(() => {
@@ -66,22 +66,15 @@ export const EmptyCanvasOverlay: React.FC<EmptyCanvasOverlayProps> = ({ onDismis
   }, [dispatch]);
 
   return (
-    <div
-      className="absolute inset-0 flex items-center justify-center z-20"
-      style={{ pointerEvents: 'auto' }}
-    >
+    <div className="absolute inset-0 flex items-center justify-center z-20" style={{ pointerEvents: 'auto' }}>
       {/* Backdrop */}
       <div className="absolute inset-0 bg-ice-base/60 backdrop-blur-sm" />
 
       {/* Content */}
       <div className="relative z-10 text-center max-w-lg px-6">
         {/* Heading */}
-        <h2 className="text-ice-2xl font-semibold text-ice-text-1 mb-1.5">
-          {EMPTY_CANVAS.TITLE}
-        </h2>
-        <p className="text-ice-md text-ice-text-2 mb-7">
-          {EMPTY_CANVAS.SUBTITLE}
-        </p>
+        <h2 className="text-ice-2xl font-semibold text-ice-text-1 mb-1.5">{EMPTY_CANVAS.TITLE}</h2>
+        <p className="text-ice-md text-ice-text-2 mb-7">{EMPTY_CANVAS.SUBTITLE}</p>
 
         {/* Archetype grid */}
         <div className="grid grid-cols-2 gap-2.5 mb-4">
@@ -101,9 +94,7 @@ export const EmptyCanvasOverlay: React.FC<EmptyCanvasOverlayProps> = ({ onDismis
                   <Icon style={{ width: 20, height: 20, color }} />
                 </div>
                 <span className="text-ice-md font-semibold text-ice-text-1">{qs.name}</span>
-                <span className="text-ice-sm text-ice-text-2 leading-snug">
-                  {qs.description}
-                </span>
+                <span className="text-ice-sm text-ice-text-2 leading-snug">{qs.description}</span>
               </button>
             );
           })}

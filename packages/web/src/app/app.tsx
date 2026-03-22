@@ -89,9 +89,7 @@ const ProjectTabBar: React.FC<{ basePath: string; activeTab: string }> = ({ base
               onClick={() => navigate(path)}
               className={cn(
                 'px-3 py-1 text-ice-base font-medium rounded transition-colors',
-                isActive
-                  ? 'bg-ice-active text-ice-text-1'
-                  : 'text-ice-text-3 hover:text-ice-text-2 hover:bg-ice-hover'
+                isActive ? 'bg-ice-active text-ice-text-1' : 'text-ice-text-3 hover:text-ice-text-2 hover:bg-ice-hover',
               )}
             >
               {tab.label}
@@ -110,7 +108,7 @@ const ProjectTabBar: React.FC<{ basePath: string; activeTab: string }> = ({ base
             'flex items-center gap-1 px-2 py-1 text-ice-sm font-medium rounded transition-colors',
             activeTab === 'canvas'
               ? 'bg-ice-active text-ice-text-1 shadow-sm'
-              : 'text-ice-text-3 hover:text-ice-text-2'
+              : 'text-ice-text-3 hover:text-ice-text-2',
           )}
         >
           <PenTool className="w-3 h-3" />
@@ -120,9 +118,7 @@ const ProjectTabBar: React.FC<{ basePath: string; activeTab: string }> = ({ base
           onClick={() => navigate(`${basePath}/table`)}
           className={cn(
             'flex items-center gap-1 px-2 py-1 text-ice-sm font-medium rounded transition-colors',
-            activeTab === 'table'
-              ? 'bg-ice-active text-ice-text-1 shadow-sm'
-              : 'text-ice-text-3 hover:text-ice-text-2'
+            activeTab === 'table' ? 'bg-ice-active text-ice-text-1 shadow-sm' : 'text-ice-text-3 hover:text-ice-text-2',
           )}
         >
           <Table2 className="w-3 h-3" />
@@ -195,9 +191,10 @@ const DynamicContent: React.FC = () => {
   }
 
   // Compute the project base path (URL without subpage)
-  const projectBasePath = resolved.type === 'project'
-    ? '/' + segments.slice(0, resolved.subpage === 'canvas' ? segments.length : segments.length - 1).join('/')
-    : '';
+  const projectBasePath =
+    resolved.type === 'project'
+      ? '/' + segments.slice(0, resolved.subpage === 'canvas' ? segments.length : segments.length - 1).join('/')
+      : '';
 
   // ── Project views ─────────────────────────────────────────────────────
   if (resolved.type === 'project') {
@@ -241,9 +238,8 @@ const DynamicContent: React.FC = () => {
   const folderId = resolved.type === 'folder' ? resolved.id : null;
   const folderName = resolved.type === 'folder' ? resolved.name : 'Projects';
   // basePath = the URL path for this folder (from resolved breadcrumbs), always includes org prefix
-  const folderBasePath = resolved.breadcrumbs.length > 0
-    ? resolved.breadcrumbs[resolved.breadcrumbs.length - 1].path
-    : resolved.orgPrefix;
+  const folderBasePath =
+    resolved.breadcrumbs.length > 0 ? resolved.breadcrumbs[resolved.breadcrumbs.length - 1].path : resolved.orgPrefix;
 
   return (
     <div className="h-full flex flex-col bg-background">
@@ -264,7 +260,9 @@ const PageLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // FE-8: fetchProfile is dispatched once at DynamicContent level via account-slice thunk idempotency
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((s: RootState) => s.account.user);
-  useEffect(() => { if (!user) dispatch(fetchProfile()); }, [dispatch, user]);
+  useEffect(() => {
+    if (!user) dispatch(fetchProfile());
+  }, [dispatch, user]);
 
   return (
     <div className="h-full flex flex-col bg-ice-surface">
@@ -283,11 +281,45 @@ const App: React.FC = () => (
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
-        <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
+        <Route
+          path="/onboarding"
+          element={
+            <ProtectedRoute>
+              <OnboardingPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/invite/:token" element={<InviteAcceptPage />} />
-        <Route path="/settings" element={<ProtectedRoute><PageLayout><UserSettingsPage /></PageLayout></ProtectedRoute>} />
-        <Route path="/team" element={<ProtectedRoute><PageLayout><TeamPage /></PageLayout></ProtectedRoute>} />
-        <Route path="/*" element={<ProtectedRoute><ErrorBoundary name="Canvas"><DynamicContent /></ErrorBoundary></ProtectedRoute>} />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <PageLayout>
+                <UserSettingsPage />
+              </PageLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/team"
+          element={
+            <ProtectedRoute>
+              <PageLayout>
+                <TeamPage />
+              </PageLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/*"
+          element={
+            <ProtectedRoute>
+              <ErrorBoundary name="Canvas">
+                <DynamicContent />
+              </ErrorBoundary>
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   </ErrorBoundary>

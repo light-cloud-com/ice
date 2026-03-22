@@ -111,9 +111,7 @@ export async function createEnvironment(
   // Deep-copy nodes/edges
   const clonedNodes = JSON.parse(JSON.stringify(prodEnv.card.nodes));
   const clonedEdges = JSON.parse(JSON.stringify(prodEnv.card.edges));
-  const clonedViewport = prodEnv.card.viewport
-    ? JSON.parse(JSON.stringify(prodEnv.card.viewport))
-    : null;
+  const clonedViewport = prodEnv.card.viewport ? JSON.parse(JSON.stringify(prodEnv.card.viewport)) : null;
 
   const envName = name.toLowerCase().replace(/\s+/g, '-');
 
@@ -153,10 +151,13 @@ export async function createEnvironment(
 
     // Pick a default branch for this environment
     const defaultBranch =
-      envName === 'staging' ? 'staging' :
-      envName === 'develop' || envName === 'development' ? 'develop' :
-      type === 'pr' && prBranch ? prBranch :
-      envName;
+      envName === 'staging'
+        ? 'staging'
+        : envName === 'develop' || envName === 'development'
+          ? 'develop'
+          : type === 'pr' && prBranch
+            ? prBranch
+            : envName;
 
     for (const prodRule of prodRules) {
       const webhookSecret = (await import('crypto')).randomBytes(32).toString('hex');
@@ -188,10 +189,7 @@ export async function createEnvironment(
 
 // ─── Update ─────────────────────────────────────────────────────────────────
 
-export async function updateEnvironment(
-  envId: string,
-  data: { name?: string; region?: string },
-) {
+export async function updateEnvironment(envId: string, data: { name?: string; region?: string }) {
   const env = await prisma.environment.findUnique({ where: { id: envId } });
   if (!env) throw new Error('Environment not found');
   if (env.is_protected && data.name) {
@@ -222,10 +220,7 @@ export async function deleteEnvironment(envId: string) {
 
 // ─── Compare (diff two environments) ────────────────────────────────────────
 
-export async function compareEnvironments(
-  sourceEnvId: string,
-  targetEnvId: string,
-): Promise<EnvironmentDiff> {
+export async function compareEnvironments(sourceEnvId: string, targetEnvId: string): Promise<EnvironmentDiff> {
   const [sourceEnv, targetEnv] = await Promise.all([
     prisma.environment.findUnique({ where: { id: sourceEnvId }, include: { card: true } }),
     prisma.environment.findUnique({ where: { id: targetEnvId }, include: { card: true } }),
@@ -233,19 +228,12 @@ export async function compareEnvironments(
 
   if (!sourceEnv || !targetEnv) throw new Error('Environment not found');
 
-  return diffCardNodes(
-    sourceEnv.card.nodes as any[],
-    targetEnv.card.nodes as any[],
-  );
+  return diffCardNodes(sourceEnv.card.nodes as any[], targetEnv.card.nodes as any[]);
 }
 
 // ─── Promote (overwrite target with source) ─────────────────────────────────
 
-export async function promoteEnvironment(
-  sourceEnvId: string,
-  targetEnvId: string,
-  userId: string,
-) {
+export async function promoteEnvironment(sourceEnvId: string, targetEnvId: string, userId: string) {
   const [sourceEnv, targetEnv] = await Promise.all([
     prisma.environment.findUnique({ where: { id: sourceEnvId }, include: { card: true } }),
     prisma.environment.findUnique({ where: { id: targetEnvId } }),
@@ -277,26 +265,32 @@ export async function promoteEnvironment(
 
       for (const rule of rules) {
         const event = await createDeploymentEvent(
-          rule.id, 'manual', 'promote',
+          rule.id,
+          'manual',
+          'promote',
           rule.branch_pattern,
           `Promoted from ${sourceEnv.name}`,
           userId,
         );
-        await queue.add('pipeline', {
-          type: 'pipeline',
-          eventId: event.id,
-          ruleId: rule.id,
-          cardId: targetEnv.card_id,
-          nodeId: rule.node_id,
-          repository: rule.repository,
-          branch: rule.branch_pattern,
-          commitSha: 'HEAD',
-          environment: targetEnv.name,
-          buildCommand: rule.build_command,
-          installCommand: rule.install_command,
-          outputDir: rule.output_dir,
-          framework: rule.framework,
-        }, { attempts: 1, removeOnComplete: 100, removeOnFail: 100 });
+        await queue.add(
+          'pipeline',
+          {
+            type: 'pipeline',
+            eventId: event.id,
+            ruleId: rule.id,
+            cardId: targetEnv.card_id,
+            nodeId: rule.node_id,
+            repository: rule.repository,
+            branch: rule.branch_pattern,
+            commitSha: 'HEAD',
+            environment: targetEnv.name,
+            buildCommand: rule.build_command,
+            installCommand: rule.install_command,
+            outputDir: rule.output_dir,
+            framework: rule.framework,
+          },
+          { attempts: 1, removeOnComplete: 100, removeOnFail: 100 },
+        );
       }
     }
   } catch (err) {

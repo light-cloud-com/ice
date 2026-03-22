@@ -68,22 +68,15 @@ export const EnvironmentStep: React.FC<EnvironmentStepProps> = ({
               key={env.type}
               className={cn(
                 'rounded-lg border transition-all',
-                env.enabled
-                  ? 'border-ice-border bg-ice-surface'
-                  : 'border-ice-border bg-ice-base opacity-60'
+                env.enabled ? 'border-ice-border bg-ice-surface' : 'border-ice-border bg-ice-base opacity-60',
               )}
             >
               {/* Toggle row */}
-              <button
-                onClick={() => onToggle(index)}
-                className="flex items-center gap-3 w-full px-3 py-2.5 text-left"
-              >
+              <button onClick={() => onToggle(index)} className="flex items-center gap-3 w-full px-3 py-2.5 text-left">
                 <div
                   className={cn(
                     'w-4 h-4 rounded border-2 flex items-center justify-center transition-all',
-                    env.enabled
-                      ? 'bg-ice-accent border-ice-accent'
-                      : 'border-ice-border bg-transparent'
+                    env.enabled ? 'bg-ice-accent border-ice-accent' : 'border-ice-border bg-transparent',
                   )}
                 >
                   {env.enabled && (

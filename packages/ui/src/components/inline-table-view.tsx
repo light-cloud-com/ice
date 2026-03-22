@@ -73,9 +73,7 @@ export const InlineTableView: React.FC = () => {
 
   const handleRowClick = (id: string, e: React.MouseEvent) => {
     if (e.metaKey || e.ctrlKey) {
-      const next = selectedNodes.includes(id)
-        ? selectedNodes.filter((n) => n !== id)
-        : [...selectedNodes, id];
+      const next = selectedNodes.includes(id) ? selectedNodes.filter((n) => n !== id) : [...selectedNodes, id];
       dispatch(setSelectedNodes(next));
     } else {
       dispatch(setSelectedNodes([id]));
@@ -97,7 +95,11 @@ export const InlineTableView: React.FC = () => {
       >
         {label}
         {isActive ? (
-          sortDir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+          sortDir === 'asc' ? (
+            <ArrowUp className="w-3 h-3" />
+          ) : (
+            <ArrowDown className="w-3 h-3" />
+          )
         ) : (
           <ArrowUpDown className="w-3 h-3 opacity-40" />
         )}

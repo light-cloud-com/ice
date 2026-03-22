@@ -47,8 +47,7 @@ export function CreateTeamModal({ onClose }: Props) {
       dispatch(setSelectedOrg(newOrg));
       onClose();
     } catch (err: unknown) {
-      const msg =
-        err instanceof Error ? err.message : 'Failed to create team. Please try again.';
+      const msg = err instanceof Error ? err.message : 'Failed to create team. Please try again.';
       setError(msg);
     } finally {
       setLoading(false);
@@ -89,9 +88,7 @@ export function CreateTeamModal({ onClose }: Props) {
             />
           </label>
 
-          <p className="mt-1.5 text-xs text-ice-text-2">
-            Between 2 and 50 characters. You can change this later.
-          </p>
+          <p className="mt-1.5 text-xs text-ice-text-2">Between 2 and 50 characters. You can change this later.</p>
 
           {error && (
             <p className="mt-3 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">

@@ -22,11 +22,10 @@ import { getBlueprint, expandBlueprint } from '@ice/blocks';
  */
 export function expandComposedTemplate(
   template: ComposedTemplate,
-  provider?: Provider
+  provider?: Provider,
 ): { nodes: CardNode[]; edges: CardEdge[] } {
   // Use explicitly passed provider, fall back to the template's default provider
-  const resolvedProvider: Provider | undefined =
-    provider ?? (template.provider as Provider | undefined);
+  const resolvedProvider: Provider | undefined = provider ?? (template.provider as Provider | undefined);
 
   const allNodes: CardNode[] = [];
   const allEdges: CardEdge[] = [];
@@ -148,7 +147,7 @@ export function expandComposedTemplate(
           (n) =>
             n.type === 'container' &&
             (n.data?.iceType as string) === `Group.${group.subtype}` &&
-            n.data?.label === group.label
+            n.data?.label === group.label,
         );
         if (blockId && groupNode) {
           allEdges.push({

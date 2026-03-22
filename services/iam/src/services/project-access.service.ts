@@ -28,7 +28,7 @@ export async function getProjectRole(userId: string, projectId: string): Promise
 export async function hasProjectAccess(
   userId: string,
   projectId: string,
-  minRole: 'viewer' | 'editor' | 'owner'
+  minRole: 'viewer' | 'editor' | 'owner',
 ): Promise<boolean> {
   // Get the project's org to check org-level role
   const project = await prisma.canvasProject.findUnique({
@@ -64,12 +64,7 @@ export async function listProjectMembers(projectId: string) {
   });
 }
 
-export async function addProjectMember(
-  projectId: string,
-  userId: string,
-  role: string,
-  grantedBy: string
-) {
+export async function addProjectMember(projectId: string, userId: string, role: string, grantedBy: string) {
   return prisma.projectMember.upsert({
     where: { project_id_user_id: { project_id: projectId, user_id: userId } },
     update: { role },

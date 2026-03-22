@@ -17,12 +17,7 @@ import type {
   ImportWarning,
   ImportMetadata,
 } from './types.js';
-import {
-  get_ice_type,
-  get_ice_provider,
-  get_provider_from_type,
-  map_properties,
-} from './type-mapper.js';
+import { get_ice_type, get_ice_provider, get_provider_from_type, map_properties } from './type-mapper.js';
 import { MutableGraph, create_mutable_graph } from '../../graph/mutable-graph.js';
 import type { NodeInput, EdgeInput } from '../../types/graph.js';
 
@@ -78,7 +73,7 @@ const DEFAULT_OPTIONS: Required<Omit<TerraformImportOptions, 'target_graph'>> = 
  */
 export async function import_terraform_state(
   state_path: string,
-  options: TerraformImportOptions = {}
+  options: TerraformImportOptions = {},
 ): Promise<TerraformImportResult> {
   const errors: ImportError[] = [];
   const warnings: ImportWarning[] = [];
@@ -137,7 +132,7 @@ export async function import_terraform_state(
  */
 export function import_terraform_state_json(
   json_content: string,
-  options: TerraformImportOptions = {}
+  options: TerraformImportOptions = {},
 ): TerraformImportResult {
   const errors: ImportError[] = [];
   const warnings: ImportWarning[] = [];
@@ -171,14 +166,12 @@ export function import_terraform_state_object(
   state: TerraformState,
   options: TerraformImportOptions = {},
   errors: ImportError[] = [],
-  warnings: ImportWarning[] = []
+  warnings: ImportWarning[] = [],
 ): TerraformImportResult {
   // Merge options with defaults, filtering out undefined values
   const opts = {
     ...DEFAULT_OPTIONS,
-    ...(Object.fromEntries(
-      Object.entries(options).filter(([_, v]) => v !== undefined)
-    ) as TerraformImportOptions),
+    ...(Object.fromEntries(Object.entries(options).filter(([_, v]) => v !== undefined)) as TerraformImportOptions),
   };
   const imported_resources: ImportedResource[] = [];
   const imported_outputs: ImportedOutput[] = [];
@@ -277,7 +270,7 @@ function import_resource_instance(
   resource: TerraformResource,
   instance: TerraformResourceInstance,
   options: Required<Omit<TerraformImportOptions, 'target_graph'>>,
-  warnings: ImportWarning[]
+  warnings: ImportWarning[],
 ): ImportedResource {
   const terraform_type = resource.type;
   const ice_type = get_ice_type(terraform_type);
@@ -342,7 +335,7 @@ function import_resource_instance(
  */
 function mask_sensitive_attributes(
   properties: Record<string, unknown>,
-  sensitive_paths: string[]
+  sensitive_paths: string[],
 ): Record<string, unknown> {
   const result = { ...properties };
 
@@ -413,11 +406,7 @@ function infer_dependencies(resources: ImportedResource[], warnings: ImportWarni
 /**
  * Scan an object for ID references.
  */
-function scan_for_references(
-  obj: unknown,
-  id_lookup: Map<string, string>,
-  deps: Set<string>
-): void {
+function scan_for_references(obj: unknown, id_lookup: Map<string, string>, deps: Set<string>): void {
   if (obj === null || obj === undefined) return;
 
   if (typeof obj === 'string') {
@@ -461,7 +450,7 @@ function create_empty_metadata(): ImportMetadata {
  */
 export function import_result_to_graph(
   result: TerraformImportResult,
-  graph_name: string = 'terraform-import'
+  graph_name: string = 'terraform-import',
 ): MutableGraph {
   const graph = create_mutable_graph(graph_name, {
     description: `Imported from Terraform state (v${result.metadata.state_version})`,
@@ -535,7 +524,7 @@ export function import_result_to_graph(
  */
 export async function import_terraform_to_graph(
   state_path: string,
-  options: TerraformImportOptions = {}
+  options: TerraformImportOptions = {},
 ): Promise<{ graph: MutableGraph; result: TerraformImportResult }> {
   const result = await import_terraform_state(state_path, options);
   const graph = options.target_graph ?? import_result_to_graph(result);

@@ -50,10 +50,7 @@ export async function search(query: string) {
   const core = await getCore();
   const q = query.toLowerCase();
   const resources = (core.getAllHighLevelResources?.() || []) as any[];
-  return resources.filter((r: any) =>
-    r.name.toLowerCase().includes(q) ||
-    r.description?.toLowerCase().includes(q)
-  );
+  return resources.filter((r: any) => r.name.toLowerCase().includes(q) || r.description?.toLowerCase().includes(q));
 }
 
 export async function getLowLevel(highLevelId: string) {

@@ -74,7 +74,7 @@ export const test = base.extend<{
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
           body: body ? JSON.stringify(body) : undefined,
         });
@@ -82,7 +82,7 @@ export const test = base.extend<{
       },
       get: async (path) => {
         const res = await fetch(`${BACKEND_URL}${path}`, {
-          headers: { 'Authorization': `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${token}` },
         });
         return res.json();
       },

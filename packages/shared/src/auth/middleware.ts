@@ -20,7 +20,23 @@ export interface AuthRequest extends Request {
   organisationId?: string;
 }
 
+// Desktop mode IDs — set by auto-seeded local user
+let _desktopUserId: string | null = null;
+let _desktopOrgId: string | null = null;
+
+export function setDesktopUser(userId: string, orgId: string) {
+  _desktopUserId = userId;
+  _desktopOrgId = orgId;
+}
+
 export function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
+  // Desktop mode: skip JWT validation, use local user
+  if (process.env.ICE_DESKTOP === 'true' && _desktopUserId) {
+    req.userId = _desktopUserId;
+    req.organisationId = _desktopOrgId || '';
+    return next();
+  }
+
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith('Bearer ')) {
     return res.status(401).json({ message: 'Missing authorization token' });

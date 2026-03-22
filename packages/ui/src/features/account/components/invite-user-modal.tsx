@@ -8,8 +8,8 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSelector } from 'react-redux';
 import { X, Shield, User, Eye } from 'lucide-react';
-import type { RootState } from '@/store';
-import axiosInstance from '@/shared/api/axios-instance';
+import type { RootState } from '../../../store';
+import axiosInstance from '../../../shared/api/axios-instance';
 
 interface Props {
   onClose: () => void;

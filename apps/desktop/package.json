@@ -1,7 +1,7 @@
 {
   "name": "@ice/desktop",
   "version": "0.1.0",
-  "description": "ICE Desktop - Electron cross-platform app sharing UI with web",
+  "description": "ICE Desktop - Standalone Electron app for cloud infrastructure design & deployment",
   "private": true,
   "type": "module",
   "main": "dist/main/index.js",
@@ -9,25 +9,41 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "pack": "electron-vite build && electron-builder --dir",
+    "dist": "electron-vite build && electron-builder",
+    "dist:mac": "electron-vite build && electron-builder --mac",
+    "dist:win": "electron-vite build && electron-builder --win",
+    "dist:linux": "electron-vite build && electron-builder --linux"
   },
   "dependencies": {
+    "@electron-toolkit/utils": "^3.0.0",
     "@ice/core": "workspace:*",
     "@ice/blocks": "workspace:*",
+    "@ice/db": "workspace:*",
+    "@ice/gateway": "workspace:*",
+    "@ice/shared": "workspace:*",
     "@ice/types": "workspace:*",
     "@ice/ui": "workspace:*",
     "@ice/provider-gcp": "workspace:*",
     "@ice/provider-registry": "workspace:*"
   },
   "devDependencies": {
+    "@electron-toolkit/tsconfig": "^1.0.1",
     "@types/node": "^20.11.0",
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
     "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.17",
     "electron": "^28.1.3",
+    "electron-builder": "^24.9.1",
     "electron-vite": "^2.0.0",
+    "postcss": "^8.4.33",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "typescript": "^5.3.3"
+    "react-redux": "^9.1.0",
+    "react-router-dom": "^6.22.0",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.6.3"
   }
 }

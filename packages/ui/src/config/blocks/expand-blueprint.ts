@@ -9,7 +9,7 @@ import type { BlockBlueprint, ExpandedBlueprint, Provider } from './types';
 import {
   computeCompactNodeHeight,
   computeCompactNodeWidth,
-} from '@ice/ui/canvas/components/nodes/svg-compact-node';
+} from '../../features/canvas/components/nodes/svg-compact-node';
 
 // =============================================================================
 // ID generation

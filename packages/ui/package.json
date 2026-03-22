@@ -9,7 +9,6 @@
   "exports": {
     ".": "./src/index.ts",
     "./canvas": "./src/features/canvas/index.ts",
-    "./canvas/*": "./src/features/canvas/*",
     "./deploy": "./src/features/deploy/index.ts",
     "./properties": "./src/features/properties/index.ts",
     "./palette": "./src/features/palette/index.ts",
@@ -25,7 +24,8 @@
     "./api": "./src/api/adapter.ts",
     "./hooks": "./src/hooks/index.ts",
     "./utils": "./src/utils/index.ts",
-    "./primitives/*": "./src/primitives/*"
+    "./src/*": "./src/*",
+    "./*": "./*"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

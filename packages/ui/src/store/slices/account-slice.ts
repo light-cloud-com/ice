@@ -5,7 +5,7 @@
  */
 
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
-import axiosInstance from '@/shared/api/axios-instance';
+import axiosInstance from '../../shared/api/axios-instance';
 
 export interface Organisation {
   id: string;

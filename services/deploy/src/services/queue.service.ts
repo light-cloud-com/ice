@@ -5,38 +5,46 @@
  * Job status is tracked in the DeployJob table for UI polling.
  */
 
-import { Queue, Worker, type Job } from 'bullmq';
-import IORedis from 'ioredis';
 import prisma from '@ice/db';
 import { applyDeployment } from './deploy.service';
 import { updateEventProgress, failEvent, type DeployStep } from './pipeline.service';
 import { buildFromSource, cleanupBuild } from './build.service';
+import { InMemoryQueue, InMemoryWorker } from './memory-queue';
 
-const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
+const REDIS_URL = process.env.REDIS_URL;
+const USE_MEMORY_QUEUE = !REDIS_URL || process.env.ICE_DESKTOP === 'true';
 
-let connection: IORedis | null = null;
-let deployQueue: Queue | null = null;
+let connection: any = null;
+let deployQueue: any = null;
 
-function getConnection(): IORedis {
+function getConnection(): any {
+  if (USE_MEMORY_QUEUE) return null;
   if (!connection) {
+    const IORedis = require('ioredis');
     connection = new IORedis(REDIS_URL, {
-      maxRetriesPerRequest: null, // required by BullMQ
+      maxRetriesPerRequest: null,
       retryStrategy(times: number) {
         if (times > 3) {
-          console.warn('Redis not available — deploy queue disabled');
-          return null; // stop retrying
+          console.warn('Redis not available — falling back to in-memory queue');
+          return null;
         }
         return Math.min(times * 500, 3000);
       },
     });
-    connection.on('error', () => {}); // suppress connection errors after max retries
+    connection.on('error', () => {});
   }
   return connection;
 }
 
-export function getDeployQueue(): Queue {
+export function getDeployQueue(): any {
   if (!deployQueue) {
-    deployQueue = new Queue('deploy', { connection: getConnection() as any });
+    if (USE_MEMORY_QUEUE) {
+      deployQueue = new InMemoryQueue();
+      console.log('Using in-memory deploy queue (no Redis)');
+    } else {
+      const { Queue } = require('bullmq');
+      deployQueue = new Queue('deploy', { connection: getConnection() });
+    }
   }
   return deployQueue;
 }
@@ -87,7 +95,7 @@ export async function queueDeployment(
 
 export function startDeployWorker() {
   try {
-    const worker = new Worker('deploy', async (job: Job) => {
+    const jobProcessor = async (job: any) => {
       const data = job.data as any;
 
       // Route to pipeline worker or deploy worker based on job type
@@ -113,10 +121,19 @@ export function startDeployWorker() {
 
       // Run the actual deployment
       await applyDeployment(cardId, nodes, edges, options, orgId, userId);
-    }, {
-      connection: getConnection() as any,
-      concurrency: 3,
-    });
+    };
+
+    let worker: any;
+    if (USE_MEMORY_QUEUE) {
+      worker = new InMemoryWorker('deploy', jobProcessor);
+      worker._bind(getDeployQueue());
+    } else {
+      const { Worker } = require('bullmq');
+      worker = new Worker('deploy', jobProcessor, {
+        connection: getConnection(),
+        concurrency: 3,
+      });
+    }
 
     worker.on('completed', async (job: Job) => {
       const data = job.data as any;

@@ -7,9 +7,9 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Settings, Users, LogOut } from 'lucide-react';
-import type { RootState, AppDispatch } from '@/store';
-import { clearUser } from '@/store/slices/account-slice';
-import { logout, setAccessToken } from '@/shared/api/auth';
+import type { RootState, AppDispatch } from '../../../store';
+import { clearUser } from '../../../store/slices/account-slice';
+import { logout, setAccessToken } from '../../../shared/api/auth';
 
 function getInitials(name?: string, email?: string): string {
   if (name) {

@@ -1,19 +1,25 @@
 {
-  "name": "ice-saas",
+  "name": "ice",
   "version": "0.1.0",
-  "description": "ICE SaaS - Integrated Cloud Environment (Web + Backend)",
+  "description": "ICE - Integrated Cloud Environment (Web + Backend)",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.12.1",
   "scripts": {
     "dev:web": "pnpm --filter @ice/web dev",
     "dev:gateway": "pnpm --filter @ice/gateway dev",
+    "dev:desktop": "ICE_DESKTOP=true JWT_SECRET=desktop-dev CREDENTIAL_ENCRYPTION_KEY=desktop-dev-key-32chars! PORT=15173 FRONTEND_URL=http://localhost:5173 concurrently -n gw,web,app -c blue,green,magenta \"pnpm dev:gateway\" \"pnpm dev:web\" \"sleep 5 && ELECTRON_RENDERER_URL=http://localhost:5173 pnpm --filter @ice/desktop dev\"",
     "dev:saas": "concurrently \"pnpm dev:gateway\" \"pnpm dev:web\"",
     "dev:all": "docker compose up -d redis postgres && concurrently -n gw,web -c blue,green \"pnpm dev:gateway\" \"pnpm dev:web\"",
     "build": "pnpm -r --workspace-concurrency=1 build",
     "build:web": "pnpm --filter @ice/web build",
     "build:core": "pnpm --filter @ice/core build",
     "build:gateway": "pnpm --filter @ice/gateway build",
+    "build:desktop": "pnpm --filter @ice/desktop build",
+    "dist:desktop": "pnpm --filter @ice/desktop dist",
+    "dist:desktop:mac": "pnpm --filter @ice/desktop dist:mac",
+    "dist:desktop:win": "pnpm --filter @ice/desktop dist:win",
+    "dist:desktop:linux": "pnpm --filter @ice/desktop dist:linux",
     "test:unit": "vitest run --root .",
     "test:e2e": "playwright test --config e2e/playwright.config.ts",
     "test:build": "pnpm --filter @ice/web exec vite build",
@@ -37,6 +43,7 @@
     "onlyBuiltDependencies": [
       "better-sqlite3",
       "esbuild",
+      "electron",
       "protobufjs"
     ]
   }

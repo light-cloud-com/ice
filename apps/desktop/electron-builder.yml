@@ -1,0 +1,48 @@
+appId: com.ice.desktop
+productName: ICE
+copyright: Copyright (c) 2024-2026 Light Cloud
+
+directories:
+  buildResources: resources
+  output: release
+
+files:
+  - dist/**/*
+  - resources/**/*
+
+mac:
+  category: public.app-category.developer-tools
+  icon: resources/icons/512x512.png
+  target:
+    - target: dmg
+      arch: [universal]
+    - target: zip
+      arch: [universal]
+  hardenedRuntime: true
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+
+win:
+  icon: resources/icons/icon.ico
+  target:
+    - target: nsis
+      arch: [x64, arm64]
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  artifactName: ICE-Setup-${version}.${ext}
+
+linux:
+  icon: resources/icons
+  category: Development
+  target:
+    - target: AppImage
+      arch: [x64, arm64]
+    - target: deb
+      arch: [x64]
+
+publish:
+  provider: github
+  owner: light-cloud
+  repo: ice-desktop

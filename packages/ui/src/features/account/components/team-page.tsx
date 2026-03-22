@@ -10,10 +10,10 @@ import { useSelector } from 'react-redux';
 import {
   UserPlus, Loader2, Shield, User, Eye, Pencil, Trash2, Clock, Mail,
 } from 'lucide-react';
-import type { RootState } from '@/store';
-import axiosInstance from '@/shared/api/axios-instance';
+import type { RootState } from '../../../store';
+import axiosInstance from '../../../shared/api/axios-instance';
 import { InviteUserModal } from './invite-user-modal';
-import { cn } from '@/shared/utils/cn';
+import { cn } from '../../../shared/utils/cn';
 
 interface TeamMember {
   id: string;

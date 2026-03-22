@@ -9,9 +9,9 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useDispatch } from 'react-redux';
 import { X } from 'lucide-react';
-import type { AppDispatch } from '@/store';
-import { addOrganisation, setSelectedOrg } from '@/store/slices/account-slice';
-import axiosInstance from '@/shared/api/axios-instance';
+import type { AppDispatch } from '../../../store';
+import { addOrganisation, setSelectedOrg } from '../../../store/slices/account-slice';
+import axiosInstance from '../../../shared/api/axios-instance';
 
 interface Props {
   onClose: () => void;

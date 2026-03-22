@@ -104,6 +104,29 @@ app.use('/api', createEngineRouter());
 app.use('/api', createCredentialsRouter());
 createBillingRouter().then((r) => app.use('/api', r));
 
+// ─── Desktop Mode: serve web app static files ──────────────────────────────
+
+if (process.env.ICE_DESKTOP === 'true') {
+  const { join } = await import('path');
+  const { fileURLToPath } = await import('url');
+  const _dirname = join(fileURLToPath(import.meta.url), '..');
+  const webDistPath = join(_dirname, '../../web/dist');
+
+  const { existsSync } = await import('fs');
+  if (existsSync(webDistPath)) {
+    app.use(express.static(webDistPath));
+
+    // SPA fallback — serve index.html for all non-API routes
+    app.get('*', (req, res, next) => {
+      if (req.path.startsWith('/api') || req.path.startsWith('/socket.io')) return next();
+      res.sendFile(join(webDistPath, 'index.html'));
+    });
+    console.log('[desktop] Serving web app from', webDistPath);
+  } else {
+    console.log('[desktop] No web dist found — renderer loads from Vite dev server');
+  }
+}
+
 // ─── Error handler ──────────────────────────────────────────────────────────
 
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

@@ -6,8 +6,8 @@ import { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Building2, ChevronDown, Plus, Check } from 'lucide-react';
-import type { RootState, AppDispatch } from '@/store';
-import { setSelectedOrg, type Organisation } from '@/store/slices/account-slice';
+import type { RootState, AppDispatch } from '../../../store';
+import { setSelectedOrg, type Organisation } from '../../../store/slices/account-slice';
 import { CreateTeamModal } from './create-team-modal';
 
 export function OrgSwitcher() {

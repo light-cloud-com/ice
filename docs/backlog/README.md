@@ -17,6 +17,7 @@ Fixed on 2026-03-22.
 | [Infrastructure & CI/CD](infrastructure.md) | 16 | 15 | 1 | Broken CI, missing configs, Docker issues, build system |
 | [Developer Experience](developer-experience.md) | 10 | 10 | 0 | Missing scripts, testing gaps, monorepo health |
 | [Refactoring Debt](refactoring-debt.md) | 8 | 8 | 0 | Incomplete migration artifacts from modular refactor |
+| [Desktop App](desktop-app.md) | 15 | 0 | 15 | Electron app non-functional — missing deps, UI, config |
 
 ### Product & Content Gaps
 

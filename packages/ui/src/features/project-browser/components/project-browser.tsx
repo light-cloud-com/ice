@@ -27,11 +27,11 @@ import {
   Table2,
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import type { RootState, AppDispatch } from '@/store';
-import { openDialog } from '@/store/slices/ui-slice';
-import axiosInstance from '@/shared/api/axios-instance';
-import { useResolvePath } from '@/shared/hooks/use-resolve-path';
-import { toSlug } from '@/shared/utils/slug';
+import type { RootState, AppDispatch } from '../../../store';
+import { openDialog } from '../../../store/slices/ui-slice';
+import axiosInstance from '../../../shared/api/axios-instance';
+import { useResolvePath } from '../../../shared/hooks/use-resolve-path';
+import { toSlug } from '../../../shared/utils/slug';
 
 interface ProjectNode {
   id: string;

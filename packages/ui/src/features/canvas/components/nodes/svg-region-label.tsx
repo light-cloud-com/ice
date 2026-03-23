@@ -11,17 +11,12 @@
  */
 
 import React, { memo } from 'react';
+import { REGION_STYLES } from '../../../../config/color-palette';
 import type { CanvasNode } from '../svg-canvas';
 
 interface SvgRegionLabelProps {
   node: CanvasNode;
 }
-
-const REGION_STYLES: Record<string, { fill: string; labelColor: string }> = {
-  'Network.VPC': { fill: 'rgba(99, 102, 241, 0.04)', labelColor: '#6366f1' },
-  'Network.Subnet': { fill: 'rgba(139, 92, 246, 0.03)', labelColor: '#8b5cf6' },
-  default: { fill: 'rgba(100, 116, 139, 0.03)', labelColor: '#64748b' },
-};
 
 export const SvgRegionLabel: React.FC<SvgRegionLabelProps> = memo(({ node }) => {
   const { x, y, width, height, label } = node;

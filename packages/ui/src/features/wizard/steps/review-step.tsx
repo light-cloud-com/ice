@@ -7,15 +7,11 @@
 import { getCloudProvider } from '@ice/core/resources';
 import { Cloud, Globe, Shield, LayoutTemplate, FileCode2 } from 'lucide-react';
 import React from 'react';
+import { SECURITY_LEVEL_COLORS } from '../../../config/color-palette';
 import { COMPOSED_TEMPLATES } from '../../../config/templates';
 import type { WizardState } from '../hooks/use-wizard-state';
 
-const SECURITY_COLORS: Record<string, string> = {
-  basic: '#6b7280',
-  standard: '#3b82f6',
-  strict: '#f59e0b',
-  compliance: '#22c55e',
-};
+const SECURITY_COLORS = SECURITY_LEVEL_COLORS;
 
 interface ReviewStepProps {
   state: WizardState;

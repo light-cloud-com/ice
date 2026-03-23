@@ -53,6 +53,14 @@ import { SvgConnectionPath, EDGE_COLORS, type ConnectionTooltipInfo } from './sv
 import { SvgLogNode } from './svg-log-node';
 import { getIcon, DEFAULT_ICON, type Provider } from '../../../assets/icons';
 import { getBrandIcon } from '../../../assets/icons/brand-registry';
+import {
+  HEADER_HEIGHT,
+  CONTAINER_PADDING,
+  MIN_CONTAINER_WIDTH,
+  MIN_CONTAINER_HEIGHT,
+  LOD_THRESHOLD_L3,
+  LOD_THRESHOLD_L2,
+} from '../../../config/canvas-constants';
 import { getBlueprint, expandBlueprint } from '../../../config/blocks';
 import { canContain, isContainer } from '../../../config/containment-rules';
 import { isTypeVisibleAtLevel, isEdgeVisibleAtLevel } from '../../../config/visualization-config';
@@ -114,13 +122,9 @@ export interface CanvasConnection {
 // Constants - Unified sizes
 // =============================================================================
 
-// Container layout — padding/gaps for parent nodes that hold children
-const CONTAINER_HEADER_H = 36; // header height (matches SvgGroupNode HEADER_HEIGHT)
-const CONTAINER_PAD = 20; // inner padding around children
-
-// Minimum container size (used for bounds calculations)
-const MIN_CONTAINER_WIDTH = 240;
-const MIN_CONTAINER_HEIGHT = 150;
+// Aliases for readability in canvas layout logic
+const CONTAINER_HEADER_H = HEADER_HEIGHT;
+const CONTAINER_PAD = CONTAINER_PADDING;
 
 // =============================================================================
 // Canvas Component
@@ -175,7 +179,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   // L3 (full): > 95% — default experience, all details visible
   // L2 (compact): 50-95% — bigger icon + label + status only, no metadata
   // L1 (iconic): < 50% — large centered icon + bold label + status dot
-  const lod = viewport.zoom > 0.95 ? 3 : viewport.zoom > 0.5 ? 2 : 1;
+  const lod = viewport.zoom > LOD_THRESHOLD_L3 ? 3 : viewport.zoom > LOD_THRESHOLD_L2 ? 2 : 1;
 
   // Canvas dimensions
   const [dimensions, setDimensions] = React.useState({ width: 800, height: 600 });

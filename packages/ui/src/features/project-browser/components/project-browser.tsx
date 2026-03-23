@@ -18,7 +18,6 @@ import {
   FolderPlus,
   FilePlus,
   FolderInput,
-  Search,
   Settings,
   Rocket,
   PenTool,
@@ -32,6 +31,7 @@ import { useResolvePath } from '../../../shared/hooks/use-resolve-path';
 import { toSlug } from '../../../shared/utils/slug';
 import { openDialog } from '../../../store/slices/ui-slice';
 import type { RootState, AppDispatch } from '../../../store';
+import { SearchInput } from '../../../shared/components/ui/search-input';
 
 interface ProjectNode {
   id: string;
@@ -99,7 +99,7 @@ const TreeItem = memo(
     return (
       <>
         <div
-          className={`group flex items-center h-7 px-1 rounded-md cursor-pointer transition-colors ${isActive && (!activeSubpage || activeSubpage === 'canvas') ? 'bg-ice-active text-ice-text-1' : 'hover:bg-ice-hover'}`}
+          className={`group flex items-center h-7 px-2 py-1.5 rounded-md cursor-pointer ${isActive && (!activeSubpage || activeSubpage === 'canvas') ? 'bg-ice-active text-ice-text-1' : 'hover:bg-ice-hover'}`}
           style={{ paddingLeft: `${level * 12 + 4}px` }}
           onClick={() => {
             if (isFolder) {
@@ -126,9 +126,9 @@ const TreeItem = memo(
           <span className="w-4 h-4 flex items-center justify-center shrink-0 ml-0.5">
             {isFolder ? (
               isOpen ? (
-                <FolderOpen className="w-[14px] h-[14px] text-amber-500/70" />
+                <FolderOpen className="w-[14px] h-[14px] text-amber-500" />
               ) : (
-                <Folder className="w-[14px] h-[14px] text-amber-500/70" />
+                <Folder className="w-[14px] h-[14px] text-amber-500" />
               )
             ) : (
               <FileText className="w-[14px] h-[14px] text-blue-400/50" />
@@ -180,7 +180,7 @@ const TreeItem = memo(
                   {isFolder && (
                     <DropdownMenu.Item
                       onClick={() => onCreateIn(node.id)}
-                      className="flex items-center gap-2 px-2 py-1.5 text-ice-md text-ice-text-2 rounded cursor-pointer outline-none hover:bg-ice-active"
+                      className="flex items-center gap-2 px-3 py-1.5 text-ice-md text-ice-text-2 rounded cursor-pointer outline-none hover:bg-ice-active"
                     >
                       <FilePlus className="w-3.5 h-3.5 text-ice-text-3" />
                       New project here
@@ -191,7 +191,7 @@ const TreeItem = memo(
                       setRenameValue(node.name);
                       setIsRenaming(true);
                     }}
-                    className="flex items-center gap-2 px-2 py-1.5 text-ice-md text-ice-text-2 rounded cursor-pointer outline-none hover:bg-ice-active"
+                    className="flex items-center gap-2 px-3 py-1.5 text-ice-md text-ice-text-2 rounded cursor-pointer outline-none hover:bg-ice-active"
                   >
                     <Pencil className="w-3.5 h-3.5 text-ice-text-3" />
                     Rename
@@ -200,7 +200,7 @@ const TreeItem = memo(
                   {/* Move submenu */}
                   {availableFolders.length > 0 && (
                     <DropdownMenu.Sub>
-                      <DropdownMenu.SubTrigger className="flex items-center gap-2 px-2 py-1.5 text-ice-md text-ice-text-2 rounded cursor-pointer outline-none hover:bg-ice-active">
+                      <DropdownMenu.SubTrigger className="flex items-center gap-2 px-3 py-1.5 text-ice-md text-ice-text-2 rounded cursor-pointer outline-none hover:bg-ice-active">
                         <FolderInput className="w-3.5 h-3.5 text-ice-text-3" />
                         Move to
                         <ChevronRight className="w-3 h-3 ml-auto text-ice-text-3" />
@@ -212,7 +212,7 @@ const TreeItem = memo(
                         >
                           <DropdownMenu.Item
                             onClick={() => onMove(node.id, null)}
-                            className="flex items-center gap-2 px-2 py-1.5 text-ice-md text-ice-text-2 rounded cursor-pointer outline-none hover:bg-ice-active"
+                            className="flex items-center gap-2 px-3 py-1.5 text-ice-md text-ice-text-2 rounded cursor-pointer outline-none hover:bg-ice-active"
                           >
                             Root
                           </DropdownMenu.Item>
@@ -220,7 +220,7 @@ const TreeItem = memo(
                             <DropdownMenu.Item
                               key={f.id}
                               onClick={() => onMove(node.id, f.id)}
-                              className="flex items-center gap-2 px-2 py-1.5 text-ice-md text-ice-text-2 rounded cursor-pointer outline-none hover:bg-ice-active"
+                              className="flex items-center gap-2 px-3 py-1.5 text-ice-md text-ice-text-2 rounded cursor-pointer outline-none hover:bg-ice-active"
                             >
                               <Folder className="w-3 h-3 text-amber-500/50" />
                               {f.name}
@@ -234,7 +234,7 @@ const TreeItem = memo(
                   <DropdownMenu.Separator className="h-px my-1 bg-ice-active" />
                   <DropdownMenu.Item
                     onClick={() => onDelete(node.id)}
-                    className="flex items-center gap-2 px-2 py-1.5 text-ice-md text-red-400 rounded cursor-pointer outline-none hover:bg-red-500/10"
+                    className="flex items-center gap-2 px-3 py-1.5 text-ice-md text-red-400 rounded cursor-pointer outline-none hover:bg-red-500/10"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     Delete
@@ -247,7 +247,7 @@ const TreeItem = memo(
 
         {/* Folder children */}
         {isFolder && isOpen && (
-          <div className="ml-3 border-l border-ice-border pl-1">
+          <div className="ml-4 border-l border-ice-border pl-2">
             {node.children.map((child) => (
               <TreeItem
                 key={child.id}
@@ -271,7 +271,7 @@ const TreeItem = memo(
 
         {/* Project sub-pages */}
         {!isFolder && isOpen && (
-          <div className="ml-3 border-l border-ice-border pl-1">
+          <div className="ml-4 border-l border-ice-border pl-2 ">
             {[
               { id: 'canvas', label: 'Canvas', icon: PenTool },
               { id: 'table', label: 'Table', icon: Table2 },
@@ -280,7 +280,7 @@ const TreeItem = memo(
             ].map((sub) => (
               <div
                 key={sub.id}
-                className={`flex items-center h-6 px-1 rounded-md cursor-pointer transition-colors ${
+                className={`flex items-center h-6 px-1 my-1 rounded-md cursor-pointer transition-colors ${
                   isActive && activeSubpage === sub.id
                     ? 'bg-ice-active text-ice-text-1'
                     : 'text-ice-text-3 hover:bg-ice-hover hover:text-ice-text-2'
@@ -480,28 +480,19 @@ export function ProjectBrowser() {
   return (
     <div className="flex flex-col h-full">
       {/* Search + Actions */}
-      <div className="px-2 pt-1 pb-1 space-y-1.5">
-        <div className="relative">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-ice-text-3" />
-          <input
-            type="text"
-            placeholder="Search..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-6 pr-2 py-1 text-ice-base rounded bg-ice-hover border border-ice-border text-ice-text-1 placeholder:text-ice-text-3 focus:outline-none focus:border-ice-border-strong transition-colors"
-          />
-        </div>
-        <div className="flex items-center gap-1">
+      <div className="px-3 py-2 space-y-1.5">
+        <SearchInput value={search} onChange={setSearch} />
+        <div className="flex items-center gap-1.5">
           <button
             onClick={() => dispatch(openDialog('projectWizard'))}
-            className="flex items-center gap-1 px-2 py-1 text-ice-sm font-medium rounded bg-ice-accent-muted text-ice-accent hover:bg-ice-accent hover:text-white transition-colors flex-1 justify-center"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-ice-sm font-medium rounded bg-ice-accent-muted text-ice-accent hover:bg-ice-accent hover:text-white transition-colors flex-1 justify-center"
           >
             <FilePlus className="w-3 h-3" />
             New Project
           </button>
           <button
             onClick={() => handleCreate('folder')}
-            className="flex items-center gap-1 px-2 py-1 text-ice-sm font-medium rounded bg-ice-hover text-ice-text-2 hover:bg-ice-active transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-ice-sm font-medium rounded bg-ice-hover text-ice-text-2 hover:bg-ice-active transition-colors"
           >
             <FolderPlus className="w-3 h-3" />
           </button>
@@ -509,7 +500,7 @@ export function ProjectBrowser() {
       </div>
 
       {/* Tree */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden px-1.5 py-1 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-2 py-2 custom-scrollbar">
         {loading ? (
           <div className="flex items-center justify-center py-10">
             <Loader2 className="w-4 h-4 animate-spin text-ice-text-3" />

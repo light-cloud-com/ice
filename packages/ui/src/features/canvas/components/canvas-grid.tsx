@@ -6,6 +6,7 @@
  */
 
 import React, { useMemo } from 'react';
+import { GRID_SIZE } from '../../../config/canvas-constants';
 import type { ViewState } from './svg-canvas';
 
 interface CanvasGridProps {
@@ -31,7 +32,7 @@ export const CanvasGrid: React.FC<CanvasGridProps> = ({ viewState, width, height
     };
   }, [viewState, width, height]);
 
-  const gridSize = 48;
+  const gridSize = GRID_SIZE;
   const patternId = 'canvas-grid-pattern';
 
   return (

@@ -15,6 +15,12 @@
 
 import React, { memo, useState, useCallback, useRef, useEffect } from 'react';
 import { getIcon, type Provider } from '../../../../assets/icons';
+import { CORNER_RADIUS } from '../../../../config/canvas-constants';
+import {
+  BLOCK_ACCENT_COLORS,
+  GROUP_TINT_COLORS,
+  GROUP_BORDER_COLORS,
+} from '../../../../config/color-palette';
 import type { CanvasNode } from '../svg-canvas';
 
 interface SvgGroupNodeProps {
@@ -36,27 +42,9 @@ interface SvgGroupNodeProps {
 
 // ─── Shared constants ──────────────────────────────────────────────────────────
 
-const CORNER_RADIUS = 8;
 const MIN_WIDTH = 276;
 const FOLDED_HEIGHT = 36;
 const ACCENT_BAR_WIDTH = 4;
-
-// Block accent colors by category suffix
-const BLOCK_ACCENT_COLORS: Record<string, string> = {
-  Frontend: '#3b82f6',
-  Services: '#8b5cf6',
-  Data: '#10b981',
-  Messaging: '#6366f1',
-  Monitoring: '#f59e0b',
-  StaticSite: '#3b82f6',
-  ScalableBackend: '#8b5cf6',
-  Worker: '#ed7100',
-  Database: '#3B48CC',
-  Cache: '#3B48CC',
-  Storage: '#1A9C3E',
-  Gateway: '#E7157B',
-  Queue: '#E7157B',
-};
 
 /** Convert hex color to tint (very low alpha) and border (medium alpha) */
 function hexToTint(hex: string): string {
@@ -68,25 +56,6 @@ function hexToTint(hex: string): string {
 function hexToBorder(hex: string): string {
   return hex + '50';
 }
-
-// Group tint colors
-const GROUP_TINT_COLORS: Record<string, string> = {
-  Frontend: 'rgba(59, 130, 246, 0.04)',
-  Services: 'rgba(139, 92, 246, 0.04)',
-  Data: 'rgba(16, 185, 129, 0.04)',
-  Messaging: 'rgba(99, 102, 241, 0.04)',
-  Monitoring: 'rgba(245, 158, 11, 0.04)',
-  External: 'rgba(100, 116, 139, 0.04)',
-};
-
-const GROUP_BORDER_COLORS: Record<string, string> = {
-  Frontend: '#3b82f640',
-  Services: '#8b5cf640',
-  Data: '#10b98140',
-  Messaging: '#6366f140',
-  Monitoring: '#f59e0b40',
-  External: '#64748b40',
-};
 
 export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
   ({

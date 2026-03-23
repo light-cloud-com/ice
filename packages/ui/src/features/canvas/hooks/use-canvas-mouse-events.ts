@@ -11,6 +11,7 @@
  */
 
 import { useCallback, useState, useRef, useEffect, type RefObject } from 'react';
+import { SCALE_MIN, SCALE_MAX, ZOOM_SENSITIVITY } from '../../../config/canvas-constants';
 import type { Point } from './use-canvas-utils';
 import type { ViewState, CanvasNode } from '../components/svg-canvas';
 
@@ -51,10 +52,7 @@ interface UseCanvasMouseEventsProps {
 // Constants
 // =============================================================================
 
-const SCALE_MIN = 0.1;
-const SCALE_MAX = 3;
-const ZOOM_SENSITIVITY = 0.002; // Smoother zoom
-const RESIZE_HANDLE_SIZE = 24; // Size of resize hit area (larger for easier grabbing)
+const RESIZE_HANDLE_SIZE = 24;
 
 // =============================================================================
 // Hook

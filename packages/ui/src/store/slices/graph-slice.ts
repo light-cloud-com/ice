@@ -9,7 +9,6 @@
  */
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { DEMO_NODES, DEMO_EDGES } from '../../config/demo-data';
 import {
   type ViewLevel,
   type EmptyContainerMode,
@@ -88,27 +87,11 @@ export interface GraphState {
 }
 
 // Convert demo data to Redux node format
-const demoNodes = DEMO_NODES.map((node) => ({
-  id: node.id,
-  type: node.type,
-  position: node.position,
-  width: node.width,
-  height: node.height,
-  parentId: node.parentId,
-  data: node.data,
-}));
-
-const demoEdges = DEMO_EDGES.map((edge) => ({
-  id: edge.id,
-  source: edge.source,
-  target: edge.target,
-  data: edge.data,
-}));
 
 const initialState: GraphState = {
   iceGraph: null,
-  nodes: demoNodes,
-  edges: demoEdges,
+  nodes: [],
+  edges: [],
   isLoading: false,
   error: null,
   isDirty: false,

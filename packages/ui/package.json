@@ -21,9 +21,7 @@
     "./debug": "./src/features/debug/index.ts",
     "./integrations": "./src/features/integrations/index.ts",
     "./store": "./src/store/index.ts",
-    "./api": "./src/api/adapter.ts",
-    "./hooks": "./src/hooks/index.ts",
-    "./utils": "./src/utils/index.ts",
+    "./api": "./src/shared/api/api-adapter.ts",
     "./src/*": "./src/*",
     "./*": "./*"
   },

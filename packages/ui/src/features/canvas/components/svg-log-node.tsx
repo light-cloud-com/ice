@@ -12,6 +12,8 @@
  */
 
 import React, { memo, useState, useCallback, useEffect, useRef } from 'react';
+import { CORNER_RADIUS } from '../../../config/canvas-constants';
+import { LOG_COLORS } from '../../../config/color-palette';
 import type { CanvasNode } from './svg-canvas';
 
 interface SvgLogNodeProps {
@@ -38,12 +40,6 @@ const TERMINAL = {
   cursor: '#22c55e',
 };
 
-const LOG_COLORS: Record<string, { bg: string; text: string; label: string }> = {
-  info: { bg: '#1e3a5f22', text: '#3b82f6', label: 'INFO' },
-  warn: { bg: '#3d2f1a22', text: '#f59e0b', label: 'WARN' },
-  error: { bg: '#3d1a1a22', text: '#ef4444', label: 'ERROR' },
-  debug: { bg: '#1a3d2f22', text: '#6b7280', label: 'DEBUG' },
-};
 
 // Sample log messages
 const SAMPLE_MESSAGES: Record<string, Array<{ level: string; message: string }>> = {
@@ -97,7 +93,6 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, o
 
   // Dimensions
   const headerHeight = 32;
-  const cornerRadius = 8;
   const nodeWidth = Math.max(width || 400, 320);
   const nodeHeight = folded ? headerHeight : Math.max(height || 240, 160);
 
@@ -243,7 +238,7 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, o
           y={y - 3}
           width={nodeWidth + 6}
           height={nodeHeight + 6}
-          rx={cornerRadius + 3}
+          rx={CORNER_RADIUS + 3}
           fill="none"
           stroke="#22c55e"
           strokeWidth={2}
@@ -257,7 +252,7 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, o
         y={y}
         width={nodeWidth}
         height={nodeHeight}
-        rx={cornerRadius}
+        rx={CORNER_RADIUS}
         fill={TERMINAL.bg}
         stroke={isSelected ? '#22c55e' : isHovered ? '#4ade80' : TERMINAL.border}
         strokeWidth={isSelected ? 2 : 1}
@@ -266,7 +261,7 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, o
       {/* Header */}
       <defs>
         <clipPath id={`log-shape-${node.id}`}>
-          <rect x={x} y={y} width={nodeWidth} height={nodeHeight} rx={cornerRadius} />
+          <rect x={x} y={y} width={nodeWidth} height={nodeHeight} rx={CORNER_RADIUS} />
         </clipPath>
       </defs>
       <rect

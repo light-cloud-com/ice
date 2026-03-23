@@ -11,6 +11,12 @@
  * 4. Maintain hierarchy (children positioned relative to parents)
  */
 
+import {
+  HEADER_HEIGHT,
+  CONTAINER_PADDING,
+  MIN_CONTAINER_WIDTH,
+  MIN_CONTAINER_HEIGHT,
+} from '../../config/canvas-constants';
 import { isContainer as isContainerType } from '../../config/containment-rules';
 import {
   computeCompactNodeHeight,
@@ -18,31 +24,12 @@ import {
 } from '../../features/canvas/components/nodes/svg-compact-node';
 
 // =============================================================================
-// Constants - Unified Node Sizes (Mac-style)
+// Constants - Layout-Specific
 // =============================================================================
 
-/** Minimum width for container nodes (blocks/VPCs) */
-const MIN_BLOCK_WIDTH = 240;
-
-/** Minimum height for collapsed nodes */
 const MIN_NODE_HEIGHT_COLLAPSED = 36;
-
-/** Minimum height for container nodes */
-const MIN_BLOCK_HEIGHT = 150;
-
-/** Gap between top-level nodes */
 const NODE_GAP = 80;
-
-/** Gap between child nodes inside containers */
 const CHILD_GAP = 24;
-
-/** Padding inside containers */
-const CONTAINER_PADDING = 20;
-
-/** Header height for all nodes */
-const HEADER_HEIGHT = 36;
-
-/** Extra padding for VPCs and large containers */
 const VPC_EXTRA_PADDING = 20;
 
 // =============================================================================
@@ -204,8 +191,8 @@ export function autoLayout(
     totalHeight += containerPadding;
 
     const calculatedWidth = maxRowWidth + containerPadding * 2;
-    const minContainerWidth = isVPC ? 600 : isSubnet ? 400 : MIN_BLOCK_WIDTH;
-    const minContainerHeight = isVPC ? 400 : isSubnet ? 300 : MIN_BLOCK_HEIGHT;
+    const minContainerWidth = isVPC ? 600 : isSubnet ? 400 : MIN_CONTAINER_WIDTH;
+    const minContainerHeight = isVPC ? 400 : isSubnet ? 300 : MIN_CONTAINER_HEIGHT;
 
     return {
       width: Math.max(minContainerWidth, calculatedWidth),
@@ -657,37 +644,9 @@ export function calculateZIndex(iceType: string, depth: number = 0): number {
 }
 
 /**
- * Sort nodes for proper rendering order (containers first, then resources).
- */
-export function sortNodesForRendering(nodes: LayoutNode[]): LayoutNode[] {
-  return [...nodes].sort((a, b) => {
-    const zIndexA = calculateZIndex(a.iceType || '', getParentDepth(a, nodes));
-    const zIndexB = calculateZIndex(b.iceType || '', getParentDepth(b, nodes));
-    return zIndexA - zIndexB;
-  });
-}
-
-/**
- * Get the depth of a node in the parent hierarchy.
- */
-function getParentDepth(node: LayoutNode, allNodes: LayoutNode[]): number {
-  let depth = 0;
-  let current = node;
-
-  while (current.parentId) {
-    depth++;
-    const parent = allNodes.find((n) => n.id === current.parentId);
-    if (!parent) break;
-    current = parent;
-  }
-
-  return depth;
-}
-
-/**
  * Check if two rectangles overlap.
  */
-export function rectsOverlap(
+function rectsOverlap(
   r1: { x: number; y: number; width: number; height: number },
   r2: { x: number; y: number; width: number; height: number },
   padding: number = 0,
@@ -700,32 +659,3 @@ export function rectsOverlap(
   );
 }
 
-/**
- * Find a non-overlapping position for a node.
- */
-export function findNonOverlappingPosition(
-  node: { width: number; height: number },
-  existingNodes: Array<{ x: number; y: number; width: number; height: number }>,
-  startX: number = 50,
-  startY: number = 50,
-  gap: number = NODE_GAP,
-): { x: number; y: number } {
-  // Try positions in a grid until we find a non-overlapping one
-  for (let row = 0; row < 100; row++) {
-    for (let col = 0; col < 10; col++) {
-      const testX = startX + col * (MIN_BLOCK_WIDTH + gap);
-      const testY = startY + row * (MIN_BLOCK_HEIGHT + gap);
-
-      const testRect = { x: testX, y: testY, width: node.width, height: node.height };
-      const overlaps = existingNodes.some((existing) => rectsOverlap(testRect, existing, gap));
-
-      if (!overlaps) {
-        return { x: testX, y: testY };
-      }
-    }
-  }
-
-  // Fallback: place below all existing nodes
-  const maxY = existingNodes.reduce((max, n) => Math.max(max, n.y + n.height), 0);
-  return { x: startX, y: maxY + gap };
-}

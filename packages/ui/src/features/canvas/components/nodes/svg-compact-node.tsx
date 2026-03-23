@@ -15,6 +15,17 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { getIcon, DEFAULT_ICON, type Provider } from '../../../../assets/icons';
 import { getBrandIcon, type BrandIcon } from '../../../../assets/icons/brand-registry';
+import {
+  CORNER_RADIUS,
+  HEADER_HEIGHT,
+  CARD_WIDTH,
+  CARD_PX,
+  CARD_PY,
+  ICON_SIZE,
+  ICON_GAP,
+  STATUS_COLORS,
+  CATEGORY_STYLE,
+} from '../../../../config/canvas-constants';
 import { REPO_SELECTOR } from '../../../../i18n/messages';
 import { RepoSelector } from '../../../integrations/components/repo-selector';
 import type { CanvasNode } from '../svg-canvas';
@@ -55,50 +66,12 @@ interface SvgCompactNodeProps {
   zoom?: number;
 }
 
-// ─── Design Tokens ──────────────────────────────────────────────────────────
+// ─── Derived Tokens ─────────────────────────────────────────────────────────
 
-const CARD_PX = 12;
-const CARD_PY = 10;
-const CARD_RADIUS = 8;
-const ICON_SIZE = 20;
-const ICON_GAP = 8;
 const TEXT_X = CARD_PX + ICON_SIZE + ICON_GAP;
-const HEADER_H = 36;
 const META_LINE_H = 16;
 const STATUS_LINE_H = 16;
 const PAD_BOTTOM = 10;
-const CARD_WIDTH = 220;
-
-// ─── Colors ─────────────────────────────────────────────────────────────────
-
-const CATEGORY_STYLE: Record<string, { border: string; glow: string }> = {
-  Application: { border: '#1e3a5f', glow: '#3b82f6' },
-  Database: { border: '#2d1f5e', glow: '#8b5cf6' },
-  Storage: { border: '#1a4035', glow: '#10b981' },
-  Network: { border: '#3b1e48', glow: '#ec4899' },
-  Security: { border: '#3d2f1a', glow: '#f59e0b' },
-  Messaging: { border: '#252660', glow: '#6366f1' },
-  Monitoring: { border: '#2a3040', glow: '#64748b' },
-  Block: { border: '#253548', glow: '#3b82f6' },
-  default: { border: 'var(--ice-border)', glow: 'var(--ice-border-strong)' },
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  active: '#22c55e',
-  running: '#22c55e',
-  healthy: '#22c55e',
-  deployed: '#22c55e',
-  pending: '#f59e0b',
-  warning: '#f59e0b',
-  creating: '#f59e0b',
-  updating: '#3b82f6',
-  deploying: '#3b82f6',
-  error: '#ef4444',
-  failed: '#ef4444',
-  deleting: '#ef4444',
-  stopped: '#64748b',
-  inactive: '#64748b',
-};
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -156,7 +129,7 @@ export function computeCompactNodeHeight(
 
   const h =
     CARD_PY +
-    HEADER_H +
+    HEADER_HEIGHT +
     metaGap +
     (isRenamed ? RENAMED_SUBTITLE_H : 0) +
     metaCount * META_LINE_H +
@@ -311,7 +284,7 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
   const renamedOffset = isRenamed ? RENAMED_SUBTITLE_H : 0;
   const contentH =
     CARD_PY +
-    HEADER_H +
+    HEADER_HEIGHT +
     renamedOffset +
     metaGap +
     metaLines.length * META_LINE_H +
@@ -402,7 +375,7 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
             y={y - 3}
             width={SW + 6}
             height={SH + 6}
-            rx={CARD_RADIUS + 3}
+            rx={CORNER_RADIUS + 3}
             fill="none"
             stroke={bcat.glow}
             strokeWidth={2}
@@ -415,7 +388,7 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
           y={y}
           width={SW}
           height={SH}
-          rx={CARD_RADIUS}
+          rx={CORNER_RADIUS}
           fill="var(--ice-bg-surface)"
           stroke={bBorder}
           strokeWidth={isSelected ? 1.5 : 1}
@@ -621,7 +594,7 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
             y={cy - CH / 2 - 3 * invScale}
             width={CW + 6 * invScale}
             height={CH + 6 * invScale}
-            rx={(CARD_RADIUS + 2) * invScale}
+            rx={(CORNER_RADIUS + 2) * invScale}
             fill="none"
             stroke={cat.glow}
             strokeWidth={2 * invScale}
@@ -633,7 +606,7 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
           y={cy - CH / 2}
           width={CW}
           height={CH}
-          rx={CARD_RADIUS * invScale}
+          rx={CORNER_RADIUS * invScale}
           fill="var(--ice-bg-surface)"
           stroke={border}
           strokeWidth={borderW}
@@ -740,7 +713,7 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
           y={y - 3}
           width={W + 6}
           height={H + 6}
-          rx={CARD_RADIUS + 3}
+          rx={CORNER_RADIUS + 3}
           fill="none"
           stroke={cat.glow}
           strokeWidth={2}
@@ -755,7 +728,7 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
           y={y - 3}
           width={W + 6}
           height={H + 6}
-          rx={CARD_RADIUS + 3}
+          rx={CORNER_RADIUS + 3}
           fill="none"
           stroke="#22d3ee"
           strokeWidth={2}
@@ -770,7 +743,7 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
         y={y}
         width={W}
         height={H}
-        rx={CARD_RADIUS}
+        rx={CORNER_RADIUS}
         fill="var(--ice-bg-surface)"
         stroke={border}
         strokeWidth={isSelected ? 1.5 : 1}
@@ -958,7 +931,7 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
 
           {/* ═══════ METADATA LINES ═══════ */}
           {(() => {
-            const metaY = y + CARD_PY + HEADER_H + renamedOffset + metaGap;
+            const metaY = y + CARD_PY + HEADER_HEIGHT + renamedOffset + metaGap;
             let cursorY = metaY;
 
             return (

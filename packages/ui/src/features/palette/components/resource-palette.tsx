@@ -22,7 +22,6 @@ import {
   List,
   Cog,
   Clock,
-  X,
   Bell,
   ChevronRight,
   Brain,
@@ -33,23 +32,16 @@ import {
 } from 'lucide-react';
 import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { GROUP_COLOR_PRESETS } from '../../../config/color-palette';
 import { ENABLED_PROVIDER_IDS, ENABLED_PROVIDERS as ENABLED_CLOUD_PROVIDERS } from '../../../config/providers';
 import axiosInstance from '../../../shared/api/axios-instance';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../../../shared/components/ui/resizable';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '../../../shared/components/ui/tooltip';
 import { useResolvePath } from '../../../shared/hooks/use-resolve-path';
 import { cn } from '../../../shared/utils/cn';
+import { SearchInput } from '../../../shared/components/ui/search-input';
 import { ProjectBrowser } from '../../project-browser';
 
-// =============================================================================
-// Provider brand colors for pills
-// =============================================================================
-
-const _PROVIDER_COLORS: Record<string, string> = {
-  aws: '#ff9900',
-  gcp: '#4285f4',
-  azure: '#0078d4',
-};
 
 // =============================================================================
 // Category definitions with metadata
@@ -664,12 +656,6 @@ const COMPONENTS: ComponentDef[] = [
   },
 ];
 
-// =============================================================================
-// Group Color Presets
-// =============================================================================
-
-const GROUP_COLOR_PRESETS = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#64748b'];
-
 let groupColorIndex = 0;
 function nextGroupColor(): string {
   const color = GROUP_COLOR_PRESETS[groupColorIndex % GROUP_COLOR_PRESETS.length];
@@ -748,9 +734,6 @@ interface BlocksSectionProps {
   setSelectedProvider: (v: string) => void;
   projectProvider: string | null;
   searchInputRef: React.RefObject<HTMLInputElement | null>;
-  isSearchFocused: boolean;
-  setIsSearchFocused: (v: boolean) => void;
-  clearSearch: () => void;
   filteredComponents: ComponentDef[];
   categorizedItems: { category: CategoryDef; items: ComponentDef[] }[];
   isSearching: boolean;
@@ -768,9 +751,6 @@ const BlocksSection: React.FC<BlocksSectionProps> = ({
   setSelectedProvider,
   projectProvider,
   searchInputRef,
-  isSearchFocused: _isSearchFocused,
-  setIsSearchFocused,
-  clearSearch,
   filteredComponents,
   categorizedItems,
   isSearching,
@@ -785,30 +765,16 @@ const BlocksSection: React.FC<BlocksSectionProps> = ({
   return (
     <div className="h-full flex flex-col">
       {/* Search + provider filter */}
-      <div className="px-2 pb-1 shrink-0">
-        <div className="relative mb-1">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-ice-text-3" />
-          <input
-            id="ice-palette-search-input"
-            ref={searchInputRef}
-            type="text"
-            placeholder="Search blocks..."
-            value={localSearch}
-            onChange={(e) => setLocalSearch(e.target.value)}
-            onFocus={() => setIsSearchFocused(true)}
-            onBlur={() => setIsSearchFocused(false)}
-            className="w-full pl-6 pr-7 py-1 text-ice-base rounded bg-ice-hover border border-ice-border text-ice-text-1 placeholder:text-ice-text-3 focus:outline-none focus:border-ice-border-strong transition-colors"
-          />
-          {localSearch && (
-            <button
-              onClick={clearSearch}
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-ice-active"
-            >
-              <X className="w-3 h-3 text-ice-text-3" />
-            </button>
-          )}
-        </div>
-        <div className="flex gap-0.5">
+      <div className="px-3 py-2 shrink-0">
+        <SearchInput
+          ref={searchInputRef}
+          id="ice-palette-search-input"
+          value={localSearch}
+          onChange={setLocalSearch}
+          placeholder="Search blocks..."
+          className="mb-1.5"
+        />
+        <div className="flex gap-1">
           {PROVIDERS.map((provider) => {
             const isActive = selectedProvider === provider.id;
             const isLocked = !!projectProvider && provider.id !== 'all' && provider.id !== projectProvider;
@@ -948,7 +914,6 @@ export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
   }, [projectProvider]);
   const showProjects = showProjectSection;
   const showBlocks = showBlocksSection;
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(loadCollapsed);
   const [mounted, setMounted] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -956,11 +921,6 @@ export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  const clearSearch = () => {
-    setLocalSearch('');
-    searchInputRef.current?.focus();
-  };
 
   const toggleCategory = useCallback((categoryId: string) => {
     setCollapsedCategories((prev) => {
@@ -1043,9 +1003,7 @@ export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
                 setSelectedProvider={setSelectedProvider}
                 projectProvider={projectProvider}
                 searchInputRef={searchInputRef}
-                isSearchFocused={isSearchFocused}
-                setIsSearchFocused={setIsSearchFocused}
-                clearSearch={clearSearch}
+
                 filteredComponents={filteredComponents}
                 categorizedItems={categorizedItems}
                 isSearching={isSearching}
@@ -1069,9 +1027,6 @@ export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
             setSelectedProvider={setSelectedProvider}
             projectProvider={projectProvider}
             searchInputRef={searchInputRef}
-            isSearchFocused={isSearchFocused}
-            setIsSearchFocused={setIsSearchFocused}
-            clearSearch={clearSearch}
             filteredComponents={filteredComponents}
             categorizedItems={categorizedItems}
             isSearching={isSearching}
@@ -1207,7 +1162,7 @@ const ComponentItem: React.FC<ComponentItemProps> = ({ component, selectedProvid
 
       {/* Runtime chips — shown below the drag row */}
       {hasRuntimes && (
-        <div className="flex flex-wrap gap-[4px] ml-[26px] mr-1 mb-1.5 mt-0.5 pl-2.5">
+        <div className="flex flex-wrap gap-1 ml-7 mr-1 mb-1.5 mt-0.5 pl-2.5">
           {component.runtimes!.map((rt) => {
             const isSelected = selectedRuntime === rt.value;
             return (
@@ -1218,7 +1173,7 @@ const ComponentItem: React.FC<ComponentItemProps> = ({ component, selectedProvid
                 onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
                 className={cn(
-                  'px-[6px] py-[2px] rounded text-ice-xs font-medium transition-all duration-150 cursor-grab',
+                  'px-1.5 py-0.5 rounded text-ice-xs font-medium transition-all duration-150 cursor-grab',
                   'active:cursor-grabbing active:scale-95',
                   'border',
                   isSelected ? 'border-current' : 'border-transparent hover:bg-ice-hover',

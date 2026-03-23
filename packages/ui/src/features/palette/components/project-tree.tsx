@@ -24,6 +24,8 @@ import {
 } from 'lucide-react';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { TREE_INDENT_PX, TREE_INDENT_BASE } from '../../../config/canvas-constants';
+import { ENV_DOT_COLORS } from '../../../config/color-palette';
 import { cn } from '../../../shared/utils/cn';
 import { setActiveCard, deleteCard } from '../../../store/slices/cards-slice';
 import {
@@ -74,12 +76,7 @@ function decodeDrag(data: string): { type: DragItemType; id: string } | null {
 }
 
 // Environment type → dot color
-const ENV_DOT_COLOR: Record<string, string> = {
-  production: 'bg-green-500',
-  staging: 'bg-yellow-500',
-  development: 'bg-blue-500',
-  pr: 'bg-purple-500',
-};
+const ENV_DOT_COLOR = ENV_DOT_COLORS;
 
 // =============================================================================
 // Context Menu
@@ -346,7 +343,7 @@ export const ProjectTree: React.FC = () => {
           'flex items-center gap-2 px-2 py-1 cursor-pointer rounded-md mx-1 transition-colors',
           isActiveEnv ? 'bg-blue-500/10 text-ice-text-1' : 'text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-2',
         )}
-        style={{ paddingLeft: `${depth * 16 + 8}px` }}
+        style={{ paddingLeft: `${depth * TREE_INDENT_PX + TREE_INDENT_BASE}px` }}
       >
         <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', dotColor)} />
         <span className="text-ice-sm truncate">{env.name}</span>
@@ -374,7 +371,7 @@ export const ProjectTree: React.FC = () => {
             'group flex items-center gap-1.5 px-2 py-1.5 cursor-pointer rounded-md mx-1 transition-colors',
             isActive ? 'bg-blue-500/15 text-white' : 'text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-1',
           )}
-          style={{ paddingLeft: `${depth * 16 + 8}px` }}
+          style={{ paddingLeft: `${depth * TREE_INDENT_PX + TREE_INDENT_BASE}px` }}
         >
           {/* Expand chevron (only if has envs) */}
           {hasEnvs ? (
@@ -472,7 +469,7 @@ export const ProjectTree: React.FC = () => {
               ? 'bg-green-500/15 text-green-400'
               : 'text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-1',
           )}
-          style={{ paddingLeft: `${depth * 16 + 8}px` }}
+          style={{ paddingLeft: `${depth * TREE_INDENT_PX + TREE_INDENT_BASE}px` }}
         >
           <ChevronIcon className="w-3 h-3 shrink-0 opacity-50" />
           <FolderIcon className="w-3.5 h-3.5 shrink-0 text-amber-400/70" />
@@ -537,7 +534,7 @@ export const ProjectTree: React.FC = () => {
   return (
     <div className="flex flex-col h-full">
       {/* Header actions */}
-      <div className="flex items-center gap-1 px-4 py-3">
+      <div className="flex items-center gap-1.5 px-3 py-2">
         <button
           onClick={() => dispatch(openDialog('projectWizard'))}
           className={cn(
@@ -561,7 +558,7 @@ export const ProjectTree: React.FC = () => {
       </div>
 
       {/* Divider */}
-      <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent mx-4" />
+      <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent mx-3" />
 
       {/* Tree */}
       <div

@@ -4,7 +4,7 @@
 
 /* ── ICE SaaS Design System ─────────────────────────────────────────────────
  *
- * Dual theme: light (Notion-inspired) + dark (WebStorm Dracula).
+ * Dual theme: light (Notion-inspired) + dark (Midnight Navy).
  * Three surface levels. One accent per theme.
  * ──────────────────────────────────────────────────────────────────────────── */
 
@@ -69,50 +69,51 @@
   }
 
   .dark {
-    /* ── Dark mode — WebStorm Dracula ──
-     * Exact WebStorm Dracula colors with steel-gray accent
+    /* ── Dark mode — Midnight Navy ──
+     * Deep navy palette inspired by platform editor skyDark theme.
+     * Clean 4-level surface hierarchy with sky-blue accent.
      */
-    --ice-bg-base: #2b2b2b;           /* Editor background */
-    --ice-bg-surface: #363636;        /* Tool windows, sidebar */
-    --ice-bg-raised: #45494a;         /* Cards, tabs, elevated */
-    --ice-bg-overlay: #4b4e50;        /* Dropdowns, popovers */
-    --ice-bg-hover: rgba(255, 255, 255, 0.07);
-    --ice-bg-active: #4e5254;         /* Selected item */
-    --ice-bg-toolbar: #3c3f41;        /* Toolbar matches sidebar */
-    --ice-border: #515253;            /* Subtle dividers */
-    --ice-border-strong: #6b6b6b;     /* Strong borders */
-    --ice-text-primary: #dcdfe4;      /* Near white — high contrast on dark bg */
-    --ice-text-secondary: #a0a8b4;    /* Mid gray */
-    --ice-text-tertiary: #6d737a;     /* Muted */
-    --ice-accent: #589df6;            /* WebStorm link/action blue */
-    --ice-accent-hover: #7db3f7;
-    --ice-accent-muted: rgba(88, 157, 246, 0.15);
-    --ice-green: #6a8759;             /* WebStorm string green */
-    --ice-green-muted: rgba(106, 135, 89, 0.20);
-    --ice-red: #cc7832;               /* WebStorm keyword orange */
-    --ice-red-muted: rgba(204, 120, 50, 0.15);
-    --ice-yellow: #ffc66d;            /* WebStorm function yellow */
+    --ice-bg-base: #0F1723;           /* Editor background — deepest navy */
+    --ice-bg-surface: #1e2533;        /* Sidebar, tool windows */
+    --ice-bg-raised: #252d3d;         /* Cards, tabs, elevated */
+    --ice-bg-overlay: #2c3548;        /* Dropdowns, popovers */
+    --ice-bg-hover: rgba(255, 255, 255, 0.06);
+    --ice-bg-active: #2f3a4e;         /* Selected item */
+    --ice-bg-toolbar: #182030;        /* Toolbar — between base and surface */
+    --ice-border: #2e3a4d;            /* Subtle dividers — navy-tinted */
+    --ice-border-strong: #3d4b62;     /* Strong borders */
+    --ice-text-primary: #e1e7ef;      /* Near white — 12:1 contrast on base */
+    --ice-text-secondary: #8b9ab5;    /* Mid blue-gray — 5:1 contrast */
+    --ice-text-tertiary: #5c6b82;     /* Muted */
+    --ice-accent: #4c9aff;            /* Sky blue */
+    --ice-accent-hover: #6bb0ff;
+    --ice-accent-muted: rgba(76, 154, 255, 0.15);
+    --ice-green: #34d399;             /* Emerald */
+    --ice-green-muted: rgba(52, 211, 153, 0.12);
+    --ice-red: #f87171;               /* Soft red */
+    --ice-red-muted: rgba(248, 113, 113, 0.12);
+    --ice-yellow: #fbbf24;            /* Amber */
 
-    /* shadcn dark — WebStorm */
-    --background: 0 0% 17%;
-    --foreground: 213 16% 72%;
-    --card: 200 3% 27%;
-    --card-foreground: 213 16% 72%;
-    --popover: 195 3% 30%;
-    --popover-foreground: 213 16% 72%;
-    --primary: 214 91% 60%;           /* Steel blue accent */
+    /* shadcn dark — Midnight Navy */
+    --background: 216 40% 10%;
+    --foreground: 214 31% 91%;
+    --card: 220 24% 19%;
+    --card-foreground: 214 31% 91%;
+    --popover: 221 24% 23%;
+    --popover-foreground: 214 31% 91%;
+    --primary: 214 100% 65%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 200 3% 27%;
-    --secondary-foreground: 213 16% 72%;
-    --muted: 200 3% 27%;
-    --muted-foreground: 210 8% 50%;
-    --accent: 200 3% 27%;
-    --accent-foreground: 213 16% 72%;
-    --destructive: 27 64% 50%;
+    --secondary: 220 24% 19%;
+    --secondary-foreground: 219 22% 63%;
+    --muted: 220 24% 19%;
+    --muted-foreground: 216 17% 44%;
+    --accent: 220 24% 19%;
+    --accent-foreground: 219 22% 63%;
+    --destructive: 0 82% 68%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 1% 33%;
-    --input: 0 1% 33%;
-    --ring: 214 91% 60%;
+    --border: 217 25% 24%;
+    --input: 217 25% 24%;
+    --ring: 214 100% 65%;
   }
 }
 

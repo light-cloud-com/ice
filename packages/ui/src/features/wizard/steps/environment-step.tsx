@@ -7,6 +7,7 @@
 
 import { Globe, Shield } from 'lucide-react';
 import React from 'react';
+import { SECURITY_LEVEL_COLORS } from '../../../config/color-palette';
 import { cn } from '../../../shared/utils/cn';
 import type { SecurityLevel } from '../../../config/templates/types';
 import type { WizardEnvironment } from '../hooks/use-wizard-state';
@@ -22,10 +23,10 @@ const REGIONS = [
 ];
 
 const SECURITY_LEVELS: { value: SecurityLevel; label: string; color: string }[] = [
-  { value: 'basic', label: 'Basic', color: '#6b7280' },
-  { value: 'standard', label: 'Standard', color: '#3b82f6' },
-  { value: 'strict', label: 'Strict', color: '#f59e0b' },
-  { value: 'compliance', label: 'Compliance', color: '#22c55e' },
+  { value: 'basic', label: 'Basic', color: SECURITY_LEVEL_COLORS.basic },
+  { value: 'standard', label: 'Standard', color: SECURITY_LEVEL_COLORS.standard },
+  { value: 'strict', label: 'Strict', color: SECURITY_LEVEL_COLORS.strict },
+  { value: 'compliance', label: 'Compliance', color: SECURITY_LEVEL_COLORS.compliance },
 ];
 
 const ENV_TYPE_LABELS: Record<string, { label: string; emoji: string }> = {

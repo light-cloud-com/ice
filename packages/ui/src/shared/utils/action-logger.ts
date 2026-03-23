@@ -44,10 +44,6 @@ function isEnabled(): boolean {
   return _enabled ?? false;
 }
 
-export function refreshActionLogFlag(): void {
-  _enabled = null;
-}
-
 function ensureBuffer(): IceActionEvent[] {
   if (!window.__ICE_ACTION_LOG__) {
     window.__ICE_ACTION_LOG__ = [];
@@ -98,13 +94,6 @@ export function logAction(
 }
 
 /**
- * Log a UI click event.
- */
-export function logClick(elementId: string, detail: Record<string, unknown> = {}): void {
-  logAction('ui', 'click', elementId, detail);
-}
-
-/**
  * Log an API request (call from axios interceptor).
  */
 export function logApiCall(method: string, path: string, body?: unknown): void {
@@ -129,34 +118,10 @@ export function logApiResponse(method: string, path: string, status: number, dat
 }
 
 /**
- * Log a navigation event.
- */
-export function logNavigate(to: string, from?: string): void {
-  logAction('nav', 'navigate', to, { from: from ?? null });
-}
-
-/**
- * Log a deploy progress event.
- */
-export function logDeployProgress(cardId: string, detail: Record<string, unknown>): void {
-  logAction('deploy', 'progress', cardId, detail);
-}
-
-/**
  * Log a Redux state change (significant actions only).
  */
 export function logStateChange(actionType: string, payload?: unknown): void {
   logAction('state', 'dispatch', actionType, { payload: payload ?? null });
-}
-
-/**
- * Log an error.
- */
-export function logError(target: string, error: unknown): void {
-  logAction('ui', 'error', target, {
-    message: error instanceof Error ? error.message : String(error),
-    stack: error instanceof Error ? error.stack : undefined,
-  });
 }
 
 /**

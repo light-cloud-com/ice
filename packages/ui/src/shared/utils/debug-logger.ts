@@ -6,7 +6,7 @@
  * Disable: localStorage.removeItem('ice-debug')
  */
 
-type DebugPrefix = '[ICE:Canvas]' | '[ICE:Layout]' | '[ICE:Blueprint]' | '[ICE:Drop]' | '[ICE:Redux]' | '[ICE:View]';
+type DebugPrefix = '[ICE:Canvas]' | '[ICE:Blueprint]' | '[ICE:Drop]';
 
 let _debugEnabled: boolean | null = null;
 
@@ -19,13 +19,6 @@ function isDebugEnabled(): boolean {
     }
   }
   return _debugEnabled;
-}
-
-/**
- * Refresh debug flag (call after localStorage changes).
- */
-export function refreshDebugFlag(): void {
-  _debugEnabled = null;
 }
 
 /**
@@ -55,13 +48,6 @@ export function logCanvasRender(data: {
     '[ICE:Canvas]',
     `Render: ${data.visibleCount}/${data.nodeCount} nodes, ${data.edgeCount} edges, L${data.viewLevel}`,
   );
-}
-
-/**
- * Log layout operations.
- */
-export function logLayout(operation: string, data?: unknown): void {
-  iceDebug('[ICE:Layout]', operation, data);
 }
 
 /**
@@ -96,16 +82,3 @@ export function logDrop(data: {
   );
 }
 
-/**
- * Log Redux action.
- */
-export function logRedux(actionType: string, data?: unknown): void {
-  iceDebug('[ICE:Redux]', actionType, data);
-}
-
-/**
- * Log view level change.
- */
-export function logViewChange(from: number, to: number): void {
-  iceDebug('[ICE:View]', `Level ${from} → ${to}`);
-}

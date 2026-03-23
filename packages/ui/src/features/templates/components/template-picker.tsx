@@ -14,7 +14,6 @@ import {
   Server,
   Activity,
   Globe,
-  Search,
   LayoutTemplate,
 } from 'lucide-react';
 import React, { useState, useMemo } from 'react';
@@ -39,6 +38,7 @@ import { cn } from '../../../shared/utils/cn';
 import { createCard, importToActiveCard } from '../../../store/slices/cards-slice';
 import { openTabInPane, setActivePane } from '../../../store/slices/ui-slice';
 import type { AppDispatch, RootState } from '../../../store';
+import { SearchInput } from '../../../shared/components/ui/search-input';
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Rocket,
@@ -106,16 +106,12 @@ export const TemplatePicker: React.FC = () => {
       <DropdownMenuContent align="start" className="w-80">
         <DropdownMenuLabel>Templates</DropdownMenuLabel>
         <div className="px-2 pb-1.5">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search templates..."
-              className="flex h-8 w-full rounded-md border border-input bg-background pl-8 pr-3 py-1 text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              onKeyDown={(e) => e.stopPropagation()}
-            />
-          </div>
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            placeholder="Search templates..."
+            onKeyDown={(e) => e.stopPropagation()}
+          />
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>

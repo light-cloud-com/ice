@@ -10,6 +10,7 @@ import { Globe, Rocket, Server, Activity, FileCode2, LayoutTemplate } from 'luci
 import React, { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { getBlueprint, expandBlueprint } from '../../../config/blocks';
+import { ARCHETYPE_COLORS } from '../../../config/color-palette';
 import { getTemplatesByCategory } from '../../../config/templates';
 import { expandComposedTemplate } from '../../../config/templates/expand-template';
 import { EMPTY_CANVAS } from '../../../i18n/messages';
@@ -23,13 +24,6 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Rocket,
   Server,
   Activity,
-};
-
-const ARCHETYPE_COLORS: Record<string, string> = {
-  'qs-website-db': '#3b82f6',
-  'qs-webapp-api': '#22c55e',
-  'qs-api-only': '#8b5cf6',
-  'qs-data-pipeline': '#f59e0b',
 };
 
 interface EmptyCanvasOverlayProps {

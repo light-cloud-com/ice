@@ -13,7 +13,6 @@ import {
   Server,
   Activity,
   Globe,
-  Search,
   FileCode2,
   CheckCircle,
   AlertTriangle,
@@ -25,7 +24,9 @@ import {
   searchTemplates,
   getProviderCompatibility,
 } from '../../../config/templates';
+import { SECURITY_LEVEL_COLORS } from '../../../config/color-palette';
 import { Badge } from '../../../shared/components/ui/badge';
+import { SearchInput } from '../../../shared/components/ui/search-input';
 import { cn } from '../../../shared/utils/cn';
 import type { Provider } from '../../../config/blocks/types';
 import type { TemplateCategory } from '../../../config/templates';
@@ -42,10 +43,10 @@ const ICON_MAP: Record<string, React.ElementType> = {
 };
 
 const SECURITY_BADGE: Record<string, { label: string; color: string }> = {
-  basic: { label: 'Basic', color: '#6b7280' },
-  standard: { label: 'Standard', color: '#3b82f6' },
-  strict: { label: 'Strict', color: '#f59e0b' },
-  compliance: { label: 'Compliance', color: '#22c55e' },
+  basic: { label: 'Basic', color: SECURITY_LEVEL_COLORS.basic },
+  standard: { label: 'Standard', color: SECURITY_LEVEL_COLORS.standard },
+  strict: { label: 'Strict', color: SECURITY_LEVEL_COLORS.strict },
+  compliance: { label: 'Compliance', color: SECURITY_LEVEL_COLORS.compliance },
 };
 
 interface TemplateStepProps {
@@ -126,15 +127,11 @@ export const TemplateStep: React.FC<TemplateStepProps> = ({
       </div>
 
       {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-ice-text-3" />
-        <input
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Search templates..."
-          className="w-full h-8 rounded-md border border-ice-border bg-ice-base text-ice-text-1 text-xs pl-8 pr-3 placeholder:text-ice-text-3 focus:outline-none focus:ring-1 focus:ring-ice-accent"
-        />
-      </div>
+      <SearchInput
+        value={searchQuery}
+        onChange={onSearchChange}
+        placeholder="Search templates..."
+      />
 
       {/* Template grid */}
       <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-1">

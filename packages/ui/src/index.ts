@@ -1,6 +1,6 @@
 // API Adapter
-export { setApiAdapter, getApi } from './api/adapter';
-export type { IceAPI } from './api/adapter';
+export { setApiAdapter, getApi } from './shared/api/api-adapter';
+export type { IceAPI } from './shared/api/api-adapter';
 
 // Store
 export { store } from './store';
@@ -15,4 +15,3 @@ export * as AI from './features/ai';
 export * as Wizard from './features/wizard';
 export * as Debug from './features/debug';
 export * as Integrations from './features/integrations';
-export * as Primitives from './primitives';

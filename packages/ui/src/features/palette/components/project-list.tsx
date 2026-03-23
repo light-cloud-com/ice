@@ -4,10 +4,12 @@
  * Displays a tree of project files and folders from the filesystem.
  */
 
-import { FolderOpen, FolderPlus, FileText, ChevronRight, Search, X, RefreshCw, PlayCircle } from 'lucide-react';
-import React, { useCallback, useEffect, useState, useRef } from 'react';
+import { FolderOpen, FolderPlus, FileText, ChevronRight, RefreshCw, PlayCircle } from 'lucide-react';
+import React, { useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { TREE_INDENT_PX, TREE_INDENT_BASE } from '../../../config/canvas-constants';
 import { getApi } from '../../../shared/api/api-adapter';
+import { SearchInput } from '../../../shared/components/ui/search-input';
 import { cn } from '../../../shared/utils/cn';
 import { createCard, importToActiveCard, type CardNode, type CardEdge } from '../../../store/slices/cards-slice';
 import {
@@ -64,7 +66,7 @@ const ProjectTreeItem: React.FC<ProjectTreeItemProps> = ({
         'group relative flex items-center gap-2 py-1.5 px-2 rounded-md cursor-pointer',
         'hover:bg-ice-hover transition-colors duration-150',
       )}
-      style={{ paddingLeft: `${depth * 16 + 8}px` }}
+      style={{ paddingLeft: `${depth * TREE_INDENT_PX + TREE_INDENT_BASE}px` }}
       onClick={(e) => {
         e.stopPropagation();
         if (type === 'folder' && onToggle) {
@@ -118,16 +120,7 @@ export const ProjectList: React.FC = () => {
   const filteredFolders = useSelector(selectFilteredFolders);
   const activePaneId = useSelector((state: RootState) => state.ui.splitView.activePaneId);
 
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement>(null);
-
   // Scan directory when rootDirectory changes
-  useEffect(() => {
-    if (rootDirectory) {
-      scanDirectory(rootDirectory);
-    }
-  }, [rootDirectory, scanDirectory]);
-
   const scanDirectory = useCallback(
     async (dirPath: string) => {
       dispatch(setLoading(true));
@@ -144,6 +137,11 @@ export const ProjectList: React.FC = () => {
     },
     [dispatch],
   );
+  useEffect(() => {
+    if (rootDirectory) {
+      scanDirectory(rootDirectory);
+    }
+  }, [rootDirectory, scanDirectory]);
 
   const handleSelectDirectory = async () => {
     try {
@@ -332,8 +330,8 @@ export const ProjectList: React.FC = () => {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-ice-border">
-        <div className="flex items-center justify-between mb-3">
+      <div className="px-3 py-2 border-b border-ice-border">
+        <div className="flex items-center justify-between mb-2">
           <span className="text-ice-sm font-medium text-ice-text-2 uppercase tracking-wider">Projects</span>
           <div className="flex items-center gap-1">
             {/* Open All button - only show when files exist */}
@@ -373,38 +371,12 @@ export const ProjectList: React.FC = () => {
         </div>
 
         {/* Search */}
-        <div className={cn('relative transition-all duration-200', isSearchFocused && 'transform scale-[1.01]')}>
-          <Search
-            className={cn(
-              'absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 transition-colors duration-200',
-              isSearchFocused ? 'text-ice-text-2' : 'text-ice-text-3',
-            )}
-          />
-          <input
-            ref={searchInputRef}
-            type="text"
-            placeholder="Search projects..."
-            value={searchQuery}
-            onChange={(e) => dispatch(setSearchQuery(e.target.value))}
-            onFocus={() => setIsSearchFocused(true)}
-            onBlur={() => setIsSearchFocused(false)}
-            className={cn(
-              'w-full pl-8 pr-7 py-2 text-ice-base rounded-md',
-              'bg-ice-hover border border-ice-border',
-              'text-ice-text-1 placeholder:text-ice-text-3',
-              'focus:outline-none focus:bg-ice-active focus:border-ice-border-strong',
-              'transition-all duration-200',
-            )}
-          />
-          {searchQuery && (
-            <button
-              onClick={() => dispatch(setSearchQuery(''))}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-ice-active"
-            >
-              <X className="w-3 h-3 text-ice-text-2" />
-            </button>
-          )}
-        </div>
+        <SearchInput
+          value={searchQuery}
+          onChange={(v) => dispatch(setSearchQuery(v))}
+          placeholder="Search projects..."
+          size="md"
+        />
       </div>
 
       {/* Content */}
@@ -465,7 +437,7 @@ export const ProjectList: React.FC = () => {
       </div>
 
       {/* Footer */}
-      <div className="px-4 py-2 border-t border-ice-border">
+      <div className="px-3 py-2 border-t border-ice-border">
         <p className="text-ice-xs text-ice-text-3">
           {files.length} project{files.length !== 1 ? 's' : ''}
           {folders.length > 0 && `, ${folders.length} folder${folders.length !== 1 ? 's' : ''}`}

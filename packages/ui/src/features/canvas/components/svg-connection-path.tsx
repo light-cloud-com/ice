@@ -10,6 +10,7 @@
  */
 
 import React, { memo, useMemo, useState, useCallback, useRef } from 'react';
+import { EDGE_COLORS } from '../../../config/color-palette';
 import { inferConnectionMeta, CATEGORY_LABELS, type ConnectionCategory } from '../utils/connection-rules';
 import type { CanvasNode, CanvasConnection } from './svg-canvas';
 
@@ -55,19 +56,8 @@ interface SvgConnectionPathProps {
   lod?: number;
 }
 
-// Edge colors by relationship type
-export const EDGE_COLORS: Record<string, string> = {
-  default: '#475569',
-  selected: '#3b82f6',
-  hover: '#60a5fa',
-  depends_on: '#f59e0b',
-  connects_to: '#22c55e',
-  references: '#8b5cf6',
-  logs_to: '#22c55e',
-  bundled: '#60a5fa',
-  outgoing: '#22d3ee',
-  incoming: '#f97316',
-};
+// Re-export for backwards compatibility
+export { EDGE_COLORS } from '../../../config/color-palette';
 
 // =============================================================================
 // Bezier Curve Routing

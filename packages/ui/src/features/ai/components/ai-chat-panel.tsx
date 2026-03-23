@@ -358,7 +358,7 @@ export const AiChatPanel: React.FC = () => {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div id="ice-ai-panel" className="h-full flex flex-col bg-ice-surface">
+    <div id="ice-ai-panel" className="h-full flex flex-col bg-ice-surface border-ice-border border-[0] xl:border-l">
       {/* Header */}
       <div className="flex items-center gap-2 px-3 py-2.5 border-b border-ice-border shrink-0">
         <Sparkles className="w-3.5 h-3.5 text-ice-accent" />

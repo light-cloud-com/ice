@@ -14,6 +14,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { getIcon, DEFAULT_ICON, type Provider } from '../../../assets/icons';
 import { getBrandIcon } from '../../../assets/icons/brand-registry';
+import { GROUP_COLOR_PRESETS } from '../../../config/color-palette';
 import { getApi } from '../../../shared/api/api-adapter';
 import axiosInstance from '../../../shared/api/axios-instance';
 import { cn } from '../../../shared/utils/cn';
@@ -117,18 +118,7 @@ const CloseButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
 
 // ─── Group Color Picker ─────────────────────────────────────────────────────
 
-const GROUP_COLORS = [
-  '#3b82f6', // blue
-  '#22c55e', // green
-  '#f59e0b', // amber
-  '#ef4444', // red
-  '#a855f7', // purple
-  '#ec4899', // pink
-  '#06b6d4', // cyan
-  '#f97316', // orange
-  '#6366f1', // indigo
-  '#64748b', // slate
-];
+const GROUP_COLORS = GROUP_COLOR_PRESETS;
 
 const GroupColorPicker: React.FC<{
   color: string;
@@ -1201,7 +1191,7 @@ export const PropertiesPanel: React.FC = () => {
 
   // ═══ NOTHING SELECTED — Project Overview ═══
   return (
-    <div id="ice-properties-panel" className="h-full flex flex-col bg-ice-surface">
+    <div id="ice-properties-panel" className="h-full flex flex-col bg-ice-surface border-l">
       <div className="px-3 py-3 border-b border-ice-border">
         <div className="flex items-center justify-between">
           <div className="text-ice-xs uppercase tracking-wider text-ice-text-3 mb-1">Properties</div>

@@ -48,7 +48,7 @@ export const ViewLevelToggle: React.FC = () => {
   }, [dispatch]);
 
   return (
-    <div className="flex items-center gap-0.5 bg-muted rounded-md p-0.5">
+    <div data-testid="view-level-toggle" className="flex items-center gap-0.5 bg-muted rounded-md p-0.5">
       {([1, 2] as ViewLevel[]).map((level) => {
         const LevelIcon = VIEW_ICONS[level];
         const levelConfig = VIEW_LEVELS[level];

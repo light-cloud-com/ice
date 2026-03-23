@@ -10,11 +10,7 @@
  */
 
 import React, { memo, useMemo, useState, useCallback, useRef } from 'react';
-import {
-  inferConnectionMeta,
-  CATEGORY_LABELS,
-  type ConnectionCategory,
-} from '../utils/connection-rules';
+import { inferConnectionMeta, CATEGORY_LABELS, type ConnectionCategory } from '../utils/connection-rules';
 import type { CanvasNode, CanvasConnection } from './svg-canvas';
 
 // ─── Tooltip info passed up to canvas ───────────────────────────────────────

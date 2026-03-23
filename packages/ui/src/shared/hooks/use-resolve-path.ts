@@ -21,7 +21,7 @@ export interface ResolvedPath {
   orgPrefix: string;
 }
 
-const PROJECT_SUBPAGES = new Set(['settings', 'deployments', 'table']);
+const PROJECT_SUBPAGES = new Set(['settings', 'deployments', 'activity', 'table']);
 
 export function useResolvePath(allSegments: string[]): ResolvedPath {
   const selectedOrg = useSelector((s: RootState) => s.account?.selectedOrg);

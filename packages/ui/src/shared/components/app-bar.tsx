@@ -70,6 +70,7 @@ export const AppBar: React.FC = memo(() => {
   return (
     <>
       <header
+        data-testid="toolbar"
         className="h-11 flex items-center gap-2 px-3 border-b border-ice-border bg-ice-surface relative z-[9999] shrink-0 transition-[padding]"
         style={{
           paddingLeft: showTrafficLightPad ? '78px' : undefined,

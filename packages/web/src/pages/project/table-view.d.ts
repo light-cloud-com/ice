@@ -5,6 +5,6 @@
  */
 import React from 'react';
 export declare const ProjectTableView: React.FC<{
-    projectId: string;
+  projectId: string;
 }>;
 //# sourceMappingURL=table-view.d.ts.map

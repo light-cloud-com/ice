@@ -51,16 +51,13 @@ export const fetchProfile = createAsyncThunk('account/fetchProfile', async () =>
  * then updates the in-memory + localStorage token so all subsequent
  * API calls use the new org-scoped JWT.
  */
-export const switchOrganisation = createAsyncThunk(
-  'account/switchOrganisation',
-  async (org: Organisation) => {
-    const res = await axiosInstance.post('/auth/switch-org', { organisationId: org.id });
-    const { token } = res.data;
-    const { setAccessToken } = await import('../../shared/api/axios-instance');
-    setAccessToken(token);
-    return org;
-  },
-);
+export const switchOrganisation = createAsyncThunk('account/switchOrganisation', async (org: Organisation) => {
+  const res = await axiosInstance.post('/auth/switch-org', { organisationId: org.id });
+  const { token } = res.data;
+  const { setAccessToken } = await import('../../shared/api/axios-instance');
+  setAccessToken(token);
+  return org;
+});
 
 const accountSlice = createSlice({
   name: 'account',

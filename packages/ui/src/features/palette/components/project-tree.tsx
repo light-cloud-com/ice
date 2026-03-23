@@ -622,75 +622,76 @@ export const ProjectTree: React.FC = () => {
       </div>
 
       {/* Context Menu */}
-      {contextMenu && (() => {
-        const isProject = contextMenu.type === 'project';
-        const isFolder = contextMenu.type === 'folder';
-        // Only show "Move to Top Level" if item is nested
-        const isNested = isProject
-          ? projects.find((p) => p.id === contextMenu.id)?.folderId != null
-          : folders.find((f) => f.id === contextMenu.id)?.parentFolderId != null;
+      {contextMenu &&
+        (() => {
+          const isProject = contextMenu.type === 'project';
+          const isFolder = contextMenu.type === 'folder';
+          // Only show "Move to Top Level" if item is nested
+          const isNested = isProject
+            ? projects.find((p) => p.id === contextMenu.id)?.folderId != null
+            : folders.find((f) => f.id === contextMenu.id)?.parentFolderId != null;
 
-        return (
-          <div
-            ref={menuRef}
-            className="fixed z-50 w-48 rounded-md border border-ice-border bg-ice-surface shadow-xl py-1"
-            style={{ left: contextMenu.x, top: contextMenu.y }}
-          >
-            <button
-              onClick={() => handleStartRename(contextMenu.type, contextMenu.id)}
-              className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-ice-base text-ice-text-1 hover:bg-ice-active transition-colors"
+          return (
+            <div
+              ref={menuRef}
+              className="fixed z-50 w-48 rounded-md border border-ice-border bg-ice-surface shadow-xl py-1"
+              style={{ left: contextMenu.x, top: contextMenu.y }}
             >
-              <Pencil className="w-3 h-3" />
-              Rename
-            </button>
-            {isNested && isProject && (
               <button
-                onClick={() => {
-                  setContextMenu(null);
-                  dispatch(moveProjectToFolder({ projectId: contextMenu.id, folderId: null }));
-                }}
+                onClick={() => handleStartRename(contextMenu.type, contextMenu.id)}
                 className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-ice-base text-ice-text-1 hover:bg-ice-active transition-colors"
               >
-                <FolderInput className="w-3 h-3" />
-                Move to Top Level
+                <Pencil className="w-3 h-3" />
+                Rename
               </button>
-            )}
-            {isNested && isFolder && (
+              {isNested && isProject && (
+                <button
+                  onClick={() => {
+                    setContextMenu(null);
+                    dispatch(moveProjectToFolder({ projectId: contextMenu.id, folderId: null }));
+                  }}
+                  className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-ice-base text-ice-text-1 hover:bg-ice-active transition-colors"
+                >
+                  <FolderInput className="w-3 h-3" />
+                  Move to Top Level
+                </button>
+              )}
+              {isNested && isFolder && (
+                <button
+                  onClick={() => {
+                    setContextMenu(null);
+                    dispatch(moveFolder({ folderId: contextMenu.id, parentFolderId: null }));
+                  }}
+                  className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-ice-base text-ice-text-1 hover:bg-ice-active transition-colors"
+                >
+                  <FolderInput className="w-3 h-3" />
+                  Move to Top Level
+                </button>
+              )}
+              {isFolder && (
+                <button
+                  onClick={() => {
+                    setContextMenu(null);
+                    setCreatingFolder(contextMenu.id);
+                    setNewFolderName('New Folder');
+                  }}
+                  className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-ice-base text-ice-text-1 hover:bg-ice-active transition-colors"
+                >
+                  <FolderPlus className="w-3 h-3" />
+                  New Subfolder
+                </button>
+              )}
+              <div className="h-px bg-ice-border my-1" />
               <button
-                onClick={() => {
-                  setContextMenu(null);
-                  dispatch(moveFolder({ folderId: contextMenu.id, parentFolderId: null }));
-                }}
-                className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-ice-base text-ice-text-1 hover:bg-ice-active transition-colors"
+                onClick={() => handleDelete(contextMenu.type, contextMenu.id)}
+                className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-ice-base text-red-400 hover:bg-red-500/10 transition-colors"
               >
-                <FolderInput className="w-3 h-3" />
-                Move to Top Level
+                <Trash2 className="w-3 h-3" />
+                Delete
               </button>
-            )}
-            {isFolder && (
-              <button
-                onClick={() => {
-                  setContextMenu(null);
-                  setCreatingFolder(contextMenu.id);
-                  setNewFolderName('New Folder');
-                }}
-                className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-ice-base text-ice-text-1 hover:bg-ice-active transition-colors"
-              >
-                <FolderPlus className="w-3 h-3" />
-                New Subfolder
-              </button>
-            )}
-            <div className="h-px bg-ice-border my-1" />
-            <button
-              onClick={() => handleDelete(contextMenu.type, contextMenu.id)}
-              className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-ice-base text-red-400 hover:bg-red-500/10 transition-colors"
-            >
-              <Trash2 className="w-3 h-3" />
-              Delete
-            </button>
-          </div>
-        );
-      })()}
+            </div>
+          );
+        })()}
     </div>
   );
 };

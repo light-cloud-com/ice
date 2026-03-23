@@ -9,12 +9,8 @@
 import axiosInstance from '@ui/shared/api/axios-instance';
 import { cn } from '@ui/shared/utils/cn';
 import { selectActiveCard } from '@ui/store/slices/cards-slice';
-import {
-  fetchEventsForNode,
-  type DeploymentEvent,
-  type DeployStep,
-} from '@ui/store/slices/pipeline-slice';
-import { Loader2, CheckCircle, XCircle, Clock, Rocket, GitBranch, Server, ChevronDown } from 'lucide-react';
+import { fetchEventsForNode, type DeploymentEvent, type DeployStep } from '@ui/store/slices/pipeline-slice';
+import { Loader2, CheckCircle, XCircle, Clock, Rocket, GitBranch, Server, ChevronDown, RotateCcw } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState, AppDispatch } from '@ui/store';
@@ -148,7 +144,18 @@ export const ProjectDeployments: React.FC<{ projectId: string }> = ({ projectId 
           <Loader2 className="w-5 h-5 animate-spin text-ice-text-3" />
         </div>
       ) : tab === 'infra' ? (
-        <InfraDeploymentList deployments={infraDeploys} />
+        <InfraDeploymentList
+          deployments={infraDeploys}
+          cardId={activeCard?.id}
+          onRollbackComplete={() => {
+            if (activeCard?.id) {
+              axiosInstance
+                .get(`/canvas/deploy/history/${activeCard.id}`)
+                .then((res) => setInfraDeploys(Array.isArray(res.data) ? res.data : []))
+                .catch(() => {});
+            }
+          }}
+        />
       ) : (
         <ServiceDeploymentList events={serviceEvents} />
       )}
@@ -189,7 +196,28 @@ const TabButton: React.FC<{
 
 // ─── Infrastructure Deployment List ──────────────────────────────────────────
 
-const InfraDeploymentList: React.FC<{ deployments: InfraDeployment[] }> = ({ deployments }) => {
+const InfraDeploymentList: React.FC<{
+  deployments: InfraDeployment[];
+  cardId?: string;
+  onRollbackComplete?: () => void;
+}> = ({ deployments, cardId, onRollbackComplete }) => {
+  const [rollingBack, setRollingBack] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+
+  const handleRollback = async (deploymentId: string) => {
+    if (!cardId) return;
+    setRollingBack(deploymentId);
+    setConfirmId(null);
+    try {
+      await axiosInstance.post('/canvas/deploy/rollback', { deploymentId, cardId });
+      onRollbackComplete?.();
+    } catch (err: any) {
+      console.error('Rollback failed:', err.message);
+    } finally {
+      setRollingBack(null);
+    }
+  };
+
   const statusIcon = (status: string) => {
     switch (status) {
       case 'success':
@@ -207,6 +235,9 @@ const InfraDeploymentList: React.FC<{ deployments: InfraDeployment[] }> = ({ dep
     }
   };
 
+  // The latest successful deployment (index 0 since sorted desc) — can't roll back to current
+  const latestSuccessId = deployments.find((d) => d.status === 'success')?.id;
+
   if (deployments.length === 0) {
     return (
       <div className="text-center py-16">
@@ -219,29 +250,78 @@ const InfraDeploymentList: React.FC<{ deployments: InfraDeployment[] }> = ({ dep
 
   return (
     <div className="border border-ice-border rounded-lg overflow-hidden divide-y divide-ice-border">
-      {deployments.map((d) => (
-        <div key={d.id} className="flex items-center gap-3 px-4 py-3 hover:bg-ice-hover transition-colors">
-          {statusIcon(d.status)}
-          <div className="flex-1 min-w-0">
-            <span className="text-sm text-ice-text-1 font-medium capitalize">{d.status}</span>
-            <span className="text-xs text-ice-text-3 ml-2">
-              {d.provider} · {d.region} · {d.environment}
+      {deployments.map((d) => {
+        const canRollback = d.status === 'success' && d.id !== latestSuccessId && !rollingBack;
+        const isRollingBack = rollingBack === d.id;
+        const isConfirming = confirmId === d.id;
+
+        return (
+          <div key={d.id} className="flex items-center gap-3 px-4 py-3 hover:bg-ice-hover transition-colors">
+            {statusIcon(d.status)}
+            <div className="flex-1 min-w-0">
+              <span className="text-sm text-ice-text-1 font-medium capitalize">{d.status}</span>
+              <span className="text-xs text-ice-text-3 ml-2">
+                {d.provider} · {d.region} · {d.environment}
+              </span>
+              {d.error && <p className="text-xs text-red-400 mt-0.5 truncate">{d.error}</p>}
+            </div>
+            <span className="text-xs text-ice-text-3 shrink-0">
+              {new Date(d.created_at).toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
             </span>
-            {d.error && <p className="text-xs text-red-400 mt-0.5 truncate">{d.error}</p>}
+            {d.duration_ms != null && d.duration_ms > 0 && (
+              <span className="text-xs text-ice-text-3 tabular-nums shrink-0">
+                {(d.duration_ms / 1000).toFixed(1)}s
+              </span>
+            )}
+            {canRollback && !isConfirming && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setConfirmId(d.id);
+                }}
+                className="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded text-amber-500 hover:bg-amber-500/10 transition-colors shrink-0"
+                title="Roll back to this deployment"
+              >
+                <RotateCcw className="w-3 h-3" />
+                Rollback
+              </button>
+            )}
+            {isConfirming && (
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRollback(d.id);
+                  }}
+                  className="px-2 py-1 text-xs font-medium rounded bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-colors"
+                >
+                  Confirm
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setConfirmId(null);
+                  }}
+                  className="px-2 py-1 text-xs font-medium rounded text-ice-text-3 hover:bg-ice-hover transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+            {isRollingBack && (
+              <div className="flex items-center gap-1.5 text-xs text-blue-400 shrink-0">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Rolling back...
+              </div>
+            )}
           </div>
-          <span className="text-xs text-ice-text-3 shrink-0">
-            {new Date(d.created_at).toLocaleDateString('en-GB', {
-              day: 'numeric',
-              month: 'short',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </span>
-          {d.duration_ms != null && d.duration_ms > 0 && (
-            <span className="text-xs text-ice-text-3 tabular-nums shrink-0">{(d.duration_ms / 1000).toFixed(1)}s</span>
-          )}
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };

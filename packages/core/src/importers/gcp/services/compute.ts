@@ -17,7 +17,6 @@ import type {
  * Compute Engine resource discovery service.
  */
 export class ComputeService extends BaseGCPService {
-   
   private clients: Record<string, any> | null = null;
 
   get service_type(): GCPServiceType {
@@ -34,7 +33,7 @@ export class ComputeService extends BaseGCPService {
       // Dynamic import to make the dependency optional
       // Use string variable to prevent TypeScript from trying to resolve the module
       const module_name = '@google-cloud/compute';
-       
+
       const compute: any = await Function('moduleName', 'return import(moduleName)')(module_name);
 
       const options: Record<string, unknown> = {

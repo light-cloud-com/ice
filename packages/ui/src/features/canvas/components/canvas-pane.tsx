@@ -13,7 +13,7 @@ import { cn } from '../../../shared/utils/cn';
 import { setActiveCard, renameCard, selectCards } from '../../../store/slices/cards-slice';
 import { selectProjectsByOrg } from '../../../store/slices/projects-slice';
 import { setPaneCard, setActivePane, closeSplit, closeTabInPane, openDialog } from '../../../store/slices/ui-slice';
-import type { AppDispatch, RootState  } from '../../../store';
+import type { AppDispatch, RootState } from '../../../store';
 
 interface CanvasPaneProps {
   paneId: string;
@@ -149,7 +149,6 @@ export const CanvasPane: React.FC<CanvasPaneProps> = ({ paneId, cardId, isActive
                   )}
                 />
               )}
-
 
               {/* Action buttons */}
               {!isEditing && (

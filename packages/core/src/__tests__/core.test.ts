@@ -37,7 +37,7 @@ import {
   // Provider registry
   create_provider_registry,
   create_provider_manager,
-} from "..";
+} from '..';
 
 describe('Result Pattern', () => {
   it('should create success result', () => {

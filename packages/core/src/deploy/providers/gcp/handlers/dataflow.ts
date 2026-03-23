@@ -83,10 +83,9 @@ export const dataflow_handler: GCPResourceHandler = {
 
     try {
       // Dataflow jobs are immutable — cancel the existing job then recreate
-      await ctx.rest_client.post(
-        `${BASE_URL}/projects/${ctx.project}/locations/${region}/jobs/${job_id}`,
-        { requestedState: 'JOB_STATE_CANCELLED' },
-      );
+      await ctx.rest_client.post(`${BASE_URL}/projects/${ctx.project}/locations/${region}/jobs/${job_id}`, {
+        requestedState: 'JOB_STATE_CANCELLED',
+      });
 
       // Poll until the job is cancelled (5s interval, 60s max)
       const cancel_start = Date.now();

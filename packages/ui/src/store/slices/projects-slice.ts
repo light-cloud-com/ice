@@ -63,74 +63,71 @@ export interface ProjectsState {
  * Fetch all projects and folders for the given org from the backend.
  * The backend route POST /canvas/projects returns items scoped by JWT org.
  */
-export const fetchProjectTree = createAsyncThunk(
-  'projects/fetchProjectTree',
-  async (orgId: string) => {
-    const { default: axiosInstance } = await import('../../shared/api/axios-instance');
-    const res = await axiosInstance.post('/canvas/projects', {});
-    const items = res.data as Array<{
+export const fetchProjectTree = createAsyncThunk('projects/fetchProjectTree', async (orgId: string) => {
+  const { default: axiosInstance } = await import('../../shared/api/axios-instance');
+  const res = await axiosInstance.post('/canvas/projects', {});
+  const items = res.data as Array<{
+    id: string;
+    name: string;
+    description?: string;
+    type: string;
+    parent_id: string | null;
+    organisation_id: string;
+    slug?: string;
+    provider?: string;
+    created_at?: string;
+    cards?: Array<{ id: string; name: string }>;
+    environments?: Array<{
       id: string;
       name: string;
-      description?: string;
       type: string;
-      parent_id: string | null;
-      organisation_id: string;
-      slug?: string;
-      provider?: string;
-      created_at?: string;
-      cards?: Array<{ id: string; name: string }>;
-      environments?: Array<{
-        id: string;
-        name: string;
-        type: string;
-        card_id: string;
-        is_protected?: boolean;
-        region?: string;
-        pr_number?: number;
-      }>;
+      card_id: string;
+      is_protected?: boolean;
+      region?: string;
+      pr_number?: number;
     }>;
+  }>;
 
-    const projects: Project[] = [];
-    const folders: ProjectFolder[] = [];
+  const projects: Project[] = [];
+  const folders: ProjectFolder[] = [];
 
-    for (const item of items) {
-      if (item.type === 'folder') {
-        folders.push({
-          id: item.id,
-          name: item.name,
-          organisationId: orgId,
-          parentFolderId: item.parent_id,
-          expanded: true,
-          order: 0,
-        });
-      } else {
-        projects.push({
-          id: item.id,
-          name: item.name,
-          description: item.description || '',
-          provider: item.provider || '',
-          organisationId: orgId,
-          environments: (item.environments || []).map((e) => ({
-            id: e.id,
-            name: e.name,
-            type: (e.type || 'development') as Environment['type'],
-            cardId: e.card_id,
-            templateId: null,
-            securityLevel: 'standard' as SecurityLevel,
-            region: e.region || '',
-            createdAt: 0,
-          })),
-          folderId: item.parent_id,
-          order: 0,
-          expanded: false,
-          createdAt: item.created_at ? new Date(item.created_at).getTime() : 0,
-        });
-      }
+  for (const item of items) {
+    if (item.type === 'folder') {
+      folders.push({
+        id: item.id,
+        name: item.name,
+        organisationId: orgId,
+        parentFolderId: item.parent_id,
+        expanded: true,
+        order: 0,
+      });
+    } else {
+      projects.push({
+        id: item.id,
+        name: item.name,
+        description: item.description || '',
+        provider: item.provider || '',
+        organisationId: orgId,
+        environments: (item.environments || []).map((e) => ({
+          id: e.id,
+          name: e.name,
+          type: (e.type || 'development') as Environment['type'],
+          cardId: e.card_id,
+          templateId: null,
+          securityLevel: 'standard' as SecurityLevel,
+          region: e.region || '',
+          createdAt: 0,
+        })),
+        folderId: item.parent_id,
+        order: 0,
+        expanded: false,
+        createdAt: item.created_at ? new Date(item.created_at).getTime() : 0,
+      });
     }
+  }
 
-    return { orgId, projects, folders };
-  },
-);
+  return { orgId, projects, folders };
+});
 
 // =============================================================================
 // Helpers
@@ -163,7 +160,9 @@ const projectsSlice = createSlice({
       // Check if project already exists (from backend fetch)
       if (state.projects.some((p) => p.id === action.payload.id)) return;
       const orgId = action.payload.organisationId;
-      const siblings = state.projects.filter((p) => p.folderId === (action.payload.folderId ?? null) && p.organisationId === orgId);
+      const siblings = state.projects.filter(
+        (p) => p.folderId === (action.payload.folderId ?? null) && p.organisationId === orgId,
+      );
       const project: Project = {
         ...action.payload,
         order: nextOrder(siblings),
@@ -229,7 +228,10 @@ const projectsSlice = createSlice({
 
     // ── Folder CRUD ─────────────────────────────────────────────────────────
 
-    createFolder: (state, action: PayloadAction<{ name: string; organisationId: string; parentFolderId?: string | null }>) => {
+    createFolder: (
+      state,
+      action: PayloadAction<{ name: string; organisationId: string; parentFolderId?: string | null }>,
+    ) => {
       const parentId = action.payload.parentFolderId ?? null;
       const orgId = action.payload.organisationId;
       const siblings = state.folders.filter((f) => f.parentFolderId === parentId && f.organisationId === orgId);
@@ -292,14 +294,8 @@ const projectsSlice = createSlice({
       .addCase(fetchProjectTree.fulfilled, (state, action) => {
         const { orgId, projects, folders } = action.payload;
         // Replace projects/folders for this org, keep other orgs' data
-        state.projects = [
-          ...state.projects.filter((p) => p.organisationId !== orgId),
-          ...projects,
-        ];
-        state.folders = [
-          ...state.folders.filter((f) => f.organisationId !== orgId),
-          ...folders,
-        ];
+        state.projects = [...state.projects.filter((p) => p.organisationId !== orgId), ...projects];
+        state.folders = [...state.folders.filter((f) => f.organisationId !== orgId), ...folders];
         state.loadedOrgId = orgId;
         state.loading = false;
       })

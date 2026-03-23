@@ -3,7 +3,7 @@
  */
 import React from 'react';
 interface ProjectSettingsProps {
-    projectId: string;
+  projectId: string;
 }
 export declare const ProjectSettings: React.FC<ProjectSettingsProps>;
 export {};

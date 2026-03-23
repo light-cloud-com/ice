@@ -145,8 +145,37 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
     // ─── LOD 1: Iconic group — just colored region ─────────────────────
     const gc = (data.groupColor as string) || '';
     if (lod <= 1) {
+      const lodBorderColor = isDragOver ? '#22c55e' : isChildExiting ? '#f97316' : gc || 'var(--ice-border)';
       return (
         <g className="svg-group-node lod-1" data-node-id={node.id} style={{ cursor: 'move' }}>
+          {isDragOver && (
+            <rect
+              x={x - 3}
+              y={y - 3}
+              width={nodeWidth + 6}
+              height={nodeHeight + 6}
+              rx={CORNER_RADIUS + 3}
+              fill="none"
+              stroke="#22c55e"
+              strokeWidth={2}
+              strokeDasharray="8 4"
+              opacity={0.8}
+            />
+          )}
+          {isChildExiting && (
+            <rect
+              x={x - 3}
+              y={y - 3}
+              width={nodeWidth + 6}
+              height={nodeHeight + 6}
+              rx={CORNER_RADIUS + 3}
+              fill="none"
+              stroke="#f97316"
+              strokeWidth={2}
+              strokeDasharray="6 4"
+              opacity={0.9}
+            />
+          )}
           <rect
             x={x}
             y={y}
@@ -154,10 +183,10 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
             height={nodeHeight}
             rx={CORNER_RADIUS}
             fill={gc ? `${gc}15` : 'rgba(15, 23, 42, 0.15)'}
-            stroke={gc || 'var(--ice-border)'}
-            strokeWidth={1}
-            strokeDasharray="4 2"
-            opacity={0.6}
+            stroke={lodBorderColor}
+            strokeWidth={isDragOver || isChildExiting ? 2 : 1}
+            strokeDasharray={isDragOver ? undefined : '4 2'}
+            opacity={isDragOver || isChildExiting ? 1 : 0.6}
           />
         </g>
       );
@@ -166,8 +195,43 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
     // ─── LOD 2: Compact group — border + label only ──────────────────
     if (lod <= 2) {
       const lbl = (label || '').length > 20 ? (label || '').slice(0, 20) + '\u2026' : label || '';
+      const lodBorderColor = isDragOver
+        ? '#22c55e'
+        : isChildExiting
+          ? '#f97316'
+          : isSelected
+            ? gc || 'var(--ice-border-strong)'
+            : gc || 'var(--ice-border)';
       return (
         <g className="svg-group-node lod-2" data-node-id={node.id} style={{ cursor: 'move' }}>
+          {isDragOver && (
+            <rect
+              x={x - 3}
+              y={y - 3}
+              width={nodeWidth + 6}
+              height={nodeHeight + 6}
+              rx={CORNER_RADIUS + 3}
+              fill="none"
+              stroke="#22c55e"
+              strokeWidth={2}
+              strokeDasharray="8 4"
+              opacity={0.8}
+            />
+          )}
+          {isChildExiting && (
+            <rect
+              x={x - 3}
+              y={y - 3}
+              width={nodeWidth + 6}
+              height={nodeHeight + 6}
+              rx={CORNER_RADIUS + 3}
+              fill="none"
+              stroke="#f97316"
+              strokeWidth={2}
+              strokeDasharray="6 4"
+              opacity={0.9}
+            />
+          )}
           <rect
             x={x}
             y={y}
@@ -175,9 +239,9 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
             height={nodeHeight}
             rx={CORNER_RADIUS}
             fill={gc ? `${gc}08` : 'rgba(15, 23, 42, 0.08)'}
-            stroke={isSelected ? gc || 'var(--ice-border-strong)' : gc || 'var(--ice-border)'}
-            strokeWidth={isSelected ? 1.5 : 1}
-            strokeDasharray="6 3"
+            stroke={lodBorderColor}
+            strokeWidth={isDragOver || isChildExiting ? 2 : isSelected ? 1.5 : 1}
+            strokeDasharray={isDragOver ? undefined : '6 3'}
           />
           <text
             x={x + 10}

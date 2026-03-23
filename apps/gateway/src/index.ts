@@ -75,9 +75,10 @@ app.use('/api/webhooks/github', express.raw({ type: 'application/json' }));
 app.use(express.json({ limit: '10mb' }));
 
 // BE-8: Key by userId when authenticated, fall back to IP for anonymous requests
+const isDevOrTest = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
 const limiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 200,
+  max: isDevOrTest ? 1000 : 200,
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => {

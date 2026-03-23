@@ -53,6 +53,17 @@ async function globalSetup(_config: FullConfig) {
     token = loginData.token || '';
   }
 
+  // 3. Skip onboarding so tests aren't redirected away from the app
+  if (token) {
+    await fetch(`${BACKEND_URL}/onboarding/skip`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  }
+
   process.env.TEST_AUTH_TOKEN = token;
   process.env.TEST_USER_EMAIL = TEST_USER.email;
   process.env.TEST_USER_PASSWORD = TEST_USER.password;

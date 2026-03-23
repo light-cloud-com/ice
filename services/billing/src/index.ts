@@ -1,12 +1,12 @@
 import { Router } from 'express';
 
 // Re-export services
-export { default as billingRoutes } from "./routes";
+export { default as billingRoutes } from './routes';
 
 export async function createBillingRouter(): Promise<Router> {
   const router = Router();
   try {
-    const mod = await import("./routes");
+    const mod = await import('./routes');
     router.use('/billing', mod.default);
     console.log('[billing] Billing routes loaded');
   } catch (err) {

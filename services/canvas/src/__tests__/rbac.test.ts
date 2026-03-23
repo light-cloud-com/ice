@@ -21,7 +21,9 @@ try {
     const eq = t.indexOf('=');
     if (eq > 0 && !process.env[t.slice(0, eq)]) process.env[t.slice(0, eq)] = t.slice(eq + 1);
   }
-} catch { /* */ }
+} catch {
+  /* */
+}
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'test-secret-for-rbac';
 
@@ -45,7 +47,9 @@ async function cleanup() {
   await prisma.canvasCard.deleteMany({ where: { project: { organisation_id: ORG.id } } }).catch(() => {});
   await prisma.canvasProject.deleteMany({ where: { organisation_id: ORG.id } }).catch(() => {});
   await prisma.organisationMember.deleteMany({ where: { organisation_id: ORG.id } }).catch(() => {});
-  await prisma.user.deleteMany({ where: { email: { in: [OWNER.email, EDITOR.email, VIEWER.email, MEMBER.email] } } }).catch(() => {});
+  await prisma.user
+    .deleteMany({ where: { email: { in: [OWNER.email, EDITOR.email, VIEWER.email, MEMBER.email] } } })
+    .catch(() => {});
   await prisma.organisation.deleteMany({ where: { name: ORG.name } }).catch(() => {});
 }
 
@@ -61,7 +65,9 @@ beforeAll(async () => {
   ORG.id = org.id;
 
   for (const u of [OWNER, EDITOR, VIEWER, MEMBER]) {
-    const created = await prisma.user.create({ data: { email: u.email, name: u.email.split('@')[0], password_hash: '@@test@@', organisation_id: ORG.id } });
+    const created = await prisma.user.create({
+      data: { email: u.email, name: u.email.split('@')[0], password_hash: '@@test@@', organisation_id: ORG.id },
+    });
     u.id = created.id;
   }
 
@@ -76,9 +82,15 @@ beforeAll(async () => {
   const cards = await prisma.canvasCard.findMany({ where: { project_id: projectId } });
   cardId = cards[0]?.id || '';
 
-  await prisma.projectMember.create({ data: { project_id: projectId, user_id: OWNER.id, role: 'owner', granted_by: OWNER.id } });
-  await prisma.projectMember.create({ data: { project_id: projectId, user_id: EDITOR.id, role: 'editor', granted_by: OWNER.id } });
-  await prisma.projectMember.create({ data: { project_id: projectId, user_id: VIEWER.id, role: 'viewer', granted_by: OWNER.id } });
+  await prisma.projectMember.create({
+    data: { project_id: projectId, user_id: OWNER.id, role: 'owner', granted_by: OWNER.id },
+  });
+  await prisma.projectMember.create({
+    data: { project_id: projectId, user_id: EDITOR.id, role: 'editor', granted_by: OWNER.id },
+  });
+  await prisma.projectMember.create({
+    data: { project_id: projectId, user_id: VIEWER.id, role: 'viewer', granted_by: OWNER.id },
+  });
   // MEMBER has NO project membership
 }, 30000);
 
@@ -88,7 +100,13 @@ afterAll(async () => {
 });
 
 /** Simulate middleware execution */
-function check(mw: any, userId: string, orgId: string, body: Record<string, any> = {}, params: Record<string, any> = {}): Promise<number> {
+function check(
+  mw: any,
+  userId: string,
+  orgId: string,
+  body: Record<string, any> = {},
+  params: Record<string, any> = {},
+): Promise<number> {
   return new Promise((resolve) => {
     const req: any = { userId, organisationId: orgId, body, params, query: {} };
     const res: any = { status: (code: number) => ({ json: () => resolve(code) }) };
@@ -166,7 +184,8 @@ describe('Card delete requires owner', () => {
 });
 
 describe('Environment promote requires owner', () => {
-  it('editor cannot promote', async () => expect(await check(rpa('owner'), EDITOR.id, ORG.id, { projectId })).toBe(403));
+  it('editor cannot promote', async () =>
+    expect(await check(rpa('owner'), EDITOR.id, ORG.id, { projectId })).toBe(403));
   it('owner can promote', async () => expect(await check(rpa('owner'), OWNER.id, ORG.id, { projectId })).toBe(200));
 });
 

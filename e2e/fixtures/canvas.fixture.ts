@@ -2,14 +2,65 @@
  * Canvas Fixture — Canvas interaction helpers
  *
  * Extends base fixture with drag/drop, connect, zoom helpers.
+ * Overrides authenticatedPage to create a project and navigate to its canvas.
  */
 
 import { type Page } from '@playwright/test';
 import { test as base, expect } from './base.fixture';
 
+const BACKEND_URL = 'http://localhost:5001/api';
+
+function toSlug(name: string): string {
+  return (
+    name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '') || 'org'
+  );
+}
+
 export const test = base.extend<{
   canvas: CanvasHelper;
+  authenticatedPage: Page;
 }>({
+  authenticatedPage: async ({ authenticatedPage }, use) => {
+    const token = await authenticatedPage.evaluate(() => localStorage.getItem('ice-token'));
+
+    // Get user profile to find org name
+    const profileRes = await fetch(`${BACKEND_URL}/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const profile = await profileRes.json();
+    const orgName = profile.organisations?.[0]?.name || "Test User's Org";
+    const orgSlug = toSlug(orgName);
+
+    // Create a project for canvas tests
+    const projRes = await fetch(`${BACKEND_URL}/canvas/projects/create`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ name: `E2E Canvas ${Date.now()}` }),
+    });
+    const project = await projRes.json();
+
+    if (!project.slug && !project.name) {
+      throw new Error(`Project creation failed: ${JSON.stringify(project)}`);
+    }
+
+    const projectSlug = project.slug || toSlug(project.name);
+    const canvasUrl = `/${orgSlug}/${projectSlug}`;
+
+    // Navigate to the project canvas — use networkidle to ensure profile loads
+    await authenticatedPage.goto(canvasUrl, { waitUntil: 'networkidle' });
+
+    // Wait for canvas to appear
+    await authenticatedPage.locator('[data-testid="svg-canvas"]').waitFor({ state: 'visible', timeout: 20000 });
+
+    await use(authenticatedPage);
+  },
+
   canvas: async ({ authenticatedPage }, use) => {
     const helper = new CanvasHelper(authenticatedPage);
     await use(helper);
@@ -74,12 +125,6 @@ export class CanvasHelper {
     const node = this.page.locator(`[data-node-id="${nodeId}"]`);
     await node.click();
     await this.page.keyboard.press('Delete');
-  }
-
-  /** Switch view level */
-  async switchViewLevel(level: 1 | 2) {
-    const toggle = this.page.locator('[data-testid="view-level-toggle"]');
-    await toggle.click();
   }
 
   /** Pan the canvas */

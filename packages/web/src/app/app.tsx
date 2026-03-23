@@ -32,6 +32,7 @@ import { AuthCallbackPage } from '@/pages/auth-callback';
 import { FolderView } from '@/pages/folder-view';
 import { InviteAcceptPage } from '@/pages/invite-accept';
 import { LoginPage } from '@/pages/login';
+import { ProjectActivity } from '@/pages/project/activity';
 import { ProjectDeployments } from '@/pages/project/deployments';
 import { ProjectSettings } from '@/pages/project/settings';
 import { SignupPage } from '@/pages/signup';
@@ -138,6 +139,14 @@ const DynamicContent: React.FC = () => {
           <MainLayout projectId={resolved.id!} projectName={resolved.name}>
             <div className="h-full overflow-y-auto bg-ice-base">
               <ProjectDeployments projectId={resolved.id!} />
+            </div>
+          </MainLayout>
+        )}
+
+        {resolved.subpage === 'activity' && (
+          <MainLayout projectId={resolved.id!} projectName={resolved.name}>
+            <div className="h-full overflow-y-auto bg-ice-base">
+              <ProjectActivity projectId={resolved.id!} />
             </div>
           </MainLayout>
         )}

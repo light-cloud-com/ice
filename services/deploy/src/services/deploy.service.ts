@@ -677,6 +677,222 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
   }
 }
 
+export async function rollbackDeployment(deploymentId: string, cardId: string, orgId: string, userId?: string) {
+  // 1. Find the target deployment to roll back to
+  const targetDeployment = await prisma.canvasDeployment.findUnique({
+    where: { id: deploymentId },
+  });
+
+  if (!targetDeployment) {
+    throw new Error('Target deployment not found');
+  }
+
+  if (targetDeployment.card_id !== cardId) {
+    throw new Error('Deployment does not belong to this card');
+  }
+
+  if (targetDeployment.status !== 'success') {
+    throw new Error('Can only roll back to a successful deployment');
+  }
+
+  const targetResults = targetDeployment.results as any;
+  if (!targetResults?.resources) {
+    throw new Error('Target deployment has no resource data to roll back to');
+  }
+
+  const provider = targetDeployment.provider || 'gcp';
+  const credentials = await providerService.getDecryptedCredentials(orgId, provider);
+  if (!credentials) {
+    throw new Error('Provider not connected. Please connect your cloud provider first.');
+  }
+
+  // 2. Create rollback deployment record
+  const rollbackRecord = await prisma.canvasDeployment.create({
+    data: {
+      card_id: cardId,
+      user_id: userId,
+      status: 'deploying',
+      provider,
+      region: targetDeployment.region,
+      environment: targetDeployment.environment,
+      plan: { rollback_to: deploymentId } as any,
+    },
+  });
+
+  const startTime = Date.now();
+  let tempCredentialsPath: string | undefined;
+
+  emitDeployProgress(cardId, {
+    type: 'log',
+    message: `Rolling back to deployment ${deploymentId.slice(0, 8)}...`,
+  });
+
+  try {
+    const core = await getCoreEngine();
+    const { GCPDeployer, AWSDeployer, AzureDeployer, MutableGraph } = core;
+
+    let deployer: any;
+    if (provider === 'aws') {
+      deployer = new AWSDeployer();
+    } else if (provider === 'azure') {
+      deployer = new AzureDeployer();
+    } else {
+      deployer = new GCPDeployer();
+    }
+
+    // Set up auth
+    let authClient: any = credentials;
+    const gcpProject = credentials.project_id;
+
+    if (credentials._auth_type === 'oauth') {
+      const accessToken = await providerService.getValidGCPAccessToken(orgId, credentials);
+      if (!accessToken) {
+        throw new Error('GCP OAuth token expired. Please reconnect via Cloud Providers settings.');
+      }
+      const { OAuth2Client } = await import('google-auth-library');
+      const oauthClient = new OAuth2Client();
+      oauthClient.setCredentials({ access_token: accessToken });
+      authClient = oauthClient;
+    } else {
+      const key = credentials.service_account_key || credentials.key;
+      if (key) {
+        const parsed = typeof key === 'string' ? JSON.parse(key) : key;
+        const { GoogleAuth } = await import('google-auth-library');
+        const auth = new GoogleAuth({
+          credentials: parsed,
+          scopes: ['https://www.googleapis.com/auth/cloud-platform'],
+        });
+        authClient = await auth.getClient();
+
+        const os = await import('os');
+        const path = await import('path');
+        const tmpPath = path.join(os.tmpdir(), `ice-sa-${rollbackRecord.id}-${Date.now()}.json`);
+        fs.writeFileSync(tmpPath, typeof key === 'string' ? key : JSON.stringify(parsed));
+        process.env.GOOGLE_APPLICATION_CREDENTIALS = tmpPath;
+        tempCredentialsPath = tmpPath;
+      }
+    }
+
+    await deployer.authenticate(authClient, gcpProject);
+
+    // 3. Build desired state from target deployment's resources
+    const desiredGraph = new MutableGraph('desired');
+    const targetResources = targetResults.resources || [];
+    for (const res of targetResources) {
+      if (res.success && res.resource_id) {
+        try {
+          desiredGraph.add_node({
+            name: res.name,
+            type: res.type,
+            properties: {
+              ...res.outputs,
+              provider_id: res.provider_id,
+            },
+          });
+        } catch {
+          // Ignore duplicates
+        }
+      }
+    }
+
+    // 4. Build current state from the latest successful deployment
+    const currentGraph = new MutableGraph('current');
+    const latestDeploy = await prisma.canvasDeployment.findFirst({
+      where: { card_id: cardId, status: 'success', id: { not: rollbackRecord.id } },
+      orderBy: { created_at: 'desc' },
+    });
+
+    if (latestDeploy?.results) {
+      const latestResults = latestDeploy.results as any;
+      const latestResources = latestResults.resources || [];
+      for (const res of latestResources) {
+        if (res.success && res.resource_id) {
+          try {
+            currentGraph.add_node({
+              name: res.name,
+              type: res.type,
+              properties: {
+                ...res.outputs,
+                provider_id: res.provider_id,
+              },
+            });
+          } catch {
+            // Ignore duplicates
+          }
+        }
+      }
+    }
+
+    emitDeployProgress(cardId, {
+      type: 'log',
+      message: `Rolling back: target has ${targetResources.filter((r: any) => r.success).length} resources`,
+    });
+
+    // 5. Deploy using diff: desired (target) vs current (latest)
+    const { deploy_graph } = core;
+    const result = await deploy_graph(desiredGraph, currentGraph, deployer, {
+      provider,
+      project: gcpProject,
+      regions: [targetDeployment.region || 'us-central1'],
+    });
+
+    const durationMs = Date.now() - startTime;
+
+    await prisma.canvasDeployment.update({
+      where: { id: rollbackRecord.id },
+      data: {
+        status: result.success ? 'success' : 'failed',
+        results: result as any,
+        duration_ms: durationMs,
+        error: result.errors?.length > 0 ? result.errors.map((e: any) => e.message).join('; ') : null,
+      },
+    });
+
+    await deployer.cleanup();
+
+    emitDeployProgress(cardId, {
+      type: 'complete',
+      success: result.success,
+      results: result,
+      duration_ms: durationMs,
+    });
+
+    return {
+      success: result.success,
+      deploymentId: rollbackRecord.id,
+      duration_ms: durationMs,
+      error: result.success ? null : 'Rollback failed — check resource configuration',
+      result,
+    };
+  } catch (err: any) {
+    console.error('Rollback error:', err.message, err.stack);
+
+    const durationMs = Date.now() - startTime;
+
+    await prisma.canvasDeployment.update({
+      where: { id: rollbackRecord.id },
+      data: {
+        status: 'failed',
+        duration_ms: durationMs,
+        error: err.message,
+      },
+    });
+
+    emitDeployProgress(cardId, {
+      type: 'complete',
+      success: false,
+      results: { error: err.message },
+    });
+
+    return { success: false, deploymentId: rollbackRecord.id, duration_ms: durationMs, error: err.message };
+  } finally {
+    cleanupTempCredentialsFile(tempCredentialsPath);
+    if (process.env.GOOGLE_APPLICATION_CREDENTIALS === tempCredentialsPath) {
+      delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    }
+  }
+}
+
 export async function getDeploymentStatus(deploymentId: string) {
   return prisma.canvasDeployment.findUnique({ where: { id: deploymentId } });
 }
@@ -687,6 +903,103 @@ export async function getDeployedResources(cardId: string) {
     orderBy: { created_at: 'desc' },
   });
   return deployment?.results || [];
+}
+
+export async function checkDrift(cardId: string, nodes: any[]) {
+  // Compare canvas desired state against last successful deployment
+  const deployment = await prisma.canvasDeployment.findFirst({
+    where: { card_id: cardId, status: 'success' },
+    orderBy: { created_at: 'desc' },
+  });
+
+  if (!deployment?.results) {
+    return { driftResults: [] };
+  }
+
+  const deployedResults = deployment.results as any;
+  const deployedResources = (deployedResults.resources || []).filter((r: any) => r.success);
+
+  // Build lookup of deployed resources by name+type
+  const deployedMap = new Map<string, any>();
+  for (const res of deployedResources) {
+    deployedMap.set(`${res.type}::${res.name}`, res);
+  }
+
+  // Build lookup of canvas nodes (resource type only)
+  const canvasResources = nodes.filter((n: any) => n.type === 'resource' && n.data?.iceType);
+
+  const driftResults: Array<{
+    nodeId: string;
+    status: 'in_sync' | 'drifted' | 'missing' | 'extra';
+    changes: Array<{ path: string; desired: unknown; actual: unknown }>;
+  }> = [];
+
+  // Check each canvas node against deployed state
+  for (const node of canvasResources) {
+    const label = (node.data?.label as string) || '';
+    const _iceType = (node.data?.iceType as string) || '';
+
+    // Try to find matching deployed resource
+    let deployed: any = null;
+    for (const [key, res] of deployedMap.entries()) {
+      if (res.source_node_id === node.id) {
+        deployed = res;
+        deployedMap.delete(key);
+        break;
+      }
+    }
+
+    // Fallback: match by name
+    if (!deployed) {
+      for (const [key, res] of deployedMap.entries()) {
+        if (res.name === label || key.endsWith(`::${label}`)) {
+          deployed = res;
+          deployedMap.delete(key);
+          break;
+        }
+      }
+    }
+
+    if (!deployed) {
+      // Node exists on canvas but was never deployed
+      if (node.data?.provider_id) {
+        // Was deployed before but not in latest — drifted
+        driftResults.push({ nodeId: node.id, status: 'missing', changes: [] });
+      }
+      continue;
+    }
+
+    // Compare key properties
+    const changes: Array<{ path: string; desired: unknown; actual: unknown }> = [];
+    const nodeProps = (node.data?.properties || {}) as Record<string, unknown>;
+    const deployedOutputs = deployed.outputs || {};
+
+    // Check if any configured properties differ from deployed outputs
+    for (const [key, desiredVal] of Object.entries(nodeProps)) {
+      if (key.startsWith('_') || desiredVal === undefined || desiredVal === null || desiredVal === '') continue;
+      const actualVal = deployedOutputs[key];
+      if (actualVal !== undefined && String(actualVal) !== String(desiredVal)) {
+        changes.push({ path: key, desired: desiredVal, actual: actualVal });
+      }
+    }
+
+    driftResults.push({
+      nodeId: node.id,
+      status: changes.length > 0 ? 'drifted' : 'in_sync',
+      changes,
+    });
+  }
+
+  // Resources deployed but no longer on canvas
+  for (const [, res] of deployedMap.entries()) {
+    driftResults.push({
+      nodeId: res.source_node_id || `extra-${res.name}`,
+      status: 'extra',
+      changes: [],
+    });
+  }
+
+  return { driftResults };
 }
 
 export async function getDeploymentHistory(cardId: string) {

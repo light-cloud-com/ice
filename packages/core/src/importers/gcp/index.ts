@@ -36,4 +36,4 @@ export {
 export { infer_relationships, get_relationship_type } from './relationships.js';
 
 // Services
-export { BaseGCPService, ComputeService, StorageService } from "./services";
+export { BaseGCPService, ComputeService, StorageService } from './services';

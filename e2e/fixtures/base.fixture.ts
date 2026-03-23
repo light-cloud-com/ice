@@ -18,26 +18,38 @@ let _cachedToken: string | null = null;
 async function getToken(): Promise<string> {
   if (_cachedToken) return _cachedToken;
 
-  // Retry up to 3 times (bcrypt can be slow, server may not be ready)
-  for (let attempt = 0; attempt < 3; attempt++) {
+  // Prefer the token from global-setup (avoids rate limiting)
+  if (process.env.TEST_AUTH_TOKEN) {
+    _cachedToken = process.env.TEST_AUTH_TOKEN;
+    return _cachedToken;
+  }
+
+  let lastError = '';
+  for (let attempt = 0; attempt < 5; attempt++) {
     try {
       const res = await fetch(`${BACKEND_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: TEST_EMAIL, password: TEST_PASSWORD }),
       });
+      if (res.status === 429) {
+        lastError = 'Rate limited (429)';
+        await new Promise((r) => setTimeout(r, 5000));
+        continue;
+      }
       const data = await res.json();
       if (data.token) {
         _cachedToken = data.token;
         return _cachedToken;
       }
-    } catch {
-      // retry
+      lastError = data.message || JSON.stringify(data);
+    } catch (err: any) {
+      lastError = err.message || String(err);
     }
-    await new Promise((r) => setTimeout(r, 1000));
+    await new Promise((r) => setTimeout(r, 2000));
   }
 
-  throw new Error('Failed to get auth token after 3 attempts');
+  throw new Error(`Failed to get auth token after 5 attempts. Last error: ${lastError}`);
 }
 
 export const test = base.extend<{

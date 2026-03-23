@@ -10,8 +10,15 @@ No way to search or filter nodes on the canvas. The palette sidebar has search b
 ### FEAT-2: Canvas export to image/PDF (P2)
 No SVG/PNG/PDF export of the canvas diagram. No `toPng`, `exportSVG`, or canvas snapshot utilities exist. Users can't share architecture diagrams outside the app.
 
-### FEAT-3: "Group selection" action (P3)
-Group container nodes exist and Shift+drag enables reparenting, but there's no "Group Selection" action to wrap selected nodes in a new group. Users must drop nodes into pre-existing containers.
+### ~~FEAT-3: "Group selection" action (P3)~~ ✅ DONE
+Select multiple nodes → right-click → "Group Selection" (or `Ctrl+G` / `⌘G`). Creates a `Group.Custom` container wrapping selected nodes with proper padding. Full group management:
+
+- **Shift+drag reparenting** — single and multi-select, with animated highlight borders (green=entering, orange=leaving) on dragged elements, target group, and source group. Works at all zoom levels (LOD 1/2/3).
+- **Nested groups** — groups inside groups with correct z-index depth ordering (children always above parents for click targeting and rendering).
+- **Container auto-expansion** — parent groups expand in all 4 directions (left/top shift position, right/bottom increase size) when children are dragged to edges.
+- **Fold/unfold** — collapsed nodes use visual height (36-38px) for hit-testing and containment. Unfolding auto-resizes the group to fit its children and expands ancestor containers.
+- **Properties panel** — group color picker (10 presets), inline name editing. Rename removed from context menu.
+- **Auto-organize** — respects folded state: preserves expanded height, skips repositioning hidden children.
 
 ### FEAT-4: Zoom-to-fit uses hardcoded width estimate (P3)
 **File:** `packages/web/src/features/canvas/components/canvas-controls.tsx`
@@ -33,8 +40,8 @@ Socket.IO is only used for deploy progress events. No multi-user canvas sync, no
 ### FEAT-7: Comments / annotations on nodes (P3)
 No comment, annotation, or sticky-note feature anywhere. Users can't leave notes for teammates on specific resources.
 
-### FEAT-8: Activity feed / audit log UI (P3)
-Backend has `AiAuditLog` and deployment records but no frontend component displays an activity timeline or change log per project.
+### ~~FEAT-8: Activity feed / audit log UI (P3)~~ ✅ DONE
+New `/activity` project subpage with unified timeline merging AI audit logs, infrastructure deployments, and CI/CD pipeline events. Filter tabs (All / AI / Infra / Service), relative timestamps, expandable metadata, and timeline indicators. Accessible via "Activity" button in the environment tab bar.
 
 ### FEAT-9: Per-project sharing links (P3)
 Team invite and project member management exist, but there's no shareable read-only link or canvas-level permission override separate from org membership.
@@ -43,14 +50,14 @@ Team invite and project member management exist, but there's no shareable read-o
 
 ## Deploy
 
-### FEAT-10: Rollback to previous deployment (P2)
-Deploy history page exists showing past deployments, but there's no "Rollback to this version" action. All the data is there (`DeployRecord` has full results), just no API or UI to revert.
+### ~~FEAT-10: Rollback to previous deployment (P2)~~ ✅ DONE
+"Rollback" button on past successful deployments in the deploy history page (excludes the latest deployment). Two-step confirmation UI. Backend `POST /api/canvas/deploy/rollback` compares target deployment's resources against current state via `deploy_graph` diff engine. Creates a new `CanvasDeployment` record with `plan: { rollback_to }` metadata. Emits progress events via Socket.IO.
 
 ### FEAT-11: Pre-deploy cost estimation (P2)
 Templates carry static `estimatedCost` strings (`$60-120/mo`), but there's no dynamic cost computation at plan time. The deploy plan response has no cost field. Users deploy blind on cost.
 
-### FEAT-12: Drift detection (P2)
-No comparison between canvas desired state and actual deployed state. `deployedResources` is tracked in Redux but there's no visual diff or "out of sync" indicator on the canvas.
+### ~~FEAT-12: Drift detection (P2)~~ ✅ DONE
+"Check for Drift" button in the properties panel Deploy tab. Backend `POST /api/canvas/deploy/drift-check` compares canvas node properties against the last successful deployment's resource outputs. Detects `in_sync`, `drifted`, `missing`, and `extra` states per node. Drifted nodes show orange status (`#f97316`) on the canvas with animated status bar. Properties panel shows per-property diff (old → new) for drifted nodes. Drift state tracked in Redux via `driftByNode` map.
 
 ---
 

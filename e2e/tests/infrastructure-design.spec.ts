@@ -1,9 +1,9 @@
 import { test, expect } from '../fixtures/canvas.fixture';
 
 test.describe('Infrastructure Design', () => {
-  test('should have nodes on canvas from demo data', async ({ authenticatedPage }) => {
-    const nodes = await authenticatedPage.locator('[data-node-id]').all();
-    expect(nodes.length).toBeGreaterThan(0);
+  test('should render empty canvas for new project', async ({ authenticatedPage }) => {
+    const canvas = authenticatedPage.locator('[data-testid="svg-canvas"]');
+    await expect(canvas).toBeVisible({ timeout: 15000 });
   });
 
   test('should show node details when clicking a resource node', async ({ authenticatedPage }) => {
@@ -23,11 +23,11 @@ test.describe('Infrastructure Design', () => {
     await expect(authenticatedPage.locator('[data-testid="svg-canvas"]')).toBeVisible();
   });
 
-  test('should display multiple node types on canvas', async ({ authenticatedPage }) => {
-    const groupNodes = await authenticatedPage.locator('.svg-group-node').count();
-    const compactNodes = await authenticatedPage.locator('.svg-compact-node').count();
+  test('should display canvas with palette for infrastructure design', async ({ authenticatedPage }) => {
+    const canvas = authenticatedPage.locator('[data-testid="svg-canvas"]');
+    const palette = authenticatedPage.locator('[data-testid="resource-palette"]');
 
-    // Demo data should have both group and compact nodes
-    expect(groupNodes + compactNodes).toBeGreaterThan(0);
+    await expect(canvas).toBeVisible({ timeout: 15000 });
+    await expect(palette).toBeVisible({ timeout: 5000 });
   });
 });

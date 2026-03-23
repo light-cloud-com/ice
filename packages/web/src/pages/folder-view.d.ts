@@ -6,10 +6,10 @@
  */
 import React from 'react';
 interface FolderViewProps {
-    folderId: string | null;
-    folderName: string;
-    /** The resolved base path for this folder (e.g. "/folder-a/folder-b") */
-    basePath?: string;
+  folderId: string | null;
+  folderName: string;
+  /** The resolved base path for this folder (e.g. "/folder-a/folder-b") */
+  basePath?: string;
 }
 export declare const FolderView: React.FC<FolderViewProps>;
 export {};

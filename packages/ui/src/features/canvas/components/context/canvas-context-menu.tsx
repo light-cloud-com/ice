@@ -15,6 +15,7 @@ import {
   selectActiveCard,
   undoCardChange,
   redoCardChange,
+  groupSelectedNodes,
 } from '../../../../store/slices/cards-slice';
 import { setSelectedNodes, setSelectedEdges, clearSelection } from '../../../../store/slices/selection-slice';
 import { closeContextMenu, toggleProperties } from '../../../../store/slices/ui-slice';
@@ -67,8 +68,13 @@ const SubMenu: React.FC<{
   return (
     <div
       className="relative"
-      onMouseEnter={() => { clearTimeout(timeoutRef.current); setIsOpen(true); }}
-      onMouseLeave={() => { timeoutRef.current = setTimeout(() => setIsOpen(false), 150); }}
+      onMouseEnter={() => {
+        clearTimeout(timeoutRef.current);
+        setIsOpen(true);
+      }}
+      onMouseLeave={() => {
+        timeoutRef.current = setTimeout(() => setIsOpen(false), 150);
+      }}
     >
       <button className="w-full flex items-center justify-between px-3 py-1.5 text-left text-xs rounded text-ice-text-1 hover:bg-ice-hover transition-colors">
         <span>{label}</span>
@@ -152,10 +158,33 @@ export const CanvasContextMenu: React.FC = () => {
         className="fixed z-50 min-w-[180px] bg-ice-overlay border border-ice-border rounded-lg shadow-xl py-1 px-1"
         style={{ left: contextMenu.position.x, top: contextMenu.position.y }}
       >
-        <MenuItem label="Undo" shortcut={modKey('Z')} disabled={!canUndo} onClick={() => { dispatch(undoCardChange()); close(); }} />
-        <MenuItem label="Redo" shortcut={isMac ? '⇧⌘Z' : 'Ctrl+Y'} disabled={!canRedo} onClick={() => { dispatch(redoCardChange()); close(); }} />
+        <MenuItem
+          label="Undo"
+          shortcut={modKey('Z')}
+          disabled={!canUndo}
+          onClick={() => {
+            dispatch(undoCardChange());
+            close();
+          }}
+        />
+        <MenuItem
+          label="Redo"
+          shortcut={isMac ? '⇧⌘Z' : 'Ctrl+Y'}
+          disabled={!canRedo}
+          onClick={() => {
+            dispatch(redoCardChange());
+            close();
+          }}
+        />
         <Separator />
-        <MenuItem label="Paste" shortcut={modKey('V')} onClick={() => { close(); fireKey('v', true); }} />
+        <MenuItem
+          label="Paste"
+          shortcut={modKey('V')}
+          onClick={() => {
+            close();
+            fireKey('v', true);
+          }}
+        />
         <MenuItem
           label="Select All"
           shortcut={modKey('A')}
@@ -165,7 +194,13 @@ export const CanvasContextMenu: React.FC = () => {
           }}
         />
         <Separator />
-        <MenuItem label="Auto-organize" onClick={() => { dispatch(autoOrganizeCard()); close(); }} />
+        <MenuItem
+          label="Auto-organize"
+          onClick={() => {
+            dispatch(autoOrganizeCard());
+            close();
+          }}
+        />
       </div>
     );
   }
@@ -206,27 +241,58 @@ export const CanvasContextMenu: React.FC = () => {
         style={{ left: contextMenu.position.x, top: contextMenu.position.y }}
       >
         <MenuItem
-          label="Rename"
-          onClick={() => { dispatch(setSelectedNodes([targetId])); openProperties(); close(); }}
-        />
-        <MenuItem
           label="Properties"
-          onClick={() => { dispatch(setSelectedNodes([targetId])); openProperties(); close(); }}
+          onClick={() => {
+            dispatch(setSelectedNodes([targetId]));
+            openProperties();
+            close();
+          }}
         />
         <Separator />
-        <MenuItem label="Copy" shortcut={modKey('C')} onClick={() => { close(); fireKey('c', true); }} />
+        <MenuItem
+          label="Copy"
+          shortcut={modKey('C')}
+          onClick={() => {
+            close();
+            fireKey('c', true);
+          }}
+        />
         <MenuItem label="Copy as Text" onClick={copyText} />
-        <MenuItem label="Cut" shortcut={modKey('X')} onClick={() => { close(); fireKey('x', true); }} />
+        <MenuItem
+          label="Cut"
+          shortcut={modKey('X')}
+          onClick={() => {
+            close();
+            fireKey('x', true);
+          }}
+        />
         <MenuItem
           label="Duplicate"
-          onClick={() => { close(); fireKey('c', true); setTimeout(() => fireKey('v', true), 50); }}
+          onClick={() => {
+            close();
+            fireKey('c', true);
+            setTimeout(() => fireKey('v', true), 50);
+          }}
         />
         <Separator />
         <SubMenu label="Change Provider" items={providerItems} />
         {isContainer && (
           <MenuItem
             label={targetNode?.data?.folded ? 'Unfold' : 'Fold'}
-            onClick={() => { dispatch(toggleCardNodeFold(targetId)); close(); }}
+            onClick={() => {
+              dispatch(toggleCardNodeFold(targetId));
+              close();
+            }}
+          />
+        )}
+        {hasMultiSelection && (
+          <MenuItem
+            label="Group Selection"
+            shortcut={modKey('G')}
+            onClick={() => {
+              dispatch(groupSelectedNodes(selectedNodes));
+              close();
+            }}
           />
         )}
         <Separator />
@@ -262,14 +328,21 @@ export const CanvasContextMenu: React.FC = () => {
       >
         <MenuItem
           label="Properties"
-          onClick={() => { dispatch(setSelectedEdges([targetId])); openProperties(); close(); }}
+          onClick={() => {
+            dispatch(setSelectedEdges([targetId]));
+            openProperties();
+            close();
+          }}
         />
         <Separator />
         <MenuItem
           label="Delete Connection"
           shortcut="Del"
           danger
-          onClick={() => { dispatch(deleteCardEdge(targetId)); close(); }}
+          onClick={() => {
+            dispatch(deleteCardEdge(targetId));
+            close();
+          }}
         />
       </div>
     );

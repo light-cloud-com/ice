@@ -3,8 +3,8 @@
  */
 import React from 'react';
 interface ProjectCanvasProps {
-    projectId: string;
-    projectName: string;
+  projectId: string;
+  projectName: string;
 }
 export declare const ProjectCanvas: React.FC<ProjectCanvasProps>;
 export {};

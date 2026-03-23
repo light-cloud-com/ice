@@ -52,9 +52,7 @@ const SidebarStripButton: React.FC<{ tab: SidebarStripTab; side: SidebarSide }> 
       className={cn(
         'relative flex items-center justify-center w-[26px] rounded-sm transition-colors cursor-pointer',
         'hover:bg-ice-bg-hover',
-        tab.active
-          ? 'text-ice-accent'
-          : 'text-ice-text-tertiary hover:text-ice-text-secondary',
+        tab.active ? 'text-ice-accent' : 'text-ice-text-tertiary hover:text-ice-text-secondary',
       )}
       style={{ height: 'auto', padding: '6px 0' }}
     >

@@ -217,6 +217,10 @@ export function autoLayout(
     const childIds = childrenMap.get(parent.id) || [];
     if (childIds.length === 0) return;
 
+    // Don't reposition children of folded containers — they're hidden
+    const parentFolded = parent.folded || (parent.data?.folded as boolean) || false;
+    if (parentFolded) return;
+
     const children = childIds.map((id) => nodeMap.get(id)).filter((n): n is LayoutNode => !!n);
     const iceType = parent.iceType || '';
     const isVPC = iceType === 'Network.VPC';
@@ -399,6 +403,10 @@ function flowLayout(
 
   // Position: columns left-to-right, nodes stacked top-to-bottom per column
   const absolutizeChildren = (parent: LayoutNode, parentX: number, parentY: number): void => {
+    // Skip children of folded containers — they stay at their current positions
+    const parentFolded = parent.folded || (parent.data?.folded as boolean) || false;
+    if (parentFolded) return;
+
     const childIds = childrenMap.get(parent.id) || [];
     for (const childId of childIds) {
       const child = nodeMap.get(childId);
@@ -486,6 +494,10 @@ function gridLayout(
   resources.sort((a, b) => a.label.localeCompare(b.label));
 
   const absolutizeChildren = (parent: LayoutNode, parentX: number, parentY: number): void => {
+    // Skip children of folded containers — they stay at their current positions
+    const parentFolded = parent.folded || (parent.data?.folded as boolean) || false;
+    if (parentFolded) return;
+
     const childIds = childrenMap.get(parent.id) || [];
     for (const childId of childIds) {
       const child = nodeMap.get(childId);

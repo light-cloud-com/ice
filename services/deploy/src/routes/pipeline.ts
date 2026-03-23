@@ -83,23 +83,33 @@ router.post('/rules', requireProjectAccess('editor'), async (req: AuthRequest, r
   }
 });
 
-router.put('/rules/:ruleId', resolveRuleToCard, requireProjectAccess('editor'), async (req: AuthRequest, res: Response) => {
-  try {
-    const rule = await pipelineService.updateRule(req.params.ruleId as string, req.body, req.organisationId!);
-    res.json({ success: true, rule });
-  } catch (err: any) {
-    res.status(400).json({ success: false, error: err.message });
-  }
-});
+router.put(
+  '/rules/:ruleId',
+  resolveRuleToCard,
+  requireProjectAccess('editor'),
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const rule = await pipelineService.updateRule(req.params.ruleId as string, req.body, req.organisationId!);
+      res.json({ success: true, rule });
+    } catch (err: any) {
+      res.status(400).json({ success: false, error: err.message });
+    }
+  },
+);
 
-router.delete('/rules/:ruleId', resolveRuleToCard, requireProjectAccess('owner'), async (req: AuthRequest, res: Response) => {
-  try {
-    await pipelineService.deleteRule(req.params.ruleId as string, req.userId!, req.organisationId!);
-    res.json({ success: true });
-  } catch (err: any) {
-    res.status(400).json({ success: false, error: err.message });
-  }
-});
+router.delete(
+  '/rules/:ruleId',
+  resolveRuleToCard,
+  requireProjectAccess('owner'),
+  async (req: AuthRequest, res: Response) => {
+    try {
+      await pipelineService.deleteRule(req.params.ruleId as string, req.userId!, req.organisationId!);
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(400).json({ success: false, error: err.message });
+    }
+  },
+);
 
 // ─── Deployment Events ──────────────────────────────────────────────────────
 

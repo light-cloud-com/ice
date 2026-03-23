@@ -48,7 +48,7 @@ test.describe('Smoke: All Flows', () => {
       'click',
       async () => {
         await page.click('#ice-login-auth-btn-submit');
-        await page.waitForURL('**/*', { timeout: 10000 });
+        await page.waitForFunction(() => !window.location.href.includes('/login'), { timeout: 10000 });
       },
       '#ice-login-auth-btn-submit',
     );

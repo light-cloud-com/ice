@@ -151,7 +151,7 @@ function loadPersistedCards(): CardsState {
           .map((c: any) => ({ ...c, nodes: migrateCardNodes(c.nodes || []) }));
         return {
           cards,
-          activeCardId: parsed.activeCardId === 'demo' ? (cards[0]?.id || null) : (parsed.activeCardId || null),
+          activeCardId: parsed.activeCardId === 'demo' ? cards[0]?.id || null : parsed.activeCardId || null,
           history: {},
         };
       }
@@ -558,15 +558,19 @@ const cardsSlice = createSlice({
       // Create a map of organized positions
       const organizedMap = new Map(organizedNodes.map((n) => [n.id, n]));
 
-      // Update card nodes with new positions and sizes
+      // Update card nodes with new positions and sizes.
+      // For folded nodes, preserve their stored expanded height —
+      // the layout uses the collapsed height for positioning, but the stored
+      // height should reflect the expanded size for when they're unfolded.
       card.nodes = card.nodes.map((node) => {
         const organized = organizedMap.get(node.id);
         if (organized) {
+          const isFolded = !!node.data?.folded;
           return {
             ...node,
             position: { x: organized.x, y: organized.y },
             width: organized.width,
-            height: organized.height,
+            height: isFolded ? node.height : organized.height,
           };
         }
         return node;
@@ -622,6 +626,57 @@ const cardsSlice = createSlice({
       card.edges = snapshot.edges;
     },
 
+    // Group selected nodes into a new Group.Custom container
+    groupSelectedNodes: (state, action: PayloadAction<string[]>) => {
+      const nodeIds = action.payload;
+      if (nodeIds.length < 2) return;
+
+      const card = state.cards.find((c) => c.id === state.activeCardId);
+      if (!card) return;
+
+      pushSnapshot(state);
+
+      const selectedNodes = card.nodes.filter((n) => nodeIds.includes(n.id));
+      if (selectedNodes.length < 2) return;
+
+      // Compute bounding box of selected nodes
+      const PADDING = 40;
+      let minX = Infinity,
+        minY = Infinity,
+        maxX = -Infinity,
+        maxY = -Infinity;
+      for (const node of selectedNodes) {
+        minX = Math.min(minX, node.position.x);
+        minY = Math.min(minY, node.position.y);
+        maxX = Math.max(maxX, node.position.x + node.width);
+        maxY = Math.max(maxY, node.position.y + node.height);
+      }
+
+      const groupNode: CardNode = {
+        id: `group-${Date.now()}`,
+        type: 'container',
+        position: { x: minX - PADDING, y: minY - PADDING },
+        width: maxX - minX + PADDING * 2,
+        height: maxY - minY + PADDING * 2 + 30, // extra 30 for group header
+        data: {
+          label: 'New Group',
+          iceType: 'Group.Custom',
+          groupColor: '#3b82f6',
+          behavior: 'container',
+          status: 'active',
+          folded: false,
+        },
+      };
+
+      card.nodes.push(groupNode);
+
+      // Reparent selected nodes (only top-level ones, not already children of each other)
+      for (const node of selectedNodes) {
+        if (!nodeIds.includes(node.parentId || '')) {
+          node.parentId = groupNode.id;
+        }
+      }
+    },
   },
 });
 
@@ -653,6 +708,7 @@ export const {
   expandBlueprintToCard,
   undoCardChange,
   redoCardChange,
+  groupSelectedNodes,
 } = cardsSlice.actions;
 
 export default cardsSlice.reducer;

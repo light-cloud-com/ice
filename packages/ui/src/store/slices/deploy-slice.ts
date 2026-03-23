@@ -51,6 +51,20 @@ export interface DeployedResource {
   deployed_at: string;
 }
 
+export interface DriftChange {
+  path: string;
+  desired: unknown;
+  actual: unknown;
+}
+
+export type DriftStatus = 'in_sync' | 'drifted' | 'missing' | 'extra' | 'unknown';
+
+export interface NodeDriftInfo {
+  nodeId: string;
+  status: DriftStatus;
+  changes: DriftChange[];
+}
+
 export interface DeployRecord {
   id: string;
   timestamp: number;
@@ -103,6 +117,10 @@ export interface DeployState {
 
   // Deployed resources (for monitoring)
   deployedResources: DeployedResource[];
+
+  // Drift detection
+  driftByNode: Record<string, NodeDriftInfo>;
+  driftCheckLoading: boolean;
 }
 
 const initialState: DeployState = {
@@ -120,6 +138,8 @@ const initialState: DeployState = {
   results: [],
   history: [],
   deployedResources: [],
+  driftByNode: {},
+  driftCheckLoading: false,
 };
 
 // ─── Slice ──────────────────────────────────────────────────────────────────
@@ -250,6 +270,22 @@ const deploySlice = createSlice({
     setDeployedResources(state, action: PayloadAction<DeployedResource[]>) {
       state.deployedResources = action.payload;
     },
+
+    // Drift detection
+    setDriftCheckLoading(state, action: PayloadAction<boolean>) {
+      state.driftCheckLoading = action.payload;
+    },
+    setDriftResults(state, action: PayloadAction<NodeDriftInfo[]>) {
+      state.driftByNode = {};
+      for (const info of action.payload) {
+        state.driftByNode[info.nodeId] = info;
+      }
+      state.driftCheckLoading = false;
+    },
+    clearDrift(state) {
+      state.driftByNode = {};
+      state.driftCheckLoading = false;
+    },
   },
 });
 
@@ -273,6 +309,9 @@ export const {
   resetDeploy,
   appendLog,
   setDeployedResources,
+  setDriftCheckLoading,
+  setDriftResults,
+  clearDrift,
 } = deploySlice.actions;
 
 export default deploySlice.reducer;

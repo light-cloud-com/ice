@@ -22,7 +22,7 @@ import axiosInstance from '../../../shared/api/axios-instance';
 import { StepIndicator } from '../../../shared/components/step-indicator';
 import { useTheme } from '../../../shared/hooks/use-theme';
 import { toSlug } from '../../../shared/utils/slug';
-import { addOrganisation, fetchProfile, switchOrganisation  } from '../../../store/slices/account-slice';
+import { addOrganisation, fetchProfile, switchOrganisation } from '../../../store/slices/account-slice';
 import {
   setStep,
   fetchOnboardingStatus,

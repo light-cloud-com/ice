@@ -51,10 +51,38 @@ router.post('/destroy', requireProjectAccess('owner'), async (req: AuthRequest, 
   }
 });
 
+router.post('/rollback', requireProjectAccess('owner'), async (req: AuthRequest, res: Response) => {
+  req.setTimeout(10 * 60 * 1000);
+  res.setTimeout(10 * 60 * 1000);
+  try {
+    const { deploymentId, cardId } = req.body;
+    if (!deploymentId || !cardId) {
+      return res.status(400).json({ success: false, error: 'deploymentId and cardId are required' });
+    }
+    const result = await deployService.rollbackDeployment(deploymentId, cardId, req.organisationId!, req.userId);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 router.get('/status/:deploymentId', async (req: AuthRequest, res: Response) => {
   const deployment = await deployService.getDeploymentStatus(req.params.deploymentId as string);
   if (!deployment) return res.status(404).json({ message: 'Deployment not found' });
   res.json(deployment);
+});
+
+router.post('/drift-check', requireProjectAccess('viewer'), async (req: AuthRequest, res: Response) => {
+  try {
+    const { cardId, nodes } = req.body;
+    if (!cardId || !nodes) {
+      return res.status(400).json({ success: false, error: 'cardId and nodes are required' });
+    }
+    const result = await deployService.checkDrift(cardId, nodes);
+    res.json({ success: true, ...result });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 router.get('/resources/:cardId', requireProjectAccess('viewer'), async (req: AuthRequest, res: Response) => {

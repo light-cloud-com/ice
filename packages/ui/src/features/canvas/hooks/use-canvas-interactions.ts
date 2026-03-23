@@ -75,7 +75,7 @@ export interface UseCanvasInteractionsOptions {
   onBoxSelect?: (rect: { x: number; y: number; width: number; height: number } | null) => void;
   onContextMenu?: (position: { x: number; y: number }, type: 'canvas' | 'node' | 'edge', targetId?: string) => void;
   onDelete?: () => void;
-  onDragOverGroup?: (groupId: string | null, draggedNodeId?: string | null) => void;
+  onDragOverGroup?: (groupId: string | null, draggedNodeId?: string | null, centerX?: number, centerY?: number) => void;
   onDragEnd?: (itemId: string, x: number, y: number, forceReparent?: boolean) => void;
   gridSize?: number;
   minZoom?: number;
@@ -358,23 +358,9 @@ export function useCanvasInteractions({
           if (e.shiftKey) {
             const centerX = newX + state.startItemWidth / 2;
             const centerY = newY + state.startItemHeight / 2;
-            // Find group at drag center (excluding the dragged item itself and other selected)
-            const draggedIds = new Set([state.itemId, ...state.dragItemOffsets.keys()]);
-            let hoveredGroup: string | null = null;
-            for (let i = itemsRef.current.length - 1; i >= 0; i--) {
-              const candidate = itemsRef.current[i];
-              if (draggedIds.has(candidate.id)) continue;
-              if (
-                centerX >= candidate.x &&
-                centerX <= candidate.x + candidate.width &&
-                centerY >= candidate.y &&
-                centerY <= candidate.y + candidate.height
-              ) {
-                hoveredGroup = candidate.id;
-                break;
-              }
-            }
-            onDragOverGroup(hoveredGroup, state.itemId);
+            // Pass center coordinates so handleDragOverGroup can do its own
+            // container search across all nesting levels
+            onDragOverGroup(null, state.itemId, centerX, centerY);
           } else {
             onDragOverGroup(null, null);
           }

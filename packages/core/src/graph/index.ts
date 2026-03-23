@@ -5,10 +5,10 @@
  */
 
 // Re-export parser module
-export * from "./parser";
+export * from './parser';
 
 // Re-export validator module
-export * from "./validator";
+export * from './validator';
 
 // Mutable graph implementation
 export type { GraphStats, SerializedGraph } from './mutable-graph.js';
@@ -42,7 +42,7 @@ export {
   LEVEL_VISIBLE_CATEGORIES,
   NETWORK_CONTAINER_TYPES,
   L1_VISIBLE_NETWORK_TYPES,
-} from "./classifier";
+} from './classifier';
 
 // Inference module
 export {
@@ -51,4 +51,4 @@ export {
   infer_relationships,
   type InferredRelationship,
   type InferenceOptions,
-} from "./inference";
+} from './inference';

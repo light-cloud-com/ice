@@ -128,19 +128,22 @@ export const ProjectList: React.FC = () => {
     }
   }, [rootDirectory, scanDirectory]);
 
-  const scanDirectory = useCallback(async (dirPath: string) => {
-    dispatch(setLoading(true));
-    try {
-      const api = getApi();
-      const result = await api.projects.scanDirectory(dirPath);
-      dispatch(setScanResults(result));
-    } catch (error) {
-      console.error('Failed to scan directory:', error);
-      dispatch(setScanResults({ files: [], folders: [] }));
-    } finally {
-      dispatch(setLoading(false));
-    }
-  }, [dispatch]);
+  const scanDirectory = useCallback(
+    async (dirPath: string) => {
+      dispatch(setLoading(true));
+      try {
+        const api = getApi();
+        const result = await api.projects.scanDirectory(dirPath);
+        dispatch(setScanResults(result));
+      } catch (error) {
+        console.error('Failed to scan directory:', error);
+        dispatch(setScanResults({ files: [], folders: [] }));
+      } finally {
+        dispatch(setLoading(false));
+      }
+    },
+    [dispatch],
+  );
 
   const handleSelectDirectory = async () => {
     try {

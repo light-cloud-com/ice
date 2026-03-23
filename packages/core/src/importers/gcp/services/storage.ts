@@ -17,7 +17,6 @@ import type {
  * Cloud Storage resource discovery service.
  */
 export class StorageService extends BaseGCPService {
-   
   private storage_client: any = null;
 
   get service_type(): GCPServiceType {
@@ -34,7 +33,7 @@ export class StorageService extends BaseGCPService {
       // Dynamic import to make the dependency optional
       // Use string variable to prevent TypeScript from trying to resolve the module
       const module_name = '@google-cloud/storage';
-       
+
       const storage_module: any = await Function('moduleName', 'return import(moduleName)')(module_name);
       const Storage = storage_module.Storage;
 

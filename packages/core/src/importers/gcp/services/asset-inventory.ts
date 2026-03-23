@@ -96,7 +96,6 @@ function extractCleanProperties(resourceData: Record<string, unknown>): Record<s
  * Discovers only business-relevant GCP resources (not infrastructure noise).
  */
 export class AssetInventoryService extends BaseGCPService {
-   
   private asset_client: any = null;
 
   get service_type(): GCPServiceType {
@@ -111,7 +110,7 @@ export class AssetInventoryService extends BaseGCPService {
 
     try {
       const module_name = '@google-cloud/asset';
-       
+
       const asset_module: any = await Function('moduleName', 'return import(moduleName)')(module_name);
       const AssetServiceClient = asset_module.AssetServiceClient;
 

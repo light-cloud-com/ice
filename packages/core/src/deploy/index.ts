@@ -13,7 +13,7 @@ export {
   create_aws_deployer,
   AzureDeployer,
   create_azure_deployer,
-} from "./providers";
+} from './providers';
 
 export type {
   ResourceDeployResult,

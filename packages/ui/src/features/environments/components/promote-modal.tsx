@@ -6,11 +6,7 @@ import { ArrowUpRight, Plus, Minus, RefreshCw, Loader2, CheckCircle } from 'luci
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { cn } from '../../../shared/utils/cn';
-import {
-  promoteEnvironment,
-  clearPendingDiff,
-  fetchEnvironments,
-} from '../../../store/slices/environments-slice';
+import { promoteEnvironment, clearPendingDiff, fetchEnvironments } from '../../../store/slices/environments-slice';
 import type { RootState, AppDispatch } from '../../../store';
 
 export const PromoteModal: React.FC = () => {

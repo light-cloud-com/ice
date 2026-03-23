@@ -64,22 +64,19 @@ export const domain_mapping_handler: GCPResourceHandler = {
     const labels = (properties.labels as Record<string, string>) || {};
 
     try {
-      const response = (await ctx.rest_client.post(
-        `${BASE_URL}/namespaces/${ctx.project}/domainmappings`,
-        {
-          apiVersion: 'domains.cloudrun.com/v1',
-          kind: 'DomainMapping',
-          metadata: {
-            name: domain,
-            namespace: ctx.project,
-            labels,
-          },
-          spec: {
-            routeName: route_name,
-            certificateMode: certificate_mode,
-          },
+      const response = (await ctx.rest_client.post(`${BASE_URL}/namespaces/${ctx.project}/domainmappings`, {
+        apiVersion: 'domains.cloudrun.com/v1',
+        kind: 'DomainMapping',
+        metadata: {
+          name: domain,
+          namespace: ctx.project,
+          labels,
         },
-      )) as any;
+        spec: {
+          routeName: route_name,
+          certificateMode: certificate_mode,
+        },
+      })) as any;
 
       // Domain mappings may return a status with resource records for DNS verification
       const resource_records = response?.status?.resourceRecords || [];
@@ -109,9 +106,7 @@ export const domain_mapping_handler: GCPResourceHandler = {
 
       // Delete existing mapping
       try {
-        await ctx.rest_client.delete(
-          `${BASE_URL}/namespaces/${ctx.project}/domainmappings/${domain}`,
-        );
+        await ctx.rest_client.delete(`${BASE_URL}/namespaces/${ctx.project}/domainmappings/${domain}`);
         // Brief pause to allow deletion to propagate
         await new Promise((r) => setTimeout(r, 2000));
       } catch (deleteErr: any) {
@@ -127,22 +122,19 @@ export const domain_mapping_handler: GCPResourceHandler = {
       const certificate_mode = (properties.ssl_mode as string) || 'AUTOMATIC';
       const labels = (properties.labels as Record<string, string>) || {};
 
-      const response = (await ctx.rest_client.post(
-        `${BASE_URL}/namespaces/${ctx.project}/domainmappings`,
-        {
-          apiVersion: 'domains.cloudrun.com/v1',
-          kind: 'DomainMapping',
-          metadata: {
-            name: domain,
-            namespace: ctx.project,
-            labels,
-          },
-          spec: {
-            routeName: route_name,
-            certificateMode: certificate_mode,
-          },
+      const response = (await ctx.rest_client.post(`${BASE_URL}/namespaces/${ctx.project}/domainmappings`, {
+        apiVersion: 'domains.cloudrun.com/v1',
+        kind: 'DomainMapping',
+        metadata: {
+          name: domain,
+          namespace: ctx.project,
+          labels,
         },
-      )) as any;
+        spec: {
+          routeName: route_name,
+          certificateMode: certificate_mode,
+        },
+      })) as any;
 
       const resource_records = response?.status?.resourceRecords || [];
       const new_provider_id = `namespaces/${ctx.project}/domainmappings/${domain}`;
@@ -165,14 +157,10 @@ export const domain_mapping_handler: GCPResourceHandler = {
     const start = Date.now();
 
     // Extract the domain from provider_id or fall back to name
-    const domain = provider_id.includes('/domainmappings/')
-      ? provider_id.split('/domainmappings/')[1]
-      : name;
+    const domain = provider_id.includes('/domainmappings/') ? provider_id.split('/domainmappings/')[1] : name;
 
     try {
-      await ctx.rest_client.delete(
-        `${BASE_URL}/namespaces/${ctx.project}/domainmappings/${domain}`,
-      );
+      await ctx.rest_client.delete(`${BASE_URL}/namespaces/${ctx.project}/domainmappings/${domain}`);
 
       return result(name, 'delete', start);
     } catch (error) {

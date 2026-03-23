@@ -29,7 +29,7 @@ Comprehensive audit of the ICE SaaS codebase. Initial audit: 2026-03-21. Ongoing
 
 | Document | Items | Description |
 |---|---|---|
-| [Missing Features](missing-features.md) | 27 | Canvas, collaboration, deploy, import/export, project mgmt |
+| [Missing Features](missing-features.md) | 27 (4 done) | Canvas, collaboration, deploy, import/export, project mgmt |
 | [Missing Blocks](missing-blocks.md) | 80+ | Per-provider gap analysis, structural issues, factual errors |
 | [Missing Templates](missing-templates.md) | 12 | Multi-provider variants, architecture patterns, quick-starts |
 
@@ -58,15 +58,40 @@ Comprehensive audit of the ICE SaaS codebase. Initial audit: 2026-03-21. Ongoing
 | Type | Count | Framework | Scope |
 |---|---|---|---|
 | Unit tests | 23 | Vitest | crypto, auth, build validation, card translator |
+| Feature tests | 31 | Vitest | group selection, activity feed, rollback, drift detection |
+| Containment & nesting tests | 99 | Vitest | containment rules, z-index depth, reparenting, nested groups, drag-drop, expansion direction |
 | Org isolation tests | 16 | Vitest | canvas service — cross-org cards, environments, moves |
 | RBAC tests | 30 | Vitest | requireProjectAccess, requireOrgRole, business rules |
 | E2E tests | 32 | Playwright | security, backend services, frontend flows |
 | Build checks | 1 | Vite | import resolution errors |
-| **Total** | **102** | | |
+| **Total** | **232** | | |
 
 ## Session Log
 
 ### 2026-03-23
+
+**Missing features — 4 implemented (FEAT-3, FEAT-8, FEAT-10, FEAT-12):**
+
+- FEAT-3: Group Selection — context menu action + `Ctrl+G` shortcut to wrap selected nodes in a `Group.Custom` container. Extensive follow-up work on group interactions (see below).
+- FEAT-8: Activity Feed — new `/activity` project subpage merging AI audit logs, infra deployments, and CI/CD events into a unified timeline with filter tabs and relative timestamps.
+- FEAT-10: Rollback — `POST /api/canvas/deploy/rollback` endpoint + "Rollback" button with confirmation in deploy history UI. Uses `deploy_graph` diff engine to compare target vs current deployment state.
+- FEAT-12: Drift Detection — `POST /api/canvas/deploy/drift-check` endpoint + "Check for Drift" button in properties panel. Compares canvas properties against deployed outputs. Shows `drifted`/`in_sync`/`missing`/`extra` status per node with property-level diffs. Orange status indicator on canvas.
+- 31 new tests across all 4 features (6 group selection, 9 activity feed, 5 rollback validation, 11 drift detection).
+
+**Group interactions — 10 improvements (FEAT-3 follow-up):**
+
+- Shift+drag highlight for all selected nodes (multi-select), not just the primary
+- Animated dashed border (green=entering, orange=leaving) replaces broken scale(1.4) lift
+- Drag-over highlight works at all zoom levels (LOD 1, 2, 3)
+- Smallest-container search for drag target detection (works across all nesting levels)
+- Z-index depth ordering: child groups always above parent groups (click + render)
+- Container auto-expansion in all 4 directions (left/top shift position, right/bottom increase size)
+- Folded nodes use visual height (36-38px) for hit-testing and containment sizing
+- Unfold auto-resizes the group to fit children + expands ancestor containers
+- Drop reparent uses expanded height so parent is sized for unfold
+- Auto-organize: preserves folded height, skips repositioning hidden children
+- Properties panel: group color picker (10 presets), removed Rename from context menu
+- 88 new tests: containment rules, z-index depth, reparenting, nesting, expansion direction
 
 **ESLint cleanup (379 → 0):**
 - 218 import-x/order, 83 unused-imports, 32 react-hooks/exhaustive-deps, 21 preserve-caught-error, 15 no-case-declarations, 4 no-require-imports, 6 misc

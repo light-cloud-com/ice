@@ -50,7 +50,12 @@ export const Minimap: React.FC = () => {
   }, [activeCard]);
 
   // Compute bounds and scale
-  const { scale, offsetX, offsetY, bounds: _bounds } = useMemo(() => {
+  const {
+    scale,
+    offsetX,
+    offsetY,
+    bounds: _bounds,
+  } = useMemo(() => {
     if (nodes.length === 0)
       return { scale: 1, offsetX: 0, offsetY: 0, bounds: { minX: 0, minY: 0, maxX: 500, maxY: 300 } };
 

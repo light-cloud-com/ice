@@ -12,10 +12,10 @@ test.describe('Canvas Basics', () => {
     await expect(palette).toBeVisible({ timeout: 5000 });
   });
 
-  test('should have nodes from demo data on canvas', async ({ authenticatedPage }) => {
-    // The app loads with demo data by default
-    const nodes = await authenticatedPage.locator('[data-node-id]').all();
-    expect(nodes.length).toBeGreaterThan(0);
+  test('should have empty canvas for new project', async ({ authenticatedPage }) => {
+    // New projects start with an empty canvas (no demo data)
+    const canvas = authenticatedPage.locator('[data-testid="svg-canvas"]');
+    await expect(canvas).toBeVisible({ timeout: 15000 });
   });
 
   test('should drag block from palette and create nodes', async ({ authenticatedPage }) => {

@@ -61,7 +61,9 @@ export class AzureDeployer implements ProviderDeployer {
         // Web client not available
       }
     } catch (error) {
-      throw new Error(`Failed to initialize Azure SDK: ${error instanceof Error ? error.message : String(error)}`, { cause: error });
+      throw new Error(`Failed to initialize Azure SDK: ${error instanceof Error ? error.message : String(error)}`, {
+        cause: error,
+      });
     }
   }
 

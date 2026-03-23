@@ -11,7 +11,7 @@
  */
 
 import { execSync, spawn } from 'child_process';
-import { mkdtempSync, rmSync, existsSync, createWriteStream  } from 'fs';
+import { mkdtempSync, rmSync, existsSync, createWriteStream } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { pipeline as streamPipeline } from 'stream/promises';

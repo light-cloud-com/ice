@@ -9,7 +9,7 @@ test.describe('Authentication', () => {
     await page.fill('input[type="password"]', 'securepass123');
     await page.click('button[type="submit"]');
 
-    await expect(page).toHaveURL('/');
+    await expect(page).toHaveURL('/onboarding');
   });
 
   test('should login with valid credentials', async ({ page }) => {

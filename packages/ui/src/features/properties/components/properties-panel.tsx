@@ -15,6 +15,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { getIcon, DEFAULT_ICON, type Provider } from '../../../assets/icons';
 import { getBrandIcon } from '../../../assets/icons/brand-registry';
 import { getApi } from '../../../shared/api/api-adapter';
+import axiosInstance from '../../../shared/api/axios-instance';
 import { cn } from '../../../shared/utils/cn';
 import {
   selectActiveCard,
@@ -24,6 +25,7 @@ import {
   type CardNode,
   type CardEdge,
 } from '../../../store/slices/cards-slice';
+import { setDriftCheckLoading, setDriftResults } from '../../../store/slices/deploy-slice';
 import { fetchGitHubBranches } from '../../../store/slices/integrations-slice';
 import {
   fetchRulesForNode,
@@ -112,6 +114,152 @@ const CloseButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
     </svg>
   </button>
 );
+
+// ─── Group Color Picker ─────────────────────────────────────────────────────
+
+const GROUP_COLORS = [
+  '#3b82f6', // blue
+  '#22c55e', // green
+  '#f59e0b', // amber
+  '#ef4444', // red
+  '#a855f7', // purple
+  '#ec4899', // pink
+  '#06b6d4', // cyan
+  '#f97316', // orange
+  '#6366f1', // indigo
+  '#64748b', // slate
+];
+
+const GroupColorPicker: React.FC<{
+  color: string;
+  onChange: (color: string) => void;
+}> = ({ color, onChange }) => (
+  <div className="px-3 py-2 border-b border-ice-border">
+    <div className="text-ice-2xs text-ice-text-3 mb-1.5">Group Color</div>
+    <div className="flex items-center gap-1.5 flex-wrap">
+      {GROUP_COLORS.map((c) => (
+        <button
+          key={c}
+          onClick={() => onChange(c)}
+          className="w-5 h-5 rounded-full border-2 transition-all hover:scale-110"
+          style={{
+            backgroundColor: c,
+            borderColor: c === color ? 'white' : 'transparent',
+            boxShadow: c === color ? `0 0 0 2px ${c}` : undefined,
+          }}
+          title={c}
+        />
+      ))}
+    </div>
+  </div>
+);
+
+// ─── Drift Indicator ────────────────────────────────────────────────────────
+
+const DriftIndicator: React.FC<{ nodeId: string }> = ({ nodeId }) => {
+  const driftInfo = useSelector((s: RootState) => s.deploy.driftByNode[nodeId]);
+  const isLoading = useSelector((s: RootState) => s.deploy.driftCheckLoading);
+
+  if (isLoading) {
+    return (
+      <div className="px-3 py-2 text-ice-xs text-ice-text-3 flex items-center gap-1.5">
+        <div className="w-3 h-3 border border-ice-text-3 border-t-transparent rounded-full animate-spin" />
+        Checking drift...
+      </div>
+    );
+  }
+
+  if (!driftInfo) return null;
+
+  if (driftInfo.status === 'in_sync') {
+    return (
+      <div className="px-3 py-2 flex items-center gap-1.5">
+        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+        <span className="text-ice-xs text-emerald-500 font-medium">In sync</span>
+      </div>
+    );
+  }
+
+  if (driftInfo.status === 'missing') {
+    return (
+      <div className="px-3 py-2 flex items-center gap-1.5">
+        <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+        <span className="text-ice-xs text-amber-500 font-medium">Not in latest deployment</span>
+      </div>
+    );
+  }
+
+  if (driftInfo.status === 'drifted' && driftInfo.changes.length > 0) {
+    return (
+      <div className="px-3 py-2">
+        <div className="flex items-center gap-1.5 mb-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+          <span className="text-ice-xs text-orange-500 font-medium">
+            Drifted ({driftInfo.changes.length} {driftInfo.changes.length === 1 ? 'change' : 'changes'})
+          </span>
+        </div>
+        <div className="space-y-1.5 ml-3">
+          {driftInfo.changes.map((change, i) => (
+            <div key={i} className="text-ice-2xs">
+              <span className="text-ice-text-3">{change.path}</span>
+              <div className="flex items-center gap-1 mt-0.5">
+                <span className="text-red-400 line-through">{String(change.actual)}</span>
+                <span className="text-ice-text-3">&rarr;</span>
+                <span className="text-emerald-400">{String(change.desired)}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+};
+
+const DriftCheckButton: React.FC<{ cardId: string; nodes: any[] }> = ({ cardId, nodes }) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const isLoading = useSelector((s: RootState) => s.deploy.driftCheckLoading);
+
+  const handleCheckDrift = async () => {
+    dispatch(setDriftCheckLoading(true));
+    try {
+      const res = await axiosInstance.post('/canvas/deploy/drift-check', { cardId, nodes });
+      if (res.data?.driftResults) {
+        dispatch(setDriftResults(res.data.driftResults));
+        // Update canvas node statuses to reflect drift
+        for (const result of res.data.driftResults) {
+          if (result.status === 'drifted' || result.status === 'missing') {
+            dispatch(updateCardNodeData({ nodeId: result.nodeId, data: { status: 'drifted' } }));
+          } else if (result.status === 'in_sync') {
+            dispatch(updateCardNodeData({ nodeId: result.nodeId, data: { status: 'active' } }));
+          }
+        }
+      }
+    } catch {
+      dispatch(setDriftCheckLoading(false));
+    }
+  };
+
+  return (
+    <div className="px-3 py-2">
+      <button
+        onClick={handleCheckDrift}
+        disabled={isLoading}
+        className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-ice-xs font-medium rounded border border-ice-border text-ice-text-2 hover:bg-ice-hover transition-colors disabled:opacity-50"
+      >
+        {isLoading ? (
+          <>
+            <div className="w-3 h-3 border border-ice-text-3 border-t-transparent rounded-full animate-spin" />
+            Checking...
+          </>
+        ) : (
+          'Check for Drift'
+        )}
+      </button>
+    </div>
+  );
+};
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
   <div className="mb-3">
@@ -653,6 +801,14 @@ export const PropertiesPanel: React.FC = () => {
           </div>
         </div>
 
+        {/* ── Group color picker (only for container/group nodes) ── */}
+        {selectedNode.type === 'container' && (
+          <GroupColorPicker
+            color={(selectedNode.data?.groupColor as string) || '#3b82f6'}
+            onChange={(color) => updateNodeField('groupColor', color)}
+          />
+        )}
+
         {/* ── Navigation Tabs ── */}
         {(() => {
           const hasDeployment = !!selectedNode.data?.provider_id;
@@ -715,6 +871,7 @@ export const PropertiesPanel: React.FC = () => {
               {/* ════ DEPLOY TAB ════ */}
               {activeTab === 'deploy' && hasDeployment && (
                 <>
+                  <DriftIndicator nodeId={selectedNode.id} />
                   <Section title="Current">
                     <div className="space-y-2.5">
                       <div className="flex items-center gap-1.5">
@@ -765,6 +922,7 @@ export const PropertiesPanel: React.FC = () => {
                     </div>
                   </Section>
                   <DeployHistory cardId={activeCard.id} />
+                  <DriftCheckButton cardId={activeCard.id} nodes={activeCard.nodes} />
                 </>
               )}
 
@@ -1587,7 +1745,19 @@ const SourceRepositorySection: React.FC<{
       .then(() => dispatch(fetchRulesForNode({ cardId, nodeId: targetService.id })))
       .catch((err: any) => console.error('[Pipeline] Auto-create failed:', err));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- use .length for arrays to avoid re-firing on reference changes; autoCreated guard prevents loops
-  }, [nodeRepo, anyRulesLoaded, allRules.length, autoCreated, branches.length, connectedServices.length, cardId, dispatch, activeEnvName, buildCommand, outputDirectory]);
+  }, [
+    nodeRepo,
+    anyRulesLoaded,
+    allRules.length,
+    autoCreated,
+    branches.length,
+    connectedServices.length,
+    cardId,
+    dispatch,
+    activeEnvName,
+    buildCommand,
+    outputDirectory,
+  ]);
 
   const handleAddRule = (serviceId: string) => {
     // Find branches not already used for this env + service

@@ -12,6 +12,7 @@ import {
   addNodeToCard,
   addEdgeToCard,
   deleteCardNode,
+  groupSelectedNodes,
   type CardNode,
   type CardEdge,
 } from '../../store/slices/cards-slice';
@@ -157,6 +158,16 @@ export function useClipboard() {
             dispatch(deleteCardNode(nodeId));
           }
           dispatch(setSelectedNodes([]));
+        }
+        return;
+      }
+
+      // Ctrl+G — Group Selection
+      if (isCtrl && e.key === 'g') {
+        e.preventDefault();
+        const selected = selectedNodesRef.current;
+        if (selected.length >= 2) {
+          dispatch(groupSelectedNodes(selected));
         }
         return;
       }

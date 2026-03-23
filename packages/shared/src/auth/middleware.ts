@@ -2,6 +2,7 @@
  * JWT Auth Middleware
  */
 
+import crypto from 'crypto';
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
@@ -149,5 +150,7 @@ export function generateToken(userId: string, organisationId: string): string {
 }
 
 export function generateRefreshToken(userId: string, organisationId: string): string {
-  return jwt.sign({ userId, organisationId, type: 'refresh' }, JWT_SECRET, { expiresIn: '30d' });
+  return jwt.sign({ userId, organisationId, type: 'refresh', jti: crypto.randomUUID() }, JWT_SECRET, {
+    expiresIn: '30d',
+  });
 }

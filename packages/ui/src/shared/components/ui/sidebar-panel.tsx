@@ -57,14 +57,28 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
       <>
         {side === 'left' && (
           <>
-            <ResizablePanel defaultSize={0} minSize={0} maxSize={0} collapsible collapsedSize={0} style={{ overflow: 'hidden' }} />
+            <ResizablePanel
+              defaultSize={0}
+              minSize={0}
+              maxSize={0}
+              collapsible
+              collapsedSize={0}
+              style={{ overflow: 'hidden' }}
+            />
             <ResizableHandle withHandle style={{ display: 'none' }} />
           </>
         )}
         {side === 'right' && (
           <>
             <ResizableHandle withHandle style={{ display: 'none' }} />
-            <ResizablePanel defaultSize={0} minSize={0} maxSize={0} collapsible collapsedSize={0} style={{ overflow: 'hidden' }} />
+            <ResizablePanel
+              defaultSize={0}
+              minSize={0}
+              maxSize={0}
+              collapsible
+              collapsedSize={0}
+              style={{ overflow: 'hidden' }}
+            />
           </>
         )}
       </>

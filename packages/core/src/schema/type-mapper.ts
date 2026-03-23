@@ -5,12 +5,7 @@
  * Handles differences between Terraform and Pulumi naming conventions.
  */
 
-import type {
-  IceType,
-  PropertySchema,
-  ProviderImplementation,
-  SchemaProvider,
-} from './schema-provider.js';
+import type { IceType, PropertySchema, ProviderImplementation, SchemaProvider } from './schema-provider.js';
 
 // =============================================================================
 // Mapping Types

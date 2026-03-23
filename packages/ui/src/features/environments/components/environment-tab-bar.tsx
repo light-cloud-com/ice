@@ -6,7 +6,18 @@
  * Clicking switches the active canvas card.
  */
 
-import { Lock, Plus, GitPullRequest, Loader2, ArrowUpRight, Trash2, Rocket, Settings, History } from 'lucide-react';
+import {
+  Lock,
+  Plus,
+  GitPullRequest,
+  Loader2,
+  ArrowUpRight,
+  Trash2,
+  Rocket,
+  Settings,
+  History,
+  Activity,
+} from 'lucide-react';
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -278,6 +289,18 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
                 >
                   <History className="w-3 h-3" />
                   Deployments
+                </button>
+                <button
+                  onClick={() => navigate(`${basePath}/activity`)}
+                  className={cn(
+                    'flex items-center gap-1 px-2 py-1 text-ice-xs font-medium rounded transition-colors',
+                    pathname.endsWith('/activity')
+                      ? 'bg-ice-active text-ice-text-1'
+                      : 'text-ice-text-3 hover:text-ice-text-2 hover:bg-ice-hover',
+                  )}
+                >
+                  <Activity className="w-3 h-3" />
+                  Activity
                 </button>
 
                 <div className="w-px h-4 bg-ice-border mx-1" />

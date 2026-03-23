@@ -218,6 +218,8 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   }, [nodes.length, dispatch]);
 
   // Convert Redux nodes to canvas format with type-based sizing.
+  // Uses VISUAL dimensions: folded nodes get their collapsed height (36-38px)
+  // so hit-testing, container expansion, and rendering all use consistent bounds.
   const canvasNodes: LocalCanvasNode[] = useMemo(() => {
     return nodes.map((node) => {
       const iceType =
@@ -225,10 +227,15 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
       const isGroup = iceType.startsWith('Group.') || node.type === 'container' || node.type === ('group' as any);
       const isBlock = iceType.startsWith('Block.') || node.type === 'block';
+      const folded = !!node.data?.folded;
       const defaultWidth = computeCompactNodeWidth(isBlock || isGroup);
       const nodeData = (node.data as Record<string, unknown>) || {};
       const hasPipelineStatus = !!(pipelineNodeStatus[node.id] && pipelineNodeStatus[node.id].status !== 'idle');
       const defaultHeight = computeCompactNodeHeight(nodeData, isBlock || isGroup, hasPipelineStatus);
+
+      // Visual height: folded groups = 36px, folded blocks/resources = 38px
+      const expandedHeight = Math.max(node.height || 0, defaultHeight);
+      const visualHeight = folded ? (isGroup ? 36 : 38) : expandedHeight;
 
       return {
         id: node.id,
@@ -236,7 +243,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
         x: node.position?.x || 0,
         y: node.position?.y || 0,
         width: Math.max(node.width || 0, defaultWidth),
-        height: Math.max(node.height || 0, defaultHeight),
+        height: visualHeight,
         label: (node.data?.label as string) || node.id,
         data: { ...(node.data as Record<string, unknown>), iceType },
         parentId: node.parentId || null,
@@ -459,11 +466,23 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   // Nodes are draggable unless they have a collapsed ancestor
   // Sorted by z-index so hit-testing (reverse iteration) finds children before parents
   const canvasItems: CanvasItem[] = useMemo(() => {
+    // Compute nesting depth for each node so children always render above parents
+    const depthMap = new Map<string, number>();
+    const getDepth = (nodeId: string | undefined): number => {
+      if (!nodeId) return 0;
+      if (depthMap.has(nodeId)) return depthMap.get(nodeId)!;
+      const node = visibleNodes.find((n) => n.id === nodeId);
+      const d = node?.parentId ? getDepth(node.parentId) + 1 : 0;
+      depthMap.set(nodeId, d);
+      return d;
+    };
+
     // Build items with z-index for sorting
     const items = visibleNodes
       .filter((node) => !hasCollapsedAncestor(node.id))
       .map((node) => {
         const iceType = (node.data?.iceType as string) || '';
+        const depth = getDepth(node.id);
         return {
           id: node.id,
           x: node.x,
@@ -471,7 +490,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
           width: node.width,
           height: node.height,
           parentId: node.parentId,
-          _z: calculateZIndex(iceType, 0),
+          _z: calculateZIndex(iceType, depth),
         };
       });
     items.sort((a, b) => a._z - b._z);
@@ -635,7 +654,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     [visibleNodes, calculateContainerBounds],
   );
 
-  // Handle moving a node and all its children, then recursively update ancestors.
+  // Handle moving a node and all its children, then expand ancestor containers.
   // skipAncestorResize: when Shift is held (reparent mode), don't resize the parent container.
   // Uses getAllDescendantIds so hidden block children at L1 also move with their parent.
   const handleNodeMove = useCallback(
@@ -646,63 +665,129 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       const deltaX = newX - node.x;
       const deltaY = newY - node.y;
 
-      // Build a map of all pending node states
-      const nodeStates = new Map<string, { x: number; y: number; width: number; height: number }>();
-
-      // Update the moved node
-      nodeStates.set(id, { x: newX, y: newY, width: node.width, height: node.height });
-
-      // Update ALL descendants (including hidden children at L1) using canvasNodes
-      const descendantIds = getAllDescendantIds(id);
-      for (const descendantId of descendantIds) {
-        const descendant = canvasNodes.find((n) => n.id === descendantId);
-        if (descendant) {
-          nodeStates.set(descendantId, {
-            x: descendant.x + deltaX,
-            y: descendant.y + deltaY,
-            width: descendant.width,
-            height: descendant.height,
-          });
-        }
-      }
-
-      // Build position updates array
+      // Collect all position updates
       const positionUpdates: Array<{ id: string; position: { x: number; y: number } }> = [];
+      const sizeUpdates: Array<{ id: string; width: number; height: number }> = [];
 
-      // Add moved node and descendants
-      for (const [nodeId, state] of nodeStates) {
-        positionUpdates.push({ id: nodeId, position: { x: state.x, y: state.y } });
+      // 1. Move the dragged node
+      positionUpdates.push({ id, position: { x: newX, y: newY } });
+
+      // 2. Move ALL descendants (including hidden children at L1)
+      const descendantIds = getAllDescendantIds(id);
+      for (const descId of descendantIds) {
+        const desc = canvasNodes.find((n) => n.id === descId);
+        if (desc) {
+          positionUpdates.push({ id: descId, position: { x: desc.x + deltaX, y: desc.y + deltaY } });
+        }
       }
 
-      // Recalculate ancestor bounds (skip when Shift held)
-      if (!skipAncestorResize) {
-        const ancestorUpdates = recalculateAncestorBounds(id, nodeStates);
+      // 3. Expand ancestor containers if child overflows their bounds.
+      //    Walk up the parent chain: for each ancestor, check if the moved node
+      //    (or its siblings) extend beyond the container. If so, shift position
+      //    and increase size directly.
+      if (!skipAncestorResize && node.parentId) {
+        let currentNode = node;
 
-        // Add ancestor position updates
-        for (const update of ancestorUpdates) {
-          if (update.position && !nodeStates.has(update.id)) {
-            positionUpdates.push({ id: update.id, position: update.position });
+        while (currentNode.parentId) {
+          const parent = visibleNodes.find((n) => n.id === currentNode.parentId);
+          if (!parent || parent.data?.folded) break;
+
+          // Get parent's latest state (may have been updated in a previous iteration)
+          const existingPosUpdate = positionUpdates.find((u) => u.id === parent.id);
+          const existingSizeUpdate = sizeUpdates.find((u) => u.id === parent.id);
+          let px = existingPosUpdate?.position.x ?? parent.x;
+          let py = existingPosUpdate?.position.y ?? parent.y;
+          let pw = existingSizeUpdate?.width ?? parent.width;
+          let ph = existingSizeUpdate?.height ?? parent.height;
+
+          // Compute bounding box of ALL children of this parent
+          const siblings = visibleNodes.filter((n) => n.parentId === parent.id);
+          let childMinX = Infinity,
+            childMinY = Infinity;
+          let childMaxR = -Infinity,
+            childMaxB = -Infinity;
+
+          for (const sib of siblings) {
+            // Use updated position if this sibling was moved
+            const sibUpdate = positionUpdates.find((u) => u.id === sib.id);
+            const sx = sibUpdate?.position.x ?? sib.x;
+            const sy = sibUpdate?.position.y ?? sib.y;
+            childMinX = Math.min(childMinX, sx);
+            childMinY = Math.min(childMinY, sy);
+            childMaxR = Math.max(childMaxR, sx + sib.width);
+            childMaxB = Math.max(childMaxB, sy + sib.height);
           }
-        }
 
-        // Dispatch all position updates to active card
-        dispatch(updateCardNodePositions(positionUpdates));
+          if (!isFinite(childMinX)) break;
 
-        // Dispatch ancestor size updates
-        for (const update of ancestorUpdates) {
-          if (update.size) {
-            dispatch(
-              resizeCardNode({
-                id: update.id,
-                width: update.size.width,
-                height: update.size.height,
-              }),
-            );
+          // Check each edge and expand toward the child
+          const padL = CONTAINER_PAD;
+          const padT = CONTAINER_PAD + CONTAINER_HEADER_H;
+          const padR = CONTAINER_PAD;
+          const padB = CONTAINER_PAD;
+
+          let changed = false;
+
+          // Left overflow: child extends past left edge
+          const overflowL = px + padL - childMinX;
+          if (overflowL > 0) {
+            px -= overflowL;
+            pw += overflowL;
+            changed = true;
           }
+
+          // Top overflow: child extends past top edge
+          const overflowT = py + padT - childMinY;
+          if (overflowT > 0) {
+            py -= overflowT;
+            ph += overflowT;
+            changed = true;
+          }
+
+          // Right overflow: child extends past right edge
+          const overflowR = childMaxR - (px + pw - padR);
+          if (overflowR > 0) {
+            pw += overflowR;
+            changed = true;
+          }
+
+          // Bottom overflow: child extends past bottom edge
+          const overflowB = childMaxB - (py + ph - padB);
+          if (overflowB > 0) {
+            ph += overflowB;
+            changed = true;
+          }
+
+          if (changed) {
+            pw = Math.max(MIN_CONTAINER_WIDTH, pw);
+            ph = Math.max(MIN_CONTAINER_HEIGHT, ph);
+
+            // Update or add position entry
+            if (existingPosUpdate) {
+              existingPosUpdate.position.x = px;
+              existingPosUpdate.position.y = py;
+            } else {
+              positionUpdates.push({ id: parent.id, position: { x: px, y: py } });
+            }
+
+            // Update or add size entry
+            if (existingSizeUpdate) {
+              existingSizeUpdate.width = pw;
+              existingSizeUpdate.height = ph;
+            } else {
+              sizeUpdates.push({ id: parent.id, width: pw, height: ph });
+            }
+          }
+
+          // Walk up to grandparent
+          currentNode = parent as any;
         }
-      } else {
-        // Just move the node and descendants, no ancestor resizing
-        dispatch(updateCardNodePositions(positionUpdates));
+      }
+
+      // Dispatch all updates
+      dispatch(updateCardNodePositions(positionUpdates));
+      for (const su of sizeUpdates) {
+        dispatch(resizeCardNode(su));
       }
 
       // Detect if dragged node is near its parent's edge (exit indicator)
@@ -721,7 +806,192 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
         setExitingGroupId(null);
       }
     },
-    [visibleNodes, canvasNodes, getAllDescendantIds, recalculateAncestorBounds, dispatch],
+    [visibleNodes, canvasNodes, getAllDescendantIds, dispatch],
+  );
+
+  // Handle fold/unfold with ancestor container expansion.
+  // When unfolding a node near a parent's edge, the expanded height may overflow —
+  // so we expand ancestor containers to keep the unfolded node fully contained.
+  const handleToggleFold = useCallback(
+    (nodeId: string) => {
+      const node = visibleNodes.find((n) => n.id === nodeId);
+      if (!node) {
+        dispatch(toggleCardNodeFold(nodeId));
+        return;
+      }
+
+      const wasFolded = !!node.data?.folded;
+      dispatch(toggleCardNodeFold(nodeId));
+
+      // Only need to resize when UNFOLDING (node gets taller, must fit children)
+      if (!wasFolded) return;
+
+      const positionUpdates: Array<{ id: string; position: { x: number; y: number } }> = [];
+      const sizeUpdates: Array<{ id: string; width: number; height: number }> = [];
+
+      // Step 1: Resize the unfolded node itself to encompass its children.
+      // Children may have been moved while hidden, or this is the first unfold
+      // after auto-organize. Use the FULL canvas nodes (not visibleNodes which
+      // has folded height) to find children positions.
+      const childrenOfNode = canvasNodes.filter((n) => n.parentId === nodeId);
+      let selfW = node.width;
+      let selfH = node.height; // This is the folded visual height (36px)
+      let selfX = node.x;
+      let selfY = node.y;
+
+      if (childrenOfNode.length > 0) {
+        let cMinX = Infinity,
+          cMinY = Infinity;
+        let cMaxR = -Infinity,
+          cMaxB = -Infinity;
+
+        for (const child of childrenOfNode) {
+          cMinX = Math.min(cMinX, child.x);
+          cMinY = Math.min(cMinY, child.y);
+          cMaxR = Math.max(cMaxR, child.x + child.width);
+          cMaxB = Math.max(cMaxB, child.y + child.height);
+        }
+
+        // Expand self to fit children
+        const overL = selfX + CONTAINER_PAD - cMinX;
+        if (overL > 0) {
+          selfX -= overL;
+          selfW += overL;
+        }
+
+        const overT = selfY + CONTAINER_PAD + CONTAINER_HEADER_H - cMinY;
+        if (overT > 0) {
+          selfY -= overT;
+          selfH += overT;
+        }
+
+        const overR = cMaxR - (selfX + selfW - CONTAINER_PAD);
+        if (overR > 0) {
+          selfW += overR;
+        }
+
+        const overB = cMaxB - (selfY + selfH - CONTAINER_PAD);
+        if (overB > 0) {
+          selfH += overB;
+        }
+
+        selfW = Math.max(MIN_CONTAINER_WIDTH, selfW);
+        selfH = Math.max(MIN_CONTAINER_HEIGHT, selfH);
+      } else {
+        // No children — use the stored expanded height from Redux
+        const reduxNode = nodes.find((n: any) => n.id === nodeId);
+        const iceType = (node.data?.iceType as string) || '';
+        const isGroupOrBlock =
+          node.type === 'container' ||
+          node.type === 'block' ||
+          iceType.startsWith('Group.') ||
+          iceType.startsWith('Block.');
+        const defaultH = computeCompactNodeHeight(node.data as Record<string, unknown>, isGroupOrBlock, false);
+        selfH = Math.max(reduxNode?.height || 0, defaultH, MIN_CONTAINER_HEIGHT);
+      }
+
+      // Apply self resize
+      if (selfX !== node.x || selfY !== node.y) {
+        positionUpdates.push({ id: nodeId, position: { x: selfX, y: selfY } });
+      }
+      if (selfW !== node.width || selfH !== node.height) {
+        sizeUpdates.push({ id: nodeId, width: selfW, height: selfH });
+      }
+
+      // Step 2: Walk up ancestors and expand them to fit the resized node
+      if (node.parentId) {
+        let current = node;
+        while (current.parentId) {
+          const parent = visibleNodes.find((n) => n.id === current.parentId);
+          if (!parent || parent.data?.folded) break;
+
+          const existingPosUpdate = positionUpdates.find((u) => u.id === parent.id);
+          const existingSizeUpdate = sizeUpdates.find((u) => u.id === parent.id);
+          let px = existingPosUpdate?.position.x ?? parent.x;
+          let py = existingPosUpdate?.position.y ?? parent.y;
+          let pw = existingSizeUpdate?.width ?? parent.width;
+          let ph = existingSizeUpdate?.height ?? parent.height;
+
+          // Compute children bounds, using the expanded size for the unfolded node
+          const siblings = visibleNodes.filter((n) => n.parentId === parent.id);
+          let childMinX = Infinity,
+            childMinY = Infinity;
+          let childMaxR = -Infinity,
+            childMaxB = -Infinity;
+
+          for (const sib of siblings) {
+            // Use the computed expanded bounds for the just-unfolded node
+            const sx = sib.id === nodeId ? selfX : sib.x;
+            const sy = sib.id === nodeId ? selfY : sib.y;
+            const sw = sib.id === nodeId ? selfW : sib.width;
+            const sh = sib.id === nodeId ? selfH : sib.height;
+            childMinX = Math.min(childMinX, sx);
+            childMinY = Math.min(childMinY, sy);
+            childMaxR = Math.max(childMaxR, sx + sw);
+            childMaxB = Math.max(childMaxB, sy + sh);
+          }
+
+          if (!isFinite(childMinX)) break;
+
+          let changed = false;
+
+          const overflowL = px + CONTAINER_PAD - childMinX;
+          if (overflowL > 0) {
+            px -= overflowL;
+            pw += overflowL;
+            changed = true;
+          }
+
+          const overflowT = py + CONTAINER_PAD + CONTAINER_HEADER_H - childMinY;
+          if (overflowT > 0) {
+            py -= overflowT;
+            ph += overflowT;
+            changed = true;
+          }
+
+          const overflowR = childMaxR - (px + pw - CONTAINER_PAD);
+          if (overflowR > 0) {
+            pw += overflowR;
+            changed = true;
+          }
+
+          const overflowB = childMaxB - (py + ph - CONTAINER_PAD);
+          if (overflowB > 0) {
+            ph += overflowB;
+            changed = true;
+          }
+
+          if (changed) {
+            pw = Math.max(MIN_CONTAINER_WIDTH, pw);
+            ph = Math.max(MIN_CONTAINER_HEIGHT, ph);
+            if (existingPosUpdate) {
+              existingPosUpdate.position.x = px;
+              existingPosUpdate.position.y = py;
+            } else {
+              positionUpdates.push({ id: parent.id, position: { x: px, y: py } });
+            }
+            if (existingSizeUpdate) {
+              existingSizeUpdate.width = pw;
+              existingSizeUpdate.height = ph;
+            } else {
+              sizeUpdates.push({ id: parent.id, width: pw, height: ph });
+            }
+          }
+
+          current = parent as any;
+        }
+      }
+
+      // Dispatch all expansions
+      if (positionUpdates.length > 0) {
+        dispatch(updateCardNodePositions(positionUpdates));
+      }
+      for (const su of sizeUpdates) {
+        dispatch(resizeCardNode(su));
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- canvasNodes derived from visibleNodes
+    [visibleNodes, dispatch],
   );
 
   // Calculate minimum size required for a container to fit its children
@@ -813,8 +1083,8 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
   // Track which group is being hovered during drag (for visual feedback)
   const [dragOverGroupId, setDragOverGroupId] = useState<string | null>(null);
-  // Track whether the user is Shift-dragging (reparent mode) — for visual lift effect
-  const [shiftDraggingNodeId, setShiftDraggingNodeId] = useState<string | null>(null);
+  // Track all nodes being Shift-dragged (reparent mode) — for visual highlight
+  const [shiftDraggingNodeIds, setShiftDraggingNodeIds] = useState<Set<string>>(new Set());
   // Track which group has a child being dragged near its edge (exit indicator)
   const [exitingGroupId, setExitingGroupId] = useState<string | null>(null);
   // Track which node is hovered (for highlighting connected edges)
@@ -959,31 +1229,92 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     // eslint-disable-next-line react-hooks/exhaustive-deps -- use card?.id only to avoid re-subscribing on every card mutation
   }, [card?.id, dispatch]);
 
-  // Handle drag-over group detection + shift-drag visual state
-  const handleDragOverGroup = useCallback(
-    (groupId: string | null, draggedNodeId?: string | null) => {
-      // Track which node is being Shift-dragged (for lift effect)
-      setShiftDraggingNodeId(draggedNodeId || null);
+  // Check if a node is a container type
+  const isContainerNode = useCallback((node: LocalCanvasNode) => {
+    const iceType = (node.data.iceType as string) || '';
+    return (
+      node.type === 'container' ||
+      node.type === ('group' as any) ||
+      iceType === 'Network.VPC' ||
+      iceType === 'Network.Subnet'
+    );
+  }, []);
 
-      if (!groupId) {
+  // Handle drag-over group detection + shift-drag visual state.
+  // Uses the same smallest-container search as handleDragEnd so highlighting
+  // matches the actual drop target at every nesting level.
+  const handleDragOverGroup = useCallback(
+    (_groupId: string | null, draggedNodeId?: string | null, centerX?: number, centerY?: number) => {
+      // When Shift-drag ends (draggedNodeId becomes null), clear everything
+      if (!draggedNodeId) {
+        setShiftDraggingNodeIds(new Set());
+        setExitingGroupId(null);
         setDragOverGroupId(null);
         return;
       }
-      // Highlight groups and VPC/Subnet as valid containers (blocks are flat cards)
-      const groupNode = visibleNodes.find((n) => n.id === groupId);
-      if (groupNode) {
-        const nodeIceType = (groupNode.data.iceType as string) || '';
-        const isNodeContainer =
-          groupNode.type === 'container' ||
-          groupNode.type === ('group' as any) ||
-          nodeIceType === 'Network.VPC' ||
-          nodeIceType === 'Network.Subnet';
-        setDragOverGroupId(isNodeContainer ? groupId : null);
-      } else {
-        setDragOverGroupId(null);
+
+      // Track all selected nodes being Shift-dragged (for highlight effect)
+      const draggedIds = new Set(selectedNodes);
+      draggedIds.add(draggedNodeId);
+      setShiftDraggingNodeIds(draggedIds);
+
+      // Find the parent group that dragged nodes are leaving
+      let exitingParent: string | null = null;
+      for (const nodeId of draggedIds) {
+        const node = visibleNodes.find((n) => n.id === nodeId);
+        if (node?.parentId && !draggedIds.has(node.parentId)) {
+          exitingParent = node.parentId;
+          break;
+        }
       }
+
+      // Find the best (smallest) container at the drag center position,
+      // excluding dragged nodes, their descendants, and the current parent.
+      // This mirrors the exact logic in handleDragEnd so the highlight always
+      // matches what will actually happen on drop.
+      let resolvedTargetId: string | null = null;
+
+      if (centerX !== undefined && centerY !== undefined) {
+        // Build full exclusion set: dragged nodes + all their descendants
+        const excludeIds = new Set(draggedIds);
+        for (const id of draggedIds) {
+          for (const desc of getDescendantIds(id)) {
+            excludeIds.add(desc);
+          }
+        }
+
+        let smallestArea = Infinity;
+
+        for (const node of visibleNodes) {
+          if (excludeIds.has(node.id)) continue;
+          // Skip current parent — Shift-drag means "move to a NEW parent"
+          if (node.id === exitingParent) continue;
+
+          if (!isContainerNode(node)) continue;
+
+          // Check if drag center is inside this container
+          if (
+            centerX >= node.x &&
+            centerX <= node.x + node.width &&
+            centerY >= node.y &&
+            centerY <= node.y + node.height
+          ) {
+            const area = node.width * node.height;
+            if (area < smallestArea) {
+              smallestArea = area;
+              resolvedTargetId = node.id;
+            }
+          }
+        }
+      }
+
+      setDragOverGroupId(resolvedTargetId);
+
+      // Show orange exit indicator on parent group when dragging out,
+      // but not when hovering over a different valid target (green takes priority)
+      setExitingGroupId(resolvedTargetId ? null : exitingParent);
     },
-    [visibleNodes],
+    [visibleNodes, selectedNodes, isContainerNode, getDescendantIds],
   );
 
   // Handle drag end — re-parent node only when Ctrl/Cmd is held.
@@ -996,7 +1327,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
       let bestContainer: LocalCanvasNode | null = null;
 
-      // Only search for a container when Ctrl/Cmd is held (explicit reparent)
+      // Only search for a container when Shift is held (explicit reparent)
       if (forceReparent) {
         const centerX = x + draggedNode.width / 2;
         const centerY = y + draggedNode.height / 2;
@@ -1004,11 +1335,22 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
         // Find the best container at the drop position (excluding the dragged node and its descendants)
         const descendantIds = new Set(getDescendantIds(itemId));
         descendantIds.add(itemId);
+        // Also exclude all other selected nodes (multi-drag)
+        for (const id of selectedNodes) {
+          descendantIds.add(id);
+        }
+
+        // Exclude the dragged node's current parent so it can escape.
+        // Without this, dropping a child within the parent's bounds re-selects
+        // the same parent and no reparent happens.
+        const currentParent = draggedNode.parentId || null;
 
         let smallestArea = Infinity;
 
         for (const node of visibleNodes) {
           if (descendantIds.has(node.id)) continue;
+          // Skip the current parent — Shift-drag means "move to a NEW parent"
+          if (node.id === currentParent) continue;
           const nodeIceType = (node.data.iceType as string) || '';
           const isNodeContainer =
             node.type === 'container' ||
@@ -1038,6 +1380,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       if (!forceReparent) {
         setDragOverGroupId(null);
         setExitingGroupId(null);
+        setShiftDraggingNodeIds(new Set());
         return;
       }
 
@@ -1061,57 +1404,83 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
         dispatch(updateCardNodeParent({ nodeId: itemId, parentId: newParentId }));
 
         // After reparenting, expand the new parent to encompass the child.
-        // Uses the same "expand only" logic as calculateContainerBounds: union of
-        // current container bounds with required bounds from all children.
+        // Uses the stored (expanded) height for the dropped node — not the visual
+        // (folded) height — so the container is large enough when the node is unfolded.
         if (newParentId && bestContainer) {
+          // Get the full expanded height from Redux (not the visual folded height)
+          const reduxNode = nodes.find((n: any) => n.id === itemId);
+          const droppedIceType = (draggedNode.data?.iceType as string) || '';
+          const droppedIsGroup = draggedNode.type === 'container' || droppedIceType.startsWith('Group.');
+          const droppedIsBlock = draggedNode.type === 'block' || droppedIceType.startsWith('Block.');
+          const droppedDefaultH = computeCompactNodeHeight(
+            draggedNode.data as Record<string, unknown>,
+            droppedIsGroup || droppedIsBlock,
+            false,
+          );
+          const droppedExpandedH = Math.max(reduxNode?.height || 0, droppedDefaultH);
+
           const existingChildren = visibleNodes.filter((n) => n.parentId === newParentId);
-          // Include the just-reparented node as a child
-          const allChildren = [
-            ...existingChildren,
-            { ...draggedNode, x, y, width: draggedNode.width, height: draggedNode.height },
-          ];
 
-          let minCX = Infinity,
-            minCY = Infinity,
-            maxCR = -Infinity,
-            maxCB = -Infinity;
-          for (const child of allChildren) {
-            minCX = Math.min(minCX, child.x);
-            minCY = Math.min(minCY, child.y);
-            maxCR = Math.max(maxCR, child.x + child.width);
-            maxCB = Math.max(maxCB, child.y + child.height);
+          // Compute bounding box including the dropped node at its expanded size
+          let childMinX = x;
+          let childMinY = y;
+          let childMaxR = x + draggedNode.width;
+          let childMaxB = y + droppedExpandedH;
+
+          for (const child of existingChildren) {
+            childMinX = Math.min(childMinX, child.x);
+            childMinY = Math.min(childMinY, child.y);
+            childMaxR = Math.max(childMaxR, child.x + child.width);
+            childMaxB = Math.max(childMaxB, child.y + child.height);
           }
 
-          // Required bounds from children + padding
-          const reqLeft = minCX - CONTAINER_PAD;
-          const reqTop = minCY - CONTAINER_PAD - CONTAINER_HEADER_H;
-          const reqRight = maxCR + CONTAINER_PAD;
-          const reqBottom = maxCB + CONTAINER_PAD;
+          // Per-edge overflow expansion (same logic as handleNodeMove)
+          let px = bestContainer.x;
+          let py = bestContainer.y;
+          let pw = bestContainer.width;
+          let ph = bestContainer.height;
+          let changed = false;
 
-          // Current container bounds
-          const curLeft = bestContainer.x;
-          const curTop = bestContainer.y;
-          const curRight = bestContainer.x + bestContainer.width;
-          const curBottom = bestContainer.y + bestContainer.height;
-
-          // Expand (union of current + required)
-          const newPX = Math.min(curLeft, reqLeft);
-          const newPY = Math.min(curTop, reqTop);
-          const newW = Math.max(MIN_CONTAINER_WIDTH, Math.max(curRight, reqRight) - newPX);
-          const newH = Math.max(MIN_CONTAINER_HEIGHT, Math.max(curBottom, reqBottom) - newPY);
-
-          if (newPX !== curLeft || newPY !== curTop) {
-            dispatch(updateCardNodePositions([{ id: newParentId, position: { x: newPX, y: newPY } }]));
+          const overflowL = px + CONTAINER_PAD - childMinX;
+          if (overflowL > 0) {
+            px -= overflowL;
+            pw += overflowL;
+            changed = true;
           }
-          if (newW !== bestContainer.width || newH !== bestContainer.height) {
-            dispatch(resizeCardNode({ id: newParentId, width: newW, height: newH }));
+
+          const overflowT = py + CONTAINER_PAD + CONTAINER_HEADER_H - childMinY;
+          if (overflowT > 0) {
+            py -= overflowT;
+            ph += overflowT;
+            changed = true;
+          }
+
+          const overflowR = childMaxR - (px + pw - CONTAINER_PAD);
+          if (overflowR > 0) {
+            pw += overflowR;
+            changed = true;
+          }
+
+          const overflowB = childMaxB - (py + ph - CONTAINER_PAD);
+          if (overflowB > 0) {
+            ph += overflowB;
+            changed = true;
+          }
+
+          if (changed) {
+            pw = Math.max(MIN_CONTAINER_WIDTH, pw);
+            ph = Math.max(MIN_CONTAINER_HEIGHT, ph);
+            dispatch(updateCardNodePositions([{ id: newParentId, position: { x: px, y: py } }]));
+            dispatch(resizeCardNode({ id: newParentId, width: pw, height: ph }));
           }
         }
       }
 
       setDragOverGroupId(null);
       setExitingGroupId(null);
+      setShiftDraggingNodeIds(new Set());
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- nodes/selectedNodes accessed via visibleNodes
     [visibleNodes, getDescendantIds, dispatch],
   );
 
@@ -1332,14 +1701,31 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
   // Sort nodes by z-index for proper rendering (containers behind resources)
   // Exclude nodes whose parent is collapsed
+  // Compute nesting depth for rendering z-order
+  const nodeDepthMap = useMemo(() => {
+    const map = new Map<string, number>();
+    const getDepth = (nodeId: string | undefined): number => {
+      if (!nodeId) return 0;
+      if (map.has(nodeId)) return map.get(nodeId)!;
+      const node = visibleNodes.find((n) => n.id === nodeId);
+      const d = node?.parentId ? getDepth(node.parentId) + 1 : 0;
+      map.set(nodeId, d);
+      return d;
+    };
+    for (const node of visibleNodes) {
+      getDepth(node.id);
+    }
+    return map;
+  }, [visibleNodes]);
+
   const sortedNodes = useMemo(() => {
     return [...visibleNodes]
       .filter((node) => !hasCollapsedAncestor(node.id))
       .sort((a, b) => {
         const aIceType = (a.data.iceType as string) || '';
         const bIceType = (b.data.iceType as string) || '';
-        const aZIndex = calculateZIndex(aIceType, 0);
-        const bZIndex = calculateZIndex(bIceType, 0);
+        const aZIndex = calculateZIndex(aIceType, nodeDepthMap.get(a.id) || 0);
+        const bZIndex = calculateZIndex(bIceType, nodeDepthMap.get(b.id) || 0);
 
         if (aZIndex !== bZIndex) return aZIndex - bZIndex;
 
@@ -1350,7 +1736,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
         if (!aSelected && bSelected) return -1;
         return 0;
       });
-  }, [visibleNodes, selectedNodes, hasCollapsedAncestor]);
+  }, [visibleNodes, selectedNodes, hasCollapsedAncestor, nodeDepthMap]);
 
   // Compute port map for connection distribution
   // For each node+side, track how many connections use it and assign indices
@@ -1785,8 +2171,8 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
           {/* SVG filter for Shift-drag lift shadow */}
           <defs>
-            <filter id="shift-drag-shadow" x="-50%" y="-50%" width="200%" height="200%">
-              <feDropShadow dx="0" dy="8" stdDeviation="16" floodColor="#000" floodOpacity="0.6" />
+            <filter id="shift-drag-shadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="4" stdDeviation="8" floodColor="#000" floodOpacity="0.35" />
             </filter>
           </defs>
 
@@ -1815,15 +2201,8 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                   }
                 : undefined;
 
-              // Shift-drag lift effect: scale(1.2) + shadow
-              const isLifted = shiftDraggingNodeId === node.id;
-              const cx = node.x + node.width / 2;
-              const cy = node.y + node.height / 2;
-              const liftTransform = isLifted
-                ? `translate(${cx}, ${cy}) scale(1.4) translate(${-cx}, ${-cy})`
-                : undefined;
-              const liftFilter = isLifted ? 'url(#shift-drag-shadow)' : undefined;
-              const liftOpacity = isLifted ? 0.85 : undefined;
+              // Shift-drag highlight: colored border + shadow for all dragged nodes
+              const isLifted = shiftDraggingNodeIds.has(node.id);
 
               const wrapLift = (content: React.ReactNode) => {
                 // Wrap with entrance animation if needed
@@ -1835,12 +2214,37 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                   content
                 );
 
-                return isLifted ? (
-                  <g key={node.id} transform={liftTransform} filter={liftFilter} opacity={liftOpacity}>
+                if (!isLifted) return animated;
+
+                // Determine highlight color: green if dragging INTO a group, orange if leaving
+                const isEntering = !!dragOverGroupId;
+                const highlightColor = isEntering ? '#22c55e' : '#f97316';
+
+                return (
+                  <g key={node.id} filter="url(#shift-drag-shadow)" opacity={0.9}>
                     {animated}
+                    {/* Highlight border around the dragged node */}
+                    <rect
+                      x={node.x - 2}
+                      y={node.y - 2}
+                      width={node.width + 4}
+                      height={node.height + 4}
+                      rx={8}
+                      fill="none"
+                      stroke={highlightColor}
+                      strokeWidth={2}
+                      strokeDasharray="6 3"
+                      opacity={0.8}
+                    >
+                      <animate
+                        attributeName="stroke-dashoffset"
+                        from="0"
+                        to="-18"
+                        dur="0.8s"
+                        repeatCount="indefinite"
+                      />
+                    </rect>
                   </g>
-                ) : (
-                  animated
                 );
               };
 
@@ -2019,7 +2423,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                     key={isLifted ? undefined : `${node.id}-lod${lod}`}
                     node={node}
                     isSelected={selectedNodes.includes(node.id)}
-                    onToggleFold={(nodeId) => dispatch(toggleCardNodeFold(nodeId))}
+                    onToggleFold={handleToggleFold}
                   />,
                 );
               }
@@ -2032,7 +2436,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                     node={node}
                     isSelected={selectedNodes.includes(node.id)}
                     childNodes={sortedNodes.filter((n) => n.parentId === node.id)}
-                    onToggleFold={(nodeId) => dispatch(toggleCardNodeFold(nodeId))}
+                    onToggleFold={handleToggleFold}
                     isDragOver={dragOverGroupId === node.id}
                     isChildExiting={exitingGroupId === node.id}
                     isRenaming={renamingNodeId === node.id}
@@ -2052,7 +2456,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                     node={node}
                     isSelected={selectedNodes.includes(node.id)}
                     childNodes={sortedNodes.filter((n) => n.parentId === node.id)}
-                    onToggleFold={(nodeId) => dispatch(toggleCardNodeFold(nodeId))}
+                    onToggleFold={handleToggleFold}
                     isDragOver={dragOverGroupId === node.id}
                     onNodeHover={handleNodeHover}
                     isRenaming={renamingNodeId === node.id}
@@ -2075,7 +2479,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                   node={node}
                   isSelected={selectedNodes.includes(node.id)}
                   childNodes={sortedNodes.filter((n) => n.parentId === node.id)}
-                  onToggleFold={(nodeId) => dispatch(toggleCardNodeFold(nodeId))}
+                  onToggleFold={handleToggleFold}
                   isDragOver={dragOverGroupId === node.id}
                   onNodeHover={handleNodeHover}
                   isRenaming={renamingNodeId === node.id}

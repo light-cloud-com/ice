@@ -47,7 +47,9 @@ export class AWSDeployer implements ProviderDeployer {
         // Lambda client not available
       }
     } catch (error) {
-      throw new Error(`Failed to initialize AWS SDK: ${error instanceof Error ? error.message : String(error)}`, { cause: error });
+      throw new Error(`Failed to initialize AWS SDK: ${error instanceof Error ? error.message : String(error)}`, {
+        cause: error,
+      });
     }
   }
 

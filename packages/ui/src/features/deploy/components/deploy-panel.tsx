@@ -372,7 +372,16 @@ export const DeployPanel: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
       const msg = err?.response?.data?.error || err?.message || 'Deployment failed';
       dispatch(deployError(msg));
     }
-  }, [activeCard, deploy.provider, deploy.gcpProject, deploy.region, deploy.environment, deploy.status, dispatch, handleAuthenticate]);
+  }, [
+    activeCard,
+    deploy.provider,
+    deploy.gcpProject,
+    deploy.region,
+    deploy.environment,
+    deploy.status,
+    dispatch,
+    handleAuthenticate,
+  ]);
 
   // ─── Close ──────────────────────────────────────────────────────────
 

@@ -7,6 +7,6 @@
  */
 import React from 'react';
 export declare const ProjectDeployments: React.FC<{
-    projectId: string;
+  projectId: string;
 }>;
 //# sourceMappingURL=deployments.d.ts.map

@@ -111,7 +111,6 @@ export const CardTabs: React.FC = () => {
               <span className="truncate max-w-[120px]">{card.name}</span>
             )}
 
-
             {/* Action buttons - shown on hover or when active */}
             {!isEditing && (
               <div

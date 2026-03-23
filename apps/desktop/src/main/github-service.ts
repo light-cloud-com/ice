@@ -116,7 +116,6 @@ export class GitHubService {
   async pollDeviceFlow(deviceCode: string, interval: number): Promise<GitHubUser> {
     const pollInterval = Math.max(interval, 5) * 1000; // GitHub minimum 5s
 
-     
     while (true) {
       await new Promise((resolve) => setTimeout(resolve, pollInterval));
 

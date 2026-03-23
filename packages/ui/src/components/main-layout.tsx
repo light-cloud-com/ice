@@ -58,7 +58,14 @@ interface DragResizePanelProps {
   children: React.ReactNode;
 }
 
-const DragResizePanel: React.FC<DragResizePanelProps> = ({ side, storageKey, defaultWidth, minWidth, maxWidth, children }) => {
+const DragResizePanel: React.FC<DragResizePanelProps> = ({
+  side,
+  storageKey,
+  defaultWidth,
+  minWidth,
+  maxWidth,
+  children,
+}) => {
   const [width, setWidth] = useState(() => {
     const saved = localStorage.getItem(storageKey);
     return saved ? Math.max(minWidth, Math.min(maxWidth, parseInt(saved, 10))) : defaultWidth;
@@ -67,20 +74,26 @@ const DragResizePanel: React.FC<DragResizePanelProps> = ({ side, storageKey, def
   const startX = React.useRef(0);
   const startW = React.useRef(0);
 
-  const onPointerDown = React.useCallback((e: React.PointerEvent) => {
-    e.preventDefault();
-    dragging.current = true;
-    startX.current = e.clientX;
-    startW.current = width;
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  }, [width]);
+  const onPointerDown = React.useCallback(
+    (e: React.PointerEvent) => {
+      e.preventDefault();
+      dragging.current = true;
+      startX.current = e.clientX;
+      startW.current = width;
+      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    },
+    [width],
+  );
 
-  const onPointerMove = React.useCallback((e: React.PointerEvent) => {
-    if (!dragging.current) return;
-    const delta = side === 'left' ? e.clientX - startX.current : startX.current - e.clientX;
-    const newW = Math.max(minWidth, Math.min(maxWidth, startW.current + delta));
-    setWidth(newW);
-  }, [side, minWidth, maxWidth]);
+  const onPointerMove = React.useCallback(
+    (e: React.PointerEvent) => {
+      if (!dragging.current) return;
+      const delta = side === 'left' ? e.clientX - startX.current : startX.current - e.clientX;
+      const newW = Math.max(minWidth, Math.min(maxWidth, startW.current + delta));
+      setWidth(newW);
+    },
+    [side, minWidth, maxWidth],
+  );
 
   const onPointerUp = React.useCallback(() => {
     if (!dragging.current) return;
@@ -110,7 +123,13 @@ const DragResizePanel: React.FC<DragResizePanelProps> = ({ side, storageKey, def
 
 // ── MainLayout ──────────────────────────────────────────────────────────────
 
-export const MainLayout: React.FC<MainLayoutProps> = ({ projectId, projectName, view = 'canvas', basePath, children }) => {
+export const MainLayout: React.FC<MainLayoutProps> = ({
+  projectId,
+  projectName,
+  view = 'canvas',
+  basePath,
+  children,
+}) => {
   const dispatch = useDispatch<AppDispatch>();
   const { showPalette, showBlocks, showProperties, showAiChat } = useSelector((state: RootState) => state.ui);
   const isPortrait = useIsPortrait();
@@ -178,22 +197,25 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ projectId, projectName, 
 
   // ── Collapsed strip tabs ────────────────────────────────────────────────
 
-  const leftStripTabs: SidebarStripTab[] = useMemo(() => [
-    {
-      id: 'project',
-      label: 'Project',
-      icon: FolderOpen,
-      active: showPalette,
-      onClick: () => dispatch(togglePalette()),
-    },
-    {
-      id: 'blocks',
-      label: 'Blocks',
-      icon: Blocks,
-      active: showBlocks,
-      onClick: () => dispatch(toggleBlocks()),
-    },
-  ], [showPalette, showBlocks, dispatch]);
+  const leftStripTabs: SidebarStripTab[] = useMemo(
+    () => [
+      {
+        id: 'project',
+        label: 'Project',
+        icon: FolderOpen,
+        active: showPalette,
+        onClick: () => dispatch(togglePalette()),
+      },
+      {
+        id: 'blocks',
+        label: 'Blocks',
+        icon: Blocks,
+        active: showBlocks,
+        onClick: () => dispatch(toggleBlocks()),
+      },
+    ],
+    [showPalette, showBlocks, dispatch],
+  );
 
   const rightStripTabs: SidebarStripTab[] = useMemo(() => {
     const tabs: SidebarStripTab[] = [];
@@ -231,21 +253,22 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ projectId, projectName, 
   const showLeftPanel = showPalette || showBlocks;
   const showRightPanel = showProperties || (isCanvasView && showAiChat);
 
-  const rightPanelContent = showProperties && isCanvasView && showAiChat ? (
-    <ResizablePanelGroup direction="vertical" autoSaveId="ice-right-panels">
-      <ResizablePanel defaultSize={50} minSize={25}>
-        <AiChatPanel />
-      </ResizablePanel>
-      <ResizableHandle withHandle />
-      <ResizablePanel defaultSize={50} minSize={25}>
-        <PropertiesPanel />
-      </ResizablePanel>
-    </ResizablePanelGroup>
-  ) : isCanvasView && showAiChat ? (
-    <AiChatPanel />
-  ) : (
-    <PropertiesPanel />
-  );
+  const rightPanelContent =
+    showProperties && isCanvasView && showAiChat ? (
+      <ResizablePanelGroup direction="vertical" autoSaveId="ice-right-panels">
+        <ResizablePanel defaultSize={50} minSize={25}>
+          <AiChatPanel />
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel defaultSize={50} minSize={25}>
+          <PropertiesPanel />
+        </ResizablePanel>
+      </ResizablePanelGroup>
+    ) : isCanvasView && showAiChat ? (
+      <AiChatPanel />
+    ) : (
+      <PropertiesPanel />
+    );
 
   // ── Portrait layout ─────────────────────────────────────────────────────
 
@@ -269,9 +292,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ projectId, projectName, 
 
             <ResizablePanel defaultSize={75}>
               <ResizablePanelGroup direction="vertical" className="h-full" autoSaveId="ice-layout-v">
-                <ResizablePanel defaultSize={showRightPanel ? 55 : 100}>
-                  {canvasContent}
-                </ResizablePanel>
+                <ResizablePanel defaultSize={showRightPanel ? 55 : 100}>{canvasContent}</ResizablePanel>
 
                 {isCanvasView && showAiChat && (
                   <>
@@ -319,9 +340,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ projectId, projectName, 
           </DragResizePanel>
         )}
 
-        <div className="flex-1 min-w-0 h-full">
-          {canvasContent}
-        </div>
+        <div className="flex-1 min-w-0 h-full">{canvasContent}</div>
 
         {showRightPanel && (
           <DragResizePanel side="right" storageKey="ice-right-w" defaultWidth={320} minWidth={220} maxWidth={500}>

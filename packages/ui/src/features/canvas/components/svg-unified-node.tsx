@@ -140,6 +140,7 @@ const STATUS_COLORS: Record<string, string> = {
   active: '#22c55e',
   deploying: '#3b82f6',
   degraded: '#eab308',
+  drifted: '#f97316',
   stopped: '#6b7280',
   failed: '#ef4444',
   unknown: '#6b7280',

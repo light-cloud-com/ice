@@ -53,27 +53,41 @@ let folderB: any;
 
 async function cleanup() {
   // Delete in dependency order
-  await prisma.projectMember.deleteMany({
-    where: { user_id: { in: [USER_A.id, USER_B.id].filter(Boolean) } },
-  }).catch(() => {});
-  await prisma.environment.deleteMany({
-    where: { project: { organisation_id: { in: [ORG_A.id, ORG_B.id].filter(Boolean) } } },
-  }).catch(() => {});
-  await prisma.canvasCard.deleteMany({
-    where: { project: { organisation_id: { in: [ORG_A.id, ORG_B.id].filter(Boolean) } } },
-  }).catch(() => {});
-  await prisma.canvasProject.deleteMany({
-    where: { organisation_id: { in: [ORG_A.id, ORG_B.id].filter(Boolean) } },
-  }).catch(() => {});
-  await prisma.organisationMember.deleteMany({
-    where: { organisation_id: { in: [ORG_A.id, ORG_B.id].filter(Boolean) } },
-  }).catch(() => {});
-  await prisma.user.deleteMany({
-    where: { email: { in: [USER_A.email, USER_B.email] } },
-  }).catch(() => {});
-  await prisma.organisation.deleteMany({
-    where: { name: { in: [ORG_A.name, ORG_B.name] } },
-  }).catch(() => {});
+  await prisma.projectMember
+    .deleteMany({
+      where: { user_id: { in: [USER_A.id, USER_B.id].filter(Boolean) } },
+    })
+    .catch(() => {});
+  await prisma.environment
+    .deleteMany({
+      where: { project: { organisation_id: { in: [ORG_A.id, ORG_B.id].filter(Boolean) } } },
+    })
+    .catch(() => {});
+  await prisma.canvasCard
+    .deleteMany({
+      where: { project: { organisation_id: { in: [ORG_A.id, ORG_B.id].filter(Boolean) } } },
+    })
+    .catch(() => {});
+  await prisma.canvasProject
+    .deleteMany({
+      where: { organisation_id: { in: [ORG_A.id, ORG_B.id].filter(Boolean) } },
+    })
+    .catch(() => {});
+  await prisma.organisationMember
+    .deleteMany({
+      where: { organisation_id: { in: [ORG_A.id, ORG_B.id].filter(Boolean) } },
+    })
+    .catch(() => {});
+  await prisma.user
+    .deleteMany({
+      where: { email: { in: [USER_A.email, USER_B.email] } },
+    })
+    .catch(() => {});
+  await prisma.organisation
+    .deleteMany({
+      where: { name: { in: [ORG_A.name, ORG_B.name] } },
+    })
+    .catch(() => {});
 }
 
 beforeAll(async () => {
@@ -161,15 +175,15 @@ describe('listProjects — org isolation', () => {
 
 describe('createProject — cross-org parent folder rejection', () => {
   it('rejects creating project under folder from different org', async () => {
-    await expect(
-      canvasService.createProject(ORG_A.id, USER_A.id, 'Smuggled', 'project', folderB.id),
-    ).rejects.toThrow('Parent folder not found');
+    await expect(canvasService.createProject(ORG_A.id, USER_A.id, 'Smuggled', 'project', folderB.id)).rejects.toThrow(
+      'Parent folder not found',
+    );
   });
 
   it('rejects creating folder under folder from different org', async () => {
-    await expect(
-      canvasService.createProject(ORG_A.id, USER_A.id, 'Smuggled', 'folder', folderB.id),
-    ).rejects.toThrow('Parent folder not found');
+    await expect(canvasService.createProject(ORG_A.id, USER_A.id, 'Smuggled', 'folder', folderB.id)).rejects.toThrow(
+      'Parent folder not found',
+    );
   });
 
   it('allows creating under own org folder', async () => {
@@ -203,9 +217,9 @@ describe('getProject — no org filter in service', () => {
 
 describe('moveProject — cross-org parent validation', () => {
   it('rejects moving project to folder in different org when orgId is provided', async () => {
-    await expect(
-      canvasService.moveProject(projectA.id, folderB.id, ORG_A.id),
-    ).rejects.toThrow('Target folder not found');
+    await expect(canvasService.moveProject(projectA.id, folderB.id, ORG_A.id)).rejects.toThrow(
+      'Target folder not found',
+    );
 
     // Verify project was NOT moved
     const check = await prisma.canvasProject.findUnique({ where: { id: projectA.id } });

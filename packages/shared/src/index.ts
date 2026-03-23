@@ -7,7 +7,7 @@ export {
   setDesktopUser,
 } from './auth/middleware.js';
 export type { AuthRequest } from './auth/middleware.js';
-export { encryptCredentials, decryptCredentials, encryptString, decryptString } from "./crypto";
+export { encryptCredentials, decryptCredentials, encryptString, decryptString } from './crypto';
 export {
   setupSocketService,
   emitDeployProgress,

@@ -127,11 +127,7 @@ export const TemplateStep: React.FC<TemplateStepProps> = ({
       </div>
 
       {/* Search */}
-      <SearchInput
-        value={searchQuery}
-        onChange={onSearchChange}
-        placeholder="Search templates..."
-      />
+      <SearchInput value={searchQuery} onChange={onSearchChange} placeholder="Search templates..." />
 
       {/* Template grid */}
       <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-1">

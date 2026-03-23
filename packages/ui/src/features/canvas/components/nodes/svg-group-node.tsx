@@ -16,11 +16,7 @@
 import React, { memo, useState, useCallback, useRef, useEffect } from 'react';
 import { getIcon, type Provider } from '../../../../assets/icons';
 import { CORNER_RADIUS } from '../../../../config/canvas-constants';
-import {
-  BLOCK_ACCENT_COLORS,
-  GROUP_TINT_COLORS,
-  GROUP_BORDER_COLORS,
-} from '../../../../config/color-palette';
+import { BLOCK_ACCENT_COLORS, GROUP_TINT_COLORS, GROUP_BORDER_COLORS } from '../../../../config/color-palette';
 import type { CanvasNode } from '../svg-canvas';
 
 interface SvgGroupNodeProps {

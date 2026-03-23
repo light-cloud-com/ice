@@ -658,4 +658,3 @@ function rectsOverlap(
     r2.y + r2.height + padding < r1.y
   );
 }
-

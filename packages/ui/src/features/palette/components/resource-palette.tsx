@@ -42,7 +42,6 @@ import { cn } from '../../../shared/utils/cn';
 import { SearchInput } from '../../../shared/components/ui/search-input';
 import { ProjectBrowser } from '../../project-browser';
 
-
 // =============================================================================
 // Category definitions with metadata
 // =============================================================================
@@ -1003,7 +1002,6 @@ export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
                 setSelectedProvider={setSelectedProvider}
                 projectProvider={projectProvider}
                 searchInputRef={searchInputRef}
-
                 filteredComponents={filteredComponents}
                 categorizedItems={categorizedItems}
                 isSearching={isSearching}

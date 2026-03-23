@@ -5,17 +5,7 @@
  * Templates are block-based and expanded via expandComposedTemplate().
  */
 
-import {
-  Rocket,
-  Brain,
-  BrainCircuit,
-  ShieldCheck,
-  Zap,
-  Server,
-  Activity,
-  Globe,
-  LayoutTemplate,
-} from 'lucide-react';
+import { Rocket, Brain, BrainCircuit, ShieldCheck, Zap, Server, Activity, Globe, LayoutTemplate } from 'lucide-react';
 import React, { useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {

@@ -40,7 +40,6 @@ const TERMINAL = {
   cursor: '#22c55e',
 };
 
-
 // Sample log messages
 const SAMPLE_MESSAGES: Record<string, Array<{ level: string; message: string }>> = {
   'order-service': [

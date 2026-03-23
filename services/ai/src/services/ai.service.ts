@@ -6,13 +6,13 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
-import type { AiCanvasOp, AiResponse, SerializedCanvas, AiStreamEvent } from '@ice/types';
 import { generateAiConnectionPrompt } from '@ice/types';
-import type { Response } from 'express';
-import { buildSchemaContext } from './ai-schema-context.service';
 import { createAuditEntry, finalizeAuditEntry, writeAuditEntry } from './ai-audit.service';
+import { buildSchemaContext } from './ai-schema-context.service';
 import { validateCanvas } from './canvas-validation.service';
 import { dryRunDeploy } from './deploy-dryrun.service';
+import type { AiCanvasOp, AiResponse, SerializedCanvas, AiStreamEvent } from '@ice/types';
+import type { Response } from 'express';
 
 // =============================================================================
 // Claude Client

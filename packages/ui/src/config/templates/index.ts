@@ -23,15 +23,15 @@ export { ragChatbotTemplate } from './rag-chatbot';
 export { euComplianceTemplate } from './eu-compliance';
 export { saasStarterTemplate } from './saas-starter';
 
-import { fullStackTemplate } from './full-stack';
 import { aiMlTemplate } from './ai-ml';
-import { ragChatbotTemplate } from './rag-chatbot';
 import { euComplianceTemplate } from './eu-compliance';
-import { saasStarterTemplate } from './saas-starter';
+import { fullStackTemplate } from './full-stack';
 import { QUICK_STARTS } from './quick-starts';
-import type { ComposedTemplate, TemplateCategory } from './types';
+import { ragChatbotTemplate } from './rag-chatbot';
+import { saasStarterTemplate } from './saas-starter';
 import { TEMPLATE_CATEGORIES } from './types';
 import { getBlueprint } from '../blocks';
+import type { ComposedTemplate, TemplateCategory } from './types';
 import type { Provider } from '../blocks/types';
 
 // =============================================================================

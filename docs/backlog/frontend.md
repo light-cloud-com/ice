@@ -1,6 +1,6 @@
 # Frontend Backlog
 
-> **Status: All 18 items fixed** (2026-03-22)
+> **Status: All 23 items fixed** (2026-03-23)
 
 ## FE-1: Hardcoded test credentials on login page (P1) -- FIXED
 
@@ -107,3 +107,33 @@
 ## FE-18: Unused dependencies in `packages/web/package.json` (P3) -- FIXED
 
 **Fix applied:** Removed `@xyflow/react`, `react-hook-form`, and `zod` from dependencies.
+
+---
+
+## FE-19: Template config re-export cycle (P1) -- FIXED
+
+**Fix applied (2026-03-23):** Deleted `packages/ui/src/config/templates.ts` which re-exported from `"./templates"` resolving to itself, creating an import cycle. Imports now resolve to `templates/index.ts` directly.
+
+---
+
+## FE-20: ProjectWizard only rendered inside canvas/table subpage (P1) -- FIXED
+
+**Fix applied (2026-03-23):** `<ProjectWizard />` was conditionally rendered only inside the canvas/table route branch. Moved to render in all views: project (all subpages), folder, and org root. Users can now create projects from the wizard regardless of which page they are on.
+
+---
+
+## FE-21: Hardcoded demo card loaded on every new environment (P2) -- FIXED
+
+**Fix applied (2026-03-23):** Removed `demoCard`, `demoNodes`, `demoEdges`, `loadDemoToCard` action, and `isDemo` flag from `cards-slice.ts`. Removed demo badges from `card-tabs.tsx` and `canvas-pane.tsx`. Removed `DEMO_NODES`/`DEMO_EDGES` imports. Bumped `CARDS_DATA_VERSION` to 5 to force-clear old localStorage. Cards now start empty and load from backend when a project/environment is opened.
+
+---
+
+## FE-22: Project tree used local localStorage instead of backend API (P1) -- FIXED
+
+**Fix applied (2026-03-23):** Project tree sidebar now fetches org-scoped data from backend via `fetchProjectTree` async thunk. Removed `ice-projects` localStorage key. Folder CRUD (create, rename, delete) now goes through backend API and refreshes the tree on completion.
+
+---
+
+## FE-23: Org switch was cosmetic only — JWT stayed fixed (P1) -- FIXED
+
+**Fix applied (2026-03-23):** `switchOrganisation` thunk now calls `POST /auth/switch-org` to get a new JWT scoped to the target org, then updates the token via `setAccessToken`. All org-switch callsites updated (org-switcher, breadcrumbs, create-team-modal, onboarding).

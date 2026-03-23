@@ -4,13 +4,12 @@
  * Returns usage breakdown for billing period
  */
 
-import { Request, Response } from 'express';
 import { User } from '@prisma/client';
+import { Request, Response } from 'express';
+import { errorHandler } from '../../error-handler';
+import prisma from '../../lib/prisma';
 import { getCurrentMonthUsage, getDailyUsageBreakdown } from '../../services/usage-tracking-service';
 import { checkPermissions } from '../../utils/check-permissions';
-import { errorHandler } from '../../error-handler';
-
-import prisma from '../../lib/prisma';
 interface AuthenticatedRequest extends Request {
   user: User;
   body: {
@@ -69,7 +68,7 @@ export const getUsage = async (req: AuthenticatedRequest, res: Response): Promis
     });
 
     if (!hasPermission.hasPermission && !hasPermission.isSuper) {
-      const { PrismaClient } = await import('@prisma/client');
+      const { PrismaClient: _PrismaClient } = await import('@prisma/client');
       const membership = await prisma.organisationUsers.findFirst({
         where: {
           user_id: req.user.id,

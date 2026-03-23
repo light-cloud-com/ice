@@ -4,8 +4,8 @@
  * Types for deployment apply operations.
  */
 
-import type { NodeId } from '../types/graph.js';
 import type { DeploymentId, DeploymentPlan, PlannedChange } from '../types/deployment.js';
+import type { NodeId } from '../types/graph.js';
 import type { DeploymentError, ResourceState } from '../types/providers.js';
 
 // =============================================================================
@@ -45,6 +45,9 @@ export interface ApplyOptions {
 
   /** Use mock provider for testing */
   mock?: boolean;
+
+  /** Cloud provider to use (e.g. 'gcp', 'aws', 'mock') */
+  provider?: string;
 
   /** Callback for progress updates */
   on_progress?: ApplyProgressCallback;

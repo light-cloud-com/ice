@@ -6,11 +6,14 @@
  * Clicking switches the active canvas card.
  */
 
+import { Lock, Plus, GitPullRequest, Loader2, ArrowUpRight, Trash2, Rocket, Settings, History } from 'lucide-react';
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Lock, Plus, GitPullRequest, Loader2, ArrowUpRight, Trash2, Rocket, Settings, History } from 'lucide-react';
-import type { RootState, AppDispatch } from '../../../store';
+import { getApi } from '../../../shared/api/api-adapter';
+import { cn } from '../../../shared/utils/cn';
+import { setActiveCard, importToActiveCard, createCard } from '../../../store/slices/cards-slice';
+import { openDeployPanel } from '../../../store/slices/deploy-slice';
 import {
   fetchEnvironments,
   createEnvironment,
@@ -19,10 +22,7 @@ import {
   compareEnvironments,
   type Environment,
 } from '../../../store/slices/environments-slice';
-import { openDeployPanel } from '../../../store/slices/deploy-slice';
-import { setActiveCard, importToActiveCard, createCard } from '../../../store/slices/cards-slice';
-import { getApi } from '../../../shared/api/api-adapter';
-import { cn } from '../../../shared/utils/cn';
+import type { RootState, AppDispatch } from '../../../store';
 
 interface EnvironmentTabBarProps {
   projectId: string;
@@ -128,7 +128,8 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
       const prod = environments.find((e) => e.type === 'production');
       if (prod) handleSwitchEnv(prod);
     }
-  }, [environments.length, activeEnvId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- use .length to avoid re-firing on array reference changes
+  }, [environments.length, activeEnvId, handleSwitchEnv]);
 
   const handleContextMenu = useCallback((e: React.MouseEvent, envId: string) => {
     e.preventDefault();
@@ -314,28 +315,49 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
       {contextMenu &&
         (() => {
           const env = environments.find((e) => e.id === contextMenu.envId);
-          if (!env || env.is_protected) return null;
+          if (!env) return null;
+          const showPromote = !env.is_protected && prodEnv;
+          const showDelete = !env.is_protected;
+
           return (
             <div
-              className="fixed z-[9999] bg-ice-surface border border-ice-border rounded-md shadow-lg py-1 min-w-[160px]"
+              className="fixed z-[9999] bg-ice-surface border border-ice-border rounded-md shadow-lg py-1 min-w-[170px]"
               style={{ left: contextMenu.x, top: contextMenu.y }}
               onClick={(e) => e.stopPropagation()}
             >
+              {/* Deploy — available for all environments */}
               <button
-                onClick={() => handlePromote(contextMenu.envId)}
+                onClick={() => {
+                  setContextMenu(null);
+                  handleSwitchEnv(env);
+                  dispatch(openDeployPanel());
+                }}
                 className="w-full flex items-center gap-2 px-3 py-1.5 text-ice-xs text-ice-text-2 hover:bg-ice-hover transition-colors"
               >
-                <ArrowUpRight className="w-3.5 h-3.5" />
-                Promote to production
+                <Rocket className="w-3.5 h-3.5" />
+                Deploy
               </button>
-              <div className="h-px bg-ice-border my-1" />
-              <button
-                onClick={() => handleDelete(contextMenu.envId)}
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-ice-xs text-red-400 hover:bg-red-500/10 transition-colors"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                Delete environment
-              </button>
+              {showPromote && (
+                <button
+                  onClick={() => handlePromote(contextMenu.envId)}
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-ice-xs text-ice-text-2 hover:bg-ice-hover transition-colors"
+                >
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                  Promote to production
+                </button>
+              )}
+              {showDelete && (
+                <>
+                  <div className="h-px bg-ice-border my-1" />
+                  <button
+                    onClick={() => handleDelete(contextMenu.envId)}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-ice-xs text-red-400 hover:bg-red-500/10 transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Delete environment
+                  </button>
+                </>
+              )}
             </div>
           );
         })()}

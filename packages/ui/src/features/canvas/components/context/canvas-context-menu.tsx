@@ -1,44 +1,54 @@
 /**
  * Canvas Context Menu
  *
- * HTML-based context menu overlay for the canvas.
- * Renders different menus for canvas, node, and edge right-clicks.
+ * Right-click context menu for canvas, nodes, and edges.
  */
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import type { RootState, AppDispatch } from '../../../../store';
-import { closeContextMenu, toggleProperties } from '../../../../store/slices/ui-slice';
 import {
   deleteCardNode,
   deleteCardEdge,
   toggleCardNodeFold,
   autoOrganizeCard,
   updateCardNodeData,
-  updateCardEdgeData,
   selectActiveCard,
-  expandBlueprintToCard,
+  undoCardChange,
+  redoCardChange,
 } from '../../../../store/slices/cards-slice';
 import { setSelectedNodes, setSelectedEdges, clearSelection } from '../../../../store/slices/selection-slice';
-import { getBlueprint, expandBlueprint } from '../../../../config/blocks';
+import { closeContextMenu, toggleProperties } from '../../../../store/slices/ui-slice';
+import type { RootState, AppDispatch } from '../../../../store';
+
+// ── Platform-aware shortcut labels ──────────────────────────────────────────
+
+const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform || '');
+const MOD = isMac ? '⌘' : 'Ctrl+';
+function modKey(key: string): string {
+  return `${MOD}${key}`;
+}
 
 /** Fire a synthetic keyboard event so clipboard/undo hooks pick it up */
 function fireKey(key: string, ctrl = false) {
   document.dispatchEvent(new KeyboardEvent('keydown', { key, ctrlKey: ctrl, metaKey: ctrl, bubbles: true }));
 }
 
+// ── Menu primitives ─────────────────────────────────────────────────────────
+
 interface MenuItemProps {
   label: string;
   shortcut?: string;
   danger?: boolean;
+  disabled?: boolean;
   onClick: () => void;
 }
 
-const MenuItem: React.FC<MenuItemProps> = ({ label, shortcut, danger, onClick }) => (
+const MenuItem: React.FC<MenuItemProps> = ({ label, shortcut, danger, disabled, onClick }) => (
   <button
-    className={`w-full flex items-center justify-between px-3 py-1.5 text-left text-xs rounded
-      ${danger ? 'text-red-400 hover:bg-red-950/50' : 'text-ice-text-1 hover:bg-ice-hover'} transition-colors`}
-    onClick={onClick}
+    disabled={disabled}
+    className={`w-full flex items-center justify-between px-3 py-1.5 text-left text-xs rounded transition-colors
+      ${disabled ? 'text-ice-text-3 cursor-default' : danger ? 'text-red-400 hover:bg-red-950/50' : 'text-ice-text-1 hover:bg-ice-hover'}`}
+    onClick={disabled ? undefined : onClick}
   >
     <span>{label}</span>
     {shortcut && <span className="text-ice-text-3 ml-4 text-ice-xs">{shortcut}</span>}
@@ -47,7 +57,6 @@ const MenuItem: React.FC<MenuItemProps> = ({ label, shortcut, danger, onClick })
 
 const Separator: React.FC = () => <div className="h-px bg-ice-border my-1" />;
 
-// Submenu component — opens a flyout on hover
 const SubMenu: React.FC<{
   label: string;
   items: Array<{ label: string; onClick: () => void }>;
@@ -55,16 +64,12 @@ const SubMenu: React.FC<{
   const [isOpen, setIsOpen] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
-  const handleEnter = () => {
-    clearTimeout(timeoutRef.current);
-    setIsOpen(true);
-  };
-  const handleLeave = () => {
-    timeoutRef.current = setTimeout(() => setIsOpen(false), 150);
-  };
-
   return (
-    <div className="relative" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
+    <div
+      className="relative"
+      onMouseEnter={() => { clearTimeout(timeoutRef.current); setIsOpen(true); }}
+      onMouseLeave={() => { timeoutRef.current = setTimeout(() => setIsOpen(false), 150); }}
+    >
       <button className="w-full flex items-center justify-between px-3 py-1.5 text-left text-xs rounded text-ice-text-1 hover:bg-ice-hover transition-colors">
         <span>{label}</span>
         <span className="text-ice-text-3 text-ice-xs ml-4">▸</span>
@@ -86,6 +91,17 @@ const SubMenu: React.FC<{
   );
 };
 
+// ── Constants ───────────────────────────────────────────────────────────────
+
+const SUPPORTED_PROVIDERS = [
+  { value: 'gcp', label: 'GCP' },
+  { value: 'aws', label: 'AWS' },
+  { value: 'azure', label: 'Azure' },
+  { value: 'k8s', label: 'Kubernetes' },
+];
+
+// ── Main component ──────────────────────────────────────────────────────────
+
 export const CanvasContextMenu: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -94,21 +110,21 @@ export const CanvasContextMenu: React.FC = () => {
   const selectedNodes = useSelector((state: RootState) => state.selection.selectedNodes);
   const showProperties = useSelector((state: RootState) => state.ui.showProperties);
   const activeCard = useSelector(selectActiveCard);
+  const history = useSelector((state: RootState) => {
+    const cardId = state.cards.activeCardId;
+    return cardId ? state.cards.history[cardId] : undefined;
+  });
 
-  // Close on outside click
   useEffect(() => {
     if (!contextMenu.isOpen) return;
-
     const handleClick = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         dispatch(closeContextMenu());
       }
     };
-
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') dispatch(closeContextMenu());
     };
-
     document.addEventListener('mousedown', handleClick);
     document.addEventListener('keydown', handleEscape);
     return () => {
@@ -120,75 +136,42 @@ export const CanvasContextMenu: React.FC = () => {
   if (!contextMenu.isOpen) return null;
 
   const close = () => dispatch(closeContextMenu());
-
-  // Helper: ensure properties panel is open
   const openProperties = () => {
     if (!showProperties) dispatch(toggleProperties());
   };
 
-  // Canvas menu
+  const canUndo = (history?.past?.length || 0) > 0;
+  const canRedo = (history?.future?.length || 0) > 0;
+
+  // ── Canvas menu ─────────────────────────────────────────────────────────
+
   if (contextMenu.type === 'canvas') {
-    // Top 5 blocks for quick add
-    const quickBlocks = [
-      { label: 'Backend', type: 'scalable-backend' },
-      { label: 'Database', type: 'database' },
-      { label: 'Cache', type: 'redis-cache' },
-      { label: 'Queue', type: 'queue' },
-      { label: 'Storage', type: 'storage' },
-    ];
-
-    const addBlockItems = quickBlocks.map(({ label, type }) => ({
-      label,
-      onClick: () => {
-        const bp = getBlueprint(type);
-        if (bp) {
-          const expanded = expandBlueprint(bp, {
-            position: { x: contextMenu.position.x, y: contextMenu.position.y },
-          });
-          dispatch(expandBlueprintToCard(expanded));
-        }
-        close();
-      },
-    }));
-
     return (
       <div
         ref={menuRef}
         className="fixed z-50 min-w-[180px] bg-ice-overlay border border-ice-border rounded-lg shadow-xl py-1 px-1"
         style={{ left: contextMenu.position.x, top: contextMenu.position.y }}
       >
-        <SubMenu label="Add Block" items={addBlockItems} />
+        <MenuItem label="Undo" shortcut={modKey('Z')} disabled={!canUndo} onClick={() => { dispatch(undoCardChange()); close(); }} />
+        <MenuItem label="Redo" shortcut={isMac ? '⇧⌘Z' : 'Ctrl+Y'} disabled={!canRedo} onClick={() => { dispatch(redoCardChange()); close(); }} />
         <Separator />
+        <MenuItem label="Paste" shortcut={modKey('V')} onClick={() => { close(); fireKey('v', true); }} />
         <MenuItem
           label="Select All"
-          shortcut="Ctrl+A"
+          shortcut={modKey('A')}
           onClick={() => {
-            const allNodeIds = activeCard?.nodes.map((n: any) => n.id) || [];
-            dispatch(setSelectedNodes(allNodeIds));
-            close();
-          }}
-        />
-        <MenuItem
-          label="Auto-organize"
-          onClick={() => {
-            dispatch(autoOrganizeCard());
+            dispatch(setSelectedNodes(activeCard?.nodes.map((n: any) => n.id) || []));
             close();
           }}
         />
         <Separator />
-        <MenuItem
-          label="Paste"
-          shortcut="Ctrl+V"
-          onClick={() => {
-            close();
-            fireKey('v', true);
-          }}
-        />
+        <MenuItem label="Auto-organize" onClick={() => { dispatch(autoOrganizeCard()); close(); }} />
       </div>
     );
   }
 
-  // Node menu
+  // ── Node menu ───────────────────────────────────────────────────────────
+
   if (contextMenu.type === 'node' && contextMenu.targetId) {
     const targetId = contextMenu.targetId;
     const hasMultiSelection = selectedNodes.length > 1;
@@ -197,11 +180,12 @@ export const CanvasContextMenu: React.FC = () => {
     const nodeIceType = (targetNode?.data?.iceType as string) || '';
     const nodeProvider = (targetNode?.data?.provider as string) || '';
     const estimatedCost = (targetNode?.data?.estimatedCost as string) || '';
+    const isContainer = targetNode?.type === 'container';
 
-    const providerItems = ['aws', 'gcp', 'azure', 'k8s', 'alibaba', 'oci', 'do'].map((p) => ({
-      label: p.toUpperCase(),
+    const providerItems = SUPPORTED_PROVIDERS.map(({ value, label }) => ({
+      label,
       onClick: () => {
-        dispatch(updateCardNodeData({ nodeId: targetId, data: { provider: p } }));
+        dispatch(updateCardNodeData({ nodeId: targetId, data: { provider: value } }));
         close();
       },
     }));
@@ -222,49 +206,29 @@ export const CanvasContextMenu: React.FC = () => {
         style={{ left: contextMenu.position.x, top: contextMenu.position.y }}
       >
         <MenuItem
+          label="Rename"
+          onClick={() => { dispatch(setSelectedNodes([targetId])); openProperties(); close(); }}
+        />
+        <MenuItem
           label="Properties"
-          onClick={() => {
-            dispatch(setSelectedNodes([targetId]));
-            openProperties();
-            close();
-          }}
+          onClick={() => { dispatch(setSelectedNodes([targetId])); openProperties(); close(); }}
         />
         <Separator />
-        <MenuItem
-          label="Copy"
-          shortcut="Ctrl+C"
-          onClick={() => {
-            close();
-            fireKey('c', true);
-          }}
-        />
+        <MenuItem label="Copy" shortcut={modKey('C')} onClick={() => { close(); fireKey('c', true); }} />
         <MenuItem label="Copy as Text" onClick={copyText} />
-        <MenuItem
-          label="Cut"
-          shortcut="Ctrl+X"
-          onClick={() => {
-            close();
-            fireKey('x', true);
-          }}
-        />
+        <MenuItem label="Cut" shortcut={modKey('X')} onClick={() => { close(); fireKey('x', true); }} />
         <MenuItem
           label="Duplicate"
-          onClick={() => {
-            close();
-            // Copy then paste = duplicate
-            fireKey('c', true);
-            setTimeout(() => fireKey('v', true), 50);
-          }}
+          onClick={() => { close(); fireKey('c', true); setTimeout(() => fireKey('v', true), 50); }}
         />
         <Separator />
         <SubMenu label="Change Provider" items={providerItems} />
-        <MenuItem
-          label="Fold/Unfold"
-          onClick={() => {
-            dispatch(toggleCardNodeFold(targetId));
-            close();
-          }}
-        />
+        {isContainer && (
+          <MenuItem
+            label={targetNode?.data?.folded ? 'Unfold' : 'Fold'}
+            onClick={() => { dispatch(toggleCardNodeFold(targetId)); close(); }}
+          />
+        )}
         <Separator />
         <MenuItem
           label={hasMultiSelection ? `Delete ${selectedNodes.length} items` : 'Delete'}
@@ -272,9 +236,7 @@ export const CanvasContextMenu: React.FC = () => {
           danger
           onClick={() => {
             if (hasMultiSelection) {
-              for (const id of selectedNodes) {
-                dispatch(deleteCardNode(id));
-              }
+              for (const id of selectedNodes) dispatch(deleteCardNode(id));
               dispatch(clearSelection());
             } else {
               dispatch(deleteCardNode(targetId));
@@ -287,17 +249,10 @@ export const CanvasContextMenu: React.FC = () => {
     );
   }
 
-  // Edge menu
+  // ── Edge menu ───────────────────────────────────────────────────────────
+
   if (contextMenu.type === 'edge' && contextMenu.targetId) {
     const targetId = contextMenu.targetId;
-
-    const relationshipItems = ['connects_to', 'depends_on', 'references', 'logs_to'].map((rel) => ({
-      label: rel.replace(/_/g, ' '),
-      onClick: () => {
-        dispatch(updateCardEdgeData({ edgeId: targetId, data: { relationship: rel } }));
-        close();
-      },
-    }));
 
     return (
       <div
@@ -307,23 +262,14 @@ export const CanvasContextMenu: React.FC = () => {
       >
         <MenuItem
           label="Properties"
-          onClick={() => {
-            dispatch(setSelectedEdges([targetId]));
-            openProperties();
-            close();
-          }}
+          onClick={() => { dispatch(setSelectedEdges([targetId])); openProperties(); close(); }}
         />
-        <Separator />
-        <SubMenu label="Change Type" items={relationshipItems} />
         <Separator />
         <MenuItem
           label="Delete Connection"
           shortcut="Del"
           danger
-          onClick={() => {
-            dispatch(deleteCardEdge(targetId));
-            close();
-          }}
+          onClick={() => { dispatch(deleteCardEdge(targetId)); close(); }}
         />
       </div>
     );

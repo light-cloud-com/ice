@@ -4,11 +4,11 @@
  * Summary of project settings before creation.
  */
 
-import React from 'react';
-import { Cloud, Globe, Shield, LayoutTemplate, FileCode2 } from 'lucide-react';
 import { getCloudProvider } from '@ice/core/resources';
-import type { WizardState } from '../hooks/use-wizard-state';
+import { Cloud, Globe, Shield, LayoutTemplate, FileCode2 } from 'lucide-react';
+import React from 'react';
 import { COMPOSED_TEMPLATES } from '../../../config/templates';
+import type { WizardState } from '../hooks/use-wizard-state';
 
 const SECURITY_COLORS: Record<string, string> = {
   basic: '#6b7280',

@@ -47,7 +47,7 @@ export class AWSDeployer implements ProviderDeployer {
         // Lambda client not available
       }
     } catch (error) {
-      throw new Error(`Failed to initialize AWS SDK: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(`Failed to initialize AWS SDK: ${error instanceof Error ? error.message : String(error)}`, { cause: error });
     }
   }
 
@@ -62,7 +62,7 @@ export class AWSDeployer implements ProviderDeployer {
     type: string,
     name: string,
     properties: Record<string, unknown>,
-    options: Record<string, unknown>,
+    _options: Record<string, unknown>,
   ): Promise<ResourceDeployResult> {
     const start = Date.now();
 
@@ -115,7 +115,7 @@ export class AWSDeployer implements ProviderDeployer {
     provider_id: string,
     properties: Record<string, unknown>,
     current_properties: Record<string, unknown>,
-    options: Record<string, unknown>,
+    _options: Record<string, unknown>,
   ): Promise<ResourceDeployResult> {
     const start = Date.now();
 
@@ -164,7 +164,7 @@ export class AWSDeployer implements ProviderDeployer {
     type: string,
     name: string,
     provider_id: string,
-    options: Record<string, unknown>,
+    _options: Record<string, unknown>,
   ): Promise<ResourceDeployResult> {
     const start = Date.now();
 
@@ -258,7 +258,7 @@ export class AWSDeployer implements ProviderDeployer {
     name: string,
     provider_id: string,
     properties: Record<string, unknown>,
-    current_properties: Record<string, unknown>,
+    _current_properties: Record<string, unknown>,
   ): Promise<void> {
     if (!this.ec2_client) {
       throw new Error('EC2 SDK not available');
@@ -368,7 +368,7 @@ export class AWSDeployer implements ProviderDeployer {
     }
   }
 
-  private async delete_s3_bucket(name: string, provider_id: string): Promise<void> {
+  private async delete_s3_bucket(name: string, _provider_id: string): Promise<void> {
     if (!this.s3_client) {
       throw new Error('S3 SDK not available');
     }
@@ -470,7 +470,7 @@ export class AWSDeployer implements ProviderDeployer {
     }
   }
 
-  private async delete_lambda_function(name: string, provider_id: string): Promise<void> {
+  private async delete_lambda_function(name: string, _provider_id: string): Promise<void> {
     if (!this.lambda_client) {
       throw new Error('Lambda SDK not available');
     }

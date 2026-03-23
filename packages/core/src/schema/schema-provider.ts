@@ -5,8 +5,8 @@
  * This abstracts the schema source (embedded, remote, or custom).
  */
 
-import type { Result } from '../types/result.js';
 import type { IceError } from '../types/errors.js';
+import type { Result } from '../types/result.js';
 
 // =============================================================================
 // Schema Types

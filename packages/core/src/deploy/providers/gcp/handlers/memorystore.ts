@@ -5,9 +5,9 @@
  * Uses REST API (no official Node.js SDK for Memorystore).
  */
 
+import { SERVICE_NAMES, operation_failed, operation_timed_out } from '../messages.js';
 import type { ResourceDeployResult } from '../../../types.js';
 import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
-import { SERVICE_NAMES, operation_failed, operation_timed_out } from '../messages.js';
 
 const TYPE = 'gcp.redis.instance';
 const BASE_URL = 'https://redis.googleapis.com/v1';

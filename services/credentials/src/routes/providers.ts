@@ -4,11 +4,11 @@
  * Includes GCP OAuth via Google Identity Services (client-side code flow).
  */
 
-import { Router, type Response } from 'express';
-import { requireAuth, type AuthRequest } from '@ice/shared';
+import { requireAuth, requireOrgRole, type AuthRequest } from '@ice/shared';
+import { Router, type Router as RouterType, type Response } from 'express';
 import * as providerService from '../services/provider.service';
 
-const router = Router();
+const router: RouterType = Router();
 router.use(requireAuth);
 
 // ── GCP OAuth — Code exchange (GIS authorization code flow) ──────────────
@@ -16,7 +16,7 @@ router.use(requireAuth);
 // We exchange for access_token + refresh_token using redirect_uri: 'postmessage'.
 // This flow goes through RAPT challenge (required by Google Workspace).
 
-router.post('/gcp/oauth/exchange', async (req: AuthRequest, res: Response) => {
+router.post('/gcp/oauth/exchange', requireOrgRole('owner', 'admin'), async (req: AuthRequest, res: Response) => {
   try {
     const { code } = req.body;
     if (!code) {
@@ -115,7 +115,7 @@ router.get('/:provider/credentials', async (req: AuthRequest, res: Response) => 
   res.json(result);
 });
 
-router.post('/:provider/credentials', async (req: AuthRequest, res: Response) => {
+router.post('/:provider/credentials', requireOrgRole('owner', 'admin'), async (req: AuthRequest, res: Response) => {
   try {
     const provider = req.params.provider as string;
     const result = await providerService.saveCredentials(req.organisationId!, provider, req.body.credentials);
@@ -135,7 +135,7 @@ router.get('/:provider/status', async (req: AuthRequest, res: Response) => {
   res.json(result);
 });
 
-router.post('/:provider/connect', async (req: AuthRequest, res: Response) => {
+router.post('/:provider/connect', requireOrgRole('owner', 'admin'), async (req: AuthRequest, res: Response) => {
   try {
     const provider = req.params.provider as string;
     const result = await providerService.connectProvider(req.organisationId!, provider, req.body.credentials);
@@ -145,7 +145,7 @@ router.post('/:provider/connect', async (req: AuthRequest, res: Response) => {
   }
 });
 
-router.post('/:provider/disconnect', async (req: AuthRequest, res: Response) => {
+router.post('/:provider/disconnect', requireOrgRole('owner', 'admin'), async (req: AuthRequest, res: Response) => {
   const provider = req.params.provider as string;
   await providerService.disconnectProvider(req.organisationId!, provider);
   res.json({ success: true });

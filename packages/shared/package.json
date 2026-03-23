@@ -18,14 +18,14 @@
   },
   "dependencies": {
     "@ice/db": "workspace:*",
-    "@prisma/client": "^6.17.1",
-    "express": "^4.21.1",
-    "jsonwebtoken": "^9.0.2",
+    "@prisma/client": "^6.19.2",
+    "express": "^4.22.1",
+    "jsonwebtoken": "^9.0.3",
     "socket.io": "^4.8.3"
   },
   "devDependencies": {
-    "@types/express": "^5.0.0",
-    "@types/jsonwebtoken": "^9.0.7",
-    "typescript": "^5.6.3"
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "typescript": "^5.9.3"
   }
 }

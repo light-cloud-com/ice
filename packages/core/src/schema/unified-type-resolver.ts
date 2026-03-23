@@ -265,7 +265,7 @@ export class UnifiedTypeResolver {
         }
         break;
 
-      case 'terraform':
+      case 'terraform': {
         // Terraform formats:
         // - google_compute_instance -> terraform:google.compute_instance
         // - aws_instance -> terraform:aws.instance
@@ -278,8 +278,9 @@ export class UnifiedTypeResolver {
           normalized = native_type;
         }
         break;
+      }
 
-      case 'pulumi':
+      case 'pulumi': {
         // Pulumi formats:
         // - gcp:compute/instance:Instance -> pulumi:gcp.compute.instance
         // - aws:ec2/instance:Instance -> pulumi:aws.ec2.instance
@@ -291,6 +292,7 @@ export class UnifiedTypeResolver {
           normalized = native_type.toLowerCase().replace(/[:/]/g, '.');
         }
         break;
+      }
 
       default:
         normalized = native_type.toLowerCase();
@@ -339,7 +341,7 @@ export class UnifiedTypeResolver {
         }
         return `azure.${native_type.toLowerCase().replace(/\//g, '.')}`;
 
-      case 'terraform':
+      case 'terraform': {
         // google_compute_instance -> gcp.compute.instance
         const tf_parts = native_type.split('_');
         if (tf_parts.length >= 2) {
@@ -348,8 +350,9 @@ export class UnifiedTypeResolver {
           return `${provider}.${resource}`;
         }
         return native_type.replace(/_/g, '.');
+      }
 
-      case 'pulumi':
+      case 'pulumi': {
         // gcp:compute/instance:Instance -> gcp.compute.instance
         const pulumi_match = native_type.match(/^([^:]+):([^/]+)\/([^:]+):(.+)$/);
         if (pulumi_match) {
@@ -358,6 +361,7 @@ export class UnifiedTypeResolver {
           return `${mapped_provider}.${module}.${type?.toLowerCase()}`;
         }
         return native_type.toLowerCase().replace(/[:/]/g, '.');
+      }
 
       default:
         return native_type;

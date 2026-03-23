@@ -4,10 +4,10 @@
  * Standard validators for graph validation.
  */
 
-import type { Validator, ValidationIssue, ValidationOptions } from './base-validator.js';
-import type { MutableGraph } from '../mutable-graph.js';
-import type { SchemaProvider, IceType } from '../../schema/schema-provider.js';
 import { has_cycle, find_cycles } from '../algorithms.js';
+import type { Validator, ValidationIssue } from './base-validator.js';
+import type { SchemaProvider, IceType } from '../../schema/schema-provider.js';
+import type { MutableGraph } from '../mutable-graph.js';
 
 // =============================================================================
 // Structure Validators
@@ -510,10 +510,10 @@ export function create_builtin_validators(schema_provider?: SchemaProvider): Val
 /**
  * Create a configured graph validator with all built-in validators.
  */
-export function create_configured_validator(
+export async function create_configured_validator(
   schema_provider?: SchemaProvider,
-): import('./base-validator.js').GraphValidator {
-  const { create_graph_validator } = require('./base-validator.js');
+): Promise<import('./base-validator.js').GraphValidator> {
+  const { create_graph_validator } = await import('./base-validator.js');
   const validator = create_graph_validator();
 
   for (const v of create_builtin_validators(schema_provider)) {

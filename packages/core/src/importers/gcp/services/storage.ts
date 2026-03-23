@@ -17,7 +17,7 @@ import type {
  * Cloud Storage resource discovery service.
  */
 export class StorageService extends BaseGCPService {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   private storage_client: any = null;
 
   get service_type(): GCPServiceType {
@@ -34,7 +34,7 @@ export class StorageService extends BaseGCPService {
       // Dynamic import to make the dependency optional
       // Use string variable to prevent TypeScript from trying to resolve the module
       const module_name = '@google-cloud/storage';
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const storage_module: any = await Function('moduleName', 'return import(moduleName)')(module_name);
       const Storage = storage_module.Storage;
 
@@ -50,6 +50,7 @@ export class StorageService extends BaseGCPService {
     } catch (error) {
       throw new Error(
         `Failed to initialize GCP Storage client. Make sure @google-cloud/storage is installed: ${error instanceof Error ? error.message : String(error)}`,
+        { cause: error },
       );
     }
   }

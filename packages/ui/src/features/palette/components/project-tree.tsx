@@ -7,8 +7,6 @@
  * - Click environment → activate it and open its card
  */
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
 import {
   FolderPlus,
   Plus,
@@ -24,12 +22,17 @@ import {
   X,
   Layers,
 } from 'lucide-react';
-import type { AppDispatch, RootState } from '../../../store';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { cn } from '../../../shared/utils/cn';
+import { setActiveCard, deleteCard } from '../../../store/slices/cards-slice';
 import {
-  selectProjects,
-  selectFolders,
+  selectProjectsByOrg,
+  selectFoldersByOrg,
   selectActiveProjectId,
   selectActiveEnvironmentId,
+  selectLoadedOrgId,
+  fetchProjectTree,
   setActiveProject,
   setActiveEnvironment,
   createFolder,
@@ -52,8 +55,7 @@ import {
   setActivePane,
   closeTabsByCardIds,
 } from '../../../store/slices/ui-slice';
-import { setActiveCard, deleteCard } from '../../../store/slices/cards-slice';
-import { cn } from '../../../shared/utils/cn';
+import type { AppDispatch, RootState } from '../../../store';
 
 // Drag data is encoded as "type:id"
 type DragItemType = 'project' | 'folder';
@@ -96,11 +98,21 @@ interface ContextMenuState {
 
 export const ProjectTree: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const projects = useSelector(selectProjects);
-  const folders = useSelector(selectFolders);
+  const selectedOrg = useSelector((state: RootState) => state.account?.selectedOrg);
+  const orgId = selectedOrg?.id || '';
+  const loadedOrgId = useSelector(selectLoadedOrgId);
+  const projects = useSelector(selectProjectsByOrg(orgId));
+  const folders = useSelector(selectFoldersByOrg(orgId));
   const activeProjectId = useSelector(selectActiveProjectId);
   const activeEnvId = useSelector(selectActiveEnvironmentId);
   const panes = useSelector((state: RootState) => state.ui.splitView.panes);
+
+  // Fetch project tree from backend when org changes
+  useEffect(() => {
+    if (orgId && orgId !== loadedOrgId) {
+      dispatch(fetchProjectTree(orgId));
+    }
+  }, [orgId, loadedOrgId, dispatch]);
 
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -200,40 +212,56 @@ export const ProjectTree: React.FC = () => {
     [projects, folders],
   );
 
-  const handleFinishRename = useCallback(() => {
+  const handleFinishRename = useCallback(async () => {
     if (!editingId || !editingName.trim()) {
       setEditingId(null);
       return;
     }
-    if (projects.some((p) => p.id === editingId)) {
-      dispatch(renameProject({ projectId: editingId, name: editingName.trim() }));
+    const name = editingName.trim();
+    const isProject = projects.some((p) => p.id === editingId);
+    // Update locally immediately
+    if (isProject) {
+      dispatch(renameProject({ projectId: editingId, name }));
     } else {
-      dispatch(renameFolder({ folderId: editingId, name: editingName.trim() }));
+      dispatch(renameFolder({ folderId: editingId, name }));
+    }
+    // Sync to backend
+    try {
+      const { default: axiosInstance } = await import('../../../shared/api/axios-instance');
+      await axiosInstance.post('/canvas/projects/update', { projectId: editingId, name });
+    } catch {
+      // Backend sync failed — local update still stands
     }
     setEditingId(null);
     setEditingName('');
   }, [editingId, editingName, dispatch, projects]);
 
   const handleDelete = useCallback(
-    (type: 'project' | 'folder', id: string) => {
+    async (type: 'project' | 'folder', id: string) => {
       setContextMenu(null);
-      if (type === 'project') {
-        // Collect card IDs from project environments before deleting
-        const project = projects.find((p) => p.id === id);
-        if (project) {
-          const cardIds = project.environments.map((e) => e.cardId);
-          // Close tabs showing these cards in all panes
-          if (cardIds.length > 0) {
-            dispatch(closeTabsByCardIds(cardIds));
-            // Delete the associated cards
-            for (const cid of cardIds) {
-              dispatch(deleteCard(cid));
+      try {
+        const { default: axiosInstance } = await import('../../../shared/api/axios-instance');
+        if (type === 'project') {
+          const project = projects.find((p) => p.id === id);
+          if (project) {
+            const cardIds = project.environments.map((e) => e.cardId);
+            if (cardIds.length > 0) {
+              dispatch(closeTabsByCardIds(cardIds));
+              for (const cid of cardIds) {
+                dispatch(deleteCard(cid));
+              }
             }
           }
+          await axiosInstance.post('/canvas/projects/delete', { projectId: id });
+          dispatch(deleteProject(id));
+        } else {
+          await axiosInstance.post('/canvas/projects/delete', { projectId: id });
+          dispatch(deleteFolder(id));
         }
-        dispatch(deleteProject(id));
-      } else {
-        dispatch(deleteFolder(id));
+      } catch {
+        // If backend fails, still remove locally
+        if (type === 'project') dispatch(deleteProject(id));
+        else dispatch(deleteFolder(id));
       }
     },
     [dispatch, projects],
@@ -244,14 +272,26 @@ export const ProjectTree: React.FC = () => {
     setNewFolderName('New Folder');
   }, []);
 
-  const handleFinishCreateFolder = useCallback(() => {
-    if (newFolderName.trim()) {
+  const handleFinishCreateFolder = useCallback(async () => {
+    if (newFolderName.trim() && orgId) {
       const parentId = creatingFolder === 'root' ? null : creatingFolder;
-      dispatch(createFolder({ name: newFolderName.trim(), parentFolderId: parentId }));
+      try {
+        const { default: axiosInstance } = await import('../../../shared/api/axios-instance');
+        await axiosInstance.post('/canvas/projects/create', {
+          name: newFolderName.trim(),
+          type: 'folder',
+          parentId: parentId || undefined,
+        });
+        // Refresh tree from backend
+        dispatch(fetchProjectTree(orgId));
+      } catch {
+        // Fallback: create locally
+        dispatch(createFolder({ name: newFolderName.trim(), organisationId: orgId, parentFolderId: parentId }));
+      }
     }
     setCreatingFolder(null);
     setNewFolderName('');
-  }, [creatingFolder, newFolderName, dispatch]);
+  }, [creatingFolder, newFolderName, orgId, dispatch]);
 
   // ── Drag & Drop (unified for projects + folders) ─────────────────────────
 
@@ -582,53 +622,75 @@ export const ProjectTree: React.FC = () => {
       </div>
 
       {/* Context Menu */}
-      {contextMenu && (
-        <div
-          ref={menuRef}
-          className="fixed z-50 w-44 rounded-md border border-ice-border bg-ice-surface shadow-xl py-1"
-          style={{ left: contextMenu.x, top: contextMenu.y }}
-        >
-          <button
-            onClick={() => handleStartRename(contextMenu.type, contextMenu.id)}
-            className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-ice-base text-ice-text-1 hover:bg-ice-active transition-colors"
+      {contextMenu && (() => {
+        const isProject = contextMenu.type === 'project';
+        const isFolder = contextMenu.type === 'folder';
+        // Only show "Move to Top Level" if item is nested
+        const isNested = isProject
+          ? projects.find((p) => p.id === contextMenu.id)?.folderId != null
+          : folders.find((f) => f.id === contextMenu.id)?.parentFolderId != null;
+
+        return (
+          <div
+            ref={menuRef}
+            className="fixed z-50 w-48 rounded-md border border-ice-border bg-ice-surface shadow-xl py-1"
+            style={{ left: contextMenu.x, top: contextMenu.y }}
           >
-            <Pencil className="w-3 h-3" />
-            Rename
-          </button>
-          {contextMenu.type === 'project' && (
             <button
-              onClick={() => {
-                setContextMenu(null);
-                dispatch(moveProjectToFolder({ projectId: contextMenu.id, folderId: null }));
-              }}
+              onClick={() => handleStartRename(contextMenu.type, contextMenu.id)}
               className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-ice-base text-ice-text-1 hover:bg-ice-active transition-colors"
             >
-              <FolderInput className="w-3 h-3" />
-              Move to Top Level
+              <Pencil className="w-3 h-3" />
+              Rename
             </button>
-          )}
-          {contextMenu.type === 'folder' && (
+            {isNested && isProject && (
+              <button
+                onClick={() => {
+                  setContextMenu(null);
+                  dispatch(moveProjectToFolder({ projectId: contextMenu.id, folderId: null }));
+                }}
+                className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-ice-base text-ice-text-1 hover:bg-ice-active transition-colors"
+              >
+                <FolderInput className="w-3 h-3" />
+                Move to Top Level
+              </button>
+            )}
+            {isNested && isFolder && (
+              <button
+                onClick={() => {
+                  setContextMenu(null);
+                  dispatch(moveFolder({ folderId: contextMenu.id, parentFolderId: null }));
+                }}
+                className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-ice-base text-ice-text-1 hover:bg-ice-active transition-colors"
+              >
+                <FolderInput className="w-3 h-3" />
+                Move to Top Level
+              </button>
+            )}
+            {isFolder && (
+              <button
+                onClick={() => {
+                  setContextMenu(null);
+                  setCreatingFolder(contextMenu.id);
+                  setNewFolderName('New Folder');
+                }}
+                className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-ice-base text-ice-text-1 hover:bg-ice-active transition-colors"
+              >
+                <FolderPlus className="w-3 h-3" />
+                New Subfolder
+              </button>
+            )}
+            <div className="h-px bg-ice-border my-1" />
             <button
-              onClick={() => {
-                setContextMenu(null);
-                dispatch(moveFolder({ folderId: contextMenu.id, parentFolderId: null }));
-              }}
-              className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-ice-base text-ice-text-1 hover:bg-ice-active transition-colors"
+              onClick={() => handleDelete(contextMenu.type, contextMenu.id)}
+              className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-ice-base text-red-400 hover:bg-red-500/10 transition-colors"
             >
-              <FolderInput className="w-3 h-3" />
-              Move to Top Level
+              <Trash2 className="w-3 h-3" />
+              Delete
             </button>
-          )}
-          <div className="h-px bg-ice-border my-1" />
-          <button
-            onClick={() => handleDelete(contextMenu.type, contextMenu.id)}
-            className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-ice-base text-red-400 hover:bg-red-500/10 transition-colors"
-          >
-            <Trash2 className="w-3 h-3" />
-            Delete
-          </button>
-        </div>
-      )}
+          </div>
+        );
+      })()}
     </div>
   );
 };

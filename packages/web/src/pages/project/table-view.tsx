@@ -4,11 +4,10 @@
  * Reads from the active card in Redux (set by environment tab bar).
  */
 
+import { selectActiveCard } from '@ui/store/slices/cards-slice';
+import { ArrowUpDown } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { ArrowUpDown } from 'lucide-react';
-import type { RootState } from '@ui/store';
-import { selectActiveCard } from '@ui/store/slices/cards-slice';
 
 interface NodeRow {
   id: string;

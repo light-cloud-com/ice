@@ -4,8 +4,8 @@
  * A toggle switch component for boolean values.
  */
 
-import * as React from 'react';
 import * as SwitchPrimitives from '@radix-ui/react-switch';
+import * as React from 'react';
 import { cn } from '../utils/cn';
 
 const Switch = React.forwardRef<

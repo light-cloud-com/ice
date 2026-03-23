@@ -11,11 +11,10 @@
  */
 
 import { execSync, spawn } from 'child_process';
-import { mkdtempSync, rmSync, existsSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import { mkdtempSync, rmSync, existsSync, createWriteStream  } from 'fs';
 import { tmpdir } from 'os';
+import { join } from 'path';
 import { pipeline as streamPipeline } from 'stream/promises';
-import { createWriteStream } from 'fs';
 import prisma from '@ice/db';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -200,7 +199,7 @@ async function downloadAndExtract(token: string, repository: string, ref: string
       timeout: 60000,
     });
   } catch (err: any) {
-    throw new Error(`Failed to extract source: ${err.message}`);
+    throw new Error(`Failed to extract source: ${err.message}`, { cause: err });
   }
 
   // Remove tarball
@@ -329,7 +328,7 @@ function detectInstallCommand(buildDir: string): string | null {
   return null;
 }
 
-async function getGitHubToken(userId: string): Promise<string | null> {
+async function getGitHubToken(_userId: string): Promise<string | null> {
   // Find any user in the org who has a GitHub token
   const record = await prisma.gitHubToken.findFirst({
     orderBy: { connected_at: 'desc' },

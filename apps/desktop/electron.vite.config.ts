@@ -1,6 +1,6 @@
-import { defineConfig, externalizeDepsPlugin } from 'electron-vite';
-import { resolve } from 'path';
 import { copyFileSync, mkdirSync, existsSync } from 'fs';
+import { resolve } from 'path';
+import { defineConfig, externalizeDepsPlugin } from 'electron-vite';
 
 // Copy splash screen to dist
 function copySplashPlugin() {

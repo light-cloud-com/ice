@@ -5,11 +5,11 @@
  * a single flat resource CardNode ready for Redux dispatch.
  */
 
-import type { BlockBlueprint, ExpandedBlueprint, Provider } from './types';
 import {
   computeCompactNodeHeight,
   computeCompactNodeWidth,
 } from '../../features/canvas/components/nodes/svg-compact-node';
+import type { BlockBlueprint, ExpandedBlueprint, Provider } from './types';
 
 // =============================================================================
 // ID generation

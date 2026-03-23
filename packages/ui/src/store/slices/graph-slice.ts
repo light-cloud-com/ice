@@ -9,13 +9,13 @@
  */
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { DEMO_NODES, DEMO_EDGES } from '../../config/demo-data';
 import {
   type ViewLevel,
   type EmptyContainerMode,
   VIEW_LEVELS,
   isTypeVisibleAtLevel,
 } from '../../config/visualization-config';
-import { DEMO_NODES, DEMO_EDGES } from '../../config/demo-data';
 import { getApi } from '../../shared/api/api-adapter';
 
 // Types - Canvas Node/Edge (used by SVG Canvas)

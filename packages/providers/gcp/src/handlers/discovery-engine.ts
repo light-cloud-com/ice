@@ -5,9 +5,9 @@
  * Uses REST API.
  */
 
-import type { ResourceDeployResult } from '../../../types.js';
-import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
 import { SERVICE_NAMES, operation_failed, operation_timed_out } from '../messages.js';
+import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
+import type { ResourceDeployResult } from '@ice/core';
 
 const TYPE = 'gcp.discoveryengine.searchEngine';
 const BASE_URL = 'https://discoveryengine.googleapis.com/v1';
@@ -86,10 +86,29 @@ export const discovery_engine_handler: GCPResourceHandler = {
     }
   },
 
-  async update(name, provider_id, properties, _current, ctx) {
+  async update(name, provider_id, properties, current, ctx) {
     const start = Date.now();
-    // Search engines have limited update capability
-    return result(name, 'update', start, { provider_id });
+
+    try {
+      const patch_body: Record<string, string> = {};
+
+      if (properties.display_name && properties.display_name !== current?.display_name) {
+        patch_body.displayName = properties.display_name as string;
+      }
+
+      if (properties.search_tier && properties.search_tier !== current?.search_tier) {
+        patch_body.searchTier = properties.search_tier as string;
+      }
+
+      // Only call PATCH if there are actual changes
+      if (Object.keys(patch_body).length > 0) {
+        await ctx.rest_client.patch(`${BASE_URL}/${provider_id}`, patch_body);
+      }
+
+      return result(name, 'update', start, { provider_id });
+    } catch (error) {
+      return fail(name, 'update', start, error instanceof Error ? error.message : String(error));
+    }
   },
 
   async delete(name, provider_id, ctx) {

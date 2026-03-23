@@ -26,6 +26,7 @@ const PROJECT_SUBPAGES = new Set(['settings', 'deployments', 'table']);
 export function useResolvePath(allSegments: string[]): ResolvedPath {
   const selectedOrg = useSelector((s: RootState) => s.account?.selectedOrg);
   const user = useSelector((s: RootState) => s.account?.user);
+  const allSegmentsKey = allSegments.join('/');
 
   const [result, setResult] = useState<ResolvedPath>({
     loading: true,
@@ -146,7 +147,8 @@ export function useResolvePath(allSegments: string[]): ResolvedPath {
     return () => {
       cancelled = true;
     };
-  }, [selectedOrg?.id, user?.organisations, allSegments.join('/')]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- use stable primitives only to avoid infinite re-render loops
+  }, [selectedOrg?.id, allSegmentsKey]);
 
   return result;
 }

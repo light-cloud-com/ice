@@ -6,22 +6,22 @@
  */
 
 import { configureStore, type Middleware } from '@reduxjs/toolkit';
-import { logStateChange } from '../shared/utils/action-logger';
-import graphReducer from './slices/graph-slice';
-import uiReducer from './slices/ui-slice';
-import selectionReducer from './slices/selection-slice';
-import viewReducer from './slices/view-slice';
-import cardsReducer from './slices/cards-slice';
-import projectListReducer from './slices/project-list-slice';
-import projectsReducer from './slices/projects-slice';
-import debugReducer from './slices/debug-slice';
-import deployReducer from './slices/deploy-slice';
-import integrationsReducer from './slices/integrations-slice';
 import accountReducer from './slices/account-slice';
 import aiReducer from './slices/ai-slice';
-import pipelineReducer from './slices/pipeline-slice';
+import cardsReducer from './slices/cards-slice';
+import debugReducer from './slices/debug-slice';
+import deployReducer from './slices/deploy-slice';
 import environmentsReducer from './slices/environments-slice';
+import graphReducer from './slices/graph-slice';
+import integrationsReducer from './slices/integrations-slice';
 import onboardingReducer from './slices/onboarding-slice';
+import pipelineReducer from './slices/pipeline-slice';
+import projectListReducer from './slices/project-list-slice';
+import projectsReducer from './slices/projects-slice';
+import selectionReducer from './slices/selection-slice';
+import uiReducer from './slices/ui-slice';
+import viewReducer from './slices/view-slice';
+import { logStateChange } from '../shared/utils/action-logger';
 
 // Action logger middleware — logs significant Redux dispatches for E2E observability
 const LOGGED_ACTION_PREFIXES = [

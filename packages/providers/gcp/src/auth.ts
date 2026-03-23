@@ -7,8 +7,8 @@
  * 3. OAuth2 browser flow — for desktop users without gcloud
  */
 
+import { AUTH_MESSAGES } from '@ice/core';
 import { load_sdk } from './sdk-loader.js';
-import { AUTH_MESSAGES } from '../../messages.js';
 
 // =============================================================================
 // Types
@@ -145,7 +145,7 @@ export async function list_gcp_projects(config: GCPAuthConfig): Promise<GCPProje
       name: p.name,
       number: p.projectNumber,
     }));
-  } catch (error) {
+  } catch {
     return [];
   }
 }

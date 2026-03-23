@@ -5,8 +5,8 @@
  * set region and security level per environment.
  */
 
-import React from 'react';
 import { Globe, Shield } from 'lucide-react';
+import React from 'react';
 import { cn } from '../../../shared/utils/cn';
 import type { SecurityLevel } from '../../../config/templates/types';
 import type { WizardEnvironment } from '../hooks/use-wizard-state';

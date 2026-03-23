@@ -2,9 +2,20 @@
  * App Bar — shared between web and desktop
  */
 
-import React, { memo, useEffect, useState, useMemo } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import awsIcon from 'devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg';
+import azureIcon from 'devicon/icons/azure/azure-original.svg';
+import gcpIcon from 'devicon/icons/googlecloud/googlecloud-original.svg';
 import { LayoutGrid, Rocket, Sun, Moon, Github, Undo2, Redo2 } from 'lucide-react';
+import React, { memo, useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Breadcrumbs } from './breadcrumbs';
+import logoDark from '../../assets/logo-dark.png';
+import logoLight from '../../assets/logo-light.png';
+import { ProfileAvatar } from '../../features/account/components/profile-avatar';
+import { DeployPanel } from '../../features/deploy/components/deploy-panel';
+import { PromoteModal } from '../../features/environments/components/promote-modal';
+import { GitHubConnectModal } from '../../features/integrations/components/github-connect-modal';
+import { ProviderConnectModal } from '../../features/integrations/components/provider-connect-modal';
 import {
   autoOrganizeCard,
   undoCardChange,
@@ -16,17 +27,6 @@ import { openDeployPanel } from '../../store/slices/deploy-slice';
 import { checkGitHubConnection } from '../../store/slices/integrations-slice';
 import { useTheme } from '../hooks/use-theme';
 import { cn } from '../utils/cn';
-import { Breadcrumbs } from './breadcrumbs';
-import { ProfileAvatar } from '../../features/account/components/profile-avatar';
-import { GitHubConnectModal } from '../../features/integrations/components/github-connect-modal';
-import { ProviderConnectModal } from '../../features/integrations/components/provider-connect-modal';
-import { DeployPanel } from '../../features/deploy/components/deploy-panel';
-import { PromoteModal } from '../../features/environments/components/promote-modal';
-import gcpIcon from 'devicon/icons/googlecloud/googlecloud-original.svg';
-import awsIcon from 'devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg';
-import azureIcon from 'devicon/icons/azure/azure-original.svg';
-import logoDark from '../../assets/logo-dark.png';
-import logoLight from '../../assets/logo-light.png';
 import type { RootState, AppDispatch } from '../../store';
 
 /** Detect Electron + macOS + fullscreen state for traffic light padding */

@@ -4,12 +4,12 @@
  * Modal dialog to invite a user by email with a selected role.
  */
 
+import { X, Shield, User, Eye } from 'lucide-react';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSelector } from 'react-redux';
-import { X, Shield, User, Eye } from 'lucide-react';
-import type { RootState } from '../../../store';
 import axiosInstance from '../../../shared/api/axios-instance';
+import type { RootState } from '../../../store';
 
 interface Props {
   onClose: () => void;

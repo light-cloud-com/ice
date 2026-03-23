@@ -5,10 +5,10 @@
  * Uses the unified schema to map ICE types to Terraform resource types.
  */
 
-import type { MutableGraph } from '../graph/mutable-graph.js';
-import type { Node, Edge } from '../types/graph.js';
 import { EmbeddedSchemaProvider } from '../schema/embedded-schema-provider.js';
+import type { MutableGraph } from '../graph/mutable-graph.js';
 import type { IceType } from '../schema/schema-provider.js';
+import type { Node } from '../types/graph.js';
 
 // =============================================================================
 // Types
@@ -364,7 +364,7 @@ export class TerraformExporter {
   /**
    * Map ICE properties to Terraform properties.
    */
-  private mapProperties(properties: Record<string, unknown>, terraform_type: string): Record<string, unknown> {
+  private mapProperties(properties: Record<string, unknown>, _terraform_type: string): Record<string, unknown> {
     const result: Record<string, unknown> = {};
 
     for (const [key, value] of Object.entries(properties)) {
@@ -408,7 +408,7 @@ export class TerraformExporter {
   /**
    * Format dependency references.
    */
-  private formatDependencies(deps: string[], provider: string): string[] | undefined {
+  private formatDependencies(deps: string[], _provider: string): string[] | undefined {
     if (deps.length === 0) return undefined;
 
     // Format as Terraform references

@@ -5,6 +5,9 @@
  * Uses AWS Resource Explorer to discover ALL resources across all regions.
  */
 
+import { get_ice_type, map_properties } from './type-mapper.js';
+import { classifyAWSError, ImportErrorCode } from '../../errors/import-errors.js';
+import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph.js';
 import type {
   AWSImportOptions,
   AWSImportResult,
@@ -14,10 +17,7 @@ import type {
   AWSImportMetadata,
   AWSResource,
 } from './types.js';
-import { get_ice_type, map_properties } from './type-mapper.js';
-import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph.js';
 import type { NodeInput, EdgeInput } from '../../types/graph.js';
-import { classifyAWSError, ImportErrorCode } from '../../errors/import-errors.js';
 
 // =============================================================================
 // Default Options
@@ -356,6 +356,7 @@ async function init_aws_sdk(profile?: string): Promise<AWSSdk> {
   } catch (error) {
     throw new Error(
       `Failed to initialize AWS SDK. Make sure AWS SDK v3 packages are installed: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
     );
   }
 }
@@ -378,7 +379,7 @@ async function get_account_id(sdk: AWSSdk): Promise<string> {
 
 async function discover_with_resource_explorer(
   sdk: AWSSdk,
-  opts: Required<Omit<AWSImportOptions, 'profile'>>,
+  _opts: Required<Omit<AWSImportOptions, 'profile'>>,
 ): Promise<AWSResource[]> {
   const resources: AWSResource[] = [];
 
@@ -417,7 +418,7 @@ async function discover_with_resource_explorer(
 
 async function discover_with_config(
   sdk: AWSSdk,
-  opts: Required<Omit<AWSImportOptions, 'profile'>>,
+  _opts: Required<Omit<AWSImportOptions, 'profile'>>,
 ): Promise<AWSResource[]> {
   const resources: AWSResource[] = [];
 

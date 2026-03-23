@@ -67,7 +67,7 @@ export const stripeWebhook = async (req: Request, res: Response): Promise<void> 
  * // ... other middleware
  * app.use('/api/billing', billingRoutes);
  */
-export const captureRawBody = (req: Request, _res: Response, next: Function) => {
+export const captureRawBody = (req: Request, _res: Response, next: (...args: unknown[]) => unknown) => {
   let data = '';
   req.on('data', (chunk) => {
     data += chunk;

@@ -6,7 +6,7 @@ services:
       POSTGRES_USER: ice
       POSTGRES_PASSWORD: icedev
     ports:
-      - '5555:5432'
+      - '5556:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:

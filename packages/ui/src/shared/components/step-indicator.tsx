@@ -8,8 +8,8 @@
  * Used by onboarding, project wizard, and any multi-step flow.
  */
 
-import React from 'react';
 import { Check } from 'lucide-react';
+import React from 'react';
 import { cn } from '../utils/cn';
 
 interface StepIndicatorProps {

@@ -5,8 +5,6 @@
  * tooltips, and prominent category headers.
  */
 
-import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
 import {
   Globe,
   Database,
@@ -25,7 +23,6 @@ import {
   Cog,
   Clock,
   X,
-  FolderOpen,
   Bell,
   ChevronRight,
   Brain,
@@ -33,22 +30,22 @@ import {
   Waypoints,
   BarChart3,
   Terminal,
-  GripVertical,
 } from 'lucide-react';
-import { cn } from '../../../shared/utils/cn';
-import { CLOUD_PROVIDERS } from '@ice/core/resources';
+import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { ENABLED_PROVIDER_IDS, ENABLED_PROVIDERS as ENABLED_CLOUD_PROVIDERS } from '../../../config/providers';
-import { ProjectBrowser } from '../../project-browser';
-import { useResolvePath } from '../../../shared/hooks/use-resolve-path';
 import axiosInstance from '../../../shared/api/axios-instance';
-import { OrgSwitcher } from '../../account/components';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../../../shared/components/ui/resizable';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '../../../shared/components/ui/tooltip';
+import { useResolvePath } from '../../../shared/hooks/use-resolve-path';
+import { cn } from '../../../shared/utils/cn';
+import { ProjectBrowser } from '../../project-browser';
 
 // =============================================================================
 // Provider brand colors for pills
 // =============================================================================
 
-const PROVIDER_COLORS: Record<string, string> = {
+const _PROVIDER_COLORS: Record<string, string> = {
   aws: '#ff9900',
   gcp: '#4285f4',
   azure: '#0078d4',
@@ -741,10 +738,185 @@ const PALETTE_STYLES = `
 `;
 
 // =============================================================================
+// Blocks Section (extracted for use in resizable split)
+// =============================================================================
+
+interface BlocksSectionProps {
+  localSearch: string;
+  setLocalSearch: (v: string) => void;
+  selectedProvider: string;
+  setSelectedProvider: (v: string) => void;
+  projectProvider: string | null;
+  searchInputRef: React.RefObject<HTMLInputElement | null>;
+  isSearchFocused: boolean;
+  setIsSearchFocused: (v: boolean) => void;
+  clearSearch: () => void;
+  filteredComponents: ComponentDef[];
+  categorizedItems: { category: CategoryDef; items: ComponentDef[] }[];
+  isSearching: boolean;
+  showGroup: boolean;
+  collapsedCategories: Set<string>;
+  toggleCategory: (id: string) => void;
+  mounted: boolean;
+  staggerIdx: number;
+}
+
+const BlocksSection: React.FC<BlocksSectionProps> = ({
+  localSearch,
+  setLocalSearch,
+  selectedProvider,
+  setSelectedProvider,
+  projectProvider,
+  searchInputRef,
+  isSearchFocused: _isSearchFocused,
+  setIsSearchFocused,
+  clearSearch,
+  filteredComponents,
+  categorizedItems,
+  isSearching,
+  showGroup,
+  collapsedCategories,
+  toggleCategory,
+  mounted,
+  staggerIdx: initialStaggerIdx,
+}) => {
+  let staggerIdx = initialStaggerIdx;
+
+  return (
+    <div className="h-full flex flex-col">
+      {/* Search + provider filter */}
+      <div className="px-2 pb-1 shrink-0">
+        <div className="relative mb-1">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-ice-text-3" />
+          <input
+            id="ice-palette-search-input"
+            ref={searchInputRef}
+            type="text"
+            placeholder="Search blocks..."
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setIsSearchFocused(false)}
+            className="w-full pl-6 pr-7 py-1 text-ice-base rounded bg-ice-hover border border-ice-border text-ice-text-1 placeholder:text-ice-text-3 focus:outline-none focus:border-ice-border-strong transition-colors"
+          />
+          {localSearch && (
+            <button
+              onClick={clearSearch}
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-ice-active"
+            >
+              <X className="w-3 h-3 text-ice-text-3" />
+            </button>
+          )}
+        </div>
+        <div className="flex gap-0.5">
+          {PROVIDERS.map((provider) => {
+            const isActive = selectedProvider === provider.id;
+            const isLocked = !!projectProvider && provider.id !== 'all' && provider.id !== projectProvider;
+            return (
+              <button
+                key={provider.id}
+                id={`ice-palette-filter-${provider.id}`}
+                onClick={() => !isLocked && setSelectedProvider(provider.id)}
+                disabled={isLocked}
+                className={cn(
+                  'px-1.5 py-0.5 text-ice-xs font-medium rounded transition-[color,background-color]',
+                  isLocked
+                    ? 'text-ice-text-3 opacity-30 cursor-not-allowed'
+                    : isActive
+                      ? 'bg-ice-active text-ice-text-1'
+                      : 'text-ice-text-3 hover:text-ice-text-2 hover:bg-ice-hover',
+                )}
+              >
+                {provider.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Scrollable blocks content */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
+        <div className="px-2 py-2">
+          {categorizedItems.map(({ category, items }) => {
+            const isCollapsed = !isSearching && collapsedCategories.has(category.id);
+
+            return (
+              <div key={category.id} className="mb-px">
+                {!isSearching && (
+                  <button
+                    onClick={() => toggleCategory(category.id)}
+                    className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded hover:bg-ice-hover transition-colors"
+                  >
+                    <ChevronRight
+                      className={cn(
+                        'w-3 h-3 text-ice-text-3 transition-transform duration-150 shrink-0',
+                        !isCollapsed && 'rotate-90',
+                      )}
+                    />
+                    <div
+                      className="w-2 h-2 rounded-full shrink-0"
+                      style={{ backgroundColor: category.color, opacity: isCollapsed ? 0.4 : 0.8 }}
+                    />
+                    <span className="text-ice-sm font-semibold text-ice-text-2 uppercase tracking-wider">
+                      {category.label}
+                    </span>
+                    <span className="text-ice-xs text-ice-text-3 ml-auto tabular-nums">{items.length}</span>
+                  </button>
+                )}
+
+                {!isCollapsed && (
+                  <div className={cn(!isSearching && 'ml-7 border-l border-ice-border pl-2')}>
+                    {items.map((component) => {
+                      const idx = staggerIdx++;
+                      return (
+                        <ComponentItem
+                          key={component.type}
+                          component={component}
+                          selectedProvider={selectedProvider}
+                          categoryColor={category.color}
+                          staggerIndex={mounted ? 0 : idx}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {filteredComponents.length === 0 && !showGroup && (
+            <div className="text-center py-16 palette-fade-enter">
+              <Search className="w-5 h-5 text-ice-text-3 mx-auto mb-3" />
+              <p className="text-ice-base text-ice-text-3 font-medium">No blocks found</p>
+              <p className="text-ice-xs text-ice-text-3 mt-1">Try a different search or provider</p>
+            </div>
+          )}
+
+          {showGroup && filteredComponents.length > 0 && (
+            <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent my-2 mx-2" />
+          )}
+
+          {showGroup && <DraggableGroupItem />}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// =============================================================================
 // Main Component
 // =============================================================================
 
-export const ResourcePalette: React.FC = () => {
+export interface ResourcePaletteProps {
+  /** Which section to show. Defaults to both. */
+  showProjectSection?: boolean;
+  showBlocksSection?: boolean;
+}
+
+export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
+  showProjectSection = true,
+  showBlocksSection = true,
+}) => {
   const { pathname } = useLocation();
   // Show blocks only on canvas/table views (not settings/deployments)
   const isCanvasView = !pathname.endsWith('/settings') && !pathname.endsWith('/deployments');
@@ -774,8 +946,8 @@ export const ResourcePalette: React.FC = () => {
       setSelectedProvider(projectProvider);
     }
   }, [projectProvider]);
-  const [showProjects, setShowProjects] = useState(true);
-  const [showBlocks, setShowBlocks] = useState(true);
+  const showProjects = showProjectSection;
+  const showBlocks = showBlocksSection;
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(loadCollapsed);
   const [mounted, setMounted] = useState(false);
@@ -838,7 +1010,7 @@ export const ResourcePalette: React.FC = () => {
   const showGroup = !localSearch.trim() || 'group organize'.includes(localSearch.toLowerCase());
 
   // Running stagger index for mount animation
-  let staggerIdx = 0;
+  const staggerIdx = 0;
 
   return (
     <TooltipProvider delayDuration={400}>
@@ -854,174 +1026,62 @@ export const ResourcePalette: React.FC = () => {
           background: 'var(--ice-bg-surface)',
         }}
       >
-        {/* Content */}
-        <div className="h-full flex flex-col">
-          {/* ── Projects (collapsible) ── */}
-          <div className={cn('shrink-0', showProjects && 'max-h-[40%]')}>
-            <button
-              onClick={() => setShowProjects(!showProjects)}
-              className="w-full flex items-center gap-1.5 px-3 py-1.5 hover:bg-ice-hover transition-colors"
-            >
-              <ChevronRight
-                className={cn(
-                  'w-3 h-3 text-ice-text-3 transition-transform duration-150 shrink-0',
-                  showProjects && 'rotate-90',
-                )}
-              />
-              <span className="text-ice-sm font-semibold text-ice-text-2 uppercase tracking-wider">Projects</span>
-            </button>
-            {showProjects && (
-              <div className="overflow-y-auto custom-scrollbar" style={{ maxHeight: 'calc(100% - 28px)' }}>
+        {/* Content — Projects and Blocks split with resizable panels */}
+        {showProjects && showBlocks && isCanvasView ? (
+          <ResizablePanelGroup direction="vertical" autoSaveId="ice-palette-split" className="h-full">
+            <ResizablePanel defaultSize={40} minSize={20}>
+              <div className="h-full overflow-y-auto custom-scrollbar">
                 <ProjectBrowser />
               </div>
-            )}
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={60} minSize={20}>
+              <BlocksSection
+                localSearch={localSearch}
+                setLocalSearch={setLocalSearch}
+                selectedProvider={selectedProvider}
+                setSelectedProvider={setSelectedProvider}
+                projectProvider={projectProvider}
+                searchInputRef={searchInputRef}
+                isSearchFocused={isSearchFocused}
+                setIsSearchFocused={setIsSearchFocused}
+                clearSearch={clearSearch}
+                filteredComponents={filteredComponents}
+                categorizedItems={categorizedItems}
+                isSearching={isSearching}
+                showGroup={showGroup}
+                collapsedCategories={collapsedCategories}
+                toggleCategory={toggleCategory}
+                mounted={mounted}
+                staggerIdx={staggerIdx}
+              />
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        ) : showProjects ? (
+          <div className="h-full overflow-y-auto custom-scrollbar">
+            <ProjectBrowser />
           </div>
-
-          {isCanvasView && <div className="mx-3 h-px bg-ice-border" />}
-
-          {/* ── Blocks (only on canvas/table views) ── */}
-          {isCanvasView && (
-            <>
-              <button
-                onClick={() => setShowBlocks(!showBlocks)}
-                className="w-full flex items-center gap-1.5 px-3 py-1.5 hover:bg-ice-hover transition-colors shrink-0"
-              >
-                <ChevronRight
-                  className={cn(
-                    'w-3 h-3 text-ice-text-3 transition-transform duration-150 shrink-0',
-                    showBlocks && 'rotate-90',
-                  )}
-                />
-                <span className="text-ice-sm font-semibold text-ice-text-2 uppercase tracking-wider">Blocks</span>
-                <span className="text-ice-xs text-ice-text-3 ml-auto tabular-nums">{filteredComponents.length}</span>
-              </button>
-
-              {showBlocks && (
-                <div className="px-2 pb-1 shrink-0">
-                  <div className="relative mb-1">
-                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-ice-text-3" />
-                    <input
-                      id="ice-palette-search-input"
-                      ref={searchInputRef}
-                      type="text"
-                      placeholder="Search blocks..."
-                      value={localSearch}
-                      onChange={(e) => setLocalSearch(e.target.value)}
-                      onFocus={() => setIsSearchFocused(true)}
-                      onBlur={() => setIsSearchFocused(false)}
-                      className="w-full pl-6 pr-7 py-1 text-ice-base rounded bg-ice-hover border border-ice-border text-ice-text-1 placeholder:text-ice-text-3 focus:outline-none focus:border-ice-border-strong transition-colors"
-                    />
-                    {localSearch && (
-                      <button
-                        onClick={clearSearch}
-                        className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-ice-active"
-                      >
-                        <X className="w-3 h-3 text-ice-text-3" />
-                      </button>
-                    )}
-                  </div>
-                  <div className="flex gap-0.5">
-                    {PROVIDERS.map((provider) => {
-                      const isActive = selectedProvider === provider.id;
-                      const isLocked = !!projectProvider && provider.id !== 'all' && provider.id !== projectProvider;
-                      return (
-                        <button
-                          key={provider.id}
-                          id={`ice-palette-filter-${provider.id}`}
-                          onClick={() => !isLocked && setSelectedProvider(provider.id)}
-                          disabled={isLocked}
-                          className={cn(
-                            'px-1.5 py-0.5 text-ice-xs font-medium rounded transition-[color,background-color]',
-                            isLocked
-                              ? 'text-ice-text-3 opacity-30 cursor-not-allowed'
-                              : isActive
-                                ? 'bg-ice-active text-ice-text-1'
-                                : 'text-ice-text-3 hover:text-ice-text-2 hover:bg-ice-hover',
-                          )}
-                        >
-                          {provider.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* ── Scrollable blocks content ── */}
-              {showBlocks && (
-                <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
-                  <div className="px-2 py-2">
-                    {categorizedItems.map(({ category, items }) => {
-                      const isCollapsed = !isSearching && collapsedCategories.has(category.id);
-                      const CatIcon = category.icon;
-
-                      return (
-                        <div key={category.id} className="mb-px">
-                          {/* Category header — minimal */}
-                          {!isSearching && (
-                            <button
-                              onClick={() => toggleCategory(category.id)}
-                              className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded hover:bg-ice-hover transition-colors"
-                            >
-                              <ChevronRight
-                                className={cn(
-                                  'w-3 h-3 text-ice-text-3 transition-transform duration-150 shrink-0',
-                                  !isCollapsed && 'rotate-90',
-                                )}
-                              />
-                              <div
-                                className="w-2 h-2 rounded-full shrink-0"
-                                style={{ backgroundColor: category.color, opacity: isCollapsed ? 0.4 : 0.8 }}
-                              />
-                              <span className="text-ice-sm font-semibold text-ice-text-2 uppercase tracking-wider">
-                                {category.label}
-                              </span>
-                              <span className="text-ice-xs text-ice-text-3 ml-auto tabular-nums">{items.length}</span>
-                            </button>
-                          )}
-
-                          {/* Items */}
-                          {!isCollapsed && (
-                            <div className={cn(!isSearching && 'ml-7 border-l border-ice-border pl-2')}>
-                              {items.map((component) => {
-                                const idx = staggerIdx++;
-                                return (
-                                  <ComponentItem
-                                    key={component.type}
-                                    component={component}
-                                    selectedProvider={selectedProvider}
-                                    categoryColor={category.color}
-                                    staggerIndex={mounted ? 0 : idx}
-                                  />
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-
-                    {filteredComponents.length === 0 && !showGroup && (
-                      <div className="text-center py-16 palette-fade-enter">
-                        <Search className="w-5 h-5 text-ice-text-3 mx-auto mb-3" />
-                        <p className="text-ice-base text-ice-text-3 font-medium">No blocks found</p>
-                        <p className="text-ice-xs text-ice-text-3 mt-1">Try a different search or provider</p>
-                      </div>
-                    )}
-
-                    {/* Separator before Group */}
-                    {showGroup && filteredComponents.length > 0 && (
-                      <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent my-2 mx-2" />
-                    )}
-
-                    {/* Group — always at bottom */}
-                    {showGroup && <DraggableGroupItem />}
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
+        ) : showBlocks && isCanvasView ? (
+          <BlocksSection
+            localSearch={localSearch}
+            setLocalSearch={setLocalSearch}
+            selectedProvider={selectedProvider}
+            setSelectedProvider={setSelectedProvider}
+            projectProvider={projectProvider}
+            searchInputRef={searchInputRef}
+            isSearchFocused={isSearchFocused}
+            setIsSearchFocused={setIsSearchFocused}
+            clearSearch={clearSearch}
+            filteredComponents={filteredComponents}
+            categorizedItems={categorizedItems}
+            isSearching={isSearching}
+            showGroup={showGroup}
+            collapsedCategories={collapsedCategories}
+            toggleCategory={toggleCategory}
+            mounted={mounted}
+            staggerIdx={staggerIdx}
+          />
+        ) : null}
       </div>
     </TooltipProvider>
   );

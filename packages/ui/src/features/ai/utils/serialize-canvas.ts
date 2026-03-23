@@ -6,9 +6,9 @@
  * (exact positions, sizes) since the AI only needs topology and properties.
  */
 
+import { BLOCK_BLUEPRINTS } from '../../../config/blocks';
 import type { RootState } from '../../../store';
 import type { SerializedCanvas, SerializedCanvasNode, SerializedCanvasEdge } from '@ice/types';
-import { BLOCK_BLUEPRINTS } from '../../../config/blocks';
 
 /** Properties to include in the serialized node (skip noisy internal fields) */
 const RELEVANT_PROPERTIES = new Set([

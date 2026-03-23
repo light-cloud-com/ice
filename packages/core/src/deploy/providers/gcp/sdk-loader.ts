@@ -6,8 +6,8 @@
  * Includes a REST client utility for services without Node.js SDKs.
  */
 
-import type { GCPRestClient } from './types.js';
 import { isAuthMissingError, isAuthExpiredError, AUTH_MESSAGES } from '../../messages.js';
+import type { GCPRestClient } from './types.js';
 
 /**
  * Dynamically import a GCP SDK package.
@@ -145,9 +145,9 @@ export async function verify_gcp_auth(external_client?: unknown): Promise<any> {
   } catch (err: any) {
     const msg = err?.message || String(err);
     if (isAuthMissingError(msg)) {
-      throw new Error(AUTH_MESSAGES.CREDENTIALS_NOT_FOUND);
+      throw new Error(AUTH_MESSAGES.CREDENTIALS_NOT_FOUND, { cause: err });
     }
-    throw new Error(AUTH_MESSAGES.AUTH_FAILED(msg));
+    throw new Error(AUTH_MESSAGES.AUTH_FAILED(msg), { cause: err });
   }
 
   // Verify we can actually get a token
@@ -159,9 +159,9 @@ export async function verify_gcp_auth(external_client?: unknown): Promise<any> {
   } catch (err: any) {
     const msg = err?.message || String(err);
     if (isAuthExpiredError(msg)) {
-      throw new Error(AUTH_MESSAGES.CREDENTIALS_EXPIRED);
+      throw new Error(AUTH_MESSAGES.CREDENTIALS_EXPIRED, { cause: err });
     }
-    throw new Error(AUTH_MESSAGES.AUTH_FAILED(msg));
+    throw new Error(AUTH_MESSAGES.AUTH_FAILED(msg), { cause: err });
   }
 
   return client;

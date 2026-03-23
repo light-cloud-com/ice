@@ -4,6 +4,10 @@
  * Imports resources directly from GCP APIs into ICE graph format.
  */
 
+import { infer_relationships } from './relationships.js';
+import { ComputeService, StorageService, AssetInventoryService, BaseGCPService } from "./services";
+import { get_ice_type, get_behavior, map_properties } from './type-mapper.js';
+import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph.js';
 import type {
   GCPImportOptions,
   GCPImportResult,
@@ -14,10 +18,6 @@ import type {
   GCPResource,
   GCPServiceType,
 } from './types.js';
-import { get_ice_type, get_behavior, map_properties } from './type-mapper.js';
-import { infer_relationships, get_relationship_type } from './relationships.js';
-import { ComputeService, StorageService, AssetInventoryService, BaseGCPService } from './services/index.js';
-import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph.js';
 import type { NodeInput, EdgeInput } from '../../types/graph.js';
 
 // =============================================================================
@@ -315,7 +315,7 @@ function create_service(
 /**
  * Create an error result.
  */
-function create_error_result(code: string, message: string, start_time: number): GCPImportResult {
+function _create_error_result(code: string, message: string, start_time: number): GCPImportResult {
   return {
     success: false,
     resources: [],

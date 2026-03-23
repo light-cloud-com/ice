@@ -4,12 +4,12 @@
  * Returns current billing status including charges, credits, and payment info
  */
 
-import { Request, Response } from 'express';
 import { User } from '@prisma/client';
+import { Request, Response } from 'express';
+import { Permission } from '../../const/permissions';
+import { errorHandler } from '../../error-handler';
 import { getBillingSummary } from '../../services/billing-service';
 import { checkPermissions } from '../../utils/check-permissions';
-import { errorHandler } from '../../error-handler';
-import { Permission } from '../../const/permissions';
 
 interface AuthenticatedRequest extends Request {
   user: User;

@@ -7,11 +7,11 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import type { RootState, AppDispatch } from '../../../store';
-import { fetchGitHubRepos } from '../../../store/slices/integrations-slice';
-import { Combobox, type ComboboxOption } from '../../../shared/components/ui/combobox';
 import { GitHubConnectModal } from './github-connect-modal';
 import { REPO_SELECTOR } from '../../../i18n/messages';
+import { Combobox, type ComboboxOption } from '../../../shared/components/ui/combobox';
+import { fetchGitHubRepos } from '../../../store/slices/integrations-slice';
+import type { RootState, AppDispatch } from '../../../store';
 
 interface RepoSelectorProps {
   value: string;

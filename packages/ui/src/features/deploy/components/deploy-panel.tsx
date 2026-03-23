@@ -5,10 +5,6 @@
  * Flow: Configure → Plan → Review → Deploy → Results
  */
 
-import React, { useCallback, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { getApi } from '../../../shared/api/api-adapter';
 import {
   X,
   Rocket,
@@ -23,9 +19,13 @@ import {
   ArrowRight,
   ExternalLink,
 } from 'lucide-react';
-import type { RootState, AppDispatch } from '../../../store';
-import { selectActiveCard, updateCardNodeData } from '../../../store/slices/cards-slice';
+import React, { useCallback, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { useSelector, useDispatch } from 'react-redux';
 import { DEPLOY_UI, isApiNotEnabledError, extractApiName, extractApiEnableUrl } from '../../../i18n/messages';
+import { getApi } from '../../../shared/api/api-adapter';
+import { cn } from '../../../shared/utils/cn';
+import { selectActiveCard, updateCardNodeData } from '../../../store/slices/cards-slice';
 import {
   closeDeployPanel,
   setProvider,
@@ -48,7 +48,7 @@ import {
   type DeployPlan,
   type DeployStatus,
 } from '../../../store/slices/deploy-slice';
-import { cn } from '../../../shared/utils/cn';
+import type { RootState, AppDispatch } from '../../../store';
 
 // ─── Provider regions ────────────────────────────────────────────────────────
 
@@ -175,7 +175,8 @@ export const DeployPanel: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
         }
       }
     })();
-  }, [isOpen, activeCard, dispatch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- use activeCard?.id to avoid re-firing on card object reference changes
+  }, [isOpen, activeCard?.id, deploy.gcpProject, deploy.region, dispatch]);
 
   // Subscribe to deploy progress room for this card
   useEffect(() => {
@@ -185,7 +186,8 @@ export const DeployPanel: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
     return () => {
       unsub?.();
     };
-  }, [isOpen, activeCard]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- use activeCard?.id to avoid re-firing on card object reference changes
+  }, [isOpen, activeCard?.id]);
 
   // Listen to deploy progress events from main process
   useEffect(() => {
@@ -235,7 +237,8 @@ export const DeployPanel: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
     });
 
     return cleanup;
-  }, [isOpen, dispatch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- use activeCard?.id to avoid re-firing on card object reference changes
+  }, [isOpen, activeCard?.id, dispatch]);
 
   // ─── Authenticate ─────────────────────────────────────────────────
 
@@ -369,7 +372,7 @@ export const DeployPanel: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
       const msg = err?.response?.data?.error || err?.message || 'Deployment failed';
       dispatch(deployError(msg));
     }
-  }, [activeCard, deploy.provider, deploy.gcpProject, deploy.region, deploy.environment, dispatch, handleAuthenticate]);
+  }, [activeCard, deploy.provider, deploy.gcpProject, deploy.region, deploy.environment, deploy.status, dispatch, handleAuthenticate]);
 
   // ─── Close ──────────────────────────────────────────────────────────
 
@@ -952,7 +955,7 @@ const ApiErrorBanner: React.FC<{
 
   if (isBillingError) {
     // Extract project ID from error or URL
-    const projectMatch = error.match(/project[=\/]([a-z0-9-]+)/i);
+    const projectMatch = error.match(/project[=/]([a-z0-9-]+)/i);
     const projectId = projectMatch?.[1] || '';
     return (
       <div className="rounded-md border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 p-4 space-y-2">

@@ -13,7 +13,7 @@ import type { GCPImportedResource, GCPImportWarning } from './types.js';
 /**
  * Infer dependencies between resources by scanning properties for self_link references.
  */
-export function infer_relationships(resources: GCPImportedResource[], warnings: GCPImportWarning[]): void {
+export function infer_relationships(resources: GCPImportedResource[], _warnings: GCPImportWarning[]): void {
   // Build self_link lookup map
   const self_link_map = new Map<string, GCPImportedResource>();
   for (const resource of resources) {

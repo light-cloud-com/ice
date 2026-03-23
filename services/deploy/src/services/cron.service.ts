@@ -6,8 +6,8 @@
  * - Every 5 min: detect stuck deploy jobs
  */
 
-import cron from 'node-cron';
 import prisma from '@ice/db';
+import cron from 'node-cron';
 
 export function startCronJobs() {
   // Every hour: clean expired refresh tokens

@@ -7,9 +7,6 @@
  * Opens from: clicking ⚡ badge on canvas node, right-click → Pipeline
  */
 
-import React, { useEffect, useCallback, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { useSelector, useDispatch } from 'react-redux';
 import {
   X,
   Zap,
@@ -22,12 +19,17 @@ import {
   XCircle,
   Clock,
   Rocket,
-  RefreshCw,
   Circle,
   ArrowRight,
 } from 'lucide-react';
-import type { RootState, AppDispatch } from '../../../store';
+import React, { useEffect, useCallback, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { PIPELINE } from '../../../i18n/messages';
+import { getApi } from '../../../shared/api/api-adapter';
+import { cn } from '../../../shared/utils/cn';
 import { selectActiveCard } from '../../../store/slices/cards-slice';
+import { fetchGitHubBranches } from '../../../store/slices/integrations-slice';
 import {
   closePipelinePanel,
   fetchRulesForNode,
@@ -42,12 +44,8 @@ import {
   type DeploymentRule,
   type DeploymentEvent,
   type DeployStep,
-  type FrameworkDetection,
 } from '../../../store/slices/pipeline-slice';
-import { getApi } from '../../../shared/api/api-adapter';
-import { fetchGitHubBranches } from '../../../store/slices/integrations-slice';
-import { PIPELINE } from '../../../i18n/messages';
-import { cn } from '../../../shared/utils/cn';
+import type { RootState, AppDispatch } from '../../../store';
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
@@ -106,7 +104,7 @@ export const PipelinePanel: React.FC = () => {
       if (!detection) dispatch(detectFramework({ repository, branch }));
       if (branches.length === 0) dispatch(fetchGitHubBranches(repository));
     }
-  }, [isPanelOpen, cardId, nodeId, repository]);
+  }, [isPanelOpen, cardId, nodeId, repository, detection, branches.length, dispatch, branch]);
 
   // ── Auto-create default pipeline rule when rules load empty for a repo ──
   const [autoCreated, setAutoCreated] = useState(false);

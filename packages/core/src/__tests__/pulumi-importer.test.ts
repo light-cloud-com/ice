@@ -13,7 +13,7 @@ import {
   is_type_supported,
   is_provider_resource,
   is_stack_resource,
-} from '../importers/pulumi/index.js';
+} from "../importers/pulumi";
 
 // =============================================================================
 // Sample Pulumi State Data

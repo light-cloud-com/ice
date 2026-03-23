@@ -9,7 +9,7 @@ import {
   get_ice_provider,
   get_provider_from_type,
   is_type_supported,
-} from '../importers/terraform/index.js';
+} from "../importers/terraform";
 
 // =============================================================================
 // Sample Terraform State Data

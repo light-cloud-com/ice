@@ -8,13 +8,13 @@
  * GET  /api/auth/me — Get current user
  */
 
-import { Router, type Request, type Response } from 'express';
-import jwt from 'jsonwebtoken';
 import { requireAuth, type AuthRequest } from '@ice/shared';
+import { Router, type Router as RouterType, type Request, type Response } from 'express';
+import jwt from 'jsonwebtoken';
 import * as authService from '../services/auth.service';
 import { AuthError } from '../services/auth.service';
 
-const router = Router();
+const router: RouterType = Router();
 const JWT_SECRET =
   process.env.JWT_SECRET ||
   (process.env.NODE_ENV === 'test'
@@ -170,6 +170,32 @@ router.post('/logout', async (req: Request, res: Response) => {
   await authService.logoutUser(req.cookies?.refreshToken);
   res.clearCookie('refreshToken');
   res.json({ success: true });
+});
+
+// ── Switch Organisation ──────────────────────────────────────────────────────
+
+router.post('/switch-org', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const { organisationId } = req.body;
+    if (!organisationId) {
+      return res.status(400).json({ message: 'organisationId is required' });
+    }
+
+    // Verify user is a member of the target org
+    const prisma = (await import('@ice/db')).default;
+    const membership = await prisma.organisationMember.findUnique({
+      where: { user_id_organisation_id: { user_id: req.userId!, organisation_id: organisationId } },
+    });
+    if (!membership) {
+      return res.status(403).json({ message: 'Not a member of this organisation' });
+    }
+
+    // Issue new JWT with the target org
+    const token = jwt.sign({ userId: req.userId!, organisationId }, JWT_SECRET, { expiresIn: '1h' });
+    res.json({ token });
+  } catch {
+    res.status(500).json({ message: 'Failed to switch organisation' });
+  }
 });
 
 // ── Me ───────────────────────────────────────────────────────────────────────

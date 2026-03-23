@@ -4,9 +4,9 @@
  * Handles: gcp.cloudfunctions.function
  */
 
-import type { ResourceDeployResult } from '../../../types.js';
-import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
 import { SERVICE_NAMES, operation_failed, operation_timed_out } from '../messages.js';
+import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
+import type { ResourceDeployResult } from '@ice/core';
 
 const TYPE = 'gcp.cloudfunctions.function';
 const BASE_URL = 'https://cloudfunctions.googleapis.com/v2';
@@ -108,7 +108,7 @@ export const cloud_functions_handler: GCPResourceHandler = {
 function build_function_spec(
   name: string,
   properties: Record<string, unknown>,
-  ctx: GCPHandlerContext,
+  _ctx: GCPHandlerContext,
 ): Record<string, unknown> {
   return {
     name,

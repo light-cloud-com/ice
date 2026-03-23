@@ -4,13 +4,12 @@
  * Returns details of a specific invoice
  */
 
+import { User } from '@prisma/client';
 import { Request, Response } from 'express';
-import { User, PrismaClient } from '@prisma/client';
+import { errorHandler } from '../../error-handler';
+import prisma from '../../lib/prisma';
 import { getInvoice as getInvoiceService } from '../../services/invoice-service';
 import { checkPermissions } from '../../utils/check-permissions';
-import { errorHandler } from '../../error-handler';
-
-import prisma from '../../lib/prisma';
 interface AuthenticatedRequest extends Request {
   user: User;
   params: {

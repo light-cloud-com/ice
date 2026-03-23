@@ -17,7 +17,7 @@ import type {
  * Compute Engine resource discovery service.
  */
 export class ComputeService extends BaseGCPService {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   private clients: Record<string, any> | null = null;
 
   get service_type(): GCPServiceType {
@@ -34,7 +34,7 @@ export class ComputeService extends BaseGCPService {
       // Dynamic import to make the dependency optional
       // Use string variable to prevent TypeScript from trying to resolve the module
       const module_name = '@google-cloud/compute';
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const compute: any = await Function('moduleName', 'return import(moduleName)')(module_name);
 
       const options: Record<string, unknown> = {
@@ -56,6 +56,7 @@ export class ComputeService extends BaseGCPService {
     } catch (error) {
       throw new Error(
         `Failed to initialize GCP Compute client. Make sure @google-cloud/compute is installed: ${error instanceof Error ? error.message : String(error)}`,
+        { cause: error },
       );
     }
   }

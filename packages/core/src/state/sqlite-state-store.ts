@@ -5,18 +5,11 @@
  * Uses better-sqlite3 for synchronous, transactional operations.
  */
 
-import type { Database, Statement } from 'better-sqlite3';
-import type { NodeId } from '../types/graph.js';
-import type { ResourceState, ResourceStatus } from '../types/providers.js';
-import type { DeploymentId, DeploymentStatus } from '../types/deployment.js';
 import { create_deployment_id } from '../types/deployment.js';
-import { create_node_id } from '../types/graph.js';
-import type { Result } from '../types/result.js';
-import type { IceError } from '../types/errors.js';
-import { success, failure } from '../types/result.js';
 import { InternalError } from '../types/errors.js';
+import { create_node_id } from '../types/graph.js';
+import { success, failure } from '../types/result.js';
 import type {
-  StateStore,
   StoredResourceState,
   DeploymentRecord,
   StateLock,
@@ -28,6 +21,12 @@ import type {
   StateChangeEvent,
   StateChangeType,
 } from './state-store.js';
+import type { DeploymentId, DeploymentStatus } from '../types/deployment.js';
+import type { IceError } from '../types/errors.js';
+import type { NodeId } from '../types/graph.js';
+import type { ResourceState } from '../types/providers.js';
+import type { Result } from '../types/result.js';
+import type { Database, Statement } from 'better-sqlite3';
 
 // =============================================================================
 // SQLite State Store Configuration

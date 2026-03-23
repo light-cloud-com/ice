@@ -25,7 +25,7 @@ interface PatternSuggestion {
  * Analyze the canvas and return contextual infrastructure suggestions.
  * Returns 3 most relevant suggestions based on what's missing.
  */
-export function suggestPatterns(nodes: CanvasNode[], edges: CanvasEdge[]): PatternSuggestion[] {
+export function suggestPatterns(nodes: CanvasNode[], _edges: CanvasEdge[]): PatternSuggestion[] {
   if (nodes.length === 0) {
     // Empty canvas — suggest starting architectures
     return [

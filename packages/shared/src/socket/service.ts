@@ -10,8 +10,8 @@
  * All connections require JWT authentication via handshake auth.
  */
 
-import { Server as SocketServer } from 'socket.io';
 import jwt from 'jsonwebtoken';
+import { Server as SocketServer } from 'socket.io';
 
 let _io: SocketServer;
 

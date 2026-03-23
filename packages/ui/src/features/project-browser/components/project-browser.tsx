@@ -5,8 +5,6 @@
  * Scoped to selected organisation.
  */
 
-import React, { useCallback, useEffect, useState, useRef, memo } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import {
   ChevronRight,
@@ -26,12 +24,14 @@ import {
   PenTool,
   Table2,
 } from 'lucide-react';
+import React, { useCallback, useEffect, useState, useRef, memo } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
-import type { RootState, AppDispatch } from '../../../store';
-import { openDialog } from '../../../store/slices/ui-slice';
 import axiosInstance from '../../../shared/api/axios-instance';
 import { useResolvePath } from '../../../shared/hooks/use-resolve-path';
 import { toSlug } from '../../../shared/utils/slug';
+import { openDialog } from '../../../store/slices/ui-slice';
+import type { RootState, AppDispatch } from '../../../store';
 
 interface ProjectNode {
   id: string;
@@ -78,7 +78,7 @@ const TreeItem = memo(
     const isFolder = node.type === 'folder';
     const isOpen = expandedIds.has(node.id);
     const isActive = node.id === activeNodeId;
-    const hasChildren = node.children.length > 0;
+    const _hasChildren = node.children.length > 0;
     const [isRenaming, setIsRenaming] = useState(false);
     const [renameValue, setRenameValue] = useState(node.name);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -369,7 +369,7 @@ export function ProjectBrowser() {
   const toggleExpand = useCallback((id: string) => {
     setExpanded((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) { next.delete(id); } else { next.add(id); }
       return next;
     });
   }, []);

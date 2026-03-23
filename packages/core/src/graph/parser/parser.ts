@@ -4,7 +4,6 @@
  * Recursive descent parser that builds an AST from tokens.
  */
 
-import type { Token, TokenType, SourceSpan, SourcePosition } from './tokens.js';
 import { describe_token } from './tokens.js';
 import type {
   Program,
@@ -41,6 +40,7 @@ import type {
   BinaryOperator,
   UnaryOperator,
 } from './ast.js';
+import type { Token, TokenType, SourceSpan, SourcePosition } from './tokens.js';
 
 // =============================================================================
 // Parser Error
@@ -494,7 +494,7 @@ export class Parser {
   }
 
   private parse_conditional(): Expression {
-    let expr = this.parse_or();
+    const expr = this.parse_or();
 
     if (this.match('QUESTION')) {
       const start = expr.span.start;

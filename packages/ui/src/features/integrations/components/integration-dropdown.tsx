@@ -5,17 +5,17 @@
  * Click on GitHub to open the connect modal. Shows status dots + names.
  */
 
+import { Github, Cloud, Check, X, Loader2, ChevronDown, Plug } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { Github, Cloud, Check, X, Loader2, ChevronDown, Plug } from 'lucide-react';
-import { cn } from '../../../shared/utils/cn';
+import { GitHubConnectModal } from './github-connect-modal';
 import { INTEGRATIONS } from '../../../i18n/messages';
+import { ProviderSettings } from '../../../shared/components/provider-settings';
+import { cn } from '../../../shared/utils/cn';
+import { checkGitHubConnection } from '../../../store/slices/integrations-slice';
 import type { RootState, AppDispatch } from '../../../store';
 import type { IntegrationStatus } from '../../../store/slices/integrations-slice';
-import { checkGitHubConnection } from '../../../store/slices/integrations-slice';
-import { GitHubConnectModal } from './github-connect-modal';
-import { ProviderSettings } from '../../../shared/components/provider-settings';
 
 const STATUS_CONFIG: Record<IntegrationStatus, { color: string; icon: React.ElementType | null; label: string }> = {
   connected: { color: 'text-emerald-500', icon: Check, label: INTEGRATIONS.CONNECTED },

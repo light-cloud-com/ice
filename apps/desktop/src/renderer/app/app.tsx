@@ -5,22 +5,21 @@
  * Uses IPC adapter for local deployments (no backend needed).
  */
 
+import { DebugOverlay } from '@ice/ui/debug';
+import { AppBar } from '@ice/ui/src/shared/components/app-bar';
+import { ErrorBoundary } from '@ice/ui/src/shared/components/error-boundary';
+import { MainLayout } from '@ice/ui/src/shared/components/main-layout';
+import { ThemeProvider } from '@ice/ui/src/shared/hooks/use-theme';
+import { initializeGraph } from '@ice/ui/src/store/slices/graph-slice';
+import { ProjectWizard } from '@ice/ui/wizard';
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { HashRouter, Routes, Route } from 'react-router-dom';
-import { ErrorBoundary } from '@ice/ui/src/shared/components/error-boundary';
-import { AppBar } from '@ice/ui/src/shared/components/app-bar';
-import { MainLayout } from '@ice/ui/src/shared/components/main-layout';
-import { ProjectWizard } from '@ice/ui/wizard';
-import { DebugOverlay } from '@ice/ui/debug';
-import { DeployPanel } from '@ice/ui/deploy';
-import { initializeGraph } from '@ice/ui/src/store/slices/graph-slice';
-import { ThemeProvider } from '@ice/ui/src/shared/hooks/use-theme';
 import type { AppDispatch, RootState } from '@ice/ui/src/store';
 
 function CanvasView() {
   const dispatch = useDispatch<AppDispatch>();
-  const deployIsOpen = useSelector((s: RootState) => s.deploy.isOpen);
+  const _deployIsOpen = useSelector((s: RootState) => s.deploy.isOpen);
 
   useEffect(() => {
     dispatch(initializeGraph());

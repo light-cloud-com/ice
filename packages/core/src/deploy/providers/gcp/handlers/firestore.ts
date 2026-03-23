@@ -6,7 +6,7 @@
  */
 
 import type { ResourceDeployResult } from '../../../types.js';
-import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
+import type { GCPResourceHandler } from '../types.js';
 
 const TYPE = 'gcp.firestore.database';
 const BASE_URL = 'https://firestore.googleapis.com/v1';
@@ -73,7 +73,7 @@ export const firestore_handler: GCPResourceHandler = {
     }
   },
 
-  async update(name, provider_id, properties, _current, ctx) {
+  async update(name, provider_id, _properties, _current, _ctx) {
     const start = Date.now();
     // Firestore databases have very limited update options
     return result(name, 'update', start, { provider_id });

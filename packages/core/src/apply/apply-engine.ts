@@ -4,22 +4,21 @@
  * Core logic for executing deployment plans.
  */
 
-import type { MutableGraph } from '../graph/mutable-graph.js';
-import type { Node, NodeId } from '../types/graph.js';
-import type { DeploymentPlan, PlannedChange, DeploymentAction } from '../types/deployment.js';
-import type { ProviderClient, ResourceState } from '../types/providers.js';
-import { create_deployment_id } from '../types/deployment.js';
 import { get_plan_execution_layers } from '../plan/plan-engine.js';
 import { create_mock_provider } from '../providers/mock-provider.js';
+import { create_deployment_id } from '../types/deployment.js';
 import type {
   ApplyOptions,
   ApplyResult,
   ApplySummary,
-  ApplyError,
   ApplyContext,
   ResourceApplyResult,
   ExecutionLayer,
 } from './types.js';
+import type { MutableGraph } from '../graph/mutable-graph.js';
+import type { DeploymentPlan, PlannedChange, DeploymentAction } from '../types/deployment.js';
+import type { Node } from '../types/graph.js';
+import type { ProviderClient, ResourceState } from '../types/providers.js';
 
 // =============================================================================
 // Apply Function
@@ -50,6 +49,7 @@ export async function apply_plan(
       dry_run: options.dry_run ?? false,
       abort_on_error: options.abort_on_error ?? false,
       mock: options.mock ?? true, // Default to mock mode
+      provider: options.provider ?? 'mock',
       on_progress: options.on_progress,
     },
     results: [],
@@ -109,7 +109,7 @@ async function execute_layer(
   provider: ProviderClient,
   context: ApplyContext,
 ): Promise<boolean> {
-  const { parallelism, dry_run, abort_on_error } = context.options;
+  const { parallelism, dry_run: _dry_run, abort_on_error } = context.options;
 
   // Filter out no_op changes
   const changes_to_apply = layer.changes.filter((c) => c.action !== 'no_op');
@@ -337,7 +337,7 @@ async function execute_provider_operation(
       }
       return provider.deploy(node);
 
-    case 'delete':
+    case 'delete': {
       if (!current_state) {
         return {
           success: false,
@@ -353,6 +353,7 @@ async function execute_provider_operation(
         success: destroy_result.success,
         error: destroy_result.error,
       };
+    }
 
     case 'no_op':
       return { success: true, state: current_state };

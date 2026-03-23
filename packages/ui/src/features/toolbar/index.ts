@@ -1,1 +1,1 @@
-export { ViewLevelToggle } from './components/view-level-toggle';
+// View level toggle removed — always using Professional (Level 2)

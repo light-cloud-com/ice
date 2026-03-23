@@ -4,8 +4,6 @@
  * Handles: gcp.run.service, gcp.run.job
  */
 
-import type { ResourceDeployResult } from '../../../types.js';
-import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
 import {
   SERVICE_NAMES,
   sdk_not_available,
@@ -14,6 +12,8 @@ import {
   BUILD_MESSAGES,
 } from '../messages.js';
 import { ensure_artifact_registry, build_from_source } from './cloud-build-helper.js';
+import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
+import type { ResourceDeployResult } from '@ice/core';
 
 function result(
   name: string,
@@ -146,6 +146,23 @@ export const cloud_run_handler: GCPResourceHandler = {
         await operation.promise();
 
         const outputs = await fetch_service_outputs(ctx, provider_id, properties, image);
+
+        // Set IAM policy for public access if allow_unauthenticated is enabled (ENGINE-18)
+        if (properties.allow_unauthenticated !== false && provider_id) {
+          try {
+            const iamUrl = `https://run.googleapis.com/v2/${provider_id}:setIamPolicy`;
+            await ctx.rest_client.post(iamUrl, {
+              policy: {
+                bindings: [{ role: 'roles/run.invoker', members: ['allUsers'] }],
+              },
+            });
+            ctx.on_log?.('Set public access (allUsers invoker)');
+          } catch (iamErr: any) {
+            ctx.on_log?.(`Warning: Could not set public access: ${iamErr.message || iamErr}`);
+            // Non-fatal — service is deployed but may not be publicly accessible
+          }
+        }
+
         return result(name, type, 'update', start, { provider_id, outputs });
       }
     } catch (error) {
@@ -293,6 +310,23 @@ async function create_service(
   const provider_id = `projects/${ctx.project}/locations/${region}/services/${name}`;
 
   const outputs = await fetch_service_outputs(ctx, provider_id, properties, image);
+
+  // Set IAM policy for public access if allow_unauthenticated is enabled (ENGINE-18)
+  if (properties.allow_unauthenticated !== false && provider_id) {
+    try {
+      const iamUrl = `https://run.googleapis.com/v2/${provider_id}:setIamPolicy`;
+      await ctx.rest_client.post(iamUrl, {
+        policy: {
+          bindings: [{ role: 'roles/run.invoker', members: ['allUsers'] }],
+        },
+      });
+      ctx.on_log?.('Set public access (allUsers invoker)');
+    } catch (iamErr: any) {
+      ctx.on_log?.(`Warning: Could not set public access: ${iamErr.message || iamErr}`);
+      // Non-fatal — service is deployed but may not be publicly accessible
+    }
+  }
+
   return result(name, 'gcp.run.service', 'create', start, { provider_id, outputs });
 }
 

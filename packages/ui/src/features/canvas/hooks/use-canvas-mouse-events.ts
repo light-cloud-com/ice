@@ -11,8 +11,8 @@
  */
 
 import { useCallback, useState, useRef, useEffect, type RefObject } from 'react';
-import type { ViewState, CanvasNode } from '../components/svg-canvas';
 import type { Point } from './use-canvas-utils';
+import type { ViewState, CanvasNode } from '../components/svg-canvas';
 
 // =============================================================================
 // Types
@@ -339,8 +339,8 @@ export const useCanvasMouseEvents = ({
 
         let newWidth = originalBounds.width;
         let newHeight = originalBounds.height;
-        let newX = originalBounds.x;
-        let newY = originalBounds.y;
+        const newX = originalBounds.x;
+        const newY = originalBounds.y;
 
         if (resizeHandle === 'se') {
           // Southeast corner - resize width and height

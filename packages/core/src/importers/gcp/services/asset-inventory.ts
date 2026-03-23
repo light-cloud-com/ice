@@ -6,9 +6,9 @@
  */
 
 import { BaseGCPService } from './base-service.js';
-import type { ServiceDiscoveryResult, GCPServiceType, GCPResource } from '../types.js';
+import { classifyGCPError } from '../../../errors/import-errors.js';
 import { getGCPCloudAssetTypes } from '../../../resources/high-level-resources.js';
-import { classifyGCPError, ImportErrorCode } from '../../../errors/import-errors.js';
+import type { ServiceDiscoveryResult, GCPServiceType, GCPResource } from '../types.js';
 
 /**
  * Flatten protobuf Struct format to plain JSON.
@@ -35,9 +35,10 @@ function flattenProtobufValue(value: unknown): unknown {
         return null;
       case 'structValue':
         return flattenProtobufStruct(obj.structValue as Record<string, unknown>);
-      case 'listValue':
+      case 'listValue': {
         const listVal = obj.listValue as { values?: unknown[] };
         return (listVal?.values || []).map(flattenProtobufValue);
+      }
       default:
         return value;
     }
@@ -95,7 +96,7 @@ function extractCleanProperties(resourceData: Record<string, unknown>): Record<s
  * Discovers only business-relevant GCP resources (not infrastructure noise).
  */
 export class AssetInventoryService extends BaseGCPService {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   private asset_client: any = null;
 
   get service_type(): GCPServiceType {
@@ -110,7 +111,7 @@ export class AssetInventoryService extends BaseGCPService {
 
     try {
       const module_name = '@google-cloud/asset';
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const asset_module: any = await Function('moduleName', 'return import(moduleName)')(module_name);
       const AssetServiceClient = asset_module.AssetServiceClient;
 
@@ -133,7 +134,7 @@ export class AssetInventoryService extends BaseGCPService {
           if (keyData.project_id) {
             options.projectId = keyData.project_id;
           }
-        } catch (readError) {
+        } catch {
           // Fallback to keyFilename if direct read fails
           options.keyFilename = this.key_file;
         }
@@ -143,6 +144,7 @@ export class AssetInventoryService extends BaseGCPService {
     } catch (error) {
       throw new Error(
         `Failed to initialize GCP Asset client. Make sure @google-cloud/asset is installed: ${error instanceof Error ? error.message : String(error)}`,
+        { cause: error },
       );
     }
   }

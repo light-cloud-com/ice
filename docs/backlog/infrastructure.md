@@ -1,6 +1,6 @@
 # Infrastructure & CI/CD Backlog
 
-> **Status: 15 of 16 items fixed** (2026-03-22). 1 remaining (deploy workflow) requires cloud provider config.
+> **Status: 16 of 17 items fixed** (2026-03-23). 1 remaining (deploy workflow) requires cloud provider config.
 
 ## INFRA-1: CI pipeline broken — references deleted `backend/` directory (P0) -- FIXED
 
@@ -95,3 +95,9 @@ No automated deployment of the gateway or web frontend. Requires cloud provider 
 ## INFRA-16: Gateway tsconfig uses `moduleResolution: "bundler"` (P2) -- FIXED
 
 **Fix applied:** Changed to `"module": "NodeNext"`, `"moduleResolution": "NodeNext"` for proper Node.js runtime compatibility.
+
+---
+
+## INFRA-17: 379 ESLint warnings/errors across the codebase (P2) -- FIXED
+
+**Fix applied (2026-03-23):** Reduced ESLint violations from 379 to 0 across ~95 files in all packages and services. Breakdown: 218 `import-x/order`, 83 `unused-imports/no-unused-vars`, 32 `react-hooks/exhaustive-deps`, 21 `preserve-caught-error`, 15 `no-case-declarations`, 4 `no-require-imports`, 6 miscellaneous.

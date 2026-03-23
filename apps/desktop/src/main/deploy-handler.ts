@@ -14,7 +14,6 @@
  * classify resources as create/update/delete instead of always "create".
  */
 
-import { ipcMain, BrowserWindow, app, shell } from 'electron';
 import { join } from 'path';
 import {
   translate_card_to_graph,
@@ -41,7 +40,7 @@ import {
   IPC_ERRORS,
   ALLOWED_EXTERNAL_URL_PREFIXES,
 } from '@ice/core';
-import { IPC_ERRORS as MAIN_IPC_ERRORS } from './messages';
+import { ipcMain, BrowserWindow, app, shell } from 'electron';
 import { connectGCPViaGcloud } from './ipc-handlers';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -550,38 +549,8 @@ export function registerDeployHandlers() {
             });
 
             if (result.success) {
-              // Cloud Run services: set IAM policy to allow unauthenticated access.
-              // Done here (not in handler) because the handler's REST client silently
-              // fails and we need direct access to the auth client for reliable REST calls.
-              if (
-                node.type === 'gcp.run.service' &&
-                result.provider_id &&
-                node.properties.allow_unauthenticated !== false
-              ) {
-                try {
-                  const iamUrl = `https://run.googleapis.com/v2/${result.provider_id}:setIamPolicy`;
-                  sendProgress({
-                    type: 'log',
-                    message: `Setting public access on ${node.name}...`,
-                  });
-                  await authCheck.client.request({
-                    url: iamUrl,
-                    method: 'POST',
-                    data: {
-                      policy: {
-                        bindings: [{ role: 'roles/run.invoker', members: ['allUsers'] }],
-                      },
-                    },
-                    headers: { 'Content-Type': 'application/json' },
-                  });
-                  sendProgress({ type: 'log', message: `Public access enabled for ${node.name}` });
-                } catch (iamErr: any) {
-                  sendProgress({
-                    type: 'log',
-                    message: `Warning: Could not set public access on ${node.name}: ${iamErr.message || iamErr}`,
-                  });
-                }
-              }
+              // IAM policy for Cloud Run public access is now handled inside the
+              // Cloud Run handler itself (ENGINE-18).
 
               sendProgress({
                 type: 'log',

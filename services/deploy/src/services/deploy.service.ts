@@ -5,10 +5,10 @@
  * Uses user's own cloud credentials (not Light Cloud's).
  */
 
-import prisma from '@ice/db';
-import { emitDeployProgress } from '@ice/shared';
-import * as providerService from '@ice/service-credentials';
 import fs from 'fs';
+import prisma from '@ice/db';
+import * as providerService from '@ice/service-credentials';
+import { emitDeployProgress } from '@ice/shared';
 
 /** Clean up a specific temp credentials file */
 function cleanupTempCredentialsFile(filePath: string | undefined) {
@@ -241,7 +241,7 @@ export async function applyDeployment(
             message: 'Authenticating via Service Account...',
           });
         } catch (err: any) {
-          throw new Error(`Invalid service account key: ${err.message}`);
+          throw new Error(`Invalid service account key: ${err.message}`, { cause: err });
         }
       }
     }
@@ -274,7 +274,7 @@ export async function applyDeployment(
     // This enables update/skip semantics — without it, every deploy is "create all".
     // @ts-ignore — resolved at runtime via pnpm workspace
     const { MutableGraph } = await import('@ice/core/graph');
-    let currentGraph = new MutableGraph('current');
+    const currentGraph = new MutableGraph('current');
 
     const lastDeploy = await prisma.canvasDeployment.findFirst({
       where: { card_id: cardId, status: 'success' },
@@ -581,7 +581,7 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
           tempCredentialsPath = tmpPath;
           process.env.GOOGLE_APPLICATION_CREDENTIALS = tmpPath;
         } catch (err: any) {
-          throw new Error(`Invalid service account key: ${err.message}`);
+          throw new Error(`Invalid service account key: ${err.message}`, { cause: err });
         }
       }
     }

@@ -5,13 +5,13 @@
  * change roles, remove members, invite users, show pending invitations.
  */
 
+import { UserPlus, Loader2, Shield, User, Eye, Trash2, Clock, Mail } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { UserPlus, Loader2, Shield, User, Eye, Pencil, Trash2, Clock, Mail } from 'lucide-react';
-import type { RootState } from '../../../store';
-import axiosInstance from '../../../shared/api/axios-instance';
 import { InviteUserModal } from './invite-user-modal';
+import axiosInstance from '../../../shared/api/axios-instance';
 import { cn } from '../../../shared/utils/cn';
+import type { RootState } from '../../../store';
 
 interface TeamMember {
   id: string;

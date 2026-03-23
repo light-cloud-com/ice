@@ -5,12 +5,12 @@
  * PUT /api/profile/password — Change password
  */
 
-import { Router, type Response } from 'express';
-import bcrypt from 'bcryptjs';
 import prisma from '@ice/db';
 import { requireAuth, type AuthRequest } from '@ice/shared';
+import * as bcrypt from 'bcryptjs';
+import { Router, type Router as RouterType, type Response } from 'express';
 
-const router = Router();
+const router: RouterType = Router();
 router.use(requireAuth);
 
 router.put('/name', async (req: AuthRequest, res: Response) => {
@@ -24,7 +24,7 @@ router.put('/name', async (req: AuthRequest, res: Response) => {
     });
 
     res.json({ message: 'Name updated successfully' });
-  } catch (err: any) {
+  } catch {
     res.status(500).json({ message: 'Failed to update name' });
   }
 });
@@ -48,7 +48,7 @@ router.put('/password', async (req: AuthRequest, res: Response) => {
     });
 
     res.json({ message: 'Password updated successfully' });
-  } catch (err: any) {
+  } catch {
     res.status(500).json({ message: 'Failed to update password' });
   }
 });

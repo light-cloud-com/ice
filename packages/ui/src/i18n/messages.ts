@@ -151,7 +151,7 @@ export const TOOLBAR = {
 export const STATUS_BAR = {
   UNTITLED: 'untitled',
   VALID: 'Valid',
-  VERSION: 'ICE v0.1.0',
+  VERSION: `ICE v${__ICE_VERSION__}`,
 
   // Deploy status
   CONNECTING: 'Connecting to GCP...',

@@ -13,12 +13,12 @@
  * POST /api/canvas/cards/delete     — Delete card
  */
 
-import { Router, type Response } from 'express';
-import { requireAuth, requireProjectAccess, type AuthRequest } from '@ice/shared';
-import * as canvasService from '../services/canvas.service';
 import { grantCreatorAccess } from '@ice/service-iam';
+import { requireAuth, requireProjectAccess, type AuthRequest } from '@ice/shared';
+import { Router, type Router as RouterType, type Response } from 'express';
+import * as canvasService from '../services/canvas.service';
 
-const router = Router();
+const router: RouterType = Router();
 router.use(requireAuth);
 
 function getOrgId(req: AuthRequest): string {
@@ -77,7 +77,7 @@ router.post('/projects/delete', requireProjectAccess('owner'), async (req: AuthR
 
 router.post('/projects/move', requireProjectAccess('owner'), async (req: AuthRequest, res: Response) => {
   try {
-    await canvasService.moveProject(req.body.projectId, req.body.parentId);
+    await canvasService.moveProject(req.body.projectId, req.body.parentId, getOrgId(req));
     res.json({ success: true });
   } catch (err: any) {
     res.status(400).json({ message: err.message });
@@ -92,7 +92,7 @@ router.post('/cards/create', requireProjectAccess('editor'), async (req: AuthReq
   res.json(card);
 });
 
-router.post('/cards/get', async (req: AuthRequest, res: Response) => {
+router.post('/cards/get', requireProjectAccess('viewer'), async (req: AuthRequest, res: Response) => {
   try {
     const card = await canvasService.getCard(req.body.cardId);
     res.json(card);
@@ -115,7 +115,7 @@ router.post('/cards/update', requireProjectAccess('editor'), async (req: AuthReq
   }
 });
 
-router.post('/cards/delete', requireProjectAccess('editor'), async (req: AuthRequest, res: Response) => {
+router.post('/cards/delete', requireProjectAccess('owner'), async (req: AuthRequest, res: Response) => {
   await canvasService.deleteCard(req.body.cardId);
   res.json({ success: true });
 });

@@ -4,8 +4,16 @@
  * Imports Pulumi stack state files into ICE graph format.
  */
 
-import { readFile } from 'fs/promises';
 import { existsSync } from 'fs';
+import { readFile } from 'fs/promises';
+import {
+  get_ice_type,
+  get_provider_from_type,
+  parse_urn,
+  is_provider_resource,
+  is_stack_resource,
+} from './type-mapper.js';
+import { MutableGraph, create_mutable_graph } from '../../graph/mutable-graph.js';
 import type {
   PulumiStackState,
   PulumiStackExport,
@@ -18,14 +26,6 @@ import type {
   PulumiImportWarning,
   PulumiImportMetadata,
 } from './types.js';
-import {
-  get_ice_type,
-  get_provider_from_type,
-  parse_urn,
-  is_provider_resource,
-  is_stack_resource,
-} from './type-mapper.js';
-import { MutableGraph, create_mutable_graph } from '../../graph/mutable-graph.js';
 import type { NodeInput, EdgeInput } from '../../types/graph.js';
 
 // =============================================================================

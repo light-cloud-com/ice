@@ -6,10 +6,10 @@
  * GET /api/schemas/:iceType
  */
 
-import { Router, type Request, type Response } from 'express';
+import { Router, type Request, type Response, type Router as RouterType } from 'express';
 import * as schemaService from '../services/schema.service';
 
-const router = Router();
+const router: RouterType = Router();
 
 router.get('/categories', async (_req: Request, res: Response) => {
   try {

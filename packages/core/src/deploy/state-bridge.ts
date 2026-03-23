@@ -6,8 +6,7 @@
  */
 
 import type { ResourceDeployResult, DeployResult } from './types.js';
-import type { Graph, Node, NodeId } from '../types/graph.js';
-import { create_node_id } from '../types/graph.js';
+import type { Graph } from '../types/graph.js';
 
 // =============================================================================
 // Types

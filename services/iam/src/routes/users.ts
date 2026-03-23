@@ -10,12 +10,12 @@
  */
 
 import crypto from 'crypto';
-import { Router, type Response } from 'express';
 import prisma from '@ice/db';
 import { requireAuth, type AuthRequest } from '@ice/shared';
+import { Router, type Router as RouterType, type Response } from 'express';
 import { sendOrgInviteEmail } from '../services/email.service';
 
-const router = Router();
+const router: RouterType = Router();
 router.use(requireAuth);
 
 // ── Helper: get caller's role in org ─────────────────────────────────────────
@@ -35,6 +35,12 @@ router.post('/', async (req: AuthRequest, res: Response) => {
   try {
     const { targetOrganisationId, page = 1, limit = 50 } = req.body;
     const orgId = targetOrganisationId || req.organisationId || '';
+
+    // Check org role — admin+ required to list members
+    const callerRole = await getCallerRole(req.userId!, orgId);
+    if (!callerRole || !ADMIN_ROLES.has(callerRole)) {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
 
     const [members, total] = await Promise.all([
       prisma.organisationMember.findMany({
@@ -221,6 +227,12 @@ router.get('/invitations', async (req: AuthRequest, res: Response) => {
   try {
     const orgId = (req.query.organisationId as string) || req.organisationId || '';
 
+    // Check org role — admin+ required to list invitations
+    const callerRole = await getCallerRole(req.userId!, orgId);
+    if (!callerRole || !ADMIN_ROLES.has(callerRole)) {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+
     const invitations = await prisma.invitation.findMany({
       where: { organisation_id: orgId, accepted_at: null, expires_at: { gt: new Date() } },
       orderBy: { created_at: 'desc' },
@@ -234,7 +246,7 @@ router.get('/invitations', async (req: AuthRequest, res: Response) => {
     });
 
     res.json(invitations);
-  } catch (err: any) {
+  } catch {
     res.status(500).json({ message: 'Failed to list invitations' });
   }
 });

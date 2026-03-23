@@ -129,6 +129,8 @@
   }
 
   body {
+    min-width: 1024px;
+    min-height: 768px;
     background: var(--ice-bg-base);
     color: var(--ice-text-primary);
     font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;

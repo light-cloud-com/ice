@@ -5,9 +5,9 @@
  * Used primarily for RabbitMQ on GKE.
  */
 
-import type { ResourceDeployResult } from '../../../types.js';
-import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
 import { SERVICE_NAMES, sdk_not_available, sdk_not_available_short, HANDLER_MESSAGES } from '../messages.js';
+import type { GCPResourceHandler } from '../types.js';
+import type { ResourceDeployResult } from '@ice/core';
 
 const TYPE = 'gcp.container.cluster';
 
@@ -94,17 +94,42 @@ export const gke_handler: GCPResourceHandler = {
     }
   },
 
-  async update(name, provider_id, properties, _current, ctx) {
+  async update(name, provider_id, properties, current, ctx) {
     const start = Date.now();
-    // GKE cluster updates are complex; label updates are supported
     try {
       const client = ctx.clients.get('container') as any;
       if (!client) return fail(name, 'update', start, sdk_not_available_short(SERVICE_NAMES.GKE));
 
+      const node_pool_name = `${provider_id}/nodePools/default-pool`;
+
+      // Update labels if provided
       if (properties.labels) {
         await client.setLabels({
           name: provider_id,
           resourceLabels: properties.labels,
+        });
+      }
+
+      // Update node pool size if node_count or initial_node_count changed
+      const desired_count = (properties.node_count ?? properties.initial_node_count) as number | undefined;
+      const current_count = (current?.node_count ?? current?.initial_node_count) as number | undefined;
+      if (desired_count != null && desired_count !== current_count) {
+        await client.setNodePoolSize({
+          name: node_pool_name,
+          nodeCount: desired_count,
+        });
+      }
+
+      // Update machine type if it changed
+      const desired_machine = properties.machine_type as string | undefined;
+      const current_machine = current?.machine_type as string | undefined;
+      if (desired_machine && desired_machine !== current_machine) {
+        await client.updateNodePool({
+          name: node_pool_name,
+          nodeVersion: '-',
+          config: {
+            machineType: desired_machine,
+          },
         });
       }
 

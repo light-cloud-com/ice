@@ -5,9 +5,9 @@
  * Handles ID remapping, blueprint resolution, validation, and undo snapshots.
  */
 
-import type { AppDispatch } from '../../../store';
-import type { AiCanvasOp, AddBlueprintOp } from '@ice/types';
-import type { Card, CardNode } from '../../../store/slices/cards-slice';
+import { getBlueprint, expandBlueprint } from '../../../config/blocks';
+import { canContain } from '../../../config/containment-rules';
+import { store } from '../../../store';
 import {
   addNodeToCard,
   addEdgeToCard,
@@ -22,10 +22,10 @@ import {
   autoOrganizeCard,
   selectActiveCard,
 } from '../../../store/slices/cards-slice';
-import { getBlueprint, expandBlueprint } from '../../../config/blocks';
 import type { Provider } from '../../../config/blocks/types';
-import { canContain } from '../../../config/containment-rules';
-import { store } from '../../../store';
+import type { AppDispatch } from '../../../store';
+import type { Card, CardNode } from '../../../store/slices/cards-slice';
+import type { AiCanvasOp, AddBlueprintOp } from '@ice/types';
 
 // =============================================================================
 // Types

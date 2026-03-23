@@ -9,8 +9,6 @@
  * - Connection status
  */
 
-import React, { useMemo } from 'react';
-import { useSelector } from 'react-redux';
 import {
   Circle,
   GitBranch,
@@ -24,11 +22,12 @@ import {
   Loader2,
   XCircle,
 } from 'lucide-react';
-import type { RootState } from '../store';
-import { selectActiveCard } from '../store/slices/cards-slice';
-import { STATUS_BAR } from '../i18n/messages';
+import React, { useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import { IntegrationStatusDots } from '../features/integrations';
-import { ViewLevelToggle } from '../features/toolbar/components/view-level-toggle';
+import { STATUS_BAR } from '../i18n/messages';
+import { selectActiveCard } from '../store/slices/cards-slice';
+import type { RootState } from '../store';
 
 function parseCostRange(cost: string): number {
   const matches = cost.match(/\$(\d+)(?:[–-](\d+))?/);
@@ -156,11 +155,6 @@ export const StatusBar: React.FC = () => {
 
       {/* Spacer */}
       <div className="flex-1" />
-
-      {/* View level toggle (Basic / Professional) */}
-      <ViewLevelToggle />
-
-      <StatusDivider />
 
       {/* Zoom level */}
       <div className="flex items-center gap-1.5">

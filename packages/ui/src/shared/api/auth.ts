@@ -2,8 +2,7 @@
  * Auth utilities for the web app
  */
 
-import axiosInstance from './axios-instance';
-import { setAccessToken, getAccessToken } from './axios-instance';
+import axiosInstance, { setAccessToken, getAccessToken } from './axios-instance';
 
 export interface AuthUser {
   id: string;

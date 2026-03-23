@@ -12,12 +12,12 @@
  * ╰──────────────────────────────╯
  */
 
-import React, { memo, useState, useCallback, useRef, useEffect } from 'react';
-import type { CanvasNode } from '../svg-canvas';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { getIcon, DEFAULT_ICON, type Provider } from '../../../../assets/icons';
 import { getBrandIcon, type BrandIcon } from '../../../../assets/icons/brand-registry';
-import { RepoSelector } from '../../../integrations/components/repo-selector';
 import { REPO_SELECTOR } from '../../../../i18n/messages';
+import { RepoSelector } from '../../../integrations/components/repo-selector';
+import type { CanvasNode } from '../svg-canvas';
 
 export interface NodePipelineStatus {
   status: 'idle' | 'queued' | 'building' | 'deploying' | 'success' | 'failed';
@@ -216,27 +216,26 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
     if (!isSelected) setRepoSelectorOpen(false);
   }, [isSelected]);
 
-  // Auto-open repo selector for Source.Repository nodes with no repo set
-  const isSourceRepo = (data.iceType as string) === 'Source.Repository' || data.behavior === 'source';
-  useEffect(() => {
-    if (isSelected && isSourceRepo && !repository) {
-      setRepoSelectorOpen(true);
-    }
-  }, [isSelected, isSourceRepo]);
-
-  // The original type name (set during blueprint expansion)
-  const blockTypeName = (data.blockTypeName as string) || '';
-  // Show type subtitle when user has renamed the block
-  const isRenamed = blockTypeName && label && label !== blockTypeName;
-
   // ── Data extraction ──
   const iceType = (data.iceType as string) || '';
   const category = iceType.split('.')[0] || 'default';
   const provider = (data.provider as string) || '';
   const runtime = (data.runtime as string) || '';
   const folded = (data.folded as boolean) || false;
-
   const repository = (data.repository as string) || (data.github as string) || (data.repo as string) || '';
+
+  // Auto-open repo selector for Source.Repository nodes with no repo set
+  const isSourceRepo = (data.iceType as string) === 'Source.Repository' || data.behavior === 'source';
+  useEffect(() => {
+    if (isSelected && isSourceRepo && !repository) {
+      setRepoSelectorOpen(true);
+    }
+  }, [isSelected, isSourceRepo, repository]);
+
+  // The original type name (set during blueprint expansion)
+  const blockTypeName = (data.blockTypeName as string) || '';
+  // Show type subtitle when user has renamed the block
+  const isRenamed = blockTypeName && label && label !== blockTypeName;
   const domain = (data.domain as string) || (data.subdomain as string) || (data.url as string) || '';
   const image = (data.image as string) || '';
   const version = (data.version as string) || '';

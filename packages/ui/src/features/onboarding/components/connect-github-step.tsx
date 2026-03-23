@@ -5,16 +5,16 @@
  * Reuses existing integration store actions.
  */
 
+import { Github, Loader2, Copy, Check, ExternalLink } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Github, Loader2, Copy, Check, ExternalLink } from 'lucide-react';
 import { cn } from '../../../shared/utils/cn';
-import { setGithubConnected } from '../../../store/slices/onboarding-slice';
 import {
   connectGitHubPAT,
   startGitHubDeviceFlow,
   checkGitHubConnection,
 } from '../../../store/slices/integrations-slice';
+import { setGithubConnected } from '../../../store/slices/onboarding-slice';
 import type { RootState, AppDispatch } from '../../../store';
 
 export const ConnectGithubStep: React.FC = () => {

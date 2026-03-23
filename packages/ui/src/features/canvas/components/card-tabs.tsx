@@ -5,10 +5,10 @@
  * Supports creating, deleting, and renaming cards.
  */
 
+import { Plus, X, Pencil, Check } from 'lucide-react';
 import React, { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Plus, X, Pencil, Check } from 'lucide-react';
-import type { AppDispatch } from '../../../store';
+import { cn } from '../../../shared/utils/cn';
 import {
   setActiveCard,
   createCard,
@@ -17,7 +17,7 @@ import {
   selectCards,
   selectActiveCardId,
 } from '../../../store/slices/cards-slice';
-import { cn } from '../../../shared/utils/cn';
+import type { AppDispatch } from '../../../store';
 
 export const CardTabs: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -111,10 +111,6 @@ export const CardTabs: React.FC = () => {
               <span className="truncate max-w-[120px]">{card.name}</span>
             )}
 
-            {/* Demo badge */}
-            {card.isDemo && !isEditing && (
-              <span className="text-ice-xs px-1.5 py-0.5 rounded bg-ice-green/20 text-ice-green font-medium">DEMO</span>
-            )}
 
             {/* Action buttons - shown on hover or when active */}
             {!isEditing && (

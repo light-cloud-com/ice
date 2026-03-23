@@ -7,8 +7,8 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { initializeGraph, loadGraph, saveGraph, undo, redo } from '../../store/slices/graph-slice';
-import { togglePalette, toggleProperties, toggleMinimap } from '../../store/slices/ui-slice';
 import { clearSelection, selectAll } from '../../store/slices/selection-slice';
+import { togglePalette, toggleProperties, toggleMinimap } from '../../store/slices/ui-slice';
 import { getApi } from '../api/api-adapter';
 import type { AppDispatch, RootState } from '../../store';
 

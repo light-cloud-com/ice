@@ -259,7 +259,7 @@ export async function promoteEnvironment(sourceEnvId: string, targetEnvId: strin
       where: { card_id: targetEnv.card_id, enabled: true },
     });
     if (rules.length > 0) {
-      const { createDeploymentEvent, updateEventProgress } = await import('./pipeline.service');
+      const { createDeploymentEvent, updateEventProgress: _updateEventProgress } = await import('./pipeline.service');
       const { getDeployQueue } = await import('./queue.service');
       const queue = getDeployQueue();
 

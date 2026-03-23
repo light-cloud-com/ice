@@ -288,7 +288,7 @@ export async function failEvent(eventId: string, error: string) {
 
 // ─── Webhook Matching ───────────────────────────────────────────────────────
 
-export async function matchRulesForPush(repository: string, branch: string, commitSha: string) {
+export async function matchRulesForPush(repository: string, branch: string, _commitSha: string) {
   const rules = await prisma.deploymentRule.findMany({
     where: {
       repository,

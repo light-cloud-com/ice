@@ -11,11 +11,11 @@
  * GET  /api/github/repos/:owner/:repo/branches — List branches
  */
 
-import { Router, type Response } from 'express';
 import { requireAuth, type AuthRequest } from '@ice/shared';
+import { Router, type Router as RouterType, type Response } from 'express';
 import * as githubService from '../services/github.service';
 
-const router = Router();
+const router: RouterType = Router();
 router.use(requireAuth);
 
 router.get('/status', async (req: AuthRequest, res: Response) => {

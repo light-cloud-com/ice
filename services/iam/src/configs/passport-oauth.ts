@@ -4,10 +4,10 @@
  * Uses auth.service.findOrCreateOAuthUser for user management.
  */
 
-import passport from 'passport';
-import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import { Strategy as GitHubStrategy } from 'passport-github2';
 import prisma from '@ice/db';
+import passport from 'passport';
+import { Strategy as GitHubStrategy } from 'passport-github2';
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { findOrCreateOAuthUser } from '../services/auth.service';
 
 export function configurePassportOAuth() {

@@ -5,9 +5,10 @@
  * Now uses user-level billing (one payment method per user, covers all their orgs)
  */
 
-import { Request, Response } from 'express';
 import { User } from '@prisma/client';
-import prisma from '../../lib/prisma';
+import { Request, Response } from 'express';
+import { Permission } from '../../const/permissions';
+import { errorHandler } from '../../error-handler';
 import {
   createUserSetupIntent,
   attachUserPaymentMethod,
@@ -16,8 +17,6 @@ import {
   isStripeConfigured,
 } from '../../services/stripe-service';
 import { checkPermissions } from '../../utils/check-permissions';
-import { errorHandler } from '../../error-handler';
-import { Permission } from '../../const/permissions';
 
 interface AuthenticatedRequest extends Request {
   user: User;

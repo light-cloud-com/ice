@@ -4,13 +4,12 @@
  * Returns paginated list of invoices for an organisation
  */
 
-import { Request, Response } from 'express';
 import { User } from '@prisma/client';
+import { Request, Response } from 'express';
+import { errorHandler } from '../../error-handler';
+import prisma from '../../lib/prisma';
 import { listInvoices as listInvoicesService } from '../../services/invoice-service';
 import { checkPermissions } from '../../utils/check-permissions';
-import { errorHandler } from '../../error-handler';
-
-import prisma from '../../lib/prisma';
 interface AuthenticatedRequest extends Request {
   user: User;
   body: {
@@ -73,7 +72,7 @@ export const listInvoices = async (req: AuthenticatedRequest, res: Response): Pr
     });
 
     if (!hasPermission.hasPermission && !hasPermission.isSuper) {
-      const { PrismaClient } = await import('@prisma/client');
+      const { PrismaClient: _PrismaClient } = await import('@prisma/client');
       const membership = await prisma.organisationUsers.findFirst({
         where: {
           user_id: req.user.id,

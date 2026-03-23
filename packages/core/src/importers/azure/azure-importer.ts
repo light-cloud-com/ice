@@ -5,6 +5,9 @@
  * Uses Azure Resource Graph to discover ALL resources.
  */
 
+import { get_ice_type, map_properties } from './type-mapper.js';
+import { classifyAzureError } from '../../errors/import-errors.js';
+import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph.js';
 import type {
   AzureImportOptions,
   AzureImportResult,
@@ -14,10 +17,7 @@ import type {
   AzureImportMetadata,
   AzureResource,
 } from './types.js';
-import { get_ice_type, map_properties } from './type-mapper.js';
-import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph.js';
 import type { NodeInput, EdgeInput } from '../../types/graph.js';
-import { classifyAzureError, ImportErrorCode } from '../../errors/import-errors.js';
 
 // =============================================================================
 // Default Options
@@ -262,6 +262,7 @@ async function init_azure_sdk(): Promise<AzureSdk> {
   } catch (error) {
     throw new Error(
       `Failed to initialize Azure SDK. Make sure Azure SDK packages are installed: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
     );
   }
 }
@@ -277,7 +278,7 @@ async function discover_with_resource_graph(
     resource_groups?: string[];
   },
   errors: AzureImportError[],
-  warnings: AzureImportWarning[],
+  _warnings: AzureImportWarning[],
 ): Promise<AzureResource[]> {
   const resources: AzureResource[] = [];
 

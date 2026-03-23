@@ -7,12 +7,13 @@
 
 import React, { useMemo, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import type { RootState, AppDispatch } from '../../../store';
 import { selectActiveCard } from '../../../store/slices/cards-slice';
 import { setPaneViewport } from '../../../store/slices/ui-slice';
+import type { RootState, AppDispatch } from '../../../store';
 
 const MINIMAP_W = 160;
 const MINIMAP_H = 100;
+const defaultViewport = { panX: 0, panY: 0, scale: 1 };
 const PADDING = 10;
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -34,7 +35,7 @@ export const Minimap: React.FC = () => {
   const activeCard = useSelector(selectActiveCard);
   const splitView = useSelector((s: RootState) => s.ui.splitView);
   const activePane = splitView.panes.find((p) => p.id === splitView.activePaneId);
-  const viewport = activePane?.viewport || { panX: 0, panY: 0, scale: 1 };
+  const viewport = useMemo(() => activePane?.viewport || defaultViewport, [activePane?.viewport]);
 
   const nodes = useMemo(() => {
     if (!activeCard) return [];
@@ -49,7 +50,7 @@ export const Minimap: React.FC = () => {
   }, [activeCard]);
 
   // Compute bounds and scale
-  const { scale, offsetX, offsetY, bounds } = useMemo(() => {
+  const { scale, offsetX, offsetY, bounds: _bounds } = useMemo(() => {
     if (nodes.length === 0)
       return { scale: 1, offsetX: 0, offsetY: 0, bounds: { minX: 0, minY: 0, maxX: 500, maxY: 300 } };
 

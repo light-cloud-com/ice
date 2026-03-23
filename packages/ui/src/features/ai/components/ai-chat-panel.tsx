@@ -6,8 +6,6 @@
  * Supports conversation list, new chat, and resume.
  */
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import {
   Sparkles,
   Loader2,
@@ -19,17 +17,18 @@ import {
   ChevronUp,
   Plus,
   MessageSquare,
-  ChevronDown,
   Trash2,
 } from 'lucide-react';
-import type { AppDispatch, RootState } from '../../../store';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import axiosInstance from '../../../shared/api/axios-instance';
+import { cn } from '../../../shared/utils/cn';
 import { clearAiState } from '../../../store/slices/ai-slice';
 import { selectActiveCard } from '../../../store/slices/cards-slice';
 import { toggleAiChat } from '../../../store/slices/ui-slice';
 import { useAiCommand } from '../hooks/use-ai-command';
 import { suggestPatterns } from '../utils/suggest-patterns';
-import { cn } from '../../../shared/utils/cn';
-import axiosInstance from '../../../shared/api/axios-instance';
+import type { AppDispatch, RootState } from '../../../store';
 import type { AiCanvasOp } from '@ice/types';
 
 // =============================================================================
@@ -117,7 +116,7 @@ export const AiChatPanel: React.FC = () => {
 
   const activeCard = useSelector(selectActiveCard);
   const projectId = useSelector((s: RootState) => s.projects.activeProjectId);
-  const selectedOrg = useSelector((s: RootState) => s.account.selectedOrg);
+  const _selectedOrg = useSelector((s: RootState) => s.account.selectedOrg);
 
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -229,7 +228,7 @@ export const AiChatPanel: React.FC = () => {
         console.warn('Failed to persist AI messages:', err);
       }
     },
-    [conversationId, projectId, activeCard?.id, fetchConversations],
+    [projectId, activeCard?.id, fetchConversations],
   );
 
   // ── Auto-scroll ───────────────────────────────────────────────────────────

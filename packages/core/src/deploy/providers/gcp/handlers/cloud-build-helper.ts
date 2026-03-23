@@ -10,8 +10,8 @@
  * Repository format: accepts both "owner/repo" (GitHub full_name) and full URLs.
  */
 
-import type { GCPHandlerContext } from '../types.js';
 import { BUILD_MESSAGES } from '../messages.js';
+import type { GCPHandlerContext } from '../types.js';
 
 const ARTIFACT_REGISTRY_BASE = 'https://artifactregistry.googleapis.com/v1';
 const CLOUD_BUILD_BASE = 'https://cloudbuild.googleapis.com/v1';
@@ -68,7 +68,7 @@ export async function ensure_artifact_registry(
     if (status === 409 || message.includes('ALREADY_EXISTS')) {
       return;
     }
-    throw new Error(BUILD_MESSAGES.AR_CREATE_FAILED(repoName, message));
+    throw new Error(BUILD_MESSAGES.AR_CREATE_FAILED(repoName, message), { cause: err });
   }
 }
 

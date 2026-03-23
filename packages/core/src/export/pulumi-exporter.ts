@@ -5,10 +5,10 @@
  * Uses the unified schema to map ICE types to Pulumi resource types.
  */
 
-import type { MutableGraph } from '../graph/mutable-graph.js';
-import type { Node, Edge } from '../types/graph.js';
 import { EmbeddedSchemaProvider } from '../schema/embedded-schema-provider.js';
+import type { MutableGraph } from '../graph/mutable-graph.js';
 import type { IceType } from '../schema/schema-provider.js';
+import type { Node } from '../types/graph.js';
 
 // =============================================================================
 // Types
@@ -542,7 +542,7 @@ export class PulumiExporter {
     }
 
     for (const resource of program.resources) {
-      const { provider_alias, class_path } = this.parseResourceType(resource.type);
+      const { provider_alias: _provider_alias, class_path } = this.parseResourceType(resource.type);
 
       if (options.include_comments) {
         lines.push(`// ${resource.name}`);

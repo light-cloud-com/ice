@@ -6,10 +6,12 @@
  */
 
 import prisma from '@ice/db';
-import { applyDeployment } from './deploy.service';
-import { updateEventProgress, failEvent, type DeployStep } from './pipeline.service';
+import { Queue, Worker } from 'bullmq';
+import IORedis from 'ioredis';
 import { buildFromSource, cleanupBuild } from './build.service';
+import { applyDeployment } from './deploy.service';
 import { InMemoryQueue, InMemoryWorker } from './memory-queue';
+import { updateEventProgress, failEvent, type DeployStep } from './pipeline.service';
 
 const REDIS_URL = process.env.REDIS_URL;
 const USE_MEMORY_QUEUE = !REDIS_URL || process.env.ICE_DESKTOP === 'true';
@@ -20,7 +22,6 @@ let deployQueue: any = null;
 function getConnection(): any {
   if (USE_MEMORY_QUEUE) return null;
   if (!connection) {
-    const IORedis = require('ioredis');
     connection = new IORedis(REDIS_URL, {
       maxRetriesPerRequest: null,
       retryStrategy(times: number) {
@@ -42,7 +43,6 @@ export function getDeployQueue(): any {
       deployQueue = new InMemoryQueue();
       console.log('Using in-memory deploy queue (no Redis)');
     } else {
-      const { Queue } = require('bullmq');
       deployQueue = new Queue('deploy', { connection: getConnection() });
     }
   }
@@ -132,7 +132,6 @@ export function startDeployWorker() {
       worker = new InMemoryWorker('deploy', jobProcessor);
       worker._bind(getDeployQueue());
     } else {
-      const { Worker } = require('bullmq');
       worker = new Worker('deploy', jobProcessor, {
         connection: getConnection(),
         concurrency: 3,
@@ -180,7 +179,7 @@ export function startDeployWorker() {
 async function processPipelineJob(data: any) {
   const {
     eventId,
-    ruleId,
+    ruleId: _ruleId,
     cardId,
     nodeId,
     repository,

@@ -6,9 +6,10 @@
  * - Tab 2: OAuth Device Flow (browser-based sign-in)
  */
 
+import { Github, Loader2, Copy, Check, ExternalLink, LogOut } from 'lucide-react';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Github, Loader2, Copy, Check, ExternalLink, LogOut } from 'lucide-react';
+import { GITHUB } from '../../../i18n/messages';
 import {
   Dialog,
   DialogContent,
@@ -18,9 +19,8 @@ import {
 } from '../../../shared/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../../shared/components/ui/tabs';
 import { cn } from '../../../shared/utils/cn';
-import { GITHUB } from '../../../i18n/messages';
-import type { RootState, AppDispatch } from '../../../store';
 import { connectGitHubPAT, startGitHubDeviceFlow, disconnectGitHub } from '../../../store/slices/integrations-slice';
+import type { RootState, AppDispatch } from '../../../store';
 
 interface GitHubConnectModalProps {
   isOpen: boolean;

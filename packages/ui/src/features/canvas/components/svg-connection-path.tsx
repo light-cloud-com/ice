@@ -10,13 +10,12 @@
  */
 
 import React, { memo, useMemo, useState, useCallback, useRef } from 'react';
-import type { CanvasNode, CanvasConnection } from './svg-canvas';
 import {
   inferConnectionMeta,
-  CATEGORY_COLORS,
   CATEGORY_LABELS,
   type ConnectionCategory,
 } from '../utils/connection-rules';
+import type { CanvasNode, CanvasConnection } from './svg-canvas';
 
 // ─── Tooltip info passed up to canvas ───────────────────────────────────────
 
@@ -52,6 +51,8 @@ interface SvgConnectionPathProps {
   onDelete?: (connectionId: string) => void;
   /** Select this edge */
   onSelect?: (connectionId: string) => void;
+  /** Right-click on this edge */
+  onContextMenu?: (connectionId: string, position: { x: number; y: number }) => void;
   /** When true, shows a flowing animation on the edge (pipeline deploying) */
   pipelineActive?: boolean;
   /** Level of detail: 3=full, 2=compact, 1=iconic */
@@ -159,6 +160,7 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
     onConnectionHover,
     onDelete,
     onSelect,
+    onContextMenu: onEdgeContextMenu,
     pipelineActive = false,
     lod = 3,
   }) => {
@@ -314,6 +316,11 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
           onClick={(e) => {
             e.stopPropagation();
             onSelect?.(connection.id);
+          }}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onEdgeContextMenu?.(connection.id, { x: e.clientX, y: e.clientY });
           }}
         />
 

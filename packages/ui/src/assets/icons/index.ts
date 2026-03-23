@@ -10,76 +10,56 @@
 // =============================================================================
 
 // Compute
-import awsEc2 from './aws/Compute/EC2.svg';
-import awsLambda from './aws/Compute/Lambda.svg';
-import awsFargate from './aws/Compute/Fargate.svg';
-
-// Containers
-import awsEcs from './aws/Containers/Elastic-Container-Service.svg';
-import awsEks from './aws/Containers/Elastic-Kubernetes-Service.svg';
-
-// Database
-import awsRds from './aws/Database/RDS.svg';
-import awsAurora from './aws/Database/Aurora.svg';
-import awsDynamodb from './aws/Database/DynamoDB.svg';
-import awsElasticache from './aws/Database/ElastiCache.svg';
-import awsDocumentdb from './aws/Database/DocumentDB.svg';
-import awsNeptune from './aws/Database/Neptune.svg';
-import awsTimestream from './aws/Database/Timestream.svg';
-
-// Storage
-import awsS3 from './aws/Storage/Simple-Storage-Service.svg';
-import awsS3Glacier from './aws/Storage/Simple-Storage-Service-Glacier.svg';
-import awsEfs from './aws/Storage/EFS.svg';
-import awsEbs from './aws/Storage/Elastic-Block-Store.svg';
-
-// Networking
-import awsVpc from './aws/Networking-Content-Delivery/Virtual-Private-Cloud.svg';
-import awsCloudfront from './aws/Networking-Content-Delivery/CloudFront.svg';
-import awsElb from './aws/Networking-Content-Delivery/Elastic-Load-Balancing.svg';
-import awsRoute53 from './aws/Networking-Content-Delivery/Route-53.svg';
-import awsApiGateway from './aws/App-Integration/API-Gateway.svg';
-import awsDirectConnect from './aws/Networking-Content-Delivery/Direct-Connect.svg';
-import awsTransitGateway from './aws/Networking-Content-Delivery/Transit-Gateway.svg';
-
-// Security
-import awsWaf from './aws/Security-Identity-Compliance/WAF.svg';
-import awsShield from './aws/Security-Identity-Compliance/Shield.svg';
-import awsIam from './aws/Security-Identity-Compliance/Identity-and-Access-Management.svg';
-import awsCognito from './aws/Security-Identity-Compliance/Cognito.svg';
-import awsSecretsManager from './aws/Security-Identity-Compliance/Secrets-Manager.svg';
-import awsKms from './aws/Security-Identity-Compliance/Key-Management-Service.svg';
-import awsGuardduty from './aws/Security-Identity-Compliance/GuardDuty.svg';
-import awsNetworkFirewall from './aws/Security-Identity-Compliance/Network-Firewall.svg';
-
-// App Integration / Messaging
-import awsSqs from './aws/App-Integration/Simple-Queue-Service.svg';
-import awsSns from './aws/App-Integration/Simple-Notification-Service.svg';
-import awsEventbridge from './aws/App-Integration/EventBridge.svg';
-import awsMq from './aws/App-Integration/MQ.svg';
-
-// Analytics / Streaming
+import awsAthena from './aws/Analytics/Athena.svg';
+import awsEmr from './aws/Analytics/EMR.svg';
+import awsGlue from './aws/Analytics/Glue.svg';
 import awsKinesis from './aws/Analytics/Kinesis.svg';
 import awsMsk from './aws/Analytics/Managed-Streaming-for-Apache-Kafka.svg';
 import awsOpenSearch from './aws/Analytics/OpenSearch-Service.svg';
-import awsAthena from './aws/Analytics/Athena.svg';
 import awsRedshift from './aws/Analytics/Redshift.svg';
-import awsGlue from './aws/Analytics/Glue.svg';
-import awsEmr from './aws/Analytics/EMR.svg';
-
-// Management & Monitoring
+import awsApiGateway from './aws/App-Integration/API-Gateway.svg';
+import awsEventbridge from './aws/App-Integration/EventBridge.svg';
+import awsMq from './aws/App-Integration/MQ.svg';
+import awsSns from './aws/App-Integration/Simple-Notification-Service.svg';
+import awsSqs from './aws/App-Integration/Simple-Queue-Service.svg';
+import awsConnect from './aws/Business-Applications/Connect.svg';
+import awsPinpoint from './aws/Business-Applications/Pinpoint.svg';
+import awsSes from './aws/Business-Applications/Simple-Email-Service.svg';
+import awsEc2 from './aws/Compute/EC2.svg';
+import awsFargate from './aws/Compute/Fargate.svg';
+import awsLambda from './aws/Compute/Lambda.svg';
+import awsEcs from './aws/Containers/Elastic-Container-Service.svg';
+import awsEks from './aws/Containers/Elastic-Kubernetes-Service.svg';
+import awsAurora from './aws/Database/Aurora.svg';
+import awsDocumentdb from './aws/Database/DocumentDB.svg';
+import awsDynamodb from './aws/Database/DynamoDB.svg';
+import awsElasticache from './aws/Database/ElastiCache.svg';
+import awsNeptune from './aws/Database/Neptune.svg';
+import awsRds from './aws/Database/RDS.svg';
+import awsTimestream from './aws/Database/Timestream.svg';
+import awsAmplify from './aws/Front-End-Web-Mobile/Amplify.svg';
 import awsCloudwatch from './aws/Management-Governance/CloudWatch.svg';
+import awsXray from './aws/Management-Governance/Distro-for-OpenTelemetry.svg';
 import awsGrafana from './aws/Management-Governance/Managed-Grafana.svg';
 import awsPrometheus from './aws/Management-Governance/Managed-Service-for-Prometheus.svg';
-import awsXray from './aws/Management-Governance/Distro-for-OpenTelemetry.svg';
-
-// Frontend
-import awsAmplify from './aws/Front-End-Web-Mobile/Amplify.svg';
-
-// Business / Communication
-import awsSes from './aws/Business-Applications/Simple-Email-Service.svg';
-import awsPinpoint from './aws/Business-Applications/Pinpoint.svg';
-import awsConnect from './aws/Business-Applications/Connect.svg';
+import awsCloudfront from './aws/Networking-Content-Delivery/CloudFront.svg';
+import awsDirectConnect from './aws/Networking-Content-Delivery/Direct-Connect.svg';
+import awsElb from './aws/Networking-Content-Delivery/Elastic-Load-Balancing.svg';
+import awsRoute53 from './aws/Networking-Content-Delivery/Route-53.svg';
+import awsTransitGateway from './aws/Networking-Content-Delivery/Transit-Gateway.svg';
+import awsVpc from './aws/Networking-Content-Delivery/Virtual-Private-Cloud.svg';
+import awsCognito from './aws/Security-Identity-Compliance/Cognito.svg';
+import awsGuardduty from './aws/Security-Identity-Compliance/GuardDuty.svg';
+import awsIam from './aws/Security-Identity-Compliance/Identity-and-Access-Management.svg';
+import awsKms from './aws/Security-Identity-Compliance/Key-Management-Service.svg';
+import awsNetworkFirewall from './aws/Security-Identity-Compliance/Network-Firewall.svg';
+import awsSecretsManager from './aws/Security-Identity-Compliance/Secrets-Manager.svg';
+import awsShield from './aws/Security-Identity-Compliance/Shield.svg';
+import awsWaf from './aws/Security-Identity-Compliance/WAF.svg';
+import awsEfs from './aws/Storage/EFS.svg';
+import awsEbs from './aws/Storage/Elastic-Block-Store.svg';
+import awsS3Glacier from './aws/Storage/Simple-Storage-Service-Glacier.svg';
+import awsS3 from './aws/Storage/Simple-Storage-Service.svg';
 
 // =============================================================================
 // Brand Icons — Real official logos via simple-icons (137+ technologies)

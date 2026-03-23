@@ -9,14 +9,14 @@
  * GET  /api/canvas/deploy/history/:cardId
  */
 
-import { Router, type Response } from 'express';
 import { requireAuth, requireProjectAccess, type AuthRequest } from '@ice/shared';
+import { Router, type Router as RouterType, type Response } from 'express';
 import * as deployService from '../services/deploy.service';
 
-const router = Router();
+const router: RouterType = Router();
 router.use(requireAuth);
 
-router.post('/plan', async (req: AuthRequest, res: Response) => {
+router.post('/plan', requireProjectAccess('editor'), async (req: AuthRequest, res: Response) => {
   try {
     const { cardId, nodes, edges, options } = req.body;
     const result = await deployService.planDeployment(cardId, nodes, edges, options, req.userId);
@@ -26,7 +26,7 @@ router.post('/plan', async (req: AuthRequest, res: Response) => {
   }
 });
 
-router.post('/apply', async (req: AuthRequest, res: Response) => {
+router.post('/apply', requireProjectAccess('owner'), async (req: AuthRequest, res: Response) => {
   // Deployments can take several minutes (container builds, API enabling, etc.)
   req.setTimeout(10 * 60 * 1000); // 10 minutes
   res.setTimeout(10 * 60 * 1000);
@@ -39,7 +39,7 @@ router.post('/apply', async (req: AuthRequest, res: Response) => {
   }
 });
 
-router.post('/destroy', async (req: AuthRequest, res: Response) => {
+router.post('/destroy', requireProjectAccess('owner'), async (req: AuthRequest, res: Response) => {
   req.setTimeout(10 * 60 * 1000);
   res.setTimeout(10 * 60 * 1000);
   try {

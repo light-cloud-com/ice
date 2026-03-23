@@ -5,8 +5,8 @@
  */
 
 import React from 'react';
-import { cn } from '../../../shared/utils/cn';
 import { ENABLED_PROVIDERS } from '../../../config/providers';
+import { cn } from '../../../shared/utils/cn';
 import type { Provider } from '../../../config/blocks/types';
 
 interface ProjectInfoStepProps {

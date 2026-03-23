@@ -5,14 +5,14 @@
  * Rest auto-generated from URL: Org > Folder > Project > Settings
  */
 
-import React, { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { ChevronRight, ChevronDown, Building2, Check, Plus } from 'lucide-react';
-import { useResolvePath } from '../hooks/use-resolve-path';
-import { setSelectedOrg, type Organisation } from '../../store/slices/account-slice';
+import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { CreateTeamModal } from '../../features/account/components';
+import { switchOrganisation, type Organisation } from '../../store/slices/account-slice';
+import { useResolvePath } from '../hooks/use-resolve-path';
 import { toSlug } from '../utils/slug';
 import type { RootState, AppDispatch } from '../../store';
 
@@ -43,7 +43,7 @@ export const Breadcrumbs: React.FC = () => {
   }
 
   const handleOrgSwitch = (org: Organisation) => {
-    dispatch(setSelectedOrg(org));
+    dispatch(switchOrganisation(org));
     navigate(`/${toSlug(org.name)}`);
   };
 

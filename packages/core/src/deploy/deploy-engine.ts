@@ -4,6 +4,8 @@
  * Orchestrates deployment of infrastructure changes to cloud providers.
  */
 
+import { DEPLOY_ERROR_CODES, DEPLOY_DISPLAY } from './messages.js';
+import { diff_graphs } from '../diff/diff.js';
 import type {
   DeployOptions,
   DeployResult,
@@ -13,10 +15,8 @@ import type {
   ResourceDeployResult,
   ProviderDeployer,
 } from './types.js';
-import type { Graph, Node } from '../types/graph.js';
 import type { DiffResult, ResourceChange } from '../diff/types.js';
-import { diff_graphs } from '../diff/diff.js';
-import { DEPLOY_ERROR_CODES, DEPLOY_DISPLAY } from './messages.js';
+import type { Graph, Node } from '../types/graph.js';
 
 /**
  * Default deployment options.

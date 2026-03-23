@@ -61,7 +61,7 @@ export class AzureDeployer implements ProviderDeployer {
         // Web client not available
       }
     } catch (error) {
-      throw new Error(`Failed to initialize Azure SDK: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(`Failed to initialize Azure SDK: ${error instanceof Error ? error.message : String(error)}`, { cause: error });
     }
   }
 
@@ -73,7 +73,7 @@ export class AzureDeployer implements ProviderDeployer {
     type: string,
     name: string,
     properties: Record<string, unknown>,
-    options: Record<string, unknown>,
+    _options: Record<string, unknown>,
   ): Promise<ResourceDeployResult> {
     const start = Date.now();
 
@@ -125,8 +125,8 @@ export class AzureDeployer implements ProviderDeployer {
     name: string,
     provider_id: string,
     properties: Record<string, unknown>,
-    current_properties: Record<string, unknown>,
-    options: Record<string, unknown>,
+    _current_properties: Record<string, unknown>,
+    _options: Record<string, unknown>,
   ): Promise<ResourceDeployResult> {
     const start = Date.now();
 
@@ -175,7 +175,7 @@ export class AzureDeployer implements ProviderDeployer {
     type: string,
     name: string,
     provider_id: string,
-    options: Record<string, unknown>,
+    _options: Record<string, unknown>,
   ): Promise<ResourceDeployResult> {
     const start = Date.now();
 

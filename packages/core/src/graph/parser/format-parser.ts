@@ -5,7 +5,6 @@
  * These convert from YAML/JSON to the internal AST representation.
  */
 
-import type { SourcePosition, SourceSpan } from './tokens.js';
 import type {
   Program,
   Statement,
@@ -24,10 +23,10 @@ import type {
   ArrayExpression,
   ObjectExpression,
   ObjectProperty,
-  Block,
   Attribute,
   Reference,
 } from './ast.js';
+import type { SourcePosition, SourceSpan } from './tokens.js';
 
 // =============================================================================
 // Types

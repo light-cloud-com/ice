@@ -6,19 +6,18 @@
  * 2. Service Deployments — CI/CD pipeline builds and deploys
  */
 
-import React, { useEffect, useMemo, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { Loader2, CheckCircle, XCircle, Clock, Rocket, GitBranch, Server, ChevronDown } from 'lucide-react';
-import type { RootState, AppDispatch } from '@ui/store';
+import axiosInstance from '@ui/shared/api/axios-instance';
+import { cn } from '@ui/shared/utils/cn';
 import { selectActiveCard } from '@ui/store/slices/cards-slice';
 import {
-  fetchRulesForNode,
   fetchEventsForNode,
   type DeploymentEvent,
   type DeployStep,
 } from '@ui/store/slices/pipeline-slice';
-import axiosInstance from '@ui/shared/api/axios-instance';
-import { cn } from '@ui/shared/utils/cn';
+import { Loader2, CheckCircle, XCircle, Clock, Rocket, GitBranch, Server, ChevronDown } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState, AppDispatch } from '@ui/store';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -92,7 +91,8 @@ export const ProjectDeployments: React.FC<{ projectId: string }> = ({ projectId 
     setServiceLoading(true);
     const promises = serviceNodes.map((svc) => dispatch(fetchEventsForNode({ cardId: activeCard.id, nodeId: svc.id })));
     Promise.all(promises).finally(() => setServiceLoading(false));
-  }, [activeCard?.id, serviceNodes.length]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- use stable primitives to avoid re-firing on object/array reference changes
+  }, [activeCard?.id, dispatch, serviceNodes.length]);
 
   // Collect all service events from Redux
   const serviceEvents = useSelector((s: RootState) => {

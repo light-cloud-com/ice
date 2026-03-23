@@ -4,19 +4,21 @@
  * Zoom in, zoom out, zoom-to-fit buttons on the bottom-right of the canvas.
  */
 
-import React, { useCallback } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
 import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
-import type { RootState, AppDispatch } from '../../../store';
-import { selectActiveCard, setCardViewport } from '../../../store/slices/cards-slice';
+import React, { useCallback, useMemo } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectActiveCard } from '../../../store/slices/cards-slice';
 import { setPaneViewport } from '../../../store/slices/ui-slice';
+import type { RootState, AppDispatch } from '../../../store';
+
+const defaultViewport = { panX: 0, panY: 0, scale: 1 };
 
 export const CanvasControls: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const activeCard = useSelector(selectActiveCard);
   const splitView = useSelector((s: RootState) => s.ui.splitView);
   const activePane = splitView.panes.find((p) => p.id === splitView.activePaneId);
-  const viewport = activePane?.viewport || { panX: 0, panY: 0, scale: 1 };
+  const viewport = useMemo(() => activePane?.viewport || defaultViewport, [activePane?.viewport]);
 
   const setViewport = useCallback(
     (panX: number, panY: number, scale: number) => {

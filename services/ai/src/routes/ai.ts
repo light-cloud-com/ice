@@ -10,17 +10,17 @@
  * GET  /api/ai/inspect/:cardId/state   — Raw canvas JSON
  */
 
-import { Router, type Response } from 'express';
+import prisma from '@ice/db';
+import { requireAuth, requireProjectAccess, type AuthRequest } from '@ice/shared';
+import { Router, type Router as RouterType, type Response } from 'express';
 import { rateLimit } from 'express-rate-limit';
-import { requireAuth, type AuthRequest } from '@ice/shared';
+import { listAuditEntries, getAuditEntry } from '../services/ai-audit.service';
 import { processCanvasIntent, streamCanvasIntent } from '../services/ai.service';
 import { validateCanvas } from '../services/canvas-validation.service';
 import { dryRunDeploy } from '../services/deploy-dryrun.service';
-import { listAuditEntries, getAuditEntry } from '../services/ai-audit.service';
-import prisma from '@ice/db';
 import type { AiCanvasIntentRequest } from '@ice/types';
 
-const router = Router();
+const router: RouterType = Router();
 
 // AI-specific rate limiter: 10 requests per minute per user
 const aiLimiter = rateLimit({
@@ -36,7 +36,7 @@ router.use(aiLimiter);
 // ── Canvas Intent ────────────────────────────────────────────────────────────
 
 router.post('/canvas-intent', async (req: AuthRequest, res: Response) => {
-  const { intent, canvasContext, cardId } = req.body as AiCanvasIntentRequest;
+  const { intent, canvasContext, cardId: _cardId } = req.body as AiCanvasIntentRequest;
 
   if (!intent || typeof intent !== 'string') {
     return res.status(400).json({ message: 'Missing intent' });
@@ -105,9 +105,13 @@ router.post('/dryrun', async (req: AuthRequest, res: Response) => {
 
 // ── Audit ────────────────────────────────────────────────────────────────────
 
-router.get('/audit/list', async (_req: AuthRequest, res: Response) => {
+router.get('/audit/list', async (req: AuthRequest, res: Response) => {
   try {
-    const entries = await listAuditEntries();
+    const orgId = req.organisationId;
+    if (!orgId) {
+      return res.status(400).json({ message: 'Organisation context required' });
+    }
+    const entries = await listAuditEntries(50, orgId);
     res.json({ entries });
   } catch (err: any) {
     console.error('Audit list error:', err);
@@ -117,8 +121,20 @@ router.get('/audit/list', async (_req: AuthRequest, res: Response) => {
 
 router.get('/audit/:id', async (req: AuthRequest, res: Response) => {
   try {
+    const orgId = req.organisationId;
+    if (!orgId) {
+      return res.status(400).json({ message: 'Organisation context required' });
+    }
     const entry = await getAuditEntry(req.params.id as string);
     if (!entry) {
+      return res.status(404).json({ message: 'Audit entry not found' });
+    }
+    // Verify audit entry belongs to the requesting user's org
+    const row = await prisma.aiAuditLog.findUnique({
+      where: { id: req.params.id as string },
+      select: { organisation_id: true },
+    });
+    if (row?.organisation_id && row.organisation_id !== orgId) {
       return res.status(404).json({ message: 'Audit entry not found' });
     }
     res.json(entry);
@@ -130,7 +146,7 @@ router.get('/audit/:id', async (req: AuthRequest, res: Response) => {
 
 // ── Inspect ──────────────────────────────────────────────────────────────────
 
-router.get('/inspect/:cardId/summary', async (req: AuthRequest, res: Response) => {
+router.get('/inspect/:cardId/summary', requireProjectAccess('viewer'), async (req: AuthRequest, res: Response) => {
   try {
     const card = await prisma.canvasCard.findUnique({
       where: { id: req.params.cardId as string },
@@ -170,7 +186,7 @@ router.get('/inspect/:cardId/summary', async (req: AuthRequest, res: Response) =
   }
 });
 
-router.get('/inspect/:cardId/state', async (req: AuthRequest, res: Response) => {
+router.get('/inspect/:cardId/state', requireProjectAccess('viewer'), async (req: AuthRequest, res: Response) => {
   try {
     const card = await prisma.canvasCard.findUnique({
       where: { id: req.params.cardId as string },

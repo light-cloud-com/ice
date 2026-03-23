@@ -2,12 +2,12 @@
  * Project Canvas Page — loads a specific project's nodes/edges into the canvas
  */
 
+import { SvgCanvas } from '@ice/ui/canvas';
+import axiosInstance from '@ui/shared/api/axios-instance';
+import { createCard, importToActiveCard, setActiveCard } from '@ui/store/slices/cards-slice';
+import { Loader2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Loader2 } from 'lucide-react';
-import { SvgCanvas } from '@ice/ui/canvas';
-import { createCard, importToActiveCard, setActiveCard } from '@ui/store/slices/cards-slice';
-import axiosInstance from '@ui/shared/api/axios-instance';
 import type { RootState, AppDispatch } from '@ui/store';
 
 interface ProjectCanvasProps {
@@ -18,7 +18,7 @@ interface ProjectCanvasProps {
 export const ProjectCanvas: React.FC<ProjectCanvasProps> = ({ projectId, projectName }) => {
   const dispatch = useDispatch<AppDispatch>();
   const [loading, setLoading] = useState(true);
-  const activeCardId = useSelector((s: RootState) => s.cards.activeCardId);
+  const _activeCardId = useSelector((s: RootState) => s.cards.activeCardId);
 
   useEffect(() => {
     const loadProject = async () => {

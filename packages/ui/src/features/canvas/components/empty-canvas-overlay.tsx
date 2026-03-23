@@ -6,17 +6,17 @@
  * start with a blank canvas.
  */
 
+import { Globe, Rocket, Server, Activity, FileCode2, LayoutTemplate } from 'lucide-react';
 import React, { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
-import { Globe, Rocket, Server, Activity, FileCode2, LayoutTemplate } from 'lucide-react';
-import type { AppDispatch } from '../../../store';
-import { importToActiveCard, expandBlueprintToCard } from '../../../store/slices/cards-slice';
-import { openDialog } from '../../../store/slices/ui-slice';
+import { getBlueprint, expandBlueprint } from '../../../config/blocks';
 import { getTemplatesByCategory } from '../../../config/templates';
 import { expandComposedTemplate } from '../../../config/templates/expand-template';
-import { getBlueprint, expandBlueprint } from '../../../config/blocks';
-import type { ComposedTemplate } from '../../../config/templates/types';
 import { EMPTY_CANVAS } from '../../../i18n/messages';
+import { importToActiveCard, expandBlueprintToCard } from '../../../store/slices/cards-slice';
+import { openDialog } from '../../../store/slices/ui-slice';
+import type { ComposedTemplate } from '../../../config/templates/types';
+import type { AppDispatch } from '../../../store';
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Globe,

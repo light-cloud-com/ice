@@ -6,10 +6,10 @@
  * ready for importToActiveCard.
  */
 
-import type { CardNode, CardEdge } from '../../store/slices/cards-slice';
-import type { ComposedTemplate } from './types';
-import type { Provider } from '../blocks/types';
 import { getBlueprint, expandBlueprint } from '../blocks';
+import type { ComposedTemplate } from './types';
+import type { CardNode, CardEdge } from '../../store/slices/cards-slice';
+import type { Provider } from '../blocks/types';
 
 /**
  * Expand a ComposedTemplate into flat CardNode[] + CardEdge[] arrays.

@@ -4,11 +4,11 @@
  * Handles: gcp.aiplatform.endpoint, gcp.aiplatform.index, gcp.aiplatform.indexEndpoint
  */
 
-import type { ResourceDeployResult } from '../../../types.js';
-import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
 import { SERVICE_NAMES, operation_failed, operation_timed_out } from '../messages.js';
+import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
+import type { ResourceDeployResult } from '@ice/core';
 
-const BASE_URL = 'https://us-central1-aiplatform.googleapis.com/v1';
+const _BASE_URL = 'https://us-central1-aiplatform.googleapis.com/v1';
 
 function result(
   name: string,

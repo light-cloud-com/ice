@@ -6,8 +6,8 @@
  */
 
 import { useSelector } from 'react-redux';
-import type { RootState } from '../../store';
 import { toSlug } from '../utils/slug';
+import type { RootState } from '../../store';
 
 /** Get the slug for the currently selected org */
 export function useOrgSlug(): string {

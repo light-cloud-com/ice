@@ -5,18 +5,11 @@
  * and generating billing summaries.
  */
 
-import { PrismaClient, Prisma } from '@prisma/client';
-import prisma from '../lib/prisma';
+import { calculateBillableHours, hasScalingData } from './scaling-tracking-service';
 import {
-  CONTAINER_SIZES,
-  DATABASE_TIERS,
   getContainerSize,
   getDatabaseTier,
   getRegion,
-  calculateContainerCost,
-  calculateDatabaseCost,
-  calculateStaticSiteCost,
-  calculateBuildCost,
   calculateUserCost,
   USER_PRICING,
   BUILD_RATES,
@@ -24,7 +17,7 @@ import {
   HOURS_PER_MONTH,
   GCP_RATES,
 } from '../const/light-cloud-pricing';
-import { calculateBillableHours, hasScalingData } from './scaling-tracking-service';
+import prisma from '../lib/prisma';
 
 // Types
 export interface BillingLineItem {
@@ -365,7 +358,7 @@ export async function calculateCurrentCharges(
   }
 
   // Find resources that were created AND deleted in this period
-  for (const [resourceId, events] of resourceEvents) {
+  for (const [_resourceId, events] of resourceEvents) {
     let createEvent: (typeof pricingEvents)[0] | null = null;
     let deleteEvent: (typeof pricingEvents)[0] | null = null;
 
@@ -550,7 +543,7 @@ export async function estimateResourceCost(
   };
 
   switch (resourceType) {
-    case 'container':
+    case 'container': {
       const sizeId = memoryToSizeMap[options.size || '512Mi'] || 'micro';
       const containerSize = getContainerSize(sizeId);
       hourlyRate = containerSize?.pricePerHour || 0.0641;
@@ -569,8 +562,9 @@ export async function estimateResourceCost(
         { name: 'Tier 2 region', price: Math.round(hourlyRate * HOURS_PER_MONTH * 0.2) },
       );
       break;
+    }
 
-    case 'database':
+    case 'database': {
       const tierId = cloudSqlTierMap[options.tier || 'db-f1-micro'] || 'dev';
       const dbTier = getDatabaseTier(tierId);
       hourlyRate = dbTier?.pricePerHour || 0.0183;
@@ -584,14 +578,16 @@ export async function estimateResourceCost(
         addOnsAvailable.push({ name: 'High Availability', price: Math.round(hourlyRate * HOURS_PER_MONTH) });
       }
       break;
+    }
 
-    case 'static_site':
+    case 'static_site': {
       // Static sites are purely usage-based (storage + bandwidth)
       // Estimate based on 0.5GB storage
       const estimatedStorageGb = options.storageGb || 0.5;
       hourlyRate = STATIC_SITE_RATES.storage.pricePerGbHour * estimatedStorageGb;
       included.push('Global CDN', 'SSL certificate', 'Preview environments');
       break;
+    }
   }
 
   const monthlyCost = hourlyRate * HOURS_PER_MONTH;
@@ -646,7 +642,7 @@ export async function recordPricingEvent(
 
   if (price === undefined) {
     switch (resourceType) {
-      case 'container':
+      case 'container': {
         const sizeId = memoryToSizeMap[sizeTier || '512Mi'] || 'micro';
         const containerSize = getContainerSize(sizeId);
         price = containerSize?.pricePerHour || 0.0641;
@@ -658,11 +654,13 @@ export async function recordPricingEvent(
           }
         }
         break;
-      case 'database':
+      }
+      case 'database': {
         const tierId = cloudSqlTierMap[sizeTier || 'db-f1-micro'] || 'dev';
         const dbTier = getDatabaseTier(tierId);
         price = dbTier?.pricePerHour || 0.0183;
         break;
+      }
       case 'static_site':
         // Estimate based on 0.5GB storage
         price = STATIC_SITE_RATES.storage.pricePerGbHour * 0.5;
@@ -907,8 +905,8 @@ export async function getDailyUsageHistory(
   });
 
   // Build a map of active resources by date
-  const activeResources: Map<string, Set<string>> = new Map();
-  const resourcePrices: Map<string, { type: string; price: number }> = new Map();
+  const _activeResources: Map<string, Set<string>> = new Map();
+  const _resourcePrices: Map<string, { type: string; price: number }> = new Map();
 
   // Track resource lifecycle from events
   const resourceActiveRanges: Map<
@@ -1033,7 +1031,7 @@ export async function getDailyUsageHistory(
       database: 0,
     };
 
-    for (const [resourceId, ranges] of resourceActiveRanges) {
+    for (const [_resourceId, ranges] of resourceActiveRanges) {
       for (const range of ranges) {
         // Check if resource was active during this day
         const rangeEnd = range.end || endDate;

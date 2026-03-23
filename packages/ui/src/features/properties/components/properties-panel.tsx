@@ -12,9 +12,10 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { getIcon, DEFAULT_ICON, type Provider } from '../../../assets/icons';
+import { getBrandIcon } from '../../../assets/icons/brand-registry';
 import { getApi } from '../../../shared/api/api-adapter';
 import { cn } from '../../../shared/utils/cn';
-import type { RootState, AppDispatch } from '../../../store';
 import {
   selectActiveCard,
   updateCardNodeData,
@@ -23,10 +24,6 @@ import {
   type CardNode,
   type CardEdge,
 } from '../../../store/slices/cards-slice';
-import { toggleProperties } from '../../../store/slices/ui-slice';
-import { getIcon, DEFAULT_ICON, type Provider } from '../../../assets/icons';
-import { getBrandIcon } from '../../../assets/icons/brand-registry';
-import { RepoSelector } from '../../integrations/components/repo-selector';
 import { fetchGitHubBranches } from '../../../store/slices/integrations-slice';
 import {
   fetchRulesForNode,
@@ -38,7 +35,10 @@ import {
   type DeploymentEvent,
   type DeployStep,
 } from '../../../store/slices/pipeline-slice';
+import { toggleProperties } from '../../../store/slices/ui-slice';
 import { analyzeCanvasPatterns } from '../../canvas/utils/connection-rules';
+import { RepoSelector } from '../../integrations/components/repo-selector';
+import type { RootState, AppDispatch } from '../../../store';
 
 // ─── Types from core HIGH_LEVEL_CATEGORIES ──────────────────────────────────
 
@@ -387,7 +387,7 @@ export const PropertiesPanel: React.FC = () => {
   // Source tab state — "repo" or "image" (must be before any early returns for Rules of Hooks)
   const nodeRepo = (selectedNode?.data?.repository as string) || '';
   const nodeImage = (selectedNode?.data?.image as string) || '';
-  const [sourceTab, setSourceTab] = useState<'repo' | 'image'>(nodeImage && !nodeRepo ? 'image' : 'repo');
+  const [_sourceTab, setSourceTab] = useState<'repo' | 'image'>(nodeImage && !nodeRepo ? 'image' : 'repo');
 
   // Sync tab when switching nodes
   useEffect(() => {
@@ -721,7 +721,7 @@ export const PropertiesPanel: React.FC = () => {
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                         <span className="text-ice-xs text-emerald-500 font-medium">Live</span>
                       </div>
-                      {selectedNode.data?.url && (
+                      {!!selectedNode.data?.url && (
                         <div>
                           <div className="text-ice-2xs text-ice-text-3 mb-0.5">URL</div>
                           <a
@@ -734,7 +734,7 @@ export const PropertiesPanel: React.FC = () => {
                           </a>
                         </div>
                       )}
-                      {selectedNode.data?.deployed_image && (
+                      {!!selectedNode.data?.deployed_image && (
                         <div>
                           <div className="text-ice-2xs text-ice-text-3 mb-0.5">Image</div>
                           <div className="text-ice-xs text-ice-text-2 font-mono break-all">
@@ -748,13 +748,13 @@ export const PropertiesPanel: React.FC = () => {
                           {selectedNode.data.provider_id as string}
                         </div>
                       </div>
-                      {selectedNode.data?.region && (
+                      {!!selectedNode.data?.region && (
                         <div>
                           <div className="text-ice-2xs text-ice-text-3 mb-0.5">Region</div>
                           <div className="text-ice-xs text-ice-text-2">{selectedNode.data.region as string}</div>
                         </div>
                       )}
-                      {selectedNode.data?.max_instances && (
+                      {!!selectedNode.data?.max_instances && (
                         <div>
                           <div className="text-ice-2xs text-ice-text-3 mb-0.5">Instances</div>
                           <div className="text-ice-xs text-ice-text-2">
@@ -1151,7 +1151,7 @@ const PipelineSection: React.FC<{
     if (repository && branches.length === 0) {
       dispatch(fetchGitHubBranches(repository));
     }
-  }, [cardId, nodeId, repository]);
+  }, [cardId, nodeId, repository, branches.length, dispatch]);
 
   // Auto-create default rule when rules load empty
   const [autoCreated, setAutoCreated] = useState(false);
@@ -1175,7 +1175,7 @@ const PipelineSection: React.FC<{
     )
       .then(() => dispatch(fetchRulesForNode({ cardId, nodeId })))
       .catch((err: any) => console.error('[Pipeline] Auto-create failed:', err));
-  }, [repository, rulesLoaded, rules.length, autoCreated, branches]);
+  }, [repository, rulesLoaded, rules.length, autoCreated, branches, cardId, dispatch, nodeId]);
 
   // No repo connected → don't show the section
   if (!repository) return null;
@@ -1203,7 +1203,7 @@ const PipelineSection: React.FC<{
   };
 
   const handleRetry = (eventId: string) => {
-    import('../../../store/slices/pipeline-slice').then(({ default: _, ...mod }) => {
+    import('../../../store/slices/pipeline-slice').then(({ default: _, ..._mod }) => {
       // retryDeploy is on the API adapter, not a thunk — call it directly
       import('../../../shared/api/api-adapter').then(({ getApi }) => {
         getApi()
@@ -1529,7 +1529,8 @@ const SourceRepositorySection: React.FC<{
       dispatch(fetchRulesForNode({ cardId, nodeId: svc.id }));
       dispatch(fetchEventsForNode({ cardId, nodeId: svc.id }));
     }
-  }, [connectedServices.length, cardId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- use .length to avoid re-firing on array reference changes
+  }, [connectedServices.length, cardId, dispatch]);
 
   // Aggregate rules for all connected services
   const allRules = useSelector((s: RootState) => {
@@ -1585,7 +1586,8 @@ const SourceRepositorySection: React.FC<{
     )
       .then(() => dispatch(fetchRulesForNode({ cardId, nodeId: targetService.id })))
       .catch((err: any) => console.error('[Pipeline] Auto-create failed:', err));
-  }, [nodeRepo, anyRulesLoaded, allRules.length, autoCreated, branches, connectedServices.length]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- use .length for arrays to avoid re-firing on reference changes; autoCreated guard prevents loops
+  }, [nodeRepo, anyRulesLoaded, allRules.length, autoCreated, branches.length, connectedServices.length, cardId, dispatch, activeEnvName, buildCommand, outputDirectory]);
 
   const handleAddRule = (serviceId: string) => {
     // Find branches not already used for this env + service
@@ -1875,7 +1877,7 @@ const InlineConnectionEditor: React.FC<{
   dispatch: AppDispatch;
 }> = ({ edge, thisNodeId, nodes, edges, dispatch }) => {
   const [expanded, setExpanded] = useState(false);
-  const isIncoming = edge.target === thisNodeId;
+  const _isIncoming = edge.target === thisNodeId;
   const sourceNode = nodes.find((n) => n.id === edge.source);
   const targetNode = nodes.find((n) => n.id === edge.target);
   const sourceLabel = (sourceNode?.data?.label as string) || edge.source.slice(0, 8);
@@ -1905,7 +1907,7 @@ const InlineConnectionEditor: React.FC<{
   const showEnvVar = !!envVarsNode && !!envVar;
 
   // Connection type label for the visual
-  const typeLabel = connCategory || 'connection';
+  const _typeLabel = connCategory || 'connection';
 
   return (
     <div className="rounded border border-ice-border overflow-hidden">

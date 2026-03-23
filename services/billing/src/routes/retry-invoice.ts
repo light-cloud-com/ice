@@ -5,13 +5,13 @@
  * Used when an invoice was created but Stripe processing failed
  */
 
-import { Request, Response } from 'express';
 import { User } from '@prisma/client';
+import { Request, Response } from 'express';
+import { Permission } from '../../const/permissions';
+import { errorHandler } from '../../error-handler';
 import prisma from '../../lib/prisma';
 import { retryInvoicePayment } from '../../services/invoice-service';
 import { checkPermissions } from '../../utils/check-permissions';
-import { errorHandler } from '../../error-handler';
-import { Permission } from '../../const/permissions';
 
 interface AuthenticatedRequest extends Request {
   user: User;

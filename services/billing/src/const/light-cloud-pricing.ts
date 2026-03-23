@@ -516,8 +516,8 @@ export function calculateDatabaseCost(
   if (!tier) return { gcpCost: 0, price: 0 };
 
   // Compute cost
-  let computeGcpCost = tier.gcpCostPerHour * hours;
-  let computePrice = tier.pricePerHour * hours;
+  const computeGcpCost = tier.gcpCostPerHour * hours;
+  const computePrice = tier.pricePerHour * hours;
 
   // Storage cost
   const storageGcpCost = DATABASE_STORAGE_RATES.gcpCostPerGbHour * storageGb * hours;

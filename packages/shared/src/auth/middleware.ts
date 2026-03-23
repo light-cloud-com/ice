@@ -119,6 +119,31 @@ export function requireProjectAccess(minRole: 'viewer' | 'editor' | 'owner') {
   };
 }
 
+/**
+ * Org-level role middleware.
+ * Checks the authenticated user's org membership role against the allowed list.
+ * Use for org-scoped routes that don't have a projectId (billing, credentials, etc.).
+ */
+export function requireOrgRole(...allowedRoles: string[]) {
+  return async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const orgId = req.organisationId;
+    if (!orgId) {
+      return res.status(401).json({ message: 'No organisation context' });
+    }
+
+    // Lazy-import to avoid circular deps at startup
+    const prisma = (await import('@ice/db')).default;
+
+    const member = await prisma.organisationMember.findUnique({
+      where: { user_id_organisation_id: { user_id: req.userId!, organisation_id: orgId } },
+    });
+    if (!member || !allowedRoles.includes(member.role)) {
+      return res.status(403).json({ message: 'Insufficient organisation permissions' });
+    }
+    next();
+  };
+}
+
 export function generateToken(userId: string, organisationId: string): string {
   return jwt.sign({ userId, organisationId }, JWT_SECRET, { expiresIn: '1h' });
 }

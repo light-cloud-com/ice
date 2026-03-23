@@ -5,8 +5,8 @@
  * Handles string interpolation, heredocs, and error recovery.
  */
 
+import { create_token, create_position, get_keyword_type } from './tokens.js';
 import type { Token, TokenType, SourcePosition } from './tokens.js';
-import { create_token, create_position, KEYWORDS, get_keyword_type } from './tokens.js';
 
 // =============================================================================
 // Lexer Error
@@ -289,7 +289,7 @@ export class Lexer {
    */
   private scan_string(start_pos: number, start_line: number, start_column: number): void {
     const parts: string[] = [];
-    let has_interpolation = false;
+    let _has_interpolation = false;
 
     while (!this.is_at_end() && this.peek() !== '"') {
       if (this.peek() === '\\') {
@@ -323,7 +323,7 @@ export class Lexer {
         }
       } else if (this.peek() === '$' && this.peek_next() === '{') {
         // String interpolation - for now, just include as literal
-        has_interpolation = true;
+        _has_interpolation = true;
         parts.push(this.advance());
       } else if (this.peek() === '\n') {
         this.add_error('Unterminated string literal', true);
@@ -350,7 +350,7 @@ export class Lexer {
   /**
    * Scan a number literal.
    */
-  private scan_number(start_pos: number, start_line: number, start_column: number, negative: boolean): void {
+  private scan_number(start_pos: number, start_line: number, start_column: number, _negative: boolean): void {
     // Integer part
     while (this.is_digit(this.peek())) {
       this.advance();

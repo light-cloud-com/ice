@@ -11,8 +11,8 @@
  */
 
 import React, { memo, useState, useCallback } from 'react';
-import type { CanvasNode } from './svg-canvas';
 import { getIcon, DEFAULT_ICON, type Provider } from '../../../assets/icons';
+import type { CanvasNode } from './svg-canvas';
 
 // =============================================================================
 // Types

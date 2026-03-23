@@ -314,7 +314,7 @@ export function useCanvasInteractions({
         }
       }
     },
-    [screenToCanvas, findItemAtPosition, onSelect, onToggleSelect, onItemMove, onItemResize],
+    [screenToCanvas, findItemAtPosition, onSelect, onToggleSelect, onItemMove, onItemResize, onDragOverGroup],
   );
 
   // Mouse move
@@ -400,7 +400,7 @@ export function useCanvasInteractions({
         }
       }
     },
-    [screenToCanvas, onViewportChange, onItemMove, onItemResize, onBoxSelect, onDragOverGroup],
+    [screenToCanvas, onViewportChange, onItemMove, onItemResize, onBoxSelect, onDragOverGroup, gridSize],
   );
 
   // Mouse up

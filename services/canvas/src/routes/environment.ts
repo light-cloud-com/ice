@@ -10,14 +10,14 @@
  * POST /api/environments/pr-previews   Toggle PR preview setting
  */
 
-import { Router, type Response } from 'express';
-import { requireAuth, type AuthRequest } from '@ice/shared';
+import { requireAuth, requireProjectAccess, type AuthRequest } from '@ice/shared';
+import { Router, type Router as RouterType, type Response } from 'express';
 import * as envService from '../services/environment.service';
 
-const router = Router();
+const router: RouterType = Router();
 router.use(requireAuth);
 
-router.post('/list', async (req: AuthRequest, res: Response) => {
+router.post('/list', requireProjectAccess('viewer'), async (req: AuthRequest, res: Response) => {
   try {
     const { projectId } = req.body;
     if (!projectId) return res.status(400).json({ success: false, error: 'projectId required' });
@@ -28,7 +28,7 @@ router.post('/list', async (req: AuthRequest, res: Response) => {
   }
 });
 
-router.post('/create', async (req: AuthRequest, res: Response) => {
+router.post('/create', requireProjectAccess('editor'), async (req: AuthRequest, res: Response) => {
   try {
     const { projectId, name, type, region } = req.body;
     if (!projectId || !name) {
@@ -41,7 +41,7 @@ router.post('/create', async (req: AuthRequest, res: Response) => {
   }
 });
 
-router.post('/update', async (req: AuthRequest, res: Response) => {
+router.post('/update', requireProjectAccess('editor'), async (req: AuthRequest, res: Response) => {
   try {
     const { envId, name, region } = req.body;
     if (!envId) return res.status(400).json({ success: false, error: 'envId required' });
@@ -52,7 +52,7 @@ router.post('/update', async (req: AuthRequest, res: Response) => {
   }
 });
 
-router.post('/delete', async (req: AuthRequest, res: Response) => {
+router.post('/delete', requireProjectAccess('owner'), async (req: AuthRequest, res: Response) => {
   try {
     const { envId } = req.body;
     if (!envId) return res.status(400).json({ success: false, error: 'envId required' });
@@ -63,7 +63,7 @@ router.post('/delete', async (req: AuthRequest, res: Response) => {
   }
 });
 
-router.post('/compare', async (req: AuthRequest, res: Response) => {
+router.post('/compare', requireProjectAccess('viewer'), async (req: AuthRequest, res: Response) => {
   try {
     const { sourceEnvId, targetEnvId } = req.body;
     if (!sourceEnvId || !targetEnvId) {
@@ -76,7 +76,7 @@ router.post('/compare', async (req: AuthRequest, res: Response) => {
   }
 });
 
-router.post('/promote', async (req: AuthRequest, res: Response) => {
+router.post('/promote', requireProjectAccess('owner'), async (req: AuthRequest, res: Response) => {
   try {
     const { sourceEnvId, targetEnvId } = req.body;
     if (!sourceEnvId || !targetEnvId) {
@@ -89,7 +89,7 @@ router.post('/promote', async (req: AuthRequest, res: Response) => {
   }
 });
 
-router.post('/pr-previews', async (req: AuthRequest, res: Response) => {
+router.post('/pr-previews', requireProjectAccess('editor'), async (req: AuthRequest, res: Response) => {
   try {
     const { projectId, enabled } = req.body;
     if (!projectId) return res.status(400).json({ success: false, error: 'projectId required' });

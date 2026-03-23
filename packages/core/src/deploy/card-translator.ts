@@ -5,7 +5,7 @@
  * with GCP-typed nodes that the deploy pipeline understands.
  */
 
-import { MutableGraph, create_mutable_graph } from '../graph/mutable-graph.js';
+import { create_mutable_graph } from '../graph/mutable-graph.js';
 import type { Graph, EdgeRelationship } from '../types/graph.js';
 
 // =============================================================================

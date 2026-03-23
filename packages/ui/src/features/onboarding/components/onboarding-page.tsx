@@ -5,12 +5,24 @@
  * Each step is skippable. Progress bar at top. Back button available.
  */
 
-import React, { useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
 import { ChevronLeft, ChevronRight, Sparkles, SkipForward } from 'lucide-react';
+import React, { useCallback, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { ConnectCloudStep } from './connect-cloud-step';
+import { ConnectGithubStep } from './connect-github-step';
+import { FirstProjectStep } from './first-project-step';
+import { TeamStep } from './team-step';
+import { WelcomeStep } from './welcome-step';
+import logoDark from '../../../assets/logo-dark.png';
+import logoLight from '../../../assets/logo-light.png';
+import { COMPOSED_TEMPLATES, expandComposedTemplate } from '../../../config/templates';
+import { QUICK_STARTS } from '../../../config/templates/quick-starts';
+import axiosInstance from '../../../shared/api/axios-instance';
 import { StepIndicator } from '../../../shared/components/step-indicator';
-import { fetchProfile, setSelectedOrg } from '../../../store/slices/account-slice';
+import { useTheme } from '../../../shared/hooks/use-theme';
+import { toSlug } from '../../../shared/utils/slug';
+import { addOrganisation, fetchProfile, switchOrganisation  } from '../../../store/slices/account-slice';
 import {
   setStep,
   fetchOnboardingStatus,
@@ -18,22 +30,7 @@ import {
   completeOnboarding,
   skipOnboarding,
 } from '../../../store/slices/onboarding-slice';
-import { addOrganisation } from '../../../store/slices/account-slice';
-import axiosInstance from '../../../shared/api/axios-instance';
-import { toSlug } from '../../../shared/utils/slug';
-import { COMPOSED_TEMPLATES, expandComposedTemplate } from '../../../config/templates';
-import { QUICK_STARTS } from '../../../config/templates/quick-starts';
 import type { Provider } from '../../../config/blocks/types';
-
-import { WelcomeStep } from './welcome-step';
-import { TeamStep } from './team-step';
-import { ConnectCloudStep } from './connect-cloud-step';
-import { ConnectGithubStep } from './connect-github-step';
-import { FirstProjectStep } from './first-project-step';
-
-import logoDark from '../../../assets/logo-dark.png';
-import logoLight from '../../../assets/logo-light.png';
-import { useTheme } from '../../../shared/hooks/use-theme';
 import type { RootState, AppDispatch } from '../../../store';
 
 const TOTAL_STEPS = 5;
@@ -50,7 +47,7 @@ export const OnboardingPage: React.FC = () => {
   const region = useSelector((s: RootState) => s.onboarding.defaultRegion);
   const teamMode = useSelector((s: RootState) => s.onboarding.teamMode);
   const teamName = useSelector((s: RootState) => s.onboarding.teamName);
-  const inviteEmails = useSelector((s: RootState) => s.onboarding.inviteEmails);
+  const _inviteEmails = useSelector((s: RootState) => s.onboarding.inviteEmails);
   const projectName = useSelector((s: RootState) => s.onboarding.projectName);
   const selectedTemplateId = useSelector((s: RootState) => s.onboarding.selectedTemplateId);
   const selectedOrg = useSelector((s: RootState) => s.account.selectedOrg);
@@ -139,7 +136,7 @@ export const OnboardingPage: React.FC = () => {
           const res = await axiosInstance.post('/organisations/create', { name: teamName.trim() });
           const newOrg = { id: res.data.id, name: res.data.name, role: 'owner' };
           dispatch(addOrganisation(newOrg));
-          dispatch(setSelectedOrg(newOrg));
+          dispatch(switchOrganisation(newOrg));
         } catch (err) {
           console.warn('Failed to create team:', err);
         }
@@ -181,7 +178,7 @@ export const OnboardingPage: React.FC = () => {
     }
     dispatch(setStep(Math.min(currentStep + 1, TOTAL_STEPS)));
     dispatch(saveOnboardingStep({ step: Math.min(currentStep + 1, TOTAL_STEPS) }));
-  }, [currentStep, teamMode, dispatch, handleFinish]);
+  }, [currentStep, dispatch, handleFinish]);
 
   const handleSkipAll = useCallback(async () => {
     await dispatch(skipOnboarding());

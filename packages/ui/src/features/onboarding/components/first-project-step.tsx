@@ -5,13 +5,13 @@
  * Selecting a template auto-names the project.
  */
 
+import { Globe, Rocket, Server, Activity, FileBox } from 'lucide-react';
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Globe, Rocket, Server, Activity, FileBox } from 'lucide-react';
+import { COMPOSED_TEMPLATES } from '../../../config/templates';
+import { QUICK_STARTS } from '../../../config/templates/quick-starts';
 import { cn } from '../../../shared/utils/cn';
 import { setProjectName, setSelectedTemplateId } from '../../../store/slices/onboarding-slice';
-import { QUICK_STARTS } from '../../../config/templates/quick-starts';
-import { COMPOSED_TEMPLATES } from '../../../config/templates';
 import type { RootState, AppDispatch } from '../../../store';
 
 const ICON_MAP: Record<string, React.ElementType> = {

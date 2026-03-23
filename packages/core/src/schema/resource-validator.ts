@@ -5,11 +5,11 @@
  * Provides detailed validation errors with paths and suggestions.
  */
 
-import type { IceType, PropertySchema, PropertyValidation, SchemaProvider } from './schema-provider.js';
-import type { Result } from '../types/result.js';
-import { success, failure } from '../types/result.js';
 import { ValidationError } from '../types/errors.js';
+import { success, failure } from '../types/result.js';
+import type { IceType, PropertySchema, PropertyValidation, SchemaProvider } from './schema-provider.js';
 import type { ValidationViolation } from '../types/errors.js';
+import type { Result } from '../types/result.js';
 
 // =============================================================================
 // Validation Types

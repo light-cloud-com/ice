@@ -4,8 +4,9 @@
  * Shows connection status, credential form, and connected state.
  */
 
-import React, { useState, useEffect } from 'react';
 import { Check, Loader2, LogOut, ExternalLink } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { getApi } from '../../../shared/api/api-adapter';
 import {
   Dialog,
   DialogContent,
@@ -13,9 +14,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from '../../../shared/components/ui/dialog';
-import { cn } from '../../../shared/utils/cn';
-import { getApi } from '../../../shared/api/api-adapter';
 import { useGCPOAuth } from '../../../shared/hooks/use-gcp-oauth';
+import { cn } from '../../../shared/utils/cn';
 
 interface ProviderField {
   name: string;

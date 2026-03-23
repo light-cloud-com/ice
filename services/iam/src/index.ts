@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import authRoutes from './routes/auth.js';
 import oauthRoutes from './routes/oauth.js';
-import profileRoutes from './routes/profile.js';
-import organisationRoutes from './routes/organisations.js';
-import userRoutes from './routes/users.js';
 import onboardingRoutes from './routes/onboarding.js';
+import organisationRoutes from './routes/organisations.js';
+import profileRoutes from './routes/profile.js';
+import userRoutes from './routes/users.js';
 export { configurePassportOAuth } from './configs/passport-oauth.js';
 export { AuthError } from './services/auth.service.js';
 export * from './services/project-access.service.js';

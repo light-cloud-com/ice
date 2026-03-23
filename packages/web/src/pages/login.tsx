@@ -2,11 +2,11 @@
  * Login Page — uses ICE design tokens
  */
 
-import React, { useState } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
 import { login } from '@ui/shared/api/auth';
 import { OAuthButtons } from '@ui/shared/components/oauth-buttons';
+import { Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();

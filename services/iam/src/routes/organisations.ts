@@ -4,11 +4,11 @@
  * POST /api/organisations/create — Create new org
  */
 
-import { Router, type Response } from 'express';
 import prisma from '@ice/db';
 import { requireAuth, type AuthRequest } from '@ice/shared';
+import { Router, type Router as RouterType, type Response } from 'express';
 
-const router = Router();
+const router: RouterType = Router();
 router.use(requireAuth);
 
 router.post('/create', async (req: AuthRequest, res: Response) => {

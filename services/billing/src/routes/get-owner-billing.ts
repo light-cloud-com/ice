@@ -2,16 +2,16 @@
  * Get billing summary for all organisations owned by the user
  */
 
-import { Request, Response } from 'express';
 import { User } from '@prisma/client';
+import { Request, Response } from 'express';
+import { TRIAL_CONFIG } from '../../const/trial';
 import prisma from '../../lib/prisma';
+import { getBillingSummary } from '../../services/billing-service';
+import { getTrialStatus } from '../../services/trial-service';
 
 interface AuthenticatedRequest extends Request {
   user: User;
 }
-import { getBillingSummary } from '../../services/billing-service';
-import { getTrialStatus } from '../../services/trial-service';
-import { TRIAL_CONFIG } from '../../const/trial';
 
 export interface OrganisationBillingSummary {
   organisation: {

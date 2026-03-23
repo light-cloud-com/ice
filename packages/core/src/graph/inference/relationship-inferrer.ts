@@ -417,7 +417,7 @@ export class RelationshipInferrer {
     });
   }
 
-  private find_resources_by_port(port: number, protocol: string): Node[] {
+  private find_resources_by_port(port: number, _protocol: string): Node[] {
     // Map common ports to resource types
     const portToType: Record<number, string[]> = {
       5432: ['Database.PostgreSQL'],

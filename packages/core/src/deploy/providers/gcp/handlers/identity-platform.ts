@@ -6,7 +6,7 @@
  */
 
 import type { ResourceDeployResult } from '../../../types.js';
-import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
+import type { GCPResourceHandler } from '../types.js';
 
 const TYPE = 'gcp.identityplatform.config';
 const BASE_URL = 'https://identitytoolkit.googleapis.com/v2';
@@ -89,7 +89,7 @@ export const identity_platform_handler: GCPResourceHandler = {
     }
   },
 
-  async delete(name, _provider_id, ctx) {
+  async delete(name, _provider_id, _ctx) {
     const start = Date.now();
     // Identity Platform cannot be fully deleted, only disabled
     return result(name, 'delete', start);

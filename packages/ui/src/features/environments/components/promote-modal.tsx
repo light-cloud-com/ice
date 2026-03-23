@@ -2,17 +2,16 @@
  * Promote Modal — Shows diff between source env and production, confirms promotion
  */
 
+import { ArrowUpRight, Plus, Minus, RefreshCw, Loader2, CheckCircle } from 'lucide-react';
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { ArrowUpRight, Plus, Minus, RefreshCw, Loader2, CheckCircle } from 'lucide-react';
-import type { RootState, AppDispatch } from '../../../store';
+import { cn } from '../../../shared/utils/cn';
 import {
   promoteEnvironment,
   clearPendingDiff,
   fetchEnvironments,
-  type EnvironmentDiff,
 } from '../../../store/slices/environments-slice';
-import { cn } from '../../../shared/utils/cn';
+import type { RootState, AppDispatch } from '../../../store';
 
 export const PromoteModal: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();

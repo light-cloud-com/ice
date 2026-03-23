@@ -4,12 +4,12 @@
  * Full-page user settings: profile (name) and password management.
  */
 
+import { Save, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Save, Loader2 } from 'lucide-react';
-import type { RootState, AppDispatch } from '../../../store';
-import { fetchProfile } from '../../../store/slices/account-slice';
 import axiosInstance from '../../../shared/api/axios-instance';
+import { fetchProfile } from '../../../store/slices/account-slice';
+import type { RootState, AppDispatch } from '../../../store';
 
 export function UserSettingsPage() {
   const dispatch = useDispatch<AppDispatch>();

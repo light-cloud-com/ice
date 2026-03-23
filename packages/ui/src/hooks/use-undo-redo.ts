@@ -7,8 +7,8 @@
 
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import type { AppDispatch } from '../store';
 import { undoCardChange, redoCardChange } from '../store/slices/cards-slice';
+import type { AppDispatch } from '../store';
 
 export function useUndoRedo() {
   const dispatch = useDispatch<AppDispatch>();

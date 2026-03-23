@@ -5,11 +5,11 @@
  * If not logged in, redirects to login with a return URL.
  */
 
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { isAuthenticated } from '@ui/shared/api/auth';
 import axiosInstance from '@ui/shared/api/axios-instance';
+import { Loader2, CheckCircle, XCircle } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 
 export const InviteAcceptPage: React.FC = () => {
   const { token } = useParams<{ token: string }>();

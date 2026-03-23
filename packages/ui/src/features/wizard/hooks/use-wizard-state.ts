@@ -6,8 +6,8 @@
  */
 
 import { useState, useCallback } from 'react';
-import type { SecurityLevel, EnvironmentPreset } from '../../../config/templates/types';
 import type { Provider } from '../../../config/blocks/types';
+import type { SecurityLevel, EnvironmentPreset } from '../../../config/templates/types';
 
 // =============================================================================
 // Types

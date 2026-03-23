@@ -7,12 +7,12 @@
  * GET /api/auth/github/callback — GitHub callback → redirect with JWT
  */
 
-import { Router, type Request, type Response, type NextFunction } from 'express';
-import passport from 'passport';
-import { generateToken, generateRefreshToken } from '@ice/shared';
 import prisma from '@ice/db';
+import { generateToken, generateRefreshToken } from '@ice/shared';
+import { Router, type Router as RouterType, type Request, type Response, type NextFunction } from 'express';
+import passport from 'passport';
 
-const router = Router();
+const router: RouterType = Router();
 
 const ALLOWED_ORIGINS = (process.env.FRONTEND_URL || 'http://localhost:5173').split(',').map((u) => u.trim());
 

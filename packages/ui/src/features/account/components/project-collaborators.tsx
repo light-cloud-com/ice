@@ -5,9 +5,9 @@
  * Renders inside project settings page.
  */
 
+import { UserPlus, Shield, Pencil, Eye, Trash2, Loader2 } from 'lucide-react';
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { UserPlus, Shield, Pencil, Eye, Trash2, Loader2 } from 'lucide-react';
 import axiosInstance from '../../../shared/api/axios-instance';
 import { cn } from '../../../shared/utils/cn';
 import type { RootState } from '../../../store';

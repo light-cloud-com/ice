@@ -7,11 +7,11 @@
  * PUT  /api/onboarding/skip     — Skip all remaining steps
  */
 
-import { Router, type Response } from 'express';
 import prisma from '@ice/db';
 import { requireAuth, type AuthRequest } from '@ice/shared';
+import { Router, type Router as RouterType, type Response } from 'express';
 
-const router = Router();
+const router: RouterType = Router();
 router.use(requireAuth);
 
 // ── Get onboarding status ────────────────────────────────────────────────────
@@ -29,7 +29,7 @@ router.get('/status', async (req: AuthRequest, res: Response) => {
     });
     if (!user) return res.status(404).json({ message: 'User not found' });
     res.json(user);
-  } catch (err: any) {
+  } catch {
     res.status(500).json({ message: 'Failed to get onboarding status' });
   }
 });
@@ -63,7 +63,7 @@ router.put('/step', async (req: AuthRequest, res: Response) => {
     });
 
     res.json(user);
-  } catch (err: any) {
+  } catch {
     res.status(500).json({ message: 'Failed to update onboarding step' });
   }
 });
@@ -83,7 +83,7 @@ router.put('/complete', async (req: AuthRequest, res: Response) => {
       },
     });
     res.json(user);
-  } catch (err: any) {
+  } catch {
     res.status(500).json({ message: 'Failed to complete onboarding' });
   }
 });
@@ -103,7 +103,7 @@ router.put('/skip', async (req: AuthRequest, res: Response) => {
       },
     });
     res.json(user);
-  } catch (err: any) {
+  } catch {
     res.status(500).json({ message: 'Failed to skip onboarding' });
   }
 });

@@ -7,18 +7,18 @@
  * POST /api/project-members/remove      — Remove member from project
  */
 
-import { Router, type Response } from 'express';
-import { requireAuth, type AuthRequest } from '@ice/shared';
+import prisma from '@ice/db';
 import * as projectAccess from '@ice/service-iam';
 import { sendProjectInviteEmail } from '@ice/service-iam';
-import prisma from '@ice/db';
+import { requireAuth, requireProjectAccess, type AuthRequest } from '@ice/shared';
+import { Router, type Router as RouterType, type Response } from 'express';
 
-const router = Router();
+const router: RouterType = Router();
 router.use(requireAuth);
 
 // ── List project members ─────────────────────────────────────────────────────
 
-router.post('/list', async (req: AuthRequest, res: Response) => {
+router.post('/list', requireProjectAccess('viewer'), async (req: AuthRequest, res: Response) => {
   try {
     const { projectId } = req.body;
     if (!projectId) return res.status(400).json({ message: 'projectId is required' });
@@ -34,7 +34,7 @@ router.post('/list', async (req: AuthRequest, res: Response) => {
         grantedAt: m.granted_at,
       })),
     );
-  } catch (err: any) {
+  } catch {
     res.status(500).json({ message: 'Failed to list project members' });
   }
 });

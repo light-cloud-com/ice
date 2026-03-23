@@ -7,8 +7,8 @@
 
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../../../shared/components/ui/resizable';
 import { CanvasPane } from './canvas-pane';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../../../shared/components/ui/resizable';
 import type { RootState } from '../../../store';
 
 export const SplitCanvasView: React.FC = () => {

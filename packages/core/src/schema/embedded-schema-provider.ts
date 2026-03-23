@@ -7,10 +7,8 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import type { Result } from '../types/result.js';
-import type { IceError } from '../types/errors.js';
-import { success, failure } from '../types/result.js';
 import { InternalError } from '../types/errors.js';
+import { success, failure } from '../types/result.js';
 import type {
   IceType,
   PropertySchema,
@@ -19,12 +17,13 @@ import type {
   ResourceSchema,
   SchemaEventListener,
   SchemaEventType,
-  SchemaProvider,
   SchemaQuery,
   SchemaQueryResult,
   SchemaStats,
   ObservableSchemaProvider,
 } from './schema-provider.js';
+import type { IceError } from '../types/errors.js';
+import type { Result } from '../types/result.js';
 
 // =============================================================================
 // Type Definitions for SQLite Schema Registry
@@ -218,7 +217,7 @@ export class EmbeddedSchemaProvider implements GraphSchemaProvider {
     try {
       // Dynamically import the schemas db module.
       // Graceful fallback: if the module or export doesn't exist, the provider runs without a registry.
-      const schemas: Record<string, unknown> | null = await import('../schemas/db/index.js').catch(() => null);
+      const schemas: Record<string, unknown> | null = await import("../schemas/db").catch(() => null);
 
       if (schemas && typeof schemas.get_schema_registry === 'function') {
         const factory = schemas.get_schema_registry as (dbPath?: string) => SqliteSchemaRegistry;
@@ -585,7 +584,7 @@ export function create_embedded_schema_provider(db_path?: string): EmbeddedSchem
  * @deprecated Use create_embedded_schema_provider with db_path instead.
  */
 export function create_embedded_schema_provider_with_registry(
-  registry_factory: () => Promise<unknown>,
+  _registry_factory: () => Promise<unknown>,
 ): EmbeddedSchemaProvider {
   // For backwards compatibility, create a provider and let initialize handle it
   return new EmbeddedSchemaProvider();

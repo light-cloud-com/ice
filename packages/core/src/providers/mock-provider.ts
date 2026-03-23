@@ -177,7 +177,7 @@ export class MockProvider implements ProviderClient {
   // State Operations
   // ===========================================================================
 
-  async get_state(node: Node): Promise<ResourceState | null> {
+  async get_state(_node: Node): Promise<ResourceState | null> {
     await this.simulate_delay();
     // Mock provider doesn't persist state - always returns null
     return null;
@@ -196,7 +196,7 @@ export class MockProvider implements ProviderClient {
   // Type Support
   // ===========================================================================
 
-  supports_type(ice_type: string): boolean {
+  supports_type(_ice_type: string): boolean {
     // Mock provider supports all types
     return true;
   }

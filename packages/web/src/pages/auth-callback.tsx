@@ -4,10 +4,10 @@
  * Reads ?token= or ?error= from URL, stores token, redirects to canvas.
  */
 
+import { setAccessToken, getCurrentUser } from '@ui/shared/api/auth';
+import { Loader2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
-import { setAccessToken, getCurrentUser } from '@ui/shared/api/auth';
 
 export const AuthCallbackPage: React.FC = () => {
   const navigate = useNavigate();

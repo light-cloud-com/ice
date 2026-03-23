@@ -1,6 +1,6 @@
 {
   "name": "ice",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "ICE - Integrated Cloud Environment (Web + Backend)",
   "private": true,
   "type": "module",
@@ -24,17 +24,24 @@
     "test:e2e": "playwright test --config e2e/playwright.config.ts",
     "test:build": "pnpm --filter @ice/web exec vite build",
     "typecheck": "pnpm -r typecheck",
-    "lint": "pnpm -r lint",
+    "lint": "eslint packages/*/src services/*/src apps/*/src --fix",
+    "lint:check": "eslint packages/*/src services/*/src apps/*/src",
     "format": "prettier --write \"packages/**/*.{ts,tsx}\" \"services/**/*.{ts,tsx}\" \"apps/**/*.{ts,tsx}\" \"e2e/**/*.ts\"",
     "format:check": "prettier --check \"packages/**/*.{ts,tsx}\" \"services/**/*.{ts,tsx}\" \"apps/**/*.{ts,tsx}\"",
     "clean": "pnpm -r clean && rm -rf node_modules"
   },
   "devDependencies": {
-    "@playwright/test": "^1.41.0",
-    "concurrently": "^8.2.0",
-    "prettier": "^3.2.0",
-    "typescript": "^5.6.3",
-    "vitest": "^2.1.9"
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.58.2",
+    "concurrently": "^9.2.1",
+    "eslint": "^10.1.0",
+    "eslint-plugin-import-x": "^4.16.2",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-unused-imports": "^4.4.1",
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.57.1",
+    "vitest": "^4.1.0"
   },
   "engines": {
     "node": ">=22.0.0",
@@ -46,6 +53,12 @@
       "esbuild",
       "electron",
       "protobufjs"
-    ]
+    ],
+    "overrides": {
+      "tar": ">=7.5.11",
+      "effect": ">=3.20.0",
+      "@tootallnate/once": ">=3.0.1",
+      "electron-builder-squirrel-windows": ">=26.0.0"
+    }
   }
 }

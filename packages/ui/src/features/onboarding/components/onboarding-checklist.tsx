@@ -6,9 +6,9 @@
  * if some steps were skipped. Dismissible.
  */
 
+import { Check, X, ChevronUp, ChevronDown, ListChecks } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Check, X, ChevronUp, ChevronDown, ListChecks } from 'lucide-react';
 import { cn } from '../../../shared/utils/cn';
 import { checkGitHubConnection } from '../../../store/slices/integrations-slice';
 import type { RootState, AppDispatch } from '../../../store';

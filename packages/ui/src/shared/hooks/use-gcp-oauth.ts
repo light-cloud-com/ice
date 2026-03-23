@@ -56,7 +56,7 @@ export function useGCPOAuth(onSuccess: () => void): UseGCPOAuthResult {
       return;
     }
 
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    const clientId = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID;
     if (!clientId) {
       setError('Google OAuth not configured (missing VITE_GOOGLE_CLIENT_ID).');
       return;

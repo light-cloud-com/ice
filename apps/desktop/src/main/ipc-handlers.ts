@@ -5,13 +5,11 @@
  * file operations, and deployment commands.
  */
 
-import { ipcMain, dialog, BrowserWindow } from 'electron';
-import { readFile, writeFile, readdir, stat, mkdir } from 'fs/promises';
+import { exec } from 'child_process';
 import { randomUUID } from 'crypto';
+import { readFile, writeFile, readdir, stat, mkdir } from 'fs/promises';
 import { join, basename, extname } from 'path';
-import Store from 'electron-store';
-import { GitHubService } from './github-service';
-// Import from core - shared between desktop and importers
+import { promisify } from 'util';
 import {
   HIGH_LEVEL_CATEGORIES,
   getHighLevelResourcesForPalette,
@@ -21,6 +19,9 @@ import {
   type AWSImportOptions,
   type AzureImportOptions,
 } from '@ice/core';
+import { ipcMain, dialog, BrowserWindow } from 'electron';
+import Store from 'electron-store';
+import { GitHubService } from './github-service';
 
 // Secure credential store
 const credentialStore = new Store({
@@ -919,9 +920,6 @@ export function register_ipc_handlers(): void {
 // =========================================
 // Shell command helper
 // =========================================
-
-import { exec, spawn } from 'child_process';
-import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 

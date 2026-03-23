@@ -4,8 +4,10 @@
  * Imports Terraform state files (.tfstate) into ICE graph format.
  */
 
-import { readFile } from 'fs/promises';
 import { existsSync } from 'fs';
+import { readFile } from 'fs/promises';
+import { get_ice_type, get_ice_provider, map_properties } from './type-mapper.js';
+import { MutableGraph, create_mutable_graph } from '../../graph/mutable-graph.js';
 import type {
   TerraformState,
   TerraformResource,
@@ -17,8 +19,6 @@ import type {
   ImportWarning,
   ImportMetadata,
 } from './types.js';
-import { get_ice_type, get_ice_provider, get_provider_from_type, map_properties } from './type-mapper.js';
-import { MutableGraph, create_mutable_graph } from '../../graph/mutable-graph.js';
 import type { NodeInput, EdgeInput } from '../../types/graph.js';
 
 // =============================================================================
@@ -370,7 +370,7 @@ function mask_path(obj: Record<string, unknown>, path: string[]): void {
 /**
  * Infer dependencies from attribute references.
  */
-function infer_dependencies(resources: ImportedResource[], warnings: ImportWarning[]): void {
+function infer_dependencies(resources: ImportedResource[], _warnings: ImportWarning[]): void {
   // Build a lookup map of resource addresses and their IDs
   const resource_lookup = new Map<string, string>();
   const id_lookup = new Map<string, string>();

@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import providerRoutes from './routes/providers.js';
 import githubRoutes from './routes/github.js';
+import providerRoutes from './routes/providers.js';
 export * from './services/provider.service.js';
 export * from './services/github.service.js';
 

@@ -145,7 +145,7 @@ export async function list_gcp_projects(config: GCPAuthConfig): Promise<GCPProje
       name: p.name,
       number: p.projectNumber,
     }));
-  } catch (error) {
+  } catch {
     return [];
   }
 }

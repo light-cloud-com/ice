@@ -14,8 +14,8 @@
  */
 
 import React, { memo, useState, useCallback, useRef, useEffect } from 'react';
-import type { CanvasNode } from '../svg-canvas';
 import { getIcon, type Provider } from '../../../../assets/icons';
+import type { CanvasNode } from '../svg-canvas';
 
 interface SvgGroupNodeProps {
   node: CanvasNode;

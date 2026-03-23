@@ -123,8 +123,16 @@ export async function deleteProject(projectId: string, orgId: string) {
   await deleteRecursive(projectId);
 }
 
-export async function moveProject(projectId: string, parentId: string | null) {
+export async function moveProject(projectId: string, parentId: string | null, orgId?: string) {
   if (parentId) {
+    // Validate target parent belongs to the same org
+    if (orgId) {
+      const parent = await prisma.canvasProject.findFirst({
+        where: { id: parentId, organisation_id: orgId, type: 'folder' },
+      });
+      if (!parent) throw new Error('Target folder not found or belongs to a different organisation');
+    }
+
     async function isDescendant(folderId: string, targetId: string): Promise<boolean> {
       if (folderId === targetId) return true;
       const children = await prisma.canvasProject.findMany({

@@ -4,7 +4,6 @@
  * Searchable template grid with category tabs, "Blank" option, and provider compatibility.
  */
 
-import React, { useMemo, useState } from 'react';
 import {
   Rocket,
   Brain,
@@ -19,16 +18,17 @@ import {
   CheckCircle,
   AlertTriangle,
 } from 'lucide-react';
-import { cn } from '../../../shared/utils/cn';
+import React, { useMemo, useState } from 'react';
 import {
   ALL_TEMPLATES,
   TEMPLATE_CATEGORIES,
   searchTemplates,
   getProviderCompatibility,
 } from '../../../config/templates';
-import type { TemplateCategory } from '../../../config/templates';
 import { Badge } from '../../../shared/components/ui/badge';
+import { cn } from '../../../shared/utils/cn';
 import type { Provider } from '../../../config/blocks/types';
+import type { TemplateCategory } from '../../../config/templates';
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Rocket,

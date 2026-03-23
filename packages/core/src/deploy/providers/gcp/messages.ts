@@ -29,6 +29,7 @@ export const SERVICE_NAMES = {
   DATAFLOW: 'Dataflow',
   DISCOVERY_ENGINE: 'Discovery Engine',
   GKE: 'GKE',
+  DOMAIN_MAPPING: 'Domain Mapping',
 } as const;
 
 // =============================================================================

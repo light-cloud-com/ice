@@ -6,11 +6,11 @@
  * No separate IPC handlers — same code path as the web app.
  */
 
-import { app, BrowserWindow, shell, screen, ipcMain } from 'electron';
-import { join } from 'path';
-import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { randomBytes } from 'crypto';
 import { existsSync } from 'fs';
+import { join } from 'path';
+import { electronApp, optimizer, is } from '@electron-toolkit/utils';
+import { app, BrowserWindow, shell, screen } from 'electron';
 
 // ─── Configuration ─────────────────────────────────────────────────────────
 

@@ -32,6 +32,7 @@ export interface SplitViewState {
 export interface UIState {
   // Panel visibility
   showPalette: boolean;
+  showBlocks: boolean;
   showProperties: boolean;
   showMinimap: boolean;
   showValidation: boolean;
@@ -116,6 +117,7 @@ function loadPersistedPanes(): SplitViewState {
 
 const initialState: UIState = {
   showPalette: true,
+  showBlocks: true,
   showProperties: false,
   showMinimap: true,
   showValidation: false,
@@ -147,6 +149,9 @@ const uiSlice = createSlice({
   reducers: {
     togglePalette: (state) => {
       state.showPalette = !state.showPalette;
+    },
+    toggleBlocks: (state) => {
+      state.showBlocks = !state.showBlocks;
     },
     toggleProperties: (state) => {
       state.showProperties = !state.showProperties;
@@ -306,6 +311,7 @@ const uiSlice = createSlice({
 
 export const {
   togglePalette,
+  toggleBlocks,
   toggleProperties,
   toggleMinimap,
   toggleAiChat,

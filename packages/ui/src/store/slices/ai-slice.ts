@@ -6,8 +6,8 @@
  */
 
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { AiCanvasOp, AiResponse } from '@ice/types';
 import type { Card } from './cards-slice';
+import type { AiCanvasOp, AiResponse } from '@ice/types';
 
 // =============================================================================
 // Types

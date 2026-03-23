@@ -1,6 +1,6 @@
 # Security Backlog
 
-> **Status: All 15 items fixed** (2026-03-22)
+> **Status: All 19 items fixed** (2026-03-23)
 
 ## SEC-1: Default JWT secret and encryption key fallbacks (P0) -- FIXED
 
@@ -89,3 +89,27 @@
 ## SEC-15: Billing scheduled job endpoints allow unauthenticated access (P2) -- FIXED
 
 **Fix applied:** `verifySchedulerAuth` defaults to denying access when `SCHEDULER_API_KEY` is not configured.
+
+---
+
+## SEC-16: `/cards/get` route has no `requireProjectAccess` middleware (P0) -- FIXED
+
+**Fix applied (2026-03-23):** Any authenticated user could read any card by supplying a `cardId`. Added `requireProjectAccess('viewer')` middleware to the route. Covered by org-isolation integration tests.
+
+---
+
+## SEC-17: All 7 environment routes missing project access checks (P0) -- FIXED
+
+**Fix applied (2026-03-23):** `/environments/list`, `/create`, `/update`, `/delete`, `/compare`, `/promote`, and `/pr-previews` only had `requireAuth` — no org or project scoping. Added `requireProjectAccess` with appropriate role levels (`viewer` for reads, `editor` for mutations, `admin` for deletes/promotes). Covered by 16 new integration tests in `services/canvas/src/__tests__/org-isolation.test.ts`.
+
+---
+
+## SEC-18: `moveProject` allows cross-org folder moves (P1) -- FIXED
+
+**Fix applied (2026-03-23):** The `moveProject` service did not validate that the target parent folder belongs to the same organisation as the project. Added `orgId` parameter and validation check — moves to folders in a different org are now rejected.
+
+---
+
+## SEC-19: JWT not re-issued on organisation switch (P1) -- FIXED
+
+**Fix applied (2026-03-23):** Added `POST /auth/switch-org` endpoint that validates the user's membership in the target org and issues a new JWT with the correct `organisationId` claim. Previously the JWT was fixed at login time, so switching orgs in the UI was cosmetic only — all API calls still used the original org context.

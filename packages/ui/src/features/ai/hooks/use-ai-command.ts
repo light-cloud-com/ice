@@ -7,11 +7,8 @@
 
 import { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import type { RootState, AppDispatch } from '../../../store';
+import { getAccessToken } from '../../../shared/api/axios-instance';
 import { store } from '../../../store';
-import { serializeCanvas } from '../utils/serialize-canvas';
-import { executeAiOperations } from '../services/operation-executor';
-import { importToActiveCard, selectActiveCard } from '../../../store/slices/cards-slice';
 import {
   startAiRequest,
   setStreamingStatus,
@@ -28,8 +25,11 @@ import {
   setAnimatingEdges,
   clearAnimations,
 } from '../../../store/slices/ai-slice';
-import type { AiCanvasOp, AiStreamEvent } from '@ice/types';
-import { getAccessToken } from '../../../shared/api/axios-instance';
+import { importToActiveCard, selectActiveCard } from '../../../store/slices/cards-slice';
+import { executeAiOperations } from '../services/operation-executor';
+import { serializeCanvas } from '../utils/serialize-canvas';
+import type { RootState, AppDispatch } from '../../../store';
+import type { AiCanvasOp } from '@ice/types';
 
 const API_BASE = (import.meta as any).env?.VITE_API_URL || '/api';
 

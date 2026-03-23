@@ -5,21 +5,20 @@
  * desired state (graph) against current state.
  */
 
-import type { Node, NodeId } from '../types/graph.js';
+import { diff_properties, is_destructive_change } from './diff.js';
+import { get_execution_layers } from '../graph/algorithms.js';
+import { MutableGraph } from '../graph/mutable-graph.js';
+import { create_deployment_id } from '../types/deployment.js';
 import type {
   DeploymentPlan,
   PlannedChange,
   PlanSummary,
   PlanOptions,
   DeploymentAction,
-  PropertyChange,
   ProviderRequirement,
 } from '../types/deployment.js';
+import type { Node, NodeId } from '../types/graph.js';
 import type { ResourceState } from '../types/providers.js';
-import { create_deployment_id } from '../types/deployment.js';
-import { MutableGraph } from '../graph/mutable-graph.js';
-import { get_execution_layers } from '../graph/algorithms.js';
-import { diff_properties, is_destructive_change } from './diff.js';
 
 // =============================================================================
 // Plan Engine
@@ -298,7 +297,7 @@ function compute_summary(changes: PlannedChange[]): PlanSummary {
 function extract_provider(resource_type: string): string {
   // Format: "aws.ec2.instance" -> "aws"
   // Format: "aws:ec2/instance:Instance" -> "aws"
-  const parts = resource_type.split(/[.:\/]/);
+  const parts = resource_type.split(/[.:/]/);
   return (parts[0] ?? 'unknown').toLowerCase();
 }
 

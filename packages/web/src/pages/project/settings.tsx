@@ -2,17 +2,17 @@
  * Project Settings Page — name, description, provider, region
  */
 
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { Save, Loader2, Trash2, AlertTriangle } from 'lucide-react';
-import axiosInstance from '@ui/shared/api/axios-instance';
-import type { RootState } from '@ui/store';
 import { ProjectCollaborators } from '@ui/features/account/components/project-collaborators';
-import gcpIcon from 'devicon/icons/googlecloud/googlecloud-original.svg';
+import axiosInstance from '@ui/shared/api/axios-instance';
+import { cn } from '@ui/shared/utils/cn';
 import awsIcon from 'devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg';
 import azureIcon from 'devicon/icons/azure/azure-original.svg';
-import { cn } from '@ui/shared/utils/cn';
+import gcpIcon from 'devicon/icons/googlecloud/googlecloud-original.svg';
+import { Save, Loader2, Trash2, AlertTriangle } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import type { RootState } from '@ui/store';
 
 const PROVIDERS = [
   {

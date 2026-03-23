@@ -5,9 +5,9 @@
  * Creating a team is the default — team name is required.
  */
 
+import { Users, UserPlus } from 'lucide-react';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Users, UserPlus } from 'lucide-react';
 import { cn } from '../../../shared/utils/cn';
 import { setTeamMode, setTeamName } from '../../../store/slices/onboarding-slice';
 import type { RootState, AppDispatch } from '../../../store';

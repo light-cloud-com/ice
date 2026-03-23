@@ -4,8 +4,8 @@
  * A tabbed interface component for organizing content.
  */
 
-import * as React from 'react';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
+import * as React from 'react';
 import { cn } from '../utils/cn';
 
 const Tabs = TabsPrimitive.Root;

@@ -41,7 +41,7 @@ function isEnabled(): boolean {
       _enabled = false;
     }
   }
-  return _enabled;
+  return _enabled ?? false;
 }
 
 export function refreshActionLogFlag(): void {

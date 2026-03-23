@@ -5,8 +5,6 @@
  * Templates are block-based and expanded via expandComposedTemplate().
  */
 
-import React, { useState, useMemo } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import {
   Rocket,
   Brain,
@@ -19,6 +17,16 @@ import {
   Search,
   LayoutTemplate,
 } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  ALL_TEMPLATES,
+  TEMPLATE_CATEGORIES,
+  searchTemplates,
+  expandComposedTemplate,
+  type ComposedTemplate,
+} from '../../../config/templates';
+import { Badge } from '../../../shared/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -27,15 +35,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuGroup,
 } from '../../../shared/components/ui/dropdown-menu';
-import { Badge } from '../../../shared/components/ui/badge';
 import { cn } from '../../../shared/utils/cn';
-import {
-  ALL_TEMPLATES,
-  TEMPLATE_CATEGORIES,
-  searchTemplates,
-  expandComposedTemplate,
-  type ComposedTemplate,
-} from '../../../config/templates';
 import { createCard, importToActiveCard } from '../../../store/slices/cards-slice';
 import { openTabInPane, setActivePane } from '../../../store/slices/ui-slice';
 import type { AppDispatch, RootState } from '../../../store';

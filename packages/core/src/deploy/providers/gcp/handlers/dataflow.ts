@@ -6,7 +6,7 @@
  */
 
 import type { ResourceDeployResult } from '../../../types.js';
-import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
+import type { GCPResourceHandler } from '../types.js';
 
 const TYPE = 'gcp.dataflow.job';
 const BASE_URL = 'https://dataflow.googleapis.com/v1b3';
@@ -78,8 +78,56 @@ export const dataflow_handler: GCPResourceHandler = {
 
   async update(name, provider_id, properties, _current, ctx) {
     const start = Date.now();
-    // Dataflow jobs cannot be updated in-place; they must be drained and recreated
-    return result(name, 'update', start, { provider_id });
+    const region = extract_region(provider_id) || ctx.region;
+    const job_id = provider_id.split('/').pop();
+
+    try {
+      // Dataflow jobs are immutable — cancel the existing job then recreate
+      await ctx.rest_client.post(
+        `${BASE_URL}/projects/${ctx.project}/locations/${region}/jobs/${job_id}`,
+        { requestedState: 'JOB_STATE_CANCELLED' },
+      );
+
+      // Poll until the job is cancelled (5s interval, 60s max)
+      const cancel_start = Date.now();
+      while (Date.now() - cancel_start < 60_000) {
+        const job = (await ctx.rest_client.get(
+          `${BASE_URL}/projects/${ctx.project}/locations/${region}/jobs/${job_id}`,
+        )) as any;
+        if (
+          job?.currentState === 'JOB_STATE_CANCELLED' ||
+          job?.currentState === 'JOB_STATE_DONE' ||
+          job?.currentState === 'JOB_STATE_FAILED'
+        ) {
+          break;
+        }
+        await new Promise((r) => setTimeout(r, 5000));
+      }
+
+      // Create a replacement job with updated properties
+      const job_body = {
+        name,
+        type: properties.template_type === 'batch' ? 'JOB_TYPE_BATCH' : 'JOB_TYPE_STREAMING',
+        environment: {
+          tempLocation: `gs://${ctx.project}-dataflow-temp/${name}`,
+          zone: `${region}-a`,
+        },
+        labels: properties.labels || {},
+      };
+
+      const response = (await ctx.rest_client.post(
+        `${BASE_URL}/projects/${ctx.project}/locations/${region}/jobs`,
+        job_body,
+      )) as any;
+
+      const new_provider_id = response?.id
+        ? `projects/${ctx.project}/locations/${region}/jobs/${response.id}`
+        : `projects/${ctx.project}/locations/${region}/jobs/${name}`;
+
+      return result(name, 'update', start, { provider_id: new_provider_id });
+    } catch (error) {
+      return fail(name, 'update', start, error instanceof Error ? error.message : String(error));
+    }
   },
 
   async delete(name, provider_id, ctx) {

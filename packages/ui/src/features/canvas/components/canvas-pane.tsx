@@ -5,16 +5,15 @@
  * Each pane shows only its own openCardIds as simple tabs.
  */
 
+import { Plus, X, Pencil, Check, FolderOpen, Rocket } from 'lucide-react';
 import React, { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Plus, X, Pencil, Check, FolderOpen, Rocket } from 'lucide-react';
-import type { AppDispatch } from '../../../store';
-import { setActiveCard, renameCard, selectCards } from '../../../store/slices/cards-slice';
-import { setPaneCard, setActivePane, closeSplit, closeTabInPane, openDialog } from '../../../store/slices/ui-slice';
-import { selectProjects } from '../../../store/slices/projects-slice';
-import type { RootState } from '../../../store';
 import { SvgCanvas } from './svg-canvas';
 import { cn } from '../../../shared/utils/cn';
+import { setActiveCard, renameCard, selectCards } from '../../../store/slices/cards-slice';
+import { selectProjectsByOrg } from '../../../store/slices/projects-slice';
+import { setPaneCard, setActivePane, closeSplit, closeTabInPane, openDialog } from '../../../store/slices/ui-slice';
+import type { AppDispatch, RootState  } from '../../../store';
 
 interface CanvasPaneProps {
   paneId: string;
@@ -27,7 +26,8 @@ export const CanvasPane: React.FC<CanvasPaneProps> = ({ paneId, cardId, isActive
   const dispatch = useDispatch<AppDispatch>();
   const allCards = useSelector(selectCards);
   const pane = useSelector((state: RootState) => state.ui.splitView.panes.find((p) => p.id === paneId));
-  const projects = useSelector(selectProjects);
+  const orgId = useSelector((state: RootState) => state.account?.selectedOrg?.id || '');
+  const projects = useSelector(selectProjectsByOrg(orgId));
 
   // Only cards open in THIS pane
   const openCardIds = pane?.openCardIds || [cardId];
@@ -150,12 +150,6 @@ export const CanvasPane: React.FC<CanvasPaneProps> = ({ paneId, cardId, isActive
                 />
               )}
 
-              {/* Demo badge */}
-              {card.isDemo && !isEditing && (
-                <span className="text-ice-xs px-1.5 py-0.5 rounded bg-ice-green/20 text-ice-green font-medium">
-                  DEMO
-                </span>
-              )}
 
               {/* Action buttons */}
               {!isEditing && (

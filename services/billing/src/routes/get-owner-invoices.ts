@@ -2,8 +2,8 @@
  * Get invoices for all organisations owned by the user
  */
 
-import { Request, Response } from 'express';
 import { User } from '@prisma/client';
+import { Request, Response } from 'express';
 import prisma from '../../lib/prisma';
 
 interface AuthenticatedRequest extends Request {

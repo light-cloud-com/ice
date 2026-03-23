@@ -4,6 +4,9 @@
  * Dynamic provider registration and management.
  */
 
+import { InternalError, ProviderError } from '../types/errors.js';
+import { success, failure } from '../types/result.js';
+import type { IceError } from '../types/errors.js';
 import type {
   ProviderName,
   ProviderConfig,
@@ -14,9 +17,6 @@ import type {
   HealthCheckResult,
 } from '../types/providers.js';
 import type { Result } from '../types/result.js';
-import type { IceError } from '../types/errors.js';
-import { success, failure } from '../types/result.js';
-import { InternalError, ProviderError } from '../types/errors.js';
 
 // =============================================================================
 // Provider Registry Implementation
@@ -118,7 +118,7 @@ export class DefaultProviderRegistry implements ProviderRegistry {
   async health_check_all(): Promise<Map<ProviderName, HealthCheckResult>> {
     const results = new Map<ProviderName, HealthCheckResult>();
 
-    for (const [key, client] of this.clients) {
+    for (const [_key, client] of this.clients) {
       try {
         const result = await client.health_check();
         results.set(client.provider, result);

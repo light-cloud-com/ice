@@ -4,8 +4,8 @@
  * A visual divider between content sections.
  */
 
-import * as React from 'react';
 import * as SeparatorPrimitive from '@radix-ui/react-separator';
+import * as React from 'react';
 import { cn } from '../utils/cn';
 
 const Separator = React.forwardRef<

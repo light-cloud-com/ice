@@ -4,9 +4,9 @@
  * Extracted from routes/auth.ts and routes/oauth.ts
  */
 
-import bcrypt from 'bcryptjs';
 import prisma from '@ice/db';
 import { generateToken, generateRefreshToken } from '@ice/shared';
+import * as bcrypt from 'bcryptjs';
 
 export interface AuthResult {
   token: string;

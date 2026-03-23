@@ -6,8 +6,8 @@
  * All credentials stored via electron-store.
  */
 
-import Store from 'electron-store';
 import { shell } from 'electron';
+import Store from 'electron-store';
 
 // =============================================================================
 // Types
@@ -116,7 +116,7 @@ export class GitHubService {
   async pollDeviceFlow(deviceCode: string, interval: number): Promise<GitHubUser> {
     const pollInterval = Math.max(interval, 5) * 1000; // GitHub minimum 5s
 
-    // eslint-disable-next-line no-constant-condition
+     
     while (true) {
       await new Promise((resolve) => setTimeout(resolve, pollInterval));
 

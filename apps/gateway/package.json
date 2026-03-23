@@ -5,35 +5,35 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "DOTENV_CONFIG_PATH=../../.env tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js"
   },
   "dependencies": {
     "@ice/db": "workspace:*",
-    "@ice/shared": "workspace:*",
-    "@ice/service-iam": "workspace:*",
-    "@ice/service-canvas": "workspace:*",
-    "@ice/service-deploy": "workspace:*",
     "@ice/service-ai": "workspace:*",
-    "@ice/service-engine": "workspace:*",
     "@ice/service-billing": "workspace:*",
+    "@ice/service-canvas": "workspace:*",
     "@ice/service-credentials": "workspace:*",
+    "@ice/service-deploy": "workspace:*",
+    "@ice/service-engine": "workspace:*",
+    "@ice/service-iam": "workspace:*",
+    "@ice/shared": "workspace:*",
     "cookie-parser": "^1.4.7",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.21.1",
-    "express-rate-limit": "^7.4.1",
-    "helmet": "^8.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^4.22.1",
+    "express-rate-limit": "^7.5.1",
+    "helmet": "^8.1.0",
     "passport": "^0.7.0",
     "socket.io": "^4.8.3"
   },
   "devDependencies": {
-    "@types/cookie-parser": "^1.4.8",
-    "@types/cors": "^2.8.17",
-    "@types/express": "^5.0.0",
-    "@types/node": "^22.8.1",
-    "tsx": "^4.19.2",
-    "typescript": "^5.6.3"
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.19.15",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   }
 }

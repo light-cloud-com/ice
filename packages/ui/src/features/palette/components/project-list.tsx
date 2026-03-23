@@ -4,11 +4,12 @@
  * Displays a tree of project files and folders from the filesystem.
  */
 
-import React, { useEffect, useState, useRef } from 'react';
+import { FolderOpen, FolderPlus, FileText, ChevronRight, Search, X, RefreshCw, PlayCircle } from 'lucide-react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getApi } from '../../../shared/api/api-adapter';
-import { FolderOpen, FolderPlus, FileText, ChevronRight, Search, X, RefreshCw, PlayCircle } from 'lucide-react';
 import { cn } from '../../../shared/utils/cn';
+import { createCard, importToActiveCard, type CardNode, type CardEdge } from '../../../store/slices/cards-slice';
 import {
   setRootDirectory,
   setScanResults,
@@ -25,7 +26,6 @@ import {
   type ProjectFile,
   type ProjectFolder,
 } from '../../../store/slices/project-list-slice';
-import { createCard, importToActiveCard, type CardNode, type CardEdge } from '../../../store/slices/cards-slice';
 import { openTabInPane } from '../../../store/slices/ui-slice';
 import type { RootState } from '../../../store';
 
@@ -126,9 +126,9 @@ export const ProjectList: React.FC = () => {
     if (rootDirectory) {
       scanDirectory(rootDirectory);
     }
-  }, [rootDirectory]);
+  }, [rootDirectory, scanDirectory]);
 
-  const scanDirectory = async (dirPath: string) => {
+  const scanDirectory = useCallback(async (dirPath: string) => {
     dispatch(setLoading(true));
     try {
       const api = getApi();
@@ -140,7 +140,7 @@ export const ProjectList: React.FC = () => {
     } finally {
       dispatch(setLoading(false));
     }
-  };
+  }, [dispatch]);
 
   const handleSelectDirectory = async () => {
     try {

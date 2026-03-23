@@ -5,36 +5,37 @@
  * Replaces the monolithic gcp-deployer.ts with a scalable architecture.
  */
 
-import type { DeployOptions, ResourceDeployResult, ProviderDeployer } from '../../types.js';
-import type { GCPHandlerContext, GCPResourceHandler } from './types.js';
 import { initialize_gcp_clients, create_rest_client } from './sdk-loader.js';
 import { isApiNotEnabledError, extractApiName, GCP_DEPLOYER_MESSAGES, buildApiEnableUrl } from '../../messages.js';
-
 // Import handlers
-import { cloud_run_handler } from './handlers/cloud-run.js';
-import { cloud_sql_handler } from './handlers/cloud-sql.js';
-import { cloud_functions_handler } from './handlers/cloud-functions.js';
-import { cloud_scheduler_handler } from './handlers/cloud-scheduler.js';
-import { cloud_storage_handler } from './handlers/cloud-storage.js';
-import { pubsub_handler } from './handlers/pubsub.js';
-import { firestore_handler } from './handlers/firestore.js';
-import { memorystore_handler } from './handlers/memorystore.js';
-import { secret_manager_handler } from './handlers/secret-manager.js';
-import { identity_platform_handler } from './handlers/identity-platform.js';
-import { bigquery_handler } from './handlers/bigquery.js';
 import { api_gateway_handler } from './handlers/api-gateway.js';
-import { load_balancer_handler } from './handlers/load-balancer.js';
-import { logging_handler } from './handlers/logging.js';
-import { vertex_ai_handler } from './handlers/vertex-ai.js';
+import { bigquery_handler } from './handlers/bigquery.js';
+import { cloud_functions_handler } from './handlers/cloud-functions.js';
+import { cloud_run_handler } from './handlers/cloud-run.js';
+import { cloud_scheduler_handler } from './handlers/cloud-scheduler.js';
+import { cloud_sql_handler } from './handlers/cloud-sql.js';
+import { cloud_storage_handler } from './handlers/cloud-storage.js';
 import { dataflow_handler } from './handlers/dataflow.js';
 import { discovery_engine_handler } from './handlers/discovery-engine.js';
+import { domain_mapping_handler } from './handlers/domain-mapping.js';
+import { firestore_handler } from './handlers/firestore.js';
 import { gke_handler } from './handlers/gke.js';
+import { identity_platform_handler } from './handlers/identity-platform.js';
+import { load_balancer_handler } from './handlers/load-balancer.js';
+import { logging_handler } from './handlers/logging.js';
+import { memorystore_handler } from './handlers/memorystore.js';
+import { pubsub_handler } from './handlers/pubsub.js';
+import { secret_manager_handler } from './handlers/secret-manager.js';
+import { vertex_ai_handler } from './handlers/vertex-ai.js';
+import type { GCPHandlerContext, GCPResourceHandler } from './types.js';
+import type { DeployOptions, ResourceDeployResult, ProviderDeployer } from '../../types.js';
 
 // =============================================================================
 // GCP API name mapping — resource type prefix → googleapis.com service name
 // =============================================================================
 
 const API_FOR_TYPE: Record<string, string> = {
+  'gcp.run.domainMapping': 'run.googleapis.com',
   'gcp.run.': 'run.googleapis.com',
   'gcp.sql.': 'sqladmin.googleapis.com',
   'gcp.cloudfunctions.': 'cloudfunctions.googleapis.com',
@@ -60,6 +61,8 @@ const API_FOR_TYPE: Record<string, string> = {
 // =============================================================================
 
 const HANDLER_REGISTRY: Array<{ prefix: string; handler: GCPResourceHandler }> = [
+  // Cloud Run Domain Mapping (must precede generic gcp.run. prefix)
+  { prefix: 'gcp.run.domainMapping', handler: domain_mapping_handler },
   // Cloud Run (services and jobs)
   { prefix: 'gcp.run.', handler: cloud_run_handler },
   // Cloud SQL

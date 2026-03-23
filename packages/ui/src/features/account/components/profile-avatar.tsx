@@ -2,14 +2,14 @@
  * ProfileAvatar — compact avatar with Radix dropdown
  */
 
-import { useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Settings, Users, LogOut } from 'lucide-react';
-import type { RootState, AppDispatch } from '../../../store';
-import { clearUser } from '../../../store/slices/account-slice';
+import { useCallback } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { logout, setAccessToken } from '../../../shared/api/auth';
+import { clearUser } from '../../../store/slices/account-slice';
+import type { RootState, AppDispatch } from '../../../store';
 
 function getInitials(name?: string, email?: string): string {
   if (name) {

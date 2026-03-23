@@ -8,10 +8,13 @@
  * opens first environment card, and closes the dialog.
  */
 
+import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import React, { useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { COMPOSED_TEMPLATES, expandComposedTemplate } from '../../../config/templates';
+import axiosInstance from '../../../shared/api/axios-instance';
+import { StepIndicator } from '../../../shared/components/step-indicator';
 import {
   Dialog,
   DialogContent,
@@ -20,21 +23,14 @@ import {
   DialogDescription,
 } from '../../../shared/components/ui/dialog';
 import { cn } from '../../../shared/utils/cn';
-import type { RootState, AppDispatch } from '../../../store';
-import { closeDialog } from '../../../store/slices/ui-slice';
-import { openTabInPane, setActivePane } from '../../../store/slices/ui-slice';
-import { createCard, importToActiveCard, setActiveCard } from '../../../store/slices/cards-slice';
-import { createProject, type Environment } from '../../../store/slices/projects-slice';
-import { COMPOSED_TEMPLATES, expandComposedTemplate } from '../../../config/templates';
-import axiosInstance from '../../../shared/api/axios-instance';
 import { toSlug } from '../../../shared/utils/slug';
-
+import { closeDialog } from '../../../store/slices/ui-slice';
 import { useWizardState } from '../hooks/use-wizard-state';
-import { StepIndicator } from '../../../shared/components/step-indicator';
-import { ProjectInfoStep } from '../steps/project-info-step';
 import { EnvironmentStep } from '../steps/environment-step';
-import { TemplateStep } from '../steps/template-step';
+import { ProjectInfoStep } from '../steps/project-info-step';
 import { ReviewStep } from '../steps/review-step';
+import { TemplateStep } from '../steps/template-step';
+import type { RootState, AppDispatch } from '../../../store';
 
 const STEP_LABELS = ['Project', 'Environments', 'Template', 'Review'];
 
@@ -42,7 +38,7 @@ export const ProjectWizard: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const isOpen = useSelector((state: RootState) => state.ui.dialogs.projectWizard);
-  const activePaneId = useSelector((state: RootState) => state.ui.splitView.activePaneId);
+  const _activePaneId = useSelector((state: RootState) => state.ui.splitView.activePaneId);
   const selectedOrg = useSelector((state: RootState) => state.account?.selectedOrg);
 
   const wizard = useWizardState();
@@ -116,10 +112,16 @@ export const ProjectWizard: React.FC = () => {
         }
       }
 
-      // 5. Close wizard
+      // 5. Refresh project tree in sidebar
+      if (orgId) {
+        const { fetchProjectTree } = await import('../../../store/slices/projects-slice');
+        dispatch(fetchProjectTree(orgId));
+      }
+
+      // 6. Close wizard
       handleClose();
 
-      // 6. Navigate to the new project
+      // 7. Navigate to the new project
       if (selectedOrg) {
         const orgSlug = toSlug(selectedOrg.name);
         const projectSlug = project.slug || toSlug(state.projectName);
@@ -131,7 +133,7 @@ export const ProjectWizard: React.FC = () => {
     } catch (err) {
       console.error('Failed to create project:', err);
     }
-  }, [state, dispatch, selectedOrg, navigate, handleClose]);
+  }, [state, selectedOrg, navigate, handleClose, dispatch]);
 
   // ── Render ────────────────────────────────────────────────────────────────
 

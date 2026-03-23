@@ -13,14 +13,17 @@
 
 import React, { useRef, useEffect, useMemo, useCallback, useState, type CSSProperties } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import type { RootState, AppDispatch } from '../../../store';
 // Note: Graph actions no longer used - all node operations go through cardsSlice
 // Viewport is now stored per-pane in uiSlice (for split view support)
+import { CanvasGrid } from './canvas-grid';
+import { CanvasContextMenu } from './context/canvas-context-menu';
+import { ControlsHelpModal } from './controls-help-modal';
+// ConnectionTypePopover removed — connections are fully auto-configured
+import { EmptyCanvasOverlay } from './empty-canvas-overlay';
 import {
   selectActiveCard,
   addNodeToCard,
   addEdgeToCard,
-  updateCardEdgeData,
   expandBlueprintToCard,
   updateCardNodePosition,
   updateCardNodePositions,
@@ -36,43 +39,39 @@ import {
   type CardNode,
   type CardEdge,
 } from '../../../store/slices/cards-slice';
-import { getBlueprint, expandBlueprint } from '../../../config/blocks';
-import { setPaneViewport, openContextMenu } from '../../../store/slices/ui-slice';
-import {
-  setSelectedNodes,
-  setSelectedEdges,
-  toggleNodeSelection,
-  setSelectionRect,
-} from '../../../store/slices/selection-slice';
-import { useCanvasInteractions, type CanvasItem } from '../hooks/use-canvas-interactions';
-import { useClipboard } from '../../../shared/hooks/use-clipboard';
-import { useUndoRedo } from '../../../shared/hooks/use-undo-redo';
-import { CanvasGrid } from './canvas-grid';
-import { getIcon, DEFAULT_ICON, type Provider } from '../../../assets/icons';
-import { getBrandIcon } from '../../../assets/icons/brand-registry';
-import { SvgCompactNode, computeCompactNodeHeight, computeCompactNodeWidth } from './nodes/svg-compact-node';
-import { receiveCardPipelineUpdate } from '../../../store/slices/pipeline-slice';
-import { SvgGroupNode } from './nodes/svg-group-node';
-import { SvgRegionLabel } from './nodes/svg-region-label';
-import { SvgLogNode } from './svg-log-node';
-import { SvgConnectionPath, EDGE_COLORS, type ConnectionTooltipInfo } from './svg-connection-path';
-import { SelectionFrame } from './selection-frame';
-import { SvgUserNode, USER_NODE_WIDTH, USER_NODE_HEIGHT, USER_NODE_ID } from '../../../shared/components/svg-user-node';
-import { useExposedServices } from '../../../shared/hooks/use-exposed-services';
-import { CanvasContextMenu } from './context/canvas-context-menu';
-import { ControlsHelpModal } from './controls-help-modal';
-// ConnectionTypePopover removed — connections are fully auto-configured
 import {
   inferConnectionMeta,
   validateConnection,
   wouldCreateCycle,
   CATEGORY_TO_RELATIONSHIP,
 } from '../utils/connection-rules';
-import { EmptyCanvasOverlay } from './empty-canvas-overlay';
-import { isTypeVisibleAtLevel, isEdgeVisibleAtLevel } from '../../../config/visualization-config';
+import { SvgCompactNode, computeCompactNodeHeight, computeCompactNodeWidth } from './nodes/svg-compact-node';
+import { SvgGroupNode } from './nodes/svg-group-node';
+import { SvgRegionLabel } from './nodes/svg-region-label';
+import { SelectionFrame } from './selection-frame';
+import { SvgConnectionPath, EDGE_COLORS, type ConnectionTooltipInfo } from './svg-connection-path';
+import { SvgLogNode } from './svg-log-node';
+import { getIcon, DEFAULT_ICON, type Provider } from '../../../assets/icons';
+import { getBrandIcon } from '../../../assets/icons/brand-registry';
+import { getBlueprint, expandBlueprint } from '../../../config/blocks';
 import { canContain, isContainer } from '../../../config/containment-rules';
+import { isTypeVisibleAtLevel, isEdgeVisibleAtLevel } from '../../../config/visualization-config';
+import { SvgUserNode, USER_NODE_WIDTH, USER_NODE_HEIGHT, USER_NODE_ID } from '../../../shared/components/svg-user-node';
+import { useClipboard } from '../../../shared/hooks/use-clipboard';
+import { useExposedServices } from '../../../shared/hooks/use-exposed-services';
+import { useUndoRedo } from '../../../shared/hooks/use-undo-redo';
 import { calculateZIndex } from '../../../shared/utils/auto-layout';
 import { logCanvasRender, logDrop, logBlueprint } from '../../../shared/utils/debug-logger';
+import { receiveCardPipelineUpdate } from '../../../store/slices/pipeline-slice';
+import {
+  setSelectedNodes,
+  setSelectedEdges,
+  toggleNodeSelection,
+  setSelectionRect,
+} from '../../../store/slices/selection-slice';
+import { setPaneViewport, openContextMenu } from '../../../store/slices/ui-slice';
+import { useCanvasInteractions, type CanvasItem } from '../hooks/use-canvas-interactions';
+import type { RootState, AppDispatch } from '../../../store';
 
 // =============================================================================
 // Types
@@ -157,8 +156,8 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   const pane = paneId ? splitView.panes.find((p) => p.id === paneId) : null;
 
   // Get nodes and edges from the card
-  const nodes = card?.nodes || [];
-  const edges = card?.edges || [];
+  const nodes = useMemo(() => card?.nodes || [], [card?.nodes]);
+  const edges = useMemo(() => card?.edges || [], [card?.edges]);
 
   // Use pane viewport if available, otherwise fall back to card viewport
   const paneViewport = pane?.viewport;
@@ -243,7 +242,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
         parentId: node.parentId || null,
       };
     });
-  }, [nodes]);
+  }, [nodes, pipelineNodeStatus]);
 
   // Filter nodes by view level, promoting children of hidden parents to root
   const visibleNodes: LocalCanvasNode[] = useMemo(() => {
@@ -957,6 +956,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       unsubCard?.();
       cleanupCard?.();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- use card?.id only to avoid re-subscribing on every card mutation
   }, [card?.id, dispatch]);
 
   // Handle drag-over group detection + shift-drag visual state
@@ -1167,7 +1167,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     };
     svg.addEventListener('wheel', handler, { passive: false });
     return () => svg.removeEventListener('wheel', handler);
-  }, [bindCanvas.onWheel]);
+  }, [bindCanvas]);
 
   // Find container at position for drop handling
   const findContainerAtPosition = useCallback(
@@ -1322,7 +1322,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       // Add node to active card
       dispatch(addNodeToCard(newNode));
     },
-    [screenToCanvas, findContainerAtPosition, nodes, dispatch],
+    [screenToCanvas, findContainerAtPosition, dispatch],
   );
 
   const handleDragOver = useCallback((event: React.DragEvent) => {
@@ -1626,7 +1626,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
       setDrawingConnection(null);
     },
-    [drawingConnection, screenToCanvas, effectiveNodes, dispatch],
+    [drawingConnection, screenToCanvas, effectiveNodes, card, dispatch],
   );
 
   // Connection popover handlers removed — connections are auto-configured
@@ -1768,6 +1768,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                   onConnectionHover={handleConnectionHover}
                   onDelete={handleEdgeDelete}
                   onSelect={handleEdgeSelect}
+                  onContextMenu={(edgeId, pos) => handleContextMenu(pos, 'edge', edgeId)}
                   lod={lod}
                   pipelineActive={edgePipelineActive}
                 />
@@ -2180,6 +2181,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                   onConnectionHover={handleConnectionHover}
                   onDelete={handleEdgeDelete}
                   onSelect={handleEdgeSelect}
+                  onContextMenu={(edgeId, pos) => handleContextMenu(pos, 'edge', edgeId)}
                   lod={lod}
                 />
               );

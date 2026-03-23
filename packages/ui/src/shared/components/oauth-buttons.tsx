@@ -5,8 +5,8 @@
  * GitHub: Still uses redirect flow (works with Device Flow fallback)
  */
 
-import React, { useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
 import { setAccessToken } from '../api/auth';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';

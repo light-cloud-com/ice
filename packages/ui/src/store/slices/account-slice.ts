@@ -2,6 +2,7 @@
  * Account Slice
  *
  * Manages user profile, organisation membership, and selected org.
+ * When switching orgs, a new JWT is issued via /auth/switch-org.
  */
 
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
@@ -25,7 +26,7 @@ export interface UserProfile {
   defaultRegion: string | null;
 }
 
-interface AccountState {
+export interface AccountState {
   user: UserProfile | null;
   selectedOrg: Organisation | null;
   loading: boolean;
@@ -44,13 +45,29 @@ export const fetchProfile = createAsyncThunk('account/fetchProfile', async () =>
   return response.data as UserProfile;
 });
 
+/**
+ * Switch to a different organisation.
+ * Calls /auth/switch-org to get a new JWT scoped to the target org,
+ * then updates the in-memory + localStorage token so all subsequent
+ * API calls use the new org-scoped JWT.
+ */
+export const switchOrganisation = createAsyncThunk(
+  'account/switchOrganisation',
+  async (org: Organisation) => {
+    const res = await axiosInstance.post('/auth/switch-org', { organisationId: org.id });
+    const { token } = res.data;
+    const { setAccessToken } = await import('../../shared/api/axios-instance');
+    setAccessToken(token);
+    return org;
+  },
+);
+
 const accountSlice = createSlice({
   name: 'account',
   initialState,
   reducers: {
     setUser(state, action: PayloadAction<UserProfile>) {
       state.user = action.payload;
-      // Auto-select first org if none selected
       if (!state.selectedOrg && action.payload.organisations.length > 0) {
         state.selectedOrg = action.payload.organisations[0];
       }
@@ -86,6 +103,9 @@ const accountSlice = createSlice({
       .addCase(fetchProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message ?? 'Failed to fetch profile';
+      })
+      .addCase(switchOrganisation.fulfilled, (state, action) => {
+        state.selectedOrg = action.payload;
       });
   },
 });

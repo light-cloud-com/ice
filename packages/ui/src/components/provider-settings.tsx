@@ -5,9 +5,7 @@
  * and import infrastructure directly from their cloud accounts.
  */
 
-import React, { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { getApi } from '../api/api-adapter';
+import { getCloudProvider } from '@ice/core/resources';
 import {
   Cloud,
   Check,
@@ -23,9 +21,11 @@ import {
   ExternalLink,
   HelpCircle,
 } from 'lucide-react';
-import { cn } from '../utils/cn';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { getApi } from '../api/api-adapter';
 import { useGCPOAuth } from '../hooks/use-gcp-oauth';
-import { getCloudProvider } from '@ice/core/resources';
+import { cn } from '../utils/cn';
 
 // Provider configuration type
 interface ProviderConfig {

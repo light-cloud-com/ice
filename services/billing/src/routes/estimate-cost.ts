@@ -4,10 +4,10 @@
  * Returns cost estimate for a new resource before creation
  */
 
-import { Request, Response } from 'express';
 import { User } from '@prisma/client';
-import { estimateResourceCost } from '../../services/billing-service';
+import { Request, Response } from 'express';
 import { errorHandler } from '../../error-handler';
+import { estimateResourceCost } from '../../services/billing-service';
 
 interface AuthenticatedRequest extends Request {
   user: User;

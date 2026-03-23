@@ -34,6 +34,14 @@ export const ConnectionTypePopover: React.FC<ConnectionTypePopoverProps> = ({ po
   const [protocol, setProtocol] = useState('');
   const [port, setPort] = useState('');
 
+  const handleConfirm = useCallback(() => {
+    onConfirm({
+      relationship,
+      protocol: protocol || undefined,
+      port: port || undefined,
+    });
+  }, [relationship, protocol, port, onConfirm]);
+
   // Close on Escape
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -42,7 +50,7 @@ export const ConnectionTypePopover: React.FC<ConnectionTypePopoverProps> = ({ po
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [relationship, protocol, port]);
+  }, [relationship, protocol, port, handleConfirm, onDismiss]);
 
   // Close on click outside
   useEffect(() => {
@@ -60,14 +68,6 @@ export const ConnectionTypePopover: React.FC<ConnectionTypePopoverProps> = ({ po
       window.removeEventListener('mousedown', handleClick);
     };
   }, [onDismiss]);
-
-  const handleConfirm = useCallback(() => {
-    onConfirm({
-      relationship,
-      protocol: protocol || undefined,
-      port: port || undefined,
-    });
-  }, [relationship, protocol, port, onConfirm]);
 
   return (
     <div

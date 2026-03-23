@@ -9,7 +9,6 @@ import type {
   IceType,
   PropertySchema,
   ProviderImplementation,
-  ResourceSchema,
   SchemaProvider,
 } from './schema-provider.js';
 

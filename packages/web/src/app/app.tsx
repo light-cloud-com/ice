@@ -11,126 +11,38 @@
  *   /team                     → Team management
  */
 
-import React, { useEffect, useState } from 'react';
-import { ErrorBoundary } from '@ui/shared/components/error-boundary';
-import { AppBar } from '@ui/shared/components/app-bar';
-import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { PenTool, Table2, PanelLeftClose, PanelLeft } from 'lucide-react';
-import { MainLayout } from '@ui/shared/components/main-layout';
-import { ProjectWizard } from '@ui/features/wizard';
+import { UserSettingsPage, TeamPage } from '@ui/features/account/components';
 import { DebugOverlay } from '@ui/features/debug/components/debug-overlay';
+import { OnboardingPage, OnboardingChecklist } from '@ui/features/onboarding';
+import { ProjectWizard } from '@ui/features/wizard';
+import { isAuthenticated } from '@ui/shared/api/auth';
+import { AppBar } from '@ui/shared/components/app-bar';
+import { ErrorBoundary } from '@ui/shared/components/error-boundary';
+import { MainLayout } from '@ui/shared/components/main-layout';
 import { useMenuActions } from '@ui/shared/hooks/use-menu-actions';
 import { useResolvePath } from '@ui/shared/hooks/use-resolve-path';
-import { initializeGraph } from '@ui/store/slices/graph-slice';
-import { togglePalette } from '@ui/store/slices/ui-slice';
 import { fetchProfile } from '@ui/store/slices/account-slice';
+import { initializeGraph } from '@ui/store/slices/graph-slice';
 import { setActiveProject } from '@ui/store/slices/projects-slice';
-import { isAuthenticated } from '@ui/shared/api/auth';
-import { LoginPage } from '../pages/login';
-import { SignupPage } from '../pages/signup';
-import { AuthCallbackPage } from '../pages/auth-callback';
-import { FolderView } from '../pages/folder-view';
-import { ProjectCanvas } from '../pages/project/canvas';
-import { ProjectSettings } from '../pages/project/settings';
-import { ProjectDeployments } from '../pages/project/deployments';
-import { ProjectTableView } from '../pages/project/table-view';
-import { UserSettingsPage, TeamPage } from '@ui/features/account/components';
-import { OnboardingPage, OnboardingChecklist } from '@ui/features/onboarding';
-import { InviteAcceptPage } from '../pages/invite-accept';
-import { EnvironmentTabBar } from '@ui/features/environments/components/environment-tab-bar';
-import { cn } from '@ui/shared/utils/cn';
+import React, { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import type { RootState, AppDispatch } from '@ui/store';
+import { AuthCallbackPage } from '@/pages/auth-callback';
+import { FolderView } from '@/pages/folder-view';
+import { InviteAcceptPage } from '@/pages/invite-accept';
+import { LoginPage } from '@/pages/login';
+import { ProjectDeployments } from '@/pages/project/deployments';
+import { ProjectSettings } from '@/pages/project/settings';
+import { SignupPage } from '@/pages/signup';
 
 // ── Auth ────────────────────────────────────────────────────────────────────
-
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   if (!isAuthenticated()) return <Navigate to="/login" replace />;
   return <>{children}</>;
 };
 
-// ── App Bar ─────────────────────────────────────────────────────────────────
-
-// ── Project tab bar ─────────────────────────────────────────────────────────
-
-const PROJECT_TABS = [
-  { id: 'canvas', label: 'Canvas' },
-  { id: 'table', label: 'Table' },
-  { id: 'settings', label: 'Settings' },
-  { id: 'deployments', label: 'Deployments' },
-];
-
-const ProjectTabBar: React.FC<{ basePath: string; activeTab: string }> = ({ basePath, activeTab }) => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch<AppDispatch>();
-  const showPalette = useSelector((s: RootState) => s.ui.showPalette);
-
-  return (
-    <div className="h-9 flex items-center px-3 border-b border-ice-border bg-ice-surface shrink-0">
-      {/* Sidebar toggle */}
-      <button
-        onClick={() => dispatch(togglePalette())}
-        title={showPalette ? 'Hide sidebar' : 'Show sidebar'}
-        className="p-1 rounded text-ice-text-3 hover:text-ice-text-1 hover:bg-ice-hover transition-colors mr-1"
-      >
-        {showPalette ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeft className="w-4 h-4" />}
-      </button>
-
-      <BarSep />
-
-      {/* Left: page tabs */}
-      <div className="flex items-center gap-0.5">
-        {PROJECT_TABS.filter((t) => t.id !== 'canvas' && t.id !== 'table').map((tab) => {
-          const isActive = tab.id === activeTab;
-          const path = `${basePath}/${tab.id}`;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => navigate(path)}
-              className={cn(
-                'px-3 py-1 text-ice-base font-medium rounded transition-colors',
-                isActive ? 'bg-ice-active text-ice-text-1' : 'text-ice-text-3 hover:text-ice-text-2 hover:bg-ice-hover',
-              )}
-            >
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="flex-1" />
-
-      {/* Right: Canvas / Table view toggle */}
-      <div className="flex items-center gap-px p-0.5 rounded-md bg-ice-hover">
-        <button
-          onClick={() => navigate(basePath)}
-          className={cn(
-            'flex items-center gap-1 px-2 py-1 text-ice-sm font-medium rounded transition-colors',
-            activeTab === 'canvas'
-              ? 'bg-ice-active text-ice-text-1 shadow-sm'
-              : 'text-ice-text-3 hover:text-ice-text-2',
-          )}
-        >
-          <PenTool className="w-3 h-3" />
-          Canvas
-        </button>
-        <button
-          onClick={() => navigate(`${basePath}/table`)}
-          className={cn(
-            'flex items-center gap-1 px-2 py-1 text-ice-sm font-medium rounded transition-colors',
-            activeTab === 'table' ? 'bg-ice-active text-ice-text-1 shadow-sm' : 'text-ice-text-3 hover:text-ice-text-2',
-          )}
-        >
-          <Table2 className="w-3 h-3" />
-          Table
-        </button>
-      </div>
-    </div>
-  );
-};
-
 // ── Dynamic content resolver ────────────────────────────────────────────────
-
 const DynamicContent: React.FC = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -201,7 +113,6 @@ const DynamicContent: React.FC = () => {
     return (
       <div className="h-full flex flex-col bg-background">
         <AppBar />
-        <EnvironmentTabBar projectId={resolved.id!} basePath={projectBasePath} />
 
         {(resolved.subpage === 'canvas' || resolved.subpage === 'table') && (
           <>
@@ -209,8 +120,8 @@ const DynamicContent: React.FC = () => {
               projectId={resolved.id!}
               projectName={resolved.name}
               view={resolved.subpage as 'canvas' | 'table'}
+              basePath={projectBasePath}
             />
-            <ProjectWizard />
             <DebugOverlay />
           </>
         )}
@@ -230,6 +141,8 @@ const DynamicContent: React.FC = () => {
             </div>
           </MainLayout>
         )}
+
+        <ProjectWizard />
       </div>
     );
   }
@@ -249,6 +162,7 @@ const DynamicContent: React.FC = () => {
           <FolderView folderId={folderId} folderName={folderName} basePath={folderBasePath} />
         </div>
       </MainLayout>
+      <ProjectWizard />
       <OnboardingChecklist />
     </div>
   );

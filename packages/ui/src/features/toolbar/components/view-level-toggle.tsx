@@ -6,12 +6,12 @@
  * - Level 2 (Infrastructure): Full infrastructure - for DevOps & SREs
  */
 
+import { LayoutGrid, Layers3 } from 'lucide-react';
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { LayoutGrid, Layers3 } from 'lucide-react';
+import { VIEW_LEVELS, type ViewLevel } from '../../../config/visualization-config';
 import { cn } from '../../../shared/utils/cn';
 import { setViewLevel } from '../../../store/slices/view-slice';
-import { VIEW_LEVELS, type ViewLevel } from '../../../config/visualization-config';
 import type { RootState, AppDispatch } from '../../../store';
 
 const VIEW_ICONS: Record<ViewLevel, React.ElementType> = {

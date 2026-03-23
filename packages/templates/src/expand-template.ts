@@ -6,9 +6,9 @@
  * ready for importToActiveCard.
  */
 
+import { getBlueprint, expandBlueprint } from '@ice/blocks';
 import type { CardNode, CardEdge, ComposedTemplate } from './types';
 import type { Provider } from '@ice/blocks';
-import { getBlueprint, expandBlueprint } from '@ice/blocks';
 
 /**
  * Expand a ComposedTemplate into flat CardNode[] + CardEdge[] arrays.

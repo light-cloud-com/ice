@@ -111,9 +111,10 @@ export function writeAuditEntry(entry: AuditEntry): void {
 /**
  * List audit entries (most recent first).
  */
-export async function listAuditEntries(limit = 50): Promise<Array<{ id: string; timestamp: string; intent: string }>> {
+export async function listAuditEntries(limit = 50, orgId?: string): Promise<Array<{ id: string; timestamp: string; intent: string }>> {
   try {
     const rows = await prisma.aiAuditLog.findMany({
+      where: orgId ? { organisation_id: orgId } : undefined,
       select: { id: true, created_at: true, intent: true },
       orderBy: { created_at: 'desc' },
       take: limit,

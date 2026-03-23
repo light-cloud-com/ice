@@ -287,8 +287,6 @@ export function useExposedServices(
 
     // Collect the top-level containers (VPCs) that contain any canvas content
     let topY = Infinity;
-    let centerX = 0;
-
     // Check VPC containers — user traffic icon must be above them
     const vpcNodes = all.filter((n) => {
       const iceType = (n.data?.iceType as string) || '';
@@ -315,7 +313,7 @@ export function useExposedServices(
     }
 
     // Centroid X across exposed nodes
-    centerX = exposed.reduce((sum, n) => sum + n.x + n.width / 2, 0) / exposed.length;
+    const centerX = exposed.reduce((sum, n) => sum + n.x + n.width / 2, 0) / exposed.length;
 
     // Place user icon above all containers and nodes (outside VPC)
     const userIconPosition = {

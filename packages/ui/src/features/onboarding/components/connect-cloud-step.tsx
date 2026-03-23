@@ -5,16 +5,16 @@
  * Provider/region selection moved here from the old Welcome step.
  */
 
-import React, { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { Check, Loader2, ExternalLink, ShieldCheck } from 'lucide-react';
-import { cn } from '../../../shared/utils/cn';
-import { setDefaultProvider, setDefaultRegion, setCloudConnected } from '../../../store/slices/onboarding-slice';
-import { getApi } from '../../../shared/api/api-adapter';
-import { useGCPOAuth } from '../../../shared/hooks/use-gcp-oauth';
-import gcpIcon from 'devicon/icons/googlecloud/googlecloud-original.svg';
 import awsIcon from 'devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg';
 import azureIcon from 'devicon/icons/azure/azure-original.svg';
+import gcpIcon from 'devicon/icons/googlecloud/googlecloud-original.svg';
+import { Check, Loader2, ExternalLink, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { getApi } from '../../../shared/api/api-adapter';
+import { useGCPOAuth } from '../../../shared/hooks/use-gcp-oauth';
+import { cn } from '../../../shared/utils/cn';
+import { setDefaultProvider, setDefaultRegion, setCloudConnected } from '../../../store/slices/onboarding-slice';
 import type { RootState, AppDispatch } from '../../../store';
 
 // ── Provider / region data ──────────────────────────────────────────────────

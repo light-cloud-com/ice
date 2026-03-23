@@ -2,13 +2,13 @@
  * OrgSwitcher — compact org dropdown for top bar
  */
 
-import { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Building2, ChevronDown, Plus, Check } from 'lucide-react';
-import type { RootState, AppDispatch } from '../../../store';
-import { setSelectedOrg, type Organisation } from '../../../store/slices/account-slice';
+import { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { CreateTeamModal } from './create-team-modal';
+import { switchOrganisation } from '../../../store/slices/account-slice';
+import type { RootState, AppDispatch } from '../../../store';
 
 export function OrgSwitcher() {
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -40,7 +40,7 @@ export function OrgSwitcher() {
             {organisations.map((org) => (
               <DropdownMenu.Item
                 key={org.id}
-                onClick={() => dispatch(setSelectedOrg(org))}
+                onClick={() => dispatch(switchOrganisation(org))}
                 className="flex items-center gap-2 px-2 py-1.5 text-ice-md text-ice-text-2 rounded cursor-pointer outline-none hover:bg-ice-active"
               >
                 <Building2 className="h-3.5 w-3.5 text-ice-text-3 shrink-0" />

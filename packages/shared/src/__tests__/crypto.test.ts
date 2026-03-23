@@ -12,7 +12,7 @@ beforeAll(() => {
 
 describe('Crypto Module', () => {
   it('should encrypt and decrypt credentials', async () => {
-    const { encryptCredentials, decryptCredentials } = await import('../crypto/index.js');
+    const { encryptCredentials, decryptCredentials } = await import("../crypto");
 
     const original = { accessKey: 'AKIA1234', secretKey: 's3cr3t' };
     const encrypted = encryptCredentials(original);
@@ -25,7 +25,7 @@ describe('Crypto Module', () => {
   });
 
   it('should encrypt and decrypt strings', async () => {
-    const { encryptString, decryptString } = await import('../crypto/index.js');
+    const { encryptString, decryptString } = await import("../crypto");
 
     const original = 'github-token-abc123';
     const encrypted = encryptString(original);
@@ -38,7 +38,7 @@ describe('Crypto Module', () => {
   });
 
   it('should produce different ciphertexts for same input (random IV)', async () => {
-    const { encryptString } = await import('../crypto/index.js');
+    const { encryptString } = await import("../crypto");
 
     const a = encryptString('same-value');
     const b = encryptString('same-value');
@@ -47,7 +47,7 @@ describe('Crypto Module', () => {
   });
 
   it('should reject tampered ciphertext (GCM auth tag)', async () => {
-    const { encryptString, decryptString } = await import('../crypto/index.js');
+    const { encryptString, decryptString } = await import("../crypto");
 
     const encrypted = encryptString('sensitive-data');
     // Tamper with the ciphertext
@@ -59,14 +59,14 @@ describe('Crypto Module', () => {
   });
 
   it('should handle empty strings', async () => {
-    const { encryptString, decryptString } = await import('../crypto/index.js');
+    const { encryptString, decryptString } = await import("../crypto");
 
     const encrypted = encryptString('');
     expect(decryptString(encrypted)).toBe('');
   });
 
   it('should handle unicode and special characters', async () => {
-    const { encryptCredentials, decryptCredentials } = await import('../crypto/index.js');
+    const { encryptCredentials, decryptCredentials } = await import("../crypto");
 
     const original = { key: '日本語テスト', emoji: '🔐🔑', special: '<>&"\'\\' };
     const encrypted = encryptCredentials(original);

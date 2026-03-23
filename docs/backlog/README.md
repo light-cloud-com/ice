@@ -1,7 +1,6 @@
 # Backlog
 
-Comprehensive audit of the ICE SaaS codebase performed on 2026-03-21, organized by domain.
-Fixed on 2026-03-22.
+Comprehensive audit of the ICE SaaS codebase. Initial audit: 2026-03-21. Ongoing fixes through 2026-03-23.
 
 ## Index
 
@@ -9,15 +8,22 @@ Fixed on 2026-03-22.
 
 | Document | Total | Fixed | Open | Description |
 |---|---|---|---|---|
-| [Security](security.md) | 15 | 15 | 0 | Auth vulnerabilities, credential handling, injection risks |
+| [Security](security.md) | 19 | 19 | 0 | Auth vulnerabilities, credential handling, injection risks, org isolation |
 | [Backend Services](backend-services.md) | 16 | 16 | 0 | Service bugs, missing features, broken integrations |
-| [Frontend](frontend.md) | 18 | 18 | 0 | React bugs, UX gaps, dead code, accessibility |
-| [Core Engine & Deployers](core-engine.md) | 18 | 12 | 6 | Deployer coverage gaps, broken handlers, dead code |
+| [Frontend](frontend.md) | 23 | 23 | 0 | React bugs, UX gaps, dead code, accessibility, org isolation UI |
+| [Core Engine & Deployers](core-engine.md) | 18 | 18 | 0 | Deployer coverage gaps, broken handlers, dead code |
 | [Database](database.md) | 8 | 8 | 0 | Missing indexes, schema gaps, unbounded tables |
-| [Infrastructure & CI/CD](infrastructure.md) | 16 | 15 | 1 | Broken CI, missing configs, Docker issues, build system |
+| [Infrastructure & CI/CD](infrastructure.md) | 17 | 16 | 1 | Broken CI, missing configs, Docker issues, build system, ESLint |
 | [Developer Experience](developer-experience.md) | 10 | 10 | 0 | Missing scripts, testing gaps, monorepo health |
 | [Refactoring Debt](refactoring-debt.md) | 8 | 8 | 0 | Incomplete migration artifacts from modular refactor |
 | [Desktop App](desktop-app.md) | 15 | 15 | 0 | Electron app — now embeds full web app + backend |
+| [RBAC](rbac.md) | 20 | 20 | 0 | Role enforcement across deploy, pipeline, billing, credentials, AI |
+
+### UX & Interaction
+
+| Document | Total | Fixed | Open | Description |
+|---|---|---|---|---|
+| [Context Menus](context-menus.md) | 25 | 0 | 25 | Irrelevant items, missing actions, accessibility, cross-menu consistency |
 
 ### Product & Content Gaps
 
@@ -29,60 +35,94 @@ Fixed on 2026-03-22.
 
 ## Progress Summary
 
-**Total fixed: 117 / 124 bugs & tech debt items (94%)**
+**Total fixed: 153 / 154 bugs & tech debt items (99%)**
 
-- Security: 15/15 (100%)
-- Backend Services: 16/16 (100%)
-- Frontend: 18/18 (100%)
-- Core Engine: 12/18 (67%)
-- Database: 8/8 (100%)
-- Infrastructure & CI/CD: 15/16 (94%)
-- Developer Experience: 10/10 (100%)
-- Refactoring Debt: 8/8 (100%)
-- Desktop App: 15/15 (100%)
+| Domain | Fixed | Total | % |
+|---|---|---|---|
+| Security | 19 | 19 | 100% |
+| Backend Services | 16 | 16 | 100% |
+| Frontend | 23 | 23 | 100% |
+| Core Engine | 18 | 18 | 100% |
+| Database | 8 | 8 | 100% |
+| Infrastructure & CI/CD | 16 | 17 | 94% |
+| Developer Experience | 10 | 10 | 100% |
+| Refactoring Debt | 8 | 8 | 100% |
+| Desktop App | 15 | 15 | 100% |
+| RBAC | 20 | 20 | 100% |
 
-**Remaining 7 open items:**
-- 6 Core Engine: GCP handler stubs (domain mapping, dataflow update, GKE update, discovery engine update), Terraform/Pulumi importer UI, Cloud Run IAM policy
-- 1 Infrastructure: Deployment workflow (requires cloud provider configuration)
+**Remaining 1 open item:**
+- INFRA-16: Deployment workflow (requires cloud provider configuration)
 
-**Test coverage:**
-- 23 unit tests (vitest): crypto, auth, build validation, card translator type maps
-- 32 e2e tests (Playwright): security, backend services, frontend
-- Vite build check in CI catches import resolution errors
+## Test Coverage
 
-**Architecture changes:**
+| Type | Count | Framework | Scope |
+|---|---|---|---|
+| Unit tests | 23 | Vitest | crypto, auth, build validation, card translator |
+| Org isolation tests | 16 | Vitest | canvas service — cross-org cards, environments, moves |
+| RBAC tests | 30 | Vitest | requireProjectAccess, requireOrgRole, business rules |
+| E2E tests | 32 | Playwright | security, backend services, frontend flows |
+| Build checks | 1 | Vite | import resolution errors |
+| **Total** | **102** | | |
+
+## Session Log
+
+### 2026-03-23
+
+**ESLint cleanup (379 → 0):**
+- 218 import-x/order, 83 unused-imports, 32 react-hooks/exhaustive-deps, 21 preserve-caught-error, 15 no-case-declarations, 4 no-require-imports, 6 misc
+- ~95 files across all packages and services
+
+**Organisation isolation — backend (8 fixes):**
+- `/cards/get` had no access control (any user could read any card)
+- All 7 environment routes had no project access checks
+- `moveProject` allowed cross-org parent folder moves
+- New `POST /auth/switch-org` endpoint issues new JWT on org switch
+
+**Organisation isolation — frontend (5 fixes):**
+- Project tree now fetches from backend (was local-only localStorage)
+- `switchOrganisation` thunk calls `/auth/switch-org` for new JWT
+- Removed `ice-projects` localStorage persistence
+- Folder CRUD wired to backend API
+- ProjectWizard mounted in all views (was missing from folder/root/settings/deployments)
+
+**Demo card removal:**
+- Removed hardcoded demo card, `loadDemoToCard` action, `isDemo` flag, demo badges
+- Bumped CARDS_DATA_VERSION to 5 to force-clear old localStorage
+- Cards now start empty, loaded from backend
+
+**Core Engine (6 handler fixes):**
+- ENGINE-10: New domain mapping handler (Cloud Run v1 REST API)
+- ENGINE-11: Dataflow update now cancels + recreates (jobs are immutable)
+- ENGINE-12: GKE update supports node pool scaling + machine type changes
+- ENGINE-14: Discovery Engine update PATCHes displayName/searchTier
+- ENGINE-16: Terraform/Pulumi importers wired to API (`POST /api/import/*`)
+- ENGINE-18: Cloud Run IAM policy moved from desktop handler into cloud-run handler
+
+**RBAC (20 fixes):**
+- Deploy plan/apply/destroy: added `requireProjectAccess` (editor/owner/owner)
+- Pipeline rules/trigger/retry/cancel: added project access checks with ruleId/eventId resolvers
+- Billing payment/settings/details: added `requireOrgRole` (owner / owner+admin)
+- Credentials connect/disconnect: added `requireOrgRole` (owner+admin)
+- AI audit scoped to org, inspect scoped to project
+- Card delete escalated to owner, env promote escalated to owner
+- Project members list, users list, invitations: added role checks
+- New `requireOrgRole` middleware in `@ice/shared`
+
+**Other fixes:**
+- Template cycle fix (deleted self-referencing `templates.ts`)
+- Fixed `use-resolve-path.ts` infinite loop from unstable deps
+- Fixed `svg-compact-node.tsx` TDZ error (`repository` used before declaration)
+
+### 2026-03-22
+
+Initial bulk fix session: 117 items across security, backend, frontend, database, infrastructure, developer experience, refactoring debt, desktop app. See individual backlog documents.
+
+## Architecture
+
 - `@ice/ui` — single source of truth for all shared UI (features, store, components, hooks, utils, config, assets)
 - `@ice/web` — thin shell (routing, pages, styles), all UI from `@ice/ui` via Vite alias
 - `@ice/desktop` — Electron shell that embeds the full gateway + services (same code as web, no IPC handlers)
+- `@ice/shared` — auth middleware (`requireAuth`, `requireProjectAccess`, `requireOrgRole`), crypto, socket setup
 - SQLite + in-memory queue for desktop (no PostgreSQL/Redis needed)
 - Tailwind scans `ui/src/` for class names in both web and desktop
-- All packages renamed to `@ice/*` scope
-
-## Priority Summary
-
-### P0 — Fix immediately (broken or security-critical)
-
-1. ~~**[SEC-1]** Default JWT secret / encryption key fallbacks~~ FIXED
-2. ~~**[SEC-2]** Stripe webhook body parsing broken~~ FIXED
-3. ~~**[SEC-3]** GitHub webhook HMAC bypass~~ FIXED
-4. ~~**[SEC-4]** Command injection in build service~~ FIXED
-5. ~~**[BE-1]** Billing service crashes on startup~~ FIXED
-6. ~~**[INFRA-1]** CI pipeline broken~~ FIXED
-7. ~~**[INFRA-2]** Gateway Dockerfile missing~~ FIXED
-
-### P1 — Fix before production
-
-8. ~~**[SEC-5]** JWT in OAuth redirect URL query string~~ FIXED
-9. ~~**[SEC-6]** Socket.IO rooms have no authentication~~ FIXED
-10. ~~**[SEC-7]** Google token login doesn't validate audience~~ FIXED
-11. ~~**[SEC-8]** OAuth IDOR~~ FIXED
-12. ~~**[BE-2]** Billing routes use `passport-jwt` strategy that isn't registered~~ FIXED
-13. ~~**[BE-3]** Refresh tokens never rotated or revoked on reuse~~ FIXED
-14. ~~**[DB-1]** Missing indexes on high-traffic query paths~~ FIXED
-15. ~~**[FE-1]** Hardcoded test credentials on login page~~ FIXED
-16. ~~**[FE-2]** No error boundaries — any component crash = white screen~~ FIXED
-17. ~~**[ENGINE-1]** AWS/Azure canvas deployment completely non-functional~~ FIXED
-
-### P2 — Important improvements
-
-18-100+: See individual backlog documents for full lists.
+- All packages use `@ice/*` scope

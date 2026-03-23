@@ -5,27 +5,22 @@
  * Provides efficient node/edge management and traversal.
  */
 
+import { create_graph_id, create_node_id, create_edge_id } from '../types/graph.js';
+import { classify_resource } from './classifier/category-classifier.js';
 import type {
   Graph,
   GraphId,
   GraphMetadata,
   Node,
   NodeId,
-  NodeMetadata,
   NodeInput,
   Edge,
   EdgeId,
-  EdgeMetadata,
   EdgeInput,
-  EdgeRelationship,
   AddNodeResult,
   AddEdgeResult,
   TraversalOptions,
-  TopologicalSortResult,
-  NodeCategory,
 } from '../types/graph.js';
-import { create_graph_id, create_node_id, create_edge_id } from '../types/graph.js';
-import { classify_resource } from './classifier/category-classifier.js';
 
 // =============================================================================
 // Mutable Graph

@@ -5,7 +5,6 @@
  */
 
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import { DEMO_NODES, DEMO_EDGES } from '../../config/demo-data';
 import { autoLayout, type LayoutNode } from '../../shared/utils/auto-layout';
 import type { ExpandedBlueprint } from '../../config/blocks';
 
@@ -43,7 +42,6 @@ export interface Card {
   edges: CardEdge[];
   viewport: CardViewport;
   createdAt: number;
-  isDemo?: boolean;
   projectId?: string;
   environmentId?: string;
 }
@@ -74,41 +72,6 @@ export interface CardsState {
 }
 
 // =============================================================================
-// Demo Card
-// =============================================================================
-
-// Convert demo data to card format
-const demoNodes: CardNode[] = DEMO_NODES.map((node) => ({
-  id: node.id,
-  type: node.type,
-  position: node.position,
-  width: node.width,
-  height: node.height,
-  parentId: node.parentId,
-  data: {
-    ...node.data,
-    label: node.data.label,
-  },
-}));
-
-const demoEdges: CardEdge[] = DEMO_EDGES.map((edge) => ({
-  id: edge.id,
-  source: edge.source,
-  target: edge.target,
-  data: edge.data,
-}));
-
-const demoCard: Card = {
-  id: 'demo',
-  name: 'Demo',
-  nodes: demoNodes,
-  edges: demoEdges,
-  viewport: { ...DEFAULT_VIEWPORT },
-  createdAt: Date.now(),
-  isDemo: true,
-};
-
-// =============================================================================
 // Persistence
 // =============================================================================
 
@@ -116,9 +79,9 @@ const CARDS_STORAGE_KEY = 'ice-cards';
 
 /**
  * Data version — bump this to force-clear persisted cards on next load.
- * This ensures users pick up structural changes (e.g. Group.* migration, new demo data).
+ * v5: Removed hardcoded demo card — cards now come from backend.
  */
-const CARDS_DATA_VERSION = 4;
+const CARDS_DATA_VERSION = 5;
 const CARDS_VERSION_KEY = 'ice-cards-version';
 
 /**
@@ -176,24 +139,19 @@ function loadPersistedCards(): CardsState {
     if (storedVersion < CARDS_DATA_VERSION) {
       localStorage.removeItem(CARDS_STORAGE_KEY);
       localStorage.setItem(CARDS_VERSION_KEY, String(CARDS_DATA_VERSION));
-      return { cards: [demoCard], activeCardId: 'demo', history: {} };
+      return { cards: [], activeCardId: null, history: {} };
     }
 
     const raw = localStorage.getItem(CARDS_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed.cards && parsed.cards.length > 0) {
-        // Refresh the demo card from source data (in case demo-data.ts changed)
-        const cards = parsed.cards.map((c: any) =>
-          c.id === 'demo' ? demoCard : { ...c, nodes: migrateCardNodes(c.nodes || []) },
-        );
-        // Ensure demo card exists
-        if (!cards.some((c: any) => c.id === 'demo')) {
-          cards.unshift(demoCard);
-        }
+        const cards = parsed.cards
+          .filter((c: any) => c.id !== 'demo') // drop legacy demo card
+          .map((c: any) => ({ ...c, nodes: migrateCardNodes(c.nodes || []) }));
         return {
           cards,
-          activeCardId: parsed.activeCardId || 'demo',
+          activeCardId: parsed.activeCardId === 'demo' ? (cards[0]?.id || null) : (parsed.activeCardId || null),
           history: {},
         };
       }
@@ -201,7 +159,7 @@ function loadPersistedCards(): CardsState {
   } catch {
     /* ignore corrupt data */
   }
-  return { cards: [demoCard], activeCardId: 'demo', history: {} };
+  return { cards: [], activeCardId: null, history: {} };
 }
 
 // =============================================================================
@@ -286,7 +244,7 @@ const cardsSlice = createSlice({
     ) => {
       const id = action.payload?.id || `card-${Date.now()}`;
       const existingNames = state.cards.map((c) => c.name);
-      let name = action.payload?.name || 'New Card';
+      const name = action.payload?.name || 'New Card';
 
       // Ensure unique name
       let counter = 1;
@@ -359,6 +317,20 @@ const cardsSlice = createSlice({
         const edge = card.edges.find((e) => e.id === action.payload.edgeId);
         if (edge) {
           edge.data = { ...edge.data, ...action.payload.data };
+        }
+      }
+    },
+
+    // Reverse edge direction (swap source ↔ target)
+    reverseCardEdge: (state, action: PayloadAction<string>) => {
+      pushSnapshot(state);
+      const card = state.cards.find((c) => c.id === state.activeCardId);
+      if (card) {
+        const edge = card.edges.find((e) => e.id === action.payload);
+        if (edge) {
+          const tmp = edge.source;
+          edge.source = edge.target;
+          edge.target = tmp;
         }
       }
     },
@@ -650,31 +622,6 @@ const cardsSlice = createSlice({
       card.edges = snapshot.edges;
     },
 
-    // Load demo data into active card
-    loadDemoToCard: (state) => {
-      pushSnapshot(state);
-      const card = state.cards.find((c) => c.id === state.activeCardId);
-      if (!card) return;
-
-      // Convert demo nodes to CardNode format
-      card.nodes = DEMO_NODES.map((node) => ({
-        id: node.id,
-        type: node.type,
-        position: { x: node.position.x, y: node.position.y },
-        width: node.width,
-        height: node.height,
-        parentId: node.parentId,
-        data: node.data,
-      }));
-
-      // Convert demo edges to CardEdge format
-      card.edges = DEMO_EDGES.map((edge) => ({
-        id: edge.id,
-        source: edge.source,
-        target: edge.target,
-        data: edge.data,
-      }));
-    },
   },
 });
 
@@ -690,6 +637,7 @@ export const {
   addNodeToCard,
   addEdgeToCard,
   updateCardEdgeData,
+  reverseCardEdge,
   updateCardNodePosition,
   updateCardNodePositions,
   resizeCardNode,
@@ -703,7 +651,6 @@ export const {
   setCardViewportById,
   autoOrganizeCard,
   expandBlueprintToCard,
-  loadDemoToCard,
   undoCardChange,
   redoCardChange,
 } = cardsSlice.actions;

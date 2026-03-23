@@ -2,11 +2,11 @@
  * Sign Up Page — uses ICE design tokens
  */
 
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
 import { register } from '@ui/shared/api/auth';
 import { OAuthButtons } from '@ui/shared/components/oauth-buttons';
+import { Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 
 export const SignupPage: React.FC = () => {
   const navigate = useNavigate();

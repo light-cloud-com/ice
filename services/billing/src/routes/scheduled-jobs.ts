@@ -9,12 +9,11 @@
  */
 
 import { Request, Response } from 'express';
-import { snapshotDailyUsage } from '../../services/usage-tracking-service';
+import prisma from '../../lib/prisma';
 import { generateAllMonthlyInvoices } from '../../services/invoice-service';
 import { pollAndRecordScalingEvents } from '../../services/scaling-tracking-service';
 import { getExpiredTrials, convertTrialToPaid, expireTrial, hasPaymentMethod } from '../../services/trial-service';
-
-import prisma from '../../lib/prisma';
+import { snapshotDailyUsage } from '../../services/usage-tracking-service';
 // API key check for scheduled jobs — always required
 const verifySchedulerAuth = (req: Request): boolean => {
   const authHeader = req.headers.authorization;

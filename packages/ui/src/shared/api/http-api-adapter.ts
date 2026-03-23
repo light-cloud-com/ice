@@ -5,9 +5,9 @@
  * Replaces Electron IPC for the web version.
  */
 
-import type { IceAPI } from './api-adapter';
-import axiosInstance from './axios-instance';
 import { io, type Socket } from 'socket.io-client';
+import axiosInstance from './axios-instance';
+import type { IceAPI } from './api-adapter';
 
 // ─── Event emitter for menu actions (replaces Electron menu) ─────────────────
 
@@ -227,7 +227,7 @@ export function createHttpApiAdapter(): IceAPI {
 
     // ── Templates ──────────────────────────────────────────────────────
     templates: {
-      loadToGraph: async (data) => {
+      loadToGraph: async (_data) => {
         // In web version, templates are expanded client-side via config/templates
         // No backend call needed — Redux state is the source of truth
         return { success: true };

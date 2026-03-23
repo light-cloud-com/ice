@@ -5,9 +5,9 @@
  * for each configured provider (GitHub, GCP, AWS, Azure).
  */
 
+import { Loader2 } from 'lucide-react';
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { Loader2 } from 'lucide-react';
 import { cn } from '../../../shared/utils/cn';
 import type { RootState } from '../../../store';
 import type { IntegrationStatus } from '../../../store/slices/integrations-slice';

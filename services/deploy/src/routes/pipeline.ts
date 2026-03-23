@@ -10,16 +10,51 @@
  * POST   /api/pipeline/trigger                    — Manual deploy trigger
  */
 
-import { Router, type Response } from 'express';
-import { requireAuth, type AuthRequest } from '@ice/shared';
+import { requireAuth, requireProjectAccess, type AuthRequest } from '@ice/shared';
+import { Router, type Router as RouterType, type Response } from 'express';
 import * as pipelineService from '../services/pipeline.service';
 
-const router = Router();
+const router: RouterType = Router();
 router.use(requireAuth);
+
+/**
+ * Middleware: resolve ruleId → cardId so requireProjectAccess can check permissions.
+ * Attaches cardId to req.body if not already present.
+ */
+async function resolveRuleToCard(req: AuthRequest, _res: Response, next: import('express').NextFunction) {
+  const ruleId = req.params.ruleId || req.body?.ruleId;
+  if (ruleId && !req.body?.cardId) {
+    const prisma = (await import('@ice/db')).default;
+    const rule = await prisma.deploymentRule.findUnique({ where: { id: ruleId }, select: { card_id: true } });
+    if (rule) {
+      if (!req.body) req.body = {};
+      req.body.cardId = rule.card_id;
+    }
+  }
+  next();
+}
+
+/**
+ * Middleware: resolve eventId → cardId so requireProjectAccess can check permissions.
+ */
+async function resolveEventToCard(req: AuthRequest, _res: Response, next: import('express').NextFunction) {
+  const eventId = req.body?.eventId;
+  if (eventId && !req.body?.cardId) {
+    const prisma = (await import('@ice/db')).default;
+    const event = await prisma.deploymentEvent.findUnique({
+      where: { id: eventId },
+      select: { rule: { select: { card_id: true } } },
+    });
+    if (event?.rule) {
+      req.body.cardId = event.rule.card_id;
+    }
+  }
+  next();
+}
 
 // ─── Rules CRUD ─────────────────────────────────────────────────────────────
 
-router.get('/rules/:cardId/:nodeId', async (req: AuthRequest, res: Response) => {
+router.get('/rules/:cardId/:nodeId', requireProjectAccess('viewer'), async (req: AuthRequest, res: Response) => {
   try {
     const rules = await pipelineService.getRulesForNode(req.params.cardId as string, req.params.nodeId as string);
     res.json({ success: true, rules });
@@ -28,7 +63,7 @@ router.get('/rules/:cardId/:nodeId', async (req: AuthRequest, res: Response) => 
   }
 });
 
-router.post('/rules', async (req: AuthRequest, res: Response) => {
+router.post('/rules', requireProjectAccess('editor'), async (req: AuthRequest, res: Response) => {
   try {
     if (!req.body.cardId || !req.body.nodeId || !req.body.repository) {
       return res.status(400).json({
@@ -48,7 +83,7 @@ router.post('/rules', async (req: AuthRequest, res: Response) => {
   }
 });
 
-router.put('/rules/:ruleId', async (req: AuthRequest, res: Response) => {
+router.put('/rules/:ruleId', resolveRuleToCard, requireProjectAccess('editor'), async (req: AuthRequest, res: Response) => {
   try {
     const rule = await pipelineService.updateRule(req.params.ruleId as string, req.body, req.organisationId!);
     res.json({ success: true, rule });
@@ -57,7 +92,7 @@ router.put('/rules/:ruleId', async (req: AuthRequest, res: Response) => {
   }
 });
 
-router.delete('/rules/:ruleId', async (req: AuthRequest, res: Response) => {
+router.delete('/rules/:ruleId', resolveRuleToCard, requireProjectAccess('owner'), async (req: AuthRequest, res: Response) => {
   try {
     await pipelineService.deleteRule(req.params.ruleId as string, req.userId!, req.organisationId!);
     res.json({ success: true });
@@ -68,7 +103,7 @@ router.delete('/rules/:ruleId', async (req: AuthRequest, res: Response) => {
 
 // ─── Deployment Events ──────────────────────────────────────────────────────
 
-router.get('/events/:cardId/:nodeId', async (req: AuthRequest, res: Response) => {
+router.get('/events/:cardId/:nodeId', requireProjectAccess('viewer'), async (req: AuthRequest, res: Response) => {
   try {
     const events = await pipelineService.getEventsForNode(req.params.cardId as string, req.params.nodeId as string);
     res.json({ success: true, events });
@@ -79,6 +114,7 @@ router.get('/events/:cardId/:nodeId', async (req: AuthRequest, res: Response) =>
 
 // ─── Framework Detection ────────────────────────────────────────────────────
 
+// No cardId/projectId in body — requireAuth only
 router.post('/detect-framework', async (req: AuthRequest, res: Response) => {
   try {
     const { repository, branch } = req.body;
@@ -95,7 +131,7 @@ router.post('/detect-framework', async (req: AuthRequest, res: Response) => {
 
 // ─── Manual Deploy Trigger ──────────────────────────────────────────────────
 
-router.post('/trigger', async (req: AuthRequest, res: Response) => {
+router.post('/trigger', resolveRuleToCard, requireProjectAccess('editor'), async (req: AuthRequest, res: Response) => {
   try {
     const { ruleId, commitSha, branch, commitMessage } = req.body;
     if (!ruleId) {
@@ -158,7 +194,7 @@ router.post('/trigger', async (req: AuthRequest, res: Response) => {
 
 // ─── Retry Failed Deploy ─────────────────────────────────────────────────────
 
-router.post('/retry', async (req: AuthRequest, res: Response) => {
+router.post('/retry', resolveEventToCard, requireProjectAccess('editor'), async (req: AuthRequest, res: Response) => {
   try {
     const { eventId } = req.body;
     if (!eventId) return res.status(400).json({ success: false, error: 'eventId is required' });
@@ -212,7 +248,7 @@ router.post('/retry', async (req: AuthRequest, res: Response) => {
 
 // ─── Cancel Active Deploy ────────────────────────────────────────────────────
 
-router.post('/cancel', async (req: AuthRequest, res: Response) => {
+router.post('/cancel', resolveEventToCard, requireProjectAccess('editor'), async (req: AuthRequest, res: Response) => {
   try {
     const { eventId } = req.body;
     if (!eventId) return res.status(400).json({ success: false, error: 'eventId is required' });

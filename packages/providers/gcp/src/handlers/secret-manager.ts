@@ -4,9 +4,9 @@
  * Handles: gcp.secretmanager.secret
  */
 
-import type { ResourceDeployResult } from '../../../types.js';
-import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
 import { SERVICE_NAMES, sdk_not_available, sdk_not_available_short } from '../messages.js';
+import type { GCPResourceHandler } from '../types.js';
+import type { ResourceDeployResult } from '@ice/core';
 
 const TYPE = 'gcp.secretmanager.secret';
 

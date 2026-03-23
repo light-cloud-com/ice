@@ -10,9 +10,9 @@
  * 4. Queue pipeline deploy jobs
  */
 
-import { Router, type Request, type Response } from 'express';
 import crypto from 'crypto';
 import prisma from '@ice/db';
+import { Router, type Router as RouterType, type Request, type Response } from 'express';
 import {
   matchRulesForPush,
   matchRulesForMerge,
@@ -23,7 +23,7 @@ import {
 } from '../services/pipeline.service';
 import { getDeployQueue } from '../services/queue.service';
 
-const router = Router();
+const router: RouterType = Router();
 
 // ─── Raw body parsing (needed for HMAC verification) ────────────────────────
 

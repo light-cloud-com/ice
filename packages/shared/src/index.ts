@@ -1,12 +1,13 @@
 export {
   requireAuth,
   requireProjectAccess,
+  requireOrgRole,
   generateToken,
   generateRefreshToken,
   setDesktopUser,
 } from './auth/middleware.js';
 export type { AuthRequest } from './auth/middleware.js';
-export { encryptCredentials, decryptCredentials, encryptString, decryptString } from './crypto/index.js';
+export { encryptCredentials, decryptCredentials, encryptString, decryptString } from "./crypto";
 export {
   setupSocketService,
   emitDeployProgress,

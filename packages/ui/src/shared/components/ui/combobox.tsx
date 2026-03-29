@@ -7,6 +7,7 @@
 
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { t as translate } from '../../../i18n';
 
 export interface ComboboxOption {
   value: string;
@@ -30,9 +31,9 @@ export const Combobox: React.FC<ComboboxProps> = ({
   value,
   options,
   onSelect,
-  placeholder = 'Search...',
+  placeholder = translate('combobox.defaultPlaceholder'),
   loading = false,
-  emptyText = 'No results',
+  emptyText = translate('combobox.defaultEmptyText'),
   className = '',
   compact = false,
 }) => {
@@ -164,7 +165,7 @@ export const Combobox: React.FC<ComboboxProps> = ({
             ref={listRef}
             className="bg-ice-overlay border border-ice-border rounded-md shadow-xl max-h-[200px] overflow-y-auto"
           >
-            {loading && <div className={`px-3 py-2 ${textSize} text-ice-text-3`}>Loading...</div>}
+            {loading && <div className={`px-3 py-2 ${textSize} text-ice-text-3`}>{translate('combobox.loading')}</div>}
             {!loading && filtered.length === 0 && (
               <div className={`px-3 py-2 ${textSize} text-ice-text-3`}>{emptyText}</div>
             )}
@@ -266,4 +267,3 @@ export const Combobox: React.FC<ComboboxProps> = ({
   );
 };
 
-export default Combobox;

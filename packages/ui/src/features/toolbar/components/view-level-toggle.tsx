@@ -74,4 +74,3 @@ export const ViewLevelToggle: React.FC = () => {
   );
 };
 
-export default ViewLevelToggle;

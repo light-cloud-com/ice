@@ -9,7 +9,7 @@
 import { Github, Loader2, Copy, Check, ExternalLink, LogOut } from 'lucide-react';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { GITHUB } from '../../../i18n/messages';
+import { useTranslation } from '../../../i18n';
 import {
   Dialog,
   DialogContent,
@@ -28,6 +28,7 @@ interface GitHubConnectModalProps {
 }
 
 export const GitHubConnectModal: React.FC<GitHubConnectModalProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const githubStatus = useSelector((state: RootState) => state.integrations.integrations.github);
   const deviceFlow = useSelector((state: RootState) => state.integrations.github.deviceFlow);
@@ -66,12 +67,12 @@ export const GitHubConnectModal: React.FC<GitHubConnectModalProps> = ({ isOpen, 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Github className="w-5 h-5" />
-            {GITHUB.CONNECT_TITLE}
+            {t('integrations.github.connectTitle')}
           </DialogTitle>
           <DialogDescription>
             {isConnected
-              ? GITHUB.CONNECTED_AS(githubStatus.username || '')
-              : 'Connect your GitHub account to browse repositories and branches.'}
+              ? t('integrations.github.connectedAs', { username: githubStatus.username || '' })
+              : t('integrations.github.connectDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -84,7 +85,7 @@ export const GitHubConnectModal: React.FC<GitHubConnectModalProps> = ({ isOpen, 
               )}
               <div className="flex-1">
                 <div className="font-medium text-sm">{githubStatus.username}</div>
-                <div className="text-xs text-muted-foreground">{GITHUB.CONNECTED_AS(githubStatus.username || '')}</div>
+                <div className="text-xs text-muted-foreground">{t('integrations.github.connectedAs', { username: githubStatus.username || '' })}</div>
               </div>
               <Check className="w-5 h-5 text-emerald-500" />
             </div>
@@ -109,23 +110,23 @@ export const GitHubConnectModal: React.FC<GitHubConnectModalProps> = ({ isOpen, 
         {!isConnected && (
           <Tabs defaultValue="pat" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="pat">{GITHUB.PAT_TAB}</TabsTrigger>
-              <TabsTrigger value="device">{GITHUB.DEVICE_FLOW_TAB}</TabsTrigger>
+              <TabsTrigger value="pat">{t('integrations.github.patTab')}</TabsTrigger>
+              <TabsTrigger value="device">{t('integrations.github.deviceFlowTab')}</TabsTrigger>
             </TabsList>
 
             {/* PAT Tab */}
             <TabsContent value="pat" className="space-y-3">
               <div>
-                <label className="text-sm font-medium">{GITHUB.PAT_LABEL}</label>
+                <label className="text-sm font-medium">{t('integrations.github.patLabel')}</label>
                 <input
                   type="password"
                   value={patToken}
                   onChange={(e) => setPatToken(e.target.value)}
-                  placeholder={GITHUB.PAT_PLACEHOLDER}
+                  placeholder={t('integrations.github.patPlaceholder')}
                   className="mt-1 w-full px-3 py-2 text-sm rounded-md border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring"
                   onKeyDown={(e) => e.key === 'Enter' && handlePATConnect()}
                 />
-                <p className="mt-1 text-xs text-muted-foreground">{GITHUB.PAT_HELP}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{t('integrations.github.patHelp')}</p>
               </div>
               <button
                 onClick={handlePATConnect}
@@ -137,7 +138,7 @@ export const GitHubConnectModal: React.FC<GitHubConnectModalProps> = ({ isOpen, 
                 )}
               >
                 {isConnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Github className="w-4 h-4" />}
-                {GITHUB.PAT_CONNECT}
+                {t('integrations.github.patConnect')}
               </button>
             </TabsContent>
 
@@ -154,11 +155,11 @@ export const GitHubConnectModal: React.FC<GitHubConnectModalProps> = ({ isOpen, 
                   )}
                 >
                   {isConnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Github className="w-4 h-4" />}
-                  {GITHUB.DEVICE_FLOW_BUTTON}
+                  {t('integrations.github.deviceFlowButton')}
                 </button>
               ) : (
                 <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">{GITHUB.DEVICE_FLOW_INSTRUCTIONS}</p>
+                  <p className="text-sm text-muted-foreground">{t('integrations.github.deviceFlowInstructions')}</p>
                   <div className="flex items-center justify-center gap-2">
                     <code className="px-4 py-3 text-2xl font-mono font-bold tracking-widest rounded-lg bg-muted border border-border">
                       {deviceFlow.userCode}
@@ -166,14 +167,14 @@ export const GitHubConnectModal: React.FC<GitHubConnectModalProps> = ({ isOpen, 
                     <button
                       onClick={handleCopyCode}
                       className="p-2 rounded-md hover:bg-muted transition-colors"
-                      title={GITHUB.DEVICE_FLOW_COPY}
+                      title={t('integrations.github.deviceFlowCopy')}
                     >
                       {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
                     </button>
                   </div>
                   <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                     <Loader2 className="w-3 h-3 animate-spin" />
-                    {GITHUB.DEVICE_FLOW_WAITING}
+                    {t('integrations.github.deviceFlowWaiting')}
                   </div>
                   <a
                     href={deviceFlow.verificationUri}

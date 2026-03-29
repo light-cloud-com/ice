@@ -422,14 +422,3 @@ export function map_properties(gcp_kind: string, properties: Record<string, unkn
   return result;
 }
 
-/**
- * Extract self_link from various property formats.
- */
-export function extract_self_link(value: unknown): string | null {
-  if (typeof value === 'string') {
-    if (value.includes('googleapis.com') || value.startsWith('projects/')) {
-      return value;
-    }
-  }
-  return null;
-}

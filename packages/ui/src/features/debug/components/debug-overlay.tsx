@@ -7,10 +7,12 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation } from '../../../i18n';
 import { toggleDebugPanel } from '../../../store/slices/debug-slice';
 import type { RootState, AppDispatch } from '../../../store';
 
 export const DebugOverlay: React.FC = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const { panelOpen, lastAction, lastActionTime, renderDuration } = useSelector((state: RootState) => state.debug);
   const cards = useSelector((state: RootState) => state.cards);
@@ -107,7 +109,7 @@ export const DebugOverlay: React.FC = () => {
           background: 'rgba(30, 41, 59, 0.5)',
         }}
       >
-        <span style={{ fontWeight: 700, color: '#8b5cf6' }}>ICE Debug</span>
+        <span style={{ fontWeight: 700, color: '#8b5cf6' }}>{t('debug.title')}</span>
         <div style={{ display: 'flex', gap: 8 }}>
           <button
             onClick={() => setCollapsed(true)}
@@ -139,18 +141,18 @@ export const DebugOverlay: React.FC = () => {
       {/* Content */}
       <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
         <Row
-          label="Nodes"
-          value={`${nodeCount} (${groupCount} groups, ${blockCount} blocks, ${resourceCount} resources)`}
+          label={t('debug.nodes')}
+          value={`${nodeCount} (${groupCount} ${t('debug.groups')}, ${blockCount} ${t('debug.blocks')}, ${resourceCount} ${t('debug.resources')})`}
         />
-        <Row label="Edges" value={String(edgeCount)} />
-        <Row label="Active Card" value={activeCard?.name || cards.activeCardId || 'none'} />
+        <Row label={t('debug.edges')} value={String(edgeCount)} />
+        <Row label={t('debug.activeCard')} value={activeCard?.name || cards.activeCardId || 'none'} />
         <Divider />
-        <Row label="Selected Nodes" value={selectedNodeIds.length > 0 ? selectedNodeIds.join(', ') : 'none'} />
-        <Row label="Selected Edges" value={selectedEdgeIds.length > 0 ? selectedEdgeIds.join(', ') : 'none'} />
+        <Row label={t('debug.selectedNodes')} value={selectedNodeIds.length > 0 ? selectedNodeIds.join(', ') : t('debug.none')} />
+        <Row label={t('debug.selectedEdges')} value={selectedEdgeIds.length > 0 ? selectedEdgeIds.join(', ') : t('debug.none')} />
         <Divider />
-        <Row label="Last Action" value={lastAction || 'none'} />
-        <Row label="Action Time" value={lastActionAgo} />
-        <Row label="Render" value={renderDuration > 0 ? `${renderDuration.toFixed(1)}ms` : '-'} />
+        <Row label={t('debug.lastAction')} value={lastAction || t('debug.none')} />
+        <Row label={t('debug.actionTime')} value={lastActionAgo} />
+        <Row label={t('debug.render')} value={renderDuration > 0 ? `${renderDuration.toFixed(1)}ms` : '-'} />
       </div>
 
       {/* Node list (scrollable) */}
@@ -164,7 +166,7 @@ export const DebugOverlay: React.FC = () => {
           }}
         >
           <div style={{ padding: '4px 12px', color: '#64748b', fontWeight: 600, fontSize: 10 }}>
-            NODES ({nodeCount})
+            {t('debug.nodesHeader', { count: nodeCount })}
           </div>
           {activeCard.nodes.map((node) => (
             <div
@@ -218,4 +220,3 @@ const Row: React.FC<{ label: string; value: string }> = ({ label, value }) => (
 
 const Divider: React.FC = () => <div style={{ borderTop: '1px solid #1e293b', margin: '2px 0' }} />;
 
-export default DebugOverlay;

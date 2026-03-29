@@ -7,14 +7,14 @@
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-export interface SelectionRect {
+interface SelectionRect {
   x: number;
   y: number;
   width: number;
   height: number;
 }
 
-export interface SelectionState {
+interface SelectionState {
   selectedNodes: string[];
   selectedEdges: string[];
   lastSelectedNode: string | null;

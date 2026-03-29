@@ -10,7 +10,7 @@
  * Always active in development mode (import.meta.env.DEV).
  */
 
-export interface IceActionEvent {
+interface IceActionEvent {
   ts: number;
   seq: number;
   category: 'ui' | 'api' | 'deploy' | 'canvas' | 'auth' | 'nav' | 'ai' | 'env' | 'state';
@@ -55,7 +55,7 @@ function ensureBuffer(): IceActionEvent[] {
 /**
  * Log a structured action event.
  */
-export function logAction(
+function logAction(
   category: IceActionEvent['category'],
   action: string,
   target: string,
@@ -127,14 +127,14 @@ export function logStateChange(actionType: string, payload?: unknown): void {
 /**
  * Get all logged events (for programmatic access within the app).
  */
-export function getActionLog(): IceActionEvent[] {
+function getActionLog(): IceActionEvent[] {
   return window.__ICE_ACTION_LOG__ || [];
 }
 
 /**
  * Clear the action log buffer.
  */
-export function clearActionLog(): void {
+function clearActionLog(): void {
   if (window.__ICE_ACTION_LOG__) {
     window.__ICE_ACTION_LOG__.length = 0;
   }

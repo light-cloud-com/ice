@@ -31,13 +31,14 @@ export function setDesktopUser(userId: string, orgId: string) {
 }
 
 export function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
-  // Desktop mode: skip JWT validation, use local user
-  if (process.env.ICE_DESKTOP === 'true' && _desktopUserId) {
+  // Community edition: skip JWT validation, use auto-seeded local user
+  if (_desktopUserId) {
     req.userId = _desktopUserId;
     req.organisationId = _desktopOrgId || '';
     return next();
   }
 
+  // Fallback: JWT validation (for SaaS edition, if re-enabled)
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith('Bearer ')) {
     return res.status(401).json({ message: 'Missing authorization token' });

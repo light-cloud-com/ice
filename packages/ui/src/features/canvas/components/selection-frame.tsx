@@ -29,4 +29,3 @@ export const SelectionFrame: React.FC = () => {
   );
 };
 
-export default SelectionFrame;

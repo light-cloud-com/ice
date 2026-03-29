@@ -2755,4 +2755,3 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   );
 };
 
-export default SvgCanvas;

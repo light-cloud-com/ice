@@ -26,7 +26,7 @@ import {
   STATUS_COLORS,
   CATEGORY_STYLE,
 } from '../../../../config/canvas-constants';
-import { REPO_SELECTOR } from '../../../../i18n/messages';
+import { useTranslation } from '../../../../i18n';
 import { RepoSelector } from '../../../integrations/components/repo-selector';
 import type { CanvasNode } from '../svg-canvas';
 
@@ -171,6 +171,7 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
   lod = 3,
   zoom = 1,
 }) => {
+  const { t } = useTranslation();
   const { x, y, width, height, data, label } = node;
   const [isHovered, setIsHovered] = useState(false);
   const [repoSelectorOpen, setRepoSelectorOpen] = useState(false);
@@ -1016,7 +1017,7 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
                       setRepoSelectorOpen(true);
                     }}
                   >
-                    {REPO_SELECTOR.LINK_REPO}
+                    {t('integrations.repoSelector.linkRepo')}
                   </text>
                 )}
 
@@ -1541,4 +1542,3 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
 
 SvgCompactNode.displayName = 'SvgCompactNode';
 
-export default SvgCompactNode;

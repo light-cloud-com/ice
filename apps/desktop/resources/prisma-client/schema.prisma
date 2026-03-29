@@ -1,0 +1,404 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Auth ────────────────────────────────────────────────────────────────────
+
+model User {
+  id                   String   @id @default(cuid())
+  email                String   @unique
+  name                 String
+  password_hash        String
+  avatar               String?
+  organisation_id      String?
+  onboarding_completed Boolean  @default(false)
+  onboarding_step      Int      @default(1)
+  default_provider     String? // 'gcp', 'aws', 'azure'
+  default_region       String? // cloud region e.g. 'us-central1', 'eu-west-1'
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+
+  organisation        Organisation?        @relation(fields: [organisation_id], references: [id])
+  refresh_tokens      RefreshToken[]
+  canvas_projects     CanvasProject[]
+  github_token        GitHubToken?
+  memberships         OrganisationMember[]
+  project_memberships ProjectMember[]
+  ai_audit_logs       AiAuditLog[]
+  deployments         CanvasDeployment[]
+  ai_conversations    AiConversation[]
+
+  @@map("user")
+}
+
+model Organisation {
+  id         String   @id @default(cuid())
+  name       String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  users                User[]
+  canvas_projects      CanvasProject[]
+  provider_credentials ProviderCredential[]
+  deployment_rules     DeploymentRule[]
+  members              OrganisationMember[]
+  invitations          Invitation[]
+  ai_audit_logs        AiAuditLog[]
+
+  @@map("organisation")
+}
+
+// ─── Organisation Membership ─────────────────────────────────────────────────
+
+model OrganisationMember {
+  id              String   @id @default(cuid())
+  user_id         String
+  organisation_id String
+  role            String   @default("member") // 'owner' | 'admin' | 'member' | 'viewer'
+  joined_at       DateTime @default(now())
+
+  user         User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  organisation Organisation @relation(fields: [organisation_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, organisation_id])
+  @@map("organisation_member")
+}
+
+// ─── Invitations ─────────────────────────────────────────────────────────────
+
+model Invitation {
+  id              String    @id @default(cuid())
+  email           String
+  organisation_id String
+  role            String    @default("member")
+  token           String    @unique
+  invited_by      String
+  created_at      DateTime  @default(now())
+  expires_at      DateTime
+  accepted_at     DateTime?
+
+  organisation Organisation @relation(fields: [organisation_id], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([token])
+  @@map("invitation")
+}
+
+model RefreshToken {
+  id         String   @id @default(cuid())
+  token      String   @unique
+  user_id    String
+  expires_at DateTime
+  created_at DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("refresh_token")
+}
+
+// ─── GitHub Token ─────────────────────────────────────────────────────────────
+
+model GitHubToken {
+  id           String   @id @default(cuid())
+  user_id      String   @unique
+  access_token String // encrypted
+  username     String
+  avatar_url   String?
+  name         String?
+  scope        String? // 'repo read:user'
+  connected_at DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("github_token")
+}
+
+// ─── Canvas ──────────────────────────────────────────────────────────────────
+
+model CanvasProject {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String?
+  description     String?
+  type            String   @default("project") // "folder" or "project"
+  parent_id       String? // folder hierarchy
+  provider        String? // 'gcp', 'aws', 'azure' — default cloud provider for this project
+  region          String? // cloud region/zone e.g. 'us-central1', 'eu-west-1'
+  organisation_id String
+  created_by      String
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  cards               CanvasCard[]
+  environments        Environment[]
+  members             ProjectMember[]
+  pr_previews_enabled Boolean         @default(false)
+  organisation        Organisation    @relation(fields: [organisation_id], references: [id], onDelete: Cascade)
+  creator             User            @relation(fields: [created_by], references: [id])
+
+  @@index([organisation_id])
+  @@index([parent_id])
+  @@map("canvas_project")
+}
+
+model ProjectMember {
+  id         String   @id @default(cuid())
+  project_id String
+  user_id    String
+  role       String   @default("editor") // 'owner' | 'editor' | 'viewer'
+  granted_by String
+  granted_at DateTime @default(now())
+
+  project CanvasProject @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  user    User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([project_id, user_id])
+  @@index([user_id])
+  @@map("project_member")
+}
+
+model CanvasCard {
+  id         String   @id @default(cuid())
+  name       String
+  project_id String
+  nodes      Json // CardNode[] — stored as JSON (same shape as cardsSlice)
+  edges      Json // CardEdge[] — stored as JSON
+  viewport   Json? // {x, y, zoom}
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  project     CanvasProject @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  environment Environment?
+
+  @@map("canvas_card")
+}
+
+// ─── Environments ───────────────────────────────────────────────────────────
+
+model Environment {
+  id             String   @id @default(cuid())
+  project_id     String
+  card_id        String   @unique // 1:1 → CanvasCard
+  name           String // 'production', 'staging', 'pr-42'
+  type           String   @default("development") // 'production' | 'staging' | 'development' | 'pr'
+  region         String? // per-env cloud region override
+  is_protected   Boolean  @default(false) // production = true, can't delete
+  pr_number      Int? // set for type='pr' ephemeral envs
+  pr_branch      String? // head branch for ephemeral PR env
+  pr_source_repo String? // "owner/repo" for the PR
+  created_by     String
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  project CanvasProject @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  card    CanvasCard    @relation(fields: [card_id], references: [id], onDelete: Cascade)
+
+  @@unique([project_id, name])
+  @@index([project_id])
+  @@index([pr_source_repo, pr_number])
+  @@map("environment")
+}
+
+// ─── Provider Credentials ────────────────────────────────────────────────────
+
+model ProviderCredential {
+  id              String   @id @default(cuid())
+  organisation_id String
+  provider        String // 'gcp', 'aws', 'azure', 'kubernetes', etc.
+  credentials     String // Encrypted JSON
+  project_id      String? // GCP project ID, AWS account, etc.
+  is_connected    Boolean  @default(false)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  organisation Organisation @relation(fields: [organisation_id], references: [id], onDelete: Cascade)
+
+  @@unique([organisation_id, provider])
+  @@map("provider_credential")
+}
+
+// ─── Deploy History ──────────────────────────────────────────────────────────
+
+model CanvasDeployment {
+  id          String   @id @default(cuid())
+  card_id     String
+  user_id     String? // who triggered the deployment
+  status      String // 'planning', 'deploying', 'success', 'failed'
+  provider    String
+  region      String
+  environment String
+  plan        Json? // Deploy plan snapshot
+  results     Json? // Deploy results
+  duration_ms Int?
+  error       String? // Error message if failed
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  deploy_jobs DeployJob[]
+  user        User?       @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@index([card_id, status, created_at(sort: Desc)])
+  @@index([user_id])
+  @@map("canvas_deployment")
+}
+
+// ─── Job Queue ───────────────────────────────────────────────────────────────
+
+model DeployJob {
+  id            String    @id @default(cuid())
+  deployment_id String
+  status        String    @default("queued") // queued, processing, completed, failed
+  attempts      Int       @default(0)
+  max_attempts  Int       @default(3)
+  error         String?
+  started_at    DateTime?
+  completed_at  DateTime?
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  deployment CanvasDeployment @relation(fields: [deployment_id], references: [id], onDelete: Cascade)
+
+  @@index([status, started_at])
+  @@map("deploy_job")
+}
+
+// ─── Pipeline: Deployment Rules ─────────────────────────────────────────────
+
+model DeploymentRule {
+  id              String   @id @default(cuid())
+  card_id         String
+  node_id         String // which service node on the canvas
+  repository      String // "owner/repo"
+  trigger_type    String   @default("push") // "push" | "merge"
+  branch_pattern  String   @default("main") // "main" | "develop" | "feature/*"
+  environment     String   @default("production")
+  build_command   String? // "npm run build"
+  install_command String? // "npm ci"
+  output_dir      String? // "dist" | ".next"
+  framework       String? // "nextjs" | "react" | "vue"
+  enabled         Boolean  @default(true)
+  webhook_id      Int? // GitHub webhook ID for cleanup
+  webhook_secret  String? // HMAC secret for this webhook
+  organisation_id String
+  created_by      String
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  events       DeploymentEvent[]
+  organisation Organisation      @relation(fields: [organisation_id], references: [id], onDelete: Cascade)
+
+  @@unique([card_id, node_id, branch_pattern])
+  @@index([repository])
+  @@index([card_id])
+  @@map("deployment_rule")
+}
+
+// ─── Pipeline: Deployment Events ────────────────────────────────────────────
+
+model DeploymentEvent {
+  id               String    @id @default(cuid())
+  rule_id          String
+  deployment_id    String? // links to CanvasDeployment if infra deploy
+  trigger          String // "push" | "merge" | "manual"
+  commit_sha       String
+  commit_message   String?
+  commit_author    String?
+  branch           String
+  status           String    @default("queued") // queued | building | deploying | success | failed | cancelled
+  deployment_stage String? // human-readable: "Installing dependencies..."
+  deployment_logs  Json?     @default("[]") // [{step, status, message, timestamp}]
+  deployed_url     String?
+  started_at       DateTime  @default(now())
+  completed_at     DateTime?
+  duration_seconds Int?
+  error            String?
+
+  rule DeploymentRule @relation(fields: [rule_id], references: [id], onDelete: Cascade)
+
+  @@index([rule_id])
+  @@index([commit_sha])
+  @@map("deployment_event")
+}
+
+// ─── Pipeline: Webhook Idempotency ──────────────────────────────────────────
+
+model WebhookDelivery {
+  id          String   @id @default(cuid())
+  delivery_id String   @unique // GitHub's X-GitHub-Delivery header
+  event       String // "push", "pull_request", etc.
+  processed   Boolean  @default(false)
+  result      String? // "deployed", "skipped", "error"
+  created_at  DateTime @default(now())
+
+  @@index([created_at])
+  @@map("webhook_delivery")
+}
+
+// ─── AI Conversations ──────────────────────────────────────────────────────
+
+model AiConversation {
+  id              String   @id @default(cuid())
+  project_id      String
+  card_id         String? // which canvas card (nullable for project-level chats)
+  user_id         String
+  organisation_id String
+  title           String? // auto-generated from first message
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  messages AiMessage[]
+  user     User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([project_id, user_id])
+  @@index([organisation_id])
+  @@map("ai_conversation")
+}
+
+model AiMessage {
+  id              String   @id @default(cuid())
+  conversation_id String
+  role            String // 'user' | 'assistant'
+  content         String
+  operations      Json? // AiCanvasOp[] (assistant only)
+  operation_count Int      @default(0)
+  suggestions     Json? // string[] (assistant only)
+  created_at      DateTime @default(now())
+
+  conversation AiConversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+
+  @@index([conversation_id])
+  @@map("ai_message")
+}
+
+// ─── AI Audit Logs ──────────────────────────────────────────────────────────
+
+model AiAuditLog {
+  id                String   @id @default(cuid())
+  user_id           String?
+  organisation_id   String?
+  intent            String
+  canvas_before     Json // { nodeCount, edgeCount, nodes, edges }
+  operations        Json     @default("[]") // AiCanvasOp[]
+  raw_response      String   @default("") // Full Claude response text
+  parse_success     Boolean  @default(false)
+  schema_validation Json? // { valid, errorCount, errors? }
+  deploy_dry_run    Json? // { success, deployableCount, error? }
+  duration_ms       Int      @default(0)
+  model             String   @default("claude-sonnet-4-20250514")
+  error             String?
+  created_at        DateTime @default(now())
+
+  user         User?         @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  organisation Organisation? @relation(fields: [organisation_id], references: [id], onDelete: SetNull)
+
+  @@index([created_at(sort: Desc)])
+  @@index([user_id])
+  @@index([organisation_id])
+  @@map("ai_audit_log")
+}

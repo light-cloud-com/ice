@@ -81,4 +81,3 @@ const SidebarStripButton: React.FC<{ tab: SidebarStripTab; side: SidebarSide }> 
   );
 };
 
-export default SidebarStrip;

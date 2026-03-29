@@ -38,6 +38,7 @@ import axiosInstance from '../../../shared/api/axios-instance';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../../../shared/components/ui/resizable';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '../../../shared/components/ui/tooltip';
 import { useResolvePath } from '../../../shared/hooks/use-resolve-path';
+import { useTranslation, t as translate } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
 import { SearchInput } from '../../../shared/components/ui/search-input';
 import { ProjectBrowser } from '../../project-browser';
@@ -669,7 +670,7 @@ function nextGroupColor(): string {
 type Provider = 'aws' | 'gcp' | 'azure';
 
 const PROVIDERS: { id: string; label: string; color?: string }[] = [
-  { id: 'all', label: 'All' },
+  { id: 'all', label: translate('palette.providerAll') },
   ...ENABLED_CLOUD_PROVIDERS.map((p) => ({ id: p.id, label: p.shortName, color: p.color })),
 ];
 
@@ -759,6 +760,7 @@ const BlocksSection: React.FC<BlocksSectionProps> = ({
   mounted,
   staggerIdx: initialStaggerIdx,
 }) => {
+  const { t } = useTranslation();
   let staggerIdx = initialStaggerIdx;
 
   return (
@@ -770,7 +772,7 @@ const BlocksSection: React.FC<BlocksSectionProps> = ({
           id="ice-palette-search-input"
           value={localSearch}
           onChange={setLocalSearch}
-          placeholder="Search blocks..."
+          placeholder={t('palette.searchPlaceholder')}
           className="mb-1.5"
         />
         <div className="flex gap-1">
@@ -882,6 +884,7 @@ export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
   showProjectSection = true,
   showBlocksSection = true,
 }) => {
+  const { t } = useTranslation();
   const { pathname } = useLocation();
   // Show blocks only on canvas/table views (not settings/deployments)
   const isCanvasView = !pathname.endsWith('/settings') && !pathname.endsWith('/deployments');

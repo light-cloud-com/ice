@@ -2,7 +2,7 @@
  * Preload Script — Minimal bridge for desktop-specific features
  *
  * The web app communicates with the backend via HTTP (same as production).
- * The preload only exposes Electron-specific features: menu actions, window state.
+ * The preload only exposes Electron-specific features: menu actions, window state, updates.
  */
 
 import { contextBridge, ipcRenderer } from 'electron';
@@ -19,4 +19,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('fullscreen-change', handler);
     return () => ipcRenderer.removeListener('fullscreen-change', handler);
   },
+  // Auto-update
+  onUpdateStatus: (callback: (status: { status: string; version?: string; percent?: number }) => void) => {
+    const handler = (_event: any, status: any) => callback(status);
+    ipcRenderer.on('update-status', handler);
+    return () => ipcRenderer.removeListener('update-status', handler);
+  },
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
 });

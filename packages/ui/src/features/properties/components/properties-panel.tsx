@@ -13,6 +13,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { getIcon, DEFAULT_ICON, type Provider } from '../../../assets/icons';
+import { useTranslation, t } from '../../../i18n';
 import { getBrandIcon } from '../../../assets/icons/brand-registry';
 import { GROUP_COLOR_PRESETS } from '../../../config/color-palette';
 import { getApi } from '../../../shared/api/api-adapter';
@@ -100,7 +101,7 @@ const CloseButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
   <button
     onClick={onClick}
     className="w-5 h-5 flex items-center justify-center rounded hover:bg-ice-hover text-ice-text-3 hover:text-ice-text-1 transition-colors"
-    title="Close properties"
+    title={t('properties.closeTitle')}
   >
     <svg
       width="12"
@@ -125,7 +126,7 @@ const GroupColorPicker: React.FC<{
   onChange: (color: string) => void;
 }> = ({ color, onChange }) => (
   <div className="px-3 py-2 border-b border-ice-border">
-    <div className="text-ice-2xs text-ice-text-3 mb-1.5">Group Color</div>
+    <div className="text-ice-2xs text-ice-text-3 mb-1.5">{t('properties.groupColor')}</div>
     <div className="flex items-center gap-1.5 flex-wrap">
       {GROUP_COLORS.map((c) => (
         <button
@@ -154,7 +155,7 @@ const DriftIndicator: React.FC<{ nodeId: string }> = ({ nodeId }) => {
     return (
       <div className="px-3 py-2 text-ice-xs text-ice-text-3 flex items-center gap-1.5">
         <div className="w-3 h-3 border border-ice-text-3 border-t-transparent rounded-full animate-spin" />
-        Checking drift...
+        {t('properties.drift.checking')}
       </div>
     );
   }
@@ -165,7 +166,7 @@ const DriftIndicator: React.FC<{ nodeId: string }> = ({ nodeId }) => {
     return (
       <div className="px-3 py-2 flex items-center gap-1.5">
         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-        <span className="text-ice-xs text-emerald-500 font-medium">In sync</span>
+        <span className="text-ice-xs text-emerald-500 font-medium">{t('properties.drift.inSync')}</span>
       </div>
     );
   }
@@ -174,7 +175,7 @@ const DriftIndicator: React.FC<{ nodeId: string }> = ({ nodeId }) => {
     return (
       <div className="px-3 py-2 flex items-center gap-1.5">
         <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-        <span className="text-ice-xs text-amber-500 font-medium">Not in latest deployment</span>
+        <span className="text-ice-xs text-amber-500 font-medium">{t('properties.drift.notInDeployment')}</span>
       </div>
     );
   }
@@ -185,7 +186,7 @@ const DriftIndicator: React.FC<{ nodeId: string }> = ({ nodeId }) => {
         <div className="flex items-center gap-1.5 mb-2">
           <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />
           <span className="text-ice-xs text-orange-500 font-medium">
-            Drifted ({driftInfo.changes.length} {driftInfo.changes.length === 1 ? 'change' : 'changes'})
+            {t('properties.drift.drifted')} ({driftInfo.changes.length} {driftInfo.changes.length === 1 ? t('properties.drift.change') : t('properties.drift.changes')})
           </span>
         </div>
         <div className="space-y-1.5 ml-3">
@@ -241,10 +242,10 @@ const DriftCheckButton: React.FC<{ cardId: string; nodes: any[] }> = ({ cardId, 
         {isLoading ? (
           <>
             <div className="w-3 h-3 border border-ice-text-3 border-t-transparent rounded-full animate-spin" />
-            Checking...
+            {t('properties.drift.checkingButton')}
           </>
         ) : (
-          'Check for Drift'
+          t('properties.drift.checkButton')
         )}
       </button>
     </div>
@@ -399,7 +400,7 @@ const ResourceInfoPanel: React.FC<{
       {/* IaC mapping */}
       {relevantImpls.length > 0 && (
         <div className="px-3 pt-2.5 pb-2">
-          <div className="text-ice-xs font-semibold uppercase tracking-wider text-ice-text-3 mb-1.5">IaC Resource</div>
+          <div className="text-ice-xs font-semibold uppercase tracking-wider text-ice-text-3 mb-1.5">{t('properties.config.iacResource')}</div>
           {relevantImpls.map((impl) => (
             <div key={`${impl.provider}-${impl.resource_type}`} className="mb-1">
               <div className="flex items-center gap-1.5">
@@ -417,18 +418,18 @@ const ResourceInfoPanel: React.FC<{
       {/* Network — only real values */}
       {hasNetwork && (
         <div className="px-3 pb-2">
-          <div className="text-ice-xs font-semibold uppercase tracking-wider text-ice-text-3 mb-1.5">Network</div>
-          {port && <InfoRow label="Port" value={port} color="text-ice-text-1" />}
-          {domain && <InfoRow label="Domain" value={domain} />}
-          {inCount > 0 && <InfoRow label="Inbound" value={`${inCount} connection${inCount !== 1 ? 's' : ''}`} />}
-          {outCount > 0 && <InfoRow label="Outbound" value={`${outCount} connection${outCount !== 1 ? 's' : ''}`} />}
+          <div className="text-ice-xs font-semibold uppercase tracking-wider text-ice-text-3 mb-1.5">{t('properties.network.title')}</div>
+          {port && <InfoRow label={t('properties.network.port')} value={port} color="text-ice-text-1" />}
+          {domain && <InfoRow label={t('properties.network.domain')} value={domain} />}
+          {inCount > 0 && <InfoRow label={t('properties.network.inbound')} value={`${inCount} ${inCount !== 1 ? t('properties.network.connections') : t('properties.network.connection')}`} />}
+          {outCount > 0 && <InfoRow label={t('properties.network.outbound')} value={`${outCount} ${outCount !== 1 ? t('properties.network.connections') : t('properties.network.connection')}`} />}
         </div>
       )}
 
       {/* About — description from DB */}
       {resourceDef?.description && (
         <div className="px-3 pb-3">
-          <div className="text-ice-xs font-semibold uppercase tracking-wider text-ice-text-3 mb-1.5">About</div>
+          <div className="text-ice-xs font-semibold uppercase tracking-wider text-ice-text-3 mb-1.5">{t('properties.about')}</div>
           <p className="text-ice-xs text-ice-text-3 leading-relaxed">{resourceDef.description}</p>
           {resourceDef.providers.length > 0 && (
             <div className="flex items-center gap-1 mt-1.5 flex-wrap">
@@ -451,6 +452,7 @@ const ResourceInfoPanel: React.FC<{
 // ─── Main PropertiesPanel ────────────────────────────────────────────────────
 
 export const PropertiesPanel: React.FC = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const activeCard = useSelector(selectActiveCard);
   const { selectedNodes, selectedEdges } = useSelector((state: RootState) => state.selection);
@@ -525,7 +527,7 @@ export const PropertiesPanel: React.FC = () => {
   // Source tab state — "repo" or "image" (must be before any early returns for Rules of Hooks)
   const nodeRepo = (selectedNode?.data?.repository as string) || '';
   const nodeImage = (selectedNode?.data?.image as string) || '';
-  const [_sourceTab, setSourceTab] = useState<'repo' | 'image'>(nodeImage && !nodeRepo ? 'image' : 'repo');
+  const [, setSourceTab] = useState<'repo' | 'image'>(nodeImage && !nodeRepo ? 'image' : 'repo');
 
   // Sync tab when switching nodes
   useEffect(() => {
@@ -559,15 +561,15 @@ export const PropertiesPanel: React.FC = () => {
     if (/StaticSite|SSRSite|Frontend/i.test(srcIceType) && /Database|PostgreSQL|MySQL|MongoDB/i.test(tgtIceType)) {
       edgeWarnings.push({
         level: 'warning',
-        message: 'Direct database access from frontend is a security risk',
-        suggestion: 'Add a Backend service between them',
+        message: t('properties.edge.warningDbFromFrontend'),
+        suggestion: t('properties.edge.warningDbSuggestion'),
       });
     }
     if (/StaticSite|SSRSite|Frontend/i.test(srcIceType) && /Queue|SQS|SNS|PubSub|RabbitMQ/i.test(tgtIceType)) {
       edgeWarnings.push({
         level: 'warning',
-        message: 'Clients should not publish to queues directly',
-        suggestion: 'Route through a Backend API',
+        message: t('properties.edge.warningQueueFromClient'),
+        suggestion: t('properties.edge.warningQueueSuggestion'),
       });
     }
 
@@ -576,7 +578,7 @@ export const PropertiesPanel: React.FC = () => {
         {/* Header */}
         <div className="px-3 py-3 border-b border-ice-border">
           <div className="flex items-center justify-between">
-            <div className="text-ice-xs uppercase tracking-wider text-ice-text-3 mb-1">Connection</div>
+            <div className="text-ice-xs uppercase tracking-wider text-ice-text-3 mb-1">{t('properties.edge.connectionHeader')}</div>
             <CloseButton onClick={() => dispatch(toggleProperties())} />
           </div>
           <div className="text-ice-base text-ice-text-1 font-medium truncate">
@@ -626,7 +628,7 @@ export const PropertiesPanel: React.FC = () => {
         </div>
 
         {/* Properties */}
-        <Section title="Properties">
+        <Section title={t('properties.edge.propertiesSection')}>
           {/* Port — unified with env var when EnvVars block is connected */}
           {(() => {
             const sourceId = selectedEdge.source;
@@ -643,7 +645,7 @@ export const PropertiesPanel: React.FC = () => {
             if (envNode) {
               return (
                 <div className="space-y-1">
-                  <label className="text-ice-2xs text-ice-text-3">Port</label>
+                  <label className="text-ice-2xs text-ice-text-3">{t('properties.edge.portLabel')}</label>
                   <div className="flex items-center gap-1">
                     <select
                       value={currentEnvVar}
@@ -660,7 +662,7 @@ export const PropertiesPanel: React.FC = () => {
                       className="flex-1 min-w-0 px-1.5 py-1.5 text-ice-sm rounded-l border border-ice-border bg-ice-base text-amber-400 font-mono focus:outline-none focus:ring-1 focus:ring-blue-500"
                     >
                       <option value="" className="text-ice-text-1">
-                        custom
+                        {t('properties.edge.customOption')}
                       </option>
                       {vars.map((v) => (
                         <option key={v.name} value={v.name}>
@@ -694,7 +696,7 @@ export const PropertiesPanel: React.FC = () => {
 
             return (
               <TextField
-                label="Port"
+                label={t('properties.edge.portLabel')}
                 value={currentPort}
                 placeholder="e.g. 5432"
                 onChange={(v) => updateEdgeField('port', v ? Number(v) : null)}
@@ -709,7 +711,7 @@ export const PropertiesPanel: React.FC = () => {
             onClick={() => dispatch(deleteCardEdge(selectedEdge.id))}
             className="w-full py-1.5 text-ice-sm text-red-400 bg-red-950/30 border border-red-900/50 rounded hover:bg-red-950/50 transition-colors"
           >
-            Delete Connection
+            {t('properties.edge.deleteButton')}
           </button>
         </div>
       </div>
@@ -810,22 +812,22 @@ export const PropertiesPanel: React.FC = () => {
           // Tabs are derived from the node's actual content — not hardcoded
           const tabs: Array<{ id: string; label: string; show: boolean; dot?: boolean }> = [];
           if (dbProperties.length > 0 || iceType === 'Config.EnvVars' || iceType === 'Networking.Domain') {
-            tabs.push({ id: 'config', label: 'Config', show: true });
+            tabs.push({ id: 'config', label: t('properties.tabs.config'), show: true });
           }
           if (isScalable) {
-            tabs.push({ id: 'scaling', label: 'Scaling', show: true });
+            tabs.push({ id: 'scaling', label: t('properties.tabs.scaling'), show: true });
           }
           if (iceType === 'Networking.Domain') {
-            tabs.push({ id: 'domain', label: 'Domain', show: true });
+            tabs.push({ id: 'domain', label: t('properties.tabs.domain'), show: true });
           }
           if (hasSource || iceType === 'Source.Repository') {
-            tabs.push({ id: 'source', label: 'Source & CI', show: true });
+            tabs.push({ id: 'source', label: t('properties.tabs.source'), show: true });
           }
           if (incomingEdges.length > 0 || outgoingEdges.length > 0) {
-            tabs.push({ id: 'connections', label: 'Connections', show: true });
+            tabs.push({ id: 'connections', label: t('properties.tabs.connections'), show: true });
           }
           if (hasDeployment) {
-            tabs.push({ id: 'deploy', label: 'Deploy', show: true, dot: true });
+            tabs.push({ id: 'deploy', label: t('properties.tabs.deploy'), show: true, dot: true });
           }
           const visibleTabs = tabs.filter((t) => t.show);
           // Fall back to first tab if current tab doesn't exist
@@ -862,15 +864,15 @@ export const PropertiesPanel: React.FC = () => {
               {activeTab === 'deploy' && hasDeployment && (
                 <>
                   <DriftIndicator nodeId={selectedNode.id} />
-                  <Section title="Current">
+                  <Section title={t('properties.deploy.current')}>
                     <div className="space-y-2.5">
                       <div className="flex items-center gap-1.5">
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-ice-xs text-emerald-500 font-medium">Live</span>
+                        <span className="text-ice-xs text-emerald-500 font-medium">{t('properties.deploy.live')}</span>
                       </div>
                       {!!selectedNode.data?.url && (
                         <div>
-                          <div className="text-ice-2xs text-ice-text-3 mb-0.5">URL</div>
+                          <div className="text-ice-2xs text-ice-text-3 mb-0.5">{t('properties.deploy.urlLabel')}</div>
                           <a
                             href={selectedNode.data.url as string}
                             target="_blank"
@@ -883,27 +885,27 @@ export const PropertiesPanel: React.FC = () => {
                       )}
                       {!!selectedNode.data?.deployed_image && (
                         <div>
-                          <div className="text-ice-2xs text-ice-text-3 mb-0.5">Image</div>
+                          <div className="text-ice-2xs text-ice-text-3 mb-0.5">{t('properties.deploy.imageLabel')}</div>
                           <div className="text-ice-xs text-ice-text-2 font-mono break-all">
                             {selectedNode.data.deployed_image as string}
                           </div>
                         </div>
                       )}
                       <div>
-                        <div className="text-ice-2xs text-ice-text-3 mb-0.5">Resource ID</div>
+                        <div className="text-ice-2xs text-ice-text-3 mb-0.5">{t('properties.deploy.resourceIdLabel')}</div>
                         <div className="text-ice-xs text-ice-text-2 font-mono break-all">
                           {selectedNode.data.provider_id as string}
                         </div>
                       </div>
                       {!!selectedNode.data?.region && (
                         <div>
-                          <div className="text-ice-2xs text-ice-text-3 mb-0.5">Region</div>
+                          <div className="text-ice-2xs text-ice-text-3 mb-0.5">{t('properties.deploy.regionLabel')}</div>
                           <div className="text-ice-xs text-ice-text-2">{selectedNode.data.region as string}</div>
                         </div>
                       )}
                       {!!selectedNode.data?.max_instances && (
                         <div>
-                          <div className="text-ice-2xs text-ice-text-3 mb-0.5">Instances</div>
+                          <div className="text-ice-2xs text-ice-text-3 mb-0.5">{t('properties.deploy.instancesLabel')}</div>
                           <div className="text-ice-xs text-ice-text-2">
                             {String(selectedNode.data.min_instances || 0)} – {String(selectedNode.data.max_instances)}
                           </div>
@@ -955,38 +957,38 @@ export const PropertiesPanel: React.FC = () => {
                 <Section title="">
                   {activeInstances != null && (
                     <div className="flex items-center justify-between gap-2 py-1">
-                      <span className="text-ice-sm text-ice-text-2 shrink-0">Active</span>
+                      <span className="text-ice-sm text-ice-text-2 shrink-0">{t('properties.scaling.active')}</span>
                       <div className="flex items-center gap-1.5">
                         <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                         <span className="text-ice-base text-emerald-400 font-mono font-semibold">
-                          {activeInstances} running
+                          {activeInstances} {t('properties.scaling.running')}
                         </span>
                       </div>
                     </div>
                   )}
                   <StepperField
-                    label="Min instances"
+                    label={t('properties.scaling.minInstances')}
                     value={minInstances ?? 1}
                     min={0}
                     max={maxInstances ?? 99}
                     onChange={(v) => updateNodeField('minInstances', v)}
                   />
                   <StepperField
-                    label="Max instances"
+                    label={t('properties.scaling.maxInstances')}
                     value={maxInstances ?? 3}
                     min={minInstances ?? 0}
                     max={99}
                     onChange={(v) => updateNodeField('maxInstances', v)}
                   />
                   <SelectField
-                    label="Scale on"
+                    label={t('properties.scaling.scaleOn')}
                     value={scalingMetric}
                     options={['cpu', 'memory', 'requests', 'queue_depth', 'custom']}
                     onChange={(v) => updateNodeField('scalingMetric', v)}
                   />
                   {scalingMetric && scalingMetric !== 'custom' && (
                     <NumberField
-                      label="Threshold (%)"
+                      label={t('properties.scaling.threshold')}
                       value={scalingThreshold}
                       onChange={(v) => updateNodeField('scalingThreshold', v)}
                     />
@@ -999,27 +1001,27 @@ export const PropertiesPanel: React.FC = () => {
                 <Section title="">
                   <div className="space-y-2">
                     <TextField
-                      label="Hostname"
+                      label={t('properties.domain.hostname')}
                       value={(selectedNode?.data?.hostname as string) || ''}
-                      placeholder="app.example.com"
+                      placeholder={t('properties.domain.hostnamePlaceholder')}
                       onChange={(v) => updateNodeField('hostname', v)}
                     />
                     <TextField
-                      label="Subdomain"
+                      label={t('properties.domain.subdomain')}
                       value={(selectedNode?.data?.subdomain as string) || ''}
-                      placeholder="www"
+                      placeholder={t('properties.domain.subdomainPlaceholder')}
                       onChange={(v) => updateNodeField('subdomain', v)}
                     />
                     <SelectField
-                      label="SSL Mode"
+                      label={t('properties.domain.sslMode')}
                       value={(selectedNode?.data?.sslMode as string) || 'auto'}
                       options={['auto', 'manual', 'none']}
                       onChange={(v) => updateNodeField('sslMode', v)}
                     />
                     <TextField
-                      label="DNS Provider"
+                      label={t('properties.domain.dnsProvider')}
                       value={(selectedNode?.data?.dnsProvider as string) || ''}
-                      placeholder="cloudflare, route53..."
+                      placeholder={t('properties.domain.dnsProviderPlaceholder')}
                       onChange={(v) => updateNodeField('dnsProvider', v)}
                     />
                   </div>
@@ -1049,7 +1051,7 @@ export const PropertiesPanel: React.FC = () => {
                 <>
                   {/* Configuration fields from DB */}
                   {dbProperties.length > 0 && (
-                    <Section title="Configuration">
+                    <Section title={t('properties.config.title')}>
                       {dbProperties.map((prop) => {
                         const value = selectedNode.data?.[prop.name];
                         if (prop.type === 'select' && prop.options) {
@@ -1140,7 +1142,7 @@ export const PropertiesPanel: React.FC = () => {
 
                   {/* IaC Mapping */}
                   {implementations.length > 0 && (
-                    <Section title="IaC Mapping">
+                    <Section title={t('properties.config.iacMapping')}>
                       <div className="space-y-0.5">
                         {implementations
                           .filter((impl) => !provider || impl.provider === provider)
@@ -1163,9 +1165,9 @@ export const PropertiesPanel: React.FC = () => {
 
                   {/* Cost */}
                   {estimatedCost && (
-                    <Section title="Cost">
+                    <Section title={t('properties.config.cost')}>
                       <div className="flex items-center justify-between py-1">
-                        <span className="text-ice-sm text-ice-text-2">Estimated monthly</span>
+                        <span className="text-ice-sm text-ice-text-2">{t('properties.config.estimatedMonthly')}</span>
                         <span className="text-ice-sm text-emerald-400 font-mono">{estimatedCost}</span>
                       </div>
                     </Section>
@@ -1194,24 +1196,24 @@ export const PropertiesPanel: React.FC = () => {
     <div id="ice-properties-panel" className="h-full flex flex-col bg-ice-surface border-l">
       <div className="px-3 py-3 border-b border-ice-border">
         <div className="flex items-center justify-between">
-          <div className="text-ice-xs uppercase tracking-wider text-ice-text-3 mb-1">Properties</div>
+          <div className="text-ice-xs uppercase tracking-wider text-ice-text-3 mb-1">{t('properties.title')}</div>
           <CloseButton onClick={() => dispatch(toggleProperties())} />
         </div>
-        <div className="text-ice-md text-ice-text-1 font-semibold">{activeCard?.name || 'No Card'}</div>
+        <div className="text-ice-md text-ice-text-1 font-semibold">{activeCard?.name || t('properties.noCard')}</div>
       </div>
 
-      <Section title="Overview">
+      <Section title={t('properties.overview.title')}>
         <div className="flex items-center justify-between py-1">
-          <span className="text-ice-sm text-ice-text-2">Nodes</span>
+          <span className="text-ice-sm text-ice-text-2">{t('properties.overview.nodes')}</span>
           <span className="text-ice-sm text-ice-text-1 font-mono">{totalNodes}</span>
         </div>
         <div className="flex items-center justify-between py-1">
-          <span className="text-ice-sm text-ice-text-2">Connections</span>
+          <span className="text-ice-sm text-ice-text-2">{t('properties.overview.connections')}</span>
           <span className="text-ice-sm text-ice-text-1 font-mono">{totalEdges}</span>
         </div>
         {totalCost > 0 && (
           <div className="flex items-center justify-between py-1">
-            <span className="text-ice-sm text-ice-text-2">Est. monthly cost</span>
+            <span className="text-ice-sm text-ice-text-2">{t('properties.overview.estMonthlyCost')}</span>
             <span className="text-ice-sm text-emerald-400 font-mono">{formatCost(totalCost)}</span>
           </div>
         )}
@@ -1227,7 +1229,7 @@ export const PropertiesPanel: React.FC = () => {
           );
           if (hints.length === 0) return null;
           return (
-            <Section title="Suggestions">
+            <Section title={t('properties.overview.suggestions')}>
               <div className="space-y-1.5">
                 {hints.map((h, i) => (
                   <div key={i} className="rounded border border-blue-500/20 bg-blue-500/5 px-2.5 py-2">
@@ -1242,7 +1244,7 @@ export const PropertiesPanel: React.FC = () => {
       {activeCard && activeCard.nodes.length === 0 && (
         <div className="flex-1 flex items-center justify-center px-6">
           <p className="text-ice-sm text-ice-text-3 text-center leading-relaxed">
-            Drop blocks from the palette to start building
+            {t('properties.overview.emptyHint')}
           </p>
         </div>
       )}
@@ -1250,7 +1252,7 @@ export const PropertiesPanel: React.FC = () => {
       {activeCard && activeCard.nodes.length > 0 && (
         <div className="flex-1 flex items-center justify-center px-6">
           <p className="text-ice-sm text-ice-text-3 text-center leading-relaxed">
-            Select a node or edge to view and edit its properties
+            {t('properties.overview.selectHint')}
           </p>
         </div>
       )}
@@ -1374,10 +1376,10 @@ const PipelineSection: React.FC<{
   };
 
   return (
-    <Section title="Service Deploys">
+    <Section title={t('pipeline.serviceDeploys')}>
       {/* Loading */}
       {(rulesLoading || (autoCreated && rules.length === 0)) && (
-        <div className="text-ice-xs text-ice-text-3 py-1">Setting up pipeline...</div>
+        <div className="text-ice-xs text-ice-text-3 py-1">{t('pipeline.settingUp')}</div>
       )}
 
       {/* Trigger rules */}
@@ -1448,7 +1450,7 @@ const PipelineSection: React.FC<{
                   dispatch(deletePipelineRule({ ruleId: rule.id, cardId: rule.card_id, nodeId: rule.node_id }))
                 }
                 className="ml-auto text-ice-text-3 hover:text-red-400 transition-colors"
-                title="Remove trigger"
+                title={t('pipeline.removeTrigger')}
               >
                 &times;
               </button>
@@ -1457,7 +1459,7 @@ const PipelineSection: React.FC<{
 
           {/* Add trigger */}
           <button onClick={handleAddRule} className="text-ice-xs text-ice-text-3 hover:text-blue-400 transition-colors">
-            + Add trigger
+            {t('pipeline.addTrigger')}
           </button>
         </div>
       )}
@@ -1465,7 +1467,7 @@ const PipelineSection: React.FC<{
       {/* Recent deployments with expandable logs */}
       {events.length > 0 && (
         <div className="mt-2 pt-2 border-t border-ice-border space-y-1">
-          <div className="text-ice-xs text-ice-text-3 font-semibold uppercase tracking-wider mb-1">Recent</div>
+          <div className="text-ice-xs text-ice-text-3 font-semibold uppercase tracking-wider mb-1">{t('pipeline.recent')}</div>
           {events.slice(0, 5).map((ev) => {
             const isExpanded = expandedEventId === ev.id;
             const logs = (ev.deployment_logs || []) as DeployStep[];
@@ -1520,7 +1522,7 @@ const PipelineSection: React.FC<{
                         </div>
                       ))
                     ) : (
-                      <div className="text-[10px] font-mono text-slate-500">No logs recorded</div>
+                      <div className="text-[10px] font-mono text-slate-500">{t('pipeline.noLogs')}</div>
                     )}
                     {ev.error && (
                       <div className="text-[10px] font-mono text-red-400 pt-1 border-t border-slate-800">
@@ -1543,7 +1545,7 @@ const PipelineSection: React.FC<{
                         }}
                         className="mt-1 px-2 py-0.5 text-[10px] font-medium rounded bg-amber-600 text-white hover:bg-amber-700 transition-colors"
                       >
-                        Retry
+                        {t('common.buttons.retry')}
                       </button>
                     )}
                   </div>
@@ -1587,7 +1589,7 @@ const ServiceSourceSection: React.FC<{
 
   if (linkedRepo) {
     return (
-      <Section title="Source">
+      <Section title={t('properties.source.title')}>
         <div className="rounded border border-ice-border bg-ice-raised px-2.5 py-2 space-y-1">
           <div className="flex items-center justify-between">
             <span className="text-ice-sm font-mono text-ice-text-1">{linkedRepo}</span>
@@ -1595,7 +1597,7 @@ const ServiceSourceSection: React.FC<{
           {linkedBranch && <div className="text-ice-xs text-ice-text-3 font-mono">&rarr; {linkedBranch}</div>}
           {sourceBlockName && (
             <div className="text-ice-xs text-ice-text-3">
-              Managed by <span className="text-ice-text-2 font-medium">{sourceBlockName}</span> block
+              {t('properties.source.managedBy')} <span className="text-ice-text-2 font-medium">{sourceBlockName}</span> {t('properties.source.block')}
             </div>
           )}
         </div>
@@ -1604,12 +1606,11 @@ const ServiceSourceSection: React.FC<{
   }
 
   return (
-    <Section title="Source">
+    <Section title={t('properties.source.title')}>
       <div className="rounded border border-dashed border-ice-border px-2.5 py-3 text-center space-y-1.5">
-        <div className="text-ice-sm text-ice-text-3">No source connected</div>
+        <div className="text-ice-sm text-ice-text-3">{t('properties.source.noSourceConnected')}</div>
         <div className="text-ice-xs text-ice-text-3 leading-relaxed">
-          Add a <span className="text-ice-text-2 font-medium">GitHub Repo</span> block from the palette and connect it
-          to this service to enable CI/CD.
+          {t('properties.source.noSourceHint')}
         </div>
       </div>
     </Section>
@@ -1772,7 +1773,7 @@ const SourceRepositorySection: React.FC<{
   return (
     <>
       {/* Repository */}
-      <Section title="Repository">
+      <Section title={t('properties.source.repository')}>
         <RepoSelector
           value={nodeRepo}
           onChange={(repo) => {
@@ -1787,7 +1788,7 @@ const SourceRepositorySection: React.FC<{
 
       {/* Branch */}
       {nodeRepo && (
-        <Section title="Branch">
+        <Section title={t('properties.source.branch')}>
           <select
             value={nodeBranch}
             onChange={(e) => onUpdateField('branch', e.target.value)}
@@ -1797,7 +1798,7 @@ const SourceRepositorySection: React.FC<{
               branches.map((b) => (
                 <option key={b.name} value={b.name}>
                   {b.name}
-                  {b.protected ? ' (protected)' : ''}
+                  {b.protected ? ` ${t('properties.source.branchProtected')}` : ''}
                 </option>
               ))
             ) : (
@@ -1813,18 +1814,18 @@ const SourceRepositorySection: React.FC<{
 
       {/* Build */}
       {nodeRepo && (
-        <Section title="Build">
+        <Section title={t('properties.source.build')}>
           <div className="space-y-2">
             <TextField
-              label="Build command"
+              label={t('properties.source.buildCommand')}
               value={buildCommand}
-              placeholder="npm run build"
+              placeholder={t('properties.source.buildCommandPlaceholder')}
               onChange={(v) => onUpdateField('buildCommand', v)}
             />
             <TextField
-              label="Output directory"
+              label={t('properties.source.outputDirectory')}
               value={outputDirectory}
-              placeholder="dist"
+              placeholder={t('properties.source.outputDirPlaceholder')}
               onChange={(v) => onUpdateField('outputDirectory', v)}
             />
           </div>
@@ -1840,11 +1841,11 @@ const SourceRepositorySection: React.FC<{
           return (
             <Section title={`Triggers · ${activeEnvName}`}>
               {envRules.length === 0 && autoCreated && (
-                <div className="text-ice-xs text-ice-text-3 py-1">Setting up pipeline...</div>
+                <div className="text-ice-xs text-ice-text-3 py-1">{t('pipeline.settingUp')}</div>
               )}
 
               {envRules.length === 0 && !autoCreated && (
-                <div className="text-ice-xs text-ice-text-3 py-1">No triggers for this environment</div>
+                <div className="text-ice-xs text-ice-text-3 py-1">{t('pipeline.noTriggersForEnv')}</div>
               )}
 
               {/* One row per connected service — toggle + trigger type + branch (read-only) + service name */}
@@ -1858,7 +1859,7 @@ const SourceRepositorySection: React.FC<{
                     }`}
                   >
                     <span className={`text-ice-xs ${!svcRule?.enabled ? 'text-ice-text-1' : 'text-ice-text-3'}`}>
-                      manual
+                      {t('pipeline.manual')}
                     </span>
 
                     {/* Toggle */}
@@ -1878,7 +1879,7 @@ const SourceRepositorySection: React.FC<{
                     </button>
 
                     <span className={`text-ice-xs ${svcRule?.enabled ? 'text-emerald-500' : 'text-ice-text-3'}`}>
-                      auto
+                      {t('pipeline.auto')}
                     </span>
 
                     {/* Deploy button — always visible for manual trigger */}
@@ -1891,7 +1892,7 @@ const SourceRepositorySection: React.FC<{
                         }}
                         className="ml-auto px-2 py-0.5 text-ice-xs rounded bg-emerald-600 text-white hover:bg-emerald-700 transition-colors font-medium"
                       >
-                        Deploy
+                        {t('common.buttons.deploy')}
                       </button>
                     )}
                   </div>
@@ -1903,9 +1904,9 @@ const SourceRepositorySection: React.FC<{
 
       {/* No services connected hint */}
       {nodeRepo && connectedServices.length === 0 && (
-        <Section title="Triggers">
+        <Section title={t('pipeline.triggers')}>
           <div className="text-ice-xs text-ice-text-3">
-            Connect this block to a service to configure deploy triggers.
+            {t('properties.noServiceHint')}
           </div>
         </Section>
       )}
@@ -1923,7 +1924,7 @@ const SourceRepositorySection: React.FC<{
           if (activeStatuses.length === 0) return null;
 
           return (
-            <Section title="Live Build">
+            <Section title={t('pipeline.liveBuild')}>
               <div className="rounded border border-ice-border bg-slate-950 p-2 max-h-32 overflow-y-auto font-mono text-[10px] leading-relaxed space-y-0.5">
                 {activeStatuses.map(({ svc, status }) => {
                   // Elapsed time since build started
@@ -1942,7 +1943,7 @@ const SourceRepositorySection: React.FC<{
                         {timeStr && (
                           <span className={`ml-auto ${timeoutWarn ? 'text-amber-400' : 'text-slate-500'}`}>
                             {timeStr}
-                            {timeoutWarn ? ' (timeout soon)' : ''}
+                            {timeoutWarn ? ` ${t('pipeline.timeoutSoon')}` : ''}
                           </span>
                         )}
                       </div>
@@ -1984,7 +1985,7 @@ const DeployHistory: React.FC<{ cardId: string }> = ({ cardId }) => {
   if (history.length === 0) return null;
 
   return (
-    <Section title="History">
+    <Section title={t('properties.deploy.history')}>
       <div className="space-y-1">
         {history.map((d, i) => {
           const date = new Date(d.created_at);
@@ -2037,7 +2038,6 @@ const InlineConnectionEditor: React.FC<{
   dispatch: AppDispatch;
 }> = ({ edge, thisNodeId, nodes, edges, dispatch }) => {
   const [expanded, setExpanded] = useState(false);
-  const _isIncoming = edge.target === thisNodeId;
   const sourceNode = nodes.find((n) => n.id === edge.source);
   const targetNode = nodes.find((n) => n.id === edge.target);
   const sourceLabel = (sourceNode?.data?.label as string) || edge.source.slice(0, 8);
@@ -2065,9 +2065,6 @@ const InlineConnectionEditor: React.FC<{
   };
 
   const showEnvVar = !!envVarsNode && !!envVar;
-
-  // Connection type label for the visual
-  const _typeLabel = connCategory || 'connection';
 
   return (
     <div className="rounded border border-ice-border overflow-hidden">
@@ -2122,7 +2119,7 @@ const InlineConnectionEditor: React.FC<{
 
           {/* Port — unified with env var when EnvVars block is connected */}
           <div className="space-y-1">
-            <label className="text-ice-2xs text-ice-text-3">Port</label>
+            <label className="text-ice-2xs text-ice-text-3">{t('properties.edge.portLabel')}</label>
             {envVarsNode ? (
               <div className="flex items-center gap-1">
                 <select
@@ -2140,7 +2137,7 @@ const InlineConnectionEditor: React.FC<{
                   className="flex-1 min-w-0 px-1.5 py-1.5 text-ice-xs rounded-l border border-ice-border bg-ice-base text-amber-400 font-mono focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   <option value="" className="text-ice-text-1">
-                    custom
+                    {t('properties.edge.customOption')}
                   </option>
                   {envVarsVariables.map((v) => (
                     <option key={v.name} value={v.name}>
@@ -2183,7 +2180,7 @@ const InlineConnectionEditor: React.FC<{
             onClick={() => dispatch(deleteCardEdge(edge.id))}
             className="w-full py-1 text-ice-2xs text-red-400 hover:bg-red-950/30 rounded transition-colors"
           >
-            Remove connection
+            {t('pipeline.removeConnection')}
           </button>
         </div>
       )}
@@ -2212,7 +2209,7 @@ const RepoDeployList: React.FC<{
   };
 
   return (
-    <Section title="Service Deploys">
+    <Section title={t('pipeline.serviceDeploys')}>
       <div className="space-y-1">
         {events.slice(0, 8).map((ev) => {
           const isExpanded = expandedId === ev.id;
@@ -2331,28 +2328,28 @@ const EnvVarsEditor: React.FC<{
   };
 
   return (
-    <Section title="Variables">
+    <Section title={t('properties.envVars.title')}>
       <div className="space-y-1.5">
         {variables.map((v, i) => (
           <div key={i} className="flex items-center gap-1">
             <input
               value={v.name}
               onChange={(e) => handleUpdate(i, 'name', e.target.value)}
-              placeholder="KEY"
+              placeholder={t('properties.envVars.keyPlaceholder')}
               className="flex-1 min-w-0 px-1.5 py-1 text-ice-xs font-mono rounded border border-ice-border bg-ice-base text-ice-text-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
             <span className="text-ice-text-3 text-ice-xs">=</span>
             <input
               value={v.isSecret ? '••••••' : v.value}
               onChange={(e) => handleUpdate(i, 'value', e.target.value)}
-              placeholder="value"
+              placeholder={t('properties.envVars.valuePlaceholder')}
               type={v.isSecret ? 'password' : 'text'}
               className="flex-1 min-w-0 px-1.5 py-1 text-ice-xs font-mono rounded border border-ice-border bg-ice-base text-ice-text-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
             <button
               onClick={() => handleUpdate(i, 'isSecret', !v.isSecret)}
               className={`p-0.5 rounded text-ice-xs transition-colors ${v.isSecret ? 'text-amber-500' : 'text-ice-text-3 hover:text-ice-text-2'}`}
-              title={v.isSecret ? 'Secret (hidden)' : 'Make secret'}
+              title={v.isSecret ? t('properties.envVars.secretTitle') : t('properties.envVars.makeSecretTitle')}
             >
               {v.isSecret ? '🔒' : '🔓'}
             </button>
@@ -2365,11 +2362,10 @@ const EnvVarsEditor: React.FC<{
           </div>
         ))}
         <button onClick={handleAdd} className="text-ice-xs text-ice-text-3 hover:text-blue-400 transition-colors">
-          + Add variable
+          {t('properties.envVars.addVariable')}
         </button>
       </div>
     </Section>
   );
 };
 
-export default PropertiesPanel;

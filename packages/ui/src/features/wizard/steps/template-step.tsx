@@ -18,6 +18,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from '../../../i18n';
 import {
   ALL_TEMPLATES,
   TEMPLATE_CATEGORIES,
@@ -64,6 +65,7 @@ export const TemplateStep: React.FC<TemplateStepProps> = ({
   onSelect,
   onSearchChange,
 }) => {
+  const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState<TemplateCategory | 'all'>('all');
 
   const filtered = useMemo(() => {
@@ -79,8 +81,8 @@ export const TemplateStep: React.FC<TemplateStepProps> = ({
   return (
     <div className="space-y-3">
       <div>
-        <h3 className="text-sm font-semibold text-ice-text-1 mb-1">Choose a Template</h3>
-        <p className="text-xs text-ice-text-2 mb-3">Start from a pre-built template or a blank canvas</p>
+        <h3 className="text-sm font-semibold text-ice-text-1 mb-1">{t('wizard.template.title')}</h3>
+        <p className="text-xs text-ice-text-2 mb-3">{t('wizard.template.hint')}</p>
       </div>
 
       {/* Category tabs */}
@@ -94,7 +96,7 @@ export const TemplateStep: React.FC<TemplateStepProps> = ({
               : 'bg-ice-surface text-ice-text-2 hover:text-ice-text-1 hover:bg-ice-hover',
           )}
         >
-          All
+          {t('wizard.template.categoryAll')}
         </button>
         {TEMPLATE_CATEGORIES.map((cat) => {
           const CatIcon = ICON_MAP[cat.icon] || Zap;
@@ -127,7 +129,7 @@ export const TemplateStep: React.FC<TemplateStepProps> = ({
       </div>
 
       {/* Search */}
-      <SearchInput value={searchQuery} onChange={onSearchChange} placeholder="Search templates..." />
+      <SearchInput value={searchQuery} onChange={onSearchChange} placeholder={t('wizard.template.searchPlaceholder')} />
 
       {/* Template grid */}
       <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-1">
@@ -145,10 +147,10 @@ export const TemplateStep: React.FC<TemplateStepProps> = ({
             <div className="flex h-7 w-7 items-center justify-center rounded-md bg-ice-raised">
               <FileCode2 className="h-3.5 w-3.5 text-ice-text-2" />
             </div>
-            <span className="text-xs font-semibold text-ice-text-1">Blank Canvas</span>
+            <span className="text-xs font-semibold text-ice-text-1">{t('wizard.template.blankCanvas')}</span>
           </div>
           <p className="text-ice-xs text-ice-text-2 leading-snug">
-            Start with an empty canvas and build your infrastructure from scratch.
+            {t('wizard.template.blankCanvasDesc')}
           </p>
         </button>
 
@@ -199,7 +201,7 @@ export const TemplateStep: React.FC<TemplateStepProps> = ({
                 >
                   {secBadge.label}
                 </span>
-                <span className="text-ice-xs text-ice-text-3">{template.blocks.length} blocks</span>
+                <span className="text-ice-xs text-ice-text-3">{template.blocks.length} {t('wizard.template.blocks')}</span>
                 {/* Provider compatibility indicator */}
                 {allSupported ? (
                   <span className="flex items-center gap-0.5 text-ice-2xs text-emerald-400">

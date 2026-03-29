@@ -8,25 +8,47 @@ directories:
 
 files:
   - dist/**/*
-  - resources/**/*
+  - node_modules/.prisma/**/*
+  - "!**/backend/.env"
+  - "!**/.env"
+  - "!**/.env.*"
+asarUnpack:
+  - "**/*.node"
+  - "node_modules/.prisma/**/*.node"
+npmRebuild: true
+buildDependenciesFromSource: false
+nodeGypRebuild: false
+
+extraResources:
+  - from: resources/icons
+    to: icons
+    filter:
+      - "**/*"
+  - from: ../../packages/web/dist
+    to: web-dist
+    filter:
+      - "**/*"
+  - from: resources/prisma-client
+    to: prisma-client
+    filter:
+      - "**/*"
 
 mac:
   category: public.app-category.developer-tools
   icon: resources/icons/512x512.png
+  x64ArchFiles: "Contents/Resources/app.asar.unpacked/node_modules/**/*.node"
   target:
     - target: dmg
-      arch: [universal]
+      arch: [arm64]
     - target: zip
-      arch: [universal]
-  hardenedRuntime: true
-  entitlements: build/entitlements.mac.plist
-  entitlementsInherit: build/entitlements.mac.plist
+      arch: [arm64]
+  hardenedRuntime: false
 
 win:
   icon: resources/icons/icon.ico
   target:
     - target: nsis
-      arch: [x64, arm64]
+      arch: [x64]
 
 nsis:
   oneClick: false
@@ -44,5 +66,5 @@ linux:
 
 publish:
   provider: github
-  owner: light-cloud
-  repo: ice-desktop
+  owner: light-cloud-com
+  repo: ice

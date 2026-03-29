@@ -26,6 +26,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { TREE_INDENT_PX, TREE_INDENT_BASE } from '../../../config/canvas-constants';
 import { ENV_DOT_COLORS } from '../../../config/color-palette';
+import { useTranslation } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
 import { setActiveCard, deleteCard } from '../../../store/slices/cards-slice';
 import {
@@ -94,6 +95,7 @@ interface ContextMenuState {
 // =============================================================================
 
 export const ProjectTree: React.FC = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const selectedOrg = useSelector((state: RootState) => state.account?.selectedOrg);
   const orgId = selectedOrg?.id || '';
@@ -266,8 +268,8 @@ export const ProjectTree: React.FC = () => {
 
   const handleCreateFolder = useCallback(() => {
     setCreatingFolder('root');
-    setNewFolderName('New Folder');
-  }, []);
+    setNewFolderName(t('projectTree.defaultFolderName'));
+  }, [t]);
 
   const handleFinishCreateFolder = useCallback(async () => {
     if (newFolderName.trim() && orgId) {
@@ -543,7 +545,7 @@ export const ProjectTree: React.FC = () => {
           )}
         >
           <Plus className="w-3 h-3" />
-          New Project
+          {t('projectTree.newProject')}
         </button>
         <button
           onClick={handleCreateFolder}
@@ -553,7 +555,7 @@ export const ProjectTree: React.FC = () => {
           )}
         >
           <FolderPlus className="w-3 h-3" />
-          New Folder
+          {t('projectTree.newFolder')}
         </button>
       </div>
 
@@ -612,8 +614,8 @@ export const ProjectTree: React.FC = () => {
         {topFolders.length === 0 && topProjects.length === 0 && creatingFolder === null && (
           <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
             <FolderOpen className="w-8 h-8 text-ice-text-3 mb-3" />
-            <p className="text-ice-base text-ice-text-3 mb-1">No projects yet</p>
-            <p className="text-ice-sm text-ice-text-3">Click "New Project" to get started</p>
+            <p className="text-ice-base text-ice-text-3 mb-1">{t('projectTree.emptyNoProjects')}</p>
+            <p className="text-ice-sm text-ice-text-3">{t('projectTree.emptyHint')}</p>
           </div>
         )}
       </div>
@@ -639,7 +641,7 @@ export const ProjectTree: React.FC = () => {
                 className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-ice-base text-ice-text-1 hover:bg-ice-active transition-colors"
               >
                 <Pencil className="w-3 h-3" />
-                Rename
+                {t('projectTree.contextRename')}
               </button>
               {isNested && isProject && (
                 <button
@@ -650,7 +652,7 @@ export const ProjectTree: React.FC = () => {
                   className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-ice-base text-ice-text-1 hover:bg-ice-active transition-colors"
                 >
                   <FolderInput className="w-3 h-3" />
-                  Move to Top Level
+                  {t('projectTree.contextMoveToTopLevel')}
                 </button>
               )}
               {isNested && isFolder && (
@@ -662,7 +664,7 @@ export const ProjectTree: React.FC = () => {
                   className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-ice-base text-ice-text-1 hover:bg-ice-active transition-colors"
                 >
                   <FolderInput className="w-3 h-3" />
-                  Move to Top Level
+                  {t('projectTree.contextMoveToTopLevel')}
                 </button>
               )}
               {isFolder && (
@@ -670,12 +672,12 @@ export const ProjectTree: React.FC = () => {
                   onClick={() => {
                     setContextMenu(null);
                     setCreatingFolder(contextMenu.id);
-                    setNewFolderName('New Folder');
+                    setNewFolderName(t('projectTree.defaultFolderName'));
                   }}
                   className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-ice-base text-ice-text-1 hover:bg-ice-active transition-colors"
                 >
                   <FolderPlus className="w-3 h-3" />
-                  New Subfolder
+                  {t('projectTree.contextNewSubfolder')}
                 </button>
               )}
               <div className="h-px bg-ice-border my-1" />
@@ -684,7 +686,7 @@ export const ProjectTree: React.FC = () => {
                 className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-ice-base text-red-400 hover:bg-red-500/10 transition-colors"
               >
                 <Trash2 className="w-3 h-3" />
-                Delete
+                {t('projectTree.contextDelete')}
               </button>
             </div>
           );
@@ -693,4 +695,3 @@ export const ProjectTree: React.FC = () => {
   );
 };
 
-export default ProjectTree;

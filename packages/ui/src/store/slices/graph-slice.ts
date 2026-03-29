@@ -72,7 +72,7 @@ interface SerializedGraph {
   metadata: Record<string, unknown>;
 }
 
-export interface GraphState {
+interface GraphState {
   iceGraph: SerializedGraph | null;
   nodes: CanvasNode[];
   edges: CanvasEdge[];
@@ -120,7 +120,7 @@ export const saveGraph = createAsyncThunk('graph/save', async (filePath?: string
 // Transform Options
 // =============================================================================
 
-export interface TransformOptions {
+interface TransformOptions {
   viewLevel: ViewLevel;
   emptyContainerMode: EmptyContainerMode;
 }
@@ -134,7 +134,7 @@ const DEFAULT_OPTIONS: TransformOptions = {
 // ICE to Canvas Transform
 // =============================================================================
 
-export function iceToCanvas(
+function iceToCanvas(
   graph: SerializedGraph,
   options: TransformOptions = DEFAULT_OPTIONS,
 ): { nodes: CanvasNode[]; edges: CanvasEdge[] } {

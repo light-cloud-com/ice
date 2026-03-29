@@ -1,5 +1,7 @@
 /**
- * Main Application Component
+ * Main Application Component — Community Edition
+ *
+ * No login/signup — app loads straight to content.
  *
  * Route-based project navigation:
  *   /                         → Home (root folder view)
@@ -11,11 +13,10 @@
  *   /team                     → Team management
  */
 
-import { UserSettingsPage, TeamPage } from '@ui/features/account/components';
+// Account components not needed in community (single user)
 import { DebugOverlay } from '@ui/features/debug/components/debug-overlay';
 import { OnboardingPage, OnboardingChecklist } from '@ui/features/onboarding';
 import { ProjectWizard } from '@ui/features/wizard';
-import { isAuthenticated } from '@ui/shared/api/auth';
 import { AppBar } from '@ui/shared/components/app-bar';
 import { ErrorBoundary } from '@ui/shared/components/error-boundary';
 import { MainLayout } from '@ui/shared/components/main-layout';
@@ -25,26 +26,18 @@ import { fetchProfile } from '@ui/store/slices/account-slice';
 import { initializeGraph } from '@ui/store/slices/graph-slice';
 import { setActiveProject } from '@ui/store/slices/projects-slice';
 import React, { useEffect } from 'react';
+import { useTranslation, LocaleProvider } from '@ui/i18n';
 import { useSelector, useDispatch } from 'react-redux';
-import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import type { RootState, AppDispatch } from '@ui/store';
-import { AuthCallbackPage } from '@/pages/auth-callback';
 import { FolderView } from '@/pages/folder-view';
-import { InviteAcceptPage } from '@/pages/invite-accept';
-import { LoginPage } from '@/pages/login';
 import { ProjectActivity } from '@/pages/project/activity';
 import { ProjectDeployments } from '@/pages/project/deployments';
 import { ProjectSettings } from '@/pages/project/settings';
-import { SignupPage } from '@/pages/signup';
-
-// ── Auth ────────────────────────────────────────────────────────────────────
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  if (!isAuthenticated()) return <Navigate to="/login" replace />;
-  return <>{children}</>;
-};
 
 // ── Dynamic content resolver ────────────────────────────────────────────────
 const DynamicContent: React.FC = () => {
+  const { t } = useTranslation();
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
@@ -90,13 +83,13 @@ const DynamicContent: React.FC = () => {
       <div className="h-full flex flex-col bg-background">
         <AppBar />
         <div className="flex-1 flex flex-col items-center justify-center gap-3">
-          <span className="text-6xl font-bold text-ice-text-3">404</span>
-          <p className="text-ice-text-2 text-sm">This page doesn't exist</p>
+          <span className="text-6xl font-bold text-ice-text-3">{t('app.notFound.code')}</span>
+          <p className="text-ice-text-2 text-sm">{t('app.notFound.message')}</p>
           <button
             onClick={() => navigate(resolved.orgPrefix || '/')}
             className="ice-btn ice-btn-primary text-ice-md mt-2"
           >
-            Go home
+            {t('app.notFound.button')}
           </button>
         </div>
       </div>
@@ -158,8 +151,7 @@ const DynamicContent: React.FC = () => {
 
   // ── Folder or root ────────────────────────────────────────────────────
   const folderId = resolved.type === 'folder' ? resolved.id : null;
-  const folderName = resolved.type === 'folder' ? resolved.name : 'Projects';
-  // basePath = the URL path for this folder (from resolved breadcrumbs), always includes org prefix
+  const folderName = resolved.type === 'folder' ? resolved.name : t('app.folderView.rootName');
   const folderBasePath =
     resolved.breadcrumbs.length > 0 ? resolved.breadcrumbs[resolved.breadcrumbs.length - 1].path : resolved.orgPrefix;
 
@@ -177,75 +169,26 @@ const DynamicContent: React.FC = () => {
   );
 };
 
-// ── Page layout for account pages ───────────────────────────────────────────
-
-const PageLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // FE-8: fetchProfile is dispatched once at DynamicContent level via account-slice thunk idempotency
-  const dispatch = useDispatch<AppDispatch>();
-  const user = useSelector((s: RootState) => s.account.user);
-  useEffect(() => {
-    if (!user) dispatch(fetchProfile());
-  }, [dispatch, user]);
-
-  return (
-    <div className="h-full flex flex-col bg-ice-surface">
-      <AppBar />
-      <div className="flex-1 overflow-y-auto p-8">{children}</div>
-    </div>
-  );
-};
-
 // ── Root ─────────────────────────────────────────────────────────────────────
 
 const App: React.FC = () => (
-  <ErrorBoundary name="App">
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/auth/callback" element={<AuthCallbackPage />} />
-        <Route
-          path="/onboarding"
-          element={
-            <ProtectedRoute>
-              <OnboardingPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/invite/:token" element={<InviteAcceptPage />} />
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute>
-              <PageLayout>
-                <UserSettingsPage />
-              </PageLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/team"
-          element={
-            <ProtectedRoute>
-              <PageLayout>
-                <TeamPage />
-              </PageLayout>
-            </ProtectedRoute>
-          }
-        />
+  <LocaleProvider>
+    <ErrorBoundary name="App">
+      <BrowserRouter>
+        <Routes>
+        <Route path="/onboarding" element={<OnboardingPage />} />
         <Route
           path="/*"
           element={
-            <ProtectedRoute>
-              <ErrorBoundary name="Canvas">
-                <DynamicContent />
-              </ErrorBoundary>
-            </ProtectedRoute>
+            <ErrorBoundary name="Canvas">
+              <DynamicContent />
+            </ErrorBoundary>
           }
         />
-      </Routes>
-    </BrowserRouter>
-  </ErrorBoundary>
+        </Routes>
+      </BrowserRouter>
+    </ErrorBoundary>
+  </LocaleProvider>
 );
 
 export default App;

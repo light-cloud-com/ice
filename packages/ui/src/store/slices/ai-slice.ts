@@ -13,14 +13,14 @@ import type { AiCanvasOp, AiResponse } from '@ice/types';
 // Types
 // =============================================================================
 
-export interface AiHistoryEntry {
+interface AiHistoryEntry {
   intent: string;
   explanation: string;
   operationCount: number;
   timestamp: number;
 }
 
-export interface AiState {
+interface AiState {
   /** Whether an AI request is currently in flight */
   isProcessing: boolean;
   /** The current user intent being processed */

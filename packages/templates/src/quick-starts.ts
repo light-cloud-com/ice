@@ -9,7 +9,7 @@
 import type { ComposedTemplate } from './types';
 
 /** SSR Site + Database: Server-rendered app with a managed database */
-export const quickStartWebsiteDb: ComposedTemplate = {
+const quickStartWebsiteDb: ComposedTemplate = {
   id: 'qs-website-db',
   name: 'Website + Database',
   description: 'Server-rendered app with a managed database',
@@ -37,7 +37,7 @@ export const quickStartWebsiteDb: ComposedTemplate = {
 };
 
 /** Web App + API: Static frontend, gateway, API service, and database */
-export const quickStartWebAppApi: ComposedTemplate = {
+const quickStartWebAppApi: ComposedTemplate = {
   id: 'qs-webapp-api',
   name: 'Web App + API',
   description: 'Static frontend with a backend API and database',
@@ -74,7 +74,7 @@ export const quickStartWebAppApi: ComposedTemplate = {
 };
 
 /** API Only: Gateway, API service, and database */
-export const quickStartApiOnly: ComposedTemplate = {
+const quickStartApiOnly: ComposedTemplate = {
   id: 'qs-api-only',
   name: 'API Only',
   description: 'Backend API with database — no frontend',
@@ -104,7 +104,7 @@ export const quickStartApiOnly: ComposedTemplate = {
 };
 
 /** Data Pipeline: Queue, worker, database, and storage */
-export const quickStartDataPipeline: ComposedTemplate = {
+const quickStartDataPipeline: ComposedTemplate = {
   id: 'qs-data-pipeline',
   name: 'Data Pipeline',
   description: 'Queue-driven processing with storage',

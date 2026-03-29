@@ -14,7 +14,7 @@ import { getApi } from '../../shared/api/api-adapter';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-export type PipelineStatus = 'idle' | 'queued' | 'building' | 'deploying' | 'success' | 'failed';
+type PipelineStatus = 'idle' | 'queued' | 'building' | 'deploying' | 'success' | 'failed';
 
 export interface DeployStep {
   step: string;
@@ -84,7 +84,7 @@ export interface FrameworkDetection {
   detectedFiles: string[];
 }
 
-export interface PipelineState {
+interface PipelineState {
   // Per-node pipeline status (for canvas badges)
   nodeStatus: Record<string, NodePipelineStatus>;
 

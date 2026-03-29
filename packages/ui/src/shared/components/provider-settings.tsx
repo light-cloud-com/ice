@@ -25,6 +25,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { getApi } from '../api/api-adapter';
 import { useGCPOAuth } from '../hooks/use-gcp-oauth';
+import { useTranslation } from '../../i18n';
 import { cn } from '../utils/cn';
 
 // Provider configuration type
@@ -160,6 +161,7 @@ interface ProviderSettingsProps {
 }
 
 export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onClose, onImportComplete }) => {
+  const { t } = useTranslation();
   // State for each provider
   const [providerStates, setProviderStates] = useState<
     Record<
@@ -206,7 +208,7 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
 
   // GCP OAuth via Google Identity Services
   const reloadGCPState = async () => {
-    setSuccess('Connected to Google Cloud');
+    setSuccess(t('providerSettings.connect.connectedToCloud'));
     const isConn = await getApi().provider.isConnected('gcp');
     const projects = isConn ? await getApi().provider.getProjects('gcp') : [];
     setProviderStates((prev) => ({
@@ -279,7 +281,7 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
             projects: result.projects || [],
           },
         }));
-        setSuccess(`Connected to ${config?.name || providerId}`);
+        setSuccess(t('providerSettings.connect.connectedTo', { name: config?.name || providerId }));
       } else {
         throw new Error(result.error || 'Connection failed');
       }
@@ -303,7 +305,7 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
           formValues: {},
         },
       }));
-      setSuccess('Disconnected successfully');
+      setSuccess(t('providerSettings.connect.disconnectedSuccess'));
     } catch (err) {
       setError(String(err instanceof Error ? err.message : err));
     }
@@ -325,7 +327,7 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
         ...providerStates[providerId]?.formValues,
         _projects: JSON.stringify(remainingProjects),
       });
-      setSuccess('Project removed');
+      setSuccess(t('providerSettings.projects.removed'));
     } catch (err) {
       setError(String(err instanceof Error ? err.message : err));
     }
@@ -341,7 +343,7 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
       const result = await getApi().provider.import(providerId, projectId);
 
       if (result.success) {
-        setSuccess(`Imported ${result.graph?.nodes?.length || 0} resources from ${projectId}`);
+        setSuccess(t('providerSettings.import.success', { count: result.graph?.nodes?.length || 0, projectId }));
 
         // Notify parent component about the import
         if (onImportComplete) {
@@ -371,7 +373,7 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
             <Cloud className="w-5 h-5 text-primary" />
-            <h2 className="font-semibold">Cloud Providers</h2>
+            <h2 className="font-semibold">{t('providerSettings.title')}</h2>
           </div>
           <button onClick={onClose} className="p-1 hover:bg-muted rounded">
             <X className="w-4 h-4" />
@@ -395,7 +397,7 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
         {/* Content */}
         <div className="p-4 overflow-auto max-h-[60vh]">
           <p className="text-sm text-muted-foreground mb-4">
-            Connect to your cloud providers to import existing infrastructure directly.
+            {t('providerSettings.description')}
           </p>
 
           <div className="space-y-3">
@@ -439,10 +441,10 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
                     {state.connected ? (
                       <span className="flex items-center gap-1 text-xs text-green-600">
                         <Check className="w-3 h-3" />
-                        Connected
+                        {t('providerSettings.status.connected')}
                       </span>
                     ) : (
-                      <span className="text-xs text-muted-foreground">Not connected</span>
+                      <span className="text-xs text-muted-foreground">{t('providerSettings.status.notConnected')}</span>
                     )}
                   </button>
 
@@ -453,7 +455,7 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
                         /* Connected state - show projects and import button */
                         <div className="space-y-3 mt-3">
                           <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">Projects ({state.projects.length})</span>
+                            <span className="text-sm font-medium">{t('providerSettings.projects.label', { count: state.projects.length })}</span>
                             <div className="flex items-center gap-2">
                               {provider.id === 'gcp' && (
                                 <button
@@ -461,14 +463,14 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
                                   className="flex items-center gap-1 text-xs text-primary hover:text-primary/80"
                                 >
                                   <Plus className="w-3 h-3" />
-                                  Add Project
+                                  {t('providerSettings.projects.addProject')}
                                 </button>
                               )}
                               <button
                                 onClick={() => handleDisconnect(provider.id)}
                                 className="text-xs text-red-500 hover:text-red-600"
                               >
-                                Disconnect All
+                                {t('providerSettings.projects.disconnectAll')}
                               </button>
                             </div>
                           </div>
@@ -476,7 +478,7 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
                           {/* Add project form for GCP */}
                           {showAddProject === provider.id && provider.id === 'gcp' && (
                             <div className="p-3 bg-muted/50 rounded-md space-y-2 border border-dashed border-border">
-                              <div className="text-xs font-medium text-muted-foreground">Add another GCP project</div>
+                              <div className="text-xs font-medium text-muted-foreground">{t('providerSettings.projects.addAnother')}</div>
                               {provider.configFields.map((field) => (
                                 <div key={field.name}>
                                   <label className="text-xs text-muted-foreground">{field.label}</label>
@@ -511,7 +513,7 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
                                       serviceAccountKey: state.formValues.new_serviceAccountKey || '',
                                     };
                                     if (!newCreds.serviceAccountKey) {
-                                      setError('Service account key is required');
+                                      setError(t('providerSettings.connect.serviceAccountRequired'));
                                       return;
                                     }
                                     setConnecting(provider.id);
@@ -532,9 +534,9 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
                                           },
                                         }));
                                         setShowAddProject(null);
-                                        setSuccess('Project added successfully');
+                                        setSuccess(t('providerSettings.projects.addedSuccess'));
                                       } else {
-                                        setError(result.error || 'Failed to add project');
+                                        setError(result.error || t('providerSettings.connect.failedToAdd'));
                                       }
                                     } catch (err) {
                                       setError(String(err));
@@ -550,13 +552,13 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
                                   ) : (
                                     <Plus className="w-3 h-3" />
                                   )}
-                                  Add
+                                  {t('providerSettings.projects.addButton')}
                                 </button>
                                 <button
                                   onClick={() => setShowAddProject(null)}
                                   className="px-3 py-1.5 text-xs rounded hover:bg-muted"
                                 >
-                                  Cancel
+                                  {t('providerSettings.projects.cancelButton')}
                                 </button>
                               </div>
                             </div>
@@ -588,12 +590,12 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
                                       {importing === `${provider.id}-${project.id}` ? (
                                         <>
                                           <RefreshCw className="w-3 h-3 animate-spin" />
-                                          Importing...
+                                          {t('providerSettings.import.importing')}
                                         </>
                                       ) : (
                                         <>
                                           <Download className="w-3 h-3" />
-                                          Import
+                                          {t('providerSettings.import.button')}
                                         </>
                                       )}
                                     </button>
@@ -601,7 +603,7 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
                                       <button
                                         onClick={() => handleRemoveProject(provider.id, project.id)}
                                         className="p-1.5 text-muted-foreground hover:text-red-500 rounded hover:bg-muted"
-                                        title="Remove project"
+                                        title={t('providerSettings.import.removeTooltip')}
                                       >
                                         <Trash2 className="w-3 h-3" />
                                       </button>
@@ -611,7 +613,7 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
                               ))}
                             </div>
                           ) : (
-                            <div className="text-sm text-muted-foreground text-center py-4">No projects found</div>
+                            <div className="text-sm text-muted-foreground text-center py-4">{t('providerSettings.projects.noProjects')}</div>
                           )}
                         </div>
                       ) : (
@@ -653,12 +655,12 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
                                     />
                                   </svg>
                                 )}
-                                Sign in with Google
+                                {t('providerSettings.connect.signInGoogle')}
                               </button>
 
                               <div className="flex items-center gap-3 text-xs text-muted-foreground">
                                 <div className="flex-1 border-t border-border" />
-                                <span>or use a service account key</span>
+                                <span>{t('providerSettings.connect.orServiceAccount')}</span>
                                 <div className="flex-1 border-t border-border" />
                               </div>
                             </>
@@ -689,7 +691,7 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
                                   onChange={(e) => updateFormValue(provider.id, field.name, e.target.value)}
                                   className="w-full mt-1 p-2 text-sm border border-input rounded-md bg-background"
                                 >
-                                  <option value="">Select...</option>
+                                  <option value="">{t('providerSettings.connect.select')}</option>
                                   {field.options?.map((opt) => (
                                     <option key={opt} value={opt}>
                                       {opt}
@@ -728,12 +730,12 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
                             {connecting === provider.id ? (
                               <>
                                 <RefreshCw className="w-4 h-4 animate-spin" />
-                                Connecting...
+                                {t('providerSettings.connect.connecting')}
                               </>
                             ) : (
                               <>
                                 <Check className="w-4 h-4" />
-                                Connect{provider.id === 'gcp' ? ' with Service Account' : ''}
+                                {provider.id === 'gcp' ? t('providerSettings.connect.buttonGcp') : t('providerSettings.connect.button')}
                               </>
                             )}
                           </button>
@@ -752,12 +754,10 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
               <HelpCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
               <div className="text-xs space-y-2">
                 <div>
-                  <strong>Your credentials stay in your account</strong> — ICE deploys to your own cloud projects, not
-                  ours.
+                  <strong>{t('providerSettings.info.credentialsSafe')}</strong> — {t('providerSettings.info.credentialsSafeDesc')}
                 </div>
                 <div className="pt-1 border-t border-blue-200 dark:border-blue-800">
-                  <strong>GCP:</strong> Use <em>Sign in with Google</em> for quick setup, or paste a service account key
-                  for CI/production use.
+                  {t('providerSettings.info.gcpTip')}
                 </div>
               </div>
             </div>
@@ -767,7 +767,7 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
         {/* Footer */}
         <div className="flex justify-end gap-2 p-4 border-t border-border bg-muted/20">
           <button onClick={onClose} className="px-4 py-2 text-sm rounded-md hover:bg-muted">
-            Close
+            {t('providerSettings.footer.close')}
           </button>
         </div>
       </div>
@@ -776,4 +776,3 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
   );
 };
 
-export default ProviderSettings;

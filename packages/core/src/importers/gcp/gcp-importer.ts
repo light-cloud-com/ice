@@ -312,23 +312,3 @@ function create_service(
   }
 }
 
-/**
- * Create an error result.
- */
-function _create_error_result(code: string, message: string, start_time: number): GCPImportResult {
-  return {
-    success: false,
-    resources: [],
-    errors: [{ code, message }],
-    warnings: [],
-    metadata: {
-      project: '',
-      regions: [],
-      zones: [],
-      services_scanned: [],
-      resource_count: 0,
-      imported_at: new Date().toISOString(),
-      duration_ms: Date.now() - start_time,
-    },
-  };
-}

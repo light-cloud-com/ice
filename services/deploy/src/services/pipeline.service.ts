@@ -12,7 +12,7 @@ import { emitPipelineUpdate, emitCardPipelineUpdate } from '@ice/shared';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-export interface CreateRuleInput {
+interface CreateRuleInput {
   cardId: string;
   nodeId: string;
   repository: string; // "owner/repo"
@@ -146,22 +146,7 @@ export async function getRulesForNode(cardId: string, nodeId: string) {
   });
 }
 
-export async function getRulesForCard(cardId: string) {
-  return prisma.deploymentRule.findMany({
-    where: { card_id: cardId },
-    orderBy: { created_at: 'asc' },
-  });
-}
-
 // ─── Deployment Events ──────────────────────────────────────────────────────
-
-export async function getEventsForRule(ruleId: string, limit = 20) {
-  return prisma.deploymentEvent.findMany({
-    where: { rule_id: ruleId },
-    orderBy: { started_at: 'desc' },
-    take: limit,
-  });
-}
 
 export async function getEventsForNode(cardId: string, nodeId: string, limit = 20) {
   // Find all cards in the same project (rules are shared across environments)

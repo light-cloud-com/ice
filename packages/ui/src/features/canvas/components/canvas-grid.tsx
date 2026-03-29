@@ -58,4 +58,3 @@ export const CanvasGrid: React.FC<CanvasGridProps> = ({ viewState, width, height
   );
 };
 
-export default CanvasGrid;

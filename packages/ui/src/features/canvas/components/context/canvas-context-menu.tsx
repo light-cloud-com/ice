@@ -6,6 +6,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation } from '../../../../i18n';
 import {
   deleteCardNode,
   deleteCardEdge,
@@ -109,6 +110,7 @@ const SUPPORTED_PROVIDERS = [
 // ── Main component ──────────────────────────────────────────────────────────
 
 export const CanvasContextMenu: React.FC = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -159,7 +161,7 @@ export const CanvasContextMenu: React.FC = () => {
         style={{ left: contextMenu.position.x, top: contextMenu.position.y }}
       >
         <MenuItem
-          label="Undo"
+          label={t('canvas.contextMenu.undo')}
           shortcut={modKey('Z')}
           disabled={!canUndo}
           onClick={() => {
@@ -168,7 +170,7 @@ export const CanvasContextMenu: React.FC = () => {
           }}
         />
         <MenuItem
-          label="Redo"
+          label={t('canvas.contextMenu.redo')}
           shortcut={isMac ? '⇧⌘Z' : 'Ctrl+Y'}
           disabled={!canRedo}
           onClick={() => {
@@ -178,7 +180,7 @@ export const CanvasContextMenu: React.FC = () => {
         />
         <Separator />
         <MenuItem
-          label="Paste"
+          label={t('canvas.contextMenu.paste')}
           shortcut={modKey('V')}
           onClick={() => {
             close();
@@ -186,7 +188,7 @@ export const CanvasContextMenu: React.FC = () => {
           }}
         />
         <MenuItem
-          label="Select All"
+          label={t('canvas.contextMenu.selectAll')}
           shortcut={modKey('A')}
           onClick={() => {
             dispatch(setSelectedNodes(activeCard?.nodes.map((n: any) => n.id) || []));
@@ -195,7 +197,7 @@ export const CanvasContextMenu: React.FC = () => {
         />
         <Separator />
         <MenuItem
-          label="Auto-organize"
+          label={t('canvas.contextMenu.autoOrganize')}
           onClick={() => {
             dispatch(autoOrganizeCard());
             close();
@@ -241,7 +243,7 @@ export const CanvasContextMenu: React.FC = () => {
         style={{ left: contextMenu.position.x, top: contextMenu.position.y }}
       >
         <MenuItem
-          label="Properties"
+          label={t('canvas.contextMenu.properties')}
           onClick={() => {
             dispatch(setSelectedNodes([targetId]));
             openProperties();
@@ -250,16 +252,16 @@ export const CanvasContextMenu: React.FC = () => {
         />
         <Separator />
         <MenuItem
-          label="Copy"
+          label={t('canvas.contextMenu.copy')}
           shortcut={modKey('C')}
           onClick={() => {
             close();
             fireKey('c', true);
           }}
         />
-        <MenuItem label="Copy as Text" onClick={copyText} />
+        <MenuItem label={t('canvas.contextMenu.copyAsText')} onClick={copyText} />
         <MenuItem
-          label="Cut"
+          label={t('canvas.contextMenu.cut')}
           shortcut={modKey('X')}
           onClick={() => {
             close();
@@ -267,7 +269,7 @@ export const CanvasContextMenu: React.FC = () => {
           }}
         />
         <MenuItem
-          label="Duplicate"
+          label={t('canvas.contextMenu.duplicate')}
           onClick={() => {
             close();
             fireKey('c', true);
@@ -275,10 +277,10 @@ export const CanvasContextMenu: React.FC = () => {
           }}
         />
         <Separator />
-        <SubMenu label="Change Provider" items={providerItems} />
+        <SubMenu label={t('canvas.contextMenu.changeProvider')} items={providerItems} />
         {isContainer && (
           <MenuItem
-            label={targetNode?.data?.folded ? 'Unfold' : 'Fold'}
+            label={targetNode?.data?.folded ? t('canvas.contextMenu.unfold') : t('canvas.contextMenu.fold')}
             onClick={() => {
               dispatch(toggleCardNodeFold(targetId));
               close();
@@ -287,7 +289,7 @@ export const CanvasContextMenu: React.FC = () => {
         )}
         {hasMultiSelection && (
           <MenuItem
-            label="Group Selection"
+            label={t('canvas.contextMenu.groupSelection')}
             shortcut={modKey('G')}
             onClick={() => {
               dispatch(groupSelectedNodes(selectedNodes));
@@ -297,7 +299,7 @@ export const CanvasContextMenu: React.FC = () => {
         )}
         <Separator />
         <MenuItem
-          label={hasMultiSelection ? `Delete ${selectedNodes.length} items` : 'Delete'}
+          label={hasMultiSelection ? t('canvas.contextMenu.deleteItems', { count: selectedNodes.length }) : t('canvas.contextMenu.delete')}
           shortcut="Del"
           danger
           onClick={() => {
@@ -327,7 +329,7 @@ export const CanvasContextMenu: React.FC = () => {
         style={{ left: contextMenu.position.x, top: contextMenu.position.y }}
       >
         <MenuItem
-          label="Properties"
+          label={t('canvas.contextMenu.properties')}
           onClick={() => {
             dispatch(setSelectedEdges([targetId]));
             openProperties();
@@ -336,7 +338,7 @@ export const CanvasContextMenu: React.FC = () => {
         />
         <Separator />
         <MenuItem
-          label="Delete Connection"
+          label={t('canvas.contextMenu.deleteConnection')}
           shortcut="Del"
           danger
           onClick={() => {
@@ -351,4 +353,3 @@ export const CanvasContextMenu: React.FC = () => {
   return null;
 };
 
-export default CanvasContextMenu;

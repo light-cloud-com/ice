@@ -19,7 +19,7 @@ import prisma from '@ice/db';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-export interface BuildConfig {
+interface BuildConfig {
   repository: string; // "owner/repo"
   branch: string;
   commitSha: string;
@@ -29,7 +29,7 @@ export interface BuildConfig {
   framework: string | null;
 }
 
-export interface BuildResult {
+interface BuildResult {
   success: boolean;
   buildDir: string;
   outputPath: string | null;

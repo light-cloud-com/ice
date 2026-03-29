@@ -49,4 +49,3 @@ export const SvgRegionLabel: React.FC<SvgRegionLabelProps> = memo(({ node }) => 
 
 SvgRegionLabel.displayName = 'SvgRegionLabel';
 
-export default SvgRegionLabel;

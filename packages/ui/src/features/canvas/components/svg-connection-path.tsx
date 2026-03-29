@@ -444,4 +444,3 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
 
 SvgConnectionPath.displayName = 'SvgConnectionPath';
 
-export default SvgConnectionPath;

@@ -15,6 +15,7 @@ import {
   DialogDescription,
 } from '../../../shared/components/ui/dialog';
 import { useGCPOAuth } from '../../../shared/hooks/use-gcp-oauth';
+import { useTranslation } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
 
 interface ProviderField {
@@ -45,6 +46,7 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
   description,
   fields,
 }) => {
+  const { t } = useTranslation();
   const [connected, setConnected] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -56,7 +58,7 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
   // GCP OAuth via Google Identity Services
   const gcpOAuth = useGCPOAuth(() => {
     setConnected(true);
-    setSuccess(`Connected to ${providerName} via Google`);
+    setSuccess(t('providerConnect.success.connectedViaGoogle', { providerName }));
     // Reload project info
     (async () => {
       const creds = await getApi().provider.getCredentials(providerId);
@@ -108,7 +110,7 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
       if (result.success) {
         setConnected(true);
         setProjectId(result.project_id || formValues.project_id || null);
-        setSuccess(`Connected to ${providerName}`);
+        setSuccess(t('providerConnect.success.connected', { providerName }));
         setFormValues({});
       } else {
         setError(result.error || 'Connection failed');
@@ -154,7 +156,7 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
               <img src={providerIcon} alt={providerName} className="w-8 h-8" />
               <div className="flex-1">
                 <div className="font-medium text-sm">{providerName}</div>
-                <div className="text-xs text-muted-foreground">{projectId ? `Project: ${projectId}` : 'Connected'}</div>
+                <div className="text-xs text-muted-foreground">{projectId ? t('providerConnect.status.project', { projectId }) : t('providerConnect.status.connected')}</div>
               </div>
               <Check className="w-5 h-5 text-emerald-500" />
             </div>
@@ -164,7 +166,7 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
               className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm rounded-md border border-border hover:bg-muted transition-colors text-muted-foreground"
             >
               <LogOut className="w-4 h-4" />
-              Disconnect
+              {t('providerConnect.disconnectButton')}
             </button>
           </div>
         ) : (
@@ -232,7 +234,7 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
               ) : (
                 <img src={providerIcon} alt="" className="w-4 h-4" />
               )}
-              Connect {providerName}
+              {t('providerConnect.connectButton', { providerName })}
             </button>
 
             {/* GCP: Setup guide + quick connect + org policy info */}
@@ -330,7 +332,7 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
                 {/* Quick connect divider */}
                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
                   <div className="flex-1 border-t border-border" />
-                  <span>or quick connect (personal accounts)</span>
+                  <span>{t('providerConnect.gcp.quickConnect.divider')}</span>
                   <div className="flex-1 border-t border-border" />
                 </div>
 
@@ -369,7 +371,7 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
                       />
                     </svg>
                   )}
-                  Sign in with Google
+                  {t('providerConnect.gcp.quickConnect.button')}
                 </button>
               </>
             )}

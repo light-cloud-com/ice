@@ -6,14 +6,14 @@
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
-export interface SendInviteParams {
+interface SendInviteParams {
   to: string;
   inviterName: string;
   orgName: string;
   token: string;
 }
 
-export interface SendProjectInviteParams {
+interface SendProjectInviteParams {
   to: string;
   inviterName: string;
   projectName: string;

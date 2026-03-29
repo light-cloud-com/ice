@@ -13,7 +13,7 @@ import { getBlueprint, expandBlueprint } from '../../../config/blocks';
 import { ARCHETYPE_COLORS } from '../../../config/color-palette';
 import { getTemplatesByCategory } from '../../../config/templates';
 import { expandComposedTemplate } from '../../../config/templates/expand-template';
-import { EMPTY_CANVAS } from '../../../i18n/messages';
+import { useTranslation } from '../../../i18n';
 import { importToActiveCard, expandBlueprintToCard } from '../../../store/slices/cards-slice';
 import { openDialog } from '../../../store/slices/ui-slice';
 import type { ComposedTemplate } from '../../../config/templates/types';
@@ -31,6 +31,7 @@ interface EmptyCanvasOverlayProps {
 }
 
 export const EmptyCanvasOverlay: React.FC<EmptyCanvasOverlayProps> = ({ onDismiss }) => {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
 
   const handleSelect = useCallback(
@@ -67,8 +68,8 @@ export const EmptyCanvasOverlay: React.FC<EmptyCanvasOverlayProps> = ({ onDismis
       {/* Content */}
       <div className="relative z-10 text-center max-w-lg px-6">
         {/* Heading */}
-        <h2 className="text-ice-2xl font-semibold text-ice-text-1 mb-1.5">{EMPTY_CANVAS.TITLE}</h2>
-        <p className="text-ice-md text-ice-text-2 mb-7">{EMPTY_CANVAS.SUBTITLE}</p>
+        <h2 className="text-ice-2xl font-semibold text-ice-text-1 mb-1.5">{t('canvas.emptyState.title')}</h2>
+        <p className="text-ice-md text-ice-text-2 mb-7">{t('canvas.emptyState.subtitle')}</p>
 
         {/* Archetype grid */}
         <div className="grid grid-cols-2 gap-2.5 mb-4">
@@ -101,14 +102,14 @@ export const EmptyCanvasOverlay: React.FC<EmptyCanvasOverlayProps> = ({ onDismis
             className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-ice-border bg-transparent text-ice-text-2 text-xs font-medium cursor-pointer transition-all hover:border-ice-border-strong hover:text-ice-text-1"
           >
             <FileCode2 className="w-3.5 h-3.5" />
-            {EMPTY_CANVAS.BLANK_CANVAS}
+            {t('canvas.emptyState.blankCanvas')}
           </button>
           <button
             onClick={handleOpenTemplates}
             className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-ice-border bg-transparent text-ice-text-2 text-xs font-medium cursor-pointer transition-all hover:border-ice-border-strong hover:text-ice-text-1"
           >
             <LayoutTemplate className="w-3.5 h-3.5" />
-            {EMPTY_CANVAS.PICK_TEMPLATE}
+            {t('canvas.emptyState.pickTemplate')}
           </button>
         </div>
       </div>
@@ -116,4 +117,3 @@ export const EmptyCanvasOverlay: React.FC<EmptyCanvasOverlayProps> = ({ onDismis
   );
 };
 
-export default EmptyCanvasOverlay;

@@ -1,0 +1,1163 @@
+{
+  "common": {
+    "buttons": {
+      "save": "保存",
+      "cancel": "取消",
+      "delete": "删除",
+      "deploy": "部署",
+      "confirm": "确认",
+      "reset": "重置",
+      "retry": "重试",
+      "copy": "复制",
+      "connect": "连接",
+      "disconnect": "断开连接",
+      "close": "关闭",
+      "back": "返回",
+      "next": "下一步",
+      "skip": "跳过",
+      "continue": "继续",
+      "add": "添加",
+      "remove": "移除",
+      "create": "创建",
+      "import": "导入",
+      "change": "更改",
+      "search": "搜索"
+    },
+    "labels": {
+      "untitled": "未命名",
+      "loading": "加载中...",
+      "valid": "有效",
+      "modified": "(已修改)",
+      "version": "ICE v0.1.0",
+      "none": "无",
+      "yes": "是",
+      "no": "否",
+      "or": "或",
+      "name": "名称",
+      "email": "邮箱",
+      "password": "密码",
+      "description": "描述",
+      "type": "类型",
+      "status": "状态",
+      "role": "角色"
+    },
+    "errors": {
+      "required": "此字段为必填项",
+      "network": "出现错误，请重试。",
+      "unexpected": "发生意外错误",
+      "tryAgain": "重试"
+    },
+    "roles": {
+      "owner": "所有者",
+      "admin": "管理员",
+      "member": "成员",
+      "viewer": "查看者",
+      "editor": "编辑者"
+    },
+    "time": {
+      "justNow": "刚刚",
+      "minutesAgo": "{{count}}分钟前",
+      "hoursAgo": "{{count}}小时前",
+      "daysAgo": "{{count}}天前",
+      "never": "从未"
+    },
+    "providers": {
+      "gcp": "Google Cloud",
+      "aws": "AWS",
+      "azure": "Azure",
+      "kubernetes": "Kubernetes"
+    }
+  },
+
+  "auth": {
+    "brand": {
+      "title": "ICE",
+      "subtitle": "集成云环境"
+    },
+    "login": {
+      "heading": "登录您的账户",
+      "emailLabel": "邮箱",
+      "passwordLabel": "密码",
+      "submitButton": "登录",
+      "noAccount": "还没有账户？",
+      "createLink": "创建账户",
+      "divider": "或",
+      "invalidCredentials": "凭据无效"
+    },
+    "signup": {
+      "heading": "创建您的账户",
+      "nameLabel": "姓名",
+      "emailLabel": "邮箱",
+      "passwordLabel": "密码",
+      "passwordPlaceholder": "至少 8 个字符",
+      "submitButton": "创建账户",
+      "hasAccount": "已有账户？",
+      "signInLink": "登录",
+      "divider": "或",
+      "registrationFailed": "注册失败"
+    },
+    "callback": {
+      "noToken": "未收到令牌",
+      "backToLogin": "返回登录"
+    },
+    "oauth": {
+      "googleNotLoaded": "Google 登录未加载，请刷新页面。",
+      "googleNotConfigured": "Google 登录未配置。",
+      "googleFailed": "Google 登录失败",
+      "loginFailed": "登录失败",
+      "continueWithGoogle": "使用 Google 继续",
+      "continueWithGithub": "使用 GitHub 继续"
+    }
+  },
+
+  "canvas": {
+    "title": "基础设施画布",
+    "emptyState": {
+      "title": "您想构建什么？",
+      "subtitle": "选择一个起点——您随时可以更改",
+      "blankCanvas": "空白画布",
+      "pickTemplate": "选择模板..."
+    },
+    "controls": {
+      "title": "控制",
+      "escButton": "ESC",
+      "shortcutsTitle": "键盘快捷键",
+      "newGraph": "新建图表 (Ctrl+N)",
+      "open": "打开 (Ctrl+O)",
+      "save": "保存 (Ctrl+S)",
+      "loadDemo": "加载示例基础设施",
+      "newProject": "新建项目",
+      "undo": "撤销 (Ctrl+Z)",
+      "redo": "重做 (Ctrl+Y)",
+      "autoOrganize": "自动整理布局 (Ctrl+Shift+O)",
+      "togglePalette": "切换组件面板 (Ctrl+P)",
+      "toggleProperties": "切换属性面板 (Ctrl+I)",
+      "toggleMinimap": "切换小地图 (Ctrl+M)",
+      "splitRight": "右侧分屏（并排）",
+      "splitDown": "下方分屏（上下）",
+      "closeSplit": "关闭分屏",
+      "switchLight": "切换到浅色模式",
+      "switchDark": "切换到深色模式",
+      "cloudProviders": "云服务提供商 - 从 AWS/GCP/Azure 导入",
+      "deployInfra": "部署基础设施 (Ctrl+Shift+D)",
+      "sectionNavigation": "导航",
+      "panCanvas": "平移画布",
+      "zoomInOut": "放大 / 缩小",
+      "sectionSelection": "选择",
+      "selectNode": "选择节点",
+      "multiSelect": "多选",
+      "boxSelect": "框选",
+      "deselectAll": "取消全选",
+      "sectionEditing": "编辑",
+      "deleteSelected": "删除所选",
+      "copyPaste": "复制 / 剪切 / 粘贴",
+      "renameGroup": "重命名分组",
+      "sectionContainment": "容器",
+      "moveIntoGroup": "移入分组 / 区块",
+      "detachFromContainer": "从容器中分离",
+      "sectionView": "视图",
+      "architectureView": "架构视图",
+      "infrastructureView": "基础设施视图",
+      "toggleDebug": "切换调试面板"
+    },
+    "contextMenu": {
+      "undo": "撤销",
+      "redo": "重做",
+      "paste": "粘贴",
+      "selectAll": "全选",
+      "autoOrganize": "自动整理",
+      "properties": "属性",
+      "copy": "复制",
+      "copyAsText": "复制为文本",
+      "cut": "剪切",
+      "duplicate": "复制副本",
+      "changeProvider": "更改提供商",
+      "unfold": "展开",
+      "fold": "折叠",
+      "groupSelection": "将选中项分组",
+      "delete": "删除",
+      "deleteItems": "删除 {{count}} 个项目",
+      "deleteConnection": "删除连接"
+    }
+  },
+
+  "deploy": {
+    "title": "基础设施部署",
+    "buttons": {
+      "plan": "计划",
+      "deploy": "部署",
+      "reset": "重置",
+      "retryDeploy": "重试部署",
+      "enableApi": "在 GCP 控制台中启用 API",
+      "updateInfrastructure": "更新基础设施",
+      "destroy": "销毁"
+    },
+    "status": {
+      "authenticating": "认证中",
+      "planning": "规划中",
+      "planned": "计划就绪",
+      "deploying": "部署中",
+      "success": "已部署",
+      "error": "错误",
+      "cancelled": "已取消",
+      "connected": "已连接 {{provider}}",
+      "connectedViaOAuth": "通过 Google OAuth",
+      "connectedViaServiceAccount": "通过服务账号",
+      "notConnected": "{{provider}} 未连接——请在云服务提供商设置中配置"
+    },
+    "config": {
+      "gcpProjectLabel": "GCP 项目",
+      "gcpProjectPlaceholder": "my-gcp-project",
+      "regionLabel": "区域",
+      "environmentLabel": "环境",
+      "envDevelopment": "开发",
+      "envStaging": "预发布",
+      "envProduction": "生产",
+      "providerLabel": "提供商",
+      "selectProject": "选择项目...",
+      "awsLabel": "AWS 账户 / 区域",
+      "awsPlaceholder": "123456789012",
+      "azureLabel": "Azure 订阅",
+      "azurePlaceholder": "my-subscription-id",
+      "kubernetesLabel": "集群名称",
+      "kubernetesPlaceholder": "my-k8s-cluster"
+    },
+    "card": {
+      "label": "卡片：",
+      "untitled": "未命名",
+      "deployableResource": "可部署资源",
+      "deployableResources": "{{count}} 个可部署资源 ({{provider}})",
+      "skippedNonGcp": "已跳过——非 GCP",
+      "skippedResources": "({{count}} 个已跳过——非 {{provider}})",
+      "deployedResource": "已部署资源",
+      "deployedResources": "{{count}} 个已部署资源（来自之前的部署）"
+    },
+    "auth": {
+      "connecting": "正在连接 GCP...",
+      "browserPrompt": "浏览器窗口将打开进行 Google 认证。请完成登录以继续。"
+    },
+    "plan": {
+      "noChanges": "未检测到更改。基础设施已是最新状态。",
+      "changes": "计划：{{total}} 项更改",
+      "skip": "跳过",
+      "actionCreate": "创建",
+      "actionUpdate": "更新",
+      "actionDelete": "删除"
+    },
+    "progress": {
+      "deploying": "部署中...",
+      "percent": "{{pct}}%",
+      "succeeded": "{{count}} 个成功",
+      "failed": "{{count}} 个失败",
+      "completedIn": "部署完成，耗时 {{seconds}} 秒"
+    },
+    "errors": {
+      "apiNotEnabledTitle": "所需的 GCP API 未启用",
+      "apiNotEnabledHint": "部分 Google Cloud API 需要先启用才能部署。请点击下方按钮打开 GCP 控制台，启用 API，然后点击重试。",
+      "opensConsole": "打开 GCP 控制台",
+      "enableApi": "启用 {{api}}",
+      "destroyConfirm": "销毁所有已部署的资源？此操作不可撤销。",
+      "destroyFailed": "销毁失败",
+      "deploymentFailed": "部署失败",
+      "planningFailed": "规划失败",
+      "authenticationFailed": "认证失败",
+      "billingTitle": "未启用结算",
+      "billingDescription": "您的 GCP 项目需要关联结算账户才能启用 Cloud API（Cloud Run、Storage 等）。ICE 无法在未启用结算的情况下进行部署。",
+      "billingButton": "在 GCP 控制台中关联结算账户",
+      "raptTitle": "Google Workspace 重新认证策略 (RAPT)",
+      "raptDescription": "您的组织对云操作强制执行重新认证。OAuth 登录无法用于部署。",
+      "raptFixTitle": "要解决此问题，请选择以下方式之一：",
+      "raptOption1": "使用服务账号密钥",
+      "raptOption2": "禁用 RAPT",
+      "autoEnableHint": "要在部署期间自动启用 API，请确保您的服务账号拥有 Service Usage Admin 角色。"
+    },
+    "copy": {
+      "copy": "复制",
+      "copyProviderId": "复制提供商 ID"
+    },
+    "slice": {
+      "connecting": "正在连接 GCP...",
+      "authSuccess": "GCP 认证成功。",
+      "authFailed": "认证失败：{{error}}",
+      "planning": "正在规划部署...",
+      "planReady": "计划就绪：{{creates}} 个创建，{{updates}} 个更新，{{deletes}} 个删除",
+      "deploying": "部署中...",
+      "completed": "部署完成，耗时 {{seconds}} 秒",
+      "error": "错误：{{error}}"
+    }
+  },
+
+  "integrations": {
+    "dropdownTitle": "集成",
+    "connected": "已连接",
+    "disconnected": "未连接",
+    "connecting": "连接中...",
+    "error": "错误",
+    "github": {
+      "title": "GitHub",
+      "connectTitle": "连接 GitHub",
+      "connectDescription": "连接您的 GitHub 账户以浏览仓库和分支。",
+      "connectedAs": "已作为 {{username}} 连接",
+      "disconnectButton": "断开连接",
+      "patTab": "个人访问令牌",
+      "patLabel": "GitHub 令牌",
+      "patPlaceholder": "ghp_xxxxxxxxxxxxxxxxxxxx",
+      "patHelp": "在 github.com/settings/tokens 生成一个具有 repo 权限的令牌。",
+      "patConnect": "使用令牌连接",
+      "deviceFlowTab": "使用浏览器登录",
+      "deviceFlowButton": "使用 GitHub 登录",
+      "deviceFlowInstructions": "浏览器窗口将打开。请输入以下代码进行授权：",
+      "deviceFlowWaiting": "等待授权中...",
+      "deviceFlowCopy": "复制代码",
+      "deviceFlowCopied": "已复制！",
+      "reposTitle": "仓库",
+      "noRepos": "未找到仓库",
+      "loadingRepos": "正在加载仓库...",
+      "branches": "分支",
+      "private": "私有"
+    },
+    "repoSelector": {
+      "placeholder": "搜索仓库...",
+      "noRepos": "未找到仓库",
+      "loading": "正在加载仓库...",
+      "notConnected": "连接 GitHub 以关联仓库",
+      "linkRepo": "关联仓库",
+      "clear": "取消关联",
+      "connectGitHub": "连接 GitHub"
+    }
+  },
+
+  "pipeline": {
+    "title": "流水线",
+    "panelTitle": "流水线：{{name}}",
+    "source": "源代码",
+    "triggers": "触发器",
+    "build": "构建",
+    "deployments": "部署",
+    "changeRepo": "更改",
+    "detected": "检测到：{{framework}}",
+    "detecting": "正在检测框架...",
+    "noRepo": "未关联仓库",
+    "enabled": "已启用",
+    "disabled": "已禁用",
+    "pushTo": "推送到",
+    "mergeTo": "合并到",
+    "addTrigger": "+ 添加触发器",
+    "noTriggers": "未配置触发器",
+    "installCommand": "安装",
+    "buildCommand": "构建",
+    "outputDir": "输出",
+    "autoDetected": "（自动检测）",
+    "status": {
+      "idle": "空闲",
+      "queued": "排队中",
+      "building": "构建中",
+      "deploying": "部署中",
+      "success": "已上线",
+      "failed": "失败"
+    },
+    "noDeployments": "暂无部署",
+    "viewLogs": "日志",
+    "deployNow": "立即部署",
+    "enablePipeline": "启用流水线",
+    "steps": {
+      "prepare": "准备中",
+      "clone": "正在克隆仓库",
+      "install": "正在安装依赖",
+      "build": "正在构建应用",
+      "deploy": "部署中",
+      "configure": "配置中"
+    },
+    "activeDeployment": "当前部署",
+    "settingUp": "正在设置流水线...",
+    "noRepoHint": "请先在 GitHub Repo 区块上选择一个仓库，然后将其连接到此服务。",
+    "noRepoShort": "未关联仓库。请先在 GitHub Repo 区块上选择一个仓库。",
+    "missingContext": "缺少卡片或节点上下文。",
+    "branchProtected": "（受保护）",
+    "anyBranch": "* (任意分支)",
+    "duration": "耗时：",
+    "createFailed": "创建流水线规则失败",
+    "manual": "手动",
+    "auto": "自动",
+    "noTriggersForEnv": "此环境没有触发器",
+    "liveBuild": "实时构建",
+    "timeoutSoon": "（即将超时）",
+    "removeConnection": "移除连接",
+    "removeTrigger": "移除触发器",
+    "serviceDeploys": "服务部署",
+    "noLogs": "暂无日志记录",
+    "recent": "最近"
+  },
+
+  "onboarding": {
+    "nav": {
+      "stepWelcome": "欢迎",
+      "stepTeam": "团队",
+      "stepCloud": "云服务",
+      "stepGitHub": "GitHub",
+      "stepProject": "项目",
+      "skipSetup": "跳过设置",
+      "back": "返回",
+      "skip": "跳过",
+      "continue": "继续",
+      "createAndStart": "创建并开始"
+    },
+    "welcome": {
+      "title": "欢迎使用 ICE",
+      "titleWithName": "欢迎使用 ICE，{{name}}",
+      "subtitle": "可视化设计、部署和管理云基础设施",
+      "featureCanvas": "可视化画布",
+      "featureCanvasDesc": "将基础设施组件拖放到实时画布上",
+      "featureMultiCloud": "多云支持",
+      "featureMultiCloudDesc": "GCP、AWS 和 Azure——设计一次，随处部署",
+      "featureCiCd": "内置 CI/CD",
+      "featureCiCdDesc": "连接 GitHub，每次推送自动部署",
+      "setupHint": "此设置大约需要一分钟。您可以跳过任何步骤。"
+    },
+    "team": {
+      "title": "设置您的团队",
+      "subtitle": "每个项目都属于一个团队",
+      "createTeam": "创建团队",
+      "createTeamDesc": "创建新的团队工作空间",
+      "joinTeam": "加入团队",
+      "joinTeamDesc": "您收到了团队管理员的邀请",
+      "teamNameLabel": "团队名称",
+      "teamNamePlaceholder": "我的团队",
+      "inviteCodeLabel": "邀请码",
+      "inviteCodePlaceholder": "粘贴您的邀请码或链接",
+      "inviteCodeHint": "请向团队管理员索取邀请码或链接。"
+    },
+    "cloud": {
+      "title": "连接您的云服务",
+      "subtitle": "ICE 部署到您的云账户——我们绝不存储您的数据",
+      "providerLabel": "默认云服务提供商",
+      "regionLabel": "默认区域",
+      "regionAutoHint": "已根据您的位置自动选择。您可以在每个项目中单独更改。",
+      "credentialsHint": "凭据（可选——现在或稍后连接）",
+      "signInWithGoogle": "使用 Google 登录",
+      "orServiceAccountKey": "或使用服务账号密钥",
+      "orSignInGoogle": "或使用 Google 登录",
+      "serviceAccountKeyLabel": "服务账号密钥 (JSON)",
+      "createServiceAccount": "创建服务账号",
+      "accessKeyIdLabel": "访问密钥 ID",
+      "secretAccessKeyLabel": "秘密访问密钥",
+      "subscriptionIdLabel": "订阅 ID",
+      "tenantIdLabel": "租户 ID",
+      "clientIdLabel": "客户端 ID",
+      "clientSecretLabel": "客户端密钥",
+      "testAndConnect": "测试并连接",
+      "connected": "已连接",
+      "connectionFailed": "连接失败",
+      "securityNote": "凭据已加密存储，仅用于管理您的基础设施。"
+    },
+    "github": {
+      "title": "连接 GitHub",
+      "subtitle": "将仓库关联到画布上的服务以启用 CI/CD",
+      "connected": "已连接",
+      "tabDevice": "使用浏览器登录",
+      "tabPat": "个人访问令牌",
+      "signInButton": "使用 GitHub 登录",
+      "deviceCodePrompt": "在浏览器中输入以下代码进行授权：",
+      "copyCode": "复制代码",
+      "waitingAuth": "等待授权中...",
+      "tokenLabel": "GitHub 令牌",
+      "tokenPlaceholder": "ghp_xxxxxxxxxxxxxxxxxxxx",
+      "tokenHint": "在 github.com/settings/tokens 生成一个具有 repo 权限的令牌。",
+      "connectWithToken": "使用令牌连接",
+      "laterHint": "您也可以稍后在画布上将仓库关联到服务。"
+    },
+    "project": {
+      "title": "您想构建什么？",
+      "subtitle": "选择一个起点——您随时可以更改",
+      "nameLabel": "项目名称",
+      "namePlaceholder": "我的项目",
+      "blankCanvas": "空白画布",
+      "blankCanvasDesc": "从空项目开始"
+    },
+    "checklist": {
+      "setup": "设置：",
+      "title": "设置清单",
+      "dismissTitle": "关闭",
+      "createAccount": "创建账户",
+      "chooseProvider": "选择云服务提供商",
+      "connectCloud": "连接云凭据",
+      "connectGithub": "连接 GitHub"
+    }
+  },
+
+  "wizard": {
+    "title": "新建项目",
+    "description": "创建包含环境和可选模板的项目",
+    "stepProject": "项目",
+    "stepEnvironments": "环境",
+    "stepTemplate": "模板",
+    "stepReview": "审核",
+    "backButton": "返回",
+    "nextButton": "下一步",
+    "createButton": "创建项目",
+    "projectInfo": {
+      "nameTitle": "项目名称",
+      "nameHint": "为您的项目取一个易于识别的名称",
+      "namePlaceholder": "我的 SaaS 应用",
+      "descriptionTitle": "描述",
+      "descriptionHint": "可选——描述此项目的用途",
+      "descriptionPlaceholder": "面向客户的 SaaS 平台的生产基础设施...",
+      "providerTitle": "云服务提供商",
+      "providerHint": "选择目标云平台"
+    },
+    "environments": {
+      "title": "环境",
+      "hint": "选择要创建的环境。每个环境都有独立的画布标签页。",
+      "production": "生产",
+      "staging": "预发布",
+      "development": "开发",
+      "prPreview": "PR 预览",
+      "securityBasic": "基础",
+      "securityStandard": "标准",
+      "securityStrict": "严格",
+      "securityCompliance": "合规",
+      "setAllTo": "全部设为："
+    },
+    "template": {
+      "title": "选择模板",
+      "hint": "从预构建模板开始，或使用空白画布",
+      "categoryAll": "全部",
+      "searchPlaceholder": "搜索模板...",
+      "blankCanvas": "空白画布",
+      "blankCanvasDesc": "从空白画布开始，从零构建您的基础设施。",
+      "blocks": "个组件"
+    },
+    "review": {
+      "title": "审核并创建",
+      "hint": "在创建之前确认您的项目设置",
+      "projectLabel": "项目",
+      "environmentsLabel": "环境",
+      "templateLabel": "模板",
+      "blankCanvas": "空白画布",
+      "blocks": "个组件",
+      "summaryWithTemplate": "每个包含 {{count}} 个组件",
+      "summaryBlank": "使用空白画布",
+      "summaryPrefix": "将创建",
+      "environment": "个环境",
+      "environments": "个环境"
+    }
+  },
+
+  "environments": {
+    "tabBar": {
+      "loading": "正在加载环境...",
+      "addEnvironment": "添加环境",
+      "settings": "设置",
+      "deployments": "部署",
+      "activity": "活动",
+      "promoteToProduction": "提升到生产环境",
+      "deployInfra": "部署基础设施",
+      "contextDeploy": "部署",
+      "contextPromote": "提升到生产环境",
+      "contextDelete": "删除环境"
+    },
+    "createModal": {
+      "title": "新建环境",
+      "description": "以当前生产画布为起点进行克隆。",
+      "nameLabel": "名称",
+      "namePlaceholder": "staging",
+      "typeLabel": "类型",
+      "typeStaging": "预发布",
+      "typeDevelopment": "开发",
+      "typePrPreview": "PR 预览",
+      "regionLabel": "区域（可选）",
+      "regionPlaceholder": "与生产环境相同",
+      "cancelButton": "取消",
+      "creatingButton": "创建中...",
+      "createButton": "创建环境",
+      "errorNameRequired": "名称为必填项",
+      "errorFallback": "创建环境失败"
+    },
+    "promote": {
+      "promote": "提升",
+      "to": "到",
+      "identicalMessage": "两个环境完全一致，无需提升。",
+      "changesWillBeApplied": "将应用到",
+      "change": "项更改",
+      "changes": "项更改",
+      "inSync": "环境已同步",
+      "unchanged": "未更改",
+      "node": "个节点",
+      "nodes": "个节点",
+      "cancelButton": "取消",
+      "promoteButton": "提升到",
+      "tagAdded": "新增",
+      "tagRemoved": "已移除",
+      "tagChanged": "已更改"
+    }
+  },
+
+  "account": {
+    "avatar": {
+      "ariaLabel": "用户菜单",
+      "defaultName": "用户",
+      "settings": "设置",
+      "team": "团队",
+      "logout": "退出登录"
+    },
+    "invite": {
+      "title": "邀请团队成员",
+      "emailLabel": "邮箱地址",
+      "emailPlaceholder": "colleague@company.com",
+      "roleLabel": "角色",
+      "roleAdminDesc": "完全访问权限。可管理用户、账单和所有项目。",
+      "roleMemberDesc": "可创建和编辑项目。无法管理用户或账单。",
+      "roleViewerDesc": "只读访问权限。可查看项目但不能编辑或部署。",
+      "successMessage": "邀请发送成功！",
+      "errorFallback": "邀请发送失败，请重试。",
+      "cancelButton": "取消",
+      "sendingButton": "发送中...",
+      "sendButton": "发送邀请"
+    },
+    "team": {
+      "title": "团队",
+      "subtitle": "管理成员",
+      "subtitleFallback": "您的组织",
+      "inviteButton": "邀请",
+      "columnMember": "成员",
+      "columnRole": "角色",
+      "columnJoined": "加入时间",
+      "emptyState": "暂无团队成员。",
+      "youBadge": "（我）",
+      "removeTitle": "移除",
+      "removeConfirm": "从团队中移除此成员？",
+      "pendingInvitations": "待处理的邀请",
+      "invitedAs": "邀请为",
+      "expires": "到期"
+    },
+    "settings": {
+      "title": "设置",
+      "profileTitle": "个人资料",
+      "profileSubtitle": "更新您的个人信息。",
+      "firstNameLabel": "名",
+      "lastNameLabel": "姓",
+      "emailLabel": "邮箱",
+      "emailDisabledHint": "邮箱无法更改。",
+      "profileSaved": "个人资料更新成功。",
+      "profileSaveFailed": "更新个人资料失败，请重试。",
+      "saveProfileButton": "保存资料",
+      "passwordTitle": "密码",
+      "passwordSubtitle": "更改您的账户密码。",
+      "currentPasswordLabel": "当前密码",
+      "newPasswordLabel": "新密码",
+      "newPasswordPlaceholder": "至少 8 个字符",
+      "confirmPasswordLabel": "确认新密码",
+      "passwordMinLength": "新密码至少需要 8 个字符。",
+      "passwordMismatch": "两次密码不一致。",
+      "passwordChanged": "密码修改成功。",
+      "passwordChangeFailed": "密码修改失败，请检查当前密码。",
+      "changePasswordButton": "修改密码"
+    },
+    "collaborators": {
+      "title": "项目成员",
+      "memberCount": "位成员",
+      "addMember": "添加成员",
+      "teamMemberLabel": "团队成员",
+      "selectMember": "选择成员...",
+      "roleLabel": "角色",
+      "roleOwnerDesc": "完全控制——设置、成员、删除",
+      "roleEditorDesc": "编辑画布、部署、管理环境",
+      "roleViewerDesc": "查看画布和部署——只读",
+      "cancelButton": "取消",
+      "addButton": "添加",
+      "youBadge": "（我）",
+      "removeTitle": "从项目中移除"
+    },
+    "createTeam": {
+      "title": "创建新组织",
+      "nameLabel": "组织名称",
+      "namePlaceholder": "例如：某某公司",
+      "nameHint": "2 到 50 个字符。您之后可以更改。",
+      "errorFallback": "创建组织失败，请重试。",
+      "cancelButton": "取消",
+      "creatingButton": "创建中...",
+      "createButton": "创建组织"
+    }
+  },
+
+  "ai": {
+    "chat": {
+      "title": "AI 助手",
+      "newChat": "新对话",
+      "historyTitle": "对话历史",
+      "closeTitle": "关闭",
+      "deleteTitle": "删除",
+      "noConversations": "暂无历史对话",
+      "untitledConversation": "未命名对话",
+      "msgs": "条消息",
+      "emptyCanvasPrompt": "描述您想构建的内容，我会将其添加到画布上。",
+      "existingCanvasPrompt": "您想改进或添加什么？",
+      "notConfiguredTitle": "AI 助手未配置",
+      "notConfiguredDesc": "AI 助手需要 Anthropic API 密钥才能使用。",
+      "notConfiguredStep1": "在以下地址获取 API 密钥",
+      "notConfiguredStep2": "添加",
+      "notConfiguredStep2Suffix": "到您的",
+      "notConfiguredStep3": "重启服务器",
+      "appliedChanges": "已应用",
+      "changes": "项更改",
+      "more": "更多",
+      "thinking": "思考中...",
+      "undoLastAi": "撤销上次 AI 更改",
+      "inputPlaceholder": "描述您想构建的内容...",
+      "doneMessage": "完成。",
+      "noChangesMessage": "没有需要应用的更改。",
+      "collapsedTitle": "AI 助手"
+    }
+  },
+
+  "properties": {
+    "closeTitle": "关闭属性",
+    "title": "属性",
+    "noCard": "无卡片",
+    "overview": {
+      "title": "概览",
+      "nodes": "节点",
+      "connections": "连接",
+      "estMonthlyCost": "预估月费用",
+      "suggestions": "建议",
+      "emptyHint": "从组件面板拖放组件开始构建",
+      "selectHint": "选择一个节点或边以查看和编辑其属性"
+    },
+    "groupColor": "分组颜色",
+    "tabs": {
+      "config": "配置",
+      "scaling": "扩缩容",
+      "domain": "域名",
+      "source": "源代码与 CI",
+      "connections": "连接",
+      "deploy": "部署"
+    },
+    "config": {
+      "title": "配置",
+      "iacMapping": "IaC 映射",
+      "iacResource": "IaC 资源",
+      "cost": "费用",
+      "estimatedMonthly": "预估月费"
+    },
+    "deploy": {
+      "current": "当前",
+      "live": "运行中",
+      "urlLabel": "URL",
+      "imageLabel": "镜像",
+      "resourceIdLabel": "资源 ID",
+      "regionLabel": "区域",
+      "instancesLabel": "实例",
+      "history": "历史"
+    },
+    "scaling": {
+      "active": "活跃",
+      "running": "运行中",
+      "minInstances": "最小实例数",
+      "maxInstances": "最大实例数",
+      "scaleOn": "扩缩条件",
+      "threshold": "阈值 (%)"
+    },
+    "domain": {
+      "hostname": "主机名",
+      "hostnamePlaceholder": "app.example.com",
+      "subdomain": "子域名",
+      "subdomainPlaceholder": "www",
+      "sslMode": "SSL 模式",
+      "dnsProvider": "DNS 提供商",
+      "dnsProviderPlaceholder": "cloudflare, route53..."
+    },
+    "source": {
+      "title": "源代码",
+      "noSourceConnected": "未连接源代码",
+      "noSourceHint": "从组件面板添加 GitHub Repo 区块并将其连接到此服务以启用 CI/CD。",
+      "managedBy": "管理者",
+      "block": "区块",
+      "repository": "仓库",
+      "branch": "分支",
+      "branchProtected": "（受保护）",
+      "build": "构建",
+      "buildCommand": "构建命令",
+      "buildCommandPlaceholder": "npm run build",
+      "outputDirectory": "输出目录",
+      "outputDirPlaceholder": "dist"
+    },
+    "edge": {
+      "connectionHeader": "连接",
+      "propertiesSection": "属性",
+      "portLabel": "端口",
+      "customOption": "自定义",
+      "deleteButton": "删除连接",
+      "warningDbFromFrontend": "从前端直接访问数据库存在安全风险",
+      "warningDbSuggestion": "在它们之间添加后端服务",
+      "warningQueueFromClient": "客户端不应直接向队列发布消息",
+      "warningQueueSuggestion": "通过后端 API 进行路由"
+    },
+    "drift": {
+      "checking": "正在检查偏差...",
+      "inSync": "已同步",
+      "notInDeployment": "不在最新部署中",
+      "drifted": "已偏差",
+      "change": "项更改",
+      "changes": "项更改",
+      "checkButton": "检查偏差",
+      "checkingButton": "检查中..."
+    },
+    "network": {
+      "title": "网络",
+      "port": "端口",
+      "domain": "域名",
+      "inbound": "入站",
+      "outbound": "出站",
+      "connection": "个连接",
+      "connections": "个连接"
+    },
+    "about": "关于",
+    "envVars": {
+      "title": "变量",
+      "keyPlaceholder": "KEY",
+      "valuePlaceholder": "值",
+      "secretTitle": "密钥（已隐藏）",
+      "makeSecretTitle": "设为密钥",
+      "addVariable": "+ 添加变量"
+    },
+    "noServiceHint": "将此区块连接到服务以配置部署触发器。"
+  },
+
+  "project": {
+    "settings": {
+      "title": "项目设置",
+      "generalHeading": "常规",
+      "nameLabel": "名称",
+      "descriptionLabel": "描述",
+      "providerHeading": "云服务提供商",
+      "providerLockedDesc": "此项目的提供商和区域已锁定。所有环境均使用这些设置。",
+      "providerUnlockedDesc": "此项目中的所有资源将部署到此提供商和区域。",
+      "providerLabel": "提供商",
+      "regionLabel": "区域 / 可用区",
+      "regionLocked": "已锁定",
+      "selectRegion": "选择区域...",
+      "selectPrompt": "选择提供商以查看可用区域。",
+      "saveSuccess": "设置已保存。",
+      "saveError": "保存失败。",
+      "saveButton": "保存设置",
+      "collaboratorsHeading": "协作者",
+      "collaboratorsDesc": "控制谁可以查看和编辑此项目",
+      "dangerHeading": "危险操作",
+      "deleteTitle": "删除此项目",
+      "deleteDescription": "此操作将永久删除项目及其所有环境、画布卡片和部署历史。此操作不可撤销。",
+      "deleteConfirmLabel": "输入 {{name}} 以确认",
+      "deleteButton": "删除项目",
+      "deleteError": "删除项目失败。"
+    },
+    "activity": {
+      "title": "活动",
+      "filterAll": "全部",
+      "filterAi": "AI",
+      "filterInfra": "基础设施",
+      "filterService": "服务",
+      "emptyTitle": "暂无活动",
+      "emptyDescription": "AI 更改、部署和流水线运行等操作将显示在此处",
+      "aiCanvasChange": "AI 画布更改",
+      "infrastructure": "基础设施 {{status}}",
+      "serviceDeploy": "服务部署：{{name}}"
+    },
+    "deployments": {
+      "title": "部署",
+      "envLabel": "环境：",
+      "tabInfrastructure": "基础设施",
+      "tabService": "服务 (CI/CD)",
+      "infraEmptyTitle": "暂无基础设施部署",
+      "infraEmptyDesc": "使用\"部署基础设施\"按钮来规划和应用更改",
+      "rollback": "回滚",
+      "rollbackTooltip": "回滚到此部署",
+      "confirm": "确认",
+      "cancel": "取消",
+      "rollingBack": "回滚中...",
+      "priorDeploy": "{{count}} 个已部署资源（来自之前的部署）",
+      "serviceEmptyTitle": "暂无服务部署",
+      "serviceEmptyDesc": "将 GitHub 仓库连接到服务并推送代码以触发部署",
+      "byAuthor": "由 {{author}}",
+      "noLogs": "暂无日志步骤记录"
+    }
+  },
+
+  "projectBrowser": {
+    "newProject": "新建项目",
+    "emptyState": "暂无项目",
+    "createProject": "创建项目",
+    "deleteConfirm": "删除此项目？",
+    "newFolderName": "新建文件夹",
+    "newProjectName": "新建项目",
+    "contextNewProjectHere": "在此处新建项目",
+    "contextRename": "重命名",
+    "contextMoveTo": "移动到",
+    "contextMoveRoot": "根目录",
+    "contextDelete": "删除",
+    "subCanvas": "画布",
+    "subTable": "表格",
+    "subSettings": "设置",
+    "subDeployments": "部署"
+  },
+
+  "templates": {
+    "triggerTitle": "从模板开始",
+    "menuLabel": "模板",
+    "searchPlaceholder": "搜索模板...",
+    "noResults": "没有匹配的模板",
+    "blocks": "个组件"
+  },
+
+  "palette": {
+    "searchPlaceholder": "搜索组件...",
+    "providerAll": "全部"
+  },
+
+  "projectList": {
+    "header": "项目",
+    "openAll": "打开全部 {{count}} 个项目",
+    "addFolder": "添加文件夹",
+    "refresh": "刷新",
+    "selectDirectory": "选择目录",
+    "searchPlaceholder": "搜索项目...",
+    "emptySelectDirectory": "选择一个目录以浏览您的项目",
+    "loadExamples": "加载示例",
+    "emptyNoFiles": "此目录中未找到 .ice 或 .json 文件",
+    "projectCount": "{{count}} 个项目",
+    "folderCount": "{{count}} 个文件夹",
+    "defaultFolderName": "新建文件夹"
+  },
+
+  "projectTree": {
+    "newProject": "新建项目",
+    "newFolder": "新建文件夹",
+    "emptyNoProjects": "暂无项目",
+    "emptyHint": "点击\"新建项目\"开始",
+    "defaultFolderName": "新建文件夹",
+    "contextRename": "重命名",
+    "contextMoveToTopLevel": "移到顶层",
+    "contextNewSubfolder": "新建子文件夹",
+    "contextDelete": "删除"
+  },
+
+  "statusBar": {
+    "valid": "有效",
+    "version": "ICE v0.1.0",
+    "connecting": "正在连接 GCP...",
+    "planning": "规划中...",
+    "deployed": "已部署",
+    "deployFailed": "部署失败",
+    "planReady": "计划就绪",
+    "deploying": "部署中 {{pct}}%",
+    "nodeCount": "{{count}} 个节点",
+    "edgeCount": "{{count}} 条边",
+    "costEstimate": "~${{amount}}/月 预估",
+    "selected": "已选 {{count}} 个",
+    "selectedEdges": "{{count}} 条边",
+    "errorCount": "{{count}} 个错误"
+  },
+
+  "appBar": {
+    "autoOrganize": "自动整理",
+    "undo": "撤销 (Ctrl+Z)",
+    "redo": "重做 (Ctrl+Shift+Z)",
+    "deploy": "部署",
+    "lightMode": "浅色模式",
+    "darkMode": "深色模式",
+    "decreaseFont": "缩小字体",
+    "increaseFont": "增大字体",
+    "fontDecrease": "A-",
+    "fontIncrease": "A+",
+    "provider": {
+      "gcp": {
+        "name": "Google Cloud Platform",
+        "description": "使用服务账号密钥连接您的 GCP 项目。ICE 部署到您的云端——而非我们的。",
+        "fieldLabel": "服务账号密钥 (JSON)",
+        "helpLink": "创建服务账号"
+      },
+      "aws": {
+        "name": "Amazon Web Services",
+        "description": "使用访问密钥连接您的 AWS 账户。",
+        "accessKeyLabel": "访问密钥 ID",
+        "secretKeyLabel": "秘密访问密钥",
+        "regionLabel": "默认区域"
+      },
+      "azure": {
+        "name": "Microsoft Azure",
+        "description": "使用服务主体连接您的 Azure 订阅。",
+        "subscriptionLabel": "订阅 ID",
+        "tenantLabel": "租户 ID",
+        "clientIdLabel": "客户端 ID",
+        "clientSecretLabel": "客户端密钥"
+      }
+    }
+  },
+
+  "providerSettings": {
+    "title": "云服务提供商",
+    "description": "连接云服务提供商以直接导入现有基础设施。",
+    "status": {
+      "connected": "已连接",
+      "notConnected": "未连接"
+    },
+    "connect": {
+      "signInGoogle": "使用 Google 登录",
+      "orServiceAccount": "或使用服务账号密钥",
+      "connecting": "连接中...",
+      "button": "连接",
+      "buttonGcp": "使用服务账号连接",
+      "select": "选择...",
+      "connectedTo": "已连接到 {{name}}",
+      "disconnectedSuccess": "断开连接成功",
+      "connectedToCloud": "已连接到 Google Cloud",
+      "connectionFailed": "连接失败",
+      "failedToAdd": "添加项目失败",
+      "serviceAccountRequired": "服务账号密钥为必填项"
+    },
+    "projects": {
+      "label": "项目 ({{count}})",
+      "addProject": "添加项目",
+      "disconnectAll": "全部断开",
+      "addAnother": "添加另一个 GCP 项目",
+      "addButton": "添加",
+      "cancelButton": "取消",
+      "noProjects": "未找到项目",
+      "addedSuccess": "项目添加成功",
+      "removed": "项目已移除"
+    },
+    "import": {
+      "button": "导入",
+      "importing": "导入中...",
+      "success": "从 {{projectId}} 导入了 {{count}} 个资源",
+      "removeTooltip": "移除项目"
+    },
+    "info": {
+      "credentialsSafe": "您的凭据安全保存在您的账户中",
+      "credentialsSafeDesc": "ICE 部署到您自己的云项目，而非我们的。",
+      "gcpTip": "GCP：使用 Google 登录可快速设置，或粘贴服务账号密钥用于 CI/生产环境。"
+    },
+    "footer": {
+      "close": "关闭"
+    }
+  },
+
+  "providerConnect": {
+    "status": {
+      "project": "项目：{{projectId}}",
+      "connected": "已连接"
+    },
+    "connectButton": "连接 {{providerName}}",
+    "disconnectButton": "断开连接",
+    "success": {
+      "connected": "已连接到 {{providerName}}",
+      "connectedViaGoogle": "已通过 Google 连接到 {{providerName}}"
+    },
+    "error": {
+      "connectionFailed": "连接失败",
+      "disconnectFailed": "断开连接失败",
+      "fieldRequired": "{{label}} 为必填项"
+    },
+    "gcp": {
+      "guide": {
+        "title": "如何创建服务账号密钥",
+        "step1Title": "步骤 1 — 创建服务账号",
+        "step1_1": "打开 GCP 控制台 -> IAM -> 服务账号 -> 创建",
+        "step1_2": "为其命名（例如 ice-deployer），点击创建并继续",
+        "step1_3": "授予两个角色（点击\"+ 添加其他角色\"添加第二个）：",
+        "step1_3_role1": "Owner — 用于创建和管理资源",
+        "step1_3_role2": "Service Usage Admin — ICE 在部署时自动启用 GCP API（Cloud Run、Storage 等）所需。",
+        "step1_4": "跳过\"授予用户访问权限\"（步骤 3）——点击完成",
+        "step2Title": "步骤 2 — 下载 JSON 密钥",
+        "step2_1": "点击刚创建的服务账号",
+        "step2_2": "转到密钥标签页",
+        "step2_3": "点击添加密钥 -> 创建新密钥 -> JSON",
+        "step2_4": "下载文件并将其内容粘贴到上方输入框中"
+      },
+      "troubleshooting": {
+        "title": "故障排除",
+        "cantCreateKeys": "无法创建密钥？",
+        "oauthNotWorking": "OAuth 无法用于部署？"
+      },
+      "quickConnect": {
+        "divider": "或快速连接（个人账户）",
+        "button": "使用 Google 登录"
+      }
+    }
+  },
+
+  "invite": {
+    "loading": "正在接受邀请...",
+    "success": {
+      "title": "加入成功！",
+      "description": "您已被添加到 {{orgName}}。",
+      "button": "前往控制台"
+    },
+    "error": {
+      "title": "邀请失败",
+      "fallbackOrg": "该团队",
+      "defaultMessage": "接受邀请失败",
+      "button": "前往控制台"
+    }
+  },
+
+  "folder": {
+    "defaultProjectName": "新建项目",
+    "defaultFolderName": "新建文件夹",
+    "newProject": "新建项目",
+    "newFolder": "新建文件夹",
+    "emptyFolder": "此文件夹为空",
+    "noProjects": "暂无项目",
+    "getStarted": "创建项目或文件夹以开始使用",
+    "typeFolder": "文件夹",
+    "cards": "{{count}} 个卡片"
+  },
+
+  "app": {
+    "notFound": {
+      "code": "404",
+      "message": "页面不存在",
+      "button": "返回首页"
+    },
+    "folderView": {
+      "rootName": "项目"
+    }
+  },
+
+  "layout": {
+    "sidebar": {
+      "project": "项目",
+      "blocks": "组件",
+      "properties": "属性",
+      "aiChat": "AI 对话"
+    }
+  },
+
+  "error": {
+    "crashed": "{{name}} 崩溃了",
+    "somethingWrong": "出现错误",
+    "unexpected": "发生意外错误",
+    "tryAgain": "重试"
+  },
+
+  "debug": {
+    "title": "ICE 调试",
+    "nodes": "节点",
+    "edges": "边",
+    "activeCard": "当前卡片",
+    "selectedNodes": "已选节点",
+    "selectedEdges": "已选边",
+    "lastAction": "上次操作",
+    "actionTime": "操作时间",
+    "render": "渲染",
+    "nodesHeader": "节点 ({{count}})",
+    "none": "无",
+    "groups": "分组",
+    "blocks": "组件",
+    "resources": "资源"
+  },
+
+  "combobox": {
+    "defaultPlaceholder": "搜索...",
+    "defaultEmptyText": "无结果",
+    "loading": "加载中..."
+  }
+}

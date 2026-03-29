@@ -7,6 +7,7 @@
 import { getCloudProvider } from '@ice/core/resources';
 import { Cloud, Globe, Shield, LayoutTemplate, FileCode2 } from 'lucide-react';
 import React from 'react';
+import { useTranslation } from '../../../i18n';
 import { SECURITY_LEVEL_COLORS } from '../../../config/color-palette';
 import { COMPOSED_TEMPLATES } from '../../../config/templates';
 import type { WizardState } from '../hooks/use-wizard-state';
@@ -18,6 +19,7 @@ interface ReviewStepProps {
 }
 
 export const ReviewStep: React.FC<ReviewStepProps> = ({ state }) => {
+  const { t } = useTranslation();
   const enabledEnvs = state.environments.filter((e) => e.enabled);
   const template = state.selectedTemplateId ? COMPOSED_TEMPLATES.find((t) => t.id === state.selectedTemplateId) : null;
   const providerMeta = getCloudProvider(state.provider);
@@ -25,15 +27,15 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ state }) => {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-sm font-semibold text-ice-text-1 mb-1">Review & Create</h3>
-        <p className="text-xs text-ice-text-2 mb-3">Confirm your project settings before creating</p>
+        <h3 className="text-sm font-semibold text-ice-text-1 mb-1">{t('wizard.review.title')}</h3>
+        <p className="text-xs text-ice-text-2 mb-3">{t('wizard.review.hint')}</p>
       </div>
 
       {/* Project info */}
       <div className="rounded-lg border border-ice-border bg-ice-surface p-3 space-y-2">
         <div className="flex items-center gap-2 text-xs">
           <Cloud className="w-3.5 h-3.5" style={{ color: providerMeta?.color ?? '#4285f4' }} />
-          <span className="text-ice-text-2">Project</span>
+          <span className="text-ice-text-2">{t('wizard.review.projectLabel')}</span>
         </div>
         <div className="pl-5.5">
           <p className="text-sm font-semibold text-ice-text-1">{state.projectName}</p>
@@ -56,7 +58,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ state }) => {
       <div className="rounded-lg border border-ice-border bg-ice-surface p-3 space-y-2">
         <div className="flex items-center gap-2 text-xs">
           <Globe className="w-3.5 h-3.5 text-ice-text-2" />
-          <span className="text-ice-text-2">Environments ({enabledEnvs.length})</span>
+          <span className="text-ice-text-2">{t('wizard.review.environmentsLabel')} ({enabledEnvs.length})</span>
         </div>
         <div className="space-y-1.5">
           {enabledEnvs.map((env) => (
@@ -82,19 +84,19 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ state }) => {
       <div className="rounded-lg border border-ice-border bg-ice-surface p-3 space-y-2">
         <div className="flex items-center gap-2 text-xs">
           <LayoutTemplate className="w-3.5 h-3.5 text-ice-text-2" />
-          <span className="text-ice-text-2">Template</span>
+          <span className="text-ice-text-2">{t('wizard.review.templateLabel')}</span>
         </div>
         <div className="flex items-center gap-2 pl-5.5">
           {template ? (
             <>
               <span className="text-xs text-ice-text-1 font-medium">{template.name}</span>
-              <span className="text-ice-xs text-ice-text-2">{template.blocks.length} blocks</span>
+              <span className="text-ice-xs text-ice-text-2">{template.blocks.length} {t('wizard.review.blocks')}</span>
               <span className="text-ice-xs text-ice-text-2 ml-auto">{template.estimatedCost}</span>
             </>
           ) : (
             <>
               <FileCode2 className="w-3.5 h-3.5 text-ice-text-2" />
-              <span className="text-xs text-ice-text-1 font-medium">Blank Canvas</span>
+              <span className="text-xs text-ice-text-1 font-medium">{t('wizard.review.blankCanvas')}</span>
             </>
           )}
         </div>
@@ -102,8 +104,8 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ state }) => {
 
       {/* Summary count */}
       <div className="text-center text-xs text-ice-text-2 pt-1">
-        This will create {enabledEnvs.length} environment{enabledEnvs.length !== 1 ? 's' : ''}{' '}
-        {template ? `with ${template.blocks.length} blocks each` : 'with blank canvases'}
+        {t('wizard.review.summaryPrefix')} {enabledEnvs.length} {enabledEnvs.length !== 1 ? t('wizard.review.environments') : t('wizard.review.environment')}{' '}
+        {template ? t('wizard.review.summaryWithTemplate', { count: template.blocks.length }) : t('wizard.review.summaryBlank')}
       </div>
     </div>
   );

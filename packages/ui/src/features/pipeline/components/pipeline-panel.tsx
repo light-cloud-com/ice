@@ -25,7 +25,7 @@ import {
 import React, { useEffect, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { PIPELINE } from '../../../i18n/messages';
+import { useTranslation } from '../../../i18n';
 import { getApi } from '../../../shared/api/api-adapter';
 import { cn } from '../../../shared/utils/cn';
 import { selectActiveCard } from '../../../store/slices/cards-slice';
@@ -50,6 +50,7 @@ import type { RootState, AppDispatch } from '../../../store';
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const PipelinePanel: React.FC = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const isPanelOpen = useSelector((s: RootState) => s.pipeline.isPanelOpen);
   const nodeId = useSelector((s: RootState) => s.pipeline.activePanelNodeId);
@@ -194,8 +195,8 @@ export const PipelinePanel: React.FC = () => {
       if (!cardId || !nodeId || !repository) {
         setError(
           !repository
-            ? 'No repository linked. Select a repo on the GitHub Repo block first.'
-            : 'Missing card or node context.',
+            ? t('pipeline.noRepoShort')
+            : t('pipeline.missingContext'),
         );
         return;
       }
@@ -268,7 +269,7 @@ export const PipelinePanel: React.FC = () => {
         <div className="flex items-center justify-between px-4 py-3 border-b border-ice-border">
           <div className="flex items-center gap-2">
             <Zap className="w-4 h-4 text-amber-500" />
-            <h2 className="text-sm font-semibold text-ice-text-1">{PIPELINE.PANEL_TITLE(nodeName)}</h2>
+            <h2 className="text-sm font-semibold text-ice-text-1">{t('pipeline.panelTitle', { name: nodeName })}</h2>
             {nodeStatus && nodeStatus.status !== 'idle' && <StatusPill status={nodeStatus.status} />}
           </div>
           <button onClick={handleClose} className="p-1 rounded hover:bg-ice-hover transition-colors">
@@ -279,7 +280,7 @@ export const PipelinePanel: React.FC = () => {
         {/* Content */}
         <div className="flex-1 overflow-y-auto">
           {/* Source Section */}
-          <Section title={PIPELINE.SOURCE} icon={GitBranch}>
+          <Section title={t('pipeline.source')} icon={GitBranch}>
             {repository ? (
               <div className="rounded-md border border-ice-border bg-ice-raised px-3 py-2">
                 <div className="flex items-center justify-between">
@@ -288,16 +289,16 @@ export const PipelinePanel: React.FC = () => {
                 {detectingFramework ? (
                   <div className="flex items-center gap-1.5 mt-1 text-xs text-ice-text-3">
                     <Loader2 className="w-3 h-3 animate-spin" />
-                    {PIPELINE.DETECTING}
+                    {t('pipeline.detecting')}
                   </div>
                 ) : detection?.framework ? (
                   <div className="text-xs text-ice-text-2 mt-1">
-                    {PIPELINE.DETECTED(formatFramework(detection.framework))}
+                    {t('pipeline.detected', { framework: formatFramework(detection.framework) })}
                   </div>
                 ) : null}
               </div>
             ) : (
-              <div className="text-sm text-ice-text-3 italic">{PIPELINE.NO_REPO}</div>
+              <div className="text-sm text-ice-text-3 italic">{t('pipeline.noRepo')}</div>
             )}
           </Section>
 
@@ -309,11 +310,11 @@ export const PipelinePanel: React.FC = () => {
           )}
 
           {/* Triggers Section */}
-          <Section title={PIPELINE.TRIGGERS} icon={Zap}>
+          <Section title={t('pipeline.triggers')} icon={Zap}>
             {rulesLoading || (autoCreated && rules.length === 0) ? (
               <div className="flex items-center gap-2 text-sm text-ice-text-3">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                {repository ? 'Setting up pipeline...' : 'Loading...'}
+                {repository ? t('pipeline.settingUp') : t('common.labels.loading')}
               </div>
             ) : rules.length === 0 ? (
               <div className="space-y-2">
@@ -323,11 +324,11 @@ export const PipelinePanel: React.FC = () => {
                     className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition-colors"
                   >
                     <Zap className="w-3.5 h-3.5" />
-                    {PIPELINE.ENABLE_PIPELINE}
+                    {t('pipeline.enablePipeline')}
                   </button>
                 ) : (
                   <div className="text-xs text-ice-text-3">
-                    Select a repository on the GitHub Repo block first, then connect it to this service.
+                    {t('pipeline.noRepoHint')}
                   </div>
                 )}
               </div>
@@ -380,7 +381,7 @@ export const PipelinePanel: React.FC = () => {
                     className="flex items-center gap-1 text-xs text-ice-text-3 hover:text-ice-text-2 transition-colors"
                   >
                     <Plus className="w-3 h-3" />
-                    {PIPELINE.ADD_TRIGGER}
+                    {t('pipeline.addTrigger')}
                   </button>
                 )}
               </div>
@@ -389,11 +390,11 @@ export const PipelinePanel: React.FC = () => {
 
           {/* Build Section */}
           {detection && (
-            <Section title={PIPELINE.BUILD} icon={Rocket}>
+            <Section title={t('pipeline.build')} icon={Rocket}>
               <div className="space-y-1.5">
-                <BuildRow label={PIPELINE.INSTALL_COMMAND} value={detection.installCommand} />
-                <BuildRow label={PIPELINE.BUILD_COMMAND} value={detection.buildCommand} />
-                <BuildRow label={PIPELINE.OUTPUT_DIR} value={detection.outputDirectory} />
+                <BuildRow label={t('pipeline.installCommand')} value={detection.installCommand} />
+                <BuildRow label={t('pipeline.buildCommand')} value={detection.buildCommand} />
+                <BuildRow label={t('pipeline.outputDir')} value={detection.outputDirectory} />
               </div>
             </Section>
           )}
@@ -403,20 +404,20 @@ export const PipelinePanel: React.FC = () => {
             (nodeStatus.status === 'building' ||
               nodeStatus.status === 'deploying' ||
               nodeStatus.status === 'queued') && (
-              <Section title="Active Deployment" icon={Loader2} iconClassName="animate-spin">
+              <Section title={t('pipeline.activeDeployment')} icon={Loader2} iconClassName="animate-spin">
                 <ActiveDeployment status={nodeStatus} logs={activeLogs} />
               </Section>
             )}
 
           {/* Deployment History */}
-          <Section title={PIPELINE.DEPLOYMENTS} icon={Clock}>
+          <Section title={t('pipeline.deployments')} icon={Clock}>
             {historyLoading ? (
               <div className="flex items-center gap-2 text-sm text-ice-text-3">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                Loading...
+                {t('common.labels.loading')}
               </div>
             ) : events.length === 0 ? (
-              <div className="text-sm text-ice-text-3">{PIPELINE.NO_DEPLOYMENTS}</div>
+              <div className="text-sm text-ice-text-3">{t('pipeline.noDeployments')}</div>
             ) : (
               <div className="space-y-1">
                 {events.map((event) => (
@@ -435,7 +436,7 @@ export const PipelinePanel: React.FC = () => {
               className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-colors font-medium"
             >
               <Rocket className="w-3.5 h-3.5" />
-              {PIPELINE.DEPLOY_NOW}
+              {t('pipeline.deployNow')}
             </button>
           )}
         </div>
@@ -463,12 +464,13 @@ const Section: React.FC<{
 );
 
 const StatusPill: React.FC<{ status: string }> = ({ status }) => {
+  const { t } = useTranslation();
   const config: Record<string, { label: string; className: string }> = {
-    queued: { label: PIPELINE.STATUS_QUEUED, className: 'bg-yellow-500/10 text-yellow-500' },
-    building: { label: PIPELINE.STATUS_BUILDING, className: 'bg-blue-500/10 text-blue-500' },
-    deploying: { label: PIPELINE.STATUS_DEPLOYING, className: 'bg-purple-500/10 text-purple-500' },
-    success: { label: PIPELINE.STATUS_SUCCESS, className: 'bg-emerald-500/10 text-emerald-500' },
-    failed: { label: PIPELINE.STATUS_FAILED, className: 'bg-red-500/10 text-red-500' },
+    queued: { label: t('pipeline.status.queued'), className: 'bg-yellow-500/10 text-yellow-500' },
+    building: { label: t('pipeline.status.building'), className: 'bg-blue-500/10 text-blue-500' },
+    deploying: { label: t('pipeline.status.deploying'), className: 'bg-purple-500/10 text-purple-500' },
+    success: { label: t('pipeline.status.success'), className: 'bg-emerald-500/10 text-emerald-500' },
+    failed: { label: t('pipeline.status.failed'), className: 'bg-red-500/10 text-red-500' },
   };
   const c = config[status] || { label: status, className: 'bg-ice-hover text-ice-text-3' };
   return <span className={cn('px-1.5 py-0.5 text-[10px] font-semibold rounded-full', c.className)}>{c.label}</span>;
@@ -488,6 +490,7 @@ const TriggerRow: React.FC<{
   onChangeBranch: (branch: string) => void;
   onChangeEnvironment: (env: string) => void;
 }> = ({ rule, branches, onToggle, onDelete, onChangeBranch, onChangeEnvironment }) => {
+  const { t } = useTranslation();
   // Ensure current branch_pattern is in the list
   const branchNames = branches.map((b) => b.name);
   const currentInList = branchNames.includes(rule.branch_pattern) || rule.branch_pattern === '*';
@@ -517,7 +520,7 @@ const TriggerRow: React.FC<{
 
       {/* Trigger type + branch */}
       <span className="text-ice-text-2 text-xs">
-        {rule.trigger_type === 'merge' ? PIPELINE.MERGE_TO : PIPELINE.PUSH_TO}
+        {rule.trigger_type === 'merge' ? t('pipeline.mergeTo') : t('pipeline.pushTo')}
       </span>
       <select
         value={rule.branch_pattern}
@@ -626,6 +629,7 @@ const ActiveDeployment: React.FC<{
 );
 
 const EventRow: React.FC<{ event: DeploymentEvent }> = ({ event }) => {
+  const { t } = useTranslation();
   const [showLogs, setShowLogs] = useState(false);
 
   return (
@@ -651,7 +655,7 @@ const EventRow: React.FC<{ event: DeploymentEvent }> = ({ event }) => {
 
         {/* Metadata */}
         <span className="text-ice-text-3 flex-shrink-0">{event.rule?.environment || event.branch}</span>
-        <span className="text-ice-text-3 flex-shrink-0">{PIPELINE.AGO(event.started_at)}</span>
+        <span className="text-ice-text-3 flex-shrink-0">{formatRelativeTime(event.started_at)}</span>
 
         <ChevronDown
           className={cn('w-3 h-3 text-ice-text-3 transition-transform flex-shrink-0', showLogs && 'rotate-180')}
@@ -678,7 +682,7 @@ const EventRow: React.FC<{ event: DeploymentEvent }> = ({ event }) => {
           )}
           {event.duration_seconds && (
             <div className="text-[11px] font-mono text-slate-500 mt-1">
-              Duration: {PIPELINE.DURATION(event.duration_seconds)}
+              {t('pipeline.duration')} {formatDuration(event.duration_seconds)}
             </div>
           )}
         </div>
@@ -688,6 +692,24 @@ const EventRow: React.FC<{ event: DeploymentEvent }> = ({ event }) => {
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
+
+function formatRelativeTime(date: string): string {
+  const diff = Date.now() - new Date(date).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+function formatDuration(seconds: number): string {
+  if (seconds < 60) return `${seconds}s`;
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}m ${secs}s`;
+}
 
 function formatFramework(framework: string): string {
   const names: Record<string, string> = {

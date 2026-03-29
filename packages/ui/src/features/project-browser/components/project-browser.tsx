@@ -32,6 +32,7 @@ import { toSlug } from '../../../shared/utils/slug';
 import { openDialog } from '../../../store/slices/ui-slice';
 import type { RootState, AppDispatch } from '../../../store';
 import { SearchInput } from '../../../shared/components/ui/search-input';
+import { useTranslation } from '../../../i18n';
 
 interface ProjectNode {
   id: string;
@@ -75,10 +76,10 @@ const TreeItem = memo(
     onMove: (id: string, parentId: string | null) => void;
     allFolders: ProjectNode[];
   }) => {
+    const { t } = useTranslation();
     const isFolder = node.type === 'folder';
     const isOpen = expandedIds.has(node.id);
     const isActive = node.id === activeNodeId;
-    const _hasChildren = node.children.length > 0;
     const [isRenaming, setIsRenaming] = useState(false);
     const [renameValue, setRenameValue] = useState(node.name);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -183,7 +184,7 @@ const TreeItem = memo(
                       className="flex items-center gap-2 px-3 py-1.5 text-ice-md text-ice-text-2 rounded cursor-pointer outline-none hover:bg-ice-active"
                     >
                       <FilePlus className="w-3.5 h-3.5 text-ice-text-3" />
-                      New project here
+                      {t('projectBrowser.contextNewProjectHere')}
                     </DropdownMenu.Item>
                   )}
                   <DropdownMenu.Item
@@ -194,7 +195,7 @@ const TreeItem = memo(
                     className="flex items-center gap-2 px-3 py-1.5 text-ice-md text-ice-text-2 rounded cursor-pointer outline-none hover:bg-ice-active"
                   >
                     <Pencil className="w-3.5 h-3.5 text-ice-text-3" />
-                    Rename
+                    {t('projectBrowser.contextRename')}
                   </DropdownMenu.Item>
 
                   {/* Move submenu */}
@@ -202,7 +203,7 @@ const TreeItem = memo(
                     <DropdownMenu.Sub>
                       <DropdownMenu.SubTrigger className="flex items-center gap-2 px-3 py-1.5 text-ice-md text-ice-text-2 rounded cursor-pointer outline-none hover:bg-ice-active">
                         <FolderInput className="w-3.5 h-3.5 text-ice-text-3" />
-                        Move to
+                        {t('projectBrowser.contextMoveTo')}
                         <ChevronRight className="w-3 h-3 ml-auto text-ice-text-3" />
                       </DropdownMenu.SubTrigger>
                       <DropdownMenu.Portal>
@@ -214,7 +215,7 @@ const TreeItem = memo(
                             onClick={() => onMove(node.id, null)}
                             className="flex items-center gap-2 px-3 py-1.5 text-ice-md text-ice-text-2 rounded cursor-pointer outline-none hover:bg-ice-active"
                           >
-                            Root
+                            {t('projectBrowser.contextMoveRoot')}
                           </DropdownMenu.Item>
                           {availableFolders.map((f) => (
                             <DropdownMenu.Item
@@ -237,7 +238,7 @@ const TreeItem = memo(
                     className="flex items-center gap-2 px-3 py-1.5 text-ice-md text-red-400 rounded cursor-pointer outline-none hover:bg-red-500/10"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
-                    Delete
+                    {t('projectBrowser.contextDelete')}
                   </DropdownMenu.Item>
                 </DropdownMenu.Content>
               </DropdownMenu.Portal>
@@ -273,10 +274,10 @@ const TreeItem = memo(
         {!isFolder && isOpen && (
           <div className="ml-4 border-l border-ice-border pl-2 ">
             {[
-              { id: 'canvas', label: 'Canvas', icon: PenTool },
-              { id: 'table', label: 'Table', icon: Table2 },
-              { id: 'settings', label: 'Settings', icon: Settings },
-              { id: 'deployments', label: 'Deployments', icon: Rocket },
+              { id: 'canvas', label: t('projectBrowser.subCanvas'), icon: PenTool },
+              { id: 'table', label: t('projectBrowser.subTable'), icon: Table2 },
+              { id: 'settings', label: t('projectBrowser.subSettings'), icon: Settings },
+              { id: 'deployments', label: t('projectBrowser.subDeployments'), icon: Rocket },
             ].map((sub) => (
               <div
                 key={sub.id}
@@ -302,6 +303,7 @@ const TreeItem = memo(
 // ─── Main Component ─────────────────────────────────────────────────────────
 
 export function ProjectBrowser() {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -382,7 +384,7 @@ export function ProjectBrowser() {
     async (type: 'folder' | 'project', parentId?: string) => {
       if (!selectedOrg) return;
       await axiosInstance.post('/canvas/projects/create', {
-        name: type === 'folder' ? 'New Folder' : 'New Project',
+        name: type === 'folder' ? t('projectBrowser.newFolderName') : t('projectBrowser.newProjectName'),
         type,
         parentId: parentId || null,
         organisationId: selectedOrg.id,
@@ -403,7 +405,7 @@ export function ProjectBrowser() {
 
   const handleDelete = useCallback(
     async (id: string) => {
-      if (!window.confirm('Delete this item?')) return;
+      if (!window.confirm(t('projectBrowser.deleteConfirm'))) return;
       await axiosInstance.post('/canvas/projects/delete', { projectId: id, organisationId: selectedOrg?.id });
       fetchProjects();
     },
@@ -488,7 +490,7 @@ export function ProjectBrowser() {
             className="flex items-center gap-1.5 px-3 py-1.5 text-ice-sm font-medium rounded bg-ice-accent-muted text-ice-accent hover:bg-ice-accent hover:text-white transition-colors flex-1 justify-center"
           >
             <FilePlus className="w-3 h-3" />
-            New Project
+            {t('projectBrowser.newProject')}
           </button>
           <button
             onClick={() => handleCreate('folder')}
@@ -508,12 +510,12 @@ export function ProjectBrowser() {
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center px-4">
             <Folder className="w-8 h-8 text-white/10 mb-2" />
-            <p className="text-ice-base text-ice-text-3 mb-3">No projects yet</p>
+            <p className="text-ice-base text-ice-text-3 mb-3">{t('projectBrowser.emptyState')}</p>
             <button
               onClick={() => dispatch(openDialog('projectWizard'))}
               className="px-3 py-1 text-ice-sm font-medium rounded bg-ice-accent text-white hover:bg-ice-accent-hover transition-[background-color]"
             >
-              Create project
+              {t('projectBrowser.createProject')}
             </button>
           </div>
         ) : (

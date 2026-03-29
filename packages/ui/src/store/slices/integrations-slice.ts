@@ -14,7 +14,7 @@ import { getApi } from '../../shared/api/api-adapter';
 
 export type IntegrationStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
 
-export interface IntegrationInfo {
+interface IntegrationInfo {
   status: IntegrationStatus;
   username?: string;
   avatarUrl?: string;
@@ -45,7 +45,7 @@ interface DeviceFlowState {
   interval: number;
 }
 
-export interface IntegrationsState {
+interface IntegrationsState {
   integrations: Record<string, IntegrationInfo>;
   github: {
     repos: GitHubRepo[];
@@ -138,7 +138,7 @@ export const startGitHubDeviceFlow = createAsyncThunk(
   },
 );
 
-export const pollGitHubDeviceFlow = createAsyncThunk(
+const pollGitHubDeviceFlow = createAsyncThunk(
   'integrations/pollGitHubDeviceFlow',
   async ({ deviceCode, interval }: { deviceCode: string; interval: number }, { rejectWithValue }) => {
     const api = getApi();

@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { TREE_INDENT_PX, TREE_INDENT_BASE } from '../../../config/canvas-constants';
 import { getApi } from '../../../shared/api/api-adapter';
 import { SearchInput } from '../../../shared/components/ui/search-input';
+import { useTranslation } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
 import { createCard, importToActiveCard, type CardNode, type CardEdge } from '../../../store/slices/cards-slice';
 import {
@@ -110,6 +111,7 @@ const ProjectTreeItem: React.FC<ProjectTreeItemProps> = ({
 // =============================================================================
 
 export const ProjectList: React.FC = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const rootDirectory = useSelector(selectRootDirectory);
   const files = useSelector(selectProjectFiles);
@@ -169,7 +171,7 @@ export const ProjectList: React.FC = () => {
   const handleAddFolder = async () => {
     if (!rootDirectory) return;
 
-    const folderName = 'New Folder';
+    const folderName = t('projectList.defaultFolderName');
     try {
       {
         const api = getApi();
@@ -332,14 +334,14 @@ export const ProjectList: React.FC = () => {
       {/* Header */}
       <div className="px-3 py-2 border-b border-ice-border">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-ice-sm font-medium text-ice-text-2 uppercase tracking-wider">Projects</span>
+          <span className="text-ice-sm font-medium text-ice-text-2 uppercase tracking-wider">{t('projectList.header')}</span>
           <div className="flex items-center gap-1">
             {/* Open All button - only show when files exist */}
             {files.length > 0 && (
               <button
                 onClick={handleOpenAllProjects}
                 className="p-1.5 rounded hover:bg-ice-active transition-colors"
-                title={`Open all ${files.length} projects`}
+                title={t('projectList.openAll', { count: files.length })}
               >
                 <PlayCircle className="w-4 h-4 text-green-400/70" />
               </button>
@@ -347,7 +349,7 @@ export const ProjectList: React.FC = () => {
             <button
               onClick={handleAddFolder}
               className="p-1.5 rounded hover:bg-ice-active transition-colors"
-              title="Add Folder"
+              title={t('projectList.addFolder')}
               disabled={!rootDirectory}
             >
               <FolderPlus className={cn('w-4 h-4', rootDirectory ? 'text-ice-text-2' : 'text-ice-text-3')} />
@@ -355,7 +357,7 @@ export const ProjectList: React.FC = () => {
             <button
               onClick={handleRefresh}
               className={cn('p-1.5 rounded hover:bg-ice-active transition-colors', isLoading && 'animate-spin')}
-              title="Refresh"
+              title={t('projectList.refresh')}
               disabled={!rootDirectory}
             >
               <RefreshCw className={cn('w-4 h-4', rootDirectory ? 'text-ice-text-2' : 'text-ice-text-3')} />
@@ -363,7 +365,7 @@ export const ProjectList: React.FC = () => {
             <button
               onClick={handleSelectDirectory}
               className="p-1.5 rounded hover:bg-ice-active transition-colors"
-              title="Select Directory"
+              title={t('projectList.selectDirectory')}
             >
               <FolderOpen className="w-4 h-4 text-ice-text-2" />
             </button>
@@ -374,7 +376,7 @@ export const ProjectList: React.FC = () => {
         <SearchInput
           value={searchQuery}
           onChange={(v) => dispatch(setSearchQuery(v))}
-          placeholder="Search projects..."
+          placeholder={t('projectList.searchPlaceholder')}
           size="md"
         />
       </div>
@@ -388,19 +390,19 @@ export const ProjectList: React.FC = () => {
         ) : !rootDirectory ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-4">
             <FolderOpen className="w-12 h-12 text-ice-text-3 mb-3" />
-            <p className="text-ice-base text-ice-text-2 mb-4">Select a directory to browse your projects</p>
+            <p className="text-ice-base text-ice-text-2 mb-4">{t('projectList.emptySelectDirectory')}</p>
             <div className="flex flex-col gap-2">
               <button
                 onClick={handleLoadExamples}
                 className="px-4 py-2 text-ice-base font-medium rounded-md bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 transition-colors"
               >
-                Load Examples
+                {t('projectList.loadExamples')}
               </button>
               <button
                 onClick={handleSelectDirectory}
                 className="px-4 py-2 text-ice-base font-medium rounded-md bg-ice-active text-ice-text-1 hover:bg-ice-active transition-colors"
               >
-                Select Directory
+                {t('projectList.selectDirectory')}
               </button>
             </div>
           </div>
@@ -429,7 +431,7 @@ export const ProjectList: React.FC = () => {
             {/* Show message if no files or folders found */}
             {rootFolders.length === 0 && rootFiles.length === 0 && (
               <div className="px-2 py-4 text-center">
-                <p className="text-ice-sm text-ice-text-3">No .ice or .json files found in this directory</p>
+                <p className="text-ice-sm text-ice-text-3">{t('projectList.emptyNoFiles')}</p>
               </div>
             )}
           </>
@@ -447,4 +449,3 @@ export const ProjectList: React.FC = () => {
   );
 };
 
-export default ProjectList;

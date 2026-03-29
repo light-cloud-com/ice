@@ -8,8 +8,6 @@ import { SERVICE_NAMES, operation_failed, operation_timed_out } from '../message
 import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
 import type { ResourceDeployResult } from '@ice/core';
 
-const _BASE_URL = 'https://us-central1-aiplatform.googleapis.com/v1';
-
 function result(
   name: string,
   type: string,

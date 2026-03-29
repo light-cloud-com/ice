@@ -8,6 +8,7 @@
 import axiosInstance from '@ui/shared/api/axios-instance';
 import { Folder, FolderOpen, FileText, Loader2, Plus } from 'lucide-react';
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from '@ui/i18n';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import type { RootState } from '@ui/store';
@@ -29,6 +30,7 @@ interface FolderViewProps {
 }
 
 export const FolderView: React.FC<FolderViewProps> = ({ folderId, folderName, basePath = '' }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const selectedOrg = useSelector((s: RootState) => s.account?.selectedOrg);
   const [items, setItems] = useState<FolderItem[]>([]);
@@ -62,7 +64,7 @@ export const FolderView: React.FC<FolderViewProps> = ({ folderId, folderName, ba
     if (!selectedOrg) return;
     try {
       const res = await axiosInstance.post('/canvas/projects/create', {
-        name: type === 'folder' ? 'New Folder' : 'New Project',
+        name: type === 'folder' ? t('folder.defaultFolderName') : t('folder.defaultProjectName'),
         type,
         parentId: folderId,
         organisationId: selectedOrg.id,
@@ -96,7 +98,7 @@ export const FolderView: React.FC<FolderViewProps> = ({ folderId, folderName, ba
             className="ice-btn ice-btn-primary text-ice-md px-3 py-1.5"
           >
             <Plus className="w-3.5 h-3.5" />
-            New Project
+            {t('folder.newProject')}
           </button>
           <button
             id="ice-folder-btn-create-folder"
@@ -104,7 +106,7 @@ export const FolderView: React.FC<FolderViewProps> = ({ folderId, folderName, ba
             className="ice-btn ice-btn-ghost text-ice-md px-3 py-1.5 border border-ice-border"
           >
             <Folder className="w-3.5 h-3.5" />
-            New Folder
+            {t('folder.newFolder')}
           </button>
         </div>
       </div>
@@ -112,8 +114,8 @@ export const FolderView: React.FC<FolderViewProps> = ({ folderId, folderName, ba
       {items.length === 0 ? (
         <div className="text-center py-20">
           <FolderOpen className="w-12 h-12 text-ice-text-3 mx-auto mb-3" />
-          <p className="text-ice-text-3 text-sm">{folderId ? 'This folder is empty' : 'No projects yet'}</p>
-          <p className="text-ice-text-3 text-xs mt-1">Create a project or folder to get started</p>
+          <p className="text-ice-text-3 text-sm">{folderId ? t('folder.emptyFolder') : t('folder.noProjects')}</p>
+          <p className="text-ice-text-3 text-xs mt-1">{t('folder.getStarted')}</p>
         </div>
       ) : (
         <div className="border border-ice-border rounded-lg overflow-hidden divide-y divide-ice-border">
@@ -132,7 +134,7 @@ export const FolderView: React.FC<FolderViewProps> = ({ folderId, folderName, ba
                 )}
                 <span className="text-sm text-ice-text-1 font-medium">{item.name}</span>
                 <span className="text-xs text-ice-text-3 ml-auto">
-                  {item.type === 'folder' ? 'Folder' : `${item.cards?.length || 0} cards`}
+                  {item.type === 'folder' ? t('folder.typeFolder') : t('folder.cards', { count: item.cards?.length || 0 })}
                 </span>
               </button>
             ))}

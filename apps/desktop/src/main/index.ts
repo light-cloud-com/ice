@@ -7,25 +7,95 @@
  */
 
 import { randomBytes } from 'crypto';
-import { existsSync } from 'fs';
+import { existsSync, mkdirSync, cpSync } from 'fs';
 import { join } from 'path';
+import Module from 'module';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
-import { app, BrowserWindow, shell, screen } from 'electron';
+import { app, BrowserWindow, shell, screen, dialog, ipcMain } from 'electron';
+import { autoUpdater } from 'electron-updater';
 
 // ─── Configuration ─────────────────────────────────────────────────────────
 
 const GATEWAY_PORT = 15173; // Fixed local port for embedded gateway
 
-function getIconPath(): string {
+// ─── Auto-Update ──────────────────────────────────────────────────────────
+
+function setupAutoUpdater(): void {
+  if (is.dev) return;
+
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on('update-available', (info) => {
+    mainWindow?.webContents.send('update-status', {
+      status: 'available',
+      version: info.version,
+    });
+  });
+
+  autoUpdater.on('download-progress', (progress) => {
+    mainWindow?.webContents.send('update-status', {
+      status: 'downloading',
+      percent: Math.round(progress.percent),
+    });
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    mainWindow?.webContents.send('update-status', {
+      status: 'ready',
+      version: info.version,
+    });
+
+    // Show a native dialog prompting restart
+    dialog
+      .showMessageBox(mainWindow!, {
+        type: 'info',
+        title: 'Update Ready',
+        message: `ICE ${info.version} has been downloaded.`,
+        detail: 'Restart now to apply the update?',
+        buttons: ['Restart Now', 'Later'],
+        defaultId: 0,
+      })
+      .then(({ response }) => {
+        if (response === 0) {
+          autoUpdater.quitAndInstall(false, true);
+        }
+      });
+  });
+
+  autoUpdater.on('error', (err) => {
+    // Silent — don't bother the user if update check fails
+    if (is.dev) console.error('[updater]', err.message);
+  });
+
+  // Check for updates 5s after launch, then every 4 hours
+  setTimeout(() => autoUpdater.checkForUpdates(), 5_000);
+  setInterval(() => autoUpdater.checkForUpdates(), 4 * 60 * 60 * 1000);
+
+  // Allow renderer to trigger manual check
+  ipcMain.handle('check-for-updates', () => autoUpdater.checkForUpdates());
+}
+
+function getIconPath(): string | undefined {
   const iconName = process.platform === 'win32' ? 'icon.ico' : '512x512.png';
-  if (is.dev) return join(__dirname, '../../resources/icons', iconName);
-  return join(process.resourcesPath || __dirname, 'icons', iconName);
+  const devPath = join(__dirname, '../../resources/icons', iconName);
+  const prodPath = join(process.resourcesPath || __dirname, 'icons', iconName);
+  const iconPath = is.dev ? devPath : prodPath;
+  return existsSync(iconPath) ? iconPath : undefined;
 }
 
 // ─── Embedded Backend ──────────────────────────────────────────────────────
 
 async function startEmbeddedBackend(): Promise<void> {
   const dbPath = join(app.getPath('userData'), 'ice-desktop.db');
+
+  if (is.dev) {
+    console.log('[desktop] ─── Starting Embedded Backend ───');
+    console.log('[desktop] isDev:', is.dev);
+    console.log('[desktop] userData:', app.getPath('userData'));
+    console.log('[desktop] dbPath:', dbPath);
+    console.log('[desktop] resourcesPath:', process.resourcesPath);
+  }
 
   // Set environment for desktop mode
   process.env.ICE_DESKTOP = 'true';
@@ -36,67 +106,48 @@ async function startEmbeddedBackend(): Promise<void> {
   process.env.PORT = String(GATEWAY_PORT);
   process.env.NODE_ENV = 'production';
 
-  // Push SQLite schema if DB doesn't exist
-  if (!existsSync(dbPath)) {
-    console.log('[desktop] Creating local database...');
-    try {
-      const { execSync } = await import('child_process');
-      const schemaPath = is.dev
-        ? join(__dirname, '../../packages/db/prisma/schema.sqlite.prisma')
-        : join(process.resourcesPath || __dirname, 'prisma/schema.sqlite.prisma');
+  // Tell the gateway where the web app static files are
+  const webDistPath = is.dev
+    ? join(__dirname, '../../../../packages/web/dist')
+    : join(process.resourcesPath || __dirname, 'web-dist');
+  process.env.ICE_WEB_DIST_PATH = webDistPath;
 
-      if (existsSync(schemaPath)) {
-        execSync(`npx prisma db push --schema="${schemaPath}" --skip-generate`, {
-          env: { ...process.env, DATABASE_URL: `file:${dbPath}` },
-          stdio: 'pipe',
-        });
-      }
-    } catch (err: any) {
-      console.error('[desktop] DB setup error:', err.message);
+  // Patch module resolution so @prisma/client can find .prisma/client
+  // The generated Prisma client is in extraResources/prisma-client
+  if (!is.dev) {
+    const prismaClientDir = join(process.resourcesPath || __dirname, 'prisma-client');
+
+    // Copy to a location @prisma/client expects: node_modules/.prisma/client/
+    const targetDir = join(app.getPath('userData'), 'node_modules', '.prisma', 'client');
+    if (!existsSync(targetDir)) {
+      mkdirSync(targetDir, { recursive: true });
+      cpSync(prismaClientDir, targetDir, { recursive: true });
     }
+
+    // Patch Node's module resolution to find .prisma/client in the userData path
+    const origResolve = (Module as any)._resolveFilename;
+    (Module as any)._resolveFilename = function (request: string, parent: any, ...args: any[]) {
+      if (request === '.prisma/client/default' || request === '.prisma/client') {
+        const resolved = join(targetDir, request === '.prisma/client/default' ? 'default.js' : 'index.js');
+        if (existsSync(resolved)) return resolved;
+      }
+      // When .prisma/client tries to require @prisma/client/*, resolve from the asar
+      if (request.startsWith('@prisma/client') && parent?.filename?.includes('Application Support')) {
+        const asarPath = join(app.getAppPath(), 'node_modules', request);
+        if (existsSync(asarPath)) return asarPath;
+        // Try with .js extension
+        if (existsSync(asarPath + '.js')) return asarPath + '.js';
+      }
+      return origResolve.call(this, request, parent, ...args);
+    };
   }
 
-  // Auto-seed local user for desktop (no login needed)
-  // In dev mode, the shared DB already has the test user — skip seeding
   if (!is.dev) {
     try {
-      const prisma = (await import('@ice/db')).default;
-      const { setDesktopUser } = await import('@ice/shared');
-
-      let user = await prisma.user.findFirst();
-      if (!user) {
-        const org = await prisma.organisation.create({ data: { name: 'Local' } });
-        user = await prisma.user.create({
-          data: {
-            name: 'Desktop User',
-            email: 'desktop@ice.local',
-            password_hash: '@@desktop-local@@',
-            organisation_id: org.id,
-          },
-        });
-        await prisma.organisationMember.create({
-          data: { user_id: user.id, organisation_id: org.id, role: 'owner' },
-        });
-        console.log('[desktop] Created local user');
-      }
-
-      setDesktopUser(user.id, user.organisation_id || '');
-    } catch (err: any) {
-      console.error('[desktop] User seed error:', err.message);
-    }
-  }
-
-  // In dev mode, the gateway runs as a separate process (started by dev:desktop script)
-  // In production, the gateway is bundled and started here
-  if (!is.dev) {
-    console.log(`[desktop] Starting embedded backend on port ${GATEWAY_PORT}...`);
-    try {
-      await import('@ice/gateway/src/index.js');
+      await import('@ice/gateway');
     } catch (err: any) {
       console.error('[desktop] Gateway start error:', err.message);
     }
-  } else {
-    console.log('[desktop] Dev mode — gateway running externally');
   }
 }
 
@@ -190,16 +241,26 @@ function createMainWindow(): void {
     return { action: 'deny' };
   });
 
+  // Log renderer errors
+  mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
+    console.error('[desktop] Page failed to load:', { errorCode, errorDescription, validatedURL });
+  });
+  mainWindow.webContents.on('did-finish-load', () => {
+    console.log('[desktop] Page loaded:', mainWindow?.webContents.getURL());
+  });
+  mainWindow.webContents.on('console-message', (_event, level, message, line, sourceId) => {
+    const levels = ['LOG', 'WARN', 'ERROR'];
+    console.log(`[renderer ${levels[level] || level}] ${message} (${sourceId}:${line})`);
+  });
+
   // Load the web app from the embedded gateway
   const appUrl = `http://localhost:${GATEWAY_PORT}`;
+  console.log('[desktop] Loading URL:', is.dev ? 'http://localhost:5173' : appUrl);
 
   if (is.dev) {
-    // In dev, load from the web Vite dev server (same app as production)
-    // The web proxy forwards /api to the gateway on GATEWAY_PORT
     const webDevUrl = 'http://localhost:5173';
     mainWindow.loadURL(webDevUrl);
   } else {
-    // In production, the gateway serves the web app's static files
     mainWindow.loadURL(appUrl);
   }
 }
@@ -210,7 +271,8 @@ app.whenReady().then(async () => {
   electronApp.setAppUserModelId('com.ice.desktop');
 
   if (process.platform === 'darwin' && app.dock) {
-    app.dock.setIcon(getIconPath());
+    const icon = getIconPath();
+    if (icon) app.dock.setIcon(icon);
   }
 
   app.on('browser-window-created', (_, window) => {
@@ -225,6 +287,9 @@ app.whenReady().then(async () => {
 
   // Open main window
   createMainWindow();
+
+  // Check for updates (production only)
+  setupAutoUpdater();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createMainWindow();

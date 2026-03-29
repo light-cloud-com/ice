@@ -11,14 +11,14 @@ import prisma from '@ice/db';
 const ROLE_LEVEL: Record<string, number> = { viewer: 1, editor: 2, owner: 3 };
 const ORG_ADMIN_ROLES = new Set(['owner', 'admin']);
 
-export async function getOrgRole(userId: string, orgId: string): Promise<string | null> {
+async function getOrgRole(userId: string, orgId: string): Promise<string | null> {
   const member = await prisma.organisationMember.findUnique({
     where: { user_id_organisation_id: { user_id: userId, organisation_id: orgId } },
   });
   return member?.role || null;
 }
 
-export async function getProjectRole(userId: string, projectId: string): Promise<string | null> {
+async function getProjectRole(userId: string, projectId: string): Promise<string | null> {
   const pm = await prisma.projectMember.findUnique({
     where: { project_id_user_id: { project_id: projectId, user_id: userId } },
   });

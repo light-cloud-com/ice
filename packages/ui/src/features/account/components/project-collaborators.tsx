@@ -8,6 +8,7 @@
 import { UserPlus, Shield, Pencil, Eye, Trash2, Loader2 } from 'lucide-react';
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import { useTranslation } from '../../../i18n';
 import axiosInstance from '../../../shared/api/axios-instance';
 import { cn } from '../../../shared/utils/cn';
 import type { RootState } from '../../../store';
@@ -29,10 +30,10 @@ interface OrgMember {
   role: string;
 }
 
-const ROLES = [
-  { value: 'owner', label: 'Owner', icon: Shield, description: 'Full control — settings, members, delete' },
-  { value: 'editor', label: 'Editor', icon: Pencil, description: 'Edit canvas, deploy, manage environments' },
-  { value: 'viewer', label: 'Viewer', icon: Eye, description: 'View canvas and deployments — read only' },
+const ROLE_DEFS = [
+  { value: 'owner', labelKey: 'common.roles.owner', icon: Shield, descKey: 'account.collaborators.roleOwnerDesc' },
+  { value: 'editor', labelKey: 'common.roles.editor', icon: Pencil, descKey: 'account.collaborators.roleEditorDesc' },
+  { value: 'viewer', labelKey: 'common.roles.viewer', icon: Eye, descKey: 'account.collaborators.roleViewerDesc' },
 ];
 
 interface ProjectCollaboratorsProps {
@@ -40,6 +41,7 @@ interface ProjectCollaboratorsProps {
 }
 
 export const ProjectCollaborators: React.FC<ProjectCollaboratorsProps> = ({ projectId }) => {
+  const { t } = useTranslation();
   const currentUser = useSelector((s: RootState) => s.account.user);
   const selectedOrg = useSelector((s: RootState) => s.account.selectedOrg);
 
@@ -124,9 +126,9 @@ export const ProjectCollaborators: React.FC<ProjectCollaboratorsProps> = ({ proj
       {/* Header + add button */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-ice-sm font-medium text-ice-text-1">Project members</h3>
+          <h3 className="text-ice-sm font-medium text-ice-text-1">{t('account.collaborators.title')}</h3>
           <p className="text-ice-xs text-ice-text-3">
-            {members.length} member{members.length !== 1 ? 's' : ''}
+            {members.length} {t('account.collaborators.memberCount')}{members.length !== 1 ? 's' : ''}
           </p>
         </div>
         {availableToAdd.length > 0 && (
@@ -135,7 +137,7 @@ export const ProjectCollaborators: React.FC<ProjectCollaboratorsProps> = ({ proj
             className="flex items-center gap-1.5 text-ice-xs font-medium text-ice-accent hover:text-ice-accent-hover transition-colors"
           >
             <UserPlus className="w-3.5 h-3.5" />
-            Add member
+            {t('account.collaborators.addMember')}
           </button>
         )}
       </div>
@@ -144,9 +146,9 @@ export const ProjectCollaborators: React.FC<ProjectCollaboratorsProps> = ({ proj
       {showAdd && (
         <div className="p-3 rounded-lg bg-ice-raised border border-ice-border space-y-3">
           <div>
-            <label className="block text-ice-xs font-medium text-ice-text-2 mb-1">Team member</label>
+            <label className="block text-ice-xs font-medium text-ice-text-2 mb-1">{t('account.collaborators.teamMemberLabel')}</label>
             <select value={addUserId} onChange={(e) => setAddUserId(e.target.value)} className="ice-input w-full">
-              <option value="">Select a member...</option>
+              <option value="">{t('account.collaborators.selectMember')}</option>
               {availableToAdd.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.name} ({m.email})
@@ -155,9 +157,9 @@ export const ProjectCollaborators: React.FC<ProjectCollaboratorsProps> = ({ proj
             </select>
           </div>
           <div>
-            <label className="block text-ice-xs font-medium text-ice-text-2 mb-1">Role</label>
+            <label className="block text-ice-xs font-medium text-ice-text-2 mb-1">{t('account.collaborators.roleLabel')}</label>
             <div className="space-y-1.5">
-              {ROLES.map((r) => {
+              {ROLE_DEFS.map((r) => {
                 const Icon = r.icon;
                 return (
                   <button
@@ -172,8 +174,8 @@ export const ProjectCollaborators: React.FC<ProjectCollaboratorsProps> = ({ proj
                     )}
                   >
                     <Icon className={cn('w-3 h-3', addRole === r.value ? 'text-ice-accent' : 'text-ice-text-3')} />
-                    <span className="font-medium text-ice-text-1">{r.label}</span>
-                    <span className="text-ice-text-3 ml-1">{r.description}</span>
+                    <span className="font-medium text-ice-text-1">{t(r.labelKey)}</span>
+                    <span className="text-ice-text-3 ml-1">{t(r.descKey)}</span>
                   </button>
                 );
               })}
@@ -184,7 +186,7 @@ export const ProjectCollaborators: React.FC<ProjectCollaboratorsProps> = ({ proj
               onClick={() => setShowAdd(false)}
               className="text-ice-xs text-ice-text-3 hover:text-ice-text-1 px-3 py-1.5"
             >
-              Cancel
+              {t('account.collaborators.cancelButton')}
             </button>
             <button
               onClick={handleAdd}
@@ -192,7 +194,7 @@ export const ProjectCollaborators: React.FC<ProjectCollaboratorsProps> = ({ proj
               className="ice-btn ice-btn-primary text-ice-xs px-3 py-1.5"
             >
               {adding && <Loader2 className="w-3 h-3 animate-spin" />}
-              Add
+              {t('account.collaborators.addButton')}
             </button>
           </div>
         </div>
@@ -220,7 +222,7 @@ export const ProjectCollaborators: React.FC<ProjectCollaboratorsProps> = ({ proj
               <div className="flex-1 min-w-0">
                 <p className="text-ice-xs font-medium text-ice-text-1 truncate">
                   {m.name}
-                  {isCurrentUser && <span className="text-ice-text-3 ml-1">(you)</span>}
+                  {isCurrentUser && <span className="text-ice-text-3 ml-1">{t('account.collaborators.youBadge')}</span>}
                 </p>
                 <p className="text-[10px] text-ice-text-3 truncate">{m.email}</p>
               </div>
@@ -232,9 +234,9 @@ export const ProjectCollaborators: React.FC<ProjectCollaboratorsProps> = ({ proj
                   onChange={(e) => handleRoleChange(m.userId, e.target.value)}
                   className="text-ice-xs bg-ice-raised border border-ice-border rounded px-2 py-1 text-ice-text-1"
                 >
-                  {ROLES.map((r) => (
+                  {ROLE_DEFS.map((r) => (
                     <option key={r.value} value={r.value}>
-                      {r.label}
+                      {t(r.labelKey)}
                     </option>
                   ))}
                 </select>
@@ -247,7 +249,7 @@ export const ProjectCollaborators: React.FC<ProjectCollaboratorsProps> = ({ proj
                 <button
                   onClick={() => handleRemove(m.userId)}
                   className="p-1 rounded text-ice-text-3 hover:text-ice-red hover:bg-ice-hover transition-colors"
-                  title="Remove from project"
+                  title={t('account.collaborators.removeTitle')}
                 >
                   <Trash2 className="w-3 h-3" />
                 </button>

@@ -5,52 +5,54 @@
  */
 
 import React, { useState } from 'react';
-
-const CONTROL_SECTIONS = [
-  {
-    title: 'Navigation',
-    items: [
-      { keys: 'W A S D / Arrow Keys', action: 'Pan canvas' },
-      { keys: 'Scroll Wheel', action: 'Zoom in / out' },
-      { keys: 'Middle Mouse + Drag', action: 'Pan canvas' },
-    ],
-  },
-  {
-    title: 'Selection',
-    items: [
-      { keys: 'Click', action: 'Select node' },
-      { keys: 'Ctrl / Cmd + Click', action: 'Multi-select' },
-      { keys: 'Click + Drag (empty area)', action: 'Box select' },
-      { keys: 'Escape', action: 'Deselect all' },
-    ],
-  },
-  {
-    title: 'Editing',
-    items: [
-      { keys: 'Delete / Backspace', action: 'Delete selected' },
-      { keys: 'Cmd + C / X / V', action: 'Copy / Cut / Paste' },
-      { keys: 'Double-click label', action: 'Rename group' },
-    ],
-  },
-  {
-    title: 'Containment',
-    items: [
-      { keys: 'Shift + Drag onto container', action: 'Move into group / block' },
-      { keys: 'Shift + Drag onto canvas', action: 'Detach from container' },
-    ],
-  },
-  {
-    title: 'View',
-    items: [
-      { keys: '1', action: 'Architecture view' },
-      { keys: '2', action: 'Infrastructure view' },
-      { keys: 'Ctrl + Shift + D', action: 'Toggle debug panel' },
-    ],
-  },
-];
+import { useTranslation } from '../../../i18n';
 
 export const ControlsHelpModal: React.FC = () => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+
+  const CONTROL_SECTIONS = [
+    {
+      title: t('canvas.controls.sectionNavigation'),
+      items: [
+        { keys: 'W A S D / Arrow Keys', action: t('canvas.controls.panCanvas') },
+        { keys: 'Scroll Wheel', action: t('canvas.controls.zoomInOut') },
+        { keys: 'Middle Mouse + Drag', action: t('canvas.controls.panCanvas') },
+      ],
+    },
+    {
+      title: t('canvas.controls.sectionSelection'),
+      items: [
+        { keys: 'Click', action: t('canvas.controls.selectNode') },
+        { keys: 'Ctrl / Cmd + Click', action: t('canvas.controls.multiSelect') },
+        { keys: 'Click + Drag (empty area)', action: t('canvas.controls.boxSelect') },
+        { keys: 'Escape', action: t('canvas.controls.deselectAll') },
+      ],
+    },
+    {
+      title: t('canvas.controls.sectionEditing'),
+      items: [
+        { keys: 'Delete / Backspace', action: t('canvas.controls.deleteSelected') },
+        { keys: 'Cmd + C / X / V', action: t('canvas.controls.copyPaste') },
+        { keys: 'Double-click label', action: t('canvas.controls.renameGroup') },
+      ],
+    },
+    {
+      title: t('canvas.controls.sectionContainment'),
+      items: [
+        { keys: 'Shift + Drag onto container', action: t('canvas.controls.moveIntoGroup') },
+        { keys: 'Shift + Drag onto canvas', action: t('canvas.controls.detachFromContainer') },
+      ],
+    },
+    {
+      title: t('canvas.controls.sectionView'),
+      items: [
+        { keys: '1', action: t('canvas.controls.architectureView') },
+        { keys: '2', action: t('canvas.controls.infrastructureView') },
+        { keys: 'Ctrl + Shift + D', action: t('canvas.controls.toggleDebug') },
+      ],
+    },
+  ];
 
   return (
     <>
@@ -63,7 +65,7 @@ export const ControlsHelpModal: React.FC = () => {
           color: open ? 'var(--ice-text-primary)' : 'var(--ice-text-secondary)',
           border: '1px solid var(--ice-border-strong)',
         }}
-        title="Keyboard shortcuts"
+        title={t('canvas.controls.shortcutsTitle')}
       >
         ?
       </button>
@@ -91,9 +93,9 @@ export const ControlsHelpModal: React.FC = () => {
               className="px-4 py-2.5 flex items-center justify-between"
               style={{ borderBottom: '1px solid var(--ice-border)' }}
             >
-              <span className="text-xs font-semibold text-slate-300">Controls</span>
+              <span className="text-xs font-semibold text-slate-300">{t('canvas.controls.title')}</span>
               <button onClick={() => setOpen(false)} className="text-slate-500 hover:text-slate-300 text-xs">
-                ESC
+                {t('canvas.controls.escButton')}
               </button>
             </div>
 

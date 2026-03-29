@@ -25,7 +25,7 @@ function isDebugEnabled(): boolean {
  * Gated debug logger.
  * Only outputs when localStorage 'ice-debug' is 'true'.
  */
-export function iceDebug(prefix: DebugPrefix, message: string, data?: unknown): void {
+function iceDebug(prefix: DebugPrefix, message: string, data?: unknown): void {
   if (!isDebugEnabled()) return;
 
   if (data !== undefined) {

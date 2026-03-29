@@ -6,27 +6,29 @@
 
 import React from 'react';
 import { useSelector } from 'react-redux';
+import { useTranslation } from '../../../i18n';
 import type { RootState } from '../../../store';
 
 export const WelcomeStep: React.FC = () => {
   const userName = useSelector((s: RootState) => s.account.user?.name);
+  const { t } = useTranslation();
 
   return (
     <div className="space-y-6 text-center py-4">
       <div>
         <h2 className="text-2xl font-semibold text-ice-text-1">
-          Welcome to ICE{userName ? `, ${userName.split(' ')[0]}` : ''}
+          {userName ? t('onboarding.welcome.titleWithName', { name: userName.split(' ')[0] }) : t('onboarding.welcome.title')}
         </h2>
-        <p className="text-sm text-ice-text-2 mt-2">Design, deploy, and manage cloud infrastructure visually</p>
+        <p className="text-sm text-ice-text-2 mt-2">{t('onboarding.welcome.subtitle')}</p>
       </div>
 
       <div className="space-y-3 text-left max-w-sm mx-auto">
-        <Feature title="Visual canvas" description="Drag-and-drop infrastructure blocks onto a live canvas" />
-        <Feature title="Multi-cloud" description="GCP, AWS, and Azure — design once, deploy anywhere" />
-        <Feature title="CI/CD built in" description="Connect GitHub and deploy on every push" />
+        <Feature title={t('onboarding.welcome.featureCanvas')} description={t('onboarding.welcome.featureCanvasDesc')} />
+        <Feature title={t('onboarding.welcome.featureMultiCloud')} description={t('onboarding.welcome.featureMultiCloudDesc')} />
+        <Feature title={t('onboarding.welcome.featureCiCd')} description={t('onboarding.welcome.featureCiCdDesc')} />
       </div>
 
-      <p className="text-xs text-ice-text-3">This setup takes about a minute. You can skip any step.</p>
+      <p className="text-xs text-ice-text-3">{t('onboarding.welcome.setupHint')}</p>
     </div>
   );
 };

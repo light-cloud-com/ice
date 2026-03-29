@@ -8,7 +8,7 @@ import prisma from '@ice/db';
 import { generateToken, generateRefreshToken } from '@ice/shared';
 import * as bcrypt from 'bcryptjs';
 
-export interface AuthResult {
+interface AuthResult {
   token: string;
   refreshToken: string;
   user: { id: string; email: string; name: string; organisationId: string };

@@ -25,7 +25,7 @@ import {
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { IntegrationStatusDots } from '../../features/integrations';
-import { STATUS_BAR } from '../../i18n/messages';
+import { useTranslation } from '../../i18n';
 import { selectActiveCard } from '../../store/slices/cards-slice';
 import type { RootState } from '../../store';
 
@@ -38,6 +38,7 @@ function parseCostRange(cost: string): number {
 }
 
 export const StatusBar: React.FC = () => {
+  const { t } = useTranslation();
   const activeCard = useSelector(selectActiveCard);
   const { isDirty, iceGraph } = useSelector((state: RootState) => state.graph);
   const { selectedNodes, selectedEdges } = useSelector((state: RootState) => state.selection);
@@ -74,7 +75,7 @@ export const StatusBar: React.FC = () => {
       {/* Graph name */}
       <div className="flex items-center gap-1.5">
         <GitBranch className="w-3 h-3" />
-        <span>{activeCard?.name || iceGraph?.name || STATUS_BAR.UNTITLED}</span>
+        <span>{activeCard?.name || iceGraph?.name || t('common.labels.untitled')}</span>
         {isDirty && <Circle className="w-1.5 h-1.5 fill-current text-primary" />}
       </div>
 
@@ -136,7 +137,7 @@ export const StatusBar: React.FC = () => {
         ) : (
           <div className="flex items-center gap-1 text-green-600">
             <CheckCircle className="w-3 h-3" />
-            <span>{STATUS_BAR.VALID}</span>
+            <span>{t('statusBar.valid')}</span>
           </div>
         )}
         {validationWarnings > 0 && (
@@ -163,13 +164,14 @@ export const StatusBar: React.FC = () => {
 
       {/* Version */}
       <div className="flex items-center gap-1.5 opacity-50">
-        <span>{STATUS_BAR.VERSION}</span>
+        <span>{t('statusBar.version')}</span>
       </div>
     </div>
   );
 };
 
 const DeployStatusIndicator: React.FC = () => {
+  const { t } = useTranslation();
   const deployStatus = useSelector((state: RootState) => state.deploy.status);
   const deployProgress = useSelector((state: RootState) => state.deploy.progress);
 
@@ -182,37 +184,37 @@ const DeployStatusIndicator: React.FC = () => {
         {deployStatus === 'authenticating' && (
           <>
             <Loader2 className="w-3 h-3 animate-spin text-orange-500" />
-            <span className="text-orange-600">{STATUS_BAR.CONNECTING}</span>
+            <span className="text-orange-600">{t('statusBar.connecting')}</span>
           </>
         )}
         {deployStatus === 'deploying' && (
           <>
             <Loader2 className="w-3 h-3 animate-spin text-emerald-500" />
-            <span className="text-emerald-600">{STATUS_BAR.DEPLOYING(deployProgress)}</span>
+            <span className="text-emerald-600">{t('statusBar.deploying', { pct: deployProgress })}</span>
           </>
         )}
         {deployStatus === 'planning' && (
           <>
             <Loader2 className="w-3 h-3 animate-spin text-blue-500" />
-            <span className="text-blue-600">{STATUS_BAR.PLANNING}</span>
+            <span className="text-blue-600">{t('statusBar.planning')}</span>
           </>
         )}
         {deployStatus === 'success' && (
           <>
             <CheckCircle className="w-3 h-3 text-emerald-500" />
-            <span className="text-emerald-600">{STATUS_BAR.DEPLOYED}</span>
+            <span className="text-emerald-600">{t('statusBar.deployed')}</span>
           </>
         )}
         {deployStatus === 'error' && (
           <>
             <XCircle className="w-3 h-3 text-red-500" />
-            <span className="text-red-600">{STATUS_BAR.DEPLOY_FAILED}</span>
+            <span className="text-red-600">{t('statusBar.deployFailed')}</span>
           </>
         )}
         {deployStatus === 'planned' && (
           <>
             <Rocket className="w-3 h-3 text-yellow-500" />
-            <span className="text-yellow-600">{STATUS_BAR.PLAN_READY}</span>
+            <span className="text-yellow-600">{t('statusBar.planReady')}</span>
           </>
         )}
       </div>

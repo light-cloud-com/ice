@@ -50,11 +50,6 @@ export const COMPOSED_TEMPLATES: ComposedTemplate[] = [
 /** All templates — composed + quick-starts — single source of truth */
 export const ALL_TEMPLATES: ComposedTemplate[] = [...QUICK_STARTS, ...COMPOSED_TEMPLATES];
 
-/**
- * @deprecated Use COMPOSED_TEMPLATES + expandComposedTemplate() instead.
- */
-export const GCP_TEMPLATES = COMPOSED_TEMPLATES;
-
 // =============================================================================
 // Lookup helpers
 // =============================================================================

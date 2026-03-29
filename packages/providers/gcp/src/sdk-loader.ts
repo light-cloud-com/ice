@@ -124,7 +124,7 @@ export async function initialize_gcp_clients(project: string): Promise<Map<strin
  * If `external_client` is provided (e.g. from Electron main process
  * where dynamic import resolution works), it is used directly.
  */
-export async function verify_gcp_auth(external_client?: unknown): Promise<any> {
+async function verify_gcp_auth(external_client?: unknown): Promise<any> {
   // If a pre-authenticated client was passed in, use it directly
   if (external_client) {
     return external_client;

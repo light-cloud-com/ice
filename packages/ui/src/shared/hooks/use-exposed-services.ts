@@ -22,7 +22,7 @@ interface EdgeLike {
   data?: { relationship?: string; [key: string]: unknown };
 }
 
-export interface ExposedServiceInfo {
+interface ExposedServiceInfo {
   /** IDs of all publicly-exposed entry-point nodes */
   nodeIds: string[];
   /** Position for the user silhouette icon (centered above topmost node) */

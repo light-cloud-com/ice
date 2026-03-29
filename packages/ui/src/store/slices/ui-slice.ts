@@ -9,27 +9,27 @@
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-export interface PaneViewport {
+interface PaneViewport {
   panX: number;
   panY: number;
   scale: number;
 }
 
-export interface SplitPane {
+interface SplitPane {
   id: string;
   cardId: string; // Currently active card in this pane
   openCardIds: string[]; // List of open tabs in this pane
   viewport: PaneViewport; // Viewport is per-pane, not per-card
 }
 
-export interface SplitViewState {
+interface SplitViewState {
   enabled: boolean;
   direction: 'horizontal' | 'vertical'; // horizontal = side-by-side, vertical = top-bottom
   panes: SplitPane[];
   activePaneId: string;
 }
 
-export interface UIState {
+interface UIState {
   // Panel visibility
   showPalette: boolean;
   showBlocks: boolean;

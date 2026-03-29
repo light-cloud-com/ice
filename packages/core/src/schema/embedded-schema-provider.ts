@@ -166,7 +166,7 @@ interface SqliteSchemaStats {
 /**
  * Extended schema provider with graph query capabilities.
  */
-export interface GraphSchemaProvider extends ObservableSchemaProvider {
+interface GraphSchemaProvider extends ObservableSchemaProvider {
   /**
    * Get dependencies for a resource type (resources it depends on).
    */

@@ -179,7 +179,6 @@ export function startDeployWorker() {
 async function processPipelineJob(data: any) {
   const {
     eventId,
-    ruleId: _ruleId,
     cardId,
     nodeId,
     repository,

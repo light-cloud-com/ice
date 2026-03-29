@@ -289,7 +289,6 @@ export class Lexer {
    */
   private scan_string(start_pos: number, start_line: number, start_column: number): void {
     const parts: string[] = [];
-    let _has_interpolation = false;
 
     while (!this.is_at_end() && this.peek() !== '"') {
       if (this.peek() === '\\') {
@@ -323,7 +322,6 @@ export class Lexer {
         }
       } else if (this.peek() === '$' && this.peek_next() === '{') {
         // String interpolation - for now, just include as literal
-        _has_interpolation = true;
         parts.push(this.advance());
       } else if (this.peek() === '\n') {
         this.add_error('Unterminated string literal', true);

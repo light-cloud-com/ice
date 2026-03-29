@@ -762,4 +762,3 @@ const BlockNode: React.FC<BlockNodeProps> = memo(
 
 BlockNode.displayName = 'BlockNode';
 
-export default SvgGroupNode;

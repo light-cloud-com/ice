@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import { useTranslation } from '../../../i18n';
 import { ENABLED_PROVIDERS } from '../../../config/providers';
 import { cn } from '../../../shared/utils/cn';
 import type { Provider } from '../../../config/blocks/types';
@@ -26,36 +27,37 @@ export const ProjectInfoStep: React.FC<ProjectInfoStepProps> = ({
   onDescriptionChange,
   onProviderChange,
 }) => {
+  const { t } = useTranslation();
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-sm font-semibold text-ice-text-1 mb-1">Project Name</h3>
-        <p className="text-xs text-ice-text-2 mb-2">Give your project a recognizable name</p>
+        <h3 className="text-sm font-semibold text-ice-text-1 mb-1">{t('wizard.projectInfo.nameTitle')}</h3>
+        <p className="text-xs text-ice-text-2 mb-2">{t('wizard.projectInfo.nameHint')}</p>
         <input
           type="text"
           value={projectName}
           onChange={(e) => onNameChange(e.target.value)}
-          placeholder="My SaaS App"
+          placeholder={t('wizard.projectInfo.namePlaceholder')}
           autoFocus
           className="w-full h-9 rounded-md border border-ice-border bg-ice-base text-ice-text-1 text-sm px-3 placeholder:text-ice-text-3 focus:outline-none focus:ring-1 focus:ring-ice-accent focus:border-ice-accent"
         />
       </div>
 
       <div>
-        <h3 className="text-sm font-semibold text-ice-text-1 mb-1">Description</h3>
-        <p className="text-xs text-ice-text-2 mb-2">Optional — describe what this project is for</p>
+        <h3 className="text-sm font-semibold text-ice-text-1 mb-1">{t('wizard.projectInfo.descriptionTitle')}</h3>
+        <p className="text-xs text-ice-text-2 mb-2">{t('wizard.projectInfo.descriptionHint')}</p>
         <textarea
           value={projectDescription}
           onChange={(e) => onDescriptionChange(e.target.value)}
-          placeholder="Production infrastructure for our customer-facing SaaS platform..."
+          placeholder={t('wizard.projectInfo.descriptionPlaceholder')}
           rows={3}
           className="w-full rounded-md border border-ice-border bg-ice-base text-ice-text-1 text-sm px-3 py-2 placeholder:text-ice-text-3 focus:outline-none focus:ring-1 focus:ring-ice-accent focus:border-ice-accent resize-none"
         />
       </div>
 
       <div>
-        <h3 className="text-sm font-semibold text-ice-text-1 mb-1">Cloud Provider</h3>
-        <p className="text-xs text-ice-text-2 mb-2">Select your target cloud platform</p>
+        <h3 className="text-sm font-semibold text-ice-text-1 mb-1">{t('wizard.projectInfo.providerTitle')}</h3>
+        <p className="text-xs text-ice-text-2 mb-2">{t('wizard.projectInfo.providerHint')}</p>
         <div className="grid grid-cols-4 gap-2">
           {ENABLED_PROVIDERS.map((opt) => {
             const isSelected = provider === opt.id;

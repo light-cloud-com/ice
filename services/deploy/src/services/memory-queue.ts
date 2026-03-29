@@ -7,7 +7,7 @@
 
 type JobProcessor = (job: MemoryJob) => Promise<void>;
 
-export interface MemoryJob {
+interface MemoryJob {
   id: string;
   name: string;
   data: any;

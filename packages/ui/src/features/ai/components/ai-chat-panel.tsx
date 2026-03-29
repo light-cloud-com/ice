@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from '../../../i18n';
 import axiosInstance from '../../../shared/api/axios-instance';
 import { cn } from '../../../shared/utils/cn';
 import { clearAiState } from '../../../store/slices/ai-slice';
@@ -100,6 +101,7 @@ function opBadgeColor(op: AiCanvasOp): string {
 // =============================================================================
 
 export const AiChatPanel: React.FC = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const {
     sendIntent,
@@ -116,7 +118,6 @@ export const AiChatPanel: React.FC = () => {
 
   const activeCard = useSelector(selectActiveCard);
   const projectId = useSelector((s: RootState) => s.projects.activeProjectId);
-  const _selectedOrg = useSelector((s: RootState) => s.account.selectedOrg);
 
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -251,7 +252,7 @@ export const AiChatPanel: React.FC = () => {
       const assistantMsg: ChatMessage = {
         id: `msg-${Date.now()}`,
         role: 'assistant',
-        content: lastResponse.explanation || (hasOps ? 'Done.' : 'No changes to apply.'),
+        content: lastResponse.explanation || (hasOps ? t('ai.chat.doneMessage') : t('ai.chat.noChangesMessage')),
         operations: hasOps ? [...pendingOperations] : undefined,
         suggestions: suggestions.length > 0 ? [...suggestions] : undefined,
         applied: !hasOps,
@@ -362,11 +363,11 @@ export const AiChatPanel: React.FC = () => {
       {/* Header */}
       <div className="flex items-center gap-2 px-3 py-2.5 border-b border-ice-border shrink-0">
         <Sparkles className="w-3.5 h-3.5 text-ice-accent" />
-        <span className="text-ice-sm font-semibold text-ice-text-1 flex-1">AI Assistant</span>
+        <span className="text-ice-sm font-semibold text-ice-text-1 flex-1">{t('ai.chat.title')}</span>
         <button
           onClick={startNewConversation}
           className="p-1 rounded text-ice-text-3 hover:text-ice-text-1 hover:bg-ice-hover transition-colors"
-          title="New chat"
+          title={t('ai.chat.newChat')}
         >
           <Plus className="w-3.5 h-3.5" />
         </button>
@@ -378,7 +379,7 @@ export const AiChatPanel: React.FC = () => {
               ? 'text-ice-accent bg-ice-accent/10'
               : 'text-ice-text-3 hover:text-ice-text-1 hover:bg-ice-hover',
           )}
-          title="Chat history"
+          title={t('ai.chat.historyTitle')}
         >
           <MessageSquare className="w-3.5 h-3.5" />
           {conversations.length > 0 && (
@@ -390,7 +391,7 @@ export const AiChatPanel: React.FC = () => {
         <button
           onClick={() => dispatch(toggleAiChat())}
           className="p-1 rounded text-ice-text-3 hover:text-ice-text-1 hover:bg-ice-hover transition-colors"
-          title="Close"
+          title={t('ai.chat.closeTitle')}
         >
           <X className="w-3.5 h-3.5" />
         </button>
@@ -400,7 +401,7 @@ export const AiChatPanel: React.FC = () => {
       {showHistory && (
         <div className="border-b border-ice-border max-h-48 overflow-y-auto">
           {conversations.length === 0 ? (
-            <p className="px-3 py-4 text-ice-xs text-ice-text-3 text-center">No previous conversations</p>
+            <p className="px-3 py-4 text-ice-xs text-ice-text-3 text-center">{t('ai.chat.noConversations')}</p>
           ) : (
             conversations.map((conv) => (
               <button
@@ -413,15 +414,15 @@ export const AiChatPanel: React.FC = () => {
               >
                 <MessageSquare className="w-3 h-3 text-ice-text-3 shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-ice-xs text-ice-text-1 truncate">{conv.title || 'Untitled conversation'}</p>
+                  <p className="text-ice-xs text-ice-text-1 truncate">{conv.title || t('ai.chat.untitledConversation')}</p>
                   <p className="text-[10px] text-ice-text-3">
-                    {conv._count.messages} msgs · {formatDateTime(conv.updated_at)}
+                    {conv._count.messages} {t('ai.chat.msgs')} · {formatDateTime(conv.updated_at)}
                   </p>
                 </div>
                 <button
                   onClick={(e) => handleDeleteConversation(conv.id, e)}
                   className="p-0.5 rounded text-ice-text-3 hover:text-ice-red opacity-0 group-hover:opacity-100 hover:!opacity-100 transition-opacity"
-                  title="Delete"
+                  title={t('ai.chat.deleteTitle')}
                 >
                   <Trash2 className="w-3 h-3" />
                 </button>
@@ -444,8 +445,8 @@ export const AiChatPanel: React.FC = () => {
                 <Sparkles className="w-8 h-8 text-ice-text-3 opacity-40" />
                 <p className="text-ice-sm text-ice-text-3 leading-relaxed">
                   {canvasNodes.length === 0
-                    ? "Describe what you want to build and I'll add it to your canvas."
-                    : 'What would you like to improve or add next?'}
+                    ? t('ai.chat.emptyCanvasPrompt')
+                    : t('ai.chat.existingCanvasPrompt')}
                 </p>
                 <div className="flex flex-wrap gap-1.5 justify-center">
                   {patterns.map((p) => (
@@ -472,27 +473,27 @@ export const AiChatPanel: React.FC = () => {
             >
               {msg.content.startsWith('AI_NOT_CONFIGURED:') ? (
                 <div className="space-y-2">
-                  <p className="text-ice-sm font-semibold text-amber-400">AI Assistant Not Configured</p>
+                  <p className="text-ice-sm font-semibold text-amber-400">{t('ai.chat.notConfiguredTitle')}</p>
                   <p className="text-ice-xs text-ice-text-2 leading-relaxed">
-                    The AI assistant requires an Anthropic API key to work.
+                    {t('ai.chat.notConfiguredDesc')}
                   </p>
                   <div className="rounded border border-ice-border bg-ice-base px-2.5 py-2 space-y-1.5 text-ice-xs">
                     <div className="flex items-start gap-1.5">
                       <span className="text-ice-text-3 shrink-0">1.</span>
                       <span className="text-ice-text-2">
-                        Get an API key at <span className="font-mono text-amber-400">console.anthropic.com</span>
+                        {t('ai.chat.notConfiguredStep1')} <span className="font-mono text-amber-400">console.anthropic.com</span>
                       </span>
                     </div>
                     <div className="flex items-start gap-1.5">
                       <span className="text-ice-text-3 shrink-0">2.</span>
                       <span className="text-ice-text-2">
-                        Add <span className="font-mono text-amber-400">ANTHROPIC_API_KEY=sk-ant-...</span> to your{' '}
-                        <span className="font-mono">.env</span> file
+                        {t('ai.chat.notConfiguredStep2')} <span className="font-mono text-amber-400">ANTHROPIC_API_KEY=sk-ant-...</span> {t('ai.chat.notConfiguredStep2Suffix')}{' '}
+                        <span className="font-mono">.env</span>
                       </span>
                     </div>
                     <div className="flex items-start gap-1.5">
                       <span className="text-ice-text-3 shrink-0">3.</span>
-                      <span className="text-ice-text-2">Restart the server</span>
+                      <span className="text-ice-text-2">{t('ai.chat.notConfiguredStep3')}</span>
                     </div>
                   </div>
                 </div>
@@ -511,7 +512,7 @@ export const AiChatPanel: React.FC = () => {
                     </div>
                   ))}
                   {msg.operations.length > 5 && (
-                    <p className="text-ice-xs text-ice-text-3">+{msg.operations.length - 5} more</p>
+                    <p className="text-ice-xs text-ice-text-3">+{msg.operations.length - 5} {t('ai.chat.more')}</p>
                   )}
                 </div>
               )}
@@ -520,7 +521,7 @@ export const AiChatPanel: React.FC = () => {
                 <div className="flex items-center gap-1.5 mt-2">
                   <Check className="w-3 h-3 text-emerald-400" />
                   <span className="text-ice-xs text-emerald-400">
-                    Applied {msg.operationCount || msg.operations?.length || 0} changes
+                    {t('ai.chat.appliedChanges')} {msg.operationCount || msg.operations?.length || 0} {t('ai.chat.changes')}
                   </span>
                 </div>
               )}
@@ -547,7 +548,7 @@ export const AiChatPanel: React.FC = () => {
           <div className="flex justify-start">
             <div className="bg-ice-raised rounded-lg px-3 py-2 flex items-center gap-2">
               <Loader2 className="w-3.5 h-3.5 text-ice-accent animate-spin" />
-              <span className="text-ice-sm text-ice-text-3">{streamingStatus || 'Thinking...'}</span>
+              <span className="text-ice-sm text-ice-text-3">{streamingStatus || t('ai.chat.thinking')}</span>
             </div>
           </div>
         )}
@@ -562,7 +563,7 @@ export const AiChatPanel: React.FC = () => {
             className="flex items-center gap-1.5 text-ice-xs text-ice-text-3 hover:text-ice-text-1 transition-colors"
           >
             <Undo2 className="w-3 h-3" />
-            Undo last AI change
+            {t('ai.chat.undoLastAi')}
           </button>
         </div>
       )}
@@ -576,7 +577,7 @@ export const AiChatPanel: React.FC = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Describe what you want to build..."
+            placeholder={t('ai.chat.inputPlaceholder')}
             rows={1}
             className="flex-1 bg-transparent text-ice-sm text-ice-text-1 placeholder:text-ice-text-3 outline-none resize-none max-h-20"
             disabled={isProcessing}
@@ -603,6 +604,7 @@ export const AiChatPanel: React.FC = () => {
 // =============================================================================
 
 export const AiChatCollapsedBar: React.FC = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
 
   return (
@@ -611,7 +613,7 @@ export const AiChatCollapsedBar: React.FC = () => {
       className="flex items-center gap-2 px-3 py-1.5 w-full bg-ice-surface border-t border-ice-border hover:bg-ice-hover transition-colors shrink-0"
     >
       <Sparkles className="w-3.5 h-3.5 text-ice-accent" />
-      <span className="text-ice-sm font-medium text-ice-text-2 flex-1 text-left">AI Assistant</span>
+      <span className="text-ice-sm font-medium text-ice-text-2 flex-1 text-left">{t('ai.chat.collapsedTitle')}</span>
       <ChevronUp className="w-3.5 h-3.5 text-ice-text-3 lg:hidden" />
       <ArrowRight className="w-3.5 h-3.5 text-ice-text-3 hidden lg:block" />
     </button>

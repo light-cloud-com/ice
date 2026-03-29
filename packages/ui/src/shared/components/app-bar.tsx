@@ -9,9 +9,10 @@ import { LayoutGrid, Rocket, Sun, Moon, Github, Undo2, Redo2 } from 'lucide-reac
 import React, { memo, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Breadcrumbs } from './breadcrumbs';
+import { LanguageSwitch } from './language-switch';
+import { useTranslation } from '../../i18n';
 import logoDark from '../../assets/logo-dark.png';
 import logoLight from '../../assets/logo-light.png';
-import { ProfileAvatar } from '../../features/account/components/profile-avatar';
 import { DeployPanel } from '../../features/deploy/components/deploy-panel';
 import { PromoteModal } from '../../features/environments/components/promote-modal';
 import { GitHubConnectModal } from '../../features/integrations/components/github-connect-modal';
@@ -48,6 +49,7 @@ function useElectronTitleBar() {
 }
 
 export const AppBar: React.FC = memo(() => {
+  const { t } = useTranslation();
   const { isDark, toggle, fontSize, increaseFontSize, decreaseFontSize } = useTheme();
   const { isElectron, showTrafficLightPad } = useElectronTitleBar();
   const dispatch = useDispatch<AppDispatch>();
@@ -100,20 +102,20 @@ export const AppBar: React.FC = memo(() => {
             id="ice-appbar-btn-organize"
             icon={LayoutGrid}
             onClick={() => dispatch(autoOrganizeCard())}
-            tip="Auto-organize"
+            tip={t('appBar.autoOrganize')}
           />
           <BarBtn
             id="ice-appbar-btn-undo"
             icon={Undo2}
             onClick={() => dispatch(undoCardChange())}
-            tip="Undo (Ctrl+Z)"
+            tip={t('appBar.undo')}
             disabled={!canUndo}
           />
           <BarBtn
             id="ice-appbar-btn-redo"
             icon={Redo2}
             onClick={() => dispatch(redoCardChange())}
-            tip="Redo (Ctrl+Shift+Z)"
+            tip={t('appBar.redo')}
             disabled={!canRedo}
           />
           <BarSep />
@@ -121,7 +123,7 @@ export const AppBar: React.FC = memo(() => {
             id="ice-appbar-btn-deploy"
             icon={Rocket}
             onClick={() => dispatch(openDeployPanel())}
-            tip="Deploy"
+            tip={t('appBar.deploy')}
             className={cn('text-emerald-500 hover:text-emerald-400', deployStatus === 'deploying' && 'animate-pulse')}
           />
           <BarSep />
@@ -129,24 +131,24 @@ export const AppBar: React.FC = memo(() => {
             id="ice-appbar-btn-gcp"
             src={gcpIcon}
             onClick={() => setShowGcp(true)}
-            tip="Google Cloud"
+            tip={t('common.providers.gcp')}
             connected={gcpStatus === 'connected'}
           />
-          <BarImgBtn id="ice-appbar-btn-aws" src={awsIcon} onClick={() => setShowAws(true)} tip="AWS" />
-          <BarImgBtn id="ice-appbar-btn-azure" src={azureIcon} onClick={() => setShowAzure(true)} tip="Azure" />
+          <BarImgBtn id="ice-appbar-btn-aws" src={awsIcon} onClick={() => setShowAws(true)} tip={t('common.providers.aws')} />
+          <BarImgBtn id="ice-appbar-btn-azure" src={azureIcon} onClick={() => setShowAzure(true)} tip={t('common.providers.azure')} />
           <BarBtn
             id="ice-appbar-btn-github"
             icon={Github}
             onClick={() => setShowGitHub(true)}
-            tip="GitHub"
+            tip={t('integrations.github.title')}
             className={githubStatus === 'connected' ? 'text-emerald-500' : undefined}
           />
           <BarSep />
-          <BarBtn icon={isDark ? Sun : Moon} onClick={toggle} tip={isDark ? 'Light mode' : 'Dark mode'} />
+          <BarBtn icon={isDark ? Sun : Moon} onClick={toggle} tip={isDark ? t('appBar.lightMode') : t('appBar.darkMode')} />
           <button
             onClick={decreaseFontSize}
             disabled={fontSize === 'small'}
-            title="Decrease font size"
+            title={t('appBar.decreaseFont')}
             className={cn(
               'px-1 py-0.5 rounded text-ice-xs font-bold transition-[color,background-color,opacity]',
               fontSize === 'small'
@@ -159,7 +161,7 @@ export const AppBar: React.FC = memo(() => {
           <button
             onClick={increaseFontSize}
             disabled={fontSize === 'large'}
-            title="Increase font size"
+            title={t('appBar.increaseFont')}
             className={cn(
               'px-1 py-0.5 rounded text-ice-base font-bold transition-[color,background-color,opacity]',
               fontSize === 'large'
@@ -169,8 +171,7 @@ export const AppBar: React.FC = memo(() => {
           >
             A+
           </button>
-          <BarSep />
-          <ProfileAvatar />
+          <LanguageSwitch />
         </div>
       </header>
 
@@ -179,19 +180,19 @@ export const AppBar: React.FC = memo(() => {
         isOpen={showGcp}
         onClose={() => setShowGcp(false)}
         providerId="gcp"
-        providerName="Google Cloud Platform"
+        providerName={t('appBar.provider.gcp.name')}
         providerIcon={gcpIcon}
-        description="Connect your GCP project using a service account key. ICE deploys to your cloud — not ours."
+        description={t('appBar.provider.gcp.description')}
         fields={[
           {
             name: 'service_account_key',
-            label: 'Service Account Key (JSON)',
+            label: t('appBar.provider.gcp.fieldLabel'),
             type: 'textarea',
             placeholder: '{\n  "type": "service_account",\n  "project_id": "...",\n  ...\n}',
             required: true,
             helpLink: {
               url: 'https://console.cloud.google.com/iam-admin/serviceaccounts',
-              text: 'Create service account',
+              text: t('appBar.provider.gcp.helpLink'),
             },
           },
         ]}
@@ -200,39 +201,39 @@ export const AppBar: React.FC = memo(() => {
         isOpen={showAws}
         onClose={() => setShowAws(false)}
         providerId="aws"
-        providerName="Amazon Web Services"
+        providerName={t('appBar.provider.aws.name')}
         providerIcon={awsIcon}
-        description="Connect your AWS account using access keys."
+        description={t('appBar.provider.aws.description')}
         fields={[
-          { name: 'accessKeyId', label: 'Access Key ID', type: 'text', placeholder: 'AKIA...', required: true },
+          { name: 'accessKeyId', label: t('appBar.provider.aws.accessKeyLabel'), type: 'text', placeholder: 'AKIA...', required: true },
           {
             name: 'secretAccessKey',
-            label: 'Secret Access Key',
+            label: t('appBar.provider.aws.secretKeyLabel'),
             type: 'password',
             placeholder: '********',
             required: true,
           },
-          { name: 'region', label: 'Default Region', type: 'text', placeholder: 'us-east-1', required: true },
+          { name: 'region', label: t('appBar.provider.aws.regionLabel'), type: 'text', placeholder: 'us-east-1', required: true },
         ]}
       />
       <ProviderConnectModal
         isOpen={showAzure}
         onClose={() => setShowAzure(false)}
         providerId="azure"
-        providerName="Microsoft Azure"
+        providerName={t('appBar.provider.azure.name')}
         providerIcon={azureIcon}
-        description="Connect your Azure subscription using a service principal."
+        description={t('appBar.provider.azure.description')}
         fields={[
           {
             name: 'subscriptionId',
-            label: 'Subscription ID',
+            label: t('appBar.provider.azure.subscriptionLabel'),
             type: 'text',
             placeholder: 'xxxxxxxx-xxxx-...',
             required: true,
           },
-          { name: 'tenantId', label: 'Tenant ID', type: 'text', placeholder: 'xxxxxxxx-xxxx-...', required: true },
-          { name: 'clientId', label: 'Client ID', type: 'text', placeholder: 'xxxxxxxx-xxxx-...', required: true },
-          { name: 'clientSecret', label: 'Client Secret', type: 'password', placeholder: '********', required: true },
+          { name: 'tenantId', label: t('appBar.provider.azure.tenantLabel'), type: 'text', placeholder: 'xxxxxxxx-xxxx-...', required: true },
+          { name: 'clientId', label: t('appBar.provider.azure.clientIdLabel'), type: 'text', placeholder: 'xxxxxxxx-xxxx-...', required: true },
+          { name: 'clientSecret', label: t('appBar.provider.azure.clientSecretLabel'), type: 'password', placeholder: '********', required: true },
         ]}
       />
 

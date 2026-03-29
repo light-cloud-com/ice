@@ -9,6 +9,7 @@ import { X } from 'lucide-react';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useDispatch } from 'react-redux';
+import { useTranslation } from '../../../i18n';
 import axiosInstance from '../../../shared/api/axios-instance';
 import { addOrganisation, switchOrganisation } from '../../../store/slices/account-slice';
 import type { AppDispatch } from '../../../store';
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export function CreateTeamModal({ onClose }: Props) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +49,7 @@ export function CreateTeamModal({ onClose }: Props) {
       dispatch(switchOrganisation(newOrg));
       onClose();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to create team. Please try again.';
+      const msg = err instanceof Error ? err.message : t('account.createTeam.errorFallback');
       setError(msg);
     } finally {
       setLoading(false);
@@ -63,7 +65,7 @@ export function CreateTeamModal({ onClose }: Props) {
       <div className="relative z-10 w-full max-w-md rounded-lg border border-ice-border bg-ice-surface shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-ice-border px-6 py-4">
-          <h2 className="text-lg font-semibold text-ice-text-1">Create a new team</h2>
+          <h2 className="text-lg font-semibold text-ice-text-1">{t('account.createTeam.title')}</h2>
           <button
             onClick={onClose}
             className="rounded p-1 text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-1 transition-colors"
@@ -75,12 +77,12 @@ export function CreateTeamModal({ onClose }: Props) {
         {/* Body */}
         <form onSubmit={handleSubmit} className="px-6 py-5">
           <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-ice-text-1">Team name</span>
+            <span className="mb-1.5 block text-sm font-medium text-ice-text-1">{t('account.createTeam.nameLabel')}</span>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Acme Corp"
+              placeholder={t('account.createTeam.namePlaceholder')}
               minLength={2}
               maxLength={50}
               autoFocus
@@ -88,7 +90,7 @@ export function CreateTeamModal({ onClose }: Props) {
             />
           </label>
 
-          <p className="mt-1.5 text-xs text-ice-text-2">Between 2 and 50 characters. You can change this later.</p>
+          <p className="mt-1.5 text-xs text-ice-text-2">{t('account.createTeam.nameHint')}</p>
 
           {error && (
             <p className="mt-3 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-400">
@@ -103,14 +105,14 @@ export function CreateTeamModal({ onClose }: Props) {
               onClick={onClose}
               className="rounded-md border border-ice-border bg-ice-raised px-4 py-2 text-sm font-medium text-ice-text-1 hover:bg-ice-hover transition-colors"
             >
-              Cancel
+              {t('account.createTeam.cancelButton')}
             </button>
             <button
               type="submit"
               disabled={!isValid || loading}
               className="rounded-md bg-ice-green px-4 py-2 text-sm font-medium text-white hover:bg-[#2ea043] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? 'Creating...' : 'Create team'}
+              {loading ? t('account.createTeam.creatingButton') : t('account.createTeam.createButton')}
             </button>
           </div>
         </form>

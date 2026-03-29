@@ -717,8 +717,6 @@ export default cardsSlice.reducer;
 // Selectors
 // =============================================================================
 
-export const selectCards = (state: { cards: CardsState }) => state.cards.cards;
-export const selectActiveCardId = (state: { cards: CardsState }) => state.cards.activeCardId;
 export const selectActiveCard = (state: { cards: CardsState }) =>
   state.cards.cards.find((c) => c.id === state.cards.activeCardId);
 export const selectCanUndo = (state: { cards: CardsState }) => {

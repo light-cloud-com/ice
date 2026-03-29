@@ -567,4 +567,3 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, o
 
 SvgLogNode.displayName = 'SvgLogNode';
 
-export default SvgLogNode;

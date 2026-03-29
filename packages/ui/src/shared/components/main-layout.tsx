@@ -11,6 +11,7 @@
 import { FolderOpen, Blocks, PanelRight, MessageSquare } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation } from '../../i18n';
 import { InlineTableView } from './inline-table-view';
 import { StatusBar } from './status-bar';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './ui/resizable';
@@ -130,6 +131,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   basePath,
   children,
 }) => {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const { showPalette, showBlocks, showProperties, showAiChat } = useSelector((state: RootState) => state.ui);
   const isPortrait = useIsPortrait();
@@ -201,14 +203,14 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
     () => [
       {
         id: 'project',
-        label: 'Project',
+        label: t('layout.sidebar.project'),
         icon: FolderOpen,
         active: showPalette,
         onClick: () => dispatch(togglePalette()),
       },
       {
         id: 'blocks',
-        label: 'Blocks',
+        label: t('layout.sidebar.blocks'),
         icon: Blocks,
         active: showBlocks,
         onClick: () => dispatch(toggleBlocks()),
@@ -221,7 +223,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
     const tabs: SidebarStripTab[] = [];
     tabs.push({
       id: 'properties',
-      label: 'Properties',
+      label: t('layout.sidebar.properties'),
       icon: PanelRight,
       active: showProperties,
       onClick: () => dispatch(toggleProperties()),
@@ -229,7 +231,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
     if (isCanvasView) {
       tabs.push({
         id: 'ai',
-        label: 'AI Chat',
+        label: t('layout.sidebar.aiChat'),
         icon: MessageSquare,
         active: showAiChat,
         onClick: () => dispatch(toggleAiChat()),

@@ -10,6 +10,7 @@ import azureIcon from 'devicon/icons/azure/azure-original.svg';
 import gcpIcon from 'devicon/icons/googlecloud/googlecloud-original.svg';
 import { Save, Loader2, Trash2, AlertTriangle } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from '@ui/i18n';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import type { RootState } from '@ui/store';
@@ -49,6 +50,7 @@ interface ProjectSettingsProps {
 }
 
 export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const selectedOrg = useSelector((s: RootState) => s.account.selectedOrg);
   const [name, setName] = useState('');
@@ -87,9 +89,9 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
     setMessage(null);
     try {
       await axiosInstance.post('/canvas/projects/update', { projectId, name, description, provider, region });
-      setMessage({ type: 'success', text: 'Settings saved.' });
+      setMessage({ type: 'success', text: t('project.settings.saveSuccess') });
     } catch {
-      setMessage({ type: 'error', text: 'Failed to save.' });
+      setMessage({ type: 'error', text: t('project.settings.saveError') });
     }
     setSaving(false);
   };
@@ -104,17 +106,17 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
 
   return (
     <div className="max-w-2xl mx-auto py-10 px-6">
-      <h1 className="text-xl font-semibold text-ice-text-1 mb-6">Project Settings</h1>
+      <h1 className="text-xl font-semibold text-ice-text-1 mb-6">{t('project.settings.title')}</h1>
 
       <form onSubmit={handleSave} className="space-y-6">
         {/* General */}
         <div className="ice-card">
           <div className="ice-card-header">
-            <h2 className="text-ice-md font-semibold text-ice-text-1">General</h2>
+            <h2 className="text-ice-md font-semibold text-ice-text-1">{t('project.settings.generalHeading')}</h2>
           </div>
           <div className="ice-card-body space-y-4">
             <label className="block">
-              <span className="block text-ice-sm font-medium text-ice-text-2 mb-1.5">Name</span>
+              <span className="block text-ice-sm font-medium text-ice-text-2 mb-1.5">{t('project.settings.nameLabel')}</span>
               <input
                 type="text"
                 name="name"
@@ -124,7 +126,7 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
               />
             </label>
             <label className="block">
-              <span className="block text-ice-sm font-medium text-ice-text-2 mb-1.5">Description</span>
+              <span className="block text-ice-sm font-medium text-ice-text-2 mb-1.5">{t('project.settings.descriptionLabel')}</span>
               <textarea
                 name="description"
                 value={description}
@@ -139,17 +141,17 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
         {/* Cloud Provider */}
         <div className="ice-card">
           <div className="ice-card-header">
-            <h2 className="text-ice-md font-semibold text-ice-text-1">Cloud Provider</h2>
+            <h2 className="text-ice-md font-semibold text-ice-text-1">{t('project.settings.providerHeading')}</h2>
             <p className="text-ice-sm text-ice-text-3 mt-1">
               {provider && region
-                ? 'Provider and region are locked for this project. All environments use these settings.'
-                : 'All resources in this project will deploy to this provider & region.'}
+                ? t('project.settings.providerLockedDesc')
+                : t('project.settings.providerUnlockedDesc')}
             </p>
           </div>
           <div className="ice-card-body space-y-4">
             {/* Provider selector — locked once set */}
             <div>
-              <span className="block text-ice-sm font-medium text-ice-text-2 mb-2">Provider</span>
+              <span className="block text-ice-sm font-medium text-ice-text-2 mb-2">{t('project.settings.providerLabel')}</span>
               <div className="flex gap-2">
                 {PROVIDERS.map((p) => {
                   const isSelected = provider === p.id;
@@ -187,7 +189,7 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
             {provider && (
               <label className="block">
                 <span className="block text-ice-sm font-medium text-ice-text-2 mb-1.5">
-                  Region / Zone {provider && region && <span className="text-ice-text-3 font-normal">🔒 locked</span>}
+                  {t('project.settings.regionLabel')} {provider && region && <span className="text-ice-text-3 font-normal">🔒 {t('project.settings.regionLocked')}</span>}
                 </span>
                 <select
                   name="region"
@@ -196,7 +198,7 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
                   disabled={!!provider && !!region}
                   className={cn('ice-input', provider && region && 'opacity-70 cursor-not-allowed')}
                 >
-                  <option value="">Select a region&hellip;</option>
+                  <option value="">{t('project.settings.selectRegion')}</option>
                   {regions.map((r) => (
                     <option key={r} value={r}>
                       {r}
@@ -206,7 +208,7 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
               </label>
             )}
 
-            {!provider && <p className="text-ice-sm text-ice-text-3">Select a provider to see available regions.</p>}
+            {!provider && <p className="text-ice-sm text-ice-text-3">{t('project.settings.selectPrompt')}</p>}
           </div>
         </div>
 
@@ -224,7 +226,7 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
         <div className="flex justify-end">
           <button type="submit" disabled={saving} className="ice-btn ice-btn-primary">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            Save Settings
+            {t('project.settings.saveButton')}
           </button>
         </div>
       </form>
@@ -232,15 +234,15 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
       {/* Collaborators */}
       <div className="mt-8 ice-card">
         <div className="ice-card-header">
-          <h2 className="text-ice-md font-semibold text-ice-text-1">Collaborators</h2>
-          <p className="text-ice-sm text-ice-text-3 mt-1">Control who can view and edit this project</p>
+          <h2 className="text-ice-md font-semibold text-ice-text-1">{t('project.settings.collaboratorsHeading')}</h2>
+          <p className="text-ice-sm text-ice-text-3 mt-1">{t('project.settings.collaboratorsDesc')}</p>
         </div>
         <div className="ice-card-body">
           <ProjectCollaborators projectId={projectId} />
         </div>
       </div>
 
-      {/* Danger Zone */}
+      {/* {t('project.settings.dangerHeading')} */}
       <div className="mt-10 rounded-lg border border-ice-red/30 bg-ice-red/5">
         <div className="px-5 py-4 border-b border-ice-red/20">
           <h2 className="text-ice-md font-semibold text-ice-red flex items-center gap-2">
@@ -250,15 +252,14 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
         </div>
         <div className="px-5 py-4 space-y-4">
           <div>
-            <p className="text-ice-sm text-ice-text-1 font-medium">Delete this project</p>
+            <p className="text-ice-sm text-ice-text-1 font-medium">{t('project.settings.deleteTitle')}</p>
             <p className="text-ice-xs text-ice-text-2 mt-1">
-              This will permanently delete the project, all its environments, canvas cards, and deployment history. This
-              action cannot be undone.
+              {t('project.settings.deleteDescription')}
             </p>
           </div>
           <div>
             <label className="block text-ice-xs text-ice-text-2 mb-1.5">
-              Type <span className="font-mono font-bold text-ice-text-1">{name}</span> to confirm
+              {t('project.settings.deleteConfirmLabel', { name })}
             </label>
             <input
               type="text"
@@ -279,7 +280,7 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
                 });
                 navigate('/', { replace: true });
               } catch {
-                setMessage({ type: 'error', text: 'Failed to delete project.' });
+                setMessage({ type: 'error', text: t('project.settings.deleteError') });
                 setDeleting(false);
               }
             }}
@@ -292,7 +293,7 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
             )}
           >
             {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-            Delete Project
+            {t('project.settings.deleteButton')}
           </button>
         </div>
       </div>

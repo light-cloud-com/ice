@@ -121,7 +121,6 @@ export {
   map,
   map_error,
   flat_map,
-  and_then,
   or_else,
   all,
   any,

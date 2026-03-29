@@ -87,7 +87,7 @@ export interface TerraformPlan {
 /**
  * Planned values in a Terraform plan.
  */
-export interface TerraformPlannedValues {
+interface TerraformPlannedValues {
   readonly root_module: TerraformPlannedModule;
   readonly outputs?: Record<string, TerraformPlannedOutput>;
 }
@@ -95,7 +95,7 @@ export interface TerraformPlannedValues {
 /**
  * Planned module with resources.
  */
-export interface TerraformPlannedModule {
+interface TerraformPlannedModule {
   readonly resources?: TerraformPlannedResource[];
   readonly child_modules?: TerraformPlannedChildModule[];
 }
@@ -103,7 +103,7 @@ export interface TerraformPlannedModule {
 /**
  * Child module in planned values.
  */
-export interface TerraformPlannedChildModule {
+interface TerraformPlannedChildModule {
   readonly address: string;
   readonly resources?: TerraformPlannedResource[];
   readonly child_modules?: TerraformPlannedChildModule[];
@@ -112,7 +112,7 @@ export interface TerraformPlannedChildModule {
 /**
  * Planned resource.
  */
-export interface TerraformPlannedResource {
+interface TerraformPlannedResource {
   readonly address: string;
   readonly mode: 'managed' | 'data';
   readonly type: string;
@@ -126,7 +126,7 @@ export interface TerraformPlannedResource {
 /**
  * Planned output.
  */
-export interface TerraformPlannedOutput {
+interface TerraformPlannedOutput {
   readonly sensitive: boolean;
   readonly value?: unknown;
   readonly type?: TerraformOutputType;
@@ -167,7 +167,7 @@ export type TerraformAction = 'no-op' | 'create' | 'read' | 'update' | 'delete';
 /**
  * Terraform configuration block.
  */
-export interface TerraformConfiguration {
+interface TerraformConfiguration {
   readonly provider_config?: Record<string, TerraformProviderConfig>;
   readonly root_module?: TerraformConfigModule;
 }
@@ -186,7 +186,7 @@ export interface TerraformProviderConfig {
 /**
  * Configuration module.
  */
-export interface TerraformConfigModule {
+interface TerraformConfigModule {
   readonly outputs?: Record<string, TerraformConfigOutput>;
   readonly resources?: TerraformConfigResource[];
   readonly module_calls?: Record<string, TerraformModuleCall>;
@@ -196,7 +196,7 @@ export interface TerraformConfigModule {
 /**
  * Configuration output.
  */
-export interface TerraformConfigOutput {
+interface TerraformConfigOutput {
   readonly expression?: TerraformExpression;
   readonly description?: string;
   readonly sensitive?: boolean;
@@ -205,7 +205,7 @@ export interface TerraformConfigOutput {
 /**
  * Configuration resource.
  */
-export interface TerraformConfigResource {
+interface TerraformConfigResource {
   readonly address: string;
   readonly mode: 'managed' | 'data';
   readonly type: string;
@@ -221,7 +221,7 @@ export interface TerraformConfigResource {
 /**
  * Module call configuration.
  */
-export interface TerraformModuleCall {
+interface TerraformModuleCall {
   readonly source: string;
   readonly expressions?: Record<string, TerraformExpression>;
   readonly count_expression?: TerraformExpression;
@@ -234,7 +234,7 @@ export interface TerraformModuleCall {
 /**
  * Configuration variable.
  */
-export interface TerraformConfigVariable {
+interface TerraformConfigVariable {
   readonly default?: unknown;
   readonly description?: string;
   readonly sensitive?: boolean;
@@ -244,7 +244,7 @@ export interface TerraformConfigVariable {
 /**
  * Terraform expression (can be constant or reference).
  */
-export interface TerraformExpression {
+interface TerraformExpression {
   readonly constant_value?: unknown;
   readonly references?: string[];
 }

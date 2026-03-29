@@ -92,7 +92,7 @@ import type { ParserError, ParserOptions } from './parser.js';
 /**
  * Combined result from lexing and parsing.
  */
-export interface ParseSourceResult {
+interface ParseSourceResult {
   readonly program: Program | null;
   readonly lexer_errors: LexerError[];
   readonly parser_errors: ParserError[];

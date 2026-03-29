@@ -937,7 +937,6 @@ export async function checkDrift(cardId: string, nodes: any[]) {
   // Check each canvas node against deployed state
   for (const node of canvasResources) {
     const label = (node.data?.label as string) || '';
-    const _iceType = (node.data?.iceType as string) || '';
 
     // Try to find matching deployed resource
     let deployed: any = null;

@@ -46,7 +46,7 @@ export interface ProjectFolder {
   order: number;
 }
 
-export interface ProjectsState {
+interface ProjectsState {
   projects: Project[];
   folders: ProjectFolder[];
   activeProjectId: string | null;
@@ -330,13 +330,8 @@ export default projectsSlice.reducer;
 // Selectors
 // =============================================================================
 
-export const selectProjects = (state: { projects: ProjectsState }) => state.projects.projects;
-export const selectFolders = (state: { projects: ProjectsState }) => state.projects.folders;
 export const selectActiveProjectId = (state: { projects: ProjectsState }) => state.projects.activeProjectId;
 export const selectActiveEnvironmentId = (state: { projects: ProjectsState }) => state.projects.activeEnvironmentId;
-export const selectActiveProject = (state: { projects: ProjectsState }) =>
-  state.projects.projects.find((p) => p.id === state.projects.activeProjectId) || null;
-export const selectProjectsLoading = (state: { projects: ProjectsState }) => state.projects.loading;
 export const selectLoadedOrgId = (state: { projects: ProjectsState }) => state.projects.loadedOrgId;
 
 /** Projects filtered by organisation ID */

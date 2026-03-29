@@ -36,7 +36,7 @@ router.use(aiLimiter);
 // ── Canvas Intent ────────────────────────────────────────────────────────────
 
 router.post('/canvas-intent', async (req: AuthRequest, res: Response) => {
-  const { intent, canvasContext, cardId: _cardId } = req.body as AiCanvasIntentRequest;
+  const { intent, canvasContext } = req.body as AiCanvasIntentRequest;
 
   if (!intent || typeof intent !== 'string') {
     return res.status(400).json({ message: 'Missing intent' });

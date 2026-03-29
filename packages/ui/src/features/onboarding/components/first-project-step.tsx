@@ -8,6 +8,7 @@
 import { Globe, Rocket, Server, Activity, FileBox } from 'lucide-react';
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation } from '../../../i18n';
 import { COMPOSED_TEMPLATES } from '../../../config/templates';
 import { QUICK_STARTS } from '../../../config/templates/quick-starts';
 import { cn } from '../../../shared/utils/cn';
@@ -40,6 +41,7 @@ const TEMPLATE_OPTIONS = [
 
 export const FirstProjectStep: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const { t } = useTranslation();
   const projectName = useSelector((s: RootState) => s.onboarding.projectName);
   const selectedTemplateId = useSelector((s: RootState) => s.onboarding.selectedTemplateId);
 
@@ -53,19 +55,19 @@ export const FirstProjectStep: React.FC = () => {
   return (
     <div className="space-y-5">
       <div className="text-center">
-        <h2 className="text-xl font-semibold text-ice-text-1">What are you building?</h2>
-        <p className="text-sm text-ice-text-2 mt-1">Pick a starting point — you can always change it later</p>
+        <h2 className="text-xl font-semibold text-ice-text-1">{t('onboarding.project.title')}</h2>
+        <p className="text-sm text-ice-text-2 mt-1">{t('onboarding.project.subtitle')}</p>
       </div>
 
       {/* Project name */}
       <div>
-        <label className="block text-sm font-medium text-ice-text-2 mb-1.5">Project name</label>
+        <label className="block text-sm font-medium text-ice-text-2 mb-1.5">{t('onboarding.project.nameLabel')}</label>
         <input
           id="ice-onboarding-project-input-name"
           type="text"
           value={projectName}
           onChange={(e) => dispatch(setProjectName(e.target.value))}
-          placeholder="My Project"
+          placeholder={t('onboarding.project.namePlaceholder')}
           className="ice-input w-full"
         />
       </div>
@@ -114,8 +116,8 @@ export const FirstProjectStep: React.FC = () => {
             )}
           />
           <div>
-            <p className="text-sm font-medium text-ice-text-1">Blank Canvas</p>
-            <p className="text-xs text-ice-text-2">Start from scratch with an empty project</p>
+            <p className="text-sm font-medium text-ice-text-1">{t('onboarding.project.blankCanvas')}</p>
+            <p className="text-xs text-ice-text-2">{t('onboarding.project.blankCanvasDesc')}</p>
           </div>
         </button>
       </div>

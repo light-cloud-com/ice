@@ -7,6 +7,7 @@
 
 import { Globe, Shield } from 'lucide-react';
 import React from 'react';
+import { useTranslation } from '../../../i18n';
 import { SECURITY_LEVEL_COLORS } from '../../../config/color-palette';
 import { cn } from '../../../shared/utils/cn';
 import type { SecurityLevel } from '../../../config/templates/types';
@@ -22,18 +23,18 @@ const REGIONS = [
   'asia-southeast1',
 ];
 
-const SECURITY_LEVELS: { value: SecurityLevel; label: string; color: string }[] = [
-  { value: 'basic', label: 'Basic', color: SECURITY_LEVEL_COLORS.basic },
-  { value: 'standard', label: 'Standard', color: SECURITY_LEVEL_COLORS.standard },
-  { value: 'strict', label: 'Strict', color: SECURITY_LEVEL_COLORS.strict },
-  { value: 'compliance', label: 'Compliance', color: SECURITY_LEVEL_COLORS.compliance },
+const SECURITY_LEVELS: { value: SecurityLevel; labelKey: string; color: string }[] = [
+  { value: 'basic', labelKey: 'wizard.environments.securityBasic', color: SECURITY_LEVEL_COLORS.basic },
+  { value: 'standard', labelKey: 'wizard.environments.securityStandard', color: SECURITY_LEVEL_COLORS.standard },
+  { value: 'strict', labelKey: 'wizard.environments.securityStrict', color: SECURITY_LEVEL_COLORS.strict },
+  { value: 'compliance', labelKey: 'wizard.environments.securityCompliance', color: SECURITY_LEVEL_COLORS.compliance },
 ];
 
-const ENV_TYPE_LABELS: Record<string, { label: string; emoji: string }> = {
-  production: { label: 'Production', emoji: '🟢' },
-  staging: { label: 'Staging', emoji: '🟡' },
-  development: { label: 'Development', emoji: '🔵' },
-  pr: { label: 'PR Preview', emoji: '🟣' },
+const ENV_TYPE_KEYS: Record<string, { labelKey: string; emoji: string }> = {
+  production: { labelKey: 'wizard.environments.production', emoji: '🟢' },
+  staging: { labelKey: 'wizard.environments.staging', emoji: '🟡' },
+  development: { labelKey: 'wizard.environments.development', emoji: '🔵' },
+  pr: { labelKey: 'wizard.environments.prPreview', emoji: '🟣' },
 };
 
 interface EnvironmentStepProps {
@@ -51,19 +52,20 @@ export const EnvironmentStep: React.FC<EnvironmentStepProps> = ({
   onSecurityChange,
   onAllSecurityChange,
 }) => {
+  const { t } = useTranslation();
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-sm font-semibold text-ice-text-1 mb-1">Environments</h3>
+        <h3 className="text-sm font-semibold text-ice-text-1 mb-1">{t('wizard.environments.title')}</h3>
         <p className="text-xs text-ice-text-2 mb-3">
-          Select which environments to create. Each gets its own canvas tab.
+          {t('wizard.environments.hint')}
         </p>
       </div>
 
       {/* Environment cards */}
       <div className="space-y-2">
         {environments.map((env, index) => {
-          const meta = ENV_TYPE_LABELS[env.type];
+          const meta = ENV_TYPE_KEYS[env.type];
           return (
             <div
               key={env.type}
@@ -93,7 +95,7 @@ export const EnvironmentStep: React.FC<EnvironmentStepProps> = ({
                   )}
                 </div>
                 <span className="text-xs">{meta.emoji}</span>
-                <span className="text-sm font-medium text-ice-text-1">{meta.label}</span>
+                <span className="text-sm font-medium text-ice-text-1">{t(meta.labelKey)}</span>
               </button>
 
               {/* Config row — only when enabled */}
@@ -125,7 +127,7 @@ export const EnvironmentStep: React.FC<EnvironmentStepProps> = ({
                     >
                       {SECURITY_LEVELS.map((sl) => (
                         <option key={sl.value} value={sl.value}>
-                          {sl.label}
+                          {t(sl.labelKey)}
                         </option>
                       ))}
                     </select>
@@ -140,7 +142,7 @@ export const EnvironmentStep: React.FC<EnvironmentStepProps> = ({
       {/* Global security selector */}
       <div className="pt-2 border-t border-ice-border">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-ice-text-2">Set all to:</span>
+          <span className="text-xs text-ice-text-2">{t('wizard.environments.setAllTo')}</span>
           {SECURITY_LEVELS.map((sl) => (
             <button
               key={sl.value}
@@ -148,7 +150,7 @@ export const EnvironmentStep: React.FC<EnvironmentStepProps> = ({
               className="text-ice-xs px-2 py-1 rounded border border-ice-border bg-ice-base hover:bg-ice-hover transition-colors"
               style={{ color: sl.color }}
             >
-              {sl.label}
+              {t(sl.labelKey)}
             </button>
           ))}
         </div>

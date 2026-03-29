@@ -22,7 +22,8 @@ import {
 import React, { useCallback, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { DEPLOY_UI, isApiNotEnabledError, extractApiName, extractApiEnableUrl } from '../../../i18n/messages';
+import { useTranslation } from '../../../i18n';
+import { isApiNotEnabledError, extractApiName, extractApiEnableUrl } from '../../../shared/utils/gcp-errors';
 import { getApi } from '../../../shared/api/api-adapter';
 import { cn } from '../../../shared/utils/cn';
 import { selectActiveCard, updateCardNodeData } from '../../../store/slices/cards-slice';
@@ -124,6 +125,7 @@ function detectDominantProvider(nodes: Array<{ type: string; data?: Record<strin
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export const DeployPanel: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const activeCard = useSelector(selectActiveCard);
   const deploy = useSelector((state: RootState) => state.deploy);
@@ -408,7 +410,7 @@ export const DeployPanel: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
         <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/30">
           <div className="flex items-center gap-2.5">
             <Rocket className="w-5 h-5 text-emerald-500" />
-            <h2 className="text-base font-semibold">{DEPLOY_UI.TITLE}</h2>
+            <h2 className="text-base font-semibold">{t('deploy.title')}</h2>
             <StatusBadge status={deploy.status} id="ice-deploy-status" />
           </div>
           <button
@@ -446,8 +448,8 @@ export const DeployPanel: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
           <div className="rounded-md border border-border bg-muted/20 px-4 py-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">
-                {DEPLOY_UI.CARD_LABEL}{' '}
-                <span className="text-foreground font-medium">{activeCard?.name || DEPLOY_UI.UNTITLED}</span>
+                {t('deploy.card.label')}{' '}
+                <span className="text-foreground font-medium">{activeCard?.name || t('deploy.card.untitled')}</span>
               </span>
               <span className="text-muted-foreground">
                 {providerNodes.length} deployable resource{providerNodes.length !== 1 ? 's' : ''} (
@@ -494,9 +496,9 @@ export const DeployPanel: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
             <div className="rounded-md border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20 p-4 text-sm">
               <div className="flex items-center gap-2.5 text-orange-700 dark:text-orange-300">
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span className="font-medium">{DEPLOY_UI.CONNECTING_TO_GCP}</span>
+                <span className="font-medium">{t('deploy.auth.connecting')}</span>
               </div>
-              <p className="mt-2 text-orange-600 dark:text-orange-400 text-xs">{DEPLOY_UI.AUTH_BROWSER_PROMPT}</p>
+              <p className="mt-2 text-orange-600 dark:text-orange-400 text-xs">{t('deploy.auth.browserPrompt')}</p>
             </div>
           )}
 
@@ -530,7 +532,7 @@ export const DeployPanel: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground flex items-center gap-1.5">
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  {deploy.currentResource || DEPLOY_UI.DEPLOYING}
+                  {deploy.currentResource || t('deploy.progress.deploying')}
                 </span>
                 <span className="font-mono text-xs">{deploy.progress}%</span>
               </div>
@@ -559,7 +561,7 @@ export const DeployPanel: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
             id="ice-deploy-btn-cancel"
             className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
           >
-            {DEPLOY_UI.RESET_BUTTON}
+            {t('deploy.buttons.reset')}
           </button>
           <div className="flex items-center gap-2">
             {/* Plan button */}
@@ -584,7 +586,7 @@ export const DeployPanel: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
               ) : (
                 <Eye className="w-3.5 h-3.5" />
               )}
-              {DEPLOY_UI.PLAN_BUTTON}
+              {t('deploy.buttons.plan')}
             </button>
 
             {/* Deploy button */}
@@ -609,14 +611,14 @@ export const DeployPanel: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
               ) : (
                 <Play className="w-3.5 h-3.5" />
               )}
-              {deploy.deployedResources.length > 0 ? 'Update Infrastructure' : DEPLOY_UI.DEPLOY_BUTTON}
+              {deploy.deployedResources.length > 0 ? t('deploy.buttons.updateInfrastructure') : t('deploy.buttons.deploy')}
             </button>
 
             {/* Destroy button — only when resources are deployed */}
             {deploy.deployedResources.length > 0 && deploy.status !== 'deploying' && (
               <button
                 onClick={async () => {
-                  if (!activeCard || !confirm('Destroy all deployed resources? This cannot be undone.')) return;
+                  if (!activeCard || !confirm(t('deploy.errors.destroyConfirm'))) return;
                   try {
                     await getApi().deploy.destroy(activeCard.id, {
                       provider: deploy.provider,
@@ -635,7 +637,7 @@ export const DeployPanel: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
                 )}
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                Destroy
+                {t('deploy.buttons.destroy')}
               </button>
             )}
           </div>
@@ -649,35 +651,36 @@ export const DeployPanel: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
 // ─── Sub-components ─────────────────────────────────────────────────────────
 
 const StatusBadge: React.FC<{ status: DeployStatus; id?: string }> = ({ status, id }) => {
+  const { t } = useTranslation();
   if (status === 'idle') return null;
 
   const config: Record<string, { label: string; color: string }> = {
     authenticating: {
-      label: DEPLOY_UI.STATUS_AUTHENTICATING,
+      label: t('deploy.status.authenticating'),
       color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
     },
     planning: {
-      label: DEPLOY_UI.STATUS_PLANNING,
+      label: t('deploy.status.planning'),
       color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
     },
     planned: {
-      label: DEPLOY_UI.STATUS_PLANNED,
+      label: t('deploy.status.planned'),
       color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
     },
     deploying: {
-      label: DEPLOY_UI.STATUS_DEPLOYING,
+      label: t('deploy.status.deploying'),
       color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
     },
     success: {
-      label: DEPLOY_UI.STATUS_SUCCESS,
+      label: t('deploy.status.success'),
       color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
     },
     error: {
-      label: DEPLOY_UI.STATUS_ERROR,
+      label: t('deploy.status.error'),
       color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
     },
     cancelled: {
-      label: DEPLOY_UI.STATUS_CANCELLED,
+      label: t('deploy.status.cancelled'),
       color: 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300',
     },
   };
@@ -713,6 +716,7 @@ const ConfigSection: React.FC<{
   onRegionChange,
   onEnvironmentChange,
 }) => {
+  const { t } = useTranslation();
   const regions = PROVIDER_REGIONS[provider] || PROVIDER_REGIONS.gcp!;
   const projectMeta = PROVIDER_PROJECT_LABELS[provider] || PROVIDER_PROJECT_LABELS.gcp!;
   const [providerConnected, setProviderConnected] = React.useState(false);
@@ -749,7 +753,7 @@ const ConfigSection: React.FC<{
         <div className="flex items-center gap-2 text-xs">
           <CheckCircle className="w-3 h-3 text-emerald-500" />
           <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-            {PROVIDER_LABELS[provider] || provider} connected
+            {t('deploy.status.connected', { provider: PROVIDER_LABELS[provider] || provider })}
             {authType === 'oauth' ? ' via Google OAuth' : authType === 'service_account' ? ' via Service Account' : ''}
           </span>
         </div>
@@ -758,7 +762,7 @@ const ConfigSection: React.FC<{
         <div className="flex items-center gap-2 text-xs">
           <AlertCircle className="w-3 h-3 text-amber-500" />
           <span className="text-amber-600 dark:text-amber-400">
-            {PROVIDER_LABELS[provider] || provider} not connected — configure in Cloud Providers settings
+            {t('deploy.status.notConnected', { provider: PROVIDER_LABELS[provider] || provider })}
           </span>
         </div>
       )}
@@ -766,7 +770,7 @@ const ConfigSection: React.FC<{
       <div className="grid grid-cols-4 gap-3">
         {/* Provider */}
         <div className="space-y-1">
-          <label className="text-xs font-medium text-muted-foreground">Provider</label>
+          <label className="text-xs font-medium text-muted-foreground">{t('deploy.config.providerLabel')}</label>
           <select
             value={provider}
             onChange={(e) => onProviderChange(e.target.value)}
@@ -792,7 +796,7 @@ const ConfigSection: React.FC<{
               id="ice-deploy-input-project"
               className="w-full px-2.5 py-1.5 text-sm rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-50"
             >
-              <option value="">Select project...</option>
+              <option value="">{t('deploy.config.selectProject')}</option>
               {connectedProjects.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name || p.id}
@@ -814,7 +818,7 @@ const ConfigSection: React.FC<{
 
         {/* Region */}
         <div className="space-y-1">
-          <label className="text-xs font-medium text-muted-foreground">{DEPLOY_UI.REGION_LABEL}</label>
+          <label className="text-xs font-medium text-muted-foreground">{t('deploy.config.regionLabel')}</label>
           <select
             value={region}
             onChange={(e) => onRegionChange(e.target.value)}
@@ -832,16 +836,16 @@ const ConfigSection: React.FC<{
 
         {/* Environment */}
         <div className="space-y-1">
-          <label className="text-xs font-medium text-muted-foreground">{DEPLOY_UI.ENVIRONMENT_LABEL}</label>
+          <label className="text-xs font-medium text-muted-foreground">{t('deploy.config.environmentLabel')}</label>
           <select
             value={environment}
             onChange={(e) => onEnvironmentChange(e.target.value as any)}
             disabled={disabled}
             className="w-full px-2.5 py-1.5 text-sm rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-50"
           >
-            <option value="development">{DEPLOY_UI.ENV_DEVELOPMENT}</option>
-            <option value="staging">{DEPLOY_UI.ENV_STAGING}</option>
-            <option value="production">{DEPLOY_UI.ENV_PRODUCTION}</option>
+            <option value="development">{t('deploy.config.envDevelopment')}</option>
+            <option value="staging">{t('deploy.config.envStaging')}</option>
+            <option value="production">{t('deploy.config.envProduction')}</option>
           </select>
         </div>
       </div>
@@ -850,12 +854,13 @@ const ConfigSection: React.FC<{
 };
 
 const PlanPreview: React.FC<{ plan: DeployPlan }> = ({ plan }) => {
+  const { t } = useTranslation();
   const total = plan.creates.length + plan.updates.length + plan.deletes.length;
 
   if (total === 0 && plan.skipped.length === 0) {
     return (
       <div className="rounded-md border border-border bg-muted/20 p-4 text-sm text-muted-foreground text-center">
-        {DEPLOY_UI.NO_CHANGES}
+        {t('deploy.plan.noChanges')}
       </div>
     );
   }
@@ -864,7 +869,7 @@ const PlanPreview: React.FC<{ plan: DeployPlan }> = ({ plan }) => {
     <div className="rounded-md border border-border overflow-hidden">
       <div className="px-4 py-2 bg-muted/40 border-b border-border text-sm font-medium flex items-center gap-2">
         <Eye className="w-3.5 h-3.5" />
-        {DEPLOY_UI.PLAN_CHANGES(total)}
+        {t('deploy.plan.changes', { total })}
       </div>
       <div className="divide-y divide-border max-h-64 overflow-y-auto">
         {plan.creates.map((r, i) => (
@@ -878,7 +883,7 @@ const PlanPreview: React.FC<{ plan: DeployPlan }> = ({ plan }) => {
         ))}
         {plan.skipped.map((s, i) => (
           <div key={`s-${i}`} className="px-4 py-2 text-xs text-muted-foreground flex items-center gap-2">
-            <span className="w-16 text-gray-500">{DEPLOY_UI.SKIP_ACTION}</span>
+            <span className="w-16 text-gray-500">{t('deploy.plan.skip')}</span>
             <span>{s.name}</span>
             <span className="ml-auto text-gray-500">{s.reason}</span>
           </div>
@@ -940,6 +945,7 @@ const ApiErrorBanner: React.FC<{
   results: Array<{ error?: string; api_enable_url?: string }>;
   onRetryDeploy: () => void;
 }> = ({ error, results, onRetryDeploy }) => {
+  const { t } = useTranslation();
   // Collect all unique enable URLs from results and error message
   const enableUrls = new Set<string>();
   for (const r of results) {
@@ -971,10 +977,9 @@ const ApiErrorBanner: React.FC<{
         <div className="flex items-start gap-2 text-sm text-amber-800 dark:text-amber-200">
           <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="font-medium">Billing not enabled</p>
+            <p className="font-medium">{t('deploy.errors.billingTitle')}</p>
             <p className="mt-1 text-amber-700 dark:text-amber-300 text-xs">
-              Your GCP project requires a billing account to enable Cloud APIs (Cloud Run, Storage, etc.). ICE cannot
-              deploy without billing enabled.
+              {t('deploy.errors.billingDescription')}
             </p>
           </div>
         </div>
@@ -986,7 +991,7 @@ const ApiErrorBanner: React.FC<{
           )}
         >
           <ExternalLink className="w-3.5 h-3.5" />
-          Link billing account in GCP Console
+          {t('deploy.errors.billingButton')}
         </button>
         <button
           onClick={onRetryDeploy}
@@ -996,7 +1001,7 @@ const ApiErrorBanner: React.FC<{
           )}
         >
           <RefreshCw className="w-3.5 h-3.5" />
-          {DEPLOY_UI.RETRY_DEPLOY}
+          {t('deploy.buttons.retryDeploy')}
         </button>
       </div>
     );
@@ -1014,15 +1019,14 @@ const ApiErrorBanner: React.FC<{
         <div className="flex items-start gap-2 text-sm text-amber-800 dark:text-amber-200">
           <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="font-medium">Google Workspace re-authentication policy (RAPT)</p>
+            <p className="font-medium">{t('deploy.errors.raptTitle')}</p>
             <p className="mt-1 text-amber-700 dark:text-amber-300 text-xs">
-              Your organisation enforces re-authentication for cloud operations. OAuth sign-in cannot be used for
-              deployments.
+              {t('deploy.errors.raptDescription')}
             </p>
           </div>
         </div>
         <div className="text-xs text-amber-700 dark:text-amber-300 space-y-1 pl-6">
-          <p className="font-medium">To fix, choose one:</p>
+          <p className="font-medium">{t('deploy.errors.raptFixTitle')}</p>
           <p>
             1. <strong>Use a Service Account Key</strong> — disconnect the current OAuth connection, then reconnect with
             a service account JSON key (recommended). If key creation is blocked by org policy, ask an admin to allow{' '}
@@ -1072,11 +1076,10 @@ const ApiErrorBanner: React.FC<{
       <div className="flex items-start gap-2 text-sm text-amber-800 dark:text-amber-200">
         <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
         <div>
-          <p className="font-medium">{DEPLOY_UI.API_NOT_ENABLED_TITLE}</p>
-          <p className="mt-1 text-amber-700 dark:text-amber-300 text-xs">{DEPLOY_UI.API_NOT_ENABLED_HINT}</p>
+          <p className="font-medium">{t('deploy.errors.apiNotEnabledTitle')}</p>
+          <p className="mt-1 text-amber-700 dark:text-amber-300 text-xs">{t('deploy.errors.apiNotEnabledHint')}</p>
           <p className="mt-1 text-amber-600 dark:text-amber-400 text-xs">
-            To auto-enable APIs during deployment, ensure your service account has the{' '}
-            <strong>Service Usage Admin</strong> role. Add it in{' '}
+            {t('deploy.errors.autoEnableHint')} Add it in{' '}
             <a
               href="https://console.cloud.google.com/iam-admin/iam"
               target="_blank"
@@ -1106,8 +1109,8 @@ const ApiErrorBanner: React.FC<{
               )}
             >
               <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
-              <span className="font-medium">{DEPLOY_UI.ENABLE_API(apiName)}</span>
-              <span className="ml-auto text-xs text-amber-600 dark:text-amber-400">{DEPLOY_UI.OPENS_CONSOLE}</span>
+              <span className="font-medium">{t('deploy.errors.enableApi', { api: apiName })}</span>
+              <span className="ml-auto text-xs text-amber-600 dark:text-amber-400">{t('deploy.errors.opensConsole')}</span>
             </button>
           );
         })}
@@ -1121,7 +1124,7 @@ const ApiErrorBanner: React.FC<{
         )}
       >
         <RefreshCw className="w-3.5 h-3.5" />
-        {DEPLOY_UI.RETRY_DEPLOY}
+        {t('deploy.buttons.retryDeploy')}
       </button>
     </div>
   );
@@ -1140,6 +1143,7 @@ const ResultsSummary: React.FC<{
     duration_ms?: number;
   }>;
 }> = ({ results }) => {
+  const { t } = useTranslation();
   const succeeded = results.filter((r) => r.success).length;
   const failed = results.filter((r) => !r.success).length;
 
@@ -1147,8 +1151,8 @@ const ResultsSummary: React.FC<{
     <div className="rounded-md border border-border overflow-hidden">
       <div className="px-4 py-2 bg-muted/40 border-b border-border text-sm font-medium flex items-center gap-2">
         <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
-        Results: {DEPLOY_UI.RESULTS_SUCCEEDED(succeeded)}
-        {failed > 0 && `, ${DEPLOY_UI.RESULTS_FAILED(failed)}`}
+        Results: {t('deploy.progress.succeeded', { count: succeeded })}
+        {failed > 0 && `, ${t('deploy.progress.failed', { count: failed })}`}
       </div>
       <div className="divide-y divide-border max-h-48 overflow-y-auto">
         {results.map((r, i) => (
@@ -1189,9 +1193,9 @@ const ResultsSummary: React.FC<{
                 <button
                   onClick={() => navigator.clipboard.writeText(r.provider_id!)}
                   className="text-ice-xs text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
-                  title={DEPLOY_UI.COPY_PROVIDER_ID}
+                  title={t('deploy.copy.copyProviderId')}
                 >
-                  {DEPLOY_UI.COPY}
+                  {t('deploy.copy.copy')}
                 </button>
               </div>
             )}
@@ -1207,7 +1211,7 @@ const ResultsSummary: React.FC<{
                         className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
                       >
                         <ExternalLink className="w-3 h-3" />
-                        {DEPLOY_UI.ENABLE_IN_CONSOLE}
+                        {t('deploy.buttons.enableApi')}
                       </button>
                     </div>
                   );

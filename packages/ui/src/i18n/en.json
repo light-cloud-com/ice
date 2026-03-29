@@ -10,56 +10,187 @@
       "retry": "Retry",
       "copy": "Copy",
       "connect": "Connect",
-      "disconnect": "Disconnect"
+      "disconnect": "Disconnect",
+      "close": "Close",
+      "back": "Back",
+      "next": "Next",
+      "skip": "Skip",
+      "continue": "Continue",
+      "add": "Add",
+      "remove": "Remove",
+      "create": "Create",
+      "import": "Import",
+      "change": "Change",
+      "search": "Search"
     },
     "labels": {
       "untitled": "Untitled",
       "loading": "Loading...",
       "valid": "Valid",
       "modified": "(modified)",
-      "version": "ICE v0.1.0"
+      "version": "ICE v0.1.0",
+      "none": "none",
+      "yes": "Yes",
+      "no": "No",
+      "or": "or",
+      "name": "Name",
+      "email": "Email",
+      "password": "Password",
+      "description": "Description",
+      "type": "Type",
+      "status": "Status",
+      "role": "Role"
     },
     "errors": {
       "required": "This field is required",
-      "network": "Something went wrong. Please try again."
+      "network": "Something went wrong. Please try again.",
+      "unexpected": "An unexpected error occurred",
+      "tryAgain": "Try again"
+    },
+    "roles": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "member": "Member",
+      "viewer": "Viewer",
+      "editor": "Editor"
+    },
+    "time": {
+      "justNow": "Just now",
+      "minutesAgo": "{{count}}m ago",
+      "hoursAgo": "{{count}}h ago",
+      "daysAgo": "{{count}}d ago",
+      "never": "Never"
+    },
+    "providers": {
+      "gcp": "Google Cloud",
+      "aws": "AWS",
+      "azure": "Azure",
+      "kubernetes": "Kubernetes"
     }
   },
+
+  "auth": {
+    "brand": {
+      "title": "ICE",
+      "subtitle": "Integrated Cloud Environment"
+    },
+    "login": {
+      "heading": "Sign in to your account",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "submitButton": "Sign in",
+      "noAccount": "Don't have an account?",
+      "createLink": "Create one",
+      "divider": "or",
+      "invalidCredentials": "Invalid credentials"
+    },
+    "signup": {
+      "heading": "Create your account",
+      "nameLabel": "Name",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "At least 8 characters",
+      "submitButton": "Create account",
+      "hasAccount": "Already have an account?",
+      "signInLink": "Sign in",
+      "divider": "or",
+      "registrationFailed": "Registration failed"
+    },
+    "callback": {
+      "noToken": "No token received",
+      "backToLogin": "Back to login"
+    },
+    "oauth": {
+      "googleNotLoaded": "Google Sign-In not loaded. Please refresh.",
+      "googleNotConfigured": "Google login not configured.",
+      "googleFailed": "Google sign-in failed",
+      "loginFailed": "Login failed",
+      "continueWithGoogle": "Continue with Google",
+      "continueWithGithub": "Continue with GitHub"
+    }
+  },
+
   "canvas": {
     "title": "Infrastructure Canvas",
-    "empty-state": {
+    "emptyState": {
       "title": "What are you building?",
       "subtitle": "Pick a starting point — you can always change it later",
-      "blank-canvas": "Blank Canvas",
-      "pick-template": "Pick a template..."
+      "blankCanvas": "Blank Canvas",
+      "pickTemplate": "Pick a template..."
     },
     "controls": {
-      "new-graph": "New Graph (Ctrl+N)",
+      "title": "Controls",
+      "escButton": "ESC",
+      "shortcutsTitle": "Keyboard shortcuts",
+      "newGraph": "New Graph (Ctrl+N)",
       "open": "Open (Ctrl+O)",
       "save": "Save (Ctrl+S)",
-      "load-demo": "Load Demo Infrastructure",
-      "new-project": "New Project",
+      "loadDemo": "Load Demo Infrastructure",
+      "newProject": "New Project",
       "undo": "Undo (Ctrl+Z)",
       "redo": "Redo (Ctrl+Y)",
-      "auto-organize": "Auto-Organize Layout (Ctrl+Shift+O)",
-      "toggle-palette": "Toggle Palette (Ctrl+P)",
-      "toggle-properties": "Toggle Properties (Ctrl+I)",
-      "toggle-minimap": "Toggle Minimap (Ctrl+M)",
-      "split-right": "Split Right (side-by-side)",
-      "split-down": "Split Down (top-bottom)",
-      "close-split": "Close Split",
-      "switch-light": "Switch to Light Mode",
-      "switch-dark": "Switch to Dark Mode",
-      "cloud-providers": "Cloud Providers - Import from AWS/GCP/Azure"
+      "autoOrganize": "Auto-Organize Layout (Ctrl+Shift+O)",
+      "togglePalette": "Toggle Palette (Ctrl+P)",
+      "toggleProperties": "Toggle Properties (Ctrl+I)",
+      "toggleMinimap": "Toggle Minimap (Ctrl+M)",
+      "splitRight": "Split Right (side-by-side)",
+      "splitDown": "Split Down (top-bottom)",
+      "closeSplit": "Close Split",
+      "switchLight": "Switch to Light Mode",
+      "switchDark": "Switch to Dark Mode",
+      "cloudProviders": "Cloud Providers - Import from AWS/GCP/Azure",
+      "deployInfra": "Deploy Infrastructure (Ctrl+Shift+D)",
+      "sectionNavigation": "Navigation",
+      "panCanvas": "Pan canvas",
+      "zoomInOut": "Zoom in / out",
+      "sectionSelection": "Selection",
+      "selectNode": "Select node",
+      "multiSelect": "Multi-select",
+      "boxSelect": "Box select",
+      "deselectAll": "Deselect all",
+      "sectionEditing": "Editing",
+      "deleteSelected": "Delete selected",
+      "copyPaste": "Copy / Cut / Paste",
+      "renameGroup": "Rename group",
+      "sectionContainment": "Containment",
+      "moveIntoGroup": "Move into group / block",
+      "detachFromContainer": "Detach from container",
+      "sectionView": "View",
+      "architectureView": "Architecture view",
+      "infrastructureView": "Infrastructure view",
+      "toggleDebug": "Toggle debug panel"
+    },
+    "contextMenu": {
+      "undo": "Undo",
+      "redo": "Redo",
+      "paste": "Paste",
+      "selectAll": "Select All",
+      "autoOrganize": "Auto-organize",
+      "properties": "Properties",
+      "copy": "Copy",
+      "copyAsText": "Copy as Text",
+      "cut": "Cut",
+      "duplicate": "Duplicate",
+      "changeProvider": "Change Provider",
+      "unfold": "Unfold",
+      "fold": "Fold",
+      "groupSelection": "Group Selection",
+      "delete": "Delete",
+      "deleteItems": "Delete {{count}} items",
+      "deleteConnection": "Delete Connection"
     }
   },
+
   "deploy": {
-    "title": "Deploy to GCP",
+    "title": "Infrastructure Deploy",
     "buttons": {
       "plan": "Plan",
       "deploy": "Deploy",
       "reset": "Reset",
-      "retry": "Retry Deploy",
-      "enable-api": "Enable API in GCP Console"
+      "retryDeploy": "Retry Deploy",
+      "enableApi": "Enable API in GCP Console",
+      "updateInfrastructure": "Update Infrastructure",
+      "destroy": "Destroy"
     },
     "status": {
       "authenticating": "Authenticating",
@@ -68,79 +199,965 @@
       "deploying": "Deploying",
       "success": "Deployed",
       "error": "Error",
-      "cancelled": "Cancelled"
+      "cancelled": "Cancelled",
+      "connected": "{{provider}} connected",
+      "connectedViaOAuth": "via Google OAuth",
+      "connectedViaServiceAccount": "via Service Account",
+      "notConnected": "{{provider}} not connected — configure in Cloud Providers settings"
     },
     "config": {
-      "gcp-project-label": "GCP Project",
-      "gcp-project-placeholder": "my-gcp-project",
-      "region-label": "Region",
-      "environment-label": "Environment",
-      "env-development": "Development",
-      "env-staging": "Staging",
-      "env-production": "Production"
+      "gcpProjectLabel": "GCP Project",
+      "gcpProjectPlaceholder": "my-gcp-project",
+      "regionLabel": "Region",
+      "environmentLabel": "Environment",
+      "envDevelopment": "Development",
+      "envStaging": "Staging",
+      "envProduction": "Production",
+      "providerLabel": "Provider",
+      "selectProject": "Select project...",
+      "awsLabel": "AWS Account / Region",
+      "awsPlaceholder": "123456789012",
+      "azureLabel": "Azure Subscription",
+      "azurePlaceholder": "my-subscription-id",
+      "kubernetesLabel": "Cluster Name",
+      "kubernetesPlaceholder": "my-k8s-cluster"
     },
     "card": {
       "label": "Card:",
-      "deployable-resource": "deployable resource",
-      "skipped-non-gcp": "skipped — non-GCP",
-      "deployed-resource": "deployed resource"
+      "untitled": "Untitled",
+      "deployableResource": "deployable resource",
+      "deployableResources": "{{count}} deployable resource(s) ({{provider}})",
+      "skippedNonGcp": "skipped — non-GCP",
+      "skippedResources": "({{count}} skipped — non-{{provider}})",
+      "deployedResource": "deployed resource",
+      "deployedResources": "{{count}} deployed resource(s) (from prior deploy)"
     },
     "auth": {
       "connecting": "Connecting to GCP...",
-      "browser-prompt": "A browser window will open for Google authentication. Complete the sign-in to continue."
+      "browserPrompt": "A browser window will open for Google authentication. Complete the sign-in to continue."
     },
     "plan": {
-      "no-changes": "No changes detected. Infrastructure is up to date.",
-      "skip-action": "skip"
+      "noChanges": "No changes detected. Infrastructure is up to date.",
+      "changes": "Plan: {{total}} change(s)",
+      "skip": "skip",
+      "actionCreate": "create",
+      "actionUpdate": "update",
+      "actionDelete": "delete"
+    },
+    "progress": {
+      "deploying": "Deploying...",
+      "percent": "{{pct}}%",
+      "succeeded": "{{count}} succeeded",
+      "failed": "{{count}} failed",
+      "completedIn": "Deploy completed in {{seconds}}s"
     },
     "errors": {
-      "api-not-enabled-title": "Required GCP APIs are not enabled",
-      "api-not-enabled-hint": "Some Google Cloud APIs need to be enabled before deployment. Click the button below to open the GCP Console, enable the API, then click Retry.",
-      "opens-console": "Opens GCP Console"
+      "apiNotEnabledTitle": "Required GCP APIs are not enabled",
+      "apiNotEnabledHint": "Some Google Cloud APIs need to be enabled before deployment. Click the button below to open the GCP Console, enable the API, then click Retry.",
+      "opensConsole": "Opens GCP Console",
+      "enableApi": "Enable {{api}}",
+      "destroyConfirm": "Destroy all deployed resources? This cannot be undone.",
+      "destroyFailed": "Destroy failed",
+      "deploymentFailed": "Deployment failed",
+      "planningFailed": "Planning failed",
+      "authenticationFailed": "Authentication failed",
+      "billingTitle": "Billing not enabled",
+      "billingDescription": "Your GCP project requires a billing account to enable Cloud APIs (Cloud Run, Storage, etc.). ICE cannot deploy without billing enabled.",
+      "billingButton": "Link billing account in GCP Console",
+      "raptTitle": "Google Workspace re-authentication policy (RAPT)",
+      "raptDescription": "Your organisation enforces re-authentication for cloud operations. OAuth sign-in cannot be used for deployments.",
+      "raptFixTitle": "To fix, choose one:",
+      "raptOption1": "Use a Service Account Key",
+      "raptOption2": "Disable RAPT",
+      "autoEnableHint": "To auto-enable APIs during deployment, ensure your service account has the Service Usage Admin role."
+    },
+    "copy": {
+      "copy": "copy",
+      "copyProviderId": "Copy provider ID"
+    },
+    "slice": {
+      "connecting": "Connecting to GCP...",
+      "authSuccess": "GCP authentication successful.",
+      "authFailed": "Authentication failed: {{error}}",
+      "planning": "Planning deployment...",
+      "planReady": "Plan ready: {{creates}} create, {{updates}} update, {{deletes}} delete",
+      "deploying": "Deploying...",
+      "completed": "Deploy completed in {{seconds}}s",
+      "error": "Error: {{error}}"
     }
   },
+
   "integrations": {
-    "dropdown-title": "Integrations",
+    "dropdownTitle": "Integrations",
     "connected": "Connected",
     "disconnected": "Not connected",
     "connecting": "Connecting...",
     "error": "Error",
     "github": {
       "title": "GitHub",
-      "connect-title": "Connect to GitHub",
-      "pat-tab": "Personal Access Token",
-      "pat-label": "GitHub Token",
-      "pat-placeholder": "ghp_xxxxxxxxxxxxxxxxxxxx",
-      "pat-help": "Generate a token at github.com/settings/tokens with repo scope.",
-      "pat-connect": "Connect with Token",
-      "device-flow-tab": "Sign in with Browser",
-      "device-flow-button": "Sign in with GitHub",
-      "device-flow-instructions": "A browser window will open. Enter this code to authorize:",
-      "device-flow-waiting": "Waiting for authorization...",
-      "device-flow-copy": "Copy Code",
-      "device-flow-copied": "Copied!",
-      "repos-title": "Repositories",
-      "no-repos": "No repositories found",
-      "loading-repos": "Loading repositories...",
+      "connectTitle": "Connect to GitHub",
+      "connectDescription": "Connect your GitHub account to browse repositories and branches.",
+      "connectedAs": "Connected as {{username}}",
+      "disconnectButton": "Disconnect",
+      "patTab": "Personal Access Token",
+      "patLabel": "GitHub Token",
+      "patPlaceholder": "ghp_xxxxxxxxxxxxxxxxxxxx",
+      "patHelp": "Generate a token at github.com/settings/tokens with repo scope.",
+      "patConnect": "Connect with Token",
+      "deviceFlowTab": "Sign in with Browser",
+      "deviceFlowButton": "Sign in with GitHub",
+      "deviceFlowInstructions": "A browser window will open. Enter this code to authorize:",
+      "deviceFlowWaiting": "Waiting for authorization...",
+      "deviceFlowCopy": "Copy Code",
+      "deviceFlowCopied": "Copied!",
+      "reposTitle": "Repositories",
+      "noRepos": "No repositories found",
+      "loadingRepos": "Loading repositories...",
       "branches": "branches",
       "private": "private"
     },
-    "repo-selector": {
+    "repoSelector": {
       "placeholder": "Search repositories...",
-      "no-repos": "No repositories found",
+      "noRepos": "No repositories found",
       "loading": "Loading repos...",
-      "not-connected": "Connect GitHub to link repos",
-      "link-repo": "Link repo",
-      "clear": "Unlink"
+      "notConnected": "Connect GitHub to link repos",
+      "linkRepo": "Link repo",
+      "clear": "Unlink",
+      "connectGitHub": "Connect GitHub"
     }
   },
-  "status-bar": {
+
+  "pipeline": {
+    "title": "Pipeline",
+    "panelTitle": "Pipeline: {{name}}",
+    "source": "Source",
+    "triggers": "Triggers",
+    "build": "Build",
+    "deployments": "Deployments",
+    "changeRepo": "Change",
+    "detected": "Detected: {{framework}}",
+    "detecting": "Detecting framework...",
+    "noRepo": "No repository linked",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "pushTo": "Push to",
+    "mergeTo": "Merge to",
+    "addTrigger": "+ Add trigger",
+    "noTriggers": "No triggers configured",
+    "installCommand": "Install",
+    "buildCommand": "Build",
+    "outputDir": "Output",
+    "autoDetected": "(auto-detected)",
+    "status": {
+      "idle": "Idle",
+      "queued": "Queued",
+      "building": "Building",
+      "deploying": "Deploying",
+      "success": "Live",
+      "failed": "Failed"
+    },
+    "noDeployments": "No deployments yet",
+    "viewLogs": "Logs",
+    "deployNow": "Deploy Now",
+    "enablePipeline": "Enable Pipeline",
+    "steps": {
+      "prepare": "Preparing",
+      "clone": "Cloning repository",
+      "install": "Installing dependencies",
+      "build": "Building application",
+      "deploy": "Deploying",
+      "configure": "Configuring"
+    },
+    "activeDeployment": "Active Deployment",
+    "settingUp": "Setting up pipeline...",
+    "noRepoHint": "Select a repository on the GitHub Repo block first, then connect it to this service.",
+    "noRepoShort": "No repository linked. Select a repo on the GitHub Repo block first.",
+    "missingContext": "Missing card or node context.",
+    "branchProtected": "(protected)",
+    "anyBranch": "* (any branch)",
+    "duration": "Duration:",
+    "createFailed": "Failed to create pipeline rule",
+    "manual": "manual",
+    "auto": "auto",
+    "noTriggersForEnv": "No triggers for this environment",
+    "liveBuild": "Live Build",
+    "timeoutSoon": "(timeout soon)",
+    "removeConnection": "Remove connection",
+    "removeTrigger": "Remove trigger",
+    "serviceDeploys": "Service Deploys",
+    "noLogs": "No logs recorded",
+    "recent": "Recent"
+  },
+
+  "onboarding": {
+    "nav": {
+      "stepWelcome": "Welcome",
+      "stepTeam": "Team",
+      "stepCloud": "Cloud",
+      "stepGitHub": "GitHub",
+      "stepProject": "Project",
+      "skipSetup": "Skip setup",
+      "back": "Back",
+      "skip": "Skip",
+      "continue": "Continue",
+      "createAndStart": "Create & Start"
+    },
+    "welcome": {
+      "title": "Welcome to ICE",
+      "titleWithName": "Welcome to ICE, {{name}}",
+      "subtitle": "Design, deploy, and manage cloud infrastructure visually",
+      "featureCanvas": "Visual canvas",
+      "featureCanvasDesc": "Drag-and-drop infrastructure blocks onto a live canvas",
+      "featureMultiCloud": "Multi-cloud",
+      "featureMultiCloudDesc": "GCP, AWS, and Azure — design once, deploy anywhere",
+      "featureCiCd": "CI/CD built in",
+      "featureCiCdDesc": "Connect GitHub and deploy on every push",
+      "setupHint": "This setup takes about a minute. You can skip any step."
+    },
+    "team": {
+      "title": "Set up your team",
+      "subtitle": "Every project belongs to a team",
+      "createTeam": "Create a team",
+      "createTeamDesc": "Set up a new team workspace",
+      "joinTeam": "Join a team",
+      "joinTeamDesc": "You were invited by a team admin",
+      "teamNameLabel": "Team name",
+      "teamNamePlaceholder": "My Team",
+      "inviteCodeLabel": "Invite code",
+      "inviteCodePlaceholder": "Paste your invite code or link",
+      "inviteCodeHint": "Ask your team admin for an invite code or link."
+    },
+    "cloud": {
+      "title": "Connect your cloud",
+      "subtitle": "ICE deploys to your cloud account — we never store your data",
+      "providerLabel": "Default cloud provider",
+      "regionLabel": "Default region",
+      "regionAutoHint": "Auto-selected based on your location. You can change this per project.",
+      "credentialsHint": "Credentials (optional — connect now or later)",
+      "signInWithGoogle": "Sign in with Google",
+      "orServiceAccountKey": "or use a service account key",
+      "orSignInGoogle": "or sign in with Google",
+      "serviceAccountKeyLabel": "Service Account Key (JSON)",
+      "createServiceAccount": "Create service account",
+      "accessKeyIdLabel": "Access Key ID",
+      "secretAccessKeyLabel": "Secret Access Key",
+      "subscriptionIdLabel": "Subscription ID",
+      "tenantIdLabel": "Tenant ID",
+      "clientIdLabel": "Client ID",
+      "clientSecretLabel": "Client Secret",
+      "testAndConnect": "Test & Connect",
+      "connected": "Connected",
+      "connectionFailed": "Connection failed",
+      "securityNote": "Credentials are encrypted at rest and used only to manage your infrastructure."
+    },
+    "github": {
+      "title": "Connect GitHub",
+      "subtitle": "Link repositories to services on the canvas for CI/CD",
+      "connected": "Connected",
+      "tabDevice": "Sign in with Browser",
+      "tabPat": "Personal Access Token",
+      "signInButton": "Sign in with GitHub",
+      "deviceCodePrompt": "Enter this code in your browser to authorize:",
+      "copyCode": "Copy code",
+      "waitingAuth": "Waiting for authorization...",
+      "tokenLabel": "GitHub Token",
+      "tokenPlaceholder": "ghp_xxxxxxxxxxxxxxxxxxxx",
+      "tokenHint": "Generate a token at github.com/settings/tokens with repo scope.",
+      "connectWithToken": "Connect with Token",
+      "laterHint": "You can link repositories to services on the canvas later."
+    },
+    "project": {
+      "title": "What are you building?",
+      "subtitle": "Pick a starting point — you can always change it later",
+      "nameLabel": "Project name",
+      "namePlaceholder": "My Project",
+      "blankCanvas": "Blank Canvas",
+      "blankCanvasDesc": "Start from scratch with an empty project"
+    },
+    "checklist": {
+      "setup": "Setup:",
+      "title": "Setup checklist",
+      "dismissTitle": "Dismiss",
+      "createAccount": "Create account",
+      "chooseProvider": "Choose cloud provider",
+      "connectCloud": "Connect cloud credentials",
+      "connectGithub": "Connect GitHub"
+    }
+  },
+
+  "wizard": {
+    "title": "New Project",
+    "description": "Create a project with environments and optional template",
+    "stepProject": "Project",
+    "stepEnvironments": "Environments",
+    "stepTemplate": "Template",
+    "stepReview": "Review",
+    "backButton": "Back",
+    "nextButton": "Next",
+    "createButton": "Create Project",
+    "projectInfo": {
+      "nameTitle": "Project Name",
+      "nameHint": "Give your project a recognizable name",
+      "namePlaceholder": "My SaaS App",
+      "descriptionTitle": "Description",
+      "descriptionHint": "Optional — describe what this project is for",
+      "descriptionPlaceholder": "Production infrastructure for our customer-facing SaaS platform...",
+      "providerTitle": "Cloud Provider",
+      "providerHint": "Select your target cloud platform"
+    },
+    "environments": {
+      "title": "Environments",
+      "hint": "Select which environments to create. Each gets its own canvas tab.",
+      "production": "Production",
+      "staging": "Staging",
+      "development": "Development",
+      "prPreview": "PR Preview",
+      "securityBasic": "Basic",
+      "securityStandard": "Standard",
+      "securityStrict": "Strict",
+      "securityCompliance": "Compliance",
+      "setAllTo": "Set all to:"
+    },
+    "template": {
+      "title": "Choose a Template",
+      "hint": "Start from a pre-built template or a blank canvas",
+      "categoryAll": "All",
+      "searchPlaceholder": "Search templates...",
+      "blankCanvas": "Blank Canvas",
+      "blankCanvasDesc": "Start with an empty canvas and build your infrastructure from scratch.",
+      "blocks": "blocks"
+    },
+    "review": {
+      "title": "Review & Create",
+      "hint": "Confirm your project settings before creating",
+      "projectLabel": "Project",
+      "environmentsLabel": "Environments",
+      "templateLabel": "Template",
+      "blankCanvas": "Blank Canvas",
+      "blocks": "blocks",
+      "summaryWithTemplate": "with {{count}} blocks each",
+      "summaryBlank": "with blank canvases",
+      "summaryPrefix": "This will create",
+      "environment": "environment",
+      "environments": "environments"
+    }
+  },
+
+  "environments": {
+    "tabBar": {
+      "loading": "Loading environments...",
+      "addEnvironment": "Add environment",
+      "settings": "Settings",
+      "deployments": "Deployments",
+      "activity": "Activity",
+      "promoteToProduction": "Promote to Production",
+      "deployInfra": "Deploy Infra",
+      "contextDeploy": "Deploy",
+      "contextPromote": "Promote to production",
+      "contextDelete": "Delete environment"
+    },
+    "createModal": {
+      "title": "New Environment",
+      "description": "Clones the current production canvas as a starting point.",
+      "nameLabel": "Name",
+      "namePlaceholder": "staging",
+      "typeLabel": "Type",
+      "typeStaging": "Staging",
+      "typeDevelopment": "Development",
+      "typePrPreview": "PR Preview",
+      "regionLabel": "Region (optional)",
+      "regionPlaceholder": "Same as production",
+      "cancelButton": "Cancel",
+      "creatingButton": "Creating...",
+      "createButton": "Create Environment",
+      "errorNameRequired": "Name is required",
+      "errorFallback": "Failed to create environment"
+    },
+    "promote": {
+      "promote": "Promote",
+      "to": "to",
+      "identicalMessage": "Both environments are identical. Nothing to promote.",
+      "changesWillBeApplied": "will be applied to",
+      "change": "change",
+      "changes": "changes",
+      "inSync": "Environments are in sync",
+      "unchanged": "unchanged",
+      "node": "node",
+      "nodes": "nodes",
+      "cancelButton": "Cancel",
+      "promoteButton": "Promote to",
+      "tagAdded": "added",
+      "tagRemoved": "removed",
+      "tagChanged": "changed"
+    }
+  },
+
+  "account": {
+    "avatar": {
+      "ariaLabel": "User menu",
+      "defaultName": "User",
+      "settings": "Settings",
+      "team": "Team",
+      "logout": "Logout"
+    },
+    "invite": {
+      "title": "Invite a team member",
+      "emailLabel": "Email address",
+      "emailPlaceholder": "colleague@company.com",
+      "roleLabel": "Role",
+      "roleAdminDesc": "Full access. Can manage users, billing, and all projects.",
+      "roleMemberDesc": "Can create and edit projects. Cannot manage users or billing.",
+      "roleViewerDesc": "Read-only access. Can view projects but not edit or deploy.",
+      "successMessage": "Invitation sent successfully!",
+      "errorFallback": "Failed to send invitation. Please try again.",
+      "cancelButton": "Cancel",
+      "sendingButton": "Sending...",
+      "sendButton": "Send invitation"
+    },
+    "team": {
+      "title": "Team",
+      "subtitle": "Manage members of",
+      "subtitleFallback": "your organisation",
+      "inviteButton": "Invite",
+      "columnMember": "Member",
+      "columnRole": "Role",
+      "columnJoined": "Joined",
+      "emptyState": "No team members yet.",
+      "youBadge": "(you)",
+      "removeTitle": "Remove",
+      "removeConfirm": "Remove this member from the team?",
+      "pendingInvitations": "Pending invitations",
+      "invitedAs": "Invited as",
+      "expires": "expires"
+    },
+    "settings": {
+      "title": "Settings",
+      "profileTitle": "Profile",
+      "profileSubtitle": "Update your personal information.",
+      "firstNameLabel": "First name",
+      "lastNameLabel": "Last name",
+      "emailLabel": "Email",
+      "emailDisabledHint": "Email cannot be changed.",
+      "profileSaved": "Profile updated successfully.",
+      "profileSaveFailed": "Failed to update profile. Please try again.",
+      "saveProfileButton": "Save profile",
+      "passwordTitle": "Password",
+      "passwordSubtitle": "Change your account password.",
+      "currentPasswordLabel": "Current password",
+      "newPasswordLabel": "New password",
+      "newPasswordPlaceholder": "At least 8 characters",
+      "confirmPasswordLabel": "Confirm new password",
+      "passwordMinLength": "New password must be at least 8 characters.",
+      "passwordMismatch": "Passwords do not match.",
+      "passwordChanged": "Password changed successfully.",
+      "passwordChangeFailed": "Failed to change password. Check your current password.",
+      "changePasswordButton": "Change password"
+    },
+    "collaborators": {
+      "title": "Project members",
+      "memberCount": "member",
+      "addMember": "Add member",
+      "teamMemberLabel": "Team member",
+      "selectMember": "Select a member...",
+      "roleLabel": "Role",
+      "roleOwnerDesc": "Full control — settings, members, delete",
+      "roleEditorDesc": "Edit canvas, deploy, manage environments",
+      "roleViewerDesc": "View canvas and deployments — read only",
+      "cancelButton": "Cancel",
+      "addButton": "Add",
+      "youBadge": "(you)",
+      "removeTitle": "Remove from project"
+    },
+    "createTeam": {
+      "title": "Create a new organisation",
+      "nameLabel": "Organisation name",
+      "namePlaceholder": "e.g. Acme Corp",
+      "nameHint": "Between 2 and 50 characters. You can change this later.",
+      "errorFallback": "Failed to create organisation. Please try again.",
+      "cancelButton": "Cancel",
+      "creatingButton": "Creating...",
+      "createButton": "Create organisation"
+    }
+  },
+
+  "ai": {
+    "chat": {
+      "title": "AI Assistant",
+      "newChat": "New chat",
+      "historyTitle": "Chat history",
+      "closeTitle": "Close",
+      "deleteTitle": "Delete",
+      "noConversations": "No previous conversations",
+      "untitledConversation": "Untitled conversation",
+      "msgs": "msgs",
+      "emptyCanvasPrompt": "Describe what you want to build and I'll add it to your canvas.",
+      "existingCanvasPrompt": "What would you like to improve or add next?",
+      "notConfiguredTitle": "AI Assistant Not Configured",
+      "notConfiguredDesc": "The AI assistant requires an Anthropic API key to work.",
+      "notConfiguredStep1": "Get an API key at",
+      "notConfiguredStep2": "Add",
+      "notConfiguredStep2Suffix": "to your",
+      "notConfiguredStep3": "Restart the server",
+      "appliedChanges": "Applied",
+      "changes": "changes",
+      "more": "more",
+      "thinking": "Thinking...",
+      "undoLastAi": "Undo last AI change",
+      "inputPlaceholder": "Describe what you want to build...",
+      "doneMessage": "Done.",
+      "noChangesMessage": "No changes to apply.",
+      "collapsedTitle": "AI Assistant"
+    }
+  },
+
+  "properties": {
+    "closeTitle": "Close properties",
+    "title": "Properties",
+    "noCard": "No Card",
+    "overview": {
+      "title": "Overview",
+      "nodes": "Nodes",
+      "connections": "Connections",
+      "estMonthlyCost": "Est. monthly cost",
+      "suggestions": "Suggestions",
+      "emptyHint": "Drop blocks from the palette to start building",
+      "selectHint": "Select a node or edge to view and edit its properties"
+    },
+    "groupColor": "Group Color",
+    "tabs": {
+      "config": "Config",
+      "scaling": "Scaling",
+      "domain": "Domain",
+      "source": "Source & CI",
+      "connections": "Connections",
+      "deploy": "Deploy"
+    },
+    "config": {
+      "title": "Configuration",
+      "iacMapping": "IaC Mapping",
+      "iacResource": "IaC Resource",
+      "cost": "Cost",
+      "estimatedMonthly": "Estimated monthly"
+    },
+    "deploy": {
+      "current": "Current",
+      "live": "Live",
+      "urlLabel": "URL",
+      "imageLabel": "Image",
+      "resourceIdLabel": "Resource ID",
+      "regionLabel": "Region",
+      "instancesLabel": "Instances",
+      "history": "History"
+    },
+    "scaling": {
+      "active": "Active",
+      "running": "running",
+      "minInstances": "Min instances",
+      "maxInstances": "Max instances",
+      "scaleOn": "Scale on",
+      "threshold": "Threshold (%)"
+    },
+    "domain": {
+      "hostname": "Hostname",
+      "hostnamePlaceholder": "app.example.com",
+      "subdomain": "Subdomain",
+      "subdomainPlaceholder": "www",
+      "sslMode": "SSL Mode",
+      "dnsProvider": "DNS Provider",
+      "dnsProviderPlaceholder": "cloudflare, route53..."
+    },
+    "source": {
+      "title": "Source",
+      "noSourceConnected": "No source connected",
+      "noSourceHint": "Add a GitHub Repo block from the palette and connect it to this service to enable CI/CD.",
+      "managedBy": "Managed by",
+      "block": "block",
+      "repository": "Repository",
+      "branch": "Branch",
+      "branchProtected": "(protected)",
+      "build": "Build",
+      "buildCommand": "Build command",
+      "buildCommandPlaceholder": "npm run build",
+      "outputDirectory": "Output directory",
+      "outputDirPlaceholder": "dist"
+    },
+    "edge": {
+      "connectionHeader": "Connection",
+      "propertiesSection": "Properties",
+      "portLabel": "Port",
+      "customOption": "custom",
+      "deleteButton": "Delete Connection",
+      "warningDbFromFrontend": "Direct database access from frontend is a security risk",
+      "warningDbSuggestion": "Add a Backend service between them",
+      "warningQueueFromClient": "Clients should not publish to queues directly",
+      "warningQueueSuggestion": "Route through a Backend API"
+    },
+    "drift": {
+      "checking": "Checking drift...",
+      "inSync": "In sync",
+      "notInDeployment": "Not in latest deployment",
+      "drifted": "Drifted",
+      "change": "change",
+      "changes": "changes",
+      "checkButton": "Check for Drift",
+      "checkingButton": "Checking..."
+    },
+    "network": {
+      "title": "Network",
+      "port": "Port",
+      "domain": "Domain",
+      "inbound": "Inbound",
+      "outbound": "Outbound",
+      "connection": "connection",
+      "connections": "connections"
+    },
+    "about": "About",
+    "envVars": {
+      "title": "Variables",
+      "keyPlaceholder": "KEY",
+      "valuePlaceholder": "value",
+      "secretTitle": "Secret (hidden)",
+      "makeSecretTitle": "Make secret",
+      "addVariable": "+ Add variable"
+    },
+    "noServiceHint": "Connect this block to a service to configure deploy triggers."
+  },
+
+  "project": {
+    "settings": {
+      "title": "Project Settings",
+      "generalHeading": "General",
+      "nameLabel": "Name",
+      "descriptionLabel": "Description",
+      "providerHeading": "Cloud Provider",
+      "providerLockedDesc": "Provider and region are locked for this project. All environments use these settings.",
+      "providerUnlockedDesc": "All resources in this project will deploy to this provider & region.",
+      "providerLabel": "Provider",
+      "regionLabel": "Region / Zone",
+      "regionLocked": "locked",
+      "selectRegion": "Select a region...",
+      "selectPrompt": "Select a provider to see available regions.",
+      "saveSuccess": "Settings saved.",
+      "saveError": "Failed to save.",
+      "saveButton": "Save Settings",
+      "collaboratorsHeading": "Collaborators",
+      "collaboratorsDesc": "Control who can view and edit this project",
+      "dangerHeading": "Danger Zone",
+      "deleteTitle": "Delete this project",
+      "deleteDescription": "This will permanently delete the project, all its environments, canvas cards, and deployment history. This action cannot be undone.",
+      "deleteConfirmLabel": "Type {{name}} to confirm",
+      "deleteButton": "Delete Project",
+      "deleteError": "Failed to delete project."
+    },
+    "activity": {
+      "title": "Activity",
+      "filterAll": "All",
+      "filterAi": "AI",
+      "filterInfra": "Infra",
+      "filterService": "Service",
+      "emptyTitle": "No activity yet",
+      "emptyDescription": "Actions like AI changes, deployments, and pipeline runs will appear here",
+      "aiCanvasChange": "AI Canvas Change",
+      "infrastructure": "Infrastructure {{status}}",
+      "serviceDeploy": "Service Deploy: {{name}}"
+    },
+    "deployments": {
+      "title": "Deployments",
+      "envLabel": "Environment:",
+      "tabInfrastructure": "Infrastructure",
+      "tabService": "Service (CI/CD)",
+      "infraEmptyTitle": "No infrastructure deployments yet",
+      "infraEmptyDesc": "Use the \"Deploy Infra\" button to plan and apply changes",
+      "rollback": "Rollback",
+      "rollbackTooltip": "Roll back to this deployment",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "rollingBack": "Rolling back...",
+      "priorDeploy": "{{count}} deployed resource(s) (from prior deploy)",
+      "serviceEmptyTitle": "No service deployments yet",
+      "serviceEmptyDesc": "Connect a GitHub repo to a service and push to trigger a deploy",
+      "byAuthor": "by {{author}}",
+      "noLogs": "No log steps recorded"
+    }
+  },
+
+  "projectBrowser": {
+    "newProject": "New Project",
+    "emptyState": "No projects yet",
+    "createProject": "Create project",
+    "deleteConfirm": "Delete this item?",
+    "newFolderName": "New Folder",
+    "newProjectName": "New Project",
+    "contextNewProjectHere": "New project here",
+    "contextRename": "Rename",
+    "contextMoveTo": "Move to",
+    "contextMoveRoot": "Root",
+    "contextDelete": "Delete",
+    "subCanvas": "Canvas",
+    "subTable": "Table",
+    "subSettings": "Settings",
+    "subDeployments": "Deployments"
+  },
+
+  "templates": {
+    "triggerTitle": "Start from Template",
+    "menuLabel": "Templates",
+    "searchPlaceholder": "Search templates...",
+    "noResults": "No templates match",
+    "blocks": "blocks"
+  },
+
+  "palette": {
+    "searchPlaceholder": "Search blocks...",
+    "providerAll": "All"
+  },
+
+  "projectList": {
+    "header": "Projects",
+    "openAll": "Open all {{count}} projects",
+    "addFolder": "Add Folder",
+    "refresh": "Refresh",
+    "selectDirectory": "Select Directory",
+    "searchPlaceholder": "Search projects...",
+    "emptySelectDirectory": "Select a directory to browse your projects",
+    "loadExamples": "Load Examples",
+    "emptyNoFiles": "No .ice or .json files found in this directory",
+    "projectCount": "{{count}} project(s)",
+    "folderCount": "{{count}} folder(s)",
+    "defaultFolderName": "New Folder"
+  },
+
+  "projectTree": {
+    "newProject": "New Project",
+    "newFolder": "New Folder",
+    "emptyNoProjects": "No projects yet",
+    "emptyHint": "Click \"New Project\" to get started",
+    "defaultFolderName": "New Folder",
+    "contextRename": "Rename",
+    "contextMoveToTopLevel": "Move to Top Level",
+    "contextNewSubfolder": "New Subfolder",
+    "contextDelete": "Delete"
+  },
+
+  "statusBar": {
     "valid": "Valid",
     "version": "ICE v0.1.0",
     "connecting": "Connecting to GCP...",
     "planning": "Planning...",
     "deployed": "Deployed",
-    "deploy-failed": "Deploy failed",
-    "plan-ready": "Plan ready"
+    "deployFailed": "Deploy failed",
+    "planReady": "Plan ready",
+    "deploying": "Deploying {{pct}}%",
+    "nodeCount": "{{count}} node(s)",
+    "edgeCount": "{{count}} edge(s)",
+    "costEstimate": "~${{amount}}/mo est.",
+    "selected": "{{count}} selected",
+    "selectedEdges": "{{count}} edge(s)",
+    "errorCount": "{{count}} error(s)"
+  },
+
+  "appBar": {
+    "autoOrganize": "Auto-organize",
+    "undo": "Undo (Ctrl+Z)",
+    "redo": "Redo (Ctrl+Shift+Z)",
+    "deploy": "Deploy",
+    "lightMode": "Light mode",
+    "darkMode": "Dark mode",
+    "decreaseFont": "Decrease font size",
+    "increaseFont": "Increase font size",
+    "fontDecrease": "A-",
+    "fontIncrease": "A+",
+    "provider": {
+      "gcp": {
+        "name": "Google Cloud Platform",
+        "description": "Connect your GCP project using a service account key. ICE deploys to your cloud — not ours.",
+        "fieldLabel": "Service Account Key (JSON)",
+        "helpLink": "Create service account"
+      },
+      "aws": {
+        "name": "Amazon Web Services",
+        "description": "Connect your AWS account using access keys.",
+        "accessKeyLabel": "Access Key ID",
+        "secretKeyLabel": "Secret Access Key",
+        "regionLabel": "Default Region"
+      },
+      "azure": {
+        "name": "Microsoft Azure",
+        "description": "Connect your Azure subscription using a service principal.",
+        "subscriptionLabel": "Subscription ID",
+        "tenantLabel": "Tenant ID",
+        "clientIdLabel": "Client ID",
+        "clientSecretLabel": "Client Secret"
+      }
+    }
+  },
+
+  "providerSettings": {
+    "title": "Cloud Providers",
+    "description": "Connect to your cloud providers to import existing infrastructure directly.",
+    "status": {
+      "connected": "Connected",
+      "notConnected": "Not connected"
+    },
+    "connect": {
+      "signInGoogle": "Sign in with Google",
+      "orServiceAccount": "or use a service account key",
+      "connecting": "Connecting...",
+      "button": "Connect",
+      "buttonGcp": "Connect with Service Account",
+      "select": "Select...",
+      "connectedTo": "Connected to {{name}}",
+      "disconnectedSuccess": "Disconnected successfully",
+      "connectedToCloud": "Connected to Google Cloud",
+      "connectionFailed": "Connection failed",
+      "failedToAdd": "Failed to add project",
+      "serviceAccountRequired": "Service account key is required"
+    },
+    "projects": {
+      "label": "Projects ({{count}})",
+      "addProject": "Add Project",
+      "disconnectAll": "Disconnect All",
+      "addAnother": "Add another GCP project",
+      "addButton": "Add",
+      "cancelButton": "Cancel",
+      "noProjects": "No projects found",
+      "addedSuccess": "Project added successfully",
+      "removed": "Project removed"
+    },
+    "import": {
+      "button": "Import",
+      "importing": "Importing...",
+      "success": "Imported {{count}} resources from {{projectId}}",
+      "removeTooltip": "Remove project"
+    },
+    "info": {
+      "credentialsSafe": "Your credentials stay in your account",
+      "credentialsSafeDesc": "ICE deploys to your own cloud projects, not ours.",
+      "gcpTip": "GCP: Use Sign in with Google for quick setup, or paste a service account key for CI/production use."
+    },
+    "footer": {
+      "close": "Close"
+    }
+  },
+
+  "providerConnect": {
+    "status": {
+      "project": "Project: {{projectId}}",
+      "connected": "Connected"
+    },
+    "connectButton": "Connect {{providerName}}",
+    "disconnectButton": "Disconnect",
+    "success": {
+      "connected": "Connected to {{providerName}}",
+      "connectedViaGoogle": "Connected to {{providerName}} via Google"
+    },
+    "error": {
+      "connectionFailed": "Connection failed",
+      "disconnectFailed": "Disconnect failed",
+      "fieldRequired": "{{label}} is required"
+    },
+    "gcp": {
+      "guide": {
+        "title": "How to create a service account key",
+        "step1Title": "Step 1 — Create a service account",
+        "step1_1": "Open GCP Console -> IAM -> Service Accounts -> Create",
+        "step1_2": "Name it (e.g. ice-deployer), click Create and Continue",
+        "step1_3": "Grant two roles (click \"+ Add Another Role\" for the second):",
+        "step1_3_role1": "Owner — for creating and managing resources",
+        "step1_3_role2": "Service Usage Admin — required for ICE to auto-enable GCP APIs (Cloud Run, Storage, etc.) during deployment.",
+        "step1_4": "Skip \"Grant users access\" (step 3) — click Done",
+        "step2Title": "Step 2 — Download the JSON key",
+        "step2_1": "Click the newly created service account",
+        "step2_2": "Go to the Keys tab",
+        "step2_3": "Click Add Key -> Create new key -> JSON",
+        "step2_4": "Download the file and paste its contents into the field above"
+      },
+      "troubleshooting": {
+        "title": "Troubleshooting",
+        "cantCreateKeys": "Can't create keys?",
+        "oauthNotWorking": "OAuth not working for deployments?"
+      },
+      "quickConnect": {
+        "divider": "or quick connect (personal accounts)",
+        "button": "Sign in with Google"
+      }
+    }
+  },
+
+  "invite": {
+    "loading": "Accepting invitation...",
+    "success": {
+      "title": "You're in!",
+      "description": "You've been added to {{orgName}}.",
+      "button": "Go to dashboard"
+    },
+    "error": {
+      "title": "Invitation failed",
+      "fallbackOrg": "the team",
+      "defaultMessage": "Failed to accept invitation",
+      "button": "Go to dashboard"
+    }
+  },
+
+  "folder": {
+    "defaultProjectName": "New Project",
+    "defaultFolderName": "New Folder",
+    "newProject": "New Project",
+    "newFolder": "New Folder",
+    "emptyFolder": "This folder is empty",
+    "noProjects": "No projects yet",
+    "getStarted": "Create a project or folder to get started",
+    "typeFolder": "Folder",
+    "cards": "{{count}} cards"
+  },
+
+  "app": {
+    "notFound": {
+      "code": "404",
+      "message": "This page doesn't exist",
+      "button": "Go home"
+    },
+    "folderView": {
+      "rootName": "Projects"
+    }
+  },
+
+  "layout": {
+    "sidebar": {
+      "project": "Project",
+      "blocks": "Blocks",
+      "properties": "Properties",
+      "aiChat": "AI Chat"
+    }
+  },
+
+  "error": {
+    "crashed": "{{name}} crashed",
+    "somethingWrong": "Something went wrong",
+    "unexpected": "An unexpected error occurred",
+    "tryAgain": "Try again"
+  },
+
+  "debug": {
+    "title": "ICE Debug",
+    "nodes": "Nodes",
+    "edges": "Edges",
+    "activeCard": "Active Card",
+    "selectedNodes": "Selected Nodes",
+    "selectedEdges": "Selected Edges",
+    "lastAction": "Last Action",
+    "actionTime": "Action Time",
+    "render": "Render",
+    "nodesHeader": "NODES ({{count}})",
+    "none": "none",
+    "groups": "groups",
+    "blocks": "blocks",
+    "resources": "resources"
+  },
+
+  "combobox": {
+    "defaultPlaceholder": "Search...",
+    "defaultEmptyText": "No results",
+    "loading": "Loading..."
   }
 }

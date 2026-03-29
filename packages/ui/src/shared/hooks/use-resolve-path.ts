@@ -11,7 +11,7 @@ import axiosInstance from '../api/axios-instance';
 import { toSlug } from '../utils/slug';
 import type { RootState } from '../../store';
 
-export interface ResolvedPath {
+interface ResolvedPath {
   loading: boolean;
   type: 'root' | 'folder' | 'project' | 'notFound';
   id: string | null;

@@ -26,7 +26,7 @@ export interface ProjectFile {
   lastModified?: number;
 }
 
-export interface ScanResult {
+interface ScanResult {
   files: Array<{
     id: string;
     name: string;
@@ -42,7 +42,7 @@ export interface ScanResult {
   }>;
 }
 
-export interface ProjectListState {
+interface ProjectListState {
   folders: ProjectFolder[];
   files: ProjectFile[];
   rootDirectory: string | null;

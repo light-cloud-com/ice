@@ -36,6 +36,14 @@ export default defineConfig({
       },
     },
   },
-  // No renderer build needed — web app is served by the embedded Express gateway
-  renderer: {},
+  // No renderer build needed — web app is served by the embedded Express gateway.
+  // Minimal placeholder to satisfy electron-vite's renderer requirement.
+  renderer: {
+    build: {
+      outDir: 'dist/renderer',
+      rollupOptions: {
+        input: resolve(__dirname, 'src/renderer/index.html'),
+      },
+    },
+  },
 });

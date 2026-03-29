@@ -8,7 +8,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { GitHubConnectModal } from './github-connect-modal';
-import { REPO_SELECTOR } from '../../../i18n/messages';
+import { useTranslation } from '../../../i18n';
 import { Combobox, type ComboboxOption } from '../../../shared/components/ui/combobox';
 import { fetchGitHubRepos } from '../../../store/slices/integrations-slice';
 import type { RootState, AppDispatch } from '../../../store';
@@ -20,6 +20,7 @@ interface RepoSelectorProps {
 }
 
 export const RepoSelector: React.FC<RepoSelectorProps> = ({ value, onChange, compact = false }) => {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const githubStatus = useSelector((s: RootState) => s.integrations.integrations.github?.status);
   const repos = useSelector((s: RootState) => s.integrations.github.repos);
@@ -53,7 +54,7 @@ export const RepoSelector: React.FC<RepoSelectorProps> = ({ value, onChange, com
           onClick={() => setShowConnectModal(true)}
           className={`${compact ? 'text-ice-2xs px-1.5 py-0.5' : 'text-ice-sm px-2 py-1'} text-blue-400 bg-blue-950/30 border border-blue-900/50 rounded hover:bg-blue-950/50 transition-colors`}
         >
-          Connect GitHub
+          {t('integrations.repoSelector.connectGitHub')}
         </button>
         <GitHubConnectModal isOpen={showConnectModal} onClose={() => setShowConnectModal(false)} />
       </>
@@ -65,12 +66,11 @@ export const RepoSelector: React.FC<RepoSelectorProps> = ({ value, onChange, com
       value={value}
       options={options}
       onSelect={onChange}
-      placeholder={REPO_SELECTOR.PLACEHOLDER}
+      placeholder={t('integrations.repoSelector.placeholder')}
       loading={loading}
-      emptyText={REPO_SELECTOR.NO_REPOS}
+      emptyText={t('integrations.repoSelector.noRepos')}
       compact={compact}
     />
   );
 };
 
-export default RepoSelector;

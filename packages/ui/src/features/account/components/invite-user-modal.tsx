@@ -8,6 +8,7 @@ import { X, Shield, User, Eye } from 'lucide-react';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSelector } from 'react-redux';
+import { useTranslation } from '../../../i18n';
 import axiosInstance from '../../../shared/api/axios-instance';
 import type { RootState } from '../../../store';
 
@@ -16,28 +17,14 @@ interface Props {
   onInvited?: () => void;
 }
 
-const ROLES = [
-  {
-    value: 'admin',
-    label: 'Admin',
-    icon: Shield,
-    description: 'Full access. Can manage users, billing, and all projects.',
-  },
-  {
-    value: 'member',
-    label: 'Member',
-    icon: User,
-    description: 'Can create and edit projects. Cannot manage users or billing.',
-  },
-  {
-    value: 'viewer',
-    label: 'Viewer',
-    icon: Eye,
-    description: 'Read-only access. Can view projects but not edit or deploy.',
-  },
+const ROLE_DEFS = [
+  { value: 'admin', labelKey: 'common.roles.admin', descKey: 'account.invite.roleAdminDesc', icon: Shield },
+  { value: 'member', labelKey: 'common.roles.member', descKey: 'account.invite.roleMemberDesc', icon: User },
+  { value: 'viewer', labelKey: 'common.roles.viewer', descKey: 'account.invite.roleViewerDesc', icon: Eye },
 ] as const;
 
 export function InviteUserModal({ onClose, onInvited }: Props) {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<string>('member');
   const [loading, setLoading] = useState(false);
@@ -68,7 +55,7 @@ export function InviteUserModal({ onClose, onInvited }: Props) {
       // Auto-close after a short delay
       setTimeout(() => onClose(), 1500);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to send invitation. Please try again.';
+      const msg = err instanceof Error ? err.message : t('account.invite.errorFallback');
       setError(msg);
     } finally {
       setLoading(false);
@@ -84,7 +71,7 @@ export function InviteUserModal({ onClose, onInvited }: Props) {
       <div className="relative z-10 w-full max-w-md rounded-lg border border-ice-border bg-ice-surface shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-ice-border px-6 py-4">
-          <h2 className="text-lg font-semibold text-ice-text-1">Invite a team member</h2>
+          <h2 className="text-lg font-semibold text-ice-text-1">{t('account.invite.title')}</h2>
           <button
             onClick={onClose}
             className="rounded p-1 text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-1 transition-colors"
@@ -97,12 +84,12 @@ export function InviteUserModal({ onClose, onInvited }: Props) {
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-5">
           {/* Email */}
           <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-ice-text-1">Email address</span>
+            <span className="mb-1.5 block text-sm font-medium text-ice-text-1">{t('account.invite.emailLabel')}</span>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="colleague@company.com"
+              placeholder={t('account.invite.emailPlaceholder')}
               autoFocus
               className="w-full rounded-md border border-ice-border bg-ice-base px-3 py-2 text-sm text-ice-text-1 placeholder:text-ice-text-3 focus:border-ice-accent focus:outline-none focus:ring-1 focus:ring-ice-accent transition-colors"
             />
@@ -110,9 +97,9 @@ export function InviteUserModal({ onClose, onInvited }: Props) {
 
           {/* Role selection */}
           <div>
-            <span className="mb-2 block text-sm font-medium text-ice-text-1">Role</span>
+            <span className="mb-2 block text-sm font-medium text-ice-text-1">{t('account.invite.roleLabel')}</span>
             <div className="space-y-2">
-              {ROLES.map((r) => {
+              {ROLE_DEFS.map((r) => {
                 const Icon = r.icon;
                 const isSelected = role === r.value;
                 return (
@@ -129,9 +116,9 @@ export function InviteUserModal({ onClose, onInvited }: Props) {
                     <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${isSelected ? 'text-ice-accent' : 'text-ice-text-2'}`} />
                     <div>
                       <p className={`text-sm font-medium ${isSelected ? 'text-ice-text-1' : 'text-ice-text-1'}`}>
-                        {r.label}
+                        {t(r.labelKey)}
                       </p>
-                      <p className="mt-0.5 text-xs text-ice-text-2">{r.description}</p>
+                      <p className="mt-0.5 text-xs text-ice-text-2">{t(r.descKey)}</p>
                     </div>
                   </button>
                 );
@@ -145,7 +132,7 @@ export function InviteUserModal({ onClose, onInvited }: Props) {
           )}
           {success && (
             <p className="rounded-md border border-ice-green/30 bg-ice-green/10 px-3 py-2 text-sm text-ice-green">
-              Invitation sent successfully!
+              {t('account.invite.successMessage')}
             </p>
           )}
 
@@ -156,14 +143,14 @@ export function InviteUserModal({ onClose, onInvited }: Props) {
               onClick={onClose}
               className="rounded-md border border-ice-border bg-ice-raised px-4 py-2 text-sm font-medium text-ice-text-1 hover:bg-ice-hover transition-colors"
             >
-              Cancel
+              {t('account.invite.cancelButton')}
             </button>
             <button
               type="submit"
               disabled={!isValidEmail || loading || success}
               className="rounded-md bg-ice-green px-4 py-2 text-sm font-medium text-white hover:bg-[#2ea043] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? 'Sending...' : 'Send invitation'}
+              {loading ? t('account.invite.sendingButton') : t('account.invite.sendButton')}
             </button>
           </div>
         </form>

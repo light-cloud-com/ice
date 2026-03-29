@@ -85,7 +85,7 @@ function formatResource(res: any): string {
 
 export async function buildSchemaContext(options: SchemaContextOptions): Promise<string> {
   const { existingIceTypes, dominantProvider, maxExtra = 10 } = options;
-  const { data: schemas, categories: _categories } = await getCachedSchemas();
+  const { data: schemas } = await getCachedSchemas();
 
   if (schemas.size === 0) {
     return ''; // No schemas available — skip context

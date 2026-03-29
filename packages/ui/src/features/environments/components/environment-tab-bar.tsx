@@ -21,6 +21,7 @@ import {
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from '../../../i18n';
 import { getApi } from '../../../shared/api/api-adapter';
 import { cn } from '../../../shared/utils/cn';
 import { setActiveCard, importToActiveCard, createCard } from '../../../store/slices/cards-slice';
@@ -41,6 +42,7 @@ interface EnvironmentTabBarProps {
 }
 
 export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId, basePath }) => {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -185,7 +187,7 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
         {loading && environments.length === 0 ? (
           <div className="flex items-center gap-1.5 text-ice-xs text-ice-text-3">
             <Loader2 className="w-3 h-3 animate-spin" />
-            Loading environments...
+            {t('environments.tabBar.loading')}
           </div>
         ) : (
           <>
@@ -255,7 +257,7 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
               id="ice-env-btn-create"
               onClick={() => setShowCreate(true)}
               className="p-1 rounded text-ice-text-3 hover:text-ice-text-2 hover:bg-ice-hover transition-colors ml-1"
-              title="Add environment"
+              title={t('environments.tabBar.addEnvironment')}
             >
               <Plus className="w-3.5 h-3.5" />
             </button>
@@ -276,7 +278,7 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
                   )}
                 >
                   <Settings className="w-3 h-3" />
-                  Settings
+                  {t('environments.tabBar.settings')}
                 </button>
                 <button
                   onClick={() => navigate(`${basePath}/deployments`)}
@@ -288,7 +290,7 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
                   )}
                 >
                   <History className="w-3 h-3" />
-                  Deployments
+                  {t('environments.tabBar.deployments')}
                 </button>
                 <button
                   onClick={() => navigate(`${basePath}/activity`)}
@@ -300,7 +302,7 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
                   )}
                 >
                   <Activity className="w-3 h-3" />
-                  Activity
+                  {t('environments.tabBar.activity')}
                 </button>
 
                 <div className="w-px h-4 bg-ice-border mx-1" />
@@ -312,10 +314,10 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
                       dispatch(compareEnvironments({ sourceEnvId: activeEnv!.id, targetEnvId: prodEnv!.id }))
                     }
                     className="flex items-center gap-1 px-2 py-1 text-ice-xs font-medium rounded text-amber-500 hover:bg-amber-500/10 transition-colors"
-                    title={`Promote ${activeEnv!.name} to production`}
+                    title={t('environments.tabBar.promoteToProduction')}
                   >
                     <ArrowUpRight className="w-3 h-3" />
-                    Promote to Production
+                    {t('environments.tabBar.promoteToProduction')}
                   </button>
                 )}
 
@@ -323,10 +325,10 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
                 <button
                   onClick={() => dispatch(openDeployPanel())}
                   className="flex items-center gap-1 px-2.5 py-1 text-ice-xs font-medium rounded bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
-                  title="Deploy infrastructure resources (IaC plan/apply)"
+                  title={t('environments.tabBar.deployInfra')}
                 >
                   <Rocket className="w-3 h-3" />
-                  Deploy Infra
+                  {t('environments.tabBar.deployInfra')}
                 </button>
               </div>
             )}
@@ -358,7 +360,7 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
                 className="w-full flex items-center gap-2 px-3 py-1.5 text-ice-xs text-ice-text-2 hover:bg-ice-hover transition-colors"
               >
                 <Rocket className="w-3.5 h-3.5" />
-                Deploy
+                {t('environments.tabBar.contextDeploy')}
               </button>
               {showPromote && (
                 <button
@@ -366,7 +368,7 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
                   className="w-full flex items-center gap-2 px-3 py-1.5 text-ice-xs text-ice-text-2 hover:bg-ice-hover transition-colors"
                 >
                   <ArrowUpRight className="w-3.5 h-3.5" />
-                  Promote to production
+                  {t('environments.tabBar.contextPromote')}
                 </button>
               )}
               {showDelete && (
@@ -377,7 +379,7 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
                     className="w-full flex items-center gap-2 px-3 py-1.5 text-ice-xs text-red-400 hover:bg-red-500/10 transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
-                    Delete environment
+                    {t('environments.tabBar.contextDelete')}
                   </button>
                 </>
               )}
@@ -397,6 +399,7 @@ const CreateEnvironmentModal: React.FC<{
   projectId: string;
   onClose: () => void;
 }> = ({ projectId, onClose }) => {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const [name, setName] = useState('');
   const [type, setType] = useState<string>('staging');
@@ -406,7 +409,7 @@ const CreateEnvironmentModal: React.FC<{
 
   const handleCreate = async () => {
     if (!name.trim()) {
-      setError('Name is required');
+      setError(t('environments.createModal.errorNameRequired'));
       return;
     }
     setCreating(true);
@@ -415,7 +418,7 @@ const CreateEnvironmentModal: React.FC<{
       await dispatch(createEnvironment({ projectId, name: name.trim(), type, region: region || undefined })).unwrap();
       onClose();
     } catch (err: any) {
-      setError(typeof err === 'string' ? err : err?.message || 'Failed to create environment');
+      setError(typeof err === 'string' ? err : err?.message || t('environments.createModal.errorFallback'));
     } finally {
       setCreating(false);
     }
@@ -427,8 +430,8 @@ const CreateEnvironmentModal: React.FC<{
         className="w-[380px] bg-ice-surface border border-ice-border rounded-lg shadow-xl p-5 space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-sm font-semibold text-ice-text-1">New Environment</h3>
-        <p className="text-ice-xs text-ice-text-3">Clones the current production canvas as a starting point.</p>
+        <h3 className="text-sm font-semibold text-ice-text-1">{t('environments.createModal.title')}</h3>
+        <p className="text-ice-xs text-ice-text-3">{t('environments.createModal.description')}</p>
 
         {error && (
           <div className="rounded bg-red-500/10 border border-red-500/20 px-3 py-2 text-ice-xs text-red-400">
@@ -438,11 +441,11 @@ const CreateEnvironmentModal: React.FC<{
 
         <div className="space-y-3">
           <div>
-            <label className="text-ice-xs font-medium text-ice-text-2 block mb-1">Name</label>
+            <label className="text-ice-xs font-medium text-ice-text-2 block mb-1">{t('environments.createModal.nameLabel')}</label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="staging"
+              placeholder={t('environments.createModal.namePlaceholder')}
               autoFocus
               className="w-full px-2.5 py-1.5 text-ice-sm rounded border border-ice-border bg-ice-base text-ice-text-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
               onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
@@ -450,24 +453,24 @@ const CreateEnvironmentModal: React.FC<{
           </div>
 
           <div>
-            <label className="text-ice-xs font-medium text-ice-text-2 block mb-1">Type</label>
+            <label className="text-ice-xs font-medium text-ice-text-2 block mb-1">{t('environments.createModal.typeLabel')}</label>
             <select
               value={type}
               onChange={(e) => setType(e.target.value)}
               className="w-full px-2.5 py-1.5 text-ice-sm rounded border border-ice-border bg-ice-base text-ice-text-1"
             >
-              <option value="staging">Staging</option>
-              <option value="development">Development</option>
-              <option value="pr">PR Preview</option>
+              <option value="staging">{t('environments.createModal.typeStaging')}</option>
+              <option value="development">{t('environments.createModal.typeDevelopment')}</option>
+              <option value="pr">{t('environments.createModal.typePrPreview')}</option>
             </select>
           </div>
 
           <div>
-            <label className="text-ice-xs font-medium text-ice-text-2 block mb-1">Region (optional)</label>
+            <label className="text-ice-xs font-medium text-ice-text-2 block mb-1">{t('environments.createModal.regionLabel')}</label>
             <input
               value={region}
               onChange={(e) => setRegion(e.target.value)}
-              placeholder="Same as production"
+              placeholder={t('environments.createModal.regionPlaceholder')}
               className="w-full px-2.5 py-1.5 text-ice-sm rounded border border-ice-border bg-ice-base text-ice-text-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
@@ -478,14 +481,14 @@ const CreateEnvironmentModal: React.FC<{
             onClick={onClose}
             className="px-3 py-1.5 text-ice-sm text-ice-text-3 hover:text-ice-text-2 transition-colors"
           >
-            Cancel
+            {t('environments.createModal.cancelButton')}
           </button>
           <button
             onClick={handleCreate}
             disabled={creating || !name.trim()}
             className="px-3 py-1.5 text-ice-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors disabled:opacity-50"
           >
-            {creating ? 'Creating...' : 'Create Environment'}
+            {creating ? t('environments.createModal.creatingButton') : t('environments.createModal.createButton')}
           </button>
         </div>
       </div>

@@ -8,6 +8,7 @@
 import { Github, Loader2, Copy, Check, ExternalLink } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
 import {
   connectGitHubPAT,
@@ -19,11 +20,12 @@ import type { RootState, AppDispatch } from '../../../store';
 
 export const ConnectGithubStep: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const { t } = useTranslation();
   const githubStatus = useSelector((s: RootState) => s.integrations.integrations.github);
   const deviceFlow = useSelector((s: RootState) => s.integrations.github.deviceFlow);
   const isGithubConnected = useSelector((s: RootState) => s.onboarding.githubConnected);
 
-  const [activeTab, setActiveTab] = useState<'device' | 'pat'>('device');
+  const [activeTab, setActiveTab] = useState<'device' | 'pat'>('pat');
   const [patToken, setPatToken] = useState('');
   const [copied, setCopied] = useState(false);
 
@@ -60,8 +62,8 @@ export const ConnectGithubStep: React.FC = () => {
   return (
     <div className="space-y-5">
       <div className="text-center">
-        <h2 className="text-xl font-semibold text-ice-text-1">Connect GitHub</h2>
-        <p className="text-sm text-ice-text-2 mt-1">Link repositories to services on the canvas for CI/CD</p>
+        <h2 className="text-xl font-semibold text-ice-text-1">{t('onboarding.github.title')}</h2>
+        <p className="text-sm text-ice-text-2 mt-1">{t('onboarding.github.subtitle')}</p>
       </div>
 
       {/* Connected state */}
@@ -74,7 +76,7 @@ export const ConnectGithubStep: React.FC = () => {
           )}
           <div className="flex-1">
             <div className="font-medium text-sm text-ice-text-1">{githubStatus.username || 'GitHub'}</div>
-            <div className="text-xs text-ice-text-2">Connected</div>
+            <div className="text-xs text-ice-text-2">{t('onboarding.github.connected')}</div>
           </div>
           <Check className="w-5 h-5 text-emerald-500" />
         </div>
@@ -99,7 +101,7 @@ export const ConnectGithubStep: React.FC = () => {
                   : 'text-ice-text-2 hover:text-ice-text-1',
               )}
             >
-              Sign in with Browser
+              {t('onboarding.github.tabDevice')}
             </button>
             <button
               type="button"
@@ -111,7 +113,7 @@ export const ConnectGithubStep: React.FC = () => {
                   : 'text-ice-text-2 hover:text-ice-text-1',
               )}
             >
-              Personal Access Token
+              {t('onboarding.github.tabPat')}
             </button>
           </div>
 
@@ -130,11 +132,11 @@ export const ConnectGithubStep: React.FC = () => {
                   )}
                 >
                   {isConnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Github className="w-4 h-4" />}
-                  Sign in with GitHub
+                  {t('onboarding.github.signInButton')}
                 </button>
               ) : (
                 <div className="space-y-3 text-center">
-                  <p className="text-sm text-ice-text-2">Enter this code in your browser to authorize:</p>
+                  <p className="text-sm text-ice-text-2">{t('onboarding.github.deviceCodePrompt')}</p>
                   <div className="flex items-center justify-center gap-2">
                     <code className="px-4 py-3 text-2xl font-mono font-bold tracking-widest rounded-lg bg-ice-raised border border-ice-border text-ice-text-1">
                       {deviceFlow.userCode}
@@ -142,7 +144,7 @@ export const ConnectGithubStep: React.FC = () => {
                     <button
                       onClick={handleCopyCode}
                       className="p-2 rounded-md hover:bg-ice-hover transition-colors"
-                      title="Copy code"
+                      title={t('onboarding.github.copyCode')}
                     >
                       {copied ? (
                         <Check className="w-4 h-4 text-emerald-500" />
@@ -153,7 +155,7 @@ export const ConnectGithubStep: React.FC = () => {
                   </div>
                   <div className="flex items-center justify-center gap-2 text-sm text-ice-text-2">
                     <Loader2 className="w-3 h-3 animate-spin" />
-                    Waiting for authorization...
+                    {t('onboarding.github.waitingAuth')}
                   </div>
                   <a
                     href={deviceFlow.verificationUri}
@@ -173,17 +175,17 @@ export const ConnectGithubStep: React.FC = () => {
           {activeTab === 'pat' && (
             <div className="space-y-3">
               <div>
-                <label className="text-sm font-medium text-ice-text-2">GitHub Token</label>
+                <label className="text-sm font-medium text-ice-text-2">{t('onboarding.github.tokenLabel')}</label>
                 <input
                   type="password"
                   value={patToken}
                   onChange={(e) => setPatToken(e.target.value)}
-                  placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+                  placeholder={t('onboarding.github.tokenPlaceholder')}
                   className="ice-input w-full mt-1"
                   onKeyDown={(e) => e.key === 'Enter' && handlePATConnect()}
                 />
                 <p className="mt-1 text-xs text-ice-text-3">
-                  Generate a token at github.com/settings/tokens with repo scope.
+                  {t('onboarding.github.tokenHint')}
                 </p>
               </div>
               <button
@@ -192,14 +194,14 @@ export const ConnectGithubStep: React.FC = () => {
                 className="ice-btn ice-btn-primary w-full"
               >
                 {isConnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Github className="w-4 h-4" />}
-                Connect with Token
+                {t('onboarding.github.connectWithToken')}
               </button>
             </div>
           )}
         </>
       )}
 
-      <p className="text-xs text-ice-text-3 text-center">You can link repositories to services on the canvas later.</p>
+      <p className="text-xs text-ice-text-3 text-center">{t('onboarding.github.laterHint')}</p>
     </div>
   );
 };

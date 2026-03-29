@@ -53,7 +53,7 @@ export enum ImportErrorCode {
 /**
  * Action type for error recovery.
  */
-export type ImportErrorActionType =
+type ImportErrorActionType =
   | 'reauth'
   | 'enable_api'
   | 'grant_permission'
@@ -64,7 +64,7 @@ export type ImportErrorActionType =
 /**
  * Action to take to resolve an import error.
  */
-export interface ImportErrorAction {
+interface ImportErrorAction {
   /** Type of action */
   type: ImportErrorActionType;
 
@@ -512,43 +512,3 @@ export function classifyAzureError(
 // Error Formatting
 // =============================================================================
 
-/**
- * Format an ImportError for display in CLI.
- */
-export function formatImportError(error: ImportError): string {
-  let output = `[${error.code}] ${error.message}`;
-
-  if (error.action) {
-    output += '\n';
-    if (error.action.description) {
-      output += `  Action: ${error.action.description}\n`;
-    }
-    if (error.action.command) {
-      output += `  Run: ${error.action.command}\n`;
-    }
-    if (error.action.url) {
-      output += `  See: ${error.action.url}\n`;
-    }
-  }
-
-  return output;
-}
-
-/**
- * Check if an error indicates re-authentication is required.
- */
-export function isReauthRequired(error: ImportError): boolean {
-  return (
-    error.code === ImportErrorCode.AUTH_REAUTH_REQUIRED ||
-    error.code === ImportErrorCode.AUTH_EXPIRED ||
-    error.code === ImportErrorCode.AUTH_REQUIRED ||
-    error.action?.type === 'reauth'
-  );
-}
-
-/**
- * Check if an error is recoverable.
- */
-export function isRecoverable(error: ImportError): boolean {
-  return error.recoverable;
-}

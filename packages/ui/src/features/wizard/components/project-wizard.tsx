@@ -12,6 +12,7 @@ import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import React, { useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from '../../../i18n';
 import { COMPOSED_TEMPLATES, expandComposedTemplate } from '../../../config/templates';
 import axiosInstance from '../../../shared/api/axios-instance';
 import { StepIndicator } from '../../../shared/components/step-indicator';
@@ -32,14 +33,19 @@ import { ReviewStep } from '../steps/review-step';
 import { TemplateStep } from '../steps/template-step';
 import type { RootState, AppDispatch } from '../../../store';
 
-const STEP_LABELS = ['Project', 'Environments', 'Template', 'Review'];
-
 export const ProjectWizard: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const isOpen = useSelector((state: RootState) => state.ui.dialogs.projectWizard);
-  const _activePaneId = useSelector((state: RootState) => state.ui.splitView.activePaneId);
   const selectedOrg = useSelector((state: RootState) => state.account?.selectedOrg);
+
+  const STEP_LABELS = [
+    t('wizard.stepProject'),
+    t('wizard.stepEnvironments'),
+    t('wizard.stepTemplate'),
+    t('wizard.stepReview'),
+  ];
 
   const wizard = useWizardState();
   const { state, canProceed } = wizard;
@@ -142,9 +148,9 @@ export const ProjectWizard: React.FC = () => {
       <DialogContent className="max-w-lg bg-ice-base border-ice-border text-ice-text-1 p-0 gap-0">
         {/* Header */}
         <DialogHeader className="px-5 pt-5 pb-0">
-          <DialogTitle className="text-base font-semibold text-ice-text-1">New Project</DialogTitle>
+          <DialogTitle className="text-base font-semibold text-ice-text-1">{t('wizard.title')}</DialogTitle>
           <DialogDescription className="text-xs text-ice-text-2">
-            Create a project with environments and optional template
+            {t('wizard.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -193,7 +199,7 @@ export const ProjectWizard: React.FC = () => {
               className="flex items-center gap-1 text-xs text-ice-text-2 hover:text-ice-text-1 px-3 py-1.5 rounded-md hover:bg-ice-hover transition-colors"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
-              Back
+              {t('wizard.backButton')}
             </button>
           ) : (
             <div />
@@ -211,7 +217,7 @@ export const ProjectWizard: React.FC = () => {
                   : 'bg-ice-raised text-ice-text-3 cursor-not-allowed',
               )}
             >
-              Next
+              {t('wizard.nextButton')}
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
           ) : (
@@ -220,7 +226,7 @@ export const ProjectWizard: React.FC = () => {
               className="flex items-center gap-1.5 text-xs font-medium px-4 py-1.5 rounded-md bg-ice-green text-ice-text-1 hover:bg-ice-green/90 transition-colors"
             >
               <Sparkles className="w-3.5 h-3.5" />
-              Create Project
+              {t('wizard.createButton')}
             </button>
           )}
         </div>

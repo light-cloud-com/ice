@@ -12,6 +12,7 @@ import { selectActiveCard } from '@ui/store/slices/cards-slice';
 import { fetchEventsForNode, type DeploymentEvent, type DeployStep } from '@ui/store/slices/pipeline-slice';
 import { Loader2, CheckCircle, XCircle, Clock, Rocket, GitBranch, Server, ChevronDown, RotateCcw } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from '@ui/i18n';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState, AppDispatch } from '@ui/store';
 
@@ -33,6 +34,7 @@ type DeployTab = 'infra' | 'service';
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export const ProjectDeployments: React.FC<{ projectId: string }> = ({ projectId }) => {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const activeCard = useSelector(selectActiveCard);
   const activeEnvId = useSelector((s: RootState) => s.environments.activeEnvId[projectId]);
@@ -112,10 +114,10 @@ export const ProjectDeployments: React.FC<{ projectId: string }> = ({ projectId 
     <div className="max-w-3xl mx-auto py-10 px-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-semibold text-ice-text-1">Deployments</h1>
+        <h1 className="text-xl font-semibold text-ice-text-1">{t('project.deployments.title')}</h1>
         {activeEnv && (
           <span className="text-sm text-ice-text-3">
-            Environment: <span className="text-ice-text-2 font-medium">{activeEnv.name}</span>
+            {t('project.deployments.envLabel')} <span className="text-ice-text-2 font-medium">{activeEnv.name}</span>
           </span>
         )}
       </div>
@@ -125,14 +127,14 @@ export const ProjectDeployments: React.FC<{ projectId: string }> = ({ projectId 
         <TabButton
           active={tab === 'infra'}
           icon={Server}
-          label="Infrastructure"
+          label={t('project.deployments.tabInfrastructure')}
           count={infraCount}
           onClick={() => setTab('infra')}
         />
         <TabButton
           active={tab === 'service'}
           icon={GitBranch}
-          label="Service (CI/CD)"
+          label={t('project.deployments.tabService')}
           count={serviceCount}
           onClick={() => setTab('service')}
         />
@@ -201,6 +203,7 @@ const InfraDeploymentList: React.FC<{
   cardId?: string;
   onRollbackComplete?: () => void;
 }> = ({ deployments, cardId, onRollbackComplete }) => {
+  const { t } = useTranslation();
   const [rollingBack, setRollingBack] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
 
@@ -242,8 +245,8 @@ const InfraDeploymentList: React.FC<{
     return (
       <div className="text-center py-16">
         <Server className="w-8 h-8 text-ice-text-3 mx-auto mb-3" />
-        <p className="text-ice-text-3 text-sm">No infrastructure deployments yet</p>
-        <p className="text-ice-text-3 text-xs mt-1">Use the "Deploy Infra" button to plan and apply changes</p>
+        <p className="text-ice-text-3 text-sm">{t('project.deployments.infraEmptyTitle')}</p>
+        <p className="text-ice-text-3 text-xs mt-1">{t('project.deployments.infraEmptyDesc')}</p>
       </div>
     );
   }
@@ -285,10 +288,10 @@ const InfraDeploymentList: React.FC<{
                   setConfirmId(d.id);
                 }}
                 className="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded text-amber-500 hover:bg-amber-500/10 transition-colors shrink-0"
-                title="Roll back to this deployment"
+                title={t('project.deployments.rollbackTooltip')}
               >
                 <RotateCcw className="w-3 h-3" />
-                Rollback
+                {t('project.deployments.rollback')}
               </button>
             )}
             {isConfirming && (
@@ -300,7 +303,7 @@ const InfraDeploymentList: React.FC<{
                   }}
                   className="px-2 py-1 text-xs font-medium rounded bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-colors"
                 >
-                  Confirm
+                  {t('project.deployments.confirm')}
                 </button>
                 <button
                   onClick={(e) => {
@@ -309,14 +312,14 @@ const InfraDeploymentList: React.FC<{
                   }}
                   className="px-2 py-1 text-xs font-medium rounded text-ice-text-3 hover:bg-ice-hover transition-colors"
                 >
-                  Cancel
+                  {t('project.deployments.cancel')}
                 </button>
               </div>
             )}
             {isRollingBack && (
               <div className="flex items-center gap-1.5 text-xs text-blue-400 shrink-0">
                 <Loader2 className="w-3 h-3 animate-spin" />
-                Rolling back...
+                {t('project.deployments.rollingBack')}
               </div>
             )}
           </div>
@@ -331,14 +334,15 @@ const InfraDeploymentList: React.FC<{
 const ServiceDeploymentList: React.FC<{
   events: Array<DeploymentEvent & { _serviceName: string }>;
 }> = ({ events }) => {
+  const { t } = useTranslation();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   if (events.length === 0) {
     return (
       <div className="text-center py-16">
         <GitBranch className="w-8 h-8 text-ice-text-3 mx-auto mb-3" />
-        <p className="text-ice-text-3 text-sm">No service deployments yet</p>
-        <p className="text-ice-text-3 text-xs mt-1">Connect a GitHub repo to a service and push to trigger a deploy</p>
+        <p className="text-ice-text-3 text-sm">{t('project.deployments.serviceEmptyTitle')}</p>
+        <p className="text-ice-text-3 text-xs mt-1">{t('project.deployments.serviceEmptyDesc')}</p>
       </div>
     );
   }
@@ -382,7 +386,7 @@ const ServiceDeploymentList: React.FC<{
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="text-xs text-ice-text-3">{ev.rule?.environment || ev.branch}</span>
                   <span className="text-xs text-ice-text-3">{ev.branch}</span>
-                  {ev.commit_author && <span className="text-xs text-ice-text-3">by {ev.commit_author}</span>}
+                  {ev.commit_author && <span className="text-xs text-ice-text-3">{t('project.deployments.byAuthor', { author: ev.commit_author })}</span>}
                 </div>
                 {ev.error && !isExpanded && <p className="text-xs text-red-400 mt-0.5 truncate">{ev.error}</p>}
               </div>
@@ -431,7 +435,7 @@ const ServiceDeploymentList: React.FC<{
                     </div>
                   ))
                 ) : (
-                  <div className="text-xs font-mono text-slate-500">No log steps recorded</div>
+                  <div className="text-xs font-mono text-slate-500">{t('project.deployments.noLogs')}</div>
                 )}
                 {ev.error && (
                   <div className="text-xs font-mono text-red-400 pt-2 border-t border-slate-800">{ev.error}</div>

@@ -9,6 +9,7 @@ import { UserPlus, Loader2, Shield, User, Eye, Trash2, Clock, Mail } from 'lucid
 import { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { InviteUserModal } from './invite-user-modal';
+import { useTranslation } from '../../../i18n';
 import axiosInstance from '../../../shared/api/axios-instance';
 import { cn } from '../../../shared/utils/cn';
 import type { RootState } from '../../../store';
@@ -31,13 +32,14 @@ interface PendingInvite {
 }
 
 const ORG_ROLES = [
-  { value: 'owner', label: 'Owner', icon: Shield, color: 'text-amber-400' },
-  { value: 'admin', label: 'Admin', icon: Shield, color: 'text-ice-accent' },
-  { value: 'member', label: 'Member', icon: User, color: 'text-ice-text-2' },
-  { value: 'viewer', label: 'Viewer', icon: Eye, color: 'text-ice-text-3' },
+  { value: 'owner', labelKey: 'common.roles.owner', icon: Shield, color: 'text-amber-400' },
+  { value: 'admin', labelKey: 'common.roles.admin', icon: Shield, color: 'text-ice-accent' },
+  { value: 'member', labelKey: 'common.roles.member', icon: User, color: 'text-ice-text-2' },
+  { value: 'viewer', labelKey: 'common.roles.viewer', icon: Eye, color: 'text-ice-text-3' },
 ];
 
 export function TeamPage() {
+  const { t } = useTranslation();
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [invites, setInvites] = useState<PendingInvite[]>([]);
   const [loading, setLoading] = useState(true);
@@ -97,7 +99,7 @@ export function TeamPage() {
   };
 
   const handleRemoveUser = async (userId: string) => {
-    if (!selectedOrg || !window.confirm('Remove this member from the team?')) return;
+    if (!selectedOrg || !window.confirm(t('account.team.removeConfirm'))) return;
     setActionLoading(userId);
     try {
       await axiosInstance.post('/users/remove', {
@@ -112,7 +114,7 @@ export function TeamPage() {
   };
 
   const formatDate = (d: string | null) => {
-    if (!d) return 'Never';
+    if (!d) return t('common.time.never');
     return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
@@ -123,8 +125,8 @@ export function TeamPage() {
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-ice-text-1">Team</h1>
-          <p className="mt-1 text-sm text-ice-text-3">Manage members of {selectedOrg?.name ?? 'your organisation'}</p>
+          <h1 className="text-2xl font-bold text-ice-text-1">{t('account.team.title')}</h1>
+          <p className="mt-1 text-sm text-ice-text-3">{t('account.team.subtitle')} {selectedOrg?.name ?? t('account.team.subtitleFallback')}</p>
         </div>
         {isAdmin && (
           <button
@@ -133,7 +135,7 @@ export function TeamPage() {
             className="flex items-center gap-2 rounded-md bg-ice-accent px-4 py-2 text-sm font-medium text-white hover:bg-ice-accent-hover transition-colors"
           >
             <UserPlus className="h-4 w-4" />
-            Invite
+            {t('account.team.inviteButton')}
           </button>
         )}
       </div>
@@ -141,9 +143,9 @@ export function TeamPage() {
       {/* Members table */}
       <div className="overflow-hidden rounded-lg border border-ice-border bg-ice-raised">
         <div className="grid grid-cols-[1fr_140px_100px_60px] gap-4 border-b border-ice-border bg-ice-surface px-6 py-3">
-          <span className="text-xs font-medium uppercase tracking-wider text-ice-text-3">Member</span>
-          <span className="text-xs font-medium uppercase tracking-wider text-ice-text-3">Role</span>
-          <span className="text-xs font-medium uppercase tracking-wider text-ice-text-3">Joined</span>
+          <span className="text-xs font-medium uppercase tracking-wider text-ice-text-3">{t('account.team.columnMember')}</span>
+          <span className="text-xs font-medium uppercase tracking-wider text-ice-text-3">{t('account.team.columnRole')}</span>
+          <span className="text-xs font-medium uppercase tracking-wider text-ice-text-3">{t('account.team.columnJoined')}</span>
           <span />
         </div>
 
@@ -155,7 +157,7 @@ export function TeamPage() {
 
         {!loading && members.length === 0 && (
           <div className="py-12 text-center">
-            <p className="text-sm text-ice-text-3">No team members yet.</p>
+            <p className="text-sm text-ice-text-3">{t('account.team.emptyState')}</p>
           </div>
         )}
 
@@ -174,7 +176,7 @@ export function TeamPage() {
                 <div className="min-w-0">
                   <p className="text-sm text-ice-text-1 truncate">
                     {member.name}
-                    {isSelf && <span className="text-ice-text-3 ml-1 text-xs">(you)</span>}
+                    {isSelf && <span className="text-ice-text-3 ml-1 text-xs">{t('account.team.youBadge')}</span>}
                   </p>
                   <p className="text-xs text-ice-text-3 truncate">{member.email}</p>
                 </div>
@@ -189,14 +191,14 @@ export function TeamPage() {
                   >
                     {ORG_ROLES.map((r) => (
                       <option key={r.value} value={r.value}>
-                        {r.label}
+                        {t(r.labelKey)}
                       </option>
                     ))}
                   </select>
                 ) : (
                   <span className={cn('flex items-center gap-1.5 text-sm', roleMeta.color)}>
                     <Icon className="h-3.5 w-3.5" />
-                    {roleMeta.label}
+                    {t(roleMeta.labelKey)}
                   </span>
                 )}
 
@@ -210,7 +212,7 @@ export function TeamPage() {
                       onClick={() => handleRemoveUser(member.id)}
                       disabled={actionLoading === member.id}
                       className="p-1 rounded text-ice-text-3 hover:text-ice-red hover:bg-ice-hover transition-colors"
-                      title="Remove"
+                      title={t('account.team.removeTitle')}
                     >
                       {actionLoading === member.id ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -230,7 +232,7 @@ export function TeamPage() {
         <div className="mt-8">
           <h2 className="text-lg font-semibold text-ice-text-1 mb-3 flex items-center gap-2">
             <Mail className="w-4 h-4 text-ice-text-3" />
-            Pending invitations
+            {t('account.team.pendingInvitations')}
           </h2>
           <div className="overflow-hidden rounded-lg border border-ice-border bg-ice-raised">
             {invites.map((inv) => (
@@ -241,7 +243,7 @@ export function TeamPage() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-ice-text-1 truncate">{inv.email}</p>
                   <p className="text-xs text-ice-text-3">
-                    Invited as {inv.role} · expires {formatDate(inv.expires_at)}
+                    {t('account.team.invitedAs')} {inv.role} · {t('account.team.expires')} {formatDate(inv.expires_at)}
                   </p>
                 </div>
                 <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />

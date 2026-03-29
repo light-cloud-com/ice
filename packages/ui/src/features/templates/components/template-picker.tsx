@@ -24,6 +24,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuGroup,
 } from '../../../shared/components/ui/dropdown-menu';
+import { useTranslation } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
 import { createCard, importToActiveCard } from '../../../store/slices/cards-slice';
 import { openTabInPane, setActivePane } from '../../../store/slices/ui-slice';
@@ -44,6 +45,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
 export const TemplatePicker: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const activePaneId = useSelector((state: RootState) => state.ui.splitView.activePaneId);
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
 
@@ -87,19 +89,19 @@ export const TemplatePicker: React.FC = () => {
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <button
-          title="Start from Template"
+          title={t('templates.triggerTitle')}
           className="p-1.5 rounded hover:bg-muted transition-colors app-no-drag text-emerald-500 hover:text-emerald-600"
         >
           <LayoutTemplate className="w-4 h-4" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-80">
-        <DropdownMenuLabel>Templates</DropdownMenuLabel>
+        <DropdownMenuLabel>{t('templates.menuLabel')}</DropdownMenuLabel>
         <div className="px-2 pb-1.5">
           <SearchInput
             value={search}
             onChange={setSearch}
-            placeholder="Search templates..."
+            placeholder={t('templates.searchPlaceholder')}
             onKeyDown={(e) => e.stopPropagation()}
           />
         </div>
@@ -107,7 +109,7 @@ export const TemplatePicker: React.FC = () => {
         <DropdownMenuGroup>
           {grouped.length === 0 ? (
             <div className="px-2 py-4 text-center text-xs text-muted-foreground">
-              No templates match &quot;{search}&quot;
+              {t('templates.noResults')} "{search}"
             </div>
           ) : (
             grouped.map(({ category, templates }) => {
@@ -149,7 +151,7 @@ export const TemplatePicker: React.FC = () => {
                             {template.description}
                           </p>
                           <div className="flex items-center gap-1 mt-1">
-                            <span className="text-ice-xs text-muted-foreground">{template.blocks.length} blocks</span>
+                            <span className="text-ice-xs text-muted-foreground">{template.blocks.length} {t('templates.blocks')}</span>
                             <span className="text-muted-foreground/40 mx-0.5">&middot;</span>
                             {template.tags.slice(0, 4).map((tag) => (
                               <Badge key={tag} variant="secondary" className="text-ice-2xs px-1 py-0 h-3.5">

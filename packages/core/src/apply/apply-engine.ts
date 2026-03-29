@@ -109,7 +109,7 @@ async function execute_layer(
   provider: ProviderClient,
   context: ApplyContext,
 ): Promise<boolean> {
-  const { parallelism, dry_run: _dry_run, abort_on_error } = context.options;
+  const { parallelism, abort_on_error } = context.options;
 
   // Filter out no_op changes
   const changes_to_apply = layer.changes.filter((c) => c.action !== 'no_op');

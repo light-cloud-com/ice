@@ -26,11 +26,11 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: `http://localhost:${process.env.PORT || 5001}`,
+        target: `http://localhost:${process.env.PORT || 5002}`,
         changeOrigin: true,
       },
       '/socket.io': {
-        target: `http://localhost:${process.env.PORT || 5001}`,
+        target: `http://localhost:${process.env.PORT || 5002}`,
         ws: true,
       },
     },

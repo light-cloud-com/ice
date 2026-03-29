@@ -141,11 +141,6 @@ export function flat_map<T, U, E>(result: Result<T, E>, fn: (value: T) => Result
 }
 
 /**
- * Alias for flat_map.
- */
-export const and_then = flat_map;
-
-/**
  * Recover from a failure by trying an alternative.
  */
 export function or_else<T, E, F>(result: Result<T, E>, fn: (error: E) => Result<T, F>): Result<T, F> {

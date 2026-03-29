@@ -24,6 +24,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from '@ui/i18n';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState, AppDispatch } from '@ui/store';
 
@@ -67,7 +68,7 @@ function formatRelativeTime(date: Date): string {
   const diffHours = Math.floor(diffMs / 3_600_000);
   const diffDays = Math.floor(diffMs / 86_400_000);
 
-  if (diffMins < 1) return 'Just now';
+  if (diffMins < 1) return 'Just now'; // formatRelativeTime is a utility, not UI chrome
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
@@ -105,6 +106,7 @@ function serviceStatusToActivity(status: string): ActivityItem['status'] {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export const ProjectActivity: React.FC<{ projectId: string }> = ({ projectId: _projectId }) => {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const activeCard = useSelector(selectActiveCard);
 
@@ -181,7 +183,7 @@ export const ProjectActivity: React.FC<{ projectId: string }> = ({ projectId: _p
         id: `ai-${entry.id}`,
         type: 'ai',
         timestamp: new Date(entry.timestamp),
-        title: 'AI Canvas Change',
+        title: t('project.activity.aiCanvasChange'),
         description: entry.intent,
         status: 'success',
       });
@@ -192,7 +194,7 @@ export const ProjectActivity: React.FC<{ projectId: string }> = ({ projectId: _p
         id: `infra-${d.id}`,
         type: 'infra',
         timestamp: new Date(d.created_at),
-        title: `Infrastructure ${d.status}`,
+        title: t('project.activity.infrastructure', { status: d.status }),
         description: `${d.provider.toUpperCase()} · ${d.region} · ${d.environment}`,
         status: infraStatusToActivity(d.status),
         metadata: {
@@ -207,7 +209,7 @@ export const ProjectActivity: React.FC<{ projectId: string }> = ({ projectId: _p
         id: `svc-${ev.id}`,
         type: 'service',
         timestamp: new Date(ev.started_at),
-        title: `Service Deploy: ${ev._serviceName}`,
+        title: t('project.activity.serviceDeploy', { name: ev._serviceName }),
         description: ev.commit_message || ev.branch || '',
         status: serviceStatusToActivity(ev.status),
         metadata: {
@@ -249,31 +251,31 @@ export const ProjectActivity: React.FC<{ projectId: string }> = ({ projectId: _p
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Activity className="w-5 h-5 text-ice-text-2" />
-          <h1 className="text-xl font-semibold text-ice-text-1">Activity</h1>
+          <h1 className="text-xl font-semibold text-ice-text-1">{t('project.activity.title')}</h1>
         </div>
       </div>
 
       {/* Filter tabs */}
       <div className="flex items-center gap-1 mb-4 border-b border-ice-border">
-        <FilterTab active={filter === 'all'} label="All" count={counts.all} onClick={() => setFilter('all')} />
+        <FilterTab active={filter === 'all'} label={t('project.activity.filterAll')} count={counts.all} onClick={() => setFilter('all')} />
         <FilterTab
           active={filter === 'ai'}
           icon={Sparkles}
-          label="AI"
+          label={t('project.activity.filterAi')}
           count={counts.ai}
           onClick={() => setFilter('ai')}
         />
         <FilterTab
           active={filter === 'infra'}
           icon={Server}
-          label="Infra"
+          label={t('project.activity.filterInfra')}
           count={counts.infra}
           onClick={() => setFilter('infra')}
         />
         <FilterTab
           active={filter === 'service'}
           icon={GitBranch}
-          label="Service"
+          label={t('project.activity.filterService')}
           count={counts.service}
           onClick={() => setFilter('service')}
         />
@@ -287,9 +289,9 @@ export const ProjectActivity: React.FC<{ projectId: string }> = ({ projectId: _p
       ) : filteredItems.length === 0 ? (
         <div className="text-center py-16">
           <Activity className="w-8 h-8 text-ice-text-3 mx-auto mb-3" />
-          <p className="text-ice-text-3 text-sm">No activity yet</p>
+          <p className="text-ice-text-3 text-sm">{t('project.activity.emptyTitle')}</p>
           <p className="text-ice-text-3 text-xs mt-1">
-            Actions like AI changes, deployments, and pipeline runs will appear here
+            {t('project.activity.emptyDescription')}
           </p>
         </div>
       ) : (

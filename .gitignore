@@ -54,6 +54,16 @@ release/
 # Docker
 .docker/
 
+# Compiled TypeScript output in source directories (build artifacts)
+packages/ui/src/**/*.js
+packages/ui/src/**/*.js.map
+packages/ui/src/**/*.d.ts
+packages/ui/src/**/*.d.ts.map
+packages/web/src/**/*.js
+packages/web/src/**/*.js.map
+packages/web/src/**/*.d.ts
+packages/web/src/**/*.d.ts.map
+
 # Misc
 *.tgz
 .cache/

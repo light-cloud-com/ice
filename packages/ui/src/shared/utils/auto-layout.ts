@@ -51,7 +51,7 @@ export interface LayoutNode {
   folded?: boolean;
 }
 
-export interface LayoutOptions {
+interface LayoutOptions {
   /** Starting X position */
   startX?: number;
   /** Starting Y position */

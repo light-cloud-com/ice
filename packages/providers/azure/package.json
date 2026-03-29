@@ -14,7 +14,6 @@
   },
   "dependencies": {
     "@ice/core": "workspace:*",
-    "@ice/provider-registry": "workspace:*",
     "@ice/types": "workspace:*"
   },
   "devDependencies": {

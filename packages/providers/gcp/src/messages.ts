@@ -36,7 +36,7 @@ export const SERVICE_NAMES = {
 // SDK Package Names (npm install instructions)
 // =============================================================================
 
-export const SDK_PACKAGES: Record<string, string> = {
+const SDK_PACKAGES: Record<string, string> = {
   'run.services': '@google-cloud/run',
   'run.jobs': '@google-cloud/run',
   storage: '@google-cloud/storage',

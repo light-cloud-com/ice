@@ -5,11 +5,13 @@
 import { ArrowUpRight, Plus, Minus, RefreshCw, Loader2, CheckCircle } from 'lucide-react';
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation, t } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
 import { promoteEnvironment, clearPendingDiff, fetchEnvironments } from '../../../store/slices/environments-slice';
 import type { RootState, AppDispatch } from '../../../store';
 
 export const PromoteModal: React.FC = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const pendingDiff = useSelector((s: RootState) => s.environments.pendingDiff);
   const pendingPromote = useSelector((s: RootState) => s.environments.pendingPromote);
@@ -58,14 +60,14 @@ export const PromoteModal: React.FC = () => {
           <div className="flex items-center gap-2">
             <ArrowUpRight className="w-5 h-5 text-amber-500" />
             <h2 className="text-sm font-semibold text-ice-text-1">
-              Promote <span className="text-amber-500">{sourceName}</span> to{' '}
+              {t('environments.promote.promote')} <span className="text-amber-500">{sourceName}</span> {t('environments.promote.to')}{' '}
               <span className="text-emerald-500">{targetName}</span>
             </h2>
           </div>
           <p className="text-ice-xs text-ice-text-3 mt-1">
             {noChanges
-              ? 'Both environments are identical. Nothing to promote.'
-              : `${totalChanges} change${totalChanges !== 1 ? 's' : ''} will be applied to ${targetName}.`}
+              ? t('environments.promote.identicalMessage')
+              : `${totalChanges} ${totalChanges !== 1 ? t('environments.promote.changes') : t('environments.promote.change')} ${t('environments.promote.changesWillBeApplied')} ${targetName}.`}
           </p>
         </div>
 
@@ -74,7 +76,7 @@ export const PromoteModal: React.FC = () => {
           {noChanges ? (
             <div className="flex flex-col items-center justify-center py-8 text-ice-text-3">
               <CheckCircle className="w-8 h-8 mb-2 text-emerald-500" />
-              <p className="text-sm">Environments are in sync</p>
+              <p className="text-sm">{t('environments.promote.inSync')}</p>
             </div>
           ) : (
             <div className="space-y-1">
@@ -102,7 +104,7 @@ export const PromoteModal: React.FC = () => {
               {/* Unchanged count */}
               {pendingDiff.unchangedCount > 0 && (
                 <div className="text-ice-xs text-ice-text-3 pt-2 border-t border-ice-border mt-2">
-                  {pendingDiff.unchangedCount} node{pendingDiff.unchangedCount !== 1 ? 's' : ''} unchanged
+                  {pendingDiff.unchangedCount} {pendingDiff.unchangedCount !== 1 ? t('environments.promote.nodes') : t('environments.promote.node')} {t('environments.promote.unchanged')}
                 </div>
               )}
             </div>
@@ -115,7 +117,7 @@ export const PromoteModal: React.FC = () => {
             onClick={handleClose}
             className="px-3 py-1.5 text-ice-sm text-ice-text-3 hover:text-ice-text-2 transition-colors"
           >
-            Cancel
+            {t('environments.promote.cancelButton')}
           </button>
           {!noChanges && (
             <button
@@ -124,7 +126,7 @@ export const PromoteModal: React.FC = () => {
               className="flex items-center gap-1.5 px-4 py-1.5 text-ice-sm font-medium rounded-md bg-amber-500 text-white hover:bg-amber-600 transition-colors disabled:opacity-50"
             >
               {promoting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ArrowUpRight className="w-3.5 h-3.5" />}
-              Promote to {targetName}
+              {t('environments.promote.promoteButton')} {targetName}
             </button>
           )}
         </div>
@@ -147,15 +149,15 @@ const DiffRow: React.FC<{
       color: 'text-emerald-500',
       border: 'border-l-emerald-500',
       bg: 'bg-emerald-500/5',
-      tag: 'added',
+      tag: t('environments.promote.tagAdded'),
     },
-    removed: { icon: Minus, color: 'text-red-500', border: 'border-l-red-500', bg: 'bg-red-500/5', tag: 'removed' },
+    removed: { icon: Minus, color: 'text-red-500', border: 'border-l-red-500', bg: 'bg-red-500/5', tag: t('environments.promote.tagRemoved') },
     modified: {
       icon: RefreshCw,
       color: 'text-amber-500',
       border: 'border-l-amber-500',
       bg: 'bg-amber-500/5',
-      tag: 'changed',
+      tag: t('environments.promote.tagChanged'),
     },
   }[type];
 

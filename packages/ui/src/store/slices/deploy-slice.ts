@@ -9,11 +9,11 @@
  */
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { DEPLOY_SLICE_MESSAGES } from '../../i18n/messages';
+import { t } from '../../i18n';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-export interface DeployResourceChange {
+interface DeployResourceChange {
   name: string;
   type: string;
   action: 'create' | 'update' | 'delete';
@@ -28,7 +28,7 @@ export interface DeployPlan {
   warnings: string[];
 }
 
-export interface DeployResourceResult {
+interface DeployResourceResult {
   name: string;
   type: string;
   action: 'create' | 'update' | 'delete';
@@ -51,13 +51,13 @@ export interface DeployedResource {
   deployed_at: string;
 }
 
-export interface DriftChange {
+interface DriftChange {
   path: string;
   desired: unknown;
   actual: unknown;
 }
 
-export type DriftStatus = 'in_sync' | 'drifted' | 'missing' | 'extra' | 'unknown';
+type DriftStatus = 'in_sync' | 'drifted' | 'missing' | 'extra' | 'unknown';
 
 export interface NodeDriftInfo {
   nodeId: string;
@@ -65,7 +65,7 @@ export interface NodeDriftInfo {
   changes: DriftChange[];
 }
 
-export interface DeployRecord {
+interface DeployRecord {
   id: string;
   timestamp: number;
   environment: string;
@@ -173,16 +173,16 @@ const deploySlice = createSlice({
     startAuthenticating(state) {
       state.status = 'authenticating';
       state.error = null;
-      state.logs = [DEPLOY_SLICE_MESSAGES.CONNECTING];
+      state.logs = [t('deploy.slice.connecting')];
     },
     authSuccess(state) {
       state.status = 'idle';
-      state.logs.push(DEPLOY_SLICE_MESSAGES.AUTH_SUCCESS);
+      state.logs.push(t('deploy.slice.authSuccess'));
     },
     authFailed(state, action: PayloadAction<string>) {
       state.status = 'error';
       state.error = action.payload;
-      state.logs.push(DEPLOY_SLICE_MESSAGES.AUTH_FAILED(action.payload));
+      state.logs.push(t('deploy.slice.authFailed', { error: action.payload }));
     },
 
     // Planning
@@ -190,17 +190,17 @@ const deploySlice = createSlice({
       state.status = 'planning';
       state.error = null;
       state.plan = null;
-      state.logs = [DEPLOY_SLICE_MESSAGES.PLANNING];
+      state.logs = [t('deploy.slice.planning')];
     },
     setPlan(state, action: PayloadAction<DeployPlan>) {
       state.status = 'planned';
       state.plan = action.payload;
       state.logs.push(
-        DEPLOY_SLICE_MESSAGES.PLAN_READY(
-          action.payload.creates.length,
-          action.payload.updates.length,
-          action.payload.deletes.length,
-        ),
+        t('deploy.slice.planReady', {
+          creates: action.payload.creates.length,
+          updates: action.payload.updates.length,
+          deletes: action.payload.deletes.length,
+        }),
       );
     },
 
@@ -211,7 +211,7 @@ const deploySlice = createSlice({
       state.currentResource = '';
       state.results = [];
       state.error = null;
-      state.logs.push(DEPLOY_SLICE_MESSAGES.DEPLOYING);
+      state.logs.push(t('deploy.slice.deploying'));
     },
     setDeployProgress(state, action: PayloadAction<{ progress: number; resource: string; message: string }>) {
       state.progress = action.payload.progress;
@@ -227,7 +227,7 @@ const deploySlice = createSlice({
       state.status = 'success';
       state.progress = 100;
       state.currentResource = '';
-      state.logs.push(DEPLOY_SLICE_MESSAGES.DEPLOY_COMPLETED((action.payload.duration_ms / 1000).toFixed(1)));
+      state.logs.push(t('deploy.slice.completed', { seconds: (action.payload.duration_ms / 1000).toFixed(1) }));
 
       // Add to history (capped at 50 entries)
       state.history.unshift({
@@ -248,7 +248,7 @@ const deploySlice = createSlice({
     deployError(state, action: PayloadAction<string>) {
       state.status = 'error';
       state.error = action.payload;
-      state.logs.push(DEPLOY_SLICE_MESSAGES.ERROR(action.payload));
+      state.logs.push(t('deploy.slice.error', { error: action.payload }));
     },
 
     // Reset

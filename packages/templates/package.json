@@ -14,7 +14,6 @@
   },
   "dependencies": {
     "@ice/blocks": "workspace:*",
-    "@ice/template-registry": "workspace:*",
     "@ice/types": "workspace:*"
   },
   "devDependencies": {

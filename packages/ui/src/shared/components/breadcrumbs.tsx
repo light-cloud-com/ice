@@ -81,7 +81,7 @@ export const Breadcrumbs: React.FC = () => {
               className="flex items-center gap-2 px-2 py-1.5 text-ice-md text-ice-accent rounded cursor-pointer outline-none hover:bg-ice-hover"
             >
               <Plus className="w-3.5 h-3.5" />
-              Create team
+              Create organisation
             </DropdownMenu.Item>
           </DropdownMenu.Content>
         </DropdownMenu.Portal>

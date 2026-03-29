@@ -97,7 +97,7 @@ export async function disconnectProvider(orgId: string, provider: string) {
   });
 }
 
-export async function validateGCPCredentials(
+async function validateGCPCredentials(
   credentials: Record<string, string>,
 ): Promise<{ valid: boolean; error?: string; projectId?: string }> {
   try {

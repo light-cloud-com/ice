@@ -38,7 +38,7 @@ export interface EnvironmentDiff {
   unchangedCount: number;
 }
 
-export interface EnvironmentsState {
+interface EnvironmentsState {
   byProject: Record<string, Environment[]>;
   activeEnvId: Record<string, string>; // projectId → envId
   loading: boolean;

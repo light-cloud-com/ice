@@ -5,6 +5,7 @@
  * If not logged in, redirects to login with a return URL.
  */
 
+import { useTranslation } from '@ui/i18n';
 import { isAuthenticated } from '@ui/shared/api/auth';
 import axiosInstance from '@ui/shared/api/axios-instance';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
@@ -12,6 +13,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 
 export const InviteAcceptPage: React.FC = () => {
+  const { t } = useTranslation();
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
@@ -27,10 +29,10 @@ export const InviteAcceptPage: React.FC = () => {
     const accept = async () => {
       try {
         const res = await axiosInstance.post('/users/invite/accept', { token });
-        setOrgName(res.data.organisation?.name || 'the team');
+        setOrgName(res.data.organisation?.name || t('invite.error.fallbackOrg'));
         setStatus('success');
       } catch (err: any) {
-        setErrorMsg(err.response?.data?.message || 'Failed to accept invitation');
+        setErrorMsg(err.response?.data?.message || t('invite.error.defaultMessage'));
         setStatus('error');
       }
     };
@@ -44,19 +46,19 @@ export const InviteAcceptPage: React.FC = () => {
         {status === 'loading' && (
           <>
             <Loader2 className="w-8 h-8 animate-spin text-ice-accent mx-auto" />
-            <p className="text-sm text-ice-text-2">Accepting invitation...</p>
+            <p className="text-sm text-ice-text-2">{t('invite.loading')}</p>
           </>
         )}
 
         {status === 'success' && (
           <>
             <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto" />
-            <h1 className="text-xl font-semibold text-ice-text-1">You're in!</h1>
+            <h1 className="text-xl font-semibold text-ice-text-1">{t('invite.success.title')}</h1>
             <p className="text-sm text-ice-text-2">
-              You've been added to <span className="font-medium text-ice-text-1">{orgName}</span>.
+              {t('invite.success.description', { orgName })}
             </p>
             <button onClick={() => navigate('/', { replace: true })} className="ice-btn ice-btn-primary">
-              Go to dashboard
+              {t('invite.success.button')}
             </button>
           </>
         )}
@@ -64,10 +66,10 @@ export const InviteAcceptPage: React.FC = () => {
         {status === 'error' && (
           <>
             <XCircle className="w-12 h-12 text-ice-red mx-auto" />
-            <h1 className="text-xl font-semibold text-ice-text-1">Invitation failed</h1>
+            <h1 className="text-xl font-semibold text-ice-text-1">{t('invite.error.title')}</h1>
             <p className="text-sm text-ice-text-2">{errorMsg}</p>
             <Link to="/" className="text-sm text-ice-accent hover:underline">
-              Go to dashboard
+              {t('invite.error.button')}
             </Link>
           </>
         )}

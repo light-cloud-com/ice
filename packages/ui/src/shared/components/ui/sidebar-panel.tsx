@@ -118,4 +118,3 @@ export const SidebarPanel: React.FC<SidebarPanelProps> = ({
   );
 };
 
-export default SidebarPanel;

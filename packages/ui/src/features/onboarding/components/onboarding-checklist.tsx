@@ -9,6 +9,7 @@
 import { Check, X, ChevronUp, ChevronDown, ListChecks } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
 import { checkGitHubConnection } from '../../../store/slices/integrations-slice';
 import type { RootState, AppDispatch } from '../../../store';
@@ -23,6 +24,7 @@ const STORAGE_KEY = 'ice-onboarding-checklist-dismissed';
 
 export const OnboardingChecklist: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const { t } = useTranslation();
   const user = useSelector((s: RootState) => s.account.user);
   const githubStatus = useSelector((s: RootState) => s.integrations.integrations.github);
   const gcpStatus = useSelector((s: RootState) => s.integrations.integrations.gcp);
@@ -44,10 +46,10 @@ export const OnboardingChecklist: React.FC = () => {
   if (!user?.onboardingCompleted || dismissed) return null;
 
   const items: ChecklistItem[] = [
-    { id: 'account', label: 'Create account', done: true },
-    { id: 'provider', label: 'Choose cloud provider', done: !!user.defaultProvider },
-    { id: 'cloud', label: 'Connect cloud credentials', done: gcpStatus?.status === 'connected' },
-    { id: 'github', label: 'Connect GitHub', done: githubStatus?.status === 'connected' },
+    { id: 'account', label: t('onboarding.checklist.createAccount'), done: true },
+    { id: 'provider', label: t('onboarding.checklist.chooseProvider'), done: !!user.defaultProvider },
+    { id: 'cloud', label: t('onboarding.checklist.connectCloud'), done: gcpStatus?.status === 'connected' },
+    { id: 'github', label: t('onboarding.checklist.connectGithub'), done: githubStatus?.status === 'connected' },
   ];
 
   const doneCount = items.filter((i) => i.done).length;
@@ -73,14 +75,14 @@ export const OnboardingChecklist: React.FC = () => {
           className="flex items-center gap-2 px-3 py-2 rounded-lg bg-ice-surface border border-ice-border shadow-lg text-xs font-medium text-ice-text-1 hover:bg-ice-hover transition-colors"
         >
           <ListChecks className="w-3.5 h-3.5 text-ice-accent" />
-          Setup: {doneCount}/{items.length}
+          {t('onboarding.checklist.setup')} {doneCount}/{items.length}
           <ChevronUp className="w-3 h-3 text-ice-text-3" />
         </button>
       ) : (
         <div className="w-64 rounded-lg bg-ice-surface border border-ice-border shadow-lg">
           {/* Header */}
           <div className="flex items-center justify-between px-3 py-2 border-b border-ice-border">
-            <span className="text-xs font-semibold text-ice-text-1">Setup checklist</span>
+            <span className="text-xs font-semibold text-ice-text-1">{t('onboarding.checklist.title')}</span>
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setCollapsed(true)}
@@ -91,7 +93,7 @@ export const OnboardingChecklist: React.FC = () => {
               <button
                 onClick={handleDismiss}
                 className="p-0.5 rounded hover:bg-ice-hover text-ice-text-3 hover:text-ice-text-1 transition-colors"
-                title="Dismiss"
+                title={t('onboarding.checklist.dismissTitle')}
               >
                 <X className="w-3.5 h-3.5" />
               </button>

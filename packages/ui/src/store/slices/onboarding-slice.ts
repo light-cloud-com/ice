@@ -8,7 +8,7 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import axiosInstance from '../../shared/api/axios-instance';
 
-export interface OnboardingState {
+interface OnboardingState {
   currentStep: number; // 1-5
   completed: boolean;
   loading: boolean;

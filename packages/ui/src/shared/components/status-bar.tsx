@@ -28,6 +28,7 @@ import { IntegrationStatusDots } from '../../features/integrations';
 import { useTranslation } from '../../i18n';
 import { selectActiveCard } from '../../store/slices/cards-slice';
 import type { RootState } from '../../store';
+import { useSystemStats } from '../hooks/use-system-stats';
 
 function parseCostRange(cost: string): number {
   const matches = cost.match(/\$(\d+)(?:[–-](\d+))?/);
@@ -49,6 +50,8 @@ export const StatusBar: React.FC = () => {
   const activePane = panes.find((p) => p.id === activePaneId);
   const cardScale = activeCard?.viewport?.scale ?? 1;
   const zoom = activePane?.viewport?.scale !== 1 ? (activePane?.viewport?.scale ?? cardScale) : cardScale;
+
+  const systemStats = useSystemStats(10000);
 
   // Use active card for counts
   const nodeCount = activeCard?.nodes.length ?? 0;
@@ -156,6 +159,17 @@ export const StatusBar: React.FC = () => {
 
       {/* Spacer */}
       <div className="flex-1" />
+
+      {/* System resource usage */}
+      {systemStats && (
+        <>
+          <div className="flex items-center gap-3 text-muted-foreground">
+            <span>RAM: {systemStats.ram >= 1024 ? `${(systemStats.ram / 1024).toFixed(1)}GB` : `${systemStats.ram}MB`}</span>
+            <span>CPU: {systemStats.cpu}%</span>
+          </div>
+          <StatusDivider />
+        </>
+      )}
 
       {/* Zoom level */}
       <div className="flex items-center gap-1.5">

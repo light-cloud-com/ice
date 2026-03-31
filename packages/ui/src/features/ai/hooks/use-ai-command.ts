@@ -80,10 +80,10 @@ export function useAiCommand() {
           if (response.status === 503) {
             dispatch(
               setAiError(
-                'AI_NOT_CONFIGURED: The AI assistant requires an Anthropic API key.\n\n' +
-                  'To set up:\n' +
-                  '1. Get an API key at https://console.anthropic.com/settings/keys\n' +
-                  '2. Add ANTHROPIC_API_KEY=sk-ant-... to your .env file\n' +
+                'AI_NOT_CONFIGURED: No AI provider available.\n\n' +
+                  'Options:\n' +
+                  '1. Set ANTHROPIC_API_KEY=sk-ant-... in your .env file (recommended)\n' +
+                  '2. Or set ICE_AI_URL to any OpenAI-compatible endpoint (Ollama, LM Studio)\n' +
                   '3. Restart the server',
               ),
             );

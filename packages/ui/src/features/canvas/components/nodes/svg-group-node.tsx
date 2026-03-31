@@ -47,7 +47,7 @@ function hexToTint(hex: string): string {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, 0.06)`;
+  return `rgba(${r}, ${g}, ${b}, 0.09)`;
 }
 function hexToBorder(hex: string): string {
   return hex + '50';
@@ -147,11 +147,11 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
             width={nodeWidth}
             height={nodeHeight}
             rx={CORNER_RADIUS}
-            fill={gc ? `${gc}15` : 'rgba(15, 23, 42, 0.15)'}
+            fill={gc ? `${gc}20` : 'rgba(15, 23, 42, 0.15)'}
             stroke={lodBorderColor}
             strokeWidth={isDragOver || isChildExiting ? 2 : 1}
             strokeDasharray={isDragOver ? undefined : '4 2'}
-            opacity={isDragOver || isChildExiting ? 1 : 0.6}
+            opacity={isDragOver || isChildExiting ? 1 : 0.7}
           />
         </g>
       );
@@ -203,7 +203,7 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
             width={nodeWidth}
             height={nodeHeight}
             rx={CORNER_RADIUS}
-            fill={gc ? `${gc}08` : 'rgba(15, 23, 42, 0.08)'}
+            fill={gc ? `${gc}18` : 'rgba(15, 23, 42, 0.10)'}
             stroke={lodBorderColor}
             strokeWidth={isDragOver || isChildExiting ? 2 : isSelected ? 1.5 : 1}
             strokeDasharray={isDragOver ? undefined : '6 3'}

@@ -7,6 +7,7 @@
 
 import 'dotenv/config';
 import { createServer } from 'http';
+import { startLocalAiServer, stopLocalAiServer } from '@ice/ai';
 import { createAiRouter } from '@ice/service-ai';
 import { createCanvasRouter } from '@ice/service-canvas';
 import { createCredentialsRouter } from '@ice/service-credentials';
@@ -90,6 +91,77 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// ─── System Stats (CPU / RAM for all ICE processes) ────────────────────────
+
+import { execSync } from 'child_process';
+
+/** Collect all descendant PIDs of our process */
+function getTreePids(): number[] {
+  const rootPid = process.pid;
+  try {
+    const out = execSync('ps -e -o pid=,ppid=', { timeout: 3000, encoding: 'utf-8' });
+    const childrenOf = new Map<number, number[]>();
+    for (const line of out.trim().split('\n')) {
+      const [pidStr, ppidStr] = line.trim().split(/\s+/);
+      const pid = parseInt(pidStr), ppid = parseInt(ppidStr);
+      if (!childrenOf.has(ppid)) childrenOf.set(ppid, []);
+      childrenOf.get(ppid)!.push(pid);
+    }
+    const pids: number[] = [];
+    const queue = [rootPid];
+    while (queue.length > 0) {
+      const pid = queue.pop()!;
+      pids.push(pid);
+      for (const child of childrenOf.get(pid) || []) queue.push(child);
+    }
+    return pids;
+  } catch {
+    return [rootPid];
+  }
+}
+
+/** Get RSS (KB) for a list of PIDs — snapshot, always accurate */
+function getRssForPids(pids: number[]): number {
+  try {
+    const out = execSync(`ps -o rss= -p ${pids.join(',')}`, { timeout: 3000, encoding: 'utf-8' });
+    return out.trim().split('\n').reduce((sum, l) => sum + (parseInt(l.trim()) || 0), 0);
+  } catch {
+    return 0;
+  }
+}
+
+import { cpus } from 'os';
+const NUM_CPUS = cpus().length || 1;
+
+/** Get CPU% for a list of PIDs — ps reports per-core %, so divide by core count */
+function getCpuForPids(pids: number[]): number {
+  try {
+    const out = execSync(`ps -o %cpu= -p ${pids.join(',')}`, { timeout: 3000, encoding: 'utf-8' });
+    const perCore = out.trim().split('\n').reduce((sum, l) => sum + (parseFloat(l.trim()) || 0), 0);
+    return perCore / NUM_CPUS;
+  } catch {
+    return 0;
+  }
+}
+
+let cpuPercent = 0;
+
+// Sample CPU every 5 seconds, smooth with exponential moving average
+setInterval(() => {
+  const pids = getTreePids();
+  const raw = getCpuForPids(pids);
+  cpuPercent = cpuPercent === 0 ? raw : raw * 0.4 + cpuPercent * 0.6;
+}, 5000);
+
+app.get('/api/system/stats', (_req, res) => {
+  const pids = getTreePids();
+  const rssKb = getRssForPids(pids);
+  res.json({
+    ram: Math.round(rssKb / 1024),
+    cpu: Math.round(cpuPercent * 10) / 10,
+  });
+});
+
 // ─── Service Routers ────────────────────────────────────────────────────────
 
 app.use('/api', createIamRouter());
@@ -164,12 +236,21 @@ httpServer.listen(PORT, () => {
   // Start background services (non-blocking)
   startDeployWorker();
   startCronJobs();
+
+  // Start local AI server if configured — non-blocking
+  // Only starts when ICE_AI_PROVIDER is set to 'openai-compat' with a local URL
+  startLocalAiServer().catch((err: Error) => {
+    console.warn('[ICE AI] Auto-start failed:', err.message || err);
+  });
 });
 
 // ─── Graceful Shutdown ─────────────────────────────────────────────────────
 
 function shutdown(signal: string) {
   console.log(`\n${signal} received — shutting down gracefully...`);
+
+  // Stop local AI server if we started it
+  stopLocalAiServer().catch(() => {});
 
   httpServer.close(() => {
     console.log('HTTP server closed');

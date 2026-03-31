@@ -197,9 +197,16 @@ export const CanvasContextMenu: React.FC = () => {
         />
         <Separator />
         <MenuItem
-          label={t('canvas.contextMenu.autoOrganize')}
+          label={t('canvas.contextMenu.autoOrganize') + ' ↕'}
           onClick={() => {
-            dispatch(autoOrganizeCard());
+            dispatch(autoOrganizeCard({ direction: 'vertical' }));
+            close();
+          }}
+        />
+        <MenuItem
+          label={t('canvas.contextMenu.autoOrganize') + ' ↔'}
+          onClick={() => {
+            dispatch(autoOrganizeCard({ direction: 'horizontal' }));
             close();
           }}
         />

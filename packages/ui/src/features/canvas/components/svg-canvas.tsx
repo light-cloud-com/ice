@@ -54,6 +54,7 @@ import { SvgLogNode } from './svg-log-node';
 import { getIcon, DEFAULT_ICON, type Provider } from '../../../assets/icons';
 import { getBrandIcon } from '../../../assets/icons/brand-registry';
 import {
+  CORNER_RADIUS,
   HEADER_HEIGHT,
   CONTAINER_PADDING,
   MIN_CONTAINER_WIDTH,
@@ -150,6 +151,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   const viewLevel = useSelector((state: RootState) => state.view.viewLevel);
   const animatingNodes = useSelector((state: RootState) => state.ai.animatingNodes);
   const animatingEdges = useSelector((state: RootState) => state.ai.animatingEdges);
+  const aiCurrentIntent = useSelector((state: RootState) => state.ai.currentIntent);
   const pipelineNodeStatus = useSelector((state: RootState) => state.pipeline.nodeStatus);
   // Clipboard (Ctrl+C/V/X) and Undo/Redo (Ctrl+Z / Ctrl+Shift+Z)
   useClipboard();
@@ -788,6 +790,48 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
         }
       }
 
+      // BND-1/BND-3: After expansion, clamp the dragged node to its parent's
+      // (now expanded) bounds so it never ends up outside the container.
+      // This also catches snap-to-grid rounding that might push a node past the edge.
+      if (node.parentId && !skipAncestorResize) {
+        const parent = visibleNodes.find((n) => n.id === node.parentId);
+        if (parent && !parent.data?.folded) {
+          const parentPosUpdate = positionUpdates.find((u) => u.id === parent.id);
+          const parentSizeUpdate = sizeUpdates.find((u) => u.id === parent.id);
+          const px = parentPosUpdate?.position.x ?? parent.x;
+          const py = parentPosUpdate?.position.y ?? parent.y;
+          const pw = parentSizeUpdate?.width ?? parent.width;
+          const ph = parentSizeUpdate?.height ?? parent.height;
+
+          const minX = px + CONTAINER_PAD;
+          const minY = py + CONTAINER_PAD + CONTAINER_HEADER_H;
+          const maxX = px + pw - CONTAINER_PAD - node.width;
+          const maxY = py + ph - CONTAINER_PAD - node.height;
+
+          const nodeUpdate = positionUpdates.find((u) => u.id === id);
+          if (nodeUpdate) {
+            const clampedX = Math.max(minX, Math.min(maxX, nodeUpdate.position.x));
+            const clampedY = Math.max(minY, Math.min(maxY, nodeUpdate.position.y));
+
+            if (clampedX !== nodeUpdate.position.x || clampedY !== nodeUpdate.position.y) {
+              const adjustX = clampedX - nodeUpdate.position.x;
+              const adjustY = clampedY - nodeUpdate.position.y;
+              nodeUpdate.position.x = clampedX;
+              nodeUpdate.position.y = clampedY;
+
+              // Also adjust all descendants by the same delta
+              for (const descId of descendantIds) {
+                const descUpdate = positionUpdates.find((u) => u.id === descId);
+                if (descUpdate) {
+                  descUpdate.position.x += adjustX;
+                  descUpdate.position.y += adjustY;
+                }
+              }
+            }
+          }
+        }
+      }
+
       // Dispatch all updates
       dispatch(updateCardNodePositions(positionUpdates));
       for (const su of sizeUpdates) {
@@ -1097,13 +1141,22 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   const [renamingNodeId, setRenamingNodeId] = useState<string | null>(null);
   // Track connection tooltip (follows mouse)
   const [connTooltip, setConnTooltip] = useState<ConnectionTooltipInfo | null>(null);
-  // Dismiss state for the empty canvas overlay (reset when card changes)
+  // Dismiss state for the empty canvas overlay
   const [overlayDismissed, setOverlayDismissed] = useState(false);
+  // Reset when card changes
   const prevCardIdRef = useRef(card?.id);
-  if (card?.id !== prevCardIdRef.current) {
-    prevCardIdRef.current = card?.id;
-    setOverlayDismissed(false);
-  }
+  useEffect(() => {
+    if (card?.id !== prevCardIdRef.current) {
+      prevCardIdRef.current = card?.id;
+      setOverlayDismissed(false);
+    }
+  }, [card?.id]);
+  // Dismiss when user sends an AI command (they expect to see the canvas)
+  useEffect(() => {
+    if (aiCurrentIntent) {
+      setOverlayDismissed(true);
+    }
+  }, [aiCurrentIntent]);
 
   const handleNodeHover = useCallback((nodeId: string | null) => {
     setHoveredNodeId(nodeId);
@@ -2086,31 +2139,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
           {/* Selection frame */}
           <SelectionFrame />
 
-          {/* Region labels layer — subtle VPC/Subnet backgrounds */}
-          <g className="regions-layer">
-            {sortedNodes
-              .filter((node) => {
-                const iceType = (node.data?.iceType as string) || '';
-                return iceType === 'Network.VPC' || iceType === 'Network.Subnet';
-              })
-              .map((node) => {
-                const regionAnimDelay = animatingNodes[node.id];
-                const regionAnimStyle: CSSProperties | undefined =
-                  regionAnimDelay !== undefined
-                    ? {
-                        animation: `ice-node-entrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${regionAnimDelay}ms both`,
-                        transformOrigin: `${node.x + node.width / 2}px ${node.y + node.height / 2}px`,
-                      }
-                    : undefined;
-                return regionAnimStyle ? (
-                  <g key={`region-anim-${node.id}`} style={regionAnimStyle}>
-                    <SvgRegionLabel key={`region-${node.id}`} node={node} />
-                  </g>
-                ) : (
-                  <SvgRegionLabel key={`region-${node.id}`} node={node} />
-                );
-              })}
-          </g>
+          {/* VPC/Subnet now render as SvgGroupNode in the nodes layer */}
 
           {/* Connections layer — non-highlighted (behind nodes) */}
           <g className="connections-layer">
@@ -2178,6 +2207,23 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             <filter id="shift-drag-shadow" x="-20%" y="-20%" width="140%" height="140%">
               <feDropShadow dx="0" dy="4" stdDeviation="8" floodColor="#000" floodOpacity="0.35" />
             </filter>
+            {/* BND-5: ClipPaths for parent containment — prevents children from
+                visually overflowing their parent group/block boundaries */}
+            {sortedNodes
+              .filter((n) => {
+                const t = (n.data?.iceType as string) || '';
+                return (
+                  n.type === 'container' ||
+                  n.type === 'block' ||
+                  t === 'Network.VPC' ||
+                  t === 'Network.Subnet'
+                );
+              })
+              .map((n) => (
+                <clipPath key={`parent-clip-${n.id}`} id={`parent-clip-${n.id}`}>
+                  <rect x={n.x} y={n.y} width={n.width} height={n.height} rx={CORNER_RADIUS} />
+                </clipPath>
+              ))}
           </defs>
 
           {/* Nodes layer — Groups, Blocks, Resources, or Log terminals */}
@@ -2185,14 +2231,10 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             {sortedNodes.map((node) => {
               const iceType = (node.data?.iceType as string) || '';
 
-              // VPC/Subnet rendered as region labels above, skip here
-              if (iceType === 'Network.VPC' || iceType === 'Network.Subnet') {
-                return null;
-              }
-
               const isLogNode =
                 iceType === 'Log.Terminal' || iceType === 'Observability.Logs' || iceType.startsWith('Log.');
-              const isGroup = node.type === 'container' || node.type === ('group' as any);
+              const isVpcOrSubnet = iceType === 'Network.VPC' || iceType === 'Network.Subnet';
+              const isGroup = node.type === 'container' || node.type === ('group' as any) || isVpcOrSubnet;
               const isBlock = node.type === 'block';
 
               // Entrance animation for AI-generated nodes
@@ -2218,38 +2260,51 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                   content
                 );
 
-                if (!isLifted) return animated;
+                // Shift-dragged nodes: show lift shadow, skip clip (user is reparenting)
+                if (isLifted) {
+                  // Determine highlight color: green if dragging INTO a group, orange if leaving
+                  const isEntering = !!dragOverGroupId;
+                  const highlightColor = isEntering ? '#22c55e' : '#f97316';
 
-                // Determine highlight color: green if dragging INTO a group, orange if leaving
-                const isEntering = !!dragOverGroupId;
-                const highlightColor = isEntering ? '#22c55e' : '#f97316';
+                  return (
+                    <g key={node.id} filter="url(#shift-drag-shadow)" opacity={0.9}>
+                      {animated}
+                      {/* Highlight border around the dragged node */}
+                      <rect
+                        x={node.x - 2}
+                        y={node.y - 2}
+                        width={node.width + 4}
+                        height={node.height + 4}
+                        rx={8}
+                        fill="none"
+                        stroke={highlightColor}
+                        strokeWidth={2}
+                        strokeDasharray="6 3"
+                        opacity={0.8}
+                      >
+                        <animate
+                          attributeName="stroke-dashoffset"
+                          from="0"
+                          to="-18"
+                          dur="0.8s"
+                          repeatCount="indefinite"
+                        />
+                      </rect>
+                    </g>
+                  );
+                }
 
-                return (
-                  <g key={node.id} filter="url(#shift-drag-shadow)" opacity={0.9}>
-                    {animated}
-                    {/* Highlight border around the dragged node */}
-                    <rect
-                      x={node.x - 2}
-                      y={node.y - 2}
-                      width={node.width + 4}
-                      height={node.height + 4}
-                      rx={8}
-                      fill="none"
-                      stroke={highlightColor}
-                      strokeWidth={2}
-                      strokeDasharray="6 3"
-                      opacity={0.8}
-                    >
-                      <animate
-                        attributeName="stroke-dashoffset"
-                        from="0"
-                        to="-18"
-                        dur="0.8s"
-                        repeatCount="indefinite"
-                      />
-                    </rect>
-                  </g>
-                );
+                // BND-5/BND-6: Clip children to parent bounds so they never
+                // visually overflow the parent group/block rectangle.
+                if (node.parentId) {
+                  return (
+                    <g key={`clipped-${node.id}`} clipPath={`url(#parent-clip-${node.parentId})`}>
+                      {animated}
+                    </g>
+                  );
+                }
+
+                return animated;
               };
 
               // ── Semantic Zoom: LOD 1 & 2 — same position/size, simplified content, bigger text/icons ──

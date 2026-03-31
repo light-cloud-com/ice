@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.80.0",
+    "@ice/ai": "workspace:*",
     "@ice/db": "workspace:*",
     "@ice/shared": "workspace:*",
     "@ice/types": "workspace:*",

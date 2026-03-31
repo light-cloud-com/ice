@@ -64,6 +64,12 @@ packages/web/src/**/*.js.map
 packages/web/src/**/*.d.ts
 packages/web/src/**/*.d.ts.map
 
+# Playwright MCP artifacts
+.playwright-mcp/
+
+# Screenshots (temporary — don't commit to repo)
+*.png
+
 # Misc
 *.tgz
 .cache/

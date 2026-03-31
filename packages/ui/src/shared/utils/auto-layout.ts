@@ -28,9 +28,9 @@ import {
 // =============================================================================
 
 const MIN_NODE_HEIGHT_COLLAPSED = 36;
-const NODE_GAP = 80;
-const CHILD_GAP = 24;
-const VPC_EXTRA_PADDING = 20;
+const NODE_GAP = 36;
+const CHILD_GAP = 16;
+const VPC_EXTRA_PADDING = 8;
 
 // =============================================================================
 // Types
@@ -64,6 +64,8 @@ interface LayoutOptions {
   containerPadding?: number;
   /** Layout mode: 'flow' (left-to-right data flow) or 'grid' (category-based grid) */
   layout?: 'flow' | 'grid';
+  /** Flow direction: 'vertical' (top-to-bottom) or 'horizontal' (left-to-right) */
+  direction?: 'vertical' | 'horizontal';
 }
 
 const DEFAULT_OPTIONS: Required<LayoutOptions> = {
@@ -73,6 +75,7 @@ const DEFAULT_OPTIONS: Required<LayoutOptions> = {
   nodesPerRow: 3,
   containerPadding: CONTAINER_PADDING,
   layout: 'flow',
+  direction: 'vertical',
 };
 
 // =============================================================================
@@ -136,6 +139,13 @@ export function autoLayout(
 
   // ── Shared helpers ──────────────────────────────────────────────────────
 
+  // Standard sizes for auto-layout: main-flow nodes get a uniform size,
+  // helper/utility nodes get a compact size so they don't dominate the diagram.
+  const MAIN_NODE_WIDTH = 220;
+  const MAIN_NODE_HEIGHT = 72;
+  const HELPER_NODE_WIDTH = 170;
+  const HELPER_NODE_HEIGHT = 56;
+
   const calculateNodeSize = (node: LayoutNode): { width: number; height: number } => {
     const childIds = childrenMap.get(node.id) || [];
     const isFolded = node.folded || (node.data?.folded as boolean) || false;
@@ -147,11 +157,14 @@ export function autoLayout(
     const isBlock = iceType.startsWith('Block.') || node.type === 'block';
 
     if (isFolded || childIds.length === 0) {
+      const helper = isHelperNode(iceType);
       const contentH = computeCompactNodeHeight(node.data || {}, isBlock || isGroup);
       const contentW = computeCompactNodeWidth(isBlock || isGroup);
+      const targetW = helper ? HELPER_NODE_WIDTH : MAIN_NODE_WIDTH;
+      const targetH = helper ? HELPER_NODE_HEIGHT : MAIN_NODE_HEIGHT;
       return {
-        width: Math.max(node.width || contentW, contentW),
-        height: isFolded ? MIN_NODE_HEIGHT_COLLAPSED : Math.max(node.height || 0, contentH),
+        width: Math.max(targetW, contentW),
+        height: isFolded ? MIN_NODE_HEIGHT_COLLAPSED : Math.max(targetH, contentH),
       };
     }
 
@@ -164,7 +177,10 @@ export function autoLayout(
 
     const containerPadding = isLargeContainer ? opts.containerPadding + VPC_EXTRA_PADDING : opts.containerPadding;
     const childGap = CHILD_GAP;
-    const childrenPerRow = isVPC ? 3 : 2;
+    // VPCs: subnets side-by-side (2 per row — subnets are wide)
+    // Subnets: children stacked vertically (1 per row) to follow data flow
+    // Groups: 2 per row
+    const childrenPerRow = isVPC ? 2 : isSubnet ? 1 : 2;
     let maxRowWidth = 0;
     let totalHeight = HEADER_HEIGHT + containerPadding;
     let rowWidth = 0;
@@ -191,8 +207,8 @@ export function autoLayout(
     totalHeight += containerPadding;
 
     const calculatedWidth = maxRowWidth + containerPadding * 2;
-    const minContainerWidth = isVPC ? 600 : isSubnet ? 400 : MIN_CONTAINER_WIDTH;
-    const minContainerHeight = isVPC ? 400 : isSubnet ? 300 : MIN_CONTAINER_HEIGHT;
+    const minContainerWidth = isVPC ? 280 : isSubnet ? 260 : MIN_CONTAINER_WIDTH;
+    const minContainerHeight = isVPC ? 180 : isSubnet ? 150 : MIN_CONTAINER_HEIGHT;
 
     return {
       width: Math.max(minContainerWidth, calculatedWidth),
@@ -216,7 +232,7 @@ export function autoLayout(
 
     const containerPadding = isLargeContainer ? opts.containerPadding + VPC_EXTRA_PADDING : opts.containerPadding;
     const childGap = CHILD_GAP;
-    const childrenPerRow = isVPC ? 3 : 2;
+    const childrenPerRow = isVPC ? 3 : isSubnet ? 1 : 2;
 
     let currentX = containerPadding;
     let currentY = HEADER_HEIGHT + containerPadding;
@@ -260,7 +276,62 @@ export function autoLayout(
 }
 
 // =============================================================================
-// Flow Layout — Edge-based topological ordering, left-to-right columns
+// Semantic Node Classification
+// =============================================================================
+
+/**
+ * Map iceType to a semantic infrastructure tier.
+ * Lower tier = closer to the user, appears higher in the diagram.
+ *
+ *   Tier 0 — Frontend / CDN / entry points
+ *   Tier 1 — Routing (Gateway, Load Balancer)
+ *   Tier 2 — Compute / Application (Backend, Worker, Functions)
+ *   Tier 3 — Messaging (Queues, Streams, Pub/Sub)
+ *   Tier 4 — Data / Storage (Databases, Cache, Object Storage)
+ *
+ * Actual iceType values (from blocks registry):
+ *   Application.StaticSite, Application.SSRSite, Network.Internet,
+ *   Network.Gateway, Application.Container, Application.Worker,
+ *   Application.ServerlessFunction, Application.CronJob,
+ *   Messaging.RabbitMQ, Messaging.CloudPubSub, Messaging.Topic,
+ *   Database.PostgreSQL, Database.MySQL, Database.MongoDB, Database.Redis,
+ *   Database.Firestore, Storage.Bucket, Analytics.DataWarehouse,
+ *   Analytics.Search, AI.VectorDB, AI.LLMGateway, AI.ModelServing,
+ *   Security.Identity, Security.Secret, Monitoring.Log, Log.Terminal,
+ *   Source.Repository, Config.EnvVars
+ */
+function getSemanticTier(iceType: string): number {
+  const t = iceType.toLowerCase();
+  // Tier 0 — Frontend / entry points
+  if (/staticsite|ssrsite|network\.internet|frontend|cdn/.test(t)) return 0;
+  // Tier 1 — Routing / gateway (but not AI.LLMGateway — that's compute)
+  if (/network\.gateway/.test(t)) return 1;
+  // Tier 2 — Compute / application (includes AI services)
+  if (/container|backend|worker|function|serverless|cron|modelserving|llmgateway|ai\./.test(t)) return 2;
+  // Tier 3 — Messaging / events
+  if (/messaging|rabbitmq|pubsub|topic|queue|stream|kafka|event/.test(t)) return 3;
+  // Tier 4 — Data / storage / analytics
+  if (/database|postgres|mysql|mongo|firestore|redis|storage|bucket|warehouse|search|vector/.test(t)) return 4;
+  // Groups and VPCs default to compute tier
+  if (/group\.|block\.|network\.vpc|network\.subnet/.test(t)) return 2;
+  return 2; // default to compute layer
+}
+
+/**
+ * Helper/utility nodes placed on the SIDE of the diagram, not in the main
+ * vertical/horizontal data flow. They support the main flow but aren't part
+ * of the user-facing request path.
+ *
+ * Matched iceTypes: Security.Identity, Security.Secret, Monitoring.Log,
+ * Log.Terminal, Observability.Logs, Source.Repository, Config.EnvVars
+ */
+function isHelperNode(iceType: string): boolean {
+  const t = iceType.toLowerCase();
+  return /security\.|monitoring\.|log\.|observ|source\.repository|config\.env|envvars/.test(t);
+}
+
+// =============================================================================
+// Flow Layout — Semantic tier ordering, top-to-bottom with side helpers
 // =============================================================================
 
 function flowLayout(
@@ -276,14 +347,8 @@ function flowLayout(
 ): LayoutNode[] {
   const layoutResults: LayoutNode[] = [];
 
-  // Build dependency graph from non-containment edges among top-level nodes.
-  // Edges targeting child nodes are resolved to their top-level ancestor group,
-  // so Gateway → WebApp (child of Frontend Group) becomes Gateway → Frontend Group.
-  const topIds = new Set(topLevelNodes.map((n) => n.id));
-  const adj = new Map<string, string[]>(); // source → targets
-  const inDeg = new Map<string, number>();
-
   // Resolve any node ID to its top-level ancestor
+  const topIds = new Set(topLevelNodes.map((n) => n.id));
   const toTopLevel = (id: string): string | null => {
     if (topIds.has(id)) return id;
     const p = parentMap.get(id);
@@ -291,14 +356,37 @@ function flowLayout(
     return toTopLevel(p);
   };
 
+  // ── Step 1: Separate main-flow nodes from helpers ────────────────────────
+
+  const mainNodes: LayoutNode[] = [];
+  const helperNodes: LayoutNode[] = [];
+
+  for (const node of topLevelNodes) {
+    const n = nodeMap.get(node.id)!;
+    if (isHelperNode(n.iceType || '')) {
+      helperNodes.push(n);
+    } else {
+      mainNodes.push(n);
+    }
+  }
+
+  // ── Step 2: Build layers using topological depth + semantic tier floor ────
+  //
+  // The topological depth (longest-path from a source) gives each node in a
+  // chain its own row: Static Site(0) → Public Traffic(1) → Gateway(2) → ...
+  //
+  // The semantic tier acts as a FLOOR — a database (tier 4) can never appear
+  // above a gateway (tier 1), even if the topo sort would place it earlier.
+  // Final layer = max(topoDepth, semanticTier).
+
+  // Build adjacency for topological sort (main + helper IDs, among top-level only)
+  const adj = new Map<string, string[]>();
+  const inDeg = new Map<string, number>();
   for (const id of topIds) {
     adj.set(id, []);
     inDeg.set(id, 0);
   }
-
-  // Track added edges to avoid duplicates from multiple children
   const addedEdges = new Set<string>();
-
   for (const edge of edges) {
     if (edge.relationship === 'contains') continue;
     const s = toTopLevel(edge.source);
@@ -313,72 +401,124 @@ function flowLayout(
     }
   }
 
-  // BFS topological sort to assign layers
-  const layerOf = new Map<string, number>();
+  // BFS longest-path to assign topological depth
+  const topoDepth = new Map<string, number>();
   const queue: string[] = [];
-
   for (const id of topIds) {
     if ((inDeg.get(id) || 0) === 0) {
       queue.push(id);
-      layerOf.set(id, 0);
+      topoDepth.set(id, 0);
     }
   }
-
   let qi = 0;
   while (qi < queue.length) {
     const cur = queue[qi++];
-    const curLayer = layerOf.get(cur)!;
+    const d = topoDepth.get(cur)!;
     for (const next of adj.get(cur) || []) {
-      const newLayer = curLayer + 1;
-      const existingLayer = layerOf.get(next);
-      if (existingLayer === undefined || newLayer > existingLayer) {
-        layerOf.set(next, newLayer);
+      if (!topoDepth.has(next) || d + 1 > topoDepth.get(next)!) {
+        topoDepth.set(next, d + 1);
       }
       inDeg.set(next, (inDeg.get(next) || 0) - 1);
-      if (inDeg.get(next) === 0) {
-        queue.push(next);
-      }
+      if (inDeg.get(next) === 0) queue.push(next);
     }
   }
-
-  // Assign any unvisited nodes (cycles or disconnected) to layer 0
   for (const id of topIds) {
-    if (!layerOf.has(id)) {
-      layerOf.set(id, 0);
+    if (!topoDepth.has(id)) topoDepth.set(id, 0);
+  }
+
+  // Compute final layer for each main node: max(topoDepth, semanticTier)
+  const mainIds = new Set(mainNodes.map((n) => n.id));
+  const layerOf = new Map<string, number>();
+  for (const node of mainNodes) {
+    const topo = topoDepth.get(node.id) || 0;
+    const tier = getSemanticTier(node.iceType || '');
+    layerOf.set(node.id, Math.max(topo, tier));
+  }
+
+  // Group into layer buckets
+  const maxLayer = mainNodes.length > 0 ? Math.max(...Array.from(layerOf.values())) : 0;
+  const layers: LayoutNode[][] = Array.from({ length: maxLayer + 1 }, () => []);
+  for (const node of mainNodes) {
+    layers[layerOf.get(node.id)!].push(node);
+  }
+
+  // Sort within each layer to minimize edge crossings (barycenter heuristic).
+  // For each node, compute the average position of its connected nodes in the
+  // previous layer. Then sort by that average — nodes whose parents are on the
+  // left appear on the left, nodes whose parents are on the right appear on the
+  // right. This keeps connections roughly parallel instead of crossing.
+  //
+  // Build reverse adjacency: for each node, which nodes in the previous layer connect to it?
+  const revAdj = new Map<string, string[]>(); // target → sources
+  for (const [src, targets] of adj) {
+    for (const tgt of targets) {
+      const list = revAdj.get(tgt) || [];
+      list.push(src);
+      revAdj.set(tgt, list);
     }
   }
 
-  // Group top-level nodes into layer buckets
-  const maxLayer = Math.max(...Array.from(layerOf.values()), 0);
-  const layers: LayoutNode[][] = Array.from({ length: maxLayer + 1 }, () => []);
-
-  for (const node of topLevelNodes) {
-    const n = nodeMap.get(node.id)!;
-    const layer = layerOf.get(node.id) || 0;
-    layers[layer].push(n);
-  }
-
-  // Sort within each layer: groups first, then blocks, then resources, then by label
-  for (const layer of layers) {
-    layer.sort((a, b) => {
-      const aIsGroup =
-        a.iceType?.startsWith('Group.') || a.type === 'container' || a.type === ('group' as any)
-          ? 0
-          : a.iceType?.startsWith('Block.') || a.type === 'block'
-            ? 1
-            : 2;
-      const bIsGroup =
-        b.iceType?.startsWith('Group.') || b.type === 'container' || b.type === ('group' as any)
-          ? 0
-          : b.iceType?.startsWith('Block.') || b.type === 'block'
-            ? 1
-            : 2;
-      if (aIsGroup !== bIsGroup) return aIsGroup - bIsGroup;
+  // First pass: sort layer 0 by groups-first then label (no previous layer to reference)
+  if (layers.length > 0) {
+    layers[0].sort((a, b) => {
+      const aGroup = a.type === 'container' || a.iceType?.startsWith('Group.') ? 0 : 1;
+      const bGroup = b.type === 'container' || b.iceType?.startsWith('Group.') ? 0 : 1;
+      if (aGroup !== bGroup) return aGroup - bGroup;
       return a.label.localeCompare(b.label);
     });
   }
 
-  // Calculate sizes for all top-level nodes
+  // Assign initial indices to layer 0 for barycenter calculation
+  const positionIndex = new Map<string, number>();
+  for (let i = 0; i < (layers[0]?.length || 0); i++) {
+    positionIndex.set(layers[0][i].id, i);
+  }
+
+  // For subsequent layers, sort by barycenter of connected nodes in previous layers
+  for (let li = 1; li < layers.length; li++) {
+    const layer = layers[li];
+    if (layer.length <= 1) {
+      if (layer.length === 1) positionIndex.set(layer[0].id, 0);
+      continue;
+    }
+
+    // Compute barycenter for each node in this layer
+    const bary = new Map<string, number>();
+    for (const node of layer) {
+      // Gather positions of all connected nodes in any previous layer
+      const neighbors: number[] = [];
+      // Check incoming edges (from previous layers)
+      for (const src of revAdj.get(node.id) || []) {
+        if (positionIndex.has(src)) neighbors.push(positionIndex.get(src)!);
+      }
+      // Check outgoing edges to previous layers (for bidirectional connections)
+      for (const tgt of adj.get(node.id) || []) {
+        if (positionIndex.has(tgt)) neighbors.push(positionIndex.get(tgt)!);
+      }
+
+      if (neighbors.length > 0) {
+        bary.set(node.id, neighbors.reduce((a, b) => a + b, 0) / neighbors.length);
+      } else {
+        // No connections to previous layers — keep in middle
+        bary.set(node.id, layer.length / 2);
+      }
+    }
+
+    layer.sort((a, b) => {
+      const aGroup = a.type === 'container' || a.iceType?.startsWith('Group.') ? 0 : 1;
+      const bGroup = b.type === 'container' || b.iceType?.startsWith('Group.') ? 0 : 1;
+      if (aGroup !== bGroup) return aGroup - bGroup;
+      return (bary.get(a.id) || 0) - (bary.get(b.id) || 0);
+    });
+
+    // Update position indices for this layer
+    for (let i = 0; i < layer.length; i++) {
+      positionIndex.set(layer[i].id, i);
+    }
+  }
+
+  // ── Step 3: Calculate sizes ──────────────────────────────────────────────
+
   for (const layer of layers) {
     for (const node of layer) {
       const size = calculateNodeSize(node);
@@ -387,13 +527,18 @@ function flowLayout(
       positionChildren(node);
     }
   }
+  for (const node of helperNodes) {
+    const size = calculateNodeSize(node);
+    node.width = size.width;
+    node.height = size.height;
+    positionChildren(node);
+  }
 
-  // Position: columns left-to-right, nodes stacked top-to-bottom per column
+  // ── Step 4: Position nodes — vertical (top-to-bottom) or horizontal (left-to-right) ──
+
   const absolutizeChildren = (parent: LayoutNode, parentX: number, parentY: number): void => {
-    // Skip children of folded containers — they stay at their current positions
     const parentFolded = parent.folded || (parent.data?.folded as boolean) || false;
     if (parentFolded) return;
-
     const childIds = childrenMap.get(parent.id) || [];
     for (const childId of childIds) {
       const child = nodeMap.get(childId);
@@ -408,30 +553,166 @@ function flowLayout(
     }
   };
 
-  let columnX = opts.startX;
+  const isHorizontal = opts.direction === 'horizontal';
 
-  for (const layer of layers) {
-    if (layer.length === 0) continue;
+  // Track position of each main node (for helper placement)
+  const nodePosMap = new Map<string, { x: number; y: number }>();
 
-    let nodeY = opts.startY;
-    let maxWidthInCol = 0;
+  if (isHorizontal) {
+    // ── HORIZONTAL: layers are columns left-to-right, nodes stacked top-to-bottom per column
+    // Helpers placed above/below their connected column node.
 
-    for (const node of layer) {
-      node.x = columnX;
-      node.y = nodeY;
-
-      layoutResults.push(node);
-      absolutizeChildren(node, node.x, node.y);
-
-      maxWidthInCol = Math.max(maxWidthInCol, node.width);
-      nodeY += node.height + opts.nodeGap;
+    // Find tallest column for vertical centering
+    let maxColHeight = 0;
+    for (const layer of layers) {
+      if (layer.length === 0) continue;
+      let h = 0;
+      for (const node of layer) h += node.height;
+      h += (layer.length - 1) * opts.nodeGap;
+      maxColHeight = Math.max(maxColHeight, h);
     }
 
-    columnX += maxWidthInCol + opts.nodeGap;
+    let colX = opts.startX;
+    for (const layer of layers) {
+      if (layer.length === 0) continue;
+
+      let colHeight = 0;
+      for (const node of layer) colHeight += node.height;
+      colHeight += (layer.length - 1) * opts.nodeGap;
+
+      // Center column vertically
+      let nodeY = opts.startY + (maxColHeight - colHeight) / 2;
+      let maxWidthInCol = 0;
+
+      for (const node of layer) {
+        node.x = colX;
+        node.y = nodeY;
+        nodePosMap.set(node.id, { x: colX, y: nodeY });
+        layoutResults.push(node);
+        absolutizeChildren(node, node.x, node.y);
+        maxWidthInCol = Math.max(maxWidthInCol, node.width);
+        nodeY += node.height + opts.nodeGap;
+      }
+
+      colX += maxWidthInCol + opts.nodeGap;
+    }
+  } else {
+    // ── VERTICAL: layers are rows top-to-bottom, nodes arranged left-to-right per row
+    // Helpers placed left/right of their connected row node.
+
+    // Find widest row for horizontal centering
+    let maxRowWidth = 0;
+    for (const layer of layers) {
+      if (layer.length === 0) continue;
+      let w = 0;
+      for (const node of layer) w += node.width;
+      w += (layer.length - 1) * opts.nodeGap;
+      maxRowWidth = Math.max(maxRowWidth, w);
+    }
+
+    let rowY = opts.startY;
+    for (const layer of layers) {
+      if (layer.length === 0) continue;
+
+      let rowWidth = 0;
+      for (const node of layer) rowWidth += node.width;
+      rowWidth += (layer.length - 1) * opts.nodeGap;
+
+      // Center row horizontally
+      let nodeX = opts.startX + (maxRowWidth - rowWidth) / 2;
+      let maxHeightInRow = 0;
+
+      for (const node of layer) {
+        node.x = nodeX;
+        node.y = rowY;
+        nodePosMap.set(node.id, { x: nodeX, y: rowY });
+        layoutResults.push(node);
+        absolutizeChildren(node, node.x, node.y);
+        nodeX += node.width + opts.nodeGap;
+        maxHeightInRow = Math.max(maxHeightInRow, node.height);
+      }
+
+      rowY += maxHeightInRow + opts.nodeGap;
+    }
+  }
+
+  // ── Step 5: Position helper nodes beside their connected main node ───────
+  //
+  // Vertical: helpers placed LEFT/RIGHT of the spine.
+  // Horizontal: helpers placed ABOVE/BELOW the spine.
+
+  // Find bounding box of all main nodes
+  let mainRight = opts.startX;
+  let mainLeft = Infinity;
+  let mainBottom = opts.startY;
+  let mainTop = Infinity;
+  for (const node of mainNodes) {
+    mainRight = Math.max(mainRight, node.x + node.width);
+    mainLeft = Math.min(mainLeft, node.x);
+    mainBottom = Math.max(mainBottom, node.y + node.height);
+    mainTop = Math.min(mainTop, node.y);
+  }
+
+  const helpersPerNode = new Map<string, number>();
+
+  for (const helper of helperNodes) {
+    let connectedMainNode: LayoutNode | null = null;
+
+    for (const edge of edges) {
+      if (edge.relationship === 'contains') continue;
+      const s = toTopLevel(edge.source);
+      const t = toTopLevel(edge.target);
+      if (s === helper.id && mainIds.has(t!)) {
+        connectedMainNode = nodeMap.get(t!)!;
+        break;
+      }
+      if (t === helper.id && mainIds.has(s!)) {
+        connectedMainNode = nodeMap.get(s!)!;
+        break;
+      }
+    }
+
+    if (connectedMainNode) {
+      const count = helpersPerNode.get(connectedMainNode.id) || 0;
+      helpersPerNode.set(connectedMainNode.id, count + 1);
+
+      if (isHorizontal) {
+        // Place helpers above/below the spine, aligned with connected node's X
+        helper.x = connectedMainNode.x;
+        if (count % 2 === 0) {
+          helper.y = mainBottom + opts.nodeGap;
+        } else {
+          helper.y = mainTop - opts.nodeGap - helper.height;
+        }
+      } else {
+        // Place helpers left/right of the spine, aligned with connected node's Y
+        helper.y = connectedMainNode.y;
+        if (count % 2 === 0) {
+          helper.x = mainRight + opts.nodeGap;
+        } else {
+          helper.x = mainLeft - opts.nodeGap - helper.width;
+        }
+      }
+    } else {
+      // Disconnected helper — place after the spine
+      if (isHorizontal) {
+        helper.x = mainRight + opts.nodeGap;
+        helper.y = opts.startY;
+        mainRight += helper.width + opts.nodeGap;
+      } else {
+        helper.x = opts.startX;
+        helper.y = mainBottom + opts.nodeGap;
+        mainBottom += helper.height + opts.nodeGap;
+      }
+    }
+
+    layoutResults.push(helper);
+    absolutizeChildren(helper, helper.x, helper.y);
   }
 
   // Collision detection pass — push apart any overlapping top-level nodes
-  resolveOverlaps(topLevelNodes.map((n) => nodeMap.get(n.id)!).filter(Boolean), opts.nodeGap);
+  const allTopLevel = [...mainNodes, ...helperNodes].map((n) => nodeMap.get(n.id)!).filter(Boolean);
+  resolveOverlaps(allTopLevel, opts.nodeGap / 2);
 
   return layoutResults;
 }

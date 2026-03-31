@@ -15,27 +15,38 @@ import { requireAuth, requireProjectAccess, type AuthRequest } from '@ice/shared
 import { Router, type Router as RouterType, type Response } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import { listAuditEntries, getAuditEntry } from '../services/ai-audit.service';
-import { processCanvasIntent, streamCanvasIntent } from '../services/ai.service';
+import { processCanvasIntent, streamCanvasIntent, getAiProvider, getAiProviderSync } from '../services/ai.service';
 import { validateCanvas } from '../services/canvas-validation.service';
 import { dryRunDeploy } from '../services/deploy-dryrun.service';
 import type { AiCanvasIntentRequest } from '@ice/types';
 
 const router: RouterType = Router();
 
-// AI-specific rate limiter: 10 requests per minute per user
+// Rate limiter only for AI generation requests (not health checks or read-only endpoints)
 const aiLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 10,
+  max: 30,
   keyGenerator: (req: AuthRequest) => req.userId || req.ip || 'unknown',
   message: { message: 'Too many AI requests. Please wait a moment.' },
 });
 
 router.use(requireAuth);
-router.use(aiLimiter);
+
+// ── Health (no rate limit) ──────────────────────────────────────────────────
+
+router.get('/health', async (_req: AuthRequest, res: Response) => {
+  try {
+    const provider = await getAiProvider();
+    const health = await provider.healthCheck();
+    res.json(health);
+  } catch (err: any) {
+    res.json({ ok: false, provider: 'unknown', error: err.message });
+  }
+});
 
 // ── Canvas Intent ────────────────────────────────────────────────────────────
 
-router.post('/canvas-intent', async (req: AuthRequest, res: Response) => {
+router.post('/canvas-intent', aiLimiter, async (req: AuthRequest, res: Response) => {
   const { intent, canvasContext } = req.body as AiCanvasIntentRequest;
 
   if (!intent || typeof intent !== 'string') {
@@ -44,11 +55,6 @@ router.post('/canvas-intent', async (req: AuthRequest, res: Response) => {
 
   if (!canvasContext) {
     return res.status(400).json({ message: 'Missing canvas context' });
-  }
-
-  // Check if ANTHROPIC_API_KEY is configured
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return res.status(503).json({ message: 'AI service not configured. Set ANTHROPIC_API_KEY.' });
   }
 
   try {

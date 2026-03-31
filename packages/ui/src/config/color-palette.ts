@@ -35,12 +35,14 @@ export const BLOCK_ACCENT_COLORS: Record<string, string> = {
 };
 
 export const GROUP_TINT_COLORS: Record<string, string> = {
-  Frontend: 'rgba(59, 130, 246, 0.04)',
-  Services: 'rgba(139, 92, 246, 0.04)',
-  Data: 'rgba(16, 185, 129, 0.04)',
-  Messaging: 'rgba(99, 102, 241, 0.04)',
-  Monitoring: 'rgba(245, 158, 11, 0.04)',
-  External: 'rgba(100, 116, 139, 0.04)',
+  Frontend: 'rgba(59, 130, 246, 0.07)',
+  Services: 'rgba(139, 92, 246, 0.07)',
+  Data: 'rgba(16, 185, 129, 0.07)',
+  Messaging: 'rgba(99, 102, 241, 0.07)',
+  Monitoring: 'rgba(245, 158, 11, 0.07)',
+  External: 'rgba(100, 116, 139, 0.07)',
+  VPC: 'rgba(99, 102, 241, 0.07)',
+  Subnet: 'rgba(139, 92, 246, 0.07)',
 };
 
 export const GROUP_BORDER_COLORS: Record<string, string> = {
@@ -50,6 +52,8 @@ export const GROUP_BORDER_COLORS: Record<string, string> = {
   Messaging: '#6366f140',
   Monitoring: '#f59e0b40',
   External: '#64748b40',
+  VPC: '#6366f140',
+  Subnet: '#8b5cf640',
 };
 
 // ─── Group Color Presets ───────────────────────────────────────────────────

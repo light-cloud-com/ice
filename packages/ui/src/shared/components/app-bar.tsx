@@ -5,7 +5,7 @@
 import awsIcon from 'devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg';
 import azureIcon from 'devicon/icons/azure/azure-original.svg';
 import gcpIcon from 'devicon/icons/googlecloud/googlecloud-original.svg';
-import { LayoutGrid, Rocket, Sun, Moon, Github, Undo2, Redo2 } from 'lucide-react';
+import { Rows3, Columns3, Rocket, Sun, Moon, Github, Undo2, Redo2 } from 'lucide-react';
 import React, { memo, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Breadcrumbs } from './breadcrumbs';
@@ -99,10 +99,16 @@ export const AppBar: React.FC = memo(() => {
           style={isElectron ? ({ WebkitAppRegion: 'no-drag' } as any) : undefined}
         >
           <BarBtn
-            id="ice-appbar-btn-organize"
-            icon={LayoutGrid}
-            onClick={() => dispatch(autoOrganizeCard())}
-            tip={t('appBar.autoOrganize')}
+            id="ice-appbar-btn-organize-v"
+            icon={Rows3}
+            onClick={() => dispatch(autoOrganizeCard({ direction: 'vertical' }))}
+            tip="Auto-organize (vertical)"
+          />
+          <BarBtn
+            id="ice-appbar-btn-organize-h"
+            icon={Columns3}
+            onClick={() => dispatch(autoOrganizeCard({ direction: 'horizontal' }))}
+            tip="Auto-organize (horizontal)"
           />
           <BarBtn
             id="ice-appbar-btn-undo"

@@ -80,13 +80,21 @@ function nodeExists(nodeId: string, card: Card, idMap: Map<string, string>): boo
 // Positioning — non-overlapping grid placement
 // =============================================================================
 
-const NODE_GAP_X = 40;
-const NODE_GAP_Y = 40;
-const NODE_WIDTH = 280;
-const NODE_HEIGHT = 160;
+const NODE_GAP_X = 36;
+const NODE_GAP_Y = 36;
+const NODE_WIDTH = 220;
+const NODE_HEIGHT = 72;
+const HELPER_NODE_WIDTH = 170;
+const HELPER_NODE_HEIGHT = 56;
 const COLS_PER_ROW = 3;
 const CONTAINER_INNER_PAD = 30;
 const CONTAINER_HEADER_PAD = 50;
+
+/** Helper/utility nodes get a smaller default size */
+function isHelperIceType(iceType: string): boolean {
+  const t = iceType.toLowerCase();
+  return /security\.|monitoring\.|log\.|observ|source\.repository|config\.env|envvars/.test(t);
+}
 
 /**
  * Find a non-overlapping position for a new node.
@@ -102,24 +110,55 @@ function findPosition(
   if (parentId) {
     return findChildPosition(card, parentId, nodeWidth, nodeHeight);
   }
-  return findRootPosition(card, nodeWidth);
+  return findRootPosition(card, nodeWidth, nodeHeight);
 }
 
-function findRootPosition(card: Card, nodeWidth: number): { x: number; y: number } {
-  const rootNodes = card.nodes.filter((n) => !n.parentId);
-  if (rootNodes.length === 0) return { x: 100, y: 100 };
+function findRootPosition(card: Card, nodeWidth: number, nodeHeight: number = NODE_HEIGHT): { x: number; y: number } {
+  if (card.nodes.length === 0) return { x: 100, y: 100 };
 
-  const col = rootNodes.length % COLS_PER_ROW;
-  const row = Math.floor(rootNodes.length / COLS_PER_ROW);
+  // Find a position that doesn't overlap ANY existing node (not just root nodes).
+  // Scan grid positions and pick the first non-overlapping one.
+  const allNodes = card.nodes;
+  const gap = 12;
 
-  // Use actual widths to avoid overlap
-  const colWidth = Math.max(nodeWidth, NODE_WIDTH) + NODE_GAP_X;
-  const rowHeight = NODE_HEIGHT + NODE_GAP_Y;
+  // Start below the lowest existing node to maintain flow direction
+  let maxBottom = 100;
+  for (const n of allNodes) {
+    maxBottom = Math.max(maxBottom, n.position.y + (n.height || NODE_HEIGHT) + NODE_GAP_Y);
+  }
 
-  return {
-    x: 100 + col * colWidth,
-    y: 100 + row * rowHeight,
-  };
+  // Try positions: first below existing nodes (preferred for flow), then grid scan
+  const candidates = [
+    // Below the lowest node, centered with the widest cluster
+    { x: 100, y: maxBottom },
+  ];
+
+  // Also try grid positions starting from top
+  for (let row = 0; row < 15; row++) {
+    for (let col = 0; col < COLS_PER_ROW; col++) {
+      candidates.push({
+        x: 100 + col * (Math.max(nodeWidth, NODE_WIDTH) + NODE_GAP_X),
+        y: 100 + row * (NODE_HEIGHT + NODE_GAP_Y),
+      });
+    }
+  }
+
+  for (const { x, y } of candidates) {
+    const overlaps = allNodes.some((n) => {
+      const nw = n.width || NODE_WIDTH;
+      const nh = n.height || NODE_HEIGHT;
+      return !(
+        x + nodeWidth + gap <= n.position.x ||
+        x >= n.position.x + nw + gap ||
+        y + nodeHeight + gap <= n.position.y ||
+        y >= n.position.y + nh + gap
+      );
+    });
+    if (!overlaps) return { x, y };
+  }
+
+  // Fallback: place below everything
+  return { x: 100, y: maxBottom };
 }
 
 function findChildPosition(
@@ -149,11 +188,14 @@ function findChildPosition(
       const overlaps = siblings.some((s) => {
         const sw = s.width || NODE_WIDTH;
         const sh = s.height || NODE_HEIGHT;
+        // Check if candidate rect (x,y,nodeWidth,nodeHeight) overlaps sibling
+        // with a small gap to prevent touching edges
+        const gap = 8;
         return !(
-          x + nodeWidth + NODE_GAP_X <= s.position.x ||
-          x >= s.position.x + sw + NODE_GAP_X ||
-          y + nodeHeight + NODE_GAP_Y <= s.position.y ||
-          y >= s.position.y + sh + NODE_GAP_Y
+          x + nodeWidth + gap <= s.position.x ||
+          x >= s.position.x + sw + gap ||
+          y + nodeHeight + gap <= s.position.y ||
+          y >= s.position.y + sh + gap
         );
       });
 
@@ -202,7 +244,7 @@ function resolveBlueprint(op: AddBlueprintOp, card: Card, idMap: Map<string, str
 // Container Auto-Resize
 // =============================================================================
 
-const RESIZE_PAD = 30;
+const RESIZE_PAD = 24;
 const RESIZE_HEADER = 40;
 
 /**
@@ -317,11 +359,12 @@ export function executeAiOperations(
             idMap.set(op.id, node.id);
           }
           idMap.set(op.blockType, node.id);
-          // Also map any placeholder that may appear in edges
-          if (op.parentId) {
-            const resolvedParent = resolveId(op.parentId, idMap);
-            if (!currentCard.nodes.some((n) => n.id === resolvedParent)) {
-              // Parent doesn't exist, place at root
+          // Validate parentId — only containers can have children
+          if (node.parentId) {
+            const resolvedParent = resolveId(node.parentId, idMap);
+            const parentNode = currentCard.nodes.find((n) => n.id === resolvedParent);
+            if (!parentNode || parentNode.type !== 'container') {
+              // Parent doesn't exist or isn't a container — place at root
               delete node.parentId;
             }
           }
@@ -335,19 +378,28 @@ export function executeAiOperations(
           idMap.set(op.node.id, realId);
           const currentCard = getCard();
 
-          const parentId = op.node.parentId ? resolveId(op.node.parentId, idMap) : undefined;
-          if (parentId && !currentCard.nodes.some((n) => n.id === parentId)) {
-            skippedOps.push({ op, reason: `Parent node not found: ${op.node.parentId}` });
-            break;
+          let parentId = op.node.parentId ? resolveId(op.node.parentId, idMap) : undefined;
+          if (parentId) {
+            const parentNode = currentCard.nodes.find((n) => n.id === parentId);
+            if (!parentNode) {
+              skippedOps.push({ op, reason: `Parent node not found: ${op.node.parentId}` });
+              break;
+            }
+            // Only containers can have children — drop parentId for non-container targets
+            if (parentNode.type !== 'container') {
+              parentId = undefined;
+            }
           }
 
-          // Size: groups/containers start small — auto-resize will expand them
+          // Size: groups/containers start small — auto-resize will expand them.
+          // Helper nodes (auth, secrets, logs, etc.) get a compact size.
           const isGroup = op.node.type === 'container';
           const iceType = (op.node.data?.iceType as string) || '';
           const isVpc = iceType === 'Network.VPC';
           const isSubnet = iceType === 'Network.Subnet';
-          const defaultWidth = isVpc ? 200 : isSubnet ? 200 : isGroup ? 200 : NODE_WIDTH;
-          const defaultHeight = isVpc ? 100 : isSubnet ? 100 : isGroup ? 100 : NODE_HEIGHT;
+          const isHelper = isHelperIceType(iceType);
+          const defaultWidth = isVpc ? 280 : isSubnet ? 260 : isGroup ? 260 : isHelper ? HELPER_NODE_WIDTH : NODE_WIDTH;
+          const defaultHeight = isVpc ? 180 : isSubnet ? 150 : isGroup ? 150 : isHelper ? HELPER_NODE_HEIGHT : NODE_HEIGHT;
           const nodeW = op.node.width || defaultWidth;
           const nodeH = op.node.height || defaultHeight;
 
@@ -437,7 +489,8 @@ export function executeAiOperations(
         case 'reparentNode': {
           const resolvedNodeId = resolveId(op.nodeId, idMap);
           const currentCard = getCard();
-          if (!currentCard.nodes.some((n) => n.id === resolvedNodeId)) {
+          const childNode = currentCard.nodes.find((n) => n.id === resolvedNodeId);
+          if (!childNode) {
             skippedOps.push({ op, reason: `Node not found: ${op.nodeId}` });
             break;
           }
@@ -445,9 +498,13 @@ export function executeAiOperations(
           if (op.parentId) {
             const resolvedParentId = resolveId(op.parentId, idMap);
             const parentNode = currentCard.nodes.find((n) => n.id === resolvedParentId);
-            const childNode = currentCard.nodes.find((n) => n.id === resolvedNodeId);
             if (!parentNode) {
               skippedOps.push({ op, reason: `Parent node not found: ${op.parentId}` });
+              break;
+            }
+            // Only containers can have children
+            if (parentNode.type !== 'container') {
+              skippedOps.push({ op, reason: `${parentNode.data?.label || parentNode.id} is not a container` });
               break;
             }
             const parentIceType = (parentNode.data?.iceType as string) || '';
@@ -457,6 +514,17 @@ export function executeAiOperations(
               break;
             }
             dispatch(updateCardNodeParent({ nodeId: resolvedNodeId, parentId: resolvedParentId }));
+
+            // Reposition the child inside the new parent using the non-overlapping
+            // grid algorithm so it doesn't land on top of existing siblings.
+            const updatedCard = getCard();
+            const newPos = findChildPosition(
+              updatedCard,
+              resolvedParentId,
+              childNode.width || NODE_WIDTH,
+              childNode.height || NODE_HEIGHT,
+            );
+            dispatch(updateCardNodePosition({ nodeId: resolvedNodeId, x: newPos.x, y: newPos.y }));
           } else {
             dispatch(updateCardNodeParent({ nodeId: resolvedNodeId, parentId: null }));
           }
@@ -498,7 +566,7 @@ export function executeAiOperations(
         }
 
         case 'autoOrganize': {
-          dispatch(autoOrganizeCard());
+          dispatch(autoOrganizeCard({ direction: 'vertical' }));
           executedOps++;
           break;
         }
@@ -517,8 +585,63 @@ export function executeAiOperations(
     console.warn(`AI operation limit reached: ${truncated} operations truncated`);
   }
 
+  // Safety net: auto-connect orphaned security/helper nodes to the nearest backend.
+  // The AI sometimes adds auth/secrets without connecting them via edges.
+  if (executedOps > 0) {
+    const finalCard = getCard();
+    const connectedIds = new Set<string>();
+    for (const e of finalCard.edges) {
+      connectedIds.add(e.source);
+      connectedIds.add(e.target);
+    }
+
+    // Find backend nodes (Application.Container, scalable backend, etc.)
+    const backends = finalCard.nodes.filter((n) => {
+      const t = ((n.data?.iceType as string) || '').toLowerCase();
+      return /container|backend|worker|service/.test(t) && n.type !== 'container';
+    });
+
+    // Find orphaned helper nodes (security, auth, secrets, logs) with no edges
+    const orphanHelpers = finalCard.nodes.filter((n) => {
+      if (connectedIds.has(n.id)) return false;
+      const t = ((n.data?.iceType as string) || '').toLowerCase();
+      return /security|auth|secret|identity|monitoring|log|observ/.test(t);
+    });
+
+    if (backends.length > 0 && orphanHelpers.length > 0) {
+      const primaryBackend = backends[0];
+      for (const helper of orphanHelpers) {
+        const edgeId = generateEdgeId();
+        dispatch(
+          addEdgeToCard({
+            id: edgeId,
+            source: primaryBackend.id,
+            target: helper.id,
+            data: { relationship: 'depends_on' },
+          }),
+        );
+        executedOps++;
+      }
+    }
+  }
+
   // Auto-resize all container/group nodes to fit their children + margin
   autoResizeContainers(dispatch, getCard());
+
+  // If any structural operations were applied (adds, reparents, deletes),
+  // trigger a full auto-organize to produce a clean architecture diagram layout.
+  // Skip if the AI already included an explicit autoOrganize operation.
+  const hasStructuralOps = ops.some(
+    (o) =>
+      o.op === 'addNode' ||
+      o.op === 'addBlueprint' ||
+      o.op === 'reparentNode' ||
+      o.op === 'deleteNode',
+  );
+  const hasExplicitOrganize = ops.some((o) => o.op === 'autoOrganize');
+  if (hasStructuralOps && !hasExplicitOrganize && executedOps > 0) {
+    dispatch(autoOrganizeCard({ direction: 'vertical' }));
+  }
 
   return {
     result: {

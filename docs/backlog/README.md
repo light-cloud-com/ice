@@ -25,6 +25,14 @@ Comprehensive audit of the ICE SaaS codebase. Initial audit: 2026-03-21. Ongoing
 |---|---|---|---|---|
 | [Context Menus](context-menus.md) | 25 | 0 | 25 | Irrelevant items, missing actions, accessibility, cross-menu consistency |
 
+### AI-Native Features (Pre-Launch)
+
+| Document | Items | Description |
+|---|---|---|
+| [AI-Native Features](ai-native-features.md) | 6 | Flash-MoE AI backend, ghost mode, AI error diagnosis, security/cost warnings, conversational architecture, smart templates |
+| [User-Friendly Properties](user-friendly-properties.md) | ~40 blocks | Replace technical jargon with intent-based options across all block properties |
+| [AI Read Capabilities](ai-read-capabilities.md) | 3 levels | Deployment context, live cloud status queries, logs & metrics integration |
+
 ### Product & Content Gaps
 
 | Document | Items | Description |

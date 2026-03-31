@@ -18,6 +18,8 @@ import {
   Plus,
   MessageSquare,
   Trash2,
+  Cpu,
+  Cloud,
 } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -126,24 +128,18 @@ export const AiChatPanel: React.FC = () => {
   conversationIdRef.current = conversationId;
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [providerInfo, setProviderInfo] = useState<{ ok: boolean; provider: string; model?: string; isLocal?: boolean } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // ── Fetch conversation list when project changes ──────────────────────────
-
-  const fetchConversations = useCallback(async () => {
-    if (!projectId) return;
-    try {
-      const res = await axiosInstance.get(`/ai/conversations?projectId=${projectId}`);
-      setConversations(res.data);
-    } catch {
-      /* ignore */
-    }
-  }, [projectId]);
+  // ── Fetch AI provider status ──────────────────────────────────────────────
 
   useEffect(() => {
-    fetchConversations();
-  }, [fetchConversations]);
+    axiosInstance
+      .get('/ai/health')
+      .then((res) => setProviderInfo(res.data))
+      .catch(() => setProviderInfo(null));
+  }, []);
 
   // ── Load a conversation ───────────────────────────────────────────────────
 
@@ -170,6 +166,53 @@ export const AiChatPanel: React.FC = () => {
     }
   }, []);
 
+  // ── Fetch conversations and auto-resume on project/card change ───────────
+
+  const fetchConversations = useCallback(async () => {
+    if (!projectId) return;
+    try {
+      const res = await axiosInstance.get(`/ai/conversations?projectId=${projectId}`);
+      const convs: ConversationSummary[] = res.data;
+      setConversations(convs);
+      return convs;
+    } catch {
+      return [];
+    }
+  }, [projectId]);
+
+  // When project or card changes, fetch conversations and resume the most recent one
+  useEffect(() => {
+    let cancelled = false;
+
+    const resumeConversation = async () => {
+      dispatch(clearAiState());
+      const convs = await fetchConversations();
+      if (cancelled || !convs || convs.length === 0) {
+        // No conversations — start fresh
+        setConversationId(null);
+        setMessages([]);
+        return;
+      }
+
+      // Find the most recent conversation for this card (or project if no card)
+      const cardId = activeCard?.id;
+      const match = cardId
+        ? convs.find((c) => c.card_id === cardId) // Match by card first
+        : convs[0]; // Fall back to most recent
+
+      if (match) {
+        await loadConversation(match.id);
+      } else {
+        // No conversation for this card — start fresh
+        setConversationId(null);
+        setMessages([]);
+      }
+    };
+
+    resumeConversation();
+    return () => { cancelled = true; };
+  }, [projectId, activeCard?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Start new conversation ────────────────────────────────────────────────
 
   const startNewConversation = useCallback(() => {
@@ -178,12 +221,6 @@ export const AiChatPanel: React.FC = () => {
     setShowHistory(false);
     dispatch(clearAiState());
   }, [dispatch]);
-
-  // ── Reset when card changes ───────────────────────────────────────────────
-
-  useEffect(() => {
-    startNewConversation();
-  }, [activeCard?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Persist messages to backend ───────────────────────────────────────────
 
@@ -249,10 +286,22 @@ export const AiChatPanel: React.FC = () => {
 
       const hasOps = pendingOperations.length > 0;
 
+      // Clean explanation — local models sometimes leak raw JSON into the explanation field
+      let explanation = lastResponse.explanation || '';
+      if (explanation.startsWith('{') || explanation.startsWith('[')) {
+        try {
+          const parsed = JSON.parse(explanation);
+          explanation = parsed.explanation || parsed.message || '';
+        } catch {
+          const match = explanation.match(/"explanation"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+          if (match) explanation = match[1].replace(/\\"/g, '"').replace(/\\n/g, ' ');
+        }
+      }
+
       const assistantMsg: ChatMessage = {
         id: `msg-${Date.now()}`,
         role: 'assistant',
-        content: lastResponse.explanation || (hasOps ? t('ai.chat.doneMessage') : t('ai.chat.noChangesMessage')),
+        content: explanation || (hasOps ? t('ai.chat.doneMessage') : t('ai.chat.noChangesMessage')),
         operations: hasOps ? [...pendingOperations] : undefined,
         suggestions: suggestions.length > 0 ? [...suggestions] : undefined,
         applied: !hasOps,
@@ -363,7 +412,22 @@ export const AiChatPanel: React.FC = () => {
       {/* Header */}
       <div className="flex items-center gap-2 px-3 py-2.5 border-b border-ice-border shrink-0">
         <Sparkles className="w-3.5 h-3.5 text-ice-accent" />
-        <span className="text-ice-sm font-semibold text-ice-text-1 flex-1">{t('ai.chat.title')}</span>
+        <span className="text-ice-sm font-semibold text-ice-text-1">{t('ai.chat.title')}</span>
+        {providerInfo?.ok && (
+          <span
+            className={cn(
+              'flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium leading-none',
+              providerInfo.isLocal
+                ? 'bg-emerald-500/15 text-emerald-400'
+                : 'bg-blue-500/15 text-blue-400',
+            )}
+            title={`Provider: ${providerInfo.provider} | Model: ${providerInfo.model || 'unknown'}`}
+          >
+            {providerInfo.isLocal ? <Cpu className="w-2.5 h-2.5" /> : <Cloud className="w-2.5 h-2.5" />}
+            {providerInfo.isLocal ? 'Local' : 'Cloud'}
+          </span>
+        )}
+        <span className="flex-1" />
         <button
           onClick={startNewConversation}
           className="p-1 rounded text-ice-text-3 hover:text-ice-text-1 hover:bg-ice-hover transition-colors"
@@ -473,27 +537,33 @@ export const AiChatPanel: React.FC = () => {
             >
               {msg.content.startsWith('AI_NOT_CONFIGURED:') ? (
                 <div className="space-y-2">
-                  <p className="text-ice-sm font-semibold text-amber-400">{t('ai.chat.notConfiguredTitle')}</p>
+                  <p className="text-ice-sm font-semibold text-amber-400">AI Not Available</p>
                   <p className="text-ice-xs text-ice-text-2 leading-relaxed">
-                    {t('ai.chat.notConfiguredDesc')}
+                    No AI provider is running. Choose one of these options:
                   </p>
                   <div className="rounded border border-ice-border bg-ice-base px-2.5 py-2 space-y-1.5 text-ice-xs">
                     <div className="flex items-start gap-1.5">
                       <span className="text-ice-text-3 shrink-0">1.</span>
                       <span className="text-ice-text-2">
-                        {t('ai.chat.notConfiguredStep1')} <span className="font-mono text-amber-400">console.anthropic.com</span>
+                        Set <span className="font-mono text-amber-400">ANTHROPIC_API_KEY=sk-ant-...</span> in{' '}
+                        <span className="font-mono">.env</span> for Claude (recommended)
                       </span>
                     </div>
                     <div className="flex items-start gap-1.5">
                       <span className="text-ice-text-3 shrink-0">2.</span>
                       <span className="text-ice-text-2">
-                        {t('ai.chat.notConfiguredStep2')} <span className="font-mono text-amber-400">ANTHROPIC_API_KEY=sk-ant-...</span> {t('ai.chat.notConfiguredStep2Suffix')}{' '}
-                        <span className="font-mono">.env</span>
+                        Set <span className="font-mono text-amber-400">ICE_AI_URL</span> to a local model server (Ollama, LM Studio, etc.)
                       </span>
                     </div>
                     <div className="flex items-start gap-1.5">
                       <span className="text-ice-text-3 shrink-0">3.</span>
-                      <span className="text-ice-text-2">{t('ai.chat.notConfiguredStep3')}</span>
+                      <span className="text-ice-text-2">
+                        Set <span className="font-mono text-amber-400">ICE_AI_URL</span> to any OpenAI-compatible endpoint (Ollama, LM Studio, etc.)
+                      </span>
+                    </div>
+                    <div className="flex items-start gap-1.5">
+                      <span className="text-ice-text-3 shrink-0">4.</span>
+                      <span className="text-ice-text-2">Restart the server</span>
                     </div>
                   </div>
                 </div>

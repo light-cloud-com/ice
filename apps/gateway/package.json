@@ -11,6 +11,7 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
+    "@ice/ai": "workspace:*",
     "@ice/db": "workspace:*",
     "@ice/service-ai": "workspace:*",
     "@ice/service-canvas": "workspace:*",

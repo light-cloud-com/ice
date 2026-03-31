@@ -7,6 +7,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { autoLayout, type LayoutNode } from '../../shared/utils/auto-layout';
 import type { ExpandedBlueprint } from '../../config/blocks';
+import { CONTAINER_PADDING, HEADER_HEIGHT } from '../../config/canvas-constants';
 
 // =============================================================================
 // Types
@@ -336,19 +337,35 @@ const cardsSlice = createSlice({
     },
 
     // Update node position in active card (L2 / canonical position)
+    // BND-2: Clamps child nodes to parent bounds as a safety net.
     updateCardNodePosition: (state, action: PayloadAction<{ nodeId: string; x: number; y: number }>) => {
       pushSnapshot(state, 'updateCardNodePosition');
       const card = state.cards.find((c) => c.id === state.activeCardId);
       if (card) {
         const node = card.nodes.find((n) => n.id === action.payload.nodeId);
         if (node) {
-          node.position.x = action.payload.x;
-          node.position.y = action.payload.y;
+          let { x, y } = action.payload;
+          if (node.parentId) {
+            const parent = card.nodes.find((n) => n.id === node.parentId);
+            if (parent) {
+              const minX = parent.position.x + CONTAINER_PADDING;
+              const minY = parent.position.y + CONTAINER_PADDING + HEADER_HEIGHT;
+              const maxX = parent.position.x + parent.width - CONTAINER_PADDING - node.width;
+              const maxY = parent.position.y + parent.height - CONTAINER_PADDING - node.height;
+              x = Math.max(minX, Math.min(maxX, x));
+              y = Math.max(minY, Math.min(maxY, y));
+            }
+          }
+          node.position.x = x;
+          node.position.y = y;
         }
       }
     },
 
     // Batch update node positions in active card (L2 / canonical position)
+    // BND-2: Clamps child nodes to parent bounds as a safety net.
+    // Parent positions are applied first (they appear earlier in the update array)
+    // so that expanded parent dimensions are available for child clamping.
     updateCardNodePositions: (
       state,
       action: PayloadAction<Array<{ id: string; position: { x: number; y: number } }>>,
@@ -356,11 +373,27 @@ const cardsSlice = createSlice({
       pushSnapshot(state, 'updateCardNodePositions');
       const card = state.cards.find((c) => c.id === state.activeCardId);
       if (card) {
+        // First pass: apply all position updates
         for (const update of action.payload) {
           const node = card.nodes.find((n) => n.id === update.id);
           if (node) {
             node.position.x = update.position.x;
             node.position.y = update.position.y;
+          }
+        }
+        // Second pass: clamp children to their parent bounds
+        for (const update of action.payload) {
+          const node = card.nodes.find((n) => n.id === update.id);
+          if (node?.parentId) {
+            const parent = card.nodes.find((n) => n.id === node.parentId);
+            if (parent) {
+              const minX = parent.position.x + CONTAINER_PADDING;
+              const minY = parent.position.y + CONTAINER_PADDING + HEADER_HEIGHT;
+              const maxX = parent.position.x + parent.width - CONTAINER_PADDING - node.width;
+              const maxY = parent.position.y + parent.height - CONTAINER_PADDING - node.height;
+              node.position.x = Math.max(minX, Math.min(maxX, node.position.x));
+              node.position.y = Math.max(minY, Math.min(maxY, node.position.y));
+            }
           }
         }
       }
@@ -519,10 +552,21 @@ const cardsSlice = createSlice({
     },
 
     // Auto-organize nodes in active card
-    autoOrganizeCard: (state) => {
+    autoOrganizeCard: (state, action: PayloadAction<{ direction?: 'vertical' | 'horizontal' } | undefined>) => {
       const card = state.cards.find((c) => c.id === state.activeCardId);
       if (!card || card.nodes.length === 0) return;
       pushSnapshot(state);
+
+      const direction = action?.payload?.direction || 'vertical';
+
+      // Cleanup pass: strip parentId where parent is not a container.
+      // This fixes invalid relationships (e.g. AI setting a resource as parent of another resource).
+      const containerIds = new Set(card.nodes.filter((n) => n.type === 'container').map((n) => n.id));
+      for (const node of card.nodes) {
+        if (node.parentId && !containerIds.has(node.parentId)) {
+          delete node.parentId;
+        }
+      }
 
       // Convert CardNodes to LayoutNodes
       const layoutNodes: LayoutNode[] = card.nodes.map((node) => ({
@@ -546,13 +590,14 @@ const cardsSlice = createSlice({
         relationship: e.data?.relationship as string | undefined,
       }));
 
-      // Apply auto-layout
+      // Apply auto-layout with direction
       const organizedNodes = autoLayout(layoutNodes, layoutEdges, {
         startX: 50,
         startY: 50,
-        nodeGap: 80,
+        nodeGap: 36,
         nodesPerRow: 3,
         containerPadding: 30,
+        direction,
       });
 
       // Create a map of organized positions

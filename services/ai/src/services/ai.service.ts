@@ -1,11 +1,13 @@
 /**
- * AI Service — Claude API Integration
+ * AI Service — Multi-Provider AI Integration
  *
  * Processes natural language intents against canvas context,
  * returning structured canvas operations as JSON.
+ *
+ * Supports Anthropic (cloud, default) and any OpenAI-compatible endpoint.
  */
 
-import Anthropic from '@anthropic-ai/sdk';
+import { createProviderAsync, getProvider, type AiProvider } from '@ice/ai';
 import { generateAiConnectionPrompt } from '@ice/types';
 import { createAuditEntry, finalizeAuditEntry, writeAuditEntry } from './ai-audit.service';
 import { buildSchemaContext } from './ai-schema-context.service';
@@ -15,20 +17,25 @@ import type { AiCanvasOp, AiResponse, SerializedCanvas, AiStreamEvent } from '@i
 import type { Response } from 'express';
 
 // =============================================================================
-// Claude Client
+// AI Provider
 // =============================================================================
 
-let _client: Anthropic | null = null;
+let _providerReady: Promise<AiProvider> | null = null;
 
-function getClient(): Anthropic {
-  if (!_client) {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      throw new Error('ANTHROPIC_API_KEY environment variable is required');
-    }
-    _client = new Anthropic({ apiKey });
+/**
+ * Get the AI provider (auto-detects on first call).
+ * Tries Anthropic first, falls back to OpenAI-compat (ICE_AI_URL), then null.
+ */
+export async function getAiProvider(): Promise<AiProvider> {
+  if (!_providerReady) {
+    _providerReady = createProviderAsync();
   }
-  return _client;
+  return _providerReady;
+}
+
+/** Get provider synchronously (null if not yet initialized) */
+export function getAiProviderSync(): AiProvider | null {
+  return getProvider();
 }
 
 // =============================================================================
@@ -164,10 +171,7 @@ In your "explanation" field, provide a concise architecture summary covering:
 - **What's NOT on canvas** (concepts that have no available block — recommend as future additions)
 
 ### Suggestions:
-Always provide 3 actionable follow-up suggestions like:
-- "Add CI/CD pipeline with GitHub repository"
-- "Improve security with VPC and private subnets"
-- "Add caching layer for better performance"
+Only include suggestions when you BUILD something new on the canvas. Do NOT add suggestions when answering questions — just answer the question directly.
 `;
 }
 
@@ -223,6 +227,20 @@ CRITICAL RULES — read these first:
 - "add a database", "build me a web app", "connect X to Y", "delete the cache", "deploy my repo"
 - Always pick sensible defaults and do it. Don't ask when you can just act.
 
+**CRITICAL — "cleanup" / "clean up" / "tidy" / "organize" / "reorganize" / "fix the layout" / "make it neat":**
+These mean REORGANIZE THE EXISTING LAYOUT — NOT delete nodes. Respond with an autoOrganize operation to tidy the canvas. NEVER delete or remove nodes when the user asks to "clean up" unless they explicitly say "remove" or "delete".
+
+**"fix it" / "fix this" / "fix the canvas" / "something looks wrong" / "this doesn't look right":**
+When the user asks you to "fix" without specifics, you MUST audit the canvas for ALL of these common issues and fix every one you find:
+1. **Disconnected nodes** — any node with zero edges is broken. Connect it to the most logical neighbor (backend → secrets/auth/cache, gateway → backend, frontend → gateway/public-traffic).
+2. **Helpers inside containers** — Security.Identity (auth), Security.Secret (secrets), Monitoring.Log, Source.Repository, Config.EnvVars should be at ROOT level, not inside VPCs or subnets. Use reparentNode with parentId: null to move them out.
+3. **Empty containers** — any VPC/Subnet/Group with zero children should be deleted via deleteNode.
+4. **Missing connections** — if backend exists with database but no edge between them, add it (depends_on). If gateway exists with backend but no edge, add it (connects_to).
+5. **Duplicate edges** — if the same source→target edge exists twice, delete the duplicate.
+6. After all fixes, end with autoOrganize to clean up the layout.
+
+Always explain what you fixed in the explanation field.
+
 **ASK via clarification** when the user asks a question, needs guidance, or the intent is genuinely ambiguous:
 - "what provider should I use?" → answer helpfully, suggest based on their canvas or use case
 - "how does this work?" → explain the concept simply
@@ -231,8 +249,16 @@ CRITICAL RULES — read these first:
 - "can you help me?" / "I'm not sure what to do" → guide them with suggestions
 - "what should I add next?" → look at the canvas and suggest the logical next step
 
-For questions/guidance, respond with:
-{"explanation":"Your helpful answer here","operations":[],"suggestions":["actionable next step 1","actionable next step 2","actionable next step 3"]}
+**Response rules for questions:**
+- Give a SHORT direct answer (1-3 sentences). No long lists, no bullet points.
+- Do NOT dump a wall of suggestions unless the user explicitly asks "what can I do?" or "what should I add?"
+- When the user ASKS for suggestions ("what should I add?", "what's next?", "help me improve this"), return them as short clickable suggestions in the suggestions array — NOT as a long explanation.
+
+For factual questions, respond with a direct answer and NO suggestions:
+{"explanation":"Your short answer here","operations":[]}
+
+For "what should I do next?" or "suggest improvements", respond with short answer + clickable suggestions:
+{"explanation":"Short context","operations":[],"suggestions":["Add a Redis cache","Connect GitHub for CI/CD","Add monitoring"]}
 
 Use the "clarification" field ONLY when you truly cannot proceed without user input (e.g., user says "deploy it" but there are resources from 3 different providers and you don't know which):
 {"explanation":"Quick context","operations":[],"clarification":{"question":"Which provider?","options":["AWS","GCP","Azure"]}}
@@ -290,25 +316,36 @@ All operation formats:
 
 ## PROPERTY PRE-FILL RULES — CRITICAL
 
-When adding any resource via addBlueprint, you MUST populate dataOverrides with sensible property values that match the user's intent. NEVER leave dataOverrides empty — always fill in what a real deployment would need.
+When adding any resource via addBlueprint, you MUST populate dataOverrides with user-friendly properties. These are the properties users see in the panel — use the EXACT field names below.
 
-**Always set these when the resource schema has them:**
-- Machine/instance type (e.g. "e2-medium", "t3.medium", "Standard_B2s") — pick based on workload size
-- Min/max instances or replicas (e.g. min: 1, max: 3 for dev; min: 2, max: 10 for production)
-- Storage size (e.g. 20 GB for dev databases, 100 GB for production)
-- Engine version (e.g. "postgres16", "redis7", "mysql8")
-- Region (match the dominant provider's default region)
-- CPU/memory when applicable
-- Port numbers (e.g. 5432 for postgres, 6379 for redis, 80/443 for web)
-- High-availability / multi-AZ settings (off for dev, on for production)
+**Standard properties (most resources have these):**
+- \`name\` — a friendly name (e.g. "Orders API", "Users Database", "Email Queue")
+- \`purpose\` — what the resource is for. Pick from the resource's available options (e.g. "Web server", "Background jobs", "User uploads")
+- \`size\` — always one of: "Small — dev & testing", "Medium — moderate traffic" / "Medium — startup workload", "Large — production scale"
+- \`production\` — boolean. Set to true when user says "production", "enterprise", "reliable", "always available"
 
-**How to pick values based on intent:**
-- "build me a small/simple/dev/test X" → smallest viable: 1 instance, small machine, 10-20 GB storage
-- "build me X" (no size hint) → reasonable defaults: 1-2 instances, medium machine, 20-50 GB storage
-- "build me a production/scalable/enterprise X" → production-grade: 2+ min instances, larger machines, 100+ GB, HA enabled
-- "build me a high-performance/large X" → max tier: large machines, high storage, high replica counts
+**How to pick values from the user's conversation:**
+- "build me a small/simple/dev/test X" → size: "Small — dev & testing", production: false
+- "build me X" (no size hint) → size: "Medium — moderate traffic", production: false
+- "build me a production/scalable/enterprise X" → size: "Large — production scale", production: true
+- "add a database for my backend" → purpose: "API backend data", size: "Small — dev & testing"
+- "I need a queue for sending emails" → purpose: "Notifications", queues: ["email-notifications"]
+- "add auth" → purpose: "Email & password login"
+- "add storage for user uploads" → purpose: "User uploads"
 
-**Use the Available Resource Schemas section below to find the exact property names and allowed values for each resource type. Match property names exactly.**
+**List properties (use JSON arrays):**
+- \`queues\`: ["order-processing", "email-notifications"] — for message brokers
+- \`subscribers\`: ["order-processor", "analytics"] — for pub/sub
+- \`secrets\`: ["database-url", "api-key"] — for secret stores
+- \`routes\`: ["/api", "/webhooks"] — for API gateways
+
+**Resource-specific properties (use when relevant):**
+- Backends: \`language\` ("Node.js", "Python", "Go", etc.)
+- Databases: purpose ("Web app data", "Analytics & reporting", etc.)
+- Functions: \`trigger\` ("HTTP request", "On a schedule", "When a file is uploaded")
+- Scheduled tasks: \`frequency\` ("Every minute", "Every hour", "Once a day", "Once a week")
+
+**IMPORTANT: Never use technical properties in dataOverrides.** No port, cpu, memory, replicas, cidr, version, shards, instance_type. These are hidden from users and auto-derived from the size/production selections.
 
 ## INFRASTRUCTURE OPTIMIZATION GUIDELINES
 
@@ -317,17 +354,22 @@ When the user asks to "improve", "optimize", "harden", or "upgrade" their archit
 ### "improve security" / "harden" / "make it secure"
 Audit the existing canvas and apply ALL missing items:
 1. **VPC + Subnets** — if databases/backends are NOT inside a VPC, wrap them:
-   - Create VPC (addNode, type: "group", iceType: "Network.VPC")
-   - Create Private Subnet inside VPC for backends + databases (exposed: false)
-   - Create Public Subnet inside VPC for gateways only
-   - Use reparentNode to MOVE existing nodes into subnets
-2. **Secrets** — if services connect to databases but no secrets block exists, add one in the private subnet
-3. **Auth** — if no auth block exists and there's a frontend/gateway, add auth
+   - Create VPC: addNode with type:"container", data:{iceType:"Network.VPC", behavior:"container", groupColor:"#6366f1", folded:false}
+   - Create Subnets inside VPC: addNode with type:"container", parentId:VPC_ID, data:{iceType:"Network.Subnet", behavior:"container", groupColor:"#8b5cf6", folded:false}
+   - ONLY create a subnet if there are nodes that belong in it. NEVER create empty subnets.
+   - Use reparentNode to MOVE existing nodes into the appropriate subnet
+   - Every subnet you create MUST have at least one child node reparented into it
+2. **Secrets** — if services connect to databases but no secrets block exists, add one. Place at ROOT level (not inside subnet) — it's a helper service.
+3. **Auth** — if no auth block exists and there's a frontend/gateway, add auth. Place at ROOT level (not inside subnet) — it's a helper service.
 4. **Gateway** — if backend is publicly exposed without a gateway, add a gateway in front
 5. **Properties** — update existing nodes: set high_availability: true, encryption: true, ssl: true
-6. **Connections** — ensure backend → secrets (depends_on), gateway → backend (connects_to)
+6. **CONNECTIONS — MANDATORY** — you MUST add edges for every new node:
+   - backend → secrets: addEdge with relationship "depends_on"
+   - backend → auth: addEdge with relationship "depends_on"
+   - gateway → backend: addEdge with relationship "connects_to"
+   - Every new node MUST have at least one edge connecting it to the existing architecture. Never add disconnected nodes.
 
-Key: databases and backends MUST end up inside a private subnet. If they're currently at root level, use reparentNode to move them into the new subnet.
+Key: databases and backends MUST end up inside a private subnet. Security helpers (secrets, auth) stay at ROOT level, connected via edges.
 
 ### "optimize cost" / "reduce cost" / "make it cheaper"
 Audit existing canvas and downsize:
@@ -354,13 +396,28 @@ Audit existing canvas and add redundancy:
 4. **Monitoring** — add logs block if not present
 5. **Database** — enable automated backups, increase storage
 
-### CRITICAL RULE FOR IMPROVEMENTS
+### "clean up" / "cleanup" / "tidy" / "organize" / "reorganize" / "fix layout" / "make it neat"
+This means REORGANIZE THE EXISTING LAYOUT. Do NOT delete any nodes. Instead:
+1. Use **autoOrganize** to reflow the canvas layout
+2. Optionally use **reparentNode** to group related nodes that should be together
+3. NEVER delete nodes — "clean up" is about visual organization, not removal
+
+Example response:
+{"explanation":"I've reorganized your canvas for a cleaner layout.","operations":[{"op":"autoOrganize"}]}
+
+### CRITICAL RULES
 When improving an existing canvas:
 - Use **updateNodeData** to modify properties of existing nodes (don't recreate them)
 - Use **reparentNode** to move existing nodes into new VPC/subnet containers
 - Use **addBlueprint/addNode** only for genuinely new resources (VPC, subnet, cache, auth, secrets)
 - Use **addEdge** to wire new resources to existing ones
 - Reference existing node IDs from the canvas state — don't use "ai-" prefix for nodes that already exist
+
+**PARENT RULE — NEVER SET parentId TO A NON-CONTAINER NODE:**
+- Only nodes with type "container" (VPCs, Subnets, Groups) can be parents.
+- NEVER set parentId to a backend, database, cache, gateway, static site, or any resource node.
+- New nodes like Redis Cache, Secrets, Auth are standalone — place them at root level (no parentId) unless they belong inside a VPC/Subnet.
+- Use **addEdge** (not parentId) to express connections between resources (e.g. backend → cache, backend → database).
 
 ## Current Canvas
 
@@ -376,7 +433,14 @@ ${schemaContext}
 ## Response Format
 
 ALWAYS respond with this exact JSON shape:
-{"explanation":"Short friendly summary of what you did","operations":[...],"suggestions":["next step 1","next step 2"]}
+{"explanation":"Short friendly summary","operations":[...]}
+
+Rules for suggestions:
+- After BUILDING something (operations not empty): include 2-3 short suggestions for next steps
+- After answering a FACTUAL question: NO suggestions
+- When user ASKS for suggestions ("what next?", "improve this", "help me"): include suggestions as short actionable phrases
+- Suggestions must be SHORT (under 10 words each) — they render as clickable chips, not paragraphs
+- Keep explanations to 1-3 sentences max. Never write bullet point lists in the explanation.
 
 ## Behavior Guidelines
 
@@ -402,9 +466,9 @@ VPCs and Subnets are **pure containers** — they hold resources inside them via
 **CRITICAL: NEVER create edges (addEdge) to or from VPCs or Subnets.** They are containers, not services. Resources inside them connect to each other with edges. The VPC/Subnet just groups them visually.
 
 **Creating containers:**
-{"op":"addNode", "node":{"id":"ai-n-1", "type":"group", "position":{"x":100,"y":100}, "data":{"iceType":"Network.VPC", "label":"Production VPC", "provider":"aws", "cidr":"10.0.0.0/16"}}}
-{"op":"addNode", "node":{"id":"ai-n-2", "type":"group", "parentId":"ai-n-1", "position":{"x":120,"y":160}, "data":{"iceType":"Network.Subnet", "label":"Public Subnet", "provider":"aws", "cidr":"10.0.0.0/24", "visibility":"public"}}}
-{"op":"addNode", "node":{"id":"ai-n-3", "type":"group", "parentId":"ai-n-1", "position":{"x":500,"y":160}, "data":{"iceType":"Network.Subnet", "label":"Private Subnet", "provider":"aws", "cidr":"10.0.1.0/24", "visibility":"private", "exposed":false}}}
+{"op":"addNode", "node":{"id":"ai-n-1", "type":"container", "position":{"x":0,"y":0}, "data":{"iceType":"Network.VPC", "label":"Production VPC", "behavior":"container", "groupColor":"#6366f1", "folded":false}}}
+{"op":"addNode", "node":{"id":"ai-n-2", "type":"container", "parentId":"ai-n-1", "position":{"x":0,"y":0}, "data":{"iceType":"Network.Subnet", "label":"Private Subnet", "behavior":"container", "groupColor":"#8b5cf6", "folded":false, "visibility":"private"}}}
+Note: use type "container" for VPC/Subnet (not "group"). Always include behavior:"container", groupColor, and folded:false.
 
 **Placing resources inside containers — use parentId:**
 {"op":"addBlueprint", "id":"ai-n-4", "blockType":"aws-gateway", "label":"API Gateway", "parentId":"ai-n-2", "dataOverrides":{"domain":"api.example.com"}}
@@ -508,7 +572,7 @@ Build a complete architecture. ALWAYS add addEdge operations. Think about the da
 // =============================================================================
 
 export async function processCanvasIntent(intent: string, canvas: SerializedCanvas): Promise<AiResponse> {
-  const client = getClient();
+  const provider = await getAiProvider();
   const audit = createAuditEntry(intent, canvas);
   const startTime = Date.now();
 
@@ -516,15 +580,14 @@ export async function processCanvasIntent(intent: string, canvas: SerializedCanv
     const systemPrompt = await buildSystemPrompt(canvas, intent);
     const isArchitectMode = detectSkill(intent) === 'cloud-architect';
 
-    const message = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: isArchitectMode ? 8192 : 4096,
-      system: systemPrompt,
+    const response = await provider.chat({
+      systemPrompt,
       messages: [{ role: 'user', content: intent }],
+      maxTokens: isArchitectMode ? 8192 : 4096,
     });
 
-    const textContent = message.content.find((c) => c.type === 'text');
-    if (!textContent || textContent.type !== 'text') {
+    const rawResponse = response.content;
+    if (!rawResponse) {
       finalizeAuditEntry(audit, {
         rawResponse: '',
         parseSuccess: false,
@@ -534,8 +597,6 @@ export async function processCanvasIntent(intent: string, canvas: SerializedCanv
       writeAuditEntry(audit);
       return { explanation: 'No response generated', operations: [] };
     }
-
-    const rawResponse = textContent.text;
     const allowedBlocks = new Set(canvas.availableBlockTypes);
     const parsed = parseAiResponse(rawResponse, allowedBlocks);
 
@@ -566,7 +627,7 @@ export async function processCanvasIntent(intent: string, canvas: SerializedCanv
 // =============================================================================
 
 export async function streamCanvasIntent(intent: string, canvas: SerializedCanvas, res: Response): Promise<void> {
-  const client = getClient();
+  const provider = await getAiProvider();
   const audit = createAuditEntry(intent, canvas);
   const startTime = Date.now();
   const systemPrompt = await buildSystemPrompt(canvas, intent);
@@ -589,19 +650,14 @@ export async function streamCanvasIntent(intent: string, canvas: SerializedCanva
   });
 
   try {
-    const stream = client.messages.stream({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: isArchitectMode ? 8192 : 4096,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: intent }],
-    });
-
     let fullText = '';
 
-    for await (const event of stream) {
-      if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-        fullText += event.delta.text;
-      }
+    for await (const chunk of provider.streamChat({
+      systemPrompt,
+      messages: [{ role: 'user', content: intent }],
+      maxTokens: isArchitectMode ? 8192 : 4096,
+    })) {
+      fullText += chunk.content;
     }
 
     // Parse the complete response — validate against block registry
@@ -694,7 +750,7 @@ async function runPostProcessing(
 // =============================================================================
 
 function parseAiResponse(text: string, allowedBlockTypes?: Set<string>): AiResponse {
-  // Try to extract JSON from the response (may be wrapped in markdown code blocks)
+  // Try to extract JSON from the response (may be wrapped in markdown, thinking tags, or preamble text)
   let jsonStr = text.trim();
 
   // Strip markdown code fences
@@ -703,34 +759,100 @@ function parseAiResponse(text: string, allowedBlockTypes?: Set<string>): AiRespo
     jsonStr = fenceMatch[1].trim();
   }
 
+  // Strip <think>...</think> tags (local models with reasoning)
+  jsonStr = jsonStr.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+
+  // If text doesn't start with { or [, try to find JSON object within it
+  if (!jsonStr.startsWith('{') && !jsonStr.startsWith('[')) {
+    const jsonStart = jsonStr.indexOf('{"');
+    if (jsonStart >= 0) {
+      jsonStr = jsonStr.slice(jsonStart);
+    }
+  }
+
+  // Try parsing, then repair if needed
+  let parsed: Record<string, unknown> | null = null;
+
   try {
-    const parsed = JSON.parse(jsonStr);
+    parsed = JSON.parse(jsonStr);
+  } catch {
+    // Attempt JSON repair for common local model issues
+    const repaired = repairJson(jsonStr);
+    if (repaired) {
+      try {
+        parsed = JSON.parse(repaired);
+        console.log('[AI] JSON repaired successfully');
+      } catch {
+        // Still broken
+      }
+    }
+  }
+
+  if (parsed) {
     const validOps = Array.isArray(parsed.operations) ? validateOperations(parsed.operations, allowedBlockTypes) : [];
-    const rawOpsCount = Array.isArray(parsed.operations) ? parsed.operations.length : 0;
+    const rawOpsCount = Array.isArray(parsed.operations) ? (parsed.operations as unknown[]).length : 0;
 
     if (rawOpsCount > 0 && validOps.length < rawOpsCount) {
       console.warn(`[AI] ${rawOpsCount - validOps.length}/${rawOpsCount} operations filtered by validation`);
     }
 
     return {
-      explanation: parsed.explanation || '',
+      explanation: (parsed.explanation as string) || '',
       operations: validOps,
-      suggestions: Array.isArray(parsed.suggestions) ? parsed.suggestions : undefined,
-      clarification: parsed.clarification || undefined,
-    };
-  } catch (err) {
-    // If JSON parsing fails, treat as explanation-only
-    console.error(
-      '[AI] Failed to parse AI response as JSON:',
-      (err as Error).message,
-      '\nRaw text:',
-      text.slice(0, 300),
-    );
-    return {
-      explanation: text.slice(0, 200),
-      operations: [],
+      suggestions: Array.isArray(parsed.suggestions) ? (parsed.suggestions as string[]) : undefined,
+      clarification: parsed.clarification as AiResponse['clarification'],
     };
   }
+
+  // If JSON parsing fails completely, treat as explanation-only
+  console.error('[AI] Failed to parse AI response as JSON.\nRaw text:', text.slice(0, 300));
+  return {
+    explanation: text.slice(0, 200),
+    operations: [],
+  };
+}
+
+/**
+ * Attempt to fix common JSON issues from local models:
+ * - Missing { before "op": in arrays → },{"op": instead of },"op":
+ * - Trailing commas before ] or }
+ * - Unclosed arrays/objects
+ * - Truncated responses (close any open brackets)
+ */
+function repairJson(text: string): string | null {
+  let s = text;
+
+  // Fix missing { before "op" keys in arrays: },"op": → },{"op":
+  s = s.replace(/\},\s*"op"\s*:/g, '},{"op":');
+
+  // Fix missing { before other common keys after array comma
+  s = s.replace(/\],\s*"op"\s*:/g, '],{"op":');
+
+  // Remove trailing commas before } or ]
+  s = s.replace(/,\s*([}\]])/g, '$1');
+
+  // Count brackets and close unclosed ones
+  let braces = 0;
+  let brackets = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (const ch of s) {
+    if (escaped) { escaped = false; continue; }
+    if (ch === '\\') { escaped = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (ch === '{') braces++;
+    if (ch === '}') braces--;
+    if (ch === '[') brackets++;
+    if (ch === ']') brackets--;
+  }
+
+  // Close unclosed structures (truncated response)
+  while (brackets > 0) { s += ']'; brackets--; }
+  while (braces > 0) { s += '}'; braces--; }
+
+  return s !== text ? s : null;
 }
 
 const VALID_OPS = new Set([

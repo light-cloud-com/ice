@@ -144,6 +144,9 @@ importers:
 
   apps/gateway:
     dependencies:
+      '@ice/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@ice/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -208,6 +211,19 @@ importers:
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  packages/ai:
+    dependencies:
+      '@anthropic-ai/sdk':
+        specifier: ^0.80.0
+        version: 0.80.0(zod@3.25.76)
+    devDependencies:
+      '@types/node':
+        specifier: ^22.15.29
+        version: 22.19.15
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -623,9 +639,9 @@ importers:
 
   services/ai:
     dependencies:
-      '@anthropic-ai/sdk':
-        specifier: ^0.80.0
-        version: 0.80.0(zod@3.25.76)
+      '@ice/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@ice/db':
         specifier: workspace:*
         version: link:../../packages/db

@@ -49,11 +49,14 @@ import type { RootState, AppDispatch } from '../../../store';
 interface HighLevelProperty {
   name: string;
   label: string;
-  type: 'string' | 'number' | 'boolean' | 'select';
+  type: 'string' | 'number' | 'boolean' | 'select' | 'list';
   required: boolean;
   description: string;
   options?: string[];
   default?: unknown;
+  tier?: 'essential' | 'detailed' | 'advanced';
+  placeholder?: string;
+  addLabel?: string;
 }
 
 interface ProviderImpl {
@@ -336,6 +339,47 @@ const BooleanField: React.FC<{
   </div>
 );
 
+const ListField: React.FC<{
+  label: string;
+  value: string[];
+  onChange: (v: string[]) => void;
+  placeholder?: string;
+  addLabel?: string;
+}> = ({ label, value, onChange, placeholder, addLabel }) => (
+  <div className="py-1 space-y-1.5">
+    <span className="text-ice-sm text-ice-text-2">{label}</span>
+    <div className="space-y-1">
+      {value.map((item, i) => (
+        <div key={i} className="flex items-center gap-1">
+          <input
+            type="text"
+            value={item}
+            onChange={(e) => {
+              const updated = [...value];
+              updated[i] = e.target.value;
+              onChange(updated);
+            }}
+            placeholder={placeholder}
+            className="flex-1 min-w-0 bg-ice-raised border border-ice-border rounded px-2 py-0.5 text-ice-sm text-ice-text-1 outline-none focus:border-ice-accent transition-colors placeholder:text-ice-text-3"
+          />
+          <button
+            onClick={() => onChange(value.filter((_, j) => j !== i))}
+            className="p-0.5 text-ice-text-3 hover:text-red-400 transition-colors text-ice-sm"
+          >
+            &times;
+          </button>
+        </div>
+      ))}
+      <button
+        onClick={() => onChange([...value, ''])}
+        className="text-ice-xs text-ice-accent hover:text-blue-400 transition-colors"
+      >
+        + {addLabel || 'Add item'}
+      </button>
+    </div>
+  </div>
+);
+
 const StepperField: React.FC<{
   label: string;
   value: number;
@@ -376,78 +420,111 @@ const InfoRow: React.FC<{
   </div>
 );
 
-/** Bottom half — shows only real data from the DB and node */
-const ResourceInfoPanel: React.FC<{
-  resourceDef: ResourceDef | undefined;
+// ─── Tiered property fields ────────────────────────────────────────────────
+
+function renderPropertyField(
+  prop: HighLevelProperty,
+  value: unknown,
+  onChange: (field: string, value: unknown) => void,
+): React.ReactNode {
+  if (prop.type === 'list') {
+    const listVal = Array.isArray(value) ? (value as string[]) : [];
+    return (
+      <ListField
+        key={prop.name}
+        label={prop.label}
+        value={listVal}
+        onChange={(v) => onChange(prop.name, v)}
+        placeholder={prop.placeholder}
+        addLabel={prop.addLabel}
+      />
+    );
+  }
+  if (prop.type === 'select' && prop.options) {
+    return (
+      <SelectField
+        key={prop.name}
+        label={prop.label}
+        value={value != null ? String(value) : ''}
+        options={prop.options}
+        onChange={(v) => onChange(prop.name, v)}
+      />
+    );
+  }
+  if (prop.type === 'boolean') {
+    return (
+      <BooleanField
+        key={prop.name}
+        label={prop.label}
+        value={value != null ? !!value : !!prop.default}
+        onChange={(v) => onChange(prop.name, v)}
+      />
+    );
+  }
+  if (prop.type === 'number') {
+    return (
+      <NumberField
+        key={prop.name}
+        label={prop.label}
+        value={value != null ? Number(value) : prop.default != null ? Number(prop.default) : ''}
+        onChange={(v) => onChange(prop.name, v)}
+      />
+    );
+  }
+  return (
+    <TextField
+      key={prop.name}
+      label={prop.label}
+      value={value != null ? String(value) : ''}
+      onChange={(v) => onChange(prop.name, v)}
+      placeholder={prop.placeholder}
+    />
+  );
+}
+
+const PropertyFields: React.FC<{
+  properties: HighLevelProperty[];
   nodeData: Record<string, unknown>;
-  implementations: ProviderImpl[];
-  provider: string;
-  inCount: number;
-  outCount: number;
-}> = ({ resourceDef, nodeData, implementations, provider, inCount, outCount }) => {
-  const port = nodeData.port != null ? Number(nodeData.port) : null;
-  const domain = nodeData.domain as string | undefined;
-  const hasNetwork = port || domain || inCount > 0 || outCount > 0;
+  onFieldChange: (field: string, value: unknown) => void;
+}> = ({ properties, nodeData, onFieldChange }) => {
+  const [showMore, setShowMore] = React.useState(false);
 
-  // Filter implementations to selected provider (or show all)
-  const relevantImpls = provider ? implementations.filter((impl) => impl.provider === provider) : implementations;
-
-  const hasAnything = hasNetwork || relevantImpls.length > 0 || resourceDef?.description;
-  if (!hasAnything) return null;
+  const essential = properties.filter((p) => !p.tier || p.tier === 'essential');
+  const detailed = properties.filter((p) => p.tier === 'detailed');
+  // advanced tier is intentionally hidden from the UI
 
   return (
-    <div className="border-t border-ice-border/60 mt-1">
-      {/* IaC mapping */}
-      {relevantImpls.length > 0 && (
-        <div className="px-3 pt-2.5 pb-2">
-          <div className="text-ice-xs font-semibold uppercase tracking-wider text-ice-text-3 mb-1.5">{t('properties.config.iacResource')}</div>
-          {relevantImpls.map((impl) => (
-            <div key={`${impl.provider}-${impl.resource_type}`} className="mb-1">
-              <div className="flex items-center gap-1.5">
-                <span className="text-ice-2xs bg-violet-950/40 text-violet-400 px-1 py-0.5 rounded font-mono uppercase">
-                  {impl.provider}
-                </span>
-                <span className="text-ice-xs text-ice-text-2">{impl.display_name}</span>
-              </div>
-              <div className="text-ice-2xs text-ice-text-3 font-mono mt-0.5 truncate">{impl.resource_type}</div>
-            </div>
-          ))}
-        </div>
+    <>
+      {/* Essential fields — always visible */}
+      {essential.length > 0 && (
+        <Section title="Configuration">
+          {essential.map((prop) => renderPropertyField(prop, nodeData[prop.name], onFieldChange))}
+        </Section>
       )}
 
-      {/* Network — only real values */}
-      {hasNetwork && (
-        <div className="px-3 pb-2">
-          <div className="text-ice-xs font-semibold uppercase tracking-wider text-ice-text-3 mb-1.5">{t('properties.network.title')}</div>
-          {port && <InfoRow label={t('properties.network.port')} value={port} color="text-ice-text-1" />}
-          {domain && <InfoRow label={t('properties.network.domain')} value={domain} />}
-          {inCount > 0 && <InfoRow label={t('properties.network.inbound')} value={`${inCount} ${inCount !== 1 ? t('properties.network.connections') : t('properties.network.connection')}`} />}
-          {outCount > 0 && <InfoRow label={t('properties.network.outbound')} value={`${outCount} ${outCount !== 1 ? t('properties.network.connections') : t('properties.network.connection')}`} />}
-        </div>
-      )}
-
-      {/* About — description from DB */}
-      {resourceDef?.description && (
-        <div className="px-3 pb-3">
-          <div className="text-ice-xs font-semibold uppercase tracking-wider text-ice-text-3 mb-1.5">{t('properties.about')}</div>
-          <p className="text-ice-xs text-ice-text-3 leading-relaxed">{resourceDef.description}</p>
-          {resourceDef.providers.length > 0 && (
-            <div className="flex items-center gap-1 mt-1.5 flex-wrap">
-              {resourceDef.providers.map((p) => (
-                <span
-                  key={p}
-                  className="text-[8px] bg-ice-raised text-ice-text-3 px-1.5 py-0.5 rounded uppercase font-mono"
-                >
-                  {p}
-                </span>
-              ))}
-            </div>
+      {/* Detailed fields — behind "More options" */}
+      {detailed.length > 0 && (
+        <>
+          <button
+            onClick={() => setShowMore(!showMore)}
+            className="w-full flex items-center gap-1.5 px-3 py-1.5 text-ice-xs text-ice-text-3 hover:text-ice-text-2 transition-colors"
+          >
+            <span className={`transition-transform ${showMore ? 'rotate-90' : ''}`}>▸</span>
+            {showMore ? 'Fewer options' : `More options (${detailed.length})`}
+          </button>
+          {showMore && (
+            <Section title="Details">
+              {detailed.map((prop) => renderPropertyField(prop, nodeData[prop.name], onFieldChange))}
+            </Section>
           )}
-        </div>
+        </>
       )}
-    </div>
+    </>
   );
 };
+
+// ResourceInfoPanel removed — IaC mapping, network ports, and about section
+// were technical details that confused non-technical users
 
 // ─── Main PropertiesPanel ────────────────────────────────────────────────────
 
@@ -1030,71 +1107,29 @@ export const PropertiesPanel: React.FC = () => {
 
               {/* ════ CONNECTIONS TAB ════ */}
               {activeTab === 'connections' && (incomingEdges.length > 0 || outgoingEdges.length > 0) && (
-                <Section title="">
-                  <div className="space-y-2">
-                    {[...incomingEdges, ...outgoingEdges].map((edge) => (
-                      <InlineConnectionEditor
-                        key={edge.id}
-                        edge={edge}
-                        thisNodeId={selectedNode!.id}
-                        nodes={activeCard.nodes}
-                        edges={activeCard.edges}
-                        dispatch={dispatch}
-                      />
-                    ))}
-                  </div>
-                </Section>
+                <div className="px-2 py-1 space-y-0">
+                  {[...incomingEdges, ...outgoingEdges].map((edge) => (
+                    <ConnectionCard
+                      key={edge.id}
+                      edge={edge}
+                      thisNodeId={selectedNode!.id}
+                      nodes={activeCard.nodes}
+                      dispatch={dispatch}
+                    />
+                  ))}
+                </div>
               )}
 
               {/* ════ CONFIG TAB ════ */}
               {activeTab === 'config' && (
                 <>
-                  {/* Configuration fields from DB */}
+                  {/* Configuration fields — tiered */}
                   {dbProperties.length > 0 && (
-                    <Section title={t('properties.config.title')}>
-                      {dbProperties.map((prop) => {
-                        const value = selectedNode.data?.[prop.name];
-                        if (prop.type === 'select' && prop.options) {
-                          return (
-                            <SelectField
-                              key={prop.name}
-                              label={prop.label}
-                              value={value != null ? String(value) : ''}
-                              options={prop.options}
-                              onChange={(v) => updateNodeField(prop.name, v)}
-                            />
-                          );
-                        }
-                        if (prop.type === 'boolean') {
-                          return (
-                            <BooleanField
-                              key={prop.name}
-                              label={prop.label}
-                              value={!!value}
-                              onChange={(v) => updateNodeField(prop.name, v)}
-                            />
-                          );
-                        }
-                        if (prop.type === 'number') {
-                          return (
-                            <NumberField
-                              key={prop.name}
-                              label={prop.label}
-                              value={value != null ? Number(value) : prop.default != null ? Number(prop.default) : ''}
-                              onChange={(v) => updateNodeField(prop.name, v)}
-                            />
-                          );
-                        }
-                        return (
-                          <TextField
-                            key={prop.name}
-                            label={prop.label}
-                            value={value != null ? String(value) : ''}
-                            onChange={(v) => updateNodeField(prop.name, v)}
-                          />
-                        );
-                      })}
-                    </Section>
+                    <PropertyFields
+                      properties={dbProperties}
+                      nodeData={selectedNode.data || {}}
+                      onFieldChange={updateNodeField}
+                    />
                   )}
 
                   {/* Source.Repository (when no tabs) */}
@@ -1140,29 +1175,6 @@ export const PropertiesPanel: React.FC = () => {
                     />
                   )}
 
-                  {/* IaC Mapping */}
-                  {implementations.length > 0 && (
-                    <Section title={t('properties.config.iacMapping')}>
-                      <div className="space-y-0.5">
-                        {implementations
-                          .filter((impl) => !provider || impl.provider === provider)
-                          .map((impl) => (
-                            <div
-                              key={`${impl.provider}-${impl.resource_type}`}
-                              className="flex items-center gap-1.5 py-0.5"
-                            >
-                              <span className="text-ice-2xs bg-violet-950/40 text-violet-400 px-1 py-0.5 rounded font-mono uppercase">
-                                {impl.provider}
-                              </span>
-                              <span className="text-ice-xs text-ice-text-3 font-mono truncate">
-                                {impl.resource_type}
-                              </span>
-                            </div>
-                          ))}
-                      </div>
-                    </Section>
-                  )}
-
                   {/* Cost */}
                   {estimatedCost && (
                     <Section title={t('properties.config.cost')}>
@@ -1173,15 +1185,7 @@ export const PropertiesPanel: React.FC = () => {
                     </Section>
                   )}
 
-                  {/* Resource Info */}
-                  <ResourceInfoPanel
-                    resourceDef={resourceDef}
-                    nodeData={selectedNode.data || {}}
-                    implementations={implementations}
-                    provider={provider}
-                    inCount={incomingEdges.length}
-                    outCount={outgoingEdges.length}
-                  />
+                  {/* Cost estimate (if available) */}
                 </>
               )}
             </>
@@ -2028,162 +2032,82 @@ const DeployHistory: React.FC<{ cardId: string }> = ({ cardId }) => {
   );
 };
 
-// ─── Inline Connection Editor (expand to edit edge from node view) ───────────
+// ─── Visual Connection Card ─────────────────────────────────────────────────
 
-const InlineConnectionEditor: React.FC<{
+const ConnectionCard: React.FC<{
   edge: CardEdge;
   thisNodeId: string;
   nodes: CardNode[];
-  edges: CardEdge[];
   dispatch: AppDispatch;
-}> = ({ edge, thisNodeId, nodes, edges, dispatch }) => {
-  const [expanded, setExpanded] = useState(false);
+}> = ({ edge, thisNodeId, nodes, dispatch }) => {
   const sourceNode = nodes.find((n) => n.id === edge.source);
   const targetNode = nodes.find((n) => n.id === edge.target);
-  const sourceLabel = (sourceNode?.data?.label as string) || edge.source.slice(0, 8);
-  const targetLabel = (targetNode?.data?.label as string) || edge.target.slice(0, 8);
+  const sourceLabel = (sourceNode?.data?.label as string) || 'Unknown';
+  const targetLabel = (targetNode?.data?.label as string) || 'Unknown';
+  const sourceType = (sourceNode?.data?.iceType as string) || '';
+  const targetType = (targetNode?.data?.iceType as string) || '';
+  const sourceProvider = (sourceNode?.data?.provider as string) || 'aws';
+  const targetProvider = (targetNode?.data?.provider as string) || 'aws';
   const d = edge.data || {};
-  const connCategory = (d.connectionCategory as string) || '';
   const port = d.port != null ? String(d.port) : '';
-  const envVar = (d.envVarName as string) || '';
+  const relationship = (d.connectionCategory as string) || (d.relationship as string) || '';
 
-  // Find connected Config.EnvVars block for this node
-  const envVarsNode = useMemo(() => {
-    for (const e of edges) {
-      const connectedId = e.source === thisNodeId ? e.target : e.target === thisNodeId ? e.source : null;
-      if (!connectedId) continue;
-      const n = nodes.find((nd) => nd.id === connectedId);
-      if (n && (n.data?.iceType as string) === 'Config.EnvVars') return n;
-    }
-    return null;
-  }, [edges, nodes, thisNodeId]);
-
-  const envVarsVariables = (envVarsNode?.data?.variables as Array<{ name: string; value: string }>) || [];
-
-  const update = (field: string, value: unknown) => {
-    dispatch(updateCardEdgeData({ edgeId: edge.id, data: { [field]: value } }));
-  };
-
-  const showEnvVar = !!envVarsNode && !!envVar;
+  const isOutgoing = edge.source === thisNodeId;
+  const sourceIcon = getIcon(sourceType, sourceProvider as any);
+  const targetIcon = getIcon(targetType, targetProvider as any);
 
   return (
-    <div className="rounded border border-ice-border overflow-hidden">
-      {/* Header — click to expand */}
-      <div
-        className="flex items-center gap-1.5 text-ice-xs px-2.5 py-2 cursor-pointer hover:bg-ice-hover transition-colors"
-        onClick={() => setExpanded(!expanded)}
-      >
-        {/* Source → Target flow */}
-        <span className="text-ice-text-2 truncate max-w-[70px]">{sourceLabel}</span>
-        <span className="text-ice-text-3 shrink-0">&rarr;</span>
-        <span className="text-ice-text-2 truncate max-w-[70px]">{targetLabel}</span>
-        {/* Port badge */}
-        {port && <span className="text-ice-2xs text-ice-text-3 font-mono shrink-0">:{port}</span>}
-        {/* Env var badge */}
-        {showEnvVar && (
-          <span className="text-ice-2xs font-mono text-amber-400 bg-amber-500/10 px-1 py-0.5 rounded shrink-0">
-            {envVar}
-          </span>
-        )}
-        <span
-          className={`ml-auto text-ice-text-3 text-[9px] transition-transform shrink-0 ${expanded ? 'rotate-180' : ''}`}
-        >
-          &#9662;
+    <div className="group flex items-center gap-0 py-3 px-1">
+      {/* FROM node */}
+      <div className="flex flex-col items-center flex-1 min-w-0">
+        <div className="w-9 h-9 flex items-center justify-center mb-1.5">
+          {sourceIcon ? (
+            <img src={sourceIcon.icon} alt="" className="w-7 h-7" />
+          ) : (
+            <span className="text-ice-sm text-ice-text-3 font-semibold">{sourceType.split('.').pop()?.charAt(0) || '?'}</span>
+          )}
+        </div>
+        <span className="text-ice-xs font-medium text-ice-text-1 truncate max-w-full text-center">
+          {sourceLabel}
         </span>
       </div>
 
-      {/* Expanded editor */}
-      {expanded && (
-        <div className="border-t border-ice-border px-2.5 py-2 space-y-2.5 bg-ice-base">
-          {/* Visual source → target with relationship */}
-          <div className="flex items-center gap-2 py-1">
-            <div className="flex-1 text-center">
-              <div className="text-ice-xs font-medium text-ice-text-1 truncate">{sourceLabel}</div>
-              <div className="text-ice-2xs text-ice-text-3 font-mono truncate">
-                {(sourceNode?.data?.iceType as string)?.split('.').pop() || 'node'}
-              </div>
-            </div>
-            <div className="flex flex-col items-center shrink-0 gap-0.5">
-              <div className="w-8 h-px bg-ice-border relative">
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-0 h-0 border-l-[4px] border-l-ice-text-3 border-y-[3px] border-y-transparent" />
-              </div>
-              {connCategory && <span className="text-[9px] text-ice-text-3 font-mono">{connCategory}</span>}
-            </div>
-            <div className="flex-1 text-center">
-              <div className="text-ice-xs font-medium text-ice-text-1 truncate">{targetLabel}</div>
-              <div className="text-ice-2xs text-ice-text-3 font-mono truncate">
-                {(targetNode?.data?.iceType as string)?.split('.').pop() || 'node'}
-              </div>
-            </div>
-          </div>
-
-          {/* Port — unified with env var when EnvVars block is connected */}
-          <div className="space-y-1">
-            <label className="text-ice-2xs text-ice-text-3">{t('properties.edge.portLabel')}</label>
-            {envVarsNode ? (
-              <div className="flex items-center gap-1">
-                <select
-                  value={envVar}
-                  onChange={(e) => {
-                    const picked = e.target.value;
-                    update('envVarName', picked || null);
-                    if (picked) {
-                      const match = envVarsVariables.find((v) => v.name === picked);
-                      if (match?.value && /^\d+$/.test(match.value.trim())) {
-                        update('port', Number(match.value.trim()));
-                      }
-                    }
-                  }}
-                  className="flex-1 min-w-0 px-1.5 py-1.5 text-ice-xs rounded-l border border-ice-border bg-ice-base text-amber-400 font-mono focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  <option value="" className="text-ice-text-1">
-                    {t('properties.edge.customOption')}
-                  </option>
-                  {envVarsVariables.map((v) => (
-                    <option key={v.name} value={v.name}>
-                      {v.name}
-                    </option>
-                  ))}
-                </select>
-                <span className="text-ice-text-3 text-ice-xs">=</span>
-                <input
-                  type="text"
-                  value={port}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    update('port', val ? Number(val) : null);
-                    if (envVar && envVarsNode) {
-                      const vars = [...envVarsVariables];
-                      const idx = vars.findIndex((v) => v.name === envVar);
-                      if (idx !== -1) {
-                        vars[idx] = { ...vars[idx], value: val };
-                        dispatch(updateCardNodeData({ nodeId: envVarsNode.id, data: { variables: vars } }));
-                      }
-                    }
-                  }}
-                  placeholder="5432"
-                  className="w-16 px-1.5 py-1.5 text-ice-xs rounded-r border border-ice-border bg-ice-base text-ice-text-1 font-mono focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-              </div>
-            ) : (
-              <input
-                type="text"
-                value={port}
-                onChange={(e) => update('port', e.target.value ? Number(e.target.value) : null)}
-                placeholder="e.g. 5432"
-                className="w-full px-2 py-1.5 text-ice-xs rounded border border-ice-border bg-ice-base text-ice-text-1 font-mono focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-            )}
-          </div>
-
-          <button
-            onClick={() => dispatch(deleteCardEdge(edge.id))}
-            className="w-full py-1 text-ice-2xs text-red-400 hover:bg-red-950/30 rounded transition-colors"
-          >
-            {t('pipeline.removeConnection')}
-          </button>
+      {/* Arrow with port */}
+      <div className="flex flex-col items-center shrink-0 px-1.5 gap-0.5">
+        <div className="flex items-center gap-0.5">
+          <div className="w-8 h-px bg-ice-text-3" />
+          <div className="w-0 h-0 border-l-[5px] border-l-ice-text-3 border-y-[3px] border-y-transparent" />
         </div>
-      )}
+        {port && (
+          <span className="text-ice-2xs font-mono text-ice-accent">:{port}</span>
+        )}
+        {!port && relationship && (
+          <span className="text-ice-2xs text-ice-text-3">{relationship}</span>
+        )}
+      </div>
+
+      {/* TO node */}
+      <div className="flex flex-col items-center flex-1 min-w-0">
+        <div className="w-9 h-9 flex items-center justify-center mb-1.5">
+          {targetIcon ? (
+            <img src={targetIcon.icon} alt="" className="w-7 h-7" />
+          ) : (
+            <span className="text-ice-sm text-ice-text-3 font-semibold">{targetType.split('.').pop()?.charAt(0) || '?'}</span>
+          )}
+        </div>
+        <span className="text-ice-xs font-medium text-ice-text-1 truncate max-w-full text-center">
+          {targetLabel}
+        </span>
+      </div>
+
+      {/* Delete button */}
+      <button
+        onClick={() => dispatch(deleteCardEdge(edge.id))}
+        className="ml-1 p-1 text-ice-text-3 hover:text-red-400 transition-colors shrink-0 rounded opacity-0 group-hover:opacity-100"
+        title="Remove connection"
+      >
+        &times;
+      </button>
     </div>
   );
 };

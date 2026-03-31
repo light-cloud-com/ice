@@ -366,33 +366,46 @@ const cardsSlice = createSlice({
     // BND-2: Clamps child nodes to parent bounds as a safety net.
     // Parent positions are applied first (they appear earlier in the update array)
     // so that expanded parent dimensions are available for child clamping.
+    // Pass skipClamp: true during Shift+drag to allow nodes to escape containers.
     updateCardNodePositions: (
       state,
-      action: PayloadAction<Array<{ id: string; position: { x: number; y: number } }>>,
+      action: PayloadAction<
+        | {
+            updates: Array<{ id: string; position: { x: number; y: number } }>;
+            skipClamp?: boolean;
+          }
+        | Array<{ id: string; position: { x: number; y: number } }>
+      >,
     ) => {
       pushSnapshot(state, 'updateCardNodePositions');
       const card = state.cards.find((c) => c.id === state.activeCardId);
       if (card) {
+        // Support both old array format and new { updates, skipClamp } format
+        const updates = Array.isArray(action.payload) ? action.payload : action.payload.updates;
+        const skipClamp = Array.isArray(action.payload) ? false : !!action.payload.skipClamp;
+
         // First pass: apply all position updates
-        for (const update of action.payload) {
+        for (const update of updates) {
           const node = card.nodes.find((n) => n.id === update.id);
           if (node) {
             node.position.x = update.position.x;
             node.position.y = update.position.y;
           }
         }
-        // Second pass: clamp children to their parent bounds
-        for (const update of action.payload) {
-          const node = card.nodes.find((n) => n.id === update.id);
-          if (node?.parentId) {
-            const parent = card.nodes.find((n) => n.id === node.parentId);
-            if (parent) {
-              const minX = parent.position.x + CONTAINER_PADDING;
-              const minY = parent.position.y + CONTAINER_PADDING + HEADER_HEIGHT;
-              const maxX = parent.position.x + parent.width - CONTAINER_PADDING - node.width;
-              const maxY = parent.position.y + parent.height - CONTAINER_PADDING - node.height;
-              node.position.x = Math.max(minX, Math.min(maxX, node.position.x));
-              node.position.y = Math.max(minY, Math.min(maxY, node.position.y));
+        // Second pass: clamp children to their parent bounds (skip during Shift+drag)
+        if (!skipClamp) {
+          for (const update of updates) {
+            const node = card.nodes.find((n) => n.id === update.id);
+            if (node?.parentId) {
+              const parent = card.nodes.find((n) => n.id === node.parentId);
+              if (parent) {
+                const minX = parent.position.x + CONTAINER_PADDING;
+                const minY = parent.position.y + CONTAINER_PADDING + HEADER_HEIGHT;
+                const maxX = parent.position.x + parent.width - CONTAINER_PADDING - node.width;
+                const maxY = parent.position.y + parent.height - CONTAINER_PADDING - node.height;
+                node.position.x = Math.max(minX, Math.min(maxX, node.position.x));
+                node.position.y = Math.max(minY, Math.min(maxY, node.position.y));
+              }
             }
           }
         }
@@ -551,16 +564,21 @@ const cardsSlice = createSlice({
       }
     },
 
-    // Auto-organize nodes in active card
-    autoOrganizeCard: (state, action: PayloadAction<{ direction?: 'vertical' | 'horizontal' } | undefined>) => {
+    // Auto-organize nodes in active card.
+    // When containerId is provided, only reorganize inside that container (per-group organize).
+    // Otherwise, organize all levels (master organize).
+    autoOrganizeCard: (
+      state,
+      action: PayloadAction<{ direction?: 'vertical' | 'horizontal'; containerId?: string } | undefined>,
+    ) => {
       const card = state.cards.find((c) => c.id === state.activeCardId);
       if (!card || card.nodes.length === 0) return;
       pushSnapshot(state);
 
       const direction = action?.payload?.direction || 'vertical';
+      const containerId = action?.payload?.containerId;
 
       // Cleanup pass: strip parentId where parent is not a container.
-      // This fixes invalid relationships (e.g. AI setting a resource as parent of another resource).
       const containerIds = new Set(card.nodes.filter((n) => n.type === 'container').map((n) => n.id));
       for (const node of card.nodes) {
         if (node.parentId && !containerIds.has(node.parentId)) {
@@ -600,26 +618,69 @@ const cardsSlice = createSlice({
         direction,
       });
 
-      // Create a map of organized positions
       const organizedMap = new Map(organizedNodes.map((n) => [n.id, n]));
 
-      // Update card nodes with new positions and sizes.
-      // For folded nodes, preserve their stored expanded height —
-      // the layout uses the collapsed height for positioning, but the stored
-      // height should reflect the expanded size for when they're unfolded.
-      card.nodes = card.nodes.map((node) => {
-        const organized = organizedMap.get(node.id);
-        if (organized) {
-          const isFolded = !!node.data?.folded;
-          return {
-            ...node,
-            position: { x: organized.x, y: organized.y },
-            width: organized.width,
-            height: isFolded ? node.height : organized.height,
-          };
-        }
-        return node;
-      });
+      if (containerId) {
+        // Per-container organize: keep the container position, update size + children positions
+        const containerOrganized = organizedMap.get(containerId);
+        const containerOld = card.nodes.find((n) => n.id === containerId);
+        if (!containerOrganized || !containerOld) return;
+
+        // Offset = difference between old and new container position
+        const dx = containerOld.position.x - containerOrganized.x;
+        const dy = containerOld.position.y - containerOrganized.y;
+
+        // Collect all descendants of this container
+        const descendantIds = new Set<string>();
+        const collectDescendants = (parentId: string) => {
+          for (const node of card.nodes) {
+            if (node.parentId === parentId && !descendantIds.has(node.id)) {
+              descendantIds.add(node.id);
+              collectDescendants(node.id);
+            }
+          }
+        };
+        collectDescendants(containerId);
+
+        card.nodes = card.nodes.map((node) => {
+          if (node.id === containerId) {
+            // Container: keep position, update size
+            return {
+              ...node,
+              width: containerOrganized.width,
+              height: containerOrganized.height,
+            };
+          }
+          if (descendantIds.has(node.id)) {
+            const organized = organizedMap.get(node.id);
+            if (organized) {
+              const isFolded = !!node.data?.folded;
+              return {
+                ...node,
+                position: { x: organized.x + dx, y: organized.y + dy },
+                width: organized.width,
+                height: isFolded ? node.height : organized.height,
+              };
+            }
+          }
+          return node;
+        });
+      } else {
+        // Master organize: update all nodes
+        card.nodes = card.nodes.map((node) => {
+          const organized = organizedMap.get(node.id);
+          if (organized) {
+            const isFolded = !!node.data?.folded;
+            return {
+              ...node,
+              position: { x: organized.x, y: organized.y },
+              width: organized.width,
+              height: isFolded ? node.height : organized.height,
+            };
+          }
+          return node;
+        });
+      }
     },
 
     // Expand a blueprint into the active card (single flat resource node)

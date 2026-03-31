@@ -1,20 +1,22 @@
 /**
  * SVG Compact Node — Clean Linear/Figma-style Infrastructure Card
  *
- * Flat card layout:
- * ╭──────────────────────────────╮
- * │  [icon]  Database        AWS │   name + provider pill
- * │          PostgreSQL 15       │   runtime
- * │                              │
- * │  db.internal:5432            │   endpoint (monospace)
- * │  db.t3.medium · 50 GB       │   hardware (monospace)
- * │  ● Active           ~$45/mo │   status + cost
- * ╰──────────────────────────────╯
+ * Dual-icon card layout:
+ * ╭────────────────────────────────────╮
+ * │ [⛁]  Order Database           AWS │  category icon + label + provider
+ * │ [🐘]  Amazon RDS · PostgreSQL 16  │  brand icon + service + runtime
+ * │                                    │
+ * │  pg.internal:5432                  │  context metadata (varies by type)
+ * │  db.t3.medium · 50 GB             │  context metadata
+ * │  ● Active                  ~$45/mo │  status + cost
+ * ╰────────────────────────────────────╯
  */
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { getIcon, DEFAULT_ICON, type Provider } from '../../../../assets/icons';
 import { getBrandIcon, type BrandIcon } from '../../../../assets/icons/brand-registry';
+import { renderCategoryIcon } from '../../../../assets/icons/category-icons';
+import { getServiceName } from '../../../../assets/icons/service-names';
 import {
   CORNER_RADIUS,
   HEADER_HEIGHT,
@@ -23,6 +25,7 @@ import {
   CARD_PY,
   ICON_SIZE,
   ICON_GAP,
+  BRAND_ICON_SIZE,
   STATUS_COLORS,
   CATEGORY_STYLE,
 } from '../../../../config/canvas-constants';
@@ -95,6 +98,275 @@ function shortDomain(d: string) {
   return d;
 }
 
+// ─── Context-Aware Metadata ────────────────────────────────────────────────
+
+interface ContextResult {
+  lines: string[];
+  repoLineIndex: number;
+}
+
+/**
+ * Returns the most relevant metadata lines for a given block type.
+ * Different block categories show different information.
+ */
+/** Placeholder styling prefix — rendered with lower opacity in the SVG */
+const PH = '\u00A0'; // non-breaking space prefix to detect placeholders
+function ph(text: string): string { return PH + text; }
+function isPlaceholder(text: string): boolean { return text.startsWith(PH); }
+
+/** Count items in a list field */
+function listCount(val: unknown): number {
+  return Array.isArray(val) ? val.length : 0;
+}
+
+/**
+ * Returns the most relevant context lines per block type.
+ * Reads from ACTUAL schema field names (purpose, size, order_matters, etc.)
+ * so that property panel edits immediately reflect on the card.
+ */
+function getContextLines(data: Record<string, unknown>, iceType: string): ContextResult {
+  const lines: string[] = [];
+  let repoLineIndex = -1;
+
+  // ── Schema field readers (prefer _display companion fields for enriched options) ──
+  const purpose = (data.purpose_display as string) || (data.purpose as string) || '';
+  const size = (data.size_display as string) || (data.size as string) || '';
+  const domain = (data.custom_domain as string) || (data.domain as string) || '';
+  const framework = (data.framework_display as string) || (data.framework as string) || '';
+  const frequency = (data.frequency_display as string) || (data.frequency as string) || '';
+  const production = data.production;
+  const orderMatters = data.order_matters;
+  const keepData = (data.retention_display as string) || (data.keep_data as string) || (data.retention as string) || '';
+  const engine = (data.engine_display as string) || (data.engine as string) || '';
+  const lookupField = (data.lookup_field as string) || '';
+  const isPublic = data.public;
+  const repository = (data.repository as string) || (data.github as string) || (data.repo as string) || '';
+  const branch = (data.branch as string) || '';
+
+  // Resource ID tells us what schema this block uses
+  const resourceId = (data.resourceId as string) || '';
+
+  switch (resourceId) {
+    // ── Frontend ──
+    case 'frontend-app':
+      lines.push(domain ? truncate(shortDomain(domain), 32) : ph('app.example.com'));
+      if (framework) lines.push(framework);
+      break;
+
+    case 'ssr-site':
+      lines.push(domain ? truncate(shortDomain(domain), 32) : ph('www.example.com'));
+      if (framework) lines.push(framework);
+      break;
+
+    // ── Compute ──
+    case 'backend-api':
+    case 'container-service':
+      if (purpose) lines.push(purpose);
+      if (size) lines.push(size);
+      break;
+
+    case 'worker':
+      if (purpose) lines.push(purpose);
+      if (size) lines.push(size);
+      break;
+
+    case 'serverless-function':
+    case 'function-compute':
+    case 'oci-functions':
+      if (purpose) lines.push(purpose);
+      if (size) lines.push(size);
+      break;
+
+    case 'do-app-platform':
+      if (purpose) lines.push(purpose);
+      if (size) lines.push(size);
+      break;
+
+    case 'scheduled-task':
+      lines.push(frequency || ph('Every day at midnight'));
+      break;
+
+    // ── Database ──
+    case 'postgres-db':
+    case 'mysql-db':
+      if (size) lines.push(size);
+      lines.push(production ? 'Production-ready' : ph('Dev mode'));
+      break;
+
+    case 'mongodb':
+      if (size) lines.push(size);
+      lines.push(production ? 'Production-ready' : ph('Dev mode'));
+      break;
+
+    case 'redis-cache':
+      if (purpose) lines.push(purpose);
+      if (size) lines.push(size);
+      break;
+
+    case 'dynamodb':
+      if (size) lines.push(size);
+      if (lookupField) lines.push(`key: ${lookupField}`);
+      break;
+
+    case 'firestore':
+      if (purpose) lines.push(purpose);
+      if (size) lines.push(size);
+      break;
+
+    case 'cosmosdb':
+      if (purpose) lines.push(purpose);
+      if (size) lines.push(size);
+      break;
+
+    case 'vector-db':
+      if (purpose) lines.push(purpose);
+      if (engine) lines.push(engine);
+      break;
+
+    case 'data-warehouse':
+      if (purpose) lines.push(purpose);
+      if (engine) lines.push(engine);
+      break;
+
+    case 'search-engine':
+      if (purpose) lines.push(purpose);
+      if (engine) lines.push(engine);
+      break;
+
+    // ── Messaging ──
+    case 'message-queue':
+      if (purpose) lines.push(purpose);
+      lines.push(orderMatters ? 'FIFO (ordered)' : 'Standard');
+      break;
+
+    case 'event-bus': {
+      if (purpose) lines.push(purpose);
+      const subCount = listCount(data.subscribers);
+      lines.push(subCount > 0 ? `${subCount} subscribers` : ph('No subscribers'));
+      break;
+    }
+
+    case 'rabbitmq': {
+      if (purpose) lines.push(purpose);
+      const qCount = listCount(data.queues);
+      if (qCount > 0) lines.push(`${qCount} queues`);
+      break;
+    }
+
+    case 'cloud-pubsub': {
+      if (purpose) lines.push(purpose);
+      const listeners = listCount(data.subscribers);
+      if (listeners > 0) lines.push(`${listeners} listeners`);
+      break;
+    }
+
+    case 'service-bus': {
+      if (purpose) lines.push(purpose);
+      const qs = listCount(data.queues);
+      const ts = listCount(data.topics);
+      const parts = [];
+      if (qs > 0) parts.push(`${qs} queues`);
+      if (ts > 0) parts.push(`${ts} topics`);
+      if (parts.length) lines.push(parts.join(' \u00B7 '));
+      break;
+    }
+
+    case 'event-stream':
+      if (purpose) lines.push(purpose);
+      if (keepData) lines.push(`retain: ${keepData}`);
+      break;
+
+    // ── Storage ──
+    case 'object-storage':
+    case 'oss':
+    case 'oci-object-storage':
+    case 'do-spaces':
+      if (purpose) lines.push(purpose);
+      lines.push(isPublic ? 'Public access' : 'Private');
+      break;
+
+    case 'file-storage':
+      if (purpose) lines.push(purpose);
+      if (size) lines.push(size);
+      break;
+
+    // ── Network ──
+    case 'api-gateway': {
+      if (purpose) lines.push(purpose);
+      const routeCount = listCount(data.routes);
+      if (routeCount > 0) lines.push(`${routeCount} routes`);
+      break;
+    }
+
+    case 'dns-zone': {
+      lines.push(domain || ph('example.com'));
+      const subCount = listCount(data.subdomains);
+      if (subCount > 0) lines.push(`${subCount} subdomains`);
+      break;
+    }
+
+    case 'public-traffic':
+      if (domain) lines.push(truncate(shortDomain(domain), 32));
+      break;
+
+    case 'load-balancer':
+      if (purpose) lines.push(purpose);
+      break;
+
+    case 'cdn':
+      if (purpose) lines.push(purpose);
+      if (domain) lines.push(truncate(shortDomain(domain), 32));
+      break;
+
+    // ── Security ──
+    case 'secret-store': {
+      if (purpose) lines.push(purpose);
+      const secretCount = listCount(data.secrets);
+      lines.push(secretCount > 0 ? `${secretCount} secrets` : ph('No secrets yet'));
+      break;
+    }
+
+    case 'ssl-certificate':
+      if (domain) lines.push(domain);
+      break;
+
+    case 'service-account':
+      if (purpose) lines.push(purpose);
+      break;
+
+    // ── AI ──
+    case 'llm-gateway':
+      if (purpose) lines.push(purpose);
+      if (size) lines.push(size);
+      break;
+
+    case 'ml-model':
+      if (purpose) lines.push(purpose);
+      if (framework) lines.push(framework);
+      break;
+
+    // ── Source ──
+    default:
+      // Fall back to iceType-based matching for blocks without resourceId
+      if (iceType === 'Source.Repository') {
+        repoLineIndex = lines.length;
+        lines.push(repository ? truncate(shortRepo(repository), 30) : ph('owner/repo'));
+        lines.push(branch ? `\u2192 ${branch}` : ph('\u2192 main'));
+      } else if (iceType === 'Config.EnvVars') {
+        const varCount = listCount(data.variables);
+        lines.push(varCount > 0 ? `${varCount} variables` : ph('No variables'));
+      }
+      // Other unknown types — show purpose/size if available
+      else if (purpose) {
+        lines.push(purpose);
+        if (size) lines.push(size);
+      }
+      break;
+  }
+
+  return { lines, repoLineIndex };
+}
+
 // ─── Exported height calculator (for SvgCanvas / auto-layout sync) ──────────
 
 /** Extra height when user has renamed the block (type subtitle shown) */
@@ -109,31 +381,22 @@ export function computeCompactNodeHeight(
   _isBlock: boolean,
   hasPipeline = false,
 ): number {
-  const repo = data.repository || data.github || data.repo || '';
-  const domain = data.domain || data.subdomain || data.url || '';
-  const image = data.image || '';
-  const size = data.size || '';
-  const storage = data.storage || '';
   const cost = data.estimatedCost || '';
   const status = data.status || '';
+  const iceType = (data.iceType as string) || '';
 
-  const blockTypeName = (data.blockTypeName as string) || '';
-  const label = (data.label as string) || '';
-  const isRenamed = blockTypeName && label && label !== blockTypeName;
   const hasScaling = data.minInstances != null || data.maxInstances != null;
 
-  const metaCount = (repo ? 1 : 0) + (domain ? 1 : 0) + (image ? 1 : 0);
-  const hasHardware = !!(size || storage);
+  // Context-aware metadata lines (replaces old flat metaCount)
+  const { lines: contextLines } = getContextLines(data, iceType);
   const hasStatusLine = !!(status || cost);
-  const metaGap = metaCount > 0 || hasHardware || hasScaling || hasPipeline ? 6 : 0;
+  const metaGap = contextLines.length > 0 || hasScaling || hasPipeline ? 6 : 0;
 
   const h =
     CARD_PY +
-    HEADER_HEIGHT +
+    HEADER_HEIGHT +         // 36px: dual-icon header (category line + service line)
     metaGap +
-    (isRenamed ? RENAMED_SUBTITLE_H : 0) +
-    metaCount * META_LINE_H +
-    (hasHardware ? META_LINE_H : 0) +
+    contextLines.length * META_LINE_H +
     (hasScaling ? SCALING_ROW_H : 0) +
     (hasPipeline ? PIPELINE_ROW_H : 0) +
     (hasStatusLine ? STATUS_LINE_H : 0) +
@@ -206,20 +469,10 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
     }
   }, [isSelected, isSourceRepo, repository]);
 
-  // The original type name (set during blueprint expansion)
-  const blockTypeName = (data.blockTypeName as string) || '';
-  // Show type subtitle when user has renamed the block
-  const isRenamed = blockTypeName && label && label !== blockTypeName;
-  const domain = (data.domain as string) || (data.subdomain as string) || (data.url as string) || '';
-  const image = (data.image as string) || '';
+  // (blockTypeName subtitle removed — service name line provides this info)
   const version = (data.version as string) || '';
-  const port = data.port ? String(data.port) : '';
   const estimatedCost = (data.estimatedCost as string) || '';
-  const size = (data.size as string) || '';
-  const storage = (data.storage as string) || '';
   const status = (data.status as string) || '';
-
-  const runtimeLabel = runtime || version || '';
 
   // ── Scaling ──
   const minInstances = data.minInstances != null ? Number(data.minInstances) : null;
@@ -227,34 +480,28 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
   const activeInstances = data.activeInstances != null ? Number(data.activeInstances) : null;
   const hasScaling = minInstances != null || maxInstances != null;
 
-  // ── Hardware line ──
-  const hardwareParts: string[] = [];
-  if (size) hardwareParts.push(size);
-  if (storage) hardwareParts.push(storage);
-  const hardwareLine = hardwareParts.length > 0 ? hardwareParts.join(' \u00B7 ') : '';
-
-  // ── Icons ──
+  // ── Icons (dual system) ──
   const brandIcon: BrandIcon | null = getBrandIcon(runtime) || getBrandIcon(iceType) || getBrandIcon(label);
   const providerIcon = getIcon(iceType, (provider?.toLowerCase() || 'aws') as Provider);
   const providerUrl = providerIcon?.icon || DEFAULT_ICON;
 
-  // ── Metadata lines (plain monospace text) ──
-  const metaLines: string[] = [];
-  let repoLineIndex = -1;
-  if (domain) {
-    const d = port ? `${shortDomain(domain)}:${port}` : shortDomain(domain);
-    metaLines.push(truncate(d, 30));
-  }
-  if (repository) {
-    repoLineIndex = metaLines.length;
-    metaLines.push(truncate(shortRepo(repository), 28));
-  }
-  // Show branch on Source.Repository blocks
-  const branchName = (data.branch as string) || '';
-  if (isSourceRepo && branchName && repository) {
-    metaLines.push(`\u2192 ${branchName}`);
-  }
-  if (image) metaLines.push(truncate(image, 28));
+  // ── Service name (cloud-native) ──
+  const serviceName = getServiceName(iceType, provider || 'aws');
+  const runtimeLabel = runtime || version || '';
+  // Deduplicate: "Amazon SQS" + "SQS FIFO" → "Amazon SQS · FIFO" (strip common prefix)
+  const dedupedRuntime = (() => {
+    if (!serviceName || !runtimeLabel) return runtimeLabel;
+    // If runtime exactly matches the short service name, skip it
+    const shortName = serviceName.split(' ').pop() || '';
+    if (runtimeLabel === shortName) return '';
+    // Strip common prefix: "SQS FIFO" when service is "Amazon SQS" → "FIFO"
+    if (runtimeLabel.startsWith(shortName + ' ')) return runtimeLabel.slice(shortName.length + 1);
+    return runtimeLabel;
+  })();
+  const serviceLineText = [serviceName, dedupedRuntime].filter(Boolean).join(' \u00B7 ');
+
+  // ── Context-aware metadata lines ──
+  const { lines: metaLines, repoLineIndex } = getContextLines(data, iceType);
 
   // ── Status ──
   const statusColor = STATUS_COLORS[status] || STATUS_COLORS.active;
@@ -262,10 +509,8 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
   const hasStatusLine = !!(statusLabel || estimatedCost);
 
   // ── Pipeline status ──
-  // For Source.Repository blocks: derive aggregate status from connected services
   const aggregatePipelineStatus: NodePipelineStatus | null = (() => {
     if (isSourceRepo && connectedPipelineStatuses.length > 0) {
-      // Priority: active states > failed > success > idle
       const active = connectedPipelineStatuses.find(
         (p) => p.status === 'building' || p.status === 'deploying' || p.status === 'queued',
       );
@@ -281,21 +526,18 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
   const hasPipeline = effectivePipelineStatus && effectivePipelineStatus.status !== 'idle';
 
   // ── Size calculation ──
-  const metaGap = metaLines.length > 0 || hardwareLine || hasScaling || hasPipeline ? 6 : 0;
-  const renamedOffset = isRenamed ? RENAMED_SUBTITLE_H : 0;
+  const metaGap = metaLines.length > 0 || hasScaling || hasPipeline ? 6 : 0;
   const contentH =
     CARD_PY +
     HEADER_HEIGHT +
-    renamedOffset +
     metaGap +
     metaLines.length * META_LINE_H +
-    (hardwareLine ? META_LINE_H : 0) +
     (hasScaling ? SCALING_ROW_H : 0) +
     (hasPipeline ? PIPELINE_ROW_H : 0) +
     (hasStatusLine ? STATUS_LINE_H : 0) +
     PAD_BOTTOM;
   const W = Math.max(width || CARD_WIDTH, CARD_WIDTH);
-  const H = folded ? 38 : Math.max(height || 0, contentH, 56);
+  const H = folded ? 38 : Math.max(height || 0, contentH, 64);
 
   // ── Colors ──
   const cat = CATEGORY_STYLE[category] || CATEGORY_STYLE.default;
@@ -398,15 +640,8 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
         {/* Left accent stripe */}
         <rect x={x} y={y} width={4} height={SH} rx={2} fill={bcat.glow} opacity={0.8} />
 
-        {/* Icon */}
-        <image
-          x={x + 14}
-          y={y + 14}
-          width={ICON_SIZE}
-          height={ICON_SIZE}
-          href={brandIcon?.url || providerUrl}
-          preserveAspectRatio="xMidYMid meet"
-        />
+        {/* Category icon */}
+        {renderCategoryIcon(category, x + 14, y + 14, ICON_SIZE, bcat.glow)}
 
         {/* Block name */}
         <text
@@ -753,14 +988,7 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
       {/* ─── Folded state ─── */}
       {folded ? (
         <g>
-          <image
-            x={x + CARD_PX}
-            y={y + 9}
-            width={ICON_SIZE}
-            height={ICON_SIZE}
-            href={brandIcon?.url || providerUrl}
-            preserveAspectRatio="xMidYMid meet"
-          />
+          {renderCategoryIcon(category, x + CARD_PX, y + 9, ICON_SIZE, cat.glow)}
           <text
             x={x + TEXT_X}
             y={y + 19}
@@ -804,24 +1032,17 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
         </g>
       ) : (
         <g>
-          {/* ═══════ HEADER ═══════ */}
+          {/* ═══════ HEADER LINE 1: Category Icon + Label + Provider Pill ═══════ */}
 
-          {/* Icon */}
-          <image
-            x={x + CARD_PX}
-            y={y + CARD_PY}
-            width={ICON_SIZE}
-            height={ICON_SIZE}
-            href={brandIcon?.url || providerUrl}
-            preserveAspectRatio="xMidYMid meet"
-          />
+          {/* Category icon (generic, geometric) */}
+          {renderCategoryIcon(category, x + CARD_PX, y + CARD_PY, ICON_SIZE, cat.glow)}
 
-          {/* Service name — editable on double-click */}
+          {/* Label — editable on double-click */}
           {isRenaming ? (
             <foreignObject
               x={x + TEXT_X}
               y={y + CARD_PY - 2}
-              width={Math.min(W - TEXT_X - CARD_PX - 40, 160)}
+              width={Math.min(W - TEXT_X - CARD_PX - 40, 180)}
               height={22}
             >
               <input
@@ -872,22 +1093,6 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
             </text>
           )}
 
-          {/* Type name subtitle — shown when user has renamed */}
-          {isRenamed && !isRenaming && (
-            <text
-              x={x + TEXT_X}
-              y={y + CARD_PY + 20}
-              dominantBaseline="middle"
-              fill="var(--ice-text-secondary)"
-              fontSize="9"
-              fontFamily="ui-monospace, 'SFMono-Regular', monospace"
-              opacity={0.7}
-              style={{ pointerEvents: 'none' }}
-            >
-              {blockTypeName}
-            </text>
-          )}
-
           {/* Provider pill — top-right */}
           {provider && (
             <g>
@@ -915,24 +1120,38 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
             </g>
           )}
 
-          {/* Runtime · port — second line (shifts down when renamed) */}
-          {(runtimeLabel || port) && (
+          {/* ═══════ HEADER LINE 2: Brand Icon + Service Name · Runtime ═══════ */}
+
+          {/* Brand/runtime icon (smaller, second line) */}
+          {(brandIcon || providerUrl) && (
+            <image
+              x={x + CARD_PX + 2}
+              y={y + CARD_PY + 20}
+              width={BRAND_ICON_SIZE}
+              height={BRAND_ICON_SIZE}
+              href={brandIcon?.url || providerUrl}
+              preserveAspectRatio="xMidYMid meet"
+            />
+          )}
+
+          {/* Cloud-native service name + runtime */}
+          {serviceLineText && (
             <text
-              x={x + TEXT_X}
-              y={y + CARD_PY + 24 + renamedOffset}
+              x={x + CARD_PX + BRAND_ICON_SIZE + ICON_GAP}
+              y={y + CARD_PY + 28}
               dominantBaseline="middle"
               fill="var(--ice-text-secondary)"
               fontSize="10"
               fontFamily="ui-monospace, 'SFMono-Regular', monospace"
               style={{ pointerEvents: 'none' }}
             >
-              {[runtimeLabel, port ? `:${port}` : ''].filter(Boolean).join(' \u00B7 ')}
+              {truncate(serviceLineText, 28)}
             </text>
           )}
 
           {/* ═══════ METADATA LINES ═══════ */}
           {(() => {
-            const metaY = y + CARD_PY + HEADER_HEIGHT + renamedOffset + metaGap;
+            const metaY = y + CARD_PY + HEADER_HEIGHT + metaGap;
             let cursorY = metaY;
 
             return (
@@ -984,19 +1203,21 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
                     );
                   }
 
+                  const isPh = isPlaceholder(line);
                   return (
                     <text
                       key={i}
                       x={x + CARD_PX}
                       y={lineY}
                       dominantBaseline="middle"
-                      fill="var(--ice-text-secondary)"
+                      fill={isPh ? 'var(--ice-text-tertiary)' : 'var(--ice-text-secondary)'}
                       fontSize="10"
                       fontFamily="ui-monospace, 'SFMono-Regular', monospace"
-                      opacity={isHovered ? 0.9 : 0.6}
+                      fontStyle={isPh ? 'italic' : 'normal'}
+                      opacity={isPh ? 0.4 : isHovered ? 0.9 : 0.6}
                       style={{ pointerEvents: 'none' }}
                     >
-                      {line}
+                      {isPh ? line.slice(1) : line}
                     </text>
                   );
                 })}
@@ -1048,26 +1269,6 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
 
                 {(() => {
                   cursorY = metaY + metaLines.length * META_LINE_H;
-                  return null;
-                })()}
-
-                {/* Hardware line (size · storage) */}
-                {hardwareLine && (
-                  <text
-                    x={x + CARD_PX}
-                    y={cursorY}
-                    dominantBaseline="middle"
-                    fill="var(--ice-text-secondary)"
-                    fontSize="10"
-                    fontFamily="ui-monospace, 'SFMono-Regular', monospace"
-                    opacity={isHovered ? 0.9 : 0.6}
-                    style={{ pointerEvents: 'none' }}
-                  >
-                    {truncate(hardwareLine, 30)}
-                  </text>
-                )}
-                {(() => {
-                  if (hardwareLine) cursorY += META_LINE_H;
                   return null;
                 })()}
 

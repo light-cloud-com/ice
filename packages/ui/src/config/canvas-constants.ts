@@ -16,11 +16,13 @@ export const MIN_CONTAINER_HEIGHT = 150;
 
 // ─── Card Dimensions ───────────────────────────────────────────────────────
 
-export const CARD_WIDTH = 220;
+export const CARD_WIDTH = 240;
 export const CARD_PX = 12;
 export const CARD_PY = 10;
 export const ICON_SIZE = 20;
 export const ICON_GAP = 8;
+export const BRAND_ICON_SIZE = 16;
+export const SERVICE_LINE_H = 16;
 
 // ─── Zoom ──────────────────────────────────────────────────────────────────
 

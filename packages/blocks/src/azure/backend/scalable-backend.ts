@@ -12,8 +12,6 @@ export const azureScalableBackendBlueprint: BlockBlueprint = createBlueprintFrom
     iceType: 'Application.Container',
     runtime: 'Node.js 20',
     port: 8080,
-    image: 'myorg.azurecr.io/service:latest',
-    repository: 'myorg/service',
     minInstances: 1,
     maxInstances: 3,
     activeInstances: 1,

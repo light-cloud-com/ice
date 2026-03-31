@@ -250,7 +250,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
         y: node.position?.y || 0,
         width: Math.max(node.width || 0, defaultWidth),
         height: visualHeight,
-        label: (node.data?.label as string) || node.id,
+        label: (node.data?.label as string) || (node.data?.name as string) || node.id,
         data: { ...(node.data as Record<string, unknown>), iceType },
         parentId: node.parentId || null,
       };
@@ -832,8 +832,16 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
         }
       }
 
-      // Dispatch all updates
-      dispatch(updateCardNodePositions(positionUpdates));
+      // Skip clamping when:
+      // 1. Shift+drag (reparent mode) — node needs to escape its container
+      // 2. Dragging a container with descendants — children are rigidly translated
+      //    with the parent, so clamping would disturb their relative positions
+      //    (auto-layout uses different padding than the clamp bounds)
+      const hasDescendants = descendantIds.length > 0;
+      const shouldSkipClamp = skipAncestorResize || hasDescendants;
+      dispatch(updateCardNodePositions(
+        shouldSkipClamp ? { updates: positionUpdates, skipClamp: true } : positionUpdates
+      ));
       for (const su of sizeUpdates) {
         dispatch(resizeCardNode(su));
       }

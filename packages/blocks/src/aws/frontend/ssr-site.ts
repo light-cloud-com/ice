@@ -12,7 +12,5 @@ export const awsSsrSiteBlueprint: BlockBlueprint = createBlueprintFromResource('
     iceType: 'Application.SSRSite',
     runtime: 'Next.js 14',
     port: 3000,
-    image: 'ecr.aws/myorg/ssr-app:latest',
-    repository: 'myorg/ssr-app',
   },
 });

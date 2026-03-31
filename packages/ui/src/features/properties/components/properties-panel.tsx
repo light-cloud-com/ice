@@ -46,6 +46,14 @@ import type { RootState, AppDispatch } from '../../../store';
 
 // ─── Types from core HIGH_LEVEL_CATEGORIES ──────────────────────────────────
 
+interface OptionDetail {
+  value: string;
+  label: string;
+  description?: string;
+  cost?: string;
+  provider?: string;
+}
+
 interface HighLevelProperty {
   name: string;
   label: string;
@@ -57,6 +65,7 @@ interface HighLevelProperty {
   tier?: 'essential' | 'detailed' | 'advanced';
   placeholder?: string;
   addLabel?: string;
+  optionDetails?: OptionDetail[];
 }
 
 interface ProviderImpl {
@@ -420,6 +429,47 @@ const InfoRow: React.FC<{
   </div>
 );
 
+// ─── Rich select field (card picker for optionDetails) ────────────────────
+
+const RichSelectField: React.FC<{
+  label: string;
+  value: string;
+  options: OptionDetail[];
+  description?: string;
+  onChange: (v: string) => void;
+}> = ({ label, value, options, description, onChange }) => (
+  <div className="py-1 space-y-1.5">
+    <div>
+      <span className="text-ice-sm text-ice-text-2">{label}</span>
+      {description && <p className="text-ice-2xs text-ice-text-3 mt-0.5">{description}</p>}
+    </div>
+    <div className="space-y-1">
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          onClick={() => onChange(opt.value)}
+          className={cn(
+            'w-full text-left px-2.5 py-1.5 rounded border transition-colors',
+            value === opt.value
+              ? 'border-blue-500/50 bg-blue-950/30 text-ice-text-1'
+              : 'border-ice-border bg-ice-raised text-ice-text-2 hover:border-ice-border-strong hover:bg-ice-hover',
+          )}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-ice-sm font-mono font-medium">{opt.label}</span>
+            {opt.cost && (
+              <span className="text-ice-2xs text-emerald-400/70 shrink-0">{opt.cost}</span>
+            )}
+          </div>
+          {opt.description && (
+            <div className="text-ice-2xs text-ice-text-3 mt-0.5">{opt.description}</div>
+          )}
+        </button>
+      ))}
+    </div>
+  </div>
+);
+
 // ─── Tiered property fields ────────────────────────────────────────────────
 
 function renderPropertyField(
@@ -427,6 +477,31 @@ function renderPropertyField(
   value: unknown,
   onChange: (field: string, value: unknown) => void,
 ): React.ReactNode {
+  // Rich select — card picker with real cloud values
+  if (prop.type === 'select' && prop.optionDetails && prop.optionDetails.length > 0) {
+    const strVal = value != null ? String(value) : (prop.default != null ? String(prop.default) : '');
+    // If stored value doesn't match any optionDetail (legacy data), fall through to plain select
+    if (!strVal || prop.optionDetails.some((o) => o.value === strVal)) {
+      return (
+        <RichSelectField
+          key={prop.name}
+          label={prop.label}
+          description={prop.description}
+          value={strVal}
+          options={prop.optionDetails}
+          onChange={(v) => {
+            onChange(prop.name, v);
+            // Write companion display field for canvas cards
+            const detail = prop.optionDetails!.find((o) => o.value === v);
+            if (detail) {
+              const displayParts = [detail.label, detail.description].filter(Boolean);
+              onChange(`${prop.name}_display`, displayParts.join(' · '));
+            }
+          }}
+        />
+      );
+    }
+  }
   if (prop.type === 'list') {
     const listVal = Array.isArray(value) ? (value as string[]) : [];
     return (
@@ -488,6 +563,14 @@ const PropertyFields: React.FC<{
   onFieldChange: (field: string, value: unknown) => void;
 }> = ({ properties, nodeData, onFieldChange }) => {
   const [showMore, setShowMore] = React.useState(false);
+  const provider = ((nodeData.provider as string) || '').toLowerCase();
+
+  // Filter optionDetails by the node's cloud provider
+  const filterByProvider = (prop: HighLevelProperty): HighLevelProperty => {
+    if (!prop.optionDetails || !provider) return prop;
+    const filtered = prop.optionDetails.filter((o) => !o.provider || o.provider === provider);
+    return filtered.length > 0 ? { ...prop, optionDetails: filtered } : prop;
+  };
 
   const essential = properties.filter((p) => !p.tier || p.tier === 'essential');
   const detailed = properties.filter((p) => p.tier === 'detailed');
@@ -498,7 +581,7 @@ const PropertyFields: React.FC<{
       {/* Essential fields — always visible */}
       {essential.length > 0 && (
         <Section title="Configuration">
-          {essential.map((prop) => renderPropertyField(prop, nodeData[prop.name], onFieldChange))}
+          {essential.map((prop) => renderPropertyField(filterByProvider(prop), nodeData[prop.name], onFieldChange))}
         </Section>
       )}
 
@@ -514,7 +597,7 @@ const PropertyFields: React.FC<{
           </button>
           {showMore && (
             <Section title="Details">
-              {detailed.map((prop) => renderPropertyField(prop, nodeData[prop.name], onFieldChange))}
+              {detailed.map((prop) => renderPropertyField(filterByProvider(prop), nodeData[prop.name], onFieldChange))}
             </Section>
           )}
         </>

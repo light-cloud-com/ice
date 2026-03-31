@@ -12,8 +12,6 @@ export const awsScalableBackendBlueprint: BlockBlueprint = createBlueprintFromRe
     iceType: 'Application.Container',
     runtime: 'Node.js 20',
     port: 8080,
-    image: 'ecr.aws/myorg/service:latest',
-    repository: 'myorg/service',
     minInstances: 1,
     maxInstances: 3,
     activeInstances: 1,

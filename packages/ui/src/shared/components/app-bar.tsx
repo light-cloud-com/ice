@@ -65,6 +65,18 @@ export const AppBar: React.FC = memo(() => {
   const canUndo = useSelector(selectCanUndo);
   const canRedo = useSelector(selectCanRedo);
 
+  // Selection-aware organize: if a single container is selected, organize inside it
+  const selectedNodes = useSelector((state: RootState) => state.selection.selectedNodes);
+  const activeCard = useSelector((state: RootState) => {
+    const cards = state.cards as any;
+    return cards.cards?.find((c: any) => c.id === cards.activeCardId);
+  });
+  const selectedContainerId = React.useMemo(() => {
+    if (selectedNodes.length !== 1 || !activeCard) return undefined;
+    const node = activeCard.nodes?.find((n: any) => n.id === selectedNodes[0]);
+    return node?.type === 'container' ? node.id : undefined;
+  }, [selectedNodes, activeCard]);
+
   useEffect(() => {
     dispatch(checkGitHubConnection());
   }, [dispatch]);
@@ -101,14 +113,14 @@ export const AppBar: React.FC = memo(() => {
           <BarBtn
             id="ice-appbar-btn-organize-v"
             icon={Rows3}
-            onClick={() => dispatch(autoOrganizeCard({ direction: 'vertical' }))}
-            tip="Auto-organize (vertical)"
+            onClick={() => dispatch(autoOrganizeCard({ direction: 'vertical', containerId: selectedContainerId }))}
+            tip={selectedContainerId ? 'Organize group (vertical)' : 'Auto-organize all (vertical)'}
           />
           <BarBtn
             id="ice-appbar-btn-organize-h"
             icon={Columns3}
-            onClick={() => dispatch(autoOrganizeCard({ direction: 'horizontal' }))}
-            tip="Auto-organize (horizontal)"
+            onClick={() => dispatch(autoOrganizeCard({ direction: 'horizontal', containerId: selectedContainerId }))}
+            tip={selectedContainerId ? 'Organize group (horizontal)' : 'Auto-organize all (horizontal)'}
           />
           <BarBtn
             id="ice-appbar-btn-undo"

@@ -286,13 +286,29 @@ export const CanvasContextMenu: React.FC = () => {
         <Separator />
         <SubMenu label={t('canvas.contextMenu.changeProvider')} items={providerItems} />
         {isContainer && (
-          <MenuItem
-            label={targetNode?.data?.folded ? t('canvas.contextMenu.unfold') : t('canvas.contextMenu.fold')}
-            onClick={() => {
-              dispatch(toggleCardNodeFold(targetId));
-              close();
-            }}
-          />
+          <>
+            <MenuItem
+              label={targetNode?.data?.folded ? t('canvas.contextMenu.unfold') : t('canvas.contextMenu.fold')}
+              onClick={() => {
+                dispatch(toggleCardNodeFold(targetId));
+                close();
+              }}
+            />
+            <MenuItem
+              label={t('canvas.contextMenu.autoOrganize') + ' ↕'}
+              onClick={() => {
+                dispatch(autoOrganizeCard({ direction: 'vertical', containerId: targetId }));
+                close();
+              }}
+            />
+            <MenuItem
+              label={t('canvas.contextMenu.autoOrganize') + ' ↔'}
+              onClick={() => {
+                dispatch(autoOrganizeCard({ direction: 'horizontal', containerId: targetId }));
+                close();
+              }}
+            />
+          </>
         )}
         {hasMultiSelection && (
           <MenuItem

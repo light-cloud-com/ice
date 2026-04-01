@@ -410,20 +410,20 @@ export const AiChatPanel: React.FC = () => {
   return (
     <div id="ice-ai-panel" className="h-full flex flex-col bg-ice-surface border-ice-border border-[0] xl:border-l">
       {/* Header */}
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-ice-border shrink-0">
-        <Sparkles aria-hidden="true" className="w-3.5 h-3.5 text-ice-accent" />
-        <span className="text-ice-xs font-medium text-ice-text-1">{t('ai.chat.title')}</span>
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-ice-border shrink-0 overflow-hidden">
+        <Sparkles aria-hidden="true" className="w-3.5 h-3.5 text-ice-accent shrink-0" />
+        <span className="text-ice-xs font-medium text-ice-text-1 whitespace-nowrap shrink-0">{t('ai.chat.title')}</span>
         {providerInfo?.ok && (
           <span
             className={cn(
-              'flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-medium leading-none',
+              'flex items-center gap-1 px-1.5 py-0.5 rounded text-ice-2xs font-medium leading-none min-w-0 truncate',
               providerInfo.isLocal
                 ? 'text-emerald-400/60'
                 : 'text-blue-400/60',
             )}
             title={`Provider: ${providerInfo.provider} | Model: ${providerInfo.model || 'unknown'}`}
           >
-            {providerInfo.isLocal ? <Cpu aria-hidden="true" className="w-2.5 h-2.5" /> : <Cloud aria-hidden="true" className="w-2.5 h-2.5" />}
+            {providerInfo.isLocal ? <Cpu aria-hidden="true" className="w-2.5 h-2.5 shrink-0" /> : <Cloud aria-hidden="true" className="w-2.5 h-2.5 shrink-0" />}
             {providerInfo.model || (providerInfo.isLocal ? 'Local' : 'Cloud')}
           </span>
         )}
@@ -479,7 +479,7 @@ export const AiChatPanel: React.FC = () => {
               >
                 <div className="flex-1 min-w-0">
                   <p className="text-ice-xs truncate">{conv.title || t('ai.chat.untitledConversation')}</p>
-                  <p className="text-[10px] text-ice-text-3/40">
+                  <p className="text-ice-2xs text-ice-text-3/40">
                     {conv._count.messages} {t('ai.chat.msgs')} · {formatDateTime(conv.updated_at)}
                   </p>
                 </div>
@@ -575,7 +575,7 @@ export const AiChatPanel: React.FC = () => {
                 <div className="mt-2 space-y-0.5">
                   {msg.operations.slice(0, 5).map((op, i) => (
                     <div key={i} className="flex items-center gap-1.5">
-                      <span className={cn('px-1 py-0.5 rounded text-[9px] font-mono', opBadgeColor(op))}>
+                      <span className={cn('px-1 py-0.5 rounded text-ice-2xs font-mono', opBadgeColor(op))}>
                         {op.op.startsWith('add') ? '+' : op.op.startsWith('delete') ? '×' : '~'}
                       </span>
                       <span className="text-ice-xs text-ice-text-2 truncate">{opSummary(op)}</span>
@@ -590,7 +590,7 @@ export const AiChatPanel: React.FC = () => {
               {msg.applied && (
                 <div className="flex items-center gap-1.5 mt-1.5">
                   <Check aria-hidden="true" className="w-3 h-3 text-emerald-400/60" />
-                  <span className="text-[10px] text-emerald-400/60">
+                  <span className="text-ice-2xs text-emerald-400/60">
                     {t('ai.chat.appliedChanges')} {msg.operationCount || msg.operations?.length || 0} {t('ai.chat.changes')}
                   </span>
                 </div>
@@ -628,7 +628,7 @@ export const AiChatPanel: React.FC = () => {
           <button
             id="ice-ai-btn-undo"
             onClick={undoAi}
-            className="flex items-center gap-1.5 text-[10px] text-ice-text-3/50 hover:text-ice-text-1 transition-colors outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
+            className="flex items-center gap-1.5 text-ice-2xs text-ice-text-3/50 hover:text-ice-text-1 transition-colors outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
           >
             <Undo2 aria-hidden="true" className="w-3 h-3" />
             {t('ai.chat.undoLastAi')}

@@ -60,18 +60,10 @@ export const DebugOverlay: React.FC = () => {
     return (
       <div
         onClick={() => setCollapsed(false)}
+        className="fixed bottom-4 right-4 z-[9999] rounded-full px-3 py-1 cursor-pointer font-mono text-ice-xs tabular-nums"
         style={{
-          position: 'fixed',
-          bottom: 16,
-          right: 16,
-          zIndex: 9999,
           background: 'rgba(15, 23, 42, 0.9)',
           border: '1px solid #334155',
-          borderRadius: 20,
-          padding: '4px 12px',
-          cursor: 'pointer',
-          fontFamily: 'ui-monospace, SFMono-Regular, monospace',
-          fontSize: 11,
           color: '#94a3b8',
         }}
       >
@@ -82,56 +74,34 @@ export const DebugOverlay: React.FC = () => {
 
   return (
     <div
+      className="fixed bottom-4 right-4 z-[9999] w-80 max-h-[480px] rounded-lg font-mono text-ice-xs overflow-hidden"
       style={{
-        position: 'fixed',
-        bottom: 16,
-        right: 16,
-        zIndex: 9999,
-        width: 320,
-        maxHeight: 480,
         background: 'var(--ice-bg-overlay)',
         border: '1px solid #334155',
-        borderRadius: 8,
-        fontFamily: 'ui-monospace, SFMono-Regular, monospace',
-        fontSize: 11,
         color: '#cbd5e1',
-        overflow: 'hidden',
       }}
     >
       {/* Header */}
       <div
+        className="flex justify-between items-center px-3 py-2"
         style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '8px 12px',
           borderBottom: '1px solid #1e293b',
           background: 'rgba(30, 41, 59, 0.5)',
         }}
       >
-        <span style={{ fontWeight: 700, color: '#8b5cf6' }}>{t('debug.title')}</span>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <span className="font-bold" style={{ color: '#8b5cf6' }}>{t('debug.title')}</span>
+        <div className="flex gap-2">
           <button
             onClick={() => setCollapsed(true)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#64748b',
-              cursor: 'pointer',
-              fontSize: 11,
-            }}
+            className="bg-transparent border-none cursor-pointer text-ice-xs"
+            style={{ color: '#64748b' }}
           >
             _
           </button>
           <button
             onClick={() => dispatch(toggleDebugPanel())}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#64748b',
-              cursor: 'pointer',
-              fontSize: 11,
-            }}
+            className="bg-transparent border-none cursor-pointer text-ice-xs"
+            style={{ color: '#64748b' }}
           >
             x
           </button>
@@ -139,7 +109,7 @@ export const DebugOverlay: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div className="px-3 py-2 flex flex-col gap-1.5">
         <Row
           label={t('debug.nodes')}
           value={`${nodeCount} (${groupCount} ${t('debug.groups')}, ${blockCount} ${t('debug.blocks')}, ${resourceCount} ${t('debug.resources')})`}
@@ -158,36 +128,20 @@ export const DebugOverlay: React.FC = () => {
       {/* Node list (scrollable) */}
       {activeCard && activeCard.nodes.length > 0 && (
         <div
-          style={{
-            borderTop: '1px solid #1e293b',
-            maxHeight: 200,
-            overflowY: 'auto',
-            padding: '4px 0',
-          }}
+          className="max-h-[200px] overflow-y-auto py-1"
+          style={{ borderTop: '1px solid #1e293b' }}
         >
-          <div style={{ padding: '4px 12px', color: '#64748b', fontWeight: 600, fontSize: 10 }}>
+          <div className="px-3 py-1 font-semibold text-ice-2xs" style={{ color: '#64748b' }}>
             {t('debug.nodesHeader', { count: nodeCount })}
           </div>
           {activeCard.nodes.map((node) => (
             <div
               key={node.id}
-              style={{
-                padding: '2px 12px',
-                fontSize: 10,
-                color: '#94a3b8',
-                display: 'flex',
-                gap: 8,
-              }}
+              className="px-3 py-0.5 text-ice-2xs flex gap-2"
+              style={{ color: '#94a3b8' }}
             >
-              <span style={{ color: '#64748b', minWidth: 50 }}>{node.type}</span>
-              <span
-                style={{
-                  flex: 1,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
+              <span className="min-w-[50px]" style={{ color: '#64748b' }}>{node.type}</span>
+              <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
                 {(node.data?.label as string) || node.id}
               </span>
               <span style={{ color: '#475569' }}>
@@ -202,21 +156,12 @@ export const DebugOverlay: React.FC = () => {
 };
 
 const Row: React.FC<{ label: string; value: string }> = ({ label, value }) => (
-  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+  <div className="flex justify-between gap-2">
     <span style={{ color: '#64748b' }}>{label}</span>
-    <span
-      style={{
-        textAlign: 'right',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-        maxWidth: 200,
-      }}
-    >
+    <span className="text-right overflow-hidden text-ellipsis whitespace-nowrap max-w-[200px]">
       {value}
     </span>
   </div>
 );
 
-const Divider: React.FC = () => <div style={{ borderTop: '1px solid #1e293b', margin: '2px 0' }} />;
-
+const Divider: React.FC = () => <div className="my-0.5" style={{ borderTop: '1px solid #1e293b' }} />;

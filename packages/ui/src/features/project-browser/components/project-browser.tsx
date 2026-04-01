@@ -114,10 +114,10 @@ const TreeItem = memo(
     return (
       <>
         <button
-          className={`group flex items-center w-full h-[26px] text-left text-ice-sm transition-colors focus-visible:ring-1 focus-visible:ring-blue-500 outline-none ${
+          className={`group flex items-center w-full py-1 text-left text-ice-sm transition-colors focus-visible:ring-1 focus-visible:ring-blue-500 outline-none ${
             isActive ? 'text-ice-text-1 font-medium' : 'text-ice-text-2 hover:text-ice-text-1'
           }`}
-          style={{ paddingLeft: `${indent}px` }}
+          style={{ paddingLeft: `calc(${indent}px * var(--ice-space-scale, 1))` }}
           onClick={() => {
             if (isFolder) {
               onToggle(node.id);
@@ -365,12 +365,12 @@ const ProjectSubPages = memo(
           return (
             <button
               key={sub.id}
-              className={`flex items-center w-full h-[22px] text-left text-ice-xs transition-colors outline-none focus-visible:ring-1 focus-visible:ring-blue-500 ${
+              className={`flex items-center w-full py-0.5 text-left text-ice-xs transition-colors outline-none focus-visible:ring-1 focus-visible:ring-blue-500 ${
                 active
                   ? 'text-ice-text-1 font-medium'
                   : 'text-ice-text-3 hover:text-ice-text-2'
               }`}
-              style={{ paddingLeft: `${indent}px` }}
+              style={{ paddingLeft: `calc(${indent}px * var(--ice-space-scale, 1))` }}
               onClick={() => onNavigateSubpage(node, sub.id)}
             >
               {active && <span className="w-px h-3 bg-blue-400 rounded-full mr-2 shrink-0" />}
@@ -382,12 +382,12 @@ const ProjectSubPages = memo(
 
         {/* Environments — collapsible */}
         <button
-          className={`flex items-center w-full h-[22px] text-left text-ice-xs transition-colors outline-none focus-visible:ring-1 focus-visible:ring-blue-500 ${
+          className={`flex items-center w-full py-0.5 text-left text-ice-xs transition-colors outline-none focus-visible:ring-1 focus-visible:ring-blue-500 ${
             isActive && activeSubpage === 'environments'
               ? 'text-ice-text-1 font-medium'
               : 'text-ice-text-3 hover:text-ice-text-2'
           }`}
-          style={{ paddingLeft: `${indent}px` }}
+          style={{ paddingLeft: `calc(${indent}px * var(--ice-space-scale, 1))` }}
           onClick={() => {
             onToggle(`env:${node.id}`);
             onNavigateSubpage(node, 'environments');
@@ -417,12 +417,12 @@ const ProjectSubPages = memo(
           return (
             <button
               key={env.id}
-              className={`flex items-center w-full h-[22px] text-left text-ice-xs transition-colors outline-none focus-visible:ring-1 focus-visible:ring-blue-500 ${
+              className={`flex items-center w-full py-0.5 text-left text-ice-xs transition-colors outline-none focus-visible:ring-1 focus-visible:ring-blue-500 ${
                 isActiveEnv
                   ? 'text-ice-text-1 font-medium'
                   : 'text-ice-text-3 hover:text-ice-text-2'
               }`}
-              style={{ paddingLeft: `${envIndent}px` }}
+              style={{ paddingLeft: `calc(${envIndent}px * var(--ice-space-scale, 1))` }}
               onClick={() => handleSwitchEnv(env)}
             >
               <span className={`w-1.5 h-1.5 rounded-full mr-2 shrink-0 ${dotColor}`} />

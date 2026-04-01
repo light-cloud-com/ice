@@ -177,7 +177,7 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
     <>
       <div
         id="ice-env-bar"
-        className="h-8 flex items-center gap-0.5 px-3 border-b border-ice-border bg-ice-base shrink-0"
+        className="h-8 flex items-center gap-0.5 px-3 border-b border-ice-border bg-ice-toolbar shrink-0"
       >
         {loading && environments.length === 0 ? (
           <div className="flex items-center gap-1.5 text-ice-xs text-ice-text-3">
@@ -227,7 +227,7 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="text-[9px] text-blue-400 hover:text-blue-300 truncate max-w-[100px]"
+                      className="text-ice-2xs text-blue-400 hover:text-blue-300 truncate max-w-[100px]"
                       title={deployStatus.url}
                     >
                       {deployStatus.url.replace(/^https?:\/\//, '').slice(0, 20)}
@@ -239,7 +239,7 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
 
                   {/* PR badge */}
                   {env.type === 'pr' && env.pr_number && (
-                    <span className="flex items-center gap-0.5 text-[9px] text-purple-400">
+                    <span className="flex items-center gap-0.5 text-ice-2xs text-purple-400">
                       <GitPullRequest className="w-2.5 h-2.5" />#{env.pr_number}
                     </span>
                   )}

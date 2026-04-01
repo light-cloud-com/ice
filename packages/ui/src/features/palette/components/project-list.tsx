@@ -67,7 +67,7 @@ const ProjectTreeItem: React.FC<ProjectTreeItemProps> = ({
         'group relative flex items-center gap-2 py-1.5 px-2 rounded-md cursor-pointer',
         'hover:bg-ice-hover transition-colors duration-150',
       )}
-      style={{ paddingLeft: `${depth * TREE_INDENT_PX + TREE_INDENT_BASE}px` }}
+      style={{ paddingLeft: `calc(${depth * TREE_INDENT_PX + TREE_INDENT_BASE}px * var(--ice-space-scale, 1))` }}
       onClick={(e) => {
         e.stopPropagation();
         if (type === 'folder' && onToggle) {

@@ -35,7 +35,7 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={onKeyDown}
           className={cn(
-            'w-full rounded-md border border-ice-border text-white placeholder:text-ice-text-3',
+            'w-full rounded-md border border-ice-border text-ice-text-1 placeholder:text-ice-text-3',
             'bg-white/[0.06] focus:outline-none focus:bg-white/[0.10] focus:border-ice-border-strong transition-colors',
             isMd ? 'pl-8 pr-8 py-2 text-ice-base' : 'pl-6 pr-7 py-1 text-ice-base',
           )}

@@ -217,11 +217,11 @@ export const ProjectEnvironments: React.FC<ProjectEnvironmentsProps> = ({ projec
                   <span className="text-ice-sm font-medium text-ice-text-1">{env.name}</span>
                   {env.is_protected && <Lock className="w-3 h-3 text-ice-text-3" />}
                   {env.type === 'pr' && env.pr_number && (
-                    <span className="flex items-center gap-0.5 text-[10px] text-purple-400">
+                    <span className="flex items-center gap-0.5 text-ice-2xs text-purple-400">
                       <GitPullRequest className="w-3 h-3" />#{env.pr_number}
                     </span>
                   )}
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-ice-hover text-ice-text-3 uppercase tracking-wider">
+                  <span className="text-ice-2xs px-1.5 py-0.5 rounded bg-ice-hover text-ice-text-3 uppercase tracking-wider">
                     {env.type}
                   </span>
                 </div>

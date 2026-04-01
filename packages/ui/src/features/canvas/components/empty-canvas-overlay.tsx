@@ -80,7 +80,7 @@ export const EmptyCanvasOverlay: React.FC<EmptyCanvasOverlayProps> = ({ onDismis
               <button
                 key={qs.id}
                 onClick={() => handleSelect(qs)}
-                className="flex flex-col items-center gap-2 p-[18px_14px] rounded-xl border border-ice-border bg-ice-raised cursor-pointer transition-all hover:border-ice-border-strong hover:shadow-md"
+                className="flex flex-col items-center gap-2 px-4 py-5 rounded-xl border border-ice-border bg-ice-raised cursor-pointer transition-all hover:border-ice-border-strong hover:shadow-md"
               >
                 <div
                   className="w-10 h-10 rounded-[10px] flex items-center justify-center"

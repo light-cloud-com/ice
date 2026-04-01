@@ -48,14 +48,7 @@ function applyTheme(isDark: boolean) {
   }
 }
 
-const FONT_PX: Record<FontSize, number> = {
-  small: 11,
-  default: 13,
-  large: 15,
-};
-
 function applyFontSize(size: FontSize) {
-  document.body.style.fontSize = `${FONT_PX[size]}px`;
   const el = document.documentElement;
   el.classList.remove('font-small', 'font-large');
   if (size === 'small') el.classList.add('font-small');

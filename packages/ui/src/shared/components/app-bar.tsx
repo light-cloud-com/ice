@@ -5,7 +5,7 @@
 import awsIcon from 'devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg';
 import azureIcon from 'devicon/icons/azure/azure-original.svg';
 import gcpIcon from 'devicon/icons/googlecloud/googlecloud-original.svg';
-import { Rows3, Columns3, CircleDot, Spline, Minus, GitCommitHorizontal, Rocket, Sun, Moon, Github, Undo2, Redo2 } from 'lucide-react';
+import { Rows3, Columns3, CircleDot, Spline, Minus, GitCommitHorizontal, Rocket, Sun, Moon, Github, Undo2, Redo2, Palette } from 'lucide-react';
 import React, { memo, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Breadcrumbs } from './breadcrumbs';
@@ -26,6 +26,7 @@ import {
 } from '../../store/slices/cards-slice';
 import { openDeployPanel } from '../../store/slices/deploy-slice';
 import { setEdgeStyle, type EdgeStyle } from '../../store/slices/ui-slice';
+import { useThemePicker } from './dev-accent-picker';
 import { checkGitHubConnection } from '../../store/slices/integrations-slice';
 import { useTheme } from '../hooks/use-theme';
 import { cn } from '../utils/cn';
@@ -52,6 +53,7 @@ function useElectronTitleBar() {
 export const AppBar: React.FC = memo(() => {
   const { t } = useTranslation();
   const { isDark, toggle, fontSize, increaseFontSize, decreaseFontSize } = useTheme();
+  const { toggle: toggleThemePicker } = useThemePicker();
   const { isElectron, showTrafficLightPad } = useElectronTitleBar();
   const dispatch = useDispatch<AppDispatch>();
   const deployIsOpen = useSelector((s: RootState) => s.deploy.isOpen);
@@ -94,7 +96,7 @@ export const AppBar: React.FC = memo(() => {
     <>
       <header
         data-testid="toolbar"
-        className="h-11 flex items-center gap-2 px-3 border-b border-ice-border bg-ice-surface relative z-[9999] shrink-0 transition-[padding]"
+        className="h-11 flex items-center gap-2 px-3 border-b border-ice-border bg-ice-toolbar relative z-[9999] shrink-0 transition-[padding]"
         style={{
           paddingLeft: showTrafficLightPad ? '78px' : undefined,
           ...(isElectron ? ({ WebkitAppRegion: 'drag' } as any) : {}),
@@ -184,6 +186,7 @@ export const AppBar: React.FC = memo(() => {
             className={githubStatus === 'connected' ? 'text-emerald-500' : undefined}
           />
           <BarSep />
+          <BarBtn icon={Palette} onClick={toggleThemePicker} tip="Color themes" />
           <BarBtn icon={isDark ? Sun : Moon} onClick={toggle} tip={isDark ? t('appBar.lightMode') : t('appBar.darkMode')} />
           <button
             onClick={decreaseFontSize}

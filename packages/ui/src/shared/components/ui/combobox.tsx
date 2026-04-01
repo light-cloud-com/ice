@@ -188,14 +188,14 @@ export const Combobox: React.FC<ComboboxProps> = ({
                     <div className="text-ice-2xs text-ice-text-3 truncate mt-0.5">
                       {opt.description}
                       {opt.badge && (
-                        <span className="ml-1.5 text-[8px] bg-ice-raised text-ice-text-2 px-1 py-0 rounded">
+                        <span className="ml-1.5 text-ice-2xs bg-ice-raised text-ice-text-2 px-1 py-0 rounded">
                           {opt.badge}
                         </span>
                       )}
                     </div>
                   )}
                   {!opt.description && opt.badge && (
-                    <span className="text-[8px] bg-ice-raised text-ice-text-2 px-1 py-0 rounded">{opt.badge}</span>
+                    <span className="text-ice-2xs bg-ice-raised text-ice-text-2 px-1 py-0 rounded">{opt.badge}</span>
                   )}
                 </div>
               ))}

@@ -473,7 +473,7 @@ const StatusPill: React.FC<{ status: string }> = ({ status }) => {
     failed: { label: t('pipeline.status.failed'), className: 'bg-red-500/10 text-red-500' },
   };
   const c = config[status] || { label: status, className: 'bg-ice-hover text-ice-text-3' };
-  return <span className={cn('px-1.5 py-0.5 text-[10px] font-semibold rounded-full', c.className)}>{c.label}</span>;
+  return <span className={cn('px-1.5 py-0.5 text-ice-2xs font-semibold rounded-full', c.className)}>{c.label}</span>;
 };
 
 interface BranchInfo {
@@ -611,7 +611,7 @@ const ActiveDeployment: React.FC<{
     {logs.length > 0 && (
       <div className="rounded-md border border-ice-border bg-slate-950 p-2 space-y-0.5 max-h-40 overflow-y-auto">
         {logs.map((log, i) => (
-          <div key={i} className="flex items-center gap-1.5 text-[11px] font-mono">
+          <div key={i} className="flex items-center gap-1.5 text-ice-xs font-mono">
             {log.status === 'completed' ? (
               <CheckCircle className="w-3 h-3 text-emerald-500 flex-shrink-0" />
             ) : log.status === 'failed' ? (
@@ -666,7 +666,7 @@ const EventRow: React.FC<{ event: DeploymentEvent }> = ({ event }) => {
       {showLogs && (
         <div className="border-t border-ice-border bg-slate-950 p-2 space-y-0.5 max-h-32 overflow-y-auto">
           {((event.deployment_logs || []) as DeployStep[]).map((log, i) => (
-            <div key={i} className="flex items-center gap-1.5 text-[11px] font-mono">
+            <div key={i} className="flex items-center gap-1.5 text-ice-xs font-mono">
               {log.status === 'completed' ? (
                 <CheckCircle className="w-3 h-3 text-emerald-500 flex-shrink-0" />
               ) : log.status === 'failed' ? (
@@ -678,10 +678,10 @@ const EventRow: React.FC<{ event: DeploymentEvent }> = ({ event }) => {
             </div>
           ))}
           {event.error && (
-            <div className="text-[11px] font-mono text-red-400 mt-1 pt-1 border-t border-slate-800">{event.error}</div>
+            <div className="text-ice-xs font-mono text-red-400 mt-1 pt-1 border-t border-slate-800">{event.error}</div>
           )}
           {event.duration_seconds && (
-            <div className="text-[11px] font-mono text-slate-500 mt-1">
+            <div className="text-ice-xs font-mono text-slate-500 mt-1">
               {t('pipeline.duration')} {formatDuration(event.duration_seconds)}
             </div>
           )}

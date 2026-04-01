@@ -160,7 +160,7 @@ export const IceSelect: React.FC<IceSelectProps> = memo(
                       )}
                     </div>
                     {opt.description && (
-                      <div className="text-[10px] text-ice-text-3/50 mt-0.5 leading-tight">{opt.description}</div>
+                      <div className="text-ice-2xs text-ice-text-3/50 mt-0.5 leading-tight">{opt.description}</div>
                     )}
                   </div>
                 </SelectPrimitive.Item>

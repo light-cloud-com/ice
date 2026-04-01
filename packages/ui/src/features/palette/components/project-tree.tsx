@@ -345,7 +345,7 @@ export const ProjectTree: React.FC = () => {
           'flex items-center gap-2 px-2 py-1 cursor-pointer rounded-md mx-1 transition-colors',
           isActiveEnv ? 'bg-blue-500/10 text-ice-text-1' : 'text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-2',
         )}
-        style={{ paddingLeft: `${depth * TREE_INDENT_PX + TREE_INDENT_BASE}px` }}
+        style={{ paddingLeft: `calc(${depth * TREE_INDENT_PX + TREE_INDENT_BASE}px * var(--ice-space-scale, 1))` }}
       >
         <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', dotColor)} />
         <span className="text-ice-sm truncate">{env.name}</span>
@@ -373,7 +373,7 @@ export const ProjectTree: React.FC = () => {
             'group flex items-center gap-1.5 px-2 py-1.5 cursor-pointer rounded-md mx-1 transition-colors',
             isActive ? 'bg-blue-500/15 text-white' : 'text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-1',
           )}
-          style={{ paddingLeft: `${depth * TREE_INDENT_PX + TREE_INDENT_BASE}px` }}
+          style={{ paddingLeft: `calc(${depth * TREE_INDENT_PX + TREE_INDENT_BASE}px * var(--ice-space-scale, 1))` }}
         >
           {/* Expand chevron (only if has envs) */}
           {hasEnvs ? (
@@ -471,7 +471,7 @@ export const ProjectTree: React.FC = () => {
               ? 'bg-green-500/15 text-green-400'
               : 'text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-1',
           )}
-          style={{ paddingLeft: `${depth * TREE_INDENT_PX + TREE_INDENT_BASE}px` }}
+          style={{ paddingLeft: `calc(${depth * TREE_INDENT_PX + TREE_INDENT_BASE}px * var(--ice-space-scale, 1))` }}
         >
           <ChevronIcon className="w-3 h-3 shrink-0 opacity-50" />
           <FolderIcon className="w-3.5 h-3.5 shrink-0 text-amber-400/70" />
@@ -571,7 +571,7 @@ export const ProjectTree: React.FC = () => {
       >
         {/* New folder inline input */}
         {creatingFolder !== null && (
-          <div className="flex items-center gap-1.5 px-2 py-1.5 mx-1" style={{ paddingLeft: '8px' }}>
+          <div className="flex items-center gap-1.5 pl-2 pr-2 py-1.5 mx-1">
             <FolderOpen className="w-3.5 h-3.5 text-amber-400/70 shrink-0" />
             <input
               ref={newFolderRef}

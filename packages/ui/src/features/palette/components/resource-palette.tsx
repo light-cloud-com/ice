@@ -812,7 +812,7 @@ const BlocksSection: React.FC<BlocksSectionProps> = ({
                 {!isSearching && (
                   <button
                     onClick={() => toggleCategory(category.id)}
-                    className="w-full flex items-center h-[26px] px-2 text-left transition-colors hover:text-ice-text-1"
+                    className="w-full flex items-center py-1 px-2 text-left transition-colors hover:text-ice-text-1"
                   >
                     <span className="w-4 h-4 flex items-center justify-center shrink-0 -ml-0.5 mr-0.5 rounded hover:bg-ice-hover"
                       onClick={(e) => { e.stopPropagation(); toggleCategory(category.id); }}
@@ -1123,7 +1123,7 @@ const ComponentItem: React.FC<ComponentItemProps> = ({ component, selectedProvid
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             className={cn(
-              'group flex items-center h-[24px] pl-6 pr-2 cursor-grab',
+              'group flex items-center py-0.5 pl-6 pr-2 cursor-grab',
               'hover:text-ice-text-1',
               'active:cursor-grabbing active:opacity-70',
               'transition-colors',

@@ -217,7 +217,7 @@ export const TemplateStep: React.FC<TemplateStepProps> = ({
                   </span>
                 ) : null}
                 {template.tags.slice(0, 2).map((tag) => (
-                  <Badge key={tag} variant="secondary" className="text-[8px] px-1 py-0 h-3.5">
+                  <Badge key={tag} variant="secondary" className="text-ice-2xs px-1 py-0 h-3.5">
                     {tag}
                   </Badge>
                 ))}

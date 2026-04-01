@@ -173,7 +173,7 @@ const DiffRow: React.FC<{
           {detail}
         </span>
       )}
-      <span className={cn('ml-auto text-[10px] font-semibold uppercase', config.color)}>{config.tag}</span>
+      <span className={cn('ml-auto text-ice-2xs font-semibold uppercase', config.color)}>{config.tag}</span>
     </div>
   );
 };

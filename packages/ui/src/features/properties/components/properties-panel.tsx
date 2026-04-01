@@ -269,7 +269,7 @@ const DriftCheckButton: React.FC<{ cardId: string; nodes: any[] }> = ({ cardId, 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
   <div className="pt-3 pb-2 px-3">
     {title && (
-      <div className="text-[10px] font-medium tracking-wide text-ice-text-3/50 mb-2">{title}</div>
+      <div className="text-ice-2xs font-medium tracking-wide text-ice-text-3/50 mb-2">{title}</div>
     )}
     <div className="space-y-1">{children}</div>
   </div>
@@ -374,7 +374,7 @@ const ListField: React.FC<{
       ))}
       <button
         onClick={() => onChange([...value, ''])}
-        className="text-[10px] text-ice-text-3/50 hover:text-ice-accent transition-colors"
+        className="text-ice-2xs text-ice-text-3/50 hover:text-ice-accent transition-colors"
       >
         + {addLabel || 'Add item'}
       </button>
@@ -417,8 +417,8 @@ const InfoRow: React.FC<{
   color?: string;
 }> = ({ label, value, color }) => (
   <div className="flex items-center justify-between py-px">
-    <span className="text-[10px] text-ice-text-3/50">{label}</span>
-    <span className={`text-[10px] font-mono ${color || 'text-ice-text-2'}`}>{value}</span>
+    <span className="text-ice-2xs text-ice-text-3/50">{label}</span>
+    <span className={`text-ice-2xs font-mono ${color || 'text-ice-text-2'}`}>{value}</span>
   </div>
 );
 
@@ -434,7 +434,7 @@ const RichSelectField: React.FC<{
   <div className="py-1 space-y-1.5">
     <div>
       <span className="text-ice-xs text-ice-text-3">{label}</span>
-      {description && <p className="text-[10px] text-ice-text-3/40 mt-0.5">{description}</p>}
+      {description && <p className="text-ice-2xs text-ice-text-3/40 mt-0.5">{description}</p>}
     </div>
     <div className="space-y-0.5">
       {options.map((opt) => (
@@ -451,11 +451,11 @@ const RichSelectField: React.FC<{
           <div className="flex items-center justify-between gap-2">
             <span className="text-ice-xs font-mono">{opt.label}</span>
             {opt.cost && (
-              <span className="text-[10px] text-emerald-400/60 shrink-0">{opt.cost}</span>
+              <span className="text-ice-2xs text-emerald-400/60 shrink-0">{opt.cost}</span>
             )}
           </div>
           {opt.description && (
-            <div className="text-[10px] text-ice-text-3/40 mt-0.5">{opt.description}</div>
+            <div className="text-ice-2xs text-ice-text-3/40 mt-0.5">{opt.description}</div>
           )}
         </button>
       ))}
@@ -584,7 +584,7 @@ const PropertyFields: React.FC<{
         <>
           <button
             onClick={() => setShowMore(!showMore)}
-            className="w-full flex items-center gap-1 px-3 py-2 text-[10px] text-ice-text-3/50 hover:text-ice-text-2 transition-colors"
+            className="w-full flex items-center gap-1 px-3 py-2 text-ice-2xs text-ice-text-3/50 hover:text-ice-text-2 transition-colors"
           >
             <ChevronRight className={`w-3 h-3 transition-transform duration-150 ${showMore ? 'rotate-90' : ''}`} />
             {showMore ? 'Fewer options' : `More options (${detailed.length})`}
@@ -766,7 +766,7 @@ export const PropertiesPanel: React.FC = () => {
                 <div className="absolute right-0 top-1/2 -translate-y-1/2 w-0 h-0 border-l-[5px] border-l-ice-text-3 border-y-[3px] border-y-transparent" />
               </div>
               {((edgeData.connectionCategory as string) || (edgeData.relationship as string)) && (
-                <span className="text-[9px] text-ice-text-3 font-mono">
+                <span className="text-ice-2xs text-ice-text-3 font-mono">
                   {(edgeData.connectionCategory as string) ||
                     ((edgeData.relationship as string) || '').replace('_', ' ')}
                 </span>
@@ -1582,7 +1582,7 @@ const PipelineSection: React.FC<{
                   <div className="border-t border-ice-border bg-slate-950 px-2 py-1.5 space-y-0.5 max-h-28 overflow-y-auto">
                     {logs.length > 0 ? (
                       logs.map((log, i) => (
-                        <div key={i} className="flex items-center gap-1 text-[10px] font-mono">
+                        <div key={i} className="flex items-center gap-1 text-ice-2xs font-mono">
                           <span
                             className={`shrink-0 ${
                               log.status === 'completed'
@@ -1603,15 +1603,15 @@ const PipelineSection: React.FC<{
                         </div>
                       ))
                     ) : (
-                      <div className="text-[10px] font-mono text-slate-500">{t('pipeline.noLogs')}</div>
+                      <div className="text-ice-2xs font-mono text-slate-500">{t('pipeline.noLogs')}</div>
                     )}
                     {ev.error && (
-                      <div className="text-[10px] font-mono text-red-400 pt-1 border-t border-slate-800">
+                      <div className="text-ice-2xs font-mono text-red-400 pt-1 border-t border-slate-800">
                         {ev.error}
                       </div>
                     )}
                     {ev.duration_seconds != null && (
-                      <div className="text-[10px] font-mono text-slate-500 pt-0.5">
+                      <div className="text-ice-2xs font-mono text-slate-500 pt-0.5">
                         {ev.duration_seconds < 60
                           ? `${ev.duration_seconds}s`
                           : `${Math.floor(ev.duration_seconds / 60)}m ${ev.duration_seconds % 60}s`}
@@ -1624,7 +1624,7 @@ const PipelineSection: React.FC<{
                           e.stopPropagation();
                           handleRetry(ev.id);
                         }}
-                        className="mt-1 px-2 py-0.5 text-[10px] font-medium rounded bg-amber-600 text-white hover:bg-amber-700 transition-colors"
+                        className="mt-1 px-2 py-0.5 text-ice-2xs font-medium rounded bg-amber-600 text-white hover:bg-amber-700 transition-colors"
                       >
                         {t('common.buttons.retry')}
                       </button>
@@ -2006,7 +2006,7 @@ const SourceRepositorySection: React.FC<{
 
           return (
             <Section title={t('pipeline.liveBuild')}>
-              <div className="rounded border border-ice-border bg-slate-950 p-2 max-h-32 overflow-y-auto font-mono text-[10px] leading-relaxed space-y-0.5">
+              <div className="rounded border border-ice-border bg-slate-950 p-2 max-h-32 overflow-y-auto font-mono text-ice-2xs leading-relaxed space-y-0.5">
                 {activeStatuses.map(({ svc, status }) => {
                   // Elapsed time since build started
                   const elapsed = status!.startedAt
@@ -2246,7 +2246,7 @@ const RepoDeployList: React.FC<{
                 <div className="border-t border-ice-border bg-slate-950 px-2 py-1.5 space-y-0.5 max-h-28 overflow-y-auto">
                   {logs.length > 0 ? (
                     logs.map((log, i) => (
-                      <div key={i} className="flex items-center gap-1 text-[10px] font-mono">
+                      <div key={i} className="flex items-center gap-1 text-ice-2xs font-mono">
                         <span
                           className={`shrink-0 ${
                             log.status === 'completed'
@@ -2267,13 +2267,13 @@ const RepoDeployList: React.FC<{
                       </div>
                     ))
                   ) : (
-                    <div className="text-[10px] font-mono text-slate-500">No logs recorded</div>
+                    <div className="text-ice-2xs font-mono text-slate-500">No logs recorded</div>
                   )}
                   {ev.error && (
-                    <div className="text-[10px] font-mono text-red-400 pt-1 border-t border-slate-800">{ev.error}</div>
+                    <div className="text-ice-2xs font-mono text-red-400 pt-1 border-t border-slate-800">{ev.error}</div>
                   )}
                   {ev.duration_seconds != null && (
-                    <div className="text-[10px] font-mono text-slate-500 pt-0.5">
+                    <div className="text-ice-2xs font-mono text-slate-500 pt-0.5">
                       {ev.duration_seconds < 60
                         ? `${ev.duration_seconds}s`
                         : `${Math.floor(ev.duration_seconds / 60)}m ${ev.duration_seconds % 60}s`}
@@ -2294,7 +2294,7 @@ const RepoDeployList: React.FC<{
                             });
                         });
                       }}
-                      className="mt-1 px-2 py-0.5 text-[10px] font-medium rounded bg-amber-600 text-white hover:bg-amber-700 transition-colors"
+                      className="mt-1 px-2 py-0.5 text-ice-2xs font-medium rounded bg-amber-600 text-white hover:bg-amber-700 transition-colors"
                     >
                       Retry
                     </button>

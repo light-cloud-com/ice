@@ -1,9 +1,23 @@
 /** @type {import('tailwindcss').Config} */
+
+/* Spacing that responds to A-/A+ via --ice-space-scale (see globals.css).
+ * Only applied to padding, margin, gap, and space — NOT width/height. */
+const _sp = (px) => `calc(${px}px * var(--ice-space-scale, 1))`;
+const scaledSpacing = {
+  '0.5': _sp(2), '1': _sp(4), '1.5': _sp(6), '2': _sp(8), '2.5': _sp(10),
+  '3': _sp(12), '3.5': _sp(14), '4': _sp(16), '5': _sp(20), '6': _sp(24),
+  '7': _sp(28), '8': _sp(32), '9': _sp(36), '10': _sp(40), '12': _sp(48),
+};
+
 export default {
   darkMode: ['class'],
   content: ['./src/renderer/**/*.{ts,tsx}', '../../packages/ui/src/**/*.{ts,tsx}', './src/renderer/index.html'],
   theme: {
     extend: {
+      padding: scaledSpacing,
+      margin: scaledSpacing,
+      gap: scaledSpacing,
+      space: scaledSpacing,
       colors: {
         /* ICE design tokens — use these instead of hardcoded hex */
         ice: {
@@ -93,15 +107,24 @@ export default {
         },
       },
       fontSize: {
-        'ice-2xs': ['9px', { lineHeight: '1.4' }],
-        'ice-xs':  ['10px', { lineHeight: '1.4' }],
-        'ice-sm':  ['11px', { lineHeight: '1.45' }],
-        'ice-base': ['12px', { lineHeight: '1.5' }],
-        'ice-md':  ['13px', { lineHeight: '1.5' }],
-        'ice-lg':  ['14px', { lineHeight: '1.5' }],
-        'ice-xl':  ['16px', { lineHeight: '1.4' }],
-        'ice-2xl': ['22px', { lineHeight: '1.3' }],
-        'ice-3xl': ['28px', { lineHeight: '1.2' }],
+        /* ICE scale — driven by CSS custom properties (see globals.css)
+         * so every size responds to the A-/A+ accessibility buttons. */
+        'ice-2xs': ['var(--ice-fs-2xs)', { lineHeight: '1.5' }],
+        'ice-xs':  ['var(--ice-fs-xs)',  { lineHeight: '1.5' }],
+        'ice-sm':  ['var(--ice-fs-sm)',  { lineHeight: '1.5' }],
+        'ice-base':['var(--ice-fs-sm)',  { lineHeight: '1.5' }],
+        'ice-md':  ['var(--ice-fs-md)',  { lineHeight: '1.5' }],
+        'ice-lg':  ['var(--ice-fs-lg)',  { lineHeight: '1.5' }],
+        'ice-xl':  ['var(--ice-fs-xl)',  { lineHeight: '1.4' }],
+        'ice-2xl': ['var(--ice-fs-3xl)', { lineHeight: '1.3' }],
+        'ice-3xl': ['var(--ice-fs-4xl)', { lineHeight: '1.2' }],
+        /* Override Tailwind built-in sizes so they also scale with A-/A+. */
+        'xs':   ['var(--ice-fs-sm)',  { lineHeight: '1.5' }],
+        'sm':   ['var(--ice-fs-lg)',  { lineHeight: '1.5' }],
+        'base': ['var(--ice-fs-xl)',  { lineHeight: '1.5' }],
+        'lg':   ['var(--ice-fs-2xl)', { lineHeight: '1.5' }],
+        'xl':   ['var(--ice-fs-3xl)', { lineHeight: '1.4' }],
+        '2xl':  ['var(--ice-fs-4xl)', { lineHeight: '1.3' }],
       },
       borderRadius: {
         lg: 'var(--radius)',

@@ -50,11 +50,11 @@ const SidebarStripButton: React.FC<{ tab: SidebarStripTab; side: SidebarSide }> 
       onClick={tab.onClick}
       title={tab.label}
       className={cn(
-        'relative flex items-center justify-center w-[26px] rounded-sm transition-colors cursor-pointer',
+        'relative flex items-center justify-center w-[26px] py-1.5 rounded-sm transition-colors cursor-pointer',
         'hover:bg-ice-bg-hover',
         tab.active ? 'text-ice-accent' : 'text-ice-text-tertiary hover:text-ice-text-secondary',
       )}
-      style={{ height: 'auto', padding: '6px 0' }}
+      style={{ height: 'auto' }}
     >
       {/* Active indicator bar */}
       {tab.active && (
@@ -67,7 +67,7 @@ const SidebarStripButton: React.FC<{ tab: SidebarStripTab; side: SidebarSide }> 
       <div className="flex flex-col items-center gap-1">
         <Icon className="w-3.5 h-3.5 shrink-0" />
         <span
-          className="text-[9px] font-medium leading-none whitespace-nowrap"
+          className="text-ice-2xs font-medium leading-none whitespace-nowrap"
           style={{
             writingMode: 'vertical-lr',
             textOrientation: 'mixed',

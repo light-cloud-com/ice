@@ -15,6 +15,7 @@
 
 // Account components not needed in community (single user)
 import { DebugOverlay } from '@ui/features/debug/components/debug-overlay';
+import { DevAccentPicker } from '@ui/shared/components/dev-accent-picker';
 import { OnboardingPage, OnboardingChecklist } from '@ui/features/onboarding';
 import { ProjectWizard } from '@ui/features/wizard';
 import { AppBar } from '@ui/shared/components/app-bar';
@@ -183,19 +184,21 @@ const DynamicContent: React.FC = () => {
 const App: React.FC = () => (
   <LocaleProvider>
     <ErrorBoundary name="App">
-      <BrowserRouter>
-        <Routes>
-        <Route path="/onboarding" element={<OnboardingPage />} />
-        <Route
-          path="/*"
-          element={
-            <ErrorBoundary name="Canvas">
-              <DynamicContent />
-            </ErrorBoundary>
-          }
-        />
-        </Routes>
-      </BrowserRouter>
+      <DevAccentPicker>
+        <BrowserRouter>
+          <Routes>
+          <Route path="/onboarding" element={<OnboardingPage />} />
+          <Route
+            path="/*"
+            element={
+              <ErrorBoundary name="Canvas">
+                <DynamicContent />
+              </ErrorBoundary>
+            }
+          />
+          </Routes>
+        </BrowserRouter>
+      </DevAccentPicker>
     </ErrorBoundary>
   </LocaleProvider>
 );

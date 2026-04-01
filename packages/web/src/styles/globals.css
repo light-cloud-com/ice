@@ -11,27 +11,27 @@
 @layer base {
   :root {
     /* ── Light mode — "Warm Slate" ──
-     * Not sterile white. A warm, tinted palette with clear surface hierarchy.
-     * Inspired by Linear, Notion, Apple HIG light themes.
+     * Clear 4-level surface hierarchy. Sidebar visibly distinct from canvas.
+     * Inspired by Linear, Notion, VS Code light themes.
      */
 
-    /* Backgrounds — Notion/Linear inspired light theme */
-    --ice-bg-base: #ffffff;           /* Content area — white */
-    --ice-bg-surface: #f2f3f5;        /* Sidebar — warm light gray */
+    /* Backgrounds — clear zone separation */
+    --ice-bg-base: #ffffff;           /* Canvas — pure white */
+    --ice-bg-surface: #f4f5f7;        /* Sidebar — visible warm gray */
     --ice-bg-raised: #ffffff;         /* Cards, modals */
     --ice-bg-overlay: #ffffff;        /* Dropdowns, popovers */
     --ice-bg-hover: rgba(0, 0, 0, 0.04);
-    --ice-bg-active: rgba(0, 0, 0, 0.07);
-    --ice-bg-toolbar: #f7f7f8;        /* Toolbar */
+    --ice-bg-active: rgba(0, 0, 0, 0.08);
+    --ice-bg-toolbar: #ebedf1;        /* Toolbar — distinctly darker than canvas */
 
     /* Borders — clearly visible */
-    --ice-border: #e0e0e3;
-    --ice-border-strong: #cbccd0;
+    --ice-border: #dcdee3;
+    --ice-border-strong: #c4c7cd;
 
-    /* Text — high contrast */
-    --ice-text-primary: #11181c;
-    --ice-text-secondary: #444c56;
-    --ice-text-tertiary: #6e7781;
+    /* Text — balanced contrast */
+    --ice-text-primary: #1a2332;
+    --ice-text-secondary: #475569;
+    --ice-text-tertiary: #64748b;
 
     /* Accent — vivid blue */
     --ice-accent: #2563eb;
@@ -70,21 +70,21 @@
 
   .dark {
     /* ── Dark mode — Midnight Navy ──
-     * Deep navy palette inspired by platform editor skyDark theme.
-     * Clean 4-level surface hierarchy with sky-blue accent.
+     * Deep navy palette with clear 4-level surface hierarchy.
+     * Sidebar visibly lighter than the deep canvas.
      */
-    --ice-bg-base: #0e1621;           /* Editor background — deepest navy */
-    --ice-bg-surface: #0D141E;        /* Sidebar, tool windows */
-    --ice-bg-raised: #2E3A4D;         /* Cards, tabs, elevated */
-    --ice-bg-overlay: #2c3548;        /* Dropdowns, popovers */
+    --ice-bg-base: #0c1118;           /* Canvas — deepest navy */
+    --ice-bg-surface: #141c28;        /* Sidebar — noticeably lighter than canvas */
+    --ice-bg-raised: #1c2535;         /* Cards, tabs, elevated */
+    --ice-bg-overlay: #1e2838;        /* Dropdowns, popovers */
     --ice-bg-hover: rgba(255, 255, 255, 0.06);
-    --ice-bg-active: #0D141E;         /* Selected item */
-    --ice-bg-toolbar: #0D141E;        /* Toolbar — between base and surface */
-    --ice-border: #2e3a4d;            /* Subtle dividers — navy-tinted */
-    --ice-border-strong: #3d4b62;     /* Strong borders */
-    --ice-text-primary: #e1e7ef;      /* Near white — 12:1 contrast on base */
-    --ice-text-secondary: #8b9ab5;    /* Mid blue-gray — 5:1 contrast */
-    --ice-text-tertiary: #5c6b82;     /* Muted */
+    --ice-bg-active: rgba(255, 255, 255, 0.08);
+    --ice-bg-toolbar: #111923;        /* Toolbar — between base and surface */
+    --ice-border: #1e2a3a;            /* Subtle dividers */
+    --ice-border-strong: #2d3b4e;     /* Strong borders */
+    --ice-text-primary: #d1d9e6;      /* Soft white — gentler on dark backgrounds */
+    --ice-text-secondary: #94a3b8;    /* Mid blue-gray */
+    --ice-text-tertiary: #64748b;     /* Readable muted */
     --ice-accent: #4c9aff;            /* Sky blue */
     --ice-accent-hover: #6bb0ff;
     --ice-accent-muted: rgba(76, 154, 255, 0.15);
@@ -95,24 +95,24 @@
     --ice-yellow: #fbbf24;            /* Amber */
 
     /* shadcn dark — Midnight Navy */
-    --background: 216 40% 10%;
+    --background: 216 40% 7%;
     --foreground: 214 31% 91%;
-    --card: 220 24% 19%;
+    --card: 216 28% 16%;
     --card-foreground: 214 31% 91%;
-    --popover: 221 24% 23%;
+    --popover: 216 26% 17%;
     --popover-foreground: 214 31% 91%;
     --primary: 214 100% 65%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 220 24% 19%;
+    --secondary: 216 28% 16%;
     --secondary-foreground: 219 22% 63%;
-    --muted: 220 24% 19%;
-    --muted-foreground: 216 17% 44%;
-    --accent: 220 24% 19%;
+    --muted: 216 28% 16%;
+    --muted-foreground: 216 17% 42%;
+    --accent: 216 28% 16%;
     --accent-foreground: 219 22% 63%;
     --destructive: 0 82% 68%;
     --destructive-foreground: 0 0% 100%;
-    --border: 217 25% 24%;
-    --input: 217 25% 24%;
+    --border: 215 30% 17%;
+    --input: 215 30% 17%;
     --ring: 214 100% 65%;
   }
 }
@@ -122,11 +122,55 @@
     @apply border-border;
   }
 
+  /* ── Responsive font-size scale ──
+   * All font sizes flow through CSS custom properties so the A-/A+
+   * accessibility buttons scale every piece of text in the UI.
+   */
   html {
     color-scheme: light dark;
+
+    --ice-fs-2xs: 10px;
+    --ice-fs-xs:  11px;
+    --ice-fs-sm:  12px;
+    --ice-fs-md:  13px;
+    --ice-fs-lg:  14px;
+    --ice-fs-xl:  16px;
+    --ice-fs-2xl: 18px;
+    --ice-fs-3xl: 20px;
+    --ice-fs-4xl: 24px;
+
+    --ice-space-scale: 1;
   }
   html.dark {
     color-scheme: dark;
+  }
+
+  html.font-small {
+    --ice-fs-2xs: 9px;
+    --ice-fs-xs:  9px;
+    --ice-fs-sm:  10px;
+    --ice-fs-md:  11px;
+    --ice-fs-lg:  12px;
+    --ice-fs-xl:  14px;
+    --ice-fs-2xl: 15px;
+    --ice-fs-3xl: 17px;
+    --ice-fs-4xl: 20px;
+
+    --ice-space-scale: 0.875;
+  }
+
+  html.font-large {
+    --ice-fs-2xs: 12px;
+    --ice-fs-xs:  13px;
+    --ice-fs-sm:  14px;
+    --ice-fs-md:  15px;
+    --ice-fs-lg:  16px;
+    --ice-fs-xl:  18px;
+    --ice-fs-2xl: 21px;
+    --ice-fs-3xl: 23px;
+    --ice-fs-4xl: 28px;
+
+    --ice-space-scale: 1.125;
   }
 
   body {
@@ -135,8 +179,8 @@
     background: var(--ice-bg-base);
     color: var(--ice-text-primary);
     font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace;
-    font-weight: 500;
-    font-size: 13px;
+    font-weight: 400;
+    font-size: var(--ice-fs-md);
     line-height: 1.5;
     font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
     -webkit-font-smoothing: antialiased;
@@ -161,10 +205,6 @@
     outline: 1px solid var(--ice-accent);
     outline-offset: -1px;
   }
-
-  /* ── Font size accessibility ── */
-  html.font-small body { font-size: 13px; }
-  html.font-large body { font-size: 20px; }
 }
 
 @layer components {
@@ -247,11 +287,11 @@
     box-shadow: none;
   }
   .ice-card-header {
-    padding: 20px 24px 16px;
+    @apply px-6 pt-5 pb-4;
     border-bottom: 1px solid var(--ice-border);
   }
   .ice-card-body {
-    padding: 20px 24px;
+    @apply px-6 py-5;
   }
 
   /* ── React Flow / Canvas ──────────────────────────────────────────────── */

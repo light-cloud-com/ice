@@ -224,7 +224,7 @@ export const ProjectCollaborators: React.FC<ProjectCollaboratorsProps> = ({ proj
                   {m.name}
                   {isCurrentUser && <span className="text-ice-text-3 ml-1">{t('account.collaborators.youBadge')}</span>}
                 </p>
-                <p className="text-[10px] text-ice-text-3 truncate">{m.email}</p>
+                <p className="text-ice-2xs text-ice-text-3 truncate">{m.email}</p>
               </div>
 
               {/* Role dropdown */}

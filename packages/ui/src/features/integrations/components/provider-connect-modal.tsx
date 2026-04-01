@@ -261,7 +261,7 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
                         </a>
                       </li>
                       <li>
-                        Name it (e.g. <code className="px-1 py-0.5 rounded bg-muted text-[10px]">ice-deployer</code>),
+                        Name it (e.g. <code className="px-1 py-0.5 rounded bg-muted text-ice-2xs">ice-deployer</code>),
                         click <strong>Create and Continue</strong>
                       </li>
                       <li>
@@ -298,7 +298,7 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
                       <p className="font-medium text-foreground">Troubleshooting</p>
                       <p>
                         <strong>Can't create keys?</strong> Your organisation may enforce{' '}
-                        <code className="px-1 py-0.5 rounded bg-muted text-[10px]">
+                        <code className="px-1 py-0.5 rounded bg-muted text-ice-2xs">
                           iam.disableServiceAccountKeyCreation
                         </code>
                         . An admin can override this for your project in{' '}

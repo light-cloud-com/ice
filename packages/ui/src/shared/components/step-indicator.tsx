@@ -62,7 +62,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep, total
             {step < totalSteps && (
               <div
                 className={cn(
-                  'flex-1 h-0.5 mx-2 mt-[-16px] rounded-full transition-all',
+                  'flex-1 h-0.5 mx-2 -mt-4 rounded-full transition-all',
                   step < currentStep ? 'bg-ice-green' : 'bg-ice-border',
                 )}
               />

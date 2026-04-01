@@ -1034,7 +1034,7 @@ const ApiErrorBanner: React.FC<{
           <p>
             1. <strong>Use a Service Account Key</strong> — disconnect the current OAuth connection, then reconnect with
             a service account JSON key (recommended). If key creation is blocked by org policy, ask an admin to allow{' '}
-            <code className="px-1 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-[10px]">
+            <code className="px-1 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-ice-2xs">
               iam.disableServiceAccountKeyCreation
             </code>{' '}
             in{' '}

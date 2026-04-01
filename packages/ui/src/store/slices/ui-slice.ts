@@ -29,6 +29,8 @@ interface SplitViewState {
   activePaneId: string;
 }
 
+export type EdgeStyle = 'bezier' | 'straight' | 'rectangular';
+
 interface UIState {
   // Panel visibility
   showPalette: boolean;
@@ -37,6 +39,9 @@ interface UIState {
   showMinimap: boolean;
   showValidation: boolean;
   showAiChat: boolean;
+
+  // Edge / connection line style
+  edgeStyle: EdgeStyle;
 
   // Theme
   theme: 'light' | 'dark' | 'system';
@@ -122,6 +127,7 @@ const initialState: UIState = {
   showMinimap: true,
   showValidation: false,
   showAiChat: true,
+  edgeStyle: 'bezier' as EdgeStyle,
   theme: 'system',
   viewport: { x: 0, y: 0, zoom: 1 },
   contextMenu: {
@@ -161,6 +167,9 @@ const uiSlice = createSlice({
     },
     toggleAiChat: (state) => {
       state.showAiChat = !state.showAiChat;
+    },
+    setEdgeStyle: (state, action: PayloadAction<EdgeStyle>) => {
+      state.edgeStyle = action.payload;
     },
     openContextMenu: (
       state,
@@ -315,6 +324,7 @@ export const {
   toggleProperties,
   toggleMinimap,
   toggleAiChat,
+  setEdgeStyle,
   openContextMenu,
   closeContextMenu,
   openDialog,

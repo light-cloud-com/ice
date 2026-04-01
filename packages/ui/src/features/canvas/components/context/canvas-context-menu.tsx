@@ -210,6 +210,13 @@ export const CanvasContextMenu: React.FC = () => {
             close();
           }}
         />
+        <MenuItem
+          label={t('canvas.contextMenu.autoOrganize') + ' ◎'}
+          onClick={() => {
+            dispatch(autoOrganizeCard({ layout: 'circular' }));
+            close();
+          }}
+        />
       </div>
     );
   }
@@ -305,6 +312,13 @@ export const CanvasContextMenu: React.FC = () => {
               label={t('canvas.contextMenu.autoOrganize') + ' ↔'}
               onClick={() => {
                 dispatch(autoOrganizeCard({ direction: 'horizontal', containerId: targetId }));
+                close();
+              }}
+            />
+            <MenuItem
+              label={t('canvas.contextMenu.autoOrganize') + ' ◎'}
+              onClick={() => {
+                dispatch(autoOrganizeCard({ layout: 'circular', containerId: targetId }));
                 close();
               }}
             />

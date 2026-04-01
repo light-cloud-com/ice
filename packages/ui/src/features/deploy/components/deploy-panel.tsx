@@ -22,6 +22,7 @@ import {
 import React, { useCallback, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useSelector, useDispatch } from 'react-redux';
+import { IceSelect } from '../../../shared/components/ui/ice-select';
 import { useTranslation } from '../../../i18n';
 import { isApiNotEnabledError, extractApiName, extractApiEnableUrl } from '../../../shared/utils/gcp-errors';
 import { getApi } from '../../../shared/api/api-adapter';
@@ -432,6 +433,7 @@ export const DeployPanel: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
             region={deploy.region}
             environment={deploy.environment}
             disabled={deploy.status === 'deploying'}
+            projectId={activeCard?.projectId}
             onProviderChange={(v) => {
               dispatch(setProvider(v));
               const regions = PROVIDER_REGIONS[v];
@@ -701,22 +703,25 @@ const ConfigSection: React.FC<{
   region: string;
   environment: string;
   disabled: boolean;
+  projectId?: string;
   onProviderChange: (v: string) => void;
   onProjectChange: (v: string) => void;
   onRegionChange: (v: string) => void;
-  onEnvironmentChange: (v: 'development' | 'staging' | 'production') => void;
+  onEnvironmentChange: (v: string) => void;
 }> = ({
   provider,
   gcpProject,
   region,
   environment,
   disabled,
+  projectId,
   onProviderChange,
   onProjectChange,
   onRegionChange,
   onEnvironmentChange,
 }) => {
   const { t } = useTranslation();
+  const environments = useSelector((s: RootState) => projectId ? (s.environments.byProject[projectId] || []) : []);
   const regions = PROVIDER_REGIONS[provider] || PROVIDER_REGIONS.gcp!;
   const projectMeta = PROVIDER_PROJECT_LABELS[provider] || PROVIDER_PROJECT_LABELS.gcp!;
   const [providerConnected, setProviderConnected] = React.useState(false);
@@ -771,38 +776,35 @@ const ConfigSection: React.FC<{
         {/* Provider */}
         <div className="space-y-1">
           <label className="text-xs font-medium text-muted-foreground">{t('deploy.config.providerLabel')}</label>
-          <select
+          <IceSelect
             value={provider}
-            onChange={(e) => onProviderChange(e.target.value)}
+            onChange={onProviderChange}
             disabled={disabled}
-            id="ice-deploy-select-provider"
-            className="w-full px-2.5 py-1.5 text-sm rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-50"
-          >
-            <option value="gcp">GCP</option>
-            <option value="aws">AWS</option>
-            <option value="azure">Azure</option>
-            <option value="kubernetes">Kubernetes</option>
-          </select>
+            size="md"
+            fullWidth
+            allowEmpty={false}
+            options={[
+              { value: 'gcp', label: 'GCP' },
+              { value: 'aws', label: 'AWS' },
+              { value: 'azure', label: 'Azure' },
+              { value: 'kubernetes', label: 'Kubernetes' },
+            ]}
+          />
         </div>
 
         {/* Project / Account — dropdown if connected projects available, text input otherwise */}
         <div className="space-y-1">
           <label className="text-xs font-medium text-muted-foreground">{projectMeta.label}</label>
           {connectedProjects.length > 0 ? (
-            <select
+            <IceSelect
               value={gcpProject}
-              onChange={(e) => onProjectChange(e.target.value)}
+              onChange={onProjectChange}
               disabled={disabled}
-              id="ice-deploy-input-project"
-              className="w-full px-2.5 py-1.5 text-sm rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-50"
-            >
-              <option value="">{t('deploy.config.selectProject')}</option>
-              {connectedProjects.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name || p.id}
-                </option>
-              ))}
-            </select>
+              size="md"
+              fullWidth
+              placeholder={t('deploy.config.selectProject')}
+              options={connectedProjects.map((p) => ({ value: p.id, label: p.name || p.id }))}
+            />
           ) : (
             <input
               type="text"
@@ -811,7 +813,7 @@ const ConfigSection: React.FC<{
               disabled={disabled}
               placeholder={projectMeta.placeholder}
               id="ice-deploy-input-project"
-              className="w-full px-2.5 py-1.5 text-sm rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-50"
+              className="w-full bg-transparent border-b border-ice-border/50 px-1 py-1 text-ice-sm text-ice-text-1 outline-none focus:border-ice-accent transition-colors"
             />
           )}
         </div>
@@ -819,34 +821,36 @@ const ConfigSection: React.FC<{
         {/* Region */}
         <div className="space-y-1">
           <label className="text-xs font-medium text-muted-foreground">{t('deploy.config.regionLabel')}</label>
-          <select
+          <IceSelect
             value={region}
-            onChange={(e) => onRegionChange(e.target.value)}
+            onChange={onRegionChange}
             disabled={disabled}
-            id="ice-deploy-select-region"
-            className="w-full px-2.5 py-1.5 text-sm rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-50"
-          >
-            {regions.map((r) => (
-              <option key={r} value={r}>
-                {r}
-              </option>
-            ))}
-          </select>
+            size="md"
+            fullWidth
+            allowEmpty={false}
+            options={regions}
+          />
         </div>
 
         {/* Environment */}
         <div className="space-y-1">
           <label className="text-xs font-medium text-muted-foreground">{t('deploy.config.environmentLabel')}</label>
-          <select
+          <IceSelect
             value={environment}
-            onChange={(e) => onEnvironmentChange(e.target.value as any)}
+            onChange={(v) => onEnvironmentChange(v)}
             disabled={disabled}
-            className="w-full px-2.5 py-1.5 text-sm rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-50"
-          >
-            <option value="development">{t('deploy.config.envDevelopment')}</option>
-            <option value="staging">{t('deploy.config.envStaging')}</option>
-            <option value="production">{t('deploy.config.envProduction')}</option>
-          </select>
+            size="md"
+            fullWidth
+            allowEmpty={false}
+            options={environments.length > 0
+              ? environments.map((env) => ({ value: env.name.toLowerCase(), label: env.name }))
+              : [
+                  { value: 'development', label: t('deploy.config.envDevelopment') },
+                  { value: 'staging', label: t('deploy.config.envStaging') },
+                  { value: 'production', label: t('deploy.config.envProduction') },
+                ]
+            }
+          />
         </div>
       </div>
     </div>

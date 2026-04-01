@@ -12,6 +12,7 @@
 import React, { memo, useMemo, useState, useCallback, useRef } from 'react';
 import { EDGE_COLORS } from '../../../config/color-palette';
 import { inferConnectionMeta, CATEGORY_LABELS, type ConnectionCategory } from '../utils/connection-rules';
+import type { EdgeStyle } from '../../../store/slices/ui-slice';
 import type { CanvasNode, CanvasConnection } from './svg-canvas';
 
 // ─── Tooltip info passed up to canvas ───────────────────────────────────────
@@ -54,6 +55,8 @@ interface SvgConnectionPathProps {
   pipelineActive?: boolean;
   /** Level of detail: 3=full, 2=compact, 1=iconic */
   lod?: number;
+  /** Edge routing style */
+  edgeStyle?: EdgeStyle;
 }
 
 // Re-export for backwards compatibility
@@ -127,6 +130,77 @@ function getControlPoint(point: Point, side: Side, offset: number): Point {
   }
 }
 
+function buildStraightPath(
+  start: Point,
+  end: Point,
+): { pathD: string; midX: number; midY: number } {
+  const pathD = `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
+  return { pathD, midX: (start.x + end.x) / 2, midY: (start.y + end.y) / 2 };
+}
+
+function buildRectangularPath(
+  start: Point,
+  end: Point,
+  exitSide: Side,
+  entrySide: Side,
+): { pathD: string; midX: number; midY: number } {
+  const GAP = 20; // offset before first turn
+  const points: Point[] = [start];
+
+  // Build orthogonal waypoints based on exit/entry sides
+  if (
+    (exitSide === 'right' && entrySide === 'left') ||
+    (exitSide === 'left' && entrySide === 'right')
+  ) {
+    const midX = (start.x + end.x) / 2;
+    points.push({ x: midX, y: start.y }, { x: midX, y: end.y });
+  } else if (
+    (exitSide === 'bottom' && entrySide === 'top') ||
+    (exitSide === 'top' && entrySide === 'bottom')
+  ) {
+    const midY = (start.y + end.y) / 2;
+    points.push({ x: start.x, y: midY }, { x: end.x, y: midY });
+  } else if (
+    (exitSide === 'right' || exitSide === 'left') &&
+    (entrySide === 'top' || entrySide === 'bottom')
+  ) {
+    const outX = exitSide === 'right' ? start.x + GAP : start.x - GAP;
+    points.push({ x: outX, y: start.y }, { x: outX, y: end.y });
+  } else {
+    const outY = exitSide === 'bottom' ? start.y + GAP : start.y - GAP;
+    points.push({ x: start.x, y: outY }, { x: end.x, y: outY });
+  }
+  points.push(end);
+
+  // Build rounded-corner polyline using small arc segments
+  const R = 8; // corner radius
+  let d = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 1; i < points.length - 1; i++) {
+    const prev = points[i - 1];
+    const cur = points[i];
+    const next = points[i + 1];
+    // Direction vectors
+    const dxIn = cur.x - prev.x, dyIn = cur.y - prev.y;
+    const dxOut = next.x - cur.x, dyOut = next.y - cur.y;
+    const lenIn = Math.sqrt(dxIn * dxIn + dyIn * dyIn);
+    const lenOut = Math.sqrt(dxOut * dxOut + dyOut * dyOut);
+    const r = Math.min(R, lenIn / 2, lenOut / 2);
+    if (r < 1 || lenIn < 1 || lenOut < 1) {
+      d += ` L ${cur.x} ${cur.y}`;
+      continue;
+    }
+    const beforeX = cur.x - (dxIn / lenIn) * r;
+    const beforeY = cur.y - (dyIn / lenIn) * r;
+    const afterX = cur.x + (dxOut / lenOut) * r;
+    const afterY = cur.y + (dyOut / lenOut) * r;
+    d += ` L ${beforeX} ${beforeY} Q ${cur.x} ${cur.y} ${afterX} ${afterY}`;
+  }
+  d += ` L ${points[points.length - 1].x} ${points[points.length - 1].y}`;
+
+  const mid = points[Math.floor(points.length / 2)];
+  return { pathD: d, midX: mid.x, midY: mid.y };
+}
+
 // =============================================================================
 // Component
 // =============================================================================
@@ -149,6 +223,7 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
     onContextMenu: onEdgeContextMenu,
     pipelineActive = false,
     lod = 3,
+    edgeStyle = 'bezier',
   }) => {
     const [isHover, setIsHover] = useState(false);
     const isActive = isSelected || isHighlighted;
@@ -222,14 +297,16 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
       [onConnectionHover, buildTooltip],
     );
 
-    // Calculate bezier path
+    // Calculate path based on edgeStyle
     const pathData = useMemo(() => {
       if (!fromNode || !toNode) return null;
       const { exitSide, entrySide } = chooseSides(fromNode, toNode);
       const start = getEdgePoint(fromNode, exitSide, sourcePortIndex, sourcePortCount);
       const end = getEdgePoint(toNode, entrySide, targetPortIndex, targetPortCount);
+      if (edgeStyle === 'straight') return buildStraightPath(start, end);
+      if (edgeStyle === 'rectangular') return buildRectangularPath(start, end, exitSide, entrySide);
       return buildBezierPath(start, end, exitSide, entrySide);
-    }, [fromNode, toNode, sourcePortIndex, sourcePortCount, targetPortIndex, targetPortCount]);
+    }, [fromNode, toNode, sourcePortIndex, sourcePortCount, targetPortIndex, targetPortCount, edgeStyle]);
 
     if (!pathData) return null;
 

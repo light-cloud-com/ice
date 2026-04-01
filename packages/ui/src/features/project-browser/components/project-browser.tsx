@@ -22,6 +22,11 @@ import {
   Rocket,
   PenTool,
   Table2,
+  Activity,
+  Layers,
+  Lock,
+  GitPullRequest,
+  Circle,
 } from 'lucide-react';
 import React, { useCallback, useEffect, useState, useRef, memo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
@@ -30,6 +35,13 @@ import axiosInstance from '../../../shared/api/axios-instance';
 import { useResolvePath } from '../../../shared/hooks/use-resolve-path';
 import { toSlug } from '../../../shared/utils/slug';
 import { openDialog } from '../../../store/slices/ui-slice';
+import {
+  fetchEnvironments,
+  setActiveEnvironment,
+  type Environment,
+} from '../../../store/slices/environments-slice';
+import { setActiveCard, importToActiveCard, createCard } from '../../../store/slices/cards-slice';
+import { getApi } from '../../../shared/api/api-adapter';
 import type { RootState, AppDispatch } from '../../../store';
 import { SearchInput } from '../../../shared/components/ui/search-input';
 import { useTranslation } from '../../../i18n';
@@ -97,79 +109,74 @@ const TreeItem = memo(
 
     const availableFolders = allFolders.filter((f) => f.id !== node.id);
 
+    const indent = level * 14 + 8;
+
     return (
       <>
-        <div
-          className={`group flex items-center h-7 px-2 py-1.5 rounded-md cursor-pointer ${isActive && (!activeSubpage || activeSubpage === 'canvas') ? 'bg-ice-active text-ice-text-1' : 'hover:bg-ice-hover'}`}
-          style={{ paddingLeft: `${level * 12 + 4}px` }}
+        <button
+          className={`group flex items-center w-full h-[26px] text-left text-ice-sm transition-colors focus-visible:ring-1 focus-visible:ring-blue-500 outline-none ${
+            isActive ? 'text-ice-text-1 font-medium' : 'text-ice-text-2 hover:text-ice-text-1'
+          }`}
+          style={{ paddingLeft: `${indent}px` }}
           onClick={() => {
             if (isFolder) {
               onToggle(node.id);
             } else {
               onOpen(node);
+              if (!isOpen) onToggle(node.id);
             }
           }}
         >
-          {/* Chevron — click toggles expand independently */}
+          {/* Chevron — separate click target for expand/collapse */}
           <span
-            className="w-4 h-4 flex items-center justify-center shrink-0"
+            className="w-4 h-4 flex items-center justify-center shrink-0 -ml-0.5 mr-0.5 rounded hover:bg-ice-hover"
             onClick={(e) => {
               e.stopPropagation();
               onToggle(node.id);
             }}
           >
             <ChevronRight
-              className={`w-3 h-3 text-ice-text-3 transition-transform duration-150 ${isOpen ? 'rotate-90' : ''}`}
+              aria-hidden="true"
+              className={`w-3 h-3 text-ice-text-3/50 transition-transform duration-150 ${isOpen ? 'rotate-90' : ''}`}
             />
           </span>
 
-          {/* Icon */}
-          <span className="w-4 h-4 flex items-center justify-center shrink-0 ml-0.5">
-            {isFolder ? (
-              isOpen ? (
-                <FolderOpen className="w-[14px] h-[14px] text-amber-500" />
-              ) : (
-                <Folder className="w-[14px] h-[14px] text-amber-500" />
-              )
-            ) : (
-              <FileText className="w-[14px] h-[14px] text-blue-400/50" />
-            )}
-          </span>
-
-          {/* Name */}
-          <span className="flex-1 ml-1.5 min-w-0">
-            {isRenaming ? (
-              <input
-                ref={inputRef}
-                value={renameValue}
-                onChange={(e) => setRenameValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleRenameSubmit();
-                  if (e.key === 'Escape') {
-                    setRenameValue(node.name);
-                    setIsRenaming(false);
-                  }
-                }}
-                onBlur={handleRenameSubmit}
-                onClick={(e) => e.stopPropagation()}
-                className="w-full bg-transparent text-ice-md text-ice-text-1 outline-none border-b border-blue-500/50"
-              />
-            ) : (
-              <span className="text-ice-md text-ice-text-2 truncate block leading-tight">{node.name}</span>
-            )}
-          </span>
-
-          {/* Card count badge */}
-          {!isFolder && node.cards.length > 0 && (
-            <span className="text-ice-xs text-ice-text-3 tabular-nums mr-1">{node.cards.length}</span>
+          {isRenaming ? (
+            <input
+              ref={inputRef}
+              name="rename"
+              autoComplete="off"
+              spellCheck={false}
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleRenameSubmit();
+                if (e.key === 'Escape') {
+                  setRenameValue(node.name);
+                  setIsRenaming(false);
+                }
+              }}
+              onBlur={handleRenameSubmit}
+              onClick={(e) => e.stopPropagation()}
+              className="flex-1 min-w-0 bg-transparent text-ice-sm text-ice-text-1 border-b border-blue-500/50 outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
+            />
+          ) : (
+            <span className="truncate min-w-0">{node.name}</span>
           )}
 
-          {/* Context menu */}
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+          {!isFolder && node.cards.length > 0 && (
+            <span className="ml-1.5 text-ice-xs text-ice-text-3/40 tabular-nums">{node.cards.length}</span>
+          )}
+
+          {/* Context menu — appears on hover */}
+          <div className="ml-auto opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity shrink-0" onClick={(e) => e.stopPropagation()}>
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
-                <button className="p-0.5 rounded hover:bg-ice-active outline-none">
-                  <MoreVertical className="w-3.5 h-3.5 text-ice-text-3" />
+                <button
+                  aria-label="More options"
+                  className="p-0.5 rounded hover:bg-ice-active focus-visible:ring-1 focus-visible:ring-blue-500 outline-none"
+                >
+                  <MoreVertical aria-hidden="true" className="w-3 h-3 text-ice-text-3/50" />
                 </button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
@@ -183,7 +190,7 @@ const TreeItem = memo(
                       onClick={() => onCreateIn(node.id)}
                       className="flex items-center gap-2 px-3 py-1.5 text-ice-md text-ice-text-2 rounded cursor-pointer outline-none hover:bg-ice-active"
                     >
-                      <FilePlus className="w-3.5 h-3.5 text-ice-text-3" />
+                      <FilePlus aria-hidden="true" className="w-3.5 h-3.5 text-ice-text-3" />
                       {t('projectBrowser.contextNewProjectHere')}
                     </DropdownMenu.Item>
                   )}
@@ -194,15 +201,13 @@ const TreeItem = memo(
                     }}
                     className="flex items-center gap-2 px-3 py-1.5 text-ice-md text-ice-text-2 rounded cursor-pointer outline-none hover:bg-ice-active"
                   >
-                    <Pencil className="w-3.5 h-3.5 text-ice-text-3" />
+                    <Pencil aria-hidden="true" className="w-3.5 h-3.5 text-ice-text-3" />
                     {t('projectBrowser.contextRename')}
                   </DropdownMenu.Item>
-
-                  {/* Move submenu */}
                   {availableFolders.length > 0 && (
                     <DropdownMenu.Sub>
                       <DropdownMenu.SubTrigger className="flex items-center gap-2 px-3 py-1.5 text-ice-md text-ice-text-2 rounded cursor-pointer outline-none hover:bg-ice-active">
-                        <FolderInput className="w-3.5 h-3.5 text-ice-text-3" />
+                        <FolderInput aria-hidden="true" className="w-3.5 h-3.5 text-ice-text-3" />
                         {t('projectBrowser.contextMoveTo')}
                         <ChevronRight className="w-3 h-3 ml-auto text-ice-text-3" />
                       </DropdownMenu.SubTrigger>
@@ -231,71 +236,205 @@ const TreeItem = memo(
                       </DropdownMenu.Portal>
                     </DropdownMenu.Sub>
                   )}
-
                   <DropdownMenu.Separator className="h-px my-1 bg-ice-active" />
                   <DropdownMenu.Item
                     onClick={() => onDelete(node.id)}
                     className="flex items-center gap-2 px-3 py-1.5 text-ice-md text-red-400 rounded cursor-pointer outline-none hover:bg-red-500/10"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 aria-hidden="true" className="w-3.5 h-3.5" />
                     {t('projectBrowser.contextDelete')}
                   </DropdownMenu.Item>
                 </DropdownMenu.Content>
               </DropdownMenu.Portal>
             </DropdownMenu.Root>
           </div>
-        </div>
+        </button>
 
         {/* Folder children */}
-        {isFolder && isOpen && (
-          <div className="ml-4 border-l border-ice-border pl-2">
-            {node.children.map((child) => (
-              <TreeItem
-                key={child.id}
-                node={child}
-                level={level + 1}
-                expandedIds={expandedIds}
-                activeNodeId={activeNodeId}
-                activeSubpage={activeSubpage}
-                onToggle={onToggle}
-                onOpen={onOpen}
-                onNavigateSubpage={onNavigateSubpage}
-                onRename={onRename}
-                onDelete={onDelete}
-                onCreateIn={onCreateIn}
-                onMove={onMove}
-                allFolders={allFolders}
-              />
-            ))}
-          </div>
-        )}
+        {isFolder && isOpen && node.children.map((child) => (
+          <TreeItem
+            key={child.id}
+            node={child}
+            level={level + 1}
+            expandedIds={expandedIds}
+            activeNodeId={activeNodeId}
+            activeSubpage={activeSubpage}
+            onToggle={onToggle}
+            onOpen={onOpen}
+            onNavigateSubpage={onNavigateSubpage}
+            onRename={onRename}
+            onDelete={onDelete}
+            onCreateIn={onCreateIn}
+            onMove={onMove}
+            allFolders={allFolders}
+          />
+        ))}
 
         {/* Project sub-pages */}
         {!isFolder && isOpen && (
-          <div className="ml-4 border-l border-ice-border pl-2 ">
-            {[
-              { id: 'canvas', label: t('projectBrowser.subCanvas'), icon: PenTool },
-              { id: 'table', label: t('projectBrowser.subTable'), icon: Table2 },
-              { id: 'settings', label: t('projectBrowser.subSettings'), icon: Settings },
-              { id: 'deployments', label: t('projectBrowser.subDeployments'), icon: Rocket },
-            ].map((sub) => (
-              <div
-                key={sub.id}
-                className={`flex items-center h-6 px-1 my-1 rounded-md cursor-pointer transition-colors ${
-                  isActive && activeSubpage === sub.id
-                    ? 'bg-ice-active text-ice-text-1'
-                    : 'text-ice-text-3 hover:bg-ice-hover hover:text-ice-text-2'
-                }`}
-                style={{ paddingLeft: `${(level + 1) * 12 + 20}px` }}
-                onClick={() => onNavigateSubpage(node, sub.id)}
-              >
-                <sub.icon className="w-3 h-3 mr-1.5 shrink-0" />
-                <span className="text-ice-sm">{sub.label}</span>
-              </div>
-            ))}
-          </div>
+          <ProjectSubPages
+            node={node}
+            level={level}
+            isActive={isActive}
+            activeSubpage={activeSubpage}
+            expandedIds={expandedIds}
+            onToggle={onToggle}
+            onNavigateSubpage={onNavigateSubpage}
+          />
         )}
       </>
+    );
+  },
+);
+
+// ─── Project Sub-Pages with collapsible Environments ────────────────────────
+
+const ProjectSubPages = memo(
+  ({
+    node,
+    level,
+    isActive,
+    activeSubpage,
+    expandedIds,
+    onToggle,
+    onNavigateSubpage,
+  }: {
+    node: ProjectNode;
+    level: number;
+    isActive: boolean;
+    activeSubpage: string | null;
+    expandedIds: Set<string>;
+    onToggle: (id: string) => void;
+    onNavigateSubpage: (node: ProjectNode, subpage: string) => void;
+  }) => {
+    const { t } = useTranslation();
+    const dispatch = useDispatch<AppDispatch>();
+    const environments = useSelector((s: RootState) => s.environments.byProject[node.id] || []);
+    const activeEnvId = useSelector((s: RootState) => s.environments.activeEnvId[node.id]);
+    const envsExpanded = expandedIds.has(`env:${node.id}`);
+    const padBase = (level + 1) * 12 + 20;
+
+    // Fetch environments when project is expanded
+    useEffect(() => {
+      if (node.id) dispatch(fetchEnvironments(node.id));
+    }, [node.id, dispatch]);
+
+    const handleSwitchEnv = useCallback(
+      async (env: Environment) => {
+        dispatch(setActiveEnvironment({ projectId: node.id, envId: env.id }));
+        try {
+          const { store } = await import('../../../store');
+          const state = store.getState();
+          const existing = state.cards.cards.find((c: any) => c.id === env.card_id);
+          if (existing && existing.nodes.length > 0) {
+            dispatch(setActiveCard(env.card_id));
+            return;
+          }
+          const api = getApi();
+          const cardData = await api.graph.load(env.card_id);
+          if (!cardData) return;
+          if (!existing) dispatch(createCard({ name: cardData.name || env.name, id: cardData.id, projectId: node.id }));
+          dispatch(setActiveCard(cardData.id));
+          if (cardData.nodes?.length > 0 || cardData.edges?.length > 0) {
+            dispatch(importToActiveCard({ nodes: cardData.nodes || [], edges: cardData.edges || [], skipAutoOrganize: true }));
+          }
+        } catch (err) {
+          console.error('Failed to load environment card:', err);
+        }
+        // Navigate to canvas after switching
+        onNavigateSubpage(node, 'canvas');
+      },
+      [node, dispatch, onNavigateSubpage],
+    );
+
+    const subPages = [
+      { id: 'canvas', label: t('projectBrowser.subCanvas') },
+      { id: 'table', label: t('projectBrowser.subTable') },
+      { id: 'deployments', label: t('projectBrowser.subDeployments') },
+      { id: 'activity', label: t('projectBrowser.subActivity') },
+      { id: 'settings', label: t('projectBrowser.subSettings') },
+    ];
+
+    const indent = (level + 1) * 12 + 16;
+    const envIndent = indent + 12;
+
+    return (
+      <div className="pb-1">
+        {subPages.map((sub) => {
+          const active = isActive && activeSubpage === sub.id;
+          return (
+            <button
+              key={sub.id}
+              className={`flex items-center w-full h-[22px] text-left text-ice-xs transition-colors outline-none focus-visible:ring-1 focus-visible:ring-blue-500 ${
+                active
+                  ? 'text-ice-text-1 font-medium'
+                  : 'text-ice-text-3 hover:text-ice-text-2'
+              }`}
+              style={{ paddingLeft: `${indent}px` }}
+              onClick={() => onNavigateSubpage(node, sub.id)}
+            >
+              {active && <span className="w-px h-3 bg-blue-400 rounded-full mr-2 shrink-0" />}
+              {!active && <span className="w-px mr-2 shrink-0" />}
+              <span>{sub.label}</span>
+            </button>
+          );
+        })}
+
+        {/* Environments — collapsible */}
+        <button
+          className={`flex items-center w-full h-[22px] text-left text-ice-xs transition-colors outline-none focus-visible:ring-1 focus-visible:ring-blue-500 ${
+            isActive && activeSubpage === 'environments'
+              ? 'text-ice-text-1 font-medium'
+              : 'text-ice-text-3 hover:text-ice-text-2'
+          }`}
+          style={{ paddingLeft: `${indent}px` }}
+          onClick={() => {
+            onToggle(`env:${node.id}`);
+            onNavigateSubpage(node, 'environments');
+          }}
+        >
+          {isActive && activeSubpage === 'environments'
+            ? <span className="w-px h-3 bg-blue-400 rounded-full mr-1.5 shrink-0" />
+            : <span className="w-px mr-1.5 shrink-0" />}
+          <ChevronRight
+            aria-hidden="true"
+            className={`w-3 h-3 mr-1 shrink-0 text-ice-text-3/50 transition-transform duration-150 ${envsExpanded ? 'rotate-90' : ''}`}
+          />
+          <span>{t('projectBrowser.subEnvironments')}</span>
+          {environments.length > 0 && (
+            <span className="ml-1.5 text-ice-text-3/40 tabular-nums">{environments.length}</span>
+          )}
+        </button>
+
+        {/* Individual environments */}
+        {envsExpanded && environments.length > 0 && environments.map((env) => {
+          const isActiveEnv = env.id === activeEnvId;
+          const dotColor =
+            env.type === 'production' ? 'bg-emerald-400'
+            : env.type === 'staging' ? 'bg-amber-400'
+            : env.type === 'pr' ? 'bg-purple-400'
+            : 'bg-blue-400';
+          return (
+            <button
+              key={env.id}
+              className={`flex items-center w-full h-[22px] text-left text-ice-xs transition-colors outline-none focus-visible:ring-1 focus-visible:ring-blue-500 ${
+                isActiveEnv
+                  ? 'text-ice-text-1 font-medium'
+                  : 'text-ice-text-3 hover:text-ice-text-2'
+              }`}
+              style={{ paddingLeft: `${envIndent}px` }}
+              onClick={() => handleSwitchEnv(env)}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full mr-2 shrink-0 ${dotColor}`} />
+              <span className="truncate min-w-0">{env.name}</span>
+              {env.is_protected && <Lock aria-hidden="true" className="w-2.5 h-2.5 ml-1 shrink-0 text-ice-text-3/30" />}
+              {env.type === 'pr' && env.pr_number && (
+                <span className="ml-1 text-purple-400/60">#{env.pr_number}</span>
+              )}
+            </button>
+          );
+        })}
+      </div>
     );
   },
 );
@@ -487,16 +626,17 @@ export function ProjectBrowser() {
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => dispatch(openDialog('projectWizard'))}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-ice-sm font-medium rounded bg-ice-accent-muted text-ice-accent hover:bg-ice-accent hover:text-white transition-colors flex-1 justify-center"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-ice-sm font-medium rounded bg-ice-accent-muted text-ice-accent hover:bg-ice-accent hover:text-white transition-colors flex-1 justify-center focus-visible:ring-1 focus-visible:ring-blue-500 outline-none"
           >
             <FilePlus className="w-3 h-3" />
             {t('projectBrowser.newProject')}
           </button>
           <button
+            aria-label={t('projectBrowser.newFolderName')}
             onClick={() => handleCreate('folder')}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-ice-sm font-medium rounded bg-ice-hover text-ice-text-2 hover:bg-ice-active transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-ice-sm font-medium rounded bg-ice-hover text-ice-text-2 hover:bg-ice-active transition-colors focus-visible:ring-1 focus-visible:ring-blue-500 outline-none"
           >
-            <FolderPlus className="w-3 h-3" />
+            <FolderPlus aria-hidden="true" className="w-3 h-3" />
           </button>
         </div>
       </div>
@@ -509,11 +649,11 @@ export function ProjectBrowser() {
           </div>
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center px-4">
-            <Folder className="w-8 h-8 text-white/10 mb-2" />
+            <Folder aria-hidden="true" className="w-8 h-8 text-white/10 mb-2" />
             <p className="text-ice-base text-ice-text-3 mb-3">{t('projectBrowser.emptyState')}</p>
             <button
               onClick={() => dispatch(openDialog('projectWizard'))}
-              className="px-3 py-1 text-ice-sm font-medium rounded bg-ice-accent text-white hover:bg-ice-accent-hover transition-[background-color]"
+              className="px-3 py-1 text-ice-sm font-medium rounded bg-ice-accent text-white hover:bg-ice-accent-hover transition-[background-color] focus-visible:ring-1 focus-visible:ring-blue-500 outline-none"
             >
               {t('projectBrowser.createProject')}
             </button>

@@ -896,7 +896,9 @@
     "subCanvas": "画布",
     "subTable": "表格",
     "subSettings": "设置",
-    "subDeployments": "部署"
+    "subDeployments": "部署",
+    "subActivity": "活动",
+    "subEnvironments": "环境"
   },
 
   "templates": {

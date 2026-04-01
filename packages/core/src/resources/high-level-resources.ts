@@ -125,7 +125,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['static', 'website', 's3', 'bucket', 'cloudfront', 'cdn', 'blob', 'storage'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this website', placeholder: 'My Website' },
-          { name: 'purpose', label: 'What kind of site is this?', type: 'select', required: false, tier: 'essential', description: 'Pick the closest match — we set the best defaults', options: ['Marketing site', 'Web app (React, Vue, etc.)', 'Documentation site', 'Blog', 'Landing page'], default: 'Web app (React, Vue, etc.)' },
+          { name: 'purpose', label: 'What kind of site is this?', type: 'select', required: false, tier: 'detailed', description: 'Pick the closest match — we set the best defaults', options: ['Marketing site', 'Web app (React, Vue, etc.)', 'Documentation site', 'Blog', 'Landing page'], default: 'Web app (React, Vue, etc.)' },
           { name: 'size', label: 'Hosting tier', type: 'select', required: false, tier: 'essential', description: 'Hosting plan — determines build minutes, bandwidth, and features', default: 'amplify-free', optionDetails: [
             { value: 'amplify-free', label: 'Amplify Free', description: '1,000 build min · 15 GB served/mo', cost: 'Free', provider: 'aws' },
             { value: 'amplify-standard', label: 'Amplify Standard', description: 'Unlimited builds · pay per GB', cost: '~$0.15/GB served', provider: 'aws' },
@@ -172,7 +172,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['api', 'gateway', 'lambda', 'function', 'app', 'service', 'ecs', 'container'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this API', placeholder: 'My API' },
-          { name: 'purpose', label: 'What does this API do?', type: 'select', required: false, tier: 'essential', description: 'Pick the closest match — we set the best defaults', options: ['Web server', 'REST API', 'GraphQL API', 'Internal microservice', 'Webhook handler'], default: 'REST API' },
+          { name: 'purpose', label: 'What does this API do?', type: 'select', required: false, tier: 'detailed', description: 'Pick the closest match — we set the best defaults', options: ['Web server', 'REST API', 'GraphQL API', 'Internal microservice', 'Webhook handler'], default: 'REST API' },
           { name: 'size', label: 'Container size', type: 'select', required: false, tier: 'essential', description: 'CPU and memory allocation per container', default: '0.25-512', optionDetails: [
             { value: '0.25-512', label: '0.25 vCPU / 512 MB', description: 'Lightweight APIs', cost: '~$9/mo', provider: 'aws' },
             { value: '0.5-1024', label: '0.5 vCPU / 1 GB', description: 'Light workloads', cost: '~$18/mo', provider: 'aws' },
@@ -226,7 +226,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['lambda', 'function', 'serverless', 'cloud function'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this function', placeholder: 'My Function' },
-          { name: 'purpose', label: 'What does this function do?', type: 'select', required: false, tier: 'essential', description: 'Pick the closest match — we configure the best settings', options: ['Handle web requests', 'Process uploaded files', 'Run on a schedule', 'React to database changes', 'Process queue messages'], default: 'Handle web requests' },
+          { name: 'purpose', label: 'What does this function do?', type: 'select', required: false, tier: 'detailed', description: 'Pick the closest match — we configure the best settings', options: ['Handle web requests', 'Process uploaded files', 'Run on a schedule', 'React to database changes', 'Process queue messages'], default: 'Handle web requests' },
           { name: 'memory', label: 'Memory', type: 'select', required: false, tier: 'essential', description: 'Memory allocation — also determines proportional CPU', default: '128', optionDetails: [
             { value: '128', label: '128 MB', description: 'Minimum — quick tasks', cost: '~$0.01/M invocations', provider: 'aws' },
             { value: '256', label: '256 MB', description: 'Light processing', cost: '~$0.02/M', provider: 'aws' },
@@ -278,7 +278,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['function', 'compute', 'serverless', 'alibaba', 'fc'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this function', placeholder: 'My Function' },
-          { name: 'purpose', label: 'What does this function do?', type: 'select', required: false, tier: 'essential', description: 'Pick the closest match — we configure the best settings', options: ['Handle web requests', 'Process uploaded files', 'Run on a schedule', 'React to database changes', 'Process queue messages'], default: 'Handle web requests' },
+          { name: 'purpose', label: 'What does this function do?', type: 'select', required: false, tier: 'detailed', description: 'Pick the closest match — we configure the best settings', options: ['Handle web requests', 'Process uploaded files', 'Run on a schedule', 'React to database changes', 'Process queue messages'], default: 'Handle web requests' },
           { name: 'memory', label: 'Memory', type: 'select', required: false, tier: 'essential', description: 'Memory allocation — also determines proportional CPU', default: '512', optionDetails: [
             { value: '128', label: '128 MB', description: 'Minimum — quick tasks', cost: '~$0.01/M invocations', provider: 'alibaba' },
             { value: '256', label: '256 MB', description: 'Light processing', cost: '~$0.02/M', provider: 'alibaba' },
@@ -315,7 +315,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['functions', 'serverless', 'oci', 'oracle', 'fn'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this function', placeholder: 'My Function' },
-          { name: 'purpose', label: 'What does this function do?', type: 'select', required: false, tier: 'essential', description: 'Pick the closest match — we configure the best settings', options: ['Handle web requests', 'Process uploaded files', 'Run on a schedule', 'React to database changes', 'Process queue messages'], default: 'Handle web requests' },
+          { name: 'purpose', label: 'What does this function do?', type: 'select', required: false, tier: 'detailed', description: 'Pick the closest match — we configure the best settings', options: ['Handle web requests', 'Process uploaded files', 'Run on a schedule', 'React to database changes', 'Process queue messages'], default: 'Handle web requests' },
           { name: 'memory', label: 'Memory', type: 'select', required: false, tier: 'essential', description: 'Memory allocation for function execution', default: '256', optionDetails: [
             { value: '128', label: '128 MB', description: 'Minimum — simple tasks', cost: '~2M free invocations/mo', provider: 'oci' },
             { value: '256', label: '256 MB', description: 'Light processing', provider: 'oci' },
@@ -352,7 +352,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['app', 'platform', 'paas', 'digitalocean', 'deploy'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this app', placeholder: 'My App' },
-          { name: 'purpose', label: 'What does this app do?', type: 'select', required: false, tier: 'essential', description: 'Pick the closest match — we set the best defaults', options: ['Web server', 'API backend', 'Background worker', 'Static site'], default: 'Web server' },
+          { name: 'purpose', label: 'What does this app do?', type: 'select', required: false, tier: 'detailed', description: 'Pick the closest match — we set the best defaults', options: ['Web server', 'API backend', 'Background worker', 'Static site'], default: 'Web server' },
           { name: 'size', label: 'Instance size', type: 'select', required: false, tier: 'essential', description: 'Container size for your app', default: 'basic-xxs', optionDetails: [
             { value: 'basic-xxs', label: 'Basic XXS', description: '1 vCPU · 512 MB RAM', cost: '~$5/mo', provider: 'digitalocean' },
             { value: 'basic-xs', label: 'Basic XS', description: '1 vCPU · 1 GB RAM', cost: '~$10/mo', provider: 'digitalocean' },
@@ -395,7 +395,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['container', 'docker', 'ecs', 'kubernetes', 'k8s', 'fargate', 'aks', 'gke'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this service', placeholder: 'My Service' },
-          { name: 'purpose', label: 'What does this service do?', type: 'select', required: false, tier: 'essential', description: 'Pick the closest match — we set the best defaults', options: ['Web server', 'API backend', 'Background worker', 'Scheduled job', 'Data pipeline'], default: 'API backend' },
+          { name: 'purpose', label: 'What does this service do?', type: 'select', required: false, tier: 'detailed', description: 'Pick the closest match — we set the best defaults', options: ['Web server', 'API backend', 'Background worker', 'Scheduled job', 'Data pipeline'], default: 'API backend' },
           { name: 'size', label: 'Container size', type: 'select', required: false, tier: 'essential', description: 'CPU and memory allocation per container', default: '0.25-512', optionDetails: [
             { value: '0.25-512', label: '0.25 vCPU / 512 MB', description: 'Lightweight tasks', cost: '~$9/mo', provider: 'aws' },
             { value: '0.5-1024', label: '0.5 vCPU / 1 GB', description: 'Light workloads', cost: '~$18/mo', provider: 'aws' },
@@ -448,7 +448,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['worker', 'consumer', 'processor', 'background', 'async', 'batch'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this worker', placeholder: 'My Worker' },
-          { name: 'purpose', label: 'What does this worker do?', type: 'select', required: false, tier: 'essential', description: 'Pick the closest match — we set the best defaults', options: ['Process queue messages', 'Send emails & notifications', 'Run data imports', 'Generate reports', 'Process uploaded files', 'Other background task'], default: 'Process queue messages' },
+          { name: 'purpose', label: 'What does this worker do?', type: 'select', required: false, tier: 'detailed', description: 'Pick the closest match — we set the best defaults', options: ['Process queue messages', 'Send emails & notifications', 'Run data imports', 'Generate reports', 'Process uploaded files', 'Other background task'], default: 'Process queue messages' },
           { name: 'size', label: 'Container size', type: 'select', required: false, tier: 'essential', description: 'CPU and memory allocation per worker', default: '0.5-1024', optionDetails: [
             { value: '0.25-512', label: '0.25 vCPU / 512 MB', description: 'Lightweight tasks', cost: '~$9/mo', provider: 'aws' },
             { value: '0.5-1024', label: '0.5 vCPU / 1 GB', description: 'Light processing', cost: '~$18/mo', provider: 'aws' },
@@ -540,7 +540,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this task', placeholder: 'Nightly Report' },
           { name: 'frequency', label: 'How often should this run?', type: 'select', required: true, tier: 'essential', description: 'Pick a schedule — you can fine-tune later', options: ['Every minute', 'Every 5 minutes', 'Every hour', 'Every day at midnight', 'Every Monday', 'Every 1st of the month', 'Custom schedule'], default: 'Every day at midnight' },
-          { name: 'purpose', label: 'What does this task do?', type: 'select', required: false, tier: 'essential', description: 'Pick the closest match', default: 'other', optionDetails: [
+          { name: 'purpose', label: 'What does this task do?', type: 'select', required: false, tier: 'detailed', description: 'Pick the closest match', default: 'other', optionDetails: [
             { value: 'reports', label: 'Send reports', description: 'Generate and email periodic reports' },
             { value: 'cleanup', label: 'Clean up old data', description: 'Delete expired records, temp files' },
             { value: 'sync', label: 'Sync with external service', description: 'Pull/push data to third-party APIs' },
@@ -590,7 +590,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['llm', 'openai', 'bedrock', 'anthropic', 'ai', 'gpt', 'claude', 'inference'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this AI gateway', placeholder: 'My AI Gateway' },
-          { name: 'purpose', label: 'What will you use AI for?', type: 'select', required: false, tier: 'essential', description: 'Pick the closest match — we set the best defaults', options: ['Chatbot / assistant', 'Content generation', 'Code generation', 'Data analysis', 'Image generation', 'General purpose'], default: 'Chatbot / assistant' },
+          { name: 'purpose', label: 'What will you use AI for?', type: 'select', required: false, tier: 'detailed', description: 'Pick the closest match — we set the best defaults', options: ['Chatbot / assistant', 'Content generation', 'Code generation', 'Data analysis', 'Image generation', 'General purpose'], default: 'Chatbot / assistant' },
           { name: 'model', label: 'Primary model', type: 'select', required: false, tier: 'essential', description: 'Default LLM model to route requests to', default: 'claude-sonnet', optionDetails: [
             { value: 'claude-sonnet', label: 'Claude Sonnet', description: 'Fast, balanced — great for most tasks', cost: '~$3/$15 per M tokens in/out', provider: 'aws' },
             { value: 'claude-opus', label: 'Claude Opus', description: 'Most capable — complex reasoning', cost: '~$15/$75 per M tokens in/out', provider: 'aws' },

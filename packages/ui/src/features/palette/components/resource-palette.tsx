@@ -808,31 +808,35 @@ const BlocksSection: React.FC<BlocksSectionProps> = ({
             const isCollapsed = !isSearching && collapsedCategories.has(category.id);
 
             return (
-              <div key={category.id} className="mb-px">
+              <div key={category.id}>
                 {!isSearching && (
                   <button
                     onClick={() => toggleCategory(category.id)}
-                    className="w-full flex items-center gap-1.5 px-2 py-1.5 rounded hover:bg-ice-hover transition-colors"
+                    className="w-full flex items-center h-[26px] px-2 text-left transition-colors hover:text-ice-text-1"
                   >
-                    <ChevronRight
-                      className={cn(
-                        'w-3 h-3 text-ice-text-3 transition-transform duration-150 shrink-0',
-                        !isCollapsed && 'rotate-90',
-                      )}
-                    />
-                    <div
-                      className="w-2 h-2 rounded-full shrink-0"
-                      style={{ backgroundColor: category.color, opacity: isCollapsed ? 0.4 : 0.8 }}
-                    />
-                    <span className="text-ice-sm font-semibold text-ice-text-2 uppercase tracking-wider">
+                    <span className="w-4 h-4 flex items-center justify-center shrink-0 -ml-0.5 mr-0.5 rounded hover:bg-ice-hover"
+                      onClick={(e) => { e.stopPropagation(); toggleCategory(category.id); }}
+                    >
+                      <ChevronRight
+                        aria-hidden="true"
+                        className={cn(
+                          'w-3 h-3 text-ice-text-3/50 transition-transform duration-150',
+                          !isCollapsed && 'rotate-90',
+                        )}
+                      />
+                    </span>
+                    <span
+                      className="text-ice-xs font-medium tracking-wide"
+                      style={{ color: isCollapsed ? undefined : category.color, opacity: isCollapsed ? 0.5 : 0.8 }}
+                    >
                       {category.label}
                     </span>
-                    <span className="text-ice-xs text-ice-text-3 ml-auto tabular-nums">{items.length}</span>
+                    <span className="ml-1.5 text-ice-xs text-ice-text-3/40 tabular-nums">{items.length}</span>
                   </button>
                 )}
 
                 {!isCollapsed && (
-                  <div className={cn(!isSearching && 'ml-7 border-l border-ice-border pl-2')}>
+                  <div className={cn(!isSearching ? 'pb-1' : '')}>
                     {items.map((component) => {
                       const idx = staggerIdx++;
                       return (
@@ -1119,29 +1123,19 @@ const ComponentItem: React.FC<ComponentItemProps> = ({ component, selectedProvid
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             className={cn(
-              'group flex items-center gap-2 h-8 px-2 rounded-md cursor-grab',
-              'hover:bg-ice-hover',
-              'active:cursor-grabbing active:scale-[0.98]',
-              'transition-all duration-100',
+              'group flex items-center h-[24px] pl-6 pr-2 cursor-grab',
+              'hover:text-ice-text-1',
+              'active:cursor-grabbing active:opacity-70',
+              'transition-colors',
               isDragging && 'opacity-40',
             )}
             data-block-type={component.type}
             data-testid={`block-item-${component.type}`}
           >
-            <div
-              className="w-6 h-6 rounded flex items-center justify-center shrink-0 transition-colors"
-              style={{ backgroundColor: `${categoryColor}12`, color: `${categoryColor}90` }}
-            >
-              <Icon className="w-3.5 h-3.5" />
-            </div>
-            <span className="text-ice-base text-ice-text-2 group-hover:text-ice-text-1 truncate transition-colors flex-1">
+            <Icon className="w-3 h-3 mr-2 shrink-0" style={{ color: `${categoryColor}80` }} />
+            <span className="text-ice-xs text-ice-text-3 group-hover:text-ice-text-1 truncate transition-colors">
               {component.name}
             </span>
-            {component.providers.length === 1 && (
-              <span className="text-ice-2xs text-ice-text-3 uppercase tracking-wide shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                {component.providers[0]}
-              </span>
-            )}
           </div>
         </TooltipTrigger>
         <TooltipContent
@@ -1163,7 +1157,7 @@ const ComponentItem: React.FC<ComponentItemProps> = ({ component, selectedProvid
 
       {/* Runtime chips — shown below the drag row */}
       {hasRuntimes && (
-        <div className="flex flex-wrap gap-1 ml-7 mr-1 mb-1.5 mt-0.5 pl-2.5">
+        <div className="flex flex-wrap gap-1 pl-8 pr-2 mb-1 mt-0.5">
           {component.runtimes!.map((rt) => {
             const isSelected = selectedRuntime === rt.value;
             return (

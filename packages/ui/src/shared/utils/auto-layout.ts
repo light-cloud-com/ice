@@ -62,8 +62,8 @@ interface LayoutOptions {
   nodesPerRow?: number;
   /** Padding inside containers */
   containerPadding?: number;
-  /** Layout mode: 'flow' (left-to-right data flow) or 'grid' (category-based grid) */
-  layout?: 'flow' | 'grid';
+  /** Layout mode: 'flow' (data flow), 'grid' (category-based), or 'circular' (concentric rings) */
+  layout?: 'flow' | 'grid' | 'circular';
   /** Flow direction: 'vertical' (top-to-bottom) or 'horizontal' (left-to-right) */
   direction?: 'vertical' | 'horizontal';
 }
@@ -297,6 +297,50 @@ export function autoLayout(
     // Flow layout sizing: assign children to semantic tier layers
     const { layers, helperChildren: helpers } = assignChildLayers(childIds, children);
 
+    // Circular sizing: all main children on ONE ring, helpers on outer ring
+    // Compute width/height separately (nodes are typically wider than tall)
+    if (opts.layout === 'circular') {
+      const circPad = Math.max(containerPadding, opts.containerPadding);
+      const HELPER_RING_GAP = 40;
+      const MIN_RADIUS_CHILD = 80;
+      const allMain = layers.flat();
+      let mainMaxDim = 0, mainMaxW = 0, mainMaxH = 0;
+      for (const c of allMain) {
+        mainMaxDim = Math.max(mainMaxDim, c.width, c.height);
+        mainMaxW = Math.max(mainMaxW, c.width);
+        mainMaxH = Math.max(mainMaxH, c.height);
+      }
+
+      let mainR: number;
+      if (allMain.length <= 1) mainR = 0;
+      else {
+        const circ = allMain.length * (mainMaxDim + opts.nodeGap);
+        mainR = Math.max(MIN_RADIUS_CHILD, circ / (2 * Math.PI));
+      }
+
+      let contentW = allMain.length <= 1 ? mainMaxW : 2 * mainR + mainMaxW;
+      let contentH = allMain.length <= 1 ? mainMaxH : 2 * mainR + mainMaxH;
+
+      let hMaxDim = 0, hMaxW = 0, hMaxH = 0;
+      for (const h of helpers) {
+        hMaxDim = Math.max(hMaxDim, h.width, h.height);
+        hMaxW = Math.max(hMaxW, h.width);
+        hMaxH = Math.max(hMaxH, h.height);
+      }
+      if (helpers.length > 0) {
+        const hR = mainR + mainMaxDim / 2 + HELPER_RING_GAP + hMaxDim / 2;
+        contentW = Math.max(contentW, 2 * hR + hMaxW);
+        contentH = Math.max(contentH, 2 * hR + hMaxH);
+      }
+
+      const minW = isVPC ? 280 : isSubnet ? 260 : MIN_CONTAINER_WIDTH;
+      const minH = isVPC ? 180 : isSubnet ? 150 : MIN_CONTAINER_HEIGHT;
+      return {
+        width: Math.max(minW, contentW + circPad * 2),
+        height: Math.max(minH, contentH + circPad * 2),
+      };
+    }
+
     let mainWidth = 0;
     let mainHeight = 0;
 
@@ -383,6 +427,113 @@ export function autoLayout(
 
     const mainIdSet = new Set<string>();
     for (const layer of layers) for (const n of layer) mainIdSet.add(n.id);
+
+    // ── Circular positioning: all main children on ONE ring ──
+    // Position relative to origin, then shift for uniform padding on all sides.
+    if (opts.layout === 'circular') {
+      const circPad = Math.max(containerPadding, opts.containerPadding);
+      const HELPER_RING_GAP = 40;
+      const MIN_RADIUS_CHILD = 80;
+      const allMain = layers.flat();
+      const startAngle = -Math.PI / 2;
+      const mainAngle = new Map<string, number>();
+
+      // First pass: position children and let recursive positionChildren finalise sizes
+      let mainMaxDim = 0;
+      for (const c of allMain) mainMaxDim = Math.max(mainMaxDim, c.width, c.height);
+
+      let mainR: number;
+      if (allMain.length <= 1) mainR = 0;
+      else {
+        const circ = allMain.length * (mainMaxDim + opts.nodeGap);
+        mainR = Math.max(MIN_RADIUS_CHILD, circ / (2 * Math.PI));
+      }
+
+      for (let i = 0; i < allMain.length; i++) {
+        const angle = allMain.length === 1 ? 0 : startAngle + (i / allMain.length) * 2 * Math.PI;
+        const node = allMain[i];
+        node.x = mainR * Math.cos(angle) - node.width / 2;
+        node.y = mainR * Math.sin(angle) - node.height / 2;
+        mainAngle.set(node.id, angle);
+        node.parentId = parent.id;
+        positionChildren(node); // may resize node
+      }
+
+      for (const h of helpers) {
+        h.parentId = parent.id;
+        positionChildren(h); // finalise helper sizes
+      }
+
+      // Second pass: recompute radius from FINAL sizes and re-centre every node
+      mainMaxDim = 0;
+      for (const c of allMain) mainMaxDim = Math.max(mainMaxDim, c.width, c.height);
+
+      if (allMain.length <= 1) mainR = 0;
+      else {
+        const circ = allMain.length * (mainMaxDim + opts.nodeGap);
+        mainR = Math.max(MIN_RADIUS_CHILD, circ / (2 * Math.PI));
+      }
+
+      for (const node of allMain) {
+        const angle = mainAngle.get(node.id)!;
+        node.x = mainR * Math.cos(angle) - node.width / 2;
+        node.y = mainR * Math.sin(angle) - node.height / 2;
+      }
+
+      // Position helpers on outer ring using final sizes
+      let hMaxDim = 0;
+      for (const h of helpers) hMaxDim = Math.max(hMaxDim, h.width, h.height);
+      const helperRingR = helpers.length > 0 ? mainR + mainMaxDim / 2 + HELPER_RING_GAP + hMaxDim / 2 : 0;
+
+      if (helpers.length > 0) {
+        const usedAngles: number[] = [];
+        let disconnectedIdx = 0;
+        for (const helper of helpers) {
+          let connectedId: string | null = null;
+          for (const edge of edges) {
+            if (edge.relationship === 'contains') continue;
+            if (edge.source === helper.id && mainIdSet.has(edge.target)) { connectedId = edge.target; break; }
+            if (edge.target === helper.id && mainIdSet.has(edge.source)) { connectedId = edge.source; break; }
+          }
+          let angle: number;
+          if (connectedId && mainAngle.has(connectedId)) {
+            angle = mainAngle.get(connectedId)!;
+            while (usedAngles.some((a) => Math.abs(a - angle) < 0.3)) angle += 0.35;
+          } else {
+            angle = startAngle + ((disconnectedIdx + 0.5) / Math.max(helpers.length, 1)) * 2 * Math.PI;
+            disconnectedIdx++;
+          }
+          usedAngles.push(angle);
+          helper.x = helperRingR * Math.cos(angle) - helper.width / 2;
+          helper.y = helperRingR * Math.sin(angle) - helper.height / 2;
+        }
+      }
+
+      // Compute actual bounding box, then shift so content has uniform padding
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (const c of children) {
+        minX = Math.min(minX, c.x);
+        minY = Math.min(minY, c.y);
+        maxX = Math.max(maxX, c.x + c.width);
+        maxY = Math.max(maxY, c.y + c.height);
+      }
+      if (!isFinite(minX)) { minX = 0; minY = 0; maxX = 0; maxY = 0; }
+
+      const shiftX = circPad - minX;
+      const shiftY = circPad - minY;
+      for (const c of children) {
+        c.x += shiftX;
+        c.y += shiftY;
+      }
+
+      const contentW = maxX - minX;
+      const contentH = maxY - minY;
+      const minW = isVPC ? 280 : isSubnet ? 260 : MIN_CONTAINER_WIDTH;
+      const minH = isVPC ? 180 : isSubnet ? 150 : MIN_CONTAINER_HEIGHT;
+      parent.width = Math.max(minW, contentW + circPad * 2);
+      parent.height = Math.max(minH, contentH + circPad * 2);
+      return;
+    }
 
     // ── Position main layers — no centering, uniform padding on all sides ──
     // Resize at the end will tightly fit, ensuring equal padding.
@@ -510,6 +661,20 @@ export function autoLayout(
   };
 
   // ── Dispatch to layout strategy ─────────────────────────────────────────
+
+  if (opts.layout === 'circular') {
+    return circularLayout(
+      nodes,
+      edges,
+      topLevelNodes,
+      nodeMap,
+      parentMap,
+      childrenMap,
+      calculateNodeSize,
+      positionChildren,
+      opts,
+    );
+  }
 
   if (opts.layout === 'flow') {
     return flowLayout(
@@ -966,6 +1131,322 @@ function flowLayout(
   // Collision detection pass — push apart any overlapping top-level nodes
   const allTopLevel = [...mainNodes, ...helperNodes].map((n) => nodeMap.get(n.id)!).filter(Boolean);
   resolveOverlaps(allTopLevel, opts.nodeGap / 2);
+
+  return layoutResults;
+}
+
+// =============================================================================
+// Circular Layout — Concentric rings by semantic tier
+// =============================================================================
+
+function circularLayout(
+  _allNodes: LayoutNode[],
+  edges: Array<{ source: string; target: string; relationship?: string }>,
+  topLevelNodes: LayoutNode[],
+  nodeMap: Map<string, LayoutNode>,
+  parentMap: Map<string, string>,
+  childrenMap: Map<string, string[]>,
+  calculateNodeSize: (node: LayoutNode) => { width: number; height: number },
+  positionChildren: (parent: LayoutNode) => void,
+  opts: Required<LayoutOptions>,
+): LayoutNode[] {
+  const layoutResults: LayoutNode[] = [];
+
+  const topIds = new Set(topLevelNodes.map((n) => n.id));
+  const toTopLevel = (id: string): string | null => {
+    if (topIds.has(id)) return id;
+    const p = parentMap.get(id);
+    if (!p) return null;
+    return toTopLevel(p);
+  };
+
+  // ── Step 1: Separate main-flow nodes from helpers ────────────────────────
+
+  const mainNodes: LayoutNode[] = [];
+  const helperNodes: LayoutNode[] = [];
+  for (const node of topLevelNodes) {
+    const n = nodeMap.get(node.id)!;
+    if (isHelperNode(n.iceType || '')) helperNodes.push(n);
+    else mainNodes.push(n);
+  }
+
+  // ── Step 2: Build layers using topological depth + semantic tier ──────────
+
+  const adj = new Map<string, string[]>();
+  const inDeg = new Map<string, number>();
+  for (const id of topIds) {
+    adj.set(id, []);
+    inDeg.set(id, 0);
+  }
+  const addedEdges = new Set<string>();
+  for (const edge of edges) {
+    if (edge.relationship === 'contains') continue;
+    const s = toTopLevel(edge.source);
+    const t = toTopLevel(edge.target);
+    if (s && t && s !== t && topIds.has(s) && topIds.has(t)) {
+      const key = `${s}->${t}`;
+      if (!addedEdges.has(key)) {
+        addedEdges.add(key);
+        adj.get(s)!.push(t);
+        inDeg.set(t, (inDeg.get(t) || 0) + 1);
+      }
+    }
+  }
+
+  const topoDepth = new Map<string, number>();
+  const queue: string[] = [];
+  for (const id of topIds) {
+    if ((inDeg.get(id) || 0) === 0) {
+      queue.push(id);
+      topoDepth.set(id, 0);
+    }
+  }
+  let qi = 0;
+  while (qi < queue.length) {
+    const cur = queue[qi++];
+    const d = topoDepth.get(cur)!;
+    for (const next of adj.get(cur) || []) {
+      if (!topoDepth.has(next) || d + 1 > topoDepth.get(next)!) {
+        topoDepth.set(next, d + 1);
+      }
+      inDeg.set(next, (inDeg.get(next) || 0) - 1);
+      if (inDeg.get(next) === 0) queue.push(next);
+    }
+  }
+  for (const id of topIds) {
+    if (!topoDepth.has(id)) topoDepth.set(id, 0);
+  }
+
+  const mainIds = new Set(mainNodes.map((n) => n.id));
+  const layerOf = new Map<string, number>();
+  for (const node of mainNodes) {
+    const topo = topoDepth.get(node.id) || 0;
+    const tier = getSemanticTier(node.iceType || '');
+    layerOf.set(node.id, Math.max(topo, tier));
+  }
+
+  const maxLayer = mainNodes.length > 0 ? Math.max(...Array.from(layerOf.values())) : 0;
+  const layers: LayoutNode[][] = Array.from({ length: maxLayer + 1 }, () => []);
+  for (const node of mainNodes) {
+    layers[layerOf.get(node.id)!].push(node);
+  }
+
+  // Barycenter sort within layers
+  const revAdj = new Map<string, string[]>();
+  for (const [src, targets] of adj) {
+    for (const tgt of targets) {
+      const list = revAdj.get(tgt) || [];
+      list.push(src);
+      revAdj.set(tgt, list);
+    }
+  }
+
+  if (layers.length > 0) {
+    layers[0].sort((a, b) => {
+      const aG = a.type === 'container' || a.iceType?.startsWith('Group.') ? 0 : 1;
+      const bG = b.type === 'container' || b.iceType?.startsWith('Group.') ? 0 : 1;
+      if (aG !== bG) return aG - bG;
+      return a.label.localeCompare(b.label);
+    });
+  }
+
+  const positionIndex = new Map<string, number>();
+  for (let i = 0; i < (layers[0]?.length || 0); i++) {
+    positionIndex.set(layers[0][i].id, i);
+  }
+
+  for (let li = 1; li < layers.length; li++) {
+    const layer = layers[li];
+    if (layer.length <= 1) {
+      if (layer.length === 1) positionIndex.set(layer[0].id, 0);
+      continue;
+    }
+    const bary = new Map<string, number>();
+    for (const node of layer) {
+      const neighbors: number[] = [];
+      for (const src of revAdj.get(node.id) || []) {
+        if (positionIndex.has(src)) neighbors.push(positionIndex.get(src)!);
+      }
+      for (const tgt of adj.get(node.id) || []) {
+        if (positionIndex.has(tgt)) neighbors.push(positionIndex.get(tgt)!);
+      }
+      bary.set(node.id, neighbors.length > 0
+        ? neighbors.reduce((a, b) => a + b, 0) / neighbors.length
+        : layer.length / 2);
+    }
+    layer.sort((a, b) => (bary.get(a.id) || 0) - (bary.get(b.id) || 0));
+    for (let i = 0; i < layer.length; i++) positionIndex.set(layer[i].id, i);
+  }
+
+  // ── Step 3: Calculate sizes ──────────────────────────────────────────────
+
+  for (const layer of layers) {
+    for (const node of layer) {
+      const size = calculateNodeSize(node);
+      node.width = size.width;
+      node.height = size.height;
+      positionChildren(node);
+    }
+  }
+  for (const node of helperNodes) {
+    const size = calculateNodeSize(node);
+    node.width = size.width;
+    node.height = size.height;
+    positionChildren(node);
+  }
+
+  // ── Step 4: Position nodes on concentric rings ───────────────────────────
+
+  const absolutizeChildren = (parent: LayoutNode, parentX: number, parentY: number): void => {
+    const parentFolded = parent.folded || (parent.data?.folded as boolean) || false;
+    if (parentFolded) return;
+    const childIds = childrenMap.get(parent.id) || [];
+    for (const childId of childIds) {
+      const child = nodeMap.get(childId);
+      if (child) {
+        const absX = parentX + child.x;
+        const absY = parentY + child.y;
+        child.x = absX;
+        child.y = absY;
+        layoutResults.push(child);
+        absolutizeChildren(child, absX, absY);
+      }
+    }
+  };
+
+  const RING_GAP = 80;
+  const MIN_RADIUS = 180;
+  const nonEmptyLayers = layers.filter((l) => l.length > 0);
+
+  // Compute radius for each ring
+  const ringRadii: number[] = [];
+  let prevRadius = 0;
+  let prevMaxDim = 0;
+
+  for (let i = 0; i < nonEmptyLayers.length; i++) {
+    const layer = nonEmptyLayers[i];
+    let maxDim = 0;
+    for (const node of layer) maxDim = Math.max(maxDim, node.width, node.height);
+
+    // Minimum circumference to fit all nodes without overlap
+    const circumNeeded = layer.length * (maxDim + opts.nodeGap);
+    const radiusFromCircum = circumNeeded / (2 * Math.PI);
+
+    let radius: number;
+    if (i === 0 && layer.length === 1) {
+      radius = 0; // single node at center
+    } else if (i === 0) {
+      radius = Math.max(MIN_RADIUS, radiusFromCircum);
+    } else {
+      const minFromPrev = prevRadius + prevMaxDim / 2 + RING_GAP + maxDim / 2;
+      radius = Math.max(minFromPrev, radiusFromCircum);
+    }
+
+    ringRadii.push(radius);
+    prevRadius = radius;
+    prevMaxDim = maxDim;
+  }
+
+  // Center point: offset so all nodes stay in positive coordinate space
+  const outerRadius = ringRadii.length > 0 ? ringRadii[ringRadii.length - 1] : 0;
+  const margin = 300;
+  const centerX = opts.startX + outerRadius + margin;
+  const centerY = opts.startY + outerRadius + margin;
+
+  // Track each main node's angle for helper alignment
+  const mainAngle = new Map<string, number>();
+
+  for (let ri = 0; ri < nonEmptyLayers.length; ri++) {
+    const layer = nonEmptyLayers[ri];
+    const radius = ringRadii[ri];
+    const n = layer.length;
+    const startAngle = -Math.PI / 2; // start at top
+
+    if (radius === 0 && n === 1) {
+      // Single center node
+      const node = layer[0];
+      node.x = centerX - node.width / 2;
+      node.y = centerY - node.height / 2;
+      mainAngle.set(node.id, 0);
+      layoutResults.push(node);
+      absolutizeChildren(node, node.x, node.y);
+      continue;
+    }
+
+    for (let i = 0; i < n; i++) {
+      const angle = startAngle + (i / n) * 2 * Math.PI;
+      const node = layer[i];
+      node.x = centerX + radius * Math.cos(angle) - node.width / 2;
+      node.y = centerY + radius * Math.sin(angle) - node.height / 2;
+      mainAngle.set(node.id, angle);
+      layoutResults.push(node);
+      absolutizeChildren(node, node.x, node.y);
+    }
+  }
+
+  // ── Step 5: Position helpers on an outer ring ────────────────────────────
+
+  if (helperNodes.length > 0) {
+    let helperMaxDim = 0;
+    for (const h of helperNodes) helperMaxDim = Math.max(helperMaxDim, h.width, h.height);
+
+    const helperRadius = (prevRadius || MIN_RADIUS) + prevMaxDim / 2 + RING_GAP + helperMaxDim / 2;
+    const usedAngles: number[] = [];
+    let disconnectedIdx = 0;
+
+    for (const helper of helperNodes) {
+      let connectedMainId: string | null = null;
+      for (const edge of edges) {
+        if (edge.relationship === 'contains') continue;
+        const s = toTopLevel(edge.source);
+        const t = toTopLevel(edge.target);
+        if (s === helper.id && mainIds.has(t!)) { connectedMainId = t!; break; }
+        if (t === helper.id && mainIds.has(s!)) { connectedMainId = s!; break; }
+      }
+
+      let angle: number;
+      if (connectedMainId && mainAngle.has(connectedMainId)) {
+        angle = mainAngle.get(connectedMainId)!;
+        // Nudge if angle too close to an already-used one
+        while (usedAngles.some((a) => Math.abs(a - angle) < 0.3)) angle += 0.35;
+      } else {
+        angle = -Math.PI / 2 + ((disconnectedIdx + 0.5) / Math.max(helperNodes.length, 1)) * 2 * Math.PI;
+        disconnectedIdx++;
+      }
+      usedAngles.push(angle);
+
+      helper.x = centerX + helperRadius * Math.cos(angle) - helper.width / 2;
+      helper.y = centerY + helperRadius * Math.sin(angle) - helper.height / 2;
+      layoutResults.push(helper);
+      absolutizeChildren(helper, helper.x, helper.y);
+    }
+  }
+
+  // Collision resolution — after pushing parents apart, shift their
+  // descendants by the same delta so absolute positions stay consistent.
+  const allTopLevel = [...mainNodes, ...helperNodes].map((n) => nodeMap.get(n.id)!).filter(Boolean);
+  const prePos = new Map<string, { x: number; y: number }>();
+  for (const n of allTopLevel) prePos.set(n.id, { x: n.x, y: n.y });
+
+  resolveOverlaps(allTopLevel, opts.nodeGap / 2);
+
+  for (const n of allTopLevel) {
+    const pre = prePos.get(n.id)!;
+    const dx = n.x - pre.x;
+    const dy = n.y - pre.y;
+    if (dx === 0 && dy === 0) continue;
+    const shiftDescendants = (parentId: string) => {
+      for (const childId of childrenMap.get(parentId) || []) {
+        const child = nodeMap.get(childId);
+        if (child) {
+          child.x += dx;
+          child.y += dy;
+          shiftDescendants(childId);
+        }
+      }
+    };
+    shiftDescendants(n.id);
+  }
 
   return layoutResults;
 }

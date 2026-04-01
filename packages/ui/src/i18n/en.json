@@ -896,7 +896,9 @@
     "subCanvas": "Canvas",
     "subTable": "Table",
     "subSettings": "Settings",
-    "subDeployments": "Deployments"
+    "subDeployments": "Deployments",
+    "subActivity": "Activity",
+    "subEnvironments": "Environments"
   },
 
   "templates": {

@@ -410,54 +410,52 @@ export const AiChatPanel: React.FC = () => {
   return (
     <div id="ice-ai-panel" className="h-full flex flex-col bg-ice-surface border-ice-border border-[0] xl:border-l">
       {/* Header */}
-      <div className="flex items-center gap-2 px-3 py-2.5 border-b border-ice-border shrink-0">
-        <Sparkles className="w-3.5 h-3.5 text-ice-accent" />
-        <span className="text-ice-sm font-semibold text-ice-text-1">{t('ai.chat.title')}</span>
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-ice-border shrink-0">
+        <Sparkles aria-hidden="true" className="w-3.5 h-3.5 text-ice-accent" />
+        <span className="text-ice-xs font-medium text-ice-text-1">{t('ai.chat.title')}</span>
         {providerInfo?.ok && (
           <span
             className={cn(
-              'flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium leading-none',
+              'flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-medium leading-none',
               providerInfo.isLocal
-                ? 'bg-emerald-500/15 text-emerald-400'
-                : 'bg-blue-500/15 text-blue-400',
+                ? 'text-emerald-400/60'
+                : 'text-blue-400/60',
             )}
             title={`Provider: ${providerInfo.provider} | Model: ${providerInfo.model || 'unknown'}`}
           >
-            {providerInfo.isLocal ? <Cpu className="w-2.5 h-2.5" /> : <Cloud className="w-2.5 h-2.5" />}
-            {providerInfo.isLocal ? 'Local' : 'Cloud'}
+            {providerInfo.isLocal ? <Cpu aria-hidden="true" className="w-2.5 h-2.5" /> : <Cloud aria-hidden="true" className="w-2.5 h-2.5" />}
+            {providerInfo.model || (providerInfo.isLocal ? 'Local' : 'Cloud')}
           </span>
         )}
         <span className="flex-1" />
         <button
           onClick={startNewConversation}
-          className="p-1 rounded text-ice-text-3 hover:text-ice-text-1 hover:bg-ice-hover transition-colors"
-          title={t('ai.chat.newChat')}
+          aria-label={t('ai.chat.newChat')}
+          className="p-1 rounded text-ice-text-3/50 hover:text-ice-text-1 transition-colors outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
         >
-          <Plus className="w-3.5 h-3.5" />
+          <Plus aria-hidden="true" className="w-3.5 h-3.5" />
         </button>
         <button
           onClick={() => setShowHistory(!showHistory)}
+          aria-label={t('ai.chat.historyTitle')}
           className={cn(
-            'relative p-1 rounded transition-colors',
+            'relative p-1 rounded transition-colors outline-none focus-visible:ring-1 focus-visible:ring-blue-500',
             showHistory
-              ? 'text-ice-accent bg-ice-accent/10'
-              : 'text-ice-text-3 hover:text-ice-text-1 hover:bg-ice-hover',
+              ? 'text-ice-accent'
+              : 'text-ice-text-3/50 hover:text-ice-text-1',
           )}
-          title={t('ai.chat.historyTitle')}
         >
-          <MessageSquare className="w-3.5 h-3.5" />
+          <MessageSquare aria-hidden="true" className="w-3.5 h-3.5" />
           {conversations.length > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] flex items-center justify-center rounded-full bg-ice-accent text-[8px] font-bold text-white leading-none px-0.5">
-              {conversations.length}
-            </span>
+            <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-ice-accent" />
           )}
         </button>
         <button
           onClick={() => dispatch(toggleAiChat())}
-          className="p-1 rounded text-ice-text-3 hover:text-ice-text-1 hover:bg-ice-hover transition-colors"
-          title={t('ai.chat.closeTitle')}
+          aria-label={t('ai.chat.closeTitle')}
+          className="p-1 rounded text-ice-text-3/50 hover:text-ice-text-1 transition-colors outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
         >
-          <X className="w-3.5 h-3.5" />
+          <X aria-hidden="true" className="w-3.5 h-3.5" />
         </button>
       </div>
 
@@ -465,32 +463,34 @@ export const AiChatPanel: React.FC = () => {
       {showHistory && (
         <div className="border-b border-ice-border max-h-48 overflow-y-auto">
           {conversations.length === 0 ? (
-            <p className="px-3 py-4 text-ice-xs text-ice-text-3 text-center">{t('ai.chat.noConversations')}</p>
+            <p className="px-3 py-4 text-ice-xs text-ice-text-3/50 text-center">{t('ai.chat.noConversations')}</p>
           ) : (
             conversations.map((conv) => (
-              <button
+              <div
                 key={conv.id}
+                role="button"
+                tabIndex={0}
                 onClick={() => loadConversation(conv.id)}
+                onKeyDown={(e) => e.key === 'Enter' && loadConversation(conv.id)}
                 className={cn(
-                  'flex items-center gap-2 w-full px-3 py-2 text-left hover:bg-ice-hover transition-colors',
-                  conversationId === conv.id && 'bg-ice-hover',
+                  'group flex items-center gap-2 w-full px-3 py-1.5 text-left transition-colors cursor-pointer',
+                  conversationId === conv.id ? 'text-ice-text-1' : 'text-ice-text-3 hover:text-ice-text-2',
                 )}
               >
-                <MessageSquare className="w-3 h-3 text-ice-text-3 shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-ice-xs text-ice-text-1 truncate">{conv.title || t('ai.chat.untitledConversation')}</p>
-                  <p className="text-[10px] text-ice-text-3">
+                  <p className="text-ice-xs truncate">{conv.title || t('ai.chat.untitledConversation')}</p>
+                  <p className="text-[10px] text-ice-text-3/40">
                     {conv._count.messages} {t('ai.chat.msgs')} · {formatDateTime(conv.updated_at)}
                   </p>
                 </div>
                 <button
                   onClick={(e) => handleDeleteConversation(conv.id, e)}
-                  className="p-0.5 rounded text-ice-text-3 hover:text-ice-red opacity-0 group-hover:opacity-100 hover:!opacity-100 transition-opacity"
-                  title={t('ai.chat.deleteTitle')}
+                  aria-label={t('ai.chat.deleteTitle')}
+                  className="p-0.5 rounded text-ice-text-3/30 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
                 >
-                  <Trash2 className="w-3 h-3" />
+                  <Trash2 aria-hidden="true" className="w-3 h-3" />
                 </button>
-              </button>
+              </div>
             ))
           )}
         </div>
@@ -506,18 +506,18 @@ export const AiChatPanel: React.FC = () => {
             const patterns = suggestPatterns(canvasNodes as any, canvasEdges as any);
             return (
               <div className="flex flex-col items-center justify-center h-full text-center px-4 gap-3">
-                <Sparkles className="w-8 h-8 text-ice-text-3 opacity-40" />
-                <p className="text-ice-sm text-ice-text-3 leading-relaxed">
+                <Sparkles aria-hidden="true" className="w-6 h-6 text-ice-text-3/20" />
+                <p className="text-ice-xs text-ice-text-3/50 leading-relaxed max-w-[200px]">
                   {canvasNodes.length === 0
                     ? t('ai.chat.emptyCanvasPrompt')
                     : t('ai.chat.existingCanvasPrompt')}
                 </p>
-                <div className="flex flex-wrap gap-1.5 justify-center">
+                <div className="flex flex-wrap gap-1 justify-center">
                   {patterns.map((p) => (
                     <button
                       key={p.label}
                       onClick={() => handleSuggestionClick(p.intent)}
-                      className="px-2.5 py-1 text-ice-xs bg-ice-raised border border-ice-border rounded-full text-ice-text-2 hover:text-ice-text-1 hover:bg-ice-hover transition-colors"
+                      className="px-2 py-0.5 text-ice-xs text-ice-text-3 hover:text-ice-text-1 transition-colors"
                     >
                       {p.label}
                     </button>
@@ -531,8 +531,8 @@ export const AiChatPanel: React.FC = () => {
           <div key={msg.id} className={cn('flex', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
             <div
               className={cn(
-                'max-w-[90%] rounded-lg px-3 py-2',
-                msg.role === 'user' ? 'bg-ice-accent/20 text-ice-text-1' : 'bg-ice-raised text-ice-text-1',
+                'max-w-[90%] px-3 py-2',
+                msg.role === 'user' ? 'rounded-2xl rounded-br-sm bg-blue-500/[0.08] text-ice-text-1' : 'text-ice-text-2',
               )}
             >
               {msg.content.startsWith('AI_NOT_CONFIGURED:') ? (
@@ -588,9 +588,9 @@ export const AiChatPanel: React.FC = () => {
               )}
 
               {msg.applied && (
-                <div className="flex items-center gap-1.5 mt-2">
-                  <Check className="w-3 h-3 text-emerald-400" />
-                  <span className="text-ice-xs text-emerald-400">
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <Check aria-hidden="true" className="w-3 h-3 text-emerald-400/60" />
+                  <span className="text-[10px] text-emerald-400/60">
                     {t('ai.chat.appliedChanges')} {msg.operationCount || msg.operations?.length || 0} {t('ai.chat.changes')}
                   </span>
                 </div>
@@ -602,9 +602,9 @@ export const AiChatPanel: React.FC = () => {
                     <button
                       key={i}
                       onClick={() => handleSuggestionClick(s)}
-                      className="flex items-center gap-1 px-2 py-0.5 text-ice-xs bg-ice-surface border border-ice-border rounded-full text-ice-text-2 hover:text-ice-text-1 hover:bg-ice-hover transition-colors"
+                      className="flex items-center gap-1 px-2 py-0.5 text-ice-xs text-ice-text-3 hover:text-ice-text-1 transition-colors"
                     >
-                      <ArrowRight className="w-2.5 h-2.5" />
+                      <ArrowRight aria-hidden="true" className="w-2.5 h-2.5" />
                       {s}
                     </button>
                   ))}
@@ -615,53 +615,53 @@ export const AiChatPanel: React.FC = () => {
         ))}
 
         {isProcessing && (
-          <div className="flex justify-start">
-            <div className="bg-ice-raised rounded-lg px-3 py-2 flex items-center gap-2">
-              <Loader2 className="w-3.5 h-3.5 text-ice-accent animate-spin" />
-              <span className="text-ice-sm text-ice-text-3">{streamingStatus || t('ai.chat.thinking')}</span>
-            </div>
+          <div className="flex items-center gap-2 px-1">
+            <Loader2 aria-hidden="true" className="w-3 h-3 text-ice-accent animate-spin" />
+            <span className="text-ice-xs text-ice-text-3/50">{streamingStatus || t('ai.chat.thinking')}</span>
           </div>
         )}
       </div>
 
       {/* Undo bar */}
       {canUndo && (
-        <div className="px-3 py-1.5 border-t border-ice-border flex items-center gap-2 shrink-0">
+        <div className="px-3 py-1.5 border-t border-ice-border/50 flex items-center shrink-0">
           <button
             id="ice-ai-btn-undo"
             onClick={undoAi}
-            className="flex items-center gap-1.5 text-ice-xs text-ice-text-3 hover:text-ice-text-1 transition-colors"
+            className="flex items-center gap-1.5 text-[10px] text-ice-text-3/50 hover:text-ice-text-1 transition-colors outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
           >
-            <Undo2 className="w-3 h-3" />
+            <Undo2 aria-hidden="true" className="w-3 h-3" />
             {t('ai.chat.undoLastAi')}
           </button>
         </div>
       )}
 
       {/* Input */}
-      <div className="px-3 py-2.5 border-t border-ice-border shrink-0">
-        <div className="flex items-end gap-2 bg-ice-raised border border-ice-border rounded-lg px-3 py-2 focus-within:border-ice-accent transition-colors">
+      <div className="px-3 py-2 border-t border-ice-border/50 shrink-0">
+        <div className="flex items-end gap-2">
           <textarea
             id="ice-ai-input-message"
             ref={inputRef}
+            name="ai-message"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={t('ai.chat.inputPlaceholder')}
             rows={1}
-            className="flex-1 bg-transparent text-ice-sm text-ice-text-1 placeholder:text-ice-text-3 outline-none resize-none max-h-20"
+            className="flex-1 bg-transparent border-b border-ice-border/50 focus:border-ice-accent text-ice-xs text-ice-text-1 placeholder:text-ice-text-3/40 outline-none resize-none max-h-20 py-1 transition-colors"
             disabled={isProcessing}
           />
           <button
             id="ice-ai-btn-send"
+            aria-label="Send message"
             onClick={handleSubmit}
             disabled={!input.trim() || isProcessing}
             className={cn(
-              'p-1 rounded transition-colors shrink-0',
-              input.trim() && !isProcessing ? 'text-ice-accent hover:bg-ice-accent/20' : 'text-ice-text-3 opacity-40',
+              'p-1 rounded transition-colors shrink-0 outline-none focus-visible:ring-1 focus-visible:ring-blue-500',
+              input.trim() && !isProcessing ? 'text-ice-accent' : 'text-ice-text-3/30',
             )}
           >
-            <Send className="w-4 h-4" />
+            <Send aria-hidden="true" className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
@@ -680,12 +680,12 @@ export const AiChatCollapsedBar: React.FC = () => {
   return (
     <button
       onClick={() => dispatch(toggleAiChat())}
-      className="flex items-center gap-2 px-3 py-1.5 w-full bg-ice-surface border-t border-ice-border hover:bg-ice-hover transition-colors shrink-0"
+      className="flex items-center gap-2 px-3 py-1.5 w-full border-t border-ice-border/50 text-ice-text-3/50 hover:text-ice-text-2 transition-colors shrink-0 outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
     >
-      <Sparkles className="w-3.5 h-3.5 text-ice-accent" />
-      <span className="text-ice-sm font-medium text-ice-text-2 flex-1 text-left">{t('ai.chat.collapsedTitle')}</span>
-      <ChevronUp className="w-3.5 h-3.5 text-ice-text-3 lg:hidden" />
-      <ArrowRight className="w-3.5 h-3.5 text-ice-text-3 hidden lg:block" />
+      <Sparkles aria-hidden="true" className="w-3 h-3 text-ice-accent/50" />
+      <span className="text-ice-xs flex-1 text-left">{t('ai.chat.collapsedTitle')}</span>
+      <ChevronUp aria-hidden="true" className="w-3 h-3 lg:hidden" />
+      <ArrowRight aria-hidden="true" className="w-3 h-3 hidden lg:block" />
     </button>
   );
 };

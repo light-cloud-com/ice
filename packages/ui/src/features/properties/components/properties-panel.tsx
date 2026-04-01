@@ -10,7 +10,9 @@
  * 3. Edge selected → Relationship, protocol, port fields
  */
 
+import { ChevronRight } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { IceSelect } from '../../../shared/components/ui/ice-select';
 import { useSelector, useDispatch } from 'react-redux';
 import { getIcon, DEFAULT_ICON, type Provider } from '../../../assets/icons';
 import { useTranslation, t } from '../../../i18n';
@@ -265,9 +267,11 @@ const DriftCheckButton: React.FC<{ cardId: string; nodes: any[] }> = ({ cardId, 
 };
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-  <div className="mb-3">
-    <div className="text-ice-xs font-semibold uppercase tracking-wider text-ice-text-3 mb-1.5 px-3">{title}</div>
-    <div className="px-3">{children}</div>
+  <div className="pt-3 pb-2 px-3">
+    {title && (
+      <div className="text-[10px] font-medium tracking-wide text-ice-text-3/50 mb-2">{title}</div>
+    )}
+    <div className="space-y-1">{children}</div>
   </div>
 );
 
@@ -280,13 +284,13 @@ const TextField: React.FC<{
   placeholder?: string;
 }> = ({ label, value, onChange, placeholder }) => (
   <div className="flex items-center justify-between gap-2 py-1">
-    <span className="text-ice-sm text-ice-text-2 shrink-0">{label}</span>
+    <span className="text-ice-xs text-ice-text-3 shrink-0">{label}</span>
     <input
       type="text"
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-[140px] bg-ice-raised border border-ice-border rounded px-2 py-0.5 text-ice-sm text-ice-text-1 outline-none focus:border-ice-accent transition-colors placeholder:text-ice-text-3"
+      className="w-[140px] bg-transparent border-b border-ice-border/50 px-1 py-0.5 text-ice-xs text-ice-text-1 outline-none focus:border-ice-accent transition-colors placeholder:text-ice-text-3/40"
     />
   </div>
 );
@@ -297,12 +301,12 @@ const NumberField: React.FC<{
   onChange: (v: number) => void;
 }> = ({ label, value, onChange }) => (
   <div className="flex items-center justify-between gap-2 py-1">
-    <span className="text-ice-sm text-ice-text-2 shrink-0">{label}</span>
+    <span className="text-ice-xs text-ice-text-3 shrink-0">{label}</span>
     <input
       type="number"
       value={value}
       onChange={(e) => onChange(Number(e.target.value))}
-      className="w-[140px] bg-ice-raised border border-ice-border rounded px-2 py-0.5 text-ice-sm text-ice-text-1 outline-none focus:border-ice-accent transition-colors"
+      className="w-[140px] bg-transparent border-b border-ice-border/50 px-1 py-0.5 text-ice-xs text-ice-text-1 outline-none focus:border-ice-accent transition-colors"
     />
   </div>
 );
@@ -314,19 +318,8 @@ const SelectField: React.FC<{
   onChange: (v: string) => void;
 }> = ({ label, value, options, onChange }) => (
   <div className="flex items-center justify-between gap-2 py-1">
-    <span className="text-ice-sm text-ice-text-2 shrink-0">{label}</span>
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-[140px] bg-ice-raised border border-ice-border rounded px-1.5 py-0.5 text-ice-sm text-ice-text-1 outline-none focus:border-ice-accent transition-colors"
-    >
-      <option value="">—</option>
-      {options.map((opt) => (
-        <option key={opt} value={opt}>
-          {opt}
-        </option>
-      ))}
-    </select>
+    <span className="text-ice-xs text-ice-text-3 shrink-0">{label}</span>
+    <IceSelect value={value} onChange={onChange} options={options} width="140px" />
   </div>
 );
 
@@ -336,13 +329,13 @@ const BooleanField: React.FC<{
   onChange: (v: boolean) => void;
 }> = ({ label, value, onChange }) => (
   <div className="flex items-center justify-between gap-2 py-1">
-    <span className="text-ice-sm text-ice-text-2 shrink-0">{label}</span>
+    <span className="text-ice-xs text-ice-text-3 shrink-0">{label}</span>
     <button
       onClick={() => onChange(!value)}
-      className={`w-8 h-4 rounded-full transition-colors relative ${value ? 'bg-blue-600' : 'bg-ice-overlay'}`}
+      className={`w-7 h-3.5 rounded-full transition-colors relative ${value ? 'bg-blue-500' : 'bg-ice-border'}`}
     >
       <div
-        className={`w-3 h-3 rounded-full bg-white absolute top-0.5 transition-transform ${value ? 'translate-x-4' : 'translate-x-0.5'}`}
+        className={`w-2.5 h-2.5 rounded-full bg-white absolute top-0.5 transition-transform ${value ? 'translate-x-3.5' : 'translate-x-0.5'}`}
       />
     </button>
   </div>
@@ -356,8 +349,8 @@ const ListField: React.FC<{
   addLabel?: string;
 }> = ({ label, value, onChange, placeholder, addLabel }) => (
   <div className="py-1 space-y-1.5">
-    <span className="text-ice-sm text-ice-text-2">{label}</span>
-    <div className="space-y-1">
+    <span className="text-ice-xs text-ice-text-3">{label}</span>
+    <div className="space-y-0.5">
       {value.map((item, i) => (
         <div key={i} className="flex items-center gap-1">
           <input
@@ -369,11 +362,11 @@ const ListField: React.FC<{
               onChange(updated);
             }}
             placeholder={placeholder}
-            className="flex-1 min-w-0 bg-ice-raised border border-ice-border rounded px-2 py-0.5 text-ice-sm text-ice-text-1 outline-none focus:border-ice-accent transition-colors placeholder:text-ice-text-3"
+            className="flex-1 min-w-0 bg-transparent border-b border-ice-border/50 px-1 py-0.5 text-ice-xs text-ice-text-1 outline-none focus:border-ice-accent transition-colors placeholder:text-ice-text-3/40"
           />
           <button
             onClick={() => onChange(value.filter((_, j) => j !== i))}
-            className="p-0.5 text-ice-text-3 hover:text-red-400 transition-colors text-ice-sm"
+            className="p-0.5 text-ice-text-3/40 hover:text-red-400 transition-colors text-ice-xs"
           >
             &times;
           </button>
@@ -381,7 +374,7 @@ const ListField: React.FC<{
       ))}
       <button
         onClick={() => onChange([...value, ''])}
-        className="text-ice-xs text-ice-accent hover:text-blue-400 transition-colors"
+        className="text-[10px] text-ice-text-3/50 hover:text-ice-accent transition-colors"
       >
         + {addLabel || 'Add item'}
       </button>
@@ -397,18 +390,18 @@ const StepperField: React.FC<{
   onChange: (v: number) => void;
 }> = ({ label, value, min = 0, max = 99, onChange }) => (
   <div className="flex items-center justify-between gap-2 py-1">
-    <span className="text-ice-sm text-ice-text-2 shrink-0">{label}</span>
-    <div className="flex items-center gap-1">
+    <span className="text-ice-xs text-ice-text-3 shrink-0">{label}</span>
+    <div className="flex items-center gap-0.5">
       <button
         onClick={() => onChange(Math.max(min, value - 1))}
-        className="w-6 h-6 flex items-center justify-center rounded bg-ice-raised border border-ice-border text-ice-text-1 text-ice-base font-bold hover:bg-ice-hover transition-colors"
+        className="w-5 h-5 flex items-center justify-center rounded text-ice-text-3 text-ice-xs hover:text-ice-text-1 hover:bg-ice-hover transition-colors"
       >
         −
       </button>
-      <span className="w-8 text-center text-ice-base text-ice-text-1 font-mono font-semibold">{value}</span>
+      <span className="w-6 text-center text-ice-xs text-ice-text-1 font-mono tabular-nums">{value}</span>
       <button
         onClick={() => onChange(Math.min(max, value + 1))}
-        className="w-6 h-6 flex items-center justify-center rounded bg-ice-raised border border-ice-border text-ice-text-1 text-ice-base font-bold hover:bg-ice-hover transition-colors"
+        className="w-5 h-5 flex items-center justify-center rounded text-ice-text-3 text-ice-xs hover:text-ice-text-1 hover:bg-ice-hover transition-colors"
       >
         +
       </button>
@@ -423,9 +416,9 @@ const InfoRow: React.FC<{
   value: string | number;
   color?: string;
 }> = ({ label, value, color }) => (
-  <div className="flex items-center justify-between py-0.5">
-    <span className="text-ice-xs text-ice-text-3">{label}</span>
-    <span className={`text-ice-xs font-mono ${color || 'text-ice-text-2'}`}>{value}</span>
+  <div className="flex items-center justify-between py-px">
+    <span className="text-[10px] text-ice-text-3/50">{label}</span>
+    <span className={`text-[10px] font-mono ${color || 'text-ice-text-2'}`}>{value}</span>
   </div>
 );
 
@@ -440,29 +433,29 @@ const RichSelectField: React.FC<{
 }> = ({ label, value, options, description, onChange }) => (
   <div className="py-1 space-y-1.5">
     <div>
-      <span className="text-ice-sm text-ice-text-2">{label}</span>
-      {description && <p className="text-ice-2xs text-ice-text-3 mt-0.5">{description}</p>}
+      <span className="text-ice-xs text-ice-text-3">{label}</span>
+      {description && <p className="text-[10px] text-ice-text-3/40 mt-0.5">{description}</p>}
     </div>
-    <div className="space-y-1">
+    <div className="space-y-0.5">
       {options.map((opt) => (
         <button
           key={opt.value}
           onClick={() => onChange(opt.value)}
           className={cn(
-            'w-full text-left px-2.5 py-1.5 rounded border transition-colors',
+            'w-full text-left px-2 py-1 rounded transition-colors',
             value === opt.value
-              ? 'border-blue-500/50 bg-blue-950/30 text-ice-text-1'
-              : 'border-ice-border bg-ice-raised text-ice-text-2 hover:border-ice-border-strong hover:bg-ice-hover',
+              ? 'bg-blue-500/[0.08] text-ice-text-1'
+              : 'text-ice-text-3 hover:text-ice-text-2 hover:bg-ice-hover',
           )}
         >
           <div className="flex items-center justify-between gap-2">
-            <span className="text-ice-sm font-mono font-medium">{opt.label}</span>
+            <span className="text-ice-xs font-mono">{opt.label}</span>
             {opt.cost && (
-              <span className="text-ice-2xs text-emerald-400/70 shrink-0">{opt.cost}</span>
+              <span className="text-[10px] text-emerald-400/60 shrink-0">{opt.cost}</span>
             )}
           </div>
           {opt.description && (
-            <div className="text-ice-2xs text-ice-text-3 mt-0.5">{opt.description}</div>
+            <div className="text-[10px] text-ice-text-3/40 mt-0.5">{opt.description}</div>
           )}
         </button>
       ))}
@@ -477,30 +470,31 @@ function renderPropertyField(
   value: unknown,
   onChange: (field: string, value: unknown) => void,
 ): React.ReactNode {
-  // Rich select — card picker with real cloud values
+  // Select with optionDetails — use IceSelect dropdown
   if (prop.type === 'select' && prop.optionDetails && prop.optionDetails.length > 0) {
     const strVal = value != null ? String(value) : (prop.default != null ? String(prop.default) : '');
-    // If stored value doesn't match any optionDetail (legacy data), fall through to plain select
-    if (!strVal || prop.optionDetails.some((o) => o.value === strVal)) {
-      return (
-        <RichSelectField
-          key={prop.name}
-          label={prop.label}
-          description={prop.description}
+    return (
+      <div key={prop.name} className="flex items-center justify-between gap-2 py-1">
+        <span className="text-ice-xs text-ice-text-3 shrink-0">{prop.label}</span>
+        <IceSelect
           value={strVal}
-          options={prop.optionDetails}
+          width="160px"
           onChange={(v) => {
             onChange(prop.name, v);
-            // Write companion display field for canvas cards
             const detail = prop.optionDetails!.find((o) => o.value === v);
             if (detail) {
               const displayParts = [detail.label, detail.description].filter(Boolean);
-              onChange(`${prop.name}_display`, displayParts.join(' · '));
+              onChange(`${prop.name}_display`, displayParts.join(' \u00b7 '));
             }
           }}
+          options={prop.optionDetails.map((o) => ({
+            value: o.value,
+            label: o.label,
+            description: o.cost ? `${o.description || ''} ${o.cost}`.trim() : o.description,
+          }))}
         />
-      );
-    }
+      </div>
+    );
   }
   if (prop.type === 'list') {
     const listVal = Array.isArray(value) ? (value as string[]) : [];
@@ -590,9 +584,9 @@ const PropertyFields: React.FC<{
         <>
           <button
             onClick={() => setShowMore(!showMore)}
-            className="w-full flex items-center gap-1.5 px-3 py-1.5 text-ice-xs text-ice-text-3 hover:text-ice-text-2 transition-colors"
+            className="w-full flex items-center gap-1 px-3 py-2 text-[10px] text-ice-text-3/50 hover:text-ice-text-2 transition-colors"
           >
-            <span className={`transition-transform ${showMore ? 'rotate-90' : ''}`}>▸</span>
+            <ChevronRight className={`w-3 h-3 transition-transform duration-150 ${showMore ? 'rotate-90' : ''}`} />
             {showMore ? 'Fewer options' : `More options (${detailed.length})`}
           </button>
           {showMore && (
@@ -1022,7 +1016,7 @@ export const PropertiesPanel: React.FC = () => {
 
               {/* ════ DEPLOY TAB ════ */}
               {activeTab === 'deploy' && hasDeployment && (
-                <>
+                <div className="pt-1">
                   <DriftIndicator nodeId={selectedNode.id} />
                   <Section title={t('properties.deploy.current')}>
                     <div className="space-y-2.5">
@@ -1075,12 +1069,12 @@ export const PropertiesPanel: React.FC = () => {
                   </Section>
                   <DeployHistory cardId={activeCard.id} />
                   <DriftCheckButton cardId={activeCard.id} nodes={activeCard.nodes} />
-                </>
+                </div>
               )}
 
               {/* ════ SOURCE & CI TAB ════ */}
               {activeTab === 'source' && (
-                <>
+                <div className="pt-1">
                   {hasSource && (
                     <>
                       <ServiceSourceSection
@@ -1109,7 +1103,7 @@ export const PropertiesPanel: React.FC = () => {
                       activeEnvName={activeEnvName}
                     />
                   )}
-                </>
+                </div>
               )}
 
               {/* ════ SCALING TAB ════ */}

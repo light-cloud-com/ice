@@ -569,13 +569,14 @@ const cardsSlice = createSlice({
     // Otherwise, organize all levels (master organize).
     autoOrganizeCard: (
       state,
-      action: PayloadAction<{ direction?: 'vertical' | 'horizontal'; containerId?: string } | undefined>,
+      action: PayloadAction<{ direction?: 'vertical' | 'horizontal'; layout?: 'flow' | 'grid' | 'circular'; containerId?: string } | undefined>,
     ) => {
       const card = state.cards.find((c) => c.id === state.activeCardId);
       if (!card || card.nodes.length === 0) return;
       pushSnapshot(state);
 
       const direction = action?.payload?.direction || 'vertical';
+      const layout = action?.payload?.layout || 'flow';
       const containerId = action?.payload?.containerId;
 
       // Cleanup pass: strip parentId where parent is not a container.
@@ -608,7 +609,7 @@ const cardsSlice = createSlice({
         relationship: e.data?.relationship as string | undefined,
       }));
 
-      // Apply auto-layout with direction
+      // Apply auto-layout with direction and layout mode
       const organizedNodes = autoLayout(layoutNodes, layoutEdges, {
         startX: 50,
         startY: 50,
@@ -616,6 +617,7 @@ const cardsSlice = createSlice({
         nodesPerRow: 3,
         containerPadding: 30,
         direction,
+        layout,
       });
 
       const organizedMap = new Map(organizedNodes.map((n) => [n.id, n]));

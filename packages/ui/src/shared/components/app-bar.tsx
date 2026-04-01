@@ -5,7 +5,7 @@
 import awsIcon from 'devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg';
 import azureIcon from 'devicon/icons/azure/azure-original.svg';
 import gcpIcon from 'devicon/icons/googlecloud/googlecloud-original.svg';
-import { Rows3, Columns3, Rocket, Sun, Moon, Github, Undo2, Redo2 } from 'lucide-react';
+import { Rows3, Columns3, CircleDot, Spline, Minus, GitCommitHorizontal, Rocket, Sun, Moon, Github, Undo2, Redo2 } from 'lucide-react';
 import React, { memo, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Breadcrumbs } from './breadcrumbs';
@@ -25,6 +25,7 @@ import {
   selectCanRedo,
 } from '../../store/slices/cards-slice';
 import { openDeployPanel } from '../../store/slices/deploy-slice';
+import { setEdgeStyle, type EdgeStyle } from '../../store/slices/ui-slice';
 import { checkGitHubConnection } from '../../store/slices/integrations-slice';
 import { useTheme } from '../hooks/use-theme';
 import { cn } from '../utils/cn';
@@ -64,6 +65,14 @@ export const AppBar: React.FC = memo(() => {
 
   const canUndo = useSelector(selectCanUndo);
   const canRedo = useSelector(selectCanRedo);
+  const edgeStyle = useSelector((state: RootState) => state.ui.edgeStyle) as EdgeStyle;
+
+  const cycleEdgeStyle = () => {
+    const order: EdgeStyle[] = ['bezier', 'straight', 'rectangular'];
+    const next = order[(order.indexOf(edgeStyle) + 1) % order.length];
+    dispatch(setEdgeStyle(next));
+  };
+  const edgeIcon = edgeStyle === 'straight' ? Minus : edgeStyle === 'rectangular' ? GitCommitHorizontal : Spline;
 
   // Selection-aware organize: if a single container is selected, organize inside it
   const selectedNodes = useSelector((state: RootState) => state.selection.selectedNodes);
@@ -121,6 +130,19 @@ export const AppBar: React.FC = memo(() => {
             icon={Columns3}
             onClick={() => dispatch(autoOrganizeCard({ direction: 'horizontal', containerId: selectedContainerId }))}
             tip={selectedContainerId ? 'Organize group (horizontal)' : 'Auto-organize all (horizontal)'}
+          />
+          <BarBtn
+            id="ice-appbar-btn-organize-c"
+            icon={CircleDot}
+            onClick={() => dispatch(autoOrganizeCard({ layout: 'circular', containerId: selectedContainerId }))}
+            tip={selectedContainerId ? 'Organize group (circular)' : 'Auto-organize all (circular)'}
+          />
+          <BarSep />
+          <BarBtn
+            id="ice-appbar-btn-edge-style"
+            icon={edgeIcon}
+            onClick={cycleEdgeStyle}
+            tip={`Connection style: ${edgeStyle}`}
           />
           <BarBtn
             id="ice-appbar-btn-undo"

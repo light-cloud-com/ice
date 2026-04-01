@@ -153,6 +153,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   const animatingEdges = useSelector((state: RootState) => state.ai.animatingEdges);
   const aiCurrentIntent = useSelector((state: RootState) => state.ai.currentIntent);
   const pipelineNodeStatus = useSelector((state: RootState) => state.pipeline.nodeStatus);
+  const edgeStyle = useSelector((state: RootState) => state.ui.edgeStyle);
   // Clipboard (Ctrl+C/V/X) and Undo/Redo (Ctrl+Z / Ctrl+Shift+Z)
   useClipboard();
   useUndoRedo();
@@ -2198,6 +2199,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                   onContextMenu={(edgeId, pos) => handleContextMenu(pos, 'edge', edgeId)}
                   lod={lod}
                   pipelineActive={edgePipelineActive}
+                  edgeStyle={edgeStyle}
                 />
               );
               return edgeAnimStyle ? (
@@ -2607,6 +2609,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                   sourcePortCount={1}
                   targetPortIndex={0}
                   targetPortCount={1}
+                  edgeStyle={edgeStyle}
                 />
               ))}
             </g>
@@ -2654,6 +2657,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                   onSelect={handleEdgeSelect}
                   onContextMenu={(edgeId, pos) => handleContextMenu(pos, 'edge', edgeId)}
                   lod={lod}
+                  edgeStyle={edgeStyle}
                 />
               );
             })}

@@ -33,6 +33,7 @@ import type { RootState, AppDispatch } from '@ui/store';
 import { FolderView } from '@/pages/folder-view';
 import { ProjectActivity } from '@/pages/project/activity';
 import { ProjectDeployments } from '@/pages/project/deployments';
+import { ProjectEnvironments } from '@/pages/project/environments';
 import { ProjectSettings } from '@/pages/project/settings';
 
 // ── Dynamic content resolver ────────────────────────────────────────────────
@@ -140,6 +141,14 @@ const DynamicContent: React.FC = () => {
           <MainLayout projectId={resolved.id!} projectName={resolved.name}>
             <div className="h-full overflow-y-auto bg-ice-base">
               <ProjectActivity projectId={resolved.id!} />
+            </div>
+          </MainLayout>
+        )}
+
+        {resolved.subpage === 'environments' && (
+          <MainLayout projectId={resolved.id!} projectName={resolved.name}>
+            <div className="h-full overflow-y-auto bg-ice-base">
+              <ProjectEnvironments projectId={resolved.id!} />
             </div>
           </MainLayout>
         )}

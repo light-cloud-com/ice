@@ -14,13 +14,10 @@ import {
   ArrowUpRight,
   Trash2,
   Rocket,
-  Settings,
-  History,
-  Activity,
 } from 'lucide-react';
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { IceSelect } from '../../../shared/components/ui/ice-select';
 import { useTranslation } from '../../../i18n';
 import { getApi } from '../../../shared/api/api-adapter';
 import { cn } from '../../../shared/utils/cn';
@@ -44,8 +41,6 @@ interface EnvironmentTabBarProps {
 export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId, basePath }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
-  const navigate = useNavigate();
-  const { pathname } = useLocation();
   const environments = useSelector((s: RootState) => s.environments.byProject[projectId] || []);
   const activeEnvId = useSelector((s: RootState) => s.environments.activeEnvId[projectId]);
   const loading = useSelector((s: RootState) => s.environments.loading);
@@ -265,73 +260,32 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
             {/* Spacer */}
             <div className="flex-1" />
 
-            {/* Right side: project navigation + actions */}
-            {basePath && (
-              <div className="flex items-center gap-0.5">
+            {/* Right side: promote + deploy actions */}
+            <div className="flex items-center gap-0.5">
+              {/* Promote button — only for non-production envs */}
+              {canPromote && (
                 <button
-                  onClick={() => navigate(`${basePath}/settings`)}
-                  className={cn(
-                    'flex items-center gap-1 px-2 py-1 text-ice-xs font-medium rounded transition-colors',
-                    pathname.endsWith('/settings')
-                      ? 'bg-ice-active text-ice-text-1'
-                      : 'text-ice-text-3 hover:text-ice-text-2 hover:bg-ice-hover',
-                  )}
+                  onClick={() =>
+                    dispatch(compareEnvironments({ sourceEnvId: activeEnv!.id, targetEnvId: prodEnv!.id }))
+                  }
+                  className="flex items-center gap-1 px-2 py-1 text-ice-xs font-medium rounded text-amber-500 hover:bg-amber-500/10 transition-colors"
+                  title={t('environments.tabBar.promoteToProduction')}
                 >
-                  <Settings className="w-3 h-3" />
-                  {t('environments.tabBar.settings')}
+                  <ArrowUpRight className="w-3 h-3" />
+                  {t('environments.tabBar.promoteToProduction')}
                 </button>
-                <button
-                  onClick={() => navigate(`${basePath}/deployments`)}
-                  className={cn(
-                    'flex items-center gap-1 px-2 py-1 text-ice-xs font-medium rounded transition-colors',
-                    pathname.endsWith('/deployments')
-                      ? 'bg-ice-active text-ice-text-1'
-                      : 'text-ice-text-3 hover:text-ice-text-2 hover:bg-ice-hover',
-                  )}
-                >
-                  <History className="w-3 h-3" />
-                  {t('environments.tabBar.deployments')}
-                </button>
-                <button
-                  onClick={() => navigate(`${basePath}/activity`)}
-                  className={cn(
-                    'flex items-center gap-1 px-2 py-1 text-ice-xs font-medium rounded transition-colors',
-                    pathname.endsWith('/activity')
-                      ? 'bg-ice-active text-ice-text-1'
-                      : 'text-ice-text-3 hover:text-ice-text-2 hover:bg-ice-hover',
-                  )}
-                >
-                  <Activity className="w-3 h-3" />
-                  {t('environments.tabBar.activity')}
-                </button>
+              )}
 
-                <div className="w-px h-4 bg-ice-border mx-1" />
-
-                {/* Promote button — only for non-production envs */}
-                {canPromote && (
-                  <button
-                    onClick={() =>
-                      dispatch(compareEnvironments({ sourceEnvId: activeEnv!.id, targetEnvId: prodEnv!.id }))
-                    }
-                    className="flex items-center gap-1 px-2 py-1 text-ice-xs font-medium rounded text-amber-500 hover:bg-amber-500/10 transition-colors"
-                    title={t('environments.tabBar.promoteToProduction')}
-                  >
-                    <ArrowUpRight className="w-3 h-3" />
-                    {t('environments.tabBar.promoteToProduction')}
-                  </button>
-                )}
-
-                {/* Deploy Infrastructure button */}
-                <button
-                  onClick={() => dispatch(openDeployPanel())}
-                  className="flex items-center gap-1 px-2.5 py-1 text-ice-xs font-medium rounded bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
-                  title={t('environments.tabBar.deployInfra')}
-                >
-                  <Rocket className="w-3 h-3" />
-                  {t('environments.tabBar.deployInfra')}
-                </button>
-              </div>
-            )}
+              {/* Deploy Infrastructure button */}
+              <button
+                onClick={() => dispatch(openDeployPanel())}
+                className="flex items-center gap-1 px-2.5 py-1 text-ice-xs font-medium rounded bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+                title={t('environments.tabBar.deployInfra')}
+              >
+                <Rocket className="w-3 h-3" />
+                {t('environments.tabBar.deployInfra')}
+              </button>
+            </div>
           </>
         )}
       </div>
@@ -454,15 +408,18 @@ const CreateEnvironmentModal: React.FC<{
 
           <div>
             <label className="text-ice-xs font-medium text-ice-text-2 block mb-1">{t('environments.createModal.typeLabel')}</label>
-            <select
+            <IceSelect
               value={type}
-              onChange={(e) => setType(e.target.value)}
-              className="w-full px-2.5 py-1.5 text-ice-sm rounded border border-ice-border bg-ice-base text-ice-text-1"
-            >
-              <option value="staging">{t('environments.createModal.typeStaging')}</option>
-              <option value="development">{t('environments.createModal.typeDevelopment')}</option>
-              <option value="pr">{t('environments.createModal.typePrPreview')}</option>
-            </select>
+              onChange={setType}
+              size="md"
+              fullWidth
+              allowEmpty={false}
+              options={[
+                { value: 'staging', label: t('environments.createModal.typeStaging') },
+                { value: 'development', label: t('environments.createModal.typeDevelopment') },
+                { value: 'pr', label: t('environments.createModal.typePrPreview') },
+              ]}
+            />
           </div>
 
           <div>

@@ -29,6 +29,8 @@ export const SERVICE_LINE_H = 16;
 export const SCALE_MIN = 0.1;
 export const SCALE_MAX = 3;
 export const ZOOM_SENSITIVITY = 0.002;
+/** Discrete zoom step size (0.05 = 5%). Zoom snaps to multiples of this value. */
+export const ZOOM_STEP = 0.05;
 
 // ─── Level of Detail Thresholds ────────────────────────────────────────────
 // LOD 3 = full detail, LOD 2 = compact, LOD 1 = iconic

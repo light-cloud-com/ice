@@ -17,6 +17,7 @@
  */
 
 import { useCallback, useRef, useEffect, type RefObject, type MouseEvent } from 'react';
+import { ZOOM_STEP } from '../../../config/canvas-constants';
 
 // =============================================================================
 // Types
@@ -453,7 +454,8 @@ export function useCanvasInteractions({
       const mouseY = e.clientY - rect.top;
       const vp = viewportRef.current;
 
-      const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+      // Smooth continuous zoom — layout re-org is debounced separately
+      const zoomFactor = e.deltaY > 0 ? 0.95 : 1.05;
       const newZoom = Math.max(minZoom, Math.min(maxZoom, vp.zoom * zoomFactor));
       const zoomRatio = newZoom / vp.zoom;
       const newX = mouseX - (mouseX - vp.x) * zoomRatio;

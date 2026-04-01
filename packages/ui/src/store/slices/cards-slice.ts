@@ -5,9 +5,9 @@
  */
 
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import { autoLayout, type LayoutNode } from '../../shared/utils/auto-layout';
+import { autoLayout, forceResolveOverlaps, type LayoutNode } from '../../shared/utils/auto-layout';
 import type { ExpandedBlueprint } from '../../config/blocks';
-import { CONTAINER_PADDING, HEADER_HEIGHT } from '../../config/canvas-constants';
+import { CONTAINER_PADDING, HEADER_HEIGHT, MIN_CONTAINER_WIDTH, MIN_CONTAINER_HEIGHT } from '../../config/canvas-constants';
 
 // =============================================================================
 // Types
@@ -221,6 +221,56 @@ function pushSnapshot(state: CardsState, actionType?: string): void {
 
   // New action clears redo
   history.future = [];
+}
+
+// =============================================================================
+// Cascading container reflow
+// =============================================================================
+
+/**
+ * After an organize action, propagate container size changes upward.
+ * Process deepest containers first (leaf-up) so children are sized before parents.
+ */
+function cascadeContainerReflow(nodes: CardNode[]): void {
+  const containers = nodes.filter((n) => n.type === 'container');
+  if (containers.length === 0) return;
+
+  const depthOf = (nodeId: string): number => {
+    const node = nodes.find((n) => n.id === nodeId);
+    if (!node?.parentId) return 0;
+    return 1 + depthOf(node.parentId);
+  };
+  const depths = new Map(containers.map((c) => [c.id, depthOf(c.id)]));
+  const sorted = [...containers].sort((a, b) => (depths.get(b.id) || 0) - (depths.get(a.id) || 0));
+
+  for (const container of sorted) {
+    const children = nodes.filter((n) => n.parentId === container.id);
+    if (children.length === 0) continue;
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const child of children) {
+      minX = Math.min(minX, child.position.x);
+      minY = Math.min(minY, child.position.y);
+      maxX = Math.max(maxX, child.position.x + child.width);
+      maxY = Math.max(maxY, child.position.y + child.height);
+    }
+
+    // Symmetric padding: equal on all sides. HEADER_HEIGHT is added to top
+    // only for the label bar, so top padding = CONTAINER_PADDING + HEADER_HEIGHT.
+    const contentW = maxX - minX;
+    const contentH = maxY - minY;
+    const newW = Math.max(contentW + CONTAINER_PADDING * 2, MIN_CONTAINER_WIDTH);
+    const newH = Math.max(contentH + CONTAINER_PADDING * 2 + HEADER_HEIGHT, MIN_CONTAINER_HEIGHT);
+
+    // Center the container around its children (symmetric L/R padding)
+    const contentCenterX = (minX + maxX) / 2;
+    const contentCenterY = (minY + maxY) / 2;
+    container.width = newW;
+    container.height = newH;
+    container.position.x = contentCenterX - newW / 2;
+    // Vertically: shift up by half the header to keep content visually centered
+    container.position.y = contentCenterY - (newH - HEADER_HEIGHT) / 2 - HEADER_HEIGHT;
+  }
 }
 
 // =============================================================================
@@ -648,7 +698,6 @@ const cardsSlice = createSlice({
 
         card.nodes = card.nodes.map((node) => {
           if (node.id === containerId) {
-            // Container: keep position, update size
             return {
               ...node,
               width: containerOrganized.width,
@@ -670,7 +719,19 @@ const cardsSlice = createSlice({
           return node;
         });
       } else {
-        // Master organize: update all nodes
+        // Compute old centroid (center of mass of all top-level nodes)
+        const topNodes = card.nodes.filter((n) => !n.parentId);
+        let oldCentroidX = 0, oldCentroidY = 0;
+        if (topNodes.length > 0) {
+          for (const n of topNodes) {
+            oldCentroidX += n.position.x + n.width / 2;
+            oldCentroidY += n.position.y + n.height / 2;
+          }
+          oldCentroidX /= topNodes.length;
+          oldCentroidY /= topNodes.length;
+        }
+
+        // Master organize: update all nodes with layout positions + sizes
         card.nodes = card.nodes.map((node) => {
           const organized = organizedMap.get(node.id);
           if (organized) {
@@ -684,6 +745,116 @@ const cardsSlice = createSlice({
           }
           return node;
         });
+
+        // Centroid-stabilize: shift the entire layout so the centroid of
+        // top-level nodes stays at the same position. This prevents the
+        // whole diagram from drifting when node sizes change with zoom.
+        if (topNodes.length > 0) {
+          const newTopNodes = card.nodes.filter((n) => !n.parentId);
+          let newCentroidX = 0, newCentroidY = 0;
+          for (const n of newTopNodes) {
+            newCentroidX += n.position.x + n.width / 2;
+            newCentroidY += n.position.y + n.height / 2;
+          }
+          newCentroidX /= newTopNodes.length;
+          newCentroidY /= newTopNodes.length;
+
+          const dx = oldCentroidX - newCentroidX;
+          const dy = oldCentroidY - newCentroidY;
+          if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+            for (const node of card.nodes) {
+              node.position.x += dx;
+              node.position.y += dy;
+            }
+          }
+        }
+      }
+
+      // Cascading reflow: propagate size changes upward through containment hierarchy
+      cascadeContainerReflow(card.nodes);
+
+      // Force-directed collision resolution
+      const bodies = card.nodes.map((n) => ({
+        id: n.id,
+        x: n.position.x,
+        y: n.position.y,
+        width: n.width,
+        height: n.height,
+        parentId: n.parentId || null,
+      }));
+      forceResolveOverlaps(bodies, 16, 80);
+      for (const b of bodies) {
+        const node = card.nodes.find((n) => n.id === b.id);
+        if (node) {
+          node.position.x = b.x;
+          node.position.y = b.y;
+        }
+      }
+    },
+
+    // ── Proportional zoom scaling ──────────────────────────────────────
+    // Instead of re-running the full layout (which rearranges topology and
+    // causes jumps), scale positions and sizes proportionally around the
+    // centroid.  The relative arrangement stays identical — blocks just
+    // grow/shrink in place.
+    scaleLayoutForZoom: (
+      state,
+      action: PayloadAction<{ zoom: number; prevZoom: number }>,
+    ) => {
+      const card = state.cards.find((c) => c.id === state.activeCardId);
+      if (!card || card.nodes.length === 0) return;
+
+      const { zoom, prevZoom } = action.payload;
+      if (Math.abs(zoom - prevZoom) < 0.001) return;
+
+      // Compute what the node dimensions should be at each zoom level
+      // (matches the renderer's inverse-zoom visual bounds)
+      const LOD_L3 = 0.7, LOD_L2 = 0.35;
+      const dimsAt = (z: number) => {
+        const inv = 1 / Math.max(z, 0.1);
+        const lod = z > LOD_L3 ? 3 : z > LOD_L2 ? 2 : 1;
+        return {
+          mainW: lod <= 1 ? 60 * inv : lod <= 2 ? 160 * inv : 240,
+          mainH: lod <= 1 ? 60 * inv : lod <= 2 ? 48 * inv : 80,
+        };
+      };
+
+      const oldDims = dimsAt(prevZoom);
+      const newDims = dimsAt(zoom);
+
+      // Scale factor: ratio of new visual size to old visual size
+      const scaleX = newDims.mainW / oldDims.mainW;
+      const scaleY = newDims.mainH / oldDims.mainH;
+
+      // Compute centroid of top-level nodes (scale around this point)
+      const topNodes = card.nodes.filter((n) => !n.parentId);
+      if (topNodes.length === 0) return;
+
+      let cx = 0, cy = 0;
+      for (const n of topNodes) {
+        cx += n.position.x + n.width / 2;
+        cy += n.position.y + n.height / 2;
+      }
+      cx /= topNodes.length;
+      cy /= topNodes.length;
+
+      // Scale every node's position and size around the centroid
+      for (const node of card.nodes) {
+        const nodeCx = node.position.x + node.width / 2;
+        const nodeCy = node.position.y + node.height / 2;
+
+        // Scale center position relative to centroid
+        const newCx = cx + (nodeCx - cx) * scaleX;
+        const newCy = cy + (nodeCy - cy) * scaleY;
+
+        // Scale dimensions
+        const newW = node.width * scaleX;
+        const newH = node.height * scaleY;
+
+        node.position.x = newCx - newW / 2;
+        node.position.y = newCy - newH / 2;
+        node.width = newW;
+        node.height = newH;
       }
     },
 
@@ -815,6 +986,7 @@ export const {
   setCardViewport,
   setCardViewportById,
   autoOrganizeCard,
+  scaleLayoutForZoom,
   expandBlueprintToCard,
   undoCardChange,
   redoCardChange,

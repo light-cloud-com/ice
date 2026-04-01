@@ -34,6 +34,7 @@ import {
   deleteCardNode,
   deleteCardEdge,
   autoOrganizeCard,
+  scaleLayoutForZoom,
   setCardViewport,
   setCardViewportById,
   type CardNode,
@@ -61,6 +62,7 @@ import {
   MIN_CONTAINER_HEIGHT,
   LOD_THRESHOLD_L3,
   LOD_THRESHOLD_L2,
+  ZOOM_STEP,
 } from '../../../config/canvas-constants';
 import { getBlueprint, expandBlueprint } from '../../../config/blocks';
 import { canContain, isContainer } from '../../../config/containment-rules';
@@ -71,6 +73,7 @@ import { useExposedServices } from '../../../shared/hooks/use-exposed-services';
 import { useUndoRedo } from '../../../shared/hooks/use-undo-redo';
 import { calculateZIndex } from '../../../shared/utils/auto-layout';
 import { logCanvasRender, logDrop, logBlueprint } from '../../../shared/utils/debug-logger';
+import { inspectLayout, updateInspectorState, installInspector } from '../../../shared/utils/layout-inspector';
 import { receiveCardPipelineUpdate } from '../../../store/slices/pipeline-slice';
 import {
   setSelectedNodes,
@@ -78,7 +81,7 @@ import {
   toggleNodeSelection,
   setSelectionRect,
 } from '../../../store/slices/selection-slice';
-import { setPaneViewport, openContextMenu, type OrganizeStyle } from '../../../store/slices/ui-slice';
+import { setPaneViewport, openContextMenu } from '../../../store/slices/ui-slice';
 import { useCanvasInteractions, type CanvasItem } from '../hooks/use-canvas-interactions';
 import type { RootState, AppDispatch } from '../../../store';
 
@@ -184,9 +187,12 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   // L1 (iconic): < 50% — large centered icon + bold label + status dot
   const lod = viewport.zoom > LOD_THRESHOLD_L3 ? 3 : viewport.zoom > LOD_THRESHOLD_L2 ? 2 : 1;
 
-  // Auto-organize on zoom: re-layout when LOD level changes or zoom shifts significantly
+  // Proportional zoom scaling: when autoOrganizeOnZoom is enabled, scale
+  // positions and sizes proportionally instead of re-running the full layout.
+  // This keeps the relative arrangement identical — blocks just grow/shrink
+  // in place around the diagram centroid.  No topology rearrangement = no jumps.
+  // Full re-layout only happens on manual organize button clicks.
   const autoOrganizeOnZoom = useSelector((state: RootState) => state.ui.autoOrganizeOnZoom);
-  const autoOrganizeStyle = useSelector((state: RootState) => state.ui.autoOrganizeStyle) as OrganizeStyle;
   const prevAutoZoomRef = useRef(viewport.zoom);
 
   useEffect(() => {
@@ -195,23 +201,46 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       return;
     }
 
-    // Trigger when zoom changes by more than 15% from last organize
-    const ratio = viewport.zoom / (prevAutoZoomRef.current || 1);
-    if (ratio > 0.85 && ratio < 1.15) return;
+    const prevZoom = prevAutoZoomRef.current;
+    const delta = Math.abs(viewport.zoom - prevZoom);
+    if (delta < ZOOM_STEP * 0.5) return;
 
     prevAutoZoomRef.current = viewport.zoom;
+    dispatch(scaleLayoutForZoom({ zoom: viewport.zoom, prevZoom }));
+  }, [viewport.zoom, autoOrganizeOnZoom, dispatch]);
 
-    const timer = setTimeout(() => {
-      const payload: Record<string, unknown> = { zoom: viewport.zoom };
-      if (autoOrganizeStyle === 'circular') {
-        payload.layout = 'circular';
-      } else {
-        payload.direction = autoOrganizeStyle;
+  // ── Layout Inspector: feed state on every zoom/layout change ──────────
+  useEffect(() => { installInspector(); }, []);
+
+  useEffect(() => {
+    const inspectNodes = nodes.map((n) => ({
+      id: n.id,
+      type: n.type,
+      label: (n.data?.label as string) || n.id,
+      iceType: (n.data?.iceType as string) || '',
+      x: n.position.x,
+      y: n.position.y,
+      width: n.width,
+      height: n.height,
+      parentId: n.parentId,
+      folded: !!(n.data?.folded),
+    }));
+    const inspectEdges = edges.map((e) => ({
+      id: e.id,
+      source: e.source,
+      target: e.target,
+      relationship: e.data?.relationship as string | undefined,
+    }));
+    const state = { zoom: viewport.zoom, lod, nodes: inspectNodes, edges: inspectEdges };
+    updateInspectorState(state);
+
+    // Auto-log when ice-debug is enabled
+    try {
+      if (localStorage.getItem('ice-debug') === 'true') {
+        inspectLayout(state);
       }
-      dispatch(autoOrganizeCard(payload as any));
-    }, 200);
-    return () => clearTimeout(timer);
-  }, [viewport.zoom, autoOrganizeOnZoom, autoOrganizeStyle, dispatch]);
+    } catch { /* ignore */ }
+  }, [viewport.zoom, lod, nodes, edges]);
 
   // Canvas dimensions
   const [dimensions, setDimensions] = React.useState({ width: 800, height: 600 });
@@ -2165,6 +2194,33 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
         onAuxClick={bindCanvas.onAuxClick}
         onContextMenu={bindCanvas.onContextMenu}
       >
+        {/* Smooth transition styles for layout changes */}
+        <defs>
+          <style>{`
+            .svg-compact-node, .svg-group-node {
+              transition: transform 200ms ease-out, opacity 150ms ease-out;
+            }
+            .svg-compact-node rect, .svg-compact-node text,
+            .svg-compact-node circle, .svg-compact-node image,
+            .svg-group-node rect, .svg-group-node text {
+              transition: x 200ms ease-out, y 200ms ease-out,
+                          width 200ms ease-out, height 200ms ease-out;
+            }
+            .connections-layer path {
+              transition: d 200ms ease-out, opacity 150ms ease-out;
+            }
+            @media (prefers-reduced-motion: reduce) {
+              .svg-compact-node, .svg-group-node,
+              .svg-compact-node rect, .svg-compact-node text,
+              .svg-compact-node circle, .svg-compact-node image,
+              .svg-group-node rect, .svg-group-node text,
+              .connections-layer path {
+                transition: none !important;
+              }
+            }
+          `}</style>
+        </defs>
+
         {/* Transform group for pan/zoom */}
         <g transform={`translate(${viewport.x}, ${viewport.y}) scale(${viewport.zoom})`}>
           {/* Grid background */}

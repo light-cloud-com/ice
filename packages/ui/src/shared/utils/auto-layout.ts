@@ -16,8 +16,7 @@ import {
   CONTAINER_PADDING,
   MIN_CONTAINER_WIDTH,
   MIN_CONTAINER_HEIGHT,
-  LOD_THRESHOLD_L3,
-  LOD_THRESHOLD_L2,
+  SCALE_MIN,
 } from '../../config/canvas-constants';
 import { isContainer as isContainerType } from '../../config/containment-rules';
 import {
@@ -142,27 +141,34 @@ export function autoLayout(
     return !nodeMap.has(parentId);
   });
 
-  // ── LOD-aware sizing ─────────────────────────────────────────────────────
-  // When the user is zoomed out far enough that LOD < 3, nodes render at
-  // inverse-zoom dimensions (e.g. LOD 1: 60px screen → 60/zoom canvas).
-  // Layout must match these visual sizes so blocks don't overlap.
+  // ── Zoom-adaptive sizing (matches renderer's visual bounds) ─────────────
+  // The renderer draws nodes at inverse-zoom dimensions at LOD 1/2:
+  //   LOD 1 (zoom ≤ 0.35): 60/zoom × 60/zoom canvas-px
+  //   LOD 2 (0.35 < zoom ≤ 0.7): 160/zoom × 48/zoom canvas-px
+  //   LOD 3 (zoom > 0.7): 240 × actual-height canvas-px
+  // Layout MUST use these same dimensions so collision detection matches visuals.
 
   const zoom = opts.zoom || 1;
-  const lod = zoom > LOD_THRESHOLD_L3 ? 3 : zoom > LOD_THRESHOLD_L2 ? 2 : 1;
   const invZoom = 1 / Math.max(zoom, 0.1);
+  const LOD_L3 = 0.7;
+  const LOD_L2 = 0.35;
+  const lod = zoom > LOD_L3 ? 3 : zoom > LOD_L2 ? 2 : 1;
 
-  // Standard sizes for auto-layout: main-flow nodes get a uniform size,
-  // helper/utility nodes get a compact size so they don't dominate the diagram.
-  // At LOD < 3 these match the inverse-zoom-scaled visual dimensions.
+  // Node dimensions that match exactly what the renderer draws
   const MAIN_NODE_WIDTH = lod <= 1 ? 60 * invZoom : lod <= 2 ? 160 * invZoom : 240;
   const MAIN_NODE_HEIGHT = lod <= 1 ? 60 * invZoom : lod <= 2 ? 48 * invZoom : 80;
   const HELPER_NODE_WIDTH = lod <= 1 ? 60 * invZoom : lod <= 2 ? 160 * invZoom : 180;
   const HELPER_NODE_HEIGHT = lod <= 1 ? 60 * invZoom : lod <= 2 ? 48 * invZoom : 64;
 
-  // Scale gap proportionally to node size so nodes never overlap
-  if (lod < 3) {
-    opts.nodeGap = Math.max(opts.nodeGap, Math.round(MAIN_NODE_WIDTH * 0.25));
-  }
+  // Lerp helper for gaps/padding that smoothly scale with zoom
+  const t = Math.max(0, Math.min(1, (zoom - SCALE_MIN) / (1.0 - SCALE_MIN)));
+  const lerp = (min: number, max: number): number => min + t * (max - min);
+
+  // Scale gap: at low zoom nodes are visually large (inverse-scaled), so use
+  // a proportional gap to keep them separated.
+  opts.nodeGap = lod < 3
+    ? Math.max(Math.round(MAIN_NODE_WIDTH * 0.15), 12)
+    : Math.round(lerp(20, opts.nodeGap));
 
   /**
    * Assign children of a container to flow-layout layers.
@@ -308,9 +314,9 @@ export function autoLayout(
       child.height = childSize.height;
     }
 
-    const basePad = lod < 3 ? Math.round(CHILD_GAP * invZoom) : CHILD_GAP;
+    const basePad = lod < 3 ? Math.round(Math.max(CHILD_GAP, MAIN_NODE_WIDTH * 0.08)) : CHILD_GAP;
     const containerPadding = isLargeContainer ? opts.containerPadding + VPC_EXTRA_PADDING : basePad;
-    const childGap = lod < 3 ? Math.round(CHILD_GAP * invZoom) : CHILD_GAP;
+    const childGap = basePad;
     const direction = opts.direction || 'vertical';
 
     // Flow layout sizing: assign children to semantic tier layers
@@ -414,7 +420,7 @@ export function autoLayout(
     const totalH = mainHeight + Math.max(connectedHelperH, disconnectedHelperH);
 
     const calculatedWidth = totalW + containerPadding * 2;
-    const calculatedHeight = totalH + containerPadding * 2;
+    const calculatedHeight = totalH + containerPadding * 2 + HEADER_HEIGHT;
     const minContainerWidth = isVPC ? 280 : isSubnet ? 260 : MIN_CONTAINER_WIDTH;
     const minContainerHeight = isVPC ? 180 : isSubnet ? 150 : MIN_CONTAINER_HEIGHT;
 
@@ -437,9 +443,9 @@ export function autoLayout(
     const isSubnet = iceType === 'Network.Subnet';
     const isLargeContainer = isVPC || isSubnet;
 
-    const basePad = lod < 3 ? Math.round(CHILD_GAP * invZoom) : CHILD_GAP;
+    const basePad = lod < 3 ? Math.round(Math.max(CHILD_GAP, MAIN_NODE_WIDTH * 0.08)) : CHILD_GAP;
     const containerPadding = isLargeContainer ? opts.containerPadding + VPC_EXTRA_PADDING : basePad;
-    const childGap = lod < 3 ? Math.round(CHILD_GAP * invZoom) : CHILD_GAP;
+    const childGap = basePad;
     const direction = opts.direction || 'vertical';
 
     // Flow layout: assign children to layers using semantic tiers + topological ordering
@@ -555,13 +561,15 @@ export function autoLayout(
       return;
     }
 
-    // ── Position main layers — no centering, uniform padding on all sides ──
-    // Resize at the end will tightly fit, ensuring equal padding.
+    // ── Position main layers — symmetric padding on all sides ──────────
+    // Children start below the header (HEADER_HEIGHT) with equal padding.
+    const topOffset = containerPadding + HEADER_HEIGHT;
+
     if (direction === 'horizontal') {
       let colX = containerPadding;
       for (const layer of layers) {
         if (layer.length === 0) continue;
-        let nodeY = containerPadding;
+        let nodeY = topOffset;
         let maxW = 0;
         for (const node of layer) {
           node.x = colX;
@@ -574,7 +582,7 @@ export function autoLayout(
         colX += maxW + childGap;
       }
     } else {
-      let rowY = containerPadding;
+      let rowY = topOffset;
       for (const layer of layers) {
         if (layer.length === 0) continue;
         let nodeX = containerPadding;
@@ -593,7 +601,7 @@ export function autoLayout(
 
     // ── Pass 2: Position helpers relative to the centered main content ──
     let mainRight = containerPadding;
-    let mainBottom = containerPadding;
+    let mainBottom = topOffset;
     for (const layer of layers) {
       for (const n of layer) {
         mainRight = Math.max(mainRight, n.x + n.width);
@@ -668,7 +676,11 @@ export function autoLayout(
       }
     }
 
-    // Resize parent to tightly fit ALL content (after centering)
+    // Resize parent to tightly fit ALL content with symmetric padding.
+    // Left padding = containerPadding (built into child x positions).
+    // Right padding = containerPadding (added here to match).
+    // Top = HEADER_HEIGHT + containerPadding (built into child y positions).
+    // Bottom = containerPadding (added here to match).
     let contentRight = 0, contentBottom = 0;
     for (const c of children) {
       contentRight = Math.max(contentRight, c.x + c.width);
@@ -1604,49 +1616,166 @@ function gridLayout(
 // Collision Resolution
 // =============================================================================
 
+// =============================================================================
+// Force-directed collision resolution
+// =============================================================================
+//
+// Inspired by D3's forceCollide — nodes are treated as rigid rectangular bodies
+// that repel each other when overlapping.  Parent-child containment is excluded
+// (overlap there is intentional).  When a node moves, all its descendants shift
+// with it so internal layout is preserved.
+//
+// The simulation uses velocity-Verlet integration with damping so nodes spread
+// naturally rather than oscillating.
+
+interface ForceBody {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  parentId?: string | null;
+  /** Internal – velocity */
+  vx?: number;
+  vy?: number;
+  /** Internal – descendant ids (filled by the resolver) */
+  _descIds?: Set<string>;
+}
+
 /**
- * Resolve overlapping nodes by pushing them apart.
- * Iterates until no overlaps remain (max 50 iterations to avoid infinite loops).
+ * Force-directed rectangular collision resolution.
+ *
+ * Works on any array of objects with {id, x, y, width, height, parentId?}.
+ * Mutates x/y in place.  `allNodes` is the full list (including children);
+ * collision is only checked between nodes that don't share an ancestry chain.
+ * When a node is pushed, all its descendants in `allNodes` move with it.
+ *
+ * @param allNodes  Every node (parents + children)
+ * @param gap       Minimum gap between non-related nodes
+ * @param ticks     Number of simulation ticks (default 60)
+ * @param strength  Repulsion strength multiplier (default 0.8)
  */
-function resolveOverlaps(nodes: LayoutNode[], gap: number): void {
-  const MAX_ITERATIONS = 50;
-  for (let iter = 0; iter < MAX_ITERATIONS; iter++) {
-    let hadOverlap = false;
-    for (let i = 0; i < nodes.length; i++) {
-      for (let j = i + 1; j < nodes.length; j++) {
-        const a = nodes[i];
-        const b = nodes[j];
-        if (rectsOverlap(a, b, gap)) {
-          hadOverlap = true;
-          // Push apart in the direction of least displacement
-          const overlapX = Math.min(a.x + a.width + gap - b.x, b.x + b.width + gap - a.x);
-          const overlapY = Math.min(a.y + a.height + gap - b.y, b.y + b.height + gap - a.y);
-          if (overlapX < overlapY) {
-            // Push horizontally
-            const pushX = overlapX / 2 + 1;
-            if (a.x < b.x) {
-              a.x -= pushX;
-              b.x += pushX;
-            } else {
-              a.x += pushX;
-              b.x -= pushX;
-            }
+export function forceResolveOverlaps<T extends ForceBody>(
+  allNodes: T[],
+  gap: number = 12,
+  ticks: number = 60,
+  strength: number = 0.8,
+): void {
+  if (allNodes.length < 2) return;
+
+  // ── Build ancestry index ─────────────────────────────────────────────
+  const nodeById = new Map<string, T>();
+  for (const n of allNodes) nodeById.set(n.id, n);
+
+  // Collect ALL descendant ids for each node (transitive)
+  const descOf = new Map<string, Set<string>>();
+  const getDesc = (id: string): Set<string> => {
+    if (descOf.has(id)) return descOf.get(id)!;
+    const s = new Set<string>();
+    descOf.set(id, s); // set early to avoid cycles
+    for (const n of allNodes) {
+      if (n.parentId === id) {
+        s.add(n.id);
+        for (const d of getDesc(n.id)) s.add(d);
+      }
+    }
+    return s;
+  };
+  for (const n of allNodes) getDesc(n.id);
+
+  // Two nodes are "related" if one is an ancestor of the other
+  const isRelated = (a: T, b: T): boolean =>
+    descOf.get(a.id)!.has(b.id) || descOf.get(b.id)!.has(a.id);
+
+  // ── Identify top-level nodes (the bodies we simulate) ────────────────
+  const topLevel = allNodes.filter((n) => !n.parentId || !nodeById.has(n.parentId));
+
+  if (topLevel.length < 2) return;
+
+  // Init velocities
+  for (const n of topLevel) { n.vx = 0; n.vy = 0; }
+
+  // Shift a node and all its descendants by (dx, dy)
+  const shiftTree = (node: T, dx: number, dy: number) => {
+    node.x += dx;
+    node.y += dy;
+    const desc = descOf.get(node.id);
+    if (desc) {
+      for (const did of desc) {
+        const d = nodeById.get(did);
+        if (d) { d.x += dx; d.y += dy; }
+      }
+    }
+  };
+
+  // ── Simulation loop ──────────────────────────────────────────────────
+  const damping = 0.4; // velocity retention per tick (0 = full damping)
+
+  for (let tick = 0; tick < ticks; tick++) {
+    // Decay strength over time to help convergence
+    const alpha = strength * (1 - tick / ticks);
+    if (alpha < 0.01) break;
+
+    // Apply collision forces between all non-related top-level pairs
+    for (let i = 0; i < topLevel.length; i++) {
+      for (let j = i + 1; j < topLevel.length; j++) {
+        const a = topLevel[i];
+        const b = topLevel[j];
+
+        if (isRelated(a, b)) continue;
+
+        // Rectangle overlap with gap
+        const ax2 = a.x + a.width + gap;
+        const ay2 = a.y + a.height + gap;
+        const bx2 = b.x + b.width + gap;
+        const by2 = b.y + b.height + gap;
+
+        if (a.x >= bx2 || b.x >= ax2 || a.y >= by2 || b.y >= ay2) continue;
+
+        // Compute overlap on each axis
+        const ox = Math.min(ax2 - b.x, bx2 - a.x);
+        const oy = Math.min(ay2 - b.y, by2 - a.y);
+
+        // Push along the axis of least overlap (minimum translation vector)
+        if (ox < oy) {
+          const force = ox * alpha;
+          if (a.x + a.width / 2 < b.x + b.width / 2) {
+            a.vx! -= force / 2;
+            b.vx! += force / 2;
           } else {
-            // Push vertically
-            const pushY = overlapY / 2 + 1;
-            if (a.y < b.y) {
-              a.y -= pushY;
-              b.y += pushY;
-            } else {
-              a.y += pushY;
-              b.y -= pushY;
-            }
+            a.vx! += force / 2;
+            b.vx! -= force / 2;
+          }
+        } else {
+          const force = oy * alpha;
+          if (a.y + a.height / 2 < b.y + b.height / 2) {
+            a.vy! -= force / 2;
+            b.vy! += force / 2;
+          } else {
+            a.vy! += force / 2;
+            b.vy! -= force / 2;
           }
         }
       }
     }
-    if (!hadOverlap) break;
+
+    // Integrate: apply velocity → position, then damp
+    for (const n of topLevel) {
+      if (n.vx! !== 0 || n.vy! !== 0) {
+        shiftTree(n, n.vx!, n.vy!);
+        n.vx! *= damping;
+        n.vy! *= damping;
+      }
+    }
   }
+
+  // Clean up temp fields
+  for (const n of allNodes) { delete n.vx; delete n.vy; delete n._descIds; }
+}
+
+/** Legacy wrapper for internal auto-layout calls */
+function resolveOverlaps(nodes: LayoutNode[], gap: number): void {
+  forceResolveOverlaps(nodes, gap);
 }
 
 /**

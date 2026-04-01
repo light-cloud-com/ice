@@ -16,6 +16,8 @@ import {
   CONTAINER_PADDING,
   MIN_CONTAINER_WIDTH,
   MIN_CONTAINER_HEIGHT,
+  LOD_THRESHOLD_L3,
+  LOD_THRESHOLD_L2,
 } from '../../config/canvas-constants';
 import { isContainer as isContainerType } from '../../config/containment-rules';
 import {
@@ -66,6 +68,8 @@ interface LayoutOptions {
   layout?: 'flow' | 'grid' | 'circular';
   /** Flow direction: 'vertical' (top-to-bottom) or 'horizontal' (left-to-right) */
   direction?: 'vertical' | 'horizontal';
+  /** Current viewport zoom — when provided, layout adapts spacing for LOD */
+  zoom?: number;
 }
 
 const DEFAULT_OPTIONS: Required<LayoutOptions> = {
@@ -76,6 +80,7 @@ const DEFAULT_OPTIONS: Required<LayoutOptions> = {
   containerPadding: CONTAINER_PADDING,
   layout: 'flow',
   direction: 'vertical',
+  zoom: 1,
 };
 
 // =============================================================================
@@ -137,14 +142,27 @@ export function autoLayout(
     return !nodeMap.has(parentId);
   });
 
-  // ── Shared helpers ──────────────────────────────────────────────────────
+  // ── LOD-aware sizing ─────────────────────────────────────────────────────
+  // When the user is zoomed out far enough that LOD < 3, nodes render at
+  // inverse-zoom dimensions (e.g. LOD 1: 60px screen → 60/zoom canvas).
+  // Layout must match these visual sizes so blocks don't overlap.
+
+  const zoom = opts.zoom || 1;
+  const lod = zoom > LOD_THRESHOLD_L3 ? 3 : zoom > LOD_THRESHOLD_L2 ? 2 : 1;
+  const invZoom = 1 / Math.max(zoom, 0.1);
 
   // Standard sizes for auto-layout: main-flow nodes get a uniform size,
   // helper/utility nodes get a compact size so they don't dominate the diagram.
-  const MAIN_NODE_WIDTH = 240;
-  const MAIN_NODE_HEIGHT = 80;
-  const HELPER_NODE_WIDTH = 180;
-  const HELPER_NODE_HEIGHT = 64;
+  // At LOD < 3 these match the inverse-zoom-scaled visual dimensions.
+  const MAIN_NODE_WIDTH = lod <= 1 ? 60 * invZoom : lod <= 2 ? 160 * invZoom : 240;
+  const MAIN_NODE_HEIGHT = lod <= 1 ? 60 * invZoom : lod <= 2 ? 48 * invZoom : 80;
+  const HELPER_NODE_WIDTH = lod <= 1 ? 60 * invZoom : lod <= 2 ? 160 * invZoom : 180;
+  const HELPER_NODE_HEIGHT = lod <= 1 ? 60 * invZoom : lod <= 2 ? 48 * invZoom : 64;
+
+  // Scale gap proportionally to node size so nodes never overlap
+  if (lod < 3) {
+    opts.nodeGap = Math.max(opts.nodeGap, Math.round(MAIN_NODE_WIDTH * 0.25));
+  }
 
   /**
    * Assign children of a container to flow-layout layers.
@@ -290,8 +308,9 @@ export function autoLayout(
       child.height = childSize.height;
     }
 
-    const containerPadding = isLargeContainer ? opts.containerPadding + VPC_EXTRA_PADDING : CHILD_GAP;
-    const childGap = CHILD_GAP;
+    const basePad = lod < 3 ? Math.round(CHILD_GAP * invZoom) : CHILD_GAP;
+    const containerPadding = isLargeContainer ? opts.containerPadding + VPC_EXTRA_PADDING : basePad;
+    const childGap = lod < 3 ? Math.round(CHILD_GAP * invZoom) : CHILD_GAP;
     const direction = opts.direction || 'vertical';
 
     // Flow layout sizing: assign children to semantic tier layers
@@ -418,8 +437,9 @@ export function autoLayout(
     const isSubnet = iceType === 'Network.Subnet';
     const isLargeContainer = isVPC || isSubnet;
 
-    const containerPadding = isLargeContainer ? opts.containerPadding + VPC_EXTRA_PADDING : CHILD_GAP;
-    const childGap = CHILD_GAP;
+    const basePad = lod < 3 ? Math.round(CHILD_GAP * invZoom) : CHILD_GAP;
+    const containerPadding = isLargeContainer ? opts.containerPadding + VPC_EXTRA_PADDING : basePad;
+    const childGap = lod < 3 ? Math.round(CHILD_GAP * invZoom) : CHILD_GAP;
     const direction = opts.direction || 'vertical';
 
     // Flow layout: assign children to layers using semantic tiers + topological ordering

@@ -33,8 +33,8 @@ export const ZOOM_SENSITIVITY = 0.002;
 // ─── Level of Detail Thresholds ────────────────────────────────────────────
 // LOD 3 = full detail, LOD 2 = compact, LOD 1 = iconic
 
-export const LOD_THRESHOLD_L3 = 0.95;
-export const LOD_THRESHOLD_L2 = 0.5;
+export const LOD_THRESHOLD_L3 = 0.7;
+export const LOD_THRESHOLD_L2 = 0.35;
 
 // ─── Grid ──────────────────────────────────────────────────────────────────
 

@@ -11,6 +11,7 @@
 
 import React, { memo, useMemo, useState, useCallback, useRef } from 'react';
 import { EDGE_COLORS } from '../../../config/color-palette';
+import { useReducedMotion } from '../../../shared/hooks/use-reduced-motion';
 import { inferConnectionMeta, CATEGORY_LABELS, type ConnectionCategory } from '../utils/connection-rules';
 import type { EdgeStyle } from '../../../store/slices/ui-slice';
 import type { CanvasNode, CanvasConnection } from './svg-canvas';
@@ -55,6 +56,8 @@ interface SvgConnectionPathProps {
   pipelineActive?: boolean;
   /** Level of detail: 3=full, 2=compact, 1=iconic */
   lod?: number;
+  /** Current zoom level — used for inverse-zoom scaling at low LOD */
+  zoom?: number;
   /** Edge routing style */
   edgeStyle?: EdgeStyle;
 }
@@ -71,8 +74,40 @@ interface Point {
   x: number;
   y: number;
 }
+interface Bounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
 
-function chooseSides(from: CanvasNode, to: CanvasNode): { exitSide: Side; entrySide: Side } {
+/**
+ * Returns the visual bounds of a node at the current LOD/zoom.
+ * At LOD 1/2 resource/block nodes render as inverse-zoom-scaled cards
+ * centered on the original position — connections must attach there.
+ */
+function getEffectiveBounds(node: CanvasNode, lod: number, zoom: number): Bounds {
+  // Containers (groups) keep their canvas dimensions at all LOD levels
+  if (node.type === 'container' || lod >= 3) {
+    return { x: node.x, y: node.y, width: node.width, height: node.height };
+  }
+
+  const invScale = 1 / Math.max(zoom, 0.1);
+  const cx = node.x + node.width / 2;
+  const cy = node.y + node.height / 2;
+
+  if (lod <= 1) {
+    const S = 60 * invScale;
+    return { x: cx - S / 2, y: cy - S / 2, width: S, height: S };
+  }
+
+  // LOD 2
+  const CW = 160 * invScale;
+  const CH = 48 * invScale;
+  return { x: cx - CW / 2, y: cy - CH / 2, width: CW, height: CH };
+}
+
+function chooseSides(from: Bounds, to: Bounds): { exitSide: Side; entrySide: Side } {
   const dx = to.x + to.width / 2 - (from.x + from.width / 2);
   const dy = to.y + to.height / 2 - (from.y + from.height / 2);
   if (Math.abs(dx) > Math.abs(dy)) {
@@ -81,17 +116,17 @@ function chooseSides(from: CanvasNode, to: CanvasNode): { exitSide: Side; entryS
   return dy > 0 ? { exitSide: 'bottom', entrySide: 'top' } : { exitSide: 'top', entrySide: 'bottom' };
 }
 
-function getEdgePoint(node: CanvasNode, side: Side, portIndex = 0, portCount = 1): Point {
+function getEdgePoint(bounds: Bounds, side: Side, portIndex = 0, portCount = 1): Point {
   const r = (portIndex + 1) / (portCount + 1);
   switch (side) {
     case 'left':
-      return { x: node.x, y: node.y + node.height * r };
+      return { x: bounds.x, y: bounds.y + bounds.height * r };
     case 'right':
-      return { x: node.x + node.width, y: node.y + node.height * r };
+      return { x: bounds.x + bounds.width, y: bounds.y + bounds.height * r };
     case 'top':
-      return { x: node.x + node.width * r, y: node.y };
+      return { x: bounds.x + bounds.width * r, y: bounds.y };
     case 'bottom':
-      return { x: node.x + node.width * r, y: node.y + node.height };
+      return { x: bounds.x + bounds.width * r, y: bounds.y + bounds.height };
   }
 }
 
@@ -223,9 +258,11 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
     onContextMenu: onEdgeContextMenu,
     pipelineActive = false,
     lod = 3,
+    zoom = 1,
     edgeStyle = 'bezier',
   }) => {
     const [isHover, setIsHover] = useState(false);
+    const reducedMotion = useReducedMotion();
     const isActive = isSelected || isHighlighted;
     const gRef = useRef<SVGGElement>(null);
 
@@ -297,16 +334,18 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
       [onConnectionHover, buildTooltip],
     );
 
-    // Calculate path based on edgeStyle
+    // Calculate path based on edgeStyle — use effective visual bounds at current LOD
     const pathData = useMemo(() => {
       if (!fromNode || !toNode) return null;
-      const { exitSide, entrySide } = chooseSides(fromNode, toNode);
-      const start = getEdgePoint(fromNode, exitSide, sourcePortIndex, sourcePortCount);
-      const end = getEdgePoint(toNode, entrySide, targetPortIndex, targetPortCount);
+      const effFrom = getEffectiveBounds(fromNode, lod, zoom);
+      const effTo = getEffectiveBounds(toNode, lod, zoom);
+      const { exitSide, entrySide } = chooseSides(effFrom, effTo);
+      const start = getEdgePoint(effFrom, exitSide, sourcePortIndex, sourcePortCount);
+      const end = getEdgePoint(effTo, entrySide, targetPortIndex, targetPortCount);
       if (edgeStyle === 'straight') return buildStraightPath(start, end);
       if (edgeStyle === 'rectangular') return buildRectangularPath(start, end, exitSide, entrySide);
       return buildBezierPath(start, end, exitSide, entrySide);
-    }, [fromNode, toNode, sourcePortIndex, sourcePortCount, targetPortIndex, targetPortCount, edgeStyle]);
+    }, [fromNode, toNode, sourcePortIndex, sourcePortCount, targetPortIndex, targetPortCount, edgeStyle, lod, zoom]);
 
     if (!pathData) return null;
 
@@ -324,22 +363,33 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
           ? EDGE_COLORS.hover
           : baseColor;
 
+    // Inverse-zoom scale factor — keeps strokes visible at low zoom
+    const invZoom = 1 / Math.max(zoom, 0.1);
     const baseWidth = isThinEdge ? 0.6 : 1;
-    const strokeWidth = lod <= 1 ? 0.5 : isSelected ? 2.5 : isHover || isHighlighted ? 2 : lod <= 2 ? 0.8 : baseWidth;
-    const strokeOpacity =
-      lod <= 1
-        ? 0.3
-        : isSelected
+    const strokeWidth = isSelected
+      ? 2.5 * (lod < 3 ? invZoom : 1)
+      : isHover || isHighlighted
+        ? 2 * (lod < 3 ? invZoom : 1)
+        : lod <= 1
+          ? 1.5 * invZoom
+          : lod <= 2
+            ? 1.2 * invZoom
+            : baseWidth;
+    const strokeOpacity = isSelected
+      ? 0.7
+      : isHighlighted
+        ? 0.6
+        : isHover
           ? 0.7
-          : isHighlighted
-            ? 0.6
-            : isHover
-              ? 0.7
-              : lod <= 2
-                ? 0.25
-                : isThinEdge
-                  ? 0.12
-                  : 0.15;
+          : lod <= 1
+            ? 0.4
+            : lod <= 2
+              ? 0.35
+              : isThinEdge
+                ? 0.12
+                : 0.15;
+    // Hover target must stay large enough on screen
+    const hoverTargetWidth = lod < 3 ? Math.max(16, 24 * invZoom) : 16;
     const showLabels = lod >= 3;
     const showArrow = lod >= 2 && hasArrow;
 
@@ -373,7 +423,7 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
         <path
           d={pathD}
           stroke="transparent"
-          strokeWidth={16}
+          strokeWidth={hoverTargetWidth}
           fill="none"
           style={{ cursor: 'pointer', pointerEvents: 'auto' }}
           onClick={(e) => {
@@ -391,7 +441,7 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
         <path
           d={pathD}
           stroke={pipelineActive ? '#3b82f6' : strokeColor}
-          strokeWidth={pipelineActive ? 2 : strokeWidth}
+          strokeWidth={pipelineActive ? 2 * (lod < 3 ? invZoom : 1) : strokeWidth}
           fill="none"
           strokeDasharray={isDashedEdge ? '6 4' : isDottedEdge ? '2 3' : undefined}
           markerEnd={showArrow ? `url(#${markerId})` : undefined}
@@ -404,13 +454,15 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
           <path
             d={pathD}
             stroke="#3b82f6"
-            strokeWidth={2}
+            strokeWidth={2 * (lod < 3 ? invZoom : 1)}
             fill="none"
             strokeDasharray="8 12"
             strokeLinecap="round"
             opacity={0.9}
           >
-            <animate attributeName="stroke-dashoffset" values="0;-40" dur="1s" repeatCount="indefinite" />
+            {!reducedMotion && (
+              <animate attributeName="stroke-dashoffset" values="0;-40" dur="1s" repeatCount="indefinite" />
+            )}
           </path>
         )}
 

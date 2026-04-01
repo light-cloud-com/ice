@@ -5,7 +5,7 @@
 import awsIcon from 'devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg';
 import azureIcon from 'devicon/icons/azure/azure-original.svg';
 import gcpIcon from 'devicon/icons/googlecloud/googlecloud-original.svg';
-import { Rows3, Columns3, CircleDot, Spline, Minus, GitCommitHorizontal, Rocket, Sun, Moon, Github, Undo2, Redo2, Palette } from 'lucide-react';
+import { Rows3, Columns3, CircleDot, Spline, Minus, GitCommitHorizontal, Maximize2, RefreshCw, Rocket, Sun, Moon, Github, Undo2, Redo2, Palette } from 'lucide-react';
 import React, { memo, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Breadcrumbs } from './breadcrumbs';
@@ -23,9 +23,10 @@ import {
   redoCardChange,
   selectCanUndo,
   selectCanRedo,
+  setCardViewport,
 } from '../../store/slices/cards-slice';
 import { openDeployPanel } from '../../store/slices/deploy-slice';
-import { setEdgeStyle, type EdgeStyle } from '../../store/slices/ui-slice';
+import { setEdgeStyle, toggleAutoOrganizeOnZoom, setAutoOrganizeStyle, type EdgeStyle, type OrganizeStyle } from '../../store/slices/ui-slice';
 import { useThemePicker } from './dev-accent-picker';
 import { checkGitHubConnection } from '../../store/slices/integrations-slice';
 import { useTheme } from '../hooks/use-theme';
@@ -68,6 +69,8 @@ export const AppBar: React.FC = memo(() => {
   const canUndo = useSelector(selectCanUndo);
   const canRedo = useSelector(selectCanRedo);
   const edgeStyle = useSelector((state: RootState) => state.ui.edgeStyle) as EdgeStyle;
+  const autoOrganizeOnZoom = useSelector((state: RootState) => state.ui.autoOrganizeOnZoom);
+  const autoOrganizeStyle = useSelector((state: RootState) => state.ui.autoOrganizeStyle) as OrganizeStyle;
 
   const cycleEdgeStyle = () => {
     const order: EdgeStyle[] = ['bezier', 'straight', 'rectangular'];
@@ -87,6 +90,7 @@ export const AppBar: React.FC = memo(() => {
     const node = activeCard.nodes?.find((n: any) => n.id === selectedNodes[0]);
     return node?.type === 'container' ? node.id : undefined;
   }, [selectedNodes, activeCard]);
+  const currentZoom: number = (activeCard?.viewport?.scale as number) ?? 1;
 
   useEffect(() => {
     dispatch(checkGitHubConnection());
@@ -124,20 +128,64 @@ export const AppBar: React.FC = memo(() => {
           <BarBtn
             id="ice-appbar-btn-organize-v"
             icon={Rows3}
-            onClick={() => dispatch(autoOrganizeCard({ direction: 'vertical', containerId: selectedContainerId }))}
+            onClick={() => {
+              dispatch(autoOrganizeCard({ direction: 'vertical', containerId: selectedContainerId, zoom: currentZoom }));
+              dispatch(setAutoOrganizeStyle('vertical'));
+            }}
             tip={selectedContainerId ? 'Organize group (vertical)' : 'Auto-organize all (vertical)'}
+            className={autoOrganizeOnZoom && autoOrganizeStyle === 'vertical' ? 'text-blue-400' : undefined}
           />
           <BarBtn
             id="ice-appbar-btn-organize-h"
             icon={Columns3}
-            onClick={() => dispatch(autoOrganizeCard({ direction: 'horizontal', containerId: selectedContainerId }))}
+            onClick={() => {
+              dispatch(autoOrganizeCard({ direction: 'horizontal', containerId: selectedContainerId, zoom: currentZoom }));
+              dispatch(setAutoOrganizeStyle('horizontal'));
+            }}
             tip={selectedContainerId ? 'Organize group (horizontal)' : 'Auto-organize all (horizontal)'}
+            className={autoOrganizeOnZoom && autoOrganizeStyle === 'horizontal' ? 'text-blue-400' : undefined}
           />
           <BarBtn
             id="ice-appbar-btn-organize-c"
             icon={CircleDot}
-            onClick={() => dispatch(autoOrganizeCard({ layout: 'circular', containerId: selectedContainerId }))}
+            onClick={() => {
+              dispatch(autoOrganizeCard({ layout: 'circular', containerId: selectedContainerId, zoom: currentZoom }));
+              dispatch(setAutoOrganizeStyle('circular'));
+            }}
             tip={selectedContainerId ? 'Organize group (circular)' : 'Auto-organize all (circular)'}
+            className={autoOrganizeOnZoom && autoOrganizeStyle === 'circular' ? 'text-blue-400' : undefined}
+          />
+          <BarBtn
+            id="ice-appbar-btn-auto-organize-zoom"
+            icon={RefreshCw}
+            onClick={() => dispatch(toggleAutoOrganizeOnZoom())}
+            tip={autoOrganizeOnZoom ? 'Auto-organize on zoom: ON' : 'Auto-organize on zoom: OFF'}
+            className={autoOrganizeOnZoom ? 'text-blue-400 bg-blue-500/10' : undefined}
+          />
+          <BarBtn
+            id="ice-appbar-btn-fit-view"
+            icon={Maximize2}
+            onClick={() => {
+              if (!activeCard?.nodes?.length) return;
+              const nodes = activeCard.nodes;
+              let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+              for (const n of nodes) {
+                minX = Math.min(minX, n.position.x);
+                minY = Math.min(minY, n.position.y);
+                maxX = Math.max(maxX, n.position.x + (n.width || 240));
+                maxY = Math.max(maxY, n.position.y + (n.height || 80));
+              }
+              const pad = 60;
+              const bw = maxX - minX + pad * 2;
+              const bh = maxY - minY + pad * 2;
+              const vw = window.innerWidth - 300;
+              const vh = window.innerHeight - 80;
+              const zoom = Math.min(Math.max(vw / bw, 0.1), Math.min(vh / bh, 3));
+              const panX = -minX + pad + (vw / zoom - bw + pad * 2) / 2;
+              const panY = -minY + pad + (vh / zoom - bh + pad * 2) / 2;
+              dispatch(setCardViewport({ panX, panY, scale: zoom }));
+            }}
+            tip="Fit to view"
           />
           <BarSep />
           <BarBtn

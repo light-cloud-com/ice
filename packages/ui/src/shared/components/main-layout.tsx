@@ -17,7 +17,7 @@ import { StatusBar } from './status-bar';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './ui/resizable';
 import { SidebarPanel } from './ui/sidebar-panel';
 import { SidebarStrip } from './ui/sidebar-strip';
-import { AiChatPanel, AiChatCollapsedBar } from '../../features/ai/components/ai-chat-panel';
+import { AiChatPanel } from '../../features/ai/components/ai-chat-panel';
 import { SvgCanvas } from '../../features/canvas/components/svg-canvas';
 import { EnvironmentTabBar } from '../../features/environments/components/environment-tab-bar';
 import { ResourcePalette } from '../../features/palette/components/resource-palette';
@@ -248,7 +248,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
       <div className="flex-1 min-h-0 relative">
         {children ? children : view === 'table' ? <InlineTableView /> : <SvgCanvas />}
       </div>
-      {isCanvasView && !showAiChat && <AiChatCollapsedBar />}
     </div>
   );
 

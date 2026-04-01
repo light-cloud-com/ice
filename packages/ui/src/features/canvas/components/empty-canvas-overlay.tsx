@@ -61,7 +61,7 @@ export const EmptyCanvasOverlay: React.FC<EmptyCanvasOverlayProps> = ({ onDismis
   }, [dispatch]);
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center z-20" style={{ pointerEvents: 'auto' }}>
+    <div className="absolute inset-0 flex items-center justify-center z-20" style={{ pointerEvents: 'auto' }} role="dialog" aria-modal="true" aria-label="Choose a starting template">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-ice-base/60 backdrop-blur-sm" />
 
@@ -80,13 +80,13 @@ export const EmptyCanvasOverlay: React.FC<EmptyCanvasOverlayProps> = ({ onDismis
               <button
                 key={qs.id}
                 onClick={() => handleSelect(qs)}
-                className="flex flex-col items-center gap-2 px-4 py-5 rounded-xl border border-ice-border bg-ice-raised cursor-pointer transition-all hover:border-ice-border-strong hover:shadow-md"
+                className="flex flex-col items-center gap-2 px-4 py-5 rounded-xl border border-ice-border bg-ice-raised cursor-pointer transition-all hover:border-ice-border-strong hover:shadow-md focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
               >
                 <div
                   className="w-10 h-10 rounded-[10px] flex items-center justify-center"
                   style={{ background: `${color}1a` }}
                 >
-                  <Icon style={{ width: 20, height: 20, color }} />
+                  <Icon style={{ width: 20, height: 20, color }} aria-hidden="true" />
                 </div>
                 <span className="text-ice-md font-semibold text-ice-text-1">{qs.name}</span>
                 <span className="text-ice-sm text-ice-text-2 leading-snug">{qs.description}</span>
@@ -99,16 +99,16 @@ export const EmptyCanvasOverlay: React.FC<EmptyCanvasOverlayProps> = ({ onDismis
         <div className="flex justify-center gap-3">
           <button
             onClick={handleBlank}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-ice-border bg-transparent text-ice-text-2 text-xs font-medium cursor-pointer transition-all hover:border-ice-border-strong hover:text-ice-text-1"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-ice-border bg-transparent text-ice-text-2 text-xs font-medium cursor-pointer transition-all hover:border-ice-border-strong hover:text-ice-text-1 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
           >
-            <FileCode2 className="w-3.5 h-3.5" />
+            <FileCode2 className="w-3.5 h-3.5" aria-hidden="true" />
             {t('canvas.emptyState.blankCanvas')}
           </button>
           <button
             onClick={handleOpenTemplates}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-ice-border bg-transparent text-ice-text-2 text-xs font-medium cursor-pointer transition-all hover:border-ice-border-strong hover:text-ice-text-1"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-ice-border bg-transparent text-ice-text-2 text-xs font-medium cursor-pointer transition-all hover:border-ice-border-strong hover:text-ice-text-1 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
           >
-            <LayoutTemplate className="w-3.5 h-3.5" />
+            <LayoutTemplate className="w-3.5 h-3.5" aria-hidden="true" />
             {t('canvas.emptyState.pickTemplate')}
           </button>
         </div>

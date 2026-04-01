@@ -34,6 +34,8 @@ interface SvgGroupNodeProps {
   onRenameCancel?: () => void;
   /** Level of detail: 3=full, 2=compact, 1=iconic */
   lod?: number;
+  /** Current zoom level — used for inverse-zoom scaling at low LOD */
+  zoom?: number;
 }
 
 // ─── Shared constants ──────────────────────────────────────────────────────────
@@ -68,9 +70,11 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
     onRenameCommit,
     onRenameCancel,
     lod = 3,
+    zoom = 1,
   }) => {
     const { x, y, width, height, label, data } = node;
     const [isHovered, setIsHovered] = useState(false);
+    const invZoom = 1 / Math.max(zoom, 0.1);
     const renameInputRef = useRef<HTMLInputElement>(null);
 
     const folded = (node.data?.folded as boolean) || false;
@@ -149,8 +153,8 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
             rx={CORNER_RADIUS}
             fill={gc ? `${gc}20` : 'rgba(15, 23, 42, 0.15)'}
             stroke={lodBorderColor}
-            strokeWidth={isDragOver || isChildExiting ? 2 : 1}
-            strokeDasharray={isDragOver ? undefined : '4 2'}
+            strokeWidth={(isDragOver || isChildExiting ? 2 : 1.5) * invZoom}
+            strokeDasharray={isDragOver ? undefined : `${6 * invZoom} ${3 * invZoom}`}
             opacity={isDragOver || isChildExiting ? 1 : 0.7}
           />
         </g>
@@ -205,15 +209,15 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
             rx={CORNER_RADIUS}
             fill={gc ? `${gc}18` : 'rgba(15, 23, 42, 0.10)'}
             stroke={lodBorderColor}
-            strokeWidth={isDragOver || isChildExiting ? 2 : isSelected ? 1.5 : 1}
-            strokeDasharray={isDragOver ? undefined : '6 3'}
+            strokeWidth={(isDragOver || isChildExiting ? 2 : isSelected ? 1.5 : 1) * invZoom}
+            strokeDasharray={isDragOver ? undefined : `${6 * invZoom} ${3 * invZoom}`}
           />
           <text
-            x={x + 10}
-            y={y + 14}
+            x={x + 10 * invZoom}
+            y={y + 14 * invZoom}
             dominantBaseline="middle"
             fill={gc || 'var(--ice-text-secondary)'}
-            fontSize="10"
+            fontSize={10 * invZoom}
             fontWeight="600"
             fontFamily="'JetBrains Mono Variable', monospace"
             opacity={0.7}
@@ -349,6 +353,9 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
             <input
               ref={renameInputRef}
               defaultValue={label || 'New Group'}
+              aria-label="Rename group"
+              autoComplete="off"
+              name="group-label"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   onRenameCommit?.((e.target as HTMLInputElement).value);
@@ -372,6 +379,7 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
                 fontFamily: "'JetBrains Mono Variable', monospace",
                 padding: '0 6px',
                 outline: 'none',
+                boxShadow: `0 0 0 2px ${labelColor}40`,
               }}
             />
           </foreignObject>

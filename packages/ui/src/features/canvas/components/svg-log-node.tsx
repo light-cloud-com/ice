@@ -14,6 +14,7 @@
 import React, { memo, useState, useCallback, useEffect, useRef } from 'react';
 import { CORNER_RADIUS } from '../../../config/canvas-constants';
 import { LOG_COLORS } from '../../../config/color-palette';
+import { useReducedMotion } from '../../../shared/hooks/use-reduced-motion';
 import type { CanvasNode } from './svg-canvas';
 
 interface SvgLogNodeProps {
@@ -78,6 +79,7 @@ function generateTimestamp(secondsAgo: number = 0): string {
 }
 
 export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, onToggleFold }) => {
+  const reducedMotion = useReducedMotion();
   const { x, y, width, height, data, label } = node;
   const [isHovered, setIsHovered] = useState(false);
   const [folded, setFolded] = useState(false);
@@ -361,7 +363,9 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, o
       {!folded && isAutoScroll && (
         <g className="live-indicator">
           <circle cx={x + nodeWidth - 88} cy={y + 16} r={3} fill="#22c55e">
-            <animate attributeName="opacity" values="1;0.4;1" dur="1.5s" repeatCount="indefinite" />
+            {!reducedMotion && (
+              <animate attributeName="opacity" values="1;0.4;1" dur="1.5s" repeatCount="indefinite" />
+            )}
           </circle>
           <text
             x={x + nodeWidth - 80}
@@ -471,7 +475,7 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, o
                     fontFamily="ui-monospace, 'SF Mono', monospace"
                     opacity={index === visibleLogs.length - 1 ? 1 : 0.85}
                   >
-                    {log.message.length > 38 ? log.message.substring(0, 38) + '...' : log.message}
+                    {log.message.length > 38 ? log.message.substring(0, 38) + '\u2026' : log.message}
                   </text>
                 </g>
               );
@@ -528,7 +532,9 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, o
               rx={0.5}
               opacity={0.6}
             >
-              <animate attributeName="opacity" values="0.6;0.2;0.6" dur="2s" repeatCount="indefinite" />
+              {!reducedMotion && (
+                <animate attributeName="opacity" values="0.6;0.2;0.6" dur="2s" repeatCount="indefinite" />
+              )}
             </rect>
           )}
         </g>
@@ -557,7 +563,7 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, o
             fontWeight="600"
             fontFamily="ui-monospace, monospace"
           >
-            {logs.length} logs
+            {logs.length}{'\u00A0'}logs
           </text>
         </g>
       )}

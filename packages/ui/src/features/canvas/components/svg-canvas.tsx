@@ -78,7 +78,7 @@ import {
   toggleNodeSelection,
   setSelectionRect,
 } from '../../../store/slices/selection-slice';
-import { setPaneViewport, openContextMenu } from '../../../store/slices/ui-slice';
+import { setPaneViewport, openContextMenu, type OrganizeStyle } from '../../../store/slices/ui-slice';
 import { useCanvasInteractions, type CanvasItem } from '../hooks/use-canvas-interactions';
 import type { RootState, AppDispatch } from '../../../store';
 
@@ -184,6 +184,35 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   // L1 (iconic): < 50% — large centered icon + bold label + status dot
   const lod = viewport.zoom > LOD_THRESHOLD_L3 ? 3 : viewport.zoom > LOD_THRESHOLD_L2 ? 2 : 1;
 
+  // Auto-organize on zoom: re-layout when LOD level changes or zoom shifts significantly
+  const autoOrganizeOnZoom = useSelector((state: RootState) => state.ui.autoOrganizeOnZoom);
+  const autoOrganizeStyle = useSelector((state: RootState) => state.ui.autoOrganizeStyle) as OrganizeStyle;
+  const prevAutoZoomRef = useRef(viewport.zoom);
+
+  useEffect(() => {
+    if (!autoOrganizeOnZoom) {
+      prevAutoZoomRef.current = viewport.zoom;
+      return;
+    }
+
+    // Trigger when zoom changes by more than 15% from last organize
+    const ratio = viewport.zoom / (prevAutoZoomRef.current || 1);
+    if (ratio > 0.85 && ratio < 1.15) return;
+
+    prevAutoZoomRef.current = viewport.zoom;
+
+    const timer = setTimeout(() => {
+      const payload: Record<string, unknown> = { zoom: viewport.zoom };
+      if (autoOrganizeStyle === 'circular') {
+        payload.layout = 'circular';
+      } else {
+        payload.direction = autoOrganizeStyle;
+      }
+      dispatch(autoOrganizeCard(payload as any));
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [viewport.zoom, autoOrganizeOnZoom, autoOrganizeStyle, dispatch]);
+
   // Canvas dimensions
   const [dimensions, setDimensions] = React.useState({ width: 800, height: 600 });
 
@@ -215,7 +244,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     // Threshold >10 avoids triggering on blueprint drops (container + 1-3 children = 2-4 nodes)
     if (currentCount > 0 && (prevCount === 0 || currentCount - prevCount > 10)) {
       const timer = setTimeout(() => {
-        dispatch(autoOrganizeCard());
+        dispatch(autoOrganizeCard({ zoom: viewport.zoom }));
       }, 100);
       prevNodeCountRef.current = currentCount;
       return () => clearTimeout(timer);
@@ -2198,6 +2227,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                   onSelect={handleEdgeSelect}
                   onContextMenu={(edgeId, pos) => handleContextMenu(pos, 'edge', edgeId)}
                   lod={lod}
+                  zoom={viewport.zoom}
                   pipelineActive={edgePipelineActive}
                   edgeStyle={edgeStyle}
                 />
@@ -2317,175 +2347,6 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                 return animated;
               };
 
-              // ── Semantic Zoom: LOD 1 & 2 — same position/size, simplified content, bigger text/icons ──
-              // Cards stay at their exact original canvas position and size.
-              // Content is stripped down and remaining elements are scaled up for readability.
-              if (lod < 3 && !isLogNode && !isGroup) {
-                const W = node.width;
-                const H = node.height;
-                const iconUrl = (() => {
-                  const runtime = (node.data?.runtime as string) || '';
-                  const provider = ((node.data?.provider as string) || 'aws').toLowerCase() as Provider;
-                  const bi = getBrandIcon(runtime) || getBrandIcon(iceType) || getBrandIcon(node.label);
-                  if (bi) return bi.url;
-                  const pi = getIcon(iceType, provider);
-                  return pi?.icon || DEFAULT_ICON;
-                })();
-
-                const statusColor =
-                  node.data?.status === 'failed' || node.data?.status === 'error'
-                    ? '#ef4444'
-                    : node.data?.status === 'active' || node.data?.status === 'running'
-                      ? '#22c55e'
-                      : '#64748b';
-                const pipeStatus = pipelineNodeStatus[node.id];
-                const dotColor =
-                  pipeStatus?.status === 'success'
-                    ? '#22c55e'
-                    : pipeStatus?.status === 'failed'
-                      ? '#ef4444'
-                      : pipeStatus?.status === 'building' || pipeStatus?.status === 'deploying'
-                        ? '#3b82f6'
-                        : statusColor;
-                const isNodeSelected = selectedNodes.includes(node.id);
-                const borderColor = isNodeSelected ? '#3b82f6' : 'var(--ice-border)';
-
-                if (lod <= 1) {
-                  // L1 — Same card rect, large centered icon, big status dot, bold label
-                  const iconSize = Math.min(W * 0.5, H * 0.45);
-                  const fontSize = Math.max(16, W * 0.08);
-                  const dotR = Math.max(6, W * 0.03);
-
-                  return wrapLift(
-                    <g key={`${node.id}-lod1`} data-node-id={node.id} style={{ cursor: 'move' }}>
-                      {isNodeSelected && (
-                        <rect
-                          x={node.x - 3}
-                          y={node.y - 3}
-                          width={W + 6}
-                          height={H + 6}
-                          rx={11}
-                          fill="none"
-                          stroke="#3b82f6"
-                          strokeWidth={2}
-                          opacity={0.5}
-                        />
-                      )}
-                      <rect
-                        x={node.x}
-                        y={node.y}
-                        width={W}
-                        height={H}
-                        rx={8}
-                        fill="var(--ice-bg-surface)"
-                        stroke={borderColor}
-                        strokeWidth={isNodeSelected ? 2 : 1}
-                      />
-                      {/* Large centered icon */}
-                      <image
-                        x={node.x + (W - iconSize) / 2}
-                        y={node.y + H * 0.1}
-                        width={iconSize}
-                        height={iconSize}
-                        href={iconUrl}
-                        preserveAspectRatio="xMidYMid meet"
-                      />
-                      {/* Bold label below icon */}
-                      <text
-                        x={node.x + W / 2}
-                        y={node.y + H * 0.1 + iconSize + fontSize * 0.9}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                        fill="var(--ice-text-primary)"
-                        fontSize={fontSize}
-                        fontWeight="700"
-                        fontFamily="'JetBrains Mono Variable', monospace"
-                        style={{ pointerEvents: 'none' }}
-                      >
-                        {(node.label || '').length > 10 ? (node.label || '').slice(0, 10) + '…' : node.label || ''}
-                      </text>
-                      {/* Status dot */}
-                      <circle cx={node.x + W / 2} cy={node.y + H - dotR * 2} r={dotR} fill={dotColor} opacity={0.9} />
-                    </g>,
-                  );
-                }
-
-                // L2 — Same card rect, bigger icon + label, status dot. No metadata/scaling/cost
-                const iconSize = Math.min(28, H * 0.35);
-                const fontSize = Math.max(14, W * 0.065);
-                const dotR = Math.max(4, W * 0.02);
-
-                return wrapLift(
-                  <g key={`${node.id}-lod2`} data-node-id={node.id} style={{ cursor: 'move' }}>
-                    {isNodeSelected && (
-                      <rect
-                        x={node.x - 3}
-                        y={node.y - 3}
-                        width={W + 6}
-                        height={H + 6}
-                        rx={11}
-                        fill="none"
-                        stroke="#3b82f6"
-                        strokeWidth={2}
-                        opacity={0.5}
-                      />
-                    )}
-                    <rect
-                      x={node.x}
-                      y={node.y}
-                      width={W}
-                      height={H}
-                      rx={8}
-                      fill="var(--ice-bg-surface)"
-                      stroke={borderColor}
-                      strokeWidth={isNodeSelected ? 1.5 : 1}
-                    />
-                    {/* Larger icon */}
-                    <image
-                      x={node.x + 12}
-                      y={node.y + (H - iconSize) / 2 - 4}
-                      width={iconSize}
-                      height={iconSize}
-                      href={iconUrl}
-                      preserveAspectRatio="xMidYMid meet"
-                    />
-                    {/* Bigger label */}
-                    <text
-                      x={node.x + 12 + iconSize + 8}
-                      y={node.y + H / 2 - 6}
-                      dominantBaseline="middle"
-                      fill="var(--ice-text-primary)"
-                      fontSize={fontSize}
-                      fontWeight="600"
-                      fontFamily="'JetBrains Mono Variable', monospace"
-                      style={{ pointerEvents: 'none' }}
-                    >
-                      {(node.label || '').length > 12 ? (node.label || '').slice(0, 12) + '…' : node.label || ''}
-                    </text>
-                    {/* Status dot + label */}
-                    <circle
-                      cx={node.x + 12 + iconSize + 8}
-                      cy={node.y + H / 2 + fontSize * 0.7}
-                      r={dotR}
-                      fill={dotColor}
-                      opacity={0.9}
-                    />
-                    <text
-                      x={node.x + 12 + iconSize + 8 + dotR * 2 + 4}
-                      y={node.y + H / 2 + fontSize * 0.7}
-                      dominantBaseline="middle"
-                      fill="var(--ice-text-secondary)"
-                      fontSize={Math.max(10, fontSize * 0.7)}
-                      fontFamily="ui-monospace, 'SFMono-Regular', monospace"
-                      opacity={0.7}
-                      style={{ pointerEvents: 'none' }}
-                    >
-                      {(node.data?.status as string) || ''}
-                    </text>
-                  </g>,
-                );
-              }
-
               if (isLogNode) {
                 return wrapLift(
                   <SvgLogNode
@@ -2513,6 +2374,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                     onRenameCommit={(newLabel) => handleRenameCommit(node.id, newLabel)}
                     onRenameCancel={handleRenameCancel}
                     lod={lod}
+                    zoom={viewport.zoom}
                   />,
                 );
               }
@@ -2559,6 +2421,8 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                   pipelineStatus={pipelineNodeStatus[node.id]}
                   onPipelineClick={handlePipelineClick}
                   connectedPipelineStatuses={getConnectedPipelineStatuses(node)}
+                  lod={lod}
+                  zoom={viewport.zoom}
                 />,
               );
             })}
@@ -2657,6 +2521,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                   onSelect={handleEdgeSelect}
                   onContextMenu={(edgeId, pos) => handleContextMenu(pos, 'edge', edgeId)}
                   lod={lod}
+                  zoom={viewport.zoom}
                   edgeStyle={edgeStyle}
                 />
               );

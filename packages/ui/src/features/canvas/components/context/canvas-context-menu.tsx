@@ -118,6 +118,7 @@ export const CanvasContextMenu: React.FC = () => {
   const selectedNodes = useSelector((state: RootState) => state.selection.selectedNodes);
   const showProperties = useSelector((state: RootState) => state.ui.showProperties);
   const activeCard = useSelector(selectActiveCard);
+  const currentZoom = activeCard?.viewport?.scale ?? 1;
   const history = useSelector((state: RootState) => {
     const cardId = state.cards.activeCardId;
     return cardId ? state.cards.history[cardId] : undefined;
@@ -199,21 +200,21 @@ export const CanvasContextMenu: React.FC = () => {
         <MenuItem
           label={t('canvas.contextMenu.autoOrganize') + ' ↕'}
           onClick={() => {
-            dispatch(autoOrganizeCard({ direction: 'vertical' }));
+            dispatch(autoOrganizeCard({ direction: 'vertical', zoom: currentZoom }));
             close();
           }}
         />
         <MenuItem
           label={t('canvas.contextMenu.autoOrganize') + ' ↔'}
           onClick={() => {
-            dispatch(autoOrganizeCard({ direction: 'horizontal' }));
+            dispatch(autoOrganizeCard({ direction: 'horizontal', zoom: currentZoom }));
             close();
           }}
         />
         <MenuItem
           label={t('canvas.contextMenu.autoOrganize') + ' ◎'}
           onClick={() => {
-            dispatch(autoOrganizeCard({ layout: 'circular' }));
+            dispatch(autoOrganizeCard({ layout: 'circular', zoom: currentZoom }));
             close();
           }}
         />
@@ -304,21 +305,21 @@ export const CanvasContextMenu: React.FC = () => {
             <MenuItem
               label={t('canvas.contextMenu.autoOrganize') + ' ↕'}
               onClick={() => {
-                dispatch(autoOrganizeCard({ direction: 'vertical', containerId: targetId }));
+                dispatch(autoOrganizeCard({ direction: 'vertical', containerId: targetId, zoom: currentZoom }));
                 close();
               }}
             />
             <MenuItem
               label={t('canvas.contextMenu.autoOrganize') + ' ↔'}
               onClick={() => {
-                dispatch(autoOrganizeCard({ direction: 'horizontal', containerId: targetId }));
+                dispatch(autoOrganizeCard({ direction: 'horizontal', containerId: targetId, zoom: currentZoom }));
                 close();
               }}
             />
             <MenuItem
               label={t('canvas.contextMenu.autoOrganize') + ' ◎'}
               onClick={() => {
-                dispatch(autoOrganizeCard({ layout: 'circular', containerId: targetId }));
+                dispatch(autoOrganizeCard({ layout: 'circular', containerId: targetId, zoom: currentZoom }));
                 close();
               }}
             />

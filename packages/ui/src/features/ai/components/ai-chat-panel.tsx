@@ -14,7 +14,6 @@ import {
   ArrowRight,
   Send,
   X,
-  ChevronUp,
   Plus,
   MessageSquare,
   Trash2,
@@ -666,26 +665,5 @@ export const AiChatPanel: React.FC = () => {
         </div>
       </div>
     </div>
-  );
-};
-
-// =============================================================================
-// Collapsed bar — shown when the AI chat is collapsed
-// =============================================================================
-
-export const AiChatCollapsedBar: React.FC = () => {
-  const { t } = useTranslation();
-  const dispatch = useDispatch<AppDispatch>();
-
-  return (
-    <button
-      onClick={() => dispatch(toggleAiChat())}
-      className="flex items-center gap-2 px-3 py-1.5 w-full border-t border-ice-border/50 text-ice-text-3/50 hover:text-ice-text-2 transition-colors shrink-0 outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
-    >
-      <Sparkles aria-hidden="true" className="w-3 h-3 text-ice-accent/50" />
-      <span className="text-ice-xs flex-1 text-left">{t('ai.chat.collapsedTitle')}</span>
-      <ChevronUp aria-hidden="true" className="w-3 h-3 lg:hidden" />
-      <ArrowRight aria-hidden="true" className="w-3 h-3 hidden lg:block" />
-    </button>
   );
 };

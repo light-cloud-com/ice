@@ -14,6 +14,7 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { getIcon, DEFAULT_ICON, type Provider } from '../../../../assets/icons';
+import { useReducedMotion } from '../../../../shared/hooks/use-reduced-motion';
 import { getBrandIcon, type BrandIcon } from '../../../../assets/icons/brand-registry';
 import { renderCategoryIcon } from '../../../../assets/icons/category-icons';
 import { getServiceName } from '../../../../assets/icons/service-names';
@@ -435,6 +436,7 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
   zoom = 1,
 }) => {
   const { t } = useTranslation();
+  const reducedMotion = useReducedMotion();
   const { x, y, width, height, data, label } = node;
   const [isHovered, setIsHovered] = useState(false);
   const [repoSelectorOpen, setRepoSelectorOpen] = useState(false);
@@ -561,37 +563,6 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
     setIsHovered(false);
     onNodeHover?.(null);
   }, [onNodeHover]);
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // LOD TEST — bright red square when lod < 3
-  // ══════════════════════════════════════════════════════════════════════════
-  if (lod < 3) {
-    return (
-      <g data-node-id={node.id} style={{ cursor: 'move' }} onMouseEnter={onEnter} onMouseLeave={onLeave}>
-        <rect
-          x={x}
-          y={y}
-          width={100}
-          height={100}
-          rx={8}
-          fill={lod === 1 ? 'red' : 'orange'}
-          stroke="black"
-          strokeWidth={2}
-        />
-        <text
-          x={x + 50}
-          y={y + 50}
-          textAnchor="middle"
-          dominantBaseline="middle"
-          fill="white"
-          fontSize={16}
-          fontWeight="bold"
-        >
-          L{lod}
-        </text>
-      </g>
-    );
-  }
 
   // ══════════════════════════════════════════════════════════════════════════
   // BLOCK SUMMARY CARD — Level 1 compact view
@@ -781,9 +752,12 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
           height={iconSize}
           href={brandIcon?.url || providerUrl}
           preserveAspectRatio="xMidYMid meet"
+          role="img"
+          aria-label={label || iceType || 'Resource'}
         />
         <circle cx={cx} cy={cy + S / 2 - 10 * invScale} r={dotR} fill={pipeColor || statusColor} opacity={0.9}>
           {pipeColor &&
+            !reducedMotion &&
             effectivePipelineStatus?.status !== 'success' &&
             effectivePipelineStatus?.status !== 'failed' && (
               <animate attributeName="opacity" values="1;0.4;1" dur="1.2s" repeatCount="indefinite" />
@@ -855,6 +829,7 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
           height={iconSz}
           href={brandIcon?.url || providerUrl}
           preserveAspectRatio="xMidYMid meet"
+          aria-hidden="true"
         />
         {/* Label */}
         <text
@@ -878,6 +853,7 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
           opacity={0.9}
         >
           {pipeColor &&
+            !reducedMotion &&
             effectivePipelineStatus?.status !== 'success' &&
             effectivePipelineStatus?.status !== 'failed' && (
               <animate attributeName="opacity" values="1;0.4;1" dur="1.2s" repeatCount="indefinite" />
@@ -1048,6 +1024,9 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
               <input
                 ref={renameInputRef}
                 defaultValue={label || ''}
+                aria-label="Rename node"
+                autoComplete="off"
+                name="node-label"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     onRenameCommit?.((e.target as HTMLInputElement).value);
@@ -1071,6 +1050,7 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
                   fontFamily: "'JetBrains Mono Variable', monospace",
                   padding: '0 6px',
                   outline: 'none',
+                  boxShadow: '0 0 0 2px rgba(59, 130, 246, 0.3)',
                 }}
               />
             </foreignObject>
@@ -1131,6 +1111,7 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
               height={BRAND_ICON_SIZE}
               href={brandIcon?.url || providerUrl}
               preserveAspectRatio="xMidYMid meet"
+              aria-hidden="true"
             />
           )}
 
@@ -1555,7 +1536,9 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
                     fill="#3b82f6"
                   >
                     {/* Pulse animation during active deploy */}
-                    <animate attributeName="opacity" values="1;0.6;1" dur="1.5s" repeatCount="indefinite" />
+                    {!reducedMotion && (
+                      <animate attributeName="opacity" values="1;0.6;1" dur="1.5s" repeatCount="indefinite" />
+                    )}
                   </rect>
                 </g>
               )}
@@ -1603,7 +1586,7 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
                     fill={dotColor}
                     opacity={0.9}
                   >
-                    {isActive && (
+                    {isActive && !reducedMotion && (
                       <animate attributeName="opacity" values="1;0.4;1" dur="1.2s" repeatCount="indefinite" />
                     )}
                   </circle>

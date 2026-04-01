@@ -27,7 +27,7 @@ export const SvgRegionLabel: React.FC<SvgRegionLabelProps> = memo(({ node }) => 
   const regionHeight = Math.max(height || 300, 200);
 
   return (
-    <g className="svg-region-label" style={{ pointerEvents: 'none' }}>
+    <g className="svg-region-label" style={{ pointerEvents: 'none' }} aria-hidden="true">
       {/* Faint tinted background */}
       <rect x={x} y={y} width={regionWidth} height={regionHeight} rx={12} fill={style.fill} />
 

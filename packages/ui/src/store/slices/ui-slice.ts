@@ -30,6 +30,7 @@ interface SplitViewState {
 }
 
 export type EdgeStyle = 'bezier' | 'straight' | 'rectangular';
+export type OrganizeStyle = 'vertical' | 'horizontal' | 'circular';
 
 interface UIState {
   // Panel visibility
@@ -42,6 +43,10 @@ interface UIState {
 
   // Edge / connection line style
   edgeStyle: EdgeStyle;
+
+  // Auto-organize on zoom (LOD transitions)
+  autoOrganizeOnZoom: boolean;
+  autoOrganizeStyle: OrganizeStyle;
 
   // Theme
   theme: 'light' | 'dark' | 'system';
@@ -128,6 +133,8 @@ const initialState: UIState = {
   showValidation: false,
   showAiChat: true,
   edgeStyle: 'bezier' as EdgeStyle,
+  autoOrganizeOnZoom: false,
+  autoOrganizeStyle: 'vertical' as OrganizeStyle,
   theme: 'system',
   viewport: { x: 0, y: 0, zoom: 1 },
   contextMenu: {
@@ -170,6 +177,12 @@ const uiSlice = createSlice({
     },
     setEdgeStyle: (state, action: PayloadAction<EdgeStyle>) => {
       state.edgeStyle = action.payload;
+    },
+    toggleAutoOrganizeOnZoom: (state) => {
+      state.autoOrganizeOnZoom = !state.autoOrganizeOnZoom;
+    },
+    setAutoOrganizeStyle: (state, action: PayloadAction<OrganizeStyle>) => {
+      state.autoOrganizeStyle = action.payload;
     },
     openContextMenu: (
       state,
@@ -338,6 +351,8 @@ export const {
   openTabInPane,
   closeTabInPane,
   closeTabsByCardIds,
+  toggleAutoOrganizeOnZoom,
+  setAutoOrganizeStyle,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

@@ -68,6 +68,8 @@ interface SvgCompactNodeProps {
   lod?: number;
   /** Current zoom level — used to size LOD cards inversely to zoom */
   zoom?: number;
+  /** Connection drag state: indicates if this node is a valid/invalid target during connection drawing */
+  connectionDragState?: 'valid-target' | 'invalid-target' | 'source' | null;
 }
 
 // ─── Derived Tokens ─────────────────────────────────────────────────────────
@@ -434,6 +436,7 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
   connectedPipelineStatuses = [],
   lod = 3,
   zoom = 1,
+  connectionDragState = null,
 }) => {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
@@ -718,7 +721,8 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
       <g
         className="svg-compact-node lod-1"
         data-node-id={node.id}
-        style={{ cursor: 'move' }}
+        style={{ cursor: connectionDragState === 'valid-target' ? 'crosshair' : 'move' }}
+        opacity={connectionDragState === 'invalid-target' ? 0.3 : 1}
         onMouseEnter={onEnter}
         onMouseLeave={onLeave}
       >
@@ -735,6 +739,24 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
             opacity={0.6}
           />
         )}
+        {/* Connection drag: valid target glow */}
+        {connectionDragState === 'valid-target' && (
+          <rect
+            x={cx - S / 2 - 4 * invScale}
+            y={cy - S / 2 - 4 * invScale}
+            width={S + 8 * invScale}
+            height={S + 8 * invScale}
+            rx={12 * invScale}
+            fill="none"
+            stroke="#22c55e"
+            strokeWidth={2 * invScale}
+            opacity={0.8}
+          >
+            {!reducedMotion && (
+              <animate attributeName="opacity" values="0.5;0.9;0.5" dur="1.5s" repeatCount="indefinite" />
+            )}
+          </rect>
+        )}
         <rect
           x={cx - S / 2}
           y={cy - S / 2}
@@ -742,7 +764,7 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
           height={S}
           rx={10 * invScale}
           fill="var(--ice-bg-surface)"
-          stroke={border}
+          stroke={connectionDragState === 'valid-target' ? '#22c55e' : border}
           strokeWidth={borderW}
         />
         <image
@@ -794,7 +816,8 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
       <g
         className="svg-compact-node lod-2"
         data-node-id={node.id}
-        style={{ cursor: 'move' }}
+        style={{ cursor: connectionDragState === 'valid-target' ? 'crosshair' : 'move' }}
+        opacity={connectionDragState === 'invalid-target' ? 0.3 : 1}
         onMouseEnter={onEnter}
         onMouseLeave={onLeave}
       >
@@ -811,6 +834,24 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
             opacity={0.6}
           />
         )}
+        {/* Connection drag: valid target glow */}
+        {connectionDragState === 'valid-target' && (
+          <rect
+            x={cx - CW / 2 - 4 * invScale}
+            y={cy - CH / 2 - 4 * invScale}
+            width={CW + 8 * invScale}
+            height={CH + 8 * invScale}
+            rx={(CORNER_RADIUS + 3) * invScale}
+            fill="none"
+            stroke="#22c55e"
+            strokeWidth={2 * invScale}
+            opacity={0.8}
+          >
+            {!reducedMotion && (
+              <animate attributeName="opacity" values="0.5;0.9;0.5" dur="1.5s" repeatCount="indefinite" />
+            )}
+          </rect>
+        )}
         <rect
           x={cx - CW / 2}
           y={cy - CH / 2}
@@ -818,7 +859,7 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
           height={CH}
           rx={CORNER_RADIUS * invScale}
           fill="var(--ice-bg-surface)"
-          stroke={border}
+          stroke={connectionDragState === 'valid-target' ? '#22c55e' : border}
           strokeWidth={borderW}
         />
         {/* Icon */}
@@ -873,8 +914,8 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
             {statusLabel}
           </text>
         )}
-        {/* Connection ports on hover */}
-        {isHovered && (
+        {/* Connection ports on hover or when valid target */}
+        {(isHovered || connectionDragState === 'valid-target') && (
           <g className="connection-ports">
             <circle
               className="connection-port"
@@ -882,8 +923,8 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
               data-side="left"
               cx={cx - CW / 2}
               cy={cy}
-              r={5 * invScale}
-              fill={cat.glow}
+              r={(connectionDragState === 'valid-target' ? 6 : 5) * invScale}
+              fill={connectionDragState === 'valid-target' ? '#22c55e' : cat.glow}
               stroke="var(--ice-bg-base)"
               strokeWidth={2 * invScale}
               style={{ cursor: 'crosshair' }}
@@ -894,8 +935,8 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
               data-side="right"
               cx={cx + CW / 2}
               cy={cy}
-              r={5 * invScale}
-              fill={cat.glow}
+              r={(connectionDragState === 'valid-target' ? 6 : 5) * invScale}
+              fill={connectionDragState === 'valid-target' ? '#22c55e' : cat.glow}
               stroke="var(--ice-bg-base)"
               strokeWidth={2 * invScale}
               style={{ cursor: 'crosshair' }}
@@ -914,7 +955,8 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
     <g
       className="svg-compact-node"
       data-node-id={node.id}
-      style={{ cursor: 'move' }}
+      style={{ cursor: connectionDragState === 'valid-target' ? 'crosshair' : 'move' }}
+      opacity={connectionDragState === 'invalid-target' ? 0.3 : 1}
       onMouseEnter={onEnter}
       onMouseLeave={onLeave}
     >
@@ -949,6 +991,25 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
         />
       )}
 
+      {/* Connection drag: valid target glow */}
+      {connectionDragState === 'valid-target' && (
+        <rect
+          x={x - 4}
+          y={y - 4}
+          width={W + 8}
+          height={H + 8}
+          rx={CORNER_RADIUS + 4}
+          fill="none"
+          stroke="#22c55e"
+          strokeWidth={2}
+          opacity={0.8}
+        >
+          {!reducedMotion && (
+            <animate attributeName="opacity" values="0.5;0.9;0.5" dur="1.5s" repeatCount="indefinite" />
+          )}
+        </rect>
+      )}
+
       {/* Card background */}
       <rect
         x={x}
@@ -957,7 +1018,7 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
         height={H}
         rx={CORNER_RADIUS}
         fill="var(--ice-bg-surface)"
-        stroke={border}
+        stroke={connectionDragState === 'valid-target' ? '#22c55e' : border}
         strokeWidth={isSelected ? 1.5 : 1}
       />
 
@@ -1663,8 +1724,8 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
         </g>
       )}
 
-      {/* ═══════ CONNECTION PORTS (visible on hover) ═══════ */}
-      {isHovered && (
+      {/* ═══════ CONNECTION PORTS (visible on hover or when valid target) ═══════ */}
+      {(isHovered || connectionDragState === 'valid-target') && (
         <g className="connection-ports">
           {/* Top */}
           <circle
@@ -1673,8 +1734,8 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
             data-side="top"
             cx={x + W / 2}
             cy={y}
-            r={5}
-            fill={cat.glow}
+            r={connectionDragState === 'valid-target' ? 6 : 5}
+            fill={connectionDragState === 'valid-target' ? '#22c55e' : cat.glow}
             stroke="var(--ice-bg-base)"
             strokeWidth={2}
             style={{ cursor: 'crosshair' }}
@@ -1686,8 +1747,8 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
             data-side="right"
             cx={x + W}
             cy={y + H / 2}
-            r={5}
-            fill={cat.glow}
+            r={connectionDragState === 'valid-target' ? 6 : 5}
+            fill={connectionDragState === 'valid-target' ? '#22c55e' : cat.glow}
             stroke="var(--ice-bg-base)"
             strokeWidth={2}
             style={{ cursor: 'crosshair' }}
@@ -1699,8 +1760,8 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
             data-side="bottom"
             cx={x + W / 2}
             cy={y + H}
-            r={5}
-            fill={cat.glow}
+            r={connectionDragState === 'valid-target' ? 6 : 5}
+            fill={connectionDragState === 'valid-target' ? '#22c55e' : cat.glow}
             stroke="var(--ice-bg-base)"
             strokeWidth={2}
             style={{ cursor: 'crosshair' }}
@@ -1712,8 +1773,8 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
             data-side="left"
             cx={x}
             cy={y + H / 2}
-            r={5}
-            fill={cat.glow}
+            r={connectionDragState === 'valid-target' ? 6 : 5}
+            fill={connectionDragState === 'valid-target' ? '#22c55e' : cat.glow}
             stroke="var(--ice-bg-base)"
             strokeWidth={2}
             style={{ cursor: 'crosshair' }}

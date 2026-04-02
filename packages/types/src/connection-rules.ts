@@ -10,6 +10,10 @@
  *   DNS      — domain routing (Domain→Gateway)
  *
  * Containers (VPC, Subnet, Group) CANNOT have connections.
+ *
+ * Architecture: A declarative CONNECTION_RULES array defines every valid
+ * source→target pair. All functions (canConnect, inferConnectionMeta,
+ * validateConnection) derive from this single array.
  */
 
 // ─── Core Types ──────────────────────────────────────────────────────────────
@@ -61,7 +65,7 @@ export const CATEGORY_TO_RELATIONSHIP: Record<ConnectionCategory, string> = {
 
 // ─── Block Type Classification ───────────────────────────────────────────────
 // These functions classify iceType strings into logical groups.
-// Used by inferConnectionMeta, validateConnection, and the AI prompt generator.
+// Used by the CONNECTION_RULES array and exported for external consumers.
 
 export function isDatabase(t: string): boolean {
   return (
@@ -126,6 +130,16 @@ export function isContainer(iceType: string, nodeType?: string): boolean {
   return iceType === 'Network.VPC' || iceType === 'Network.Subnet' || iceType.startsWith('Group.');
 }
 
+/** Composite: anything deployable (backend + frontend) */
+function isService(t: string): boolean {
+  return isBackend(t) || isFrontend(t);
+}
+
+/** Composite: anything that can receive DNS traffic */
+function isRoutable(t: string): boolean {
+  return isBackend(t) || isFrontend(t) || isGateway(t);
+}
+
 // ─── Default Ports ───────────────────────────────────────────────────────────
 
 export const DEFAULT_PORTS: Record<string, number> = {
@@ -174,124 +188,143 @@ export function getEnvVarName(iceType: string): string | undefined {
   return undefined;
 }
 
+// ─── Declarative Connection Rules ───────────────────────────────────────────
+// Each rule defines: "blocks matching source() CAN connect to blocks matching
+// target()". First matching rule wins. This array is the single source of
+// truth for canConnect(), inferConnectionMeta(), and the AI prompt generator.
+
+export interface ConnectionRule {
+  /** Human-readable label for debugging / AI prompt generation */
+  label: string;
+  /** Source block classifier */
+  source: (iceType: string) => boolean;
+  /** Target block classifier */
+  target: (iceType: string) => boolean;
+  /** Connection category */
+  category: ConnectionCategory;
+  /** Traffic sub-type (only for traffic category) */
+  trafficType?: TrafficType;
+  /** Visual line style */
+  lineStyle: LineStyle;
+  /** If true, direction should be flipped (target becomes source) */
+  reverse?: boolean;
+}
+
+export const CONNECTION_RULES: ConnectionRule[] = [
+  // ── TRAFFIC: request ────────────────────────────────────────────────────
+  { label: 'Frontend → Backend',       source: isFrontend,   target: isBackend,       category: 'traffic', trafficType: 'request', lineStyle: 'solid' },
+  { label: 'Gateway → Backend',        source: isGateway,    target: isBackend,       category: 'traffic', trafficType: 'request', lineStyle: 'solid' },
+  { label: 'Gateway → Frontend',       source: isGateway,    target: isFrontend,      category: 'traffic', trafficType: 'request', lineStyle: 'solid' },
+  { label: 'Backend → Backend',        source: isBackend,    target: isBackend,       category: 'traffic', trafficType: 'request', lineStyle: 'solid' },
+  { label: 'Backend → Auth',           source: isBackend,    target: isAuth,          category: 'traffic', trafficType: 'request', lineStyle: 'solid' },
+  { label: 'Frontend → Auth',          source: isFrontend,   target: isAuth,          category: 'traffic', trafficType: 'request', lineStyle: 'solid' },
+  { label: 'Frontend → Gateway',       source: isFrontend,   target: isGateway,       category: 'traffic', trafficType: 'request', lineStyle: 'solid' },
+
+  // ── TRAFFIC: data ──────────────────────────────────────────────────────
+  { label: 'Backend → Database',       source: isBackend,    target: isDatabase,      category: 'traffic', trafficType: 'data', lineStyle: 'solid' },
+  { label: 'Backend → Cache',          source: isBackend,    target: isCache,         category: 'traffic', trafficType: 'data', lineStyle: 'solid' },
+  { label: 'Backend → Storage',        source: isBackend,    target: isStorage,       category: 'traffic', trafficType: 'data', lineStyle: 'solid' },
+  { label: 'Backend → Search',         source: isBackend,    target: isSearch,        category: 'traffic', trafficType: 'data', lineStyle: 'solid' },
+  { label: 'Backend → VectorDB',       source: isBackend,    target: isVectorDb,      category: 'traffic', trafficType: 'data', lineStyle: 'solid' },
+  { label: 'Backend → LLM',            source: isBackend,    target: isLLM,           category: 'traffic', trafficType: 'data', lineStyle: 'solid' },
+  { label: 'Frontend → Storage',       source: isFrontend,   target: isStorage,       category: 'traffic', trafficType: 'data', lineStyle: 'solid' },
+
+  // ── TRAFFIC: publish / subscribe ───────────────────────────────────────
+  { label: 'Backend → Queue (publish)',     source: isBackend,    target: isQueue,         category: 'traffic', trafficType: 'publish', lineStyle: 'dashed' },
+  { label: 'Queue → Backend (subscribe)',   source: isQueue,      target: isBackend,       category: 'traffic', trafficType: 'subscribe', lineStyle: 'dotted' },
+  { label: 'Backend → Warehouse',           source: isBackend,    target: isDataWarehouse,  category: 'traffic', trafficType: 'publish', lineStyle: 'dashed' },
+
+  // ── TRAFFIC: stream ────────────────────────────────────────────────────
+  { label: 'Service → Monitoring',     source: (t) => !isMonitoring(t) && !isContainer(t), target: isMonitoring, category: 'traffic', trafficType: 'stream', lineStyle: 'thin' },
+
+  // ── PIPELINE ───────────────────────────────────────────────────────────
+  { label: 'Repo → Service',           source: isRepo,       target: isService,       category: 'pipeline', lineStyle: 'dashed' },
+  // Reverse: user drags service→repo, we flip it to repo→service
+  { label: 'Service → Repo (flip)',    source: isService,    target: isRepo,          category: 'pipeline', lineStyle: 'dashed', reverse: true },
+
+  // ── CONFIG ─────────────────────────────────────────────────────────────
+  { label: 'Service → EnvVars',        source: isService,    target: isEnvConfig,     category: 'config', lineStyle: 'dotted' },
+  { label: 'Service → Secrets',        source: isService,    target: isSecrets,       category: 'config', lineStyle: 'dotted' },
+  // Reverse: user drags envvars/secrets→service, we flip
+  { label: 'EnvVars → Service (flip)', source: isEnvConfig,  target: isService,       category: 'config', lineStyle: 'dotted', reverse: true },
+  { label: 'Secrets → Service (flip)', source: isSecrets,    target: isService,       category: 'config', lineStyle: 'dotted', reverse: true },
+
+  // ── DNS ────────────────────────────────────────────────────────────────
+  { label: 'Domain → Routable',        source: isDomain,     target: isRoutable,      category: 'dns', lineStyle: 'solid' },
+  // Reverse: user drags service→domain, we flip
+  { label: 'Routable → Domain (flip)', source: isRoutable,   target: isDomain,        category: 'dns', lineStyle: 'solid', reverse: true },
+];
+
+// ─── Derived Functions ──────────────────────────────────────────────────────
+
+/**
+ * Check if two block types can be connected.
+ * Returns true if any CONNECTION_RULE matches (in either direction).
+ */
+export function canConnect(srcIceType: string, tgtIceType: string, srcNodeType?: string, tgtNodeType?: string): boolean {
+  // Containers can never have edges
+  if (isContainer(srcIceType, srcNodeType) || isContainer(tgtIceType, tgtNodeType)) return false;
+  // Self-connection is never valid (checked at type level — same iceType is fine, same instance is caught elsewhere)
+  return CONNECTION_RULES.some((r) => r.source(srcIceType) && r.target(tgtIceType));
+}
+
+/**
+ * Find the matching rule for a source→target pair.
+ * Returns the first matching rule, or null if no rule matches.
+ */
+export function findConnectionRule(srcIceType: string, tgtIceType: string): ConnectionRule | null {
+  return CONNECTION_RULES.find((r) => r.source(srcIceType) && r.target(tgtIceType)) ?? null;
+}
+
+/**
+ * Given a source iceType, return all node IDs from the provided list
+ * that are valid connection targets.
+ */
+export function getValidTargetIds(
+  srcIceType: string,
+  srcNodeType: string | undefined,
+  nodes: Array<{ id: string; iceType: string; nodeType?: string }>,
+  srcId: string,
+): string[] {
+  if (isContainer(srcIceType, srcNodeType)) return [];
+  return nodes
+    .filter((n) => n.id !== srcId && canConnect(srcIceType, n.iceType, srcNodeType, n.nodeType))
+    .map((n) => n.id);
+}
+
 // ─── Connection Inference ────────────────────────────────────────────────────
 
 export function inferConnectionMeta(src: string, tgt: string): ConnectionMeta {
   const C = CATEGORY_COLORS;
 
-  // PIPELINE
-  if (isRepo(src) && !isRepo(tgt)) return { category: 'pipeline', lineStyle: 'dashed', color: C.pipeline };
-  if (isRepo(tgt) && !isRepo(src)) return { category: 'pipeline', lineStyle: 'dashed', color: C.pipeline, flip: true };
+  // Find matching rule
+  const rule = findConnectionRule(src, tgt);
 
-  // CONFIG
-  if (isEnvConfig(tgt) && !isEnvConfig(src)) return { category: 'config', lineStyle: 'dotted', color: C.config };
-  if (isEnvConfig(src) && !isEnvConfig(tgt))
-    return { category: 'config', lineStyle: 'dotted', color: C.config, flip: true };
-  if (isSecrets(tgt) && !isSecrets(src))
-    return { category: 'config', lineStyle: 'dotted', color: C.config, envVarName: getEnvVarName(tgt) };
-  if (isSecrets(src) && !isSecrets(tgt))
-    return { category: 'config', lineStyle: 'dotted', color: C.config, envVarName: getEnvVarName(src), flip: true };
-
-  // DNS
-  if (isDomain(src) && !isDomain(tgt)) return { category: 'dns', lineStyle: 'solid', color: C.dns };
-  if (isDomain(tgt) && !isDomain(src)) return { category: 'dns', lineStyle: 'solid', color: C.dns, flip: true };
-
-  // TRAFFIC — stream
-  if (isMonitoring(tgt)) return { category: 'traffic', trafficType: 'stream', lineStyle: 'thin', color: C.traffic };
-  if (isMonitoring(src) && !isMonitoring(tgt))
-    return { category: 'traffic', trafficType: 'stream', lineStyle: 'thin', color: C.traffic, flip: true };
-
-  // TRAFFIC — subscribe
-  if (isQueue(src) && isBackend(tgt))
-    return {
-      category: 'traffic',
-      trafficType: 'subscribe',
-      lineStyle: 'dotted',
-      color: C.traffic,
-      envVarName: getEnvVarName(src),
+  if (rule) {
+    const meta: ConnectionMeta = {
+      category: rule.category,
+      lineStyle: rule.lineStyle,
+      color: C[rule.category],
+      ...(rule.trafficType && { trafficType: rule.trafficType }),
+      ...(rule.reverse && { flip: true }),
     };
 
-  // TRAFFIC — publish
-  if (isBackend(src) && isQueue(tgt))
-    return {
-      category: 'traffic',
-      trafficType: 'publish',
-      lineStyle: 'dashed',
-      color: C.traffic,
-      port: getDefaultPort(tgt),
-      envVarName: getEnvVarName(tgt),
-    };
-  if (isBackend(src) && isDataWarehouse(tgt))
-    return {
-      category: 'traffic',
-      trafficType: 'publish',
-      lineStyle: 'dashed',
-      color: C.traffic,
-      envVarName: getEnvVarName(tgt),
-    };
+    // Auto-inject port and env var from the "data target" side
+    const dataTarget = rule.reverse ? src : tgt;
+    const port = getDefaultPort(dataTarget);
+    const envVar = getEnvVarName(dataTarget);
+    if (port) meta.port = port;
+    if (envVar) meta.envVarName = envVar;
 
-  // TRAFFIC — data
-  if (isBackend(src) && isDatabase(tgt))
-    return {
-      category: 'traffic',
-      trafficType: 'data',
-      lineStyle: 'solid',
-      color: C.traffic,
-      port: getDefaultPort(tgt),
-      envVarName: getEnvVarName(tgt),
-    };
-  if (isBackend(src) && isCache(tgt))
-    return {
-      category: 'traffic',
-      trafficType: 'data',
-      lineStyle: 'solid',
-      color: C.traffic,
-      port: 6379,
-      envVarName: getEnvVarName(tgt),
-    };
-  if (isBackend(src) && isStorage(tgt))
-    return {
-      category: 'traffic',
-      trafficType: 'data',
-      lineStyle: 'solid',
-      color: C.traffic,
-      envVarName: getEnvVarName(tgt),
-    };
-  if (isBackend(src) && isSearch(tgt))
-    return {
-      category: 'traffic',
-      trafficType: 'data',
-      lineStyle: 'solid',
-      color: C.traffic,
-      port: 9200,
-      envVarName: getEnvVarName(tgt),
-    };
-  if (isBackend(src) && (isVectorDb(tgt) || isLLM(tgt)))
-    return {
-      category: 'traffic',
-      trafficType: 'data',
-      lineStyle: 'solid',
-      color: C.traffic,
-      envVarName: getEnvVarName(tgt),
-    };
+    // Special case: cache always uses port 6379
+    if (rule.trafficType === 'data' && isCache(dataTarget)) {
+      meta.port = 6379;
+    }
 
-  // TRAFFIC — request
-  if ((isFrontend(src) || isGateway(src)) && isBackend(tgt))
-    return { category: 'traffic', trafficType: 'request', lineStyle: 'solid', color: C.traffic };
-  if (isGateway(src) && isFrontend(tgt))
-    return { category: 'traffic', trafficType: 'request', lineStyle: 'solid', color: C.traffic };
-  if (isBackend(src) && isAuth(tgt))
-    return {
-      category: 'traffic',
-      trafficType: 'request',
-      lineStyle: 'solid',
-      color: C.traffic,
-      envVarName: getEnvVarName(tgt),
-    };
-  if (isBackend(src) && isBackend(tgt))
-    return { category: 'traffic', trafficType: 'request', lineStyle: 'solid', color: C.traffic };
+    return meta;
+  }
 
-  // Default
+  // Default fallback — still allow connection with generic traffic style
   return { category: 'traffic', trafficType: 'request', lineStyle: 'solid', color: C.traffic };
 }
 
@@ -361,33 +394,39 @@ export function wouldCreateCycle(
 // from the same rules used by the UI. Single source of truth.
 
 export function generateAiConnectionPrompt(): string {
+  // Group rules by category for readable output
+  const grouped: Record<ConnectionCategory, ConnectionRule[]> = {
+    traffic: [],
+    pipeline: [],
+    config: [],
+    dns: [],
+  };
+  for (const rule of CONNECTION_RULES) {
+    if (!rule.reverse) grouped[rule.category].push(rule);
+  }
+
   return `## CONNECTION CATEGORIES
 
 Every connection falls into one of 4 categories. The category is auto-determined from block types — set the correct "relationship" value in addEdge.
 
 ### TRAFFIC (green) — runtime network flow between services
 relationship: "connects_to"
-Examples: Frontend → Backend, Backend → Database, Backend → Queue, Gateway → Backend
-Rules:
-- Request (solid line): Frontend/Gateway → Backend, Backend → Backend, Backend → Auth
-- Data (solid line): Backend → Database/Cache/Storage/Search/VectorDB
-- Publish (dashed line): Backend → Queue, Backend → DataWarehouse (async, fire-and-forget)
-- Subscribe (dotted line): Queue → Worker (event consumption)
-- Stream (thin line): Any service → Monitoring/Logs
+Valid connections:
+${grouped.traffic.map((r) => `- ${r.label} (${r.trafficType || 'request'}, ${r.lineStyle} line)`).join('\n')}
 
 ### PIPELINE (purple) — code deployment
 relationship: "connects_to"
-Source.Repository → Service only. Means "this repo's code deploys to this service."
+${grouped.pipeline.map((r) => `- ${r.label}`).join('\n')}
 Direction: ALWAYS repo → service (never service → repo)
 
 ### CONFIG (amber) — deploy-time configuration
 relationship: "depends_on"
-Service → Config.EnvVars or Service → Secrets only. Means "reads config at deploy time."
+${grouped.config.map((r) => `- ${r.label}`).join('\n')}
 Direction: ALWAYS service → config block (never config → service)
 
 ### DNS (cyan) — domain routing
 relationship: "connects_to"
-Networking.Domain → Service/Gateway only. Means "this domain routes to this service."
+${grouped.dns.map((r) => `- ${r.label}`).join('\n')}
 Direction: ALWAYS domain → service (never service → domain)
 
 ### CONTAINERS CANNOT HAVE EDGES

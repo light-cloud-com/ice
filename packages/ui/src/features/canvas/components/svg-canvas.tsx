@@ -44,6 +44,7 @@ import {
   inferConnectionMeta,
   validateConnection,
   wouldCreateCycle,
+  canConnect,
   CATEGORY_TO_RELATIONSHIP,
 } from '../utils/connection-rules';
 import { SvgCompactNode, computeCompactNodeHeight, computeCompactNodeWidth } from './nodes/svg-compact-node';
@@ -1919,6 +1920,26 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     currentPoint: { x: number; y: number };
   } | null>(null);
 
+  /** Compute valid/invalid target states for all nodes during connection drag */
+  const connectionDragTargets = useMemo(() => {
+    if (!drawingConnection) return null;
+    const sourceNode = effectiveNodes.find((n) => n.id === drawingConnection.sourceId);
+    if (!sourceNode) return null;
+    const srcIceType = (sourceNode.data?.iceType as string) || '';
+    const srcNodeType = sourceNode.type;
+
+    const targets = new Map<string, 'valid-target' | 'invalid-target' | 'source'>();
+    targets.set(drawingConnection.sourceId, 'source');
+
+    for (const node of effectiveNodes) {
+      if (node.id === drawingConnection.sourceId) continue;
+      const tgtIceType = (node.data?.iceType as string) || '';
+      const isValid = canConnect(srcIceType, tgtIceType, srcNodeType, node.type);
+      targets.set(node.id, isValid ? 'valid-target' : 'invalid-target');
+    }
+    return targets;
+  }, [drawingConnection, effectiveNodes]);
+
   /** Start drawing a connection from a port */
   const handleConnectionPortDown = useCallback(
     (e: React.MouseEvent) => {
@@ -1977,6 +1998,14 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
       if (targetNode) {
         const sourceNode = effectiveNodes.find((n) => n.id === drawingConnection.sourceId);
+        const srcIceTypeCheck = (sourceNode?.data?.iceType as string) || '';
+        const tgtIceTypeCheck = (targetNode.data?.iceType as string) || '';
+
+        // ── Block invalid connections based on CONNECTION_RULES ──
+        if (!canConnect(srcIceTypeCheck, tgtIceTypeCheck, sourceNode?.type, targetNode.type)) {
+          setDrawingConnection(null);
+          return;
+        }
 
         // ── Connection constraints: one Source and one EnvVars per service ──
         if (sourceNode && card) {
@@ -2429,6 +2458,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                     onRenameCancel={handleRenameCancel}
                     lod={lod}
                     zoom={viewport.zoom}
+                    connectionDragState={connectionDragTargets?.get(node.id) ?? null}
                   />,
                 );
               }
@@ -2454,6 +2484,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                     connectedPipelineStatuses={getConnectedPipelineStatuses(node)}
                     lod={lod}
                     zoom={viewport.zoom}
+                    connectionDragState={connectionDragTargets?.get(node.id) ?? null}
                   />,
                 );
               }
@@ -2477,6 +2508,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                   connectedPipelineStatuses={getConnectedPipelineStatuses(node)}
                   lod={lod}
                   zoom={viewport.zoom}
+                  connectionDragState={connectionDragTargets?.get(node.id) ?? null}
                 />,
               );
             })}
@@ -2502,11 +2534,31 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                 cp2 = { x: currentPoint.x, y: currentPoint.y - offset * sign };
               }
               const pathD = `M ${sourcePoint.x} ${sourcePoint.y} C ${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${currentPoint.x} ${currentPoint.y}`;
+
+              // Determine preview color based on what's under the cursor
+              let previewColor = '#22d3ee'; // cyan default (empty space)
+              if (connectionDragTargets) {
+                for (let i = effectiveNodes.length - 1; i >= 0; i--) {
+                  const node = effectiveNodes[i];
+                  if (node.id === drawingConnection.sourceId) continue;
+                  if (
+                    currentPoint.x >= node.x &&
+                    currentPoint.x <= node.x + node.width &&
+                    currentPoint.y >= node.y &&
+                    currentPoint.y <= node.y + node.height
+                  ) {
+                    const state = connectionDragTargets.get(node.id);
+                    previewColor = state === 'valid-target' ? '#22c55e' : '#ef4444'; // green or red
+                    break;
+                  }
+                }
+              }
+
               return (
                 <g className="connection-preview" style={{ pointerEvents: 'none' }}>
-                  <path d={pathD} stroke="#22d3ee" strokeWidth={2} fill="none" strokeDasharray="8 4" opacity={0.7} />
-                  <circle cx={sourcePoint.x} cy={sourcePoint.y} r={4} fill="#22d3ee" opacity={0.9} />
-                  <circle cx={currentPoint.x} cy={currentPoint.y} r={4} fill="#22d3ee" opacity={0.6} />
+                  <path d={pathD} stroke={previewColor} strokeWidth={2} fill="none" strokeDasharray="8 4" opacity={0.7} />
+                  <circle cx={sourcePoint.x} cy={sourcePoint.y} r={4} fill={previewColor} opacity={0.9} />
+                  <circle cx={currentPoint.x} cy={currentPoint.y} r={4} fill={previewColor} opacity={0.6} />
                 </g>
               );
             })()}

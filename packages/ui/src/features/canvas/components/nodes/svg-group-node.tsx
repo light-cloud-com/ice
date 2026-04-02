@@ -36,6 +36,8 @@ interface SvgGroupNodeProps {
   lod?: number;
   /** Current zoom level — used for inverse-zoom scaling at low LOD */
   zoom?: number;
+  /** Connection drag state: containers are always invalid targets */
+  connectionDragState?: 'valid-target' | 'invalid-target' | 'source' | null;
 }
 
 // ─── Shared constants ──────────────────────────────────────────────────────────
@@ -71,6 +73,7 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
     onRenameCancel,
     lod = 3,
     zoom = 1,
+    connectionDragState = null,
   }) => {
     const { x, y, width, height, label, data } = node;
     const [isHovered, setIsHovered] = useState(false);
@@ -274,7 +277,7 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
       <g
         className="svg-group-node"
         data-node-id={node.id}
-        style={{ cursor: 'move', opacity: isDragging ? 0.85 : 1 }}
+        style={{ cursor: 'move', opacity: connectionDragState === 'invalid-target' ? 0.3 : isDragging ? 0.85 : 1 }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >

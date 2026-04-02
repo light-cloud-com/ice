@@ -8,13 +8,12 @@ import { createBlueprintFromResource } from '@ice/core/resources';
 import type { BlockBlueprint } from '../../types';
 
 export const ossBlueprint: BlockBlueprint = createBlueprintFromResource('oss', {
-  blockType: 'oss',
+  iceType: 'Storage.OSS',
   category: 'storage',
   name: 'OSS',
   description: 'Alibaba Cloud object storage. China-optimized CDN.',
   icon: 'HardDrive',
   providers: ['alibaba'],
   nodeDataDefaults: {
-    iceType: 'Storage.OSS',
   },
 });

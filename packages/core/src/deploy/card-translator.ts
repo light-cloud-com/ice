@@ -67,13 +67,13 @@ export interface SkippedNode {
 // =============================================================================
 
 const GCP_TYPE_MAP: Record<string, string> = {
-  'Application.StaticSite': 'gcp.storage.bucket',
-  'Application.SSRSite': 'gcp.run.service',
-  'Application.Container': 'gcp.run.service',
-  'Application.BackendAPI': 'gcp.run.service',
-  'Application.Worker': 'gcp.run.job',
-  'Application.CronJob': 'gcp.cloudscheduler.job',
-  'Application.ServerlessFunction': 'gcp.cloudfunctions.function',
+  'Compute.StaticSite': 'gcp.storage.bucket',
+  'Compute.SSRSite': 'gcp.run.service',
+  'Compute.Container': 'gcp.run.service',
+  'Compute.BackendAPI': 'gcp.run.service',
+  'Compute.Worker': 'gcp.run.job',
+  'Compute.CronJob': 'gcp.cloudscheduler.job',
+  'Compute.ServerlessFunction': 'gcp.cloudfunctions.function',
   'Database.PostgreSQL': 'gcp.sql.databaseInstance',
   'Database.MySQL': 'gcp.sql.databaseInstance',
   'Database.Firestore': 'gcp.firestore.database',
@@ -95,7 +95,7 @@ const GCP_TYPE_MAP: Record<string, string> = {
   'AI.ModelServing': 'gcp.aiplatform.endpoint',
   'Analytics.DataWarehouse': 'gcp.bigquery.dataset',
   'Analytics.Search': 'gcp.discoveryengine.searchEngine',
-  'Networking.Domain': 'gcp.run.domainMapping',
+  'Network.Domain': 'gcp.run.domainMapping',
 };
 
 // =============================================================================
@@ -103,13 +103,13 @@ const GCP_TYPE_MAP: Record<string, string> = {
 // =============================================================================
 
 const AWS_TYPE_MAP: Record<string, string> = {
-  'Application.StaticSite': 'aws.s3.bucket',
-  'Application.SSRSite': 'aws.ecs.service',
-  'Application.Container': 'aws.ecs.service',
-  'Application.BackendAPI': 'aws.ecs.service',
-  'Application.Worker': 'aws.ecs.service',
-  'Application.CronJob': 'aws.events.rule',
-  'Application.ServerlessFunction': 'aws.lambda.function',
+  'Compute.StaticSite': 'aws.s3.bucket',
+  'Compute.SSRSite': 'aws.ecs.service',
+  'Compute.Container': 'aws.ecs.service',
+  'Compute.BackendAPI': 'aws.ecs.service',
+  'Compute.Worker': 'aws.ecs.service',
+  'Compute.CronJob': 'aws.events.rule',
+  'Compute.ServerlessFunction': 'aws.lambda.function',
   'Database.PostgreSQL': 'aws.rds.dbInstance',
   'Database.MySQL': 'aws.rds.dbInstance',
   'Database.DynamoDB': 'aws.dynamodb.table',
@@ -137,13 +137,13 @@ const AWS_TYPE_MAP: Record<string, string> = {
 // =============================================================================
 
 const AZURE_TYPE_MAP: Record<string, string> = {
-  'Application.StaticSite': 'azure.storage.staticSite',
-  'Application.SSRSite': 'azure.appservice.webApp',
-  'Application.Container': 'azure.containerapp.containerApp',
-  'Application.BackendAPI': 'azure.appservice.webApp',
-  'Application.Worker': 'azure.containerapp.containerApp',
-  'Application.CronJob': 'azure.logicapp.workflow',
-  'Application.ServerlessFunction': 'azure.functions.functionApp',
+  'Compute.StaticSite': 'azure.storage.staticSite',
+  'Compute.SSRSite': 'azure.appservice.webApp',
+  'Compute.Container': 'azure.containerapp.containerApp',
+  'Compute.BackendAPI': 'azure.appservice.webApp',
+  'Compute.Worker': 'azure.containerapp.containerApp',
+  'Compute.CronJob': 'azure.logicapp.workflow',
+  'Compute.ServerlessFunction': 'azure.functions.functionApp',
   'Database.PostgreSQL': 'azure.dbforpostgresql.server',
   'Database.MySQL': 'azure.dbformysql.server',
   'Database.CosmosDB': 'azure.cosmosdb.account',
@@ -166,7 +166,7 @@ const AZURE_TYPE_MAP: Record<string, string> = {
 };
 
 // iceTypes that are UI-only and should not be deployed
-const UI_ONLY_TYPES = new Set(['Log.Terminal']);
+const UI_ONLY_TYPES = new Set(['Monitoring.Terminal']);
 
 // iceTypes that are external services (not GCP-managed)
 const EXTERNAL_TYPES = new Set(['Database.MongoDB']);

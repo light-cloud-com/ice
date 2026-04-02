@@ -36,9 +36,9 @@ const ENTRY_TYPES = new Set([
   'Network.CDN',
   'Network.APIGateway',
   'Network.Gateway',
-  'Application.StaticSite',
-  'Application.SSRSite',
-  'Application.Container',
+  'Compute.StaticSite',
+  'Compute.SSRSite',
+  'Compute.Container',
 ]);
 
 /** Internal/placeholder domains that should NOT count as public */
@@ -79,11 +79,11 @@ const NEVER_EXPOSED_TYPES = new Set([
   'Security.Policy',
   'Monitoring.Log',
   'Monitoring.Alert',
-  'Log.Terminal',
+  'Monitoring.Terminal',
   'Config.Environment',
   'Source.Repository',
-  'Application.Worker',
-  'Application.CronJob',
+  'Compute.Worker',
+  'Compute.CronJob',
 ]);
 
 /**
@@ -210,17 +210,17 @@ function traceToVisibleNodes(
 }
 
 /**
- * Filter exposed nodes to frontend-only when Block.Frontend containers exist.
+ * Filter exposed nodes to frontend-only when Group.Frontend containers exist.
  * Public traffic should flow: User → Frontend → Backend (via API Gateway),
  * never directly to backend services.
  */
 function filterToFrontend(exposed: CanvasNode[], allNodes: CanvasNode[], edges: EdgeLike[]): CanvasNode[] {
-  // Find all Group.Frontend / Block.Frontend container IDs
+  // Find all Group.Frontend container IDs
   const frontendBlockIds = new Set(
     allNodes
       .filter((n) => {
         const iceType = (n.data?.iceType as string) || '';
-        return iceType === 'Group.Frontend' || iceType === 'Block.Frontend';
+        return iceType === 'Group.Frontend';
       })
       .map((n) => n.id),
   );

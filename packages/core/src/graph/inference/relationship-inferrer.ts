@@ -290,7 +290,7 @@ export class RelationshipInferrer {
   // ---------------------------------------------------------------------------
 
   private is_compute_resource(node: Node): boolean {
-    return node.type.startsWith('Application.') || node.type.startsWith('Compute.');
+    return node.type.startsWith('Compute.') || node.type.startsWith('Compute.');
   }
 
   private find_node_by_reference(reference: string): Node | undefined {

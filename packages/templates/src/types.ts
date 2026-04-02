@@ -112,8 +112,8 @@ export interface GCPTemplate {
 
 /** A block reference within a composed template */
 export interface TemplateBlock {
-  /** Blueprint block type (e.g. 'scalable-backend', 'database') */
-  blockType: string;
+  /** Canonical block type in {Category}.{Resource} format, e.g. 'Database.PostgreSQL' */
+  iceType: string;
   /** Display label override (e.g. 'API Service' instead of 'Scalable Backend') */
   label: string;
   /** Canvas position */

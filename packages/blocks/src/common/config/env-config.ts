@@ -1,7 +1,7 @@
 import type { BlockBlueprint } from '../../types';
 
 export const envConfigBlueprint: BlockBlueprint = {
-  blockType: 'env-config',
+  iceType: 'Config.Environment',
   resourceId: 'env-config',
   name: 'Environment Variables',
   description: 'Key-value environment variables. Connect to services that need them.',
@@ -9,7 +9,7 @@ export const envConfigBlueprint: BlockBlueprint = {
   category: 'config',
   providers: ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean'],
   nodeData: {
-    iceType: 'Config.EnvVars',
+    iceType: 'Config.Environment',
     behavior: 'config',
     variables: [],
     label: 'Environment Variables',

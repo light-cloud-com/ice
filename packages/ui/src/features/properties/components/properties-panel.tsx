@@ -10,7 +10,7 @@
  * 3. Edge selected → Relationship, protocol, port fields
  */
 
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Info } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { IceSelect } from '../../../shared/components/ui/ice-select';
 import { useSelector, useDispatch } from 'react-redux';
@@ -54,6 +54,16 @@ interface OptionDetail {
   description?: string;
   cost?: string;
   provider?: string;
+  tooltip?: string;
+}
+
+interface CustomInputConfig {
+  type: 'number' | 'string';
+  unit: string;
+  min?: number;
+  max?: number;
+  step?: number;
+  placeholder?: string;
 }
 
 interface HighLevelProperty {
@@ -68,6 +78,8 @@ interface HighLevelProperty {
   placeholder?: string;
   addLabel?: string;
   optionDetails?: OptionDetail[];
+  tooltip?: string;
+  customInput?: CustomInputConfig;
 }
 
 interface ProviderImpl {
@@ -463,36 +475,108 @@ const RichSelectField: React.FC<{
   </div>
 );
 
+// ─── Tooltip label ────────────────────────────────────────────────────────
+
+const PropertyLabel: React.FC<{ label: string; tooltip?: string }> = ({ label, tooltip }) => {
+  const [showTooltip, setShowTooltip] = React.useState(false);
+  return (
+    <span className="text-ice-xs text-ice-text-3 shrink-0 inline-flex items-center gap-1">
+      {label}
+      {tooltip && (
+        <span
+          className="relative inline-flex"
+          onMouseEnter={() => setShowTooltip(true)}
+          onMouseLeave={() => setShowTooltip(false)}
+        >
+          <Info className="w-3 h-3 text-ice-text-3/30 hover:text-ice-text-3/60 cursor-help transition-colors" />
+          {showTooltip && (
+            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 z-[9999] w-56 px-2 py-1.5 rounded text-ice-2xs leading-tight text-ice-text-2 bg-ice-overlay border border-ice-border shadow-lg pointer-events-none">
+              {tooltip}
+            </span>
+          )}
+        </span>
+      )}
+    </span>
+  );
+};
+
+// ─── Custom value input (shown when 'custom' option is selected) ──────────
+
+const CustomValueInput: React.FC<{
+  config: CustomInputConfig;
+  value: unknown;
+  onChange: (value: unknown) => void;
+}> = ({ config, value, onChange }) => {
+  const numVal = value != null ? String(value) : '';
+  return (
+    <div className="flex items-center gap-1.5 mt-1 ml-auto" style={{ width: '160px' }}>
+      <input
+        type={config.type}
+        value={numVal}
+        min={config.min}
+        max={config.max}
+        step={config.step}
+        placeholder={config.placeholder}
+        onChange={(e) => {
+          const v = config.type === 'number' ? (e.target.value ? Number(e.target.value) : '') : e.target.value;
+          onChange(v);
+        }}
+        className={cn(
+          'flex-1 h-6 px-1.5 rounded text-ice-xs text-ice-text-1 bg-transparent',
+          'border-b border-ice-border/50 hover:border-ice-text-3/50 focus:border-ice-accent',
+          'outline-none transition-colors placeholder:text-ice-text-3/30',
+        )}
+      />
+      <span className="text-ice-2xs text-ice-text-3/50 shrink-0">{config.unit}</span>
+    </div>
+  );
+};
+
 // ─── Tiered property fields ────────────────────────────────────────────────
 
 function renderPropertyField(
   prop: HighLevelProperty,
   value: unknown,
   onChange: (field: string, value: unknown) => void,
+  nodeData?: Record<string, unknown>,
 ): React.ReactNode {
   // Select with optionDetails — use IceSelect dropdown
   if (prop.type === 'select' && prop.optionDetails && prop.optionDetails.length > 0) {
     const strVal = value != null ? String(value) : (prop.default != null ? String(prop.default) : '');
+    const isCustomSelected = strVal === 'custom' && prop.customInput;
+    const customVal = nodeData?.[`${prop.name}_custom`];
     return (
-      <div key={prop.name} className="flex items-center justify-between gap-2 py-1">
-        <span className="text-ice-xs text-ice-text-3 shrink-0">{prop.label}</span>
-        <IceSelect
-          value={strVal}
-          width="160px"
-          onChange={(v) => {
-            onChange(prop.name, v);
-            const detail = prop.optionDetails!.find((o) => o.value === v);
-            if (detail) {
-              const displayParts = [detail.label, detail.description].filter(Boolean);
-              onChange(`${prop.name}_display`, displayParts.join(' \u00b7 '));
-            }
-          }}
-          options={prop.optionDetails.map((o) => ({
-            value: o.value,
-            label: o.label,
-            description: o.cost ? `${o.description || ''} ${o.cost}`.trim() : o.description,
-          }))}
-        />
+      <div key={prop.name} className="py-1">
+        <div className="flex items-center justify-between gap-2">
+          <PropertyLabel label={prop.label} tooltip={prop.tooltip} />
+          <IceSelect
+            value={strVal}
+            width="160px"
+            onChange={(v) => {
+              onChange(prop.name, v);
+              const detail = prop.optionDetails!.find((o) => o.value === v);
+              if (detail) {
+                const displayParts = [detail.label, detail.description].filter(Boolean);
+                onChange(`${prop.name}_display`, displayParts.join(' \u00b7 '));
+              }
+            }}
+            options={prop.optionDetails.map((o) => ({
+              value: o.value,
+              label: o.label,
+              description: o.cost ? `${o.description || ''} ${o.cost}`.trim() : o.description,
+            }))}
+          />
+        </div>
+        {isCustomSelected && (
+          <CustomValueInput
+            config={prop.customInput!}
+            value={customVal}
+            onChange={(v) => {
+              onChange(`${prop.name}_custom`, v);
+              onChange(`${prop.name}_display`, `Custom: ${v} ${prop.customInput!.unit}`);
+            }}
+          />
+        )}
       </div>
     );
   }
@@ -522,32 +606,49 @@ function renderPropertyField(
   }
   if (prop.type === 'boolean') {
     return (
-      <BooleanField
-        key={prop.name}
-        label={prop.label}
-        value={value != null ? !!value : !!prop.default}
-        onChange={(v) => onChange(prop.name, v)}
-      />
+      <div key={prop.name} className="flex items-center justify-between gap-2 py-1">
+        <PropertyLabel label={prop.label} tooltip={prop.tooltip} />
+        <button
+          onClick={() => onChange(prop.name, value != null ? !value : !prop.default)}
+          className={cn(
+            'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors',
+            (value != null ? !!value : !!prop.default) ? 'bg-ice-accent' : 'bg-ice-border/50',
+          )}
+        >
+          <span
+            className={cn(
+              'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition-transform',
+              (value != null ? !!value : !!prop.default) ? 'translate-x-4' : 'translate-x-0',
+            )}
+          />
+        </button>
+      </div>
     );
   }
   if (prop.type === 'number') {
     return (
-      <NumberField
-        key={prop.name}
-        label={prop.label}
-        value={value != null ? Number(value) : prop.default != null ? Number(prop.default) : ''}
-        onChange={(v) => onChange(prop.name, v)}
-      />
+      <div key={prop.name} className="flex items-center justify-between gap-2 py-1">
+        <PropertyLabel label={prop.label} tooltip={prop.tooltip} />
+        <input
+          type="number"
+          value={value != null ? Number(value) : prop.default != null ? Number(prop.default) : ''}
+          onChange={(e) => onChange(prop.name, e.target.value ? Number(e.target.value) : '')}
+          className="w-20 h-6 px-1.5 rounded text-ice-xs text-ice-text-1 bg-transparent border-b border-ice-border/50 hover:border-ice-text-3/50 focus:border-ice-accent outline-none transition-colors text-right"
+        />
+      </div>
     );
   }
   return (
-    <TextField
-      key={prop.name}
-      label={prop.label}
-      value={value != null ? String(value) : ''}
-      onChange={(v) => onChange(prop.name, v)}
-      placeholder={prop.placeholder}
-    />
+    <div key={prop.name} className="flex items-center justify-between gap-2 py-1">
+      <PropertyLabel label={prop.label} tooltip={prop.tooltip} />
+      <input
+        type="text"
+        value={value != null ? String(value) : ''}
+        placeholder={prop.placeholder}
+        onChange={(e) => onChange(prop.name, e.target.value)}
+        className="flex-1 max-w-[160px] h-6 px-1.5 rounded text-ice-xs text-ice-text-1 bg-transparent border-b border-ice-border/50 hover:border-ice-text-3/50 focus:border-ice-accent outline-none transition-colors placeholder:text-ice-text-3/30"
+      />
+    </div>
   );
 }
 
@@ -575,7 +676,7 @@ const PropertyFields: React.FC<{
       {/* Essential fields — always visible */}
       {essential.length > 0 && (
         <Section title="Configuration">
-          {essential.map((prop) => renderPropertyField(filterByProvider(prop), nodeData[prop.name], onFieldChange))}
+          {essential.map((prop) => renderPropertyField(filterByProvider(prop), nodeData[prop.name], onFieldChange, nodeData))}
         </Section>
       )}
 
@@ -591,7 +692,7 @@ const PropertyFields: React.FC<{
           </button>
           {showMore && (
             <Section title="Details">
-              {detailed.map((prop) => renderPropertyField(filterByProvider(prop), nodeData[prop.name], onFieldChange))}
+              {detailed.map((prop) => renderPropertyField(filterByProvider(prop), nodeData[prop.name], onFieldChange, nodeData))}
             </Section>
           )}
         </>
@@ -787,7 +888,7 @@ export const PropertiesPanel: React.FC = () => {
           {(() => {
             const sourceId = selectedEdge.source;
             const envNode = activeCard.nodes.find((n) => {
-              if ((n.data?.iceType as string) !== 'Config.EnvVars') return false;
+              if ((n.data?.iceType as string) !== 'Config.Environment') return false;
               return activeCard.edges.some(
                 (e) => (e.source === sourceId && e.target === n.id) || (e.target === sourceId && e.source === n.id),
               );
@@ -959,19 +1060,19 @@ export const PropertiesPanel: React.FC = () => {
         {(() => {
           const hasDeployment = !!selectedNode.data?.provider_id;
           const hasSource =
-            (iceType.startsWith('Application.') || iceType === 'Network.Gateway' || iceType.startsWith('Block.')) &&
+            (iceType.startsWith('Compute.') || iceType === 'Network.Gateway') &&
             iceType !== 'Source.Repository';
           const activeTab = propsTab;
 
           // Tabs are derived from the node's actual content — not hardcoded
           const tabs: Array<{ id: string; label: string; show: boolean; dot?: boolean }> = [];
-          if (dbProperties.length > 0 || iceType === 'Config.EnvVars' || iceType === 'Networking.Domain') {
+          if (dbProperties.length > 0 || iceType === 'Config.Environment' || iceType === 'Network.Domain') {
             tabs.push({ id: 'config', label: t('properties.tabs.config'), show: true });
           }
           if (isScalable) {
             tabs.push({ id: 'scaling', label: t('properties.tabs.scaling'), show: true });
           }
-          if (iceType === 'Networking.Domain') {
+          if (iceType === 'Network.Domain') {
             tabs.push({ id: 'domain', label: t('properties.tabs.domain'), show: true });
           }
           if (hasSource || iceType === 'Source.Repository') {
@@ -1151,7 +1252,7 @@ export const PropertiesPanel: React.FC = () => {
               )}
 
               {/* ════ DOMAIN TAB ════ */}
-              {activeTab === 'domain' && iceType === 'Networking.Domain' && (
+              {activeTab === 'domain' && iceType === 'Network.Domain' && (
                 <Section title="">
                   <div className="space-y-2">
                     <TextField
@@ -1242,7 +1343,7 @@ export const PropertiesPanel: React.FC = () => {
                   )}
 
                   {/* Environment Variables */}
-                  {iceType === 'Config.EnvVars' && (
+                  {iceType === 'Config.Environment' && (
                     <EnvVarsEditor
                       variables={
                         (selectedNode?.data?.variables as Array<{ name: string; value: string; isSecret?: boolean }>) ||

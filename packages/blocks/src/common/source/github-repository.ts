@@ -1,7 +1,7 @@
 import type { BlockBlueprint } from '../../types';
 
 export const githubRepositoryBlueprint: BlockBlueprint = {
-  blockType: 'github-repository',
+  iceType: 'Source.Repository',
   resourceId: 'github-repository',
   name: 'GitHub Repository',
   description: 'Source code repository. Connect to a service to deploy from.',

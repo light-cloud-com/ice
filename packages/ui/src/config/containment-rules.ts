@@ -6,7 +6,7 @@
  *
  * Containment hierarchy:
  * - VPC → Subnet → (Instances, Databases, etc.)
- * - Blocks contain their underlying resources
+ * - Groups contain related resources
  */
 
 // =============================================================================
@@ -16,22 +16,6 @@
 export type ContainerType =
   | 'Network.VPC'
   | 'Network.Subnet'
-  | 'Block.StaticSite'
-  | 'Block.ScalableBackend'
-  | 'Block.Worker'
-  | 'Block.Database'
-  | 'Block.Cache'
-  | 'Block.Storage'
-  | 'Block.Gateway'
-  | 'Block.Queue'
-  | 'Block.ServerlessFunction'
-  | 'Block.ScheduledTask'
-  | 'Block.Auth'
-  | 'Block.Secrets'
-  | 'Block.CDN'
-  | 'Block.EventStream'
-  | 'Block.NoSQLDatabase'
-  | 'Block.Logs'
   | 'Group.Frontend'
   | 'Group.Services'
   | 'Group.Data'
@@ -69,9 +53,9 @@ export const CONTAINMENT_RULES: ContainmentRule[] = [
   {
     parent: 'Network.Subnet',
     allowedChildren: [
-      'Application.Container',
-      'Application.Function',
-      'Application.VM',
+      'Compute.Container',
+      'Compute.Function',
+      'Compute.VM',
       'Database.PostgreSQL',
       'Database.MySQL',
       'Database.MongoDB',
@@ -82,125 +66,32 @@ export const CONTAINMENT_RULES: ContainmentRule[] = [
     description: 'Subnet can contain compute and data resources',
   },
 
-  // Block containers (Level 1 blocks containing Level 2 resources)
-  {
-    parent: 'Block.StaticSite',
-    allowedChildren: ['Storage.Bucket', 'Network.CDN', 'Network.DNS', 'Security.Certificate'],
-    description: 'Static site block contains storage and CDN resources',
-  },
-  {
-    parent: 'Block.ScalableBackend',
-    allowedChildren: [
-      'Application.Container',
-      'Application.Function',
-      'Network.LoadBalancer',
-      'Network.Gateway',
-      'Database.PostgreSQL',
-      'Database.MySQL',
-      'Database.Redis',
-      'Messaging.Queue',
-    ],
-    description: 'Scalable backend block contains compute, database, and messaging',
-  },
-  {
-    parent: 'Block.Worker',
-    allowedChildren: ['Application.Container', 'Application.Function', 'Messaging.Queue', 'Messaging.Topic'],
-    description: 'Worker block contains compute and messaging',
-  },
-  {
-    parent: 'Block.Database',
-    allowedChildren: ['Database.PostgreSQL', 'Database.MySQL', 'Storage.Disk', 'Security.Secret'],
-    description: 'Database block contains database instances and storage',
-  },
-  {
-    parent: 'Block.Cache',
-    allowedChildren: ['Database.Redis', 'Database.Memcached'],
-    description: 'Cache block contains cache instances',
-  },
-  {
-    parent: 'Block.Storage',
-    allowedChildren: ['Storage.Bucket', 'Storage.Disk', 'Storage.FileStore'],
-    description: 'Storage block contains storage resources',
-  },
-  {
-    parent: 'Block.Gateway',
-    allowedChildren: ['Network.Gateway', 'Network.LoadBalancer', 'Security.Certificate', 'Security.WAF'],
-    description: 'Gateway block contains API gateway and security',
-  },
-  {
-    parent: 'Block.Queue',
-    allowedChildren: ['Messaging.Queue', 'Messaging.Topic', 'Messaging.DeadLetterQueue'],
-    description: 'Queue block contains messaging resources',
-  },
-  {
-    parent: 'Block.ServerlessFunction',
-    allowedChildren: ['Application.Function', 'Security.IAMRole', 'Monitoring.Log'],
-    description: 'Serverless function block contains function and IAM',
-  },
-  {
-    parent: 'Block.ScheduledTask',
-    allowedChildren: ['Application.CronJob', 'Application.Function', 'Messaging.Queue'],
-    description: 'Scheduled task block contains cron jobs and functions',
-  },
-  {
-    parent: 'Block.Auth',
-    allowedChildren: ['Security.Identity', 'Security.IAMRole', 'Security.Policy', 'Security.Certificate'],
-    description: 'Auth block contains identity and access management resources',
-  },
-  {
-    parent: 'Block.Secrets',
-    allowedChildren: ['Security.Secret', 'Security.Key'],
-    description: 'Secrets block contains secrets and encryption keys',
-  },
-  {
-    parent: 'Block.CDN',
-    allowedChildren: ['Network.CDN', 'Network.DNS', 'Security.Certificate'],
-    description: 'CDN block contains content delivery and DNS resources',
-  },
-  {
-    parent: 'Block.EventStream',
-    allowedChildren: ['Messaging.Queue', 'Messaging.Topic', 'Messaging.PubSub'],
-    description: 'Event stream block contains messaging and pub/sub resources',
-  },
-  {
-    parent: 'Block.NoSQLDatabase',
-    allowedChildren: ['Database.MongoDB', 'Database.Firestore', 'Database.BigTable', 'Database.Redis'],
-    description: 'NoSQL database block contains document and key-value stores',
-  },
-  {
-    parent: 'Block.Logs',
-    allowedChildren: ['Monitoring.Log', 'Monitoring.Alert', 'Monitoring.Dashboard'],
-    description: 'Logs block contains logging and monitoring resources',
-  },
-
-  // Organizational groups (used by demo data and templates)
+  // Organizational groups
   {
     parent: 'Group.Frontend',
     allowedChildren: [
-      'Application.Container',
-      'Application.StaticSite',
-      'Application.Function',
+      'Compute.Container',
+      'Compute.StaticSite',
+      'Compute.SSRSite',
+      'Compute.Function',
       'Network.CDN',
       'Network.LoadBalancer',
-      'Block.StaticSite',
-      'Block.CDN',
-      'Block.Gateway',
+      'Network.Gateway',
     ],
-    description: 'Frontend group contains frontend services, CDN, and related blocks',
+    description: 'Frontend group contains frontend services, CDN, and gateways',
   },
   {
     parent: 'Group.Services',
     allowedChildren: [
-      'Application.Container',
-      'Application.Function',
-      'Application.VM',
-      'Block.ScalableBackend',
-      'Block.Worker',
-      'Block.ServerlessFunction',
-      'Block.ScheduledTask',
-      'Block.Gateway',
+      'Compute.Container',
+      'Compute.Function',
+      'Compute.VM',
+      'Compute.Worker',
+      'Compute.ServerlessFunction',
+      'Compute.CronJob',
+      'Network.Gateway',
     ],
-    description: 'Services group contains backend compute resources and related blocks',
+    description: 'Services group contains backend compute resources',
   },
   {
     parent: 'Group.Data',
@@ -214,12 +105,8 @@ export const CONTAINMENT_RULES: ContainmentRule[] = [
       'Database.Aurora',
       'Storage.Bucket',
       'Storage.Disk',
-      'Block.Database',
-      'Block.NoSQLDatabase',
-      'Block.Cache',
-      'Block.Storage',
     ],
-    description: 'Data group contains databases, storage, and related blocks',
+    description: 'Data group contains databases and storage',
   },
   {
     parent: 'Group.Messaging',
@@ -229,25 +116,20 @@ export const CONTAINMENT_RULES: ContainmentRule[] = [
       'Messaging.Kafka',
       'Messaging.PubSub',
       'Messaging.EventBridge',
-      'Block.Queue',
-      'Block.EventStream',
+      'Messaging.RabbitMQ',
     ],
-    description: 'Messaging group contains messaging, event resources, and related blocks',
+    description: 'Messaging group contains messaging and event resources',
   },
   {
     parent: 'Group.Monitoring',
     allowedChildren: [
-      'Observability.Metrics',
-      'Observability.Dashboard',
-      'Observability.Tracing',
-      'Observability.Logs',
       'Monitoring.Log',
       'Monitoring.Alert',
       'Monitoring.Dashboard',
+      'Monitoring.Terminal',
       'Monitoring.LogGroup',
-      'Block.Logs',
     ],
-    description: 'Monitoring group contains observability resources and related blocks',
+    description: 'Monitoring group contains observability resources',
   },
   {
     parent: 'Group.External',
@@ -259,15 +141,13 @@ export const CONTAINMENT_RULES: ContainmentRule[] = [
       'External.Auth',
       'External.Storage',
       'External.API',
-      'Block.Secrets',
-      'Block.Auth',
       'Security.Secret',
       'Security.Key',
       'Security.IAMRole',
       'Security.Policy',
       'Security.Identity',
     ],
-    description: 'External group contains third-party integrations and security blocks',
+    description: 'External group contains third-party integrations and security',
   },
 ];
 
@@ -304,7 +184,7 @@ for (const rule of CONTAINMENT_RULES) {
  * Check if a child type can be contained within a parent type
  */
 export function canContain(parentType: string, childType: string): boolean {
-  // User-created groups (Group.Custom) accept any child — blocks, resources, anything
+  // User-created groups (Group.Custom) accept any child
   if (parentType === 'Group.Custom') return true;
 
   const allowedChildren = parentToChildrenMap.get(parentType as ContainerType);
@@ -354,10 +234,10 @@ export function getAllowedChildren(parentType: string): string[] {
  */
 export function isContainer(nodeType: string): boolean {
   if (parentToChildrenMap.has(nodeType as ContainerType)) return true;
-  // VPC/Subnet are always containers even if not explicitly listed
+  // VPC/Subnet are always containers
   if (nodeType === 'Network.VPC' || nodeType === 'Network.Subnet') return true;
-  // User-created groups are always containers
-  if (nodeType === 'Group.Custom') return true;
+  // Groups are always containers
+  if (nodeType.startsWith('Group.')) return true;
   return false;
 }
 
@@ -394,13 +274,13 @@ export function validatePlacement(nodeType: string, parentType: string | null): 
 
 /**
  * Get containment depth for a node type
- * Level 0: Can be at root (VPC, Blocks)
- * Level 1: Must be in VPC or Block (Subnet, resources in blocks)
- * Level 2: Must be in Subnet (instances, databases when not in blocks)
+ * Level 0: Can be at root (Groups, VPCs)
+ * Level 1: Must be in a container (resources in groups, subnets in VPC)
+ * Level 2: Must be in subnet (instances, databases in VPC architecture)
  */
 export function getContainmentDepth(nodeType: string): number {
-  // Groups, blocks, and VPCs are root level
-  if (nodeType.startsWith('Group.') || nodeType.startsWith('Block.') || nodeType === 'Network.VPC') {
+  // Groups and VPCs are root level
+  if (nodeType.startsWith('Group.') || nodeType === 'Network.VPC') {
     return 0;
   }
 
@@ -411,7 +291,7 @@ export function getContainmentDepth(nodeType: string): number {
 
   // Check if can be direct child of root containers
   const parents = getAllowedParents(nodeType);
-  const hasRootParent = parents.some((p) => p.startsWith('Group.') || p.startsWith('Block.') || p === 'Network.VPC');
+  const hasRootParent = parents.some((p) => p.startsWith('Group.') || p === 'Network.VPC');
 
   if (hasRootParent) {
     return 1;

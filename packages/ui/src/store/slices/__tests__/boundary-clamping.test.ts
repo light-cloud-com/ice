@@ -31,7 +31,7 @@ function makeNode(id: string, overrides: Partial<CardNode> = {}): CardNode {
     position: { x: 100, y: 100 },
     width: 200,
     height: 100,
-    data: { label: id, iceType: 'Application.Container' },
+    data: { label: id, iceType: 'Compute.Container' },
     ...overrides,
   };
 }

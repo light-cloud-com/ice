@@ -293,7 +293,7 @@ export function autoLayout(
     const isSubnet = iceType === 'Network.Subnet';
     const isLargeContainer = isVPC || isSubnet;
     const isGroup = iceType.startsWith('Group.') || node.type === 'container' || node.type === ('group' as any);
-    const isBlock = iceType.startsWith('Block.') || node.type === 'block';
+    const isBlock = node.type === 'block';
 
     if (isFolded || childIds.length === 0) {
       const helper = isHelperNode(iceType);
@@ -1514,7 +1514,7 @@ function gridLayout(
       subnets.push(n);
     } else if (iceType.startsWith('Group.') || node.type === 'container' || node.type === ('group' as any)) {
       groups.push(n);
-    } else if (iceType.startsWith('Block.') || node.type === 'block') {
+    } else if (node.type === 'block') {
       blocks.push(n);
     } else {
       resources.push(n);
@@ -1799,7 +1799,7 @@ export function calculateZIndex(iceType: string, depth: number = 0): number {
   }
 
   // Blocks and other containers
-  if (iceType.startsWith('Block.') || isContainerType(iceType)) {
+  if (isContainerType(iceType)) {
     return 20 + depth;
   }
 

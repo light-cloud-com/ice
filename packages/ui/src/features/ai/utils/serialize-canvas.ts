@@ -45,7 +45,7 @@ let _blockTypes: string[] | null = null;
 
 function getAvailableBlockTypes(): string[] {
   if (!_blockTypes) {
-    _blockTypes = BLOCK_BLUEPRINTS.map((bp) => bp.blockType);
+    _blockTypes = BLOCK_BLUEPRINTS.map((bp) => bp.iceType);
   }
   return _blockTypes;
 }

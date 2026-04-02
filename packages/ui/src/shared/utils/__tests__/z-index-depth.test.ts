@@ -28,7 +28,7 @@ describe('calculateZIndex', () => {
     });
 
     it('Resources should be above everything else', () => {
-      const resourceZ = calculateZIndex('Application.Container', 0);
+      const resourceZ = calculateZIndex('Compute.Container', 0);
       expect(resourceZ).toBeGreaterThan(calculateZIndex('Block.ScalableBackend', 0));
       expect(resourceZ).toBeGreaterThan(calculateZIndex('Group.Custom', 0));
       expect(resourceZ).toBeGreaterThan(calculateZIndex('Network.VPC', 0));
@@ -58,7 +58,7 @@ describe('calculateZIndex', () => {
 
     it('resource inside nested group should be above the group', () => {
       const groupZ = calculateZIndex('Group.Custom', 2);
-      const resourceZ = calculateZIndex('Application.Container', 3);
+      const resourceZ = calculateZIndex('Compute.Container', 3);
       expect(resourceZ).toBeGreaterThan(groupZ);
     });
 
@@ -66,7 +66,7 @@ describe('calculateZIndex', () => {
       // A deeply nested group should still be below a resource at depth 0
       // Group at depth 5: 15 + 5 = 20, Resource at depth 0: 100
       const deepGroupZ = calculateZIndex('Group.Custom', 5);
-      const surfaceResourceZ = calculateZIndex('Application.Container', 0);
+      const surfaceResourceZ = calculateZIndex('Compute.Container', 0);
       expect(surfaceResourceZ).toBeGreaterThan(deepGroupZ);
     });
   });

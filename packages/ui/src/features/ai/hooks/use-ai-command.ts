@@ -219,7 +219,7 @@ export function useAiCommand() {
 /** Infrastructure layer priority for animation ordering */
 function getLayerPriority(op: AiCanvasOp): number {
   if (op.op === 'addNode' || op.op === 'addBlueprint') {
-    const iceType = op.op === 'addNode' ? (op.node.data?.iceType as string) || '' : op.blockType || '';
+    const iceType = op.op === 'addNode' ? (op.node.data?.iceType as string) || '' : op.iceType || '';
     const nodeType = op.op === 'addNode' ? op.node.type : '';
 
     // Network containers first (the "backbone")
@@ -228,7 +228,7 @@ function getLayerPriority(op: AiCanvasOp): number {
     // Groups / logical containers
     if (nodeType === 'container' || iceType.startsWith('Group.')) return 2;
     // Blocks (application units)
-    if (nodeType === 'block' || iceType.startsWith('Block.')) return 3;
+    if (nodeType === 'block') return 3;
     // Compute resources
     if (iceType.startsWith('Compute.') || iceType.includes('Container') || iceType.includes('Function')) return 4;
     // Databases & storage
@@ -276,8 +276,8 @@ function computeAnimationOrder(
       nodes[realId] = delay;
       step++;
     } else if (op.op === 'addBlueprint') {
-      // Blueprint may have mapped by id or blockType
-      const realId = createdNodeIds.get(op.id || '') || createdNodeIds.get(op.blockType) || op.id || '';
+      // Blueprint may have mapped by id or iceType
+      const realId = createdNodeIds.get(op.id || '') || createdNodeIds.get(op.iceType) || op.id || '';
       if (realId) {
         nodes[realId] = delay;
         step++;

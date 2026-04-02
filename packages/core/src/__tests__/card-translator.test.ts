@@ -26,9 +26,9 @@ describe('Card Translator Type Maps', () => {
     it('should map all standard GCP iceTypes', async () => {
       const mod = await import('../deploy/card-translator.js');
       const gcpTypes = [
-        'Application.StaticSite',
-        'Application.Container',
-        'Application.ServerlessFunction',
+        'Compute.StaticSite',
+        'Compute.Container',
+        'Compute.ServerlessFunction',
         'Database.PostgreSQL',
         'Storage.Bucket',
         'Messaging.CloudPubSub',
@@ -52,8 +52,8 @@ describe('Card Translator Type Maps', () => {
     it('should map AWS iceTypes (ENGINE-1)', async () => {
       const mod = await import('../deploy/card-translator.js');
       const awsTypes = [
-        'Application.Container',
-        'Application.ServerlessFunction',
+        'Compute.Container',
+        'Compute.ServerlessFunction',
         'Database.PostgreSQL',
         'Storage.Bucket',
         'Messaging.Queue',
@@ -73,7 +73,7 @@ describe('Card Translator Type Maps', () => {
     it('should not return empty results for AWS anymore', async () => {
       const mod = await import('../deploy/card-translator.js');
       const result = mod.translate_card_to_graph({
-        nodes: [{ id: 'n1', type: 'resource', data: { iceType: 'Application.Container', label: 'app' } }],
+        nodes: [{ id: 'n1', type: 'resource', data: { iceType: 'Compute.Container', label: 'app' } }],
         edges: [],
         provider: 'aws',
         projectName: 'test',
@@ -87,7 +87,7 @@ describe('Card Translator Type Maps', () => {
       const mod = await import('../deploy/card-translator.js');
       const result = mod.translate_card_to_graph({
         nodes: [
-          { id: 'n1', type: 'resource', data: { iceType: 'Application.Container', label: 'app' } },
+          { id: 'n1', type: 'resource', data: { iceType: 'Compute.Container', label: 'app' } },
           { id: 'n2', type: 'resource', data: { iceType: 'Database.PostgreSQL', label: 'db' } },
         ],
         edges: [],
@@ -104,7 +104,7 @@ describe('Card Translator Type Maps', () => {
 
       for (const provider of ['alibaba', 'digitalocean', 'kubernetes']) {
         const result = mod.translate_card_to_graph({
-          nodes: [{ id: 'n1', type: 'resource', data: { iceType: 'Application.Container', label: 'app' } }],
+          nodes: [{ id: 'n1', type: 'resource', data: { iceType: 'Compute.Container', label: 'app' } }],
           edges: [],
           provider: provider as any,
           projectName: 'test',
@@ -130,7 +130,7 @@ describe('Card Translator Type Maps', () => {
     it('should skip UI-only types', async () => {
       const mod = await import('../deploy/card-translator.js');
       const result = mod.translate_card_to_graph({
-        nodes: [{ id: 'n1', type: 'resource', data: { iceType: 'Log.Terminal', label: 'logs' } }],
+        nodes: [{ id: 'n1', type: 'resource', data: { iceType: 'Monitoring.Terminal', label: 'logs' } }],
         edges: [],
         provider: 'gcp',
         projectName: 'test',

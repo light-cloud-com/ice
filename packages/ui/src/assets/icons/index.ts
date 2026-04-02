@@ -82,10 +82,10 @@ export interface IconMapping {
 // AWS Icons mapped by ice type
 export const AWS_ICONS: Record<string, IconMapping> = {
   // Compute
-  'Application.Container': { icon: awsEcs, label: 'ECS', color: '#ED7100' },
-  'Application.Function': { icon: awsLambda, label: 'Lambda', color: '#ED7100' },
-  'Application.VM': { icon: awsEc2, label: 'EC2', color: '#ED7100' },
-  'Application.StaticSite': { icon: awsAmplify, label: 'Amplify', color: '#ED7100' },
+  'Compute.Container': { icon: awsEcs, label: 'ECS', color: '#ED7100' },
+  'Compute.Function': { icon: awsLambda, label: 'Lambda', color: '#ED7100' },
+  'Compute.VM': { icon: awsEc2, label: 'EC2', color: '#ED7100' },
+  'Compute.StaticSite': { icon: awsAmplify, label: 'Amplify', color: '#ED7100' },
 
   // Containers
   'Container.ECS': { icon: awsEcs, label: 'ECS', color: '#ED7100' },
@@ -159,19 +159,6 @@ export const AWS_ICONS: Record<string, IconMapping> = {
   'External.Payment': { icon: awsConnect, label: 'Payment', color: '#64748b' },
   'External.Email': { icon: awsSes, label: 'Email', color: '#64748b' },
   'External.SMS': { icon: awsPinpoint, label: 'SMS', color: '#64748b' },
-
-  // Blocks (use similar AWS icons)
-  'Block.StaticSite': { icon: awsAmplify, label: 'Frontend', color: '#ED7100' },
-  'Block.ScalableBackend': { icon: awsEcs, label: 'Backend', color: '#ED7100' },
-  'Block.Worker': { icon: awsLambda, label: 'Worker', color: '#ED7100' },
-  'Block.Database': { icon: awsRds, label: 'Database', color: '#3B48CC' },
-  'Block.Cache': { icon: awsElasticache, label: 'Cache', color: '#3B48CC' },
-  'Block.Storage': { icon: awsS3, label: 'Storage', color: '#1A9C3E' },
-  'Block.Gateway': { icon: awsApiGateway, label: 'Gateway', color: '#E7157B' },
-  'Block.Queue': { icon: awsSqs, label: 'Queue', color: '#E7157B' },
-  'Block.ServerlessFunction': { icon: awsLambda, label: 'Function', color: '#ED7100' },
-  'Block.ScheduledTask': { icon: awsEventbridge, label: 'Scheduled', color: '#E7157B' },
-  'Block.Logs': { icon: awsCloudwatch, label: 'Logs', color: '#E7157B' },
 
   // Groups (organizational containers)
   'Group.Frontend': { icon: awsVpc, label: 'Frontend', color: '#8B5CF6' },

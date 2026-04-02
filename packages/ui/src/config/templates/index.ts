@@ -99,11 +99,11 @@ export function getProviderCompatibility(template: ComposedTemplate, provider: P
   let supported = 0;
   const unsupported: string[] = [];
   for (const block of template.blocks) {
-    const bp = getBlueprint(block.blockType);
+    const bp = getBlueprint(block.iceType);
     if (bp && bp.providers.includes(provider)) {
       supported++;
     } else {
-      unsupported.push(block.label || block.blockType);
+      unsupported.push(block.label || block.iceType);
     }
   }
   return { template, supported, total: template.blocks.length, unsupported };

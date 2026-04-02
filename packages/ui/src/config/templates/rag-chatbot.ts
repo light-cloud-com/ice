@@ -89,48 +89,48 @@ export const ragChatbotTemplate: ComposedTemplate = {
 
   blocks: [
     // 0-1: Chat frontend
-    { blockType: 'public-traffic', label: 'Public Traffic', position: { x: 60, y: 60 } },
+    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 60, y: 60 } },
     {
-      blockType: 'ssr-site',
+      iceType: 'Compute.SSRSite',
       label: 'Chat UI',
       position: { x: 310, y: 60 },
       data: { domain: 'chat.acme.io', runtime: 'Next.js 14' },
     },
 
     // 2-3: RAG API
-    { blockType: 'gateway', label: 'Gateway', position: { x: 60, y: 260 } },
+    { iceType: 'Network.Gateway', label: 'Gateway', position: { x: 60, y: 260 } },
     {
-      blockType: 'scalable-backend',
+      iceType: 'Compute.Container',
       label: 'RAG Service',
       position: { x: 310, y: 260 },
       data: { runtime: 'Python 3.12', domain: 'api.chat.acme.io', port: 8080 },
     },
 
     // 4-5: AI layer
-    { blockType: 'llm-gateway', label: 'LLM Gateway', position: { x: 640, y: 60 } },
-    { blockType: 'vector-db', label: 'Vector DB', position: { x: 640, y: 220 } },
+    { iceType: 'AI.LLMGateway', label: 'LLM Gateway', position: { x: 640, y: 60 } },
+    { iceType: 'AI.VectorDB', label: 'Vector DB', position: { x: 640, y: 220 } },
 
     // 6-8: Data stores
     {
-      blockType: 'postgresql',
+      iceType: 'Database.PostgreSQL',
       label: 'PostgreSQL',
       position: { x: 980, y: 60 },
       data: { size: 'db.t3.medium', storage: '50 GB' },
     },
-    { blockType: 'redis-cache', label: 'Cache', position: { x: 980, y: 220 } },
-    { blockType: 'storage', label: 'Document Storage', position: { x: 980, y: 300 } },
+    { iceType: 'Database.Redis', label: 'Cache', position: { x: 980, y: 220 } },
+    { iceType: 'Storage.Bucket', label: 'Document Storage', position: { x: 980, y: 300 } },
 
     // 9-10: Ingestion pipeline
-    { blockType: 'sqs', label: 'Ingestion Queue', position: { x: 60, y: 460 } },
+    { iceType: 'Messaging.SQS', label: 'Ingestion Queue', position: { x: 60, y: 460 } },
     {
-      blockType: 'worker',
+      iceType: 'Compute.Worker',
       label: 'Ingestion Worker',
       position: { x: 310, y: 460 },
       data: { runtime: 'Python 3.11' },
     },
 
     // 11: Monitoring
-    { blockType: 'logs', label: 'Logs', position: { x: 640, y: 460 } },
+    { iceType: 'Monitoring.Log', label: 'Logs', position: { x: 640, y: 460 } },
   ],
 
   connections: [

@@ -183,7 +183,7 @@ interface ComponentDef {
 const COMPONENTS: ComponentDef[] = [
   // ── Compute ──
   {
-    type: 'scalable-backend',
+    type: 'Compute.Container',
     name: 'Scalable Backend',
     description: 'Containerized service. Auto-scales.',
     tooltip:
@@ -201,7 +201,7 @@ const COMPONENTS: ComponentDef[] = [
     ],
   },
   {
-    type: 'worker',
+    type: 'Compute.Worker',
     name: 'Worker',
     description: 'Background jobs: image processing, emails.',
     tooltip:
@@ -211,7 +211,7 @@ const COMPONENTS: ComponentDef[] = [
     category: 'Compute',
   },
   {
-    type: 'serverless-function',
+    type: 'Compute.ServerlessFunction',
     name: 'Serverless Function',
     description: 'Event-driven. Scales to zero.',
     tooltip:
@@ -228,7 +228,7 @@ const COMPONENTS: ComponentDef[] = [
     ],
   },
   {
-    type: 'function-compute',
+    type: 'Compute.FunctionCompute',
     name: 'Function Compute',
     description: 'Alibaba Cloud serverless functions. Event-driven.',
     tooltip:
@@ -238,7 +238,7 @@ const COMPONENTS: ComponentDef[] = [
     category: 'Compute',
   },
   {
-    type: 'oci-functions',
+    type: 'Compute.OCIFunctions',
     name: 'OCI Functions',
     description: 'Oracle Cloud serverless. Fn-based.',
     tooltip:
@@ -248,7 +248,7 @@ const COMPONENTS: ComponentDef[] = [
     category: 'Compute',
   },
   {
-    type: 'do-app-platform',
+    type: 'Compute.DOAppPlatform',
     name: 'App Platform',
     description: 'DigitalOcean PaaS. Git push to deploy.',
     tooltip:
@@ -259,7 +259,7 @@ const COMPONENTS: ComponentDef[] = [
   },
   // ── Scheduler ──
   {
-    type: 'scheduled-task',
+    type: 'Compute.CronJob',
     name: 'Cron Job',
     description: 'Runs on a schedule. Reports, cleanup, syncs.',
     tooltip:
@@ -271,7 +271,7 @@ const COMPONENTS: ComponentDef[] = [
 
   // ── Frontend ──
   {
-    type: 'static-site',
+    type: 'Compute.StaticSite',
     name: 'Static Site',
     description: 'React/Vue app. CDN included.',
     tooltip:
@@ -281,7 +281,7 @@ const COMPONENTS: ComponentDef[] = [
     category: 'Frontend',
   },
   {
-    type: 'ssr-site',
+    type: 'Compute.SSRSite',
     name: 'SSR Site',
     description: 'Server-rendered (Next.js, Nuxt). CDN included.',
     tooltip:
@@ -293,7 +293,7 @@ const COMPONENTS: ComponentDef[] = [
 
   // ── Network ──
   {
-    type: 'public-traffic',
+    type: 'Network.Internet',
     name: 'Public Traffic',
     description: 'Internet entry point. People reaching your app.',
     tooltip:
@@ -303,7 +303,7 @@ const COMPONENTS: ComponentDef[] = [
     category: 'Network',
   },
   {
-    type: 'gateway',
+    type: 'Network.Gateway',
     name: 'Gateway',
     description: 'Routes traffic, auth + rate limiting.',
     tooltip:
@@ -315,7 +315,7 @@ const COMPONENTS: ComponentDef[] = [
 
   // ── Database ──
   {
-    type: 'postgresql',
+    type: 'Database.PostgreSQL',
     name: 'PostgreSQL',
     description: 'Relational. ACID-compliant.',
     tooltip:
@@ -325,7 +325,7 @@ const COMPONENTS: ComponentDef[] = [
     category: 'Database',
   },
   {
-    type: 'mysql',
+    type: 'Database.MySQL',
     name: 'MySQL',
     description: 'Relational. Web-scale classic.',
     tooltip:
@@ -335,7 +335,7 @@ const COMPONENTS: ComponentDef[] = [
     category: 'Database',
   },
   {
-    type: 'mongodb',
+    type: 'Database.MongoDB',
     name: 'MongoDB',
     description: 'Document store. Schema-flexible.',
     tooltip:
@@ -345,7 +345,7 @@ const COMPONENTS: ComponentDef[] = [
     category: 'Database',
   },
   {
-    type: 'dynamodb',
+    type: 'Database.DynamoDB',
     name: 'DynamoDB',
     description: 'AWS NoSQL key-value. Single-digit ms.',
     tooltip:
@@ -355,7 +355,7 @@ const COMPONENTS: ComponentDef[] = [
     category: 'Database',
   },
   {
-    type: 'firestore',
+    type: 'Database.Firestore',
     name: 'Firestore',
     description: 'Google Cloud document DB. Real-time sync.',
     tooltip:
@@ -365,7 +365,7 @@ const COMPONENTS: ComponentDef[] = [
     category: 'Database',
   },
   {
-    type: 'cosmosdb',
+    type: 'Database.CosmosDB',
     name: 'Cosmos DB',
     description: 'Azure multi-model DB. Global distribution.',
     tooltip:
@@ -375,7 +375,7 @@ const COMPONENTS: ComponentDef[] = [
     category: 'Database',
   },
   {
-    type: 'tablestore',
+    type: 'Database.Tablestore',
     name: 'Tablestore',
     description: 'Alibaba Cloud NoSQL wide-column. Serverless.',
     tooltip:
@@ -385,7 +385,7 @@ const COMPONENTS: ComponentDef[] = [
     category: 'Database',
   },
   {
-    type: 'autonomous-db',
+    type: 'Database.AutonomousDB',
     name: 'Autonomous DB',
     description: 'Oracle Cloud self-managing database.',
     tooltip:
@@ -395,7 +395,7 @@ const COMPONENTS: ComponentDef[] = [
     category: 'Database',
   },
   {
-    type: 'do-managed-db',
+    type: 'Database.DOManagedDB',
     name: 'Managed Database',
     description: 'DigitalOcean managed DB. Postgres/MySQL/Redis.',
     tooltip:
@@ -407,7 +407,7 @@ const COMPONENTS: ComponentDef[] = [
 
   // ── Cache ──
   {
-    type: 'redis-cache',
+    type: 'Database.Redis',
     name: 'Redis',
     description: 'In-memory store. Sub-millisecond reads.',
     tooltip:
@@ -419,7 +419,7 @@ const COMPONENTS: ComponentDef[] = [
 
   // ── Messaging ──
   {
-    type: 'sqs',
+    type: 'Messaging.SQS',
     name: 'SQS',
     description: 'AWS managed queue. Guaranteed delivery.',
     tooltip:
@@ -429,7 +429,7 @@ const COMPONENTS: ComponentDef[] = [
     category: 'Messaging',
   },
   {
-    type: 'sns',
+    type: 'Messaging.SNS',
     name: 'SNS',
     description: 'AWS pub/sub notifications.',
     tooltip:
@@ -439,7 +439,7 @@ const COMPONENTS: ComponentDef[] = [
     category: 'Messaging',
   },
   {
-    type: 'rabbitmq',
+    type: 'Messaging.RabbitMQ',
     name: 'RabbitMQ',
     description: 'Open-source message broker.',
     tooltip:
@@ -449,7 +449,7 @@ const COMPONENTS: ComponentDef[] = [
     category: 'Messaging',
   },
   {
-    type: 'event-stream',
+    type: 'Messaging.Topic',
     name: 'Event Stream',
     description: 'Real-time events (Kafka, Kinesis).',
     tooltip:
@@ -459,7 +459,7 @@ const COMPONENTS: ComponentDef[] = [
     category: 'Messaging',
   },
   {
-    type: 'cloud-pubsub',
+    type: 'Messaging.CloudPubSub',
     name: 'Cloud Pub/Sub',
     description: 'Google Cloud managed pub/sub. Global.',
     tooltip:
@@ -469,7 +469,7 @@ const COMPONENTS: ComponentDef[] = [
     category: 'Messaging',
   },
   {
-    type: 'service-bus',
+    type: 'Messaging.ServiceBus',
     name: 'Service Bus',
     description: 'Azure enterprise messaging. Queues + topics.',
     tooltip:
@@ -481,7 +481,7 @@ const COMPONENTS: ComponentDef[] = [
 
   // ── Storage ──
   {
-    type: 'storage',
+    type: 'Storage.Bucket',
     name: 'Storage',
     description: 'Files, images, uploads. S3/GCS/Blob.',
     tooltip:
@@ -491,7 +491,7 @@ const COMPONENTS: ComponentDef[] = [
     category: 'Storage',
   },
   {
-    type: 'oss',
+    type: 'Storage.OSS',
     name: 'OSS',
     description: 'Alibaba Cloud object storage. China-optimized CDN.',
     tooltip:
@@ -501,7 +501,7 @@ const COMPONENTS: ComponentDef[] = [
     category: 'Storage',
   },
   {
-    type: 'oci-object-storage',
+    type: 'Storage.OCIObjectStorage',
     name: 'OCI Object Storage',
     description: 'Oracle Cloud enterprise object storage. Tiered.',
     tooltip:
@@ -511,7 +511,7 @@ const COMPONENTS: ComponentDef[] = [
     category: 'Storage',
   },
   {
-    type: 'do-spaces',
+    type: 'Storage.DOSpaces',
     name: 'Spaces',
     description: 'DigitalOcean S3-compatible object storage.',
     tooltip:
@@ -523,7 +523,7 @@ const COMPONENTS: ComponentDef[] = [
 
   // ── Security ──
   {
-    type: 'auth',
+    type: 'Security.Identity',
     name: 'Auth',
     description: 'Login, signup, permissions.',
     tooltip:
@@ -533,7 +533,7 @@ const COMPONENTS: ComponentDef[] = [
     category: 'Security',
   },
   {
-    type: 'secrets',
+    type: 'Security.Secret',
     name: 'Secrets',
     description: 'API keys, DB passwords, tokens.',
     tooltip:
@@ -545,7 +545,7 @@ const COMPONENTS: ComponentDef[] = [
 
   // ── AI ──
   {
-    type: 'llm-gateway',
+    type: 'AI.LLMGateway',
     name: 'LLM Gateway',
     description: 'LLM API proxy. Rate limiting + fallback.',
     tooltip:
@@ -555,7 +555,7 @@ const COMPONENTS: ComponentDef[] = [
     category: 'AI',
   },
   {
-    type: 'vector-db',
+    type: 'AI.VectorDB',
     name: 'Vector DB',
     description: 'Embeddings + similarity search.',
     tooltip:
@@ -565,7 +565,7 @@ const COMPONENTS: ComponentDef[] = [
     category: 'AI',
   },
   {
-    type: 'ml-model',
+    type: 'AI.ModelServing',
     name: 'ML Model',
     description: 'Deploy + serve ML models.',
     tooltip:
@@ -577,7 +577,7 @@ const COMPONENTS: ComponentDef[] = [
 
   // ── Analytics ──
   {
-    type: 'data-warehouse',
+    type: 'Analytics.DataWarehouse',
     name: 'Data Warehouse',
     description: 'Columnar analytics. SQL at scale.',
     tooltip:
@@ -587,7 +587,7 @@ const COMPONENTS: ComponentDef[] = [
     category: 'Analytics',
   },
   {
-    type: 'search',
+    type: 'Analytics.Search',
     name: 'Search',
     description: 'Full-text search. Elasticsearch/OpenSearch.',
     tooltip:
@@ -599,7 +599,7 @@ const COMPONENTS: ComponentDef[] = [
 
   // ── Monitoring ──
   {
-    type: 'logs',
+    type: 'Monitoring.Log',
     name: 'Logs',
     description: 'Errors, performance, alerts.',
     tooltip:
@@ -609,7 +609,7 @@ const COMPONENTS: ComponentDef[] = [
     category: 'Monitoring',
   },
   {
-    type: 'log-terminal',
+    type: 'Monitoring.Terminal',
     name: 'Log Terminal',
     description: 'Live streaming log viewer.',
     tooltip:
@@ -621,7 +621,7 @@ const COMPONENTS: ComponentDef[] = [
 
   // ── Source ──
   {
-    type: 'github-repository',
+    type: 'Source.Repository',
     name: 'GitHub Repo',
     description: 'Source code. Connect to a service to deploy.',
     tooltip:
@@ -633,7 +633,7 @@ const COMPONENTS: ComponentDef[] = [
 
   // ── Config ──
   {
-    type: 'env-config',
+    type: 'Config.Environment',
     name: 'Env Variables',
     description: 'Key-value environment variables.',
     tooltip:
@@ -645,7 +645,7 @@ const COMPONENTS: ComponentDef[] = [
 
   // ── Networking ── (domain is provider-agnostic)
   {
-    type: 'domain',
+    type: 'Network.Domain',
     name: 'Domain',
     description: 'Custom domain and SSL routing.',
     tooltip:

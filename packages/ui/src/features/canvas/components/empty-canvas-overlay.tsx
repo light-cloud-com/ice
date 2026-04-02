@@ -44,7 +44,7 @@ export const EmptyCanvasOverlay: React.FC<EmptyCanvasOverlayProps> = ({ onDismis
 
   const handleBlank = useCallback(() => {
     // Place a Public Traffic node as the default entry point
-    const blueprint = getBlueprint('public-traffic');
+    const blueprint = getBlueprint('Network.Internet');
     if (blueprint) {
       const expanded = expandBlueprint(blueprint, {
         position: { x: 300, y: 300 },

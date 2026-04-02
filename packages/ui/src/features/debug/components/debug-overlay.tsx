@@ -44,7 +44,7 @@ export const DebugOverlay: React.FC = () => {
       .length ?? 0;
   const blockCount =
     activeCard?.nodes.filter(
-      (n) => (n.type === 'block' || ((n.data?.iceType as string) || '').startsWith('Block.')) && n.type !== 'container',
+      (n) => n.type === 'block' && n.type !== 'container',
     ).length ?? 0;
   const resourceCount = nodeCount - blockCount - groupCount;
 

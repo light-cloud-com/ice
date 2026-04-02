@@ -69,10 +69,10 @@ export const aiMlTemplate: ComposedTemplate = {
 
   blocks: [
     // 0-2: Inference API (with public traffic entry)
-    { blockType: 'public-traffic', label: 'Public Traffic', position: { x: 60, y: 60 } },
-    { blockType: 'gateway', label: 'Gateway', position: { x: 310, y: 60 } },
+    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 60, y: 60 } },
+    { iceType: 'Network.Gateway', label: 'Gateway', position: { x: 310, y: 60 } },
     {
-      blockType: 'scalable-backend',
+      iceType: 'Compute.Container',
       label: 'Inference Service',
       position: { x: 560, y: 60 },
       data: { runtime: 'Python 3.12', domain: 'ml-api.acme.io', port: 8080 },
@@ -80,23 +80,23 @@ export const aiMlTemplate: ComposedTemplate = {
 
     // 3: Training worker
     {
-      blockType: 'worker',
+      iceType: 'Compute.Worker',
       label: 'Training Worker',
       position: { x: 560, y: 260 },
       data: { runtime: 'Python 3.11' },
     },
 
     // 4-6: Data stores
-    { blockType: 'postgresql', label: 'PostgreSQL', position: { x: 900, y: 60 } },
-    { blockType: 'storage', label: 'Model Storage', position: { x: 900, y: 210 } },
-    { blockType: 'storage', label: 'Training Data Storage', position: { x: 900, y: 360 } },
+    { iceType: 'Database.PostgreSQL', label: 'PostgreSQL', position: { x: 900, y: 60 } },
+    { iceType: 'Storage.Bucket', label: 'Model Storage', position: { x: 900, y: 210 } },
+    { iceType: 'Storage.Bucket', label: 'Training Data Storage', position: { x: 900, y: 360 } },
 
     // 7: Pipeline trigger
-    { blockType: 'sqs', label: 'SQS', position: { x: 60, y: 260 } },
+    { iceType: 'Messaging.SQS', label: 'SQS', position: { x: 60, y: 260 } },
 
     // 8-9: Cache + monitoring
-    { blockType: 'redis-cache', label: 'Cache', position: { x: 60, y: 460 } },
-    { blockType: 'logs', label: 'Logs', position: { x: 310, y: 460 } },
+    { iceType: 'Database.Redis', label: 'Cache', position: { x: 60, y: 460 } },
+    { iceType: 'Monitoring.Log', label: 'Logs', position: { x: 310, y: 460 } },
   ],
 
   connections: [

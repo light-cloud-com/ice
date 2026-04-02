@@ -21,14 +21,14 @@ export const quickStartWebsiteDb: ComposedTemplate = {
   securityLevel: 'basic',
   environmentPresets: [{ type: 'production', name: 'Production', region: 'us-east-1', securityLevel: 'basic' }],
   blocks: [
-    { blockType: 'public-traffic', label: 'Public Traffic', position: { x: 100, y: 200 } },
+    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 100, y: 200 } },
     {
-      blockType: 'ssr-site',
+      iceType: 'Compute.SSRSite',
       label: 'SSR Site',
       position: { x: 380, y: 200 },
       data: { domain: 'mysite.com' },
     },
-    { blockType: 'postgresql', label: 'PostgreSQL', position: { x: 660, y: 200 } },
+    { iceType: 'Database.PostgreSQL', label: 'PostgreSQL', position: { x: 660, y: 200 } },
   ],
   connections: [
     { fromBlock: 0, toBlock: 1, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
@@ -49,21 +49,21 @@ export const quickStartWebAppApi: ComposedTemplate = {
   securityLevel: 'basic',
   environmentPresets: [{ type: 'production', name: 'Production', region: 'us-east-1', securityLevel: 'basic' }],
   blocks: [
-    { blockType: 'public-traffic', label: 'Public Traffic', position: { x: 100, y: 200 } },
+    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 100, y: 200 } },
     {
-      blockType: 'static-site',
+      iceType: 'Compute.StaticSite',
       label: 'Static Site',
       position: { x: 380, y: 100 },
       data: { domain: 'app.mysite.com' },
     },
-    { blockType: 'gateway', label: 'Gateway', position: { x: 380, y: 300 } },
+    { iceType: 'Network.Gateway', label: 'Gateway', position: { x: 380, y: 300 } },
     {
-      blockType: 'scalable-backend',
+      iceType: 'Compute.Container',
       label: 'Node.js Service',
       position: { x: 660, y: 300 },
       data: { runtime: 'Node.js 20', domain: 'api.mysite.com', port: 8080 },
     },
-    { blockType: 'postgresql', label: 'PostgreSQL', position: { x: 940, y: 300 } },
+    { iceType: 'Database.PostgreSQL', label: 'PostgreSQL', position: { x: 940, y: 300 } },
   ],
   connections: [
     { fromBlock: 0, toBlock: 1, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
@@ -86,15 +86,15 @@ export const quickStartApiOnly: ComposedTemplate = {
   securityLevel: 'basic',
   environmentPresets: [{ type: 'production', name: 'Production', region: 'us-east-1', securityLevel: 'basic' }],
   blocks: [
-    { blockType: 'public-traffic', label: 'Public Traffic', position: { x: 100, y: 200 } },
-    { blockType: 'gateway', label: 'Gateway', position: { x: 380, y: 200 } },
+    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 100, y: 200 } },
+    { iceType: 'Network.Gateway', label: 'Gateway', position: { x: 380, y: 200 } },
     {
-      blockType: 'scalable-backend',
+      iceType: 'Compute.Container',
       label: 'Node.js Service',
       position: { x: 660, y: 200 },
       data: { runtime: 'Node.js 20', domain: 'api.mysite.com', port: 8080 },
     },
-    { blockType: 'postgresql', label: 'PostgreSQL', position: { x: 940, y: 200 } },
+    { iceType: 'Database.PostgreSQL', label: 'PostgreSQL', position: { x: 940, y: 200 } },
   ],
   connections: [
     { fromBlock: 0, toBlock: 1, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
@@ -116,10 +116,10 @@ export const quickStartDataPipeline: ComposedTemplate = {
   securityLevel: 'basic',
   environmentPresets: [{ type: 'production', name: 'Production', region: 'us-east-1', securityLevel: 'basic' }],
   blocks: [
-    { blockType: 'sqs', label: 'SQS', position: { x: 200, y: 200 } },
-    { blockType: 'worker', label: 'Worker', position: { x: 480, y: 200 } },
-    { blockType: 'postgresql', label: 'PostgreSQL', position: { x: 760, y: 100 } },
-    { blockType: 'storage', label: 'Storage', position: { x: 760, y: 300 } },
+    { iceType: 'Messaging.SQS', label: 'SQS', position: { x: 200, y: 200 } },
+    { iceType: 'Compute.Worker', label: 'Worker', position: { x: 480, y: 200 } },
+    { iceType: 'Database.PostgreSQL', label: 'PostgreSQL', position: { x: 760, y: 100 } },
+    { iceType: 'Storage.Bucket', label: 'Storage', position: { x: 760, y: 300 } },
   ],
   connections: [
     { fromBlock: 0, toBlock: 1, relationship: 'connects_to' },

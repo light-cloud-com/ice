@@ -291,28 +291,36 @@ export const BLOCK_BLUEPRINTS: BlockBlueprint[] = [
   domainBlueprint,
 ];
 
-/** Fast lookup map: blockType → blueprint */
-const blueprintMap = new Map<string, BlockBlueprint>(BLOCK_BLUEPRINTS.map((bp) => [bp.blockType, bp]));
+/**
+ * Fast lookup maps:
+ * - blueprintByTypeAndProvider: "iceType|provider" → blueprint (for provider-specific lookup)
+ * - blueprintByType: "iceType" → first blueprint (for provider-agnostic lookup)
+ */
+const blueprintByTypeAndProvider = new Map<string, BlockBlueprint>();
+const blueprintByType = new Map<string, BlockBlueprint>();
+
+for (const bp of BLOCK_BLUEPRINTS) {
+  // Index by iceType (first match wins for provider-agnostic lookup)
+  if (!blueprintByType.has(bp.iceType)) {
+    blueprintByType.set(bp.iceType, bp);
+  }
+  // Index by iceType + each provider
+  for (const provider of bp.providers) {
+    blueprintByTypeAndProvider.set(`${bp.iceType}|${provider}`, bp);
+  }
+}
 
 /**
- * Get a blueprint by its palette block type.
+ * Get a blueprint by its canonical iceType and optional provider.
  *
- * Supports two lookup modes:
- * 1. Exact match: `getBlueprint('aws-postgresql')` → AWS PostgreSQL
- * 2. Provider-prefixed: `getBlueprint('postgresql', 'aws')` → AWS PostgreSQL
- *
- * The second form enables templates to use generic blockTypes ('postgresql')
- * which resolve to provider-specific blueprints ('aws-postgresql') at expand time.
+ * @example
+ * getBlueprint('Database.PostgreSQL', 'aws')  // → AWS PostgreSQL blueprint
+ * getBlueprint('Database.PostgreSQL', 'gcp')  // → GCP Cloud SQL blueprint
+ * getBlueprint('Network.Domain')              // → Domain blueprint (cross-provider)
  */
-export function getBlueprint(blockType: string, provider?: string): BlockBlueprint | undefined {
-  // 1. Try exact match (e.g., 'aws-postgresql' or 'dynamodb')
-  const exact = blueprintMap.get(blockType);
-  if (exact) return exact;
-
-  // 2. Try provider-prefixed match (e.g., 'postgresql' + 'aws' → 'aws-postgresql')
+export function getBlueprint(iceType: string, provider?: string): BlockBlueprint | undefined {
   if (provider) {
-    return blueprintMap.get(`${provider}-${blockType}`);
+    return blueprintByTypeAndProvider.get(`${iceType}|${provider}`);
   }
-
-  return undefined;
+  return blueprintByType.get(iceType);
 }

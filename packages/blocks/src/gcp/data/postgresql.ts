@@ -2,14 +2,13 @@ import { createBlueprintFromResource } from '@ice/core/resources';
 import type { BlockBlueprint } from '../../types';
 
 export const gcpPostgresqlBlueprint: BlockBlueprint = createBlueprintFromResource('postgres-db', {
-  blockType: 'gcp-postgresql',
+  iceType: 'Database.PostgreSQL',
   category: 'data',
   name: 'GCP PostgreSQL',
   description: 'Google Cloud SQL. Relational, ACID-compliant.',
   icon: 'Database',
   providers: ['gcp'],
   nodeDataDefaults: {
-    iceType: 'Database.PostgreSQL',
     runtime: 'PostgreSQL 16',
     port: 5432,
     size: 'db-f1-micro',

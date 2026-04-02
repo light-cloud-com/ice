@@ -11,7 +11,7 @@
 
 const SERVICE_NAMES: Record<string, Record<string, string>> = {
   // ── Compute ──
-  'Application.Container': {
+  'Compute.Container': {
     aws: 'Amazon ECS',
     gcp: 'Cloud Run',
     azure: 'Azure Container Apps',
@@ -20,19 +20,19 @@ const SERVICE_NAMES: Record<string, Record<string, string>> = {
     oci: 'OCI Container Instances',
     digitalocean: 'DO App Platform',
   },
-  'Application.Function': {
+  'Compute.Function': {
     aws: 'AWS Lambda',
     gcp: 'Cloud Functions',
     azure: 'Azure Functions',
     alibaba: 'Alibaba FC',
   },
-  'Application.ServerlessFunction': {
+  'Compute.ServerlessFunction': {
     aws: 'AWS Lambda',
     gcp: 'Cloud Functions',
     azure: 'Azure Functions',
     alibaba: 'Alibaba FC',
   },
-  'Application.VM': {
+  'Compute.VM': {
     aws: 'Amazon EC2',
     gcp: 'Compute Engine',
     azure: 'Azure Virtual Machines',
@@ -40,24 +40,24 @@ const SERVICE_NAMES: Record<string, Record<string, string>> = {
     oci: 'OCI Compute',
     digitalocean: 'DO Droplets',
   },
-  'Application.StaticSite': {
+  'Compute.StaticSite': {
     aws: 'AWS Amplify',
     gcp: 'Firebase Hosting',
     azure: 'Azure Static Web Apps',
     cloudflare: 'Cloudflare Pages',
   },
-  'Application.SSRSite': {
+  'Compute.SSRSite': {
     aws: 'AWS App Runner',
     gcp: 'Cloud Run',
     azure: 'Azure App Service',
   },
-  'Application.Worker': {
+  'Compute.Worker': {
     aws: 'Amazon ECS Task',
     gcp: 'Cloud Run Job',
     azure: 'Azure Container Apps Job',
     kubernetes: 'Kubernetes Job',
   },
-  'Application.ScheduledTask': {
+  'Compute.ScheduledTask': {
     aws: 'Amazon EventBridge',
     gcp: 'Cloud Scheduler',
     azure: 'Azure Logic Apps',
@@ -277,7 +277,7 @@ const SERVICE_NAMES: Record<string, Record<string, string>> = {
     gitlab: 'GitLab',
     bitbucket: 'Bitbucket',
   },
-  'Config.EnvVars': {
+  'Config.Environment': {
     aws: 'AWS Systems Manager',
     gcp: 'Runtime Configurator',
     azure: 'Azure App Configuration',
@@ -290,7 +290,7 @@ const SERVICE_NAMES: Record<string, Record<string, string>> = {
  * Get the full cloud-native service name for a given iceType + provider.
  *
  * @example getServiceName('Database.PostgreSQL', 'aws') → 'Amazon RDS'
- * @example getServiceName('Application.Container', 'gcp') → 'Cloud Run'
+ * @example getServiceName('Compute.Container', 'gcp') → 'Cloud Run'
  */
 export function getServiceName(iceType: string, provider: string): string | null {
   const providerMap = SERVICE_NAMES[iceType];

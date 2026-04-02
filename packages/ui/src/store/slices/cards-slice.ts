@@ -92,34 +92,16 @@ const BLOCK_TO_GROUP_TYPES = new Set(['Frontend', 'Services', 'Data', 'Messaging
 
 /**
  * Migrate persisted node data:
- * - Cluster.* iceType → Block.* (legacy)
- * - Block.Frontend/Services/Data/Messaging/Monitoring/External → Group.* with type: 'group'
+ * - Legacy Cluster.* / Block.* organizational types → Group.* with type: 'container'
  */
 function migrateCardNodes(nodes: CardNode[]): CardNode[] {
   return nodes.map((node) => {
     const iceType = (node.data?.iceType as string) || '';
 
-    // Legacy: Cluster.* → Block.*
-    if (iceType.startsWith('Cluster.')) {
-      const suffix = iceType.slice('Cluster.'.length);
-      // Check if it should be a Group instead
-      if (BLOCK_TO_GROUP_TYPES.has(suffix)) {
-        return {
-          ...node,
-          type: 'container' as const,
-          data: { ...node.data, iceType: `Group.${suffix}` },
-        };
-      }
-      return {
-        ...node,
-        type: 'block' as const,
-        data: { ...node.data, iceType: `Block.${suffix}` },
-      };
-    }
-
-    // Migrate organizational Block.* → Group.*
-    if (iceType.startsWith('Block.')) {
-      const suffix = iceType.slice('Block.'.length);
+    // Legacy: Cluster.* / Block.* organizational types → Group.*
+    if (iceType.startsWith('Cluster.') || iceType.startsWith('Block.')) {
+      const prefix = iceType.startsWith('Cluster.') ? 'Cluster.' : 'Block.';
+      const suffix = iceType.slice(prefix.length);
       if (BLOCK_TO_GROUP_TYPES.has(suffix)) {
         return {
           ...node,

@@ -35,19 +35,19 @@ const KIND_MAP: Record<string, TypeInfo> = {
   'compute#urlmap': { ice_type: 'Network.LoadBalancer', behavior: 'connector' },
   'compute#backendservice': { ice_type: 'Network.LoadBalancer', behavior: 'connector' },
   'dns#managedzone': { ice_type: 'Network.DNS', behavior: 'singleton' },
-  'apigateway#gateway': { ice_type: 'Application.API', behavior: 'connector' },
+  'apigateway#gateway': { ice_type: 'Compute.API', behavior: 'connector' },
 
   // ==========================================================================
   // Application / Compute
   // ==========================================================================
-  'run#service': { ice_type: 'Application.Container', behavior: 'scalable' },
-  'run#job': { ice_type: 'Application.Worker', behavior: 'scalable' },
-  'cloudfunctions#function': { ice_type: 'Application.Function', behavior: 'scalable' },
-  'cloudfunctions#cloudfunction': { ice_type: 'Application.Function', behavior: 'scalable' },
-  'appengine#service': { ice_type: 'Application.Container', behavior: 'scalable' },
-  'container#cluster': { ice_type: 'Application.Container', behavior: 'scalable' },
-  'compute#instance': { ice_type: 'Application.Container', behavior: 'scalable' },
-  'compute#instancegroup': { ice_type: 'Application.Container', behavior: 'scalable' },
+  'run#service': { ice_type: 'Compute.Container', behavior: 'scalable' },
+  'run#job': { ice_type: 'Compute.Worker', behavior: 'scalable' },
+  'cloudfunctions#function': { ice_type: 'Compute.Function', behavior: 'scalable' },
+  'cloudfunctions#cloudfunction': { ice_type: 'Compute.Function', behavior: 'scalable' },
+  'appengine#service': { ice_type: 'Compute.Container', behavior: 'scalable' },
+  'container#cluster': { ice_type: 'Compute.Container', behavior: 'scalable' },
+  'compute#instance': { ice_type: 'Compute.Container', behavior: 'scalable' },
+  'compute#instancegroup': { ice_type: 'Compute.Container', behavior: 'scalable' },
 
   // ==========================================================================
   // Database
@@ -91,7 +91,7 @@ const KIND_MAP: Record<string, TypeInfo> = {
   // ==========================================================================
   // Jobs / Scheduled Tasks
   // ==========================================================================
-  'cloudscheduler#job': { ice_type: 'Application.CronJob', behavior: 'singleton' },
+  'cloudscheduler#job': { ice_type: 'Compute.CronJob', behavior: 'singleton' },
 };
 
 /**

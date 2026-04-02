@@ -68,7 +68,7 @@ export function expandComposedTemplate(
 
   for (let blockIdx = 0; blockIdx < template.blocks.length; blockIdx++) {
     const block = template.blocks[blockIdx];
-    const blueprint = getBlueprint(block.blockType, resolvedProvider);
+    const blueprint = getBlueprint(block.iceType, resolvedProvider);
 
     // Check if this block belongs to a group
     const parentGroupId = blockToGroupId.get(blockIdx);
@@ -86,10 +86,7 @@ export function expandComposedTemplate(
         ...(parentGroupId ? { parentId: parentGroupId } : {}),
         data: {
           label: block.label,
-          iceType: `Resource.${block.blockType
-            .split('-')
-            .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
-            .join('')}`,
+          iceType: block.iceType,
           behavior: 'singleton',
           status: 'active',
           ...block.data,

@@ -73,7 +73,7 @@ function formatDateTime(dateStr: string): string {
 function opSummary(op: AiCanvasOp): string {
   switch (op.op) {
     case 'addBlueprint':
-      return `Add ${op.label || op.blockType}`;
+      return `Add ${op.label || op.iceType}`;
     case 'addNode':
       return `Add ${(op.node.data?.label as string) || op.node.type}`;
     case 'addEdge':

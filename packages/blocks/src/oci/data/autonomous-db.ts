@@ -8,14 +8,13 @@ import { createBlueprintFromResource } from '@ice/core/resources';
 import type { BlockBlueprint } from '../../types';
 
 export const autonomousDbBlueprint: BlockBlueprint = createBlueprintFromResource('autonomous-db', {
-  blockType: 'autonomous-db',
+  iceType: 'Database.AutonomousDB',
   category: 'data',
   name: 'Autonomous DB',
   description: 'Oracle Cloud self-managing database.',
   icon: 'Database',
   providers: ['oci'],
   nodeDataDefaults: {
-    iceType: 'Database.AutonomousDB',
     runtime: 'Oracle 19c',
   },
 });

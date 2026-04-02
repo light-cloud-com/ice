@@ -23,7 +23,7 @@ import {
 describe('canContain', () => {
   describe('Group.Custom — universal container', () => {
     it('should accept any resource type', () => {
-      expect(canContain('Group.Custom', 'Application.Container')).toBe(true);
+      expect(canContain('Group.Custom', 'Compute.Container')).toBe(true);
       expect(canContain('Group.Custom', 'Database.PostgreSQL')).toBe(true);
       expect(canContain('Group.Custom', 'Messaging.Queue')).toBe(true);
       expect(canContain('Group.Custom', 'Storage.Bucket')).toBe(true);
@@ -51,7 +51,7 @@ describe('canContain', () => {
 
   describe('Named groups — typed containment', () => {
     it('Group.Frontend should accept frontend resources', () => {
-      expect(canContain('Group.Frontend', 'Application.Container')).toBe(true);
+      expect(canContain('Group.Frontend', 'Compute.Container')).toBe(true);
       expect(canContain('Group.Frontend', 'Network.CDN')).toBe(true);
       expect(canContain('Group.Frontend', 'Block.StaticSite')).toBe(true);
     });
@@ -71,7 +71,7 @@ describe('canContain', () => {
     it('Group.Services should accept compute blocks', () => {
       expect(canContain('Group.Services', 'Block.ScalableBackend')).toBe(true);
       expect(canContain('Group.Services', 'Block.Worker')).toBe(true);
-      expect(canContain('Group.Services', 'Application.Container')).toBe(true);
+      expect(canContain('Group.Services', 'Compute.Container')).toBe(true);
     });
 
     it('Group.Messaging should accept messaging types', () => {
@@ -82,7 +82,7 @@ describe('canContain', () => {
 
   describe('Block containment — strict rules', () => {
     it('Block.ScalableBackend should accept compute and database', () => {
-      expect(canContain('Block.ScalableBackend', 'Application.Container')).toBe(true);
+      expect(canContain('Block.ScalableBackend', 'Compute.Container')).toBe(true);
       expect(canContain('Block.ScalableBackend', 'Database.PostgreSQL')).toBe(true);
       expect(canContain('Block.ScalableBackend', 'Messaging.Queue')).toBe(true);
     });
@@ -95,7 +95,7 @@ describe('canContain', () => {
     it('Block.Database should accept only database resources', () => {
       expect(canContain('Block.Database', 'Database.PostgreSQL')).toBe(true);
       expect(canContain('Block.Database', 'Database.MySQL')).toBe(true);
-      expect(canContain('Block.Database', 'Application.Container')).toBe(false);
+      expect(canContain('Block.Database', 'Compute.Container')).toBe(false);
     });
 
     it('Block.Cache should accept cache instances', () => {
@@ -104,7 +104,7 @@ describe('canContain', () => {
     });
 
     it('Block.Cache should reject non-Database types', () => {
-      expect(canContain('Block.Cache', 'Application.Container')).toBe(false);
+      expect(canContain('Block.Cache', 'Compute.Container')).toBe(false);
       expect(canContain('Block.Cache', 'Storage.Bucket')).toBe(false);
       expect(canContain('Block.Cache', 'Messaging.Queue')).toBe(false);
     });
@@ -118,12 +118,12 @@ describe('canContain', () => {
     });
 
     it('VPC should reject compute resources', () => {
-      expect(canContain('Network.VPC', 'Application.Container')).toBe(false);
+      expect(canContain('Network.VPC', 'Compute.Container')).toBe(false);
       expect(canContain('Network.VPC', 'Database.PostgreSQL')).toBe(false);
     });
 
     it('Subnet should accept compute and data resources', () => {
-      expect(canContain('Network.Subnet', 'Application.Container')).toBe(true);
+      expect(canContain('Network.Subnet', 'Compute.Container')).toBe(true);
       expect(canContain('Network.Subnet', 'Database.PostgreSQL')).toBe(true);
       expect(canContain('Network.Subnet', 'Storage.Bucket')).toBe(true);
     });
@@ -136,14 +136,14 @@ describe('canContain', () => {
     });
 
     it('should not cross-match categories', () => {
-      expect(canContain('Block.Cache', 'Application.Container')).toBe(false);
+      expect(canContain('Block.Cache', 'Compute.Container')).toBe(false);
     });
   });
 
   describe('Unknown parent type', () => {
     it('should return false for non-existent parent types', () => {
-      expect(canContain('Unknown.Type', 'Application.Container')).toBe(false);
-      expect(canContain('Application.Container', 'Application.Container')).toBe(false);
+      expect(canContain('Unknown.Type', 'Compute.Container')).toBe(false);
+      expect(canContain('Compute.Container', 'Compute.Container')).toBe(false);
     });
   });
 });
@@ -172,7 +172,7 @@ describe('isContainer', () => {
   });
 
   it('should return false for leaf resources', () => {
-    expect(isContainer('Application.Container')).toBe(false);
+    expect(isContainer('Compute.Container')).toBe(false);
     expect(isContainer('Database.PostgreSQL')).toBe(false);
     expect(isContainer('Messaging.Queue')).toBe(false);
     expect(isContainer('Storage.Bucket')).toBe(false);
@@ -190,14 +190,14 @@ describe('isContainer', () => {
 
 describe('validatePlacement', () => {
   it('should allow any node at root level (no parent)', () => {
-    expect(validatePlacement('Application.Container', null)).toEqual({ valid: true });
+    expect(validatePlacement('Compute.Container', null)).toEqual({ valid: true });
     expect(validatePlacement('Block.Database', null)).toEqual({ valid: true });
     expect(validatePlacement('Group.Custom', null)).toEqual({ valid: true });
   });
 
   it('should allow valid child in parent', () => {
     expect(validatePlacement('Network.Subnet', 'Network.VPC')).toEqual({ valid: true });
-    expect(validatePlacement('Application.Container', 'Block.ScalableBackend')).toEqual({ valid: true });
+    expect(validatePlacement('Compute.Container', 'Block.ScalableBackend')).toEqual({ valid: true });
   });
 
   it('should reject invalid child in parent with reason', () => {
@@ -208,7 +208,7 @@ describe('validatePlacement', () => {
   });
 
   it('should allow anything in Group.Custom', () => {
-    expect(validatePlacement('Application.Container', 'Group.Custom')).toEqual({ valid: true });
+    expect(validatePlacement('Compute.Container', 'Group.Custom')).toEqual({ valid: true });
     expect(validatePlacement('Group.Frontend', 'Group.Custom')).toEqual({ valid: true });
   });
 });
@@ -219,7 +219,7 @@ describe('validatePlacement', () => {
 
 describe('getAllowedParents', () => {
   it('should return valid parents for a resource type', () => {
-    const parents = getAllowedParents('Application.Container');
+    const parents = getAllowedParents('Compute.Container');
     expect(parents).toContain('Network.Subnet');
     expect(parents).toContain('Block.ScalableBackend');
     expect(parents).toContain('Group.Frontend');
@@ -241,7 +241,7 @@ describe('getAllowedChildren', () => {
   });
 
   it('should return empty for non-container types', () => {
-    expect(getAllowedChildren('Application.Container')).toEqual([]);
+    expect(getAllowedChildren('Compute.Container')).toEqual([]);
     expect(getAllowedChildren('Unknown.Type')).toEqual([]);
   });
 });
@@ -264,7 +264,7 @@ describe('getContainmentDepth', () => {
 
   it('should return 1 for resources with root-level parents', () => {
     // Application.Container can be in Group.Frontend (root) → depth 1
-    expect(getContainmentDepth('Application.Container')).toBe(1);
+    expect(getContainmentDepth('Compute.Container')).toBe(1);
   });
 });
 

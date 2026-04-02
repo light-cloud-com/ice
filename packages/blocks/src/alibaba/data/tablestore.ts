@@ -8,14 +8,13 @@ import { createBlueprintFromResource } from '@ice/core/resources';
 import type { BlockBlueprint } from '../../types';
 
 export const tablestoreBlueprint: BlockBlueprint = createBlueprintFromResource('tablestore', {
-  blockType: 'tablestore',
+  iceType: 'Database.Tablestore',
   category: 'data',
   name: 'Tablestore',
   description: 'Alibaba Cloud NoSQL wide-column. Serverless.',
   icon: 'Database',
   providers: ['alibaba'],
   nodeDataDefaults: {
-    iceType: 'Database.Tablestore',
     runtime: 'Tablestore',
   },
 });

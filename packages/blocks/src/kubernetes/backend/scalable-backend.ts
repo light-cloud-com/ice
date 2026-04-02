@@ -2,14 +2,13 @@ import { createBlueprintFromResource } from '@ice/core/resources';
 import type { BlockBlueprint } from '../../types';
 
 export const kubernetesScalableBackendBlueprint: BlockBlueprint = createBlueprintFromResource('container-service', {
-  blockType: 'kubernetes-scalable-backend',
+  iceType: 'Compute.Container',
   category: 'backend',
   name: 'Kubernetes Service',
   description: 'Kubernetes Deployment + HPA. Containerized service, auto-scales.',
   icon: 'Server',
   providers: ['kubernetes'],
   nodeDataDefaults: {
-    iceType: 'Application.Container',
     runtime: 'Node.js 20',
     port: 8080,
     minInstances: 1,

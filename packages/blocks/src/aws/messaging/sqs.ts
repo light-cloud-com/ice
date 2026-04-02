@@ -8,14 +8,13 @@ import { createBlueprintFromResource } from '@ice/core/resources';
 import type { BlockBlueprint } from '../../types';
 
 export const sqsBlueprint: BlockBlueprint = createBlueprintFromResource('message-queue', {
-  blockType: 'sqs',
+  iceType: 'Messaging.SQS',
   category: 'messaging',
   name: 'SQS',
   description: 'AWS managed queue. Guaranteed delivery.',
   icon: 'List',
   providers: ['aws'],
   nodeDataDefaults: {
-    iceType: 'Messaging.SQS',
     runtime: 'SQS FIFO',
   },
 });

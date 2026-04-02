@@ -24,8 +24,8 @@ export type Provider = 'aws' | 'gcp' | 'azure' | 'kubernetes' | 'alibaba' | 'oci
  * No containers, no children, no internal edges.
  */
 export interface BlockBlueprint {
-  /** Palette block type, e.g. 'static-site' */
-  blockType: string;
+  /** Canonical block type in {Category}.{Resource} format, e.g. 'Database.PostgreSQL' */
+  iceType: string;
   /** Maps to HIGH_LEVEL_CATEGORIES resource ID in @ice/core */
   resourceId: string;
   /** Human-readable name, e.g. 'Static Site' */

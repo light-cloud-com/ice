@@ -8,14 +8,13 @@ import { createBlueprintFromResource } from '@ice/core/resources';
 import type { BlockBlueprint } from '../../types';
 
 export const cosmosdbBlueprint: BlockBlueprint = createBlueprintFromResource('cosmosdb', {
-  blockType: 'cosmosdb',
+  iceType: 'Database.CosmosDB',
   category: 'data',
   name: 'Cosmos DB',
   description: 'Azure multi-model DB. Global distribution.',
   icon: 'Database',
   providers: ['azure'],
   nodeDataDefaults: {
-    iceType: 'Database.CosmosDB',
     runtime: 'Cosmos DB NoSQL',
   },
 });

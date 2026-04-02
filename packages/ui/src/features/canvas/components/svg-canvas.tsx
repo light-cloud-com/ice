@@ -288,10 +288,10 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   const canvasNodes: LocalCanvasNode[] = useMemo(() => {
     return nodes.map((node) => {
       const iceType =
-        (node.data?.iceType as string) || (node.data?.blockType ? `Block.${node.data.blockType}` : 'Resource.Unknown');
+        (node.data?.iceType as string) || 'Resource.Unknown';
 
       const isGroup = iceType.startsWith('Group.') || node.type === 'container' || node.type === ('group' as any);
-      const isBlock = iceType.startsWith('Block.') || node.type === 'block';
+      const isBlock = node.type === 'block';
       const folded = !!node.data?.folded;
       const defaultWidth = computeCompactNodeWidth(isBlock || isGroup);
       const nodeData = (node.data as Record<string, unknown>) || {};
@@ -999,8 +999,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
         const isGroupOrBlock =
           node.type === 'container' ||
           node.type === 'block' ||
-          iceType.startsWith('Group.') ||
-          iceType.startsWith('Block.');
+          iceType.startsWith('Group.');
         const defaultH = computeCompactNodeHeight(node.data as Record<string, unknown>, isGroupOrBlock, false);
         selfH = Math.max(reduxNode?.height || 0, defaultH, MIN_CONTAINER_HEIGHT);
       }
@@ -1535,7 +1534,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
           const reduxNode = nodes.find((n: any) => n.id === itemId);
           const droppedIceType = (draggedNode.data?.iceType as string) || '';
           const droppedIsGroup = draggedNode.type === 'container' || droppedIceType.startsWith('Group.');
-          const droppedIsBlock = draggedNode.type === 'block' || droppedIceType.startsWith('Block.');
+          const droppedIsBlock = draggedNode.type === 'block';
           const droppedDefaultH = computeCompactNodeHeight(
             draggedNode.data as Record<string, unknown>,
             droppedIsGroup || droppedIsBlock,
@@ -1671,7 +1670,6 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
           return (
             isContainer(iceType) ||
             iceType.startsWith('Group.') ||
-            iceType.startsWith('Block.') ||
             iceType.startsWith('Network.')
           );
         })
@@ -1768,7 +1766,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
           }
 
           logBlueprint({
-            type: blueprint.blockType,
+            type: blueprint.iceType,
             provider: provider !== 'all' ? provider : undefined,
             childCount: 0,
             containerWidth: expanded.node.width,
@@ -1989,12 +1987,12 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
           const specialType =
             srcType === 'Source.Repository' || sourceNode.data?.behavior === 'source'
               ? 'Source.Repository'
-              : srcType === 'Config.EnvVars'
-                ? 'Config.EnvVars'
+              : srcType === 'Config.Environment'
+                ? 'Config.Environment'
                 : tgtType === 'Source.Repository' || targetNode.data?.behavior === 'source'
                   ? 'Source.Repository'
-                  : tgtType === 'Config.EnvVars'
-                    ? 'Config.EnvVars'
+                  : tgtType === 'Config.Environment'
+                    ? 'Config.Environment'
                     : null;
 
           if (specialType) {
@@ -2328,7 +2326,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
               const iceType = (node.data?.iceType as string) || '';
 
               const isLogNode =
-                iceType === 'Log.Terminal' || iceType === 'Observability.Logs' || iceType.startsWith('Log.');
+                iceType === 'Monitoring.Terminal' || iceType === 'Observability.Logs' || iceType.startsWith('Log.');
               const isVpcOrSubnet = iceType === 'Network.VPC' || iceType === 'Network.Subnet';
               const isGroup = node.type === 'container' || node.type === ('group' as any) || isVpcOrSubnet;
               const isBlock = node.type === 'block';

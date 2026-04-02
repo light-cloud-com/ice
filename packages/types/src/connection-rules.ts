@@ -81,7 +81,7 @@ export function isStorage(t: string): boolean {
 export function isBackend(t: string): boolean {
   return (
     /Backend|Container|Worker|Function|CronJob|Scheduled|AppPlatform|OCIFunctions/i.test(t) ||
-    t.startsWith('Application.') ||
+    t.startsWith('Compute.') ||
     t.startsWith('Compute.')
   );
 }
@@ -116,10 +116,10 @@ export function isRepo(t: string): boolean {
   return t === 'Source.Repository';
 }
 export function isEnvConfig(t: string): boolean {
-  return t === 'Config.EnvVars';
+  return t === 'Config.Environment';
 }
 export function isDomain(t: string): boolean {
-  return t === 'Networking.Domain' || /Domain|DNS/i.test(t);
+  return t === 'Network.Domain' || /Domain|DNS/i.test(t);
 }
 export function isContainer(iceType: string, nodeType?: string): boolean {
   if (nodeType === 'container' || nodeType === 'group') return true;

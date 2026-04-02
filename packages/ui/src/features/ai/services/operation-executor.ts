@@ -216,7 +216,7 @@ function findChildPosition(
 // =============================================================================
 
 function resolveBlueprint(op: AddBlueprintOp, card: Card, idMap: Map<string, string>): CardNode | null {
-  const blueprint = getBlueprint(op.blockType, op.provider);
+  const blueprint = getBlueprint(op.iceType, op.provider);
   if (!blueprint) return null;
 
   const parentContainerId = op.parentId ? resolveId(op.parentId, idMap) : undefined;
@@ -351,14 +351,14 @@ export function executeAiOperations(
           const currentCard = getCard();
           const node = resolveBlueprint(op, currentCard, idMap);
           if (!node) {
-            skippedOps.push({ op, reason: `Blueprint not found: ${op.blockType}` });
+            skippedOps.push({ op, reason: `Blueprint not found: ${op.iceType}` });
             break;
           }
-          // Map AI-provided placeholder ID and blockType to real node ID
+          // Map AI-provided placeholder ID and iceType to real node ID
           if (op.id) {
             idMap.set(op.id, node.id);
           }
-          idMap.set(op.blockType, node.id);
+          idMap.set(op.iceType, node.id);
           // Validate parentId — only containers can have children
           if (node.parentId) {
             const resolvedParent = resolveId(node.parentId, idMap);
@@ -595,7 +595,7 @@ export function executeAiOperations(
       connectedIds.add(e.target);
     }
 
-    // Find backend nodes (Application.Container, scalable backend, etc.)
+    // Find backend nodes (Compute.Container, scalable backend, etc.)
     const backends = finalCard.nodes.filter((n) => {
       const t = ((n.data?.iceType as string) || '').toLowerCase();
       return /container|backend|worker|service/.test(t) && n.type !== 'container';

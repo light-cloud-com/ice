@@ -353,7 +353,7 @@ function getContextLines(data: Record<string, unknown>, iceType: string): Contex
         repoLineIndex = lines.length;
         lines.push(repository ? truncate(shortRepo(repository), 30) : ph('owner/repo'));
         lines.push(branch ? `\u2192 ${branch}` : ph('\u2192 main'));
-      } else if (iceType === 'Config.EnvVars') {
+      } else if (iceType === 'Config.Environment') {
         const varCount = listCount(data.variables);
         lines.push(varCount > 0 ? `${varCount} variables` : ph('No variables'));
       }

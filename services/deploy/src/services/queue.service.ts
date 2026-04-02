@@ -295,7 +295,7 @@ async function processPipelineJob(data: any) {
     for (const edge of connectedEdges) {
       const otherId = edge.source === nodeId ? edge.target : edge.source;
       const otherNode = nodes.find((n: any) => n.id === otherId);
-      if (otherNode?.data?.iceType === 'Config.EnvVars' && Array.isArray(otherNode.data.variables)) {
+      if (otherNode?.data?.iceType === 'Config.Environment' && Array.isArray(otherNode.data.variables)) {
         for (const v of otherNode.data.variables) {
           if (v.name && v.value) envVars[v.name] = v.value;
         }
@@ -307,7 +307,7 @@ async function processPipelineJob(data: any) {
     for (const edge of connectedEdges) {
       const otherId = edge.source === nodeId ? edge.target : edge.source;
       const otherNode = nodes.find((n: any) => n.id === otherId);
-      if (otherNode?.data?.iceType === 'Networking.Domain') {
+      if (otherNode?.data?.iceType === 'Network.Domain') {
         const hostname = otherNode.data.hostname || otherNode.data.subdomain;
         if (hostname) customDomain = hostname as string;
       }

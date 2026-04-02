@@ -5,7 +5,7 @@
  * merged with UI-specific overrides. This makes the schemas layer
  * the single source of truth for providers[], name, description,
  * and behavior — while the UI controls presentation details
- * (blockType, category, iceType, nodeDataDefaults).
+ * (iceType, category, nodeDataDefaults).
  */
 
 import { getAllHighLevelResources } from './high-level-resources.js';
@@ -24,8 +24,8 @@ export interface BlueprintProviderVariant {
 }
 
 export interface GeneratedBlueprint {
-  /** Palette block type, e.g. 'static-site' */
-  blockType: string;
+  /** Canonical block type in {Category}.{Resource} format, e.g. 'Database.PostgreSQL' */
+  iceType: string;
   /** Maps to HIGH_LEVEL_CATEGORIES resource ID */
   resourceId: string;
   /** Human-readable name */
@@ -49,8 +49,8 @@ export interface GeneratedBlueprint {
 // =============================================================================
 
 export interface BlueprintOverrides {
-  /** Palette drag type (required — UI concern) */
-  blockType: string;
+  /** Canonical block type in {Category}.{Resource} format, e.g. 'Database.PostgreSQL' */
+  iceType: string;
   /** Palette category grouping (required — UI concern) */
   category: string;
   /** Override schema name (e.g., 'Service' instead of 'Container Service') */
@@ -76,7 +76,7 @@ export interface BlueprintOverrides {
  * with UI-specific overrides.
  *
  * From schema: name, description, behavior, providers[], icon
- * From overrides: blockType, category, nodeDataDefaults, providerVariants
+ * From overrides: iceType, category, nodeDataDefaults, providerVariants
  *
  * @param resourceId - ID in HIGH_LEVEL_CATEGORIES (e.g., 'postgres-db')
  * @param overrides - UI-specific configuration
@@ -91,13 +91,15 @@ export function createBlueprintFromResource(resourceId: string, overrides: Bluep
   }
 
   // Build nodeData: behavior from schema + UI defaults
+  // Auto-inject iceType into nodeData so blueprints don't need to duplicate it
   const nodeData: Record<string, unknown> = {
     behavior: resource.behavior,
+    iceType: overrides.iceType,
     ...overrides.nodeDataDefaults,
   };
 
   return {
-    blockType: overrides.blockType,
+    iceType: overrides.iceType,
     resourceId,
     name: overrides.name ?? resource.name,
     description: overrides.description ?? resource.description,

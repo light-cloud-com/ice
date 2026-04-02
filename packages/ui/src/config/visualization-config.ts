@@ -28,36 +28,16 @@ export const RESOURCE_CATEGORIES = {
   // Organizational groups
   groups: ['Group.Frontend', 'Group.Services', 'Group.Data', 'Group.Messaging', 'Group.Monitoring', 'Group.External'],
 
-  // Cloud Blocks (high-level containers for Level 2 resources)
-  blocks: [
-    'Block.StaticSite',
-    'Block.ScalableBackend',
-    'Block.Worker',
-    'Block.Database',
-    'Block.NoSQLDatabase',
-    'Block.Cache',
-    'Block.Storage',
-    'Block.Gateway',
-    'Block.ScheduledTask',
-    'Block.ServerlessFunction',
-    'Block.Queue',
-    'Block.EventStream',
-    'Block.Logs',
-    'Block.CDN',
-    'Block.Auth',
-    'Block.Secrets',
-  ],
-
   // Application services — what runs your code
   compute: [
-    'Application.Container',
-    'Application.Function',
-    'Application.VM',
-    'Application.CronJob',
-    'Application.StaticSite',
-    'Application.SSRSite',
-    'Application.ServerlessFunction',
-    'Application.Worker',
+    'Compute.Container',
+    'Compute.Function',
+    'Compute.VM',
+    'Compute.CronJob',
+    'Compute.StaticSite',
+    'Compute.SSRSite',
+    'Compute.ServerlessFunction',
+    'Compute.Worker',
   ],
 
   // Data stores
@@ -92,7 +72,7 @@ export const RESOURCE_CATEGORIES = {
   auth: ['Security.Identity', 'Security.Secret'],
 
   // Observability (architecture-level — logs, monitoring)
-  observability: ['Monitoring.Log', 'Monitoring.Alert', 'Monitoring.Dashboard', 'Log.Terminal'],
+  observability: ['Monitoring.Log', 'Monitoring.Alert', 'Monitoring.Dashboard', 'Monitoring.Terminal'],
 
   // AI/ML
   ai: ['AI.LLMGateway', 'AI.VectorDB', 'AI.ModelServing'],
@@ -139,7 +119,6 @@ export const VIEW_LEVELS: Record<ViewLevel, ViewLevelConfig> = {
     tooltip: 'Basic View (press 1)',
     visibleCategories: [
       'groups',
-      'blocks',
       'compute',
       'databases',
       'storage',
@@ -161,7 +140,6 @@ export const VIEW_LEVELS: Record<ViewLevel, ViewLevelConfig> = {
     tooltip: 'Professional View (press 2)',
     visibleCategories: [
       'groups',
-      'blocks',
       'compute',
       'databases',
       'storage',

@@ -72,57 +72,12 @@ function detectSkill(intent: string): AiSkill {
 // Cloud Architect Skill Prompt
 // =============================================================================
 
-function buildCloudArchitectPrompt(dominantProvider: string, blockTypes: string[]): string {
-  // Group available blocks by category for the architect
+function buildCloudArchitectPrompt(dominantProvider: string, iceTypes: string[]): string {
+  // Group available blocks by category — derived from iceType prefix (e.g., "Database.PostgreSQL" → "Database")
   const categories: Record<string, string[]> = {};
-  for (const bt of blockTypes) {
-    const prefix = bt.startsWith(dominantProvider + '-') ? bt.slice(dominantProvider.length + 1) : bt;
-    // Derive category from block name
-    if (
-      prefix.includes('backend') ||
-      prefix.includes('worker') ||
-      prefix.includes('function') ||
-      prefix.includes('scheduled') ||
-      prefix.includes('ssr') ||
-      prefix.includes('static')
-    )
-      (categories['Compute'] ??= []).push(bt);
-    else if (
-      prefix.includes('postgres') ||
-      prefix.includes('mysql') ||
-      prefix.includes('mongo') ||
-      prefix.includes('redis') ||
-      prefix.includes('vector') ||
-      prefix.includes('warehouse') ||
-      prefix.includes('search')
-    )
-      (categories['Databases & Cache'] ??= []).push(bt);
-    else if (prefix.includes('storage') || prefix.includes('cdn')) (categories['Storage'] ??= []).push(bt);
-    else if (
-      prefix.includes('gateway') ||
-      prefix.includes('loadbalancer') ||
-      prefix.includes('dns') ||
-      prefix.includes('cdn')
-    )
-      (categories['Networking'] ??= []).push(bt);
-    else if (
-      prefix.includes('auth') ||
-      prefix.includes('secret') ||
-      prefix.includes('firewall') ||
-      prefix.includes('waf')
-    )
-      (categories['Security'] ??= []).push(bt);
-    else if (prefix.includes('log') || prefix.includes('monitor')) (categories['Observability'] ??= []).push(bt);
-    else if (
-      prefix.includes('queue') ||
-      prefix.includes('rabbit') ||
-      prefix.includes('event') ||
-      prefix.includes('kafka')
-    )
-      (categories['Messaging & Events'] ??= []).push(bt);
-    else if (prefix.includes('llm') || prefix.includes('ml') || prefix.includes('ai'))
-      (categories['AI/ML'] ??= []).push(bt);
-    else (categories['Other'] ??= []).push(bt);
+  for (const t of iceTypes) {
+    const category = t.split('.')[0] || 'Other';
+    (categories[category] ??= []).push(t);
   }
 
   const categoryList = Object.entries(categories)
@@ -265,47 +220,41 @@ Use the "clarification" field ONLY when you truly cannot proceed without user in
 
 ## Operations — STRICT BLOCK REGISTRY
 
-You MUST ONLY use blockTypes from the list below. These are the ONLY blocks that exist. If a blockType is not in this list, it DOES NOT EXIST and MUST NOT be used. Any operation with an unknown blockType will be rejected.
+You MUST ONLY use iceType values from the list below. These are the ONLY blocks that exist. If an iceType is not in this list, it DOES NOT EXIST and MUST NOT be used. Any operation with an unknown iceType will be rejected.
 
-### Available blockTypes for "${dominantProvider}":
-${canvas.availableBlockTypes.filter((t) => t.startsWith(dominantProvider + '-') || !t.includes('-')).join(', ')}
-
-### Provider-agnostic blocks (work with any provider):
-github-repository, env-config
-
-### Full registry (all providers):
+### Available iceTypes:
 ${canvas.availableBlockTypes.join(', ')}
 
-**Mapping from user intent to EXACT blockType (for provider "${dominantProvider}"):**
-- "frontend" / "website" / "static site" → ${dominantProvider}-static-site
-- "SSR" / "Next.js" / "server-rendered" → ${dominantProvider}-ssr-site
-- "backend" / "service" / "API server" → ${dominantProvider}-scalable-backend
-- "worker" / "background job" → ${dominantProvider}-worker
-- "cron" / "scheduled task" → ${dominantProvider}-scheduled-task
-- "function" / "lambda" / "serverless" → ${dominantProvider}-serverless-function
-- "database" / "postgres" / "SQL" → ${dominantProvider}-postgresql
-- "mysql" → ${dominantProvider}-mysql
-- "mongodb" / "document db" → ${dominantProvider}-mongodb
-- "cache" / "redis" → ${dominantProvider}-redis-cache
-- "storage" / "bucket" / "S3" / "files" → ${dominantProvider}-storage
-- "API gateway" / "gateway" → ${dominantProvider}-gateway
-- "queue" / "rabbitmq" → ${dominantProvider}-rabbitmq
-- "event stream" / "kafka" → ${dominantProvider}-event-stream
-- "auth" / "login" / "users" → ${dominantProvider}-auth
-- "secrets" / "keys" / "credentials" → ${dominantProvider}-secrets
-- "logs" / "monitoring" → ${dominantProvider}-logs
-- "LLM" / "AI gateway" → ${dominantProvider}-llm-gateway
-- "vector db" / "embeddings" → ${dominantProvider}-vector-db
-- "ML model" → ${dominantProvider}-ml-model
-- "data warehouse" / "analytics" → ${dominantProvider}-data-warehouse
-- "search" / "elasticsearch" → ${dominantProvider}-search
-- "repo" / "github" / "source code" → github-repository
-- "env vars" / "config" / "environment" → env-config
+**Mapping from user intent to EXACT iceType:**
+- "frontend" / "website" / "static site" → Compute.StaticSite
+- "SSR" / "Next.js" / "server-rendered" → Compute.SSRSite
+- "backend" / "service" / "API server" → Compute.Container
+- "worker" / "background job" → Compute.Worker
+- "cron" / "scheduled task" → Compute.CronJob
+- "function" / "lambda" / "serverless" → Compute.ServerlessFunction
+- "database" / "postgres" / "SQL" → Database.PostgreSQL
+- "mysql" → Database.MySQL
+- "mongodb" / "document db" → Database.MongoDB
+- "cache" / "redis" → Database.Redis
+- "storage" / "bucket" / "S3" / "files" → Storage.Bucket
+- "API gateway" / "gateway" → Network.Gateway
+- "queue" / "rabbitmq" → Messaging.RabbitMQ
+- "event stream" / "kafka" → Messaging.Topic
+- "auth" / "login" / "users" → Security.Identity
+- "secrets" / "keys" / "credentials" → Security.Secret
+- "logs" / "monitoring" → Monitoring.Log
+- "LLM" / "AI gateway" → AI.LLMGateway
+- "vector db" / "embeddings" → AI.VectorDB
+- "ML model" → AI.ModelServing
+- "data warehouse" / "analytics" → Analytics.DataWarehouse
+- "search" / "elasticsearch" → Analytics.Search
+- "repo" / "github" / "source code" → Source.Repository
+- "env vars" / "config" / "environment" → Config.Environment
 
-DO NOT invent blockTypes. DO NOT use blockTypes not listed above.
+DO NOT invent iceTypes. DO NOT use iceTypes not listed above.
 
 All operation formats:
-- addBlueprint: {"op":"addBlueprint", "id":"ai-n-1", "blockType":"...", "label":"...", "parentId":"optional", "dataOverrides":{...properties...}}
+- addBlueprint: {"op":"addBlueprint", "id":"ai-n-1", "iceType":"...", "label":"...", "parentId":"optional", "dataOverrides":{...properties...}}
 - addEdge: {"op":"addEdge", "edge":{"id":"ai-e-1", "source":"...", "target":"...", "data":{"relationship":"connects_to|depends_on"}}}
 - updateNodeData: {"op":"updateNodeData", "nodeId":"...", "data":{...}}
 - deleteNode: {"op":"deleteNode", "nodeId":"..."}
@@ -471,8 +420,8 @@ VPCs and Subnets are **pure containers** — they hold resources inside them via
 Note: use type "container" for VPC/Subnet (not "group"). Always include behavior:"container", groupColor, and folded:false.
 
 **Placing resources inside containers — use parentId:**
-{"op":"addBlueprint", "id":"ai-n-4", "blockType":"aws-gateway", "label":"API Gateway", "parentId":"ai-n-2", "dataOverrides":{"domain":"api.example.com"}}
-{"op":"addBlueprint", "id":"ai-n-5", "blockType":"aws-scalable-backend", "label":"Backend", "parentId":"ai-n-3", "dataOverrides":{"exposed":false}}
+{"op":"addBlueprint", "id":"ai-n-4", "iceType":"Network.Gateway", "label":"API Gateway", "parentId":"ai-n-2", "dataOverrides":{"domain":"api.example.com"}}
+{"op":"addBlueprint", "id":"ai-n-5", "iceType":"Compute.Container", "label":"Backend", "parentId":"ai-n-3", "dataOverrides":{"exposed":false}}
 
 **Edges connect resources to each other, NEVER to containers:**
 {"op":"addEdge", "edge":{"id":"ai-e-1", "source":"ai-n-4", "target":"ai-n-5", "data":{"relationship":"connects_to"}}}
@@ -491,7 +440,7 @@ Note: use type "container" for VPC/Subnet (not "group"). Always include behavior
 
 The canvas has a built-in "Public Traffic" user icon that AUTOMATICALLY appears and connects to all publicly exposed services. You do NOT need to add a public-traffic block — it is handled by the canvas UI.
 
-**NEVER use addBlueprint with blockType "public-traffic", "aws-public-traffic", "gcp-public-traffic", etc.** The canvas auto-detects exposed services and draws the user traffic icon for them.
+**NEVER use addBlueprint with iceType "Network.Internet".** The canvas auto-detects exposed services and draws the user traffic icon for them.
 
 **How the canvas decides what's exposed:**
 - Services with a domain, URL, or subdomain property are considered public entry points
@@ -507,13 +456,13 @@ The canvas has a built-in "Public Traffic" user icon that AUTOMATICALLY appears 
 
 Two special provider-agnostic blocks are available:
 
-**github-repository** — Represents a source code repository. Use when user mentions a GitHub repo, source code, or deploying from a repo.
-- blockType: "github-repository" (no provider prefix)
+**Source.Repository** — Represents a source code repository. Use when user mentions a GitHub repo, source code, or deploying from a repo.
+- iceType: "Source.Repository"
 - Key dataOverrides: repository (e.g. "myorg/my-app"), branch (default "main"), path (default "/"), buildCommand (e.g. "npm run build"), outputDirectory (e.g. "dist"), autoDeploy (boolean)
 - Connect FROM repo TO the service it builds: repo → service (connects_to)
 
-**env-config** — Represents environment variables and configuration. Use when user mentions env vars, config, credentials, or connection strings.
-- blockType: "env-config" (no provider prefix)
+**Config.Environment** — Represents environment variables and configuration. Use when user mentions env vars, config, credentials, or connection strings.
+- iceType: "Config.Environment"
 - Key dataOverrides: environment ("development"|"staging"|"production"), variables (array of {name, value} objects)
 - Connect FROM service TO env-config: service → env-config (depends_on)
 - When a database exists, auto-populate DATABASE_URL in variables
@@ -521,10 +470,10 @@ Two special provider-agnostic blocks are available:
 - When secrets exist, reference them with secret_ref instead of value
 
 Example — "deploy my GitHub repo myorg/api with database credentials":
-1. addBlueprint: github-repository with repository="myorg/api", branch="main", buildCommand="npm run build"
-2. addBlueprint: scalable-backend (Backend)
-3. addBlueprint: postgresql (Database)
-4. addBlueprint: env-config with variables=[{name:"DATABASE_URL", value:"postgres://db:5432/app"}, {name:"NODE_ENV", value:"production"}]
+1. addBlueprint: Source.Repository with repository="myorg/api", branch="main", buildCommand="npm run build"
+2. addBlueprint: Compute.Container (Backend)
+3. addBlueprint: Database.PostgreSQL (Database)
+4. addBlueprint: Config.Environment with variables=[{name:"DATABASE_URL", value:"postgres://db:5432/app"}, {name:"NODE_ENV", value:"production"}]
 5. addEdge: repo → backend (connects_to)
 6. addEdge: backend → database (depends_on)
 7. addEdge: backend → env-config (depends_on)
@@ -557,9 +506,7 @@ Build a complete architecture. ALWAYS add addEdge operations. Think about the da
   // Detect and inject specialized skill prompt
   const skill = intent ? detectSkill(intent) : 'default';
   if (skill === 'cloud-architect') {
-    const providerBlocks = canvas.availableBlockTypes.filter(
-      (t) => t.startsWith(dominantProvider + '-') || !t.includes('-'),
-    );
+    const providerBlocks = canvas.availableBlockTypes;
     basePrompt += buildCloudArchitectPrompt(dominantProvider, providerBlocks);
     console.log('[AI] Cloud Architect skill activated for intent:', intent?.slice(0, 80));
   }
@@ -889,11 +836,11 @@ function validateOperations(ops: unknown[], allowedBlockTypes?: Set<string>): Ai
     const opType = record.op;
     if (typeof opType !== 'string' || !VALID_OPS.has(opType)) return false;
 
-    // Validate addBlueprint uses a real registered blockType
+    // Validate addBlueprint uses a real registered iceType
     if (opType === 'addBlueprint' && allowedBlockTypes) {
-      const blockType = record.blockType as string;
-      if (!blockType || !allowedBlockTypes.has(blockType)) {
-        console.warn(`[AI] Rejected unknown blockType: "${blockType}"`);
+      const iceType = record.iceType as string;
+      if (!iceType || !allowedBlockTypes.has(iceType)) {
+        console.warn(`[AI] Rejected unknown iceType: "${iceType}"`);
         return false;
       }
     }

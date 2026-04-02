@@ -31,7 +31,7 @@ describe('Drift Detection — checkDrift', () => {
     const checkDrift = await getCheckDrift();
 
     const result = await checkDrift('card-1', [
-      { id: 'n1', type: 'resource', data: { iceType: 'Application.Container', label: 'api' } },
+      { id: 'n1', type: 'resource', data: { iceType: 'Compute.Container', label: 'api' } },
     ]);
 
     expect(result.driftResults).toEqual([]);
@@ -56,7 +56,7 @@ describe('Drift Detection — checkDrift', () => {
 
     const checkDrift = await getCheckDrift();
     const result = await checkDrift('card-1', [
-      { id: 'n1', type: 'resource', data: { iceType: 'Application.Container', label: 'api', properties: {} } },
+      { id: 'n1', type: 'resource', data: { iceType: 'Compute.Container', label: 'api', properties: {} } },
     ]);
 
     const nodeResult = result.driftResults.find((r: any) => r.nodeId === 'n1');
@@ -88,7 +88,7 @@ describe('Drift Detection — checkDrift', () => {
         id: 'n1',
         type: 'resource',
         data: {
-          iceType: 'Application.Container',
+          iceType: 'Compute.Container',
           label: 'api',
           properties: { region: 'us-central1', memory: '512Mi' },
         },
@@ -140,7 +140,7 @@ describe('Drift Detection — checkDrift', () => {
       {
         id: 'n1',
         type: 'resource',
-        data: { iceType: 'Application.Container', label: 'api', provider_id: 'old-id' },
+        data: { iceType: 'Compute.Container', label: 'api', provider_id: 'old-id' },
       },
     ]);
 
@@ -184,7 +184,7 @@ describe('Drift Detection — checkDrift', () => {
         id: 'n1',
         type: 'resource',
         data: {
-          iceType: 'Application.Container',
+          iceType: 'Compute.Container',
           label: 'api',
           properties: { _internal: 'original', region: 'us-central1' },
         },

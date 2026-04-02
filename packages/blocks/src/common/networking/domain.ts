@@ -1,7 +1,7 @@
 import type { BlockBlueprint } from '../../types';
 
 export const domainBlueprint: BlockBlueprint = {
-  blockType: 'domain',
+  iceType: 'Network.Domain',
   resourceId: 'domain',
   name: 'Domain',
   description: 'Custom domain and routing. Connect to services to expose them.',
@@ -9,7 +9,7 @@ export const domainBlueprint: BlockBlueprint = {
   category: 'networking',
   providers: ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean'],
   nodeData: {
-    iceType: 'Networking.Domain',
+    iceType: 'Network.Domain',
     behavior: 'networking',
     hostname: '',
     subdomain: '',

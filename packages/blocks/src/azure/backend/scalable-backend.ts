@@ -2,14 +2,13 @@ import { createBlueprintFromResource } from '@ice/core/resources';
 import type { BlockBlueprint } from '../../types';
 
 export const azureScalableBackendBlueprint: BlockBlueprint = createBlueprintFromResource('container-service', {
-  blockType: 'azure-scalable-backend',
+  iceType: 'Compute.Container',
   category: 'backend',
   name: 'Azure Service',
   description: 'Azure Container Apps. Containerized service, auto-scales.',
   icon: 'Server',
   providers: ['azure'],
   nodeDataDefaults: {
-    iceType: 'Application.Container',
     runtime: 'Node.js 20',
     port: 8080,
     minInstances: 1,

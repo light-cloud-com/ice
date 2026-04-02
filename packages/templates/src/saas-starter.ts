@@ -80,49 +80,49 @@ export const saasStarterTemplate: ComposedTemplate = {
 
   blocks: [
     // 0-2: Edge (with public traffic entry)
-    { blockType: 'public-traffic', label: 'Public Traffic', position: { x: 60, y: 60 } },
+    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 60, y: 60 } },
     {
-      blockType: 'ssr-site',
+      iceType: 'Compute.SSRSite',
       label: 'SSR Site',
       position: { x: 310, y: 60 },
       data: { domain: 'app.saas.io', runtime: 'Next.js 14' },
     },
-    { blockType: 'gateway', label: 'Gateway', position: { x: 560, y: 60 } },
+    { iceType: 'Network.Gateway', label: 'Gateway', position: { x: 560, y: 60 } },
 
     // 3-5: Backend microservices
     {
-      blockType: 'scalable-backend',
+      iceType: 'Compute.Container',
       label: 'Users Service',
       position: { x: 60, y: 260 },
       data: { runtime: 'Node.js 20', port: 8080 },
     },
     {
-      blockType: 'scalable-backend',
+      iceType: 'Compute.Container',
       label: 'Auth Service',
       position: { x: 310, y: 260 },
       data: { runtime: 'Node.js 20', port: 8081 },
     },
     {
-      blockType: 'scalable-backend',
+      iceType: 'Compute.Container',
       label: 'Billing Service',
       position: { x: 60, y: 400 },
       data: { runtime: 'Go 1.22', port: 8082 },
     },
 
     // 6-8: Data stores
-    { blockType: 'postgresql', label: 'Users PostgreSQL', position: { x: 640, y: 60 } },
-    { blockType: 'postgresql', label: 'Billing PostgreSQL', position: { x: 640, y: 210 } },
-    { blockType: 'redis-cache', label: 'Cache', position: { x: 640, y: 370 } },
+    { iceType: 'Database.PostgreSQL', label: 'Users PostgreSQL', position: { x: 640, y: 60 } },
+    { iceType: 'Database.PostgreSQL', label: 'Billing PostgreSQL', position: { x: 640, y: 210 } },
+    { iceType: 'Database.Redis', label: 'Cache', position: { x: 640, y: 370 } },
 
     // 9-10: Async processing
-    { blockType: 'sqs', label: 'SQS', position: { x: 60, y: 600 } },
-    { blockType: 'worker', label: 'Worker', position: { x: 310, y: 600 } },
+    { iceType: 'Messaging.SQS', label: 'SQS', position: { x: 60, y: 600 } },
+    { iceType: 'Compute.Worker', label: 'Worker', position: { x: 310, y: 600 } },
 
     // 11-14: Platform services
-    { blockType: 'storage', label: 'Storage', position: { x: 640, y: 600 } },
-    { blockType: 'secrets', label: 'Secrets', position: { x: 880, y: 600 } },
-    { blockType: 'auth', label: 'Auth', position: { x: 880, y: 60 } },
-    { blockType: 'logs', label: 'Logs', position: { x: 880, y: 210 } },
+    { iceType: 'Storage.Bucket', label: 'Storage', position: { x: 640, y: 600 } },
+    { iceType: 'Security.Secret', label: 'Secrets', position: { x: 880, y: 600 } },
+    { iceType: 'Security.Identity', label: 'Auth', position: { x: 880, y: 60 } },
+    { iceType: 'Monitoring.Log', label: 'Logs', position: { x: 880, y: 210 } },
   ],
 
   connections: [

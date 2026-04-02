@@ -239,7 +239,7 @@ export class CustomizationLoader {
           resources: {
             mycompany_api_endpoint: {
               description: 'Internal API endpoint',
-              category: 'application',
+              category: 'compute',
               properties: {
                 name: { type: 'string', required: true },
                 url: { type: 'string', required: true },

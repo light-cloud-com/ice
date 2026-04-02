@@ -61,10 +61,10 @@ export const euComplianceTemplate: ComposedTemplate = {
 
   blocks: [
     // 0-2: Application layer (with public traffic entry)
-    { blockType: 'public-traffic', label: 'Public Traffic', position: { x: 60, y: 60 } },
-    { blockType: 'gateway', label: 'Gateway', position: { x: 310, y: 60 } },
+    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 60, y: 60 } },
+    { iceType: 'Network.Gateway', label: 'Gateway', position: { x: 310, y: 60 } },
     {
-      blockType: 'scalable-backend',
+      iceType: 'Compute.Container',
       label: 'Node.js Service',
       position: { x: 560, y: 60 },
       data: { domain: 'app.eu.acme.io', runtime: 'Node.js 20', port: 8080 },
@@ -72,18 +72,18 @@ export const euComplianceTemplate: ComposedTemplate = {
 
     // 3-5: Encrypted data (EU-pinned)
     {
-      blockType: 'postgresql',
+      iceType: 'Database.PostgreSQL',
       label: 'PostgreSQL',
       position: { x: 60, y: 260 },
       data: { size: 'db.r6g.large', storage: '100 GB' },
     },
-    { blockType: 'storage', label: 'Storage', position: { x: 310, y: 260 } },
-    { blockType: 'redis-cache', label: 'Cache', position: { x: 60, y: 400 } },
+    { iceType: 'Storage.Bucket', label: 'Storage', position: { x: 310, y: 260 } },
+    { iceType: 'Database.Redis', label: 'Cache', position: { x: 60, y: 400 } },
 
     // 6-8: Security & compliance
-    { blockType: 'auth', label: 'Auth', position: { x: 640, y: 60 } },
-    { blockType: 'secrets', label: 'Secrets', position: { x: 640, y: 210 } },
-    { blockType: 'logs', label: 'Logs', position: { x: 640, y: 370 } },
+    { iceType: 'Security.Identity', label: 'Auth', position: { x: 640, y: 60 } },
+    { iceType: 'Security.Secret', label: 'Secrets', position: { x: 640, y: 210 } },
+    { iceType: 'Monitoring.Log', label: 'Logs', position: { x: 640, y: 370 } },
   ],
 
   connections: [

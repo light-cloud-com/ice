@@ -90,8 +90,8 @@ export interface AddBlueprintOp {
   op: 'addBlueprint';
   /** AI-assigned placeholder ID for edge references, e.g. 'ai-n-1' */
   id?: string;
-  /** Blueprint block type, e.g. 'aws-redis-cache', 'gcp-postgresql' */
-  blockType: string;
+  /** Canonical block type in {Category}.{Resource} format, e.g. 'Database.PostgreSQL' */
+  iceType: string;
   /** Optional provider override */
   provider?: string;
   /** Optional custom label */

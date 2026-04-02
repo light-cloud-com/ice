@@ -69,30 +69,30 @@ export const fullStackTemplate: ComposedTemplate = {
 
   blocks: [
     // 0-2: Frontend + entry
-    { blockType: 'public-traffic', label: 'Public Traffic', position: { x: 60, y: 60 } },
+    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 60, y: 60 } },
     {
-      blockType: 'static-site',
+      iceType: 'Compute.StaticSite',
       label: 'Static Site',
       position: { x: 310, y: 60 },
       data: { domain: 'app.acme.io' },
     },
-    { blockType: 'gateway', label: 'Gateway', position: { x: 560, y: 60 } },
+    { iceType: 'Network.Gateway', label: 'Gateway', position: { x: 560, y: 60 } },
 
     // 3: Backend
     {
-      blockType: 'scalable-backend',
+      iceType: 'Compute.Container',
       label: 'Node.js Service',
       position: { x: 60, y: 260 },
       data: { domain: 'api.acme.io', runtime: 'Node.js 20', port: 8080 },
     },
 
     // 4-6: Data stores
-    { blockType: 'postgresql', label: 'PostgreSQL', position: { x: 380, y: 260 } },
-    { blockType: 'redis-cache', label: 'Cache', position: { x: 630, y: 260 } },
-    { blockType: 'storage', label: 'Storage', position: { x: 380, y: 400 } },
+    { iceType: 'Database.PostgreSQL', label: 'PostgreSQL', position: { x: 380, y: 260 } },
+    { iceType: 'Database.Redis', label: 'Cache', position: { x: 630, y: 260 } },
+    { iceType: 'Storage.Bucket', label: 'Storage', position: { x: 380, y: 400 } },
 
     // 7: Monitoring
-    { blockType: 'logs', label: 'Logs', position: { x: 60, y: 460 } },
+    { iceType: 'Monitoring.Log', label: 'Logs', position: { x: 60, y: 460 } },
   ],
 
   connections: [

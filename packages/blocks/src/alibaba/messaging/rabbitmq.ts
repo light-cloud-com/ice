@@ -2,14 +2,13 @@ import { createBlueprintFromResource } from '@ice/core/resources';
 import type { BlockBlueprint } from '../../types';
 
 export const alibabaRabbitmqBlueprint: BlockBlueprint = createBlueprintFromResource('rabbitmq', {
-  blockType: 'alibaba-rabbitmq',
+  iceType: 'Messaging.RabbitMQ',
   category: 'messaging',
   name: 'Alibaba RabbitMQ',
   description: 'Alibaba Cloud AMQP. RabbitMQ message broker.',
   icon: 'List',
   providers: ['alibaba'],
   nodeDataDefaults: {
-    iceType: 'Messaging.RabbitMQ',
     runtime: 'RabbitMQ 3.13',
     port: 5672,
   },

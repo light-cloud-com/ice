@@ -16,7 +16,7 @@ import type { NodeCategory } from '../../types/graph.js';
  * Used for quick prefix-based classification.
  */
 const PREFIX_TO_CATEGORY: Record<string, NodeCategory> = {
-  Application: 'Compute',
+  Compute: 'Compute',
   Database: 'Data',
   Storage: 'Data',
   Network: 'Network',
@@ -31,11 +31,11 @@ const PREFIX_TO_CATEGORY: Record<string, NodeCategory> = {
  */
 const TYPE_TO_CATEGORY: Record<string, NodeCategory> = {
   // Compute
-  'Application.Container': 'Compute',
-  'Application.Function': 'Compute',
-  'Application.VM': 'Compute',
-  'Application.CronJob': 'Compute',
-  'Application.Worker': 'Compute',
+  'Compute.Container': 'Compute',
+  'Compute.Function': 'Compute',
+  'Compute.VM': 'Compute',
+  'Compute.CronJob': 'Compute',
+  'Compute.Worker': 'Compute',
 
   // Data (Databases)
   'Database.PostgreSQL': 'Data',

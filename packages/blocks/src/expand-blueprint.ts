@@ -111,7 +111,7 @@ export function expandBlueprint(blueprint: BlockBlueprint, options: ExpandBluepr
 
   // Log terminal nodes need larger dimensions for the terminal UI
   const iceType = mergedData.iceType as string | undefined;
-  const isLogNode = iceType?.startsWith('Log.') || iceType === 'Observability.Logs';
+  const isLogNode = iceType === 'Monitoring.Terminal' || iceType === 'Monitoring.Log';
   const width = isLogNode ? 400 : computeCompactNodeWidth(false);
   const height = isLogNode ? 240 : computeCompactNodeHeight(mergedData, false);
 

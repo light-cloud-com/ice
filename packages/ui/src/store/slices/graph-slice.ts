@@ -267,8 +267,6 @@ function iceToCanvas(
     let canvasType: string;
     if (node.type.startsWith('Group.')) {
       canvasType = 'container';
-    } else if (node.type.startsWith('Block.')) {
-      canvasType = 'block';
     } else if (isContainer && node.type !== 'Network.VPC' && node.type !== 'Network.Subnet') {
       canvasType = 'container';
     } else {

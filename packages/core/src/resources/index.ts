@@ -40,6 +40,17 @@ export {
   type ProviderImplementation,
 } from './high-level-resources.js';
 
+// Scale presets — AI assistant uses these for auto-configuration
+export {
+  SCALE_PRESETS,
+  SCALE_TIERS,
+  SCALE_TIER_INFO,
+  getScalePreset,
+  getAllPresetsForResource,
+  type ScaleTier,
+  type TierPreset,
+} from './scale-presets.js';
+
 // Cloud blocks
 export {
   BLOCK_TEMPLATES,

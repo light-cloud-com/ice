@@ -22,6 +22,7 @@ import {
   CORNER_RADIUS,
   HEADER_HEIGHT,
   CARD_WIDTH,
+  CARD_HEIGHT,
   CARD_PX,
   CARD_PY,
   ICON_SIZE,
@@ -70,6 +71,10 @@ interface SvgCompactNodeProps {
   zoom?: number;
   /** Connection drag state: indicates if this node is a valid/invalid target during connection drawing */
   connectionDragState?: 'valid-target' | 'invalid-target' | 'source' | null;
+  /** Highest validation severity for this node (null = no issues) */
+  validationSeverity?: 'error' | 'warning' | 'info' | null;
+  /** Count of validation issues on this node */
+  validationCount?: number;
 }
 
 // ─── Derived Tokens ─────────────────────────────────────────────────────────
@@ -372,39 +377,12 @@ function getContextLines(data: Record<string, unknown>, iceType: string): Contex
 
 // ─── Exported height calculator (for SvgCanvas / auto-layout sync) ──────────
 
-/** Extra height when user has renamed the block (type subtitle shown) */
-const RENAMED_SUBTITLE_H = 14;
-/** Height of the scaling row (+/- min/max instances) */
-const SCALING_ROW_H = 22;
-/** Height of the pipeline status row (⚡ badge + progress) */
-const PIPELINE_ROW_H = 18;
-
 export function computeCompactNodeHeight(
-  data: Record<string, unknown>,
+  _data: Record<string, unknown>,
   _isBlock: boolean,
-  hasPipeline = false,
+  _hasPipeline = false,
 ): number {
-  const cost = data.estimatedCost || '';
-  const status = data.status || '';
-  const iceType = (data.iceType as string) || '';
-
-  const hasScaling = data.minInstances != null || data.maxInstances != null;
-
-  // Context-aware metadata lines (replaces old flat metaCount)
-  const { lines: contextLines } = getContextLines(data, iceType);
-  const hasStatusLine = !!(status || cost);
-  const metaGap = contextLines.length > 0 || hasScaling || hasPipeline ? 6 : 0;
-
-  const h =
-    CARD_PY +
-    HEADER_HEIGHT +         // 36px: dual-icon header (category line + service line)
-    metaGap +
-    contextLines.length * META_LINE_H +
-    (hasScaling ? SCALING_ROW_H : 0) +
-    (hasPipeline ? PIPELINE_ROW_H : 0) +
-    (hasStatusLine ? STATUS_LINE_H : 0) +
-    PAD_BOTTOM;
-  return Math.max(h, 56);
+  return CARD_HEIGHT;
 }
 
 export function computeCompactNodeWidth(_isBlock: boolean): number {
@@ -437,6 +415,8 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
   lod = 3,
   zoom = 1,
   connectionDragState = null,
+  validationSeverity = null,
+  validationCount = 0,
 }) => {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
@@ -530,19 +510,10 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
   const effectivePipelineStatus = pipelineStatus || aggregatePipelineStatus;
   const hasPipeline = effectivePipelineStatus && effectivePipelineStatus.status !== 'idle';
 
-  // ── Size calculation ──
+  // ── Size calculation (fixed 3:2 ratio, except when folded) ──
   const metaGap = metaLines.length > 0 || hasScaling || hasPipeline ? 6 : 0;
-  const contentH =
-    CARD_PY +
-    HEADER_HEIGHT +
-    metaGap +
-    metaLines.length * META_LINE_H +
-    (hasScaling ? SCALING_ROW_H : 0) +
-    (hasPipeline ? PIPELINE_ROW_H : 0) +
-    (hasStatusLine ? STATUS_LINE_H : 0) +
-    PAD_BOTTOM;
-  const W = Math.max(width || CARD_WIDTH, CARD_WIDTH);
-  const H = folded ? 38 : Math.max(height || 0, contentH, 64);
+  const W = CARD_WIDTH;
+  const H = folded ? 38 : CARD_HEIGHT;
 
   // ── Colors ──
   const cat = CATEGORY_STYLE[category] || CATEGORY_STYLE.default;
@@ -695,20 +666,9 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // LOD 1 — ICONIC: large icon + status dot, rendered at inverse-zoom size
-  // so it looks ~60px on screen regardless of zoom level
+  // LOD 1 — ICONIC: large centered icon + label + status dot (fixed size)
   // ══════════════════════════════════════════════════════════════════════════
   if (lod <= 1) {
-    // Scale factor: render larger in canvas coords to compensate for zoom
-    const invScale = 1 / Math.max(zoom, 0.1);
-    const screenSize = 60; // desired screen pixels
-    const S = screenSize * invScale;
-    const iconSize = 28 * invScale;
-    const dotR = 5 * invScale;
-    const borderW = (isSelected ? 2 : 1) * invScale;
-    const cx = x + W / 2; // center on original node position
-    const cy = y + H / 2;
-
     const pipeColor = effectivePipelineStatus
       ? effectivePipelineStatus.status === 'success'
         ? '#22c55e'
@@ -728,29 +688,16 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
       >
         {isSelected && (
           <rect
-            x={cx - S / 2 - 3 * invScale}
-            y={cy - S / 2 - 3 * invScale}
-            width={S + 6 * invScale}
-            height={S + 6 * invScale}
-            rx={12 * invScale}
-            fill="none"
-            stroke={cat.glow}
-            strokeWidth={2 * invScale}
-            opacity={0.6}
+            x={x - 3} y={y - 3} width={W + 6} height={H + 6}
+            rx={CORNER_RADIUS + 3} fill="none"
+            stroke={cat.glow} strokeWidth={2} opacity={0.6}
           />
         )}
-        {/* Connection drag: valid target glow */}
         {connectionDragState === 'valid-target' && (
           <rect
-            x={cx - S / 2 - 4 * invScale}
-            y={cy - S / 2 - 4 * invScale}
-            width={S + 8 * invScale}
-            height={S + 8 * invScale}
-            rx={12 * invScale}
-            fill="none"
-            stroke="#22c55e"
-            strokeWidth={2 * invScale}
-            opacity={0.8}
+            x={x - 4} y={y - 4} width={W + 8} height={H + 8}
+            rx={CORNER_RADIUS + 4} fill="none"
+            stroke="#22c55e" strokeWidth={2} opacity={0.8}
           >
             {!reducedMotion && (
               <animate attributeName="opacity" values="0.5;0.9;0.5" dur="1.5s" repeatCount="indefinite" />
@@ -758,26 +705,34 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
           </rect>
         )}
         <rect
-          x={cx - S / 2}
-          y={cy - S / 2}
-          width={S}
-          height={S}
-          rx={10 * invScale}
+          x={x} y={y} width={W} height={H}
+          rx={CORNER_RADIUS}
           fill="var(--ice-bg-surface)"
           stroke={connectionDragState === 'valid-target' ? '#22c55e' : border}
-          strokeWidth={borderW}
+          strokeWidth={isSelected ? 2 : 1}
         />
         <image
-          x={cx - iconSize / 2}
-          y={cy - iconSize / 2 - 4 * invScale}
-          width={iconSize}
-          height={iconSize}
+          x={x + W / 2 - 28} y={y + 24}
+          width={56} height={56}
           href={brandIcon?.url || providerUrl}
           preserveAspectRatio="xMidYMid meet"
           role="img"
           aria-label={label || iceType || 'Resource'}
         />
-        <circle cx={cx} cy={cy + S / 2 - 10 * invScale} r={dotR} fill={pipeColor || statusColor} opacity={0.9}>
+        <text
+          x={x + W / 2} y={y + 100}
+          textAnchor="middle" dominantBaseline="middle"
+          fill="var(--ice-text-primary)"
+          fontSize="16" fontWeight="600"
+          fontFamily="'JetBrains Mono Variable', monospace"
+          style={{ pointerEvents: 'none' }}
+        >
+          {truncate(label || '', 14)}
+        </text>
+        <circle
+          cx={x + W / 2} cy={y + H - 20} r={6}
+          fill={pipeColor || statusColor} opacity={0.9}
+        >
           {pipeColor &&
             !reducedMotion &&
             effectivePipelineStatus?.status !== 'success' &&
@@ -785,25 +740,26 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
               <animate attributeName="opacity" values="1;0.4;1" dur="1.2s" repeatCount="indefinite" />
             )}
         </circle>
+        {(isHovered || connectionDragState === 'valid-target') && (
+          <g className="connection-ports">
+            <circle className="connection-port" data-node-id={node.id} data-side="left"
+              cx={x} cy={y + H / 2} r={connectionDragState === 'valid-target' ? 6 : 5}
+              fill={connectionDragState === 'valid-target' ? '#22c55e' : cat.glow}
+              stroke="var(--ice-bg-base)" strokeWidth={2} style={{ cursor: 'crosshair' }} />
+            <circle className="connection-port" data-node-id={node.id} data-side="right"
+              cx={x + W} cy={y + H / 2} r={connectionDragState === 'valid-target' ? 6 : 5}
+              fill={connectionDragState === 'valid-target' ? '#22c55e' : cat.glow}
+              stroke="var(--ice-bg-base)" strokeWidth={2} style={{ cursor: 'crosshair' }} />
+          </g>
+        )}
       </g>
     );
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  // LOD 2 — COMPACT: icon + label + status, inverse-zoom sized
+  // LOD 2 — COMPACT: icon + label + service + status (fixed size)
   // ══════════════════════════════════════════════════════════════════════════
   if (lod <= 2) {
-    const invScale = 1 / Math.max(zoom, 0.1);
-    const CW = 160 * invScale;
-    const CH = 48 * invScale;
-    const fontSize = 12 * invScale;
-    const iconSz = 20 * invScale;
-    const dotR = 4 * invScale;
-    const borderW = (isSelected ? 1.5 : 1) * invScale;
-    const padX = 10 * invScale;
-    const cx = x + W / 2;
-    const cy = y + H / 2;
-
     const pipeColor = effectivePipelineStatus
       ? effectivePipelineStatus.status === 'success'
         ? '#22c55e'
@@ -823,29 +779,16 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
       >
         {isSelected && (
           <rect
-            x={cx - CW / 2 - 3 * invScale}
-            y={cy - CH / 2 - 3 * invScale}
-            width={CW + 6 * invScale}
-            height={CH + 6 * invScale}
-            rx={(CORNER_RADIUS + 2) * invScale}
-            fill="none"
-            stroke={cat.glow}
-            strokeWidth={2 * invScale}
-            opacity={0.6}
+            x={x - 3} y={y - 3} width={W + 6} height={H + 6}
+            rx={CORNER_RADIUS + 3} fill="none"
+            stroke={cat.glow} strokeWidth={2} opacity={0.6}
           />
         )}
-        {/* Connection drag: valid target glow */}
         {connectionDragState === 'valid-target' && (
           <rect
-            x={cx - CW / 2 - 4 * invScale}
-            y={cy - CH / 2 - 4 * invScale}
-            width={CW + 8 * invScale}
-            height={CH + 8 * invScale}
-            rx={(CORNER_RADIUS + 3) * invScale}
-            fill="none"
-            stroke="#22c55e"
-            strokeWidth={2 * invScale}
-            opacity={0.8}
+            x={x - 4} y={y - 4} width={W + 8} height={H + 8}
+            rx={CORNER_RADIUS + 4} fill="none"
+            stroke="#22c55e" strokeWidth={2} opacity={0.8}
           >
             {!reducedMotion && (
               <animate attributeName="opacity" values="0.5;0.9;0.5" dur="1.5s" repeatCount="indefinite" />
@@ -853,94 +796,85 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
           </rect>
         )}
         <rect
-          x={cx - CW / 2}
-          y={cy - CH / 2}
-          width={CW}
-          height={CH}
-          rx={CORNER_RADIUS * invScale}
+          x={x} y={y} width={W} height={H}
+          rx={CORNER_RADIUS}
           fill="var(--ice-bg-surface)"
           stroke={connectionDragState === 'valid-target' ? '#22c55e' : border}
-          strokeWidth={borderW}
+          strokeWidth={isSelected ? 1.5 : 1}
         />
-        {/* Icon */}
-        <image
-          x={cx - CW / 2 + padX}
-          y={cy - iconSz / 2}
-          width={iconSz}
-          height={iconSz}
-          href={brandIcon?.url || providerUrl}
-          preserveAspectRatio="xMidYMid meet"
-          aria-hidden="true"
-        />
-        {/* Label */}
+        {/* Icon + Label header */}
+        {renderCategoryIcon(category, x + CARD_PX, y + CARD_PY, ICON_SIZE, cat.glow)}
         <text
-          x={cx - CW / 2 + padX + iconSz + 6 * invScale}
-          y={cy - 4 * invScale}
+          x={x + TEXT_X} y={y + CARD_PY + 8}
           dominantBaseline="middle"
           fill="var(--ice-text-primary)"
-          fontSize={fontSize}
-          fontWeight="600"
+          fontSize="12" fontWeight="600"
           fontFamily="'JetBrains Mono Variable', monospace"
           style={{ pointerEvents: 'none' }}
         >
-          {truncate(label || '', 12)}
+          {truncate(label || '', 20)}
         </text>
-        {/* Status dot + label */}
-        <circle
-          cx={cx - CW / 2 + padX + 4 * invScale}
-          cy={cy + CH / 2 - 10 * invScale}
-          r={dotR}
-          fill={pipeColor || statusColor}
-          opacity={0.9}
-        >
-          {pipeColor &&
-            !reducedMotion &&
-            effectivePipelineStatus?.status !== 'success' &&
-            effectivePipelineStatus?.status !== 'failed' && (
-              <animate attributeName="opacity" values="1;0.4;1" dur="1.2s" repeatCount="indefinite" />
-            )}
-        </circle>
-        {statusLabel && (
+        {/* Brand icon + service name */}
+        {(brandIcon || providerUrl) && (
+          <image
+            x={x + CARD_PX + 2} y={y + CARD_PY + 20}
+            width={BRAND_ICON_SIZE} height={BRAND_ICON_SIZE}
+            href={brandIcon?.url || providerUrl}
+            preserveAspectRatio="xMidYMid meet" aria-hidden="true"
+          />
+        )}
+        {serviceLineText && (
           <text
-            x={cx - CW / 2 + padX + 12 * invScale}
-            y={cy + CH / 2 - 9 * invScale}
+            x={x + CARD_PX + BRAND_ICON_SIZE + ICON_GAP} y={y + CARD_PY + 28}
             dominantBaseline="middle"
             fill="var(--ice-text-secondary)"
-            fontSize={9 * invScale}
-            fontFamily="ui-monospace, 'SFMono-Regular', monospace"
-            opacity={0.7}
+            fontSize="10" fontFamily="ui-monospace, 'SFMono-Regular', monospace"
             style={{ pointerEvents: 'none' }}
           >
-            {statusLabel}
+            {truncate(serviceLineText, 24)}
           </text>
         )}
-        {/* Connection ports on hover or when valid target */}
+        {/* Status dot + label — bottom */}
+        {statusLabel && (
+          <g>
+            <circle cx={x + CARD_PX + 4} cy={y + H - 16} r={4} fill={pipeColor || statusColor} opacity={0.9}>
+              {pipeColor &&
+                !reducedMotion &&
+                effectivePipelineStatus?.status !== 'success' &&
+                effectivePipelineStatus?.status !== 'failed' && (
+                  <animate attributeName="opacity" values="1;0.4;1" dur="1.2s" repeatCount="indefinite" />
+                )}
+            </circle>
+            <text
+              x={x + CARD_PX + 12} y={y + H - 16}
+              dominantBaseline="middle"
+              fill="var(--ice-text-secondary)"
+              fontSize="9" fontFamily="ui-monospace, 'SFMono-Regular', monospace"
+              opacity={0.7} style={{ pointerEvents: 'none' }}
+            >
+              {statusLabel}
+            </text>
+          </g>
+        )}
+        {/* Connection ports */}
         {(isHovered || connectionDragState === 'valid-target') && (
           <g className="connection-ports">
-            <circle
-              className="connection-port"
-              data-node-id={node.id}
-              data-side="left"
-              cx={cx - CW / 2}
-              cy={cy}
-              r={(connectionDragState === 'valid-target' ? 6 : 5) * invScale}
+            <circle className="connection-port" data-node-id={node.id} data-side="top"
+              cx={x + W / 2} cy={y} r={connectionDragState === 'valid-target' ? 6 : 5}
               fill={connectionDragState === 'valid-target' ? '#22c55e' : cat.glow}
-              stroke="var(--ice-bg-base)"
-              strokeWidth={2 * invScale}
-              style={{ cursor: 'crosshair' }}
-            />
-            <circle
-              className="connection-port"
-              data-node-id={node.id}
-              data-side="right"
-              cx={cx + CW / 2}
-              cy={cy}
-              r={(connectionDragState === 'valid-target' ? 6 : 5) * invScale}
+              stroke="var(--ice-bg-base)" strokeWidth={2} style={{ cursor: 'crosshair' }} />
+            <circle className="connection-port" data-node-id={node.id} data-side="right"
+              cx={x + W} cy={y + H / 2} r={connectionDragState === 'valid-target' ? 6 : 5}
               fill={connectionDragState === 'valid-target' ? '#22c55e' : cat.glow}
-              stroke="var(--ice-bg-base)"
-              strokeWidth={2 * invScale}
-              style={{ cursor: 'crosshair' }}
-            />
+              stroke="var(--ice-bg-base)" strokeWidth={2} style={{ cursor: 'crosshair' }} />
+            <circle className="connection-port" data-node-id={node.id} data-side="bottom"
+              cx={x + W / 2} cy={y + H} r={connectionDragState === 'valid-target' ? 6 : 5}
+              fill={connectionDragState === 'valid-target' ? '#22c55e' : cat.glow}
+              stroke="var(--ice-bg-base)" strokeWidth={2} style={{ cursor: 'crosshair' }} />
+            <circle className="connection-port" data-node-id={node.id} data-side="left"
+              cx={x} cy={y + H / 2} r={connectionDragState === 'valid-target' ? 6 : 5}
+              fill={connectionDragState === 'valid-target' ? '#22c55e' : cat.glow}
+              stroke="var(--ice-bg-base)" strokeWidth={2} style={{ cursor: 'crosshair' }} />
           </g>
         )}
       </g>
@@ -1721,6 +1655,35 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
               strokeLinejoin="round"
             />
           </g>
+        </g>
+      )}
+
+      {/* ═══════ VALIDATION BADGE (error/warning dot top-right) ═══════ */}
+      {validationSeverity && validationSeverity !== 'info' && (
+        <g>
+          <circle
+            cx={x + W - 4}
+            cy={y + 4}
+            r={folded ? 4 : 6}
+            fill={validationSeverity === 'error' ? '#ef4444' : '#f59e0b'}
+            stroke="var(--ice-bg-surface)"
+            strokeWidth={1.5}
+          />
+          {!folded && validationCount > 1 && (
+            <text
+              x={x + W - 4}
+              y={y + 4.5}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fill="#fff"
+              fontSize="7"
+              fontWeight="700"
+              fontFamily="ui-monospace, 'SFMono-Regular', monospace"
+              style={{ pointerEvents: 'none' }}
+            >
+              {validationCount > 9 ? '9+' : validationCount}
+            </text>
+          )}
         </g>
       )}
 

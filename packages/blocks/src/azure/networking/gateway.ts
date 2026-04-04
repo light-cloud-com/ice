@@ -9,5 +9,6 @@ export const azureGatewayBlueprint: BlockBlueprint = createBlueprintFromResource
   icon: 'GitBranch',
   providers: ['azure'],
   nodeDataDefaults: {
+    protocol: 'azure-consumption',
   },
 });

@@ -177,7 +177,7 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
     <>
       <div
         id="ice-env-bar"
-        className="h-8 flex items-center gap-0.5 px-3 border-b border-ice-border bg-ice-toolbar shrink-0"
+        className="min-h-[36px] py-1 flex items-center gap-0.5 px-3 border-b border-ice-border bg-ice-toolbar shrink-0"
       >
         {loading && environments.length === 0 ? (
           <div className="flex items-center gap-1.5 text-ice-xs text-ice-text-3">

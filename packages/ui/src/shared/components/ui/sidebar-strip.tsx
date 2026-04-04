@@ -30,8 +30,8 @@ export const SidebarStrip: React.FC<SidebarStripProps> = ({ side, tabs }) => {
   return (
     <div
       className={cn(
-        'flex flex-col items-center gap-1 py-1 bg-ice-surface select-none shrink-0 z-10',
-        side === 'left' ? 'border-r border-border' : 'border-l border-border',
+        'flex flex-col items-center gap-1 py-1 bg-ice-surface select-none shrink-0 z-10 border-ice-border',
+        side === 'left' ? 'border-r' : 'border-l ',
       )}
       style={{ width: 28 }}
     >
@@ -80,4 +80,3 @@ const SidebarStripButton: React.FC<{ tab: SidebarStripTab; side: SidebarSide }> 
     </button>
   );
 };
-

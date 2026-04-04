@@ -9,5 +9,6 @@ export const gcpEventStreamBlueprint: BlockBlueprint = createBlueprintFromResour
   icon: 'Activity',
   providers: ['gcp'],
   nodeDataDefaults: {
+    size: 'gcp-default',
   },
 });

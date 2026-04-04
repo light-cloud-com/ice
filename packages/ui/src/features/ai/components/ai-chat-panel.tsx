@@ -13,7 +13,6 @@ import {
   Undo2,
   ArrowRight,
   Send,
-  X,
   Plus,
   MessageSquare,
   Trash2,
@@ -24,6 +23,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from '../../../i18n';
 import axiosInstance from '../../../shared/api/axios-instance';
+import { PanelHeader, PanelHeaderAction } from '../../../shared/components/ui/panel-header';
 import { cn } from '../../../shared/utils/cn';
 import { clearAiState } from '../../../store/slices/ai-slice';
 import { selectActiveCard } from '../../../store/slices/cards-slice';
@@ -407,56 +407,44 @@ export const AiChatPanel: React.FC = () => {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div id="ice-ai-panel" className="h-full flex flex-col bg-ice-surface border-ice-border border-[0] xl:border-l">
+    <div id="ice-ai-panel" className="h-full flex flex-col bg-inherit border-ice-border border-[0] xl:border-l">
       {/* Header */}
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-ice-border shrink-0 overflow-hidden">
-        <Sparkles aria-hidden="true" className="w-3.5 h-3.5 text-ice-accent shrink-0" />
-        <span className="text-ice-xs font-medium text-ice-text-1 whitespace-nowrap shrink-0">{t('ai.chat.title')}</span>
-        {providerInfo?.ok && (
-          <span
-            className={cn(
-              'flex items-center gap-1 px-1.5 py-0.5 rounded text-ice-2xs font-medium leading-none min-w-0 truncate',
-              providerInfo.isLocal
-                ? 'text-emerald-400/60'
-                : 'text-blue-400/60',
-            )}
-            title={`Provider: ${providerInfo.provider} | Model: ${providerInfo.model || 'unknown'}`}
-          >
-            {providerInfo.isLocal ? <Cpu aria-hidden="true" className="w-2.5 h-2.5 shrink-0" /> : <Cloud aria-hidden="true" className="w-2.5 h-2.5 shrink-0" />}
-            {providerInfo.model || (providerInfo.isLocal ? 'Local' : 'Cloud')}
-          </span>
-        )}
-        <span className="flex-1" />
-        <button
-          onClick={startNewConversation}
-          aria-label={t('ai.chat.newChat')}
-          className="p-1 rounded text-ice-text-3/50 hover:text-ice-text-1 transition-colors outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
-        >
-          <Plus aria-hidden="true" className="w-3.5 h-3.5" />
-        </button>
-        <button
-          onClick={() => setShowHistory(!showHistory)}
-          aria-label={t('ai.chat.historyTitle')}
-          className={cn(
-            'relative p-1 rounded transition-colors outline-none focus-visible:ring-1 focus-visible:ring-blue-500',
-            showHistory
-              ? 'text-ice-accent'
-              : 'text-ice-text-3/50 hover:text-ice-text-1',
-          )}
-        >
-          <MessageSquare aria-hidden="true" className="w-3.5 h-3.5" />
-          {conversations.length > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-ice-accent" />
-          )}
-        </button>
-        <button
-          onClick={() => dispatch(toggleAiChat())}
-          aria-label={t('ai.chat.closeTitle')}
-          className="p-1 rounded text-ice-text-3/50 hover:text-ice-text-1 transition-colors outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
-        >
-          <X aria-hidden="true" className="w-3.5 h-3.5" />
-        </button>
-      </div>
+      <PanelHeader
+        icon={<Sparkles aria-hidden="true" className="w-3.5 h-3.5 text-ice-accent" />}
+        title={t('ai.chat.title')}
+        badge={
+          providerInfo?.ok ? (
+            <span
+              className={cn(
+                'flex items-center gap-1 px-1.5 py-0.5 rounded text-ice-2xs font-medium leading-none min-w-0 truncate',
+                providerInfo.isLocal ? 'text-emerald-400/60' : 'text-blue-400/60',
+              )}
+              title={`Provider: ${providerInfo.provider} | Model: ${providerInfo.model || 'unknown'}`}
+            >
+              {providerInfo.isLocal ? <Cpu aria-hidden="true" className="w-2.5 h-2.5 shrink-0" /> : <Cloud aria-hidden="true" className="w-2.5 h-2.5 shrink-0" />}
+              {providerInfo.model || (providerInfo.isLocal ? 'Local' : 'Cloud')}
+            </span>
+          ) : undefined
+        }
+        actions={
+          <>
+            <PanelHeaderAction
+              icon={<Plus aria-hidden="true" className="w-3.5 h-3.5" />}
+              label={t('ai.chat.newChat')}
+              onClick={startNewConversation}
+            />
+            <PanelHeaderAction
+              icon={<MessageSquare aria-hidden="true" className="w-3.5 h-3.5" />}
+              label={t('ai.chat.historyTitle')}
+              onClick={() => setShowHistory(!showHistory)}
+              active={showHistory}
+              badge={conversations.length > 0}
+            />
+          </>
+        }
+        onClose={() => dispatch(toggleAiChat())}
+        closeLabel={t('ai.chat.closeTitle')}
+      />
 
       {/* Conversation history dropdown */}
       {showHistory && (

@@ -5,10 +5,29 @@
  * encrypted database + storage, Redis for sessions, secrets,
  * auth, and audit logging. All resources EU-region pinned.
  *
- * Architecture:
- *   Public Traffic → Gateway → API Service → PostgreSQL, Storage, Cache
- *   API Service → Auth, Secrets
- *   API Service, PostgreSQL, Storage → Logs (audit trail)
+ * Architecture (deployable to AWS / GCP / Azure):
+ *
+ *   ┌── Public Zone ────────────────────────────────┐
+ *   │  Internet ──► WAF                              │
+ *   └────────────────────────────────────────────────┘
+ *   ┌── VPC (EU Region) ─────────────────────────────────────────────┐
+ *   │  ┌─ Public Subnet ─┐  ┌── Private Subnet (EU) ────────────┐  │
+ *   │  │  Gateway         │  │  Node.js      PostgreSQL           │  │
+ *   │  │                  │  │  Storage      Redis Cache           │  │
+ *   │  └──────────────────┘  └───────────────────────────────────┘  │
+ *   └────────────────────────────────────────────────────────────────┘
+ *   ┌─ Security & Compliance ─┐
+ *   │  Auth                    │
+ *   │  Secrets                 │
+ *   │  Audit Trail             │
+ *   └─────────────────────────┘
+ *
+ * Layout grid (CARD 240×160, PAD 20, HEADER 36, GAP 16):
+ *   Row 0: Public Zone              (2c,1r → 536×236)   at (30,30)
+ *          Security & Compliance    (1c,3r → 280×588)   at (596,30)
+ *   Row 1: VPC (EU Region)          (886×488)            at (30,296)
+ *          ├ Public Subnet          (1c,1r → 280×236)   at (50,352)  parent→VPC
+ *          └ Private Subnet (EU)    (2c,2r → 536×412)   at (360,352) parent→VPC
  */
 
 import type { ComposedTemplate } from './types';
@@ -22,85 +41,134 @@ export const euComplianceTemplate: ComposedTemplate = {
   estimatedCost: '$120-250/mo',
   category: 'compliance',
   provider: 'gcp',
-  tags: ['GDPR', 'Encryption', 'EU-only', 'Audit Logs'],
+  providers: ['gcp', 'aws', 'azure'],
+  tags: ['GDPR', 'Encryption', 'EU-only', 'Audit Logs', 'VPC', 'Subnet'],
   securityLevel: 'compliance',
+  difficulty: 'intermediate',
+  trust: 'official',
+  compliance: ['gdpr'],
+  author: { name: 'ICE Team' },
   environmentPresets: [
-    { type: 'production', name: 'Production', region: 'eu-west-1', securityLevel: 'compliance' },
-    { type: 'staging', name: 'Staging', region: 'eu-west-1', securityLevel: 'strict' },
+    { type: 'production', name: 'Production', region: 'europe-west1', securityLevel: 'compliance' },
+    { type: 'staging', name: 'Staging', region: 'europe-west1', securityLevel: 'strict' },
   ],
 
   groups: [
+    // [0] Public Zone — outside VPC
     {
-      subtype: 'Services',
-      label: 'Application',
+      subtype: 'Frontend',
+      label: 'Public Zone',
       position: { x: 30, y: 30 },
-      width: 800,
-      height: 170,
-      blockIndices: [0, 1, 2],
+      width: 536,
+      height: 236,
+      blockIndices: [0, 1],
+      color: '#ef4444',
+    },
+    // [1] VPC (EU Region) — contains subnets, no direct blocks
+    {
+      subtype: 'Custom',
+      iceType: 'Network.VPC',
+      label: 'VPC (EU Region)',
+      position: { x: 30, y: 296 },
+      width: 886,
+      height: 488,
+      blockIndices: [],
       color: '#22c55e',
     },
+    // [2] Public Subnet — inside VPC
     {
-      subtype: 'Data',
-      label: 'Encrypted Data (EU)',
-      position: { x: 30, y: 230 },
-      width: 540,
-      height: 310,
-      blockIndices: [3, 4, 5],
-      color: '#f59e0b',
+      subtype: 'Custom',
+      iceType: 'Network.Subnet',
+      label: 'Public Subnet',
+      position: { x: 50, y: 352 },
+      width: 280,
+      height: 236,
+      blockIndices: [2],
+      color: '#3b82f6',
+      parentGroupIndex: 1,
     },
+    // [3] Private Subnet (EU) — inside VPC
+    {
+      subtype: 'Custom',
+      iceType: 'Network.Subnet',
+      label: 'Private Subnet (EU)',
+      position: { x: 360, y: 352 },
+      width: 536,
+      height: 412,
+      blockIndices: [3, 4, 5, 6],
+      color: '#6366f1',
+      parentGroupIndex: 1,
+    },
+    // [4] Security & Compliance — outside VPC
     {
       subtype: 'External',
       label: 'Security & Compliance',
-      position: { x: 610, y: 30 },
-      width: 300,
-      height: 510,
-      blockIndices: [6, 7, 8],
+      position: { x: 596, y: 30 },
+      width: 280,
+      height: 588,
+      blockIndices: [7, 8, 9],
       color: '#ef4444',
     },
   ],
 
   blocks: [
-    // 0-2: Application layer (with public traffic entry)
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 60, y: 60 } },
-    { iceType: 'Network.Gateway', label: 'Gateway', position: { x: 310, y: 60 } },
+    // ── Public Zone (outside VPC) ─────────────────────────────────────────
+    // 0: Internet
+    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 } },
+    // 1: WAF
+    { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 } },
+
+    // ── Public Subnet (inside VPC) ────────────────────────────────────────
+    // 2: Gateway
+    { iceType: 'Network.Gateway', label: 'API Gateway', position: { x: 70, y: 408 }, data: { protocol: 'http' } },
+
+    // ── Private Subnet (EU) (inside VPC) ──────────────────────────────────
+    // Row 0
+    // 3: Node.js
     {
       iceType: 'Compute.Container',
-      label: 'Node.js Service',
-      position: { x: 560, y: 60 },
-      data: { domain: 'app.eu.acme.io', runtime: 'Node.js 20', port: 8080 },
+      label: 'App Service',
+      position: { x: 380, y: 408 },
+      data: { runtime: 'nodejs20', domain: 'app.eu.acme.io', port: 8080 },
     },
-
-    // 3-5: Encrypted data (EU-pinned)
+    // 4: PostgreSQL
     {
       iceType: 'Database.PostgreSQL',
-      label: 'PostgreSQL',
-      position: { x: 60, y: 260 },
-      data: { size: 'db.r6g.large', storage: '100 GB' },
+      label: 'Encrypted Database',
+      position: { x: 636, y: 408 },
+      data: { storage: '100', version: '17' },
     },
-    { iceType: 'Storage.Bucket', label: 'Storage', position: { x: 310, y: 260 } },
-    { iceType: 'Database.Redis', label: 'Cache', position: { x: 60, y: 400 } },
+    // Row 1
+    // 5: Storage
+    { iceType: 'Storage.Bucket', label: 'Audit Storage', position: { x: 380, y: 584 } },
+    // 6: Redis Cache
+    { iceType: 'Database.Redis', label: 'Session Store', position: { x: 636, y: 584 } },
 
-    // 6-8: Security & compliance
-    { iceType: 'Security.Identity', label: 'Auth', position: { x: 640, y: 60 } },
-    { iceType: 'Security.Secret', label: 'Secrets', position: { x: 640, y: 210 } },
-    { iceType: 'Monitoring.Log', label: 'Logs', position: { x: 640, y: 370 } },
+    // ── Security & Compliance (outside VPC) ───────────────────────────────
+    // 7: Auth
+    { iceType: 'Security.Identity', label: 'Auth', position: { x: 616, y: 86 } },
+    // 8: Secrets
+    { iceType: 'Security.Secret', label: 'Secrets', position: { x: 616, y: 262 } },
+    // 9: Audit Trail
+    { iceType: 'Monitoring.Log', label: 'Audit Trail', position: { x: 616, y: 438 }, data: { keep_logs: '30 days' } },
   ],
 
   connections: [
-    // Public Traffic → Gateway → App
+    // Internet → WAF → Gateway (Gateway→Gateway rule)
     { fromBlock: 0, toBlock: 1, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
     { fromBlock: 1, toBlock: 2, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
-    // App → data stores
-    { fromBlock: 2, toBlock: 3, relationship: 'depends_on', protocol: 'TCP', port: 5432 },
-    { fromBlock: 2, toBlock: 4, relationship: 'depends_on' },
-    // App → sessions
-    { fromBlock: 2, toBlock: 5, relationship: 'depends_on', protocol: 'TCP', port: 6379 },
-    // App → security services
-    { fromBlock: 2, toBlock: 6, relationship: 'depends_on' },
-    { fromBlock: 2, toBlock: 7, relationship: 'depends_on' },
-    // Audit trail (app, DB, storage all log)
-    { fromBlock: 2, toBlock: 8, relationship: 'connects_to' },
-    { fromBlock: 3, toBlock: 8, relationship: 'connects_to' },
-    { fromBlock: 4, toBlock: 8, relationship: 'connects_to' },
+    // Gateway → Node.js (Gateway→Backend rule)
+    { fromBlock: 2, toBlock: 3, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
+    // Node.js → data stores (Backend→Database, Backend→Storage, Backend→Cache rules)
+    { fromBlock: 3, toBlock: 4, relationship: 'depends_on', protocol: 'TCP', port: 5432 },
+    { fromBlock: 3, toBlock: 5, relationship: 'depends_on' },
+    { fromBlock: 3, toBlock: 6, relationship: 'depends_on', protocol: 'TCP', port: 6379 },
+    // Node.js → security services (Backend→Auth, Service→Secrets rules)
+    { fromBlock: 3, toBlock: 7, relationship: 'connects_to' },
+    { fromBlock: 3, toBlock: 8, relationship: 'depends_on' },
+    // Audit trail (Service→Monitoring rule)
+    { fromBlock: 3, toBlock: 9, relationship: 'connects_to' },
+    { fromBlock: 4, toBlock: 9, relationship: 'connects_to' },
+    { fromBlock: 5, toBlock: 9, relationship: 'connects_to' },
   ],
 };

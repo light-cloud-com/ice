@@ -6,7 +6,7 @@
  * start with a blank canvas.
  */
 
-import { Globe, Rocket, Server, Activity, FileCode2, LayoutTemplate } from 'lucide-react';
+import { Globe, Rocket, Server, Activity, Zap, FileCode2, LayoutTemplate } from 'lucide-react';
 import React, { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { getBlueprint, expandBlueprint } from '../../../config/blocks';
@@ -15,7 +15,6 @@ import { getTemplatesByCategory } from '../../../config/templates';
 import { expandComposedTemplate } from '../../../config/templates/expand-template';
 import { useTranslation } from '../../../i18n';
 import { importToActiveCard, expandBlueprintToCard } from '../../../store/slices/cards-slice';
-import { openDialog } from '../../../store/slices/ui-slice';
 import type { ComposedTemplate } from '../../../config/templates/types';
 import type { AppDispatch } from '../../../store';
 
@@ -24,6 +23,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Rocket,
   Server,
   Activity,
+  Zap,
 };
 
 interface EmptyCanvasOverlayProps {
@@ -55,10 +55,8 @@ export const EmptyCanvasOverlay: React.FC<EmptyCanvasOverlayProps> = ({ onDismis
   }, [dispatch, onDismiss]);
 
   const handleOpenTemplates = useCallback(() => {
-    // The TemplatePicker is in the toolbar — we can't programmatically open it
-    // But we can open the project wizard which has a template step
-    dispatch(openDialog('projectWizard'));
-  }, [dispatch]);
+    window.location.href = '/templates';
+  }, []);
 
   return (
     <div className="absolute inset-0 flex items-center justify-center z-20" style={{ pointerEvents: 'auto' }} role="dialog" aria-modal="true" aria-label="Choose a starting template">

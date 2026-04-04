@@ -10,9 +10,10 @@
  * 3. Edge selected → Relationship, protocol, port fields
  */
 
-import { ChevronRight, Info } from 'lucide-react';
+import { ChevronRight, Info, Settings } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { IceSelect } from '../../../shared/components/ui/ice-select';
+import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { useSelector, useDispatch } from 'react-redux';
 import { getIcon, DEFAULT_ICON, type Provider } from '../../../assets/icons';
 import { useTranslation, t } from '../../../i18n';
@@ -123,25 +124,6 @@ function formatCost(value: number): string {
 
 // ─── UI components ─────────────────────────────────────────────────────────
 
-const CloseButton: React.FC<{ onClick: () => void }> = ({ onClick }) => (
-  <button
-    onClick={onClick}
-    className="w-5 h-5 flex items-center justify-center rounded hover:bg-ice-hover text-ice-text-3 hover:text-ice-text-1 transition-colors"
-    title={t('properties.closeTitle')}
-  >
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 12 12"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-    >
-      <path d="M2 2l8 8M10 2l-8 8" />
-    </svg>
-  </button>
-);
 
 // ─── Group Color Picker ─────────────────────────────────────────────────────
 
@@ -149,24 +131,50 @@ const GROUP_COLORS = GROUP_COLOR_PRESETS;
 
 const GroupColorPicker: React.FC<{
   color: string;
+  opacity: number;
   onChange: (color: string) => void;
-}> = ({ color, onChange }) => (
-  <div className="px-3 py-2 border-b border-ice-border">
-    <div className="text-ice-2xs text-ice-text-3 mb-1.5">{t('properties.groupColor')}</div>
-    <div className="flex items-center gap-1.5 flex-wrap">
-      {GROUP_COLORS.map((c) => (
-        <button
-          key={c}
-          onClick={() => onChange(c)}
-          className="w-5 h-5 rounded-full border-2 transition-all hover:scale-110"
-          style={{
-            backgroundColor: c,
-            borderColor: c === color ? 'white' : 'transparent',
-            boxShadow: c === color ? `0 0 0 2px ${c}` : undefined,
-          }}
-          title={c}
-        />
-      ))}
+  onOpacityChange: (opacity: number) => void;
+}> = ({ color, opacity, onChange, onOpacityChange }) => (
+  <div className="px-3 py-2 border-b border-ice-border space-y-2.5">
+    <div>
+      <div className="text-ice-2xs text-ice-text-3 mb-1.5">{t('properties.groupColor')}</div>
+      <div className="flex items-center gap-1.5 flex-wrap">
+        {GROUP_COLORS.map((c) => (
+          <button
+            key={c}
+            onClick={() => onChange(c)}
+            className="w-5 h-5 rounded-full border-2 transition-all hover:scale-110"
+            style={{
+              backgroundColor: c,
+              borderColor: c === color ? 'white' : 'transparent',
+              boxShadow: c === color ? `0 0 0 2px ${c}` : undefined,
+            }}
+            title={c}
+          />
+        ))}
+      </div>
+    </div>
+    <div>
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-ice-2xs text-ice-text-3">{t('properties.groupOpacity')}</span>
+        <span className="text-ice-2xs text-ice-text-3 font-mono tabular-nums">{Math.round(opacity * 100)}%</span>
+      </div>
+      <input
+        type="range"
+        min={0}
+        max={100}
+        step={5}
+        value={Math.round(opacity * 100)}
+        onChange={(e) => onOpacityChange(Number(e.target.value) / 100)}
+        className="w-full h-1 appearance-none rounded-full bg-ice-border accent-current cursor-pointer"
+        style={{ accentColor: color }}
+      />
+      <button
+        onClick={() => onOpacityChange(0.1)}
+        className="mt-1.5 px-2 py-0.5 text-ice-2xs font-medium rounded bg-ice-hover text-ice-text-3 hover:text-ice-text-1 hover:bg-ice-active transition-colors"
+      >
+        {t('common.buttons.reset')}
+      </button>
     </div>
   </div>
 );
@@ -656,7 +664,9 @@ const PropertyFields: React.FC<{
   properties: HighLevelProperty[];
   nodeData: Record<string, unknown>;
   onFieldChange: (field: string, value: unknown) => void;
-}> = ({ properties, nodeData, onFieldChange }) => {
+  /** Validation issues mapped by propertyPath */
+  propertyIssues?: Map<string, { severity: string; message: string }>;
+}> = ({ properties, nodeData, onFieldChange, propertyIssues }) => {
   const [showMore, setShowMore] = React.useState(false);
   const provider = ((nodeData.provider as string) || '').toLowerCase();
 
@@ -676,7 +686,18 @@ const PropertyFields: React.FC<{
       {/* Essential fields — always visible */}
       {essential.length > 0 && (
         <Section title="Configuration">
-          {essential.map((prop) => renderPropertyField(filterByProvider(prop), nodeData[prop.name], onFieldChange, nodeData))}
+          {essential.map((prop) => (
+            <div key={prop.name}>
+              {renderPropertyField(filterByProvider(prop), nodeData[prop.name], onFieldChange, nodeData)}
+              {propertyIssues?.has(prop.name) && (
+                <div className={`px-3 pb-1 text-ice-2xs ${
+                  propertyIssues.get(prop.name)!.severity === 'error' ? 'text-red-400' : 'text-amber-400'
+                }`}>
+                  {propertyIssues.get(prop.name)!.message}
+                </div>
+              )}
+            </div>
+          ))}
         </Section>
       )}
 
@@ -692,7 +713,18 @@ const PropertyFields: React.FC<{
           </button>
           {showMore && (
             <Section title="Details">
-              {detailed.map((prop) => renderPropertyField(filterByProvider(prop), nodeData[prop.name], onFieldChange, nodeData))}
+              {detailed.map((prop) => (
+                <div key={prop.name}>
+                  {renderPropertyField(filterByProvider(prop), nodeData[prop.name], onFieldChange, nodeData)}
+                  {propertyIssues?.has(prop.name) && (
+                    <div className={`px-3 pb-1 text-ice-2xs ${
+                      propertyIssues.get(prop.name)!.severity === 'error' ? 'text-red-400' : 'text-amber-400'
+                    }`}>
+                      {propertyIssues.get(prop.name)!.message}
+                    </div>
+                  )}
+                </div>
+              ))}
             </Section>
           )}
         </>
@@ -711,6 +743,7 @@ export const PropertiesPanel: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const activeCard = useSelector(selectActiveCard);
   const { selectedNodes, selectedEdges } = useSelector((state: RootState) => state.selection);
+  const validationIssues = useSelector((state: RootState) => state.validation?.issues ?? []);
 
   // ─── Properties tab state ──────────────────────────────────────────────────
   const [propsTab, setPropsTab] = useState<string>('config');
@@ -747,6 +780,18 @@ export const PropertiesPanel: React.FC = () => {
     () => activeCard?.nodes.find((n) => n.id === selectedNodeId),
     [activeCard, selectedNodeId],
   );
+
+  // Build per-property validation issues map for the selected node
+  const propertyIssuesMap = useMemo(() => {
+    if (!selectedNodeId) return undefined;
+    const map = new Map<string, { severity: string; message: string }>();
+    for (const issue of validationIssues) {
+      if (issue.nodeId === selectedNodeId && issue.propertyPath && !map.has(issue.propertyPath)) {
+        map.set(issue.propertyPath, { severity: issue.severity, message: issue.message });
+      }
+    }
+    return map.size > 0 ? map : undefined;
+  }, [validationIssues, selectedNodeId]);
 
   // Resolve active environment name
   const projectId = activeCard?.projectId || (selectedNode?.data?.projectId as string) || '';
@@ -829,17 +874,13 @@ export const PropertiesPanel: React.FC = () => {
     }
 
     return (
-      <div id="ice-properties-panel" className="h-full flex flex-col bg-ice-surface overflow-y-auto">
+      <div id="ice-properties-panel" className="h-full flex flex-col bg-inherit overflow-y-auto">
         {/* Header */}
-        <div className="px-3 py-3 border-b border-ice-border">
-          <div className="flex items-center justify-between">
-            <div className="text-ice-xs uppercase tracking-wider text-ice-text-3 mb-1">{t('properties.edge.connectionHeader')}</div>
-            <CloseButton onClick={() => dispatch(toggleProperties())} />
-          </div>
-          <div className="text-ice-base text-ice-text-1 font-medium truncate">
-            {sourceLabel} → {targetLabel}
-          </div>
-        </div>
+        <PanelHeader
+          title={t('properties.title')}
+          onClose={() => dispatch(toggleProperties())}
+          closeLabel={t('properties.closeTitle')}
+        />
 
         {/* Validation warnings */}
         {edgeWarnings.length > 0 && (
@@ -978,7 +1019,7 @@ export const PropertiesPanel: React.FC = () => {
     const iceType = (selectedNode.data?.iceType as string) || '';
     const resourceId = (selectedNode.data?.resourceId as string) || '';
     const provider = (selectedNode.data?.provider as string) || '';
-    const label = (selectedNode.data?.label as string) || '';
+    const label = (selectedNode.data?.name as string) || (selectedNode.data?.label as string) || '';
     const estimatedCost = (selectedNode.data?.estimatedCost as string) || '';
 
     // Look up properties from core DB — try resourceId first, then iceType
@@ -1008,8 +1049,15 @@ export const PropertiesPanel: React.FC = () => {
     const outgoingEdges = activeCard.edges.filter((e) => e.source === selectedNode.id);
 
     return (
-      <div id="ice-properties-panel" className="h-full flex flex-col bg-ice-surface overflow-y-auto">
+      <div id="ice-properties-panel" className="h-full flex flex-col bg-inherit overflow-y-auto">
         {/* Header */}
+        <PanelHeader
+          title={t('properties.title')}
+          onClose={() => dispatch(toggleProperties())}
+          closeLabel={t('properties.closeTitle')}
+        />
+
+        {/* Node identity */}
         <div className="px-3 py-3 border-b border-ice-border">
           <div className="flex items-center gap-2 mb-1.5">
             <img src={iconUrl} alt="" className="w-5 h-5" />
@@ -1020,14 +1068,13 @@ export const PropertiesPanel: React.FC = () => {
               key={selectedNode?.id}
               onBlur={(e) => {
                 const v = e.target.value.trim();
-                if (v && v !== label) updateNodeField('label', v);
+                if (v && v !== label) updateNodeField('name', v);
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
               }}
               className="flex-1 bg-transparent border-none text-ice-md text-ice-text-1 font-semibold outline-none focus:bg-ice-raised rounded px-1 -ml-1 transition-colors"
             />
-            <CloseButton onClick={() => dispatch(toggleProperties())} />
           </div>
           <div className="flex items-center gap-1.5">
             {resourceDef && (
@@ -1052,7 +1099,9 @@ export const PropertiesPanel: React.FC = () => {
         {selectedNode.type === 'container' && (
           <GroupColorPicker
             color={(selectedNode.data?.groupColor as string) || '#3b82f6'}
+            opacity={(selectedNode.data?.groupOpacity as number) ?? 0.1}
             onChange={(color) => updateNodeField('groupColor', color)}
+            onOpacityChange={(opacity) => updateNodeField('groupOpacity', opacity)}
           />
         )}
 
@@ -1301,12 +1350,41 @@ export const PropertiesPanel: React.FC = () => {
               {/* ════ CONFIG TAB ════ */}
               {activeTab === 'config' && (
                 <>
+                  {/* Validation issues banner */}
+                  {selectedNodeId && (() => {
+                    const nodeIssues = validationIssues.filter(i => i.nodeId === selectedNodeId && i.severity !== 'info');
+                    if (nodeIssues.length === 0) return null;
+                    const errorCount = nodeIssues.filter(i => i.severity === 'error').length;
+                    const warnCount = nodeIssues.filter(i => i.severity === 'warning').length;
+                    return (
+                      <div className={`mx-2 mt-1 mb-1 px-3 py-2 rounded-md text-ice-2xs ${
+                        errorCount > 0 ? 'bg-red-500/10 border border-red-500/20' : 'bg-amber-500/10 border border-amber-500/20'
+                      }`}>
+                        <div className={`font-medium ${errorCount > 0 ? 'text-red-400' : 'text-amber-400'}`}>
+                          {errorCount > 0 && `${errorCount} error${errorCount > 1 ? 's' : ''}`}
+                          {errorCount > 0 && warnCount > 0 && ' · '}
+                          {warnCount > 0 && `${warnCount} warning${warnCount > 1 ? 's' : ''}`}
+                        </div>
+                        {nodeIssues.slice(0, 3).map(issue => (
+                          <div key={issue.id} className="mt-0.5 text-ice-text-3">
+                            {issue.message}
+                            {issue.suggestion && <span className="text-ice-text-3/50"> — {issue.suggestion}</span>}
+                          </div>
+                        ))}
+                        {nodeIssues.length > 3 && (
+                          <div className="mt-0.5 text-ice-text-3/50">+{nodeIssues.length - 3} more</div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
                   {/* Configuration fields — tiered */}
                   {dbProperties.length > 0 && (
                     <PropertyFields
                       properties={dbProperties}
                       nodeData={selectedNode.data || {}}
                       onFieldChange={updateNodeField}
+                      propertyIssues={propertyIssuesMap}
                     />
                   )}
 
@@ -1375,14 +1453,12 @@ export const PropertiesPanel: React.FC = () => {
 
   // ═══ NOTHING SELECTED — Project Overview ═══
   return (
-    <div id="ice-properties-panel" className="h-full flex flex-col bg-ice-surface border-l">
-      <div className="px-3 py-3 border-b border-ice-border">
-        <div className="flex items-center justify-between">
-          <div className="text-ice-xs uppercase tracking-wider text-ice-text-3 mb-1">{t('properties.title')}</div>
-          <CloseButton onClick={() => dispatch(toggleProperties())} />
-        </div>
-        <div className="text-ice-md text-ice-text-1 font-semibold">{activeCard?.name || t('properties.noCard')}</div>
-      </div>
+    <div id="ice-properties-panel" className="h-full flex flex-col bg-inherit border-l">
+      <PanelHeader
+        title={t('properties.title')}
+        onClose={() => dispatch(toggleProperties())}
+        closeLabel={t('properties.closeTitle')}
+      />
 
       <Section title={t('properties.overview.title')}>
         <div className="flex items-center justify-between py-1">

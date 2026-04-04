@@ -4,11 +4,31 @@
  * Production-grade multi-tenant SaaS: SSR frontend, API gateway,
  * microservices, databases, cache, async workers, secrets, and observability.
  *
- * Architecture:
- *   Public Traffic → SSR Site, Gateway
- *   Gateway → API Services → PostgreSQL / Cache
- *   API Services → SQS → Worker → Storage
- *   Auth, Secrets, Logs as cross-cutting
+ * Architecture (deployable to AWS / GCP / Azure):
+ *
+ *   ┌── Public Zone ──────────────────────────────────────────────┐
+ *   │  Internet ──► WAF ──► SSR Site (Next.js 14)                 │
+ *   └─────────────────────────────────────────────────────────────┘
+ *   ┌── VPC ──────────────────────────────────────────────────────────────┐
+ *   │  ┌─ Public Subnet ─┐  ┌── Private Subnet ──────────────────────┐  │
+ *   │  │  Gateway         │  │  Users      Auth        Billing        │  │
+ *   │  │                  │  │  Users PG   Billing PG  Cache (Redis)  │  │
+ *   │  └──────────────────┘  └────────────────────────────────────────┘  │
+ *   └─────────────────────────────────────────────────────────────────────┘
+ *   ┌── Async ────────────────────────┐  ┌── Platform Services ──────────────┐
+ *   │  SQS ──► Worker                 │  │  Storage      Secrets              │
+ *   └─────────────────────────────────┘  │  Auth         Logs                 │
+ *                                         └───────────────────────────────────┘
+ *   Domain   Repo   Env   (ungrouped control plane)
+ *
+ * Layout grid (CARD 240×160, PAD 20, HEADER 36, GAP 16):
+ *   Row 0: Public Zone       (3c,1r → 792×236)    at (30,30)
+ *   Row 1: VPC               (1142×488)            at (30,296)
+ *          ├ Public Subnet   (1c,1r → 280×236)    at (50,352)  parent→VPC
+ *          └ Private Subnet  (3c,2r → 792×412)    at (360,352) parent→VPC
+ *   Row 2: Async             (2c,1r → 536×236)    at (30,814)
+ *          Platform Services (2c,2r → 536×412)    at (596,814)
+ *   Row 3: Ungrouped         y=1256
  */
 
 import type { ComposedTemplate } from './types';
@@ -22,143 +42,197 @@ export const saasStarterTemplate: ComposedTemplate = {
   estimatedCost: '$150-400/mo',
   category: 'full-stack',
   provider: 'gcp',
-  tags: ['Next.js', 'PostgreSQL', 'Redis', 'Microservices', 'Observability'],
+  providers: ['gcp', 'aws', 'azure'],
+  tags: ['Next.js', 'PostgreSQL', 'Redis', 'Microservices', 'Observability', 'VPC', 'Subnet'],
   securityLevel: 'standard',
+  difficulty: 'advanced',
+  trust: 'official',
+  featured: true,
+  author: { name: 'ICE Team' },
   environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-east-1', securityLevel: 'standard' },
-    { type: 'staging', name: 'Staging', region: 'us-east-1', securityLevel: 'standard' },
-    { type: 'development', name: 'Development', region: 'us-east-1', securityLevel: 'basic' },
+    { type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' },
+    { type: 'staging', name: 'Staging', region: 'us-central1', securityLevel: 'standard' },
+    { type: 'development', name: 'Development', region: 'us-central1', securityLevel: 'basic' },
   ],
 
   groups: [
+    // [0] Public Zone — outside VPC
     {
       subtype: 'Frontend',
-      label: 'Edge',
+      label: 'Public Zone',
       position: { x: 30, y: 30 },
-      width: 800,
-      height: 170,
+      width: 792,
+      height: 236,
       blockIndices: [0, 1, 2],
-      color: '#3b82f6',
+      color: '#ef4444',
     },
+    // [1] VPC — contains subnets, no direct blocks
     {
-      subtype: 'Services',
-      label: 'Backend Services',
-      position: { x: 30, y: 230 },
-      width: 540,
-      height: 310,
-      blockIndices: [3, 4, 5],
+      subtype: 'Custom',
+      iceType: 'Network.VPC',
+      label: 'VPC',
+      position: { x: 30, y: 296 },
+      width: 1142,
+      height: 488,
+      blockIndices: [],
       color: '#22c55e',
     },
+    // [2] Public Subnet — inside VPC
     {
-      subtype: 'Data',
-      label: 'Data Layer',
-      position: { x: 610, y: 30 },
-      width: 300,
-      height: 510,
-      blockIndices: [6, 7, 8],
-      color: '#f59e0b',
+      subtype: 'Custom',
+      iceType: 'Network.Subnet',
+      label: 'Public Subnet',
+      position: { x: 50, y: 352 },
+      width: 280,
+      height: 236,
+      blockIndices: [3],
+      color: '#3b82f6',
+      parentGroupIndex: 1,
     },
+    // [3] Private Subnet — inside VPC
+    {
+      subtype: 'Custom',
+      iceType: 'Network.Subnet',
+      label: 'Private Subnet',
+      position: { x: 360, y: 352 },
+      width: 792,
+      height: 412,
+      blockIndices: [4, 5, 6, 7, 8, 9],
+      color: '#6366f1',
+      parentGroupIndex: 1,
+    },
+    // [4] Async — outside VPC
     {
       subtype: 'Messaging',
-      label: 'Async Processing',
-      position: { x: 30, y: 570 },
-      width: 540,
-      height: 170,
-      blockIndices: [9, 10],
+      label: 'Async',
+      position: { x: 30, y: 814 },
+      width: 536,
+      height: 236,
+      blockIndices: [10, 11],
       color: '#8b5cf6',
     },
+    // [5] Platform Services — outside VPC
     {
       subtype: 'External',
       label: 'Platform Services',
-      position: { x: 610, y: 570 },
-      width: 540,
-      height: 170,
-      blockIndices: [11, 12, 13, 14],
+      position: { x: 596, y: 814 },
+      width: 536,
+      height: 412,
+      blockIndices: [12, 13, 14, 15],
       color: '#64748b',
     },
   ],
 
   blocks: [
-    // 0-2: Edge (with public traffic entry)
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 60, y: 60 } },
+    // ── Public Zone (outside VPC) ─────────────────────────────────────────
+    // 0: Internet
+    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 } },
+    // 1: WAF
+    { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 } },
+    // 2: SSR Site
     {
       iceType: 'Compute.SSRSite',
-      label: 'SSR Site',
-      position: { x: 310, y: 60 },
-      data: { domain: 'app.saas.io', runtime: 'Next.js 14' },
+      label: 'SaaS Dashboard',
+      position: { x: 562, y: 86 },
+      data: { framework: 'nextjs', domain: 'app.saas.io' },
     },
-    { iceType: 'Network.Gateway', label: 'Gateway', position: { x: 560, y: 60 } },
 
-    // 3-5: Backend microservices
+    // ── Public Subnet (inside VPC) ────────────────────────────────────────
+    // 3: Gateway
+    { iceType: 'Network.Gateway', label: 'API Gateway', position: { x: 70, y: 408 }, data: { protocol: 'http' } },
+
+    // ── Private Subnet (inside VPC) ───────────────────────────────────────
+    // Row 0
+    // 4: Users Service
     {
       iceType: 'Compute.Container',
       label: 'Users Service',
-      position: { x: 60, y: 260 },
-      data: { runtime: 'Node.js 20', port: 8080 },
+      position: { x: 380, y: 408 },
+      data: { runtime: 'nodejs20', port: 8080 },
     },
+    // 5: Auth Service
     {
       iceType: 'Compute.Container',
       label: 'Auth Service',
-      position: { x: 310, y: 260 },
-      data: { runtime: 'Node.js 20', port: 8081 },
+      position: { x: 636, y: 408 },
+      data: { runtime: 'nodejs20', port: 8081 },
     },
+    // 6: Billing Service
     {
       iceType: 'Compute.Container',
       label: 'Billing Service',
-      position: { x: 60, y: 400 },
-      data: { runtime: 'Go 1.22', port: 8082 },
+      position: { x: 892, y: 408 },
+      data: { runtime: 'go1.22', port: 8082 },
     },
+    // Row 1
+    // 7: Users PostgreSQL
+    { iceType: 'Database.PostgreSQL', label: 'Users DB', position: { x: 380, y: 584 }, data: { storage: '100', version: '17' } },
+    // 8: Billing PostgreSQL
+    { iceType: 'Database.PostgreSQL', label: 'Billing DB', position: { x: 636, y: 584 }, data: { storage: '100', version: '17' } },
+    // 9: Cache
+    { iceType: 'Database.Redis', label: 'App Cache', position: { x: 892, y: 584 } },
 
-    // 6-8: Data stores
-    { iceType: 'Database.PostgreSQL', label: 'Users PostgreSQL', position: { x: 640, y: 60 } },
-    { iceType: 'Database.PostgreSQL', label: 'Billing PostgreSQL', position: { x: 640, y: 210 } },
-    { iceType: 'Database.Redis', label: 'Cache', position: { x: 640, y: 370 } },
+    // ── Async (outside VPC) ───────────────────────────────────────────────
+    // 10: SQS
+    { iceType: 'Messaging.SQS', label: 'Task Queue', position: { x: 50, y: 870 }, data: { queue_type: 'standard' } },
+    // 11: Worker
+    { iceType: 'Compute.Worker', label: 'Background Worker', position: { x: 306, y: 870 }, data: { runtime: 'nodejs20' } },
 
-    // 9-10: Async processing
-    { iceType: 'Messaging.SQS', label: 'SQS', position: { x: 60, y: 600 } },
-    { iceType: 'Compute.Worker', label: 'Worker', position: { x: 310, y: 600 } },
+    // ── Platform Services (outside VPC) ───────────────────────────────────
+    // Row 0
+    // 12: Storage
+    { iceType: 'Storage.Bucket', label: 'Asset Storage', position: { x: 616, y: 870 } },
+    // 13: Secrets
+    { iceType: 'Security.Secret', label: 'Secrets', position: { x: 872, y: 870 } },
+    // Row 1
+    // 14: Auth
+    { iceType: 'Security.Identity', label: 'Auth', position: { x: 616, y: 1046 } },
+    // 15: Logs
+    { iceType: 'Monitoring.Log', label: 'Platform Logs', position: { x: 872, y: 1046 }, data: { keep_logs: '30 days' } },
 
-    // 11-14: Platform services
-    { iceType: 'Storage.Bucket', label: 'Storage', position: { x: 640, y: 600 } },
-    { iceType: 'Security.Secret', label: 'Secrets', position: { x: 880, y: 600 } },
-    { iceType: 'Security.Identity', label: 'Auth', position: { x: 880, y: 60 } },
-    { iceType: 'Monitoring.Log', label: 'Logs', position: { x: 880, y: 210 } },
+    // ── Ungrouped (control plane) ─────────────────────────────────────────
+    // 16: Domain
+    { iceType: 'Network.Domain', label: 'Domain', position: { x: 50, y: 1256 }, data: { hostname: 'app.saas.io' } },
+    // 17: Repo
+    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 306, y: 1256 }, data: { repository: '', branch: 'main' } },
+    // 18: Env
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 } },
   ],
 
   connections: [
-    // Public Traffic → SSR + Gateway
-    { fromBlock: 0, toBlock: 1, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
+    // Internet → SSR Site (Gateway→Frontend rule)
     { fromBlock: 0, toBlock: 2, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
-
-    // Gateway → microservices
-    { fromBlock: 2, toBlock: 3, relationship: 'connects_to', protocol: 'HTTP', port: 8080 },
-    { fromBlock: 2, toBlock: 4, relationship: 'connects_to', protocol: 'HTTP', port: 8081 },
-    { fromBlock: 2, toBlock: 5, relationship: 'connects_to', protocol: 'HTTP', port: 8082 },
-
-    // Service → PostgreSQL (each service owns its DB)
-    { fromBlock: 3, toBlock: 6, relationship: 'depends_on', protocol: 'TCP', port: 5432 },
-    { fromBlock: 5, toBlock: 7, relationship: 'depends_on', protocol: 'TCP', port: 5432 },
-
-    // Services → Cache (sessions, auth tokens)
-    { fromBlock: 3, toBlock: 8, relationship: 'depends_on', protocol: 'TCP', port: 6379 },
-    { fromBlock: 4, toBlock: 8, relationship: 'depends_on', protocol: 'TCP', port: 6379 },
-
-    // Auth service → Auth
-    { fromBlock: 4, toBlock: 13, relationship: 'depends_on' },
-
-    // Services → Secrets
-    { fromBlock: 4, toBlock: 12, relationship: 'depends_on' },
-    { fromBlock: 5, toBlock: 12, relationship: 'depends_on' },
-
-    // Async: Billing → SQS → Worker → Storage
-    { fromBlock: 5, toBlock: 9, relationship: 'connects_to' },
-    { fromBlock: 9, toBlock: 10, relationship: 'connects_to' },
-    { fromBlock: 10, toBlock: 11, relationship: 'depends_on' },
-
-    // Observability (all services log)
-    { fromBlock: 3, toBlock: 14, relationship: 'connects_to' },
-    { fromBlock: 4, toBlock: 14, relationship: 'connects_to' },
-    { fromBlock: 5, toBlock: 14, relationship: 'connects_to' },
-    { fromBlock: 10, toBlock: 14, relationship: 'connects_to' },
+    // Internet → WAF → Gateway (Gateway→Gateway rule)
+    { fromBlock: 0, toBlock: 1, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
+    { fromBlock: 1, toBlock: 3, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
+    // Gateway → microservices (Gateway→Backend rule)
+    { fromBlock: 3, toBlock: 4, relationship: 'connects_to', protocol: 'HTTP', port: 8080 },
+    { fromBlock: 3, toBlock: 5, relationship: 'connects_to', protocol: 'HTTP', port: 8081 },
+    { fromBlock: 3, toBlock: 6, relationship: 'connects_to', protocol: 'HTTP', port: 8082 },
+    // Services → PostgreSQL (Backend→Database rule)
+    { fromBlock: 4, toBlock: 7, relationship: 'depends_on', protocol: 'TCP', port: 5432 },
+    { fromBlock: 6, toBlock: 8, relationship: 'depends_on', protocol: 'TCP', port: 5432 },
+    // Services → Cache (Backend→Cache rule)
+    { fromBlock: 4, toBlock: 9, relationship: 'depends_on', protocol: 'TCP', port: 6379 },
+    { fromBlock: 5, toBlock: 9, relationship: 'depends_on', protocol: 'TCP', port: 6379 },
+    // Auth → platform services (Backend→Auth, Service→Secrets rules)
+    { fromBlock: 5, toBlock: 14, relationship: 'depends_on' },
+    { fromBlock: 5, toBlock: 13, relationship: 'depends_on' },
+    { fromBlock: 6, toBlock: 13, relationship: 'depends_on' },
+    // Async: Billing → SQS → Worker → Storage (Backend→Queue, Queue→Backend, Backend→Storage rules)
+    { fromBlock: 6, toBlock: 10, relationship: 'connects_to' },
+    { fromBlock: 10, toBlock: 11, relationship: 'connects_to' },
+    { fromBlock: 11, toBlock: 12, relationship: 'depends_on' },
+    // Observability (Service→Monitoring rule)
+    { fromBlock: 4, toBlock: 15, relationship: 'connects_to' },
+    { fromBlock: 5, toBlock: 15, relationship: 'connects_to' },
+    { fromBlock: 6, toBlock: 15, relationship: 'connects_to' },
+    { fromBlock: 11, toBlock: 15, relationship: 'connects_to' },
+    // Domain → SSR Site (Domain→Routable rule)
+    { fromBlock: 16, toBlock: 2, relationship: 'connects_to' },
+    // Repo → Service (Repo→Service pipeline rule)
+    { fromBlock: 17, toBlock: 4, relationship: 'connects_to' },
+    // Service → Env (Service→EnvConfig config rule)
+    { fromBlock: 4, toBlock: 18, relationship: 'depends_on' },
   ],
 };

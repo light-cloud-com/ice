@@ -11,7 +11,7 @@ export const azureMongodbBlueprint: BlockBlueprint = createBlueprintFromResource
   nodeDataDefaults: {
     runtime: 'MongoDB 7',
     port: 27017,
-    size: 'M10',
+    size: 'cosmos-serverless',
     storage: '10 GB',
     domain: 'mongo.internal',
   },

@@ -9,5 +9,6 @@ export const azureEventStreamBlueprint: BlockBlueprint = createBlueprintFromReso
   icon: 'Activity',
   providers: ['azure'],
   nodeDataDefaults: {
+    size: 'eh-basic',
   },
 });

@@ -38,11 +38,19 @@ export function expandComposedTemplate(
   const blockToGroupId = new Map<number, string>();
   const groupIds: string[] = [];
 
-  // Create group nodes first
+  // Create group nodes first (parents must appear before children in the array)
   if (template.groups) {
-    for (const group of template.groups) {
+    for (let gi = 0; gi < template.groups.length; gi++) {
+      const group = template.groups[gi];
       const groupId = `tpl-group-${template.id}-${group.subtype.toLowerCase()}-${Date.now()}-${groupIds.length}`;
       groupIds.push(groupId);
+
+      // Use explicit iceType if provided (e.g. 'Network.VPC', 'Network.Subnet'),
+      // otherwise fall back to the default Group.{subtype} pattern.
+      const containerIceType = group.iceType || `Group.${group.subtype}`;
+
+      // If this group has a parent group (e.g. Subnet inside VPC), set parentId
+      const parentId = group.parentGroupIndex != null ? groupIds[group.parentGroupIndex] : undefined;
 
       allNodes.push({
         id: groupId,
@@ -50,9 +58,10 @@ export function expandComposedTemplate(
         position: { x: group.position.x, y: group.position.y },
         width: group.width,
         height: group.height,
+        ...(parentId ? { parentId } : {}),
         data: {
           label: group.label,
-          iceType: `Group.${group.subtype}`,
+          iceType: containerIceType,
           behavior: 'container',
           status: 'active',
           groupColor: group.color || '#3b82f6',
@@ -86,7 +95,7 @@ export function expandComposedTemplate(
         height: 56,
         ...(parentGroupId ? { parentId: parentGroupId } : {}),
         data: {
-          label: block.label,
+          name: block.label,
           iceType: block.iceType,
           behavior: 'singleton',
           status: 'active',
@@ -103,10 +112,10 @@ export function expandComposedTemplate(
       parentContainerId: parentGroupId,
     });
 
-    // Override the label if the template specifies one
+    // Override the name if the template specifies one
     const nodeData = { ...expanded.node.data };
     if (block.label) {
-      nodeData.label = block.label;
+      nodeData.name = block.label;
     }
     // Merge any extra data from the template block definition
     if (block.data) {
@@ -136,22 +145,33 @@ export function expandComposedTemplate(
     blockNodeIds.push(expanded.node.id);
   }
 
-  // Create group → block containment edges
+  // Create containment edges (group → block AND group → child group)
   if (template.groups) {
-    for (const group of template.groups) {
+    for (let gi = 0; gi < template.groups.length; gi++) {
+      const group = template.groups[gi];
+      const groupNodeId = groupIds[gi];
+
+      // Group → block containment edges
       for (const blockIdx of group.blockIndices) {
         const blockId = blockNodeIds[blockIdx];
-        const groupNode = allNodes.find(
-          (n) =>
-            n.type === 'container' &&
-            (n.data?.iceType as string) === `Group.${group.subtype}` &&
-            n.data?.label === group.label,
-        );
-        if (blockId && groupNode) {
+        if (blockId && groupNodeId) {
           allEdges.push({
-            id: `tpl-contain-${template.id}-${groupNode.id}-${blockId}`,
-            source: groupNode.id,
+            id: `tpl-contain-${template.id}-${groupNodeId}-${blockId}`,
+            source: groupNodeId,
             target: blockId,
+            data: { relationship: 'contains' },
+          });
+        }
+      }
+
+      // Group → child group containment edges (VPC → Subnet nesting)
+      if (group.parentGroupIndex != null) {
+        const parentGroupNodeId = groupIds[group.parentGroupIndex];
+        if (parentGroupNodeId && groupNodeId) {
+          allEdges.push({
+            id: `tpl-contain-${template.id}-${parentGroupNodeId}-${groupNodeId}`,
+            source: parentGroupNodeId,
+            target: groupNodeId,
             data: { relationship: 'contains' },
           });
         }

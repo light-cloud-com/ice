@@ -29,18 +29,27 @@ import {
   Waypoints,
   BarChart3,
   Terminal,
+  Blocks,
+  Check,
+  ChevronDown,
+  ShieldAlert,
+  Lock,
+  Network,
+  Layers,
 } from 'lucide-react';
 import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { GROUP_COLOR_PRESETS } from '../../../config/color-palette';
+import * as SelectPrimitive from '@radix-ui/react-select';
 import { ENABLED_PROVIDER_IDS, ENABLED_PROVIDERS as ENABLED_CLOUD_PROVIDERS } from '../../../config/providers';
 import axiosInstance from '../../../shared/api/axios-instance';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../../../shared/components/ui/resizable';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '../../../shared/components/ui/tooltip';
 import { useResolvePath } from '../../../shared/hooks/use-resolve-path';
 import { useTranslation, t as translate } from '../../../i18n';
+import { getBrandIcon } from '../../../assets/icons/brand-registry';
 import { cn } from '../../../shared/utils/cn';
-import { SearchInput } from '../../../shared/components/ui/search-input';
+import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { ProjectBrowser } from '../../project-browser';
 
 // =============================================================================
@@ -293,6 +302,26 @@ const COMPONENTS: ComponentDef[] = [
 
   // ── Network ──
   {
+    type: 'Network.VPC',
+    name: 'VPC',
+    description: 'Virtual Private Cloud. Isolated network.',
+    tooltip:
+      'Virtual Private Cloud — an isolated private network that contains your subnets and resources. Provides network-level isolation, custom IP ranges, route tables, and security boundaries. All production workloads should run inside a VPC.',
+    icon: Network,
+    providers: ['aws', 'gcp', 'azure'],
+    category: 'Network',
+  },
+  {
+    type: 'Network.Subnet',
+    name: 'Subnet',
+    description: 'Network subdivision inside a VPC.',
+    tooltip:
+      'A subdivision of a VPC that isolates resources into public or private segments. Public subnets have internet access; private subnets are shielded behind NAT. Use subnets to separate frontend, backend, and data tiers.',
+    icon: Layers,
+    providers: ['aws', 'gcp', 'azure'],
+    category: 'Network',
+  },
+  {
     type: 'Network.Internet',
     name: 'Public Traffic',
     description: 'Internet entry point. People reaching your app.',
@@ -542,6 +571,26 @@ const COMPONENTS: ComponentDef[] = [
     providers: ['aws', 'gcp', 'azure'],
     category: 'Security',
   },
+  {
+    type: 'Security.WAF',
+    name: 'WAF',
+    description: 'Web Application Firewall. DDoS & injection protection.',
+    tooltip:
+      'Web Application Firewall that protects APIs and web apps from common exploits — SQL injection, XSS, DDoS attacks, bot traffic, and OWASP Top 10 vulnerabilities. Sits in front of your API gateway or load balancer.',
+    icon: ShieldAlert,
+    providers: ['aws', 'gcp', 'azure'],
+    category: 'Security',
+  },
+  {
+    type: 'Security.Certificate',
+    name: 'SSL Certificate',
+    description: 'HTTPS certificates for your domains.',
+    tooltip:
+      'Managed SSL/TLS certificate for HTTPS. Auto-provisions and auto-renews certificates for your custom domains. Free with most cloud providers (ACM, Managed SSL, Key Vault).',
+    icon: Lock,
+    providers: ['aws', 'gcp', 'azure'],
+    category: 'Security',
+  },
 
   // ── AI ──
   {
@@ -765,41 +814,88 @@ const BlocksSection: React.FC<BlocksSectionProps> = ({
 
   return (
     <div className="h-full flex flex-col">
-      {/* Search + provider filter */}
-      <div className="px-3 py-2 shrink-0">
-        <SearchInput
-          ref={searchInputRef}
-          id="ice-palette-search-input"
-          value={localSearch}
-          onChange={setLocalSearch}
-          placeholder={t('palette.searchPlaceholder')}
-          className="mb-1.5"
-        />
-        <div className="flex gap-1">
-          {PROVIDERS.map((provider) => {
-            const isActive = selectedProvider === provider.id;
-            const isLocked = !!projectProvider && provider.id !== 'all' && provider.id !== projectProvider;
-            return (
-              <button
-                key={provider.id}
-                id={`ice-palette-filter-${provider.id}`}
-                onClick={() => !isLocked && setSelectedProvider(provider.id)}
-                disabled={isLocked}
+      <PanelHeader
+        icon={<Blocks aria-hidden="true" className="w-3.5 h-3.5" />}
+        title={t('palette.title')}
+        search={{
+          value: localSearch,
+          onChange: setLocalSearch,
+          placeholder: t('palette.searchPlaceholder'),
+          ref: searchInputRef,
+          id: 'ice-palette-search-input',
+        }}
+        actions={
+          <SelectPrimitive.Root
+            value={selectedProvider}
+            onValueChange={setSelectedProvider}
+          >
+            <SelectPrimitive.Trigger
+              id="ice-palette-provider-select"
+              className={cn(
+                'group inline-flex items-center gap-1 rounded p-1 transition-colors outline-none',
+                'text-ice-text-3/50 hover:text-ice-text-1 focus-visible:ring-1 focus-visible:ring-blue-500',
+              )}
+            >
+              {(() => {
+                const brand = selectedProvider !== 'all' ? getBrandIcon(selectedProvider) : null;
+                return brand
+                  ? <img src={brand.url} alt="" className="w-3.5 h-3.5" />
+                  : <Globe aria-hidden="true" className="w-3.5 h-3.5" />;
+              })()}
+              <SelectPrimitive.Icon asChild>
+                <ChevronDown aria-hidden="true" className="w-2.5 h-2.5 shrink-0" />
+              </SelectPrimitive.Icon>
+            </SelectPrimitive.Trigger>
+
+            <SelectPrimitive.Portal>
+              <SelectPrimitive.Content
+                position="popper"
+                side="bottom"
+                align="end"
+                sideOffset={4}
                 className={cn(
-                  'px-1.5 py-0.5 text-ice-xs font-medium rounded transition-[color,background-color]',
-                  isLocked
-                    ? 'text-ice-text-3 opacity-30 cursor-not-allowed'
-                    : isActive
-                      ? 'bg-ice-active text-ice-text-1'
-                      : 'text-ice-text-3 hover:text-ice-text-2 hover:bg-ice-hover',
+                  'z-[99999] max-h-[280px] overflow-hidden',
+                  'rounded-md border border-ice-border bg-ice-overlay shadow-xl',
+                  'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-[0.98]',
+                  'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-[0.98]',
+                  'data-[side=bottom]:slide-in-from-top-1 data-[side=top]:slide-in-from-bottom-1',
                 )}
               >
-                {provider.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+                <SelectPrimitive.Viewport className="p-0.5">
+                  {PROVIDERS.map((provider) => {
+                    const isLocked = !!projectProvider && provider.id !== 'all' && provider.id !== projectProvider;
+                    const brand = provider.id !== 'all' ? getBrandIcon(provider.id) : null;
+                    return (
+                      <SelectPrimitive.Item
+                        key={provider.id}
+                        value={provider.id}
+                        disabled={isLocked}
+                        className={cn(
+                          'relative flex items-center gap-2 rounded px-2 py-1 outline-none cursor-pointer select-none transition-colors text-ice-xs',
+                          'text-ice-text-2 hover:text-ice-text-1 hover:bg-ice-hover focus:bg-ice-hover focus:text-ice-text-1',
+                          'data-[disabled]:opacity-30 data-[disabled]:pointer-events-none',
+                        )}
+                      >
+                        {brand ? (
+                          <img src={brand.url} alt="" className="w-3.5 h-3.5 shrink-0" />
+                        ) : (
+                          <Globe aria-hidden="true" className="w-3.5 h-3.5 shrink-0 text-ice-text-3" />
+                        )}
+                        <SelectPrimitive.ItemText>
+                          <span className="truncate">{provider.label}</span>
+                        </SelectPrimitive.ItemText>
+                        {provider.id === selectedProvider && (
+                          <Check aria-hidden="true" className="w-3 h-3 shrink-0 text-blue-400 ml-auto" />
+                        )}
+                      </SelectPrimitive.Item>
+                    );
+                  })}
+                </SelectPrimitive.Viewport>
+              </SelectPrimitive.Content>
+            </SelectPrimitive.Portal>
+          </SelectPrimitive.Root>
+        }
+      />
 
       {/* Scrollable blocks content */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">

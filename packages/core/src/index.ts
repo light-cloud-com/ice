@@ -211,3 +211,27 @@ export {
   type BlockTemplate,
   type EnvVar,
 } from './resources/cloud-blocks.js';
+
+// Re-export Canvas Validation Engine
+export {
+  validateCanvas,
+  validateNode,
+  validateProperties,
+  validateConnections,
+  validateStructure,
+  validateDeployability,
+  validateArchitecture,
+  validateTemplate,
+  getResourceForIceType,
+  getPropertiesForIceType,
+  getSupportedProviders,
+  isKnownIceType,
+  type CanvasIssue,
+  type CanvasValidationResult,
+  type ValidatableNode,
+  type ValidatableEdge,
+  type ValidationContext as CanvasValidationContext,
+  type IssueSeverity,
+  type IssueCategory,
+  type IssueCode,
+} from './validation/index.js';

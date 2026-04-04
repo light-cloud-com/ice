@@ -72,6 +72,7 @@ import { SvgUserNode, USER_NODE_WIDTH, USER_NODE_HEIGHT, USER_NODE_ID } from '..
 import { useClipboard } from '../../../shared/hooks/use-clipboard';
 import { useExposedServices } from '../../../shared/hooks/use-exposed-services';
 import { useUndoRedo } from '../../../shared/hooks/use-undo-redo';
+import { useCanvasValidation } from '../hooks/use-canvas-validation';
 import { calculateZIndex } from '../../../shared/utils/auto-layout';
 import { logCanvasRender, logDrop, logBlueprint } from '../../../shared/utils/debug-logger';
 import { inspectLayout, updateInspectorState, installInspector } from '../../../shared/utils/layout-inspector';
@@ -158,9 +159,12 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   const aiCurrentIntent = useSelector((state: RootState) => state.ai.currentIntent);
   const pipelineNodeStatus = useSelector((state: RootState) => state.pipeline.nodeStatus);
   const edgeStyle = useSelector((state: RootState) => state.ui.edgeStyle);
+  const validationIssues = useSelector((state: RootState) => state.validation.issues);
   // Clipboard (Ctrl+C/V/X) and Undo/Redo (Ctrl+Z / Ctrl+Shift+Z)
   useClipboard();
   useUndoRedo();
+  // Canvas validation — runs on debounced timer after node/edge changes
+  useCanvasValidation();
 
   // Get pane viewport if paneId provided
   const splitView = useSelector((state: RootState) => state.ui.splitView);
@@ -194,6 +198,9 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   // in place around the diagram centroid.  No topology rearrangement = no jumps.
   // Full re-layout only happens on manual organize button clicks.
   const autoOrganizeOnZoom = useSelector((state: RootState) => state.ui.autoOrganizeOnZoom);
+  const snapToGrid = useSelector((state: RootState) => state.ui.snapToGrid);
+  const gridSize = useSelector((state: RootState) => state.ui.gridSize);
+  const canvasLocked = useSelector((state: RootState) => state.ui.canvasLocked);
   const prevAutoZoomRef = useRef(viewport.zoom);
 
   useEffect(() => {
@@ -310,7 +317,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
         y: node.position?.y || 0,
         width: Math.max(node.width || 0, defaultWidth),
         height: visualHeight,
-        label: (node.data?.label as string) || (node.data?.name as string) || node.id,
+        label: (node.data?.name as string) || (node.data?.label as string) || node.id,
         data: { ...(node.data as Record<string, unknown>), iceType },
         parentId: node.parentId || null,
       };
@@ -1256,7 +1263,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   const handleRenameCommit = useCallback(
     (nodeId: string, newLabel: string) => {
       if (newLabel.trim()) {
-        dispatch(updateCardNodeData({ nodeId, data: { label: newLabel.trim() } }));
+        dispatch(updateCardNodeData({ nodeId, data: { name: newLabel.trim() } }));
       }
       setRenamingNodeId(null);
     },
@@ -1329,6 +1336,23 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     },
     [card, pipelineNodeStatus],
   );
+
+  // Build per-node validation lookup from validation issues
+  const nodeValidationMap = useMemo(() => {
+    const map = new Map<string, { severity: 'error' | 'warning' | 'info'; count: number }>();
+    for (const issue of validationIssues) {
+      if (!issue.nodeId) continue;
+      const existing = map.get(issue.nodeId);
+      const count = (existing?.count ?? 0) + 1;
+      // Keep highest severity: error > warning > info
+      const severityRank = { error: 3, warning: 2, info: 1 } as const;
+      const currentRank = existing ? severityRank[existing.severity] : 0;
+      const issueRank = severityRank[issue.severity as keyof typeof severityRank] ?? 0;
+      const severity = issueRank > currentRank ? (issue.severity as 'error' | 'warning' | 'info') : (existing?.severity ?? 'info');
+      map.set(issue.nodeId, { severity, count });
+    }
+    return map;
+  }, [validationIssues]);
 
   // Subscribe to card-level pipeline Socket.IO events
   useEffect(() => {
@@ -1648,6 +1672,8 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     onDelete: handleDeleteSelected,
     onDragOverGroup: handleDragOverGroup,
     onDragEnd: handleDragEnd,
+    gridSize: snapToGrid ? gridSize : 0,
+    locked: canvasLocked,
   });
 
   // Non-passive wheel listener for zoom (React onWheel is passive, preventDefault fails)
@@ -1656,6 +1682,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     if (!svg) return;
     const handler = (e: WheelEvent) => {
       e.preventDefault();
+      setConnTooltip(null);
       bindCanvas.onWheel(e as any);
     };
     svg.addEventListener('wheel', handler, { passive: false });
@@ -1862,49 +1889,61 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   }, [visibleNodes, selectedNodes, hasCollapsedAncestor, nodeDepthMap]);
 
   // Compute port map for connection distribution
-  // For each node+side, track how many connections use it and assign indices
+  // For each node+side, sort connections by the OTHER endpoint's position
+  // so that ports fan out in natural order without crossings.
   const portMap = useMemo(() => {
     const map = new Map<string, { index: number; count: number }>();
+    const nodeById = new Map<string, LocalCanvasNode>();
+    for (const n of effectiveNodes) nodeById.set(n.id, n);
 
-    // Helper: determine which side a connection uses on a node
     const getSide = (fromNode: LocalCanvasNode, toNode: LocalCanvasNode): { exitSide: string; entrySide: string } => {
       const dx = toNode.x + toNode.width / 2 - (fromNode.x + fromNode.width / 2);
       const dy = toNode.y + toNode.height / 2 - (fromNode.y + fromNode.height / 2);
       if (Math.abs(dx) > Math.abs(dy)) {
         return dx > 0 ? { exitSide: 'right', entrySide: 'left' } : { exitSide: 'left', entrySide: 'right' };
-      } else {
-        return dy > 0 ? { exitSide: 'bottom', entrySide: 'top' } : { exitSide: 'top', entrySide: 'bottom' };
       }
+      return dy > 0 ? { exitSide: 'bottom', entrySide: 'top' } : { exitSide: 'top', entrySide: 'bottom' };
     };
 
-    // First pass: count connections per node+side
-    const sideCounts = new Map<string, number>();
-    const connSides: Array<{ connId: string; sourceKey: string; targetKey: string }> = [];
+    // Collect all connections per side-key, with the "other" node for sorting
+    interface SideEntry { connId: string; role: 'source' | 'target'; otherCx: number; otherCy: number }
+    const sideGroups = new Map<string, SideEntry[]>();
 
     for (const conn of canvasConnections) {
-      const fromNode = effectiveNodes.find((n) => n.id === conn.from);
-      const toNode = effectiveNodes.find((n) => n.id === conn.to);
+      const fromNode = nodeById.get(conn.from);
+      const toNode = nodeById.get(conn.to);
       if (!fromNode || !toNode) continue;
 
       const { exitSide, entrySide } = getSide(fromNode, toNode);
       const sourceKey = `${conn.from}:${exitSide}`;
       const targetKey = `${conn.to}:${entrySide}`;
 
-      sideCounts.set(sourceKey, (sideCounts.get(sourceKey) || 0) + 1);
-      sideCounts.set(targetKey, (sideCounts.get(targetKey) || 0) + 1);
-      connSides.push({ connId: conn.id, sourceKey, targetKey });
+      const toCx = toNode.x + toNode.width / 2;
+      const toCy = toNode.y + toNode.height / 2;
+      const fromCx = fromNode.x + fromNode.width / 2;
+      const fromCy = fromNode.y + fromNode.height / 2;
+
+      if (!sideGroups.has(sourceKey)) sideGroups.set(sourceKey, []);
+      sideGroups.get(sourceKey)!.push({ connId: conn.id, role: 'source', otherCx: toCx, otherCy: toCy });
+
+      if (!sideGroups.has(targetKey)) sideGroups.set(targetKey, []);
+      sideGroups.get(targetKey)!.push({ connId: conn.id, role: 'target', otherCx: fromCx, otherCy: fromCy });
     }
 
-    // Second pass: assign indices
-    const sideIndices = new Map<string, number>();
-    for (const { connId, sourceKey, targetKey } of connSides) {
-      const srcIdx = sideIndices.get(sourceKey) || 0;
-      const tgtIdx = sideIndices.get(targetKey) || 0;
-      sideIndices.set(sourceKey, srcIdx + 1);
-      sideIndices.set(targetKey, tgtIdx + 1);
-
-      map.set(`${connId}:source`, { index: srcIdx, count: sideCounts.get(sourceKey) || 1 });
-      map.set(`${connId}:target`, { index: tgtIdx, count: sideCounts.get(targetKey) || 1 });
+    // Sort each group by the other endpoint's position to minimize crossings:
+    // left/right sides → sort by other node's Y (top-to-bottom)
+    // top/bottom sides → sort by other node's X (left-to-right)
+    for (const [key, entries] of sideGroups) {
+      const side = key.split(':').pop()!;
+      if (side === 'left' || side === 'right') {
+        entries.sort((a, b) => a.otherCy - b.otherCy);
+      } else {
+        entries.sort((a, b) => a.otherCx - b.otherCx);
+      }
+      const count = entries.length;
+      for (let i = 0; i < count; i++) {
+        map.set(`${entries[i].connId}:${entries[i].role}`, { index: i, count });
+      }
     }
 
     return map;
@@ -2194,6 +2233,8 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
         height={dimensions.height}
         style={{ cursor: drawingConnection ? 'crosshair' : cursor }}
         onMouseDown={(e) => {
+          // Dismiss any lingering connection tooltip on interaction start
+          setConnTooltip(null);
           // Check if click is on a connection port first
           const target = e.target as SVGElement;
           if (target.classList.contains('connection-port')) {
@@ -2217,7 +2258,10 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
           }
           bindCanvas.onMouseUp(e);
         }}
-        onMouseLeave={bindCanvas.onMouseLeave}
+        onMouseLeave={(e) => {
+          setConnTooltip(null);
+          bindCanvas.onMouseLeave(e);
+        }}
         onAuxClick={bindCanvas.onAuxClick}
         onContextMenu={bindCanvas.onContextMenu}
       >
@@ -2459,6 +2503,8 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                     lod={lod}
                     zoom={viewport.zoom}
                     connectionDragState={connectionDragTargets?.get(node.id) ?? null}
+                    validationSeverity={nodeValidationMap.get(node.id)?.severity ?? null}
+                    validationCount={nodeValidationMap.get(node.id)?.count ?? 0}
                   />,
                 );
               }
@@ -2485,6 +2531,8 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                     lod={lod}
                     zoom={viewport.zoom}
                     connectionDragState={connectionDragTargets?.get(node.id) ?? null}
+                    validationSeverity={nodeValidationMap.get(node.id)?.severity ?? null}
+                    validationCount={nodeValidationMap.get(node.id)?.count ?? 0}
                   />,
                 );
               }
@@ -2509,6 +2557,8 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                   lod={lod}
                   zoom={viewport.zoom}
                   connectionDragState={connectionDragTargets?.get(node.id) ?? null}
+                  validationSeverity={nodeValidationMap.get(node.id)?.severity ?? null}
+                  validationCount={nodeValidationMap.get(node.id)?.count ?? 0}
                 />,
               );
             })}
@@ -2789,6 +2839,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
       {/* Context Menu overlay */}
       <CanvasContextMenu />
+
     </div>
   );
 };

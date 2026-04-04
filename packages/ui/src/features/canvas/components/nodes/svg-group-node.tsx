@@ -46,12 +46,12 @@ const MIN_WIDTH = 276;
 const FOLDED_HEIGHT = 36;
 const ACCENT_BAR_WIDTH = 4;
 
-/** Convert hex color to tint (very low alpha) and border (medium alpha) */
-function hexToTint(hex: string): string {
+/** Convert hex color to tint and border with configurable opacity */
+function hexToTint(hex: string, alpha = 0.09): string {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, 0.09)`;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 function hexToBorder(hex: string): string {
   return hex + '50';
@@ -116,6 +116,7 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
 
     // ─── LOD 1: Iconic group — just colored region ─────────────────────
     const gc = (data.groupColor as string) || '';
+    const go = (data.groupOpacity as number) ?? undefined;
     if (lod <= 1) {
       const lodBorderColor = isDragOver ? '#22c55e' : isChildExiting ? '#f97316' : gc || 'var(--ice-border)';
       return (
@@ -154,12 +155,31 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
             width={nodeWidth}
             height={nodeHeight}
             rx={CORNER_RADIUS}
-            fill={gc ? `${gc}20` : 'rgba(15, 23, 42, 0.15)'}
+            fill={gc ? hexToTint(gc, go ?? 0.12) : 'rgba(15, 23, 42, 0.15)'}
             stroke={lodBorderColor}
             strokeWidth={(isDragOver || isChildExiting ? 2 : 1.5) * invZoom}
             strokeDasharray={isDragOver ? undefined : `${6 * invZoom} ${3 * invZoom}`}
             opacity={isDragOver || isChildExiting ? 1 : 0.7}
           />
+          {/* Label above box — identical to LOD 3 */}
+          {gc && (
+            <circle cx={x + 8} cy={y - 8} r={4} fill={gc} opacity={0.7} />
+          )}
+          {label && (
+            <text
+              x={x + (gc ? 14 : 4)}
+              y={y - 8}
+              dominantBaseline="middle"
+              fill={gc || 'var(--ice-text-secondary)'}
+              fontSize="11"
+              fontWeight="600"
+              fontFamily="'JetBrains Mono Variable', monospace"
+              letterSpacing="0.5"
+              style={{ pointerEvents: 'none', textTransform: 'uppercase' }}
+            >
+              {displayLabel}
+            </text>
+          )}
         </g>
       );
     }
@@ -210,21 +230,25 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
             width={nodeWidth}
             height={nodeHeight}
             rx={CORNER_RADIUS}
-            fill={gc ? `${gc}18` : 'rgba(15, 23, 42, 0.10)'}
+            fill={gc ? hexToTint(gc, go ?? 0.09) : 'rgba(15, 23, 42, 0.10)'}
             stroke={lodBorderColor}
             strokeWidth={(isDragOver || isChildExiting ? 2 : isSelected ? 1.5 : 1) * invZoom}
             strokeDasharray={isDragOver ? undefined : `${6 * invZoom} ${3 * invZoom}`}
           />
+          {/* Label above box — identical to LOD 3 */}
+          {gc && (
+            <circle cx={x + 8} cy={y - 8} r={4} fill={gc} opacity={0.7} />
+          )}
           <text
-            x={x + 10 * invZoom}
-            y={y + 14 * invZoom}
+            x={x + (gc ? 14 : 4)}
+            y={y - 8}
             dominantBaseline="middle"
             fill={gc || 'var(--ice-text-secondary)'}
-            fontSize={10 * invZoom}
+            fontSize="11"
             fontWeight="600"
             fontFamily="'JetBrains Mono Variable', monospace"
-            opacity={0.7}
-            style={{ pointerEvents: 'none' }}
+            letterSpacing="0.5"
+            style={{ pointerEvents: 'none', textTransform: 'uppercase' }}
           >
             {lbl}
           </text>
@@ -260,10 +284,11 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
 
     // ─── GROUP rendering — simple dashed border + top-left label ──────────
     const userColor = data?.groupColor as string | undefined;
+    const userOpacity = (data?.groupOpacity as number) ?? undefined;
     const groupBorderColor = userColor
       ? hexToBorder(userColor)
       : GROUP_BORDER_COLORS[typeSuffix] || 'var(--ice-border-strong)';
-    const groupTint = userColor ? hexToTint(userColor) : GROUP_TINT_COLORS[typeSuffix] || 'rgba(15, 23, 42, 0.15)';
+    const groupTint = userColor ? hexToTint(userColor, userOpacity ?? 0.1) : GROUP_TINT_COLORS[typeSuffix] || 'rgba(15, 23, 42, 0.15)';
     const labelColor = userColor || 'var(--ice-text-tertiary)';
 
     const getBorderColor = () => {
@@ -342,78 +367,35 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
           strokeOpacity={0.6}
         />
 
-        {/* Color indicator — small dot */}
-        {userColor && <circle cx={x + 14} cy={y + (folded ? 18 : 16)} r={4} fill={userColor} opacity={0.7} />}
-
-        {/* Label */}
-        {isRenaming ? (
-          <foreignObject
-            x={x + (userColor ? 24 : 12)}
-            y={y + (folded ? 6 : 4)}
-            width={Math.min(nodeWidth - 90, 200)}
-            height={24}
-          >
-            <input
-              ref={renameInputRef}
-              defaultValue={label || 'New Group'}
-              aria-label="Rename group"
-              autoComplete="off"
-              name="group-label"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  onRenameCommit?.((e.target as HTMLInputElement).value);
-                } else if (e.key === 'Escape') {
-                  onRenameCancel?.();
-                }
-                e.stopPropagation();
-              }}
-              onBlur={(e) => onRenameCommit?.(e.target.value)}
-              onClick={(e) => e.stopPropagation()}
-              onMouseDown={(e) => e.stopPropagation()}
-              style={{
-                width: '100%',
-                height: '22px',
-                background: 'rgba(15, 23, 42, 0.9)',
-                border: `1px solid ${labelColor}`,
-                borderRadius: 4,
-                color: 'var(--ice-text-primary)',
-                fontSize: 11,
-                fontWeight: 500,
-                fontFamily: "'JetBrains Mono Variable', monospace",
-                padding: '0 6px',
-                outline: 'none',
-                boxShadow: `0 0 0 2px ${labelColor}40`,
-              }}
-            />
-          </foreignObject>
-        ) : (
-          <text
-            x={x + (userColor ? 24 : 12)}
-            y={y + (folded ? 19 : 16)}
-            dominantBaseline="middle"
-            fill="var(--ice-text-primary)"
-            fontSize="11"
-            fontWeight="500"
-            fontFamily="'JetBrains Mono Variable', monospace"
-            letterSpacing="0.3"
-            style={{ cursor: 'text', pointerEvents: 'auto' }}
-            onDoubleClick={(e) => {
-              e.stopPropagation();
-              onDoubleClickLabel?.();
-            }}
-          >
-            {displayLabel}
-          </text>
+        {/* ── Label row (above the group box) ── */}
+        {/* Color accent bar */}
+        {userColor && (
+          <circle cx={x + 8} cy={y - 8} r={4} fill={userColor} opacity={0.7} />
         )}
 
-        {/* Child count — just a number */}
+        {/* Label */}
+        <text
+          x={x + (userColor ? 14 : 4)}
+          y={y - 8}
+          dominantBaseline="middle"
+          fill={labelColor}
+          fontSize="11"
+          fontWeight="600"
+          fontFamily="'JetBrains Mono Variable', monospace"
+          letterSpacing="0.5"
+          style={{ pointerEvents: 'none', textTransform: 'uppercase' }}
+        >
+          {displayLabel}
+        </text>
+
+        {/* Child count */}
         {childCount > 0 && (
           <text
-            x={x + nodeWidth - 16}
-            y={y + (folded ? 19 : 16)}
+            x={x + nodeWidth}
+            y={y - 8}
             textAnchor="end"
             dominantBaseline="middle"
-            fill="var(--ice-text-secondary)"
+            fill="var(--ice-text-tertiary)"
             fontSize="10"
             fontWeight="500"
             fontFamily="ui-monospace, 'SFMono-Regular', monospace"
@@ -424,10 +406,10 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
 
         {/* Fold chevron */}
         <g style={{ cursor: 'pointer' }} onClick={handleToggleFold} opacity={isHovered ? 0.8 : 0.4}>
-          <rect x={x + nodeWidth - 40} y={y + (folded ? 8 : 4)} width={18} height={20} fill="transparent" />
+          <rect x={x + nodeWidth - 26} y={y - 18} width={18} height={20} fill="transparent" />
           {folded ? (
             <path
-              d={`M ${x + nodeWidth - 35} ${y + 14} l 5 4 -5 4`}
+              d={`M ${x + nodeWidth - 21} ${y - 12} l 5 4 -5 4`}
               fill="none"
               stroke="var(--ice-text-tertiary)"
               strokeWidth={1.5}
@@ -436,7 +418,7 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
             />
           ) : (
             <path
-              d={`M ${x + nodeWidth - 36} ${y + 12} l 4 4 4 -4`}
+              d={`M ${x + nodeWidth - 22} ${y - 10} l 4 4 4 -4`}
               fill="none"
               stroke="var(--ice-text-tertiary)"
               strokeWidth={1.5}

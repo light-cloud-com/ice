@@ -17,6 +17,7 @@ export const MIN_CONTAINER_HEIGHT = 150;
 // ─── Card Dimensions ───────────────────────────────────────────────────────
 
 export const CARD_WIDTH = 240;
+export const CARD_HEIGHT = 160; // 3:2 ratio — fixed size regardless of zoom
 export const CARD_PX = 12;
 export const CARD_PY = 10;
 export const ICON_SIZE = 20;
@@ -27,7 +28,7 @@ export const SERVICE_LINE_H = 16;
 // ─── Zoom ──────────────────────────────────────────────────────────────────
 
 export const SCALE_MIN = 0.1;
-export const SCALE_MAX = 3;
+export const SCALE_MAX = 2;
 export const ZOOM_SENSITIVITY = 0.002;
 /** Discrete zoom step size (0.05 = 5%). Zoom snaps to multiples of this value. */
 export const ZOOM_STEP = 0.05;

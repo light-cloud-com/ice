@@ -147,23 +147,23 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
 
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            <Loader2 className="w-5 h-5 animate-spin text-ice-text-3" />
           </div>
         ) : connected ? (
           /* Connected state */
           <div className="space-y-4">
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-ice-green-muted border border-ice-green/20">
               <img src={providerIcon} alt={providerName} className="w-8 h-8" />
               <div className="flex-1">
-                <div className="font-medium text-sm">{providerName}</div>
-                <div className="text-xs text-muted-foreground">{projectId ? t('providerConnect.status.project', { projectId }) : t('providerConnect.status.connected')}</div>
+                <div className="font-medium text-sm text-ice-text-1">{providerName}</div>
+                <div className="text-xs text-ice-text-3">{projectId ? t('providerConnect.status.project', { projectId }) : t('providerConnect.status.connected')}</div>
               </div>
-              <Check className="w-5 h-5 text-emerald-500" />
+              <Check className="w-5 h-5 text-ice-green" />
             </div>
-            {success && <div className="text-sm text-emerald-600 dark:text-emerald-400">{success}</div>}
+            {success && <div className="text-sm text-ice-green">{success}</div>}
             <button
               onClick={handleDisconnect}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm rounded-md border border-border hover:bg-muted transition-colors text-muted-foreground"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm rounded-md border border-ice-border hover:bg-ice-hover transition-colors text-ice-text-2"
             >
               <LogOut className="w-4 h-4" />
               {t('providerConnect.disconnectButton')}
@@ -173,7 +173,7 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
           /* Connect form */
           <div className="space-y-4">
             {error && (
-              <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-700 dark:text-red-400">
+              <div className="p-3 rounded-lg bg-ice-red-muted border border-ice-red/20 text-sm text-ice-red">
                 {error}
               </div>
             )}
@@ -182,16 +182,16 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
             {fields.map((field) => (
               <div key={field.name}>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-sm font-medium">
+                  <label className="text-sm font-medium text-ice-text-1">
                     {field.label}
-                    {field.required && <span className="text-red-500 ml-1">*</span>}
+                    {field.required && <span className="text-ice-red ml-1">*</span>}
                   </label>
                   {field.helpLink && (
                     <a
                       href={field.helpLink.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-xs text-primary hover:underline"
+                      className="flex items-center gap-1 text-xs text-ice-accent hover:underline"
                     >
                       {field.helpLink.text}
                       <ExternalLink className="w-3 h-3" />
@@ -204,7 +204,7 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
                     onChange={(e) => setFormValues({ ...formValues, [field.name]: e.target.value })}
                     placeholder={field.placeholder}
                     rows={6}
-                    className="w-full px-3 py-2 text-sm rounded-md border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring font-mono text-xs"
+                    className="w-full px-3 py-2 text-sm rounded-md border border-ice-border bg-ice-base text-ice-text-1 placeholder:text-ice-text-3 focus:outline-none focus:border-ice-accent focus:ring-2 focus:ring-ice-accent-muted font-mono text-xs"
                     onKeyDown={(e) => e.key === 'Enter' && e.metaKey && handleConnect()}
                   />
                 ) : (
@@ -213,7 +213,7 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
                     value={formValues[field.name] || ''}
                     onChange={(e) => setFormValues({ ...formValues, [field.name]: e.target.value })}
                     placeholder={field.placeholder}
-                    className="w-full px-3 py-2 text-sm rounded-md border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="w-full px-3 py-2 text-sm rounded-md border border-ice-border bg-ice-base text-ice-text-1 placeholder:text-ice-text-3 focus:outline-none focus:border-ice-accent focus:ring-2 focus:ring-ice-accent-muted"
                     onKeyDown={(e) => e.key === 'Enter' && handleConnect()}
                   />
                 )}
@@ -223,11 +223,7 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
             <button
               onClick={handleConnect}
               disabled={connecting}
-              className={cn(
-                'w-full flex items-center justify-center gap-2 px-4 py-2 text-sm rounded-md font-medium transition-colors',
-                'bg-primary text-primary-foreground hover:bg-primary/90',
-                'disabled:opacity-50 disabled:cursor-not-allowed',
-              )}
+              className="ice-btn ice-btn-primary w-full"
             >
               {connecting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -242,12 +238,12 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
               <>
                 {/* Step-by-step guide */}
                 <details className="group">
-                  <summary className="flex items-center gap-2 text-xs font-medium text-primary cursor-pointer hover:underline">
+                  <summary className="flex items-center gap-2 text-xs font-medium text-ice-accent cursor-pointer hover:underline">
                     <ExternalLink className="w-3 h-3" />
                     How to create a service account key
                   </summary>
-                  <div className="mt-2 p-3 rounded-lg bg-muted/50 border border-border text-xs text-muted-foreground space-y-2">
-                    <p className="font-medium text-foreground">Step 1 — Create a service account</p>
+                  <div className="mt-2 p-3 rounded-lg bg-ice-surface border border-ice-border text-xs text-ice-text-2 space-y-2">
+                    <p className="font-medium text-ice-text-1">Step 1 — Create a service account</p>
                     <ol className="list-decimal pl-4 space-y-1">
                       <li>
                         Open{' '}
@@ -255,13 +251,13 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
                           href="https://console.cloud.google.com/iam-admin/serviceaccounts/create"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-primary hover:underline"
+                          className="text-ice-accent hover:underline"
                         >
                           GCP Console &rarr; IAM &rarr; Service Accounts &rarr; Create
                         </a>
                       </li>
                       <li>
-                        Name it (e.g. <code className="px-1 py-0.5 rounded bg-muted text-ice-2xs">ice-deployer</code>),
+                        Name it (e.g. <code className="px-1 py-0.5 rounded bg-ice-hover text-ice-2xs">ice-deployer</code>),
                         click <strong>Create and Continue</strong>
                       </li>
                       <li>
@@ -281,7 +277,7 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
                       </li>
                     </ol>
 
-                    <p className="font-medium text-foreground pt-1">Step 2 — Download the JSON key</p>
+                    <p className="font-medium text-ice-text-1 pt-1">Step 2 — Download the JSON key</p>
                     <ol className="list-decimal pl-4 space-y-1">
                       <li>Click the newly created service account</li>
                       <li>
@@ -294,11 +290,11 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
                       <li>Download the file and paste its contents into the field above</li>
                     </ol>
 
-                    <div className="pt-2 border-t border-border space-y-1.5">
-                      <p className="font-medium text-foreground">Troubleshooting</p>
+                    <div className="pt-2 border-t border-ice-border space-y-1.5">
+                      <p className="font-medium text-ice-text-1">Troubleshooting</p>
                       <p>
                         <strong>Can't create keys?</strong> Your organisation may enforce{' '}
-                        <code className="px-1 py-0.5 rounded bg-muted text-ice-2xs">
+                        <code className="px-1 py-0.5 rounded bg-ice-hover text-ice-2xs">
                           iam.disableServiceAccountKeyCreation
                         </code>
                         . An admin can override this for your project in{' '}
@@ -306,7 +302,7 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
                           href="https://console.cloud.google.com/iam-admin/orgpolicies/iam-disableServiceAccountKeyCreation"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-primary hover:underline"
+                          className="text-ice-accent hover:underline"
                         >
                           Organisation Policies
                         </a>{' '}
@@ -319,7 +315,7 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
                           href="https://admin.google.com/ac/security/reauth"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-primary hover:underline"
+                          className="text-ice-accent hover:underline"
                         >
                           Workspace Admin &rarr; Security &rarr; Google Cloud session control
                         </a>
@@ -330,10 +326,10 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
                 </details>
 
                 {/* Quick connect divider */}
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <div className="flex-1 border-t border-border" />
+                <div className="flex items-center gap-3 text-xs text-ice-text-3">
+                  <div className="flex-1 border-t border-ice-border" />
                   <span>{t('providerConnect.gcp.quickConnect.divider')}</span>
-                  <div className="flex-1 border-t border-border" />
+                  <div className="flex-1 border-t border-ice-border" />
                 </div>
 
                 <button
@@ -344,8 +340,8 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
                   disabled={gcpOAuth.connecting}
                   className={cn(
                     'w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-sm',
-                    'bg-white dark:bg-zinc-800 border border-border',
-                    'hover:bg-muted/50 transition-colors',
+                    'bg-ice-raised border border-ice-border text-ice-text-1',
+                    'hover:bg-ice-hover transition-colors',
                     'disabled:opacity-50 disabled:cursor-not-allowed',
                   )}
                 >

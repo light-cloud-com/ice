@@ -79,6 +79,7 @@ export interface UseCanvasInteractionsOptions {
   onDragOverGroup?: (groupId: string | null, draggedNodeId?: string | null, centerX?: number, centerY?: number) => void;
   onDragEnd?: (itemId: string, x: number, y: number, forceReparent?: boolean) => void;
   gridSize?: number;
+  locked?: boolean;
   minZoom?: number;
   maxZoom?: number;
   resizeHandleSize?: number;
@@ -145,8 +146,9 @@ export function useCanvasInteractions({
   onDragOverGroup,
   onDragEnd,
   gridSize = 20,
+  locked = false,
   minZoom = 0.1,
-  maxZoom = 3,
+  maxZoom = 2,
   resizeHandleSize = 20,
 }: UseCanvasInteractionsOptions): UseCanvasInteractionsResult {
   const stateRef = useRef<InteractionState>({ ...INITIAL_STATE, dragItemOffsets: new Map() });
@@ -157,6 +159,8 @@ export function useCanvasInteractions({
   itemsRef.current = items;
   const selectedIdsRef = useRef(selectedIds);
   selectedIdsRef.current = selectedIds;
+  const lockedRef = useRef(locked);
+  lockedRef.current = locked;
 
   // Screen to canvas coords
   const screenToCanvas = useCallback(
@@ -246,6 +250,8 @@ export function useCanvasInteractions({
 
         // For drag operations, use the clicked item as the drag target
         const dragTarget = item;
+
+        if (lockedRef.current) return; // Canvas locked — allow selection but no drag/resize
 
         if (isResize && onItemResize) {
           stateRef.current = {
@@ -586,8 +592,8 @@ export function useCanvasInteractions({
         startKeyboardPan();
       }
 
-      // Delete/Backspace
-      if (key === 'delete' || key === 'backspace') {
+      // Delete/Backspace (blocked when canvas locked)
+      if ((key === 'delete' || key === 'backspace') && !lockedRef.current) {
         e.preventDefault();
         onDeleteRef.current?.();
       }

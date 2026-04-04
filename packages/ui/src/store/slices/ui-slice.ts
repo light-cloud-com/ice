@@ -40,6 +40,11 @@ interface UIState {
   showMinimap: boolean;
   showValidation: boolean;
   showAiChat: boolean;
+  showCostPanel: boolean;
+  showTemplates: boolean;
+
+  /** Category to pre-filter when opening the template gallery */
+  templateGalleryCategory: string | null;
 
   // Edge / connection line style
   edgeStyle: EdgeStyle;
@@ -47,6 +52,11 @@ interface UIState {
   // Auto-organize on zoom (LOD transitions)
   autoOrganizeOnZoom: boolean;
   autoOrganizeStyle: OrganizeStyle;
+
+  // Canvas interaction settings
+  snapToGrid: boolean;
+  gridSize: number;
+  canvasLocked: boolean;
 
   // Theme
   theme: 'light' | 'dark' | 'system';
@@ -74,6 +84,7 @@ interface UIState {
     plan: boolean;
     apply: boolean;
     templatePicker: boolean;
+    templateGallery: boolean;
     projectWizard: boolean;
     aiCommand: boolean;
   };
@@ -132,9 +143,15 @@ const initialState: UIState = {
   showMinimap: true,
   showValidation: false,
   showAiChat: true,
+  showCostPanel: false,
+  showTemplates: false,
+  templateGalleryCategory: null,
   edgeStyle: 'bezier' as EdgeStyle,
   autoOrganizeOnZoom: false,
   autoOrganizeStyle: 'vertical' as OrganizeStyle,
+  snapToGrid: true,
+  gridSize: 20,
+  canvasLocked: false,
   theme: 'system',
   viewport: { x: 0, y: 0, zoom: 1 },
   contextMenu: {
@@ -150,6 +167,7 @@ const initialState: UIState = {
     plan: false,
     apply: false,
     templatePicker: false,
+    templateGallery: false,
     projectWizard: false,
     aiCommand: false,
   },
@@ -175,6 +193,26 @@ const uiSlice = createSlice({
     toggleAiChat: (state) => {
       state.showAiChat = !state.showAiChat;
     },
+    toggleCostPanel: (state) => {
+      state.showCostPanel = !state.showCostPanel;
+    },
+    toggleValidation: (state) => {
+      state.showValidation = !state.showValidation;
+    },
+    openValidation: (state) => {
+      state.showValidation = true;
+    },
+    toggleTemplates: (state) => {
+      state.showTemplates = !state.showTemplates;
+    },
+    openTemplateGallery: (state, action: PayloadAction<string | null>) => {
+      state.templateGalleryCategory = action.payload;
+      state.dialogs.templateGallery = true;
+    },
+    closeTemplateGallery: (state) => {
+      state.dialogs.templateGallery = false;
+      state.templateGalleryCategory = null;
+    },
     setEdgeStyle: (state, action: PayloadAction<EdgeStyle>) => {
       state.edgeStyle = action.payload;
     },
@@ -183,6 +221,15 @@ const uiSlice = createSlice({
     },
     setAutoOrganizeStyle: (state, action: PayloadAction<OrganizeStyle>) => {
       state.autoOrganizeStyle = action.payload;
+    },
+    toggleSnapToGrid: (state) => {
+      state.snapToGrid = !state.snapToGrid;
+    },
+    setGridSize: (state, action: PayloadAction<number>) => {
+      state.gridSize = Math.max(5, Math.min(100, action.payload));
+    },
+    toggleCanvasLocked: (state) => {
+      state.canvasLocked = !state.canvasLocked;
     },
     openContextMenu: (
       state,
@@ -337,6 +384,10 @@ export const {
   toggleProperties,
   toggleMinimap,
   toggleAiChat,
+  toggleCostPanel,
+  toggleTemplates,
+  openTemplateGallery,
+  closeTemplateGallery,
   setEdgeStyle,
   openContextMenu,
   closeContextMenu,
@@ -353,6 +404,11 @@ export const {
   closeTabsByCardIds,
   toggleAutoOrganizeOnZoom,
   setAutoOrganizeStyle,
+  toggleSnapToGrid,
+  setGridSize,
+  toggleCanvasLocked,
+  toggleValidation,
+  openValidation,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

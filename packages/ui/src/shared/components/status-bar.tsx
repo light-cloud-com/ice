@@ -3,7 +3,7 @@
  *
  * Bottom status bar showing:
  * - Graph statistics (from active card)
- * - Validation status
+ * - Validation status (clickable → opens Validation panel)
  * - Estimated cost
  * - Zoom level
  * - Connection status
@@ -23,10 +23,11 @@ import {
   XCircle,
 } from 'lucide-react';
 import React, { useMemo } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { IntegrationStatusDots } from '../../features/integrations';
 import { useTranslation } from '../../i18n';
 import { selectActiveCard } from '../../store/slices/cards-slice';
+import { openValidation } from '../../store/slices/ui-slice';
 import type { RootState } from '../../store';
 import { useSystemStats } from '../hooks/use-system-stats';
 
@@ -40,6 +41,7 @@ function parseCostRange(cost: string): number {
 
 export const StatusBar: React.FC = () => {
   const { t } = useTranslation();
+  const dispatch = useDispatch();
   const activeCard = useSelector(selectActiveCard);
   const { isDirty, iceGraph } = useSelector((state: RootState) => state.graph);
   const { selectedNodes, selectedEdges } = useSelector((state: RootState) => state.selection);
@@ -66,20 +68,22 @@ export const StatusBar: React.FC = () => {
     }, 0);
   }, [activeCard]);
 
-  // Count validation issues (mock for now)
-  const validationErrors: number = 0;
-  const validationWarnings: number = 0;
+  // Validation issue counts from the canvas validation engine
+  const validationSummary = useSelector((state: RootState) => state.validation?.summary);
+  const validationErrors = validationSummary?.errors ?? 0;
+  const validationWarnings = validationSummary?.warnings ?? 0;
+  const hasIssues = validationErrors > 0 || validationWarnings > 0;
 
   return (
     <div
-      className="h-6 flex items-center gap-4 px-3 border-t border-border bg-muted/50 text-xs text-muted-foreground"
+      className="h-6 flex items-center gap-4 px-3 border-t border-ice-border bg-ice-toolbar text-xs text-ice-text-3"
       data-testid="status-bar"
     >
       {/* Graph name */}
       <div className="flex items-center gap-1.5">
         <GitBranch className="w-3 h-3" />
         <span>{activeCard?.name || iceGraph?.name || t('common.labels.untitled')}</span>
-        {isDirty && <Circle className="w-1.5 h-1.5 fill-current text-primary" />}
+        {isDirty && <Circle className="w-1.5 h-1.5 fill-current text-ice-accent" />}
       </div>
 
       <StatusDivider />
@@ -104,7 +108,7 @@ export const StatusBar: React.FC = () => {
       {totalCost > 0 && (
         <>
           <StatusDivider />
-          <div className="flex items-center gap-1 text-emerald-600">
+          <div className="flex items-center gap-1 text-ice-green">
             <DollarSign className="w-3 h-3" />
             <span>~${Math.round(totalCost)}/mo est.</span>
           </div>
@@ -116,7 +120,7 @@ export const StatusBar: React.FC = () => {
       {/* Selection */}
       {(selectedNodes.length > 0 || selectedEdges.length > 0) && (
         <>
-          <div className="flex items-center gap-1.5 text-primary">
+          <div className="flex items-center gap-1.5 text-ice-accent">
             <Info className="w-3 h-3" />
             <span>
               {selectedNodes.length > 0 && `${selectedNodes.length} selected`}
@@ -128,28 +132,33 @@ export const StatusBar: React.FC = () => {
         </>
       )}
 
-      {/* Validation status */}
-      <div className="flex items-center gap-2">
+      {/* Validation status — clickable, opens Validation sidebar panel */}
+      <button
+        onClick={() => hasIssues && dispatch(openValidation())}
+        className={`flex items-center gap-2 rounded px-1 -mx-1 transition-colors ${
+          hasIssues ? 'hover:bg-ice-bg-raised cursor-pointer' : 'cursor-default'
+        }`}
+      >
         {validationErrors > 0 ? (
-          <div className="flex items-center gap-1 text-destructive">
+          <div className="flex items-center gap-1 text-ice-red">
             <AlertTriangle className="w-3 h-3" />
             <span>
               {validationErrors} error{validationErrors !== 1 ? 's' : ''}
             </span>
           </div>
         ) : (
-          <div className="flex items-center gap-1 text-green-600">
+          <div className="flex items-center gap-1 text-ice-green">
             <CheckCircle className="w-3 h-3" />
             <span>{t('statusBar.valid')}</span>
           </div>
         )}
         {validationWarnings > 0 && (
-          <div className="flex items-center gap-1 text-yellow-600">
+          <div className="flex items-center gap-1 text-ice-yellow">
             <AlertTriangle className="w-3 h-3" />
             <span>{validationWarnings}</span>
           </div>
         )}
-      </div>
+      </button>
 
       {/* Deploy status */}
       <DeployStatusIndicator />
@@ -163,7 +172,7 @@ export const StatusBar: React.FC = () => {
       {/* System resource usage */}
       {systemStats && (
         <>
-          <div className="flex items-center gap-3 text-muted-foreground">
+          <div className="flex items-center gap-3 text-ice-text-3">
             <span>RAM: {systemStats.ram >= 1024 ? `${(systemStats.ram / 1024).toFixed(1)}GB` : `${systemStats.ram}MB`}</span>
             <span>CPU: {systemStats.cpu}%</span>
           </div>
@@ -197,38 +206,38 @@ const DeployStatusIndicator: React.FC = () => {
       <div className="flex items-center gap-1.5">
         {deployStatus === 'authenticating' && (
           <>
-            <Loader2 className="w-3 h-3 animate-spin text-orange-500" />
-            <span className="text-orange-600">{t('statusBar.connecting')}</span>
+            <Loader2 className="w-3 h-3 animate-spin text-ice-yellow" />
+            <span className="text-ice-yellow">{t('statusBar.connecting')}</span>
           </>
         )}
         {deployStatus === 'deploying' && (
           <>
-            <Loader2 className="w-3 h-3 animate-spin text-emerald-500" />
-            <span className="text-emerald-600">{t('statusBar.deploying', { pct: deployProgress })}</span>
+            <Loader2 className="w-3 h-3 animate-spin text-ice-green" />
+            <span className="text-ice-green">{t('statusBar.deploying', { pct: deployProgress })}</span>
           </>
         )}
         {deployStatus === 'planning' && (
           <>
-            <Loader2 className="w-3 h-3 animate-spin text-blue-500" />
-            <span className="text-blue-600">{t('statusBar.planning')}</span>
+            <Loader2 className="w-3 h-3 animate-spin text-ice-accent" />
+            <span className="text-ice-accent">{t('statusBar.planning')}</span>
           </>
         )}
         {deployStatus === 'success' && (
           <>
-            <CheckCircle className="w-3 h-3 text-emerald-500" />
-            <span className="text-emerald-600">{t('statusBar.deployed')}</span>
+            <CheckCircle className="w-3 h-3 text-ice-green" />
+            <span className="text-ice-green">{t('statusBar.deployed')}</span>
           </>
         )}
         {deployStatus === 'error' && (
           <>
-            <XCircle className="w-3 h-3 text-red-500" />
-            <span className="text-red-600">{t('statusBar.deployFailed')}</span>
+            <XCircle className="w-3 h-3 text-ice-red" />
+            <span className="text-ice-red">{t('statusBar.deployFailed')}</span>
           </>
         )}
         {deployStatus === 'planned' && (
           <>
-            <Rocket className="w-3 h-3 text-yellow-500" />
-            <span className="text-yellow-600">{t('statusBar.planReady')}</span>
+            <Rocket className="w-3 h-3 text-ice-yellow" />
+            <span className="text-ice-yellow">{t('statusBar.planReady')}</span>
           </>
         )}
       </div>
@@ -236,4 +245,4 @@ const DeployStatusIndicator: React.FC = () => {
   );
 };
 
-const StatusDivider: React.FC = () => <div className="w-px h-3 bg-border" />;
+const StatusDivider: React.FC = () => <div className="w-px h-3 bg-ice-border" />;

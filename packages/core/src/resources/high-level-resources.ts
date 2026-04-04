@@ -145,7 +145,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['static', 'website', 's3', 'bucket', 'cloudfront', 'cdn', 'blob', 'storage'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this website', placeholder: 'My Website' },
-          { name: 'size', label: 'Hosting tier', type: 'select', required: false, tier: 'essential', description: 'Hosting plan — determines build minutes, bandwidth, and features', default: 'amplify-free', optionDetails: [
+          { name: 'size', label: 'Hosting tier', type: 'select', required: true, tier: 'essential', description: 'Hosting plan — determines build minutes, bandwidth, and features', default: 'amplify-free', optionDetails: [
             { value: 'amplify-free', label: 'Amplify Free', description: '1,000 build min · 15 GB served/mo', cost: 'Free', provider: 'aws' },
             { value: 'amplify-standard', label: 'Amplify Standard', description: 'Unlimited builds · pay per GB', cost: '~$0.15/GB served', provider: 'aws' },
             { value: 'firebase-free', label: 'Spark (Free)', description: '10 GB hosting · 360 MB/day served', cost: 'Free', provider: 'gcp' },
@@ -191,7 +191,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['api', 'gateway', 'lambda', 'function', 'app', 'service', 'ecs', 'container'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this API', placeholder: 'My API' },
-          { name: 'size', label: 'Container size', type: 'select', required: false, tier: 'essential', description: 'CPU and memory allocation per container', default: '0.25-512', optionDetails: [
+          { name: 'size', label: 'Container size', type: 'select', required: true, tier: 'essential', description: 'CPU and memory allocation per container', default: '0.25-512', optionDetails: [
             { value: '0.25-512', label: '0.25 vCPU / 512 MB', description: 'Lightweight APIs', cost: '~$9/mo', provider: 'aws' },
             { value: '0.5-1024', label: '0.5 vCPU / 1 GB', description: 'Light workloads', cost: '~$18/mo', provider: 'aws' },
             { value: '1-2048', label: '1 vCPU / 2 GB', description: 'Standard workloads', cost: '~$36/mo', provider: 'aws' },
@@ -395,7 +395,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['app', 'platform', 'paas', 'digitalocean', 'deploy'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this app', placeholder: 'My App' },
-          { name: 'size', label: 'Instance size', type: 'select', required: false, tier: 'essential', description: 'Container size for your app', default: 'basic-xxs', optionDetails: [
+          { name: 'size', label: 'Instance size', type: 'select', required: true, tier: 'essential', description: 'Container size for your app', default: 'basic-xxs', optionDetails: [
             { value: 'basic-xxs', label: 'Basic XXS', description: '1 vCPU · 512 MB RAM', cost: '~$5/mo', provider: 'digitalocean' },
             { value: 'basic-xs', label: 'Basic XS', description: '1 vCPU · 1 GB RAM', cost: '~$10/mo', provider: 'digitalocean' },
             { value: 'basic-s', label: 'Basic S', description: '1 vCPU · 2 GB RAM', cost: '~$20/mo', provider: 'digitalocean' },
@@ -437,7 +437,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['container', 'docker', 'ecs', 'kubernetes', 'k8s', 'fargate', 'aks', 'gke'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this service', placeholder: 'My Service' },
-          { name: 'size', label: 'Container size', type: 'select', required: false, tier: 'essential', description: 'CPU and memory allocation per container', default: '0.25-512', optionDetails: [
+          { name: 'size', label: 'Container size', type: 'select', required: true, tier: 'essential', description: 'CPU and memory allocation per container', default: '0.25-512', optionDetails: [
             { value: '0.25-512', label: '0.25 vCPU / 512 MB', description: 'Lightweight tasks', cost: '~$9/mo', provider: 'aws' },
             { value: '0.5-1024', label: '0.5 vCPU / 1 GB', description: 'Light workloads', cost: '~$18/mo', provider: 'aws' },
             { value: '1-2048', label: '1 vCPU / 2 GB', description: 'Standard workloads', cost: '~$36/mo', provider: 'aws' },
@@ -489,7 +489,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['worker', 'consumer', 'processor', 'background', 'async', 'batch'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this worker', placeholder: 'My Worker' },
-          { name: 'size', label: 'Container size', type: 'select', required: false, tier: 'essential', description: 'CPU and memory allocation per worker', default: '0.5-1024', optionDetails: [
+          { name: 'size', label: 'Container size', type: 'select', required: true, tier: 'essential', description: 'CPU and memory allocation per worker', default: '0.5-1024', optionDetails: [
             { value: '0.25-512', label: '0.25 vCPU / 512 MB', description: 'Lightweight tasks', cost: '~$9/mo', provider: 'aws' },
             { value: '0.5-1024', label: '0.5 vCPU / 1 GB', description: 'Light processing', cost: '~$18/mo', provider: 'aws' },
             { value: '1-2048', label: '1 vCPU / 2 GB', description: 'Standard workloads', cost: '~$36/mo', provider: 'aws' },
@@ -536,7 +536,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
             { value: 'sveltekit', label: 'SvelteKit', description: 'Svelte full-stack framework' },
             { value: 'astro', label: 'Astro', description: 'Content-focused with islands' },
           ] },
-          { name: 'size', label: 'Hosting size', type: 'select', required: false, tier: 'essential', description: 'Server resources for rendering pages', default: 'amplify-standard', optionDetails: [
+          { name: 'size', label: 'Hosting size', type: 'select', required: true, tier: 'essential', description: 'Server resources for rendering pages', default: 'amplify-standard', optionDetails: [
             { value: 'amplify-standard', label: 'Amplify Standard', description: 'Managed SSR · auto-scaling', cost: '~$0.15/GB served', provider: 'aws' },
             { value: '0.5-1024', label: '0.5 vCPU / 1 GB', description: 'Light traffic', cost: '~$18/mo', provider: 'aws' },
             { value: '1-2048', label: '1 vCPU / 2 GB', description: 'Standard traffic', cost: '~$36/mo', provider: 'aws' },
@@ -663,7 +663,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['ml', 'model', 'sagemaker', 'vertex', 'inference', 'serving', 'gpu'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this model', placeholder: 'My ML Model' },
-          { name: 'size', label: 'Instance type', type: 'select', required: false, tier: 'essential', description: 'Hardware for model inference — GPU type determines speed and cost', default: 'ml.g5.xlarge', optionDetails: [
+          { name: 'size', label: 'Instance type', type: 'select', required: true, tier: 'essential', description: 'Hardware for model inference — GPU type determines speed and cost', default: 'ml.g5.xlarge', optionDetails: [
             { value: 'ml.t3.medium', label: 'ml.t3.medium (CPU)', description: '2 vCPU · 4 GB RAM · No GPU', cost: '~$50/mo', provider: 'aws' },
             { value: 'ml.g5.xlarge', label: 'ml.g5.xlarge', description: '4 vCPU · 16 GB · 1x A10G (24 GB)', cost: '~$816/mo', provider: 'aws' },
             { value: 'ml.g5.2xlarge', label: 'ml.g5.2xlarge', description: '8 vCPU · 32 GB · 1x A10G (24 GB)', cost: '~$1,190/mo', provider: 'aws' },
@@ -722,7 +722,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['postgres', 'postgresql', 'rds', 'sql', 'database', 'cloudsql'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this database', placeholder: 'My Database' },
-          { name: 'size', label: 'Instance type', type: 'select', required: false, tier: 'essential', description: 'Database server size — determines CPU, memory, and performance', default: 'db.t3.micro', tooltip: 'AWS RDS: Burstable (t3) for dev/test, Memory-optimized (r6g) for production. GCP Cloud SQL: Custom machine types up to 96 vCPU / 624 GB. Azure: Burstable (B) for dev, General Purpose (D) for production.', optionDetails: [
+          { name: 'size', label: 'Instance type', type: 'select', required: true, tier: 'essential', description: 'Database server size — determines CPU, memory, and performance', default: 'db.t3.micro', tooltip: 'AWS RDS: Burstable (t3) for dev/test, Memory-optimized (r6g) for production. GCP Cloud SQL: Custom machine types up to 96 vCPU / 624 GB. Azure: Burstable (B) for dev, General Purpose (D) for production.', optionDetails: [
             { value: 'db.t3.micro', label: 'db.t3.micro', description: '2 vCPU · 1 GB RAM', cost: '~$15/mo', provider: 'aws', tooltip: 'Burstable instance — good for dev/test with intermittent CPU needs' },
             { value: 'db.t3.small', label: 'db.t3.small', description: '2 vCPU · 2 GB RAM', cost: '~$29/mo', provider: 'aws' },
             { value: 'db.t3.medium', label: 'db.t3.medium', description: '2 vCPU · 4 GB RAM', cost: '~$58/mo', provider: 'aws' },
@@ -820,7 +820,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['mysql', 'rds', 'sql', 'database', 'aurora', 'mariadb'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this database', placeholder: 'My Database' },
-          { name: 'size', label: 'Instance type', type: 'select', required: false, tier: 'essential', description: 'Database server size — determines CPU, memory, and performance', default: 'db.t3.micro', tooltip: 'AWS RDS: Burstable (t3) for dev/test, Memory-optimized (r6g) for production. GCP Cloud SQL: Custom machine types up to 96 vCPU / 624 GB. Azure: Burstable (B) for dev, General Purpose (D) for production.', optionDetails: [
+          { name: 'size', label: 'Instance type', type: 'select', required: true, tier: 'essential', description: 'Database server size — determines CPU, memory, and performance', default: 'db.t3.micro', tooltip: 'AWS RDS: Burstable (t3) for dev/test, Memory-optimized (r6g) for production. GCP Cloud SQL: Custom machine types up to 96 vCPU / 624 GB. Azure: Burstable (B) for dev, General Purpose (D) for production.', optionDetails: [
             { value: 'db.t3.micro', label: 'db.t3.micro', description: '2 vCPU · 1 GB RAM', cost: '~$15/mo', provider: 'aws' },
             { value: 'db.t3.small', label: 'db.t3.small', description: '2 vCPU · 2 GB RAM', cost: '~$29/mo', provider: 'aws' },
             { value: 'db.t3.medium', label: 'db.t3.medium', description: '2 vCPU · 4 GB RAM', cost: '~$58/mo', provider: 'aws' },
@@ -911,7 +911,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['mongo', 'mongodb', 'nosql', 'documentdb', 'cosmos'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this database', placeholder: 'My Database' },
-          { name: 'size', label: 'Instance type', type: 'select', required: false, tier: 'essential', description: 'Database server size — determines CPU, memory, and performance', default: 'db.t3.medium', tooltip: 'AWS DocumentDB: r6g instances recommended for production. Azure Cosmos DB: measured in Request Units/s — 1 RU ≈ one 1 KB document read. DigitalOcean: fixed-size nodes.', optionDetails: [
+          { name: 'size', label: 'Instance type', type: 'select', required: true, tier: 'essential', description: 'Database server size — determines CPU, memory, and performance', default: 'db.t3.medium', tooltip: 'AWS DocumentDB: r6g instances recommended for production. Azure Cosmos DB: measured in Request Units/s — 1 RU ≈ one 1 KB document read. DigitalOcean: fixed-size nodes.', optionDetails: [
             { value: 'db.t3.medium', label: 'db.t3.medium', description: '2 vCPU · 4 GB RAM', cost: '~$58/mo', provider: 'aws' },
             { value: 'db.r6g.large', label: 'db.r6g.large', description: '2 vCPU · 16 GB RAM', cost: '~$175/mo', provider: 'aws' },
             { value: 'db.r6g.xlarge', label: 'db.r6g.xlarge', description: '4 vCPU · 32 GB RAM', cost: '~$350/mo', provider: 'aws' },
@@ -979,7 +979,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['redis', 'cache', 'elasticache', 'memorystore', 'memory'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this cache', placeholder: 'My Cache' },
-          { name: 'size', label: 'Node type', type: 'select', required: false, tier: 'essential', description: 'Cache node size — determines memory and performance', default: 'cache.t3.micro', tooltip: 'AWS ElastiCache: burstable (t3) for dev, memory-optimized (r6g) for production. GCP Memorystore: basic (M1-M5) with no HA, or standard with replica. Azure Cache: shared (C0) for dev, dedicated (C1+) for production.', optionDetails: [
+          { name: 'size', label: 'Node type', type: 'select', required: true, tier: 'essential', description: 'Cache node size — determines memory and performance', default: 'cache.t3.micro', tooltip: 'AWS ElastiCache: burstable (t3) for dev, memory-optimized (r6g) for production. GCP Memorystore: basic (M1-M5) with no HA, or standard with replica. Azure Cache: shared (C0) for dev, dedicated (C1+) for production.', optionDetails: [
             { value: 'cache.t3.micro', label: 'cache.t3.micro', description: '0.5 GB RAM', cost: '~$12/mo', provider: 'aws', tooltip: 'Burstable — good for dev/test with intermittent usage' },
             { value: 'cache.t3.small', label: 'cache.t3.small', description: '1.4 GB RAM', cost: '~$24/mo', provider: 'aws' },
             { value: 'cache.t3.medium', label: 'cache.t3.medium', description: '3.09 GB RAM', cost: '~$48/mo', provider: 'aws' },
@@ -1061,7 +1061,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['firestore', 'firebase', 'document', 'realtime', 'nosql'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this database', placeholder: 'My Database' },
-          { name: 'size', label: 'Pricing plan', type: 'select', required: false, tier: 'essential', description: 'Firebase pricing plan — determines quotas and billing', default: 'spark', optionDetails: [
+          { name: 'size', label: 'Pricing plan', type: 'select', required: true, tier: 'essential', description: 'Firebase pricing plan — determines quotas and billing', default: 'spark', optionDetails: [
             { value: 'spark', label: 'Spark (Free)', description: '1 GB storage · 50K reads/day · 20K writes/day', cost: 'Free', provider: 'gcp' },
             { value: 'blaze', label: 'Blaze (Pay-as-you-go)', description: 'Unlimited · pay per operation', cost: '~$0.06/100K reads', provider: 'gcp' },
           ] },
@@ -1090,7 +1090,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['cosmosdb', 'cosmos', 'multi-model', 'global', 'nosql'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this database', placeholder: 'My Database' },
-          { name: 'size', label: 'Throughput', type: 'select', required: false, tier: 'essential', description: 'Request Units per second — determines read/write capacity', default: 'serverless', tooltip: '1 RU = one 1 KB point read. A typical 4 KB document read costs ~4 RUs. Writes cost ~5x more than reads. Serverless is best for intermittent workloads. Provisioned autoscale is best for variable but continuous traffic.', optionDetails: [
+          { name: 'size', label: 'Throughput', type: 'select', required: true, tier: 'essential', description: 'Request Units per second — determines read/write capacity', default: 'serverless', tooltip: '1 RU = one 1 KB point read. A typical 4 KB document read costs ~4 RUs. Writes cost ~5x more than reads. Serverless is best for intermittent workloads. Provisioned autoscale is best for variable but continuous traffic.', optionDetails: [
             { value: 'serverless', label: 'Serverless', description: 'Pay per request · scales to zero', cost: '~$0.25/M RUs', provider: 'azure', tooltip: 'Max 5,000 RU/s burst. Best for dev/test and intermittent workloads. Cannot enable geo-replication.' },
             { value: '400', label: '400 RU/s', description: 'Provisioned minimum · light workloads', cost: '~$24/mo', provider: 'azure' },
             { value: '1000', label: '1,000 RU/s', description: 'Standard workloads', cost: '~$58/mo', provider: 'azure' },
@@ -1129,7 +1129,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['tablestore', 'ots', 'wide-column', 'nosql', 'alibaba'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this database', placeholder: 'My Database' },
-          { name: 'size', label: 'Capacity mode', type: 'select', required: false, tier: 'essential', description: 'Billing and throughput model', default: 'on-demand', tooltip: 'On-demand: best for unpredictable traffic, pay per Capacity Unit consumed. Reserved: pre-purchase CUs for steady workloads at lower per-unit cost. 1 read CU = one 4 KB read, 1 write CU = one 4 KB write.', optionDetails: [
+          { name: 'size', label: 'Capacity mode', type: 'select', required: true, tier: 'essential', description: 'Billing and throughput model', default: 'on-demand', tooltip: 'On-demand: best for unpredictable traffic, pay per Capacity Unit consumed. Reserved: pre-purchase CUs for steady workloads at lower per-unit cost. 1 read CU = one 4 KB read, 1 write CU = one 4 KB write.', optionDetails: [
             { value: 'on-demand', label: 'On-demand (CU)', description: 'Pay per Capacity Unit · auto-scales', cost: '~$0.007/10K CU', provider: 'alibaba', tooltip: 'Best for variable or unpredictable traffic. No upfront commitment.' },
             { value: 'reserved-50', label: 'Reserved 50 CU', description: '50 read/write CU · predictable cost', cost: '~$45/mo', provider: 'alibaba' },
             { value: 'reserved-100', label: 'Reserved 100 CU', description: '100 read/write CU · steady traffic', cost: '~$85/mo', provider: 'alibaba' },
@@ -1164,7 +1164,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
             { value: 'ajd', label: 'JSON Database', description: 'Document store — MongoDB-compatible', provider: 'oci' },
             { value: 'apex', label: 'APEX Service', description: 'Low-code Oracle APEX apps', provider: 'oci' },
           ] },
-          { name: 'size', label: 'Compute', type: 'select', required: false, tier: 'essential', description: 'OCPU count and storage — determines query speed and capacity', default: '1-ocpu', optionDetails: [
+          { name: 'size', label: 'Compute', type: 'select', required: true, tier: 'essential', description: 'OCPU count and storage — determines query speed and capacity', default: '1-ocpu', optionDetails: [
             { value: 'always-free', label: 'Always Free', description: '1 OCPU · 20 GB storage', cost: 'Free forever', provider: 'oci' },
             { value: '1-ocpu', label: '1 OCPU', description: '1 OCPU · 1 TB storage', cost: '~$175/mo', provider: 'oci' },
             { value: '2-ocpu', label: '2 OCPU', description: '2 OCPU · 1 TB storage', cost: '~$350/mo', provider: 'oci' },
@@ -1199,7 +1199,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
             { value: 'mongodb', label: 'MongoDB', description: 'NoSQL document store', provider: 'digitalocean' },
             { value: 'kafka', label: 'Kafka', description: 'Event streaming', provider: 'digitalocean' },
           ] },
-          { name: 'size', label: 'Instance size', type: 'select', required: false, tier: 'essential', description: 'Database node size', default: 'db-s-1vcpu-1gb', optionDetails: [
+          { name: 'size', label: 'Instance size', type: 'select', required: true, tier: 'essential', description: 'Database node size', default: 'db-s-1vcpu-1gb', optionDetails: [
             { value: 'db-s-1vcpu-1gb', label: '1 vCPU / 1 GB', description: '1 vCPU · 1 GB RAM · 10 GB disk', cost: '~$15/mo', provider: 'digitalocean' },
             { value: 'db-s-1vcpu-2gb', label: '1 vCPU / 2 GB', description: '1 vCPU · 2 GB RAM · 25 GB disk', cost: '~$30/mo', provider: 'digitalocean' },
             { value: 'db-s-2vcpu-4gb', label: '2 vCPU / 4 GB', description: '2 vCPU · 4 GB RAM · 38 GB disk', cost: '~$60/mo', provider: 'digitalocean' },
@@ -1237,7 +1237,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['vector', 'embedding', 'pinecone', 'weaviate', 'qdrant', 'pgvector', 'chromadb', 'milvus'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this vector store', placeholder: 'My Vector Store' },
-          { name: 'size', label: 'Cluster size', type: 'select', required: false, tier: 'essential', description: 'Cluster capacity — determines vectors stored and query speed', default: 'os-t3.small', optionDetails: [
+          { name: 'size', label: 'Cluster size', type: 'select', required: true, tier: 'essential', description: 'Cluster capacity — determines vectors stored and query speed', default: 'os-t3.small', optionDetails: [
             { value: 'os-t3.small', label: 't3.small.search', description: '2 vCPU · 2 GB · ~100K vectors', cost: '~$26/mo', provider: 'aws' },
             { value: 'os-m6g.large', label: 'm6g.large.search', description: '2 vCPU · 8 GB · ~1M vectors', cost: '~$97/mo', provider: 'aws' },
             { value: 'os-r6g.xlarge', label: 'r6g.xlarge.search', description: '4 vCPU · 32 GB · ~5M vectors', cost: '~$292/mo', provider: 'aws' },
@@ -1277,7 +1277,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['warehouse', 'redshift', 'bigquery', 'snowflake', 'clickhouse', 'analytics', 'olap'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this data warehouse', placeholder: 'My Warehouse' },
-          { name: 'size', label: 'Compute size', type: 'select', required: false, tier: 'essential', description: 'Cluster/compute capacity for queries', default: 'dc2.large', optionDetails: [
+          { name: 'size', label: 'Compute size', type: 'select', required: true, tier: 'essential', description: 'Cluster/compute capacity for queries', default: 'dc2.large', optionDetails: [
             { value: 'dc2.large', label: 'dc2.large (2-node)', description: '2 vCPU · 15 GB RAM · 160 GB SSD each', cost: '~$360/mo', provider: 'aws' },
             { value: 'dc2.large-4', label: 'dc2.large (4-node)', description: '4 nodes · 640 GB total', cost: '~$720/mo', provider: 'aws' },
             { value: 'ra3.xlplus', label: 'ra3.xlplus (2-node)', description: '4 vCPU · 32 GB · managed storage', cost: '~$1,560/mo', provider: 'aws' },
@@ -1320,7 +1320,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['search', 'elasticsearch', 'opensearch', 'algolia', 'fulltext'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this search engine', placeholder: 'My Search' },
-          { name: 'size', label: 'Cluster size', type: 'select', required: false, tier: 'essential', description: 'Node size — determines index capacity and query throughput', default: 'os-t3.small', optionDetails: [
+          { name: 'size', label: 'Cluster size', type: 'select', required: true, tier: 'essential', description: 'Node size — determines index capacity and query throughput', default: 'os-t3.small', optionDetails: [
             { value: 'os-t3.small', label: 't3.small.search', description: '2 vCPU · 2 GB RAM', cost: '~$26/mo', provider: 'aws' },
             { value: 'os-t3.medium', label: 't3.medium.search', description: '2 vCPU · 4 GB RAM', cost: '~$52/mo', provider: 'aws' },
             { value: 'os-m6g.large', label: 'm6g.large.search', description: '2 vCPU · 8 GB RAM', cost: '~$97/mo', provider: 'aws' },
@@ -1384,7 +1384,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this storage bucket', placeholder: 'My Files' },
           { name: 'public', label: 'Publicly accessible?', type: 'boolean', required: false, tier: 'essential', description: 'Allow anyone on the internet to view these files', default: false },
-          { name: 'storage_class', label: 'Storage class', type: 'select', required: false, tier: 'essential', description: 'Access frequency — affects cost and retrieval speed', default: 'standard', optionDetails: [
+          { name: 'storage_class', label: 'Storage class', type: 'select', required: true, tier: 'essential', description: 'Access frequency — affects cost and retrieval speed', default: 'standard', optionDetails: [
             { value: 'standard', label: 'Standard', description: 'Frequently accessed data', cost: '~$0.023/GB/mo', provider: 'aws' },
             { value: 'standard-ia', label: 'Infrequent Access', description: 'Accessed < 1x/month · lower storage cost', cost: '~$0.0125/GB/mo', provider: 'aws' },
             { value: 'glacier', label: 'Glacier', description: 'Archive · minutes-to-hours retrieval', cost: '~$0.004/GB/mo', provider: 'aws' },
@@ -1412,7 +1412,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['oss', 'object', 'storage', 'alibaba', 'bucket'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this storage bucket', placeholder: 'My Files' },
-          { name: 'storage_class', label: 'Storage class', type: 'select', required: false, tier: 'essential', description: 'Access frequency — affects cost and retrieval speed', default: 'oss-standard', optionDetails: [
+          { name: 'storage_class', label: 'Storage class', type: 'select', required: true, tier: 'essential', description: 'Access frequency — affects cost and retrieval speed', default: 'oss-standard', optionDetails: [
             { value: 'oss-standard', label: 'Standard', description: 'Frequently accessed data', cost: '~$0.02/GB/mo', provider: 'alibaba' },
             { value: 'oss-ia', label: 'Infrequent Access', description: 'Accessed < 1x/month · 30-day min', cost: '~$0.008/GB/mo', provider: 'alibaba' },
             { value: 'oss-archive', label: 'Archive', description: 'Rarely accessed · 1-minute restore', cost: '~$0.005/GB/mo', provider: 'alibaba' },
@@ -1439,7 +1439,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['oci', 'object', 'storage', 'oracle', 'bucket'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this storage bucket', placeholder: 'My Files' },
-          { name: 'storage_class', label: 'Storage tier', type: 'select', required: false, tier: 'essential', description: 'Access frequency — affects cost and retrieval speed', default: 'oci-standard', optionDetails: [
+          { name: 'storage_class', label: 'Storage tier', type: 'select', required: true, tier: 'essential', description: 'Access frequency — affects cost and retrieval speed', default: 'oci-standard', optionDetails: [
             { value: 'oci-standard', label: 'Standard', description: 'Frequently accessed · hot data', cost: '~$0.0255/GB/mo', provider: 'oci' },
             { value: 'oci-infrequent', label: 'Infrequent Access', description: 'Accessed < 1x/month', cost: '~$0.01/GB/mo', provider: 'oci' },
             { value: 'oci-archive', label: 'Archive', description: 'Rarely accessed · 1-hour restore', cost: '~$0.004/GB/mo', provider: 'oci' },
@@ -1496,7 +1496,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['efs', 'nfs', 'file', 'filestore', 'shared'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this shared drive', placeholder: 'Shared Files' },
-          { name: 'size', label: 'Throughput mode', type: 'select', required: false, tier: 'essential', description: 'Performance tier — determines throughput and IOPS', default: 'efs-bursting', optionDetails: [
+          { name: 'size', label: 'Throughput mode', type: 'select', required: true, tier: 'essential', description: 'Performance tier — determines throughput and IOPS', default: 'efs-bursting', optionDetails: [
             { value: 'efs-bursting', label: 'EFS Bursting', description: 'Standard throughput · scales with size', cost: '~$0.30/GB/mo', provider: 'aws' },
             { value: 'efs-elastic', label: 'EFS Elastic', description: 'Auto-scaling throughput · pay per use', cost: '~$0.04/GB read', provider: 'aws' },
             { value: 'efs-provisioned', label: 'EFS Provisioned', description: 'Guaranteed throughput · predictable perf', cost: '~$6/MB/s/mo', provider: 'aws' },
@@ -1563,7 +1563,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['vpc', 'vnet', 'network', 'virtual', 'subnet'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this network', placeholder: 'My Network' },
-          { name: 'size', label: 'Size', type: 'select', required: false, tier: 'essential', description: 'How many services will live in this network?', options: ['Small — a few services', 'Medium — a typical app', 'Large — many services and teams'], default: 'Small — a few services' },
+          { name: 'size', label: 'Size', type: 'select', required: true, tier: 'essential', description: 'How many services will live in this network?', options: ['Small — a few services', 'Medium — a typical app', 'Large — many services and teams'], default: 'Small — a few services' },
           { name: 'cidr', label: 'IP range', type: 'string', required: false, tier: 'advanced', description: 'Advanced: custom IP address range for this network', default: '10.0.0.0/16', placeholder: 'e.g. 10.0.0.0/16' },
         ],
       },
@@ -1864,7 +1864,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['rabbitmq', 'amqp', 'mq', 'broker', 'rabbit'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this message broker', placeholder: 'My Message Broker' },
-          { name: 'size', label: 'Broker size', type: 'select', required: false, tier: 'essential', description: 'Broker instance size — determines throughput and connections', default: 'mq.m5.large', optionDetails: [
+          { name: 'size', label: 'Broker size', type: 'select', required: true, tier: 'essential', description: 'Broker instance size — determines throughput and connections', default: 'mq.m5.large', optionDetails: [
             { value: 'mq.t3.micro', label: 'mq.t3.micro', description: '2 vCPU · 1 GB · dev/test', cost: '~$22/mo', provider: 'aws' },
             { value: 'mq.m5.large', label: 'mq.m5.large', description: '2 vCPU · 8 GB · production', cost: '~$175/mo', provider: 'aws' },
             { value: 'mq.m5.xlarge', label: 'mq.m5.xlarge', description: '4 vCPU · 16 GB · heavy load', cost: '~$350/mo', provider: 'aws' },
@@ -1920,7 +1920,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['servicebus', 'service-bus', 'azure', 'queue', 'topic', 'enterprise'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this message bus', placeholder: 'My Service Bus' },
-          { name: 'size', label: 'Tier', type: 'select', required: false, tier: 'essential', description: 'Service Bus tier — determines features, throughput, and isolation', default: 'standard', optionDetails: [
+          { name: 'size', label: 'Tier', type: 'select', required: true, tier: 'essential', description: 'Service Bus tier — determines features, throughput, and isolation', default: 'standard', optionDetails: [
             { value: 'basic', label: 'Basic', description: 'Queues only · 256 KB messages', cost: '~$0.05/M ops', provider: 'azure' },
             { value: 'standard', label: 'Standard', description: 'Queues + topics · 256 KB messages', cost: '~$10/mo base', provider: 'azure' },
             { value: 'premium-1', label: 'Premium (1 MU)', description: 'Dedicated · 100 MB messages · 1 messaging unit', cost: '~$677/mo', provider: 'azure' },
@@ -1959,7 +1959,7 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         keywords: ['kinesis', 'kafka', 'stream', 'event', 'data'],
         properties: [
           { name: 'name', label: 'Name', type: 'string', required: true, tier: 'essential', description: 'A friendly name for this event stream', placeholder: 'My Stream' },
-          { name: 'size', label: 'Throughput', type: 'select', required: false, tier: 'essential', description: 'Stream capacity — shards determine max throughput', default: 'on-demand', optionDetails: [
+          { name: 'size', label: 'Throughput', type: 'select', required: true, tier: 'essential', description: 'Stream capacity — shards determine max throughput', default: 'on-demand', optionDetails: [
             { value: 'on-demand', label: 'On-demand', description: 'Auto-scales · up to 200 MB/s write', cost: '~$0.08/GB', provider: 'aws' },
             { value: '1-shard', label: '1 shard', description: '1 MB/s write · 2 MB/s read', cost: '~$11/mo', provider: 'aws' },
             { value: '2-shards', label: '2 shards', description: '2 MB/s write · 4 MB/s read', cost: '~$22/mo', provider: 'aws' },

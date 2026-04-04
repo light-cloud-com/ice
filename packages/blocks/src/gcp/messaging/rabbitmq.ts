@@ -11,5 +11,6 @@ export const gcpRabbitmqBlueprint: BlockBlueprint = createBlueprintFromResource(
   nodeDataDefaults: {
     runtime: 'RabbitMQ 3.13',
     port: 5672,
+    size: 'lemur',
   },
 });

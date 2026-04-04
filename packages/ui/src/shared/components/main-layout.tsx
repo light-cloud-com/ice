@@ -8,22 +8,32 @@
  * Collapsed sidebars show a WebStorm-style narrow strip with icons + vertical text.
  */
 
-import { FolderOpen, Blocks, PanelRight, MessageSquare } from 'lucide-react';
+import { FolderOpen, Blocks, PanelRight, MessageSquare, DollarSign, LayoutTemplate, ShieldCheck } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useTranslation } from '../../i18n';
 import { InlineTableView } from './inline-table-view';
 import { StatusBar } from './status-bar';
+import { useTranslation } from '../../i18n';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './ui/resizable';
 import { SidebarPanel } from './ui/sidebar-panel';
 import { SidebarStrip } from './ui/sidebar-strip';
 import { AiChatPanel } from '../../features/ai/components/ai-chat-panel';
 import { SvgCanvas } from '../../features/canvas/components/svg-canvas';
-import { EnvironmentTabBar } from '../../features/environments/components/environment-tab-bar';
+import { CostPanel } from '../../features/cost/components/cost-panel';
 import { ResourcePalette } from '../../features/palette/components/resource-palette';
+import { TemplateCategoriesPanel } from '../../features/templates/components/template-categories-panel';
 import { PropertiesPanel } from '../../features/properties/components/properties-panel';
+import { ValidationPanel } from '../../features/validation/components/validation-panel';
 import { createCard, importToActiveCard, setActiveCard } from '../../store/slices/cards-slice';
-import { togglePalette, toggleBlocks, toggleProperties, toggleAiChat } from '../../store/slices/ui-slice';
+import {
+  togglePalette,
+  toggleBlocks,
+  toggleProperties,
+  toggleAiChat,
+  toggleCostPanel,
+  toggleTemplates,
+  toggleValidation,
+} from '../../store/slices/ui-slice';
 import axiosInstance from '../api/axios-instance';
 import type { RootState, AppDispatch } from '../../store';
 import type { SidebarStripTab } from './ui/sidebar-strip';
@@ -107,7 +117,7 @@ const DragResizePanel: React.FC<DragResizePanelProps> = ({
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
-      className="w-1 shrink-0 cursor-col-resize hover:bg-blue-500/30 active:bg-blue-500/50 transition-colors"
+      className="w-1 shrink-0 cursor-col-resize bg-ice-border"
     />
   );
 
@@ -133,7 +143,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
-  const { showPalette, showBlocks, showProperties, showAiChat } = useSelector((state: RootState) => state.ui);
+  const { showPalette, showBlocks, showProperties, showAiChat, showCostPanel, showTemplates, showValidation } = useSelector(
+    (state: RootState) => state.ui,
+  );
   const isPortrait = useIsPortrait();
   const isCanvasView = view === 'canvas' && !children;
 
@@ -215,8 +227,15 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         active: showBlocks,
         onClick: () => dispatch(toggleBlocks()),
       },
+      {
+        id: 'templates',
+        label: t('layout.sidebar.templates'),
+        icon: LayoutTemplate,
+        active: showTemplates,
+        onClick: () => dispatch(toggleTemplates()),
+      },
     ],
-    [showPalette, showBlocks, dispatch],
+    [showPalette, showBlocks, showTemplates, dispatch],
   );
 
   const rightStripTabs: SidebarStripTab[] = useMemo(() => {
@@ -230,6 +249,20 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
     });
     if (isCanvasView) {
       tabs.push({
+        id: 'validation',
+        label: 'Validation',
+        icon: ShieldCheck,
+        active: showValidation,
+        onClick: () => dispatch(toggleValidation()),
+      });
+      tabs.push({
+        id: 'cost',
+        label: t('layout.sidebar.cost'),
+        icon: DollarSign,
+        active: showCostPanel,
+        onClick: () => dispatch(toggleCostPanel()),
+      });
+      tabs.push({
         id: 'ai',
         label: t('layout.sidebar.aiChat'),
         icon: MessageSquare,
@@ -238,37 +271,44 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
       });
     }
     return tabs;
-  }, [showProperties, showAiChat, isCanvasView, dispatch]);
+  }, [showProperties, showCostPanel, showAiChat, showValidation, isCanvasView, dispatch]);
 
   // ── Content ─────────────────────────────────────────────────────────────
 
   const canvasContent = (
     <div className="h-full flex flex-col">
-      {projectId && basePath && <EnvironmentTabBar projectId={projectId} basePath={basePath} />}
       <div className="flex-1 min-h-0 relative">
         {children ? children : view === 'table' ? <InlineTableView /> : <SvgCanvas />}
       </div>
     </div>
   );
 
-  const showLeftPanel = showPalette || showBlocks;
-  const showRightPanel = showProperties || (isCanvasView && showAiChat);
+  const showLeftPanel = showPalette || showBlocks || showTemplates;
+  const showRightPanel = showProperties || (isCanvasView && showAiChat) || (isCanvasView && showCostPanel) || (isCanvasView && showValidation);
+
+  // Render right panel content — panels are rendered conditionally but in stable
+  // tree positions so React preserves their state when sibling panels toggle.
+  // Build ordered list of visible right panels for alternating backgrounds
+  const rightPanels: { key: string; node: React.ReactNode }[] = [];
+  if (isCanvasView && showValidation) rightPanels.push({ key: 'validation', node: <ValidationPanel /> });
+  if (isCanvasView && showAiChat) rightPanels.push({ key: 'ai', node: <AiChatPanel /> });
+  if (isCanvasView && showCostPanel) rightPanels.push({ key: 'cost', node: <CostPanel /> });
+  if (showProperties) rightPanels.push({ key: 'props', node: <PropertiesPanel /> });
 
   const rightPanelContent =
-    showProperties && isCanvasView && showAiChat ? (
+    rightPanels.length > 1 ? (
       <ResizablePanelGroup direction="vertical" autoSaveId="ice-right-panels">
-        <ResizablePanel defaultSize={50} minSize={25}>
-          <AiChatPanel />
-        </ResizablePanel>
-        <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={50} minSize={25}>
-          <PropertiesPanel />
-        </ResizablePanel>
+        {rightPanels.map((p, i) => (
+          <React.Fragment key={p.key}>
+            {i > 0 && <ResizableHandle withHandle />}
+            <ResizablePanel defaultSize={Math.floor(100 / rightPanels.length)} minSize={15}>
+              <div className="h-full bg-ice-surface">{p.node}</div>
+            </ResizablePanel>
+          </React.Fragment>
+        ))}
       </ResizablePanelGroup>
-    ) : isCanvasView && showAiChat ? (
-      <AiChatPanel />
     ) : (
-      <PropertiesPanel />
+      (rightPanels[0]?.node ?? null)
     );
 
   // ── Portrait layout ─────────────────────────────────────────────────────
@@ -289,7 +329,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
               maxSize={35}
               className="bg-ice-surface ice-sidebar-shadow"
             >
-              <ResourcePalette showProjectSection={showPalette} showBlocksSection={showBlocks} />
+              {showTemplates && !(showPalette || showBlocks) ? (
+                <TemplateCategoriesPanel />
+              ) : (
+                <ResourcePalette showProjectSection={showPalette} showBlocksSection={showBlocks} />
+              )}
             </SidebarPanel>
 
             <ResizablePanel defaultSize={75}>
@@ -305,11 +349,20 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                   </>
                 )}
 
+                {isCanvasView && showCostPanel && (
+                  <>
+                    <ResizableHandle withHandle />
+                    <ResizablePanel defaultSize={25} minSize={15} maxSize={50} className="bg-ice-surface">
+                      <CostPanel />
+                    </ResizablePanel>
+                  </>
+                )}
+
                 {showProperties && (
                   <>
                     <ResizableHandle withHandle />
                     <ResizablePanel
-                      defaultSize={showAiChat ? 20 : 40}
+                      defaultSize={showAiChat || showCostPanel ? 20 : 40}
                       minSize={15}
                       maxSize={50}
                       className="bg-ice-surface"
@@ -341,7 +394,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         {/* Left sidebar with its own resize handle */}
         {showLeftPanel && (
           <DragResizePanel side="left" storageKey="ice-left-w" defaultWidth={260} minWidth={180} maxWidth={400}>
-            <ResourcePalette showProjectSection={showPalette} showBlocksSection={showBlocks} />
+            {showTemplates && !(showPalette || showBlocks) ? (
+              <TemplateCategoriesPanel />
+            ) : (
+              <ResourcePalette showProjectSection={showPalette} showBlocksSection={showBlocks} />
+            )}
           </DragResizePanel>
         )}
 

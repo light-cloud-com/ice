@@ -5,11 +5,13 @@
 import awsIcon from 'devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg';
 import azureIcon from 'devicon/icons/azure/azure-original.svg';
 import gcpIcon from 'devicon/icons/googlecloud/googlecloud-original.svg';
-import { Rows3, Columns3, CircleDot, Spline, Minus, GitCommitHorizontal, Maximize2, RefreshCw, Rocket, Sun, Moon, Github, Undo2, Redo2, Palette } from 'lucide-react';
-import React, { memo, useEffect, useState } from 'react';
+import { Rows3, Columns3, CircleDot, Spline, Minus, GitCommitHorizontal, Maximize2, Rocket, Sun, Moon, Github, Undo2, Redo2, Palette, ChevronDown, Lock, LockOpen, Grid3X3, GitPullRequest } from 'lucide-react';
+import React, { memo, useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Breadcrumbs } from './breadcrumbs';
 import { LanguageSwitch } from './language-switch';
+import { IceSelect } from './ui/ice-select';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './ui/tooltip';
 import { useTranslation } from '../../i18n';
 import logoDark from '../../assets/logo-dark.png';
 import logoLight from '../../assets/logo-light.png';
@@ -17,6 +19,7 @@ import { DeployPanel } from '../../features/deploy/components/deploy-panel';
 import { PromoteModal } from '../../features/environments/components/promote-modal';
 import { GitHubConnectModal } from '../../features/integrations/components/github-connect-modal';
 import { ProviderConnectModal } from '../../features/integrations/components/provider-connect-modal';
+import { getApi } from '../api/api-adapter';
 import {
   autoOrganizeCard,
   undoCardChange,
@@ -24,9 +27,17 @@ import {
   selectCanUndo,
   selectCanRedo,
   setCardViewport,
+  setActiveCard,
+  importToActiveCard,
+  createCard,
 } from '../../store/slices/cards-slice';
 import { openDeployPanel } from '../../store/slices/deploy-slice';
-import { setEdgeStyle, toggleAutoOrganizeOnZoom, setAutoOrganizeStyle, type EdgeStyle, type OrganizeStyle } from '../../store/slices/ui-slice';
+import {
+  fetchEnvironments,
+  setActiveEnvironment,
+  type Environment,
+} from '../../store/slices/environments-slice';
+import { setEdgeStyle, setAutoOrganizeStyle, toggleSnapToGrid, toggleCanvasLocked, type EdgeStyle, type OrganizeStyle } from '../../store/slices/ui-slice';
 import { useThemePicker } from './dev-accent-picker';
 import { checkGitHubConnection } from '../../store/slices/integrations-slice';
 import { useTheme } from '../hooks/use-theme';
@@ -66,10 +77,53 @@ export const AppBar: React.FC = memo(() => {
   const [showAws, setShowAws] = useState(false);
   const [showAzure, setShowAzure] = useState(false);
 
+  // ── Environment selector state ──
+  const projectId = useSelector((s: RootState) => s.projects.activeProjectId);
+  const environments = useSelector((s: RootState) =>
+    projectId ? s.environments.byProject[projectId] || [] : [],
+  );
+  const activeEnvId = useSelector((s: RootState) =>
+    projectId ? s.environments.activeEnvId[projectId] : undefined,
+  );
+
+  useEffect(() => {
+    if (projectId) dispatch(fetchEnvironments(projectId));
+  }, [projectId, dispatch]);
+
+  const handleSwitchEnv = useCallback(
+    async (envId: string) => {
+      if (!projectId) return;
+      const env = environments.find((e) => e.id === envId);
+      if (!env) return;
+      dispatch(setActiveEnvironment({ projectId, envId }));
+      try {
+        const { store } = await import('../../store');
+        const state = store.getState();
+        const existing = (state.cards as any).cards.find((c: any) => c.id === env.card_id);
+        if (existing && existing.nodes.length > 0) {
+          dispatch(setActiveCard(env.card_id));
+          return;
+        }
+        const api = getApi();
+        const cardData = await api.graph.load(env.card_id);
+        if (!cardData) return;
+        if (!existing) {
+          dispatch(createCard({ name: cardData.name || env.name, id: cardData.id, projectId }));
+        }
+        dispatch(setActiveCard(cardData.id));
+        if (cardData.nodes?.length > 0 || cardData.edges?.length > 0) {
+          dispatch(importToActiveCard({ nodes: cardData.nodes || [], edges: cardData.edges || [], skipAutoOrganize: true }));
+        }
+      } catch (err) {
+        console.error('Failed to load environment card:', err);
+      }
+    },
+    [projectId, environments, dispatch],
+  );
+
   const canUndo = useSelector(selectCanUndo);
   const canRedo = useSelector(selectCanRedo);
   const edgeStyle = useSelector((state: RootState) => state.ui.edgeStyle) as EdgeStyle;
-  const autoOrganizeOnZoom = useSelector((state: RootState) => state.ui.autoOrganizeOnZoom);
   const autoOrganizeStyle = useSelector((state: RootState) => state.ui.autoOrganizeStyle) as OrganizeStyle;
 
   const cycleEdgeStyle = () => {
@@ -78,6 +132,8 @@ export const AppBar: React.FC = memo(() => {
     dispatch(setEdgeStyle(next));
   };
   const edgeIcon = edgeStyle === 'straight' ? Minus : edgeStyle === 'rectangular' ? GitCommitHorizontal : Spline;
+  const snapEnabled = useSelector((state: RootState) => state.ui.snapToGrid);
+  const canvasLocked = useSelector((state: RootState) => state.ui.canvasLocked);
 
   // Selection-aware organize: if a single container is selected, organize inside it
   const selectedNodes = useSelector((state: RootState) => state.selection.selectedNodes);
@@ -98,6 +154,7 @@ export const AppBar: React.FC = memo(() => {
 
   return (
     <>
+      <TooltipProvider delayDuration={300}>
       <header
         data-testid="toolbar"
         className="h-11 flex items-center gap-2 px-3 border-b border-ice-border bg-ice-toolbar relative z-[9999] shrink-0 transition-[padding]"
@@ -133,7 +190,6 @@ export const AppBar: React.FC = memo(() => {
               dispatch(setAutoOrganizeStyle('vertical'));
             }}
             tip={selectedContainerId ? 'Organize group (vertical)' : 'Auto-organize all (vertical)'}
-            className={autoOrganizeOnZoom && autoOrganizeStyle === 'vertical' ? 'text-blue-400' : undefined}
           />
           <BarBtn
             id="ice-appbar-btn-organize-h"
@@ -143,7 +199,6 @@ export const AppBar: React.FC = memo(() => {
               dispatch(setAutoOrganizeStyle('horizontal'));
             }}
             tip={selectedContainerId ? 'Organize group (horizontal)' : 'Auto-organize all (horizontal)'}
-            className={autoOrganizeOnZoom && autoOrganizeStyle === 'horizontal' ? 'text-blue-400' : undefined}
           />
           <BarBtn
             id="ice-appbar-btn-organize-c"
@@ -153,14 +208,6 @@ export const AppBar: React.FC = memo(() => {
               dispatch(setAutoOrganizeStyle('circular'));
             }}
             tip={selectedContainerId ? 'Organize group (circular)' : 'Auto-organize all (circular)'}
-            className={autoOrganizeOnZoom && autoOrganizeStyle === 'circular' ? 'text-blue-400' : undefined}
-          />
-          <BarBtn
-            id="ice-appbar-btn-auto-organize-zoom"
-            icon={RefreshCw}
-            onClick={() => dispatch(toggleAutoOrganizeOnZoom())}
-            tip={autoOrganizeOnZoom ? 'Auto-organize on zoom: ON' : 'Auto-organize on zoom: OFF'}
-            className={autoOrganizeOnZoom ? 'text-blue-400 bg-blue-500/10' : undefined}
           />
           <BarBtn
             id="ice-appbar-btn-fit-view"
@@ -180,7 +227,7 @@ export const AppBar: React.FC = memo(() => {
               const bh = maxY - minY + pad * 2;
               const vw = window.innerWidth - 300;
               const vh = window.innerHeight - 80;
-              const zoom = Math.min(Math.max(vw / bw, 0.1), Math.min(vh / bh, 3));
+              const zoom = Math.min(Math.max(vw / bw, 0.1), Math.min(vh / bh, 2));
               const panX = -minX + pad + (vw / zoom - bw + pad * 2) / 2;
               const panY = -minY + pad + (vh / zoom - bh + pad * 2) / 2;
               dispatch(setCardViewport({ panX, panY, scale: zoom }));
@@ -193,6 +240,20 @@ export const AppBar: React.FC = memo(() => {
             icon={edgeIcon}
             onClick={cycleEdgeStyle}
             tip={`Connection style: ${edgeStyle}`}
+          />
+          <BarBtn
+            id="ice-appbar-btn-snap"
+            icon={Grid3X3}
+            onClick={() => dispatch(toggleSnapToGrid())}
+            tip={snapEnabled ? 'Snap to grid: ON' : 'Snap to grid: OFF'}
+            className={snapEnabled ? 'text-blue-400 bg-blue-500/10' : undefined}
+          />
+          <BarBtn
+            id="ice-appbar-btn-lock"
+            icon={canvasLocked ? Lock : LockOpen}
+            onClick={() => dispatch(toggleCanvasLocked())}
+            tip={canvasLocked ? 'Canvas locked' : 'Lock canvas'}
+            className={canvasLocked ? 'text-amber-400 bg-amber-500/10' : undefined}
           />
           <BarBtn
             id="ice-appbar-btn-undo"
@@ -208,6 +269,22 @@ export const AppBar: React.FC = memo(() => {
             tip={t('appBar.redo')}
             disabled={!canRedo}
           />
+          {projectId && environments.length > 0 && (
+            <>
+              <BarSep />
+              <IceSelect
+                value={activeEnvId || ''}
+                onChange={handleSwitchEnv}
+                allowEmpty={false}
+                options={environments.map((env) => ({
+                  value: env.id,
+                  label: `${env.is_protected ? '🔒 ' : ''}${env.name}${env.type === 'pr' && env.pr_number ? ` #${env.pr_number}` : ''}`,
+                }))}
+                placeholder="Environment"
+                width="140px"
+              />
+            </>
+          )}
           <BarSep />
           <BarBtn
             id="ice-appbar-btn-deploy"
@@ -236,35 +313,46 @@ export const AppBar: React.FC = memo(() => {
           <BarSep />
           <BarBtn icon={Palette} onClick={toggleThemePicker} tip="Color themes" />
           <BarBtn icon={isDark ? Sun : Moon} onClick={toggle} tip={isDark ? t('appBar.lightMode') : t('appBar.darkMode')} />
-          <button
-            onClick={decreaseFontSize}
-            disabled={fontSize === 'small'}
-            title={t('appBar.decreaseFont')}
-            className={cn(
-              'px-1 py-0.5 rounded text-ice-xs font-bold transition-[color,background-color,opacity]',
-              fontSize === 'small'
-                ? 'text-ice-text-3 opacity-40'
-                : 'text-ice-text-3 hover:text-ice-text-1 hover:bg-ice-hover',
-            )}
-          >
-            A-
-          </button>
-          <button
-            onClick={increaseFontSize}
-            disabled={fontSize === 'large'}
-            title={t('appBar.increaseFont')}
-            className={cn(
-              'px-1 py-0.5 rounded text-ice-base font-bold transition-[color,background-color,opacity]',
-              fontSize === 'large'
-                ? 'text-ice-text-3 opacity-40'
-                : 'text-ice-text-3 hover:text-ice-text-1 hover:bg-ice-hover',
-            )}
-          >
-            A+
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={decreaseFontSize}
+                disabled={fontSize === 'small'}
+                aria-label={t('appBar.decreaseFont')}
+                className={cn(
+                  'px-1 py-0.5 rounded text-ice-xs font-bold transition-[color,background-color,opacity]',
+                  fontSize === 'small'
+                    ? 'text-ice-text-3 opacity-40'
+                    : 'text-ice-text-3 hover:text-ice-text-1 hover:bg-ice-hover',
+                )}
+              >
+                A-
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">{t('appBar.decreaseFont')}</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={increaseFontSize}
+                disabled={fontSize === 'large'}
+                aria-label={t('appBar.increaseFont')}
+                className={cn(
+                  'px-1 py-0.5 rounded text-ice-base font-bold transition-[color,background-color,opacity]',
+                  fontSize === 'large'
+                    ? 'text-ice-text-3 opacity-40'
+                    : 'text-ice-text-3 hover:text-ice-text-1 hover:bg-ice-hover',
+                )}
+              >
+                A+
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">{t('appBar.increaseFont')}</TooltipContent>
+          </Tooltip>
           <LanguageSwitch />
         </div>
       </header>
+      </TooltipProvider>
 
       <GitHubConnectModal isOpen={showGitHub} onClose={() => setShowGitHub(false)} />
       <ProviderConnectModal
@@ -342,46 +430,62 @@ const BarBtn: React.FC<{
   tip?: string;
   className?: string;
   disabled?: boolean;
-}> = ({ id, icon: I, onClick, tip, className, disabled }) => (
-  <button
-    id={id}
-    onClick={onClick}
-    aria-label={tip}
-    title={tip}
-    disabled={disabled}
-    className={cn(
-      'p-1.5 rounded text-ice-text-3 hover:text-ice-text-1 hover:bg-ice-hover transition-[color,background-color]',
-      disabled && 'opacity-30 pointer-events-none',
-      className,
-    )}
-  >
-    <I className="w-4 h-4" aria-hidden="true" />
-  </button>
-);
+}> = ({ id, icon: I, onClick, tip, className, disabled }) => {
+  const btn = (
+    <button
+      id={id}
+      onClick={onClick}
+      aria-label={tip}
+      disabled={disabled}
+      className={cn(
+        'p-1.5 rounded text-ice-text-3 hover:text-ice-text-1 hover:bg-ice-hover transition-[color,background-color]',
+        disabled && 'opacity-30 pointer-events-none',
+        className,
+      )}
+    >
+      <I className="w-4 h-4" aria-hidden="true" />
+    </button>
+  );
+  if (!tip) return btn;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{btn}</TooltipTrigger>
+      <TooltipContent side="bottom" className="text-ice-xs">{tip}</TooltipContent>
+    </Tooltip>
+  );
+};
 const BarImgBtn: React.FC<{ id?: string; src: string; onClick: () => void; tip?: string; connected?: boolean }> = ({
   id,
   src,
   onClick,
   tip,
   connected,
-}) => (
-  <button
-    id={id}
-    onClick={onClick}
-    aria-label={tip}
-    title={tip}
-    className={cn(
-      'relative p-1.5 rounded hover:bg-ice-hover transition-[background-color]',
-      connected && 'ring-1 ring-emerald-500/40 rounded-md',
-    )}
-  >
-    <img src={src} alt={tip || ''} width={16} height={16} className="w-4 h-4" />
-    {connected && (
-      <div
-        aria-hidden="true"
-        className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 border border-ice-raised"
-      />
-    )}
-  </button>
-);
+}) => {
+  const btn = (
+    <button
+      id={id}
+      onClick={onClick}
+      aria-label={tip}
+      className={cn(
+        'relative p-1.5 rounded hover:bg-ice-hover transition-[background-color]',
+        connected && 'ring-1 ring-emerald-500/40 rounded-md',
+      )}
+    >
+      <img src={src} alt={tip || ''} width={16} height={16} className="w-4 h-4" />
+      {connected && (
+        <div
+          aria-hidden="true"
+          className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 border border-ice-raised"
+        />
+      )}
+    </button>
+  );
+  if (!tip) return btn;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{btn}</TooltipTrigger>
+      <TooltipContent side="bottom" className="text-ice-xs">{tip}</TooltipContent>
+    </Tooltip>
+  );
+};
 const BarSep: React.FC = () => <div className="w-px h-4 bg-ice-border mx-1" />;

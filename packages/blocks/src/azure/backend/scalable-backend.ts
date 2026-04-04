@@ -11,6 +11,7 @@ export const azureScalableBackendBlueprint: BlockBlueprint = createBlueprintFrom
   nodeDataDefaults: {
     runtime: 'Node.js 20',
     port: 8080,
+    size: 'azure-0.25-0.5',
     minInstances: 1,
     maxInstances: 3,
     activeInstances: 1,

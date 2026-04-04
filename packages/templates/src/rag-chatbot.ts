@@ -4,12 +4,30 @@
  * Full-stack retrieval-augmented generation system with a chat frontend,
  * ingestion pipeline, vector search, and LLM inference.
  *
- * Architecture:
- *   Public Traffic → SSR Site (chat UI)
- *   Public Traffic → Gateway → RAG API Service
- *   RAG API → LLM Gateway (completions), Vector DB (retrieval), PostgreSQL (conversations), Cache (sessions)
- *   SQS → Ingestion Worker → Vector DB, Storage (documents)
- *   All services → Logs
+ * Architecture (deployable to AWS / GCP / Azure):
+ *
+ *   ┌── Public Zone ──────────────────────────────────────────────┐
+ *   │  Internet ──► WAF ──► Chat UI (SSR Next.js 14)              │
+ *   └─────────────────────────────────────────────────────────────┘
+ *   ┌── VPC ──────────────────────────────────────────────────────────────┐
+ *   │  ┌─ Public Subnet ─┐  ┌── Private Subnet ──────────────────────┐  │
+ *   │  │  Gateway         │  │  RAG Service   LLM Gateway   VectorDB  │  │
+ *   │  │                  │  │  PostgreSQL    Redis         DocStorage │  │
+ *   │  └──────────────────┘  └────────────────────────────────────────┘  │
+ *   └─────────────────────────────────────────────────────────────────────┘
+ *   ┌── Ingestion ────────────────────┐  ┌── Monitoring ──┐
+ *   │  SQS ──► Worker                 │  │  Logs          │
+ *   └─────────────────────────────────┘  └────────────────┘
+ *   Secret   Domain   Repo   Env   (ungrouped control plane)
+ *
+ * Layout grid (CARD 240×160, PAD 20, HEADER 36, GAP 16):
+ *   Row 0: Public Zone       (3c,1r → 792×236)    at (30,30)
+ *   Row 1: VPC               (1142×488)            at (30,296)
+ *          ├ Public Subnet   (1c,1r → 280×236)    at (50,352)  parent→VPC
+ *          └ Private Subnet  (3c,2r → 792×412)    at (360,352) parent→VPC
+ *   Row 2: Ingestion         (2c,1r → 536×236)    at (30,814)
+ *          Monitoring        (1c,1r → 280×236)    at (596,814)
+ *   Row 3: Ungrouped         y=1080, y=1256
  */
 
 import type { ComposedTemplate } from './types';
@@ -23,144 +41,189 @@ export const ragChatbotTemplate: ComposedTemplate = {
   estimatedCost: '$200-400/mo',
   category: 'ai-ml',
   provider: 'gcp',
-  tags: ['RAG', 'LLM', 'Vector DB', 'Next.js', 'Python'],
+  providers: ['gcp', 'aws', 'azure'],
+  tags: ['RAG', 'LLM', 'Vector DB', 'Next.js', 'Python', 'VPC', 'Subnet'],
   securityLevel: 'standard',
+  difficulty: 'advanced',
+  trust: 'official',
+  featured: true,
+  author: { name: 'ICE Team' },
   environmentPresets: [
     { type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' },
     { type: 'staging', name: 'Staging', region: 'us-central1', securityLevel: 'basic' },
   ],
 
   groups: [
+    // [0] Public Zone — outside VPC
     {
       subtype: 'Frontend',
-      label: 'Chat Frontend',
+      label: 'Public Zone',
       position: { x: 30, y: 30 },
-      width: 540,
-      height: 170,
-      blockIndices: [0, 1],
-      color: '#3b82f6',
+      width: 792,
+      height: 236,
+      blockIndices: [0, 1, 2],
+      color: '#ef4444',
     },
+    // [1] VPC — contains subnets, no direct blocks
     {
-      subtype: 'Services',
-      label: 'RAG API',
-      position: { x: 30, y: 230 },
-      width: 540,
-      height: 170,
-      blockIndices: [2, 3],
+      subtype: 'Custom',
+      iceType: 'Network.VPC',
+      label: 'VPC',
+      position: { x: 30, y: 296 },
+      width: 1142,
+      height: 488,
+      blockIndices: [],
       color: '#22c55e',
     },
+    // [2] Public Subnet — inside VPC
     {
-      subtype: 'AI',
-      label: 'AI Layer',
-      position: { x: 610, y: 30 },
-      width: 300,
-      height: 370,
-      blockIndices: [4, 5],
-      color: '#a855f7',
+      subtype: 'Custom',
+      iceType: 'Network.Subnet',
+      label: 'Public Subnet',
+      position: { x: 50, y: 352 },
+      width: 280,
+      height: 236,
+      blockIndices: [3],
+      color: '#3b82f6',
+      parentGroupIndex: 1,
     },
+    // [3] Private Subnet — inside VPC
     {
-      subtype: 'Data',
-      label: 'Data',
-      position: { x: 950, y: 30 },
-      width: 300,
-      height: 370,
-      blockIndices: [6, 7, 8],
-      color: '#f59e0b',
+      subtype: 'Custom',
+      iceType: 'Network.Subnet',
+      label: 'Private Subnet',
+      position: { x: 360, y: 352 },
+      width: 792,
+      height: 412,
+      blockIndices: [4, 5, 6, 7, 8, 9],
+      color: '#6366f1',
+      parentGroupIndex: 1,
     },
+    // [4] Ingestion — outside VPC
     {
       subtype: 'Messaging',
-      label: 'Document Ingestion',
-      position: { x: 30, y: 430 },
-      width: 540,
-      height: 170,
-      blockIndices: [9, 10],
+      label: 'Ingestion',
+      position: { x: 30, y: 814 },
+      width: 536,
+      height: 236,
+      blockIndices: [10, 11],
       color: '#8b5cf6',
     },
+    // [5] Monitoring — outside VPC (managed service)
     {
       subtype: 'Monitoring',
       label: 'Monitoring',
-      position: { x: 610, y: 430 },
-      width: 300,
-      height: 170,
-      blockIndices: [11],
-      color: '#ef4444',
+      position: { x: 596, y: 814 },
+      width: 280,
+      height: 236,
+      blockIndices: [12],
+      color: '#f59e0b',
     },
   ],
 
   blocks: [
-    // 0-1: Chat frontend
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 60, y: 60 } },
+    // ── Public Zone (outside VPC) ─────────────────────────────────────────
+    // 0: Internet
+    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 } },
+    // 1: WAF
+    { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 } },
+    // 2: Chat UI
     {
       iceType: 'Compute.SSRSite',
       label: 'Chat UI',
-      position: { x: 310, y: 60 },
-      data: { domain: 'chat.acme.io', runtime: 'Next.js 14' },
+      position: { x: 562, y: 86 },
+      data: { framework: 'nextjs', domain: 'chat.acme.io' },
     },
 
-    // 2-3: RAG API
-    { iceType: 'Network.Gateway', label: 'Gateway', position: { x: 60, y: 260 } },
+    // ── Public Subnet (inside VPC) ────────────────────────────────────────
+    // 3: Gateway
+    { iceType: 'Network.Gateway', label: 'API Gateway', position: { x: 70, y: 408 }, data: { protocol: 'http' } },
+
+    // ── Private Subnet (inside VPC) ───────────────────────────────────────
+    // Row 0
+    // 4: RAG Service
     {
       iceType: 'Compute.Container',
       label: 'RAG Service',
-      position: { x: 310, y: 260 },
-      data: { runtime: 'Python 3.12', domain: 'api.chat.acme.io', port: 8080 },
+      position: { x: 380, y: 408 },
+      data: { runtime: 'python3.12', domain: 'api.chat.acme.io', port: 8080 },
     },
-
-    // 4-5: AI layer
-    { iceType: 'AI.LLMGateway', label: 'LLM Gateway', position: { x: 640, y: 60 } },
-    { iceType: 'AI.VectorDB', label: 'Vector DB', position: { x: 640, y: 220 } },
-
-    // 6-8: Data stores
+    // 5: LLM Gateway
+    { iceType: 'AI.LLMGateway', label: 'LLM Gateway', position: { x: 636, y: 408 } },
+    // 6: Vector DB
+    { iceType: 'AI.VectorDB', label: 'Vector DB', position: { x: 892, y: 408 } },
+    // Row 1
+    // 7: PostgreSQL
     {
       iceType: 'Database.PostgreSQL',
-      label: 'PostgreSQL',
-      position: { x: 980, y: 60 },
-      data: { size: 'db.t3.medium', storage: '50 GB' },
+      label: 'Chat History DB',
+      position: { x: 380, y: 584 },
+      data: { storage: '50', version: '17' },
     },
-    { iceType: 'Database.Redis', label: 'Cache', position: { x: 980, y: 220 } },
-    { iceType: 'Storage.Bucket', label: 'Document Storage', position: { x: 980, y: 300 } },
+    // 8: Redis Cache
+    { iceType: 'Database.Redis', label: 'Response Cache', position: { x: 636, y: 584 } },
+    // 9: Doc Storage
+    { iceType: 'Storage.Bucket', label: 'Doc Storage', position: { x: 892, y: 584 } },
 
-    // 9-10: Ingestion pipeline
-    { iceType: 'Messaging.SQS', label: 'Ingestion Queue', position: { x: 60, y: 460 } },
+    // ── Ingestion (outside VPC) ───────────────────────────────────────────
+    // 10: Ingestion Queue
+    { iceType: 'Messaging.SQS', label: 'Ingestion Queue', position: { x: 50, y: 870 }, data: { queue_type: 'standard' } },
+    // 11: Ingestion Worker
     {
       iceType: 'Compute.Worker',
       label: 'Ingestion Worker',
-      position: { x: 310, y: 460 },
-      data: { runtime: 'Python 3.11' },
+      position: { x: 306, y: 870 },
+      data: { runtime: 'python3.12' },
     },
 
-    // 11: Monitoring
-    { iceType: 'Monitoring.Log', label: 'Logs', position: { x: 640, y: 460 } },
+    // ── Monitoring (outside VPC) ──────────────────────────────────────────
+    // 12: Logs
+    { iceType: 'Monitoring.Log', label: 'Chat Logs', position: { x: 616, y: 870 }, data: { keep_logs: '30 days' } },
+
+    // ── Ungrouped (control plane) ─────────────────────────────────────────
+    // 13: Secret
+    { iceType: 'Security.Secret', label: 'API Keys', position: { x: 50, y: 1080 } },
+    // 14: Domain
+    { iceType: 'Network.Domain', label: 'Domain', position: { x: 306, y: 1080 }, data: { hostname: 'chat.acme.io' } },
+    // 15: Repo
+    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 562, y: 1080 }, data: { repository: '', branch: 'main' } },
+    // 16: Env
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 50, y: 1256 } },
   ],
 
   connections: [
-    // Public Traffic → Chat UI + Gateway
+    // Internet → WAF → Gateway (Gateway→Gateway rule)
     { fromBlock: 0, toBlock: 1, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
+    { fromBlock: 1, toBlock: 3, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
+    // Internet → Chat UI (Gateway→Frontend rule)
     { fromBlock: 0, toBlock: 2, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
-
-    // Gateway → RAG API
-    { fromBlock: 2, toBlock: 3, relationship: 'connects_to', protocol: 'HTTP', port: 8080 },
-
-    // Chat UI calls RAG API via Gateway
-    { fromBlock: 1, toBlock: 2, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
-
-    // RAG API → AI layer
-    { fromBlock: 3, toBlock: 4, relationship: 'depends_on', protocol: 'HTTP', port: 4000 },
-    { fromBlock: 3, toBlock: 5, relationship: 'depends_on', protocol: 'HTTPS', port: 443 },
-
-    // RAG API → data stores
-    { fromBlock: 3, toBlock: 6, relationship: 'depends_on', protocol: 'TCP', port: 5432 },
-    { fromBlock: 3, toBlock: 7, relationship: 'depends_on', protocol: 'TCP', port: 6379 },
-
-    // RAG API pushes document upload jobs to ingestion queue
-    { fromBlock: 3, toBlock: 9, relationship: 'connects_to' },
-    // Ingestion pipeline: SQS → Worker → Vector DB + Storage
-    { fromBlock: 9, toBlock: 10, relationship: 'connects_to' },
-    { fromBlock: 10, toBlock: 5, relationship: 'depends_on', protocol: 'HTTPS', port: 443 },
-    { fromBlock: 10, toBlock: 8, relationship: 'depends_on' },
-
-    // Observability
-    { fromBlock: 3, toBlock: 11, relationship: 'connects_to' },
+    // Chat UI → Gateway (Frontend→Gateway rule)
+    { fromBlock: 2, toBlock: 3, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
+    // Gateway → RAG Service (Gateway→Backend rule)
+    { fromBlock: 3, toBlock: 4, relationship: 'connects_to', protocol: 'HTTP', port: 8080 },
+    // RAG → AI layer (Backend→LLM, Backend→VectorDB rules)
+    { fromBlock: 4, toBlock: 5, relationship: 'depends_on', protocol: 'HTTP', port: 4000 },
+    { fromBlock: 4, toBlock: 6, relationship: 'depends_on', protocol: 'HTTPS', port: 443 },
+    // RAG → data stores (Backend→Database, Backend→Cache rules)
+    { fromBlock: 4, toBlock: 7, relationship: 'depends_on', protocol: 'TCP', port: 5432 },
+    { fromBlock: 4, toBlock: 8, relationship: 'depends_on', protocol: 'TCP', port: 6379 },
+    // RAG → Secrets (Service→Secrets config rule)
+    { fromBlock: 4, toBlock: 13, relationship: 'depends_on' },
+    // RAG → Ingestion Queue (Backend→Queue rule)
+    { fromBlock: 4, toBlock: 10, relationship: 'connects_to' },
+    // Ingestion pipeline (Queue→Backend rule)
     { fromBlock: 10, toBlock: 11, relationship: 'connects_to' },
+    // Worker → VectorDB, DocStorage (Backend→VectorDB, Backend→Storage rules)
+    { fromBlock: 11, toBlock: 6, relationship: 'depends_on', protocol: 'HTTPS', port: 443 },
+    { fromBlock: 11, toBlock: 9, relationship: 'depends_on' },
+    // Observability (Service→Monitoring rule)
+    { fromBlock: 4, toBlock: 12, relationship: 'connects_to' },
+    { fromBlock: 11, toBlock: 12, relationship: 'connects_to' },
+    // Domain → Chat UI (Domain→Routable rule)
+    { fromBlock: 14, toBlock: 2, relationship: 'connects_to' },
+    // Repo → Service (Repo→Service pipeline rule)
+    { fromBlock: 15, toBlock: 4, relationship: 'connects_to' },
+    // Service → Env (Service→EnvConfig config rule)
+    { fromBlock: 4, toBlock: 16, relationship: 'depends_on' },
   ],
 };

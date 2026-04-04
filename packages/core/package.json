@@ -41,6 +41,11 @@
       "types": "./dist/schemas/embedded/schema-registry.d.ts",
       "default": "./src/schemas/embedded/schema-registry.ts"
     },
+    "./validation": {
+      "types": "./dist/validation/index.d.ts",
+      "import": "./src/validation/index.ts",
+      "default": "./src/validation/index.ts"
+    },
     "./src/*": "./src/*"
   },
   "files": [

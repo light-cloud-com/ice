@@ -724,6 +724,7 @@
       "selectHint": "选择一个节点或边以查看和编辑其属性"
     },
     "groupColor": "分组颜色",
+    "groupOpacity": "透明度",
     "tabs": {
       "config": "配置",
       "scaling": "扩缩容",
@@ -882,6 +883,7 @@
   },
 
   "projectBrowser": {
+    "title": "项目",
     "newProject": "新建项目",
     "emptyState": "暂无项目",
     "createProject": "创建项目",
@@ -906,10 +908,41 @@
     "menuLabel": "模板",
     "searchPlaceholder": "搜索模板...",
     "noResults": "没有匹配的模板",
-    "blocks": "个组件"
+    "blocks": "个组件",
+    "gallery": {
+      "title": "模板",
+      "subtitle": "预构建架构，随时部署",
+      "allCategories": "全部",
+      "featured": "推荐",
+      "blocks": "个组件",
+      "useTemplate": "使用模板",
+      "viewDetails": "查看详情",
+      "backToList": "返回",
+      "costEstimate": "预估成本",
+      "provider": "云服务商",
+      "security": "安全级别",
+      "difficulty": "难度",
+      "whatYouGet": "包含内容",
+      "connections": "个连接",
+      "groups": "个分组",
+      "tags": "标签",
+      "description": "描述",
+      "emptyCategory": "此分类暂无模板",
+      "comingSoon": "即将推出",
+      "official": "官方",
+      "verified": "已验证",
+      "community": "社区",
+      "difficultyStarter": "入门",
+      "difficultyIntermediate": "中级",
+      "difficultyAdvanced": "高级",
+      "difficultyExpert": "专家",
+      "resourceBreakdown": "资源清单",
+      "environmentPresets": "环境配置"
+    }
   },
 
   "palette": {
+    "title": "组件",
     "searchPlaceholder": "搜索组件...",
     "providerAll": "全部"
   },
@@ -1129,8 +1162,26 @@
       "project": "项目",
       "blocks": "组件",
       "properties": "属性",
-      "aiChat": "AI 对话"
+      "cost": "成本",
+      "aiChat": "AI 对话",
+      "templates": "模板"
     }
+  },
+
+  "cost": {
+    "title": "成本估算",
+    "empty": "将资源添加到画布以查看成本估算。从左侧边栏拖动组件开始。",
+    "categoryBreakdown": "成本明细",
+    "timeProjections": "时间预测",
+    "annualRange": "年度范围（含扩展）",
+    "scalingRange": "扩展成本范围",
+    "envComparison": "环境对比",
+    "dataTransfer": "数据传输",
+    "trafficTier": "流量级别",
+    "providerComparison": "供应商对比",
+    "costPerRequest": "每请求成本",
+    "budget": "预算目标",
+    "suggestions": "优化建议"
   },
 
   "error": {

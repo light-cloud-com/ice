@@ -724,6 +724,7 @@
       "selectHint": "Select a node or edge to view and edit its properties"
     },
     "groupColor": "Group Color",
+    "groupOpacity": "Transparency",
     "tabs": {
       "config": "Config",
       "scaling": "Scaling",
@@ -882,6 +883,7 @@
   },
 
   "projectBrowser": {
+    "title": "Projects",
     "newProject": "New Project",
     "emptyState": "No projects yet",
     "createProject": "Create project",
@@ -906,10 +908,41 @@
     "menuLabel": "Templates",
     "searchPlaceholder": "Search templates...",
     "noResults": "No templates match",
-    "blocks": "blocks"
+    "blocks": "blocks",
+    "gallery": {
+      "title": "Templates",
+      "subtitle": "Pre-built architectures ready to deploy",
+      "allCategories": "All",
+      "featured": "Featured",
+      "blocks": "blocks",
+      "useTemplate": "Use Template",
+      "viewDetails": "View Details",
+      "backToList": "Back",
+      "costEstimate": "Estimated Cost",
+      "provider": "Provider",
+      "security": "Security",
+      "difficulty": "Difficulty",
+      "whatYouGet": "What You Get",
+      "connections": "connections",
+      "groups": "groups",
+      "tags": "Tags",
+      "description": "Description",
+      "emptyCategory": "No templates in this category yet",
+      "comingSoon": "Coming soon",
+      "official": "Official",
+      "verified": "Verified",
+      "community": "Community",
+      "difficultyStarter": "Starter",
+      "difficultyIntermediate": "Intermediate",
+      "difficultyAdvanced": "Advanced",
+      "difficultyExpert": "Expert",
+      "resourceBreakdown": "Resources",
+      "environmentPresets": "Environments"
+    }
   },
 
   "palette": {
+    "title": "Blocks",
     "searchPlaceholder": "Search blocks...",
     "providerAll": "All"
   },
@@ -1129,8 +1162,26 @@
       "project": "Project",
       "blocks": "Blocks",
       "properties": "Properties",
-      "aiChat": "AI Chat"
+      "cost": "Cost",
+      "aiChat": "AI Chat",
+      "templates": "Templates"
     }
+  },
+
+  "cost": {
+    "title": "Cost Estimation",
+    "empty": "Add resources to your canvas to see cost estimates. Drag blocks from the left sidebar to get started.",
+    "categoryBreakdown": "Cost Breakdown",
+    "timeProjections": "Time Projections",
+    "annualRange": "Annual range (with scaling)",
+    "scalingRange": "Scaling Cost Range",
+    "envComparison": "Environment Comparison",
+    "dataTransfer": "Data Transfer",
+    "trafficTier": "Traffic tier",
+    "providerComparison": "Provider Comparison",
+    "costPerRequest": "Cost Per Request",
+    "budget": "Budget Target",
+    "suggestions": "Optimization Tips"
   },
 
   "error": {

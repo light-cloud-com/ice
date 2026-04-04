@@ -20,6 +20,7 @@ import projectListReducer from './slices/project-list-slice';
 import projectsReducer from './slices/projects-slice';
 import selectionReducer from './slices/selection-slice';
 import uiReducer from './slices/ui-slice';
+import validationReducer from './slices/validation-slice';
 import viewReducer from './slices/view-slice';
 import { logStateChange } from '../shared/utils/action-logger';
 
@@ -59,6 +60,7 @@ export const store = configureStore({
     pipeline: pipelineReducer,
     environments: environmentsReducer,
     onboarding: onboardingReducer,
+    validation: validationReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

@@ -93,8 +93,8 @@ export const ControlsHelpModal: React.FC = () => {
               className="px-4 py-2.5 flex items-center justify-between"
               style={{ borderBottom: '1px solid var(--ice-border)' }}
             >
-              <span className="text-xs font-semibold text-slate-300">{t('canvas.controls.title')}</span>
-              <button onClick={() => setOpen(false)} className="text-slate-500 hover:text-slate-300 text-xs">
+              <span className="text-xs font-semibold" style={{ color: 'var(--ice-text-primary)' }}>{t('canvas.controls.title')}</span>
+              <button onClick={() => setOpen(false)} className="text-xs" style={{ color: 'var(--ice-text-tertiary)' }}>
                 {t('canvas.controls.escButton')}
               </button>
             </div>

@@ -9,5 +9,6 @@ export const gcpGatewayBlueprint: BlockBlueprint = createBlueprintFromResource('
   icon: 'GitBranch',
   providers: ['gcp'],
   nodeDataDefaults: {
+    protocol: 'gcp-api-gw',
   },
 });

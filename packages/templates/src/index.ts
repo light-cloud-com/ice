@@ -14,6 +14,11 @@ export type {
   TemplateConnection,
   TemplateCategory,
   TemplateCategoryMeta,
+  TemplateDifficulty,
+  TemplateTrust,
+  ComplianceTag,
+  TemplateAuthor,
+  TemplateRepo,
 } from './types';
 export { TEMPLATE_CATEGORIES } from './types';
 export { expandComposedTemplate } from './expand-template';
@@ -22,14 +27,22 @@ export { aiMlTemplate } from './ai-ml';
 export { ragChatbotTemplate } from './rag-chatbot';
 export { euComplianceTemplate } from './eu-compliance';
 export { saasStarterTemplate } from './saas-starter';
+export { backendApiTemplate, microservicesTemplate } from './backend-api';
+export { serverlessApiTemplate, eventDrivenServerlessTemplate } from './serverless-api';
+export { secureApiTemplate } from './secure-api';
+export { budgetWebAppTemplate } from './budget-webapp';
 
 import { getBlueprint } from '@ice/blocks';
 import { aiMlTemplate } from './ai-ml';
+import { backendApiTemplate, microservicesTemplate } from './backend-api';
+import { budgetWebAppTemplate } from './budget-webapp';
 import { euComplianceTemplate } from './eu-compliance';
 import { fullStackTemplate } from './full-stack';
 import { QUICK_STARTS } from './quick-starts';
 import { ragChatbotTemplate } from './rag-chatbot';
 import { saasStarterTemplate } from './saas-starter';
+import { secureApiTemplate } from './secure-api';
+import { serverlessApiTemplate, eventDrivenServerlessTemplate } from './serverless-api';
 import { TEMPLATE_CATEGORIES } from './types';
 import type { ComposedTemplate, TemplateCategory } from './types';
 import type { Provider } from '@ice/blocks';
@@ -45,6 +58,12 @@ export const COMPOSED_TEMPLATES: ComposedTemplate[] = [
   ragChatbotTemplate,
   euComplianceTemplate,
   saasStarterTemplate,
+  backendApiTemplate,
+  microservicesTemplate,
+  serverlessApiTemplate,
+  eventDrivenServerlessTemplate,
+  secureApiTemplate,
+  budgetWebAppTemplate,
 ];
 
 /** All templates — composed + quick-starts — single source of truth */
@@ -71,6 +90,11 @@ export function getTemplatesByCategory(category: TemplateCategory): ComposedTemp
 export function getActiveCategories(): TemplateCategory[] {
   const active = new Set(ALL_TEMPLATES.map((t) => t.category));
   return TEMPLATE_CATEGORIES.filter((c) => active.has(c.id)).map((c) => c.id);
+}
+
+/** Get featured templates */
+export function getFeaturedTemplates(): ComposedTemplate[] {
+  return ALL_TEMPLATES.filter((t) => t.featured);
 }
 
 /** Search templates by query string (matches name, description, tags, category) */

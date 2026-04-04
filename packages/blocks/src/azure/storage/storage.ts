@@ -9,5 +9,6 @@ export const azureStorageBlueprint: BlockBlueprint = createBlueprintFromResource
   icon: 'HardDrive',
   providers: ['azure'],
   nodeDataDefaults: {
+    storage_class: 'azure-hot',
   },
 });

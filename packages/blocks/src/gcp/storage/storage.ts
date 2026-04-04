@@ -9,5 +9,6 @@ export const gcpStorageBlueprint: BlockBlueprint = createBlueprintFromResource('
   icon: 'HardDrive',
   providers: ['gcp'],
   nodeDataDefaults: {
+    storage_class: 'gcp-standard',
   },
 });

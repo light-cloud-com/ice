@@ -36,6 +36,27 @@ import { ProjectActivity } from '@/pages/project/activity';
 import { ProjectDeployments } from '@/pages/project/deployments';
 import { ProjectEnvironments } from '@/pages/project/environments';
 import { ProjectSettings } from '@/pages/project/settings';
+import { TemplateGalleryPage } from '@/pages/template-gallery';
+
+// ── Template Gallery shell (full-page with AppBar + sidebars) ───────────────
+const TemplateGalleryShell: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
+
+  useEffect(() => {
+    dispatch(fetchProfile());
+  }, [dispatch]);
+
+  return (
+    <div className="h-full flex flex-col bg-background">
+      <AppBar />
+      <MainLayout>
+        <div className="h-full overflow-hidden">
+          <TemplateGalleryPage />
+        </div>
+      </MainLayout>
+    </div>
+  );
+};
 
 // ── Dynamic content resolver ────────────────────────────────────────────────
 const DynamicContent: React.FC = () => {
@@ -188,6 +209,14 @@ const App: React.FC = () => (
         <BrowserRouter>
           <Routes>
           <Route path="/onboarding" element={<OnboardingPage />} />
+          <Route
+            path="/templates"
+            element={
+              <ErrorBoundary name="TemplateGallery">
+                <TemplateGalleryShell />
+              </ErrorBoundary>
+            }
+          />
           <Route
             path="/*"
             element={

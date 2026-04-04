@@ -83,28 +83,9 @@ interface Bounds {
 
 /**
  * Returns the visual bounds of a node at the current LOD/zoom.
- * At LOD 1/2 resource/block nodes render as inverse-zoom-scaled cards
- * centered on the original position — connections must attach there.
  */
-function getEffectiveBounds(node: CanvasNode, lod: number, zoom: number): Bounds {
-  // Containers (groups) keep their canvas dimensions at all LOD levels
-  if (node.type === 'container' || lod >= 3) {
-    return { x: node.x, y: node.y, width: node.width, height: node.height };
-  }
-
-  const invScale = 1 / Math.max(zoom, 0.1);
-  const cx = node.x + node.width / 2;
-  const cy = node.y + node.height / 2;
-
-  if (lod <= 1) {
-    const S = 60 * invScale;
-    return { x: cx - S / 2, y: cy - S / 2, width: S, height: S };
-  }
-
-  // LOD 2
-  const CW = 160 * invScale;
-  const CH = 48 * invScale;
-  return { x: cx - CW / 2, y: cy - CH / 2, width: CW, height: CH };
+function getEffectiveBounds(node: CanvasNode, _lod: number, _zoom: number): Bounds {
+  return { x: node.x, y: node.y, width: node.width, height: node.height };
 }
 
 function chooseSides(from: Bounds, to: Bounds): { exitSide: Side; entrySide: Side } {
@@ -317,24 +298,46 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
       [connection, fromNode, toNode, relationship, bundleCount],
     );
 
-    const handleMouseEnter = useCallback(() => {
-      setIsHover(true);
+    // Safety timer: auto-dismiss tooltip if no new pointer events within 300ms
+    const tooltipTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const clearTooltipTimer = useCallback(() => {
+      if (tooltipTimer.current) {
+        clearTimeout(tooltipTimer.current);
+        tooltipTimer.current = null;
+      }
     }, []);
 
+    const scheduleTooltipDismiss = useCallback(() => {
+      clearTooltipTimer();
+      tooltipTimer.current = setTimeout(() => {
+        setIsHover(false);
+        onConnectionHover?.(null);
+      }, 300);
+    }, [onConnectionHover, clearTooltipTimer]);
+
+    const handleMouseEnter = useCallback(() => {
+      clearTooltipTimer();
+      setIsHover(true);
+    }, [clearTooltipTimer]);
+
     const handleMouseLeave = useCallback(() => {
+      clearTooltipTimer();
       setIsHover(false);
       onConnectionHover?.(null);
-    }, [onConnectionHover]);
+    }, [onConnectionHover, clearTooltipTimer]);
 
     const handleMouseMove = useCallback(
       (e: React.MouseEvent) => {
         if (!onConnectionHover) return;
+        clearTooltipTimer();
+        scheduleTooltipDismiss();
         onConnectionHover(buildTooltip(e.clientX, e.clientY));
       },
-      [onConnectionHover, buildTooltip],
+      [onConnectionHover, buildTooltip, clearTooltipTimer, scheduleTooltipDismiss],
     );
 
-    // Calculate path based on edgeStyle — use effective visual bounds at current LOD
+    // Calculate path — symmetric port distribution with sorted order
     const pathData = useMemo(() => {
       if (!fromNode || !toNode) return null;
       const effFrom = getEffectiveBounds(fromNode, lod, zoom);
@@ -401,6 +404,7 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
         className="connection-path cursor-pointer"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        onPointerLeave={handleMouseLeave}
         onMouseMove={handleMouseMove}
       >
         <defs>

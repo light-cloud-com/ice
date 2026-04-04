@@ -10,7 +10,7 @@ export const gcpServerlessFunctionBlueprint: BlockBlueprint = createBlueprintFro
   providers: ['gcp'],
   nodeDataDefaults: {
     runtime: 'Node.js 20',
-    memory: 256,
+    memory: '128-200mhz',
     timeout: 30,
   },
 });

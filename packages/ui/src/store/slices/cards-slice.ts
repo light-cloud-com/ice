@@ -7,7 +7,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { autoLayout, forceResolveOverlaps, type LayoutNode } from '../../shared/utils/auto-layout';
 import type { ExpandedBlueprint } from '../../config/blocks';
-import { CONTAINER_PADDING, HEADER_HEIGHT, MIN_CONTAINER_WIDTH, MIN_CONTAINER_HEIGHT } from '../../config/canvas-constants';
+import { CONTAINER_PADDING, HEADER_HEIGHT, MIN_CONTAINER_WIDTH, MIN_CONTAINER_HEIGHT, CARD_WIDTH, CARD_HEIGHT } from '../../config/canvas-constants';
 
 // =============================================================================
 // Types
@@ -580,6 +580,41 @@ const cardsSlice = createSlice({
       }
     },
 
+    // Add nodes/edges to active card (merge, not replace) — for combining templates
+    addToActiveCard: (
+      state,
+      action: PayloadAction<{ nodes: CardNode[]; edges: CardEdge[] }>,
+    ) => {
+      pushSnapshot(state);
+      const card = state.cards.find((c) => c.id === state.activeCardId);
+      if (card) {
+        // Find the bounding box of existing nodes to offset new ones
+        let maxX = 0;
+        let maxY = 0;
+        for (const node of card.nodes) {
+          const right = node.position.x + (node.width || 220);
+          const bottom = node.position.y + (node.height || 56);
+          if (right > maxX) maxX = right;
+          if (bottom > maxY) maxY = bottom;
+        }
+
+        // Offset new nodes to the right of existing content (with gap)
+        const offsetX = card.nodes.length > 0 ? maxX + 120 : 0;
+        const offsetY = 0;
+
+        const offsetNodes = action.payload.nodes.map((node) => ({
+          ...node,
+          position: {
+            x: node.position.x + offsetX,
+            y: node.position.y + offsetY,
+          },
+        }));
+
+        card.nodes = [...card.nodes, ...offsetNodes];
+        card.edges = [...card.edges, ...action.payload.edges];
+      }
+    },
+
     // Update viewport for active card
     setCardViewport: (state, action: PayloadAction<CardViewport>) => {
       const card = state.cards.find((c) => c.id === state.activeCardId);
@@ -789,24 +824,12 @@ const cardsSlice = createSlice({
       const { zoom, prevZoom } = action.payload;
       if (Math.abs(zoom - prevZoom) < 0.001) return;
 
-      // Compute what the node dimensions should be at each zoom level
-      // (matches the renderer's inverse-zoom visual bounds)
-      const LOD_L3 = 0.7, LOD_L2 = 0.35;
-      const dimsAt = (z: number) => {
-        const inv = 1 / Math.max(z, 0.1);
-        const lod = z > LOD_L3 ? 3 : z > LOD_L2 ? 2 : 1;
-        return {
-          mainW: lod <= 1 ? 60 * inv : lod <= 2 ? 160 * inv : 240,
-          mainH: lod <= 1 ? 60 * inv : lod <= 2 ? 48 * inv : 80,
-        };
-      };
-
-      const oldDims = dimsAt(prevZoom);
-      const newDims = dimsAt(zoom);
-
-      // Scale factor: ratio of new visual size to old visual size
-      const scaleX = newDims.mainW / oldDims.mainW;
-      const scaleY = newDims.mainH / oldDims.mainH;
+      // Block dimensions are now fixed (CARD_WIDTH × CARD_HEIGHT) at all
+      // zoom levels, so the scale factor is always 1.  We keep the centroid
+      // logic intact in case future sizing changes re-introduce zoom-dependent
+      // dimensions.
+      const scaleX = 1;
+      const scaleY = 1;
 
       // Compute centroid of top-level nodes (scale around this point)
       const topNodes = card.nodes.filter((n) => !n.parentId);
@@ -965,6 +988,7 @@ export const {
   deleteCardNode,
   deleteCardEdge,
   importToActiveCard,
+  addToActiveCard,
   setCardViewport,
   setCardViewportById,
   autoOrganizeCard,

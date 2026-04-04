@@ -46,10 +46,14 @@ import { snsBlueprint } from './aws/messaging/sns';
 import { sqsBlueprint } from './aws/messaging/sqs';
 import { awsGatewayBlueprint } from './aws/networking/gateway';
 import { awsPublicTrafficBlueprint } from './aws/networking/public-traffic';
+import { awsSubnetBlueprint } from './aws/networking/subnet';
+import { awsVpcBlueprint } from './aws/networking/vpc';
 import { awsLogTerminalBlueprint } from './aws/observability/log-terminal';
 import { awsLogsBlueprint } from './aws/observability/logs';
 import { awsAuthBlueprint } from './aws/security/auth';
 import { awsSecretsBlueprint } from './aws/security/secrets';
+import { awsSslCertificateBlueprint } from './aws/security/ssl-certificate';
+import { awsWafBlueprint } from './aws/security/waf';
 import { awsStorageBlueprint } from './aws/storage/storage';
 import { azureLlmGatewayBlueprint } from './azure/ai/llm-gateway';
 import { azureMlModelBlueprint } from './azure/ai/ml-model';
@@ -71,10 +75,14 @@ import { azureRabbitmqBlueprint } from './azure/messaging/rabbitmq';
 import { serviceBusBlueprint } from './azure/messaging/service-bus';
 import { azureGatewayBlueprint } from './azure/networking/gateway';
 import { azurePublicTrafficBlueprint } from './azure/networking/public-traffic';
+import { azureSubnetBlueprint } from './azure/networking/subnet';
+import { azureVpcBlueprint } from './azure/networking/vpc';
 import { azureLogTerminalBlueprint } from './azure/observability/log-terminal';
 import { azureLogsBlueprint } from './azure/observability/logs';
 import { azureAuthBlueprint } from './azure/security/auth';
 import { azureSecretsBlueprint } from './azure/security/secrets';
+import { azureSslCertificateBlueprint } from './azure/security/ssl-certificate';
+import { azureWafBlueprint } from './azure/security/waf';
 import { azureStorageBlueprint } from './azure/storage/storage';
 import { envConfigBlueprint } from './common/config/env-config';
 import { domainBlueprint } from './common/networking/domain';
@@ -112,10 +120,14 @@ import { gcpEventStreamBlueprint } from './gcp/messaging/event-stream';
 import { gcpRabbitmqBlueprint } from './gcp/messaging/rabbitmq';
 import { gcpGatewayBlueprint } from './gcp/networking/gateway';
 import { gcpPublicTrafficBlueprint } from './gcp/networking/public-traffic';
+import { gcpSubnetBlueprint } from './gcp/networking/subnet';
+import { gcpVpcBlueprint } from './gcp/networking/vpc';
 import { gcpLogTerminalBlueprint } from './gcp/observability/log-terminal';
 import { gcpLogsBlueprint } from './gcp/observability/logs';
 import { gcpAuthBlueprint } from './gcp/security/auth';
 import { gcpSecretsBlueprint } from './gcp/security/secrets';
+import { gcpSslCertificateBlueprint } from './gcp/security/ssl-certificate';
+import { gcpWafBlueprint } from './gcp/security/waf';
 import { gcpStorageBlueprint } from './gcp/storage/storage';
 import { kubernetesLlmGatewayBlueprint } from './kubernetes/ai/llm-gateway';
 import { kubernetesSearchBlueprint } from './kubernetes/analytics/search';
@@ -166,12 +178,16 @@ export const BLOCK_BLUEPRINTS: BlockBlueprint[] = [
   awsStorageBlueprint,
   awsGatewayBlueprint,
   awsPublicTrafficBlueprint,
+  awsVpcBlueprint,
+  awsSubnetBlueprint,
   awsRabbitmqBlueprint,
   awsEventStreamBlueprint,
   sqsBlueprint,
   snsBlueprint,
   awsAuthBlueprint,
   awsSecretsBlueprint,
+  awsWafBlueprint,
+  awsSslCertificateBlueprint,
   awsLogsBlueprint,
   awsLogTerminalBlueprint,
   awsVectorDbBlueprint,
@@ -194,11 +210,15 @@ export const BLOCK_BLUEPRINTS: BlockBlueprint[] = [
   gcpStorageBlueprint,
   gcpGatewayBlueprint,
   gcpPublicTrafficBlueprint,
+  gcpVpcBlueprint,
+  gcpSubnetBlueprint,
   gcpRabbitmqBlueprint,
   gcpEventStreamBlueprint,
   cloudPubsubBlueprint,
   gcpAuthBlueprint,
   gcpSecretsBlueprint,
+  gcpWafBlueprint,
+  gcpSslCertificateBlueprint,
   gcpLogsBlueprint,
   gcpLogTerminalBlueprint,
   gcpVectorDbBlueprint,
@@ -220,11 +240,15 @@ export const BLOCK_BLUEPRINTS: BlockBlueprint[] = [
   azureStorageBlueprint,
   azureGatewayBlueprint,
   azurePublicTrafficBlueprint,
+  azureVpcBlueprint,
+  azureSubnetBlueprint,
   azureRabbitmqBlueprint,
   azureEventStreamBlueprint,
   serviceBusBlueprint,
   azureAuthBlueprint,
   azureSecretsBlueprint,
+  azureWafBlueprint,
+  azureSslCertificateBlueprint,
   azureLogsBlueprint,
   azureLogTerminalBlueprint,
   azureVectorDbBlueprint,

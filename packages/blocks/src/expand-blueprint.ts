@@ -6,6 +6,7 @@
  */
 
 import type { BlockBlueprint, ExpandedBlueprint, Provider } from './types';
+import { HIGH_LEVEL_CATEGORIES, type HighLevelProperty } from '@ice/core/resources';
 
 // ─── Inline node dimension constants (from svg-compact-node) ────────────────
 const CARD_PY = 10;
@@ -56,6 +57,19 @@ function computeCompactNodeWidth(_isBlock: boolean): number {
 }
 
 // =============================================================================
+// Schema lookup — resolve properties by resourceId
+// =============================================================================
+
+function getResourceProperties(resourceId: string): HighLevelProperty[] {
+  for (const cat of HIGH_LEVEL_CATEGORIES) {
+    for (const res of cat.resources) {
+      if (res.id === resourceId) return res.properties;
+    }
+  }
+  return [];
+}
+
+// =============================================================================
 // ID generation
 // =============================================================================
 
@@ -98,7 +112,7 @@ export function expandBlueprint(blueprint: BlockBlueprint, options: ExpandBluepr
   const mergedData: Record<string, unknown> = {
     ...blueprint.nodeData,
     ...(variant?.dataOverrides || {}),
-    label: blueprint.name,
+    name: blueprint.name,
     blockTypeName: blueprint.name,
     resourceId: blueprint.resourceId,
     status: 'active',
@@ -107,6 +121,38 @@ export function expandBlueprint(blueprint: BlockBlueprint, options: ExpandBluepr
   // Inject provider field if a specific provider was selected
   if (resolvedProvider) {
     mergedData.provider = resolvedProvider;
+  }
+
+  // Auto-resolve provider-specific defaults from schema for select properties
+  // that have optionDetails with provider filtering. If the current value is
+  // missing or belongs to a different provider, pick the first matching option.
+  if (resolvedProvider && blueprint.resourceId) {
+    const props = getResourceProperties(blueprint.resourceId);
+    for (const prop of props) {
+      if (prop.type !== 'select' || !prop.optionDetails || prop.optionDetails.length === 0) continue;
+
+      const currentVal = mergedData[prop.name];
+      const providerOptions = prop.optionDetails.filter(
+        (od) => od.provider === resolvedProvider || !od.provider,
+      );
+
+      if (providerOptions.length === 0) continue;
+
+      // If no value set, use the first provider option (or schema default)
+      if (currentVal === undefined || currentVal === null || currentVal === '') {
+        const defaultOpt = prop.default
+          ? providerOptions.find((o) => o.value === prop.default)
+          : undefined;
+        mergedData[prop.name] = defaultOpt?.value ?? providerOptions[0]!.value;
+        continue;
+      }
+
+      // If value is set but not valid for this provider, replace it
+      const validValues = new Set(providerOptions.map((o) => o.value));
+      if (!validValues.has(currentVal as string)) {
+        mergedData[prop.name] = providerOptions[0]!.value;
+      }
+    }
   }
 
   // Log terminal nodes need larger dimensions for the terminal UI

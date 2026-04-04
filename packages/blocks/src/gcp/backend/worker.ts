@@ -10,6 +10,7 @@ export const gcpWorkerBlueprint: BlockBlueprint = createBlueprintFromResource('w
   providers: ['gcp'],
   nodeDataDefaults: {
     runtime: 'Node.js 20',
+    size: 'gcp-1-512',
     replicas: 2,
   },
 });

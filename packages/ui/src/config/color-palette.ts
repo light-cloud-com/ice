@@ -102,10 +102,12 @@ export const REGION_STYLES: Record<string, { fill: string; labelColor: string }>
 // Used by: empty-canvas-overlay
 
 export const ARCHETYPE_COLORS: Record<string, string> = {
+  'qs-static-site': '#06b6d4',
+  'qs-function': '#f59e0b',
   'qs-website-db': '#3b82f6',
   'qs-webapp-api': '#22c55e',
   'qs-api-only': '#8b5cf6',
-  'qs-data-pipeline': '#f59e0b',
+  'qs-data-pipeline': '#f97316',
 };
 
 // ─── Environment Type Colors ───────────────────────────────────────────────

@@ -17,6 +17,8 @@ import {
   MIN_CONTAINER_WIDTH,
   MIN_CONTAINER_HEIGHT,
   SCALE_MIN,
+  CARD_WIDTH,
+  CARD_HEIGHT,
 } from '../../config/canvas-constants';
 import { isContainer as isContainerType } from '../../config/containment-rules';
 import {
@@ -141,34 +143,24 @@ export function autoLayout(
     return !nodeMap.has(parentId);
   });
 
-  // ── Zoom-adaptive sizing (matches renderer's visual bounds) ─────────────
-  // The renderer draws nodes at inverse-zoom dimensions at LOD 1/2:
-  //   LOD 1 (zoom ≤ 0.35): 60/zoom × 60/zoom canvas-px
-  //   LOD 2 (0.35 < zoom ≤ 0.7): 160/zoom × 48/zoom canvas-px
-  //   LOD 3 (zoom > 0.7): 240 × actual-height canvas-px
-  // Layout MUST use these same dimensions so collision detection matches visuals.
+  // ── Fixed block sizing (all LOD levels use the same canvas dimensions) ──
+  // Blocks are always CARD_WIDTH × CARD_HEIGHT (240 × 160, 3:2 ratio)
+  // regardless of zoom level. Only content detail adapts via LOD.
 
   const zoom = opts.zoom || 1;
-  const invZoom = 1 / Math.max(zoom, 0.1);
-  const LOD_L3 = 0.7;
-  const LOD_L2 = 0.35;
-  const lod = zoom > LOD_L3 ? 3 : zoom > LOD_L2 ? 2 : 1;
+  const lod = zoom > 0.7 ? 3 : zoom > 0.35 ? 2 : 1;
 
-  // Node dimensions that match exactly what the renderer draws
-  const MAIN_NODE_WIDTH = lod <= 1 ? 60 * invZoom : lod <= 2 ? 160 * invZoom : 240;
-  const MAIN_NODE_HEIGHT = lod <= 1 ? 60 * invZoom : lod <= 2 ? 48 * invZoom : 80;
-  const HELPER_NODE_WIDTH = lod <= 1 ? 60 * invZoom : lod <= 2 ? 160 * invZoom : 180;
-  const HELPER_NODE_HEIGHT = lod <= 1 ? 60 * invZoom : lod <= 2 ? 48 * invZoom : 64;
+  // Node dimensions — fixed size at all zoom levels
+  const MAIN_NODE_WIDTH = CARD_WIDTH;
+  const MAIN_NODE_HEIGHT = CARD_HEIGHT;
+  const HELPER_NODE_WIDTH = CARD_WIDTH;
+  const HELPER_NODE_HEIGHT = CARD_HEIGHT;
 
   // Lerp helper for gaps/padding that smoothly scale with zoom
   const t = Math.max(0, Math.min(1, (zoom - SCALE_MIN) / (1.0 - SCALE_MIN)));
   const lerp = (min: number, max: number): number => min + t * (max - min);
 
-  // Scale gap: at low zoom nodes are visually large (inverse-scaled), so use
-  // a proportional gap to keep them separated.
-  opts.nodeGap = lod < 3
-    ? Math.max(Math.round(MAIN_NODE_WIDTH * 0.15), 12)
-    : Math.round(lerp(20, opts.nodeGap));
+  opts.nodeGap = Math.round(lerp(20, opts.nodeGap));
 
   /**
    * Assign children of a container to flow-layout layers.
@@ -314,7 +306,7 @@ export function autoLayout(
       child.height = childSize.height;
     }
 
-    const basePad = lod < 3 ? Math.round(Math.max(CHILD_GAP, MAIN_NODE_WIDTH * 0.08)) : CHILD_GAP;
+    const basePad = CHILD_GAP;
     const containerPadding = isLargeContainer ? opts.containerPadding + VPC_EXTRA_PADDING : basePad;
     const childGap = basePad;
     const direction = opts.direction || 'vertical';
@@ -393,31 +385,33 @@ export function autoLayout(
       if (mainHeight > 0) mainHeight -= childGap;
     }
 
-    // Compute helper space based on actual placement:
-    // Connected helpers go to the side (right for vertical, below for horizontal).
-    // Disconnected helpers stack below the main content in both modes.
-    const mainIdSet = new Set(layers.flat().map((n) => n.id));
-    let connectedHelperW = 0, connectedHelperH = 0;
-    let disconnectedHelperH = 0;
+    // Compute helper space: helpers run PERPENDICULAR to the main flow so they
+    // don't stretch the diagram in the flow direction.
+    // Horizontal flow → helpers in a VERTICAL column to the right.
+    // Vertical flow   → helpers in a HORIZONTAL row below.
+    let helperRowW = 0, helperRowH = 0;
     for (const h of helpers) {
-      let isConnected = false;
-      for (const edge of edges) {
-        if (edge.relationship === 'contains') continue;
-        const other = edge.source === h.id ? edge.target : edge.target === h.id ? edge.source : null;
-        if (other && mainIdSet.has(other)) { isConnected = true; break; }
-      }
-      if (isConnected) {
-        if (direction === 'horizontal') {
-          connectedHelperH = Math.max(connectedHelperH, h.height + childGap);
-        } else {
-          connectedHelperW = Math.max(connectedHelperW, h.width + childGap);
-        }
+      if (direction === 'horizontal') {
+        helperRowH += h.height + childGap;
+        helperRowW = Math.max(helperRowW, h.width);
       } else {
-        disconnectedHelperH += h.height + childGap;
+        helperRowW += h.width + childGap;
+        helperRowH = Math.max(helperRowH, h.height);
       }
     }
-    const totalW = mainWidth + connectedHelperW;
-    const totalH = mainHeight + Math.max(connectedHelperH, disconnectedHelperH);
+    if (helpers.length > 0) {
+      if (direction === 'horizontal') helperRowH -= childGap;
+      else helperRowW -= childGap;
+    }
+
+    let totalW: number, totalH: number;
+    if (direction === 'horizontal') {
+      totalW = mainWidth + (helpers.length > 0 ? childGap + helperRowW : 0);
+      totalH = Math.max(mainHeight, helperRowH);
+    } else {
+      totalW = Math.max(mainWidth, helperRowW);
+      totalH = mainHeight + (helpers.length > 0 ? childGap + helperRowH : 0);
+    }
 
     const calculatedWidth = totalW + containerPadding * 2;
     const calculatedHeight = totalH + containerPadding * 2 + HEADER_HEIGHT;
@@ -443,7 +437,7 @@ export function autoLayout(
     const isSubnet = iceType === 'Network.Subnet';
     const isLargeContainer = isVPC || isSubnet;
 
-    const basePad = lod < 3 ? Math.round(Math.max(CHILD_GAP, MAIN_NODE_WIDTH * 0.08)) : CHILD_GAP;
+    const basePad = CHILD_GAP;
     const containerPadding = isLargeContainer ? opts.containerPadding + VPC_EXTRA_PADDING : basePad;
     const childGap = basePad;
     const direction = opts.direction || 'vertical';
@@ -609,34 +603,65 @@ export function autoLayout(
       }
     }
 
-    let helperStackY = mainBottom + childGap;
+    // Barycenter: average position of ALL connected main nodes
+    const helperPref = new Map<string, number>();
     for (const helper of helpers) {
-      let connectedMain: LayoutNode | null = null;
+      let sum = 0, cnt = 0;
       for (const edge of edges) {
         if (edge.relationship === 'contains') continue;
-        if (edge.source === helper.id && mainIdSet.has(edge.target)) {
-          connectedMain = nodeMap.get(edge.target)!; break;
-        }
-        if (edge.target === helper.id && mainIdSet.has(edge.source)) {
-          connectedMain = nodeMap.get(edge.source)!; break;
+        let connId: string | null = null;
+        if (edge.source === helper.id && mainIdSet.has(edge.target)) connId = edge.target;
+        if (edge.target === helper.id && mainIdSet.has(edge.source)) connId = edge.source;
+        if (connId) {
+          const conn = nodeMap.get(connId);
+          if (conn) {
+            // Horizontal flow → vertical column → barycenter on Y
+            // Vertical flow   → horizontal row  → barycenter on X
+            sum += direction === 'horizontal' ? conn.y + conn.height / 2 : conn.x + conn.width / 2;
+            cnt++;
+          }
         }
       }
-      if (connectedMain) {
-        if (direction === 'horizontal') {
-          helper.x = connectedMain.x;
-          helper.y = mainBottom + childGap;
-        } else {
-          helper.y = connectedMain.y;
-          helper.x = mainRight + childGap;
-        }
-      } else {
-        // Disconnected helpers: stack below main content
-        helper.x = containerPadding;
-        helper.y = helperStackY;
-        helperStackY += helper.height + childGap;
+      if (cnt > 0) {
+        const center = sum / cnt;
+        helperPref.set(helper.id, center - (direction === 'horizontal' ? helper.height / 2 : helper.width / 2));
       }
-      helper.parentId = parent.id;
-      positionChildren(helper);
+    }
+
+    // Sort helpers by preferred position (connected first, then disconnected)
+    const sortedH = [...helpers].sort((a, b) => {
+      const ap = helperPref.get(a.id);
+      const bp = helperPref.get(b.id);
+      if (ap != null && bp != null) return ap - bp;
+      if (ap != null) return -1;
+      if (bp != null) return 1;
+      return 0;
+    });
+
+    if (direction === 'horizontal') {
+      // Horizontal flow → helpers in a VERTICAL column to the right
+      let nextY = topOffset;
+      const helperX = mainRight + childGap;
+      for (const helper of sortedH) {
+        const pref = helperPref.get(helper.id);
+        helper.y = Math.max(nextY, pref ?? nextY);
+        helper.x = helperX;
+        nextY = helper.y + helper.height + childGap;
+        helper.parentId = parent.id;
+        positionChildren(helper);
+      }
+    } else {
+      // Vertical flow → helpers in a HORIZONTAL row below
+      let nextX = containerPadding;
+      const helperY = mainBottom + childGap;
+      for (const helper of sortedH) {
+        const pref = helperPref.get(helper.id);
+        helper.x = Math.max(nextX, pref ?? nextX);
+        helper.y = helperY;
+        nextX = helper.x + helper.width + childGap;
+        helper.parentId = parent.id;
+        positionChildren(helper);
+      }
     }
 
     // Center narrower rows/columns relative to the widest/tallest one
@@ -1103,61 +1128,69 @@ function flowLayout(
     mainTop = Math.min(mainTop, node.y);
   }
 
-  const helpersPerNode = new Map<string, number>();
-
+  // Compute barycenter: average position of ALL connected main nodes.
+  // Placing helpers at their barycenter minimizes total connection length
+  // and reduces edge crossings.
+  const helperPreferred = new Map<string, number>();
   for (const helper of helperNodes) {
-    let connectedMainNode: LayoutNode | null = null;
-
+    let sum = 0, count = 0;
     for (const edge of edges) {
       if (edge.relationship === 'contains') continue;
       const s = toTopLevel(edge.source);
       const t = toTopLevel(edge.target);
-      if (s === helper.id && mainIds.has(t!)) {
-        connectedMainNode = nodeMap.get(t!)!;
-        break;
-      }
-      if (t === helper.id && mainIds.has(s!)) {
-        connectedMainNode = nodeMap.get(s!)!;
-        break;
-      }
-    }
-
-    if (connectedMainNode) {
-      const count = helpersPerNode.get(connectedMainNode.id) || 0;
-      helpersPerNode.set(connectedMainNode.id, count + 1);
-
-      if (isHorizontal) {
-        // Place helpers above/below the spine, aligned with connected node's X
-        helper.x = connectedMainNode.x;
-        if (count % 2 === 0) {
-          helper.y = mainBottom + opts.nodeGap;
-        } else {
-          helper.y = mainTop - opts.nodeGap - helper.height;
-        }
-      } else {
-        // Place helpers left/right of the spine, aligned with connected node's Y
-        helper.y = connectedMainNode.y;
-        if (count % 2 === 0) {
-          helper.x = mainRight + opts.nodeGap;
-        } else {
-          helper.x = mainLeft - opts.nodeGap - helper.width;
+      let connId: string | null = null;
+      if (s === helper.id && mainIds.has(t!)) connId = t!;
+      if (t === helper.id && mainIds.has(s!)) connId = s!;
+      if (connId) {
+        const pos = nodePosMap.get(connId);
+        if (pos) {
+          // Horizontal flow → vertical column → barycenter on Y axis
+          // Vertical flow   → horizontal row  → barycenter on X axis
+          sum += isHorizontal ? pos.y + (nodeMap.get(connId)?.height || 0) / 2 : pos.x + (nodeMap.get(connId)?.width || 0) / 2;
+          count++;
         }
       }
-    } else {
-      // Disconnected helper — place after the spine
-      if (isHorizontal) {
-        helper.x = mainRight + opts.nodeGap;
-        helper.y = opts.startY;
-        mainRight += helper.width + opts.nodeGap;
-      } else {
-        helper.x = opts.startX;
-        helper.y = mainBottom + opts.nodeGap;
-        mainBottom += helper.height + opts.nodeGap;
-      }
     }
+    if (count > 0) {
+      const center = sum / count;
+      helperPreferred.set(helper.id, center - (isHorizontal ? helper.height / 2 : helper.width / 2));
+    }
+  }
 
-    layoutResults.push(helper);
-    absolutizeChildren(helper, helper.x, helper.y);
+  // Sort helpers: connected ones first (by preferred position), disconnected last
+  const sortedHelpers = [...helperNodes].sort((a, b) => {
+    const ap = helperPreferred.get(a.id);
+    const bp = helperPreferred.get(b.id);
+    if (ap != null && bp != null) return ap - bp;
+    if (ap != null) return -1;
+    if (bp != null) return 1;
+    return 0;
+  });
+
+  if (isHorizontal) {
+    // Horizontal flow → helpers in a VERTICAL column to the right
+    let nextY = mainTop;
+    const helperX = mainRight + opts.nodeGap;
+    for (const helper of sortedHelpers) {
+      const preferred = helperPreferred.get(helper.id);
+      helper.y = Math.max(nextY, preferred ?? nextY);
+      helper.x = helperX;
+      nextY = helper.y + helper.height + opts.nodeGap;
+      layoutResults.push(helper);
+      absolutizeChildren(helper, helper.x, helper.y);
+    }
+  } else {
+    // Vertical flow → helpers in a HORIZONTAL row below
+    let nextX = mainLeft;
+    const helperY = mainBottom + opts.nodeGap;
+    for (const helper of sortedHelpers) {
+      const preferred = helperPreferred.get(helper.id);
+      helper.x = Math.max(nextX, preferred ?? nextX);
+      helper.y = helperY;
+      nextX = helper.x + helper.width + opts.nodeGap;
+      layoutResults.push(helper);
+      absolutizeChildren(helper, helper.x, helper.y);
+    }
   }
 
   // Collision detection pass — push apart any overlapping top-level nodes

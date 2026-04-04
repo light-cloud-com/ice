@@ -11,5 +11,6 @@ export const azureRedisCacheBlueprint: BlockBlueprint = createBlueprintFromResou
   nodeDataDefaults: {
     runtime: 'Redis 7',
     port: 6379,
+    size: 'C0',
   },
 });

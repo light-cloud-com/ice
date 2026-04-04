@@ -11,6 +11,7 @@ export const gcpScalableBackendBlueprint: BlockBlueprint = createBlueprintFromRe
   nodeDataDefaults: {
     runtime: 'Node.js 20',
     port: 8080,
+    size: 'gcp-1-512',
     minInstances: 1,
     maxInstances: 3,
     activeInstances: 1,

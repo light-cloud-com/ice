@@ -11,5 +11,6 @@ export const gcpRedisCacheBlueprint: BlockBlueprint = createBlueprintFromResourc
   nodeDataDefaults: {
     runtime: 'Redis 7',
     port: 6379,
+    size: 'M1',
   },
 });

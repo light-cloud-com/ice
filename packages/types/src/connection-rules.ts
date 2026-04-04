@@ -93,13 +93,13 @@ export function isFrontend(t: string): boolean {
   return /StaticSite|SSRSite|Frontend/i.test(t);
 }
 export function isGateway(t: string): boolean {
-  return /Gateway|LoadBalancer|Internet/i.test(t) || t === 'Network.Gateway';
+  return /Gateway|LoadBalancer|Internet|WAF/i.test(t) || t === 'Network.Gateway';
 }
 export function isAuth(t: string): boolean {
   return /Auth|Identity|IAM/i.test(t) || t === 'Security.Identity';
 }
 export function isSecrets(t: string): boolean {
-  return /Secret|Vault/i.test(t) || t === 'Security.Secret';
+  return /Secret|Vault|Certificate/i.test(t) || t === 'Security.Secret';
 }
 export function isMonitoring(t: string): boolean {
   return /Log|Monitor|Observability|Terminal/i.test(t) || t.startsWith('Monitoring.') || t.startsWith('Log.');
@@ -213,6 +213,7 @@ export interface ConnectionRule {
 export const CONNECTION_RULES: ConnectionRule[] = [
   // ── TRAFFIC: request ────────────────────────────────────────────────────
   { label: 'Frontend → Backend',       source: isFrontend,   target: isBackend,       category: 'traffic', trafficType: 'request', lineStyle: 'solid' },
+  { label: 'Gateway → Gateway',         source: isGateway,    target: isGateway,       category: 'traffic', trafficType: 'request', lineStyle: 'solid' },
   { label: 'Gateway → Backend',        source: isGateway,    target: isBackend,       category: 'traffic', trafficType: 'request', lineStyle: 'solid' },
   { label: 'Gateway → Frontend',       source: isGateway,    target: isFrontend,      category: 'traffic', trafficType: 'request', lineStyle: 'solid' },
   { label: 'Backend → Backend',        source: isBackend,    target: isBackend,       category: 'traffic', trafficType: 'request', lineStyle: 'solid' },
@@ -229,10 +230,22 @@ export const CONNECTION_RULES: ConnectionRule[] = [
   { label: 'Backend → LLM',            source: isBackend,    target: isLLM,           category: 'traffic', trafficType: 'data', lineStyle: 'solid' },
   { label: 'Frontend → Storage',       source: isFrontend,   target: isStorage,       category: 'traffic', trafficType: 'data', lineStyle: 'solid' },
 
+  // ── TRAFFIC: data (reverse — drag from data store to service) ──────────
+  { label: 'Database → Backend (flip)',  source: isDatabase,      target: isBackend,       category: 'traffic', trafficType: 'data', lineStyle: 'solid', reverse: true },
+  { label: 'Cache → Backend (flip)',     source: isCache,         target: isBackend,       category: 'traffic', trafficType: 'data', lineStyle: 'solid', reverse: true },
+  { label: 'Storage → Backend (flip)',   source: isStorage,       target: isBackend,       category: 'traffic', trafficType: 'data', lineStyle: 'solid', reverse: true },
+  { label: 'Storage → Frontend (flip)',  source: isStorage,       target: isFrontend,      category: 'traffic', trafficType: 'data', lineStyle: 'solid', reverse: true },
+  { label: 'Search → Backend (flip)',    source: isSearch,        target: isBackend,       category: 'traffic', trafficType: 'data', lineStyle: 'solid', reverse: true },
+  { label: 'VectorDB → Backend (flip)',  source: isVectorDb,      target: isBackend,       category: 'traffic', trafficType: 'data', lineStyle: 'solid', reverse: true },
+  { label: 'LLM → Backend (flip)',       source: isLLM,           target: isBackend,       category: 'traffic', trafficType: 'data', lineStyle: 'solid', reverse: true },
+  { label: 'Auth → Backend (flip)',      source: isAuth,          target: isBackend,       category: 'traffic', trafficType: 'data', lineStyle: 'solid', reverse: true },
+  { label: 'Auth → Frontend (flip)',     source: isAuth,          target: isFrontend,      category: 'traffic', trafficType: 'data', lineStyle: 'solid', reverse: true },
+
   // ── TRAFFIC: publish / subscribe ───────────────────────────────────────
   { label: 'Backend → Queue (publish)',     source: isBackend,    target: isQueue,         category: 'traffic', trafficType: 'publish', lineStyle: 'dashed' },
   { label: 'Queue → Backend (subscribe)',   source: isQueue,      target: isBackend,       category: 'traffic', trafficType: 'subscribe', lineStyle: 'dotted' },
   { label: 'Backend → Warehouse',           source: isBackend,    target: isDataWarehouse,  category: 'traffic', trafficType: 'publish', lineStyle: 'dashed' },
+  { label: 'Warehouse → Backend (flip)',    source: isDataWarehouse, target: isBackend,     category: 'traffic', trafficType: 'publish', lineStyle: 'dashed', reverse: true },
 
   // ── TRAFFIC: stream ────────────────────────────────────────────────────
   { label: 'Service → Monitoring',     source: (t) => !isMonitoring(t) && !isContainer(t), target: isMonitoring, category: 'traffic', trafficType: 'stream', lineStyle: 'thin' },

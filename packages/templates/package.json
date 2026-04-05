@@ -10,10 +10,13 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "validate": "tsx src/validate.ts"
   },
   "dependencies": {
+    "@ice/constants": "workspace:*",
     "@ice/blocks": "workspace:*",
+    "@ice/core": "workspace:*",
     "@ice/types": "workspace:*"
   },
   "devDependencies": {

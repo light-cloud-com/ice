@@ -8,12 +8,8 @@
 // ─── Security Levels ───────────────────────────────────────────────────────
 // Used by: wizard/template-step, wizard/environment-step, wizard/review-step
 
-export const SECURITY_LEVEL_COLORS: Record<string, string> = {
-  basic: '#6b7280',
-  standard: '#3b82f6',
-  strict: '#f59e0b',
-  compliance: '#22c55e',
-};
+import { SECURITY_LEVEL_COLORS } from '@ice/constants';
+export { SECURITY_LEVEL_COLORS };
 
 // ─── Block & Group Colors ──────────────────────────────────────────────────
 // Used by: svg-group-node

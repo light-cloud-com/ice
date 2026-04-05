@@ -13,7 +13,8 @@
 // Provider type
 // =============================================================================
 
-export type Provider = 'aws' | 'gcp' | 'azure' | 'kubernetes' | 'alibaba' | 'oci' | 'digitalocean';
+import { type Provider } from '@ice/constants';
+export type { Provider };
 
 // =============================================================================
 // Blueprint interfaces

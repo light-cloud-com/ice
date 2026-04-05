@@ -29,8 +29,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@ice/constants": "workspace:*",
     "@ice/blocks": "workspace:*",
     "@ice/core": "workspace:*",
+    "@ice/templates": "workspace:*",
     "@ice/types": "workspace:*",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",

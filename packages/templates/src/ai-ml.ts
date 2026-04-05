@@ -112,9 +112,9 @@ export const aiMlTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 } },
+    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
     // 1: WAF
-    { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 } },
+    { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
 
     // ── Public Subnet (inside VPC) ────────────────────────────────────────
     // 2: Gateway
@@ -127,7 +127,7 @@ export const aiMlTemplate: ComposedTemplate = {
       iceType: 'Compute.Container',
       label: 'Inference Service',
       position: { x: 380, y: 408 },
-      data: { runtime: 'python3.12', domain: 'ml-api.acme.io', port: 8080 },
+      data: { size: '2-4096', runtime: 'python3.12', domain: 'ml-api.acme.io', port: 8080 },
     },
     // 4: SQS
     { iceType: 'Messaging.SQS', label: 'Pipeline Queue', position: { x: 636, y: 408 }, data: { queue_type: 'standard' } },
@@ -136,17 +136,17 @@ export const aiMlTemplate: ComposedTemplate = {
       iceType: 'Compute.Worker',
       label: 'Training Worker',
       position: { x: 892, y: 408 },
-      data: { runtime: 'python3.12' },
+      data: { size: '2-4096', runtime: 'python3.12' },
     },
     // 6: PostgreSQL
-    { iceType: 'Database.PostgreSQL', label: 'ML Metadata DB', position: { x: 1148, y: 408 }, data: { storage: '100', version: '17' } },
+    { iceType: 'Database.PostgreSQL', label: 'ML Metadata DB', position: { x: 1148, y: 408 }, data: { size: 'db.t3.medium', storage: '100', version: '17' } },
     // Row 1
     // 7: Model Storage
-    { iceType: 'Storage.Bucket', label: 'Model Storage', position: { x: 380, y: 584 } },
+    { iceType: 'Storage.Bucket', label: 'Model Storage', position: { x: 380, y: 584 }, data: { storage_class: 'standard' } },
     // 8: Training Data
-    { iceType: 'Storage.Bucket', label: 'Training Data', position: { x: 636, y: 584 } },
+    { iceType: 'Storage.Bucket', label: 'Training Data', position: { x: 636, y: 584 }, data: { storage_class: 'standard' } },
     // 9: Redis Cache
-    { iceType: 'Database.Redis', label: 'Inference Cache', position: { x: 892, y: 584 } },
+    { iceType: 'Database.Redis', label: 'Inference Cache', position: { x: 892, y: 584 }, data: { size: 'cache.t3.medium', port: 6379 } },
 
     // ── Monitoring (outside VPC) ──────────────────────────────────────────
     // 10: Logs
@@ -154,7 +154,7 @@ export const aiMlTemplate: ComposedTemplate = {
 
     // ── Ungrouped (control plane) ─────────────────────────────────────────
     // 11: Secret
-    { iceType: 'Security.Secret', label: 'ML Secrets', position: { x: 50, y: 1080 } },
+    { iceType: 'Security.Secret', label: 'ML Secrets', position: { x: 50, y: 1080 }, data: {} },
   ],
 
   connections: [

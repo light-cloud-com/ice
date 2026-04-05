@@ -86,7 +86,7 @@ export const budgetWebAppTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 } },
+    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
     // 1: Static Site
     {
       iceType: 'Compute.StaticSite',
@@ -107,18 +107,18 @@ export const budgetWebAppTemplate: ComposedTemplate = {
       data: { memory: '128', timeout: '10', runtime: 'nodejs22.x' },
     },
     // 4: PostgreSQL
-    { iceType: 'Database.PostgreSQL', label: 'App Database', position: { x: 326, y: 408 }, data: { storage: '20', version: '17' } },
+    { iceType: 'Database.PostgreSQL', label: 'App Database', position: { x: 326, y: 408 }, data: { size: 'db.t3.micro', storage: '20', version: '17' } },
     // Row 1
     // 5: Storage
-    { iceType: 'Storage.Bucket', label: 'Media Storage', position: { x: 70, y: 584 } },
+    { iceType: 'Storage.Bucket', label: 'Media Storage', position: { x: 70, y: 584 }, data: { storage_class: 'standard' } },
 
     // ── Ungrouped (control plane) ─────────────────────────────────────────
     // 6: Secret
-    { iceType: 'Security.Secret', label: 'App Secrets', position: { x: 50, y: 814 } },
+    { iceType: 'Security.Secret', label: 'App Secrets', position: { x: 50, y: 814 }, data: {} },
     // 7: Domain
     { iceType: 'Network.Domain', label: 'Domain', position: { x: 306, y: 814 }, data: { hostname: 'app.mysite.com' } },
     // 8: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 814 } },
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 814 }, data: {} },
   ],
 
   connections: [

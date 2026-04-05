@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@ice/constants": "workspace:*",
     "@ice/core": "workspace:*",
     "@ice/types": "workspace:*"
   },

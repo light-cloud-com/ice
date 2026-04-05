@@ -4,6 +4,26 @@
  * Shared type definitions for infrastructure templates.
  */
 
+import {
+  type SecurityLevel,
+  type TemplateDifficulty,
+  type TemplateTrust,
+  type ComplianceTag,
+  type TemplateCategory,
+  type TemplateCategoryMeta,
+  TEMPLATE_CATEGORIES,
+} from '@ice/constants';
+
+export {
+  type SecurityLevel,
+  type TemplateDifficulty,
+  type TemplateTrust,
+  type ComplianceTag,
+  type TemplateCategory,
+  type TemplateCategoryMeta,
+  TEMPLATE_CATEGORIES,
+};
+
 export interface CardNode {
   id: string;
   type: 'block' | 'resource' | 'container';
@@ -21,17 +41,6 @@ export interface CardEdge {
   data?: { relationship?: string; [key: string]: unknown };
 }
 
-export type SecurityLevel = 'basic' | 'standard' | 'strict' | 'compliance';
-
-/** Difficulty rating for templates */
-export type TemplateDifficulty = 'starter' | 'intermediate' | 'advanced' | 'expert';
-
-/** Trust level — who authored/reviewed the template */
-export type TemplateTrust = 'official' | 'verified' | 'community';
-
-/** Compliance tags for regulated workloads */
-export type ComplianceTag = 'gdpr' | 'soc2' | 'hipaa' | 'pci-dss' | 'iso27001';
-
 /** Template author information */
 export interface TemplateAuthor {
   name: string;
@@ -46,104 +55,6 @@ export interface TemplateRepo {
   framework?: string;
   language?: string;
 }
-
-// =============================================================================
-// Template Categories
-// =============================================================================
-
-/** Template categories for library organization */
-export type TemplateCategory =
-  | 'quick-start'
-  | 'full-stack'
-  | 'backend'
-  | 'data-pipeline'
-  | 'ai-ml'
-  | 'compliance'
-  | 'devops'
-  | 'e-commerce'
-  | 'mobile'
-  | 'serverless';
-
-export interface TemplateCategoryMeta {
-  id: TemplateCategory;
-  label: string;
-  description: string;
-  icon: string;
-  color: string;
-}
-
-export const TEMPLATE_CATEGORIES: TemplateCategoryMeta[] = [
-  {
-    id: 'quick-start',
-    label: 'Quick Starts',
-    description: 'Minimal starters to get going fast',
-    icon: 'Zap',
-    color: '#f59e0b',
-  },
-  {
-    id: 'full-stack',
-    label: 'Full Stack',
-    description: 'Complete application stacks',
-    icon: 'Rocket',
-    color: '#3b82f6',
-  },
-  {
-    id: 'backend',
-    label: 'Backend & API',
-    description: 'API services and microservices',
-    icon: 'Server',
-    color: '#22c55e',
-  },
-  {
-    id: 'serverless',
-    label: 'Serverless',
-    description: 'Functions-first architectures',
-    icon: 'Zap',
-    color: '#06b6d4',
-  },
-  {
-    id: 'data-pipeline',
-    label: 'Data Pipelines',
-    description: 'Event-driven and batch processing',
-    icon: 'Activity',
-    color: '#8b5cf6',
-  },
-  {
-    id: 'ai-ml',
-    label: 'AI & ML',
-    description: 'Machine learning and AI workloads',
-    icon: 'Brain',
-    color: '#ec4899',
-  },
-  {
-    id: 'e-commerce',
-    label: 'E-Commerce',
-    description: 'Online store and marketplace patterns',
-    icon: 'ShoppingCart',
-    color: '#f97316',
-  },
-  {
-    id: 'mobile',
-    label: 'Mobile Backend',
-    description: 'Mobile app backend patterns',
-    icon: 'Smartphone',
-    color: '#14b8a6',
-  },
-  {
-    id: 'compliance',
-    label: 'Compliance',
-    description: 'Security and regulatory focused',
-    icon: 'ShieldCheck',
-    color: '#10b981',
-  },
-  {
-    id: 'devops',
-    label: 'DevOps',
-    description: 'CI/CD, monitoring, and platform tooling',
-    icon: 'GitBranch',
-    color: '#64748b',
-  },
-];
 
 export interface EnvironmentPreset {
   type: 'production' | 'staging' | 'development' | 'pr';

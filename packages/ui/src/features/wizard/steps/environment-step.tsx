@@ -10,7 +10,7 @@ import React from 'react';
 import { useTranslation } from '../../../i18n';
 import { SECURITY_LEVEL_COLORS } from '../../../config/color-palette';
 import { cn } from '../../../shared/utils/cn';
-import type { SecurityLevel } from '../../../config/templates/types';
+import type { SecurityLevel } from '../../../config/templates';
 import type { WizardEnvironment } from '../hooks/use-wizard-state';
 
 const REGIONS = [

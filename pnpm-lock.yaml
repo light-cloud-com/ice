@@ -230,12 +230,21 @@ importers:
 
   packages/blocks:
     dependencies:
+      '@ice/constants':
+        specifier: workspace:*
+        version: link:../constants
       '@ice/core':
         specifier: workspace:*
         version: link:../core
       '@ice/types':
         specifier: workspace:*
         version: link:../types
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  packages/constants:
     devDependencies:
       typescript:
         specifier: ^5.9.3
@@ -291,9 +300,9 @@ importers:
       '@google-cloud/storage':
         specifier: ^7.19.0
         version: 7.19.0(encoding@0.1.13)
-      '@ice/types':
+      '@ice/constants':
         specifier: workspace:*
-        version: link:../types
+        version: link:../constants
       '@viz-js/viz':
         specifier: ^3.25.0
         version: 3.25.0
@@ -444,6 +453,12 @@ importers:
       '@ice/blocks':
         specifier: workspace:*
         version: link:../blocks
+      '@ice/constants':
+        specifier: workspace:*
+        version: link:../constants
+      '@ice/core':
+        specifier: workspace:*
+        version: link:../core
       '@ice/types':
         specifier: workspace:*
         version: link:../types
@@ -453,6 +468,10 @@ importers:
         version: 5.9.3
 
   packages/types:
+    dependencies:
+      '@ice/constants':
+        specifier: workspace:*
+        version: link:../constants
     devDependencies:
       typescript:
         specifier: ^5.9.3
@@ -463,9 +482,15 @@ importers:
       '@ice/blocks':
         specifier: workspace:*
         version: link:../blocks
+      '@ice/constants':
+        specifier: workspace:*
+        version: link:../constants
       '@ice/core':
         specifier: workspace:*
         version: link:../core
+      '@ice/templates':
+        specifier: workspace:*
+        version: link:../templates
       '@ice/types':
         specifier: workspace:*
         version: link:../types

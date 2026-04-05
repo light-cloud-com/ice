@@ -123,34 +123,50 @@ export function expandBlueprint(blueprint: BlockBlueprint, options: ExpandBluepr
     mergedData.provider = resolvedProvider;
   }
 
-  // Auto-resolve provider-specific defaults from schema for select properties
-  // that have optionDetails with provider filtering. If the current value is
-  // missing or belongs to a different provider, pick the first matching option.
-  if (resolvedProvider && blueprint.resourceId) {
+  // Auto-resolve defaults from schema for ALL properties.
+  // For select/optionDetails: pick the first provider-matching option.
+  // For select/options: pick the schema default or first option.
+  // For any property with a default: fill it if missing.
+  if (blueprint.resourceId) {
     const props = getResourceProperties(blueprint.resourceId);
     for (const prop of props) {
-      if (prop.type !== 'select' || !prop.optionDetails || prop.optionDetails.length === 0) continue;
-
       const currentVal = mergedData[prop.name];
-      const providerOptions = prop.optionDetails.filter(
-        (od) => od.provider === resolvedProvider || !od.provider,
-      );
+      const isMissing = currentVal === undefined || currentVal === null || currentVal === '';
 
-      if (providerOptions.length === 0) continue;
+      // Select with optionDetails (provider-filtered)
+      if (prop.type === 'select' && prop.optionDetails && prop.optionDetails.length > 0) {
+        const providerOptions = resolvedProvider
+          ? prop.optionDetails.filter((od) => od.provider === resolvedProvider || !od.provider)
+          : prop.optionDetails;
 
-      // If no value set, use the first provider option (or schema default)
-      if (currentVal === undefined || currentVal === null || currentVal === '') {
-        const defaultOpt = prop.default
-          ? providerOptions.find((o) => o.value === prop.default)
-          : undefined;
-        mergedData[prop.name] = defaultOpt?.value ?? providerOptions[0]!.value;
+        if (providerOptions.length === 0) continue;
+
+        if (isMissing) {
+          const defaultOpt = prop.default
+            ? providerOptions.find((o) => o.value === prop.default)
+            : undefined;
+          mergedData[prop.name] = defaultOpt?.value ?? providerOptions[0]!.value;
+        } else if (resolvedProvider) {
+          // Replace wrong-provider value
+          const validValues = new Set(providerOptions.map((o) => o.value));
+          if (!validValues.has(currentVal as string)) {
+            mergedData[prop.name] = providerOptions[0]!.value;
+          }
+        }
         continue;
       }
 
-      // If value is set but not valid for this provider, replace it
-      const validValues = new Set(providerOptions.map((o) => o.value));
-      if (!validValues.has(currentVal as string)) {
-        mergedData[prop.name] = providerOptions[0]!.value;
+      // Select with simple options array
+      if (prop.type === 'select' && prop.options && prop.options.length > 0) {
+        if (isMissing) {
+          mergedData[prop.name] = (prop.default as string) ?? prop.options[0]!;
+        }
+        continue;
+      }
+
+      // Any property with a default value
+      if (isMissing && prop.default !== undefined) {
+        mergedData[prop.name] = prop.default;
       }
     }
   }

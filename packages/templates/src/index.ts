@@ -22,6 +22,7 @@ export type {
 } from './types';
 export { TEMPLATE_CATEGORIES } from './types';
 export { expandComposedTemplate } from './expand-template';
+export { QUICK_STARTS } from './quick-starts';
 export { fullStackTemplate } from './full-stack';
 export { aiMlTemplate } from './ai-ml';
 export { ragChatbotTemplate } from './rag-chatbot';
@@ -31,15 +32,39 @@ export { backendApiTemplate, microservicesTemplate } from './backend-api';
 export { serverlessApiTemplate, eventDrivenServerlessTemplate } from './serverless-api';
 export { secureApiTemplate } from './secure-api';
 export { budgetWebAppTemplate } from './budget-webapp';
+export { healthcarePatientPortalTemplate, healthcareTelemedicineTemplate } from './healthcare';
+export { fintechPaymentGatewayTemplate, fintechTradingPlatformTemplate } from './fintech';
+export { mediaStreamingTemplate, mediaPodcastTemplate } from './media';
+export { saasMultiTenantTemplate, saasAnalyticsDashboardTemplate } from './saas-platform';
+export { iotDeviceManagementTemplate, iotSmartHomeTemplate } from './iot';
+export { gamingMultiplayerTemplate, gamingMobileGameTemplate } from './gaming';
+export { logisticsFleetTrackingTemplate, logisticsWarehouseTemplate } from './logistics';
+export { educationLmsTemplate, educationExamPlatformTemplate } from './education';
+export { etlPipelineTemplate, eventStreamingTemplate } from './data-pipeline';
+export { ecommerceStoreTemplate, ecommerceMarketplaceTemplate } from './ecommerce';
+export { mobileAppBackendTemplate, mobileSocialAppTemplate } from './mobile-backend';
+export { devopsMonitoringTemplate, devopsCiCdTemplate } from './devops-platform';
 
 import { getBlueprint } from '@ice/blocks';
 import { aiMlTemplate } from './ai-ml';
 import { backendApiTemplate, microservicesTemplate } from './backend-api';
 import { budgetWebAppTemplate } from './budget-webapp';
+import { etlPipelineTemplate, eventStreamingTemplate } from './data-pipeline';
+import { devopsMonitoringTemplate, devopsCiCdTemplate } from './devops-platform';
+import { ecommerceStoreTemplate, ecommerceMarketplaceTemplate } from './ecommerce';
+import { educationLmsTemplate, educationExamPlatformTemplate } from './education';
 import { euComplianceTemplate } from './eu-compliance';
+import { fintechPaymentGatewayTemplate, fintechTradingPlatformTemplate } from './fintech';
 import { fullStackTemplate } from './full-stack';
+import { gamingMultiplayerTemplate, gamingMobileGameTemplate } from './gaming';
+import { healthcarePatientPortalTemplate, healthcareTelemedicineTemplate } from './healthcare';
+import { iotDeviceManagementTemplate, iotSmartHomeTemplate } from './iot';
+import { logisticsFleetTrackingTemplate, logisticsWarehouseTemplate } from './logistics';
+import { mediaStreamingTemplate, mediaPodcastTemplate } from './media';
+import { mobileAppBackendTemplate, mobileSocialAppTemplate } from './mobile-backend';
 import { QUICK_STARTS } from './quick-starts';
 import { ragChatbotTemplate } from './rag-chatbot';
+import { saasMultiTenantTemplate, saasAnalyticsDashboardTemplate } from './saas-platform';
 import { saasStarterTemplate } from './saas-starter';
 import { secureApiTemplate } from './secure-api';
 import { serverlessApiTemplate, eventDrivenServerlessTemplate } from './serverless-api';
@@ -64,6 +89,31 @@ export const COMPOSED_TEMPLATES: ComposedTemplate[] = [
   eventDrivenServerlessTemplate,
   secureApiTemplate,
   budgetWebAppTemplate,
+  // Industry templates
+  healthcarePatientPortalTemplate,
+  healthcareTelemedicineTemplate,
+  fintechPaymentGatewayTemplate,
+  fintechTradingPlatformTemplate,
+  mediaStreamingTemplate,
+  mediaPodcastTemplate,
+  saasMultiTenantTemplate,
+  saasAnalyticsDashboardTemplate,
+  iotDeviceManagementTemplate,
+  iotSmartHomeTemplate,
+  gamingMultiplayerTemplate,
+  gamingMobileGameTemplate,
+  logisticsFleetTrackingTemplate,
+  logisticsWarehouseTemplate,
+  educationLmsTemplate,
+  educationExamPlatformTemplate,
+  etlPipelineTemplate,
+  eventStreamingTemplate,
+  ecommerceStoreTemplate,
+  ecommerceMarketplaceTemplate,
+  mobileAppBackendTemplate,
+  mobileSocialAppTemplate,
+  devopsMonitoringTemplate,
+  devopsCiCdTemplate,
 ];
 
 /** All templates — composed + quick-starts — single source of truth */

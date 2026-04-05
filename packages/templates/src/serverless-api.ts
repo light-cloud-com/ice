@@ -108,7 +108,7 @@ export const serverlessApiTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 } },
+    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
     // 1: API Gateway
     { iceType: 'Network.Gateway', label: 'API Gateway', position: { x: 306, y: 86 }, data: { protocol: 'http' } },
 
@@ -130,17 +130,17 @@ export const serverlessApiTemplate: ComposedTemplate = {
     },
     // Row 1
     // 4: PostgreSQL
-    { iceType: 'Database.PostgreSQL', label: 'API Database', position: { x: 70, y: 584 }, data: { storage: '20', version: '17' } },
+    { iceType: 'Database.PostgreSQL', label: 'API Database', position: { x: 70, y: 584 }, data: { size: 'db.t3.micro', storage: '20', version: '17' } },
     // 5: Storage
-    { iceType: 'Storage.Bucket', label: 'File Storage', position: { x: 326, y: 584 } },
+    { iceType: 'Storage.Bucket', label: 'File Storage', position: { x: 326, y: 584 }, data: { storage_class: 'standard' } },
 
     // ── Ungrouped (control plane) ─────────────────────────────────────────
     // 6: Secret
-    { iceType: 'Security.Secret', label: 'API Secrets', position: { x: 50, y: 814 } },
+    { iceType: 'Security.Secret', label: 'API Secrets', position: { x: 50, y: 814 }, data: {} },
     // 7: Domain
     { iceType: 'Network.Domain', label: 'Domain', position: { x: 306, y: 814 }, data: { hostname: 'api.myapp.com' } },
     // 8: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 814 } },
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 814 }, data: {} },
   ],
 
   connections: [
@@ -241,7 +241,7 @@ export const eventDrivenServerlessTemplate: ComposedTemplate = {
       data: { memory: '256', timeout: '10', runtime: 'nodejs22.x' },
     },
     // 3: Analytics DB
-    { iceType: 'Database.PostgreSQL', label: 'Analytics DB', position: { x: 582, y: 408 }, data: { storage: '50', version: '17' } },
+    { iceType: 'Database.PostgreSQL', label: 'Analytics DB', position: { x: 582, y: 408 }, data: { size: 'db.t3.micro', storage: '50', version: '17' } },
     // Row 1
     // 4: Dead Letter Queue
     { iceType: 'Messaging.SQS', label: 'Dead Letter Queue', position: { x: 70, y: 584 }, data: { queue_type: 'standard' } },
@@ -253,7 +253,7 @@ export const eventDrivenServerlessTemplate: ComposedTemplate = {
       data: { memory: '512', timeout: '60', runtime: 'nodejs22.x' },
     },
     // 6: Archive
-    { iceType: 'Storage.Bucket', label: 'Archive', position: { x: 582, y: 584 } },
+    { iceType: 'Storage.Bucket', label: 'Archive', position: { x: 582, y: 584 }, data: { storage_class: 'standard' } },
   ],
 
   connections: [

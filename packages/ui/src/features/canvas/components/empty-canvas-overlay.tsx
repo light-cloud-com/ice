@@ -11,11 +11,10 @@ import React, { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { getBlueprint, expandBlueprint } from '../../../config/blocks';
 import { ARCHETYPE_COLORS } from '../../../config/color-palette';
-import { getTemplatesByCategory } from '../../../config/templates';
-import { expandComposedTemplate } from '../../../config/templates/expand-template';
+import { getTemplatesByCategory, expandComposedTemplate } from '../../../config/templates';
+import type { ComposedTemplate } from '../../../config/templates';
 import { useTranslation } from '../../../i18n';
 import { importToActiveCard, expandBlueprintToCard } from '../../../store/slices/cards-slice';
-import type { ComposedTemplate } from '../../../config/templates/types';
 import type { AppDispatch } from '../../../store';
 
 const ICON_MAP: Record<string, React.ElementType> = {

@@ -110,9 +110,9 @@ export const fullStackTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 } },
+    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
     // 1: WAF
-    { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 } },
+    { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
     // 2: Static Site (CDN)
     {
       iceType: 'Compute.StaticSite',
@@ -131,14 +131,14 @@ export const fullStackTemplate: ComposedTemplate = {
       iceType: 'Compute.Container',
       label: 'API Server',
       position: { x: 380, y: 408 },
-      data: { runtime: 'nodejs20', domain: 'api.acme.io', port: 8080 },
+      data: { size: '1-2048', runtime: 'nodejs20', domain: 'api.acme.io', port: 8080 },
     },
     // 5: PostgreSQL
-    { iceType: 'Database.PostgreSQL', label: 'App Database', position: { x: 636, y: 408 }, data: { storage: '50', version: '17' } },
+    { iceType: 'Database.PostgreSQL', label: 'App Database', position: { x: 636, y: 408 }, data: { size: 'db.t3.small', storage: '50', version: '17' } },
     // 6: Redis
-    { iceType: 'Database.Redis', label: 'Session Cache', position: { x: 380, y: 584 } },
+    { iceType: 'Database.Redis', label: 'Session Cache', position: { x: 380, y: 584 }, data: { size: 'cache.t3.small', port: 6379 } },
     // 7: Storage
-    { iceType: 'Storage.Bucket', label: 'File Storage', position: { x: 636, y: 584 } },
+    { iceType: 'Storage.Bucket', label: 'File Storage', position: { x: 636, y: 584 }, data: { storage_class: 'standard' } },
 
     // ── Monitoring (outside VPC) ──────────────────────────────────────────
     // 8: Logs
@@ -146,13 +146,13 @@ export const fullStackTemplate: ComposedTemplate = {
 
     // ── Ungrouped (control plane) ─────────────────────────────────────────
     // 9: Secrets
-    { iceType: 'Security.Secret', label: 'App Secrets', position: { x: 50, y: 1080 } },
+    { iceType: 'Security.Secret', label: 'App Secrets', position: { x: 50, y: 1080 }, data: {} },
     // 10: Domain
     { iceType: 'Network.Domain', label: 'Domain', position: { x: 306, y: 1080 }, data: { hostname: 'app.acme.io' } },
     // 11: Repo
     { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 562, y: 1080 }, data: { repository: '', branch: 'main' } },
     // 12: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 50, y: 1256 } },
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 50, y: 1256 }, data: {} },
   ],
 
   connections: [

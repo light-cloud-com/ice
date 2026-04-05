@@ -5,16 +5,9 @@
  * Users work with these concepts, and ICE maps them to actual cloud resources.
  */
 
-/**
- * Node behavior type - how the node behaves in the infrastructure
- */
-export type NodeBehavior =
-  | 'scalable' // Can scale horizontally (containers, functions, instances)
-  | 'container' // Wraps/contains other resources (VPC, subnet, resource group)
-  | 'singleton' // Single instance (DNS zone, secret store)
-  | 'streaming' // Continuous data flow (logs, event streams, queues)
-  | 'stateful' // Holds persistent data (databases, storage)
-  | 'connector'; // Connects other resources (load balancer, API gateway)
+import { type NodeBehavior, BEHAVIOR_LABELS, BEHAVIOR_COLORS } from '@ice/constants';
+
+export type { NodeBehavior };
 
 /**
  * Provider-specific implementation of a high-level resource
@@ -214,6 +207,10 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
             { value: 'ruby3.3', label: 'Ruby 3.3', description: 'Latest stable' },
           ] },
           { name: 'login_required', label: 'Require login?', type: 'select', required: false, tier: 'detailed', description: 'How should users prove who they are?', options: ['No login needed', 'API key', 'Username & password tokens', 'Social login (Google, GitHub, etc.)'], default: 'No login needed' },
+          { name: 'minInstances', label: 'Min instances', type: 'number', required: false, tier: 'detailed', description: 'Minimum number of always-running instances (0 = scale to zero)', default: 1 },
+          { name: 'maxInstances', label: 'Max instances', type: 'number', required: false, tier: 'detailed', description: 'Maximum number of instances during peak traffic', default: 3 },
+          { name: 'scalingMetric', label: 'Scale on', type: 'select', required: false, tier: 'detailed', description: 'What metric triggers scaling', options: ['cpu', 'memory', 'requests', 'concurrency'], default: 'cpu' },
+          { name: 'scalingThreshold', label: 'Threshold (%)', type: 'number', required: false, tier: 'detailed', description: 'Scale up when the metric exceeds this percentage', default: 70 },
         ],
       },
       {
@@ -462,6 +459,10 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
             { value: 'custom', label: 'Custom Docker', description: 'Bring your own Dockerfile' },
           ] },
           { name: 'env_vars', label: 'Environment variables', type: 'list', required: false, tier: 'detailed', description: 'Configuration values your app needs at startup', placeholder: 'e.g. DATABASE_URL=...', addLabel: 'Add a variable' },
+          { name: 'minInstances', label: 'Min instances', type: 'number', required: false, tier: 'detailed', description: 'Minimum number of always-running instances (0 = scale to zero)', default: 1 },
+          { name: 'maxInstances', label: 'Max instances', type: 'number', required: false, tier: 'detailed', description: 'Maximum number of instances during peak traffic', default: 3 },
+          { name: 'scalingMetric', label: 'Scale on', type: 'select', required: false, tier: 'detailed', description: 'What metric triggers scaling', options: ['cpu', 'memory', 'requests', 'concurrency'], default: 'cpu' },
+          { name: 'scalingThreshold', label: 'Threshold (%)', type: 'number', required: false, tier: 'detailed', description: 'Scale up when the metric exceeds this percentage', default: 70 },
         ],
       },
       {
@@ -511,6 +512,10 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
             { value: 'custom', label: 'Custom Docker', description: 'Bring your own Dockerfile' },
           ] },
           { name: 'image', label: 'Container image', type: 'string', required: false, tier: 'detailed', description: 'Docker image to run (if using a container)', placeholder: 'e.g. my-worker:latest' },
+          { name: 'minInstances', label: 'Min instances', type: 'number', required: false, tier: 'detailed', description: 'Minimum number of always-running workers', default: 1 },
+          { name: 'maxInstances', label: 'Max instances', type: 'number', required: false, tier: 'detailed', description: 'Maximum number of workers during peak load', default: 3 },
+          { name: 'scalingMetric', label: 'Scale on', type: 'select', required: false, tier: 'detailed', description: 'What metric triggers scaling', options: ['cpu', 'memory', 'queue-depth'], default: 'cpu' },
+          { name: 'scalingThreshold', label: 'Threshold (%)', type: 'number', required: false, tier: 'detailed', description: 'Scale up when the metric exceeds this percentage', default: 70 },
         ],
       },
       {
@@ -549,6 +554,10 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
             { value: 'azure-P1v3', label: 'P1v3 (2 vCPU / 8 GB)', description: 'Premium · high perf', cost: '~$138/mo', provider: 'azure' },
           ] },
           { name: 'custom_domain', label: 'Custom domain', type: 'string', required: false, tier: 'detailed', description: 'Use your own domain name instead of the default one', placeholder: 'e.g. www.example.com' },
+          { name: 'minInstances', label: 'Min instances', type: 'number', required: false, tier: 'detailed', description: 'Minimum number of always-running instances (0 = scale to zero)', default: 1 },
+          { name: 'maxInstances', label: 'Max instances', type: 'number', required: false, tier: 'detailed', description: 'Maximum number of instances during peak traffic', default: 3 },
+          { name: 'scalingMetric', label: 'Scale on', type: 'select', required: false, tier: 'detailed', description: 'What metric triggers scaling', options: ['cpu', 'memory', 'requests', 'concurrency'], default: 'cpu' },
+          { name: 'scalingThreshold', label: 'Threshold (%)', type: 'number', required: false, tier: 'detailed', description: 'Scale up when the metric exceeds this percentage', default: 70 },
         ],
       },
       {
@@ -2255,30 +2264,14 @@ export function filterResourcesByProvider(provider: string): HighLevelResource[]
  * Get behavior label for display
  */
 export function getBehaviorLabel(behavior: NodeBehavior): string {
-  const labels: Record<NodeBehavior, string> = {
-    scalable: 'Scales horizontally',
-    container: 'Contains resources',
-    singleton: 'Single instance',
-    streaming: 'Data flow',
-    stateful: 'Persistent data',
-    connector: 'Routes traffic',
-  };
-  return labels[behavior];
+  return BEHAVIOR_LABELS[behavior];
 }
 
 /**
  * Get behavior color for UI
  */
 export function getBehaviorColor(behavior: NodeBehavior): string {
-  const colors: Record<NodeBehavior, string> = {
-    scalable: 'blue',
-    container: 'purple',
-    singleton: 'gray',
-    streaming: 'green',
-    stateful: 'orange',
-    connector: 'cyan',
-  };
-  return colors[behavior];
+  return BEHAVIOR_COLORS[behavior];
 }
 
 // =============================================================================

@@ -6,18 +6,14 @@
  * svg-canvas, use-canvas-mouse-events, and auto-layout.
  */
 
+import { CARD_WIDTH, CARD_HEIGHT, HEADER_HEIGHT, CONTAINER_PADDING } from '@ice/constants';
+export { CARD_WIDTH, CARD_HEIGHT, HEADER_HEIGHT, CONTAINER_PADDING };
+
 // ─── Shared Geometry ───────────────────────────────────────────────────────
 
 export const CORNER_RADIUS = 8;
-export const HEADER_HEIGHT = 36;
-export const CONTAINER_PADDING = 20;
 export const MIN_CONTAINER_WIDTH = 240;
 export const MIN_CONTAINER_HEIGHT = 150;
-
-// ─── Card Dimensions ───────────────────────────────────────────────────────
-
-export const CARD_WIDTH = 240;
-export const CARD_HEIGHT = 160; // 3:2 ratio — fixed size regardless of zoom
 export const CARD_PX = 12;
 export const CARD_PY = 10;
 export const ICON_SIZE = 20;

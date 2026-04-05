@@ -5,126 +5,14 @@
  * for view level filtering (L1/L2/L3).
  */
 
-import type { NodeCategory } from '../../types/graph.js';
-
-// =============================================================================
-// Resource Type to Category Mapping
-// =============================================================================
-
-/**
- * Mapping of resource type prefixes to categories.
- * Used for quick prefix-based classification.
- */
-const PREFIX_TO_CATEGORY: Record<string, NodeCategory> = {
-  Compute: 'Compute',
-  Database: 'Data',
-  Storage: 'Data',
-  Network: 'Network',
-  Security: 'Security',
-  Monitoring: 'Observability',
-  Messaging: 'Data', // Queues and streams are data flow
-};
-
-/**
- * Explicit resource type to category mapping.
- * Takes precedence over prefix-based classification.
- */
-const TYPE_TO_CATEGORY: Record<string, NodeCategory> = {
-  // Compute
-  'Compute.Container': 'Compute',
-  'Compute.Function': 'Compute',
-  'Compute.VM': 'Compute',
-  'Compute.CronJob': 'Compute',
-  'Compute.Worker': 'Compute',
-
-  // Data (Databases)
-  'Database.PostgreSQL': 'Data',
-  'Database.MySQL': 'Data',
-  'Database.MongoDB': 'Data',
-  'Database.Redis': 'Data',
-  'Database.Firestore': 'Data',
-  'Database.BigTable': 'Data',
-  'Database.Spanner': 'Data',
-  'Database.DynamoDB': 'Data',
-  'Database.SQLServer': 'Data',
-
-  // Data (Storage)
-  'Storage.Bucket': 'Data',
-  'Storage.Disk': 'Data',
-  'Storage.FileStore': 'Data',
-
-  // Data (Messaging)
-  'Messaging.Queue': 'Data',
-  'Messaging.Topic': 'Data',
-  'Messaging.PubSub': 'Data',
-  'Messaging.Kafka': 'Data',
-  'Messaging.SQS': 'Data',
-
-  // Network (Infrastructure)
-  'Network.VPC': 'Network',
-  'Network.Subnet': 'Network',
-  'Network.RouteTable': 'Network',
-  'Network.InternetGateway': 'Network',
-  'Network.NATGateway': 'Network',
-  'Network.Firewall': 'Network',
-
-  // Network (Application-level)
-  'Network.LoadBalancer': 'Network',
-  'Network.CDN': 'Network',
-  'Network.DNS': 'Network',
-  'Network.Gateway': 'Network',
-  'Network.APIGateway': 'Network',
-
-  // Security
-  'Security.Secret': 'Security',
-  'Security.Key': 'Security',
-  'Security.IAMRole': 'Security',
-  'Security.Policy': 'Security',
-  'Security.Identity': 'Security',
-  'Security.SecurityGroup': 'Security',
-  'Security.NetworkACL': 'Security',
-
-  // Observability
-  'Monitoring.Log': 'Observability',
-  'Monitoring.Dashboard': 'Observability',
-  'Monitoring.Alert': 'Observability',
-  'Monitoring.Metric': 'Observability',
-  'Monitoring.LogSink': 'Observability',
-  'Monitoring.LogBucket': 'Observability',
-  'Monitoring.LogGroup': 'Observability',
-  'Monitoring.LogStream': 'Observability',
-};
-
-// =============================================================================
-// Level Visibility Configuration
-// =============================================================================
-
-/**
- * Categories visible at each view level.
- * L1 = Data Flow (Compute + Data)
- * L2 = Network Topology (L1 + Network)
- * L3 = Full Infrastructure (Everything)
- */
-export const LEVEL_VISIBLE_CATEGORIES: Record<1 | 2 | 3, NodeCategory[]> = {
-  1: ['Compute', 'Data'], // Data Flow: services talking to each other
-  2: ['Compute', 'Data', 'Network'], // Network Topology: + VPCs, subnets
-  3: ['Compute', 'Data', 'Network', 'Security', 'Observability'], // Everything
-};
-
-/**
- * Network types that should be treated as containers at L2.
- */
-export const NETWORK_CONTAINER_TYPES = ['Network.VPC', 'Network.Subnet'];
-
-/**
- * Network types visible at L1 (gateways that represent entry points).
- */
-export const L1_VISIBLE_NETWORK_TYPES = [
-  'Network.LoadBalancer',
-  'Network.Gateway',
-  'Network.APIGateway',
-  'Network.CDN',
-];
+import {
+  type NodeCategory,
+  PREFIX_TO_CATEGORY,
+  TYPE_TO_CATEGORY,
+  LEVEL_VISIBLE_CATEGORIES,
+  NETWORK_CONTAINER_TYPES,
+  L1_VISIBLE_NETWORK_TYPES,
+} from '@ice/constants';
 
 // =============================================================================
 // Classification Functions
@@ -208,4 +96,10 @@ export function get_types_by_category(category: NodeCategory): string[] {
 // Exports
 // =============================================================================
 
-export { TYPE_TO_CATEGORY, PREFIX_TO_CATEGORY };
+export {
+  TYPE_TO_CATEGORY,
+  PREFIX_TO_CATEGORY,
+  LEVEL_VISIBLE_CATEGORIES,
+  NETWORK_CONTAINER_TYPES,
+  L1_VISIBLE_NETWORK_TYPES,
+};

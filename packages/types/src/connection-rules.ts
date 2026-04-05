@@ -16,9 +16,22 @@
  * validateConnection) derive from this single array.
  */
 
+import {
+  type ConnectionCategory,
+  CATEGORY_COLORS,
+  CATEGORY_TO_RELATIONSHIP,
+  DEFAULT_PORTS,
+  DEFAULT_ENV_VARS,
+} from '@ice/constants';
+
+export {
+  type ConnectionCategory,
+  CATEGORY_COLORS,
+  CATEGORY_TO_RELATIONSHIP,
+};
+
 // ─── Core Types ──────────────────────────────────────────────────────────────
 
-export type ConnectionCategory = 'traffic' | 'pipeline' | 'config' | 'dns';
 export type TrafficType = 'request' | 'data' | 'publish' | 'subscribe' | 'stream';
 export type LineStyle = 'solid' | 'dashed' | 'dotted' | 'thin';
 
@@ -38,30 +51,6 @@ export interface ConnectionWarning {
   message: string;
   suggestion?: string;
 }
-
-// ─── Constants ───────────────────────────────────────────────────────────────
-
-export const CATEGORY_COLORS: Record<ConnectionCategory, string> = {
-  traffic: '#22c55e',
-  pipeline: '#8b5cf6',
-  config: '#f59e0b',
-  dns: '#22d3ee',
-};
-
-export const CATEGORY_LABELS: Record<ConnectionCategory, string> = {
-  traffic: 'traffic',
-  pipeline: 'pipeline',
-  config: 'config',
-  dns: 'dns',
-};
-
-/** Maps new categories to legacy relationship values for backend compat */
-export const CATEGORY_TO_RELATIONSHIP: Record<ConnectionCategory, string> = {
-  traffic: 'connects_to',
-  pipeline: 'connects_to',
-  config: 'depends_on',
-  dns: 'connects_to',
-};
 
 // ─── Block Type Classification ───────────────────────────────────────────────
 // These functions classify iceType strings into logical groups.
@@ -140,52 +129,14 @@ function isRoutable(t: string): boolean {
   return isBackend(t) || isFrontend(t) || isGateway(t);
 }
 
-// ─── Default Ports ───────────────────────────────────────────────────────────
-
-export const DEFAULT_PORTS: Record<string, number> = {
-  PostgreSQL: 5432,
-  MySQL: 3306,
-  MongoDB: 27017,
-  Redis: 6379,
-  RabbitMQ: 5672,
-  Elasticsearch: 9200,
-};
+// ─── Default Port / Env Var Lookup ──────────────────────────────────────────
 
 export function getDefaultPort(iceType: string): number | undefined {
-  for (const [key, port] of Object.entries(DEFAULT_PORTS)) {
-    if (new RegExp(key, 'i').test(iceType)) return port;
-  }
-  return undefined;
+  return DEFAULT_PORTS[iceType];
 }
 
-// ─── Default Env Var Names ───────────────────────────────────────────────────
-
-export const DEFAULT_ENV_VARS: Record<string, string> = {
-  PostgreSQL: 'DATABASE_URL',
-  MySQL: 'DATABASE_URL',
-  MongoDB: 'MONGODB_URI',
-  Redis: 'REDIS_URL',
-  RabbitMQ: 'AMQP_URL',
-  SQS: 'SQS_QUEUE_URL',
-  SNS: 'SNS_TOPIC_ARN',
-  PubSub: 'PUBSUB_TOPIC',
-  ServiceBus: 'SERVICE_BUS_CONNECTION',
-  Kafka: 'KAFKA_BROKER_URL',
-  Elasticsearch: 'ELASTICSEARCH_URL',
-  Search: 'ELASTICSEARCH_URL',
-  VectorDB: 'VECTOR_DB_URL',
-  LLM: 'LLM_API_URL',
-  Warehouse: 'DATA_WAREHOUSE_URL',
-  Auth: 'AUTH_URL',
-  Secret: 'SECRETS_ARN',
-};
-
 export function getEnvVarName(iceType: string): string | undefined {
-  if (isStorage(iceType)) return 'STORAGE_BUCKET';
-  for (const [key, envVar] of Object.entries(DEFAULT_ENV_VARS)) {
-    if (new RegExp(key, 'i').test(iceType)) return envVar;
-  }
-  return undefined;
+  return DEFAULT_ENV_VARS[iceType];
 }
 
 // ─── Declarative Connection Rules ───────────────────────────────────────────
@@ -451,7 +402,6 @@ When a service connects to a data store, an env var is auto-injected:
 ${Object.entries(DEFAULT_ENV_VARS)
   .map(([k, v]) => `- ${k} → ${v}`)
   .join('\n')}
-- Storage/Bucket → STORAGE_BUCKET
 
 ### Auto-detected ports
 ${Object.entries(DEFAULT_PORTS)

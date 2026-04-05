@@ -1,6 +1,8 @@
 /** Provider API contracts */
 
-export type CloudProvider = 'gcp' | 'aws' | 'azure' | 'kubernetes';
+import { type Provider } from '@ice/constants';
+
+export type CloudProvider = Provider;
 
 export interface ProviderCredentials {
   provider: CloudProvider;

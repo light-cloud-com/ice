@@ -26,14 +26,14 @@ const quickStartWebsiteDb: ComposedTemplate = {
   author: { name: 'ICE Team' },
   environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'basic' }],
   blocks: [
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 100, y: 200 } },
+    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 100, y: 200 }, data: {} },
     {
       iceType: 'Compute.SSRSite',
       label: 'SSR Site',
       position: { x: 380, y: 200 },
       data: { framework: 'nextjs', domain: 'mysite.com' },
     },
-    { iceType: 'Database.PostgreSQL', label: 'Site Database', position: { x: 660, y: 200 }, data: { storage: '20', version: '17' } },
+    { iceType: 'Database.PostgreSQL', label: 'Site Database', position: { x: 660, y: 200 }, data: { size: 'db.t3.micro', storage: '20', version: '17' } },
   ],
   connections: [
     { fromBlock: 0, toBlock: 1, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
@@ -59,7 +59,7 @@ const quickStartWebAppApi: ComposedTemplate = {
   author: { name: 'ICE Team' },
   environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'basic' }],
   blocks: [
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 100, y: 200 } },
+    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 100, y: 200 }, data: {} },
     {
       iceType: 'Compute.StaticSite',
       label: 'Web App',
@@ -71,9 +71,9 @@ const quickStartWebAppApi: ComposedTemplate = {
       iceType: 'Compute.Container',
       label: 'API Server',
       position: { x: 660, y: 300 },
-      data: { runtime: 'nodejs20', domain: 'api.mysite.com', port: 8080 },
+      data: { size: '0.5-1024', runtime: 'nodejs20', domain: 'api.mysite.com', port: 8080 },
     },
-    { iceType: 'Database.PostgreSQL', label: 'App Database', position: { x: 940, y: 300 }, data: { storage: '20', version: '17' } },
+    { iceType: 'Database.PostgreSQL', label: 'App Database', position: { x: 940, y: 300 }, data: { size: 'db.t3.micro', storage: '20', version: '17' } },
   ],
   connections: [
     { fromBlock: 0, toBlock: 1, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
@@ -100,15 +100,15 @@ const quickStartApiOnly: ComposedTemplate = {
   author: { name: 'ICE Team' },
   environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'basic' }],
   blocks: [
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 100, y: 200 } },
+    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 100, y: 200 }, data: {} },
     { iceType: 'Network.Gateway', label: 'API Gateway', position: { x: 380, y: 200 }, data: { protocol: 'http' } },
     {
       iceType: 'Compute.Container',
       label: 'API Server',
       position: { x: 660, y: 200 },
-      data: { runtime: 'nodejs20', domain: 'api.mysite.com', port: 8080 },
+      data: { size: '0.5-1024', runtime: 'nodejs20', domain: 'api.mysite.com', port: 8080 },
     },
-    { iceType: 'Database.PostgreSQL', label: 'API Database', position: { x: 940, y: 200 }, data: { storage: '20', version: '17' } },
+    { iceType: 'Database.PostgreSQL', label: 'API Database', position: { x: 940, y: 200 }, data: { size: 'db.t3.micro', storage: '20', version: '17' } },
   ],
   connections: [
     { fromBlock: 0, toBlock: 1, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
@@ -135,9 +135,9 @@ const quickStartDataPipeline: ComposedTemplate = {
   environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'basic' }],
   blocks: [
     { iceType: 'Messaging.SQS', label: 'Job Queue', position: { x: 200, y: 200 }, data: { queue_type: 'standard' } },
-    { iceType: 'Compute.Worker', label: 'Job Worker', position: { x: 480, y: 200 }, data: { runtime: 'nodejs20' } },
-    { iceType: 'Database.PostgreSQL', label: 'Job Database', position: { x: 760, y: 100 }, data: { storage: '20', version: '17' } },
-    { iceType: 'Storage.Bucket', label: 'Output Storage', position: { x: 760, y: 300 } },
+    { iceType: 'Compute.Worker', label: 'Job Worker', position: { x: 480, y: 200 }, data: { size: '0.5-1024', runtime: 'nodejs20' } },
+    { iceType: 'Database.PostgreSQL', label: 'Job Database', position: { x: 760, y: 100 }, data: { size: 'db.t3.micro', storage: '20', version: '17' } },
+    { iceType: 'Storage.Bucket', label: 'Output Storage', position: { x: 760, y: 300 }, data: { storage_class: 'standard' } },
   ],
   connections: [
     { fromBlock: 0, toBlock: 1, relationship: 'connects_to' },
@@ -163,7 +163,7 @@ const quickStartStaticSite: ComposedTemplate = {
   author: { name: 'ICE Team' },
   environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'basic' }],
   blocks: [
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 100, y: 200 } },
+    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 100, y: 200 }, data: {} },
     {
       iceType: 'Compute.StaticSite',
       label: 'Static Site',
@@ -193,7 +193,7 @@ const quickStartFunction: ComposedTemplate = {
   author: { name: 'ICE Team' },
   environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'basic' }],
   blocks: [
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 100, y: 200 } },
+    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 100, y: 200 }, data: {} },
     { iceType: 'Network.Gateway', label: 'API Gateway', position: { x: 380, y: 200 }, data: { protocol: 'http' } },
     {
       iceType: 'Compute.ServerlessFunction',

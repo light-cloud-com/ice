@@ -32,6 +32,14 @@ import {
   X,
   Search,
   Plus,
+  Heart,
+  Landmark,
+  Play,
+  Cloud,
+  Cpu,
+  Gamepad2,
+  Truck,
+  GraduationCap,
 } from 'lucide-react';
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -55,7 +63,7 @@ import { compareProviderCosts } from '../../../features/cost/utils/provider-pric
 import { formatCostRaw } from '../../../features/cost/utils/cost-calculator';
 import { addToActiveCard } from '../../../store/slices/cards-slice';
 import { closeTemplateGallery } from '../../../store/slices/ui-slice';
-import type { ComposedTemplate, TemplateCategory, TemplateCategoryMeta } from '../../../config/templates/types';
+import type { ComposedTemplate, TemplateCategory, TemplateCategoryMeta } from '../../../config/templates';
 import type { AppDispatch, RootState } from '../../../store';
 
 // =============================================================================
@@ -64,7 +72,8 @@ import type { AppDispatch, RootState } from '../../../store';
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Rocket, Brain, BrainCircuit, ShieldCheck, Zap, Server, Activity, Globe,
-  Waypoints, ShoppingCart, Smartphone, GitBranch,
+  Waypoints, ShoppingCart, Smartphone, GitBranch, Heart, Landmark, Play,
+  Cloud, Cpu, Gamepad2, Truck, GraduationCap,
 };
 
 const DIFFICULTY_LABELS: Record<string, { label: string; dots: number }> = {

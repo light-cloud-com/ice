@@ -14,6 +14,8 @@ import {
   type HighLevelProperty,
 } from '../resources/high-level-resources.js';
 
+import { ICE_TYPE_TO_RESOURCE_ID } from '@ice/constants';
+
 // ─── Build lookup maps on first access ──────────────────────────────────────
 
 let _iceTypeToResource: Map<string, HighLevelResource> | null = null;
@@ -30,76 +32,6 @@ function ensureMaps() {
     }
   }
 }
-
-/**
- * Known iceType → resourceId mappings.
- * Derived from BLOCK_BLUEPRINTS at import time via @ice/blocks,
- * but we can also infer from HighLevelResource fields and conventions.
- */
-const ICE_TYPE_TO_RESOURCE_ID: Record<string, string> = {
-  // Compute
-  'Compute.StaticSite': 'frontend-app',
-  'Compute.SSRSite': 'ssr-site',
-  'Compute.Container': 'container-service',
-  'Compute.BackendAPI': 'backend-api',
-  'Compute.Worker': 'worker',
-  'Compute.CronJob': 'scheduled-task',
-  'Compute.ServerlessFunction': 'serverless-function',
-  'Compute.Function': 'serverless-function',
-  // Database
-  'Database.PostgreSQL': 'postgres-db',
-  'Database.MySQL': 'mysql-db',
-  'Database.MongoDB': 'mongodb-db',
-  'Database.Redis': 'redis-cache',
-  'Database.DynamoDB': 'dynamodb',
-  'Database.Firestore': 'firestore',
-  'Database.CosmosDB': 'cosmosdb',
-  'Database.AutonomousDB': 'autonomous-db',
-  'Database.Tablestore': 'tablestore',
-  'Database.ManagedDB': 'do-managed-db',
-  // Storage
-  'Storage.Bucket': 'object-storage',
-  'Storage.ObjectStorage': 'object-storage',
-  'Storage.S3': 'object-storage',
-  'Storage.GCS': 'object-storage',
-  'Storage.Blob': 'object-storage',
-  'Storage.Spaces': 'do-spaces',
-  'Storage.OSS': 'oss-storage',
-  // Messaging
-  'Messaging.Queue': 'message-queue',
-  'Messaging.SQS': 'sqs',
-  'Messaging.SNS': 'sns',
-  'Messaging.RabbitMQ': 'rabbitmq',
-  'Messaging.Kafka': 'event-stream',
-  'Messaging.EventStream': 'event-stream',
-  'Messaging.ServiceBus': 'service-bus',
-  'Messaging.CloudPubSub': 'cloud-pubsub',
-  // Networking
-  'Network.Gateway': 'api-gateway',
-  'Network.Internet': 'public-traffic',
-  'Network.LoadBalancer': 'public-traffic',
-  'Network.VPC': 'vpc-network',
-  'Network.Subnet': 'subnet',
-  'Network.Domain': 'domain',
-  // Security
-  'Security.Identity': 'service-account',
-  'Security.Secret': 'secrets-manager',
-  'Security.WAF': 'waf',
-  'Security.SSLCertificate': 'ssl-certificate',
-  // Monitoring
-  'Monitoring.Log': 'log-group',
-  'Monitoring.Terminal': 'log-terminal',
-  // AI
-  'AI.VectorDB': 'vector-db',
-  'AI.LLMGateway': 'llm-gateway',
-  'AI.ModelServing': 'ml-model',
-  // Analytics
-  'Analytics.Search': 'search-engine',
-  'Analytics.DataWarehouse': 'data-warehouse',
-  // Special
-  'Source.Repository': '',
-  'Config.Environment': '',
-};
 
 /**
  * Look up the HighLevelResource for a given iceType.

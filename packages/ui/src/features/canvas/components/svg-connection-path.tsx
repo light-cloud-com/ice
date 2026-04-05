@@ -12,7 +12,7 @@
 import React, { memo, useMemo, useState, useCallback, useRef } from 'react';
 import { EDGE_COLORS } from '../../../config/color-palette';
 import { useReducedMotion } from '../../../shared/hooks/use-reduced-motion';
-import { inferConnectionMeta, CATEGORY_LABELS, type ConnectionCategory } from '../utils/connection-rules';
+import { inferConnectionMeta, type ConnectionCategory } from '../utils/connection-rules';
 import type { EdgeStyle } from '../../../store/slices/ui-slice';
 import type { CanvasNode, CanvasConnection } from './svg-canvas';
 
@@ -483,7 +483,7 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
             if (envVarName) labelText = envVarName;
             else if (port) labelText = `:${port}`;
             else if (connCategory && connCategory !== 'traffic') {
-              labelText = CATEGORY_LABELS[connCategory] || '';
+              labelText = connCategory;
             }
 
             if (!labelText) return null;

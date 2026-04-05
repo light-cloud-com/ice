@@ -114,9 +114,9 @@ export const secureApiTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 } },
+    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
     // 1: WAF
-    { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 } },
+    { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
 
     // ── Public Subnet (inside VPC) ────────────────────────────────────────
     // 2: Gateway
@@ -128,25 +128,25 @@ export const secureApiTemplate: ComposedTemplate = {
       iceType: 'Compute.Container',
       label: 'API Service',
       position: { x: 380, y: 408 },
-      data: { runtime: 'nodejs20', domain: 'api.secure.io', port: 8080 },
+      data: { size: '2-4096', runtime: 'nodejs20', domain: 'api.secure.io', port: 8080 },
     },
     // 4: PostgreSQL
     {
       iceType: 'Database.PostgreSQL',
       label: 'Secure Database',
       position: { x: 636, y: 408 },
-      data: { storage: '100', version: '17' },
+      data: { size: 'db.r6g.large', storage: '100', version: '17' },
     },
     // 5: Redis Sessions
-    { iceType: 'Database.Redis', label: 'Redis Sessions', position: { x: 892, y: 408 } },
+    { iceType: 'Database.Redis', label: 'Redis Sessions', position: { x: 892, y: 408 }, data: { size: 'cache.r6g.large', port: 6379 } },
 
     // ── Security Controls (outside VPC) ───────────────────────────────────
     // 6: TLS Certificate
-    { iceType: 'Security.Certificate', label: 'TLS Certificate', position: { x: 50, y: 674 } },
+    { iceType: 'Security.Certificate', label: 'TLS Certificate', position: { x: 50, y: 674 }, data: {} },
     // 7: Secrets
-    { iceType: 'Security.Secret', label: 'Secrets', position: { x: 306, y: 674 } },
+    { iceType: 'Security.Secret', label: 'Secrets', position: { x: 306, y: 674 }, data: {} },
     // 8: Auth Provider
-    { iceType: 'Security.Identity', label: 'Auth Provider', position: { x: 562, y: 674 } },
+    { iceType: 'Security.Identity', label: 'Auth Provider', position: { x: 562, y: 674 }, data: {} },
     // 9: Audit Trail
     { iceType: 'Monitoring.Log', label: 'Audit Trail', position: { x: 818, y: 674 }, data: { keep_logs: '30 days' } },
 
@@ -156,7 +156,7 @@ export const secureApiTemplate: ComposedTemplate = {
     // 11: Repo
     { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 306, y: 884 }, data: { repository: '', branch: 'main' } },
     // 12: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 884 } },
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 884 }, data: {} },
   ],
 
   connections: [

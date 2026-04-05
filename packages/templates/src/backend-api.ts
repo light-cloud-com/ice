@@ -142,9 +142,9 @@ export const backendApiTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 } },
+    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
     // 1: WAF
-    { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 } },
+    { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
 
     // ── Public Subnet (inside VPC) ────────────────────────────────────────
     // 2: Gateway
@@ -156,12 +156,12 @@ export const backendApiTemplate: ComposedTemplate = {
       iceType: 'Compute.Container',
       label: 'API Service',
       position: { x: 380, y: 408 },
-      data: { runtime: 'nodejs20', domain: 'api.myapp.com', port: 8080 },
+      data: { size: '1-2048', runtime: 'nodejs20', domain: 'api.myapp.com', port: 8080 },
     },
     // 4: PostgreSQL
-    { iceType: 'Database.PostgreSQL', label: 'API Database', position: { x: 636, y: 408 }, data: { storage: '20', version: '17' } },
+    { iceType: 'Database.PostgreSQL', label: 'API Database', position: { x: 636, y: 408 }, data: { size: 'db.t3.small', storage: '20', version: '17' } },
     // 5: Redis
-    { iceType: 'Database.Redis', label: 'API Cache', position: { x: 892, y: 408 } },
+    { iceType: 'Database.Redis', label: 'API Cache', position: { x: 892, y: 408 }, data: { size: 'cache.t3.small', port: 6379 } },
 
     // ── Monitoring (outside VPC) ──────────────────────────────────────────
     // 6: Logs
@@ -169,13 +169,13 @@ export const backendApiTemplate: ComposedTemplate = {
 
     // ── Ungrouped (control plane) ─────────────────────────────────────────
     // 7: Secret
-    { iceType: 'Security.Secret', label: 'API Secrets', position: { x: 50, y: 884 } },
+    { iceType: 'Security.Secret', label: 'API Secrets', position: { x: 50, y: 884 }, data: {} },
     // 8: Domain
     { iceType: 'Network.Domain', label: 'Domain', position: { x: 306, y: 884 }, data: { hostname: 'api.myapp.com' } },
     // 9: Repo
     { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 50, y: 1060 }, data: { repository: '', branch: 'main' } },
     // 10: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 306, y: 1060 } },
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 306, y: 1060 }, data: {} },
   ],
 
   connections: [
@@ -288,9 +288,9 @@ export const microservicesTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 } },
+    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
     // 1: WAF
-    { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 } },
+    { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
 
     // ── Public Subnet (inside VPC) ────────────────────────────────────────
     // 2: Gateway
@@ -303,32 +303,32 @@ export const microservicesTemplate: ComposedTemplate = {
       iceType: 'Compute.Container',
       label: 'Users Service',
       position: { x: 380, y: 408 },
-      data: { runtime: 'nodejs20', port: 8080 },
+      data: { size: '1-2048', runtime: 'nodejs20', port: 8080 },
     },
     // 4: Orders Service
     {
       iceType: 'Compute.Container',
       label: 'Orders Service',
       position: { x: 636, y: 408 },
-      data: { runtime: 'go1.22', port: 8081 },
+      data: { size: '1-2048', runtime: 'go1.22', port: 8081 },
     },
     // 5: Notifications
     {
       iceType: 'Compute.Container',
       label: 'Notifications',
       position: { x: 892, y: 408 },
-      data: { runtime: 'nodejs20', port: 8082 },
+      data: { size: '1-2048', runtime: 'nodejs20', port: 8082 },
     },
     // Row 1
     // 6: Users DB
-    { iceType: 'Database.PostgreSQL', label: 'Users DB', position: { x: 380, y: 584 }, data: { storage: '50', version: '17' } },
+    { iceType: 'Database.PostgreSQL', label: 'Users DB', position: { x: 380, y: 584 }, data: { size: 'db.t3.medium', storage: '50', version: '17' } },
     // 7: Orders DB
-    { iceType: 'Database.PostgreSQL', label: 'Orders DB', position: { x: 636, y: 584 }, data: { storage: '50', version: '17' } },
+    { iceType: 'Database.PostgreSQL', label: 'Orders DB', position: { x: 636, y: 584 }, data: { size: 'db.t3.medium', storage: '50', version: '17' } },
     // 8: Cache
-    { iceType: 'Database.Redis', label: 'Shared Cache', position: { x: 892, y: 584 } },
+    { iceType: 'Database.Redis', label: 'Shared Cache', position: { x: 892, y: 584 }, data: { size: 'cache.t3.medium', port: 6379 } },
     // Row 2
     // 9: Message Queue
-    { iceType: 'Messaging.RabbitMQ', label: 'Message Queue', position: { x: 380, y: 760 } },
+    { iceType: 'Messaging.RabbitMQ', label: 'Message Queue', position: { x: 380, y: 760 }, data: { size: 'mq.m5.large' } },
 
     // ── Monitoring (outside VPC) ──────────────────────────────────────────
     // 10: Logs
@@ -336,13 +336,13 @@ export const microservicesTemplate: ComposedTemplate = {
 
     // ── Ungrouped (control plane) ─────────────────────────────────────────
     // 11: Secret
-    { iceType: 'Security.Secret', label: 'App Secrets', position: { x: 50, y: 1256 } },
+    { iceType: 'Security.Secret', label: 'App Secrets', position: { x: 50, y: 1256 }, data: {} },
     // 12: Domain
     { iceType: 'Network.Domain', label: 'Domain', position: { x: 306, y: 1256 }, data: { hostname: 'api.myapp.com' } },
     // 13: Repo
     { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 50, y: 1432 }, data: { repository: '', branch: 'main' } },
     // 14: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 306, y: 1432 } },
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 306, y: 1432 }, data: {} },
   ],
 
   connections: [

@@ -124,9 +124,9 @@ export const ragChatbotTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 } },
+    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
     // 1: WAF
-    { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 } },
+    { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
     // 2: Chat UI
     {
       iceType: 'Compute.SSRSite',
@@ -146,24 +146,24 @@ export const ragChatbotTemplate: ComposedTemplate = {
       iceType: 'Compute.Container',
       label: 'RAG Service',
       position: { x: 380, y: 408 },
-      data: { runtime: 'python3.12', domain: 'api.chat.acme.io', port: 8080 },
+      data: { size: '2-4096', runtime: 'python3.12', domain: 'api.chat.acme.io', port: 8080 },
     },
     // 5: LLM Gateway
-    { iceType: 'AI.LLMGateway', label: 'LLM Gateway', position: { x: 636, y: 408 } },
+    { iceType: 'AI.LLMGateway', label: 'LLM Gateway', position: { x: 636, y: 408 }, data: {} },
     // 6: Vector DB
-    { iceType: 'AI.VectorDB', label: 'Vector DB', position: { x: 892, y: 408 } },
+    { iceType: 'AI.VectorDB', label: 'Vector DB', position: { x: 892, y: 408 }, data: {} },
     // Row 1
     // 7: PostgreSQL
     {
       iceType: 'Database.PostgreSQL',
       label: 'Chat History DB',
       position: { x: 380, y: 584 },
-      data: { storage: '50', version: '17' },
+      data: { size: 'db.t3.medium', storage: '50', version: '17' },
     },
     // 8: Redis Cache
-    { iceType: 'Database.Redis', label: 'Response Cache', position: { x: 636, y: 584 } },
+    { iceType: 'Database.Redis', label: 'Response Cache', position: { x: 636, y: 584 }, data: { size: 'cache.t3.medium', port: 6379 } },
     // 9: Doc Storage
-    { iceType: 'Storage.Bucket', label: 'Doc Storage', position: { x: 892, y: 584 } },
+    { iceType: 'Storage.Bucket', label: 'Doc Storage', position: { x: 892, y: 584 }, data: { storage_class: 'standard' } },
 
     // ── Ingestion (outside VPC) ───────────────────────────────────────────
     // 10: Ingestion Queue
@@ -173,7 +173,7 @@ export const ragChatbotTemplate: ComposedTemplate = {
       iceType: 'Compute.Worker',
       label: 'Ingestion Worker',
       position: { x: 306, y: 870 },
-      data: { runtime: 'python3.12' },
+      data: { size: '1-2048', runtime: 'python3.12' },
     },
 
     // ── Monitoring (outside VPC) ──────────────────────────────────────────
@@ -182,13 +182,13 @@ export const ragChatbotTemplate: ComposedTemplate = {
 
     // ── Ungrouped (control plane) ─────────────────────────────────────────
     // 13: Secret
-    { iceType: 'Security.Secret', label: 'API Keys', position: { x: 50, y: 1080 } },
+    { iceType: 'Security.Secret', label: 'API Keys', position: { x: 50, y: 1080 }, data: {} },
     // 14: Domain
     { iceType: 'Network.Domain', label: 'Domain', position: { x: 306, y: 1080 }, data: { hostname: 'chat.acme.io' } },
     // 15: Repo
     { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 562, y: 1080 }, data: { repository: '', branch: 'main' } },
     // 16: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 50, y: 1256 } },
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 50, y: 1256 }, data: {} },
   ],
 
   connections: [

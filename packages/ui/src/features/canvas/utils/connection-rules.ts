@@ -16,10 +16,7 @@ export {
   type ConnectionRule,
   // Constants
   CATEGORY_COLORS,
-  CATEGORY_LABELS,
   CATEGORY_TO_RELATIONSHIP,
-  DEFAULT_PORTS,
-  DEFAULT_ENV_VARS,
   CONNECTION_RULES,
   // Classification functions
   isDatabase,

@@ -7,7 +7,7 @@
  */
 
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
-import type { SecurityLevel } from '../../config/templates/types';
+import type { SecurityLevel } from '../../config/templates';
 
 // =============================================================================
 // Types

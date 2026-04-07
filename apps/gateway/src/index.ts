@@ -103,7 +103,8 @@ function getTreePids(): number[] {
     const childrenOf = new Map<number, number[]>();
     for (const line of out.trim().split('\n')) {
       const [pidStr, ppidStr] = line.trim().split(/\s+/);
-      const pid = parseInt(pidStr), ppid = parseInt(ppidStr);
+      const pid = parseInt(pidStr),
+        ppid = parseInt(ppidStr);
       if (!childrenOf.has(ppid)) childrenOf.set(ppid, []);
       childrenOf.get(ppid)!.push(pid);
     }
@@ -124,7 +125,10 @@ function getTreePids(): number[] {
 function getRssForPids(pids: number[]): number {
   try {
     const out = execSync(`ps -o rss= -p ${pids.join(',')}`, { timeout: 3000, encoding: 'utf-8' });
-    return out.trim().split('\n').reduce((sum, l) => sum + (parseInt(l.trim()) || 0), 0);
+    return out
+      .trim()
+      .split('\n')
+      .reduce((sum, l) => sum + (parseInt(l.trim()) || 0), 0);
   } catch {
     return 0;
   }
@@ -137,7 +141,10 @@ const NUM_CPUS = cpus().length || 1;
 function getCpuForPids(pids: number[]): number {
   try {
     const out = execSync(`ps -o %cpu= -p ${pids.join(',')}`, { timeout: 3000, encoding: 'utf-8' });
-    const perCore = out.trim().split('\n').reduce((sum, l) => sum + (parseFloat(l.trim()) || 0), 0);
+    const perCore = out
+      .trim()
+      .split('\n')
+      .reduce((sum, l) => sum + (parseFloat(l.trim()) || 0), 0);
     return perCore / NUM_CPUS;
   } catch {
     return 0;

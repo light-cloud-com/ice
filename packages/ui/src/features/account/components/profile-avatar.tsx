@@ -45,7 +45,9 @@ export function ProfileAvatar() {
         >
           {/* User info */}
           <div className="border-b border-ice-border px-3 py-2.5">
-            <p className="text-ice-md font-medium text-ice-text-1 truncate">{user?.name || t('account.avatar.defaultName')}</p>
+            <p className="text-ice-md font-medium text-ice-text-1 truncate">
+              {user?.name || t('account.avatar.defaultName')}
+            </p>
             <p className="text-ice-sm text-ice-text-3 truncate">{user?.email || ''}</p>
           </div>
 

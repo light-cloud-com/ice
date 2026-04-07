@@ -234,4 +234,4 @@ export {
   type IssueSeverity,
   type IssueCategory,
   type IssueCode,
-} from './validation/index.js';
+} from './validation';

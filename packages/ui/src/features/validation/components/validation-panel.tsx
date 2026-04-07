@@ -5,9 +5,9 @@
  * Clicking an issue selects the affected node on the canvas.
  */
 
+import { AlertTriangle, CheckCircle, ShieldCheck } from 'lucide-react';
 import React, { useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { AlertTriangle, CheckCircle, ShieldCheck } from 'lucide-react';
 import { setSelectedNodes } from '../../../store/slices/selection-slice';
 import type { RootState } from '../../../store';
 import type { CanvasIssue } from '../../../store/slices/validation-slice';
@@ -54,15 +54,9 @@ export const ValidationPanel: React.FC = () => {
           </div>
         ) : (
           <>
-            {errorIssues.length > 0 && (
-              <IssueGroup label="Errors" issues={errorIssues} onClick={handleClick} />
-            )}
-            {warningIssues.length > 0 && (
-              <IssueGroup label="Warnings" issues={warningIssues} onClick={handleClick} />
-            )}
-            {infoIssues.length > 0 && (
-              <IssueGroup label="Info" issues={infoIssues} onClick={handleClick} />
-            )}
+            {errorIssues.length > 0 && <IssueGroup label="Errors" issues={errorIssues} onClick={handleClick} />}
+            {warningIssues.length > 0 && <IssueGroup label="Warnings" issues={warningIssues} onClick={handleClick} />}
+            {infoIssues.length > 0 && <IssueGroup label="Info" issues={infoIssues} onClick={handleClick} />}
           </>
         )}
       </div>
@@ -79,7 +73,7 @@ const IssueGroup: React.FC<{
     <div className="px-3 py-1.5 text-ice-2xs font-medium text-ice-text-3/60 uppercase tracking-wider bg-ice-bg-raised/30">
       {label} ({issues.length})
     </div>
-    {issues.map(issue => (
+    {issues.map((issue) => (
       <button
         key={issue.id}
         onClick={() => onClick(issue)}

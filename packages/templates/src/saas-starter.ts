@@ -166,35 +166,70 @@ export const saasStarterTemplate: ComposedTemplate = {
     },
     // Row 1
     // 7: Users PostgreSQL
-    { iceType: 'Database.PostgreSQL', label: 'Users DB', position: { x: 380, y: 584 }, data: { size: 'db.t3.medium', storage: '100', version: '17' } },
+    {
+      iceType: 'Database.PostgreSQL',
+      label: 'Users DB',
+      position: { x: 380, y: 584 },
+      data: { size: 'db.t3.medium', storage: '100', version: '17' },
+    },
     // 8: Billing PostgreSQL
-    { iceType: 'Database.PostgreSQL', label: 'Billing DB', position: { x: 636, y: 584 }, data: { size: 'db.t3.medium', storage: '100', version: '17' } },
+    {
+      iceType: 'Database.PostgreSQL',
+      label: 'Billing DB',
+      position: { x: 636, y: 584 },
+      data: { size: 'db.t3.medium', storage: '100', version: '17' },
+    },
     // 9: Cache
-    { iceType: 'Database.Redis', label: 'App Cache', position: { x: 892, y: 584 }, data: { size: 'cache.t3.medium', port: 6379 } },
+    {
+      iceType: 'Database.Redis',
+      label: 'App Cache',
+      position: { x: 892, y: 584 },
+      data: { size: 'cache.t3.medium', port: 6379 },
+    },
 
     // ── Async (outside VPC) ───────────────────────────────────────────────
     // 10: SQS
     { iceType: 'Messaging.SQS', label: 'Task Queue', position: { x: 50, y: 870 }, data: { queue_type: 'standard' } },
     // 11: Worker
-    { iceType: 'Compute.Worker', label: 'Background Worker', position: { x: 306, y: 870 }, data: { size: '1-2048', runtime: 'nodejs20' } },
+    {
+      iceType: 'Compute.Worker',
+      label: 'Background Worker',
+      position: { x: 306, y: 870 },
+      data: { size: '1-2048', runtime: 'nodejs20' },
+    },
 
     // ── Platform Services (outside VPC) ───────────────────────────────────
     // Row 0
     // 12: Storage
-    { iceType: 'Storage.Bucket', label: 'Asset Storage', position: { x: 616, y: 870 }, data: { storage_class: 'standard' } },
+    {
+      iceType: 'Storage.Bucket',
+      label: 'Asset Storage',
+      position: { x: 616, y: 870 },
+      data: { storage_class: 'standard' },
+    },
     // 13: Secrets
     { iceType: 'Security.Secret', label: 'Secrets', position: { x: 872, y: 870 }, data: {} },
     // Row 1
     // 14: Auth
     { iceType: 'Security.Identity', label: 'Auth', position: { x: 616, y: 1046 }, data: {} },
     // 15: Logs
-    { iceType: 'Monitoring.Log', label: 'Platform Logs', position: { x: 872, y: 1046 }, data: { keep_logs: '30 days' } },
+    {
+      iceType: 'Monitoring.Log',
+      label: 'Platform Logs',
+      position: { x: 872, y: 1046 },
+      data: { keep_logs: '30 days' },
+    },
 
     // ── Ungrouped (control plane) ─────────────────────────────────────────
     // 16: Domain
     { iceType: 'Network.Domain', label: 'Domain', position: { x: 50, y: 1256 }, data: { hostname: 'app.saas.io' } },
     // 17: Repo
-    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 306, y: 1256 }, data: { repository: '', branch: 'main' } },
+    {
+      iceType: 'Source.Repository',
+      label: 'GitHub Repo',
+      position: { x: 306, y: 1256 },
+      data: { repository: '', branch: 'main' },
+    },
     // 18: Env
     { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },
   ],

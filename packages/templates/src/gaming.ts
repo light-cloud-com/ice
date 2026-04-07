@@ -82,9 +82,7 @@ export const gamingMultiplayerTemplate: ComposedTemplate = {
   difficulty: 'advanced',
   trust: 'official',
   author: { name: 'ICE Team' },
-  environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' },
-  ],
+  environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' }],
 
   groups: [
     // [0] Public Zone — outside VPC
@@ -206,7 +204,12 @@ export const gamingMultiplayerTemplate: ComposedTemplate = {
     // 11: Domain
     { iceType: 'Network.Domain', label: 'Domain', position: { x: 562, y: 1080 }, data: { hostname: 'play.game.io' } },
     // 12: Repo
-    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 50, y: 1256 }, data: { repository: '', branch: 'main' } },
+    {
+      iceType: 'Source.Repository',
+      label: 'GitHub Repo',
+      position: { x: 50, y: 1256 },
+      data: { repository: '', branch: 'main' },
+    },
     // 13: Env
     { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 306, y: 1256 }, data: {} },
   ],
@@ -248,8 +251,7 @@ export const gamingMultiplayerTemplate: ComposedTemplate = {
 export const gamingMobileGameTemplate: ComposedTemplate = {
   id: 'gaming-mobile-backend',
   name: 'Mobile Game Backend',
-  description:
-    'Mobile game backend with player profiles, leaderboards, push notifications, and VPC network isolation.',
+  description: 'Mobile game backend with player profiles, leaderboards, push notifications, and VPC network isolation.',
   icon: 'Smartphone',
   estimatedCost: '$80-200/mo',
   category: 'gaming',
@@ -260,9 +262,7 @@ export const gamingMobileGameTemplate: ComposedTemplate = {
   difficulty: 'intermediate',
   trust: 'official',
   author: { name: 'ICE Team' },
-  environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' },
-  ],
+  environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' }],
 
   groups: [
     // [0] Public Zone — outside VPC
@@ -379,7 +379,12 @@ export const gamingMobileGameTemplate: ComposedTemplate = {
     // 11: Domain
     { iceType: 'Network.Domain', label: 'Domain', position: { x: 50, y: 1256 }, data: { hostname: 'mobile.game.io' } },
     // 12: Repo
-    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 306, y: 1256 }, data: { repository: '', branch: 'main' } },
+    {
+      iceType: 'Source.Repository',
+      label: 'GitHub Repo',
+      position: { x: 306, y: 1256 },
+      data: { repository: '', branch: 'main' },
+    },
     // 13: Env
     { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },
   ],

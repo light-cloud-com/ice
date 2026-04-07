@@ -8,6 +8,5 @@ export const ociStorageBlueprint: BlockBlueprint = createBlueprintFromResource('
   description: 'Oracle Cloud Object Storage. Files, images, uploads.',
   icon: 'HardDrive',
   providers: ['oci'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

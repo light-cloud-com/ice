@@ -8,6 +8,5 @@ export const alibabaStorageBlueprint: BlockBlueprint = createBlueprintFromResour
   description: 'Alibaba Cloud OSS. Files, images, uploads.',
   icon: 'HardDrive',
   providers: ['alibaba'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

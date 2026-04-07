@@ -8,6 +8,5 @@ export const awsSecretsBlueprint: BlockBlueprint = createBlueprintFromResource('
   description: 'AWS Secrets Manager. API keys, DB passwords, tokens.',
   icon: 'Key',
   providers: ['aws'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

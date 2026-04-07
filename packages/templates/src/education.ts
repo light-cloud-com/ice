@@ -216,7 +216,12 @@ export const educationLmsTemplate: ComposedTemplate = {
     // 13: Domain
     { iceType: 'Network.Domain', label: 'Domain', position: { x: 50, y: 1256 }, data: { hostname: 'learn.acme.io' } },
     // 14: Repo
-    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 306, y: 1256 }, data: { repository: '', branch: 'main' } },
+    {
+      iceType: 'Source.Repository',
+      label: 'GitHub Repo',
+      position: { x: 306, y: 1256 },
+      data: { repository: '', branch: 'main' },
+    },
     // 15: Env
     { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },
   ],
@@ -278,9 +283,7 @@ export const educationExamPlatformTemplate: ComposedTemplate = {
   difficulty: 'intermediate',
   trust: 'official',
   author: { name: 'ICE Team' },
-  environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' },
-  ],
+  environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' }],
 
   groups: [
     // [0] Public Zone — outside VPC (3c with Exam App)
@@ -409,7 +412,12 @@ export const educationExamPlatformTemplate: ComposedTemplate = {
     // 12: Domain
     { iceType: 'Network.Domain', label: 'Domain', position: { x: 50, y: 1256 }, data: { hostname: 'exam.acme.io' } },
     // 13: Repo
-    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 306, y: 1256 }, data: { repository: '', branch: 'main' } },
+    {
+      iceType: 'Source.Repository',
+      label: 'GitHub Repo',
+      position: { x: 306, y: 1256 },
+      data: { repository: '', branch: 'main' },
+    },
     // 14: Env
     { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },
   ],

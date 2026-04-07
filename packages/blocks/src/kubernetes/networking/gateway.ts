@@ -8,6 +8,5 @@ export const kubernetesGatewayBlueprint: BlockBlueprint = createBlueprintFromRes
   description: 'Kubernetes Ingress. Routes traffic, auth + rate limiting.',
   icon: 'GitBranch',
   providers: ['kubernetes'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

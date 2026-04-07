@@ -785,9 +785,18 @@ function repairJson(text: string): string | null {
   let escaped = false;
 
   for (const ch of s) {
-    if (escaped) { escaped = false; continue; }
-    if (ch === '\\') { escaped = true; continue; }
-    if (ch === '"') { inString = !inString; continue; }
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (ch === '\\') {
+      escaped = true;
+      continue;
+    }
+    if (ch === '"') {
+      inString = !inString;
+      continue;
+    }
     if (inString) continue;
     if (ch === '{') braces++;
     if (ch === '}') braces--;
@@ -796,8 +805,14 @@ function repairJson(text: string): string | null {
   }
 
   // Close unclosed structures (truncated response)
-  while (brackets > 0) { s += ']'; brackets--; }
-  while (braces > 0) { s += '}'; braces--; }
+  while (brackets > 0) {
+    s += ']';
+    brackets--;
+  }
+  while (braces > 0) {
+    s += '}';
+    braces--;
+  }
 
   return s !== text ? s : null;
 }

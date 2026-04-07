@@ -70,8 +70,7 @@ import type { ComposedTemplate } from './types';
 export const mobileAppBackendTemplate: ComposedTemplate = {
   id: 'mobile-app-backend',
   name: 'Mobile App Backend',
-  description:
-    'Mobile API with push notifications, media storage, authentication, WAF, and VPC network isolation.',
+  description: 'Mobile API with push notifications, media storage, authentication, WAF, and VPC network isolation.',
   icon: 'Smartphone',
   estimatedCost: '$80-200/mo',
   category: 'mobile',
@@ -215,7 +214,12 @@ export const mobileAppBackendTemplate: ComposedTemplate = {
     // 12: Domain
     { iceType: 'Network.Domain', label: 'Domain', position: { x: 50, y: 1256 }, data: { hostname: 'api.mobile.io' } },
     // 13: Repo
-    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 306, y: 1256 }, data: { repository: '', branch: 'main' } },
+    {
+      iceType: 'Source.Repository',
+      label: 'GitHub Repo',
+      position: { x: 306, y: 1256 },
+      data: { repository: '', branch: 'main' },
+    },
     // 14: Env
     { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },
   ],
@@ -256,8 +260,7 @@ export const mobileAppBackendTemplate: ComposedTemplate = {
 export const mobileSocialAppTemplate: ComposedTemplate = {
   id: 'mobile-social-app',
   name: 'Social App Backend',
-  description:
-    'Social app with activity feeds, media sharing, search, notifications, WAF, and VPC network isolation.',
+  description: 'Social app with activity feeds, media sharing, search, notifications, WAF, and VPC network isolation.',
   icon: 'Users',
   estimatedCost: '$150-400/mo',
   category: 'mobile',
@@ -268,9 +271,7 @@ export const mobileSocialAppTemplate: ComposedTemplate = {
   difficulty: 'advanced',
   trust: 'official',
   author: { name: 'ICE Team' },
-  environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' },
-  ],
+  environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' }],
 
   groups: [
     // [0] Public Zone — outside VPC
@@ -401,7 +402,12 @@ export const mobileSocialAppTemplate: ComposedTemplate = {
     // 13: Domain
     { iceType: 'Network.Domain', label: 'Domain', position: { x: 50, y: 1256 }, data: { hostname: 'api.social.io' } },
     // 14: Repo
-    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 306, y: 1256 }, data: { repository: '', branch: 'main' } },
+    {
+      iceType: 'Source.Repository',
+      label: 'GitHub Repo',
+      position: { x: 306, y: 1256 },
+      data: { repository: '', branch: 'main' },
+    },
     // 15: Env
     { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },
   ],

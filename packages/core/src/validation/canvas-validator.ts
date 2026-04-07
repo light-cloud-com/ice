@@ -9,11 +9,11 @@
  *   const result = validateCanvas(nodes, edges, { mode: 'pre-deploy', provider: 'aws' });
  */
 
-import { validateProperties } from './property-rules.js';
-import { validateConnections } from './connection-rules.js';
-import { validateStructure } from './structure-rules.js';
-import { validateDeployability } from './deploy-rules.js';
 import { validateArchitecture } from './architecture-rules.js';
+import { validateConnections } from './connection-rules.js';
+import { validateDeployability } from './deploy-rules.js';
+import { validateProperties } from './property-rules.js';
+import { validateStructure } from './structure-rules.js';
 import type {
   CanvasIssue,
   CanvasValidationResult,
@@ -59,10 +59,7 @@ export function validateCanvas(
  * Validate a single node's properties (for real-time field-level feedback).
  * Lighter than full canvas validation.
  */
-export function validateNode(
-  node: ValidatableNode,
-  ctx: ValidationContext = { mode: 'design' },
-): CanvasIssue[] {
+export function validateNode(node: ValidatableNode, ctx: ValidationContext = { mode: 'design' }): CanvasIssue[] {
   return validateProperties([node], ctx);
 }
 
@@ -79,9 +76,9 @@ function buildResult(issues: CanvasIssue[]): CanvasValidationResult {
     }
   }
 
-  const errors = deduped.filter(i => i.severity === 'error');
-  const warnings = deduped.filter(i => i.severity === 'warning');
-  const info = deduped.filter(i => i.severity === 'info');
+  const errors = deduped.filter((i) => i.severity === 'error');
+  const warnings = deduped.filter((i) => i.severity === 'warning');
+  const info = deduped.filter((i) => i.severity === 'info');
 
   // Group by node
   const issuesByNode = new Map<string, CanvasIssue[]>();
@@ -101,7 +98,7 @@ function buildResult(issues: CanvasIssue[]): CanvasValidationResult {
     }
   }
 
-  const hasDeployErrors = errors.some(e => e.category === 'deploy');
+  const hasDeployErrors = errors.some((e) => e.category === 'deploy');
 
   return {
     valid: errors.length === 0,

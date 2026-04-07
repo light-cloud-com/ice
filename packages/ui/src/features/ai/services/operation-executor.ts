@@ -399,7 +399,15 @@ export function executeAiOperations(
           const isSubnet = iceType === 'Network.Subnet';
           const isHelper = isHelperIceType(iceType);
           const defaultWidth = isVpc ? 280 : isSubnet ? 260 : isGroup ? 260 : isHelper ? HELPER_NODE_WIDTH : NODE_WIDTH;
-          const defaultHeight = isVpc ? 180 : isSubnet ? 150 : isGroup ? 150 : isHelper ? HELPER_NODE_HEIGHT : NODE_HEIGHT;
+          const defaultHeight = isVpc
+            ? 180
+            : isSubnet
+              ? 150
+              : isGroup
+                ? 150
+                : isHelper
+                  ? HELPER_NODE_HEIGHT
+                  : NODE_HEIGHT;
           const nodeW = op.node.width || defaultWidth;
           const nodeH = op.node.height || defaultHeight;
 
@@ -632,11 +640,7 @@ export function executeAiOperations(
   // trigger a full auto-organize to produce a clean architecture diagram layout.
   // Skip if the AI already included an explicit autoOrganize operation.
   const hasStructuralOps = ops.some(
-    (o) =>
-      o.op === 'addNode' ||
-      o.op === 'addBlueprint' ||
-      o.op === 'reparentNode' ||
-      o.op === 'deleteNode',
+    (o) => o.op === 'addNode' || o.op === 'addBlueprint' || o.op === 'reparentNode' || o.op === 'deleteNode',
   );
   const hasExplicitOrganize = ops.some((o) => o.op === 'autoOrganize');
   if (hasStructuralOps && !hasExplicitOrganize && executedOps > 0) {

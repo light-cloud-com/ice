@@ -21,14 +21,9 @@
  */
 
 import { getBlueprint } from '@ice/blocks';
+import { CARD_WIDTH, CARD_HEIGHT, REQUIRED_PROPS, GROUP_COLORS } from '@ice/constants';
 import { validateTemplate } from '@ice/core';
-import {
-  CARD_WIDTH,
-  CARD_HEIGHT,
-  REQUIRED_PROPS,
-  GROUP_COLORS,
-} from '@ice/constants';
-import { ALL_TEMPLATES } from './index';
+import { ALL_TEMPLATES } from '.';
 import { expandComposedTemplate } from './expand-template';
 import type { ComposedTemplate } from './types';
 import type { Provider } from '@ice/blocks';
@@ -73,8 +68,12 @@ function checkBlueprints(t: ComposedTemplate, issues: Issue[]) {
   for (let i = 0; i < t.blocks.length; i++) {
     const b = t.blocks[i];
     if (!getBlueprint(b.iceType)) {
-      issues.push({ template: t.id, rule: 'R1:blueprint', severity: 'error',
-        message: `Block[${i}] "${b.label}" iceType "${b.iceType}" has no registered blueprint` });
+      issues.push({
+        template: t.id,
+        rule: 'R1:blueprint',
+        severity: 'error',
+        message: `Block[${i}] "${b.label}" iceType "${b.iceType}" has no registered blueprint`,
+      });
     }
   }
 }
@@ -92,10 +91,18 @@ function checkBounds(t: ComposedTemplate, issues: Issue[]) {
       const minY = g.position.y + 56;
       const maxX = g.position.x + g.width - 20;
       const maxY = g.position.y + g.height - 20;
-      if (b.position.x < minX - 1 || b.position.y < minY - 1 ||
-          b.position.x + CARD_WIDTH > maxX + 1 || b.position.y + CARD_HEIGHT > maxY + 1) {
-        issues.push({ template: t.id, rule: 'R2:bounds', severity: 'error',
-          message: `Block[${bi}] "${b.label}" at (${b.position.x},${b.position.y}) overflows group "${g.label}" bounds (${minX}-${maxX}, ${minY}-${maxY})` });
+      if (
+        b.position.x < minX - 1 ||
+        b.position.y < minY - 1 ||
+        b.position.x + CARD_WIDTH > maxX + 1 ||
+        b.position.y + CARD_HEIGHT > maxY + 1
+      ) {
+        issues.push({
+          template: t.id,
+          rule: 'R2:bounds',
+          severity: 'error',
+          message: `Block[${bi}] "${b.label}" at (${b.position.x},${b.position.y}) overflows group "${g.label}" bounds (${minX}-${maxX}, ${minY}-${maxY})`,
+        });
       }
     }
   }
@@ -113,8 +120,12 @@ function checkUngrouped(t: ComposedTemplate, issues: Issue[]) {
   }
   for (let i = 0; i < t.blocks.length; i++) {
     if (!groupedIndices.has(i) && t.blocks[i].position.y < maxGroupBottom - 1) {
-      issues.push({ template: t.id, rule: 'R3:ungrouped', severity: 'warn',
-        message: `Ungrouped block[${i}] "${t.blocks[i].label}" at y=${t.blocks[i].position.y} overlaps groups (bottom=${maxGroupBottom})` });
+      issues.push({
+        template: t.id,
+        rule: 'R3:ungrouped',
+        severity: 'warn',
+        message: `Ungrouped block[${i}] "${t.blocks[i].label}" at y=${t.blocks[i].position.y} overlaps groups (bottom=${maxGroupBottom})`,
+      });
     }
   }
 }
@@ -124,36 +135,55 @@ function checkUngrouped(t: ComposedTemplate, issues: Issue[]) {
 function checkVpcSubnet(t: ComposedTemplate, issues: Issue[]) {
   if (isQuickStart(t)) return;
   if (!t.groups || t.groups.length === 0) {
-    issues.push({ template: t.id, rule: 'R5:vpc', severity: 'error',
-      message: 'Non-quickstart template has no groups — must have VPC with Subnets' });
+    issues.push({
+      template: t.id,
+      rule: 'R5:vpc',
+      severity: 'error',
+      message: 'Non-quickstart template has no groups — must have VPC with Subnets',
+    });
     return;
   }
-  const vpcGroups = t.groups.filter(g => g.iceType === 'Network.VPC');
+  const vpcGroups = t.groups.filter((g) => g.iceType === 'Network.VPC');
   if (vpcGroups.length === 0) {
-    issues.push({ template: t.id, rule: 'R5:vpc', severity: 'error',
-      message: 'No VPC group found — every non-quickstart template must have a VPC' });
+    issues.push({
+      template: t.id,
+      rule: 'R5:vpc',
+      severity: 'error',
+      message: 'No VPC group found — every non-quickstart template must have a VPC',
+    });
     return;
   }
   for (const vpc of vpcGroups) {
     if (vpc.blockIndices.length > 0) {
-      issues.push({ template: t.id, rule: 'R5:vpc-empty', severity: 'error',
-        message: `VPC "${vpc.label}" has blockIndices — VPC must have blockIndices: []` });
+      issues.push({
+        template: t.id,
+        rule: 'R5:vpc-empty',
+        severity: 'error',
+        message: `VPC "${vpc.label}" has blockIndices — VPC must have blockIndices: []`,
+      });
     }
   }
-  const subnets = t.groups.filter(g => g.iceType === 'Network.Subnet');
+  const subnets = t.groups.filter((g) => g.iceType === 'Network.Subnet');
   if (subnets.length === 0) {
-    issues.push({ template: t.id, rule: 'R5:subnet', severity: 'error',
-      message: 'No Subnet groups found inside VPC' });
+    issues.push({ template: t.id, rule: 'R5:subnet', severity: 'error', message: 'No Subnet groups found inside VPC' });
   }
   for (const s of subnets) {
     if (s.parentGroupIndex == null) {
-      issues.push({ template: t.id, rule: 'R5:parent', severity: 'error',
-        message: `Subnet "${s.label}" missing parentGroupIndex — must point to VPC` });
+      issues.push({
+        template: t.id,
+        rule: 'R5:parent',
+        severity: 'error',
+        message: `Subnet "${s.label}" missing parentGroupIndex — must point to VPC`,
+      });
     } else {
       const parent = t.groups[s.parentGroupIndex];
       if (!parent || parent.iceType !== 'Network.VPC') {
-        issues.push({ template: t.id, rule: 'R5:parent', severity: 'error',
-          message: `Subnet "${s.label}" parentGroupIndex points to non-VPC group` });
+        issues.push({
+          template: t.id,
+          rule: 'R5:parent',
+          severity: 'error',
+          message: `Subnet "${s.label}" parentGroupIndex points to non-VPC group`,
+        });
       }
     }
   }
@@ -168,8 +198,12 @@ function checkProperties(t: ComposedTemplate, issues: Issue[]) {
     if (!required || !b.data) continue;
     for (const prop of required) {
       if (b.data[prop] === undefined) {
-        issues.push({ template: t.id, rule: 'R6:prop', severity: 'error',
-          message: `Block[${i}] "${b.label}" (${b.iceType}) missing required property "${prop}"` });
+        issues.push({
+          template: t.id,
+          rule: 'R6:prop',
+          severity: 'error',
+          message: `Block[${i}] "${b.label}" (${b.iceType}) missing required property "${prop}"`,
+        });
       }
     }
   }
@@ -182,8 +216,12 @@ function checkColors(t: ComposedTemplate, issues: Issue[]) {
   for (const g of t.groups) {
     const expected = GROUP_COLORS[g.label] ?? GROUP_COLORS[g.label.replace(/ \(.*\)/, '')];
     if (expected && g.color !== expected) {
-      issues.push({ template: t.id, rule: 'R7:color', severity: 'warn',
-        message: `Group "${g.label}" color ${g.color} doesn't match convention ${expected}` });
+      issues.push({
+        template: t.id,
+        rule: 'R7:color',
+        severity: 'warn',
+        message: `Group "${g.label}" color ${g.color} doesn't match convention ${expected}`,
+      });
     }
   }
 }
@@ -192,26 +230,49 @@ function checkColors(t: ComposedTemplate, issues: Issue[]) {
 
 function checkMetadata(t: ComposedTemplate, issues: Issue[]) {
   const required: (keyof ComposedTemplate)[] = [
-    'id', 'name', 'description', 'icon', 'estimatedCost', 'category',
-    'tags', 'securityLevel', 'environmentPresets',
+    'id',
+    'name',
+    'description',
+    'icon',
+    'estimatedCost',
+    'category',
+    'tags',
+    'securityLevel',
+    'environmentPresets',
   ];
   for (const field of required) {
     if (!t[field] || (Array.isArray(t[field]) && (t[field] as unknown[]).length === 0)) {
-      issues.push({ template: t.id, rule: 'R10:meta', severity: 'error',
-        message: `Missing required metadata field "${field}"` });
+      issues.push({
+        template: t.id,
+        rule: 'R10:meta',
+        severity: 'error',
+        message: `Missing required metadata field "${field}"`,
+      });
     }
   }
   if (!t.difficulty) {
-    issues.push({ template: t.id, rule: 'R10:meta', severity: 'warn',
-      message: 'Missing optional metadata field "difficulty"' });
+    issues.push({
+      template: t.id,
+      rule: 'R10:meta',
+      severity: 'warn',
+      message: 'Missing optional metadata field "difficulty"',
+    });
   }
   if (!t.trust) {
-    issues.push({ template: t.id, rule: 'R10:meta', severity: 'warn',
-      message: 'Missing optional metadata field "trust"' });
+    issues.push({
+      template: t.id,
+      rule: 'R10:meta',
+      severity: 'warn',
+      message: 'Missing optional metadata field "trust"',
+    });
   }
   if (!t.author) {
-    issues.push({ template: t.id, rule: 'R10:meta', severity: 'warn',
-      message: 'Missing optional metadata field "author"' });
+    issues.push({
+      template: t.id,
+      rule: 'R10:meta',
+      severity: 'warn',
+      message: 'Missing optional metadata field "author"',
+    });
   }
 }
 
@@ -223,17 +284,29 @@ function checkExpansion(t: ComposedTemplate, issues: Issue[]) {
     try {
       const { nodes } = expandComposedTemplate(t, p);
       if (nodes.length === 0) {
-        issues.push({ template: t.id, rule: 'Expand', severity: 'error',
-          message: `Expansion for provider "${p}" produced zero nodes` });
+        issues.push({
+          template: t.id,
+          rule: 'Expand',
+          severity: 'error',
+          message: `Expansion for provider "${p}" produced zero nodes`,
+        });
       }
-      const unsupported = nodes.filter(n => n.data?.providerUnsupported);
+      const unsupported = nodes.filter((n) => n.data?.providerUnsupported);
       if (unsupported.length > 0) {
-        issues.push({ template: t.id, rule: 'Expand', severity: 'warn',
-          message: `${unsupported.length} block(s) unsupported on provider "${p}": ${unsupported.map(n => n.data?.name || n.data?.iceType).join(', ')}` });
+        issues.push({
+          template: t.id,
+          rule: 'Expand',
+          severity: 'warn',
+          message: `${unsupported.length} block(s) unsupported on provider "${p}": ${unsupported.map((n) => n.data?.name || n.data?.iceType).join(', ')}`,
+        });
       }
     } catch (err) {
-      issues.push({ template: t.id, rule: 'Expand', severity: 'error',
-        message: `Expansion failed for provider "${p}": ${err}` });
+      issues.push({
+        template: t.id,
+        rule: 'Expand',
+        severity: 'error',
+        message: `Expansion failed for provider "${p}": ${err}`,
+      });
     }
   }
 }
@@ -243,21 +316,21 @@ function checkExpansion(t: ComposedTemplate, issues: Issue[]) {
 const issues: Issue[] = [];
 
 for (const t of ALL_TEMPLATES) {
-  checkCore(t, issues);       // @ice/core structural checks
+  checkCore(t, issues); // @ice/core structural checks
   checkBlueprints(t, issues); // R1: blueprints exist
-  checkBounds(t, issues);     // R2: block positions
-  checkUngrouped(t, issues);  // R3: ungrouped below groups
-  checkVpcSubnet(t, issues);  // R5: VPC/Subnet nesting
+  checkBounds(t, issues); // R2: block positions
+  checkUngrouped(t, issues); // R3: ungrouped below groups
+  checkVpcSubnet(t, issues); // R5: VPC/Subnet nesting
   checkProperties(t, issues); // R6: required properties
-  checkColors(t, issues);     // R7: group colors
-  checkMetadata(t, issues);   // R10: metadata
-  checkExpansion(t, issues);  // Expansion for all providers
+  checkColors(t, issues); // R7: group colors
+  checkMetadata(t, issues); // R10: metadata
+  checkExpansion(t, issues); // Expansion for all providers
 }
 
 // ─── Report ───────────────────────────────────────────────────────────────────
 
-const errors = issues.filter(i => i.severity === 'error');
-const warnings = issues.filter(i => i.severity === 'warn');
+const errors = issues.filter((i) => i.severity === 'error');
+const warnings = issues.filter((i) => i.severity === 'warn');
 
 console.log(`\nValidated ${ALL_TEMPLATES.length} templates\n`);
 

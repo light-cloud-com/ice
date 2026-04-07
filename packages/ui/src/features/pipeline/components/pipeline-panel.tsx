@@ -193,11 +193,7 @@ export const PipelinePanel: React.FC = () => {
   const handleAddRule = useCallback(
     async (overrideBranch?: string, overrideEnv?: string) => {
       if (!cardId || !nodeId || !repository) {
-        setError(
-          !repository
-            ? t('pipeline.noRepoShort')
-            : t('pipeline.missingContext'),
-        );
+        setError(!repository ? t('pipeline.noRepoShort') : t('pipeline.missingContext'));
         return;
       }
       setError(null);
@@ -327,9 +323,7 @@ export const PipelinePanel: React.FC = () => {
                     {t('pipeline.enablePipeline')}
                   </button>
                 ) : (
-                  <div className="text-xs text-ice-text-3">
-                    {t('pipeline.noRepoHint')}
-                  </div>
+                  <div className="text-xs text-ice-text-3">{t('pipeline.noRepoHint')}</div>
                 )}
               </div>
             ) : (

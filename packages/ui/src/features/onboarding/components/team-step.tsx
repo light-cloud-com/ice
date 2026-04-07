@@ -14,8 +14,18 @@ import { setTeamMode, setTeamName } from '../../../store/slices/onboarding-slice
 import type { RootState, AppDispatch } from '../../../store';
 
 const TEAM_OPTION_KEYS = [
-  { id: 'create' as const, icon: Users, titleKey: 'onboarding.team.createTeam', descKey: 'onboarding.team.createTeamDesc' },
-  { id: 'join' as const, icon: UserPlus, titleKey: 'onboarding.team.joinTeam', descKey: 'onboarding.team.joinTeamDesc' },
+  {
+    id: 'create' as const,
+    icon: Users,
+    titleKey: 'onboarding.team.createTeam',
+    descKey: 'onboarding.team.createTeamDesc',
+  },
+  {
+    id: 'join' as const,
+    icon: UserPlus,
+    titleKey: 'onboarding.team.joinTeam',
+    descKey: 'onboarding.team.joinTeamDesc',
+  },
 ];
 
 export const TeamStep: React.FC = () => {
@@ -62,7 +72,9 @@ export const TeamStep: React.FC = () => {
       {/* Create team — name input */}
       {teamMode === 'create' && (
         <div>
-          <label className="block text-sm font-medium text-ice-text-2 mb-1.5">{t('onboarding.team.teamNameLabel')}</label>
+          <label className="block text-sm font-medium text-ice-text-2 mb-1.5">
+            {t('onboarding.team.teamNameLabel')}
+          </label>
           <input
             id="ice-onboarding-team-input-name"
             type="text"
@@ -78,7 +90,9 @@ export const TeamStep: React.FC = () => {
       {/* Join team — invite code */}
       {teamMode === 'join' && (
         <div>
-          <label className="block text-sm font-medium text-ice-text-2 mb-1.5">{t('onboarding.team.inviteCodeLabel')}</label>
+          <label className="block text-sm font-medium text-ice-text-2 mb-1.5">
+            {t('onboarding.team.inviteCodeLabel')}
+          </label>
           <input
             type="text"
             value={inviteCode}

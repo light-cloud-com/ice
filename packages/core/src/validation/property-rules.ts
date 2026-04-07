@@ -6,17 +6,14 @@
  * numeric ranges, provider-specific options, cross-field constraints.
  */
 
-import type { HighLevelProperty } from '../resources/high-level-resources.js';
 import { getPropertiesForIceType } from './schema-bridge.js';
 import type { CanvasIssue, ValidatableNode, ValidationContext } from './types.js';
+import type { HighLevelProperty } from '../resources/high-level-resources.js';
 
 /**
  * Validate all node properties against their schemas.
  */
-export function validateProperties(
-  nodes: readonly ValidatableNode[],
-  ctx: ValidationContext,
-): CanvasIssue[] {
+export function validateProperties(nodes: readonly ValidatableNode[], ctx: ValidationContext): CanvasIssue[] {
   const issues: CanvasIssue[] = [];
   const namesSeen = new Map<string, string>(); // name → first nodeId
 
@@ -90,7 +87,7 @@ export function validateProperties(
     }
 
     // ── Name uniqueness ───────────────────────────────────────────────
-    const name = nodeData.name as string ?? nodeData.label as string;
+    const name = (nodeData.name as string) ?? (nodeData.label as string);
     if (name && typeof name === 'string') {
       const normalizedName = name.trim().toLowerCase();
       if (normalizedName && namesSeen.has(normalizedName)) {
@@ -198,8 +195,8 @@ function checkSelectValue(
   if (prop.optionDetails && prop.optionDetails.length > 0) {
     // Options valid for this provider (or provider-agnostic)
     const validOptions = prop.optionDetails
-      .filter(od => !od.provider || !provider || od.provider === provider)
-      .map(od => od.value);
+      .filter((od) => !od.provider || !provider || od.provider === provider)
+      .map((od) => od.value);
 
     if (validOptions.length > 0 && !validOptions.includes(value as string)) {
       return {

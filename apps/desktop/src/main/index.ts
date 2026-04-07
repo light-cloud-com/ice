@@ -8,8 +8,8 @@
 
 import { randomBytes } from 'crypto';
 import { existsSync, mkdirSync, cpSync } from 'fs';
-import { join } from 'path';
 import Module from 'module';
+import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { app, BrowserWindow, shell, screen, dialog, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';

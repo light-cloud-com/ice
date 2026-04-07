@@ -76,9 +76,7 @@ export const mediaStreamingTemplate: ComposedTemplate = {
   difficulty: 'intermediate',
   trust: 'official',
   author: { name: 'ICE Team' },
-  environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' },
-  ],
+  environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' }],
 
   groups: [
     // [0] Public Zone — outside VPC
@@ -166,12 +164,27 @@ export const mediaStreamingTemplate: ComposedTemplate = {
       data: { size: 'db.t3.small', storage: '50', version: '17' },
     },
     // 5: View Cache
-    { iceType: 'Database.Redis', label: 'View Cache', position: { x: 892, y: 408 }, data: { size: 'cache.t3.small', port: 6379 } },
+    {
+      iceType: 'Database.Redis',
+      label: 'View Cache',
+      position: { x: 892, y: 408 },
+      data: { size: 'cache.t3.small', port: 6379 },
+    },
     // Row 1
     // 6: Video Storage
-    { iceType: 'Storage.Bucket', label: 'Video Storage', position: { x: 380, y: 584 }, data: { storage_class: 'standard' } },
+    {
+      iceType: 'Storage.Bucket',
+      label: 'Video Storage',
+      position: { x: 380, y: 584 },
+      data: { storage_class: 'standard' },
+    },
     // 7: Transcode Queue
-    { iceType: 'Messaging.SQS', label: 'Transcode Queue', position: { x: 636, y: 584 }, data: { queue_type: 'standard' } },
+    {
+      iceType: 'Messaging.SQS',
+      label: 'Transcode Queue',
+      position: { x: 636, y: 584 },
+      data: { queue_type: 'standard' },
+    },
     // 8: Transcoding Worker
     {
       iceType: 'Compute.Worker',
@@ -192,7 +205,12 @@ export const mediaStreamingTemplate: ComposedTemplate = {
     // 12: Domain
     { iceType: 'Network.Domain', label: 'Domain', position: { x: 50, y: 1256 }, data: { hostname: 'stream.acme.io' } },
     // 13: Repo
-    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 306, y: 1256 }, data: { repository: '', branch: 'main' } },
+    {
+      iceType: 'Source.Repository',
+      label: 'GitHub Repo',
+      position: { x: 306, y: 1256 },
+      data: { repository: '', branch: 'main' },
+    },
     // 14: Env
     { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },
   ],
@@ -233,8 +251,7 @@ export const mediaStreamingTemplate: ComposedTemplate = {
 export const mediaPodcastTemplate: ComposedTemplate = {
   id: 'media-podcast',
   name: 'Podcast Platform',
-  description:
-    'Audio hosting platform with RSS feeds, episode search, and VPC network isolation.',
+  description: 'Audio hosting platform with RSS feeds, episode search, and VPC network isolation.',
   icon: 'Mic',
   estimatedCost: '$50-120/mo',
   category: 'media',
@@ -245,9 +262,7 @@ export const mediaPodcastTemplate: ComposedTemplate = {
   difficulty: 'starter',
   trust: 'official',
   author: { name: 'ICE Team' },
-  environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'basic' },
-  ],
+  environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'basic' }],
 
   groups: [
     // [0] Public Zone — outside VPC
@@ -341,7 +356,12 @@ export const mediaPodcastTemplate: ComposedTemplate = {
       data: { size: 'db.t3.small', storage: '50', version: '17' },
     },
     // 6: Audio Storage
-    { iceType: 'Storage.Bucket', label: 'Audio Storage', position: { x: 892, y: 408 }, data: { storage_class: 'standard' } },
+    {
+      iceType: 'Storage.Bucket',
+      label: 'Audio Storage',
+      position: { x: 892, y: 408 },
+      data: { storage_class: 'standard' },
+    },
 
     // ── Monitoring (outside VPC) ──────────────────────────────────────────
     // 7: Logs
@@ -355,7 +375,12 @@ export const mediaPodcastTemplate: ComposedTemplate = {
     // 10: Domain
     { iceType: 'Network.Domain', label: 'Domain', position: { x: 50, y: 1080 }, data: { hostname: 'podcast.acme.io' } },
     // 11: Repo
-    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 306, y: 1080 }, data: { repository: '', branch: 'main' } },
+    {
+      iceType: 'Source.Repository',
+      label: 'GitHub Repo',
+      position: { x: 306, y: 1080 },
+      data: { repository: '', branch: 'main' },
+    },
     // 12: Env
     { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1080 }, data: {} },
   ],

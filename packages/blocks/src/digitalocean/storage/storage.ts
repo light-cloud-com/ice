@@ -8,6 +8,5 @@ export const digitaloceanStorageBlueprint: BlockBlueprint = createBlueprintFromR
   description: 'DigitalOcean Spaces. Files, images, uploads.',
   icon: 'HardDrive',
   providers: ['digitalocean'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

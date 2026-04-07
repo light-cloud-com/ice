@@ -93,15 +93,23 @@ export async function validateCanvas(nodes: any[], edges: any[]): Promise<Valida
 
 function mapIssueCodeToType(code: string): ValidationError['type'] {
   switch (code) {
-    case 'MISSING_REQUIRED': return 'missing_property';
-    case 'TYPE_MISMATCH': return 'invalid_type';
-    case 'INVALID_OPTION': return 'invalid_option';
+    case 'MISSING_REQUIRED':
+      return 'missing_property';
+    case 'TYPE_MISMATCH':
+      return 'invalid_type';
+    case 'INVALID_OPTION':
+      return 'invalid_option';
     case 'DANGLING_EDGE_SOURCE':
-    case 'DANGLING_EDGE_TARGET': return 'invalid_edge_ref';
-    case 'INVALID_CONNECTION': return 'invalid_relationship';
+    case 'DANGLING_EDGE_TARGET':
+      return 'invalid_edge_ref';
+    case 'INVALID_CONNECTION':
+      return 'invalid_relationship';
     case 'INVALID_PARENT_REF':
-    case 'PARENT_NOT_CONTAINER': return 'invalid_parent';
-    case 'MISSING_ICE_TYPE': return 'missing_resource';
-    default: return 'missing_resource';
+    case 'PARENT_NOT_CONTAINER':
+      return 'invalid_parent';
+    case 'MISSING_ICE_TYPE':
+      return 'missing_resource';
+    default:
+      return 'missing_resource';
   }
 }

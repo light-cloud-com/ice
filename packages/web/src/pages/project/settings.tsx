@@ -3,6 +3,7 @@
  */
 
 import { ProjectCollaborators } from '@ui/features/account/components/project-collaborators';
+import { useTranslation } from '@ui/i18n';
 import axiosInstance from '@ui/shared/api/axios-instance';
 import { cn } from '@ui/shared/utils/cn';
 import awsIcon from 'devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg';
@@ -10,7 +11,6 @@ import azureIcon from 'devicon/icons/azure/azure-original.svg';
 import gcpIcon from 'devicon/icons/googlecloud/googlecloud-original.svg';
 import { Save, Loader2, Trash2, AlertTriangle } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { useTranslation } from '@ui/i18n';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import type { RootState } from '@ui/store';
@@ -116,7 +116,9 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
           </div>
           <div className="ice-card-body space-y-4">
             <label className="block">
-              <span className="block text-ice-sm font-medium text-ice-text-2 mb-1.5">{t('project.settings.nameLabel')}</span>
+              <span className="block text-ice-sm font-medium text-ice-text-2 mb-1.5">
+                {t('project.settings.nameLabel')}
+              </span>
               <input
                 type="text"
                 name="name"
@@ -126,7 +128,9 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
               />
             </label>
             <label className="block">
-              <span className="block text-ice-sm font-medium text-ice-text-2 mb-1.5">{t('project.settings.descriptionLabel')}</span>
+              <span className="block text-ice-sm font-medium text-ice-text-2 mb-1.5">
+                {t('project.settings.descriptionLabel')}
+              </span>
               <textarea
                 name="description"
                 value={description}
@@ -151,7 +155,9 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
           <div className="ice-card-body space-y-4">
             {/* Provider selector — locked once set */}
             <div>
-              <span className="block text-ice-sm font-medium text-ice-text-2 mb-2">{t('project.settings.providerLabel')}</span>
+              <span className="block text-ice-sm font-medium text-ice-text-2 mb-2">
+                {t('project.settings.providerLabel')}
+              </span>
               <div className="flex gap-2">
                 {PROVIDERS.map((p) => {
                   const isSelected = provider === p.id;
@@ -189,7 +195,10 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
             {provider && (
               <label className="block">
                 <span className="block text-ice-sm font-medium text-ice-text-2 mb-1.5">
-                  {t('project.settings.regionLabel')} {provider && region && <span className="text-ice-text-3 font-normal">🔒 {t('project.settings.regionLocked')}</span>}
+                  {t('project.settings.regionLabel')}{' '}
+                  {provider && region && (
+                    <span className="text-ice-text-3 font-normal">🔒 {t('project.settings.regionLocked')}</span>
+                  )}
                 </span>
                 <select
                   name="region"
@@ -253,9 +262,7 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
         <div className="px-5 py-4 space-y-4">
           <div>
             <p className="text-ice-sm text-ice-text-1 font-medium">{t('project.settings.deleteTitle')}</p>
-            <p className="text-ice-xs text-ice-text-2 mt-1">
-              {t('project.settings.deleteDescription')}
-            </p>
+            <p className="text-ice-xs text-ice-text-2 mt-1">{t('project.settings.deleteDescription')}</p>
           </div>
           <div>
             <label className="block text-ice-xs text-ice-text-2 mb-1.5">

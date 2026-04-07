@@ -7,6 +7,7 @@
  * 3. Service (CI/CD) pipeline events
  */
 
+import { useTranslation } from '@ui/i18n';
 import axiosInstance from '@ui/shared/api/axios-instance';
 import { cn } from '@ui/shared/utils/cn';
 import { selectActiveCard } from '@ui/store/slices/cards-slice';
@@ -24,7 +25,6 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
-import { useTranslation } from '@ui/i18n';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState, AppDispatch } from '@ui/store';
 
@@ -257,7 +257,12 @@ export const ProjectActivity: React.FC<{ projectId: string }> = ({ projectId: _p
 
       {/* Filter tabs */}
       <div className="flex items-center gap-1 mb-4 border-b border-ice-border">
-        <FilterTab active={filter === 'all'} label={t('project.activity.filterAll')} count={counts.all} onClick={() => setFilter('all')} />
+        <FilterTab
+          active={filter === 'all'}
+          label={t('project.activity.filterAll')}
+          count={counts.all}
+          onClick={() => setFilter('all')}
+        />
         <FilterTab
           active={filter === 'ai'}
           icon={Sparkles}
@@ -290,9 +295,7 @@ export const ProjectActivity: React.FC<{ projectId: string }> = ({ projectId: _p
         <div className="text-center py-16">
           <Activity className="w-8 h-8 text-ice-text-3 mx-auto mb-3" />
           <p className="text-ice-text-3 text-sm">{t('project.activity.emptyTitle')}</p>
-          <p className="text-ice-text-3 text-xs mt-1">
-            {t('project.activity.emptyDescription')}
-          </p>
+          <p className="text-ice-text-3 text-xs mt-1">{t('project.activity.emptyDescription')}</p>
         </div>
       ) : (
         <ActivityTimeline

@@ -14,6 +14,5 @@ export const doSpacesBlueprint: BlockBlueprint = createBlueprintFromResource('do
   description: 'DigitalOcean S3-compatible object storage.',
   icon: 'HardDrive',
   providers: ['digitalocean'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

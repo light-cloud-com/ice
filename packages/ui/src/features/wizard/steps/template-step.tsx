@@ -18,14 +18,14 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
-import { useTranslation } from '../../../i18n';
+import { SECURITY_LEVEL_COLORS } from '../../../config/color-palette';
 import {
   ALL_TEMPLATES,
   TEMPLATE_CATEGORIES,
   searchTemplates,
   getProviderCompatibility,
 } from '../../../config/templates';
-import { SECURITY_LEVEL_COLORS } from '../../../config/color-palette';
+import { useTranslation } from '../../../i18n';
 import { Badge } from '../../../shared/components/ui/badge';
 import { SearchInput } from '../../../shared/components/ui/search-input';
 import { cn } from '../../../shared/utils/cn';
@@ -149,9 +149,7 @@ export const TemplateStep: React.FC<TemplateStepProps> = ({
             </div>
             <span className="text-xs font-semibold text-ice-text-1">{t('wizard.template.blankCanvas')}</span>
           </div>
-          <p className="text-ice-xs text-ice-text-2 leading-snug">
-            {t('wizard.template.blankCanvasDesc')}
-          </p>
+          <p className="text-ice-xs text-ice-text-2 leading-snug">{t('wizard.template.blankCanvasDesc')}</p>
         </button>
 
         {/* Template cards */}
@@ -201,7 +199,9 @@ export const TemplateStep: React.FC<TemplateStepProps> = ({
                 >
                   {secBadge.label}
                 </span>
-                <span className="text-ice-xs text-ice-text-3">{template.blocks.length} {t('wizard.template.blocks')}</span>
+                <span className="text-ice-xs text-ice-text-3">
+                  {template.blocks.length} {t('wizard.template.blocks')}
+                </span>
                 {/* Provider compatibility indicator */}
                 {allSupported ? (
                   <span className="flex items-center gap-0.5 text-ice-2xs text-emerald-400">

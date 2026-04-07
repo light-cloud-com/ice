@@ -8,15 +8,9 @@
 import { SCALE_TIERS, type ScaleTier } from '@ice/core/resources';
 import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { selectActiveCard, type CardNode, type CardEdge } from '../../../store/slices/cards-slice';
 import { getApi } from '../../../shared/api/api-adapter';
-import type { RootState } from '../../../store';
-import {
-  computeCostSummary,
-  type CostSummary,
-  type ResourceMap,
-  type ResourceDef,
-} from '../utils/cost-calculator';
+import { selectActiveCard, type CardNode, type CardEdge } from '../../../store/slices/cards-slice';
+import { computeCostSummary, type CostSummary, type ResourceMap, type ResourceDef } from '../utils/cost-calculator';
 import {
   estimateDataTransferCost,
   compareProviderCosts,
@@ -24,6 +18,7 @@ import {
   type DataTransferEstimate,
   type ProviderCostComparison,
 } from '../utils/provider-pricing';
+import type { RootState } from '../../../store';
 
 export interface CostCalculationResult {
   summary: CostSummary;
@@ -74,10 +69,7 @@ export function useCostCalculation(trafficTierIndex: number): CostCalculationRes
   // Map traffic tier index → ScaleTier name
   const scaleTier: ScaleTier = SCALE_TIERS[trafficTierIndex] ?? 'moderate';
 
-  const summary = useMemo(
-    () => computeCostSummary(nodes, resourceMap, scaleTier),
-    [nodes, resourceMap, scaleTier],
-  );
+  const summary = useMemo(() => computeCostSummary(nodes, resourceMap, scaleTier), [nodes, resourceMap, scaleTier]);
 
   const primaryProvider = useMemo(() => {
     const providerCounts = new Map<string, number>();

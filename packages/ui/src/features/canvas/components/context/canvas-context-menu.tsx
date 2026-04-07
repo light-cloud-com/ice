@@ -337,7 +337,11 @@ export const CanvasContextMenu: React.FC = () => {
         )}
         <Separator />
         <MenuItem
-          label={hasMultiSelection ? t('canvas.contextMenu.deleteItems', { count: selectedNodes.length }) : t('canvas.contextMenu.delete')}
+          label={
+            hasMultiSelection
+              ? t('canvas.contextMenu.deleteItems', { count: selectedNodes.length })
+              : t('canvas.contextMenu.delete')
+          }
           shortcut="Del"
           danger
           onClick={() => {
@@ -390,4 +394,3 @@ export const CanvasContextMenu: React.FC = () => {
 
   return null;
 };
-

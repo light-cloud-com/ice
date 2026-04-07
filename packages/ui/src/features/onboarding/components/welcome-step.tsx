@@ -17,14 +17,22 @@ export const WelcomeStep: React.FC = () => {
     <div className="space-y-6 text-center py-4">
       <div>
         <h2 className="text-2xl font-semibold text-ice-text-1">
-          {userName ? t('onboarding.welcome.titleWithName', { name: userName.split(' ')[0] }) : t('onboarding.welcome.title')}
+          {userName
+            ? t('onboarding.welcome.titleWithName', { name: userName.split(' ')[0] })
+            : t('onboarding.welcome.title')}
         </h2>
         <p className="text-sm text-ice-text-2 mt-2">{t('onboarding.welcome.subtitle')}</p>
       </div>
 
       <div className="space-y-3 text-left max-w-sm mx-auto">
-        <Feature title={t('onboarding.welcome.featureCanvas')} description={t('onboarding.welcome.featureCanvasDesc')} />
-        <Feature title={t('onboarding.welcome.featureMultiCloud')} description={t('onboarding.welcome.featureMultiCloudDesc')} />
+        <Feature
+          title={t('onboarding.welcome.featureCanvas')}
+          description={t('onboarding.welcome.featureCanvasDesc')}
+        />
+        <Feature
+          title={t('onboarding.welcome.featureMultiCloud')}
+          description={t('onboarding.welcome.featureMultiCloudDesc')}
+        />
         <Feature title={t('onboarding.welcome.featureCiCd')} description={t('onboarding.welcome.featureCiCdDesc')} />
       </div>
 

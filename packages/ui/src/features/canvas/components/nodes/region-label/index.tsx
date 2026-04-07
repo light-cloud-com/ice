@@ -1,18 +1,6 @@
-/**
- * SVG Region Label Component
- *
- * Subtle, non-interactive background region for VPC/Subnet at L2/L3.
- * Replaces heavy container boxes with a faint tinted area and a small label.
- *
- * - VPC: very faint indigo tint
- * - Subnet: very faint violet tint
- * - No borders, no interaction (pointerEvents: 'none')
- * - Rendered BEHIND all other nodes in z-order
- */
-
 import React, { memo } from 'react';
-import { REGION_STYLES } from '../../../../config/color-palette';
-import type { CanvasNode } from '../svg-canvas';
+import { REGION_STYLES } from '../../../../../config/color-palette';
+import type { CanvasNode } from '../../svg-canvas';
 
 interface SvgRegionLabelProps {
   node: CanvasNode;
@@ -48,4 +36,3 @@ export const SvgRegionLabel: React.FC<SvgRegionLabelProps> = memo(({ node }) => 
 });
 
 SvgRegionLabel.displayName = 'SvgRegionLabel';
-

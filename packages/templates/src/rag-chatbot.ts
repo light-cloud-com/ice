@@ -161,13 +161,28 @@ export const ragChatbotTemplate: ComposedTemplate = {
       data: { size: 'db.t3.medium', storage: '50', version: '17' },
     },
     // 8: Redis Cache
-    { iceType: 'Database.Redis', label: 'Response Cache', position: { x: 636, y: 584 }, data: { size: 'cache.t3.medium', port: 6379 } },
+    {
+      iceType: 'Database.Redis',
+      label: 'Response Cache',
+      position: { x: 636, y: 584 },
+      data: { size: 'cache.t3.medium', port: 6379 },
+    },
     // 9: Doc Storage
-    { iceType: 'Storage.Bucket', label: 'Doc Storage', position: { x: 892, y: 584 }, data: { storage_class: 'standard' } },
+    {
+      iceType: 'Storage.Bucket',
+      label: 'Doc Storage',
+      position: { x: 892, y: 584 },
+      data: { storage_class: 'standard' },
+    },
 
     // ── Ingestion (outside VPC) ───────────────────────────────────────────
     // 10: Ingestion Queue
-    { iceType: 'Messaging.SQS', label: 'Ingestion Queue', position: { x: 50, y: 870 }, data: { queue_type: 'standard' } },
+    {
+      iceType: 'Messaging.SQS',
+      label: 'Ingestion Queue',
+      position: { x: 50, y: 870 },
+      data: { queue_type: 'standard' },
+    },
     // 11: Ingestion Worker
     {
       iceType: 'Compute.Worker',
@@ -186,7 +201,12 @@ export const ragChatbotTemplate: ComposedTemplate = {
     // 14: Domain
     { iceType: 'Network.Domain', label: 'Domain', position: { x: 306, y: 1080 }, data: { hostname: 'chat.acme.io' } },
     // 15: Repo
-    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 562, y: 1080 }, data: { repository: '', branch: 'main' } },
+    {
+      iceType: 'Source.Repository',
+      label: 'GitHub Repo',
+      position: { x: 562, y: 1080 },
+      data: { repository: '', branch: 'main' },
+    },
     // 16: Env
     { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 50, y: 1256 }, data: {} },
   ],

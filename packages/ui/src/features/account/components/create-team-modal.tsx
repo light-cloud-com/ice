@@ -77,7 +77,9 @@ export function CreateTeamModal({ onClose }: Props) {
         {/* Body */}
         <form onSubmit={handleSubmit} className="px-6 py-5">
           <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-ice-text-1">{t('account.createTeam.nameLabel')}</span>
+            <span className="mb-1.5 block text-sm font-medium text-ice-text-1">
+              {t('account.createTeam.nameLabel')}
+            </span>
             <input
               type="text"
               value={name}

@@ -20,6 +20,8 @@ import { CanvasContextMenu } from './context/canvas-context-menu';
 import { ControlsHelpModal } from './controls-help-modal';
 // ConnectionTypePopover removed — connections are fully auto-configured
 import { EmptyCanvasOverlay } from './empty-canvas-overlay';
+import { SvgLogNode } from './nodes/log-node';
+import { getBlueprint, expandBlueprint } from '../../../config/blocks';
 import {
   selectActiveCard,
   addNodeToCard,
@@ -47,14 +49,10 @@ import {
   canConnect,
   CATEGORY_TO_RELATIONSHIP,
 } from '../utils/connection-rules';
-import { SvgCompactNode, computeCompactNodeHeight, computeCompactNodeWidth } from './nodes/svg-compact-node';
-import { SvgGroupNode } from './nodes/svg-group-node';
-import { SvgRegionLabel } from './nodes/svg-region-label';
+import { SvgCompactNode, computeCompactNodeHeight, computeCompactNodeWidth } from './nodes/compact-node';
+import { SvgGroupNode } from './nodes/group-node';
 import { SelectionFrame } from './selection-frame';
 import { SvgConnectionPath, EDGE_COLORS, type ConnectionTooltipInfo } from './svg-connection-path';
-import { SvgLogNode } from './svg-log-node';
-import { getIcon, DEFAULT_ICON, type Provider } from '../../../assets/icons';
-import { getBrandIcon } from '../../../assets/icons/brand-registry';
 import {
   CORNER_RADIUS,
   HEADER_HEIGHT,
@@ -65,14 +63,12 @@ import {
   LOD_THRESHOLD_L2,
   ZOOM_STEP,
 } from '../../../config/canvas-constants';
-import { getBlueprint, expandBlueprint } from '../../../config/blocks';
 import { canContain, isContainer } from '../../../config/containment-rules';
 import { isTypeVisibleAtLevel, isEdgeVisibleAtLevel } from '../../../config/visualization-config';
 import { SvgUserNode, USER_NODE_WIDTH, USER_NODE_HEIGHT, USER_NODE_ID } from '../../../shared/components/svg-user-node';
 import { useClipboard } from '../../../shared/hooks/use-clipboard';
 import { useExposedServices } from '../../../shared/hooks/use-exposed-services';
 import { useUndoRedo } from '../../../shared/hooks/use-undo-redo';
-import { useCanvasValidation } from '../hooks/use-canvas-validation';
 import { calculateZIndex } from '../../../shared/utils/auto-layout';
 import { logCanvasRender, logDrop, logBlueprint } from '../../../shared/utils/debug-logger';
 import { inspectLayout, updateInspectorState, installInspector } from '../../../shared/utils/layout-inspector';
@@ -85,6 +81,7 @@ import {
 } from '../../../store/slices/selection-slice';
 import { setPaneViewport, openContextMenu } from '../../../store/slices/ui-slice';
 import { useCanvasInteractions, type CanvasItem } from '../hooks/use-canvas-interactions';
+import { useCanvasValidation } from '../hooks/use-canvas-validation';
 import type { RootState, AppDispatch } from '../../../store';
 
 // =============================================================================
@@ -218,7 +215,9 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   }, [viewport.zoom, autoOrganizeOnZoom, dispatch]);
 
   // ── Layout Inspector: feed state on every zoom/layout change ──────────
-  useEffect(() => { installInspector(); }, []);
+  useEffect(() => {
+    installInspector();
+  }, []);
 
   useEffect(() => {
     const inspectNodes = nodes.map((n) => ({
@@ -231,7 +230,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       width: n.width,
       height: n.height,
       parentId: n.parentId,
-      folded: !!(n.data?.folded),
+      folded: !!n.data?.folded,
     }));
     const inspectEdges = edges.map((e) => ({
       id: e.id,
@@ -247,7 +246,9 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       if (localStorage.getItem('ice-debug') === 'true') {
         inspectLayout(state);
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }, [viewport.zoom, lod, nodes, edges]);
 
   // Canvas dimensions
@@ -295,8 +296,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   // so hit-testing, container expansion, and rendering all use consistent bounds.
   const canvasNodes: LocalCanvasNode[] = useMemo(() => {
     return nodes.map((node) => {
-      const iceType =
-        (node.data?.iceType as string) || 'Resource.Unknown';
+      const iceType = (node.data?.iceType as string) || 'Resource.Unknown';
 
       const isGroup = iceType.startsWith('Group.') || node.type === 'container' || node.type === ('group' as any);
       const isBlock = node.type === 'block';
@@ -906,9 +906,9 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       //    (auto-layout uses different padding than the clamp bounds)
       const hasDescendants = descendantIds.length > 0;
       const shouldSkipClamp = skipAncestorResize || hasDescendants;
-      dispatch(updateCardNodePositions(
-        shouldSkipClamp ? { updates: positionUpdates, skipClamp: true } : positionUpdates
-      ));
+      dispatch(
+        updateCardNodePositions(shouldSkipClamp ? { updates: positionUpdates, skipClamp: true } : positionUpdates),
+      );
       for (const su of sizeUpdates) {
         dispatch(resizeCardNode(su));
       }
@@ -1004,10 +1004,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
         // No children — use the stored expanded height from Redux
         const reduxNode = nodes.find((n: any) => n.id === nodeId);
         const iceType = (node.data?.iceType as string) || '';
-        const isGroupOrBlock =
-          node.type === 'container' ||
-          node.type === 'block' ||
-          iceType.startsWith('Group.');
+        const isGroupOrBlock = node.type === 'container' || node.type === 'block' || iceType.startsWith('Group.');
         const defaultH = computeCompactNodeHeight(node.data as Record<string, unknown>, isGroupOrBlock, false);
         selfH = Math.max(reduxNode?.height || 0, defaultH, MIN_CONTAINER_HEIGHT);
       }
@@ -1348,7 +1345,8 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       const severityRank = { error: 3, warning: 2, info: 1 } as const;
       const currentRank = existing ? severityRank[existing.severity] : 0;
       const issueRank = severityRank[issue.severity as keyof typeof severityRank] ?? 0;
-      const severity = issueRank > currentRank ? (issue.severity as 'error' | 'warning' | 'info') : (existing?.severity ?? 'info');
+      const severity =
+        issueRank > currentRank ? (issue.severity as 'error' | 'warning' | 'info') : (existing?.severity ?? 'info');
       map.set(issue.nodeId, { severity, count });
     }
     return map;
@@ -1695,11 +1693,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       const containers = visibleNodes
         .filter((n) => {
           const iceType = (n.data.iceType as string) || '';
-          return (
-            isContainer(iceType) ||
-            iceType.startsWith('Group.') ||
-            iceType.startsWith('Network.')
-          );
+          return isContainer(iceType) || iceType.startsWith('Group.') || iceType.startsWith('Network.');
         })
         .sort((a, b) => {
           const aIceType = (a.data.iceType as string) || '';
@@ -1906,7 +1900,12 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     };
 
     // Collect all connections per side-key, with the "other" node for sorting
-    interface SideEntry { connId: string; role: 'source' | 'target'; otherCx: number; otherCy: number }
+    interface SideEntry {
+      connId: string;
+      role: 'source' | 'target';
+      otherCx: number;
+      otherCy: number;
+    }
     const sideGroups = new Map<string, SideEntry[]>();
 
     for (const conn of canvasConnections) {
@@ -2379,12 +2378,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             {sortedNodes
               .filter((n) => {
                 const t = (n.data?.iceType as string) || '';
-                return (
-                  n.type === 'container' ||
-                  n.type === 'block' ||
-                  t === 'Network.VPC' ||
-                  t === 'Network.Subnet'
-                );
+                return n.type === 'container' || n.type === 'block' || t === 'Network.VPC' || t === 'Network.Subnet';
               })
               .map((n) => (
                 <clipPath key={`parent-clip-${n.id}`} id={`parent-clip-${n.id}`}>
@@ -2606,7 +2600,14 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
               return (
                 <g className="connection-preview" style={{ pointerEvents: 'none' }}>
-                  <path d={pathD} stroke={previewColor} strokeWidth={2} fill="none" strokeDasharray="8 4" opacity={0.7} />
+                  <path
+                    d={pathD}
+                    stroke={previewColor}
+                    strokeWidth={2}
+                    fill="none"
+                    strokeDasharray="8 4"
+                    opacity={0.7}
+                  />
                   <circle cx={sourcePoint.x} cy={sourcePoint.y} r={4} fill={previewColor} opacity={0.9} />
                   <circle cx={currentPoint.x} cy={currentPoint.y} r={4} fill={previewColor} opacity={0.6} />
                 </g>
@@ -2839,8 +2840,6 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
       {/* Context Menu overlay */}
       <CanvasContextMenu />
-
     </div>
   );
 };
-

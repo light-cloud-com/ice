@@ -5,8 +5,8 @@
 import { Languages } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 import { useTranslation, LOCALES } from '../../i18n';
-import type { Locale } from '../../i18n';
 import { cn } from '../utils/cn';
+import type { Locale } from '../../i18n';
 
 export const LanguageSwitch: React.FC<{ className?: string }> = ({ className }) => {
   const { locale, setLocale } = useTranslation();

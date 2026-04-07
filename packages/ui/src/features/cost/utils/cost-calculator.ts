@@ -5,8 +5,8 @@
  * cost estimation panel and properties panel.
  */
 
-import { getScalePreset, SCALE_TIERS, type ScaleTier } from '@ice/core/resources';
-import type { CardNode, CardEdge } from '../../../store/slices/cards-slice';
+import { getScalePreset, type ScaleTier } from '@ice/core/resources';
+import type { CardNode } from '../../../store/slices/cards-slice';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -88,7 +88,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 /** Parse cost strings like "~$36/mo", "$60-120", "$0.023/GB/mo", "Free" → numeric value */
 export function parseCostRange(cost: string): number {
   if (!cost || /free/i.test(cost)) return 0;
-  const matches = cost.match(/\$([\d,]+(?:\.\d+)?)(?:[–\-]([\d,]+(?:\.\d+)?))?/);
+  const matches = cost.match(/\$([\d,]+(?:\.\d+)?)(?:[–-]([\d,]+(?:\.\d+)?))?/);
   if (!matches) return 0;
   const low = parseFloat(matches[1].replace(/,/g, ''));
   const high = matches[2] ? parseFloat(matches[2].replace(/,/g, '')) : low;
@@ -128,7 +128,7 @@ const REQUESTS_M_BY_TIER: Record<string, number> = {
  */
 function resolvePerUnitCost(cost: string, rate: number, tier: string): number {
   if (/\/GB/i.test(cost)) return rate * (STORAGE_GB_BY_TIER[tier] ?? 50);
-  if (/\/TB/i.test(cost)) return rate * (STORAGE_GB_BY_TIER[tier] ?? 50) / 1000;
+  if (/\/TB/i.test(cost)) return (rate * (STORAGE_GB_BY_TIER[tier] ?? 50)) / 1000;
   if (/\/M\b/i.test(cost)) return rate * (REQUESTS_M_BY_TIER[tier] ?? 1);
   if (/\/K\b/i.test(cost)) return rate * (REQUESTS_M_BY_TIER[tier] ?? 1) * 1000;
   return rate; // Flat rate, return as-is
@@ -139,7 +139,7 @@ function resolvePerUnitCost(cost: string, rate: number, tier: string): number {
 // running at each traffic tier. At "dev" you run min, at "very-high" you run max.
 
 const TIER_SCALE_FACTOR: Record<string, number> = {
-  dev: 0,        // min instances only
+  dev: 0, // min instances only
   low: 0.1,
   moderate: 0.25,
   medium: 0.5,
@@ -229,9 +229,8 @@ function lookupCostFromResources(
   const resolvedResourceId = resourceId || (resourceDef as any).id || '';
 
   // Get scale preset overrides for the selected tier
-  const presetOverrides = scaleTier && resolvedResourceId
-    ? getScalePreset(resolvedResourceId, scaleTier, provider)
-    : {};
+  const presetOverrides =
+    scaleTier && resolvedResourceId ? getScalePreset(resolvedResourceId, scaleTier, provider) : {};
 
   // Check each property's optionDetails for a cost-bearing match
   for (const prop of resourceDef.properties) {
@@ -243,21 +242,15 @@ function lookupCostFromResources(
     if (nodeValue != null) {
       // Find the matching option — prefer provider-specific match, then any
       const match = provider
-        ? prop.optionDetails.find(
-            (o) => o.value === String(nodeValue) && o.cost && o.provider === provider,
-          ) || prop.optionDetails.find(
-            (o) => o.value === String(nodeValue) && o.cost,
-          )
-        : prop.optionDetails.find(
-            (o) => o.value === String(nodeValue) && o.cost,
-          );
+        ? prop.optionDetails.find((o) => o.value === String(nodeValue) && o.cost && o.provider === provider) ||
+          prop.optionDetails.find((o) => o.value === String(nodeValue) && o.cost)
+        : prop.optionDetails.find((o) => o.value === String(nodeValue) && o.cost);
       if (match?.cost) return match.cost;
     }
 
     // Last resort: first option with a cost (prefer provider-specific if provider is known)
     const fallback = provider
-      ? prop.optionDetails.find((o) => o.cost && o.provider === provider)
-        || prop.optionDetails.find((o) => o.cost)
+      ? prop.optionDetails.find((o) => o.cost && o.provider === provider) || prop.optionDetails.find((o) => o.cost)
       : prop.optionDetails.find((o) => o.cost);
     if (fallback?.cost) return fallback.cost;
   }
@@ -266,7 +259,11 @@ function lookupCostFromResources(
 }
 
 /** Extract cost info from a single node */
-export function getNodeCostInfo(node: CardNode, resourceMap?: ResourceMap | null, scaleTier?: ScaleTier | null): NodeCostInfo {
+export function getNodeCostInfo(
+  node: CardNode,
+  resourceMap?: ResourceMap | null,
+  scaleTier?: ScaleTier | null,
+): NodeCostInfo {
   const data = node.data || {};
   const iceType = (data.iceType as string) || (data.ice_type as string) || '';
   const label = (data.label as string) || node.id;
@@ -280,9 +277,8 @@ export function getNodeCostInfo(node: CardNode, resourceMap?: ResourceMap | null
 
   // When a traffic tier is set, estimate instance count based on the tier.
   // At "dev" → min instances, at "very-high" → max instances.
-  const activeInstances = scaleTier && isScalable
-    ? estimateInstances(minInstances, maxInstances, scaleTier)
-    : configuredInstances;
+  const activeInstances =
+    scaleTier && isScalable ? estimateInstances(minInstances, maxInstances, scaleTier) : configuredInstances;
 
   // Try estimatedCost from node data first, then look up from resource definitions.
   // When a scaleTier is set, always prefer the resource lookup (tier overrides node config).
@@ -319,10 +315,12 @@ export function getNodeCostInfo(node: CardNode, resourceMap?: ResourceMap | null
 // ─── Aggregation ────────────────────────────────────────────────────────────
 
 /** Compute full cost summary for a set of nodes */
-export function computeCostSummary(nodes: CardNode[], resourceMap?: ResourceMap | null, scaleTier?: ScaleTier | null): CostSummary {
-  const infos = nodes
-    .filter((n) => n.type !== 'container')
-    .map((n) => getNodeCostInfo(n, resourceMap, scaleTier));
+export function computeCostSummary(
+  nodes: CardNode[],
+  resourceMap?: ResourceMap | null,
+  scaleTier?: ScaleTier | null,
+): CostSummary {
+  const infos = nodes.filter((n) => n.type !== 'container').map((n) => getNodeCostInfo(n, resourceMap, scaleTier));
 
   // Group by category
   const categoryMap = new Map<string, NodeCostInfo[]>();
@@ -348,22 +346,11 @@ export function computeCostSummary(nodes: CardNode[], resourceMap?: ResourceMap 
   const scalableNodes = infos.filter((n) => n.isScalable);
 
   // Scaling range: min = all at minInstances, max = all at maxInstances
-  const fixedCost = infos
-    .filter((n) => !n.isScalable)
-    .reduce((sum, n) => sum + n.monthlyCost, 0);
+  const fixedCost = infos.filter((n) => !n.isScalable).reduce((sum, n) => sum + n.monthlyCost, 0);
 
-  const scalableMinCost = scalableNodes.reduce(
-    (sum, n) => sum + n.perInstanceCost * n.minInstances,
-    0,
-  );
-  const scalableMaxCost = scalableNodes.reduce(
-    (sum, n) => sum + n.perInstanceCost * n.maxInstances,
-    0,
-  );
-  const scalableCurrentCost = scalableNodes.reduce(
-    (sum, n) => sum + n.monthlyCost,
-    0,
-  );
+  const scalableMinCost = scalableNodes.reduce((sum, n) => sum + n.perInstanceCost * n.minInstances, 0);
+  const scalableMaxCost = scalableNodes.reduce((sum, n) => sum + n.perInstanceCost * n.maxInstances, 0);
+  const scalableCurrentCost = scalableNodes.reduce((sum, n) => sum + n.monthlyCost, 0);
 
   return {
     totalMonthlyCost,

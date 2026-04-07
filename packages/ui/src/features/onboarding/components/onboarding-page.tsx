@@ -9,7 +9,6 @@ import { ChevronLeft, ChevronRight, Sparkles, SkipForward } from 'lucide-react';
 import React, { useCallback, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from '../../../i18n';
 import { ConnectCloudStep } from './connect-cloud-step';
 import { ConnectGithubStep } from './connect-github-step';
 import { FirstProjectStep } from './first-project-step';
@@ -17,6 +16,7 @@ import { WelcomeStep } from './welcome-step';
 import logoDark from '../../../assets/logo-dark.png';
 import logoLight from '../../../assets/logo-light.png';
 import { COMPOSED_TEMPLATES, QUICK_STARTS, expandComposedTemplate } from '../../../config/templates';
+import { useTranslation } from '../../../i18n';
 import axiosInstance from '../../../shared/api/axios-instance';
 import { StepIndicator } from '../../../shared/components/step-indicator';
 import { useTheme } from '../../../shared/hooks/use-theme';
@@ -170,11 +170,16 @@ export const OnboardingPage: React.FC = () => {
   // Map step number to component (no team step)
   const stepContent = () => {
     switch (currentStep) {
-      case 1: return <WelcomeStep />;
-      case 2: return <ConnectCloudStep />;
-      case 3: return <ConnectGithubStep />;
-      case 4: return <FirstProjectStep />;
-      default: return <WelcomeStep />;
+      case 1:
+        return <WelcomeStep />;
+      case 2:
+        return <ConnectCloudStep />;
+      case 3:
+        return <ConnectGithubStep />;
+      case 4:
+        return <FirstProjectStep />;
+      default:
+        return <WelcomeStep />;
     }
   };
 
@@ -203,9 +208,7 @@ export const OnboardingPage: React.FC = () => {
       <div className="relative z-10 flex-1 flex items-center justify-center px-4 py-6">
         <div className="w-full max-w-lg">
           <div className="ice-card">
-            <div className="ice-card-body">
-              {stepContent()}
-            </div>
+            <div className="ice-card-body">{stepContent()}</div>
           </div>
 
           <div className="flex items-center justify-between mt-4">

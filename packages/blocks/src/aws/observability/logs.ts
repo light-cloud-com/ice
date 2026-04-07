@@ -8,6 +8,5 @@ export const awsLogsBlueprint: BlockBlueprint = createBlueprintFromResource('log
   description: 'AWS CloudWatch. Errors, performance, alerts.',
   icon: 'FileText',
   providers: ['aws'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

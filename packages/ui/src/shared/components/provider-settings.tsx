@@ -23,9 +23,9 @@ import {
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from '../../i18n';
 import { getApi } from '../api/api-adapter';
 import { useGCPOAuth } from '../hooks/use-gcp-oauth';
-import { useTranslation } from '../../i18n';
 import { cn } from '../utils/cn';
 
 // Provider configuration type
@@ -396,9 +396,7 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
 
         {/* Content */}
         <div className="p-4 overflow-auto max-h-[60vh]">
-          <p className="text-sm text-muted-foreground mb-4">
-            {t('providerSettings.description')}
-          </p>
+          <p className="text-sm text-muted-foreground mb-4">{t('providerSettings.description')}</p>
 
           <div className="space-y-3">
             {PROVIDER_CONFIGS.map((provider) => {
@@ -455,7 +453,9 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
                         /* Connected state - show projects and import button */
                         <div className="space-y-3 mt-3">
                           <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">{t('providerSettings.projects.label', { count: state.projects.length })}</span>
+                            <span className="text-sm font-medium">
+                              {t('providerSettings.projects.label', { count: state.projects.length })}
+                            </span>
                             <div className="flex items-center gap-2">
                               {provider.id === 'gcp' && (
                                 <button
@@ -478,7 +478,9 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
                           {/* Add project form for GCP */}
                           {showAddProject === provider.id && provider.id === 'gcp' && (
                             <div className="p-3 bg-muted/50 rounded-md space-y-2 border border-dashed border-border">
-                              <div className="text-xs font-medium text-muted-foreground">{t('providerSettings.projects.addAnother')}</div>
+                              <div className="text-xs font-medium text-muted-foreground">
+                                {t('providerSettings.projects.addAnother')}
+                              </div>
                               {provider.configFields.map((field) => (
                                 <div key={field.name}>
                                   <label className="text-xs text-muted-foreground">{field.label}</label>
@@ -613,7 +615,9 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
                               ))}
                             </div>
                           ) : (
-                            <div className="text-sm text-muted-foreground text-center py-4">{t('providerSettings.projects.noProjects')}</div>
+                            <div className="text-sm text-muted-foreground text-center py-4">
+                              {t('providerSettings.projects.noProjects')}
+                            </div>
                           )}
                         </div>
                       ) : (
@@ -735,7 +739,9 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
                             ) : (
                               <>
                                 <Check className="w-4 h-4" />
-                                {provider.id === 'gcp' ? t('providerSettings.connect.buttonGcp') : t('providerSettings.connect.button')}
+                                {provider.id === 'gcp'
+                                  ? t('providerSettings.connect.buttonGcp')
+                                  : t('providerSettings.connect.button')}
                               </>
                             )}
                           </button>
@@ -754,7 +760,8 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
               <HelpCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
               <div className="text-xs space-y-2">
                 <div>
-                  <strong>{t('providerSettings.info.credentialsSafe')}</strong> — {t('providerSettings.info.credentialsSafeDesc')}
+                  <strong>{t('providerSettings.info.credentialsSafe')}</strong> —{' '}
+                  {t('providerSettings.info.credentialsSafeDesc')}
                 </div>
                 <div className="pt-1 border-t border-blue-200 dark:border-blue-800">
                   {t('providerSettings.info.gcpTip')}
@@ -775,4 +782,3 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
     document.body,
   );
 };
-

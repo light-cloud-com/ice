@@ -15,10 +15,7 @@ import type { CanvasIssue, ValidatableNode, ValidatableEdge } from './types.js';
 /**
  * Validate structural integrity of the canvas.
  */
-export function validateStructure(
-  nodes: readonly ValidatableNode[],
-  edges: readonly ValidatableEdge[],
-): CanvasIssue[] {
+export function validateStructure(nodes: readonly ValidatableNode[], edges: readonly ValidatableEdge[]): CanvasIssue[] {
   const issues: CanvasIssue[] = [];
   const nodeIds = new Set<string>();
   const nodeMap = new Map<string, ValidatableNode>();
@@ -71,7 +68,7 @@ export function validateStructure(
       continue;
     }
 
-    const parentIceType = parent.data.iceType as string ?? '';
+    const parentIceType = (parent.data.iceType as string) ?? '';
     if (!isContainer(parentIceType, parent.type) && parent.type !== 'container' && parent.type !== 'group') {
       issues.push({
         id: `struct:${node.id}:PARENT_NOT_CONTAINER`,
@@ -125,7 +122,7 @@ export function validateStructure(
   }
 
   for (const node of nodes) {
-    const iceType = node.data.iceType as string ?? '';
+    const iceType = (node.data.iceType as string) ?? '';
     // Skip containers, groups, monitoring (often standalone), domain, env config
     if (isContainer(iceType, node.type)) continue;
     if (node.type === 'container' || node.type === 'group') continue;

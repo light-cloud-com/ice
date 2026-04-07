@@ -29,8 +29,6 @@ import {
   Box,
   Cable,
   Layers,
-  X,
-  Search,
   Plus,
   Heart,
   Landmark,
@@ -43,6 +41,7 @@ import {
 } from 'lucide-react';
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { SECURITY_LEVEL_COLORS } from '../../../config/color-palette';
 import {
   ALL_TEMPLATES,
   TEMPLATE_CATEGORIES,
@@ -50,17 +49,13 @@ import {
   getFeaturedTemplates,
   expandComposedTemplate,
 } from '../../../config/templates';
-import { SECURITY_LEVEL_COLORS } from '../../../config/color-palette';
-import { Badge } from '../../../shared/components/ui/badge';
-import { SearchInput } from '../../../shared/components/ui/search-input';
-import {
-  Dialog,
-  DialogContent,
-} from '../../../shared/components/ui/dialog';
-import { useTranslation } from '../../../i18n';
-import { cn } from '../../../shared/utils/cn';
-import { compareProviderCosts } from '../../../features/cost/utils/provider-pricing';
 import { formatCostRaw } from '../../../features/cost/utils/cost-calculator';
+import { compareProviderCosts } from '../../../features/cost/utils/provider-pricing';
+import { useTranslation } from '../../../i18n';
+import { Badge } from '../../../shared/components/ui/badge';
+import { Dialog, DialogContent } from '../../../shared/components/ui/dialog';
+import { SearchInput } from '../../../shared/components/ui/search-input';
+import { cn } from '../../../shared/utils/cn';
 import { addToActiveCard } from '../../../store/slices/cards-slice';
 import { closeTemplateGallery } from '../../../store/slices/ui-slice';
 import type { ComposedTemplate, TemplateCategory, TemplateCategoryMeta } from '../../../config/templates';
@@ -71,9 +66,26 @@ import type { AppDispatch, RootState } from '../../../store';
 // =============================================================================
 
 const ICON_MAP: Record<string, React.ElementType> = {
-  Rocket, Brain, BrainCircuit, ShieldCheck, Zap, Server, Activity, Globe,
-  Waypoints, ShoppingCart, Smartphone, GitBranch, Heart, Landmark, Play,
-  Cloud, Cpu, Gamepad2, Truck, GraduationCap,
+  Rocket,
+  Brain,
+  BrainCircuit,
+  ShieldCheck,
+  Zap,
+  Server,
+  Activity,
+  Globe,
+  Waypoints,
+  ShoppingCart,
+  Smartphone,
+  GitBranch,
+  Heart,
+  Landmark,
+  Play,
+  Cloud,
+  Cpu,
+  Gamepad2,
+  Truck,
+  GraduationCap,
 };
 
 const DIFFICULTY_LABELS: Record<string, { label: string; dots: number }> = {
@@ -103,7 +115,9 @@ const ProviderBadges: React.FC<{ providers?: string[] }> = ({ providers }) => {
   return (
     <span className="flex items-center gap-0.5">
       {providers.map((p) => (
-        <span key={p} className="text-ice-2xs font-medium px-1 py-0 rounded bg-ice-raised text-ice-text-3 uppercase">{p}</span>
+        <span key={p} className="text-ice-2xs font-medium px-1 py-0 rounded bg-ice-raised text-ice-text-3 uppercase">
+          {p}
+        </span>
       ))}
     </span>
   );
@@ -112,10 +126,12 @@ const ProviderBadges: React.FC<{ providers?: string[] }> = ({ providers }) => {
 const TrustBadge: React.FC<{ trust?: string }> = ({ trust }) => {
   if (!trust || trust === 'community') return null;
   return (
-    <span className={cn(
-      'text-ice-2xs font-semibold px-1 py-0 rounded',
-      trust === 'official' ? 'bg-ice-accent/15 text-ice-accent' : 'bg-emerald-500/15 text-emerald-400',
-    )}>
+    <span
+      className={cn(
+        'text-ice-2xs font-semibold px-1 py-0 rounded',
+        trust === 'official' ? 'bg-ice-accent/15 text-ice-accent' : 'bg-emerald-500/15 text-emerald-400',
+      )}
+    >
       {trust === 'official' ? 'Official' : 'Verified'}
     </span>
   );
@@ -178,7 +194,9 @@ const TemplateCard: React.FC<TemplateCardProps> = React.memo(({ template, onSele
       {/* Tags */}
       <div className="flex gap-1 flex-wrap">
         {template.tags.slice(0, 4).map((tag) => (
-          <Badge key={tag} variant="secondary" className="text-ice-2xs px-1.5 py-0">{tag}</Badge>
+          <Badge key={tag} variant="secondary" className="text-ice-2xs px-1.5 py-0">
+            {tag}
+          </Badge>
         ))}
       </div>
     </button>
@@ -249,7 +267,10 @@ const TemplateDetail: React.FC<TemplateDetailProps> = ({ template, onBack, onUse
               <div className="flex items-center gap-2 mt-1">
                 <TrustBadge trust={template.trust} />
                 {catMeta && (
-                  <span className="text-ice-2xs px-1.5 py-0.5 rounded font-medium" style={{ color: catMeta.color, backgroundColor: catMeta.color + '15' }}>
+                  <span
+                    className="text-ice-2xs px-1.5 py-0.5 rounded font-medium"
+                    style={{ color: catMeta.color, backgroundColor: catMeta.color + '15' }}
+                  >
                     {catMeta.label}
                   </span>
                 )}
@@ -270,7 +291,9 @@ const TemplateDetail: React.FC<TemplateDetailProps> = ({ template, onBack, onUse
             <div className="text-ice-2xs text-ice-text-3">{t('templates.gallery.difficulty')}</div>
           </div>
           <div className="bg-ice-surface px-3 py-2.5 text-center">
-            <div className="text-sm font-semibold" style={{ color: secColor }}>{template.securityLevel}</div>
+            <div className="text-sm font-semibold" style={{ color: secColor }}>
+              {template.securityLevel}
+            </div>
             <div className="text-ice-2xs text-ice-text-3">{t('templates.gallery.security')}</div>
           </div>
         </div>
@@ -278,10 +301,17 @@ const TemplateDetail: React.FC<TemplateDetailProps> = ({ template, onBack, onUse
         {/* Providers */}
         {template.providers && template.providers.length > 0 && (
           <div className="px-5 mb-4">
-            <div className="text-ice-2xs font-medium text-ice-text-3 uppercase tracking-wider mb-1.5">{t('templates.gallery.provider')}</div>
+            <div className="text-ice-2xs font-medium text-ice-text-3 uppercase tracking-wider mb-1.5">
+              {t('templates.gallery.provider')}
+            </div>
             <div className="flex gap-1.5">
               {template.providers.map((p) => (
-                <span key={p} className="text-ice-xs font-medium px-2.5 py-1 rounded-md bg-ice-raised text-ice-text-2 uppercase">{p}</span>
+                <span
+                  key={p}
+                  className="text-ice-xs font-medium px-2.5 py-1 rounded-md bg-ice-raised text-ice-text-2 uppercase"
+                >
+                  {p}
+                </span>
               ))}
             </div>
           </div>
@@ -290,7 +320,9 @@ const TemplateDetail: React.FC<TemplateDetailProps> = ({ template, onBack, onUse
         {/* Provider Cost Comparison */}
         {providerComparison.length > 0 && (
           <div className="px-5 mb-4">
-            <div className="text-ice-2xs font-medium text-ice-text-3 uppercase tracking-wider mb-1.5">{t('cost.providerComparison')}</div>
+            <div className="text-ice-2xs font-medium text-ice-text-3 uppercase tracking-wider mb-1.5">
+              {t('cost.providerComparison')}
+            </div>
             <div className="space-y-1.5">
               {providerComparison.map((pc) => (
                 <div
@@ -311,13 +343,9 @@ const TemplateDetail: React.FC<TemplateDetailProps> = ({ template, onBack, onUse
                       {formatCostRaw(pc.totalMonthlyCost)}/mo
                     </span>
                     {pc.provider !== (template.provider || 'aws') && pc.delta !== 0 && (
-                      <span
-                        className={cn(
-                          'text-ice-xs font-mono',
-                          pc.delta < 0 ? 'text-emerald-400' : 'text-red-400',
-                        )}
-                      >
-                        {pc.delta > 0 ? '+' : ''}{Math.round(pc.deltaPercent)}%
+                      <span className={cn('text-ice-xs font-mono', pc.delta < 0 ? 'text-emerald-400' : 'text-red-400')}>
+                        {pc.delta > 0 ? '+' : ''}
+                        {Math.round(pc.deltaPercent)}%
                       </span>
                     )}
                   </div>
@@ -333,7 +361,12 @@ const TemplateDetail: React.FC<TemplateDetailProps> = ({ template, onBack, onUse
             <div className="text-ice-2xs font-medium text-ice-text-3 uppercase tracking-wider mb-1.5">Compliance</div>
             <div className="flex gap-1.5">
               {template.compliance.map((tag) => (
-                <span key={tag} className="text-ice-xs font-medium px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-400 uppercase">{tag}</span>
+                <span
+                  key={tag}
+                  className="text-ice-xs font-medium px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-400 uppercase"
+                >
+                  {tag}
+                </span>
               ))}
             </div>
           </div>
@@ -341,7 +374,9 @@ const TemplateDetail: React.FC<TemplateDetailProps> = ({ template, onBack, onUse
 
         {/* Resources */}
         <div className="px-5 mb-4">
-          <div className="text-ice-2xs font-medium text-ice-text-3 uppercase tracking-wider mb-2">{t('templates.gallery.resourceBreakdown')}</div>
+          <div className="text-ice-2xs font-medium text-ice-text-3 uppercase tracking-wider mb-2">
+            {t('templates.gallery.resourceBreakdown')}
+          </div>
           <div className="space-y-1.5">
             {Array.from(blocksByCategory.entries()).map(([category, labels]) => (
               <div key={category} className="flex items-start gap-2 text-ice-xs">
@@ -355,13 +390,17 @@ const TemplateDetail: React.FC<TemplateDetailProps> = ({ template, onBack, onUse
             {template.connections.length > 0 && (
               <div className="flex items-center gap-2 text-ice-xs">
                 <Cable className="w-3 h-3 text-ice-text-3 shrink-0" />
-                <span className="text-ice-text-3">{template.connections.length} {t('templates.gallery.connections')}</span>
+                <span className="text-ice-text-3">
+                  {template.connections.length} {t('templates.gallery.connections')}
+                </span>
               </div>
             )}
             {template.groups && template.groups.length > 0 && (
               <div className="flex items-center gap-2 text-ice-xs">
                 <Layers className="w-3 h-3 text-ice-text-3 shrink-0" />
-                <span className="text-ice-text-3">{template.groups.length} {t('templates.gallery.groups')}</span>
+                <span className="text-ice-text-3">
+                  {template.groups.length} {t('templates.gallery.groups')}
+                </span>
               </div>
             )}
           </div>
@@ -370,7 +409,9 @@ const TemplateDetail: React.FC<TemplateDetailProps> = ({ template, onBack, onUse
         {/* Environments */}
         {template.environmentPresets.length > 0 && (
           <div className="px-5 mb-4">
-            <div className="text-ice-2xs font-medium text-ice-text-3 uppercase tracking-wider mb-1.5">{t('templates.gallery.environmentPresets')}</div>
+            <div className="text-ice-2xs font-medium text-ice-text-3 uppercase tracking-wider mb-1.5">
+              {t('templates.gallery.environmentPresets')}
+            </div>
             <div className="flex gap-1.5 flex-wrap">
               {template.environmentPresets.map((env) => (
                 <span key={env.name} className="text-ice-xs px-2 py-0.5 rounded bg-ice-raised text-ice-text-2">
@@ -384,10 +425,14 @@ const TemplateDetail: React.FC<TemplateDetailProps> = ({ template, onBack, onUse
         {/* Tags */}
         {template.tags.length > 0 && (
           <div className="px-5 mb-4">
-            <div className="text-ice-2xs font-medium text-ice-text-3 uppercase tracking-wider mb-1.5">{t('templates.gallery.tags')}</div>
+            <div className="text-ice-2xs font-medium text-ice-text-3 uppercase tracking-wider mb-1.5">
+              {t('templates.gallery.tags')}
+            </div>
             <div className="flex gap-1.5 flex-wrap">
               {template.tags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="text-ice-2xs px-1.5 py-0.5">{tag}</Badge>
+                <Badge key={tag} variant="secondary" className="text-ice-2xs px-1.5 py-0.5">
+                  {tag}
+                </Badge>
               ))}
             </div>
           </div>
@@ -396,8 +441,12 @@ const TemplateDetail: React.FC<TemplateDetailProps> = ({ template, onBack, onUse
         {/* Repo */}
         {template.repo && (
           <div className="px-5 mb-5">
-            <a href={template.repo.url} target="_blank" rel="noopener noreferrer"
-              className="text-ice-xs text-ice-accent hover:underline flex items-center gap-1">
+            <a
+              href={template.repo.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-ice-xs text-ice-accent hover:underline flex items-center gap-1"
+            >
               <GitBranch className="w-3 h-3" /> View Repository
             </a>
           </div>
@@ -413,7 +462,9 @@ const TemplateDetail: React.FC<TemplateDetailProps> = ({ template, onBack, onUse
           <Plus className="w-4 h-4" />
           Add to Canvas
         </button>
-        <p className="text-ice-2xs text-ice-text-3 text-center mt-1.5">Adds to your current design — won't replace existing blocks</p>
+        <p className="text-ice-2xs text-ice-text-3 text-center mt-1.5">
+          Adds to your current design — won't replace existing blocks
+        </p>
       </div>
     </div>
   );
@@ -523,11 +574,7 @@ export const TemplateGalleryDialog: React.FC = () => {
           </div>
 
           {/* Search */}
-          <SearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder={t('templates.searchPlaceholder')}
-          />
+          <SearchInput value={search} onChange={setSearch} placeholder={t('templates.searchPlaceholder')} />
         </div>
 
         {/* Category tabs */}
@@ -559,7 +606,11 @@ export const TemplateGalleryDialog: React.FC = () => {
                 )}
                 style={
                   activeCategory === cat.id
-                    ? { backgroundColor: cat.color + '20', color: cat.color, ['--tw-ring-color' as string]: cat.color + '66' }
+                    ? {
+                        backgroundColor: cat.color + '20',
+                        color: cat.color,
+                        ['--tw-ring-color' as string]: cat.color + '66',
+                      }
                     : undefined
                 }
               >
@@ -587,7 +638,9 @@ export const TemplateGalleryDialog: React.FC = () => {
                 <div>
                   <div className="flex items-center gap-1.5 mb-2.5">
                     <Sparkles className="w-3.5 h-3.5 text-ice-accent" />
-                    <span className="text-ice-xs font-semibold text-ice-accent uppercase tracking-wider">{t('templates.gallery.featured')}</span>
+                    <span className="text-ice-xs font-semibold text-ice-accent uppercase tracking-wider">
+                      {t('templates.gallery.featured')}
+                    </span>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     {featured.map((tpl) => (
@@ -604,7 +657,10 @@ export const TemplateGalleryDialog: React.FC = () => {
                   <div key={category.id}>
                     <div className="flex items-center gap-1.5 mb-2.5">
                       <CatIcon className="w-3.5 h-3.5" style={{ color: category.color }} />
-                      <span className="text-ice-xs font-semibold uppercase tracking-wider" style={{ color: category.color }}>
+                      <span
+                        className="text-ice-xs font-semibold uppercase tracking-wider"
+                        style={{ color: category.color }}
+                      >
                         {category.label}
                       </span>
                       <span className="text-ice-2xs text-ice-text-3">({templates.length})</span>

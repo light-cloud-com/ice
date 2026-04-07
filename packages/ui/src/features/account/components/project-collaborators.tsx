@@ -128,7 +128,8 @@ export const ProjectCollaborators: React.FC<ProjectCollaboratorsProps> = ({ proj
         <div>
           <h3 className="text-ice-sm font-medium text-ice-text-1">{t('account.collaborators.title')}</h3>
           <p className="text-ice-xs text-ice-text-3">
-            {members.length} {t('account.collaborators.memberCount')}{members.length !== 1 ? 's' : ''}
+            {members.length} {t('account.collaborators.memberCount')}
+            {members.length !== 1 ? 's' : ''}
           </p>
         </div>
         {availableToAdd.length > 0 && (
@@ -146,7 +147,9 @@ export const ProjectCollaborators: React.FC<ProjectCollaboratorsProps> = ({ proj
       {showAdd && (
         <div className="p-3 rounded-lg bg-ice-raised border border-ice-border space-y-3">
           <div>
-            <label className="block text-ice-xs font-medium text-ice-text-2 mb-1">{t('account.collaborators.teamMemberLabel')}</label>
+            <label className="block text-ice-xs font-medium text-ice-text-2 mb-1">
+              {t('account.collaborators.teamMemberLabel')}
+            </label>
             <select value={addUserId} onChange={(e) => setAddUserId(e.target.value)} className="ice-input w-full">
               <option value="">{t('account.collaborators.selectMember')}</option>
               {availableToAdd.map((m) => (
@@ -157,7 +160,9 @@ export const ProjectCollaborators: React.FC<ProjectCollaboratorsProps> = ({ proj
             </select>
           </div>
           <div>
-            <label className="block text-ice-xs font-medium text-ice-text-2 mb-1">{t('account.collaborators.roleLabel')}</label>
+            <label className="block text-ice-xs font-medium text-ice-text-2 mb-1">
+              {t('account.collaborators.roleLabel')}
+            </label>
             <div className="space-y-1.5">
               {ROLE_DEFS.map((r) => {
                 const Icon = r.icon;

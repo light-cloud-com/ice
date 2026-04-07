@@ -8,9 +8,9 @@ import { FolderOpen, FolderPlus, FileText, ChevronRight, RefreshCw, PlayCircle }
 import React, { useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { TREE_INDENT_PX, TREE_INDENT_BASE } from '../../../config/canvas-constants';
+import { useTranslation } from '../../../i18n';
 import { getApi } from '../../../shared/api/api-adapter';
 import { SearchInput } from '../../../shared/components/ui/search-input';
-import { useTranslation } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
 import { createCard, importToActiveCard, type CardNode, type CardEdge } from '../../../store/slices/cards-slice';
 import {
@@ -334,7 +334,9 @@ export const ProjectList: React.FC = () => {
       {/* Header */}
       <div className="px-3 py-2 border-b border-ice-border">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-ice-sm font-medium text-ice-text-2 uppercase tracking-wider">{t('projectList.header')}</span>
+          <span className="text-ice-sm font-medium text-ice-text-2 uppercase tracking-wider">
+            {t('projectList.header')}
+          </span>
           <div className="flex items-center gap-1">
             {/* Open All button - only show when files exist */}
             {files.length > 0 && (
@@ -448,4 +450,3 @@ export const ProjectList: React.FC = () => {
     </div>
   );
 };
-

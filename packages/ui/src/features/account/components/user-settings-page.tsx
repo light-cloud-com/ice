@@ -65,7 +65,9 @@ export function UserSettingsPage() {
         <form onSubmit={handleProfileSave} className="space-y-4 px-6 py-5">
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-ice-text-2">{t('account.settings.firstNameLabel')}</span>
+              <span className="mb-1.5 block text-sm font-medium text-ice-text-2">
+                {t('account.settings.firstNameLabel')}
+              </span>
               <input
                 id="ice-settings-input-name"
                 type="text"
@@ -75,7 +77,9 @@ export function UserSettingsPage() {
               />
             </label>
             <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-ice-text-2">{t('account.settings.lastNameLabel')}</span>
+              <span className="mb-1.5 block text-sm font-medium text-ice-text-2">
+                {t('account.settings.lastNameLabel')}
+              </span>
               <input
                 type="text"
                 value={lastName}

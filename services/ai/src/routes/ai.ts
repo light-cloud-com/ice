@@ -15,7 +15,7 @@ import { requireAuth, requireProjectAccess, type AuthRequest } from '@ice/shared
 import { Router, type Router as RouterType, type Response } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import { listAuditEntries, getAuditEntry } from '../services/ai-audit.service';
-import { processCanvasIntent, streamCanvasIntent, getAiProvider, getAiProviderSync } from '../services/ai.service';
+import { processCanvasIntent, streamCanvasIntent, getAiProvider } from '../services/ai.service';
 import { validateCanvas } from '../services/canvas-validation.service';
 import { dryRunDeploy } from '../services/deploy-dryrun.service';
 import type { AiCanvasIntentRequest } from '@ice/types';

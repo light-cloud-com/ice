@@ -8,6 +8,5 @@ export const kubernetesStorageBlueprint: BlockBlueprint = createBlueprintFromRes
   description: 'Kubernetes PersistentVolume. Files, images, uploads.',
   icon: 'HardDrive',
   providers: ['kubernetes'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

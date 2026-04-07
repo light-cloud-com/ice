@@ -51,7 +51,11 @@ interface InspectOptions {
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
 function isEnabled(): boolean {
-  try { return localStorage.getItem('ice-debug') === 'true'; } catch { return false; }
+  try {
+    return localStorage.getItem('ice-debug') === 'true';
+  } catch {
+    return false;
+  }
 }
 
 function lodLabel(lod: number): string {
@@ -72,7 +76,10 @@ function computeDepths(nodes: InspectNode[]): Map<string, number> {
   const getDepth = (id: string): number => {
     if (map.has(id)) return map.get(id)!;
     const node = nodes.find((n) => n.id === id);
-    if (!node?.parentId) { map.set(id, 0); return 0; }
+    if (!node?.parentId) {
+      map.set(id, 0);
+      return 0;
+    }
     const d = 1 + getDepth(node.parentId);
     map.set(id, d);
     return d;
@@ -149,7 +156,7 @@ function detectOverlaps(nodes: InspectNode[], gap: number = 0): OverlapInfo[] {
 interface GapInfo {
   nodeA: string;
   nodeB: string;
-  gapX: number;  // negative = overlap
+  gapX: number; // negative = overlap
   gapY: number;
   minGap: number;
   relation: string;
@@ -165,10 +172,10 @@ function computeGaps(nodes: InspectNode[]): GapInfo[] {
       const b = topLevel[j];
 
       // Gap = distance between nearest edges (negative = overlap)
-      const gapLeft = b.x - (a.x + a.width);     // b is right of a
-      const gapRight = a.x - (b.x + b.width);     // a is right of b
-      const gapTop = b.y - (a.y + a.height);      // b is below a
-      const gapBottom = a.y - (b.y + b.height);   // a is below b
+      const gapLeft = b.x - (a.x + a.width); // b is right of a
+      const gapRight = a.x - (b.x + b.width); // a is right of b
+      const gapTop = b.y - (a.y + a.height); // b is below a
+      const gapBottom = a.y - (b.y + b.height); // a is below b
 
       const gapX = Math.max(gapLeft, gapRight);
       const gapY = Math.max(gapTop, gapBottom);
@@ -196,7 +203,7 @@ interface ContainerInfo {
   width: number;
   height: number;
   childCount: number;
-  childrenFit: boolean;  // do all children fit within bounds?
+  childrenFit: boolean; // do all children fit within bounds?
   overflow: { nodeLabel: string; side: string }[];
   paddingLeft: number;
   paddingTop: number;
@@ -210,7 +217,10 @@ function analyzeContainers(nodes: InspectNode[]): ContainerInfo[] {
     const children = nodes.filter((n) => n.parentId === c.id);
     const overflow: ContainerInfo['overflow'] = [];
 
-    let childMinX = Infinity, childMinY = Infinity, childMaxX = -Infinity, childMaxY = -Infinity;
+    let childMinX = Infinity,
+      childMinY = Infinity,
+      childMaxX = -Infinity,
+      childMaxY = -Infinity;
     for (const ch of children) {
       childMinX = Math.min(childMinX, ch.x);
       childMinY = Math.min(childMinY, ch.y);
@@ -219,8 +229,10 @@ function analyzeContainers(nodes: InspectNode[]): ContainerInfo[] {
 
       if (ch.x < c.x) overflow.push({ nodeLabel: (ch.label || ch.id).slice(0, 15), side: 'left' });
       if (ch.y < c.y) overflow.push({ nodeLabel: (ch.label || ch.id).slice(0, 15), side: 'top' });
-      if (ch.x + ch.width > c.x + c.width) overflow.push({ nodeLabel: (ch.label || ch.id).slice(0, 15), side: 'right' });
-      if (ch.y + ch.height > c.y + c.height) overflow.push({ nodeLabel: (ch.label || ch.id).slice(0, 15), side: 'bottom' });
+      if (ch.x + ch.width > c.x + c.width)
+        overflow.push({ nodeLabel: (ch.label || ch.id).slice(0, 15), side: 'right' });
+      if (ch.y + ch.height > c.y + c.height)
+        overflow.push({ nodeLabel: (ch.label || ch.id).slice(0, 15), side: 'bottom' });
     }
 
     return {
@@ -235,8 +247,8 @@ function analyzeContainers(nodes: InspectNode[]): ContainerInfo[] {
       overflow,
       paddingLeft: children.length ? Math.round(childMinX - c.x) : 0,
       paddingTop: children.length ? Math.round(childMinY - c.y) : 0,
-      paddingRight: children.length ? Math.round((c.x + c.width) - childMaxX) : 0,
-      paddingBottom: children.length ? Math.round((c.y + c.height) - childMaxY) : 0,
+      paddingRight: children.length ? Math.round(c.x + c.width - childMaxX) : 0,
+      paddingBottom: children.length ? Math.round(c.y + c.height - childMaxY) : 0,
     };
   });
 }
@@ -267,7 +279,7 @@ export interface InspectResult {
   containers: ContainerInfo[];
   overlaps: {
     total: number;
-    collisions: number;  // non parent-child overlaps
+    collisions: number; // non parent-child overlaps
     details: OverlapInfo[];
   };
   gaps?: GapInfo[];
@@ -344,7 +356,8 @@ function logResult(r: InspectResult, opts: InspectOptions = {}): void {
   // ── Header ──────────────────────────────────────────────────────────
   console.log(
     `%c[ICE Layout Inspector]%c  zoom=${r.zoom} (${Math.round(r.zoom * 100)}%)  ${r.lodLabel}  visual=${r.invZoomVisualSize}  nodes=${r.nodeCount}  edges=${r.edgeCount}  maxDepth=${r.maxNestingDepth}`,
-    c.header, c.reset,
+    c.header,
+    c.reset,
   );
 
   // ── Node table ──────────────────────────────────────────────────────
@@ -356,13 +369,12 @@ function logResult(r: InspectResult, opts: InspectOptions = {}): void {
   if (r.containers.length > 0) {
     console.groupCollapsed('%c Containers', c.section);
     for (const ct of r.containers) {
-      const status = ct.childrenFit
-        ? '%c✓ children fit%c'
-        : '%c⚠ OVERFLOW%c';
+      const status = ct.childrenFit ? '%c✓ children fit%c' : '%c⚠ OVERFLOW%c';
       const statusColor = ct.childrenFit ? c.ok : c.error;
       console.log(
         `  ${ct.label.padEnd(20)} ${ct.width}×${ct.height} at (${ct.x},${ct.y})  children=${ct.childCount}  pad=[${ct.paddingLeft},${ct.paddingTop},${ct.paddingRight},${ct.paddingBottom}]  ${status}`,
-        statusColor, c.reset,
+        statusColor,
+        c.reset,
       );
       if (ct.overflow.length > 0) {
         for (const ov of ct.overflow) {
@@ -379,7 +391,10 @@ function logResult(r: InspectResult, opts: InspectOptions = {}): void {
     for (const o of r.overlaps.details) {
       console.log(
         `    %c${o.nodeA}%c ↔ %c${o.nodeB}%c  overlapX=${o.overlapX} overlapY=${o.overlapY} area=${o.area}px²  (${o.relation})`,
-        c.warn, c.reset, c.warn, c.reset,
+        c.warn,
+        c.reset,
+        c.warn,
+        c.reset,
       );
     }
   } else {

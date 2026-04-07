@@ -8,6 +8,5 @@ export const kubernetesEventStreamBlueprint: BlockBlueprint = createBlueprintFro
   description: 'Kubernetes Kafka/NATS. Real-time events to multiple services.',
   icon: 'Activity',
   providers: ['kubernetes'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

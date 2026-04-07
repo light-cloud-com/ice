@@ -8,6 +8,5 @@ export const azureSecretsBlueprint: BlockBlueprint = createBlueprintFromResource
   description: 'Azure Key Vault. API keys, DB passwords, tokens.',
   icon: 'Key',
   providers: ['azure'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

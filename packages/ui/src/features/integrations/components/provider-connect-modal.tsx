@@ -6,6 +6,7 @@
 
 import { Check, Loader2, LogOut, ExternalLink } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from '../../../i18n';
 import { getApi } from '../../../shared/api/api-adapter';
 import {
   Dialog,
@@ -15,7 +16,6 @@ import {
   DialogDescription,
 } from '../../../shared/components/ui/dialog';
 import { useGCPOAuth } from '../../../shared/hooks/use-gcp-oauth';
-import { useTranslation } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
 
 interface ProviderField {
@@ -156,7 +156,11 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
               <img src={providerIcon} alt={providerName} className="w-8 h-8" />
               <div className="flex-1">
                 <div className="font-medium text-sm text-ice-text-1">{providerName}</div>
-                <div className="text-xs text-ice-text-3">{projectId ? t('providerConnect.status.project', { projectId }) : t('providerConnect.status.connected')}</div>
+                <div className="text-xs text-ice-text-3">
+                  {projectId
+                    ? t('providerConnect.status.project', { projectId })
+                    : t('providerConnect.status.connected')}
+                </div>
               </div>
               <Check className="w-5 h-5 text-ice-green" />
             </div>
@@ -220,11 +224,7 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
               </div>
             ))}
 
-            <button
-              onClick={handleConnect}
-              disabled={connecting}
-              className="ice-btn ice-btn-primary w-full"
-            >
+            <button onClick={handleConnect} disabled={connecting} className="ice-btn ice-btn-primary w-full">
               {connecting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
@@ -257,8 +257,9 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
                         </a>
                       </li>
                       <li>
-                        Name it (e.g. <code className="px-1 py-0.5 rounded bg-ice-hover text-ice-2xs">ice-deployer</code>),
-                        click <strong>Create and Continue</strong>
+                        Name it (e.g.{' '}
+                        <code className="px-1 py-0.5 rounded bg-ice-hover text-ice-2xs">ice-deployer</code>), click{' '}
+                        <strong>Create and Continue</strong>
                       </li>
                       <li>
                         Grant <strong>two roles</strong> (click "+ Add Another Role" for the second):

@@ -134,11 +134,26 @@ export const fullStackTemplate: ComposedTemplate = {
       data: { size: '1-2048', runtime: 'nodejs20', domain: 'api.acme.io', port: 8080 },
     },
     // 5: PostgreSQL
-    { iceType: 'Database.PostgreSQL', label: 'App Database', position: { x: 636, y: 408 }, data: { size: 'db.t3.small', storage: '50', version: '17' } },
+    {
+      iceType: 'Database.PostgreSQL',
+      label: 'App Database',
+      position: { x: 636, y: 408 },
+      data: { size: 'db.t3.small', storage: '50', version: '17' },
+    },
     // 6: Redis
-    { iceType: 'Database.Redis', label: 'Session Cache', position: { x: 380, y: 584 }, data: { size: 'cache.t3.small', port: 6379 } },
+    {
+      iceType: 'Database.Redis',
+      label: 'Session Cache',
+      position: { x: 380, y: 584 },
+      data: { size: 'cache.t3.small', port: 6379 },
+    },
     // 7: Storage
-    { iceType: 'Storage.Bucket', label: 'File Storage', position: { x: 636, y: 584 }, data: { storage_class: 'standard' } },
+    {
+      iceType: 'Storage.Bucket',
+      label: 'File Storage',
+      position: { x: 636, y: 584 },
+      data: { storage_class: 'standard' },
+    },
 
     // ── Monitoring (outside VPC) ──────────────────────────────────────────
     // 8: Logs
@@ -150,7 +165,12 @@ export const fullStackTemplate: ComposedTemplate = {
     // 10: Domain
     { iceType: 'Network.Domain', label: 'Domain', position: { x: 306, y: 1080 }, data: { hostname: 'app.acme.io' } },
     // 11: Repo
-    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 562, y: 1080 }, data: { repository: '', branch: 'main' } },
+    {
+      iceType: 'Source.Repository',
+      label: 'GitHub Repo',
+      position: { x: 562, y: 1080 },
+      data: { repository: '', branch: 'main' },
+    },
     // 12: Env
     { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 50, y: 1256 }, data: {} },
   ],

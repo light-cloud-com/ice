@@ -138,7 +138,12 @@ export const secureApiTemplate: ComposedTemplate = {
       data: { size: 'db.r6g.large', storage: '100', version: '17' },
     },
     // 5: Redis Sessions
-    { iceType: 'Database.Redis', label: 'Redis Sessions', position: { x: 892, y: 408 }, data: { size: 'cache.r6g.large', port: 6379 } },
+    {
+      iceType: 'Database.Redis',
+      label: 'Redis Sessions',
+      position: { x: 892, y: 408 },
+      data: { size: 'cache.r6g.large', port: 6379 },
+    },
 
     // ── Security Controls (outside VPC) ───────────────────────────────────
     // 6: TLS Certificate
@@ -154,7 +159,12 @@ export const secureApiTemplate: ComposedTemplate = {
     // 10: Domain
     { iceType: 'Network.Domain', label: 'Domain', position: { x: 50, y: 884 }, data: { hostname: 'api.secure.io' } },
     // 11: Repo
-    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 306, y: 884 }, data: { repository: '', branch: 'main' } },
+    {
+      iceType: 'Source.Repository',
+      label: 'GitHub Repo',
+      position: { x: 306, y: 884 },
+      data: { repository: '', branch: 'main' },
+    },
     // 12: Env
     { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 884 }, data: {} },
   ],

@@ -8,6 +8,5 @@ export const alibabaGatewayBlueprint: BlockBlueprint = createBlueprintFromResour
   description: 'Alibaba Cloud API Gateway. Routes traffic, auth + rate limiting.',
   icon: 'GitBranch',
   providers: ['alibaba'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

@@ -6,20 +6,12 @@
  * Clicking switches the active canvas card.
  */
 
-import {
-  Lock,
-  Plus,
-  GitPullRequest,
-  Loader2,
-  ArrowUpRight,
-  Trash2,
-  Rocket,
-} from 'lucide-react';
+import { Lock, Plus, GitPullRequest, Loader2, ArrowUpRight, Trash2, Rocket } from 'lucide-react';
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { IceSelect } from '../../../shared/components/ui/ice-select';
 import { useTranslation } from '../../../i18n';
 import { getApi } from '../../../shared/api/api-adapter';
+import { IceSelect } from '../../../shared/components/ui/ice-select';
 import { cn } from '../../../shared/utils/cn';
 import { setActiveCard, importToActiveCard, createCard } from '../../../store/slices/cards-slice';
 import { openDeployPanel } from '../../../store/slices/deploy-slice';
@@ -395,7 +387,9 @@ const CreateEnvironmentModal: React.FC<{
 
         <div className="space-y-3">
           <div>
-            <label className="text-ice-xs font-medium text-ice-text-2 block mb-1">{t('environments.createModal.nameLabel')}</label>
+            <label className="text-ice-xs font-medium text-ice-text-2 block mb-1">
+              {t('environments.createModal.nameLabel')}
+            </label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -407,7 +401,9 @@ const CreateEnvironmentModal: React.FC<{
           </div>
 
           <div>
-            <label className="text-ice-xs font-medium text-ice-text-2 block mb-1">{t('environments.createModal.typeLabel')}</label>
+            <label className="text-ice-xs font-medium text-ice-text-2 block mb-1">
+              {t('environments.createModal.typeLabel')}
+            </label>
             <IceSelect
               value={type}
               onChange={setType}
@@ -423,7 +419,9 @@ const CreateEnvironmentModal: React.FC<{
           </div>
 
           <div>
-            <label className="text-ice-xs font-medium text-ice-text-2 block mb-1">{t('environments.createModal.regionLabel')}</label>
+            <label className="text-ice-xs font-medium text-ice-text-2 block mb-1">
+              {t('environments.createModal.regionLabel')}
+            </label>
             <input
               value={region}
               onChange={(e) => setRegion(e.target.value)}

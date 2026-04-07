@@ -57,4 +57,3 @@ export const CanvasGrid: React.FC<CanvasGridProps> = ({ viewState, width, height
     </>
   );
 };
-

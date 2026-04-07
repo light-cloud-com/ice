@@ -101,9 +101,13 @@ export function validateTemplate(template: TemplateInput): CanvasIssue[] {
     }
 
     // Connection rule validity
-    if (conn.fromBlock >= 0 && conn.fromBlock < blockCount &&
-        conn.toBlock >= 0 && conn.toBlock < blockCount &&
-        conn.fromBlock !== conn.toBlock) {
+    if (
+      conn.fromBlock >= 0 &&
+      conn.fromBlock < blockCount &&
+      conn.toBlock >= 0 &&
+      conn.toBlock < blockCount &&
+      conn.fromBlock !== conn.toBlock
+    ) {
       const srcBlock = template.blocks[conn.fromBlock];
       const tgtBlock = template.blocks[conn.toBlock];
       if (srcBlock && tgtBlock && !canConnect(srcBlock.iceType, tgtBlock.iceType)) {

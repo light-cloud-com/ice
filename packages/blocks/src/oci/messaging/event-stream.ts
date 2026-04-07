@@ -8,6 +8,5 @@ export const ociEventStreamBlueprint: BlockBlueprint = createBlueprintFromResour
   description: 'Oracle Cloud Streaming. Real-time events to multiple services.',
   icon: 'Activity',
   providers: ['oci'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

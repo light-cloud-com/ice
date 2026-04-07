@@ -7,8 +7,8 @@
 
 import { Search, X } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { cn } from '../../utils/cn';
 import { SearchInput } from './search-input';
+import { cn } from '../../utils/cn';
 
 // ─── Sub-components ────────────────────────────────────────────────────────
 
@@ -31,9 +31,7 @@ export const PanelHeaderAction: React.FC<{
     )}
   >
     {icon}
-    {badge && (
-      <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-ice-accent" />
-    )}
+    {badge && <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-ice-accent" />}
   </button>
 );
 

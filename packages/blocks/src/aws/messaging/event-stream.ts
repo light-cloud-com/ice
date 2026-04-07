@@ -8,6 +8,5 @@ export const awsEventStreamBlueprint: BlockBlueprint = createBlueprintFromResour
   description: 'AWS Kinesis. Real-time events to multiple services.',
   icon: 'Activity',
   providers: ['aws'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

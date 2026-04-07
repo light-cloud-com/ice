@@ -73,4 +73,3 @@ export const ViewLevelToggle: React.FC = () => {
     </div>
   );
 };
-

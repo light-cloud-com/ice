@@ -11,6 +11,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { CONTAINER_PADDING, HEADER_HEIGHT } from '../../../config/canvas-constants';
 import cardsReducer, {
   createCard,
   addNodeToCard,
@@ -20,7 +21,6 @@ import cardsReducer, {
   type CardsState,
   type CardNode,
 } from '../cards-slice';
-import { CONTAINER_PADDING, HEADER_HEIGHT } from '../../../config/canvas-constants';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -196,10 +196,7 @@ describe('updateCardNodePositions — BND-2 batch boundary clamping', () => {
 
     // First expand the parent, then position child at the new edge
     let result = cardsReducer(state, resizeCardNode({ id: 'g1', width: 600, height: 500 }));
-    result = cardsReducer(
-      result,
-      updateCardNodePositions([{ id: 'n1', position: { x: 370, y: 370 } }]),
-    );
+    result = cardsReducer(result, updateCardNodePositions([{ id: 'n1', position: { x: 370, y: 370 } }]));
 
     const n = getNode(result, 'n1')!;
     // maxX = 0 + 600 - 20 - 200 = 380
@@ -234,10 +231,7 @@ describe('updateCardNodePositions — BND-2 batch boundary clamping', () => {
     const node = makeNode('n1', { position: { x: 0, y: 0 } });
     const state = setupState([node]);
 
-    const result = cardsReducer(
-      state,
-      updateCardNodePositions([{ id: 'n1', position: { x: -1000, y: -1000 } }]),
-    );
+    const result = cardsReducer(state, updateCardNodePositions([{ id: 'n1', position: { x: -1000, y: -1000 } }]));
 
     const n = getNode(result, 'n1')!;
     expect(n.position.x).toBe(-1000);

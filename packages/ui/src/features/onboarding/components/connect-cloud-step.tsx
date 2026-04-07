@@ -210,7 +210,9 @@ export const ConnectCloudStep: React.FC = () => {
       {/* Region selection */}
       {provider && regions.length > 0 && (
         <div>
-          <label className="block text-sm font-medium text-ice-text-2 mb-1.5">{t('onboarding.cloud.regionLabel')}</label>
+          <label className="block text-sm font-medium text-ice-text-2 mb-1.5">
+            {t('onboarding.cloud.regionLabel')}
+          </label>
           <select
             value={region || ''}
             onChange={(e) => dispatch(setDefaultRegion(e.target.value))}
@@ -222,9 +224,7 @@ export const ConnectCloudStep: React.FC = () => {
               </option>
             ))}
           </select>
-          <p className="text-xs text-ice-text-3 mt-1">
-            {t('onboarding.cloud.regionAutoHint')}
-          </p>
+          <p className="text-xs text-ice-text-3 mt-1">{t('onboarding.cloud.regionAutoHint')}</p>
         </div>
       )}
 
@@ -298,9 +298,7 @@ export const ConnectCloudStep: React.FC = () => {
 
       <div className="flex items-start gap-2 p-3 rounded-lg bg-ice-raised border border-ice-border">
         <ShieldCheck className="w-4 h-4 text-ice-accent shrink-0 mt-0.5" />
-        <p className="text-xs text-ice-text-2">
-          {t('onboarding.cloud.securityNote')}
-        </p>
+        <p className="text-xs text-ice-text-2">{t('onboarding.cloud.securityNote')}</p>
       </div>
     </div>
   );

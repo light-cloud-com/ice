@@ -28,4 +28,3 @@ export const SelectionFrame: React.FC = () => {
     />
   );
 };
-

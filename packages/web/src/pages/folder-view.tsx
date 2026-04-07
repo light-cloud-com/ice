@@ -5,10 +5,10 @@
  * null = root level.
  */
 
+import { useTranslation } from '@ui/i18n';
 import axiosInstance from '@ui/shared/api/axios-instance';
 import { Folder, FolderOpen, FileText, Loader2, Plus } from 'lucide-react';
 import React, { useEffect, useState, useCallback } from 'react';
-import { useTranslation } from '@ui/i18n';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import type { RootState } from '@ui/store';
@@ -134,7 +134,9 @@ export const FolderView: React.FC<FolderViewProps> = ({ folderId, folderName, ba
                 )}
                 <span className="text-sm text-ice-text-1 font-medium">{item.name}</span>
                 <span className="text-xs text-ice-text-3 ml-auto">
-                  {item.type === 'folder' ? t('folder.typeFolder') : t('folder.cards', { count: item.cards?.length || 0 })}
+                  {item.type === 'folder'
+                    ? t('folder.typeFolder')
+                    : t('folder.cards', { count: item.cards?.length || 0 })}
                 </span>
               </button>
             ))}

@@ -54,9 +54,7 @@ export const InviteAcceptPage: React.FC = () => {
           <>
             <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto" />
             <h1 className="text-xl font-semibold text-ice-text-1">{t('invite.success.title')}</h1>
-            <p className="text-sm text-ice-text-2">
-              {t('invite.success.description', { orgName })}
-            </p>
+            <p className="text-sm text-ice-text-2">{t('invite.success.description', { orgName })}</p>
             <button onClick={() => navigate('/', { replace: true })} className="ice-btn ice-btn-primary">
               {t('invite.success.button')}
             </button>

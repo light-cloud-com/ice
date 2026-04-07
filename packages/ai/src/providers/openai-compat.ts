@@ -10,10 +10,10 @@
  *   GET  /v1/models            — model list
  */
 
-import { parseNodeStream } from '../stream-parser';
-import type { AiProvider, ChatChunk, ChatParams, ChatResponse, HealthCheckResult } from '../types';
 import http from 'node:http';
 import https from 'node:https';
+import { parseNodeStream } from '../stream-parser';
+import type { AiProvider, ChatChunk, ChatParams, ChatResponse, HealthCheckResult } from '../types';
 
 export class OpenAICompatProvider implements AiProvider {
   readonly name: string;
@@ -69,10 +69,7 @@ export class OpenAICompatProvider implements AiProvider {
   }
 
   async *streamChat(params: ChatParams): AsyncIterable<ChatChunk> {
-    const messages = [
-      { role: 'system' as const, content: params.systemPrompt },
-      ...params.messages,
-    ];
+    const messages = [{ role: 'system' as const, content: params.systemPrompt }, ...params.messages];
 
     const body: Record<string, unknown> = {
       model: this.model,
@@ -101,7 +98,9 @@ export class OpenAICompatProvider implements AiProvider {
       const req = transport.get(url, { timeout: 3000, headers: this.buildHeaders() }, (res) => {
         let body = '';
         res.on('data', (chunk: Buffer) => (body += chunk.toString()));
-        res.on('end', () => resolve({ ok: res.statusCode! >= 200 && res.statusCode! < 300, status: res.statusCode!, body }));
+        res.on('end', () =>
+          resolve({ ok: res.statusCode! >= 200 && res.statusCode! < 300, status: res.statusCode!, body }),
+        );
       });
       req.on('error', reject);
       req.on('timeout', () => {

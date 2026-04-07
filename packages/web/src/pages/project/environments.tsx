@@ -4,21 +4,10 @@
  * Lists all environments for a project with status, actions, and management.
  */
 
-import {
-  Lock,
-  Plus,
-  GitPullRequest,
-  Loader2,
-  ArrowUpRight,
-  Trash2,
-  Rocket,
-  ExternalLink,
-} from 'lucide-react';
-import React, { useEffect, useState, useCallback } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { IceSelect } from '@ui/shared/components/ui/ice-select';
 import { getApi } from '@ui/shared/api/api-adapter';
+import { IceSelect } from '@ui/shared/components/ui/ice-select';
 import { cn } from '@ui/shared/utils/cn';
+import { setActiveCard, importToActiveCard, createCard } from '@ui/store/slices/cards-slice';
 import { openDeployPanel } from '@ui/store/slices/deploy-slice';
 import {
   fetchEnvironments,
@@ -28,7 +17,9 @@ import {
   compareEnvironments,
   type Environment,
 } from '@ui/store/slices/environments-slice';
-import { setActiveCard, importToActiveCard, createCard } from '@ui/store/slices/cards-slice';
+import { Lock, Plus, GitPullRequest, Loader2, ArrowUpRight, Trash2, Rocket, ExternalLink } from 'lucide-react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import type { RootState, AppDispatch } from '@ui/store';
 
 interface ProjectEnvironmentsProps {
@@ -78,7 +69,9 @@ export const ProjectEnvironments: React.FC<ProjectEnvironmentsProps> = ({ projec
       setDeployStatus(statuses);
     };
     fetchStatuses();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [environments]);
 
   const handleSwitchEnv = useCallback(
@@ -98,7 +91,9 @@ export const ProjectEnvironments: React.FC<ProjectEnvironmentsProps> = ({ projec
         if (!existing) dispatch(createCard({ name: cardData.name || env.name, id: cardData.id, projectId }));
         dispatch(setActiveCard(cardData.id));
         if (cardData.nodes?.length > 0 || cardData.edges?.length > 0) {
-          dispatch(importToActiveCard({ nodes: cardData.nodes || [], edges: cardData.edges || [], skipAutoOrganize: true }));
+          dispatch(
+            importToActiveCard({ nodes: cardData.nodes || [], edges: cardData.edges || [], skipAutoOrganize: true }),
+          );
         }
       } catch (err) {
         console.error('Failed to load environment card:', err);
@@ -114,7 +109,9 @@ export const ProjectEnvironments: React.FC<ProjectEnvironmentsProps> = ({ projec
       await dispatch(createEnvironment({ projectId, name: newName.trim(), type: newType })).unwrap();
       setNewName('');
       setShowCreate(false);
-    } catch { /* handled by slice */ }
+    } catch {
+      /* handled by slice */
+    }
     setCreating(false);
   };
 
@@ -280,10 +277,7 @@ export const ProjectEnvironments: React.FC<ProjectEnvironmentsProps> = ({ projec
         {environments.length === 0 && (
           <div className="text-center py-12 text-ice-text-3">
             <p className="text-ice-sm">No environments yet.</p>
-            <button
-              onClick={() => setShowCreate(true)}
-              className="mt-2 text-ice-sm text-blue-400 hover:text-blue-300"
-            >
+            <button onClick={() => setShowCreate(true)} className="mt-2 text-ice-sm text-blue-400 hover:text-blue-300">
               Create your first environment
             </button>
           </div>

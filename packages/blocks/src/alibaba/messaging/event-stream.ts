@@ -8,6 +8,5 @@ export const alibabaEventStreamBlueprint: BlockBlueprint = createBlueprintFromRe
   description: 'Alibaba Cloud EventBridge. Real-time events to multiple services.',
   icon: 'Activity',
   providers: ['alibaba'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

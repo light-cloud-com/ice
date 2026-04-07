@@ -68,8 +68,7 @@ import type { ComposedTemplate } from './types';
 export const logisticsFleetTrackingTemplate: ComposedTemplate = {
   id: 'logistics-fleet-tracking',
   name: 'Fleet Tracking',
-  description:
-    'GPS-based fleet management with real-time dashboards, route optimization, and VPC network isolation.',
+  description: 'GPS-based fleet management with real-time dashboards, route optimization, and VPC network isolation.',
   icon: 'Truck',
   estimatedCost: '$150-350/mo',
   category: 'logistics',
@@ -80,9 +79,7 @@ export const logisticsFleetTrackingTemplate: ComposedTemplate = {
   difficulty: 'intermediate',
   trust: 'official',
   author: { name: 'ICE Team' },
-  environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' },
-  ],
+  environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' }],
 
   groups: [
     // [0] Public Zone — outside VPC
@@ -200,9 +197,19 @@ export const logisticsFleetTrackingTemplate: ComposedTemplate = {
     // 9: Secrets
     { iceType: 'Security.Secret', label: 'Secrets', position: { x: 50, y: 1080 }, data: {} },
     // 10: Domain
-    { iceType: 'Network.Domain', label: 'Domain', position: { x: 306, y: 1080 }, data: { hostname: 'fleet.logistics.io' } },
+    {
+      iceType: 'Network.Domain',
+      label: 'Domain',
+      position: { x: 306, y: 1080 },
+      data: { hostname: 'fleet.logistics.io' },
+    },
     // 11: Repo
-    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 562, y: 1080 }, data: { repository: '', branch: 'main' } },
+    {
+      iceType: 'Source.Repository',
+      label: 'GitHub Repo',
+      position: { x: 562, y: 1080 },
+      data: { repository: '', branch: 'main' },
+    },
     // 12: Env
     { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 818, y: 1080 }, data: {} },
   ],
@@ -246,8 +253,7 @@ export const logisticsFleetTrackingTemplate: ComposedTemplate = {
 export const logisticsWarehouseTemplate: ComposedTemplate = {
   id: 'logistics-warehouse',
   name: 'Warehouse Management',
-  description:
-    'Inventory tracking with barcode scanning, order queues, fulfillment, and VPC network isolation.',
+  description: 'Inventory tracking with barcode scanning, order queues, fulfillment, and VPC network isolation.',
   icon: 'Warehouse',
   estimatedCost: '$100-250/mo',
   category: 'logistics',
@@ -258,9 +264,7 @@ export const logisticsWarehouseTemplate: ComposedTemplate = {
   difficulty: 'intermediate',
   trust: 'official',
   author: { name: 'ICE Team' },
-  environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' },
-  ],
+  environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' }],
 
   groups: [
     // [0] Public Zone — outside VPC
@@ -385,9 +389,19 @@ export const logisticsWarehouseTemplate: ComposedTemplate = {
     // 10: Secrets
     { iceType: 'Security.Secret', label: 'Secrets', position: { x: 50, y: 1080 }, data: {} },
     // 11: Domain
-    { iceType: 'Network.Domain', label: 'Domain', position: { x: 306, y: 1080 }, data: { hostname: 'wms.logistics.io' } },
+    {
+      iceType: 'Network.Domain',
+      label: 'Domain',
+      position: { x: 306, y: 1080 },
+      data: { hostname: 'wms.logistics.io' },
+    },
     // 12: Repo
-    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 562, y: 1080 }, data: { repository: '', branch: 'main' } },
+    {
+      iceType: 'Source.Repository',
+      label: 'GitHub Repo',
+      position: { x: 562, y: 1080 },
+      data: { repository: '', branch: 'main' },
+    },
     // 13: Env
     { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 818, y: 1080 }, data: {} },
   ],

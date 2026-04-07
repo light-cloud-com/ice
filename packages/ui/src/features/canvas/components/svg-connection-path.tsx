@@ -13,8 +13,8 @@ import React, { memo, useMemo, useState, useCallback, useRef } from 'react';
 import { EDGE_COLORS } from '../../../config/color-palette';
 import { useReducedMotion } from '../../../shared/hooks/use-reduced-motion';
 import { inferConnectionMeta, type ConnectionCategory } from '../utils/connection-rules';
-import type { EdgeStyle } from '../../../store/slices/ui-slice';
 import type { CanvasNode, CanvasConnection } from './svg-canvas';
+import type { EdgeStyle } from '../../../store/slices/ui-slice';
 
 // ─── Tooltip info passed up to canvas ───────────────────────────────────────
 
@@ -146,10 +146,7 @@ function getControlPoint(point: Point, side: Side, offset: number): Point {
   }
 }
 
-function buildStraightPath(
-  start: Point,
-  end: Point,
-): { pathD: string; midX: number; midY: number } {
+function buildStraightPath(start: Point, end: Point): { pathD: string; midX: number; midY: number } {
   const pathD = `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
   return { pathD, midX: (start.x + end.x) / 2, midY: (start.y + end.y) / 2 };
 }
@@ -164,22 +161,13 @@ function buildRectangularPath(
   const points: Point[] = [start];
 
   // Build orthogonal waypoints based on exit/entry sides
-  if (
-    (exitSide === 'right' && entrySide === 'left') ||
-    (exitSide === 'left' && entrySide === 'right')
-  ) {
+  if ((exitSide === 'right' && entrySide === 'left') || (exitSide === 'left' && entrySide === 'right')) {
     const midX = (start.x + end.x) / 2;
     points.push({ x: midX, y: start.y }, { x: midX, y: end.y });
-  } else if (
-    (exitSide === 'bottom' && entrySide === 'top') ||
-    (exitSide === 'top' && entrySide === 'bottom')
-  ) {
+  } else if ((exitSide === 'bottom' && entrySide === 'top') || (exitSide === 'top' && entrySide === 'bottom')) {
     const midY = (start.y + end.y) / 2;
     points.push({ x: start.x, y: midY }, { x: end.x, y: midY });
-  } else if (
-    (exitSide === 'right' || exitSide === 'left') &&
-    (entrySide === 'top' || entrySide === 'bottom')
-  ) {
+  } else if ((exitSide === 'right' || exitSide === 'left') && (entrySide === 'top' || entrySide === 'bottom')) {
     const outX = exitSide === 'right' ? start.x + GAP : start.x - GAP;
     points.push({ x: outX, y: start.y }, { x: outX, y: end.y });
   } else {
@@ -196,8 +184,10 @@ function buildRectangularPath(
     const cur = points[i];
     const next = points[i + 1];
     // Direction vectors
-    const dxIn = cur.x - prev.x, dyIn = cur.y - prev.y;
-    const dxOut = next.x - cur.x, dyOut = next.y - cur.y;
+    const dxIn = cur.x - prev.x,
+      dyIn = cur.y - prev.y;
+    const dxOut = next.x - cur.x,
+      dyOut = next.y - cur.y;
     const lenIn = Math.sqrt(dxIn * dxIn + dyIn * dyIn);
     const lenOut = Math.sqrt(dxOut * dxOut + dyOut * dyOut);
     const r = Math.min(R, lenIn / 2, lenOut / 2);
@@ -576,4 +566,3 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
 );
 
 SvgConnectionPath.displayName = 'SvgConnectionPath';
-

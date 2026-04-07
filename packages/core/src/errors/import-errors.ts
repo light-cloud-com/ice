@@ -53,13 +53,7 @@ export enum ImportErrorCode {
 /**
  * Action type for error recovery.
  */
-type ImportErrorActionType =
-  | 'reauth'
-  | 'enable_api'
-  | 'grant_permission'
-  | 'retry'
-  | 'install_sdk'
-  | 'enable_service';
+type ImportErrorActionType = 'reauth' | 'enable_api' | 'grant_permission' | 'retry' | 'install_sdk' | 'enable_service';
 
 /**
  * Action to take to resolve an import error.
@@ -511,4 +505,3 @@ export function classifyAzureError(
 // =============================================================================
 // Error Formatting
 // =============================================================================
-

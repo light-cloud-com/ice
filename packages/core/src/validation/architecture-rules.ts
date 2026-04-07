@@ -56,7 +56,7 @@ export function validateArchitecture(
   let hasDomain = false;
 
   for (const node of nodes) {
-    const t = node.data.iceType as string ?? '';
+    const t = (node.data.iceType as string) ?? '';
     if (isContainer(t, node.type)) continue;
 
     if (isFrontend(t)) frontends.push(node);
@@ -72,14 +72,18 @@ export function validateArchitecture(
   // ── Frontend without any backend ────────────────────────────────────
   for (const fe of frontends) {
     const targets = outgoing.get(fe.id);
-    const hasBackendConnection = targets && [...targets].some(tId => {
-      const t = nodeMap.get(tId);
-      return t && isBackend(t.data.iceType as string ?? '');
-    });
-    const hasGatewayConnection = targets && [...targets].some(tId => {
-      const t = nodeMap.get(tId);
-      return t && isGateway(t.data.iceType as string ?? '');
-    });
+    const hasBackendConnection =
+      targets &&
+      [...targets].some((tId) => {
+        const t = nodeMap.get(tId);
+        return t && isBackend((t.data.iceType as string) ?? '');
+      });
+    const hasGatewayConnection =
+      targets &&
+      [...targets].some((tId) => {
+        const t = nodeMap.get(tId);
+        return t && isGateway((t.data.iceType as string) ?? '');
+      });
 
     if (!hasBackendConnection && !hasGatewayConnection && backends.length === 0) {
       issues.push({
@@ -109,7 +113,7 @@ export function validateArchitecture(
     }
 
     // No monitoring in production
-    if (!hasMonitoring && (backends.length + frontends.length) > 0) {
+    if (!hasMonitoring && backends.length + frontends.length > 0) {
       issues.push({
         id: 'arch:NO_MONITORING',
         severity: 'info',

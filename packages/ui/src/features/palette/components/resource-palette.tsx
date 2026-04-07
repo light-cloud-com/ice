@@ -5,6 +5,7 @@
  * tooltips, and prominent category headers.
  */
 
+import * as SelectPrimitive from '@radix-ui/react-select';
 import {
   Globe,
   Database,
@@ -39,17 +40,16 @@ import {
 } from 'lucide-react';
 import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { getBrandIcon } from '../../../assets/icons/brand-registry';
 import { GROUP_COLOR_PRESETS } from '../../../config/color-palette';
-import * as SelectPrimitive from '@radix-ui/react-select';
 import { ENABLED_PROVIDER_IDS, ENABLED_PROVIDERS as ENABLED_CLOUD_PROVIDERS } from '../../../config/providers';
+import { useTranslation, t as translate } from '../../../i18n';
 import axiosInstance from '../../../shared/api/axios-instance';
+import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../../../shared/components/ui/resizable';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '../../../shared/components/ui/tooltip';
 import { useResolvePath } from '../../../shared/hooks/use-resolve-path';
-import { useTranslation, t as translate } from '../../../i18n';
-import { getBrandIcon } from '../../../assets/icons/brand-registry';
 import { cn } from '../../../shared/utils/cn';
-import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { ProjectBrowser } from '../../project-browser';
 
 // =============================================================================
@@ -825,10 +825,7 @@ const BlocksSection: React.FC<BlocksSectionProps> = ({
           id: 'ice-palette-search-input',
         }}
         actions={
-          <SelectPrimitive.Root
-            value={selectedProvider}
-            onValueChange={setSelectedProvider}
-          >
+          <SelectPrimitive.Root value={selectedProvider} onValueChange={setSelectedProvider}>
             <SelectPrimitive.Trigger
               id="ice-palette-provider-select"
               className={cn(
@@ -838,9 +835,11 @@ const BlocksSection: React.FC<BlocksSectionProps> = ({
             >
               {(() => {
                 const brand = selectedProvider !== 'all' ? getBrandIcon(selectedProvider) : null;
-                return brand
-                  ? <img src={brand.url} alt="" className="w-3.5 h-3.5" />
-                  : <Globe aria-hidden="true" className="w-3.5 h-3.5" />;
+                return brand ? (
+                  <img src={brand.url} alt="" className="w-3.5 h-3.5" />
+                ) : (
+                  <Globe aria-hidden="true" className="w-3.5 h-3.5" />
+                );
               })()}
               <SelectPrimitive.Icon asChild>
                 <ChevronDown aria-hidden="true" className="w-2.5 h-2.5 shrink-0" />
@@ -910,8 +909,12 @@ const BlocksSection: React.FC<BlocksSectionProps> = ({
                     onClick={() => toggleCategory(category.id)}
                     className="w-full flex items-center py-1 px-2 text-left transition-colors hover:text-ice-text-1"
                   >
-                    <span className="w-4 h-4 flex items-center justify-center shrink-0 -ml-0.5 mr-0.5 rounded hover:bg-ice-hover"
-                      onClick={(e) => { e.stopPropagation(); toggleCategory(category.id); }}
+                    <span
+                      className="w-4 h-4 flex items-center justify-center shrink-0 -ml-0.5 mr-0.5 rounded hover:bg-ice-hover"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleCategory(category.id);
+                      }}
                     >
                       <ChevronRight
                         aria-hidden="true"

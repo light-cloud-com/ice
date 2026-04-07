@@ -10,7 +10,6 @@ import {
   ChevronRight,
   Folder,
   FolderOpen,
-  FileText,
   Loader2,
   MoreVertical,
   Pencil,
@@ -18,33 +17,21 @@ import {
   FolderPlus,
   FilePlus,
   FolderInput,
-  Settings,
-  Rocket,
-  PenTool,
-  Table2,
-  Activity,
-  Layers,
   Lock,
-  GitPullRequest,
-  Circle,
 } from 'lucide-react';
 import React, { useCallback, useEffect, useState, useRef, memo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from '../../../i18n';
+import { getApi } from '../../../shared/api/api-adapter';
 import axiosInstance from '../../../shared/api/axios-instance';
+import { PanelHeader, PanelHeaderAction } from '../../../shared/components/ui/panel-header';
 import { useResolvePath } from '../../../shared/hooks/use-resolve-path';
 import { toSlug } from '../../../shared/utils/slug';
-import { openDialog } from '../../../store/slices/ui-slice';
-import {
-  fetchEnvironments,
-  setActiveEnvironment,
-  type Environment,
-} from '../../../store/slices/environments-slice';
 import { setActiveCard, importToActiveCard, createCard } from '../../../store/slices/cards-slice';
-import { getApi } from '../../../shared/api/api-adapter';
+import { fetchEnvironments, setActiveEnvironment, type Environment } from '../../../store/slices/environments-slice';
+import { openDialog } from '../../../store/slices/ui-slice';
 import type { RootState, AppDispatch } from '../../../store';
-import { PanelHeader, PanelHeaderAction } from '../../../shared/components/ui/panel-header';
-import { useTranslation } from '../../../i18n';
 
 interface ProjectNode {
   id: string;
@@ -169,7 +156,10 @@ const TreeItem = memo(
           )}
 
           {/* Context menu — appears on hover */}
-          <div className="ml-auto opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity shrink-0" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="ml-auto opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity shrink-0"
+            onClick={(e) => e.stopPropagation()}
+          >
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
                 <button
@@ -251,24 +241,26 @@ const TreeItem = memo(
         </button>
 
         {/* Folder children */}
-        {isFolder && isOpen && node.children.map((child) => (
-          <TreeItem
-            key={child.id}
-            node={child}
-            level={level + 1}
-            expandedIds={expandedIds}
-            activeNodeId={activeNodeId}
-            activeSubpage={activeSubpage}
-            onToggle={onToggle}
-            onOpen={onOpen}
-            onNavigateSubpage={onNavigateSubpage}
-            onRename={onRename}
-            onDelete={onDelete}
-            onCreateIn={onCreateIn}
-            onMove={onMove}
-            allFolders={allFolders}
-          />
-        ))}
+        {isFolder &&
+          isOpen &&
+          node.children.map((child) => (
+            <TreeItem
+              key={child.id}
+              node={child}
+              level={level + 1}
+              expandedIds={expandedIds}
+              activeNodeId={activeNodeId}
+              activeSubpage={activeSubpage}
+              onToggle={onToggle}
+              onOpen={onOpen}
+              onNavigateSubpage={onNavigateSubpage}
+              onRename={onRename}
+              onDelete={onDelete}
+              onCreateIn={onCreateIn}
+              onMove={onMove}
+              allFolders={allFolders}
+            />
+          ))}
 
         {/* Project sub-pages */}
         {!isFolder && isOpen && (
@@ -336,7 +328,9 @@ const ProjectSubPages = memo(
           if (!existing) dispatch(createCard({ name: cardData.name || env.name, id: cardData.id, projectId: node.id }));
           dispatch(setActiveCard(cardData.id));
           if (cardData.nodes?.length > 0 || cardData.edges?.length > 0) {
-            dispatch(importToActiveCard({ nodes: cardData.nodes || [], edges: cardData.edges || [], skipAutoOrganize: true }));
+            dispatch(
+              importToActiveCard({ nodes: cardData.nodes || [], edges: cardData.edges || [], skipAutoOrganize: true }),
+            );
           }
         } catch (err) {
           console.error('Failed to load environment card:', err);
@@ -366,9 +360,7 @@ const ProjectSubPages = memo(
             <button
               key={sub.id}
               className={`flex items-center w-full py-0.5 text-left text-ice-xs transition-colors outline-none focus-visible:ring-1 focus-visible:ring-blue-500 ${
-                active
-                  ? 'text-ice-text-1 font-medium'
-                  : 'text-ice-text-3 hover:text-ice-text-2'
+                active ? 'text-ice-text-1 font-medium' : 'text-ice-text-3 hover:text-ice-text-2'
               }`}
               style={{ paddingLeft: `calc(${indent}px * var(--ice-space-scale, 1))` }}
               onClick={() => onNavigateSubpage(node, sub.id)}
@@ -393,9 +385,11 @@ const ProjectSubPages = memo(
             onNavigateSubpage(node, 'environments');
           }}
         >
-          {isActive && activeSubpage === 'environments'
-            ? <span className="w-px h-3 bg-blue-400 rounded-full mr-1.5 shrink-0" />
-            : <span className="w-px mr-1.5 shrink-0" />}
+          {isActive && activeSubpage === 'environments' ? (
+            <span className="w-px h-3 bg-blue-400 rounded-full mr-1.5 shrink-0" />
+          ) : (
+            <span className="w-px mr-1.5 shrink-0" />
+          )}
           <ChevronRight
             aria-hidden="true"
             className={`w-3 h-3 mr-1 shrink-0 text-ice-text-3/50 transition-transform duration-150 ${envsExpanded ? 'rotate-90' : ''}`}
@@ -407,33 +401,38 @@ const ProjectSubPages = memo(
         </button>
 
         {/* Individual environments */}
-        {envsExpanded && environments.length > 0 && environments.map((env) => {
-          const isActiveEnv = env.id === activeEnvId;
-          const dotColor =
-            env.type === 'production' ? 'bg-emerald-400'
-            : env.type === 'staging' ? 'bg-amber-400'
-            : env.type === 'pr' ? 'bg-purple-400'
-            : 'bg-blue-400';
-          return (
-            <button
-              key={env.id}
-              className={`flex items-center w-full py-0.5 text-left text-ice-xs transition-colors outline-none focus-visible:ring-1 focus-visible:ring-blue-500 ${
-                isActiveEnv
-                  ? 'text-ice-text-1 font-medium'
-                  : 'text-ice-text-3 hover:text-ice-text-2'
-              }`}
-              style={{ paddingLeft: `calc(${envIndent}px * var(--ice-space-scale, 1))` }}
-              onClick={() => handleSwitchEnv(env)}
-            >
-              <span className={`w-1.5 h-1.5 rounded-full mr-2 shrink-0 ${dotColor}`} />
-              <span className="truncate min-w-0">{env.name}</span>
-              {env.is_protected && <Lock aria-hidden="true" className="w-2.5 h-2.5 ml-1 shrink-0 text-ice-text-3/30" />}
-              {env.type === 'pr' && env.pr_number && (
-                <span className="ml-1 text-purple-400/60">#{env.pr_number}</span>
-              )}
-            </button>
-          );
-        })}
+        {envsExpanded &&
+          environments.length > 0 &&
+          environments.map((env) => {
+            const isActiveEnv = env.id === activeEnvId;
+            const dotColor =
+              env.type === 'production'
+                ? 'bg-emerald-400'
+                : env.type === 'staging'
+                  ? 'bg-amber-400'
+                  : env.type === 'pr'
+                    ? 'bg-purple-400'
+                    : 'bg-blue-400';
+            return (
+              <button
+                key={env.id}
+                className={`flex items-center w-full py-0.5 text-left text-ice-xs transition-colors outline-none focus-visible:ring-1 focus-visible:ring-blue-500 ${
+                  isActiveEnv ? 'text-ice-text-1 font-medium' : 'text-ice-text-3 hover:text-ice-text-2'
+                }`}
+                style={{ paddingLeft: `calc(${envIndent}px * var(--ice-space-scale, 1))` }}
+                onClick={() => handleSwitchEnv(env)}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full mr-2 shrink-0 ${dotColor}`} />
+                <span className="truncate min-w-0">{env.name}</span>
+                {env.is_protected && (
+                  <Lock aria-hidden="true" className="w-2.5 h-2.5 ml-1 shrink-0 text-ice-text-3/30" />
+                )}
+                {env.type === 'pr' && env.pr_number && (
+                  <span className="ml-1 text-purple-400/60">#{env.pr_number}</span>
+                )}
+              </button>
+            );
+          })}
       </div>
     );
   },

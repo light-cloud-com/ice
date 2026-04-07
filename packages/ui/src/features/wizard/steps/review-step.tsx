@@ -7,9 +7,9 @@
 import { getCloudProvider } from '@ice/core/resources';
 import { Cloud, Globe, Shield, LayoutTemplate, FileCode2 } from 'lucide-react';
 import React from 'react';
-import { useTranslation } from '../../../i18n';
 import { SECURITY_LEVEL_COLORS } from '../../../config/color-palette';
 import { COMPOSED_TEMPLATES } from '../../../config/templates';
+import { useTranslation } from '../../../i18n';
 import type { WizardState } from '../hooks/use-wizard-state';
 
 const SECURITY_COLORS = SECURITY_LEVEL_COLORS;
@@ -58,7 +58,9 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ state }) => {
       <div className="rounded-lg border border-ice-border bg-ice-surface p-3 space-y-2">
         <div className="flex items-center gap-2 text-xs">
           <Globe className="w-3.5 h-3.5 text-ice-text-2" />
-          <span className="text-ice-text-2">{t('wizard.review.environmentsLabel')} ({enabledEnvs.length})</span>
+          <span className="text-ice-text-2">
+            {t('wizard.review.environmentsLabel')} ({enabledEnvs.length})
+          </span>
         </div>
         <div className="space-y-1.5">
           {enabledEnvs.map((env) => (
@@ -90,7 +92,9 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ state }) => {
           {template ? (
             <>
               <span className="text-xs text-ice-text-1 font-medium">{template.name}</span>
-              <span className="text-ice-xs text-ice-text-2">{template.blocks.length} {t('wizard.review.blocks')}</span>
+              <span className="text-ice-xs text-ice-text-2">
+                {template.blocks.length} {t('wizard.review.blocks')}
+              </span>
               <span className="text-ice-xs text-ice-text-2 ml-auto">{template.estimatedCost}</span>
             </>
           ) : (
@@ -104,8 +108,11 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ state }) => {
 
       {/* Summary count */}
       <div className="text-center text-xs text-ice-text-2 pt-1">
-        {t('wizard.review.summaryPrefix')} {enabledEnvs.length} {enabledEnvs.length !== 1 ? t('wizard.review.environments') : t('wizard.review.environment')}{' '}
-        {template ? t('wizard.review.summaryWithTemplate', { count: template.blocks.length }) : t('wizard.review.summaryBlank')}
+        {t('wizard.review.summaryPrefix')} {enabledEnvs.length}{' '}
+        {enabledEnvs.length !== 1 ? t('wizard.review.environments') : t('wizard.review.environment')}{' '}
+        {template
+          ? t('wizard.review.summaryWithTemplate', { count: template.blocks.length })
+          : t('wizard.review.summaryBlank')}
       </div>
     </div>
   );

@@ -6,13 +6,7 @@
 
 // ─── Behavior ───────────────────────────────────────────────────────────────
 
-export type NodeBehavior =
-  | 'scalable'
-  | 'container'
-  | 'singleton'
-  | 'streaming'
-  | 'stateful'
-  | 'connector';
+export type NodeBehavior = 'scalable' | 'container' | 'singleton' | 'streaming' | 'stateful' | 'connector';
 
 export const BEHAVIOR_LABELS: Record<NodeBehavior, string> = {
   scalable: 'Scales horizontally',

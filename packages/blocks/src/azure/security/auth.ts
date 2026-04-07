@@ -8,6 +8,5 @@ export const azureAuthBlueprint: BlockBlueprint = createBlueprintFromResource('s
   description: 'Azure Entra ID. Login, signup, permissions.',
   icon: 'User',
   providers: ['azure'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

@@ -15,10 +15,11 @@
 
 // Account components not needed in community (single user)
 import { DebugOverlay } from '@ui/features/debug/components/debug-overlay';
-import { DevAccentPicker } from '@ui/shared/components/dev-accent-picker';
 import { OnboardingPage, OnboardingChecklist } from '@ui/features/onboarding';
 import { ProjectWizard } from '@ui/features/wizard';
+import { useTranslation, LocaleProvider } from '@ui/i18n';
 import { AppBar } from '@ui/shared/components/app-bar';
+import { DevAccentPicker } from '@ui/shared/components/dev-accent-picker';
 import { ErrorBoundary } from '@ui/shared/components/error-boundary';
 import { MainLayout } from '@ui/shared/components/main-layout';
 import { useMenuActions } from '@ui/shared/hooks/use-menu-actions';
@@ -27,7 +28,6 @@ import { fetchProfile } from '@ui/store/slices/account-slice';
 import { initializeGraph } from '@ui/store/slices/graph-slice';
 import { setActiveProject } from '@ui/store/slices/projects-slice';
 import React, { useEffect } from 'react';
-import { useTranslation, LocaleProvider } from '@ui/i18n';
 import { useSelector, useDispatch } from 'react-redux';
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import type { RootState, AppDispatch } from '@ui/store';
@@ -208,23 +208,23 @@ const App: React.FC = () => (
       <DevAccentPicker>
         <BrowserRouter>
           <Routes>
-          <Route path="/onboarding" element={<OnboardingPage />} />
-          <Route
-            path="/templates"
-            element={
-              <ErrorBoundary name="TemplateGallery">
-                <TemplateGalleryShell />
-              </ErrorBoundary>
-            }
-          />
-          <Route
-            path="/*"
-            element={
-              <ErrorBoundary name="Canvas">
-                <DynamicContent />
-              </ErrorBoundary>
-            }
-          />
+            <Route path="/onboarding" element={<OnboardingPage />} />
+            <Route
+              path="/templates"
+              element={
+                <ErrorBoundary name="TemplateGallery">
+                  <TemplateGalleryShell />
+                </ErrorBoundary>
+              }
+            />
+            <Route
+              path="/*"
+              element={
+                <ErrorBoundary name="Canvas">
+                  <DynamicContent />
+                </ErrorBoundary>
+              }
+            />
           </Routes>
         </BrowserRouter>
       </DevAccentPicker>

@@ -5,9 +5,14 @@
  */
 
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import {
+  CONTAINER_PADDING,
+  HEADER_HEIGHT,
+  MIN_CONTAINER_WIDTH,
+  MIN_CONTAINER_HEIGHT,
+} from '../../config/canvas-constants';
 import { autoLayout, forceResolveOverlaps, type LayoutNode } from '../../shared/utils/auto-layout';
 import type { ExpandedBlueprint } from '../../config/blocks';
-import { CONTAINER_PADDING, HEADER_HEIGHT, MIN_CONTAINER_WIDTH, MIN_CONTAINER_HEIGHT, CARD_WIDTH, CARD_HEIGHT } from '../../config/canvas-constants';
 
 // =============================================================================
 // Types
@@ -229,7 +234,10 @@ function cascadeContainerReflow(nodes: CardNode[]): void {
     const children = nodes.filter((n) => n.parentId === container.id);
     if (children.length === 0) continue;
 
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
     for (const child of children) {
       minX = Math.min(minX, child.position.x);
       minY = Math.min(minY, child.position.y);
@@ -581,10 +589,7 @@ const cardsSlice = createSlice({
     },
 
     // Add nodes/edges to active card (merge, not replace) — for combining templates
-    addToActiveCard: (
-      state,
-      action: PayloadAction<{ nodes: CardNode[]; edges: CardEdge[] }>,
-    ) => {
+    addToActiveCard: (state, action: PayloadAction<{ nodes: CardNode[]; edges: CardEdge[] }>) => {
       pushSnapshot(state);
       const card = state.cards.find((c) => c.id === state.activeCardId);
       if (card) {
@@ -636,7 +641,15 @@ const cardsSlice = createSlice({
     // Otherwise, organize all levels (master organize).
     autoOrganizeCard: (
       state,
-      action: PayloadAction<{ direction?: 'vertical' | 'horizontal'; layout?: 'flow' | 'grid' | 'circular'; containerId?: string; zoom?: number } | undefined>,
+      action: PayloadAction<
+        | {
+            direction?: 'vertical' | 'horizontal';
+            layout?: 'flow' | 'grid' | 'circular';
+            containerId?: string;
+            zoom?: number;
+          }
+        | undefined
+      >,
     ) => {
       const card = state.cards.find((c) => c.id === state.activeCardId);
       if (!card || card.nodes.length === 0) return;
@@ -738,7 +751,8 @@ const cardsSlice = createSlice({
       } else {
         // Compute old centroid (center of mass of all top-level nodes)
         const topNodes = card.nodes.filter((n) => !n.parentId);
-        let oldCentroidX = 0, oldCentroidY = 0;
+        let oldCentroidX = 0,
+          oldCentroidY = 0;
         if (topNodes.length > 0) {
           for (const n of topNodes) {
             oldCentroidX += n.position.x + n.width / 2;
@@ -768,7 +782,8 @@ const cardsSlice = createSlice({
         // whole diagram from drifting when node sizes change with zoom.
         if (topNodes.length > 0) {
           const newTopNodes = card.nodes.filter((n) => !n.parentId);
-          let newCentroidX = 0, newCentroidY = 0;
+          let newCentroidX = 0,
+            newCentroidY = 0;
           for (const n of newTopNodes) {
             newCentroidX += n.position.x + n.width / 2;
             newCentroidY += n.position.y + n.height / 2;
@@ -814,10 +829,7 @@ const cardsSlice = createSlice({
     // causes jumps), scale positions and sizes proportionally around the
     // centroid.  The relative arrangement stays identical — blocks just
     // grow/shrink in place.
-    scaleLayoutForZoom: (
-      state,
-      action: PayloadAction<{ zoom: number; prevZoom: number }>,
-    ) => {
+    scaleLayoutForZoom: (state, action: PayloadAction<{ zoom: number; prevZoom: number }>) => {
       const card = state.cards.find((c) => c.id === state.activeCardId);
       if (!card || card.nodes.length === 0) return;
 
@@ -835,7 +847,8 @@ const cardsSlice = createSlice({
       const topNodes = card.nodes.filter((n) => !n.parentId);
       if (topNodes.length === 0) return;
 
-      let cx = 0, cy = 0;
+      let cx = 0,
+        cy = 0;
       for (const n of topNodes) {
         cx += n.position.x + n.width / 2;
         cy += n.position.y + n.height / 2;

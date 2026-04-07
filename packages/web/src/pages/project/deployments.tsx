@@ -6,13 +6,13 @@
  * 2. Service Deployments — CI/CD pipeline builds and deploys
  */
 
+import { useTranslation } from '@ui/i18n';
 import axiosInstance from '@ui/shared/api/axios-instance';
 import { cn } from '@ui/shared/utils/cn';
 import { selectActiveCard } from '@ui/store/slices/cards-slice';
 import { fetchEventsForNode, type DeploymentEvent, type DeployStep } from '@ui/store/slices/pipeline-slice';
 import { Loader2, CheckCircle, XCircle, Clock, Rocket, GitBranch, Server, ChevronDown, RotateCcw } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
-import { useTranslation } from '@ui/i18n';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState, AppDispatch } from '@ui/store';
 
@@ -386,7 +386,11 @@ const ServiceDeploymentList: React.FC<{
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="text-xs text-ice-text-3">{ev.rule?.environment || ev.branch}</span>
                   <span className="text-xs text-ice-text-3">{ev.branch}</span>
-                  {ev.commit_author && <span className="text-xs text-ice-text-3">{t('project.deployments.byAuthor', { author: ev.commit_author })}</span>}
+                  {ev.commit_author && (
+                    <span className="text-xs text-ice-text-3">
+                      {t('project.deployments.byAuthor', { author: ev.commit_author })}
+                    </span>
+                  )}
                 </div>
                 {ev.error && !isExpanded && <p className="text-xs text-red-400 mt-0.5 truncate">{ev.error}</p>}
               </div>

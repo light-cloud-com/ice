@@ -8,6 +8,5 @@ export const azureLogsBlueprint: BlockBlueprint = createBlueprintFromResource('l
   description: 'Azure Monitor. Errors, performance, alerts.',
   icon: 'FileText',
   providers: ['azure'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

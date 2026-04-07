@@ -70,8 +70,7 @@ import type { ComposedTemplate } from './types';
 export const iotDeviceManagementTemplate: ComposedTemplate = {
   id: 'iot-device-management',
   name: 'IoT Device Management',
-  description:
-    'Fleet-scale device registry with telemetry ingestion, dashboards, WAF, and VPC network isolation.',
+  description: 'Fleet-scale device registry with telemetry ingestion, dashboards, WAF, and VPC network isolation.',
   icon: 'Cpu',
   estimatedCost: '$150-400/mo',
   category: 'iot',
@@ -82,9 +81,7 @@ export const iotDeviceManagementTemplate: ComposedTemplate = {
   difficulty: 'intermediate',
   trust: 'official',
   author: { name: 'ICE Team' },
-  environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' },
-  ],
+  environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' }],
 
   groups: [
     // [0] Public Zone — outside VPC
@@ -211,7 +208,12 @@ export const iotDeviceManagementTemplate: ComposedTemplate = {
     // 11: Domain
     { iceType: 'Network.Domain', label: 'Domain', position: { x: 306, y: 1080 }, data: { hostname: 'iot.devices.io' } },
     // 12: Repo
-    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 562, y: 1080 }, data: { repository: '', branch: 'main' } },
+    {
+      iceType: 'Source.Repository',
+      label: 'GitHub Repo',
+      position: { x: 562, y: 1080 },
+      data: { repository: '', branch: 'main' },
+    },
     // 13: Env
     { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 50, y: 1256 }, data: {} },
   ],
@@ -253,8 +255,7 @@ export const iotDeviceManagementTemplate: ComposedTemplate = {
 export const iotSmartHomeTemplate: ComposedTemplate = {
   id: 'iot-smart-home',
   name: 'Smart Home Platform',
-  description:
-    'Home automation with device control, state caching, scheduled routines, and VPC network isolation.',
+  description: 'Home automation with device control, state caching, scheduled routines, and VPC network isolation.',
   icon: 'Home',
   estimatedCost: '$50-120/mo',
   category: 'iot',
@@ -265,9 +266,7 @@ export const iotSmartHomeTemplate: ComposedTemplate = {
   difficulty: 'starter',
   trust: 'official',
   author: { name: 'ICE Team' },
-  environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' },
-  ],
+  environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' }],
 
   groups: [
     // [0] Public Zone — outside VPC
@@ -382,7 +381,12 @@ export const iotSmartHomeTemplate: ComposedTemplate = {
     // 10: Domain
     { iceType: 'Network.Domain', label: 'Domain', position: { x: 562, y: 1080 }, data: { hostname: 'home.smart.io' } },
     // 11: Repo
-    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 50, y: 1256 }, data: { repository: '', branch: 'main' } },
+    {
+      iceType: 'Source.Repository',
+      label: 'GitHub Repo',
+      position: { x: 50, y: 1256 },
+      data: { repository: '', branch: 'main' },
+    },
     // 12: Env
     { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 306, y: 1256 }, data: {} },
   ],

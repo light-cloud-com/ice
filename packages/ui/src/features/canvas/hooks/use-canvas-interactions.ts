@@ -17,7 +17,6 @@
  */
 
 import { useCallback, useRef, useEffect, type RefObject, type MouseEvent } from 'react';
-import { ZOOM_STEP } from '../../../config/canvas-constants';
 
 // =============================================================================
 // Types

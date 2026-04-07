@@ -155,9 +155,7 @@ export const IceSelect: React.FC<IceSelectProps> = memo(
                       <SelectPrimitive.ItemText>
                         <span className="truncate">{opt.label}</span>
                       </SelectPrimitive.ItemText>
-                      {opt.value === value && (
-                        <Check aria-hidden="true" className="w-3 h-3 shrink-0 text-blue-400" />
-                      )}
+                      {opt.value === value && <Check aria-hidden="true" className="w-3 h-3 shrink-0 text-blue-400" />}
                     </div>
                     {opt.description && (
                       <div className="text-ice-2xs text-ice-text-3/50 mt-0.5 leading-tight">{opt.description}</div>

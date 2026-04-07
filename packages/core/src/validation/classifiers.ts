@@ -10,8 +10,10 @@
  */
 
 export function isDatabase(t: string): boolean {
-  return t.startsWith('Database.') ||
-    /PostgreSQL|MySQL|MongoDB|DynamoDB|Firestore|CosmosDB|AutonomousDB|Tablestore|ManagedDB/i.test(t);
+  return (
+    t.startsWith('Database.') ||
+    /PostgreSQL|MySQL|MongoDB|DynamoDB|Firestore|CosmosDB|AutonomousDB|Tablestore|ManagedDB/i.test(t)
+  );
 }
 
 export function isCache(t: string): boolean {
@@ -27,8 +29,9 @@ export function isStorage(t: string): boolean {
 }
 
 export function isBackend(t: string): boolean {
-  return /Backend|Container|Worker|Function|CronJob|Scheduled|AppPlatform|OCIFunctions/i.test(t) ||
-    t.startsWith('Compute.');
+  return (
+    /Backend|Container|Worker|Function|CronJob|Scheduled|AppPlatform|OCIFunctions/i.test(t) || t.startsWith('Compute.')
+  );
 }
 
 export function isFrontend(t: string): boolean {
@@ -88,7 +91,12 @@ function isService(t: string): boolean {
  * Check if two block types can be connected.
  * Mirrors canConnect() from @ice/types/connection-rules.
  */
-export function canConnect(srcIceType: string, tgtIceType: string, srcNodeType?: string, tgtNodeType?: string): boolean {
+export function canConnect(
+  srcIceType: string,
+  tgtIceType: string,
+  srcNodeType?: string,
+  tgtNodeType?: string,
+): boolean {
   if (isContainer(srcIceType, srcNodeType) || isContainer(tgtIceType, tgtNodeType)) return false;
 
   // Check all valid connection rules
@@ -123,8 +131,14 @@ export function canConnect(srcIceType: string, tgtIceType: string, srcNodeType?:
     // Traffic: publish/subscribe
     { source: isBackend, target: isQueue },
     { source: isQueue, target: isBackend },
-    { source: isBackend, target: (t: string) => /Warehouse|BigQuery|Redshift|Synapse/i.test(t) || t === 'Analytics.DataWarehouse' },
-    { source: (t: string) => /Warehouse|BigQuery|Redshift|Synapse/i.test(t) || t === 'Analytics.DataWarehouse', target: isBackend },
+    {
+      source: isBackend,
+      target: (t: string) => /Warehouse|BigQuery|Redshift|Synapse/i.test(t) || t === 'Analytics.DataWarehouse',
+    },
+    {
+      source: (t: string) => /Warehouse|BigQuery|Redshift|Synapse/i.test(t) || t === 'Analytics.DataWarehouse',
+      target: isBackend,
+    },
     // Traffic: stream
     { source: (t: string) => !isMonitoring(t) && !isContainer(t), target: isMonitoring },
     // Pipeline
@@ -140,5 +154,5 @@ export function canConnect(srcIceType: string, tgtIceType: string, srcNodeType?:
     { source: (t: string) => isBackend(t) || isFrontend(t) || isGateway(t), target: isDomain },
   ];
 
-  return rules.some(r => r.source(srcIceType) && r.target(tgtIceType));
+  return rules.some((r) => r.source(srcIceType) && r.target(tgtIceType));
 }

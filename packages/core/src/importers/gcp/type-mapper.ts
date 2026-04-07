@@ -421,4 +421,3 @@ export function map_properties(gcp_kind: string, properties: Record<string, unkn
 
   return result;
 }
-

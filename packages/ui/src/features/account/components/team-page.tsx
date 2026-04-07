@@ -126,7 +126,9 @@ export function TeamPage() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-ice-text-1">{t('account.team.title')}</h1>
-          <p className="mt-1 text-sm text-ice-text-3">{t('account.team.subtitle')} {selectedOrg?.name ?? t('account.team.subtitleFallback')}</p>
+          <p className="mt-1 text-sm text-ice-text-3">
+            {t('account.team.subtitle')} {selectedOrg?.name ?? t('account.team.subtitleFallback')}
+          </p>
         </div>
         {isAdmin && (
           <button
@@ -143,9 +145,15 @@ export function TeamPage() {
       {/* Members table */}
       <div className="overflow-hidden rounded-lg border border-ice-border bg-ice-raised">
         <div className="grid grid-cols-[1fr_140px_100px_60px] gap-4 border-b border-ice-border bg-ice-surface px-6 py-3">
-          <span className="text-xs font-medium uppercase tracking-wider text-ice-text-3">{t('account.team.columnMember')}</span>
-          <span className="text-xs font-medium uppercase tracking-wider text-ice-text-3">{t('account.team.columnRole')}</span>
-          <span className="text-xs font-medium uppercase tracking-wider text-ice-text-3">{t('account.team.columnJoined')}</span>
+          <span className="text-xs font-medium uppercase tracking-wider text-ice-text-3">
+            {t('account.team.columnMember')}
+          </span>
+          <span className="text-xs font-medium uppercase tracking-wider text-ice-text-3">
+            {t('account.team.columnRole')}
+          </span>
+          <span className="text-xs font-medium uppercase tracking-wider text-ice-text-3">
+            {t('account.team.columnJoined')}
+          </span>
           <span />
         </div>
 

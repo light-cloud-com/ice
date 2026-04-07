@@ -176,10 +176,20 @@ export const ecommerceStoreTemplate: ComposedTemplate = {
       data: { size: 'db.t3.small', storage: '100', version: '17' },
     },
     // 6: Cart Cache
-    { iceType: 'Database.Redis', label: 'Cart Cache', position: { x: 892, y: 408 }, data: { size: 'cache.t3.small', port: 6379 } },
+    {
+      iceType: 'Database.Redis',
+      label: 'Cart Cache',
+      position: { x: 892, y: 408 },
+      data: { size: 'cache.t3.small', port: 6379 },
+    },
     // Row 1
     // 7: Product Images
-    { iceType: 'Storage.Bucket', label: 'Product Images', position: { x: 380, y: 584 }, data: { storage_class: 'standard' } },
+    {
+      iceType: 'Storage.Bucket',
+      label: 'Product Images',
+      position: { x: 380, y: 584 },
+      data: { storage_class: 'standard' },
+    },
     // 8: Order Queue
     { iceType: 'Messaging.SQS', label: 'Order Queue', position: { x: 636, y: 584 }, data: { queue_type: 'standard' } },
     // 9: Order Worker
@@ -204,7 +214,12 @@ export const ecommerceStoreTemplate: ComposedTemplate = {
     // 14: Domain
     { iceType: 'Network.Domain', label: 'Domain', position: { x: 50, y: 1256 }, data: { hostname: 'shop.acme.io' } },
     // 15: Repo
-    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 306, y: 1256 }, data: { repository: '', branch: 'main' } },
+    {
+      iceType: 'Source.Repository',
+      label: 'GitHub Repo',
+      position: { x: 306, y: 1256 },
+      data: { repository: '', branch: 'main' },
+    },
     // 16: Env
     { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },
   ],
@@ -247,8 +262,7 @@ export const ecommerceStoreTemplate: ComposedTemplate = {
 export const ecommerceMarketplaceTemplate: ComposedTemplate = {
   id: 'ecommerce-marketplace',
   name: 'Marketplace',
-  description:
-    'Multi-vendor marketplace with buyer and seller APIs, search, WAF, and VPC isolation.',
+  description: 'Multi-vendor marketplace with buyer and seller APIs, search, WAF, and VPC isolation.',
   icon: 'Store',
   estimatedCost: '$300-600/mo',
   category: 'e-commerce',
@@ -259,9 +273,7 @@ export const ecommerceMarketplaceTemplate: ComposedTemplate = {
   difficulty: 'advanced',
   trust: 'official',
   author: { name: 'ICE Team' },
-  environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' },
-  ],
+  environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' }],
 
   groups: [
     // [0] Public Zone — outside VPC
@@ -364,11 +376,26 @@ export const ecommerceMarketplaceTemplate: ComposedTemplate = {
     },
     // Row 1
     // 7: Session Cache
-    { iceType: 'Database.Redis', label: 'Session Cache', position: { x: 380, y: 584 }, data: { size: 'cache.t3.medium', port: 6379 } },
+    {
+      iceType: 'Database.Redis',
+      label: 'Session Cache',
+      position: { x: 380, y: 584 },
+      data: { size: 'cache.t3.medium', port: 6379 },
+    },
     // 8: Media Storage
-    { iceType: 'Storage.Bucket', label: 'Media Storage', position: { x: 636, y: 584 }, data: { storage_class: 'standard' } },
+    {
+      iceType: 'Storage.Bucket',
+      label: 'Media Storage',
+      position: { x: 636, y: 584 },
+      data: { storage_class: 'standard' },
+    },
     // 9: Notification Queue
-    { iceType: 'Messaging.SQS', label: 'Notification Queue', position: { x: 892, y: 584 }, data: { queue_type: 'standard' } },
+    {
+      iceType: 'Messaging.SQS',
+      label: 'Notification Queue',
+      position: { x: 892, y: 584 },
+      data: { queue_type: 'standard' },
+    },
 
     // ── Monitoring (outside VPC) ──────────────────────────────────────────
     // 10: Platform Logs
@@ -384,7 +411,12 @@ export const ecommerceMarketplaceTemplate: ComposedTemplate = {
     // 14: Domain
     { iceType: 'Network.Domain', label: 'Domain', position: { x: 50, y: 1256 }, data: { hostname: 'market.acme.io' } },
     // 15: Repo
-    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 306, y: 1256 }, data: { repository: '', branch: 'main' } },
+    {
+      iceType: 'Source.Repository',
+      label: 'GitHub Repo',
+      position: { x: 306, y: 1256 },
+      data: { repository: '', branch: 'main' },
+    },
     // 16: Env
     { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },
   ],

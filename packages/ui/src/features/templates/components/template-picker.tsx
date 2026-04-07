@@ -15,6 +15,7 @@ import {
   expandComposedTemplate,
   type ComposedTemplate,
 } from '../../../config/templates';
+import { useTranslation } from '../../../i18n';
 import { Badge } from '../../../shared/components/ui/badge';
 import {
   DropdownMenu,
@@ -24,12 +25,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuGroup,
 } from '../../../shared/components/ui/dropdown-menu';
-import { useTranslation } from '../../../i18n';
+import { SearchInput } from '../../../shared/components/ui/search-input';
 import { cn } from '../../../shared/utils/cn';
 import { createCard, importToActiveCard } from '../../../store/slices/cards-slice';
 import { openTabInPane, setActivePane } from '../../../store/slices/ui-slice';
 import type { AppDispatch, RootState } from '../../../store';
-import { SearchInput } from '../../../shared/components/ui/search-input';
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Rocket,
@@ -151,7 +151,9 @@ export const TemplatePicker: React.FC = () => {
                             {template.description}
                           </p>
                           <div className="flex items-center gap-1 mt-1">
-                            <span className="text-ice-xs text-muted-foreground">{template.blocks.length} {t('templates.blocks')}</span>
+                            <span className="text-ice-xs text-muted-foreground">
+                              {template.blocks.length} {t('templates.blocks')}
+                            </span>
                             <span className="text-muted-foreground/40 mx-0.5">&middot;</span>
                             {template.tags.slice(0, 4).map((tag) => (
                               <Badge key={tag} variant="secondary" className="text-ice-2xs px-1 py-0 h-3.5">

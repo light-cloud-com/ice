@@ -14,6 +14,5 @@ export const ossBlueprint: BlockBlueprint = createBlueprintFromResource('oss', {
   description: 'Alibaba Cloud object storage. China-optimized CDN.',
   icon: 'HardDrive',
   providers: ['alibaba'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

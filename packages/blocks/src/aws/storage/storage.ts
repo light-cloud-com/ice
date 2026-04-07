@@ -8,6 +8,5 @@ export const awsStorageBlueprint: BlockBlueprint = createBlueprintFromResource('
   description: 'AWS S3. Files, images, uploads.',
   icon: 'HardDrive',
   providers: ['aws'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

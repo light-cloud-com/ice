@@ -12,9 +12,9 @@ import { useDispatch } from 'react-redux';
 import { getBlueprint, expandBlueprint } from '../../../config/blocks';
 import { ARCHETYPE_COLORS } from '../../../config/color-palette';
 import { getTemplatesByCategory, expandComposedTemplate } from '../../../config/templates';
-import type { ComposedTemplate } from '../../../config/templates';
 import { useTranslation } from '../../../i18n';
 import { importToActiveCard, expandBlueprintToCard } from '../../../store/slices/cards-slice';
+import type { ComposedTemplate } from '../../../config/templates';
 import type { AppDispatch } from '../../../store';
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -58,7 +58,13 @@ export const EmptyCanvasOverlay: React.FC<EmptyCanvasOverlayProps> = ({ onDismis
   }, []);
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center z-20" style={{ pointerEvents: 'auto' }} role="dialog" aria-modal="true" aria-label="Choose a starting template">
+    <div
+      className="absolute inset-0 flex items-center justify-center z-20"
+      style={{ pointerEvents: 'auto' }}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Choose a starting template"
+    >
       {/* Backdrop */}
       <div className="absolute inset-0 bg-ice-base/60 backdrop-blur-sm" />
 
@@ -113,4 +119,3 @@ export const EmptyCanvasOverlay: React.FC<EmptyCanvasOverlayProps> = ({ onDismis
     </div>
   );
 };
-

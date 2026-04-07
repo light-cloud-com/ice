@@ -159,9 +159,19 @@ export const backendApiTemplate: ComposedTemplate = {
       data: { size: '1-2048', runtime: 'nodejs20', domain: 'api.myapp.com', port: 8080 },
     },
     // 4: PostgreSQL
-    { iceType: 'Database.PostgreSQL', label: 'API Database', position: { x: 636, y: 408 }, data: { size: 'db.t3.small', storage: '20', version: '17' } },
+    {
+      iceType: 'Database.PostgreSQL',
+      label: 'API Database',
+      position: { x: 636, y: 408 },
+      data: { size: 'db.t3.small', storage: '20', version: '17' },
+    },
     // 5: Redis
-    { iceType: 'Database.Redis', label: 'API Cache', position: { x: 892, y: 408 }, data: { size: 'cache.t3.small', port: 6379 } },
+    {
+      iceType: 'Database.Redis',
+      label: 'API Cache',
+      position: { x: 892, y: 408 },
+      data: { size: 'cache.t3.small', port: 6379 },
+    },
 
     // ── Monitoring (outside VPC) ──────────────────────────────────────────
     // 6: Logs
@@ -173,7 +183,12 @@ export const backendApiTemplate: ComposedTemplate = {
     // 8: Domain
     { iceType: 'Network.Domain', label: 'Domain', position: { x: 306, y: 884 }, data: { hostname: 'api.myapp.com' } },
     // 9: Repo
-    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 50, y: 1060 }, data: { repository: '', branch: 'main' } },
+    {
+      iceType: 'Source.Repository',
+      label: 'GitHub Repo',
+      position: { x: 50, y: 1060 },
+      data: { repository: '', branch: 'main' },
+    },
     // 10: Env
     { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 306, y: 1060 }, data: {} },
   ],
@@ -321,14 +336,34 @@ export const microservicesTemplate: ComposedTemplate = {
     },
     // Row 1
     // 6: Users DB
-    { iceType: 'Database.PostgreSQL', label: 'Users DB', position: { x: 380, y: 584 }, data: { size: 'db.t3.medium', storage: '50', version: '17' } },
+    {
+      iceType: 'Database.PostgreSQL',
+      label: 'Users DB',
+      position: { x: 380, y: 584 },
+      data: { size: 'db.t3.medium', storage: '50', version: '17' },
+    },
     // 7: Orders DB
-    { iceType: 'Database.PostgreSQL', label: 'Orders DB', position: { x: 636, y: 584 }, data: { size: 'db.t3.medium', storage: '50', version: '17' } },
+    {
+      iceType: 'Database.PostgreSQL',
+      label: 'Orders DB',
+      position: { x: 636, y: 584 },
+      data: { size: 'db.t3.medium', storage: '50', version: '17' },
+    },
     // 8: Cache
-    { iceType: 'Database.Redis', label: 'Shared Cache', position: { x: 892, y: 584 }, data: { size: 'cache.t3.medium', port: 6379 } },
+    {
+      iceType: 'Database.Redis',
+      label: 'Shared Cache',
+      position: { x: 892, y: 584 },
+      data: { size: 'cache.t3.medium', port: 6379 },
+    },
     // Row 2
     // 9: Message Queue
-    { iceType: 'Messaging.RabbitMQ', label: 'Message Queue', position: { x: 380, y: 760 }, data: { size: 'mq.m5.large' } },
+    {
+      iceType: 'Messaging.RabbitMQ',
+      label: 'Message Queue',
+      position: { x: 380, y: 760 },
+      data: { size: 'mq.m5.large' },
+    },
 
     // ── Monitoring (outside VPC) ──────────────────────────────────────────
     // 10: Logs
@@ -340,7 +375,12 @@ export const microservicesTemplate: ComposedTemplate = {
     // 12: Domain
     { iceType: 'Network.Domain', label: 'Domain', position: { x: 306, y: 1256 }, data: { hostname: 'api.myapp.com' } },
     // 13: Repo
-    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 50, y: 1432 }, data: { repository: '', branch: 'main' } },
+    {
+      iceType: 'Source.Repository',
+      label: 'GitHub Repo',
+      position: { x: 50, y: 1432 },
+      data: { repository: '', branch: 'main' },
+    },
     // 14: Env
     { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 306, y: 1432 }, data: {} },
   ],

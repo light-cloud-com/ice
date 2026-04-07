@@ -42,10 +42,7 @@ export const DebugOverlay: React.FC = () => {
   const groupCount =
     activeCard?.nodes.filter((n) => n.type === 'container' || ((n.data?.iceType as string) || '').startsWith('Group.'))
       .length ?? 0;
-  const blockCount =
-    activeCard?.nodes.filter(
-      (n) => n.type === 'block' && n.type !== 'container',
-    ).length ?? 0;
+  const blockCount = activeCard?.nodes.filter((n) => n.type === 'block' && n.type !== 'container').length ?? 0;
   const resourceCount = nodeCount - blockCount - groupCount;
 
   const selectedNodeIds = selection.selectedNodes ?? [];
@@ -89,7 +86,9 @@ export const DebugOverlay: React.FC = () => {
           background: 'rgba(30, 41, 59, 0.5)',
         }}
       >
-        <span className="font-bold" style={{ color: '#8b5cf6' }}>{t('debug.title')}</span>
+        <span className="font-bold" style={{ color: '#8b5cf6' }}>
+          {t('debug.title')}
+        </span>
         <div className="flex gap-2">
           <button
             onClick={() => setCollapsed(true)}
@@ -117,8 +116,14 @@ export const DebugOverlay: React.FC = () => {
         <Row label={t('debug.edges')} value={String(edgeCount)} />
         <Row label={t('debug.activeCard')} value={activeCard?.name || cards.activeCardId || 'none'} />
         <Divider />
-        <Row label={t('debug.selectedNodes')} value={selectedNodeIds.length > 0 ? selectedNodeIds.join(', ') : t('debug.none')} />
-        <Row label={t('debug.selectedEdges')} value={selectedEdgeIds.length > 0 ? selectedEdgeIds.join(', ') : t('debug.none')} />
+        <Row
+          label={t('debug.selectedNodes')}
+          value={selectedNodeIds.length > 0 ? selectedNodeIds.join(', ') : t('debug.none')}
+        />
+        <Row
+          label={t('debug.selectedEdges')}
+          value={selectedEdgeIds.length > 0 ? selectedEdgeIds.join(', ') : t('debug.none')}
+        />
         <Divider />
         <Row label={t('debug.lastAction')} value={lastAction || t('debug.none')} />
         <Row label={t('debug.actionTime')} value={lastActionAgo} />
@@ -127,20 +132,15 @@ export const DebugOverlay: React.FC = () => {
 
       {/* Node list (scrollable) */}
       {activeCard && activeCard.nodes.length > 0 && (
-        <div
-          className="max-h-[200px] overflow-y-auto py-1"
-          style={{ borderTop: '1px solid #1e293b' }}
-        >
+        <div className="max-h-[200px] overflow-y-auto py-1" style={{ borderTop: '1px solid #1e293b' }}>
           <div className="px-3 py-1 font-semibold text-ice-2xs" style={{ color: '#64748b' }}>
             {t('debug.nodesHeader', { count: nodeCount })}
           </div>
           {activeCard.nodes.map((node) => (
-            <div
-              key={node.id}
-              className="px-3 py-0.5 text-ice-2xs flex gap-2"
-              style={{ color: '#94a3b8' }}
-            >
-              <span className="min-w-[50px]" style={{ color: '#64748b' }}>{node.type}</span>
+            <div key={node.id} className="px-3 py-0.5 text-ice-2xs flex gap-2" style={{ color: '#94a3b8' }}>
+              <span className="min-w-[50px]" style={{ color: '#64748b' }}>
+                {node.type}
+              </span>
               <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
                 {(node.data?.label as string) || node.id}
               </span>
@@ -158,9 +158,7 @@ export const DebugOverlay: React.FC = () => {
 const Row: React.FC<{ label: string; value: string }> = ({ label, value }) => (
   <div className="flex justify-between gap-2">
     <span style={{ color: '#64748b' }}>{label}</span>
-    <span className="text-right overflow-hidden text-ellipsis whitespace-nowrap max-w-[200px]">
-      {value}
-    </span>
+    <span className="text-right overflow-hidden text-ellipsis whitespace-nowrap max-w-[200px]">{value}</span>
   </div>
 );
 

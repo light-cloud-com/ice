@@ -28,8 +28,8 @@ import { IntegrationStatusDots } from '../../features/integrations';
 import { useTranslation } from '../../i18n';
 import { selectActiveCard } from '../../store/slices/cards-slice';
 import { openValidation } from '../../store/slices/ui-slice';
-import type { RootState } from '../../store';
 import { useSystemStats } from '../hooks/use-system-stats';
+import type { RootState } from '../../store';
 
 function parseCostRange(cost: string): number {
   const matches = cost.match(/\$(\d+)(?:[–-](\d+))?/);
@@ -173,7 +173,9 @@ export const StatusBar: React.FC = () => {
       {systemStats && (
         <>
           <div className="flex items-center gap-3 text-ice-text-3">
-            <span>RAM: {systemStats.ram >= 1024 ? `${(systemStats.ram / 1024).toFixed(1)}GB` : `${systemStats.ram}MB`}</span>
+            <span>
+              RAM: {systemStats.ram >= 1024 ? `${(systemStats.ram / 1024).toFixed(1)}GB` : `${systemStats.ram}MB`}
+            </span>
             <span>CPU: {systemStats.cpu}%</span>
           </div>
           <StatusDivider />

@@ -60,8 +60,8 @@ export const PromoteModal: React.FC = () => {
           <div className="flex items-center gap-2">
             <ArrowUpRight className="w-5 h-5 text-amber-500" />
             <h2 className="text-sm font-semibold text-ice-text-1">
-              {t('environments.promote.promote')} <span className="text-amber-500">{sourceName}</span> {t('environments.promote.to')}{' '}
-              <span className="text-emerald-500">{targetName}</span>
+              {t('environments.promote.promote')} <span className="text-amber-500">{sourceName}</span>{' '}
+              {t('environments.promote.to')} <span className="text-emerald-500">{targetName}</span>
             </h2>
           </div>
           <p className="text-ice-xs text-ice-text-3 mt-1">
@@ -104,7 +104,9 @@ export const PromoteModal: React.FC = () => {
               {/* Unchanged count */}
               {pendingDiff.unchangedCount > 0 && (
                 <div className="text-ice-xs text-ice-text-3 pt-2 border-t border-ice-border mt-2">
-                  {pendingDiff.unchangedCount} {pendingDiff.unchangedCount !== 1 ? t('environments.promote.nodes') : t('environments.promote.node')} {t('environments.promote.unchanged')}
+                  {pendingDiff.unchangedCount}{' '}
+                  {pendingDiff.unchangedCount !== 1 ? t('environments.promote.nodes') : t('environments.promote.node')}{' '}
+                  {t('environments.promote.unchanged')}
                 </div>
               )}
             </div>
@@ -151,7 +153,13 @@ const DiffRow: React.FC<{
       bg: 'bg-emerald-500/5',
       tag: t('environments.promote.tagAdded'),
     },
-    removed: { icon: Minus, color: 'text-red-500', border: 'border-l-red-500', bg: 'bg-red-500/5', tag: t('environments.promote.tagRemoved') },
+    removed: {
+      icon: Minus,
+      color: 'text-red-500',
+      border: 'border-l-red-500',
+      bg: 'bg-red-500/5',
+      tag: t('environments.promote.tagRemoved'),
+    },
     modified: {
       icon: RefreshCw,
       color: 'text-amber-500',

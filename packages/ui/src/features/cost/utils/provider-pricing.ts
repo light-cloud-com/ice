@@ -5,9 +5,9 @@
  * These are approximate public list prices as of early 2026.
  */
 
+import { parseCostRange, type ResourceMap, getNodeCostInfo } from './cost-calculator';
 import type { CardNode, CardEdge } from '../../../store/slices/cards-slice';
 import type { ScaleTier } from '@ice/core/resources';
-import { parseCostRange, type NodeCostInfo, type ResourceMap, getNodeCostInfo } from './cost-calculator';
 
 // ─── Data transfer / egress rates (per GB) ──────────────────────────────────
 
@@ -138,10 +138,7 @@ export interface DataTransferEstimate {
 }
 
 /** Estimate egress cost for a provider at a given traffic tier */
-export function estimateDataTransferCost(
-  provider: string,
-  trafficTierIndex: number,
-): DataTransferEstimate {
+export function estimateDataTransferCost(provider: string, trafficTierIndex: number): DataTransferEstimate {
   const rate = EGRESS_RATES[provider] || EGRESS_RATES.aws;
   const tier = TRAFFIC_TIERS[trafficTierIndex] || TRAFFIC_TIERS[0];
 
@@ -213,9 +210,7 @@ export function compareProviderCosts(
   scaleTier?: ScaleTier | null,
 ): ProviderCostComparison[] {
   const providers = ['aws', 'gcp', 'azure'];
-  const infos = nodes
-    .filter((n) => n.type !== 'container')
-    .map((n) => getNodeCostInfo(n, resourceMap, scaleTier));
+  const infos = nodes.filter((n) => n.type !== 'container').map((n) => getNodeCostInfo(n, resourceMap, scaleTier));
   const currentTotal = infos.reduce((sum, n) => sum + n.monthlyCost, 0);
 
   // For a rough comparison, use the ratio of known provider costs
@@ -252,10 +247,7 @@ export function compareProviderCosts(
 // ─── Data transfer from edge analysis ───────────────────────────────────────
 
 /** Count outbound traffic connections per node to estimate egress volume */
-export function countTrafficConnections(
-  nodes: CardNode[],
-  edges: CardEdge[],
-): Map<string, number> {
+export function countTrafficConnections(nodes: CardNode[], edges: CardEdge[]): Map<string, number> {
   const counts = new Map<string, number>();
   for (const edge of edges) {
     const category = (edge.data?.category as string) || 'traffic';

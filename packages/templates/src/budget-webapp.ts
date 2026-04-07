@@ -43,9 +43,7 @@ export const budgetWebAppTemplate: ComposedTemplate = {
   trust: 'official',
   featured: true,
   author: { name: 'ICE Team' },
-  environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'basic' },
-  ],
+  environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'basic' }],
 
   groups: [
     // [0] Public Zone — outside VPC
@@ -107,10 +105,20 @@ export const budgetWebAppTemplate: ComposedTemplate = {
       data: { memory: '128', timeout: '10', runtime: 'nodejs22.x' },
     },
     // 4: PostgreSQL
-    { iceType: 'Database.PostgreSQL', label: 'App Database', position: { x: 326, y: 408 }, data: { size: 'db.t3.micro', storage: '20', version: '17' } },
+    {
+      iceType: 'Database.PostgreSQL',
+      label: 'App Database',
+      position: { x: 326, y: 408 },
+      data: { size: 'db.t3.micro', storage: '20', version: '17' },
+    },
     // Row 1
     // 5: Storage
-    { iceType: 'Storage.Bucket', label: 'Media Storage', position: { x: 70, y: 584 }, data: { storage_class: 'standard' } },
+    {
+      iceType: 'Storage.Bucket',
+      label: 'Media Storage',
+      position: { x: 70, y: 584 },
+      data: { storage_class: 'standard' },
+    },
 
     // ── Ungrouped (control plane) ─────────────────────────────────────────
     // 6: Secret

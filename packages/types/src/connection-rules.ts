@@ -24,11 +24,7 @@ import {
   DEFAULT_ENV_VARS,
 } from '@ice/constants';
 
-export {
-  type ConnectionCategory,
-  CATEGORY_COLORS,
-  CATEGORY_TO_RELATIONSHIP,
-};
+export { type ConnectionCategory, CATEGORY_COLORS, CATEGORY_TO_RELATIONSHIP };
 
 // ─── Core Types ──────────────────────────────────────────────────────────────
 
@@ -163,60 +159,301 @@ export interface ConnectionRule {
 
 export const CONNECTION_RULES: ConnectionRule[] = [
   // ── TRAFFIC: request ────────────────────────────────────────────────────
-  { label: 'Frontend → Backend',       source: isFrontend,   target: isBackend,       category: 'traffic', trafficType: 'request', lineStyle: 'solid' },
-  { label: 'Gateway → Gateway',         source: isGateway,    target: isGateway,       category: 'traffic', trafficType: 'request', lineStyle: 'solid' },
-  { label: 'Gateway → Backend',        source: isGateway,    target: isBackend,       category: 'traffic', trafficType: 'request', lineStyle: 'solid' },
-  { label: 'Gateway → Frontend',       source: isGateway,    target: isFrontend,      category: 'traffic', trafficType: 'request', lineStyle: 'solid' },
-  { label: 'Backend → Backend',        source: isBackend,    target: isBackend,       category: 'traffic', trafficType: 'request', lineStyle: 'solid' },
-  { label: 'Backend → Auth',           source: isBackend,    target: isAuth,          category: 'traffic', trafficType: 'request', lineStyle: 'solid' },
-  { label: 'Frontend → Auth',          source: isFrontend,   target: isAuth,          category: 'traffic', trafficType: 'request', lineStyle: 'solid' },
-  { label: 'Frontend → Gateway',       source: isFrontend,   target: isGateway,       category: 'traffic', trafficType: 'request', lineStyle: 'solid' },
+  {
+    label: 'Frontend → Backend',
+    source: isFrontend,
+    target: isBackend,
+    category: 'traffic',
+    trafficType: 'request',
+    lineStyle: 'solid',
+  },
+  {
+    label: 'Gateway → Gateway',
+    source: isGateway,
+    target: isGateway,
+    category: 'traffic',
+    trafficType: 'request',
+    lineStyle: 'solid',
+  },
+  {
+    label: 'Gateway → Backend',
+    source: isGateway,
+    target: isBackend,
+    category: 'traffic',
+    trafficType: 'request',
+    lineStyle: 'solid',
+  },
+  {
+    label: 'Gateway → Frontend',
+    source: isGateway,
+    target: isFrontend,
+    category: 'traffic',
+    trafficType: 'request',
+    lineStyle: 'solid',
+  },
+  {
+    label: 'Backend → Backend',
+    source: isBackend,
+    target: isBackend,
+    category: 'traffic',
+    trafficType: 'request',
+    lineStyle: 'solid',
+  },
+  {
+    label: 'Backend → Auth',
+    source: isBackend,
+    target: isAuth,
+    category: 'traffic',
+    trafficType: 'request',
+    lineStyle: 'solid',
+  },
+  {
+    label: 'Frontend → Auth',
+    source: isFrontend,
+    target: isAuth,
+    category: 'traffic',
+    trafficType: 'request',
+    lineStyle: 'solid',
+  },
+  {
+    label: 'Frontend → Gateway',
+    source: isFrontend,
+    target: isGateway,
+    category: 'traffic',
+    trafficType: 'request',
+    lineStyle: 'solid',
+  },
 
   // ── TRAFFIC: data ──────────────────────────────────────────────────────
-  { label: 'Backend → Database',       source: isBackend,    target: isDatabase,      category: 'traffic', trafficType: 'data', lineStyle: 'solid' },
-  { label: 'Backend → Cache',          source: isBackend,    target: isCache,         category: 'traffic', trafficType: 'data', lineStyle: 'solid' },
-  { label: 'Backend → Storage',        source: isBackend,    target: isStorage,       category: 'traffic', trafficType: 'data', lineStyle: 'solid' },
-  { label: 'Backend → Search',         source: isBackend,    target: isSearch,        category: 'traffic', trafficType: 'data', lineStyle: 'solid' },
-  { label: 'Backend → VectorDB',       source: isBackend,    target: isVectorDb,      category: 'traffic', trafficType: 'data', lineStyle: 'solid' },
-  { label: 'Backend → LLM',            source: isBackend,    target: isLLM,           category: 'traffic', trafficType: 'data', lineStyle: 'solid' },
-  { label: 'Frontend → Storage',       source: isFrontend,   target: isStorage,       category: 'traffic', trafficType: 'data', lineStyle: 'solid' },
+  {
+    label: 'Backend → Database',
+    source: isBackend,
+    target: isDatabase,
+    category: 'traffic',
+    trafficType: 'data',
+    lineStyle: 'solid',
+  },
+  {
+    label: 'Backend → Cache',
+    source: isBackend,
+    target: isCache,
+    category: 'traffic',
+    trafficType: 'data',
+    lineStyle: 'solid',
+  },
+  {
+    label: 'Backend → Storage',
+    source: isBackend,
+    target: isStorage,
+    category: 'traffic',
+    trafficType: 'data',
+    lineStyle: 'solid',
+  },
+  {
+    label: 'Backend → Search',
+    source: isBackend,
+    target: isSearch,
+    category: 'traffic',
+    trafficType: 'data',
+    lineStyle: 'solid',
+  },
+  {
+    label: 'Backend → VectorDB',
+    source: isBackend,
+    target: isVectorDb,
+    category: 'traffic',
+    trafficType: 'data',
+    lineStyle: 'solid',
+  },
+  {
+    label: 'Backend → LLM',
+    source: isBackend,
+    target: isLLM,
+    category: 'traffic',
+    trafficType: 'data',
+    lineStyle: 'solid',
+  },
+  {
+    label: 'Frontend → Storage',
+    source: isFrontend,
+    target: isStorage,
+    category: 'traffic',
+    trafficType: 'data',
+    lineStyle: 'solid',
+  },
 
   // ── TRAFFIC: data (reverse — drag from data store to service) ──────────
-  { label: 'Database → Backend (flip)',  source: isDatabase,      target: isBackend,       category: 'traffic', trafficType: 'data', lineStyle: 'solid', reverse: true },
-  { label: 'Cache → Backend (flip)',     source: isCache,         target: isBackend,       category: 'traffic', trafficType: 'data', lineStyle: 'solid', reverse: true },
-  { label: 'Storage → Backend (flip)',   source: isStorage,       target: isBackend,       category: 'traffic', trafficType: 'data', lineStyle: 'solid', reverse: true },
-  { label: 'Storage → Frontend (flip)',  source: isStorage,       target: isFrontend,      category: 'traffic', trafficType: 'data', lineStyle: 'solid', reverse: true },
-  { label: 'Search → Backend (flip)',    source: isSearch,        target: isBackend,       category: 'traffic', trafficType: 'data', lineStyle: 'solid', reverse: true },
-  { label: 'VectorDB → Backend (flip)',  source: isVectorDb,      target: isBackend,       category: 'traffic', trafficType: 'data', lineStyle: 'solid', reverse: true },
-  { label: 'LLM → Backend (flip)',       source: isLLM,           target: isBackend,       category: 'traffic', trafficType: 'data', lineStyle: 'solid', reverse: true },
-  { label: 'Auth → Backend (flip)',      source: isAuth,          target: isBackend,       category: 'traffic', trafficType: 'data', lineStyle: 'solid', reverse: true },
-  { label: 'Auth → Frontend (flip)',     source: isAuth,          target: isFrontend,      category: 'traffic', trafficType: 'data', lineStyle: 'solid', reverse: true },
+  {
+    label: 'Database → Backend (flip)',
+    source: isDatabase,
+    target: isBackend,
+    category: 'traffic',
+    trafficType: 'data',
+    lineStyle: 'solid',
+    reverse: true,
+  },
+  {
+    label: 'Cache → Backend (flip)',
+    source: isCache,
+    target: isBackend,
+    category: 'traffic',
+    trafficType: 'data',
+    lineStyle: 'solid',
+    reverse: true,
+  },
+  {
+    label: 'Storage → Backend (flip)',
+    source: isStorage,
+    target: isBackend,
+    category: 'traffic',
+    trafficType: 'data',
+    lineStyle: 'solid',
+    reverse: true,
+  },
+  {
+    label: 'Storage → Frontend (flip)',
+    source: isStorage,
+    target: isFrontend,
+    category: 'traffic',
+    trafficType: 'data',
+    lineStyle: 'solid',
+    reverse: true,
+  },
+  {
+    label: 'Search → Backend (flip)',
+    source: isSearch,
+    target: isBackend,
+    category: 'traffic',
+    trafficType: 'data',
+    lineStyle: 'solid',
+    reverse: true,
+  },
+  {
+    label: 'VectorDB → Backend (flip)',
+    source: isVectorDb,
+    target: isBackend,
+    category: 'traffic',
+    trafficType: 'data',
+    lineStyle: 'solid',
+    reverse: true,
+  },
+  {
+    label: 'LLM → Backend (flip)',
+    source: isLLM,
+    target: isBackend,
+    category: 'traffic',
+    trafficType: 'data',
+    lineStyle: 'solid',
+    reverse: true,
+  },
+  {
+    label: 'Auth → Backend (flip)',
+    source: isAuth,
+    target: isBackend,
+    category: 'traffic',
+    trafficType: 'data',
+    lineStyle: 'solid',
+    reverse: true,
+  },
+  {
+    label: 'Auth → Frontend (flip)',
+    source: isAuth,
+    target: isFrontend,
+    category: 'traffic',
+    trafficType: 'data',
+    lineStyle: 'solid',
+    reverse: true,
+  },
 
   // ── TRAFFIC: publish / subscribe ───────────────────────────────────────
-  { label: 'Backend → Queue (publish)',     source: isBackend,    target: isQueue,         category: 'traffic', trafficType: 'publish', lineStyle: 'dashed' },
-  { label: 'Queue → Backend (subscribe)',   source: isQueue,      target: isBackend,       category: 'traffic', trafficType: 'subscribe', lineStyle: 'dotted' },
-  { label: 'Backend → Warehouse',           source: isBackend,    target: isDataWarehouse,  category: 'traffic', trafficType: 'publish', lineStyle: 'dashed' },
-  { label: 'Warehouse → Backend (flip)',    source: isDataWarehouse, target: isBackend,     category: 'traffic', trafficType: 'publish', lineStyle: 'dashed', reverse: true },
+  {
+    label: 'Backend → Queue (publish)',
+    source: isBackend,
+    target: isQueue,
+    category: 'traffic',
+    trafficType: 'publish',
+    lineStyle: 'dashed',
+  },
+  {
+    label: 'Queue → Backend (subscribe)',
+    source: isQueue,
+    target: isBackend,
+    category: 'traffic',
+    trafficType: 'subscribe',
+    lineStyle: 'dotted',
+  },
+  {
+    label: 'Backend → Warehouse',
+    source: isBackend,
+    target: isDataWarehouse,
+    category: 'traffic',
+    trafficType: 'publish',
+    lineStyle: 'dashed',
+  },
+  {
+    label: 'Warehouse → Backend (flip)',
+    source: isDataWarehouse,
+    target: isBackend,
+    category: 'traffic',
+    trafficType: 'publish',
+    lineStyle: 'dashed',
+    reverse: true,
+  },
 
   // ── TRAFFIC: stream ────────────────────────────────────────────────────
-  { label: 'Service → Monitoring',     source: (t) => !isMonitoring(t) && !isContainer(t), target: isMonitoring, category: 'traffic', trafficType: 'stream', lineStyle: 'thin' },
+  {
+    label: 'Service → Monitoring',
+    source: (t) => !isMonitoring(t) && !isContainer(t),
+    target: isMonitoring,
+    category: 'traffic',
+    trafficType: 'stream',
+    lineStyle: 'thin',
+  },
 
   // ── PIPELINE ───────────────────────────────────────────────────────────
-  { label: 'Repo → Service',           source: isRepo,       target: isService,       category: 'pipeline', lineStyle: 'dashed' },
+  { label: 'Repo → Service', source: isRepo, target: isService, category: 'pipeline', lineStyle: 'dashed' },
   // Reverse: user drags service→repo, we flip it to repo→service
-  { label: 'Service → Repo (flip)',    source: isService,    target: isRepo,          category: 'pipeline', lineStyle: 'dashed', reverse: true },
+  {
+    label: 'Service → Repo (flip)',
+    source: isService,
+    target: isRepo,
+    category: 'pipeline',
+    lineStyle: 'dashed',
+    reverse: true,
+  },
 
   // ── CONFIG ─────────────────────────────────────────────────────────────
-  { label: 'Service → EnvVars',        source: isService,    target: isEnvConfig,     category: 'config', lineStyle: 'dotted' },
-  { label: 'Service → Secrets',        source: isService,    target: isSecrets,       category: 'config', lineStyle: 'dotted' },
+  { label: 'Service → EnvVars', source: isService, target: isEnvConfig, category: 'config', lineStyle: 'dotted' },
+  { label: 'Service → Secrets', source: isService, target: isSecrets, category: 'config', lineStyle: 'dotted' },
   // Reverse: user drags envvars/secrets→service, we flip
-  { label: 'EnvVars → Service (flip)', source: isEnvConfig,  target: isService,       category: 'config', lineStyle: 'dotted', reverse: true },
-  { label: 'Secrets → Service (flip)', source: isSecrets,    target: isService,       category: 'config', lineStyle: 'dotted', reverse: true },
+  {
+    label: 'EnvVars → Service (flip)',
+    source: isEnvConfig,
+    target: isService,
+    category: 'config',
+    lineStyle: 'dotted',
+    reverse: true,
+  },
+  {
+    label: 'Secrets → Service (flip)',
+    source: isSecrets,
+    target: isService,
+    category: 'config',
+    lineStyle: 'dotted',
+    reverse: true,
+  },
 
   // ── DNS ────────────────────────────────────────────────────────────────
-  { label: 'Domain → Routable',        source: isDomain,     target: isRoutable,      category: 'dns', lineStyle: 'solid' },
+  { label: 'Domain → Routable', source: isDomain, target: isRoutable, category: 'dns', lineStyle: 'solid' },
   // Reverse: user drags service→domain, we flip
-  { label: 'Routable → Domain (flip)', source: isRoutable,   target: isDomain,        category: 'dns', lineStyle: 'solid', reverse: true },
+  {
+    label: 'Routable → Domain (flip)',
+    source: isRoutable,
+    target: isDomain,
+    category: 'dns',
+    lineStyle: 'solid',
+    reverse: true,
+  },
 ];
 
 // ─── Derived Functions ──────────────────────────────────────────────────────
@@ -225,7 +462,12 @@ export const CONNECTION_RULES: ConnectionRule[] = [
  * Check if two block types can be connected.
  * Returns true if any CONNECTION_RULE matches (in either direction).
  */
-export function canConnect(srcIceType: string, tgtIceType: string, srcNodeType?: string, tgtNodeType?: string): boolean {
+export function canConnect(
+  srcIceType: string,
+  tgtIceType: string,
+  srcNodeType?: string,
+  tgtNodeType?: string,
+): boolean {
   // Containers can never have edges
   if (isContainer(srcIceType, srcNodeType) || isContainer(tgtIceType, tgtNodeType)) return false;
   // Self-connection is never valid (checked at type level — same iceType is fine, same instance is caught elsewhere)

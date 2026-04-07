@@ -8,6 +8,5 @@ export const gcpAuthBlueprint: BlockBlueprint = createBlueprintFromResource('ser
   description: 'Google Cloud Identity Platform. Login, signup, permissions.',
   icon: 'User',
   providers: ['gcp'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

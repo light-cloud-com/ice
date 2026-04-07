@@ -14,6 +14,5 @@ export const ociObjectStorageBlueprint: BlockBlueprint = createBlueprintFromReso
   description: 'Oracle Cloud enterprise object storage. Tiered.',
   icon: 'HardDrive',
   providers: ['oci'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

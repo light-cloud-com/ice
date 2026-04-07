@@ -21,10 +21,7 @@ import {
   CARD_HEIGHT,
 } from '../../config/canvas-constants';
 import { isContainer as isContainerType } from '../../config/containment-rules';
-import {
-  computeCompactNodeHeight,
-  computeCompactNodeWidth,
-} from '../../features/canvas/components/nodes/svg-compact-node';
+import { computeCompactNodeHeight, computeCompactNodeWidth } from '../../features/canvas/components/nodes/compact-node';
 
 // =============================================================================
 // Constants - Layout-Specific
@@ -266,9 +263,10 @@ export function autoLayout(
         for (const tgt of childAdj.get(node.id) || []) {
           if (posIdx.has(tgt)) neighbors.push(posIdx.get(tgt)!);
         }
-        bary.set(node.id, neighbors.length > 0
-          ? neighbors.reduce((a, b) => a + b, 0) / neighbors.length
-          : layer.length / 2);
+        bary.set(
+          node.id,
+          neighbors.length > 0 ? neighbors.reduce((a, b) => a + b, 0) / neighbors.length : layer.length / 2,
+        );
       }
       layer.sort((a, b) => (bary.get(a.id) || 0) - (bary.get(b.id) || 0));
       for (let i = 0; i < layer.length; i++) posIdx.set(layer[i].id, i);
@@ -321,7 +319,9 @@ export function autoLayout(
       const HELPER_RING_GAP = 40;
       const MIN_RADIUS_CHILD = 80;
       const allMain = layers.flat();
-      let mainMaxDim = 0, mainMaxW = 0, mainMaxH = 0;
+      let mainMaxDim = 0,
+        mainMaxW = 0,
+        mainMaxH = 0;
       for (const c of allMain) {
         mainMaxDim = Math.max(mainMaxDim, c.width, c.height);
         mainMaxW = Math.max(mainMaxW, c.width);
@@ -338,7 +338,9 @@ export function autoLayout(
       let contentW = allMain.length <= 1 ? mainMaxW : 2 * mainR + mainMaxW;
       let contentH = allMain.length <= 1 ? mainMaxH : 2 * mainR + mainMaxH;
 
-      let hMaxDim = 0, hMaxW = 0, hMaxH = 0;
+      let hMaxDim = 0,
+        hMaxW = 0,
+        hMaxH = 0;
       for (const h of helpers) {
         hMaxDim = Math.max(hMaxDim, h.width, h.height);
         hMaxW = Math.max(hMaxW, h.width);
@@ -365,8 +367,12 @@ export function autoLayout(
       // Layers are columns left-to-right
       for (const layer of layers) {
         if (layer.length === 0) continue;
-        let colH = 0, maxW = 0;
-        for (const c of layer) { colH += c.height + childGap; maxW = Math.max(maxW, c.width); }
+        let colH = 0,
+          maxW = 0;
+        for (const c of layer) {
+          colH += c.height + childGap;
+          maxW = Math.max(maxW, c.width);
+        }
         if (colH > 0) colH -= childGap;
         mainWidth += maxW + childGap;
         mainHeight = Math.max(mainHeight, colH);
@@ -376,8 +382,12 @@ export function autoLayout(
       // Layers are rows top-to-bottom
       for (const layer of layers) {
         if (layer.length === 0) continue;
-        let rowW = 0, maxH = 0;
-        for (const c of layer) { rowW += c.width + childGap; maxH = Math.max(maxH, c.height); }
+        let rowW = 0,
+          maxH = 0;
+        for (const c of layer) {
+          rowW += c.width + childGap;
+          maxH = Math.max(maxH, c.height);
+        }
         if (rowW > 0) rowW -= childGap;
         mainWidth = Math.max(mainWidth, rowW);
         mainHeight += maxH + childGap;
@@ -389,7 +399,8 @@ export function autoLayout(
     // don't stretch the diagram in the flow direction.
     // Horizontal flow → helpers in a VERTICAL column to the right.
     // Vertical flow   → helpers in a HORIZONTAL row below.
-    let helperRowW = 0, helperRowH = 0;
+    let helperRowW = 0,
+      helperRowH = 0;
     for (const h of helpers) {
       if (direction === 'horizontal') {
         helperRowH += h.height + childGap;
@@ -512,8 +523,14 @@ export function autoLayout(
           let connectedId: string | null = null;
           for (const edge of edges) {
             if (edge.relationship === 'contains') continue;
-            if (edge.source === helper.id && mainIdSet.has(edge.target)) { connectedId = edge.target; break; }
-            if (edge.target === helper.id && mainIdSet.has(edge.source)) { connectedId = edge.source; break; }
+            if (edge.source === helper.id && mainIdSet.has(edge.target)) {
+              connectedId = edge.target;
+              break;
+            }
+            if (edge.target === helper.id && mainIdSet.has(edge.source)) {
+              connectedId = edge.source;
+              break;
+            }
           }
           let angle: number;
           if (connectedId && mainAngle.has(connectedId)) {
@@ -530,14 +547,22 @@ export function autoLayout(
       }
 
       // Compute actual bounding box, then shift so content has uniform padding
-      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      let minX = Infinity,
+        minY = Infinity,
+        maxX = -Infinity,
+        maxY = -Infinity;
       for (const c of children) {
         minX = Math.min(minX, c.x);
         minY = Math.min(minY, c.y);
         maxX = Math.max(maxX, c.x + c.width);
         maxY = Math.max(maxY, c.y + c.height);
       }
-      if (!isFinite(minX)) { minX = 0; minY = 0; maxX = 0; maxY = 0; }
+      if (!isFinite(minX)) {
+        minX = 0;
+        minY = 0;
+        maxX = 0;
+        maxY = 0;
+      }
 
       const shiftX = circPad - minX;
       const shiftY = circPad - minY;
@@ -606,7 +631,8 @@ export function autoLayout(
     // Barycenter: average position of ALL connected main nodes
     const helperPref = new Map<string, number>();
     for (const helper of helpers) {
-      let sum = 0, cnt = 0;
+      let sum = 0,
+        cnt = 0;
       for (const edge of edges) {
         if (edge.relationship === 'contains') continue;
         let connId: string | null = null;
@@ -706,7 +732,8 @@ export function autoLayout(
     // Right padding = containerPadding (added here to match).
     // Top = HEADER_HEIGHT + containerPadding (built into child y positions).
     // Bottom = containerPadding (added here to match).
-    let contentRight = 0, contentBottom = 0;
+    let contentRight = 0,
+      contentBottom = 0;
     for (const c of children) {
       contentRight = Math.max(contentRight, c.x + c.width);
       contentBottom = Math.max(contentBottom, c.y + c.height);
@@ -1133,7 +1160,8 @@ function flowLayout(
   // and reduces edge crossings.
   const helperPreferred = new Map<string, number>();
   for (const helper of helperNodes) {
-    let sum = 0, count = 0;
+    let sum = 0,
+      count = 0;
     for (const edge of edges) {
       if (edge.relationship === 'contains') continue;
       const s = toTopLevel(edge.source);
@@ -1146,7 +1174,9 @@ function flowLayout(
         if (pos) {
           // Horizontal flow → vertical column → barycenter on Y axis
           // Vertical flow   → horizontal row  → barycenter on X axis
-          sum += isHorizontal ? pos.y + (nodeMap.get(connId)?.height || 0) / 2 : pos.x + (nodeMap.get(connId)?.width || 0) / 2;
+          sum += isHorizontal
+            ? pos.y + (nodeMap.get(connId)?.height || 0) / 2
+            : pos.x + (nodeMap.get(connId)?.width || 0) / 2;
           count++;
         }
       }
@@ -1335,9 +1365,10 @@ function circularLayout(
       for (const tgt of adj.get(node.id) || []) {
         if (positionIndex.has(tgt)) neighbors.push(positionIndex.get(tgt)!);
       }
-      bary.set(node.id, neighbors.length > 0
-        ? neighbors.reduce((a, b) => a + b, 0) / neighbors.length
-        : layer.length / 2);
+      bary.set(
+        node.id,
+        neighbors.length > 0 ? neighbors.reduce((a, b) => a + b, 0) / neighbors.length : layer.length / 2,
+      );
     }
     layer.sort((a, b) => (bary.get(a.id) || 0) - (bary.get(b.id) || 0));
     for (let i = 0; i < layer.length; i++) positionIndex.set(layer[i].id, i);
@@ -1465,8 +1496,14 @@ function circularLayout(
         if (edge.relationship === 'contains') continue;
         const s = toTopLevel(edge.source);
         const t = toTopLevel(edge.target);
-        if (s === helper.id && mainIds.has(t!)) { connectedMainId = t!; break; }
-        if (t === helper.id && mainIds.has(s!)) { connectedMainId = s!; break; }
+        if (s === helper.id && mainIds.has(t!)) {
+          connectedMainId = t!;
+          break;
+        }
+        if (t === helper.id && mainIds.has(s!)) {
+          connectedMainId = s!;
+          break;
+        }
       }
 
       let angle: number;
@@ -1717,8 +1754,7 @@ export function forceResolveOverlaps<T extends ForceBody>(
   for (const n of allNodes) getDesc(n.id);
 
   // Two nodes are "related" if one is an ancestor of the other
-  const isRelated = (a: T, b: T): boolean =>
-    descOf.get(a.id)!.has(b.id) || descOf.get(b.id)!.has(a.id);
+  const isRelated = (a: T, b: T): boolean => descOf.get(a.id)!.has(b.id) || descOf.get(b.id)!.has(a.id);
 
   // ── Identify top-level nodes (the bodies we simulate) ────────────────
   const topLevel = allNodes.filter((n) => !n.parentId || !nodeById.has(n.parentId));
@@ -1726,7 +1762,10 @@ export function forceResolveOverlaps<T extends ForceBody>(
   if (topLevel.length < 2) return;
 
   // Init velocities
-  for (const n of topLevel) { n.vx = 0; n.vy = 0; }
+  for (const n of topLevel) {
+    n.vx = 0;
+    n.vy = 0;
+  }
 
   // Shift a node and all its descendants by (dx, dy)
   const shiftTree = (node: T, dx: number, dy: number) => {
@@ -1736,7 +1775,10 @@ export function forceResolveOverlaps<T extends ForceBody>(
     if (desc) {
       for (const did of desc) {
         const d = nodeById.get(did);
-        if (d) { d.x += dx; d.y += dy; }
+        if (d) {
+          d.x += dx;
+          d.y += dy;
+        }
       }
     }
   };
@@ -1803,7 +1845,11 @@ export function forceResolveOverlaps<T extends ForceBody>(
   }
 
   // Clean up temp fields
-  for (const n of allNodes) { delete n.vx; delete n.vy; delete n._descIds; }
+  for (const n of allNodes) {
+    delete n.vx;
+    delete n.vy;
+    delete n._descIds;
+  }
 }
 
 /** Legacy wrapper for internal auto-layout calls */

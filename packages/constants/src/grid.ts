@@ -13,9 +13,9 @@ export const CHILD_GAP = 16;
 export const GROUP_GAP = 30;
 
 export function groupWidth(cols: number): number {
-  return CONTAINER_PADDING + (cols * CARD_WIDTH) + ((cols - 1) * CHILD_GAP) + CONTAINER_PADDING;
+  return CONTAINER_PADDING + cols * CARD_WIDTH + (cols - 1) * CHILD_GAP + CONTAINER_PADDING;
 }
 
 export function groupHeight(rows: number): number {
-  return HEADER_HEIGHT + CONTAINER_PADDING + (rows * CARD_HEIGHT) + ((rows - 1) * CHILD_GAP) + CONTAINER_PADDING;
+  return HEADER_HEIGHT + CONTAINER_PADDING + rows * CARD_HEIGHT + (rows - 1) * CHILD_GAP + CONTAINER_PADDING;
 }

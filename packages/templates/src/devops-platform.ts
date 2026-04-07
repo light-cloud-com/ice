@@ -63,8 +63,7 @@ import type { ComposedTemplate } from './types';
 export const devopsMonitoringTemplate: ComposedTemplate = {
   id: 'devops-monitoring',
   name: 'Monitoring Stack',
-  description:
-    'Metrics collection with alerting pipeline, observability dashboard, and VPC network isolation.',
+  description: 'Metrics collection with alerting pipeline, observability dashboard, and VPC network isolation.',
   icon: 'Activity',
   estimatedCost: '$100-300/mo',
   category: 'devops',
@@ -75,9 +74,7 @@ export const devopsMonitoringTemplate: ComposedTemplate = {
   difficulty: 'intermediate',
   trust: 'official',
   author: { name: 'ICE Team' },
-  environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' },
-  ],
+  environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' }],
 
   groups: [
     // [0] Public Zone — outside VPC
@@ -177,7 +174,12 @@ export const devopsMonitoringTemplate: ComposedTemplate = {
 
     // ── Monitoring (outside VPC) ──────────────────────────────────────────
     // 7: Monitoring Logs
-    { iceType: 'Monitoring.Log', label: 'Monitoring Logs', position: { x: 50, y: 870 }, data: { keep_logs: '30 days' } },
+    {
+      iceType: 'Monitoring.Log',
+      label: 'Monitoring Logs',
+      position: { x: 50, y: 870 },
+      data: { keep_logs: '30 days' },
+    },
 
     // ── Ungrouped (control plane) ─────────────────────────────────────────
     // 8: Alert Worker
@@ -190,9 +192,19 @@ export const devopsMonitoringTemplate: ComposedTemplate = {
     // 9: Secrets
     { iceType: 'Security.Secret', label: 'Secrets', position: { x: 306, y: 1080 }, data: {} },
     // 10: Domain
-    { iceType: 'Network.Domain', label: 'Domain', position: { x: 50, y: 1256 }, data: { hostname: 'metrics.myapp.com' } },
+    {
+      iceType: 'Network.Domain',
+      label: 'Domain',
+      position: { x: 50, y: 1256 },
+      data: { hostname: 'metrics.myapp.com' },
+    },
     // 11: Repo
-    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 306, y: 1256 }, data: { repository: '', branch: 'main' } },
+    {
+      iceType: 'Source.Repository',
+      label: 'GitHub Repo',
+      position: { x: 306, y: 1256 },
+      data: { repository: '', branch: 'main' },
+    },
     // 12: Env
     { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },
   ],
@@ -231,8 +243,7 @@ export const devopsMonitoringTemplate: ComposedTemplate = {
 export const devopsCiCdTemplate: ComposedTemplate = {
   id: 'devops-cicd',
   name: 'CI/CD Platform',
-  description:
-    'Build pipelines with artifact storage, dashboards, deployment logs, and VPC network isolation.',
+  description: 'Build pipelines with artifact storage, dashboards, deployment logs, and VPC network isolation.',
   icon: 'GitBranch',
   estimatedCost: '$80-200/mo',
   category: 'devops',
@@ -243,9 +254,7 @@ export const devopsCiCdTemplate: ComposedTemplate = {
   difficulty: 'advanced',
   trust: 'official',
   author: { name: 'ICE Team' },
-  environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' },
-  ],
+  environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' }],
 
   groups: [
     // [0] VPC — contains subnets, no direct blocks
@@ -304,7 +313,12 @@ export const devopsCiCdTemplate: ComposedTemplate = {
     },
     // Row 1
     // 3: Artifact Storage
-    { iceType: 'Storage.Bucket', label: 'Artifact Storage', position: { x: 70, y: 318 }, data: { storage_class: 'standard' } },
+    {
+      iceType: 'Storage.Bucket',
+      label: 'Artifact Storage',
+      position: { x: 70, y: 318 },
+      data: { storage_class: 'standard' },
+    },
 
     // ── Monitoring (outside VPC) ──────────────────────────────────────────
     // 4: Build Logs
@@ -312,7 +326,12 @@ export const devopsCiCdTemplate: ComposedTemplate = {
 
     // ── Ungrouped (control plane) ─────────────────────────────────────────
     // 5: GitHub Repo
-    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 50, y: 814 }, data: { repository: '', branch: 'main' } },
+    {
+      iceType: 'Source.Repository',
+      label: 'GitHub Repo',
+      position: { x: 50, y: 814 },
+      data: { repository: '', branch: 'main' },
+    },
     // 6: Secrets
     { iceType: 'Security.Secret', label: 'Secrets', position: { x: 306, y: 814 }, data: {} },
     // 7: Env

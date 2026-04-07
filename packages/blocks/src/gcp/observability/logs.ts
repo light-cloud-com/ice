@@ -8,6 +8,5 @@ export const gcpLogsBlueprint: BlockBlueprint = createBlueprintFromResource('log
   description: 'Google Cloud Logging. Errors, performance, alerts.',
   icon: 'FileText',
   providers: ['gcp'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

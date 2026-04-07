@@ -65,13 +65,16 @@ const validationSlice = createSlice({
   name: 'validation',
   initialState,
   reducers: {
-    setValidationResult(state, action: PayloadAction<{
-      issues: CanvasIssue[];
-      valid: boolean;
-      deployable: boolean;
-      summary: ValidationSummary;
-      validatedAt: string;
-    }>) {
+    setValidationResult(
+      state,
+      action: PayloadAction<{
+        issues: CanvasIssue[];
+        valid: boolean;
+        deployable: boolean;
+        summary: ValidationSummary;
+        validatedAt: string;
+      }>,
+    ) {
       const { issues, valid, deployable, summary, validatedAt } = action.payload;
       state.issues = issues;
       state.valid = valid;
@@ -117,24 +120,24 @@ export const selectValidationSummary = (state: RootState) => state.validation.su
 
 /** Issues for a specific node */
 export const selectNodeIssues = (state: RootState, nodeId: string) =>
-  state.validation.issues.filter(i => i.nodeId === nodeId);
+  state.validation.issues.filter((i) => i.nodeId === nodeId);
 
 /** Issues for a specific edge */
 export const selectEdgeIssues = (state: RootState, edgeId: string) =>
-  state.validation.issues.filter(i => i.edgeId === edgeId);
+  state.validation.issues.filter((i) => i.edgeId === edgeId);
 
 /** Highest severity for a specific node ('error' > 'warning' > 'info' > null) */
 export const selectNodeSeverity = (state: RootState, nodeId: string): IssueSeverity | null => {
-  const nodeIssues = state.validation.issues.filter(i => i.nodeId === nodeId);
-  if (nodeIssues.some(i => i.severity === 'error')) return 'error';
-  if (nodeIssues.some(i => i.severity === 'warning')) return 'warning';
-  if (nodeIssues.some(i => i.severity === 'info')) return 'info';
+  const nodeIssues = state.validation.issues.filter((i) => i.nodeId === nodeId);
+  if (nodeIssues.some((i) => i.severity === 'error')) return 'error';
+  if (nodeIssues.some((i) => i.severity === 'warning')) return 'warning';
+  if (nodeIssues.some((i) => i.severity === 'info')) return 'info';
   return null;
 };
 
 /** Property-specific issues for a node */
 export const selectPropertyIssues = (state: RootState, nodeId: string, propertyPath: string) =>
-  state.validation.issues.filter(i => i.nodeId === nodeId && i.propertyPath === propertyPath);
+  state.validation.issues.filter((i) => i.nodeId === nodeId && i.propertyPath === propertyPath);
 
 /** Whether validation is in progress */
 export const selectIsValidating = (state: RootState) => state.validation.isValidating;

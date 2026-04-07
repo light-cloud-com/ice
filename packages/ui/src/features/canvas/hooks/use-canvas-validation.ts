@@ -5,17 +5,13 @@
  * canvas nodes or edges change. Dispatches results to Redux.
  */
 
+import { validateCanvas } from '@ice/core/validation';
 import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { validateCanvas } from '@ice/core/validation';
-import type { ValidatableNode, ValidatableEdge } from '@ice/core/validation';
-import {
-  setValidationResult,
-  setValidating,
-  clearValidation,
-} from '../../../store/slices/validation-slice';
 import { selectActiveCard } from '../../../store/slices/cards-slice';
+import { setValidationResult, setValidating, clearValidation } from '../../../store/slices/validation-slice';
 import type { RootState } from '../../../store';
+import type { ValidatableNode, ValidatableEdge } from '@ice/core/validation';
 
 const VALIDATION_DEBOUNCE_MS = 500;
 
@@ -53,14 +49,14 @@ export function useCanvasValidation() {
 
     timerRef.current = setTimeout(() => {
       // Map CardNode/CardEdge to ValidatableNode/ValidatableEdge
-      const validatableNodes: ValidatableNode[] = nodes.map(n => ({
+      const validatableNodes: ValidatableNode[] = nodes.map((n) => ({
         id: n.id,
         type: n.type,
         data: n.data,
         parentId: n.parentId,
       }));
 
-      const validatableEdges: ValidatableEdge[] = edges.map(e => ({
+      const validatableEdges: ValidatableEdge[] = edges.map((e) => ({
         id: e.id,
         source: e.source,
         target: e.target,
@@ -72,13 +68,15 @@ export function useCanvasValidation() {
         provider,
       });
 
-      dispatch(setValidationResult({
-        issues: [...result.issues],
-        valid: result.valid,
-        deployable: result.deployable,
-        summary: result.summary,
-        validatedAt: result.validatedAt,
-      }));
+      dispatch(
+        setValidationResult({
+          issues: [...result.issues],
+          valid: result.valid,
+          deployable: result.deployable,
+          summary: result.summary,
+          validatedAt: result.validatedAt,
+        }),
+      );
     }, VALIDATION_DEBOUNCE_MS);
 
     return () => {

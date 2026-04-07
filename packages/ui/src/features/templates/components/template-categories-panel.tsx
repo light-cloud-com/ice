@@ -26,15 +26,25 @@ import {
 import React, { useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { ALL_TEMPLATES, TEMPLATE_CATEGORIES, getFeaturedTemplates } from '../../../config/templates';
-import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { useTranslation } from '../../../i18n';
+import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { cn } from '../../../shared/utils/cn';
 import { toggleTemplates } from '../../../store/slices/ui-slice';
 import type { AppDispatch } from '../../../store';
 
 const ICON_MAP: Record<string, React.ElementType> = {
-  Rocket, Brain, BrainCircuit, ShieldCheck, Zap, Server, Activity, Globe,
-  Waypoints, ShoppingCart, Smartphone, GitBranch,
+  Rocket,
+  Brain,
+  BrainCircuit,
+  ShieldCheck,
+  Zap,
+  Server,
+  Activity,
+  Globe,
+  Waypoints,
+  ShoppingCart,
+  Smartphone,
+  GitBranch,
 };
 
 export const TemplateCategoriesPanel: React.FC = () => {
@@ -88,9 +98,7 @@ export const TemplateCategoriesPanel: React.FC = () => {
 
         {/* Category list */}
         <div className="px-3 pb-3">
-          <div className="text-ice-2xs font-medium text-ice-text-3 uppercase tracking-wider px-1 mb-2">
-            Categories
-          </div>
+          <div className="text-ice-2xs font-medium text-ice-text-3 uppercase tracking-wider px-1 mb-2">Categories</div>
           <div className="space-y-0.5">
             {TEMPLATE_CATEGORIES.map((cat) => {
               const CatIcon = ICON_MAP[cat.icon] || Zap;
@@ -104,9 +112,7 @@ export const TemplateCategoriesPanel: React.FC = () => {
                   disabled={isEmpty}
                   className={cn(
                     'flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-left transition-all',
-                    isEmpty
-                      ? 'opacity-40 cursor-not-allowed'
-                      : 'hover:bg-ice-hover cursor-pointer',
+                    isEmpty ? 'opacity-40 cursor-not-allowed' : 'hover:bg-ice-hover cursor-pointer',
                   )}
                 >
                   <div

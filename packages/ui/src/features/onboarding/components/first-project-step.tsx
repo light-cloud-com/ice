@@ -8,8 +8,8 @@
 import { Globe, Rocket, Server, Activity, FileBox } from 'lucide-react';
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useTranslation } from '../../../i18n';
 import { COMPOSED_TEMPLATES, QUICK_STARTS } from '../../../config/templates';
+import { useTranslation } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
 import { setProjectName, setSelectedTemplateId } from '../../../store/slices/onboarding-slice';
 import type { RootState, AppDispatch } from '../../../store';

@@ -17,7 +17,6 @@ import {
   DollarSign,
   TrendingDown,
   TrendingUp,
-  Minus,
   AlertTriangle,
   Lightbulb,
   Zap,
@@ -31,15 +30,14 @@ import {
   BrainCircuit,
   Package,
 } from 'lucide-react';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { t } from '../../../i18n';
 import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { cn } from '../../../shared/utils/cn';
 import { selectActiveCard, type CardNode } from '../../../store/slices/cards-slice';
 import { toggleCostPanel } from '../../../store/slices/ui-slice';
-import type { RootState, AppDispatch } from '../../../store';
-import type { Environment } from '../../../store/slices/environments-slice';
+import { useCostCalculation } from '../hooks/use-cost-calculation';
 import {
   formatCost,
   formatCostRaw,
@@ -49,14 +47,9 @@ import {
   type CategoryCost,
   type ResourceMap,
 } from '../utils/cost-calculator';
-import {
-  estimateDataTransferCost,
-  compareProviderCosts,
-  TRAFFIC_TIERS,
-  EGRESS_RATES,
-  type ProviderCostComparison,
-} from '../utils/provider-pricing';
-import { useCostCalculation } from '../hooks/use-cost-calculation';
+import { TRAFFIC_TIERS, EGRESS_RATES } from '../utils/provider-pricing';
+import type { RootState, AppDispatch } from '../../../store';
+import type { Environment } from '../../../store/slices/environments-slice';
 
 // ─── Section component ──────────────────────────────────────────────────────
 
@@ -81,7 +74,6 @@ const Section: React.FC<{
     </div>
   );
 };
-
 
 // ─── Category icon lookup ───────────────────────────────────────────────────
 
@@ -133,7 +125,9 @@ function loadTrafficTier(): number {
 function saveTrafficTier(value: number) {
   try {
     localStorage.setItem(TRAFFIC_TIER_KEY, String(value));
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 // Stable empty-array fallback (avoids creating new [] references in selectors)
@@ -159,15 +153,8 @@ export const CostPanel: React.FC = () => {
   // Session cost tracking
   const initialCostRef = useRef<number | null>(null);
 
-  const {
-    summary,
-    dataTransfer,
-    providerComparison,
-    trafficConnectionCount,
-    primaryProvider,
-    hasNodes,
-    resourceMap,
-  } = useCostCalculation(trafficTierIndex);
+  const { summary, dataTransfer, providerComparison, trafficConnectionCount, primaryProvider, hasNodes, resourceMap } =
+    useCostCalculation(trafficTierIndex);
 
   // Track initial cost on mount
   useEffect(() => {
@@ -176,9 +163,7 @@ export const CostPanel: React.FC = () => {
     }
   }, [summary.totalMonthlyCost]);
 
-  const sessionDelta = initialCostRef.current !== null
-    ? summary.totalMonthlyCost - initialCostRef.current
-    : 0;
+  const sessionDelta = initialCostRef.current !== null ? summary.totalMonthlyCost - initialCostRef.current : 0;
 
   const handleTrafficTierChange = useCallback((index: number) => {
     setTrafficTierIndex(index);
@@ -197,9 +182,7 @@ export const CostPanel: React.FC = () => {
           closeLabel="Close"
         />
         <div className="flex-1 flex items-center justify-center px-6">
-          <p className="text-ice-sm text-ice-text-3 text-center leading-relaxed">
-            {t('cost.empty')}
-          </p>
+          <p className="text-ice-sm text-ice-text-3 text-center leading-relaxed">{t('cost.empty')}</p>
         </div>
       </div>
     );
@@ -227,7 +210,6 @@ export const CostPanel: React.FC = () => {
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto">
-
         {/* ── Total monthly cost hero ──────────────────────────────── */}
         <div className="px-3 py-3 border-b border-ice-border">
           <div className="flex items-baseline gap-2">
@@ -243,7 +225,8 @@ export const CostPanel: React.FC = () => {
                 )}
               >
                 {sessionDelta > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                {sessionDelta > 0 ? '+' : ''}{formatCostRaw(sessionDelta)}
+                {sessionDelta > 0 ? '+' : ''}
+                {formatCostRaw(sessionDelta)}
               </span>
             )}
           </div>
@@ -256,11 +239,7 @@ export const CostPanel: React.FC = () => {
         <Section title={t('cost.categoryBreakdown')} icon={<Package className="w-3 h-3" />}>
           <div className="space-y-2">
             {categories.map((cat) => (
-              <CategoryRow
-                key={cat.category}
-                category={cat}
-                totalCost={totalMonthlyCost}
-              />
+              <CategoryRow key={cat.category} category={cat} totalCost={totalMonthlyCost} />
             ))}
           </div>
         </Section>
@@ -276,11 +255,15 @@ export const CostPanel: React.FC = () => {
                 <div className="text-ice-xs text-ice-text-3 mb-1.5">{t('cost.annualRange')}</div>
                 <div className="flex items-center justify-between">
                   <span className="text-ice-xs text-ice-text-2">Min (all at base)</span>
-                  <span className="text-ice-sm text-ice-text-1 font-mono">{formatCostRaw((scalingRange.minCost + dataTransfer.monthlyCost) * 12)}/yr</span>
+                  <span className="text-ice-sm text-ice-text-1 font-mono">
+                    {formatCostRaw((scalingRange.minCost + dataTransfer.monthlyCost) * 12)}/yr
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-ice-xs text-ice-text-2">Max (all scaled up)</span>
-                  <span className="text-ice-sm text-red-400 font-mono">{formatCostRaw((scalingRange.maxCost + dataTransfer.monthlyCost) * 12)}/yr</span>
+                  <span className="text-ice-sm text-red-400 font-mono">
+                    {formatCostRaw((scalingRange.maxCost + dataTransfer.monthlyCost) * 12)}/yr
+                  </span>
                 </div>
               </div>
             )}
@@ -366,9 +349,7 @@ export const CostPanel: React.FC = () => {
               <div className="flex items-center justify-between">
                 <span className="text-ice-xs text-ice-text-2">Transfer cost</span>
                 <span className="text-ice-sm text-emerald-400 font-mono font-semibold">
-                  {dataTransfer.monthlyCost === 0
-                    ? 'Free'
-                    : `~$${Math.round(dataTransfer.monthlyCost)}/mo`}
+                  {dataTransfer.monthlyCost === 0 ? 'Free' : `~$${Math.round(dataTransfer.monthlyCost)}/mo`}
                 </span>
               </div>
               <div className="text-ice-xs text-ice-text-3 mt-1">
@@ -391,22 +372,14 @@ export const CostPanel: React.FC = () => {
               >
                 <div className="flex items-center gap-2">
                   <span className="text-ice-sm text-ice-text-1 font-medium">{pc.label}</span>
-                  {pc.provider === primaryProvider && (
-                    <span className="text-ice-xs text-emerald-400">current</span>
-                  )}
+                  {pc.provider === primaryProvider && <span className="text-ice-xs text-emerald-400">current</span>}
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-ice-sm text-ice-text-1 font-mono">
-                    {formatCostRaw(pc.totalMonthlyCost)}/mo
-                  </span>
+                  <span className="text-ice-sm text-ice-text-1 font-mono">{formatCostRaw(pc.totalMonthlyCost)}/mo</span>
                   {pc.provider !== primaryProvider && pc.delta !== 0 && (
-                    <span
-                      className={cn(
-                        'text-ice-xs font-mono',
-                        pc.delta < 0 ? 'text-emerald-400' : 'text-red-400',
-                      )}
-                    >
-                      {pc.delta > 0 ? '+' : ''}{Math.round(pc.deltaPercent)}%
+                    <span className={cn('text-ice-xs font-mono', pc.delta < 0 ? 'text-emerald-400' : 'text-red-400')}>
+                      {pc.delta > 0 ? '+' : ''}
+                      {Math.round(pc.deltaPercent)}%
                     </span>
                   )}
                 </div>
@@ -483,7 +456,10 @@ const CategoryRow: React.FC<{
       {/* Bar */}
       <div className="h-1 bg-ice-border/50 rounded-full overflow-hidden mt-0.5 ml-6">
         <div
-          className={cn('h-full rounded-full transition-all', CATEGORY_COLORS[category.label] || CATEGORY_COLORS[category.category] || 'bg-gray-500')}
+          className={cn(
+            'h-full rounded-full transition-all',
+            CATEGORY_COLORS[category.label] || CATEGORY_COLORS[category.category] || 'bg-gray-500',
+          )}
           style={{ width: `${percent}%` }}
         />
       </div>
@@ -508,7 +484,8 @@ const ProjectionRow: React.FC<{ label: string; value: number }> = ({ label, valu
   <div className="flex items-center justify-between py-0.5">
     <span className="text-ice-xs text-ice-text-2">{label}</span>
     <span className="text-ice-sm text-ice-text-1 font-mono">
-      {formatCostRaw(value)}{label === 'Monthly' ? '/mo' : label === 'Quarterly' ? '/qtr' : '/yr'}
+      {formatCostRaw(value)}
+      {label === 'Monthly' ? '/mo' : label === 'Quarterly' ? '/qtr' : '/yr'}
     </span>
   </div>
 );
@@ -541,9 +518,7 @@ const ScalingRangeBar: React.FC<{ range: { minCost: number; currentCost: number;
       </div>
       <div className="flex items-center justify-between mt-1">
         <span className="text-ice-xs text-emerald-400 font-mono">{formatCost(minCost)}</span>
-        <span className="text-ice-xs text-ice-text-1 font-mono font-semibold">
-          Current: {formatCost(currentCost)}
-        </span>
+        <span className="text-ice-xs text-ice-text-1 font-mono font-semibold">Current: {formatCost(currentCost)}</span>
         <span className="text-ice-xs text-red-400 font-mono">{formatCost(maxCost)}</span>
       </div>
     </div>
@@ -584,21 +559,20 @@ const EnvironmentComparison: React.FC<{
               <span
                 className={cn(
                   'w-2 h-2 rounded-full',
-                  env.type === 'production' ? 'bg-emerald-500'
-                    : env.type === 'staging' ? 'bg-amber-500'
-                    : env.type === 'development' ? 'bg-blue-500'
-                    : 'bg-purple-500',
+                  env.type === 'production'
+                    ? 'bg-emerald-500'
+                    : env.type === 'staging'
+                      ? 'bg-amber-500'
+                      : env.type === 'development'
+                        ? 'bg-blue-500'
+                        : 'bg-purple-500',
                 )}
               />
               <span className="text-ice-xs text-ice-text-1">{env.name}</span>
-              {env.is_protected && (
-                <span className="text-ice-xs text-ice-text-3">🔒</span>
-              )}
+              {env.is_protected && <span className="text-ice-xs text-ice-text-3">🔒</span>}
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-ice-xs text-ice-text-1 font-mono">
-                {envCost > 0 ? formatCost(envCost) : '—'}
-              </span>
+              <span className="text-ice-xs text-ice-text-1 font-mono">{envCost > 0 ? formatCost(envCost) : '—'}</span>
               {env.type !== 'production' && delta !== 0 && (
                 <span
                   className={cn(
@@ -606,7 +580,8 @@ const EnvironmentComparison: React.FC<{
                     delta < 0 ? 'text-emerald-400' : delta > 0 ? 'text-red-400' : 'text-ice-text-3',
                   )}
                 >
-                  {delta > 0 ? '+' : ''}{formatCostRaw(delta)}
+                  {delta > 0 ? '+' : ''}
+                  {formatCostRaw(delta)}
                 </span>
               )}
             </div>
@@ -627,11 +602,7 @@ interface CostSuggestion {
   severity: 'high' | 'medium' | 'low';
 }
 
-function generateSuggestions(
-  summary: CostSummary,
-  nodes: CardNode[],
-  environments: Environment[],
-): CostSuggestion[] {
+function generateSuggestions(summary: CostSummary, nodes: CardNode[], environments: Environment[]): CostSuggestion[] {
   const suggestions: CostSuggestion[] = [];
 
   // Check for dev environments using production-tier instances
@@ -705,4 +676,3 @@ function generateSuggestions(
 
   return suggestions;
 }
-

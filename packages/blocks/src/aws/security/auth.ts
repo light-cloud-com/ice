@@ -8,6 +8,5 @@ export const awsAuthBlueprint: BlockBlueprint = createBlueprintFromResource('ser
   description: 'AWS Cognito. Login, signup, permissions.',
   icon: 'User',
   providers: ['aws'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

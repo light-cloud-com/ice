@@ -8,6 +8,5 @@ export const gcpSecretsBlueprint: BlockBlueprint = createBlueprintFromResource('
   description: 'Google Secret Manager. API keys, DB passwords, tokens.',
   icon: 'Key',
   providers: ['gcp'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

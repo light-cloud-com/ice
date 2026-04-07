@@ -8,6 +8,5 @@ export const digitaloceanGatewayBlueprint: BlockBlueprint = createBlueprintFromR
   description: 'DigitalOcean App Platform routing. Routes traffic, auth + rate limiting.',
   icon: 'GitBranch',
   providers: ['digitalocean'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

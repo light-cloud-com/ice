@@ -8,6 +8,5 @@ export const kubernetesLogsBlueprint: BlockBlueprint = createBlueprintFromResour
   description: 'Kubernetes Fluentd/Loki. Errors, performance, alerts.',
   icon: 'FileText',
   providers: ['kubernetes'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

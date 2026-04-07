@@ -140,9 +140,19 @@ export const euComplianceTemplate: ComposedTemplate = {
     },
     // Row 1
     // 5: Storage
-    { iceType: 'Storage.Bucket', label: 'Audit Storage', position: { x: 380, y: 584 }, data: { storage_class: 'standard' } },
+    {
+      iceType: 'Storage.Bucket',
+      label: 'Audit Storage',
+      position: { x: 380, y: 584 },
+      data: { storage_class: 'standard' },
+    },
     // 6: Redis Cache
-    { iceType: 'Database.Redis', label: 'Session Store', position: { x: 636, y: 584 }, data: { size: 'cache.r6g.large', port: 6379 } },
+    {
+      iceType: 'Database.Redis',
+      label: 'Session Store',
+      position: { x: 636, y: 584 },
+      data: { size: 'cache.r6g.large', port: 6379 },
+    },
 
     // ── Security & Compliance (outside VPC) ───────────────────────────────
     // 7: Auth

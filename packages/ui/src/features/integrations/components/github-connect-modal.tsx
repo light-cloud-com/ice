@@ -84,7 +84,9 @@ export const GitHubConnectModal: React.FC<GitHubConnectModalProps> = ({ isOpen, 
               )}
               <div className="flex-1">
                 <div className="font-medium text-sm text-ice-text-1">{githubStatus.username}</div>
-                <div className="text-xs text-ice-text-3">{t('integrations.github.connectedAs', { username: githubStatus.username || '' })}</div>
+                <div className="text-xs text-ice-text-3">
+                  {t('integrations.github.connectedAs', { username: githubStatus.username || '' })}
+                </div>
               </div>
               <Check className="w-5 h-5 text-ice-green" />
             </div>
@@ -140,11 +142,7 @@ export const GitHubConnectModal: React.FC<GitHubConnectModalProps> = ({ isOpen, 
             {/* Device Flow Tab */}
             <TabsContent value="device" className="space-y-3">
               {!deviceFlow ? (
-                <button
-                  onClick={handleDeviceFlow}
-                  disabled={isConnecting}
-                  className="ice-btn ice-btn-primary w-full"
-                >
+                <button onClick={handleDeviceFlow} disabled={isConnecting} className="ice-btn ice-btn-primary w-full">
                   {isConnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Github className="w-4 h-4" />}
                   {t('integrations.github.deviceFlowButton')}
                 </button>
@@ -160,7 +158,11 @@ export const GitHubConnectModal: React.FC<GitHubConnectModalProps> = ({ isOpen, 
                       className="p-2 rounded-md hover:bg-ice-hover transition-colors"
                       title={t('integrations.github.deviceFlowCopy')}
                     >
-                      {copied ? <Check className="w-4 h-4 text-ice-green" /> : <Copy className="w-4 h-4 text-ice-text-2" />}
+                      {copied ? (
+                        <Check className="w-4 h-4 text-ice-green" />
+                      ) : (
+                        <Copy className="w-4 h-4 text-ice-text-2" />
+                      )}
                     </button>
                   </div>
                   <div className="flex items-center justify-center gap-2 text-sm text-ice-text-3">

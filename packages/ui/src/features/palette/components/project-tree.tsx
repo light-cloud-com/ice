@@ -694,4 +694,3 @@ export const ProjectTree: React.FC = () => {
     </div>
   );
 };
-

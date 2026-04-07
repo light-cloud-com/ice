@@ -21,8 +21,8 @@ import { AiChatPanel } from '../../features/ai/components/ai-chat-panel';
 import { SvgCanvas } from '../../features/canvas/components/svg-canvas';
 import { CostPanel } from '../../features/cost/components/cost-panel';
 import { ResourcePalette } from '../../features/palette/components/resource-palette';
-import { TemplateCategoriesPanel } from '../../features/templates/components/template-categories-panel';
 import { PropertiesPanel } from '../../features/properties/components/properties-panel';
+import { TemplateCategoriesPanel } from '../../features/templates/components/template-categories-panel';
 import { ValidationPanel } from '../../features/validation/components/validation-panel';
 import { createCard, importToActiveCard, setActiveCard } from '../../store/slices/cards-slice';
 import {
@@ -143,9 +143,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
-  const { showPalette, showBlocks, showProperties, showAiChat, showCostPanel, showTemplates, showValidation } = useSelector(
-    (state: RootState) => state.ui,
-  );
+  const { showPalette, showBlocks, showProperties, showAiChat, showCostPanel, showTemplates, showValidation } =
+    useSelector((state: RootState) => state.ui);
   const isPortrait = useIsPortrait();
   const isCanvasView = view === 'canvas' && !children;
 
@@ -284,7 +283,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   );
 
   const showLeftPanel = showPalette || showBlocks || showTemplates;
-  const showRightPanel = showProperties || (isCanvasView && showAiChat) || (isCanvasView && showCostPanel) || (isCanvasView && showValidation);
+  const showRightPanel =
+    showProperties ||
+    (isCanvasView && showAiChat) ||
+    (isCanvasView && showCostPanel) ||
+    (isCanvasView && showValidation);
 
   // Render right panel content — panels are rendered conditionally but in stable
   // tree positions so React preserves their state when sibling panels toggle.

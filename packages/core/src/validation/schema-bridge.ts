@@ -8,13 +8,12 @@
  * BLOCK_BLUEPRINTS has both — we build the bridge from them.
  */
 
+import { ICE_TYPE_TO_RESOURCE_ID } from '@ice/constants';
 import {
   HIGH_LEVEL_CATEGORIES,
   type HighLevelResource,
   type HighLevelProperty,
 } from '../resources/high-level-resources.js';
-
-import { ICE_TYPE_TO_RESOURCE_ID } from '@ice/constants';
 
 // ─── Build lookup maps on first access ──────────────────────────────────────
 
@@ -41,7 +40,7 @@ export function getResourceForIceType(iceType: string): HighLevelResource | unde
   ensureMaps();
   const resourceId = ICE_TYPE_TO_RESOURCE_ID[iceType];
   if (!resourceId) return undefined;
-  return _allResources!.find(r => r.id === resourceId);
+  return _allResources!.find((r) => r.id === resourceId);
 }
 
 /**

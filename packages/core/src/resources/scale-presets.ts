@@ -74,11 +74,7 @@ export interface TierPreset {
  * Get the resolved scale preset for a specific resource, tier, and provider.
  * Merges common values with provider-specific overrides.
  */
-export function getScalePreset(
-  resourceId: string,
-  tier: ScaleTier,
-  provider: string,
-): Record<string, unknown> {
+export function getScalePreset(resourceId: string, tier: ScaleTier, provider: string): Record<string, unknown> {
   const preset = SCALE_PRESETS[resourceId]?.[tier];
   if (!preset) return {};
   const { _providers, ...common } = preset;
@@ -106,7 +102,6 @@ export function getAllPresetsForResource(
 // For each tier: common props + _providers for instance-size overrides
 
 export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>>> = {
-
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // COMPUTE
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -209,42 +204,48 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
 
   'serverless-function': {
     dev: {
-      memory: '128', timeout: '3',
+      memory: '128',
+      timeout: '3',
       _providers: {
         aws: { memory: '128' },
         gcp: { memory: '128-200mhz' },
       },
     },
     low: {
-      memory: '256', timeout: '30',
+      memory: '256',
+      timeout: '30',
       _providers: {
         aws: { memory: '256' },
         gcp: { memory: '256-400mhz' },
       },
     },
     moderate: {
-      memory: '512', timeout: '60',
+      memory: '512',
+      timeout: '60',
       _providers: {
         aws: { memory: '512' },
         gcp: { memory: '512-800mhz' },
       },
     },
     medium: {
-      memory: '1024', timeout: '60',
+      memory: '1024',
+      timeout: '60',
       _providers: {
         aws: { memory: '1024' },
         gcp: { memory: '1024-1400mhz' },
       },
     },
     high: {
-      memory: '2048', timeout: '300',
+      memory: '2048',
+      timeout: '300',
       _providers: {
         aws: { memory: '2048' },
         gcp: { memory: '2048-2800mhz' },
       },
     },
     'very-high': {
-      memory: '4096', timeout: '900',
+      memory: '4096',
+      timeout: '900',
       _providers: {
         aws: { memory: '4096' },
         gcp: { memory: '4096-4800mhz' },
@@ -253,29 +254,29 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
   },
 
   'function-compute': {
-    dev:        { memory: '128' },
-    low:        { memory: '256' },
-    moderate:   { memory: '512' },
-    medium:     { memory: '1024' },
-    high:       { memory: '3072' },
+    dev: { memory: '128' },
+    low: { memory: '256' },
+    moderate: { memory: '512' },
+    medium: { memory: '1024' },
+    high: { memory: '3072' },
     'very-high': { memory: '3072' },
   },
 
   'oci-functions': {
-    dev:        { memory: '128' },
-    low:        { memory: '256' },
-    moderate:   { memory: '512' },
-    medium:     { memory: '1024' },
-    high:       { memory: '2048' },
+    dev: { memory: '128' },
+    low: { memory: '256' },
+    moderate: { memory: '512' },
+    medium: { memory: '1024' },
+    high: { memory: '2048' },
     'very-high': { memory: '2048' },
   },
 
   'do-app-platform': {
-    dev:        { size: 'basic-xxs' },
-    low:        { size: 'basic-xs' },
-    moderate:   { size: 'basic-s' },
-    medium:     { size: 'pro-xs' },
-    high:       { size: 'pro-s' },
+    dev: { size: 'basic-xxs' },
+    low: { size: 'basic-xs' },
+    moderate: { size: 'basic-s' },
+    medium: { size: 'pro-xs' },
+    high: { size: 'pro-s' },
     'very-high': { size: 'pro-m' },
   },
 
@@ -416,20 +417,20 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
 
   'scheduled-task': {
     // Scheduled tasks don't scale — same config at all tiers
-    dev:        { frequency: 'Every day at midnight', timezone: 'UTC' },
-    low:        { frequency: 'Every day at midnight', timezone: 'UTC' },
-    moderate:   { frequency: 'Every hour', timezone: 'UTC' },
-    medium:     { frequency: 'Every hour', timezone: 'UTC' },
-    high:       { frequency: 'Every 5 minutes', timezone: 'UTC' },
+    dev: { frequency: 'Every day at midnight', timezone: 'UTC' },
+    low: { frequency: 'Every day at midnight', timezone: 'UTC' },
+    moderate: { frequency: 'Every hour', timezone: 'UTC' },
+    medium: { frequency: 'Every hour', timezone: 'UTC' },
+    high: { frequency: 'Every 5 minutes', timezone: 'UTC' },
     'very-high': { frequency: 'Every minute', timezone: 'UTC' },
   },
 
   'llm-gateway': {
-    dev:        { model: 'claude-haiku', fallback: false },
-    low:        { model: 'claude-haiku', fallback: false },
-    moderate:   { model: 'claude-sonnet', fallback: true },
-    medium:     { model: 'claude-sonnet', fallback: true },
-    high:       { model: 'claude-sonnet', fallback: true },
+    dev: { model: 'claude-haiku', fallback: false },
+    low: { model: 'claude-haiku', fallback: false },
+    moderate: { model: 'claude-sonnet', fallback: true },
+    medium: { model: 'claude-sonnet', fallback: true },
+    high: { model: 'claude-sonnet', fallback: true },
     'very-high': { model: 'claude-opus', fallback: true },
   },
 
@@ -484,7 +485,10 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
 
   'postgres-db': {
     dev: {
-      storage: '20', version: '17', production: false, backup_retention: '1',
+      storage: '20',
+      version: '17',
+      production: false,
+      backup_retention: '1',
       _providers: {
         aws: { size: 'db.t3.micro' },
         gcp: { size: 'db-f1-micro' },
@@ -493,7 +497,10 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     low: {
-      storage: '20', version: '17', production: false, backup_retention: '7',
+      storage: '20',
+      version: '17',
+      production: false,
+      backup_retention: '7',
       _providers: {
         aws: { size: 'db.t3.small' },
         gcp: { size: 'db-g1-small' },
@@ -502,7 +509,10 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     moderate: {
-      storage: '50', version: '17', production: true, backup_retention: '7',
+      storage: '50',
+      version: '17',
+      production: true,
+      backup_retention: '7',
       _providers: {
         aws: { size: 'db.t3.medium' },
         gcp: { size: 'db-custom-2-8192' },
@@ -511,7 +521,10 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     medium: {
-      storage: '100', version: '17', production: true, backup_retention: '14',
+      storage: '100',
+      version: '17',
+      production: true,
+      backup_retention: '14',
       _providers: {
         aws: { size: 'db.r6g.large' },
         gcp: { size: 'db-custom-4-16384' },
@@ -520,7 +533,10 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     high: {
-      storage: '500', version: '17', production: true, backup_retention: '30',
+      storage: '500',
+      version: '17',
+      production: true,
+      backup_retention: '30',
       _providers: {
         aws: { size: 'db.r6g.xlarge' },
         gcp: { size: 'db-custom-8-32768' },
@@ -529,7 +545,10 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     'very-high': {
-      storage: '1000', version: '17', production: true, backup_retention: '35',
+      storage: '1000',
+      version: '17',
+      production: true,
+      backup_retention: '35',
       _providers: {
         aws: { size: 'db.r6g.2xlarge' },
         gcp: { size: 'db-custom-16-65536' },
@@ -541,7 +560,10 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
 
   'mysql-db': {
     dev: {
-      storage: '20', version: '8.4', production: false, backup_retention: '1',
+      storage: '20',
+      version: '8.4',
+      production: false,
+      backup_retention: '1',
       _providers: {
         aws: { size: 'db.t3.micro' },
         gcp: { size: 'db-f1-micro' },
@@ -550,7 +572,10 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     low: {
-      storage: '20', version: '8.4', production: false, backup_retention: '7',
+      storage: '20',
+      version: '8.4',
+      production: false,
+      backup_retention: '7',
       _providers: {
         aws: { size: 'db.t3.small' },
         gcp: { size: 'db-g1-small' },
@@ -559,7 +584,10 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     moderate: {
-      storage: '50', version: '8.4', production: true, backup_retention: '7',
+      storage: '50',
+      version: '8.4',
+      production: true,
+      backup_retention: '7',
       _providers: {
         aws: { size: 'db.t3.medium' },
         gcp: { size: 'db-custom-2-8192' },
@@ -568,7 +596,10 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     medium: {
-      storage: '100', version: '8.4', production: true, backup_retention: '14',
+      storage: '100',
+      version: '8.4',
+      production: true,
+      backup_retention: '14',
       _providers: {
         aws: { size: 'db.r6g.large' },
         gcp: { size: 'db-custom-4-16384' },
@@ -577,7 +608,10 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     high: {
-      storage: '500', version: '8.4', production: true, backup_retention: '30',
+      storage: '500',
+      version: '8.4',
+      production: true,
+      backup_retention: '30',
       _providers: {
         aws: { size: 'db.r6g.xlarge' },
         gcp: { size: 'db-custom-8-32768' },
@@ -586,7 +620,10 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     'very-high': {
-      storage: '1000', version: '8.4', production: true, backup_retention: '35',
+      storage: '1000',
+      version: '8.4',
+      production: true,
+      backup_retention: '35',
       _providers: {
         aws: { size: 'db.r6g.2xlarge' },
         gcp: { size: 'db-custom-16-65536' },
@@ -598,7 +635,9 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
 
   mongodb: {
     dev: {
-      storage: '20', version: '7.0', production: false,
+      storage: '20',
+      version: '7.0',
+      production: false,
       _providers: {
         aws: { size: 'db.t3.medium' },
         azure: { size: 'cosmos-serverless' },
@@ -606,7 +645,9 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     low: {
-      storage: '50', version: '7.0', production: false,
+      storage: '50',
+      version: '7.0',
+      production: false,
       _providers: {
         aws: { size: 'db.t3.medium' },
         azure: { size: 'cosmos-400' },
@@ -614,7 +655,9 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     moderate: {
-      storage: '100', version: '7.0', production: true,
+      storage: '100',
+      version: '7.0',
+      production: true,
       _providers: {
         aws: { size: 'db.r6g.large' },
         azure: { size: 'cosmos-1000' },
@@ -622,7 +665,9 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     medium: {
-      storage: '250', version: '7.0', production: true,
+      storage: '250',
+      version: '7.0',
+      production: true,
       _providers: {
         aws: { size: 'db.r6g.xlarge' },
         azure: { size: 'cosmos-autoscale' },
@@ -630,7 +675,9 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     high: {
-      storage: '500', version: '7.0', production: true,
+      storage: '500',
+      version: '7.0',
+      production: true,
       _providers: {
         aws: { size: 'db.r6g.2xlarge' },
         azure: { size: 'cosmos-autoscale-10k' },
@@ -638,7 +685,9 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     'very-high': {
-      storage: '1000', version: '7.0', production: true,
+      storage: '1000',
+      version: '7.0',
+      production: true,
       _providers: {
         aws: { size: 'db.r6g.4xlarge' },
         azure: { size: 'cosmos-autoscale-10k' },
@@ -649,7 +698,9 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
 
   'redis-cache': {
     dev: {
-      keep_data_safe: false, version: '7.x', max_memory_policy: 'allkeys-lru',
+      keep_data_safe: false,
+      version: '7.x',
+      max_memory_policy: 'allkeys-lru',
       _providers: {
         aws: { size: 'cache.t3.micro' },
         gcp: { size: 'M1' },
@@ -658,7 +709,9 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     low: {
-      keep_data_safe: false, version: '7.x', max_memory_policy: 'allkeys-lru',
+      keep_data_safe: false,
+      version: '7.x',
+      max_memory_policy: 'allkeys-lru',
       _providers: {
         aws: { size: 'cache.t3.small' },
         gcp: { size: 'M1' },
@@ -667,7 +720,9 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     moderate: {
-      keep_data_safe: false, version: '7.x', max_memory_policy: 'allkeys-lru',
+      keep_data_safe: false,
+      version: '7.x',
+      max_memory_policy: 'allkeys-lru',
       _providers: {
         aws: { size: 'cache.t3.medium' },
         gcp: { size: 'M2' },
@@ -676,7 +731,9 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     medium: {
-      keep_data_safe: true, version: '7.x', max_memory_policy: 'allkeys-lru',
+      keep_data_safe: true,
+      version: '7.x',
+      max_memory_policy: 'allkeys-lru',
       _providers: {
         aws: { size: 'cache.r6g.large' },
         gcp: { size: 'M2' },
@@ -685,7 +742,9 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     high: {
-      keep_data_safe: true, version: '7.x', max_memory_policy: 'allkeys-lru',
+      keep_data_safe: true,
+      version: '7.x',
+      max_memory_policy: 'allkeys-lru',
       _providers: {
         aws: { size: 'cache.r6g.xlarge' },
         gcp: { size: 'M3' },
@@ -694,7 +753,9 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     'very-high': {
-      keep_data_safe: true, version: '7.x', max_memory_policy: 'allkeys-lru',
+      keep_data_safe: true,
+      version: '7.x',
+      max_memory_policy: 'allkeys-lru',
       _providers: {
         aws: { size: 'cache.r6g.2xlarge' },
         gcp: { size: 'M4' },
@@ -705,56 +766,71 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
   },
 
   dynamodb: {
-    dev:        { capacity_mode: 'on-demand', table_class: 'standard', enable_streams: false, encryption: 'aws-owned' },
-    low:        { capacity_mode: 'on-demand', table_class: 'standard', enable_streams: false, encryption: 'aws-owned' },
-    moderate:   { capacity_mode: 'on-demand', table_class: 'standard', enable_streams: false, encryption: 'aws-owned' },
-    medium:     { capacity_mode: 'provisioned-autoscale', table_class: 'standard', enable_streams: true, encryption: 'aws-managed' },
-    high:       { capacity_mode: 'provisioned-autoscale', table_class: 'standard', enable_streams: true, encryption: 'aws-managed' },
-    'very-high': { capacity_mode: 'provisioned-autoscale', table_class: 'standard', enable_streams: true, encryption: 'aws-managed' },
+    dev: { capacity_mode: 'on-demand', table_class: 'standard', enable_streams: false, encryption: 'aws-owned' },
+    low: { capacity_mode: 'on-demand', table_class: 'standard', enable_streams: false, encryption: 'aws-owned' },
+    moderate: { capacity_mode: 'on-demand', table_class: 'standard', enable_streams: false, encryption: 'aws-owned' },
+    medium: {
+      capacity_mode: 'provisioned-autoscale',
+      table_class: 'standard',
+      enable_streams: true,
+      encryption: 'aws-managed',
+    },
+    high: {
+      capacity_mode: 'provisioned-autoscale',
+      table_class: 'standard',
+      enable_streams: true,
+      encryption: 'aws-managed',
+    },
+    'very-high': {
+      capacity_mode: 'provisioned-autoscale',
+      table_class: 'standard',
+      enable_streams: true,
+      encryption: 'aws-managed',
+    },
   },
 
   firestore: {
-    dev:        { size: 'spark', mode: 'native', realtime: true },
-    low:        { size: 'blaze', mode: 'native', realtime: true },
-    moderate:   { size: 'blaze', mode: 'native', realtime: true },
-    medium:     { size: 'blaze', mode: 'native', realtime: true },
-    high:       { size: 'blaze', mode: 'native', realtime: true },
+    dev: { size: 'spark', mode: 'native', realtime: true },
+    low: { size: 'blaze', mode: 'native', realtime: true },
+    moderate: { size: 'blaze', mode: 'native', realtime: true },
+    medium: { size: 'blaze', mode: 'native', realtime: true },
+    high: { size: 'blaze', mode: 'native', realtime: true },
     'very-high': { size: 'blaze', mode: 'datastore', realtime: false },
   },
 
   cosmosdb: {
-    dev:        { size: 'serverless', data_safety: 'session', global: false },
-    low:        { size: '400', data_safety: 'session', global: false },
-    moderate:   { size: '1000', data_safety: 'session', global: false },
-    medium:     { size: 'autoscale-4000', data_safety: 'session', global: false },
-    high:       { size: 'autoscale-10000', data_safety: 'session', global: true },
+    dev: { size: 'serverless', data_safety: 'session', global: false },
+    low: { size: '400', data_safety: 'session', global: false },
+    moderate: { size: '1000', data_safety: 'session', global: false },
+    medium: { size: 'autoscale-4000', data_safety: 'session', global: false },
+    high: { size: 'autoscale-10000', data_safety: 'session', global: true },
     'very-high': { size: 'autoscale-40000', data_safety: 'bounded-staleness', global: true },
   },
 
   tablestore: {
-    dev:        { size: 'on-demand' },
-    low:        { size: 'on-demand' },
-    moderate:   { size: 'reserved-50' },
-    medium:     { size: 'reserved-100' },
-    high:       { size: 'reserved-500' },
+    dev: { size: 'on-demand' },
+    low: { size: 'on-demand' },
+    moderate: { size: 'reserved-50' },
+    medium: { size: 'reserved-100' },
+    high: { size: 'reserved-500' },
     'very-high': { size: 'reserved-1000' },
   },
 
   'autonomous-db': {
-    dev:        { purpose: 'atp', size: 'always-free' },
-    low:        { purpose: 'atp', size: '1-ocpu' },
-    moderate:   { purpose: 'atp', size: '1-ocpu' },
-    medium:     { purpose: 'atp', size: '2-ocpu' },
-    high:       { purpose: 'atp', size: '4-ocpu' },
+    dev: { purpose: 'atp', size: 'always-free' },
+    low: { purpose: 'atp', size: '1-ocpu' },
+    moderate: { purpose: 'atp', size: '1-ocpu' },
+    medium: { purpose: 'atp', size: '2-ocpu' },
+    high: { purpose: 'atp', size: '4-ocpu' },
     'very-high': { purpose: 'atp', size: '8-ocpu' },
   },
 
   'do-managed-db': {
-    dev:        { size: 'db-s-1vcpu-1gb', production: false },
-    low:        { size: 'db-s-1vcpu-1gb', production: false },
-    moderate:   { size: 'db-s-1vcpu-2gb', production: true },
-    medium:     { size: 'db-s-2vcpu-4gb', production: true },
-    high:       { size: 'db-s-4vcpu-8gb', production: true },
+    dev: { size: 'db-s-1vcpu-1gb', production: false },
+    low: { size: 'db-s-1vcpu-1gb', production: false },
+    moderate: { size: 'db-s-1vcpu-2gb', production: true },
+    medium: { size: 'db-s-2vcpu-4gb', production: true },
+    high: { size: 'db-s-4vcpu-8gb', production: true },
     'very-high': { size: 'db-s-8vcpu-16gb', production: true },
   },
 
@@ -899,7 +975,8 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
 
   'object-storage': {
     dev: {
-      public: false, versioning: false,
+      public: false,
+      versioning: false,
       _providers: {
         aws: { storage_class: 'standard' },
         gcp: { storage_class: 'gcp-standard' },
@@ -907,7 +984,8 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     low: {
-      public: false, versioning: false,
+      public: false,
+      versioning: false,
       _providers: {
         aws: { storage_class: 'standard' },
         gcp: { storage_class: 'gcp-standard' },
@@ -915,7 +993,8 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     moderate: {
-      public: false, versioning: true,
+      public: false,
+      versioning: true,
       _providers: {
         aws: { storage_class: 'standard' },
         gcp: { storage_class: 'gcp-standard' },
@@ -923,7 +1002,8 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     medium: {
-      public: false, versioning: true,
+      public: false,
+      versioning: true,
       _providers: {
         aws: { storage_class: 'standard' },
         gcp: { storage_class: 'gcp-standard' },
@@ -931,7 +1011,8 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     high: {
-      public: false, versioning: true,
+      public: false,
+      versioning: true,
       _providers: {
         aws: { storage_class: 'standard' },
         gcp: { storage_class: 'gcp-standard' },
@@ -939,7 +1020,8 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     'very-high': {
-      public: false, versioning: true,
+      public: false,
+      versioning: true,
       _providers: {
         aws: { storage_class: 'standard' },
         gcp: { storage_class: 'gcp-standard' },
@@ -949,29 +1031,29 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
   },
 
   oss: {
-    dev:        { storage_class: 'oss-standard', public: false },
-    low:        { storage_class: 'oss-standard', public: false },
-    moderate:   { storage_class: 'oss-standard', public: false },
-    medium:     { storage_class: 'oss-standard', public: false },
-    high:       { storage_class: 'oss-standard', public: false },
+    dev: { storage_class: 'oss-standard', public: false },
+    low: { storage_class: 'oss-standard', public: false },
+    moderate: { storage_class: 'oss-standard', public: false },
+    medium: { storage_class: 'oss-standard', public: false },
+    high: { storage_class: 'oss-standard', public: false },
     'very-high': { storage_class: 'oss-standard', public: false },
   },
 
   'oci-object-storage': {
-    dev:        { storage_class: 'oci-standard', public: false, auto_tiering: false },
-    low:        { storage_class: 'oci-standard', public: false, auto_tiering: false },
-    moderate:   { storage_class: 'oci-standard', public: false, auto_tiering: true },
-    medium:     { storage_class: 'oci-standard', public: false, auto_tiering: true },
-    high:       { storage_class: 'oci-standard', public: false, auto_tiering: true },
+    dev: { storage_class: 'oci-standard', public: false, auto_tiering: false },
+    low: { storage_class: 'oci-standard', public: false, auto_tiering: false },
+    moderate: { storage_class: 'oci-standard', public: false, auto_tiering: true },
+    medium: { storage_class: 'oci-standard', public: false, auto_tiering: true },
+    high: { storage_class: 'oci-standard', public: false, auto_tiering: true },
     'very-high': { storage_class: 'oci-standard', public: false, auto_tiering: true },
   },
 
   'do-spaces': {
-    dev:        { location: 'nyc3' },
-    low:        { location: 'nyc3' },
-    moderate:   { location: 'nyc3' },
-    medium:     { location: 'nyc3' },
-    high:       { location: 'nyc3' },
+    dev: { location: 'nyc3' },
+    low: { location: 'nyc3' },
+    moderate: { location: 'nyc3' },
+    medium: { location: 'nyc3' },
+    high: { location: 'nyc3' },
     'very-high': { location: 'nyc3' },
   },
 
@@ -1184,7 +1266,9 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
 
   'message-queue': {
     dev: {
-      retention: '1d', max_message_size: '256', dead_letter: false,
+      retention: '1d',
+      max_message_size: '256',
+      dead_letter: false,
       _providers: {
         aws: { queue_type: 'standard' },
         gcp: { queue_type: 'pull' },
@@ -1192,7 +1276,9 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     low: {
-      retention: '4d', max_message_size: '256', dead_letter: true,
+      retention: '4d',
+      max_message_size: '256',
+      dead_letter: true,
       _providers: {
         aws: { queue_type: 'standard' },
         gcp: { queue_type: 'pull' },
@@ -1200,7 +1286,9 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     moderate: {
-      retention: '4d', max_message_size: '256', dead_letter: true,
+      retention: '4d',
+      max_message_size: '256',
+      dead_letter: true,
       _providers: {
         aws: { queue_type: 'standard' },
         gcp: { queue_type: 'pull' },
@@ -1208,7 +1296,9 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     medium: {
-      retention: '7d', max_message_size: '256', dead_letter: true,
+      retention: '7d',
+      max_message_size: '256',
+      dead_letter: true,
       _providers: {
         aws: { queue_type: 'fifo' },
         gcp: { queue_type: 'push' },
@@ -1216,7 +1306,9 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     high: {
-      retention: '7d', max_message_size: '256', dead_letter: true,
+      retention: '7d',
+      max_message_size: '256',
+      dead_letter: true,
       _providers: {
         aws: { queue_type: 'fifo-high-throughput' },
         gcp: { queue_type: 'push' },
@@ -1224,7 +1316,9 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     'very-high': {
-      retention: '14d', max_message_size: '256', dead_letter: true,
+      retention: '14d',
+      max_message_size: '256',
+      dead_letter: true,
       _providers: {
         aws: { queue_type: 'fifo-high-throughput' },
         gcp: { queue_type: 'push' },
@@ -1280,7 +1374,9 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
 
   rabbitmq: {
     dev: {
-      version: '3.13', keep_messages: false, always_available: false,
+      version: '3.13',
+      keep_messages: false,
+      always_available: false,
       _providers: {
         aws: { size: 'mq.t3.micro' },
         gcp: { size: 'lemur' },
@@ -1288,7 +1384,9 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     low: {
-      version: '3.13', keep_messages: true, always_available: false,
+      version: '3.13',
+      keep_messages: true,
+      always_available: false,
       _providers: {
         aws: { size: 'mq.t3.micro' },
         gcp: { size: 'lemur' },
@@ -1296,7 +1394,9 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     moderate: {
-      version: '3.13', keep_messages: true, always_available: false,
+      version: '3.13',
+      keep_messages: true,
+      always_available: false,
       _providers: {
         aws: { size: 'mq.m5.large' },
         gcp: { size: 'tiger' },
@@ -1304,7 +1404,9 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     medium: {
-      version: '3.13', keep_messages: true, always_available: true,
+      version: '3.13',
+      keep_messages: true,
+      always_available: true,
       _providers: {
         aws: { size: 'mq.m5.large' },
         gcp: { size: 'tiger' },
@@ -1312,7 +1414,9 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     high: {
-      version: '3.13', keep_messages: true, always_available: true,
+      version: '3.13',
+      keep_messages: true,
+      always_available: true,
       _providers: {
         aws: { size: 'mq.m5.xlarge' },
         gcp: { size: 'lion' },
@@ -1320,7 +1424,9 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
       },
     },
     'very-high': {
-      version: '3.13', keep_messages: true, always_available: true,
+      version: '3.13',
+      keep_messages: true,
+      always_available: true,
       _providers: {
         aws: { size: 'mq.m5.2xlarge' },
         gcp: { size: 'lion' },
@@ -1330,11 +1436,11 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
   },
 
   'cloud-pubsub': {
-    dev:        { order_matters: false },
-    low:        { order_matters: false },
-    moderate:   { order_matters: false },
-    medium:     { order_matters: false },
-    high:       { order_matters: false },
+    dev: { order_matters: false },
+    low: { order_matters: false },
+    moderate: { order_matters: false },
+    medium: { order_matters: false },
+    high: { order_matters: false },
     'very-high': { order_matters: true },
   },
 
@@ -1415,20 +1521,20 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   'secret-store': {
-    dev:        { auto_rotate: false },
-    low:        { auto_rotate: false },
-    moderate:   { auto_rotate: false },
-    medium:     { auto_rotate: true },
-    high:       { auto_rotate: true },
+    dev: { auto_rotate: false },
+    low: { auto_rotate: false },
+    moderate: { auto_rotate: false },
+    medium: { auto_rotate: true },
+    high: { auto_rotate: true },
     'very-high': { auto_rotate: true },
   },
 
   'ssl-certificate': {
-    dev:        { auto_renew: true },
-    low:        { auto_renew: true },
-    moderate:   { auto_renew: true },
-    medium:     { auto_renew: true },
-    high:       { auto_renew: true },
+    dev: { auto_renew: true },
+    low: { auto_renew: true },
+    moderate: { auto_renew: true },
+    medium: { auto_renew: true },
+    high: { auto_renew: true },
     'very-high': { auto_renew: true },
   },
 
@@ -1437,20 +1543,20 @@ export const SCALE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   'log-group': {
-    dev:        { keep_logs: '7 days' },
-    low:        { keep_logs: '14 days' },
-    moderate:   { keep_logs: '30 days' },
-    medium:     { keep_logs: '30 days' },
-    high:       { keep_logs: '90 days' },
+    dev: { keep_logs: '7 days' },
+    low: { keep_logs: '14 days' },
+    moderate: { keep_logs: '30 days' },
+    medium: { keep_logs: '30 days' },
+    high: { keep_logs: '90 days' },
     'very-high': { keep_logs: '1 year' },
   },
 
   alert: {
-    dev:        { severity: 'Low — check when convenient' },
-    low:        { severity: 'Medium — look into it soon' },
-    moderate:   { severity: 'Medium — look into it soon' },
-    medium:     { severity: 'Medium — look into it soon' },
-    high:       { severity: 'High — wake me up at 3am' },
+    dev: { severity: 'Low — check when convenient' },
+    low: { severity: 'Medium — look into it soon' },
+    moderate: { severity: 'Medium — look into it soon' },
+    medium: { severity: 'Medium — look into it soon' },
+    high: { severity: 'High — wake me up at 3am' },
     'very-high': { severity: 'High — wake me up at 3am' },
   },
 };

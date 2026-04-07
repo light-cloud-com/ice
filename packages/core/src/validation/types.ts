@@ -11,10 +11,10 @@
 export type IssueSeverity = 'error' | 'warning' | 'info';
 
 export type IssueCategory =
-  | 'property'      // Missing required, type mismatch, invalid option
-  | 'connection'    // Invalid edge, anti-pattern, missing connection
-  | 'structure'     // Containment, orphans, dangling refs
-  | 'deploy'        // Provider support, type mapping, credentials
+  | 'property' // Missing required, type mismatch, invalid option
+  | 'connection' // Invalid edge, anti-pattern, missing connection
+  | 'structure' // Containment, orphans, dangling refs
+  | 'deploy' // Provider support, type mapping, credentials
   | 'architecture'; // Best practices, security, production readiness
 
 // ─── Issue Codes ────────────────────────────────────────────────────────────

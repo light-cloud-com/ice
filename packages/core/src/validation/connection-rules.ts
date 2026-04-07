@@ -6,13 +6,7 @@
  * self-connections, cycles, missing critical connections.
  */
 
-import {
-  canConnect,
-  isContainer,
-  isFrontend,
-  isDatabase,
-  isQueue,
-} from './classifiers.js';
+import { canConnect, isContainer, isFrontend, isDatabase, isQueue } from './classifiers.js';
 import type { CanvasIssue, ValidatableNode, ValidatableEdge, ValidationContext } from './types.js';
 
 /**
@@ -37,8 +31,8 @@ export function validateConnections(
     // Skip edges with dangling refs (caught by structure-rules)
     if (!srcNode || !tgtNode) continue;
 
-    const srcIceType = srcNode.data.iceType as string ?? '';
-    const tgtIceType = tgtNode.data.iceType as string ?? '';
+    const srcIceType = (srcNode.data.iceType as string) ?? '';
+    const tgtIceType = (tgtNode.data.iceType as string) ?? '';
     const relationship = edge.data?.relationship as string;
 
     // Skip containment edges — these are structural, not connections
@@ -129,8 +123,8 @@ export function validateConnections(
   // ── Cycle detection ───────────────────────────────────────────────────
   // Only check non-containment edges
   const dataEdges = edges
-    .filter(e => e.data?.relationship !== 'contains')
-    .map(e => ({ source: e.source, target: e.target }));
+    .filter((e) => e.data?.relationship !== 'contains')
+    .map((e) => ({ source: e.source, target: e.target }));
 
   // Check each edge for cycle creation potential
   // (A full cycle check on the entire graph)
@@ -167,7 +161,7 @@ export function validateConnections(
     if (!visited.has(nodeId)) {
       const cycle = hasCycleDFS(nodeId);
       if (cycle) {
-        const cycleLabels = cycle.map(id => {
+        const cycleLabels = cycle.map((id) => {
           const n = nodeMap.get(id);
           return (n?.data.label as string) || id.slice(0, 8);
         });

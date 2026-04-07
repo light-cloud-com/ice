@@ -22,11 +22,11 @@ import {
 import React, { useCallback, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { IceSelect } from '../../../shared/components/ui/ice-select';
 import { useTranslation } from '../../../i18n';
-import { isApiNotEnabledError, extractApiName, extractApiEnableUrl } from '../../../shared/utils/gcp-errors';
 import { getApi } from '../../../shared/api/api-adapter';
+import { IceSelect } from '../../../shared/components/ui/ice-select';
 import { cn } from '../../../shared/utils/cn';
+import { isApiNotEnabledError, extractApiName, extractApiEnableUrl } from '../../../shared/utils/gcp-errors';
 import { selectActiveCard, updateCardNodeData } from '../../../store/slices/cards-slice';
 import {
   closeDeployPanel,
@@ -613,7 +613,9 @@ export const DeployPanel: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
               ) : (
                 <Play className="w-3.5 h-3.5" />
               )}
-              {deploy.deployedResources.length > 0 ? t('deploy.buttons.updateInfrastructure') : t('deploy.buttons.deploy')}
+              {deploy.deployedResources.length > 0
+                ? t('deploy.buttons.updateInfrastructure')
+                : t('deploy.buttons.deploy')}
             </button>
 
             {/* Destroy button — only when resources are deployed */}
@@ -721,7 +723,7 @@ const ConfigSection: React.FC<{
   onEnvironmentChange,
 }) => {
   const { t } = useTranslation();
-  const environments = useSelector((s: RootState) => projectId ? (s.environments.byProject[projectId] || []) : []);
+  const environments = useSelector((s: RootState) => (projectId ? s.environments.byProject[projectId] || [] : []));
   const regions = PROVIDER_REGIONS[provider] || PROVIDER_REGIONS.gcp!;
   const projectMeta = PROVIDER_PROJECT_LABELS[provider] || PROVIDER_PROJECT_LABELS.gcp!;
   const [providerConnected, setProviderConnected] = React.useState(false);
@@ -842,13 +844,14 @@ const ConfigSection: React.FC<{
             size="md"
             fullWidth
             allowEmpty={false}
-            options={environments.length > 0
-              ? environments.map((env) => ({ value: env.name.toLowerCase(), label: env.name }))
-              : [
-                  { value: 'development', label: t('deploy.config.envDevelopment') },
-                  { value: 'staging', label: t('deploy.config.envStaging') },
-                  { value: 'production', label: t('deploy.config.envProduction') },
-                ]
+            options={
+              environments.length > 0
+                ? environments.map((env) => ({ value: env.name.toLowerCase(), label: env.name }))
+                : [
+                    { value: 'development', label: t('deploy.config.envDevelopment') },
+                    { value: 'staging', label: t('deploy.config.envStaging') },
+                    { value: 'production', label: t('deploy.config.envProduction') },
+                  ]
             }
           />
         </div>
@@ -982,9 +985,7 @@ const ApiErrorBanner: React.FC<{
           <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
           <div>
             <p className="font-medium">{t('deploy.errors.billingTitle')}</p>
-            <p className="mt-1 text-amber-700 dark:text-amber-300 text-xs">
-              {t('deploy.errors.billingDescription')}
-            </p>
+            <p className="mt-1 text-amber-700 dark:text-amber-300 text-xs">{t('deploy.errors.billingDescription')}</p>
           </div>
         </div>
         <button
@@ -1024,9 +1025,7 @@ const ApiErrorBanner: React.FC<{
           <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
           <div>
             <p className="font-medium">{t('deploy.errors.raptTitle')}</p>
-            <p className="mt-1 text-amber-700 dark:text-amber-300 text-xs">
-              {t('deploy.errors.raptDescription')}
-            </p>
+            <p className="mt-1 text-amber-700 dark:text-amber-300 text-xs">{t('deploy.errors.raptDescription')}</p>
           </div>
         </div>
         <div className="text-xs text-amber-700 dark:text-amber-300 space-y-1 pl-6">
@@ -1114,7 +1113,9 @@ const ApiErrorBanner: React.FC<{
             >
               <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
               <span className="font-medium">{t('deploy.errors.enableApi', { api: apiName })}</span>
-              <span className="ml-auto text-xs text-amber-600 dark:text-amber-400">{t('deploy.errors.opensConsole')}</span>
+              <span className="ml-auto text-xs text-amber-600 dark:text-amber-400">
+                {t('deploy.errors.opensConsole')}
+              </span>
             </button>
           );
         })}

@@ -5,8 +5,8 @@
  * a single flat resource CardNode ready for Redux dispatch.
  */
 
-import type { BlockBlueprint, ExpandedBlueprint, Provider } from './types';
 import { HIGH_LEVEL_CATEGORIES, type HighLevelProperty } from '@ice/core/resources';
+import type { BlockBlueprint, ExpandedBlueprint, Provider } from './types';
 
 // ─── Inline node dimension constants (from svg-compact-node) ────────────────
 const CARD_PY = 10;
@@ -142,9 +142,7 @@ export function expandBlueprint(blueprint: BlockBlueprint, options: ExpandBluepr
         if (providerOptions.length === 0) continue;
 
         if (isMissing) {
-          const defaultOpt = prop.default
-            ? providerOptions.find((o) => o.value === prop.default)
-            : undefined;
+          const defaultOpt = prop.default ? providerOptions.find((o) => o.value === prop.default) : undefined;
           mergedData[prop.name] = defaultOpt?.value ?? providerOptions[0]!.value;
         } else if (resolvedProvider) {
           // Replace wrong-provider value

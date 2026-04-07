@@ -5,8 +5,8 @@
  */
 
 import React from 'react';
-import { useTranslation } from '../../../i18n';
 import { ENABLED_PROVIDERS } from '../../../config/providers';
+import { useTranslation } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
 import type { Provider } from '../../../config/blocks/types';
 

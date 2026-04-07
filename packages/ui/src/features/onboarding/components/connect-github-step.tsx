@@ -184,9 +184,7 @@ export const ConnectGithubStep: React.FC = () => {
                   className="ice-input w-full mt-1"
                   onKeyDown={(e) => e.key === 'Enter' && handlePATConnect()}
                 />
-                <p className="mt-1 text-xs text-ice-text-3">
-                  {t('onboarding.github.tokenHint')}
-                </p>
+                <p className="mt-1 text-xs text-ice-text-3">{t('onboarding.github.tokenHint')}</p>
               </div>
               <button
                 onClick={handlePATConnect}

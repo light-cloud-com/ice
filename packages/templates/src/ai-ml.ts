@@ -130,7 +130,12 @@ export const aiMlTemplate: ComposedTemplate = {
       data: { size: '2-4096', runtime: 'python3.12', domain: 'ml-api.acme.io', port: 8080 },
     },
     // 4: SQS
-    { iceType: 'Messaging.SQS', label: 'Pipeline Queue', position: { x: 636, y: 408 }, data: { queue_type: 'standard' } },
+    {
+      iceType: 'Messaging.SQS',
+      label: 'Pipeline Queue',
+      position: { x: 636, y: 408 },
+      data: { queue_type: 'standard' },
+    },
     // 5: Training Worker
     {
       iceType: 'Compute.Worker',
@@ -139,14 +144,34 @@ export const aiMlTemplate: ComposedTemplate = {
       data: { size: '2-4096', runtime: 'python3.12' },
     },
     // 6: PostgreSQL
-    { iceType: 'Database.PostgreSQL', label: 'ML Metadata DB', position: { x: 1148, y: 408 }, data: { size: 'db.t3.medium', storage: '100', version: '17' } },
+    {
+      iceType: 'Database.PostgreSQL',
+      label: 'ML Metadata DB',
+      position: { x: 1148, y: 408 },
+      data: { size: 'db.t3.medium', storage: '100', version: '17' },
+    },
     // Row 1
     // 7: Model Storage
-    { iceType: 'Storage.Bucket', label: 'Model Storage', position: { x: 380, y: 584 }, data: { storage_class: 'standard' } },
+    {
+      iceType: 'Storage.Bucket',
+      label: 'Model Storage',
+      position: { x: 380, y: 584 },
+      data: { storage_class: 'standard' },
+    },
     // 8: Training Data
-    { iceType: 'Storage.Bucket', label: 'Training Data', position: { x: 636, y: 584 }, data: { storage_class: 'standard' } },
+    {
+      iceType: 'Storage.Bucket',
+      label: 'Training Data',
+      position: { x: 636, y: 584 },
+      data: { storage_class: 'standard' },
+    },
     // 9: Redis Cache
-    { iceType: 'Database.Redis', label: 'Inference Cache', position: { x: 892, y: 584 }, data: { size: 'cache.t3.medium', port: 6379 } },
+    {
+      iceType: 'Database.Redis',
+      label: 'Inference Cache',
+      position: { x: 892, y: 584 },
+      data: { size: 'cache.t3.medium', port: 6379 },
+    },
 
     // ── Monitoring (outside VPC) ──────────────────────────────────────────
     // 10: Logs

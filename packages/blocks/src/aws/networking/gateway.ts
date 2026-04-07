@@ -8,6 +8,5 @@ export const awsGatewayBlueprint: BlockBlueprint = createBlueprintFromResource('
   description: 'AWS API Gateway. Routes traffic, auth + rate limiting.',
   icon: 'GitBranch',
   providers: ['aws'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

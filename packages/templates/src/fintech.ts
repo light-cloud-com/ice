@@ -221,7 +221,12 @@ export const fintechPaymentGatewayTemplate: ComposedTemplate = {
     // 12: Domain
     { iceType: 'Network.Domain', label: 'Domain', position: { x: 50, y: 1080 }, data: { hostname: 'pay.fintech.io' } },
     // 13: Repo
-    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 306, y: 1080 }, data: { repository: '', branch: 'main' } },
+    {
+      iceType: 'Source.Repository',
+      label: 'GitHub Repo',
+      position: { x: 306, y: 1080 },
+      data: { repository: '', branch: 'main' },
+    },
     // 14: Env
     { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1080 }, data: {} },
   ],
@@ -275,9 +280,7 @@ export const fintechTradingPlatformTemplate: ComposedTemplate = {
   difficulty: 'advanced',
   trust: 'official',
   author: { name: 'ICE Team' },
-  environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'strict' },
-  ],
+  environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'strict' }],
 
   groups: [
     // [0] Public Zone — outside VPC (3c with Dashboard)
@@ -404,9 +407,19 @@ export const fintechTradingPlatformTemplate: ComposedTemplate = {
     // 11: Secrets
     { iceType: 'Security.Secret', label: 'Secrets', position: { x: 306, y: 1080 }, data: {} },
     // 12: Domain
-    { iceType: 'Network.Domain', label: 'Domain', position: { x: 562, y: 1080 }, data: { hostname: 'trade.fintech.io' } },
+    {
+      iceType: 'Network.Domain',
+      label: 'Domain',
+      position: { x: 562, y: 1080 },
+      data: { hostname: 'trade.fintech.io' },
+    },
     // 13: Repo
-    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 50, y: 1256 }, data: { repository: '', branch: 'main' } },
+    {
+      iceType: 'Source.Repository',
+      label: 'GitHub Repo',
+      position: { x: 50, y: 1256 },
+      data: { repository: '', branch: 'main' },
+    },
     // 14: Env
     { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 306, y: 1256 }, data: {} },
   ],

@@ -62,8 +62,7 @@ import type { ComposedTemplate } from './types';
 export const etlPipelineTemplate: ComposedTemplate = {
   id: 'data-etl-pipeline',
   name: 'ETL Pipeline',
-  description:
-    'Batch ETL pipeline with staging, transformation workers, data warehouse, and VPC network isolation.',
+  description: 'Batch ETL pipeline with staging, transformation workers, data warehouse, and VPC network isolation.',
   icon: 'Activity',
   estimatedCost: '$150-400/mo',
   category: 'data-pipeline',
@@ -74,9 +73,7 @@ export const etlPipelineTemplate: ComposedTemplate = {
   difficulty: 'intermediate',
   trust: 'official',
   author: { name: 'ICE Team' },
-  environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' },
-  ],
+  environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' }],
 
   groups: [
     // [0] VPC — contains subnets, no direct blocks
@@ -135,7 +132,12 @@ export const etlPipelineTemplate: ComposedTemplate = {
     },
     // Row 1
     // 3: Source Storage
-    { iceType: 'Storage.Bucket', label: 'Source Storage', position: { x: 70, y: 318 }, data: { storage_class: 'standard' } },
+    {
+      iceType: 'Storage.Bucket',
+      label: 'Source Storage',
+      position: { x: 70, y: 318 },
+      data: { storage_class: 'standard' },
+    },
     // 4: Load Worker
     {
       iceType: 'Compute.Worker',
@@ -154,7 +156,12 @@ export const etlPipelineTemplate: ComposedTemplate = {
     // 7: Secrets
     { iceType: 'Security.Secret', label: 'Secrets', position: { x: 50, y: 814 }, data: {} },
     // 8: Repo
-    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 306, y: 814 }, data: { repository: '', branch: 'main' } },
+    {
+      iceType: 'Source.Repository',
+      label: 'GitHub Repo',
+      position: { x: 306, y: 814 },
+      data: { repository: '', branch: 'main' },
+    },
     // 9: Env
     { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 814 }, data: {} },
   ],
@@ -192,8 +199,7 @@ export const etlPipelineTemplate: ComposedTemplate = {
 export const eventStreamingTemplate: ComposedTemplate = {
   id: 'data-event-streaming',
   name: 'Event Streaming',
-  description:
-    'Real-time event streaming with stream processing, analytics dashboard, and VPC network isolation.',
+  description: 'Real-time event streaming with stream processing, analytics dashboard, and VPC network isolation.',
   icon: 'Radio',
   estimatedCost: '$200-500/mo',
   category: 'data-pipeline',
@@ -204,9 +210,7 @@ export const eventStreamingTemplate: ComposedTemplate = {
   difficulty: 'advanced',
   trust: 'official',
   author: { name: 'ICE Team' },
-  environmentPresets: [
-    { type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' },
-  ],
+  environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'standard' }],
 
   groups: [
     // [0] Public Zone — outside VPC
@@ -287,7 +291,12 @@ export const eventStreamingTemplate: ComposedTemplate = {
       data: { size: '2-4096', runtime: 'nodejs20', port: 8080 },
     },
     // 4: Event Stream
-    { iceType: 'Messaging.CloudPubSub', label: 'Event Stream', position: { x: 636, y: 408 }, data: { keep_messages: '7 days' } },
+    {
+      iceType: 'Messaging.CloudPubSub',
+      label: 'Event Stream',
+      position: { x: 636, y: 408 },
+      data: { keep_messages: '7 days' },
+    },
     // 5: Stream Processor
     {
       iceType: 'Compute.Worker',
@@ -319,9 +328,19 @@ export const eventStreamingTemplate: ComposedTemplate = {
     // 9: Secrets
     { iceType: 'Security.Secret', label: 'Secrets', position: { x: 50, y: 1080 }, data: {} },
     // 10: Domain
-    { iceType: 'Network.Domain', label: 'Domain', position: { x: 306, y: 1080 }, data: { hostname: 'events.myapp.com' } },
+    {
+      iceType: 'Network.Domain',
+      label: 'Domain',
+      position: { x: 306, y: 1080 },
+      data: { hostname: 'events.myapp.com' },
+    },
     // 11: Repo
-    { iceType: 'Source.Repository', label: 'GitHub Repo', position: { x: 562, y: 1080 }, data: { repository: '', branch: 'main' } },
+    {
+      iceType: 'Source.Repository',
+      label: 'GitHub Repo',
+      position: { x: 562, y: 1080 },
+      data: { repository: '', branch: 'main' },
+    },
     // 12: Env
     { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 50, y: 1256 }, data: {} },
   ],

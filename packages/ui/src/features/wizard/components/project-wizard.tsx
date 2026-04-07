@@ -12,8 +12,8 @@ import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import React, { useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from '../../../i18n';
 import { COMPOSED_TEMPLATES, expandComposedTemplate } from '../../../config/templates';
+import { useTranslation } from '../../../i18n';
 import axiosInstance from '../../../shared/api/axios-instance';
 import { StepIndicator } from '../../../shared/components/step-indicator';
 import {
@@ -149,9 +149,7 @@ export const ProjectWizard: React.FC = () => {
         {/* Header */}
         <DialogHeader className="px-5 pt-5 pb-0">
           <DialogTitle className="text-base font-semibold text-ice-text-1">{t('wizard.title')}</DialogTitle>
-          <DialogDescription className="text-xs text-ice-text-2">
-            {t('wizard.description')}
-          </DialogDescription>
+          <DialogDescription className="text-xs text-ice-text-2">{t('wizard.description')}</DialogDescription>
         </DialogHeader>
 
         {/* Step indicator */}

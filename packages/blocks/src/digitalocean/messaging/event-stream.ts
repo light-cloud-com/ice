@@ -8,6 +8,5 @@ export const digitaloceanEventStreamBlueprint: BlockBlueprint = createBlueprintF
   description: 'DigitalOcean managed Kafka. Real-time events to multiple services.',
   icon: 'Activity',
   providers: ['digitalocean'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

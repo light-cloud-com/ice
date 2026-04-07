@@ -127,7 +127,12 @@ export const AiChatPanel: React.FC = () => {
   conversationIdRef.current = conversationId;
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [showHistory, setShowHistory] = useState(false);
-  const [providerInfo, setProviderInfo] = useState<{ ok: boolean; provider: string; model?: string; isLocal?: boolean } | null>(null);
+  const [providerInfo, setProviderInfo] = useState<{
+    ok: boolean;
+    provider: string;
+    model?: string;
+    isLocal?: boolean;
+  } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -209,7 +214,9 @@ export const AiChatPanel: React.FC = () => {
     };
 
     resumeConversation();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [projectId, activeCard?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Start new conversation ────────────────────────────────────────────────
@@ -421,7 +428,11 @@ export const AiChatPanel: React.FC = () => {
               )}
               title={`Provider: ${providerInfo.provider} | Model: ${providerInfo.model || 'unknown'}`}
             >
-              {providerInfo.isLocal ? <Cpu aria-hidden="true" className="w-2.5 h-2.5 shrink-0" /> : <Cloud aria-hidden="true" className="w-2.5 h-2.5 shrink-0" />}
+              {providerInfo.isLocal ? (
+                <Cpu aria-hidden="true" className="w-2.5 h-2.5 shrink-0" />
+              ) : (
+                <Cloud aria-hidden="true" className="w-2.5 h-2.5 shrink-0" />
+              )}
               {providerInfo.model || (providerInfo.isLocal ? 'Local' : 'Cloud')}
             </span>
           ) : undefined
@@ -495,9 +506,7 @@ export const AiChatPanel: React.FC = () => {
               <div className="flex flex-col items-center justify-center h-full text-center px-4 gap-3">
                 <Sparkles aria-hidden="true" className="w-6 h-6 text-ice-text-3/20" />
                 <p className="text-ice-xs text-ice-text-3/50 leading-relaxed max-w-[200px]">
-                  {canvasNodes.length === 0
-                    ? t('ai.chat.emptyCanvasPrompt')
-                    : t('ai.chat.existingCanvasPrompt')}
+                  {canvasNodes.length === 0 ? t('ai.chat.emptyCanvasPrompt') : t('ai.chat.existingCanvasPrompt')}
                 </p>
                 <div className="flex flex-wrap gap-1 justify-center">
                   {patterns.map((p) => (
@@ -519,7 +528,9 @@ export const AiChatPanel: React.FC = () => {
             <div
               className={cn(
                 'max-w-[90%] px-3 py-2',
-                msg.role === 'user' ? 'rounded-2xl rounded-br-sm bg-blue-500/[0.08] text-ice-text-1' : 'text-ice-text-2',
+                msg.role === 'user'
+                  ? 'rounded-2xl rounded-br-sm bg-blue-500/[0.08] text-ice-text-1'
+                  : 'text-ice-text-2',
               )}
             >
               {msg.content.startsWith('AI_NOT_CONFIGURED:') ? (
@@ -539,13 +550,15 @@ export const AiChatPanel: React.FC = () => {
                     <div className="flex items-start gap-1.5">
                       <span className="text-ice-text-3 shrink-0">2.</span>
                       <span className="text-ice-text-2">
-                        Set <span className="font-mono text-amber-400">ICE_AI_URL</span> to a local model server (Ollama, LM Studio, etc.)
+                        Set <span className="font-mono text-amber-400">ICE_AI_URL</span> to a local model server
+                        (Ollama, LM Studio, etc.)
                       </span>
                     </div>
                     <div className="flex items-start gap-1.5">
                       <span className="text-ice-text-3 shrink-0">3.</span>
                       <span className="text-ice-text-2">
-                        Set <span className="font-mono text-amber-400">ICE_AI_URL</span> to any OpenAI-compatible endpoint (Ollama, LM Studio, etc.)
+                        Set <span className="font-mono text-amber-400">ICE_AI_URL</span> to any OpenAI-compatible
+                        endpoint (Ollama, LM Studio, etc.)
                       </span>
                     </div>
                     <div className="flex items-start gap-1.5">
@@ -569,7 +582,9 @@ export const AiChatPanel: React.FC = () => {
                     </div>
                   ))}
                   {msg.operations.length > 5 && (
-                    <p className="text-ice-xs text-ice-text-3">+{msg.operations.length - 5} {t('ai.chat.more')}</p>
+                    <p className="text-ice-xs text-ice-text-3">
+                      +{msg.operations.length - 5} {t('ai.chat.more')}
+                    </p>
                   )}
                 </div>
               )}
@@ -578,7 +593,8 @@ export const AiChatPanel: React.FC = () => {
                 <div className="flex items-center gap-1.5 mt-1.5">
                   <Check aria-hidden="true" className="w-3 h-3 text-emerald-400/60" />
                   <span className="text-ice-2xs text-emerald-400/60">
-                    {t('ai.chat.appliedChanges')} {msg.operationCount || msg.operations?.length || 0} {t('ai.chat.changes')}
+                    {t('ai.chat.appliedChanges')} {msg.operationCount || msg.operations?.length || 0}{' '}
+                    {t('ai.chat.changes')}
                   </span>
                 </div>
               )}

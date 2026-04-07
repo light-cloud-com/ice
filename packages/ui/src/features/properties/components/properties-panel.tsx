@@ -10,17 +10,17 @@
  * 3. Edge selected → Relationship, protocol, port fields
  */
 
-import { ChevronRight, Info, Settings } from 'lucide-react';
+import { ChevronRight, Info } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { IceSelect } from '../../../shared/components/ui/ice-select';
-import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { useSelector, useDispatch } from 'react-redux';
 import { getIcon, DEFAULT_ICON, type Provider } from '../../../assets/icons';
-import { useTranslation, t } from '../../../i18n';
 import { getBrandIcon } from '../../../assets/icons/brand-registry';
 import { GROUP_COLOR_PRESETS } from '../../../config/color-palette';
+import { useTranslation, t } from '../../../i18n';
 import { getApi } from '../../../shared/api/api-adapter';
 import axiosInstance from '../../../shared/api/axios-instance';
+import { IceSelect } from '../../../shared/components/ui/ice-select';
+import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { cn } from '../../../shared/utils/cn';
 import {
   selectActiveCard,
@@ -124,7 +124,6 @@ function formatCost(value: number): string {
 
 // ─── UI components ─────────────────────────────────────────────────────────
 
-
 // ─── Group Color Picker ─────────────────────────────────────────────────────
 
 const GROUP_COLORS = GROUP_COLOR_PRESETS;
@@ -220,7 +219,8 @@ const DriftIndicator: React.FC<{ nodeId: string }> = ({ nodeId }) => {
         <div className="flex items-center gap-1.5 mb-2">
           <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />
           <span className="text-ice-xs text-orange-500 font-medium">
-            {t('properties.drift.drifted')} ({driftInfo.changes.length} {driftInfo.changes.length === 1 ? t('properties.drift.change') : t('properties.drift.changes')})
+            {t('properties.drift.drifted')} ({driftInfo.changes.length}{' '}
+            {driftInfo.changes.length === 1 ? t('properties.drift.change') : t('properties.drift.changes')})
           </span>
         </div>
         <div className="space-y-1.5 ml-3">
@@ -288,9 +288,7 @@ const DriftCheckButton: React.FC<{ cardId: string; nodes: any[] }> = ({ cardId, 
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
   <div className="pt-3 pb-2 px-3">
-    {title && (
-      <div className="text-ice-2xs font-medium tracking-wide text-ice-text-3/50 mb-2">{title}</div>
-    )}
+    {title && <div className="text-ice-2xs font-medium tracking-wide text-ice-text-3/50 mb-2">{title}</div>}
     <div className="space-y-1">{children}</div>
   </div>
 );
@@ -470,13 +468,9 @@ const RichSelectField: React.FC<{
         >
           <div className="flex items-center justify-between gap-2">
             <span className="text-ice-xs font-mono">{opt.label}</span>
-            {opt.cost && (
-              <span className="text-ice-2xs text-emerald-400/60 shrink-0">{opt.cost}</span>
-            )}
+            {opt.cost && <span className="text-ice-2xs text-emerald-400/60 shrink-0">{opt.cost}</span>}
           </div>
-          {opt.description && (
-            <div className="text-ice-2xs text-ice-text-3/40 mt-0.5">{opt.description}</div>
-          )}
+          {opt.description && <div className="text-ice-2xs text-ice-text-3/40 mt-0.5">{opt.description}</div>}
         </button>
       ))}
     </div>
@@ -550,7 +544,7 @@ function renderPropertyField(
 ): React.ReactNode {
   // Select with optionDetails — use IceSelect dropdown
   if (prop.type === 'select' && prop.optionDetails && prop.optionDetails.length > 0) {
-    const strVal = value != null ? String(value) : (prop.default != null ? String(prop.default) : '');
+    const strVal = value != null ? String(value) : prop.default != null ? String(prop.default) : '';
     const isCustomSelected = strVal === 'custom' && prop.customInput;
     const customVal = nodeData?.[`${prop.name}_custom`];
     return (
@@ -690,9 +684,11 @@ const PropertyFields: React.FC<{
             <div key={prop.name}>
               {renderPropertyField(filterByProvider(prop), nodeData[prop.name], onFieldChange, nodeData)}
               {propertyIssues?.has(prop.name) && (
-                <div className={`px-3 pb-1 text-ice-2xs ${
-                  propertyIssues.get(prop.name)!.severity === 'error' ? 'text-red-400' : 'text-amber-400'
-                }`}>
+                <div
+                  className={`px-3 pb-1 text-ice-2xs ${
+                    propertyIssues.get(prop.name)!.severity === 'error' ? 'text-red-400' : 'text-amber-400'
+                  }`}
+                >
                   {propertyIssues.get(prop.name)!.message}
                 </div>
               )}
@@ -717,9 +713,11 @@ const PropertyFields: React.FC<{
                 <div key={prop.name}>
                   {renderPropertyField(filterByProvider(prop), nodeData[prop.name], onFieldChange, nodeData)}
                   {propertyIssues?.has(prop.name) && (
-                    <div className={`px-3 pb-1 text-ice-2xs ${
-                      propertyIssues.get(prop.name)!.severity === 'error' ? 'text-red-400' : 'text-amber-400'
-                    }`}>
+                    <div
+                      className={`px-3 pb-1 text-ice-2xs ${
+                        propertyIssues.get(prop.name)!.severity === 'error' ? 'text-red-400' : 'text-amber-400'
+                      }`}
+                    >
                       {propertyIssues.get(prop.name)!.message}
                     </div>
                   )}
@@ -1109,8 +1107,7 @@ export const PropertiesPanel: React.FC = () => {
         {(() => {
           const hasDeployment = !!selectedNode.data?.provider_id;
           const hasSource =
-            (iceType.startsWith('Compute.') || iceType === 'Network.Gateway') &&
-            iceType !== 'Source.Repository';
+            (iceType.startsWith('Compute.') || iceType === 'Network.Gateway') && iceType !== 'Source.Repository';
           const activeTab = propsTab;
 
           // Tabs are derived from the node's actual content — not hardcoded
@@ -1196,20 +1193,26 @@ export const PropertiesPanel: React.FC = () => {
                         </div>
                       )}
                       <div>
-                        <div className="text-ice-2xs text-ice-text-3 mb-0.5">{t('properties.deploy.resourceIdLabel')}</div>
+                        <div className="text-ice-2xs text-ice-text-3 mb-0.5">
+                          {t('properties.deploy.resourceIdLabel')}
+                        </div>
                         <div className="text-ice-xs text-ice-text-2 font-mono break-all">
                           {selectedNode.data.provider_id as string}
                         </div>
                       </div>
                       {!!selectedNode.data?.region && (
                         <div>
-                          <div className="text-ice-2xs text-ice-text-3 mb-0.5">{t('properties.deploy.regionLabel')}</div>
+                          <div className="text-ice-2xs text-ice-text-3 mb-0.5">
+                            {t('properties.deploy.regionLabel')}
+                          </div>
                           <div className="text-ice-xs text-ice-text-2">{selectedNode.data.region as string}</div>
                         </div>
                       )}
                       {!!selectedNode.data?.max_instances && (
                         <div>
-                          <div className="text-ice-2xs text-ice-text-3 mb-0.5">{t('properties.deploy.instancesLabel')}</div>
+                          <div className="text-ice-2xs text-ice-text-3 mb-0.5">
+                            {t('properties.deploy.instancesLabel')}
+                          </div>
                           <div className="text-ice-xs text-ice-text-2">
                             {String(selectedNode.data.min_instances || 0)} – {String(selectedNode.data.max_instances)}
                           </div>
@@ -1351,32 +1354,39 @@ export const PropertiesPanel: React.FC = () => {
               {activeTab === 'config' && (
                 <>
                   {/* Validation issues banner */}
-                  {selectedNodeId && (() => {
-                    const nodeIssues = validationIssues.filter(i => i.nodeId === selectedNodeId && i.severity !== 'info');
-                    if (nodeIssues.length === 0) return null;
-                    const errorCount = nodeIssues.filter(i => i.severity === 'error').length;
-                    const warnCount = nodeIssues.filter(i => i.severity === 'warning').length;
-                    return (
-                      <div className={`mx-2 mt-1 mb-1 px-3 py-2 rounded-md text-ice-2xs ${
-                        errorCount > 0 ? 'bg-red-500/10 border border-red-500/20' : 'bg-amber-500/10 border border-amber-500/20'
-                      }`}>
-                        <div className={`font-medium ${errorCount > 0 ? 'text-red-400' : 'text-amber-400'}`}>
-                          {errorCount > 0 && `${errorCount} error${errorCount > 1 ? 's' : ''}`}
-                          {errorCount > 0 && warnCount > 0 && ' · '}
-                          {warnCount > 0 && `${warnCount} warning${warnCount > 1 ? 's' : ''}`}
-                        </div>
-                        {nodeIssues.slice(0, 3).map(issue => (
-                          <div key={issue.id} className="mt-0.5 text-ice-text-3">
-                            {issue.message}
-                            {issue.suggestion && <span className="text-ice-text-3/50"> — {issue.suggestion}</span>}
+                  {selectedNodeId &&
+                    (() => {
+                      const nodeIssues = validationIssues.filter(
+                        (i) => i.nodeId === selectedNodeId && i.severity !== 'info',
+                      );
+                      if (nodeIssues.length === 0) return null;
+                      const errorCount = nodeIssues.filter((i) => i.severity === 'error').length;
+                      const warnCount = nodeIssues.filter((i) => i.severity === 'warning').length;
+                      return (
+                        <div
+                          className={`mx-2 mt-1 mb-1 px-3 py-2 rounded-md text-ice-2xs ${
+                            errorCount > 0
+                              ? 'bg-red-500/10 border border-red-500/20'
+                              : 'bg-amber-500/10 border border-amber-500/20'
+                          }`}
+                        >
+                          <div className={`font-medium ${errorCount > 0 ? 'text-red-400' : 'text-amber-400'}`}>
+                            {errorCount > 0 && `${errorCount} error${errorCount > 1 ? 's' : ''}`}
+                            {errorCount > 0 && warnCount > 0 && ' · '}
+                            {warnCount > 0 && `${warnCount} warning${warnCount > 1 ? 's' : ''}`}
                           </div>
-                        ))}
-                        {nodeIssues.length > 3 && (
-                          <div className="mt-0.5 text-ice-text-3/50">+{nodeIssues.length - 3} more</div>
-                        )}
-                      </div>
-                    );
-                  })()}
+                          {nodeIssues.slice(0, 3).map((issue) => (
+                            <div key={issue.id} className="mt-0.5 text-ice-text-3">
+                              {issue.message}
+                              {issue.suggestion && <span className="text-ice-text-3/50"> — {issue.suggestion}</span>}
+                            </div>
+                          ))}
+                          {nodeIssues.length > 3 && (
+                            <div className="mt-0.5 text-ice-text-3/50">+{nodeIssues.length - 3} more</div>
+                          )}
+                        </div>
+                      );
+                    })()}
 
                   {/* Configuration fields — tiered */}
                   {dbProperties.length > 0 && (
@@ -1725,7 +1735,9 @@ const PipelineSection: React.FC<{
       {/* Recent deployments with expandable logs */}
       {events.length > 0 && (
         <div className="mt-2 pt-2 border-t border-ice-border space-y-1">
-          <div className="text-ice-xs text-ice-text-3 font-semibold uppercase tracking-wider mb-1">{t('pipeline.recent')}</div>
+          <div className="text-ice-xs text-ice-text-3 font-semibold uppercase tracking-wider mb-1">
+            {t('pipeline.recent')}
+          </div>
           {events.slice(0, 5).map((ev) => {
             const isExpanded = expandedEventId === ev.id;
             const logs = (ev.deployment_logs || []) as DeployStep[];
@@ -1855,7 +1867,8 @@ const ServiceSourceSection: React.FC<{
           {linkedBranch && <div className="text-ice-xs text-ice-text-3 font-mono">&rarr; {linkedBranch}</div>}
           {sourceBlockName && (
             <div className="text-ice-xs text-ice-text-3">
-              {t('properties.source.managedBy')} <span className="text-ice-text-2 font-medium">{sourceBlockName}</span> {t('properties.source.block')}
+              {t('properties.source.managedBy')} <span className="text-ice-text-2 font-medium">{sourceBlockName}</span>{' '}
+              {t('properties.source.block')}
             </div>
           )}
         </div>
@@ -1867,9 +1880,7 @@ const ServiceSourceSection: React.FC<{
     <Section title={t('properties.source.title')}>
       <div className="rounded border border-dashed border-ice-border px-2.5 py-3 text-center space-y-1.5">
         <div className="text-ice-sm text-ice-text-3">{t('properties.source.noSourceConnected')}</div>
-        <div className="text-ice-xs text-ice-text-3 leading-relaxed">
-          {t('properties.source.noSourceHint')}
-        </div>
+        <div className="text-ice-xs text-ice-text-3 leading-relaxed">{t('properties.source.noSourceHint')}</div>
       </div>
     </Section>
   );
@@ -2163,9 +2174,7 @@ const SourceRepositorySection: React.FC<{
       {/* No services connected hint */}
       {nodeRepo && connectedServices.length === 0 && (
         <Section title={t('pipeline.triggers')}>
-          <div className="text-ice-xs text-ice-text-3">
-            {t('properties.noServiceHint')}
-          </div>
+          <div className="text-ice-xs text-ice-text-3">{t('properties.noServiceHint')}</div>
         </Section>
       )}
 
@@ -2318,12 +2327,12 @@ const ConnectionCard: React.FC<{
           {sourceIcon ? (
             <img src={sourceIcon.icon} alt="" className="w-7 h-7" />
           ) : (
-            <span className="text-ice-sm text-ice-text-3 font-semibold">{sourceType.split('.').pop()?.charAt(0) || '?'}</span>
+            <span className="text-ice-sm text-ice-text-3 font-semibold">
+              {sourceType.split('.').pop()?.charAt(0) || '?'}
+            </span>
           )}
         </div>
-        <span className="text-ice-xs font-medium text-ice-text-1 truncate max-w-full text-center">
-          {sourceLabel}
-        </span>
+        <span className="text-ice-xs font-medium text-ice-text-1 truncate max-w-full text-center">{sourceLabel}</span>
       </div>
 
       {/* Arrow with port */}
@@ -2332,12 +2341,8 @@ const ConnectionCard: React.FC<{
           <div className="w-8 h-px bg-ice-text-3" />
           <div className="w-0 h-0 border-l-[5px] border-l-ice-text-3 border-y-[3px] border-y-transparent" />
         </div>
-        {port && (
-          <span className="text-ice-2xs font-mono text-ice-accent">:{port}</span>
-        )}
-        {!port && relationship && (
-          <span className="text-ice-2xs text-ice-text-3">{relationship}</span>
-        )}
+        {port && <span className="text-ice-2xs font-mono text-ice-accent">:{port}</span>}
+        {!port && relationship && <span className="text-ice-2xs text-ice-text-3">{relationship}</span>}
       </div>
 
       {/* TO node */}
@@ -2346,12 +2351,12 @@ const ConnectionCard: React.FC<{
           {targetIcon ? (
             <img src={targetIcon.icon} alt="" className="w-7 h-7" />
           ) : (
-            <span className="text-ice-sm text-ice-text-3 font-semibold">{targetType.split('.').pop()?.charAt(0) || '?'}</span>
+            <span className="text-ice-sm text-ice-text-3 font-semibold">
+              {targetType.split('.').pop()?.charAt(0) || '?'}
+            </span>
           )}
         </div>
-        <span className="text-ice-xs font-medium text-ice-text-1 truncate max-w-full text-center">
-          {targetLabel}
-        </span>
+        <span className="text-ice-xs font-medium text-ice-text-1 truncate max-w-full text-center">{targetLabel}</span>
       </div>
 
       {/* Delete button */}
@@ -2546,4 +2551,3 @@ const EnvVarsEditor: React.FC<{
     </Section>
   );
 };
-

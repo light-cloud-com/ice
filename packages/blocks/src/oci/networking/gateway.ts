@@ -8,6 +8,5 @@ export const ociGatewayBlueprint: BlockBlueprint = createBlueprintFromResource('
   description: 'Oracle Cloud API Gateway. Routes traffic, auth + rate limiting.',
   icon: 'GitBranch',
   providers: ['oci'],
-  nodeDataDefaults: {
-  },
+  nodeDataDefaults: {},
 });

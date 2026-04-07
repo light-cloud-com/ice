@@ -13,8 +13,7 @@ import { ConnectCloudStep } from './connect-cloud-step';
 import { ConnectGithubStep } from './connect-github-step';
 import { FirstProjectStep } from './first-project-step';
 import { WelcomeStep } from './welcome-step';
-import logoDark from '../../../assets/logo-dark.png';
-import logoLight from '../../../assets/logo-light.png';
+import { Logo } from '../../../assets/logo';
 import { COMPOSED_TEMPLATES, QUICK_STARTS, expandComposedTemplate } from '../../../config/templates';
 import { useTranslation } from '../../../i18n';
 import axiosInstance from '../../../shared/api/axios-instance';
@@ -188,7 +187,7 @@ export const OnboardingPage: React.FC = () => {
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-ice-accent/[0.03] blur-[120px] pointer-events-none" />
 
       <header className="relative z-10 flex items-center justify-between px-6 py-4">
-        <img src={isDark ? logoDark : logoLight} alt="ICE" width={60} height={18} className="h-[18px] object-contain" />
+        <Logo height={18} className="text-ice-text-1" />
         <button
           onClick={handleSkipAll}
           className="flex items-center gap-1 text-xs text-ice-text-3 hover:text-ice-text-1 transition-colors"

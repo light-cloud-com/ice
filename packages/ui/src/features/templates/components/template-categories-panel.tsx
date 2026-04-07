@@ -1,7 +1,7 @@
 /**
- * Template Categories Panel — Left sidebar
+ * Template Categories Panel — Left sidebar section
  *
- * Shows template categories as a navigable list.
+ * Shows template categories and featured templates with search.
  * Clicking a category navigates to /templates?category=xxx (full page).
  */
 
@@ -23,9 +23,14 @@ import {
   Sparkles,
   ArrowUpRight,
 } from 'lucide-react';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { ALL_TEMPLATES, TEMPLATE_CATEGORIES, getFeaturedTemplates } from '../../../config/templates';
+import {
+  ALL_TEMPLATES,
+  TEMPLATE_CATEGORIES,
+  getFeaturedTemplates,
+  searchTemplates,
+} from '../../../config/templates';
 import { useTranslation } from '../../../i18n';
 import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { cn } from '../../../shared/utils/cn';
@@ -47,9 +52,15 @@ const ICON_MAP: Record<string, React.ElementType> = {
   GitBranch,
 };
 
-export const TemplateCategoriesPanel: React.FC = () => {
+interface TemplateCategoriesPanelProps {
+  /** When true, hides the close button (used when embedded inside ResourcePalette) */
+  embedded?: boolean;
+}
+
+export const TemplateCategoriesPanel: React.FC<TemplateCategoriesPanelProps> = ({ embedded = false }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
+  const [search, setSearch] = useState('');
 
   const categoryCounts = useMemo(() => {
     const counts = new Map<string, number>();
@@ -61,7 +72,25 @@ export const TemplateCategoriesPanel: React.FC = () => {
 
   const featuredTemplates = useMemo(() => getFeaturedTemplates().slice(0, 5), []);
 
-  // Navigate to the full-page gallery
+  // Filter by search
+  const isSearching = search.trim().length > 0;
+  const searchResults = useMemo(
+    () => (isSearching ? searchTemplates(search) : []),
+    [search, isSearching],
+  );
+
+  const filteredCategories = useMemo(() => {
+    if (!isSearching) return TEMPLATE_CATEGORIES;
+    const matchedCategoryIds = new Set(searchResults.map((t) => t.category));
+    return TEMPLATE_CATEGORIES.filter((cat) => matchedCategoryIds.has(cat.id));
+  }, [isSearching, searchResults]);
+
+  const filteredFeatured = useMemo(() => {
+    if (!isSearching) return featuredTemplates;
+    const matchedIds = new Set(searchResults.map((t) => t.id));
+    return featuredTemplates.filter((t) => matchedIds.has(t.id));
+  }, [isSearching, searchResults, featuredTemplates]);
+
   const goToGallery = (category?: string) => {
     const params = category ? `?category=${category}` : '';
     window.location.href = `/templates${params}`;
@@ -72,83 +101,101 @@ export const TemplateCategoriesPanel: React.FC = () => {
       <PanelHeader
         icon={<LayoutTemplate className="w-3.5 h-3.5" />}
         title={t('templates.gallery.title')}
-        onClose={() => dispatch(toggleTemplates())}
+        search={{
+          value: search,
+          onChange: setSearch,
+          placeholder: t('templates.gallery.searchPlaceholder') || 'Search templates…',
+        }}
+        onClose={embedded ? undefined : () => dispatch(toggleTemplates())}
       />
 
-      <div className="flex-1 overflow-y-auto">
-        {/* Browse all — hero */}
-        <div className="px-3 pt-3 pb-2">
-          <button
-            onClick={() => goToGallery()}
-            className={cn(
-              'flex items-center gap-3 w-full px-3 py-3 rounded-lg text-left transition-all',
-              'bg-ice-accent/10 border border-ice-accent/20 hover:bg-ice-accent/15',
-            )}
-          >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-ice-accent/15">
-              <Sparkles className="h-4 w-4 text-ice-accent" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <span className="text-sm font-semibold text-ice-text-1">Browse All</span>
-              <span className="text-ice-xs text-ice-text-3 block">{ALL_TEMPLATES.length} templates</span>
-            </div>
-            <ArrowUpRight className="w-4 h-4 text-ice-accent shrink-0" />
-          </button>
-        </div>
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
+        {/* Search results summary */}
+        {isSearching && (
+          <div className="px-4 py-2 text-ice-2xs text-ice-text-3">
+            {searchResults.length} template{searchResults.length !== 1 ? 's' : ''} found
+          </div>
+        )}
+
+        {/* Browse all — hero (hidden when searching) */}
+        {!isSearching && (
+          <div className="px-3 pt-3 pb-2">
+            <button
+              onClick={() => goToGallery()}
+              className={cn(
+                'flex items-center gap-3 w-full px-3 py-3 rounded-lg text-left transition-all',
+                'bg-ice-accent/10 border border-ice-accent/20 hover:bg-ice-accent/15',
+              )}
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-ice-accent/15">
+                <Sparkles className="h-4 w-4 text-ice-accent" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <span className="text-sm font-semibold text-ice-text-1">Browse All</span>
+                <span className="text-ice-xs text-ice-text-3 block">{ALL_TEMPLATES.length} templates</span>
+              </div>
+              <ArrowUpRight className="w-4 h-4 text-ice-accent shrink-0" />
+            </button>
+          </div>
+        )}
 
         {/* Category list */}
-        <div className="px-3 pb-3">
-          <div className="text-ice-2xs font-medium text-ice-text-3 uppercase tracking-wider px-1 mb-2">Categories</div>
-          <div className="space-y-0.5">
-            {TEMPLATE_CATEGORIES.map((cat) => {
-              const CatIcon = ICON_MAP[cat.icon] || Zap;
-              const count = categoryCounts.get(cat.id) || 0;
-              const isEmpty = count === 0;
+        {filteredCategories.length > 0 && (
+          <div className="px-3 pb-3">
+            <div className="text-ice-2xs font-medium text-ice-text-3 uppercase tracking-wider px-1 mb-2">Categories</div>
+            <div className="space-y-0.5">
+              {filteredCategories.map((cat) => {
+                const CatIcon = ICON_MAP[cat.icon] || Zap;
+                const count = isSearching
+                  ? searchResults.filter((t) => t.category === cat.id).length
+                  : categoryCounts.get(cat.id) || 0;
+                const isEmpty = count === 0;
 
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => !isEmpty && goToGallery(cat.id)}
-                  disabled={isEmpty}
-                  className={cn(
-                    'flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-left transition-all',
-                    isEmpty ? 'opacity-40 cursor-not-allowed' : 'hover:bg-ice-hover cursor-pointer',
-                  )}
-                >
-                  <div
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
-                    style={{ backgroundColor: cat.color + '15' }}
-                  >
-                    <CatIcon className="h-3.5 w-3.5" style={{ color: cat.color }} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <span className="text-xs font-medium text-ice-text-1">{cat.label}</span>
-                    <span className="text-ice-2xs text-ice-text-3 block">{cat.description}</span>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    {count > 0 ? (
-                      <>
-                        <span className="text-ice-xs text-ice-text-3 tabular-nums">{count}</span>
-                        <ChevronRight className="w-3 h-3 text-ice-text-3" />
-                      </>
-                    ) : (
-                      <span className="text-ice-2xs text-ice-text-3">{t('templates.gallery.comingSoon')}</span>
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => !isEmpty && goToGallery(cat.id)}
+                    disabled={isEmpty}
+                    className={cn(
+                      'flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-left transition-all',
+                      isEmpty ? 'opacity-40 cursor-not-allowed' : 'hover:bg-ice-hover cursor-pointer',
                     )}
-                  </div>
-                </button>
-              );
-            })}
+                  >
+                    <div
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                      style={{ backgroundColor: cat.color + '15' }}
+                    >
+                      <CatIcon className="h-3.5 w-3.5" style={{ color: cat.color }} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <span className="text-xs font-medium text-ice-text-1">{cat.label}</span>
+                      <span className="text-ice-2xs text-ice-text-3 block">{cat.description}</span>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {count > 0 ? (
+                        <>
+                          <span className="text-ice-xs text-ice-text-3 tabular-nums">{count}</span>
+                          <ChevronRight className="w-3 h-3 text-ice-text-3" />
+                        </>
+                      ) : (
+                        <span className="text-ice-2xs text-ice-text-3">{t('templates.gallery.comingSoon')}</span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Featured quick links */}
-        {featuredTemplates.length > 0 && (
+        {filteredFeatured.length > 0 && (
           <div className="px-3 pb-3">
             <div className="text-ice-2xs font-medium text-ice-text-3 uppercase tracking-wider px-1 mb-2">
               {t('templates.gallery.featured')}
             </div>
             <div className="space-y-0.5">
-              {featuredTemplates.map((tpl) => {
+              {filteredFeatured.map((tpl) => {
                 const Icon = ICON_MAP[tpl.icon] || Rocket;
                 const catMeta = TEMPLATE_CATEGORIES.find((c) => c.id === tpl.category);
                 return (
@@ -164,6 +211,13 @@ export const TemplateCategoriesPanel: React.FC = () => {
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* No results */}
+        {isSearching && searchResults.length === 0 && (
+          <div className="px-4 py-8 text-center text-ice-xs text-ice-text-3">
+            No templates match &ldquo;{search}&rdquo;
           </div>
         )}
       </div>

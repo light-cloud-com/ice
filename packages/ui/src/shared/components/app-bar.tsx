@@ -31,8 +31,7 @@ import { useThemePicker } from './dev-accent-picker';
 import { LanguageSwitch } from './language-switch';
 import { IceSelect } from './ui/ice-select';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './ui/tooltip';
-import logoDark from '../../assets/logo-dark.png';
-import logoLight from '../../assets/logo-light.png';
+import { Logo } from '../../assets/logo';
 import { DeployPanel } from '../../features/deploy/components/deploy-panel';
 import { PromoteModal } from '../../features/environments/components/promote-modal';
 import { GitHubConnectModal } from '../../features/integrations/components/github-connect-modal';
@@ -186,13 +185,7 @@ export const AppBar: React.FC = memo(() => {
             className="flex items-center gap-2.5 min-w-0"
             style={isElectron ? ({ WebkitAppRegion: 'no-drag' } as any) : undefined}
           >
-            <img
-              src={isDark ? logoDark : logoLight}
-              alt="ICE"
-              width={60}
-              height={18}
-              className="h-[18px] object-contain shrink-0"
-            />
+            <Logo height={18} className="shrink-0 text-ice-text-1" />
             <div className="w-px h-4 bg-ice-border shrink-0" />
             <Breadcrumbs />
           </div>

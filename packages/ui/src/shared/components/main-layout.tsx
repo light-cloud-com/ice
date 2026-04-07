@@ -14,6 +14,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { InlineTableView } from './inline-table-view';
 import { StatusBar } from './status-bar';
 import { useTranslation } from '../../i18n';
+import { ResizeBar } from './ui/resize-bar';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './ui/resizable';
 import { SidebarPanel } from './ui/sidebar-panel';
 import { SidebarStrip } from './ui/sidebar-strip';
@@ -22,7 +23,6 @@ import { SvgCanvas } from '../../features/canvas/components/svg-canvas';
 import { CostPanel } from '../../features/cost/components/cost-panel';
 import { ResourcePalette } from '../../features/palette/components/resource-palette';
 import { PropertiesPanel } from '../../features/properties/components/properties-panel';
-import { TemplateCategoriesPanel } from '../../features/templates/components/template-categories-panel';
 import { ValidationPanel } from '../../features/validation/components/validation-panel';
 import { createCard, importToActiveCard, setActiveCard } from '../../store/slices/cards-slice';
 import {
@@ -113,11 +113,11 @@ const DragResizePanel: React.FC<DragResizePanelProps> = ({
   }, [storageKey, width]);
 
   const handle = (
-    <div
+    <ResizeBar
+      direction="vertical"
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
-      className="w-1 shrink-0 cursor-col-resize bg-ice-border"
     />
   );
 
@@ -332,11 +332,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
               maxSize={35}
               className="bg-ice-surface ice-sidebar-shadow"
             >
-              {showTemplates && !(showPalette || showBlocks) ? (
-                <TemplateCategoriesPanel />
-              ) : (
-                <ResourcePalette showProjectSection={showPalette} showBlocksSection={showBlocks} />
-              )}
+              <ResourcePalette showProjectSection={showPalette} showBlocksSection={showBlocks} showTemplatesSection={showTemplates} />
             </SidebarPanel>
 
             <ResizablePanel defaultSize={75}>
@@ -397,11 +393,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         {/* Left sidebar with its own resize handle */}
         {showLeftPanel && (
           <DragResizePanel side="left" storageKey="ice-left-w" defaultWidth={260} minWidth={180} maxWidth={400}>
-            {showTemplates && !(showPalette || showBlocks) ? (
-              <TemplateCategoriesPanel />
-            ) : (
-              <ResourcePalette showProjectSection={showPalette} showBlocksSection={showBlocks} />
-            )}
+            <ResourcePalette showProjectSection={showPalette} showBlocksSection={showBlocks} showTemplatesSection={showTemplates} />
           </DragResizePanel>
         )}
 

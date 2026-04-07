@@ -51,6 +51,7 @@ import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '../../
 import { useResolvePath } from '../../../shared/hooks/use-resolve-path';
 import { cn } from '../../../shared/utils/cn';
 import { ProjectBrowser } from '../../project-browser';
+import { TemplateCategoriesPanel } from '../../templates/components/template-categories-panel';
 
 // =============================================================================
 // Category definitions with metadata
@@ -978,14 +979,15 @@ const BlocksSection: React.FC<BlocksSectionProps> = ({
 // =============================================================================
 
 export interface ResourcePaletteProps {
-  /** Which section to show. Defaults to both. */
   showProjectSection?: boolean;
   showBlocksSection?: boolean;
+  showTemplatesSection?: boolean;
 }
 
 export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
   showProjectSection = true,
   showBlocksSection = true,
+  showTemplatesSection = false,
 }) => {
   const { t } = useTranslation();
   const { pathname } = useLocation();
@@ -1019,6 +1021,7 @@ export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
   }, [projectProvider]);
   const showProjects = showProjectSection;
   const showBlocks = showBlocksSection;
+  const showTemplates = showTemplatesSection;
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(loadCollapsed);
   const [mounted, setMounted] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -1091,56 +1094,73 @@ export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
           background: 'var(--ice-bg-surface)',
         }}
       >
-        {/* Content — Projects and Blocks split with resizable panels */}
-        {showProjects && showBlocks && isCanvasView ? (
-          <ResizablePanelGroup direction="vertical" autoSaveId="ice-palette-split" className="h-full">
-            <ResizablePanel defaultSize={40} minSize={20}>
-              <div className="h-full overflow-y-auto custom-scrollbar">
-                <ProjectBrowser />
-              </div>
-            </ResizablePanel>
-            <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={60} minSize={20}>
-              <BlocksSection
-                localSearch={localSearch}
-                setLocalSearch={setLocalSearch}
-                selectedProvider={selectedProvider}
-                setSelectedProvider={setSelectedProvider}
-                projectProvider={projectProvider}
-                searchInputRef={searchInputRef}
-                filteredComponents={filteredComponents}
-                categorizedItems={categorizedItems}
-                isSearching={isSearching}
-                showGroup={showGroup}
-                collapsedCategories={collapsedCategories}
-                toggleCategory={toggleCategory}
-                mounted={mounted}
-                staggerIdx={staggerIdx}
-              />
-            </ResizablePanel>
-          </ResizablePanelGroup>
-        ) : showProjects ? (
-          <div className="h-full overflow-y-auto custom-scrollbar">
-            <ProjectBrowser />
-          </div>
-        ) : showBlocks && isCanvasView ? (
-          <BlocksSection
-            localSearch={localSearch}
-            setLocalSearch={setLocalSearch}
-            selectedProvider={selectedProvider}
-            setSelectedProvider={setSelectedProvider}
-            projectProvider={projectProvider}
-            searchInputRef={searchInputRef}
-            filteredComponents={filteredComponents}
-            categorizedItems={categorizedItems}
-            isSearching={isSearching}
-            showGroup={showGroup}
-            collapsedCategories={collapsedCategories}
-            toggleCategory={toggleCategory}
-            mounted={mounted}
-            staggerIdx={staggerIdx}
-          />
-        ) : null}
+        {/* Content — active sections stacked in resizable panels */}
+        {(() => {
+          const sections: { key: string; content: React.ReactNode }[] = [];
+
+          if (showProjects) {
+            sections.push({
+              key: 'projects',
+              content: (
+                <div className="h-full overflow-y-auto custom-scrollbar">
+                  <ProjectBrowser />
+                </div>
+              ),
+            });
+          }
+
+          if (showBlocks && isCanvasView) {
+            sections.push({
+              key: 'blocks',
+              content: (
+                <BlocksSection
+                  localSearch={localSearch}
+                  setLocalSearch={setLocalSearch}
+                  selectedProvider={selectedProvider}
+                  setSelectedProvider={setSelectedProvider}
+                  projectProvider={projectProvider}
+                  searchInputRef={searchInputRef}
+                  filteredComponents={filteredComponents}
+                  categorizedItems={categorizedItems}
+                  isSearching={isSearching}
+                  showGroup={showGroup}
+                  collapsedCategories={collapsedCategories}
+                  toggleCategory={toggleCategory}
+                  mounted={mounted}
+                  staggerIdx={staggerIdx}
+                />
+              ),
+            });
+          }
+
+          if (showTemplates) {
+            sections.push({
+              key: 'templates',
+              content: (
+                <div className="h-full overflow-y-auto custom-scrollbar">
+                  <TemplateCategoriesPanel embedded />
+                </div>
+              ),
+            });
+          }
+
+          if (sections.length === 0) return null;
+          if (sections.length === 1) return sections[0].content;
+
+          const panelSize = Math.floor(100 / sections.length);
+          return (
+            <ResizablePanelGroup direction="vertical" autoSaveId="ice-palette-split" className="h-full">
+              {sections.map((section, i) => (
+                <React.Fragment key={section.key}>
+                  {i > 0 && <ResizableHandle withHandle />}
+                  <ResizablePanel defaultSize={panelSize} minSize={15}>
+                    {section.content}
+                  </ResizablePanel>
+                </React.Fragment>
+              ))}
+            </ResizablePanelGroup>
+          );
+        })()}
       </div>
     </TooltipProvider>
   );

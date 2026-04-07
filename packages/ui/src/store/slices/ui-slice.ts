@@ -98,6 +98,59 @@ interface UIState {
 // =============================================================================
 
 const UI_STORAGE_KEY = 'ice-ui-panes';
+const PANELS_STORAGE_KEY = 'ice-ui-panels';
+
+interface PersistedPanels {
+  showPalette: boolean;
+  showBlocks: boolean;
+  showProperties: boolean;
+  showMinimap: boolean;
+  showValidation: boolean;
+  showAiChat: boolean;
+  showCostPanel: boolean;
+  showTemplates: boolean;
+}
+
+const PANEL_DEFAULTS: PersistedPanels = {
+  showPalette: true,
+  showBlocks: true,
+  showProperties: false,
+  showMinimap: true,
+  showValidation: false,
+  showAiChat: true,
+  showCostPanel: false,
+  showTemplates: false,
+};
+
+function loadPersistedPanels(): PersistedPanels {
+  try {
+    const raw = localStorage.getItem(PANELS_STORAGE_KEY);
+    if (raw) return { ...PANEL_DEFAULTS, ...JSON.parse(raw) };
+  } catch {
+    /* ignore */
+  }
+  return PANEL_DEFAULTS;
+}
+
+function persistPanels(state: UIState) {
+  try {
+    localStorage.setItem(
+      PANELS_STORAGE_KEY,
+      JSON.stringify({
+        showPalette: state.showPalette,
+        showBlocks: state.showBlocks,
+        showProperties: state.showProperties,
+        showMinimap: state.showMinimap,
+        showValidation: state.showValidation,
+        showAiChat: state.showAiChat,
+        showCostPanel: state.showCostPanel,
+        showTemplates: state.showTemplates,
+      }),
+    );
+  } catch {
+    /* ignore */
+  }
+}
 
 function loadPersistedPanes(): SplitViewState {
   try {
@@ -136,15 +189,10 @@ function loadPersistedPanes(): SplitViewState {
   };
 }
 
+const persistedPanels = loadPersistedPanels();
+
 const initialState: UIState = {
-  showPalette: true,
-  showBlocks: true,
-  showProperties: false,
-  showMinimap: true,
-  showValidation: false,
-  showAiChat: true,
-  showCostPanel: false,
-  showTemplates: false,
+  ...persistedPanels,
   templateGalleryCategory: null,
   edgeStyle: 'bezier' as EdgeStyle,
   autoOrganizeOnZoom: false,
@@ -180,30 +228,39 @@ const uiSlice = createSlice({
   reducers: {
     togglePalette: (state) => {
       state.showPalette = !state.showPalette;
+      persistPanels(state);
     },
     toggleBlocks: (state) => {
       state.showBlocks = !state.showBlocks;
+      persistPanels(state);
     },
     toggleProperties: (state) => {
       state.showProperties = !state.showProperties;
+      persistPanels(state);
     },
     toggleMinimap: (state) => {
       state.showMinimap = !state.showMinimap;
+      persistPanels(state);
     },
     toggleAiChat: (state) => {
       state.showAiChat = !state.showAiChat;
+      persistPanels(state);
     },
     toggleCostPanel: (state) => {
       state.showCostPanel = !state.showCostPanel;
+      persistPanels(state);
     },
     toggleValidation: (state) => {
       state.showValidation = !state.showValidation;
+      persistPanels(state);
     },
     openValidation: (state) => {
       state.showValidation = true;
+      persistPanels(state);
     },
     toggleTemplates: (state) => {
       state.showTemplates = !state.showTemplates;
+      persistPanels(state);
     },
     openTemplateGallery: (state, action: PayloadAction<string | null>) => {
       state.templateGalleryCategory = action.payload;

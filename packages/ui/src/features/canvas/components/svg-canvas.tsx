@@ -62,6 +62,7 @@ import {
   LOD_THRESHOLD_L3,
   LOD_THRESHOLD_L2,
   ZOOM_STEP,
+  GRID_SIZE,
 } from '../../../config/canvas-constants';
 import { canContain, isContainer } from '../../../config/containment-rules';
 import { isTypeVisibleAtLevel, isEdgeVisibleAtLevel } from '../../../config/visualization-config';
@@ -1670,7 +1671,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     onDelete: handleDeleteSelected,
     onDragOverGroup: handleDragOverGroup,
     onDragEnd: handleDragEnd,
-    gridSize: snapToGrid ? gridSize : 0,
+    gridSize: snapToGrid ? GRID_SIZE : 0,
     locked: canvasLocked,
   });
 
@@ -2264,32 +2265,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
         onAuxClick={bindCanvas.onAuxClick}
         onContextMenu={bindCanvas.onContextMenu}
       >
-        {/* Smooth transition styles for layout changes */}
-        <defs>
-          <style>{`
-            .svg-compact-node, .svg-group-node {
-              transition: transform 200ms ease-out, opacity 150ms ease-out;
-            }
-            .svg-compact-node rect, .svg-compact-node text,
-            .svg-compact-node circle, .svg-compact-node image,
-            .svg-group-node rect, .svg-group-node text {
-              transition: x 200ms ease-out, y 200ms ease-out,
-                          width 200ms ease-out, height 200ms ease-out;
-            }
-            .connections-layer path {
-              transition: d 200ms ease-out, opacity 150ms ease-out;
-            }
-            @media (prefers-reduced-motion: reduce) {
-              .svg-compact-node, .svg-group-node,
-              .svg-compact-node rect, .svg-compact-node text,
-              .svg-compact-node circle, .svg-compact-node image,
-              .svg-group-node rect, .svg-group-node text,
-              .connections-layer path {
-                transition: none !important;
-              }
-            }
-          `}</style>
-        </defs>
+        <defs />
 
         {/* Transform group for pan/zoom */}
         <g transform={`translate(${viewport.x}, ${viewport.y}) scale(${viewport.zoom})`}>

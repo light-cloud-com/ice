@@ -503,17 +503,19 @@ export const AiChatPanel: React.FC = () => {
             const canvasEdges = activeCard?.edges || [];
             const patterns = suggestPatterns(canvasNodes as any, canvasEdges as any);
             return (
-              <div className="flex flex-col items-center justify-center h-full text-center px-4 gap-3">
-                <Sparkles aria-hidden="true" className="w-6 h-6 text-ice-text-3/20" />
-                <p className="text-ice-xs text-ice-text-3/50 leading-relaxed max-w-[200px]">
+              <div className="flex flex-col items-center justify-center h-full text-center px-4 gap-4">
+                <div className="w-10 h-10 rounded-xl bg-ice-accent/10 flex items-center justify-center">
+                  <Sparkles aria-hidden="true" className="w-5 h-5 text-ice-accent" />
+                </div>
+                <p className="text-ice-xs text-ice-text-3 leading-relaxed max-w-[220px]">
                   {canvasNodes.length === 0 ? t('ai.chat.emptyCanvasPrompt') : t('ai.chat.existingCanvasPrompt')}
                 </p>
-                <div className="flex flex-wrap gap-1 justify-center">
+                <div className="flex flex-wrap gap-1.5 justify-center">
                   {patterns.map((p) => (
                     <button
                       key={p.label}
                       onClick={() => handleSuggestionClick(p.intent)}
-                      className="px-2 py-0.5 text-ice-xs text-ice-text-3 hover:text-ice-text-1 transition-colors"
+                      className="px-2.5 py-1 text-ice-xs text-ice-text-2 rounded-lg border border-ice-border hover:border-ice-accent/40 hover:text-ice-text-1 hover:bg-ice-accent/5 transition-colors"
                     >
                       {p.label}
                     </button>
@@ -527,10 +529,10 @@ export const AiChatPanel: React.FC = () => {
           <div key={msg.id} className={cn('flex', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
             <div
               className={cn(
-                'max-w-[90%] px-3 py-2',
+                'max-w-[85%] px-3.5 py-2.5',
                 msg.role === 'user'
-                  ? 'rounded-2xl rounded-br-sm bg-blue-500/[0.08] text-ice-text-1'
-                  : 'text-ice-text-2',
+                  ? 'rounded-2xl rounded-br-md bg-ice-accent text-white'
+                  : 'rounded-2xl rounded-bl-md bg-white/[0.07] text-ice-text-1',
               )}
             >
               {msg.content.startsWith('AI_NOT_CONFIGURED:') ? (
@@ -600,14 +602,14 @@ export const AiChatPanel: React.FC = () => {
               )}
 
               {msg.suggestions && msg.suggestions.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-2">
+                <div className="flex flex-wrap gap-1.5 mt-2.5">
                   {msg.suggestions.map((s, i) => (
                     <button
                       key={i}
                       onClick={() => handleSuggestionClick(s)}
-                      className="flex items-center gap-1 px-2 py-0.5 text-ice-xs text-ice-text-3 hover:text-ice-text-1 transition-colors"
+                      className="flex items-center gap-1 px-2 py-1 text-ice-xs text-ice-text-2 rounded-md border border-ice-border hover:border-ice-accent/40 hover:text-ice-text-1 hover:bg-ice-accent/5 transition-colors"
                     >
-                      <ArrowRight aria-hidden="true" className="w-2.5 h-2.5" />
+                      <ArrowRight aria-hidden="true" className="w-2.5 h-2.5 text-ice-accent" />
                       {s}
                     </button>
                   ))}
@@ -618,9 +620,9 @@ export const AiChatPanel: React.FC = () => {
         ))}
 
         {isProcessing && (
-          <div className="flex items-center gap-2 px-1">
-            <Loader2 aria-hidden="true" className="w-3 h-3 text-ice-accent animate-spin" />
-            <span className="text-ice-xs text-ice-text-3/50">{streamingStatus || t('ai.chat.thinking')}</span>
+          <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-ice-raised">
+            <Loader2 aria-hidden="true" className="w-3.5 h-3.5 text-ice-accent animate-spin" />
+            <span className="text-ice-xs text-ice-text-2">{streamingStatus || t('ai.chat.thinking')}</span>
           </div>
         )}
       </div>
@@ -640,18 +642,24 @@ export const AiChatPanel: React.FC = () => {
       )}
 
       {/* Input */}
-      <div className="px-3 py-2 border-t border-ice-border/50 shrink-0">
-        <div className="flex items-end gap-2">
+      <div className="p-3 shrink-0">
+        <div className="relative rounded-2xl bg-white/[0.07] focus-within:bg-white/[0.09] transition-colors">
           <textarea
             id="ice-ai-input-message"
             ref={inputRef}
             name="ai-message"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => {
+              setInput(e.target.value);
+              // Auto-resize
+              const el = e.target;
+              el.style.height = 'auto';
+              el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+            }}
             onKeyDown={handleKeyDown}
             placeholder={t('ai.chat.inputPlaceholder')}
             rows={1}
-            className="flex-1 bg-transparent border-b border-ice-border/50 focus:border-ice-accent text-ice-xs text-ice-text-1 placeholder:text-ice-text-3/40 outline-none resize-none max-h-20 py-1 transition-colors"
+            className="w-full bg-transparent text-ice-sm text-ice-text-1 placeholder:text-ice-text-3/40 outline-none resize-none pl-4 pr-12 py-3 min-h-[44px]"
             disabled={isProcessing}
           />
           <button
@@ -660,13 +668,22 @@ export const AiChatPanel: React.FC = () => {
             onClick={handleSubmit}
             disabled={!input.trim() || isProcessing}
             className={cn(
-              'p-1 rounded transition-colors shrink-0 outline-none focus-visible:ring-1 focus-visible:ring-blue-500',
-              input.trim() && !isProcessing ? 'text-ice-accent' : 'text-ice-text-3/30',
+              'absolute right-2 bottom-2 p-2 rounded-xl transition-all outline-none focus-visible:ring-2 focus-visible:ring-ice-accent',
+              input.trim() && !isProcessing
+                ? 'bg-ice-accent text-white shadow-lg shadow-ice-accent/25 hover:scale-105 active:scale-95'
+                : 'text-ice-text-3/20',
             )}
           >
-            <Send aria-hidden="true" className="w-3.5 h-3.5" />
+            {isProcessing ? (
+              <Loader2 aria-hidden="true" className="w-4 h-4 animate-spin" />
+            ) : (
+              <Send aria-hidden="true" className="w-4 h-4" />
+            )}
           </button>
         </div>
+        <p className="text-center text-ice-2xs text-ice-text-3/30 mt-1.5">
+          Enter to send · Shift+Enter for new line
+        </p>
       </div>
     </div>
   );

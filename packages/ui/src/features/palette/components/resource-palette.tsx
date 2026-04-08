@@ -43,7 +43,13 @@ import { useLocation } from 'react-router-dom';
 import { getBrandIcon } from '../../../assets/icons/brand-registry';
 import { GROUP_COLOR_PRESETS } from '../../../config/color-palette';
 import { ENABLED_PROVIDER_IDS, ENABLED_PROVIDERS as ENABLED_CLOUD_PROVIDERS } from '../../../config/providers';
-import { useTranslation, t as translate } from '../../../i18n';
+import { useTranslation, t as translate, t } from '../../../i18n';
+
+/** Convert "Compute.Container" → "computeContainer" for block translation keys */
+function blockKey(type: string): string {
+  const [cat, name] = type.split('.');
+  return cat.charAt(0).toLowerCase() + cat.slice(1) + name;
+}
 import axiosInstance from '../../../shared/api/axios-instance';
 import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../../../shared/components/ui/resizable';
@@ -66,104 +72,20 @@ interface CategoryDef {
 }
 
 const CATEGORY_DEFS: CategoryDef[] = [
-  {
-    id: 'Compute',
-    label: 'Compute',
-    icon: Server,
-    color: '#22c55e',
-    tooltip: 'Application servers, background workers, serverless functions, and PaaS platforms that run your code.',
-  },
-  {
-    id: 'Scheduler',
-    label: 'Scheduler',
-    icon: Clock,
-    color: '#eab308',
-    tooltip: 'Time-based triggers — cron jobs, periodic tasks, and scheduled workflows.',
-  },
-  {
-    id: 'Frontend',
-    label: 'Frontend',
-    icon: Globe,
-    color: '#3b82f6',
-    tooltip: 'Web frontends — static sites and server-rendered apps served to browsers.',
-  },
-  {
-    id: 'Network',
-    label: 'Network',
-    icon: GitBranch,
-    color: '#06b6d4',
-    tooltip: 'Traffic entry points and API gateways that route requests to your services.',
-  },
-  {
-    id: 'Database',
-    label: 'Database',
-    icon: Database,
-    color: '#f59e0b',
-    tooltip: 'Managed databases — relational, document, key-value, and wide-column stores across all providers.',
-  },
-  {
-    id: 'Cache',
-    label: 'Cache',
-    icon: Zap,
-    color: '#ef4444',
-    tooltip: 'In-memory data stores for fast reads, sessions, and real-time leaderboards.',
-  },
-  {
-    id: 'Messaging',
-    label: 'Messaging',
-    icon: List,
-    color: '#8b5cf6',
-    tooltip: 'Queues, pub/sub topics, and event streams for async communication between services.',
-  },
-  {
-    id: 'Storage',
-    label: 'Storage',
-    icon: HardDrive,
-    color: '#64748b',
-    tooltip: 'Object storage for files, images, uploads, backups, and static assets. S3, GCS, Blob, OSS, OCI, Spaces.',
-  },
-  {
-    id: 'Security',
-    label: 'Security',
-    icon: Key,
-    color: '#ec4899',
-    tooltip: 'Authentication, authorization, and secrets management for your infrastructure.',
-  },
-  {
-    id: 'AI',
-    label: 'AI',
-    icon: Brain,
-    color: '#a855f7',
-    tooltip: 'AI/ML infrastructure — LLM gateways, vector databases, and model serving.',
-  },
-  {
-    id: 'Analytics',
-    label: 'Analytics',
-    icon: BarChart3,
-    color: '#14b8a6',
-    tooltip: 'Data warehouses and search engines for analytics, reporting, and full-text search.',
-  },
-  {
-    id: 'Monitoring',
-    label: 'Monitoring',
-    icon: FileText,
-    color: '#f97316',
-    tooltip: 'Logging, alerting, and performance monitoring across all your services.',
-  },
-  {
-    id: 'Source',
-    label: 'Source',
-    icon: GitBranch,
-    color: '#6366f1',
-    tooltip: 'Source code repositories and CI/CD pipelines. Connect to services to deploy from.',
-  },
-  {
-    id: 'Config',
-    label: 'Config',
-    icon: Cog,
-    color: '#78716c',
-    tooltip: 'Environment variables and configuration. Connect to services that consume them.',
-  },
+  { id: 'Compute', label: t('blocks.categories.compute.label'), icon: Server, color: '#22c55e', tooltip: t('blocks.categories.compute.tooltip') },
+  { id: 'Scheduler', label: t('blocks.categories.scheduler.label'), icon: Clock, color: '#eab308', tooltip: t('blocks.categories.scheduler.tooltip') },
+  { id: 'Frontend', label: t('blocks.categories.frontend.label'), icon: Globe, color: '#3b82f6', tooltip: t('blocks.categories.frontend.tooltip') },
+  { id: 'Network', label: t('blocks.categories.network.label'), icon: GitBranch, color: '#06b6d4', tooltip: t('blocks.categories.network.tooltip') },
+  { id: 'Database', label: t('blocks.categories.database.label'), icon: Database, color: '#f59e0b', tooltip: t('blocks.categories.database.tooltip') },
+  { id: 'Cache', label: t('blocks.categories.cache.label'), icon: Zap, color: '#ef4444', tooltip: t('blocks.categories.cache.tooltip') },
+  { id: 'Messaging', label: t('blocks.categories.messaging.label'), icon: List, color: '#8b5cf6', tooltip: t('blocks.categories.messaging.tooltip') },
+  { id: 'Storage', label: t('blocks.categories.storage.label'), icon: HardDrive, color: '#64748b', tooltip: t('blocks.categories.storage.tooltip') },
+  { id: 'Security', label: t('blocks.categories.security.label'), icon: Key, color: '#ec4899', tooltip: t('blocks.categories.security.tooltip') },
+  { id: 'AI', label: t('blocks.categories.ai.label'), icon: Brain, color: '#a855f7', tooltip: t('blocks.categories.ai.tooltip') },
+  { id: 'Analytics', label: t('blocks.categories.analytics.label'), icon: BarChart3, color: '#14b8a6', tooltip: t('blocks.categories.analytics.tooltip') },
+  { id: 'Monitoring', label: t('blocks.categories.monitoring.label'), icon: FileText, color: '#f97316', tooltip: t('blocks.categories.monitoring.tooltip') },
+  { id: 'Source', label: t('blocks.categories.source.label'), icon: GitBranch, color: '#6366f1', tooltip: t('blocks.categories.source.tooltip') },
+  { id: 'Config', label: t('blocks.categories.config.label'), icon: Cog, color: '#78716c', tooltip: t('blocks.categories.config.tooltip') },
 ];
 
 const CATEGORY_ORDER = CATEGORY_DEFS.map((c) => c.id);
@@ -190,520 +112,103 @@ interface ComponentDef {
   runtimes?: RuntimeOption[];
 }
 
+/** Helper: builds a ComponentDef with translated name/description/tooltip from the "blocks.*" i18n keys. */
+function def(
+  type: string,
+  icon: React.ElementType,
+  providers: ComponentDef['providers'],
+  category: string,
+  runtimes?: RuntimeOption[],
+): ComponentDef {
+  const k = blockKey(type);
+  return {
+    type,
+    name: t(`blocks.${k}.name`),
+    description: t(`blocks.${k}.description`),
+    tooltip: t(`blocks.${k}.tooltip`),
+    icon,
+    providers,
+    category,
+    ...(runtimes ? { runtimes } : {}),
+  };
+}
+
 const COMPONENTS: ComponentDef[] = [
   // ── Compute ──
-  {
-    type: 'Compute.Container',
-    name: 'Scalable Backend',
-    description: 'Containerized service. Auto-scales.',
-    tooltip:
-      'Auto-scaling containerized service supporting any runtime — Node.js, Python, Go, Java, .NET, Rust. Runs behind a load balancer with health checks, rolling deploys, and configurable min/max instances.',
-    icon: Server,
-    providers: ['aws', 'gcp', 'azure', 'kubernetes'],
-    category: 'Compute',
-    runtimes: [
-      { label: 'Node.js', value: 'Node.js 20' },
-      { label: 'Python', value: 'Python 3.12' },
-      { label: 'Go', value: 'Go 1.22' },
-      { label: 'Java', value: 'Java 21' },
-      { label: 'Rust', value: 'Rust 1.77' },
-      { label: '.NET', value: '.NET 8' },
-    ],
-  },
-  {
-    type: 'Compute.Worker',
-    name: 'Worker',
-    description: 'Background jobs: image processing, emails.',
-    tooltip:
-      "Long-running background process that picks up jobs from a queue. Use for image/video processing, email sending, PDF generation, data imports, or any work that shouldn't block an API response.",
-    icon: Cog,
-    providers: ['aws', 'gcp', 'kubernetes'],
-    category: 'Compute',
-  },
-  {
-    type: 'Compute.ServerlessFunction',
-    name: 'Serverless Function',
-    description: 'Event-driven. Scales to zero.',
-    tooltip:
-      'Serverless function (Lambda, Cloud Functions, Azure Functions) that runs your code in response to events. No servers to manage — scales automatically from zero to thousands of concurrent executions. Pay only for compute time used.',
-    icon: Zap,
-    providers: ['aws', 'gcp', 'azure'],
-    category: 'Compute',
-    runtimes: [
-      { label: 'Node.js', value: 'Node.js 20' },
-      { label: 'Python', value: 'Python 3.12' },
-      { label: 'Go', value: 'Go 1.x' },
-      { label: 'Java', value: 'Java 21' },
-      { label: '.NET', value: '.NET 8' },
-    ],
-  },
-  {
-    type: 'Compute.FunctionCompute',
-    name: 'Function Compute',
-    description: 'Alibaba Cloud serverless functions. Event-driven.',
-    tooltip:
-      'Alibaba Cloud Function Compute — serverless execution environment for event-driven code. Supports Node.js, Python, Java, and Go. Auto-scales from zero with pay-per-execution pricing.',
-    icon: Zap,
-    providers: ['alibaba'],
-    category: 'Compute',
-  },
-  {
-    type: 'Compute.OCIFunctions',
-    name: 'OCI Functions',
-    description: 'Oracle Cloud serverless. Fn-based.',
-    tooltip:
-      'Oracle Cloud Functions — serverless platform built on the open-source Fn Project. Supports multiple languages, runs in Docker containers, and integrates with OCI Events and API Gateway.',
-    icon: Zap,
-    providers: ['oci'],
-    category: 'Compute',
-  },
-  {
-    type: 'Compute.DOAppPlatform',
-    name: 'App Platform',
-    description: 'DigitalOcean PaaS. Git push to deploy.',
-    tooltip:
-      'DigitalOcean App Platform — fully managed PaaS. Connect your GitHub repo and deploy with git push. Supports static sites, web services, workers, and background jobs with automatic HTTPS.',
-    icon: Server,
-    providers: ['digitalocean'],
-    category: 'Compute',
-  },
+  def('Compute.Container', Server, ['aws', 'gcp', 'azure', 'kubernetes'], 'Compute', [
+    { label: 'Node.js', value: 'Node.js 20' },
+    { label: 'Python', value: 'Python 3.12' },
+    { label: 'Go', value: 'Go 1.22' },
+    { label: 'Java', value: 'Java 21' },
+    { label: 'Rust', value: 'Rust 1.77' },
+    { label: '.NET', value: '.NET 8' },
+  ]),
+  def('Compute.Worker', Cog, ['aws', 'gcp', 'kubernetes'], 'Compute'),
+  def('Compute.ServerlessFunction', Zap, ['aws', 'gcp', 'azure'], 'Compute', [
+    { label: 'Node.js', value: 'Node.js 20' },
+    { label: 'Python', value: 'Python 3.12' },
+    { label: 'Go', value: 'Go 1.x' },
+    { label: 'Java', value: 'Java 21' },
+    { label: '.NET', value: '.NET 8' },
+  ]),
+  def('Compute.FunctionCompute', Zap, ['alibaba'], 'Compute'),
+  def('Compute.OCIFunctions', Zap, ['oci'], 'Compute'),
+  def('Compute.DOAppPlatform', Server, ['digitalocean'], 'Compute'),
   // ── Scheduler ──
-  {
-    type: 'Compute.CronJob',
-    name: 'Cron Job',
-    description: 'Runs on a schedule. Reports, cleanup, syncs.',
-    tooltip:
-      'Runs on a cron schedule. Use for nightly reports, database cleanup, cache warming, billing cycles, or periodic data syncs. Runs once and exits — not a long-lived process.',
-    icon: Clock,
-    providers: ['aws', 'gcp', 'azure'],
-    category: 'Scheduler',
-  },
-
+  def('Compute.CronJob', Clock, ['aws', 'gcp', 'azure'], 'Scheduler'),
   // ── Frontend ──
-  {
-    type: 'Compute.StaticSite',
-    name: 'Static Site',
-    description: 'React/Vue app. CDN included.',
-    tooltip:
-      'Pre-built HTML/CSS/JS served from a CDN. Ideal for React, Vue, or Angular SPAs. Blazing fast globally — files are cached at edge locations. No server needed.',
-    icon: Globe,
-    providers: ['aws', 'gcp', 'azure'],
-    category: 'Frontend',
-  },
-  {
-    type: 'Compute.SSRSite',
-    name: 'SSR Site',
-    description: 'Server-rendered (Next.js, Nuxt). CDN included.',
-    tooltip:
-      'Server-side rendered app (Next.js, Nuxt, Remix). Pages render on the server for fast first paint and SEO. Supports API routes, middleware, and dynamic content. CDN caches static assets.',
-    icon: Globe,
-    providers: ['aws', 'gcp', 'azure', 'kubernetes'],
-    category: 'Frontend',
-  },
-
+  def('Compute.StaticSite', Globe, ['aws', 'gcp', 'azure'], 'Frontend'),
+  def('Compute.SSRSite', Globe, ['aws', 'gcp', 'azure', 'kubernetes'], 'Frontend'),
   // ── Network ──
-  {
-    type: 'Network.VPC',
-    name: 'VPC',
-    description: 'Virtual Private Cloud. Isolated network.',
-    tooltip:
-      'Virtual Private Cloud — an isolated private network that contains your subnets and resources. Provides network-level isolation, custom IP ranges, route tables, and security boundaries. All production workloads should run inside a VPC.',
-    icon: Network,
-    providers: ['aws', 'gcp', 'azure'],
-    category: 'Network',
-  },
-  {
-    type: 'Network.Subnet',
-    name: 'Subnet',
-    description: 'Network subdivision inside a VPC.',
-    tooltip:
-      'A subdivision of a VPC that isolates resources into public or private segments. Public subnets have internet access; private subnets are shielded behind NAT. Use subnets to separate frontend, backend, and data tiers.',
-    icon: Layers,
-    providers: ['aws', 'gcp', 'azure'],
-    category: 'Network',
-  },
-  {
-    type: 'Network.Internet',
-    name: 'Public Traffic',
-    description: 'Internet entry point. People reaching your app.',
-    tooltip:
-      'Represents users and external traffic coming from the public internet. Place this as the starting point of your architecture — everything flows from here into your services.',
-    icon: Users,
-    providers: ['aws', 'gcp', 'azure'],
-    category: 'Network',
-  },
-  {
-    type: 'Network.Gateway',
-    name: 'Gateway',
-    description: 'Routes traffic, auth + rate limiting.',
-    tooltip:
-      'API Gateway that sits between the internet and your backend services. Handles request routing, authentication, rate limiting, CORS, and request/response transformation. Includes WAF and TLS termination.',
-    icon: GitBranch,
-    providers: ['aws', 'gcp', 'azure'],
-    category: 'Network',
-  },
-
+  def('Network.VPC', Network, ['aws', 'gcp', 'azure'], 'Network'),
+  def('Network.Subnet', Layers, ['aws', 'gcp', 'azure'], 'Network'),
+  def('Network.Internet', Users, ['aws', 'gcp', 'azure'], 'Network'),
+  def('Network.Gateway', GitBranch, ['aws', 'gcp', 'azure'], 'Network'),
   // ── Database ──
-  {
-    type: 'Database.PostgreSQL',
-    name: 'PostgreSQL',
-    description: 'Relational. ACID-compliant.',
-    tooltip:
-      'Managed PostgreSQL database with automatic backups, replication, and failover. Best for structured data with complex queries, joins, and transactions. Supports JSON, full-text search, and extensions like PostGIS.',
-    icon: Database,
-    providers: ['aws', 'gcp', 'azure', 'digitalocean'],
-    category: 'Database',
-  },
-  {
-    type: 'Database.MySQL',
-    name: 'MySQL',
-    description: 'Relational. Web-scale classic.',
-    tooltip:
-      'Managed MySQL database — the most widely deployed open-source relational database. Optimized for read-heavy workloads, web applications, and e-commerce. Simple, reliable, and well-understood.',
-    icon: Database,
-    providers: ['aws', 'gcp', 'azure', 'digitalocean'],
-    category: 'Database',
-  },
-  {
-    type: 'Database.MongoDB',
-    name: 'MongoDB',
-    description: 'Document store. Schema-flexible.',
-    tooltip:
-      'Managed MongoDB document database. Stores data as flexible JSON-like documents — no fixed schema required. Great for content management, catalogs, user profiles, and rapidly evolving data models.',
-    icon: Database,
-    providers: ['aws', 'gcp', 'azure', 'digitalocean'],
-    category: 'Database',
-  },
-  {
-    type: 'Database.DynamoDB',
-    name: 'DynamoDB',
-    description: 'AWS NoSQL key-value. Single-digit ms.',
-    tooltip:
-      'AWS DynamoDB — fully managed NoSQL key-value and document database. Single-digit millisecond performance at any scale. Supports on-demand and provisioned capacity, global tables, and DynamoDB Streams for change data capture.',
-    icon: Database,
-    providers: ['aws'],
-    category: 'Database',
-  },
-  {
-    type: 'Database.Firestore',
-    name: 'Firestore',
-    description: 'Google Cloud document DB. Real-time sync.',
-    tooltip:
-      'Google Cloud Firestore — serverless document database with real-time sync and offline support. Data is organized into collections and documents. Ideal for mobile and web apps that need live data updates across clients.',
-    icon: Database,
-    providers: ['gcp'],
-    category: 'Database',
-  },
-  {
-    type: 'Database.CosmosDB',
-    name: 'Cosmos DB',
-    description: 'Azure multi-model DB. Global distribution.',
-    tooltip:
-      'Azure Cosmos DB — globally distributed multi-model database. Supports NoSQL, MongoDB, Cassandra, Gremlin, and Table APIs. Guaranteed single-digit millisecond reads and writes with five consistency levels and turnkey global replication.',
-    icon: Database,
-    providers: ['azure'],
-    category: 'Database',
-  },
-  {
-    type: 'Database.Tablestore',
-    name: 'Tablestore',
-    description: 'Alibaba Cloud NoSQL wide-column. Serverless.',
-    tooltip:
-      'Alibaba Cloud Tablestore — serverless NoSQL wide-column store optimized for time-series, IoT, and metadata. Auto-scales with no capacity planning needed.',
-    icon: Database,
-    providers: ['alibaba'],
-    category: 'Database',
-  },
-  {
-    type: 'Database.AutonomousDB',
-    name: 'Autonomous DB',
-    description: 'Oracle Cloud self-managing database.',
-    tooltip:
-      'Oracle Cloud Autonomous Database — self-driving, self-securing, self-repairing. Automated tuning, patching, and scaling. Supports OLTP, data warehousing, JSON, and APEX workloads.',
-    icon: Database,
-    providers: ['oci'],
-    category: 'Database',
-  },
-  {
-    type: 'Database.DOManagedDB',
-    name: 'Managed Database',
-    description: 'DigitalOcean managed DB. Postgres/MySQL/Redis.',
-    tooltip:
-      'DigitalOcean Managed Database — simple, reliable managed databases. Supports PostgreSQL, MySQL, and Redis with automatic failover, backups, and end-to-end encryption.',
-    icon: Database,
-    providers: ['digitalocean'],
-    category: 'Database',
-  },
-
+  def('Database.PostgreSQL', Database, ['aws', 'gcp', 'azure', 'digitalocean'], 'Database'),
+  def('Database.MySQL', Database, ['aws', 'gcp', 'azure', 'digitalocean'], 'Database'),
+  def('Database.MongoDB', Database, ['aws', 'gcp', 'azure', 'digitalocean'], 'Database'),
+  def('Database.DynamoDB', Database, ['aws'], 'Database'),
+  def('Database.Firestore', Database, ['gcp'], 'Database'),
+  def('Database.CosmosDB', Database, ['azure'], 'Database'),
+  def('Database.Tablestore', Database, ['alibaba'], 'Database'),
+  def('Database.AutonomousDB', Database, ['oci'], 'Database'),
+  def('Database.DOManagedDB', Database, ['digitalocean'], 'Database'),
   // ── Cache ──
-  {
-    type: 'Database.Redis',
-    name: 'Redis',
-    description: 'In-memory store. Sub-millisecond reads.',
-    tooltip:
-      'Managed Redis in-memory data store. Use for caching API responses, session storage, rate limiting counters, real-time leaderboards, and pub/sub messaging. Sub-millisecond latency.',
-    icon: Zap,
-    providers: ['aws', 'gcp', 'azure', 'digitalocean'],
-    category: 'Cache',
-  },
-
+  def('Database.Redis', Zap, ['aws', 'gcp', 'azure', 'digitalocean'], 'Cache'),
   // ── Messaging ──
-  {
-    type: 'Messaging.SQS',
-    name: 'SQS',
-    description: 'AWS managed queue. Guaranteed delivery.',
-    tooltip:
-      'AWS Simple Queue Service — fully managed message queue. Messages are stored durably and delivered at-least-once. Supports FIFO ordering and dead-letter queues for failed messages. Scales automatically.',
-    icon: List,
-    providers: ['aws'],
-    category: 'Messaging',
-  },
-  {
-    type: 'Messaging.SNS',
-    name: 'SNS',
-    description: 'AWS pub/sub notifications.',
-    tooltip:
-      'AWS Simple Notification Service — fan-out pub/sub messaging. One message can trigger multiple subscribers (SQS queues, Lambda functions, HTTP endpoints, email, SMS). Great for event-driven architectures.',
-    icon: Bell,
-    providers: ['aws'],
-    category: 'Messaging',
-  },
-  {
-    type: 'Messaging.RabbitMQ',
-    name: 'RabbitMQ',
-    description: 'Open-source message broker.',
-    tooltip:
-      'Open-source message broker supporting AMQP, MQTT, and STOMP protocols. Flexible routing with exchanges, queues, and bindings. Runs anywhere — cloud or self-hosted on Kubernetes.',
-    icon: List,
-    providers: ['aws', 'gcp', 'azure', 'kubernetes'],
-    category: 'Messaging',
-  },
-  {
-    type: 'Messaging.Topic',
-    name: 'Event Stream',
-    description: 'Real-time events (Kafka, Kinesis).',
-    tooltip:
-      'High-throughput event streaming platform (Kafka, Kinesis). Ordered, durable log of events that multiple consumers can read independently. Use for real-time analytics, event sourcing, and data pipelines.',
-    icon: Activity,
-    providers: ['aws', 'gcp', 'azure'],
-    category: 'Messaging',
-  },
-  {
-    type: 'Messaging.CloudPubSub',
-    name: 'Cloud Pub/Sub',
-    description: 'Google Cloud managed pub/sub. Global.',
-    tooltip:
-      'Google Cloud Pub/Sub — fully managed real-time messaging service. Publish messages to topics and deliver to multiple subscribers globally. Supports push and pull delivery, dead-letter topics, and exactly-once processing.',
-    icon: Bell,
-    providers: ['gcp'],
-    category: 'Messaging',
-  },
-  {
-    type: 'Messaging.ServiceBus',
-    name: 'Service Bus',
-    description: 'Azure enterprise messaging. Queues + topics.',
-    tooltip:
-      'Azure Service Bus — enterprise-grade message broker with queues and publish-subscribe topics. Supports sessions, transactions, dead-lettering, and scheduled delivery. Ideal for decoupling applications and building reliable distributed systems.',
-    icon: List,
-    providers: ['azure'],
-    category: 'Messaging',
-  },
-
+  def('Messaging.SQS', List, ['aws'], 'Messaging'),
+  def('Messaging.SNS', Bell, ['aws'], 'Messaging'),
+  def('Messaging.RabbitMQ', List, ['aws', 'gcp', 'azure', 'kubernetes'], 'Messaging'),
+  def('Messaging.Topic', Activity, ['aws', 'gcp', 'azure'], 'Messaging'),
+  def('Messaging.CloudPubSub', Bell, ['gcp'], 'Messaging'),
+  def('Messaging.ServiceBus', List, ['azure'], 'Messaging'),
   // ── Storage ──
-  {
-    type: 'Storage.Bucket',
-    name: 'Storage',
-    description: 'Files, images, uploads. S3/GCS/Blob.',
-    tooltip:
-      'Object storage (S3, GCS, Azure Blob, Alibaba OSS, OCI Object Storage, DO Spaces) for files, images, videos, backups, and static assets. Virtually unlimited capacity with high durability. Supports versioning, lifecycle policies, and pre-signed URLs.',
-    icon: HardDrive,
-    providers: ['aws', 'gcp', 'azure', 'alibaba', 'oci', 'digitalocean'],
-    category: 'Storage',
-  },
-  {
-    type: 'Storage.OSS',
-    name: 'OSS',
-    description: 'Alibaba Cloud object storage. China-optimized CDN.',
-    tooltip:
-      'Alibaba Cloud Object Storage Service — massively scalable object storage with China-optimized CDN integration. Supports Standard, IA, Archive, and Cold Archive storage classes.',
-    icon: HardDrive,
-    providers: ['alibaba'],
-    category: 'Storage',
-  },
-  {
-    type: 'Storage.OCIObjectStorage',
-    name: 'OCI Object Storage',
-    description: 'Oracle Cloud enterprise object storage. Tiered.',
-    tooltip:
-      'Oracle Cloud Object Storage — enterprise-grade with automatic tiering between Standard and Archive tiers. High durability with built-in redundancy across fault domains.',
-    icon: HardDrive,
-    providers: ['oci'],
-    category: 'Storage',
-  },
-  {
-    type: 'Storage.DOSpaces',
-    name: 'Spaces',
-    description: 'DigitalOcean S3-compatible object storage.',
-    tooltip:
-      'DigitalOcean Spaces — simple S3-compatible object storage with built-in CDN. Flat pricing, no egress surprises. Great for static assets, backups, and user uploads.',
-    icon: HardDrive,
-    providers: ['digitalocean'],
-    category: 'Storage',
-  },
-
+  def('Storage.Bucket', HardDrive, ['aws', 'gcp', 'azure', 'alibaba', 'oci', 'digitalocean'], 'Storage'),
+  def('Storage.OSS', HardDrive, ['alibaba'], 'Storage'),
+  def('Storage.OCIObjectStorage', HardDrive, ['oci'], 'Storage'),
+  def('Storage.DOSpaces', HardDrive, ['digitalocean'], 'Storage'),
   // ── Security ──
-  {
-    type: 'Security.Identity',
-    name: 'Auth',
-    description: 'Login, signup, permissions.',
-    tooltip:
-      'Managed identity and authentication service (Cognito, Firebase Auth, Entra ID). Handles user signup, login, MFA, social login (Google, GitHub), JWT tokens, and role-based access control.',
-    icon: User,
-    providers: ['aws', 'gcp', 'azure'],
-    category: 'Security',
-  },
-  {
-    type: 'Security.Secret',
-    name: 'Secrets',
-    description: 'API keys, DB passwords, tokens.',
-    tooltip:
-      'Secrets manager for storing API keys, database passwords, OAuth tokens, and certificates. Encrypted at rest, accessed via API, with automatic rotation and audit logging.',
-    icon: Key,
-    providers: ['aws', 'gcp', 'azure'],
-    category: 'Security',
-  },
-  {
-    type: 'Security.WAF',
-    name: 'WAF',
-    description: 'Web Application Firewall. DDoS & injection protection.',
-    tooltip:
-      'Web Application Firewall that protects APIs and web apps from common exploits — SQL injection, XSS, DDoS attacks, bot traffic, and OWASP Top 10 vulnerabilities. Sits in front of your API gateway or load balancer.',
-    icon: ShieldAlert,
-    providers: ['aws', 'gcp', 'azure'],
-    category: 'Security',
-  },
-  {
-    type: 'Security.Certificate',
-    name: 'SSL Certificate',
-    description: 'HTTPS certificates for your domains.',
-    tooltip:
-      'Managed SSL/TLS certificate for HTTPS. Auto-provisions and auto-renews certificates for your custom domains. Free with most cloud providers (ACM, Managed SSL, Key Vault).',
-    icon: Lock,
-    providers: ['aws', 'gcp', 'azure'],
-    category: 'Security',
-  },
-
+  def('Security.Identity', User, ['aws', 'gcp', 'azure'], 'Security'),
+  def('Security.Secret', Key, ['aws', 'gcp', 'azure'], 'Security'),
+  def('Security.WAF', ShieldAlert, ['aws', 'gcp', 'azure'], 'Security'),
+  def('Security.Certificate', Lock, ['aws', 'gcp', 'azure'], 'Security'),
   // ── AI ──
-  {
-    type: 'AI.LLMGateway',
-    name: 'LLM Gateway',
-    description: 'LLM API proxy. Rate limiting + fallback.',
-    tooltip:
-      'Proxy/router for LLM API calls (OpenAI, Anthropic, Cohere). Centralizes API key management, adds rate limiting, request caching, cost tracking, and automatic fallback between models.',
-    icon: BrainCircuit,
-    providers: ['aws', 'gcp', 'azure', 'kubernetes'],
-    category: 'AI',
-  },
-  {
-    type: 'AI.VectorDB',
-    name: 'Vector DB',
-    description: 'Embeddings + similarity search.',
-    tooltip:
-      'Vector database for storing and querying embeddings. Powers semantic search, RAG (retrieval-augmented generation), recommendation engines, and image similarity. Supports Pinecone, pgvector, Weaviate, and more.',
-    icon: Waypoints,
-    providers: ['aws', 'gcp', 'azure'],
-    category: 'AI',
-  },
-  {
-    type: 'AI.ModelServing',
-    name: 'ML Model',
-    description: 'Deploy + serve ML models.',
-    tooltip:
-      'Managed endpoint for serving ML models in production. Handles model versioning, A/B testing, auto-scaling, and GPU allocation. Supports PyTorch, TensorFlow, and custom containers.',
-    icon: Brain,
-    providers: ['aws', 'gcp', 'azure'],
-    category: 'AI',
-  },
-
+  def('AI.LLMGateway', BrainCircuit, ['aws', 'gcp', 'azure', 'kubernetes'], 'AI'),
+  def('AI.VectorDB', Waypoints, ['aws', 'gcp', 'azure'], 'AI'),
+  def('AI.ModelServing', Brain, ['aws', 'gcp', 'azure'], 'AI'),
   // ── Analytics ──
-  {
-    type: 'Analytics.DataWarehouse',
-    name: 'Data Warehouse',
-    description: 'Columnar analytics. SQL at scale.',
-    tooltip:
-      'Columnar data warehouse for analytical queries over terabytes of data. Run complex SQL aggregations, joins, and window functions in seconds. Supports BigQuery, Redshift, and Synapse.',
-    icon: BarChart3,
-    providers: ['aws', 'gcp', 'azure'],
-    category: 'Analytics',
-  },
-  {
-    type: 'Analytics.Search',
-    name: 'Search',
-    description: 'Full-text search. Elasticsearch/OpenSearch.',
-    tooltip:
-      'Full-text search and analytics engine. Index documents and query them with fuzzy matching, faceted search, autocomplete, and relevance scoring. Powers search bars, log analysis, and real-time dashboards.',
-    icon: Search,
-    providers: ['aws', 'gcp', 'azure', 'kubernetes'],
-    category: 'Analytics',
-  },
-
+  def('Analytics.DataWarehouse', BarChart3, ['aws', 'gcp', 'azure'], 'Analytics'),
+  def('Analytics.Search', Search, ['aws', 'gcp', 'azure', 'kubernetes'], 'Analytics'),
   // ── Monitoring ──
-  {
-    type: 'Monitoring.Log',
-    name: 'Logs',
-    description: 'Errors, performance, alerts.',
-    tooltip:
-      'Centralized logging and monitoring. Collects logs from all services, enables search and filtering, triggers alerts on errors or anomalies, and provides performance dashboards.',
-    icon: FileText,
-    providers: ['aws', 'gcp', 'azure', 'kubernetes'],
-    category: 'Monitoring',
-  },
-  {
-    type: 'Monitoring.Terminal',
-    name: 'Log Terminal',
-    description: 'Live streaming log viewer.',
-    tooltip:
-      'Terminal-style log viewer with color-coded levels, auto-scroll, and click-to-copy. Streams live logs from connected services.',
-    icon: Terminal,
-    providers: ['aws', 'gcp', 'azure', 'kubernetes'],
-    category: 'Monitoring',
-  },
-
+  def('Monitoring.Log', FileText, ['aws', 'gcp', 'azure', 'kubernetes'], 'Monitoring'),
+  def('Monitoring.Terminal', Terminal, ['aws', 'gcp', 'azure', 'kubernetes'], 'Monitoring'),
   // ── Source ──
-  {
-    type: 'Source.Repository',
-    name: 'GitHub Repo',
-    description: 'Source code. Connect to a service to deploy.',
-    tooltip:
-      'GitHub repository as a deployment source. Specify repo, branch, build command, and output directory. Connect to any service to define where its code comes from. Supports auto-deploy on push.',
-    icon: GitBranch,
-    providers: ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean'],
-    category: 'Source',
-  },
-
+  def('Source.Repository', GitBranch, ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean'], 'Source'),
   // ── Config ──
-  {
-    type: 'Config.Environment',
-    name: 'Env Variables',
-    description: 'Key-value environment variables.',
-    tooltip:
-      'Environment variables and configuration values. Define key-value pairs like DATABASE_URL, API keys, and feature flags. Connect to services that consume them.',
-    icon: Cog,
-    providers: ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean'],
-    category: 'Config',
-  },
-
+  def('Config.Environment', Cog, ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean'], 'Config'),
   // ── Networking ── (domain is provider-agnostic)
-  {
-    type: 'Network.Domain',
-    name: 'Domain',
-    description: 'Custom domain and SSL routing.',
-    tooltip:
-      'Custom domain configuration with automatic SSL. Set a hostname like app.example.com and connect to a service to route traffic. Supports auto and manual SSL modes.',
-    icon: Globe,
-    providers: ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean'],
-    category: 'Network',
-  },
+  def('Network.Domain', Globe, ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean'], 'Network'),
 ];
 
 let groupColorIndex = 0;
@@ -958,8 +463,8 @@ const BlocksSection: React.FC<BlocksSectionProps> = ({
           {filteredComponents.length === 0 && !showGroup && (
             <div className="text-center py-16 palette-fade-enter">
               <Search className="w-5 h-5 text-ice-text-3 mx-auto mb-3" />
-              <p className="text-ice-base text-ice-text-3 font-medium">No blocks found</p>
-              <p className="text-ice-xs text-ice-text-3 mt-1">Try a different search or provider</p>
+              <p className="text-ice-base text-ice-text-3 font-medium">{t('palette.noBlocksFound')}</p>
+              <p className="text-ice-xs text-ice-text-3 mt-1">{t('palette.noBlocksHint')}</p>
             </div>
           )}
 
@@ -1319,6 +824,7 @@ const ComponentItem: React.FC<ComponentItemProps> = ({ component, selectedProvid
 // =============================================================================
 
 const DraggableGroupItem: React.FC = () => {
+  const { t } = useTranslation();
   const handleDragStart = (e: React.DragEvent) => {
     const color = nextGroupColor();
     e.dataTransfer.setData('application/ice-group', 'Custom');
@@ -1366,7 +872,7 @@ const DraggableGroupItem: React.FC = () => {
       )}
     >
       <Folder className="w-3.5 h-3.5 text-ice-text-3 group-hover:text-amber-400/70 transition-colors shrink-0" />
-      <span className="text-ice-base text-ice-text-2 group-hover:text-ice-text-1 transition-colors">Group</span>
+      <span className="text-ice-base text-ice-text-2 group-hover:text-ice-text-1 transition-colors">{t('palette.group')}</span>
     </div>
   );
 };

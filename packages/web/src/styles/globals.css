@@ -26,6 +26,7 @@
 
     /* Borders — clearly visible */
     --ice-border: #dcdee3;
+    --ice-border-subtle: rgba(220, 222, 227, 0.25);
     --ice-border-strong: #c4c7cd;
 
     /* Text — balanced contrast */
@@ -81,6 +82,7 @@
     --ice-bg-active: rgba(255, 255, 255, 0.08);
     --ice-bg-toolbar: #111923;        /* Toolbar — between base and surface */
     --ice-border: #1e2a3a;            /* Subtle dividers */
+    --ice-border-subtle: rgba(255, 255, 255, 0.08);  /* Context menu separators */
     --ice-border-strong: #2d3b4e;     /* Strong borders */
     --ice-text-primary: #d1d9e6;      /* Soft white — gentler on dark backgrounds */
     --ice-text-secondary: #94a3b8;    /* Mid blue-gray */

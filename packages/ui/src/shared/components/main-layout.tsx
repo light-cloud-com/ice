@@ -9,6 +9,7 @@
  */
 
 import { FolderOpen, Blocks, PanelRight, MessageSquare, DollarSign, LayoutTemplate, ShieldCheck } from 'lucide-react';
+import { ProjectToolbar } from './project-toolbar';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { InlineTableView } from './inline-table-view';
@@ -43,6 +44,7 @@ interface MainLayoutProps {
   projectName?: string;
   view?: 'canvas' | 'table';
   basePath?: string;
+  subpage?: string;
   children?: React.ReactNode;
 }
 
@@ -139,6 +141,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   projectName,
   view = 'canvas',
   basePath,
+  subpage,
   children,
 }) => {
   const { t } = useTranslation();
@@ -274,8 +277,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
   // ── Content ─────────────────────────────────────────────────────────────
 
+  const activeSubpage = subpage || view || 'canvas';
+
   const canvasContent = (
     <div className="h-full flex flex-col">
+      {basePath && <ProjectToolbar basePath={basePath} activeSubpage={activeSubpage} />}
       <div className="flex-1 min-h-0 relative">
         {children ? children : view === 'table' ? <InlineTableView /> : <SvgCanvas />}
       </div>

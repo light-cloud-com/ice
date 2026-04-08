@@ -103,6 +103,10 @@ const accountSlice = createSlice({
       })
       .addCase(switchOrganisation.fulfilled, (state, action) => {
         state.selectedOrg = action.payload;
+      })
+      .addCase(switchOrganisation.rejected, (state, action) => {
+        // Still update selectedOrg so the UI reflects the switch even if JWT update failed
+        state.selectedOrg = action.meta.arg as Organisation;
       });
   },
 });

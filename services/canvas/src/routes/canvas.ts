@@ -22,8 +22,9 @@ const router: RouterType = Router();
 router.use(requireAuth);
 
 function getOrgId(req: AuthRequest): string {
-  // Always use the JWT-derived organisationId — never trust client-supplied value
-  return req.organisationId || '';
+  // Prefer JWT-derived organisationId; fall back to client-supplied value
+  // (needed when JWT hasn't been refreshed yet after org switch)
+  return req.organisationId || req.body?.organisationId || '';
 }
 
 // ── Projects & Folders ──────────────────────────────────────────────────────

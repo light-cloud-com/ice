@@ -8,11 +8,13 @@
 import { AlertTriangle, CheckCircle, ShieldCheck } from 'lucide-react';
 import React, { useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation } from '../../../i18n';
 import { setSelectedNodes } from '../../../store/slices/selection-slice';
 import type { RootState } from '../../../store';
 import type { CanvasIssue } from '../../../store/slices/validation-slice';
 
 export const ValidationPanel: React.FC = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const { issues, valid, summary } = useSelector((state: RootState) => state.validation);
 
@@ -31,7 +33,7 @@ export const ValidationPanel: React.FC = () => {
       {/* Header */}
       <div className="flex items-center gap-2 px-3 py-2 border-b border-ice-border">
         <ShieldCheck className="w-4 h-4 text-ice-text-3" />
-        <span className="text-sm font-semibold">Validation</span>
+        <span className="text-sm font-semibold">{t('validation.title')}</span>
         <div className="flex-1" />
         {summary.errors > 0 && (
           <span className="text-ice-2xs px-1.5 py-0.5 rounded bg-red-500/15 text-red-400 font-medium">
@@ -50,13 +52,13 @@ export const ValidationPanel: React.FC = () => {
         {valid && issues.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-2 text-ice-text-3/60 px-4">
             <CheckCircle className="w-8 h-8 text-emerald-500/40" />
-            <span className="text-sm">No issues found</span>
+            <span className="text-sm">{t('validation.noIssues')}</span>
           </div>
         ) : (
           <>
-            {errorIssues.length > 0 && <IssueGroup label="Errors" issues={errorIssues} onClick={handleClick} />}
-            {warningIssues.length > 0 && <IssueGroup label="Warnings" issues={warningIssues} onClick={handleClick} />}
-            {infoIssues.length > 0 && <IssueGroup label="Info" issues={infoIssues} onClick={handleClick} />}
+            {errorIssues.length > 0 && <IssueGroup label={t('validation.errors')} issues={errorIssues} onClick={handleClick} />}
+            {warningIssues.length > 0 && <IssueGroup label={t('validation.warnings')} issues={warningIssues} onClick={handleClick} />}
+            {infoIssues.length > 0 && <IssueGroup label={t('validation.info')} issues={infoIssues} onClick={handleClick} />}
           </>
         )}
       </div>

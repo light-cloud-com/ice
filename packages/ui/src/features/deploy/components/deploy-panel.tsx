@@ -125,7 +125,7 @@ function detectDominantProvider(nodes: Array<{ type: string; data?: Record<strin
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export const DeployPanel: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
+export const DeployPanel: React.FC<{ isOpen: boolean; mode?: 'modal' | 'page' }> = ({ isOpen, mode = 'modal' }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const activeCard = useSelector(selectActiveCard);
@@ -401,30 +401,29 @@ export const DeployPanel: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
   // Keep gcpNodes alias for backward compat within this component
   const gcpNodes = providerNodes;
 
-  return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
-      <div
-        id="ice-deploy-panel"
-        className="w-[900px] max-h-[85vh] bg-background rounded-lg shadow-xl overflow-hidden flex flex-col border border-border"
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/30">
-          <div className="flex items-center gap-2.5">
-            <Rocket className="w-5 h-5 text-emerald-500" />
-            <h2 className="text-base font-semibold">{t('deploy.title')}</h2>
-            <StatusBadge status={deploy.status} id="ice-deploy-status" />
-          </div>
-          <button
-            onClick={handleClose}
-            disabled={deploy.status === 'deploying' || deploy.status === 'authenticating'}
-            id="ice-deploy-btn-close"
-            className="p-1 rounded hover:bg-muted transition-colors disabled:opacity-50"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+  const header = (
+    <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/30">
+      <div className="flex items-center gap-2.5">
+        <Rocket className="w-5 h-5 text-emerald-500" />
+        <h2 className="text-base font-semibold">{t('deploy.title')}</h2>
+        <StatusBadge status={deploy.status} id="ice-deploy-status" />
+      </div>
+      {mode === 'modal' && (
+        <button
+          onClick={handleClose}
+          disabled={deploy.status === 'deploying' || deploy.status === 'authenticating'}
+          id="ice-deploy-btn-close"
+          className="p-1 rounded hover:bg-muted transition-colors disabled:opacity-50"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      )}
+    </div>
+  );
 
-        {/* Content */}
+  const content = (
+    <>
+        {header}
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
           {/* Configuration */}
           <ConfigSection
@@ -646,6 +645,24 @@ export const DeployPanel: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
             )}
           </div>
         </div>
+    </>
+  );
+
+  if (mode === 'page') {
+    return (
+      <div id="ice-deploy-panel" className="h-full flex flex-col bg-background">
+        {content}
+      </div>
+    );
+  }
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
+      <div
+        id="ice-deploy-panel"
+        className="w-[900px] max-h-[85vh] bg-background rounded-lg shadow-xl overflow-hidden flex flex-col border border-border"
+      >
+        {content}
       </div>
     </div>,
     document.body,
@@ -774,24 +791,13 @@ const ConfigSection: React.FC<{
         </div>
       )}
 
-      <div className="grid grid-cols-4 gap-3">
-        {/* Provider */}
+      <div className="grid grid-cols-3 gap-3">
+        {/* Provider — read-only, set in project settings */}
         <div className="space-y-1">
           <label className="text-xs font-medium text-muted-foreground">{t('deploy.config.providerLabel')}</label>
-          <IceSelect
-            value={provider}
-            onChange={onProviderChange}
-            disabled={disabled}
-            size="md"
-            fullWidth
-            allowEmpty={false}
-            options={[
-              { value: 'gcp', label: 'GCP' },
-              { value: 'aws', label: 'AWS' },
-              { value: 'azure', label: 'Azure' },
-              { value: 'kubernetes', label: 'Kubernetes' },
-            ]}
-          />
+          <div className="px-2 py-1.5 text-ice-sm text-ice-text-1 bg-ice-hover/50 rounded border border-ice-border/30">
+            {PROVIDER_LABELS[provider] || provider || 'Not set'}
+          </div>
         </div>
 
         {/* Project / Account — dropdown if connected projects available, text input otherwise */}
@@ -831,28 +837,6 @@ const ConfigSection: React.FC<{
             fullWidth
             allowEmpty={false}
             options={regions}
-          />
-        </div>
-
-        {/* Environment */}
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-muted-foreground">{t('deploy.config.environmentLabel')}</label>
-          <IceSelect
-            value={environment}
-            onChange={(v) => onEnvironmentChange(v)}
-            disabled={disabled}
-            size="md"
-            fullWidth
-            allowEmpty={false}
-            options={
-              environments.length > 0
-                ? environments.map((env) => ({ value: env.name.toLowerCase(), label: env.name }))
-                : [
-                    { value: 'development', label: t('deploy.config.envDevelopment') },
-                    { value: 'staging', label: t('deploy.config.envStaging') },
-                    { value: 'production', label: t('deploy.config.envProduction') },
-                  ]
-            }
           />
         </div>
       </div>
@@ -1031,12 +1015,11 @@ const ApiErrorBanner: React.FC<{
         <div className="text-xs text-amber-700 dark:text-amber-300 space-y-1 pl-6">
           <p className="font-medium">{t('deploy.errors.raptFixTitle')}</p>
           <p>
-            1. <strong>Use a Service Account Key</strong> — disconnect the current OAuth connection, then reconnect with
-            a service account JSON key (recommended). If key creation is blocked by org policy, ask an admin to allow{' '}
+            1. <strong>{t('deploy.errors.raptOption1')}</strong> —{' '}
             <code className="px-1 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-ice-2xs">
               iam.disableServiceAccountKeyCreation
             </code>{' '}
-            in{' '}
+            →{' '}
             <a
               href="https://console.cloud.google.com/iam-admin/orgpolicies/iam-disableServiceAccountKeyCreation"
               target="_blank"
@@ -1047,7 +1030,7 @@ const ApiErrorBanner: React.FC<{
             </a>
           </p>
           <p>
-            2. <strong>Disable RAPT</strong> —{' '}
+            2. <strong>{t('deploy.errors.raptOption2')}</strong> —{' '}
             <a
               href="https://admin.google.com/ac/security/reauth"
               target="_blank"
@@ -1055,8 +1038,7 @@ const ApiErrorBanner: React.FC<{
               className="underline"
             >
               Google Workspace Admin &rarr; Security &rarr; Google Cloud session control
-            </a>{' '}
-            &rarr; set Reauthentication policy to "Off"
+            </a>
           </p>
         </div>
       </div>

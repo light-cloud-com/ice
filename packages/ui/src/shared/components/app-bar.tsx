@@ -6,30 +6,13 @@ import awsIcon from 'devicon/icons/amazonwebservices/amazonwebservices-original-
 import azureIcon from 'devicon/icons/azure/azure-original.svg';
 import gcpIcon from 'devicon/icons/googlecloud/googlecloud-original.svg';
 import {
-  Rows3,
-  Columns3,
-  CircleDot,
-  Spline,
-  Minus,
-  GitCommitHorizontal,
-  Maximize2,
-  Rocket,
-  Sun,
-  Moon,
+  Settings,
   Github,
-  Undo2,
-  Redo2,
-  Palette,
-  Lock,
-  LockOpen,
-  Grid3X3,
 } from 'lucide-react';
-import React, { memo, useCallback, useEffect, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { Breadcrumbs } from './breadcrumbs';
-import { useThemePicker } from './dev-accent-picker';
-import { LanguageSwitch } from './language-switch';
-import { IceSelect } from './ui/ice-select';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './ui/tooltip';
 import { Logo } from '../../assets/logo';
 import { DeployPanel } from '../../features/deploy/components/deploy-panel';
@@ -37,30 +20,7 @@ import { PromoteModal } from '../../features/environments/components/promote-mod
 import { GitHubConnectModal } from '../../features/integrations/components/github-connect-modal';
 import { ProviderConnectModal } from '../../features/integrations/components/provider-connect-modal';
 import { useTranslation } from '../../i18n';
-import {
-  autoOrganizeCard,
-  undoCardChange,
-  redoCardChange,
-  selectCanUndo,
-  selectCanRedo,
-  setCardViewport,
-  setActiveCard,
-  importToActiveCard,
-  createCard,
-} from '../../store/slices/cards-slice';
-import { openDeployPanel } from '../../store/slices/deploy-slice';
-import { fetchEnvironments, setActiveEnvironment } from '../../store/slices/environments-slice';
 import { checkGitHubConnection } from '../../store/slices/integrations-slice';
-import {
-  setEdgeStyle,
-  setAutoOrganizeStyle,
-  toggleSnapToGrid,
-  toggleCanvasLocked,
-  type EdgeStyle,
-  type OrganizeStyle,
-} from '../../store/slices/ui-slice';
-import { getApi } from '../api/api-adapter';
-import { useTheme } from '../hooks/use-theme';
 import { cn } from '../utils/cn';
 import type { RootState, AppDispatch } from '../../store';
 
@@ -84,87 +44,16 @@ function useElectronTitleBar() {
 
 export const AppBar: React.FC = memo(() => {
   const { t } = useTranslation();
-  const { isDark, toggle, fontSize, increaseFontSize, decreaseFontSize } = useTheme();
-  const { toggle: toggleThemePicker } = useThemePicker();
   const { isElectron, showTrafficLightPad } = useElectronTitleBar();
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const deployIsOpen = useSelector((s: RootState) => s.deploy.isOpen);
-  const deployStatus = useSelector((s: RootState) => s.deploy.status);
   const githubStatus = useSelector((s: RootState) => s.integrations.integrations.github?.status);
   const gcpStatus = useSelector((s: RootState) => s.integrations.integrations.gcp?.status);
   const [showGitHub, setShowGitHub] = useState(false);
   const [showGcp, setShowGcp] = useState(false);
   const [showAws, setShowAws] = useState(false);
   const [showAzure, setShowAzure] = useState(false);
-
-  // ── Environment selector state ──
-  const projectId = useSelector((s: RootState) => s.projects.activeProjectId);
-  const environments = useSelector((s: RootState) => (projectId ? s.environments.byProject[projectId] || [] : []));
-  const activeEnvId = useSelector((s: RootState) => (projectId ? s.environments.activeEnvId[projectId] : undefined));
-
-  useEffect(() => {
-    if (projectId) dispatch(fetchEnvironments(projectId));
-  }, [projectId, dispatch]);
-
-  const handleSwitchEnv = useCallback(
-    async (envId: string) => {
-      if (!projectId) return;
-      const env = environments.find((e) => e.id === envId);
-      if (!env) return;
-      dispatch(setActiveEnvironment({ projectId, envId }));
-      try {
-        const { store } = await import('../../store');
-        const state = store.getState();
-        const existing = (state.cards as any).cards.find((c: any) => c.id === env.card_id);
-        if (existing && existing.nodes.length > 0) {
-          dispatch(setActiveCard(env.card_id));
-          return;
-        }
-        const api = getApi();
-        const cardData = await api.graph.load(env.card_id);
-        if (!cardData) return;
-        if (!existing) {
-          dispatch(createCard({ name: cardData.name || env.name, id: cardData.id, projectId }));
-        }
-        dispatch(setActiveCard(cardData.id));
-        if (cardData.nodes?.length > 0 || cardData.edges?.length > 0) {
-          dispatch(
-            importToActiveCard({ nodes: cardData.nodes || [], edges: cardData.edges || [], skipAutoOrganize: true }),
-          );
-        }
-      } catch (err) {
-        console.error('Failed to load environment card:', err);
-      }
-    },
-    [projectId, environments, dispatch],
-  );
-
-  const canUndo = useSelector(selectCanUndo);
-  const canRedo = useSelector(selectCanRedo);
-  const edgeStyle = useSelector((state: RootState) => state.ui.edgeStyle) as EdgeStyle;
-  const autoOrganizeStyle = useSelector((state: RootState) => state.ui.autoOrganizeStyle) as OrganizeStyle;
-
-  const cycleEdgeStyle = () => {
-    const order: EdgeStyle[] = ['bezier', 'straight', 'rectangular'];
-    const next = order[(order.indexOf(edgeStyle) + 1) % order.length];
-    dispatch(setEdgeStyle(next));
-  };
-  const edgeIcon = edgeStyle === 'straight' ? Minus : edgeStyle === 'rectangular' ? GitCommitHorizontal : Spline;
-  const snapEnabled = useSelector((state: RootState) => state.ui.snapToGrid);
-  const canvasLocked = useSelector((state: RootState) => state.ui.canvasLocked);
-
-  // Selection-aware organize: if a single container is selected, organize inside it
-  const selectedNodes = useSelector((state: RootState) => state.selection.selectedNodes);
-  const activeCard = useSelector((state: RootState) => {
-    const cards = state.cards as any;
-    return cards.cards?.find((c: any) => c.id === cards.activeCardId);
-  });
-  const selectedContainerId = React.useMemo(() => {
-    if (selectedNodes.length !== 1 || !activeCard) return undefined;
-    const node = activeCard.nodes?.find((n: any) => n.id === selectedNodes[0]);
-    return node?.type === 'container' ? node.id : undefined;
-  }, [selectedNodes, activeCard]);
-  const currentZoom: number = (activeCard?.viewport?.scale as number) ?? 1;
 
   useEffect(() => {
     dispatch(checkGitHubConnection());
@@ -194,125 +83,6 @@ export const AppBar: React.FC = memo(() => {
             className="flex items-center gap-0.5"
             style={isElectron ? ({ WebkitAppRegion: 'no-drag' } as any) : undefined}
           >
-            <BarBtn
-              id="ice-appbar-btn-organize-v"
-              icon={Rows3}
-              onClick={() => {
-                dispatch(
-                  autoOrganizeCard({ direction: 'vertical', containerId: selectedContainerId, zoom: currentZoom }),
-                );
-                dispatch(setAutoOrganizeStyle('vertical'));
-              }}
-              tip={selectedContainerId ? 'Organize group (vertical)' : 'Auto-organize all (vertical)'}
-            />
-            <BarBtn
-              id="ice-appbar-btn-organize-h"
-              icon={Columns3}
-              onClick={() => {
-                dispatch(
-                  autoOrganizeCard({ direction: 'horizontal', containerId: selectedContainerId, zoom: currentZoom }),
-                );
-                dispatch(setAutoOrganizeStyle('horizontal'));
-              }}
-              tip={selectedContainerId ? 'Organize group (horizontal)' : 'Auto-organize all (horizontal)'}
-            />
-            <BarBtn
-              id="ice-appbar-btn-organize-c"
-              icon={CircleDot}
-              onClick={() => {
-                dispatch(autoOrganizeCard({ layout: 'circular', containerId: selectedContainerId, zoom: currentZoom }));
-                dispatch(setAutoOrganizeStyle('circular'));
-              }}
-              tip={selectedContainerId ? 'Organize group (circular)' : 'Auto-organize all (circular)'}
-            />
-            <BarBtn
-              id="ice-appbar-btn-fit-view"
-              icon={Maximize2}
-              onClick={() => {
-                if (!activeCard?.nodes?.length) return;
-                const nodes = activeCard.nodes;
-                let minX = Infinity,
-                  minY = Infinity,
-                  maxX = -Infinity,
-                  maxY = -Infinity;
-                for (const n of nodes) {
-                  minX = Math.min(minX, n.position.x);
-                  minY = Math.min(minY, n.position.y);
-                  maxX = Math.max(maxX, n.position.x + (n.width || 240));
-                  maxY = Math.max(maxY, n.position.y + (n.height || 80));
-                }
-                const pad = 60;
-                const bw = maxX - minX + pad * 2;
-                const bh = maxY - minY + pad * 2;
-                const vw = window.innerWidth - 300;
-                const vh = window.innerHeight - 80;
-                const zoom = Math.min(Math.max(vw / bw, 0.1), Math.min(vh / bh, 2));
-                const panX = -minX + pad + (vw / zoom - bw + pad * 2) / 2;
-                const panY = -minY + pad + (vh / zoom - bh + pad * 2) / 2;
-                dispatch(setCardViewport({ panX, panY, scale: zoom }));
-              }}
-              tip="Fit to view"
-            />
-            <BarSep />
-            <BarBtn
-              id="ice-appbar-btn-edge-style"
-              icon={edgeIcon}
-              onClick={cycleEdgeStyle}
-              tip={`Connection style: ${edgeStyle}`}
-            />
-            <BarBtn
-              id="ice-appbar-btn-snap"
-              icon={Grid3X3}
-              onClick={() => dispatch(toggleSnapToGrid())}
-              tip={snapEnabled ? 'Snap to grid: ON' : 'Snap to grid: OFF'}
-              className={snapEnabled ? 'text-blue-400 bg-blue-500/10' : undefined}
-            />
-            <BarBtn
-              id="ice-appbar-btn-lock"
-              icon={canvasLocked ? Lock : LockOpen}
-              onClick={() => dispatch(toggleCanvasLocked())}
-              tip={canvasLocked ? 'Canvas locked' : 'Lock canvas'}
-              className={canvasLocked ? 'text-amber-400 bg-amber-500/10' : undefined}
-            />
-            <BarBtn
-              id="ice-appbar-btn-undo"
-              icon={Undo2}
-              onClick={() => dispatch(undoCardChange())}
-              tip={t('appBar.undo')}
-              disabled={!canUndo}
-            />
-            <BarBtn
-              id="ice-appbar-btn-redo"
-              icon={Redo2}
-              onClick={() => dispatch(redoCardChange())}
-              tip={t('appBar.redo')}
-              disabled={!canRedo}
-            />
-            {projectId && environments.length > 0 && (
-              <>
-                <BarSep />
-                <IceSelect
-                  value={activeEnvId || ''}
-                  onChange={handleSwitchEnv}
-                  allowEmpty={false}
-                  options={environments.map((env) => ({
-                    value: env.id,
-                    label: `${env.is_protected ? '🔒 ' : ''}${env.name}${env.type === 'pr' && env.pr_number ? ` #${env.pr_number}` : ''}`,
-                  }))}
-                  placeholder="Environment"
-                  width="140px"
-                />
-              </>
-            )}
-            <BarSep />
-            <BarBtn
-              id="ice-appbar-btn-deploy"
-              icon={Rocket}
-              onClick={() => dispatch(openDeployPanel())}
-              tip={t('appBar.deploy')}
-              className={cn('text-emerald-500 hover:text-emerald-400', deployStatus === 'deploying' && 'animate-pulse')}
-            />
-            <BarSep />
             <BarImgBtn
               id="ice-appbar-btn-gcp"
               src={gcpIcon}
@@ -340,49 +110,7 @@ export const AppBar: React.FC = memo(() => {
               className={githubStatus === 'connected' ? 'text-emerald-500' : undefined}
             />
             <BarSep />
-            <BarBtn icon={Palette} onClick={toggleThemePicker} tip="Color themes" />
-            <BarBtn
-              icon={isDark ? Sun : Moon}
-              onClick={toggle}
-              tip={isDark ? t('appBar.lightMode') : t('appBar.darkMode')}
-            />
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={decreaseFontSize}
-                  disabled={fontSize === 'small'}
-                  aria-label={t('appBar.decreaseFont')}
-                  className={cn(
-                    'px-1 py-0.5 rounded text-ice-xs font-bold transition-[color,background-color,opacity]',
-                    fontSize === 'small'
-                      ? 'text-ice-text-3 opacity-40'
-                      : 'text-ice-text-3 hover:text-ice-text-1 hover:bg-ice-hover',
-                  )}
-                >
-                  A-
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">{t('appBar.decreaseFont')}</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={increaseFontSize}
-                  disabled={fontSize === 'large'}
-                  aria-label={t('appBar.increaseFont')}
-                  className={cn(
-                    'px-1 py-0.5 rounded text-ice-base font-bold transition-[color,background-color,opacity]',
-                    fontSize === 'large'
-                      ? 'text-ice-text-3 opacity-40'
-                      : 'text-ice-text-3 hover:text-ice-text-1 hover:bg-ice-hover',
-                  )}
-                >
-                  A+
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">{t('appBar.increaseFont')}</TooltipContent>
-            </Tooltip>
-            <LanguageSwitch />
+            <BarBtn icon={Settings} onClick={() => navigate('/settings')} tip="Settings" />
           </div>
         </header>
       </TooltipProvider>

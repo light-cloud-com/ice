@@ -1,12 +1,13 @@
 import React, { memo } from 'react';
+import { t } from '../../../../../i18n';
+import { GroupLabelRow } from './group-label-row';
 import { CORNER_RADIUS } from '../../../../../config/canvas-constants';
-import { SelectionRing } from '../_shared/selection-ring';
-import { DragOverGlow } from '../_shared/drag-over-glow';
 import { ChildExitingIndicator } from '../_shared/child-exiting-indicator';
+import { DragOverGlow } from '../_shared/drag-over-glow';
+import { EmptyStateText } from '../_shared/empty-state-text';
 import { FoldButton } from '../_shared/fold-button';
 import { ResizeHandle } from '../_shared/resize-handle';
-import { EmptyStateText } from '../_shared/empty-state-text';
-import { GroupLabelRow } from './group-label-row';
+import { SelectionRing } from '../_shared/selection-ring';
 
 interface GroupLod3Props {
   nodeId: string;
@@ -34,9 +35,26 @@ interface GroupLod3Props {
 
 export const GroupLod3: React.FC<GroupLod3Props> = memo(
   ({
-    nodeId, x, y, nodeWidth, nodeHeight, displayLabel, folded, childCount, userColor,
-    groupBorderColor, groupTint, isSelected, isHovered, isDragOver, isChildExiting,
-    connectionDragState, isDragging, onMouseEnter, onMouseLeave, onToggleFold,
+    nodeId,
+    x,
+    y,
+    nodeWidth,
+    nodeHeight,
+    displayLabel,
+    folded,
+    childCount,
+    userColor,
+    groupBorderColor,
+    groupTint,
+    isSelected,
+    isHovered,
+    isDragOver,
+    isChildExiting,
+    connectionDragState,
+    isDragging,
+    onMouseEnter,
+    onMouseLeave,
+    onToggleFold,
   }) => {
     const getBorderColor = () => {
       if (isChildExiting) return '#f97316';
@@ -53,14 +71,30 @@ export const GroupLod3: React.FC<GroupLod3Props> = memo(
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >
-        {isSelected && <SelectionRing x={x} y={y} width={nodeWidth} height={nodeHeight} stroke="var(--ice-text-secondary)" padding={2} />}
-        {isDragOver && <DragOverGlow x={x} y={y} width={nodeWidth} height={nodeHeight} stroke="#22c55e" strokeDasharray="8 4" />}
+        {isSelected && (
+          <SelectionRing
+            x={x}
+            y={y}
+            width={nodeWidth}
+            height={nodeHeight}
+            stroke="var(--ice-text-secondary)"
+            padding={2}
+          />
+        )}
+        {isDragOver && (
+          <DragOverGlow x={x} y={y} width={nodeWidth} height={nodeHeight} stroke="#22c55e" strokeDasharray="8 4" />
+        )}
         {isChildExiting && <ChildExitingIndicator x={x} y={y} width={nodeWidth} height={nodeHeight} />}
 
         {/* Dashed border body */}
         <rect
-          x={x} y={y} width={nodeWidth} height={nodeHeight} rx={CORNER_RADIUS}
-          fill={groupTint} stroke={getBorderColor()}
+          x={x}
+          y={y}
+          width={nodeWidth}
+          height={nodeHeight}
+          rx={CORNER_RADIUS}
+          fill={groupTint}
+          stroke={getBorderColor()}
           strokeWidth={isSelected ? 1.5 : 1}
           strokeDasharray={isDragOver ? undefined : '4 4'}
           strokeOpacity={0.6}
@@ -79,7 +113,7 @@ export const GroupLod3: React.FC<GroupLod3Props> = memo(
         {/* Empty state */}
         {!folded && childCount === 0 && (
           <foreignObject x={x} y={y + 24} width={nodeWidth} height={nodeHeight - 24}>
-            <EmptyStateText text="Drop resources or blocks here" />
+            <EmptyStateText text={t('canvas.nodes.dropHere')} />
           </foreignObject>
         )}
 

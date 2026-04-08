@@ -13,13 +13,13 @@
 
 import React, { useRef, useEffect, useMemo, useCallback, useState, type CSSProperties } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { t } from '../../../i18n';
 // Note: Graph actions no longer used - all node operations go through cardsSlice
 // Viewport is now stored per-pane in uiSlice (for split view support)
 import { CanvasGrid } from './canvas-grid';
 import { CanvasContextMenu } from './context/canvas-context-menu';
 import { ControlsHelpModal } from './controls-help-modal';
 // ConnectionTypePopover removed — connections are fully auto-configured
-import { EmptyCanvasOverlay } from './empty-canvas-overlay';
 import { SvgLogNode } from './nodes/log-node';
 import { getBlueprint, expandBlueprint } from '../../../config/blocks';
 import {
@@ -1634,9 +1634,17 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   // Handle context menu
   const handleContextMenu = useCallback(
     (position: { x: number; y: number }, type: 'canvas' | 'node' | 'edge', targetId?: string) => {
-      dispatch(openContextMenu({ position, type, targetId }));
+      // Compute canvas position from viewport (avoids dependency on screenToCanvas)
+      const rect = svgRef.current?.getBoundingClientRect();
+      const canvasPos = rect
+        ? {
+            x: (position.x - rect.left - viewport.x) / viewport.zoom,
+            y: (position.y - rect.top - viewport.y) / viewport.zoom,
+          }
+        : { x: 0, y: 0 };
+      dispatch(openContextMenu({ position, canvasPosition: canvasPos, type, targetId }));
     },
-    [dispatch],
+    [dispatch, viewport.x, viewport.y, viewport.zoom],
   );
 
   // Canvas interactions
@@ -2222,11 +2230,6 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       onDragOver={handleDragOver}
       onMouseDown={handleCanvasClick}
     >
-      {/* Empty canvas overlay — shown when active card has 0 nodes and not dismissed */}
-      {canvasNodes.length === 0 && !overlayDismissed && (
-        <EmptyCanvasOverlay onDismiss={() => setOverlayDismissed(true)} />
-      )}
-
       <svg
         ref={svgRef}
         width={dimensions.width}
@@ -2722,7 +2725,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                   border: '1px solid #3b82f633',
                 }}
               >
-                {connTooltip.bundleCount} connections
+                {connTooltip.bundleCount} {t('canvas.tooltip.connections')}
               </span>
             )}
           </div>
@@ -2731,7 +2734,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {connTooltip.protocol && (
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--ice-text-secondary)' }}>Protocol</span>
+                <span style={{ color: 'var(--ice-text-secondary)' }}>{t('canvas.tooltip.protocol')}</span>
                 <span
                   style={{
                     fontFamily: "ui-monospace, 'SFMono-Regular', monospace",
@@ -2744,7 +2747,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             )}
             {connTooltip.port && (
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--ice-text-secondary)' }}>Port</span>
+                <span style={{ color: 'var(--ice-text-secondary)' }}>{t('canvas.tooltip.port')}</span>
                 <span
                   style={{
                     fontFamily: "ui-monospace, 'SFMono-Regular', monospace",
@@ -2757,7 +2760,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             )}
             {connTooltip.latency && (
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--ice-text-secondary)' }}>Latency</span>
+                <span style={{ color: 'var(--ice-text-secondary)' }}>{t('canvas.tooltip.latency')}</span>
                 <span
                   style={{
                     fontFamily: "ui-monospace, 'SFMono-Regular', monospace",
@@ -2770,7 +2773,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             )}
             {connTooltip.throughput && (
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--ice-text-secondary)' }}>Throughput</span>
+                <span style={{ color: 'var(--ice-text-secondary)' }}>{t('canvas.tooltip.throughput')}</span>
                 <span
                   style={{
                     fontFamily: "ui-monospace, 'SFMono-Regular', monospace",
@@ -2783,7 +2786,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             )}
             {connTooltip.bandwidth && (
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--ice-text-secondary)' }}>Bandwidth</span>
+                <span style={{ color: 'var(--ice-text-secondary)' }}>{t('canvas.tooltip.bandwidth')}</span>
                 <span
                   style={{
                     fontFamily: "ui-monospace, 'SFMono-Regular', monospace",
@@ -2796,7 +2799,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             )}
             {connTooltip.securityRule && (
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#f59e0b' }}>Security</span>
+                <span style={{ color: '#f59e0b' }}>{t('canvas.tooltip.security')}</span>
                 <span
                   style={{
                     fontFamily: "ui-monospace, 'SFMono-Regular', monospace",

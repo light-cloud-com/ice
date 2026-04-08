@@ -1,8 +1,8 @@
 import React, { memo, useState } from 'react';
+import { isPlaceholder } from './helpers';
 import { useTranslation } from '../../../../../i18n';
 import { RepoSelector } from '../../../../integrations/components/repo-selector';
 import { FONT_MONO } from '../_shared/fonts';
-import { isPlaceholder } from './helpers';
 
 interface MetadataLinesProps {
   metaLines: string[];
@@ -37,14 +37,20 @@ export const MetadataLines: React.FC<MetadataLinesProps> = memo(
                     opacity: isHovered ? 0.9 : 0.6,
                     cursor: 'pointer',
                   }}
-                  onClick={(e) => { e.stopPropagation(); setRepoSelectorOpen(!repoSelectorOpen); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setRepoSelectorOpen(!repoSelectorOpen);
+                  }}
                 >
                   {line}
                 </span>
                 {isHovered && (
                   <span
                     style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--ice-text-secondary)', cursor: 'pointer' }}
-                    onClick={(e) => { e.stopPropagation(); setRepoSelectorOpen(!repoSelectorOpen); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setRepoSelectorOpen(!repoSelectorOpen);
+                    }}
                   >
                     ✎
                   </span>
@@ -74,7 +80,10 @@ export const MetadataLines: React.FC<MetadataLinesProps> = memo(
         {!repository && isSelected && isHovered && isSourceRepo && (
           <span
             style={{ color: '#3b82f6', fontSize: 9, fontFamily: FONT_MONO, opacity: 0.7, cursor: 'pointer' }}
-            onClick={(e) => { e.stopPropagation(); setRepoSelectorOpen(true); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setRepoSelectorOpen(true);
+            }}
           >
             {t('integrations.repoSelector.linkRepo')}
           </span>
@@ -86,7 +95,10 @@ export const MetadataLines: React.FC<MetadataLinesProps> = memo(
             <RepoSelector
               compact
               value={repository}
-              onChange={(repo) => { onUpdateData?.(nodeId, { repository: repo }); setRepoSelectorOpen(false); }}
+              onChange={(repo) => {
+                onUpdateData?.(nodeId, { repository: repo });
+                setRepoSelectorOpen(false);
+              }}
             />
           </div>
         )}

@@ -1,9 +1,9 @@
 import React, { memo } from 'react';
-import { CORNER_RADIUS } from '../../../../../config/canvas-constants';
-import { DragOverGlow } from '../_shared/drag-over-glow';
-import { ChildExitingIndicator } from '../_shared/child-exiting-indicator';
 import { GroupLabelRow } from './group-label-row';
 import { hexToTint } from './helpers';
+import { CORNER_RADIUS } from '../../../../../config/canvas-constants';
+import { ChildExitingIndicator } from '../_shared/child-exiting-indicator';
+import { DragOverGlow } from '../_shared/drag-over-glow';
 
 interface GroupLod2Props {
   nodeId: string;
@@ -21,7 +21,20 @@ interface GroupLod2Props {
 }
 
 export const GroupLod2: React.FC<GroupLod2Props> = memo(
-  ({ nodeId, x, y, nodeWidth, nodeHeight, label, groupColor, groupOpacity, isSelected, isDragOver, isChildExiting, invZoom }) => {
+  ({
+    nodeId,
+    x,
+    y,
+    nodeWidth,
+    nodeHeight,
+    label,
+    groupColor,
+    groupOpacity,
+    isSelected,
+    isDragOver,
+    isChildExiting,
+    invZoom,
+  }) => {
     const displayLabel = (label || '').length > 20 ? (label || '').slice(0, 20) + '\u2026' : label || '';
     const borderColor = isDragOver
       ? '#22c55e'
@@ -33,11 +46,17 @@ export const GroupLod2: React.FC<GroupLod2Props> = memo(
 
     return (
       <g className="svg-group-node lod-2" data-node-id={nodeId} style={{ cursor: 'move' }}>
-        {isDragOver && <DragOverGlow x={x} y={y} width={nodeWidth} height={nodeHeight} stroke="#22c55e" strokeDasharray="8 4" />}
+        {isDragOver && (
+          <DragOverGlow x={x} y={y} width={nodeWidth} height={nodeHeight} stroke="#22c55e" strokeDasharray="8 4" />
+        )}
         {isChildExiting && <ChildExitingIndicator x={x} y={y} width={nodeWidth} height={nodeHeight} />}
 
         <rect
-          x={x} y={y} width={nodeWidth} height={nodeHeight} rx={CORNER_RADIUS}
+          x={x}
+          y={y}
+          width={nodeWidth}
+          height={nodeHeight}
+          rx={CORNER_RADIUS}
           fill={groupColor ? hexToTint(groupColor, groupOpacity ?? 0.09) : 'rgba(15, 23, 42, 0.10)'}
           stroke={borderColor}
           strokeWidth={(isDragOver || isChildExiting ? 2 : isSelected ? 1.5 : 1) * invZoom}

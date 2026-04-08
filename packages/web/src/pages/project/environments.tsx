@@ -4,6 +4,7 @@
  * Lists all environments for a project with status, actions, and management.
  */
 
+import { useTranslation } from '@ui/i18n';
 import { getApi } from '@ui/shared/api/api-adapter';
 import { IceSelect } from '@ui/shared/components/ui/ice-select';
 import { cn } from '@ui/shared/utils/cn';
@@ -27,6 +28,7 @@ interface ProjectEnvironmentsProps {
 }
 
 export const ProjectEnvironments: React.FC<ProjectEnvironmentsProps> = ({ projectId }) => {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const environments = useSelector((s: RootState) => s.environments.byProject[projectId] || []);
   const activeEnvId = useSelector((s: RootState) => s.environments.activeEnvId[projectId]);
@@ -160,7 +162,7 @@ export const ProjectEnvironments: React.FC<ProjectEnvironmentsProps> = ({ projec
           <input
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            placeholder="Environment name"
+            placeholder={t('environments.tabBar.envNamePlaceholder')}
             autoFocus
             className="flex-1 px-2.5 py-1.5 text-ice-sm rounded border border-ice-border bg-ice-base text-ice-text-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
             onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
@@ -171,9 +173,9 @@ export const ProjectEnvironments: React.FC<ProjectEnvironmentsProps> = ({ projec
             size="md"
             allowEmpty={false}
             options={[
-              { value: 'staging', label: 'Staging' },
-              { value: 'development', label: 'Development' },
-              { value: 'pr', label: 'PR Preview' },
+              { value: 'staging', label: t('environments.createModal.typeStaging') },
+              { value: 'development', label: t('environments.createModal.typeDevelopment') },
+              { value: 'pr', label: t('environments.createModal.typePrPreview') },
             ]}
           />
           <button
@@ -181,10 +183,10 @@ export const ProjectEnvironments: React.FC<ProjectEnvironmentsProps> = ({ projec
             disabled={creating || !newName.trim()}
             className="px-3 py-1.5 text-ice-sm bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors disabled:opacity-50"
           >
-            {creating ? 'Creating...' : 'Create'}
+            {creating ? t('environments.createModal.creatingButton') : t('common.buttons.create')}
           </button>
           <button onClick={() => setShowCreate(false)} className="text-ice-sm text-ice-text-3 hover:text-ice-text-2">
-            Cancel
+            {t('common.buttons.cancel')}
           </button>
         </div>
       )}
@@ -245,7 +247,7 @@ export const ProjectEnvironments: React.FC<ProjectEnvironmentsProps> = ({ projec
                   <button
                     onClick={() => dispatch(compareEnvironments({ sourceEnvId: env.id, targetEnvId: prodEnv!.id }))}
                     className="p-1.5 rounded text-amber-500 hover:bg-amber-500/10 transition-colors"
-                    title="Promote to production"
+                    title={t('environments.tabBar.contextPromote')}
                   >
                     <ArrowUpRight className="w-3.5 h-3.5" />
                   </button>
@@ -256,7 +258,7 @@ export const ProjectEnvironments: React.FC<ProjectEnvironmentsProps> = ({ projec
                     dispatch(openDeployPanel());
                   }}
                   className="p-1.5 rounded text-emerald-500 hover:bg-emerald-500/10 transition-colors"
-                  title="Deploy"
+                  title={t('environments.tabBar.contextDeploy')}
                 >
                   <Rocket className="w-3.5 h-3.5" />
                 </button>
@@ -264,7 +266,7 @@ export const ProjectEnvironments: React.FC<ProjectEnvironmentsProps> = ({ projec
                   <button
                     onClick={() => dispatch(deleteEnvironment({ envId: env.id, projectId }))}
                     className="p-1.5 rounded text-ice-text-3 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                    title="Delete"
+                    title={t('common.buttons.delete')}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>

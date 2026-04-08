@@ -29,6 +29,7 @@ export default {
           active: 'var(--ice-bg-active)',
           toolbar: 'var(--ice-bg-toolbar)',
           border: 'var(--ice-border)',
+          'border-subtle': 'var(--ice-border-subtle)',
           'border-strong': 'var(--ice-border-strong)',
           'text-1': 'var(--ice-text-primary)',
           'text-2': 'var(--ice-text-secondary)',

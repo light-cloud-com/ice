@@ -116,7 +116,24 @@
       "title": "您想构建什么？",
       "subtitle": "选择一个起点——您随时可以更改",
       "blankCanvas": "空白画布",
-      "pickTemplate": "选择模板..."
+      "pickTemplate": "选择模板...",
+      "quickStart": "快速开始",
+      "more": "更多..."
+    },
+    "tooltip": {
+      "connections": "个连接",
+      "protocol": "协议",
+      "port": "端口",
+      "latency": "延迟",
+      "throughput": "吞吐量",
+      "bandwidth": "带宽",
+      "security": "安全"
+    },
+    "nodes": {
+      "resource": "资源",
+      "dropHere": "将资源或组件拖放到此处",
+      "active": "活跃",
+      "instances": "实例"
     },
     "controls": {
       "title": "控制",
@@ -177,7 +194,19 @@
       "groupSelection": "将选中项分组",
       "delete": "删除",
       "deleteItems": "删除 {{count}} 个项目",
-      "deleteConnection": "删除连接"
+      "deleteConnection": "删除连接",
+      "addBlock": "添加组件",
+      "addTemplate": "添加模板",
+      "canvasLocked": "画布已锁定",
+      "connectionStyle": "连接样式",
+      "layoutVertical": "垂直 ↕",
+      "layoutHorizontal": "水平 ↔",
+      "layoutCircular": "环形 ◎",
+      "edgeBezier": "贝塞尔",
+      "edgeStraight": "直线",
+      "edgeRectangular": "直角",
+      "unlockCanvas": "解锁画布",
+      "lockCanvas": "锁定画布"
     }
   },
 
@@ -370,6 +399,10 @@
     },
     "activeDeployment": "当前部署",
     "settingUp": "正在设置流水线...",
+    "push": "推送",
+    "envProduction": "生产",
+    "envStaging": "预发布",
+    "envDevelopment": "开发",
     "noRepoHint": "请先在 GitHub Repo 区块上选择一个仓库，然后将其连接到此服务。",
     "noRepoShort": "未关联仓库。请先在 GitHub Repo 区块上选择一个仓库。",
     "missingContext": "缺少卡片或节点上下文。",
@@ -554,7 +587,8 @@
       "deployInfra": "部署基础设施",
       "contextDeploy": "部署",
       "contextPromote": "提升到生产环境",
-      "contextDelete": "删除环境"
+      "contextDelete": "删除环境",
+      "envNamePlaceholder": "环境名称"
     },
     "createModal": {
       "title": "新建环境",
@@ -706,7 +740,9 @@
       "inputPlaceholder": "描述您想构建的内容...",
       "doneMessage": "完成。",
       "noChangesMessage": "没有需要应用的更改。",
-      "collapsedTitle": "AI 助手"
+      "collapsedTitle": "AI 助手",
+      "sendMessage": "发送消息",
+      "inputHint": "回车发送 · Shift+回车换行"
     }
   },
 
@@ -821,7 +857,10 @@
       "makeSecretTitle": "设为密钥",
       "addVariable": "+ 添加变量"
     },
-    "noServiceHint": "将此区块连接到服务以配置部署触发器。"
+    "noServiceHint": "将此区块连接到服务以配置部署触发器。",
+    "addItem": "添加项目",
+    "removeConnection": "移除连接",
+    "noLogsRecorded": "暂无日志记录"
   },
 
   "project": {
@@ -840,6 +879,9 @@
       "selectPrompt": "选择提供商以查看可用区域。",
       "saveSuccess": "设置已保存。",
       "saveError": "保存失败。",
+      "tabGeneral": "常规",
+      "tabEnvironments": "环境",
+      "tabDangerZone": "危险操作",
       "saveButton": "保存设置",
       "collaboratorsHeading": "协作者",
       "collaboratorsDesc": "控制谁可以查看和编辑此项目",
@@ -895,12 +937,14 @@
     "contextMoveTo": "移动到",
     "contextMoveRoot": "根目录",
     "contextDelete": "删除",
-    "subCanvas": "画布",
+    "subCanvas": "架构",
     "subTable": "表格",
     "subSettings": "设置",
-    "subDeployments": "部署",
+    "subDeploy": "部署",
+    "subDeployments": "部署记录",
     "subActivity": "活动",
-    "subEnvironments": "环境"
+    "subEnvironments": "环境",
+    "moreOptions": "更多选项"
   },
 
   "templates": {
@@ -909,6 +953,26 @@
     "searchPlaceholder": "搜索模板...",
     "noResults": "没有匹配的模板",
     "blocks": "个组件",
+    "categories": {
+      "quick-start": { "label": "快速开始", "description": "快速入门的最简启动模板" },
+      "full-stack": { "label": "全栈", "description": "完整的应用技术栈" },
+      "backend": { "label": "后端与 API", "description": "API 服务和微服务" },
+      "serverless": { "label": "无服务器", "description": "函数优先的架构" },
+      "data-pipeline": { "label": "数据管道", "description": "事件驱动和批量处理" },
+      "ai-ml": { "label": "AI 与 ML", "description": "机器学习和 AI 工作负载" },
+      "e-commerce": { "label": "电子商务", "description": "在线商店和市场模式" },
+      "mobile": { "label": "移动后端", "description": "移动应用后端模式" },
+      "compliance": { "label": "合规", "description": "安全和监管合规" },
+      "devops": { "label": "DevOps", "description": "CI/CD、监控和平台工具" },
+      "healthcare": { "label": "医疗健康", "description": "符合 HIPAA 的患者数据和临床系统" },
+      "fintech": { "label": "金融科技", "description": "支付处理、交易和合规" },
+      "media": { "label": "媒体与流媒体", "description": "视频、音频和内容分发平台" },
+      "saas": { "label": "SaaS", "description": "多租户软件即服务平台" },
+      "iot": { "label": "IoT", "description": "设备管理和遥测数据采集" },
+      "gaming": { "label": "游戏", "description": "游戏服务器、排行榜和实时系统" },
+      "logistics": { "label": "物流与供应链", "description": "车队追踪、库存和仓库管理" },
+      "education": { "label": "教育", "description": "学习平台、课程管理和评估" }
+    },
     "gallery": {
       "title": "模板",
       "subtitle": "预构建架构，随时部署",
@@ -937,14 +1001,79 @@
       "difficultyAdvanced": "高级",
       "difficultyExpert": "专家",
       "resourceBreakdown": "资源清单",
-      "environmentPresets": "环境配置"
+      "environmentPresets": "环境配置",
+      "addToCanvas": "添加到画布",
+      "addedToCanvas": "已添加到画布",
+      "addToCanvasHint": "添加到您当前的设计 — 不会替换现有组件",
+      "viewRepository": "查看仓库",
+      "providers": "提供商",
+      "compliance": "合规",
+      "techStack": "技术栈",
+      "clearFilters": "清除筛选",
+      "clearAllFilters": "清除所有筛选",
+      "noMatchSearch": "没有匹配\"{{search}}\"的模板",
+      "noMatchFilters": "没有匹配当前筛选条件的模板",
+      "monthEst": "/月 预估",
+      "templateCount": "{{count}} 个模板",
+      "difficultyStarter": "入门",
+      "difficultyIntermediate": "中级",
+      "difficultyAdvanced": "高级",
+      "difficultyExpert": "专家",
+      "providerFilter": "提供商",
+      "difficultyFilter": "难度"
+    },
+    "items": {
+      "qs-website-db": { "name": "网站 + 数据库", "description": "带托管数据库的服务端渲染应用" },
+      "qs-webapp-api": { "name": "Web App + API", "description": "静态前端搭配后端 API 和数据库" },
+      "qs-api-only": { "name": "纯 API", "description": "仅后端 API 加数据库 — 无前端" },
+      "qs-data-pipeline": { "name": "数据管道", "description": "基于队列的数据处理与存储" },
+      "qs-static-site": { "name": "静态站点", "description": "CDN 加速的静态站点 — 最简部署" },
+      "qs-function": { "name": "Serverless 函数", "description": "API 网关后的单个无服务器函数" },
+      "aiml-workbench": { "name": "AI/ML 工作台", "description": "ML 工作台，含推理 API、训练 Worker、模型及训练数据存储、Redis 特征缓存、流水线队列和监控。" },
+      "backend-rest-api": { "name": "REST API", "description": "生产级后端 API，含网关、服务、PostgreSQL、Redis 缓存和日志。API 优先 — 无前端。" },
+      "backend-microservices": { "name": "微服务", "description": "网关后的三个独立服务，各自拥有数据库、共享消息队列和监控。" },
+      "budget-webapp": { "name": "低成本 Web 应用", "description": "成本优化的全栈应用，含 CDN 前端、无服务器函数（缩容至零）、轻量数据库和存储。按用量付费。" },
+      "data-etl-pipeline": { "name": "ETL Pipeline", "description": "批量 ETL 管道，含暂存区、转换 Worker、数据仓库和 VPC 网络隔离。" },
+      "data-event-streaming": { "name": "事件流处理", "description": "实时事件流处理，含流处理器、分析仪表盘和 VPC 网络隔离。" },
+      "devops-monitoring": { "name": "监控栈", "description": "指标采集与告警管道、可观测性仪表盘和 VPC 网络隔离。" },
+      "devops-cicd": { "name": "CI/CD Platform", "description": "构建管道，含产物存储、仪表盘、部署日志和 VPC 网络隔离。" },
+      "ecommerce-store": { "name": "在线商店", "description": "完整电商栈，含商品目录、购物车、结账、搜索、WAF 防护和 VPC 网络隔离。" },
+      "ecommerce-marketplace": { "name": "多商家市场", "description": "多商家市场平台，含买家和卖家 API、搜索、WAF 和 VPC 隔离。" },
+      "education-lms": { "name": "学习管理系统", "description": "课程交付平台，含学生门户、内容搜索、通知和 VPC 网络隔离。" },
+      "education-exam-platform": { "name": "考试平台", "description": "在线考评平台，含题库、自动评分、监考和 VPC 网络隔离。" },
+      "eu-compliance": { "name": "欧盟合规栈", "description": "GDPR 合规基础设施，含网关、加密数据库与存储、Redis 会话、密钥管理、认证和审计日志。锁定欧盟区域。" },
+      "fintech-payment-gateway": { "name": "支付处理", "description": "PCI-DSS 合规支付网关，含欺诈检测、WAF、VPC 网络隔离、加密数据库和审计追踪。" },
+      "fintech-trading-platform": { "name": "Trading Platform", "description": "实时行情数据推送、订单执行、分析仪表盘，含 WAF、VPC 隔离和审计日志。" },
+      "fullstack-webapp": { "name": "全栈 Web 应用", "description": "生产就绪的全栈应用，含 CDN 前端、WAF、公有子网中的 API 网关、私有子网中的后端服务 + PostgreSQL + Redis。" },
+      "gaming-multiplayer": { "name": "多人游戏服务器", "description": "实时游戏服务器，含匹配系统、排行榜、会话管理、WAF 和 VPC 网络隔离。" },
+      "gaming-mobile-backend": { "name": "手游后端", "description": "手游后端，含玩家档案、排行榜、推送通知和 VPC 网络隔离。" },
+      "healthcare-patient-portal": { "name": "患者门户", "description": "HIPAA 合规的患者记录、预约和文档管理，含网络隔离、WAF 和审计日志。" },
+      "healthcare-telemedicine": { "name": "远程医疗平台", "description": "实时视频问诊，含会话录制、患者管理、WAF 防护和 HIPAA 合规的网络隔离。" },
+      "iot-device-management": { "name": "IoT 设备管理", "description": "大规模设备注册表，含遥测数据采集、仪表盘、WAF 和 VPC 网络隔离。" },
+      "iot-smart-home": { "name": "智能家居平台", "description": "家庭自动化，含设备控制、状态缓存、定时任务和 VPC 网络隔离。" },
+      "logistics-fleet-tracking": { "name": "车队追踪", "description": "基于 GPS 的车队管理，含实时仪表盘、路线优化和 VPC 网络隔离。" },
+      "logistics-warehouse": { "name": "仓储管理", "description": "库存追踪，含条码扫描、订单队列、履约和 VPC 网络隔离。" },
+      "media-streaming": { "name": "视频流媒体平台", "description": "CDN 加速的视频分发，含转码管道、搜索、WAF 防护和 VPC 网络隔离。" },
+      "media-podcast": { "name": "播客平台", "description": "音频托管平台，含 RSS 订阅、节目搜索和 VPC 网络隔离。" },
+      "mobile-app-backend": { "name": "移动应用后端", "description": "移动端 API，含推送通知、媒体存储、身份认证、WAF 和 VPC 网络隔离。" },
+      "mobile-social-app": { "name": "社交应用后端", "description": "社交应用，含动态流、媒体分享、搜索、通知、WAF 和 VPC 网络隔离。" },
+      "rag-chatbot": { "name": "RAG Chatbot", "description": "全栈 RAG 聊天机器人，含聊天界面、检索 API、LLM 网关、向量数据库、文档摄取管道和对话历史。" },
+      "saas-multi-tenant": { "name": "多租户 SaaS", "description": "完整 SaaS 平台，含租户隔离、后台任务、认证、WAF 防护和 VPC 网络隔离。" },
+      "saas-analytics-dashboard": { "name": "分析仪表盘", "description": "指标采集、数据仓库、实时仪表盘，含 WAF 和 VPC 隔离。" },
+      "saas-platform": { "name": "SaaS Platform", "description": "多服务 SaaS，含 SSR 前端、网关、微服务、PostgreSQL、Redis 缓存、Worker 队列和可观测性。" },
+      "secure-api": { "name": "安全 API", "description": "安全优先的 API，含 WAF、VPC 网络隔离、加密数据库、密钥管理、TLS 加密、身份提供商和审计日志。" },
+      "serverless-api": { "name": "Serverless API", "description": "函数优先的 API，含网关、无服务器函数、托管数据库和存储。按用量付费。" },
+      "serverless-event-driven": { "name": "事件驱动函数", "description": "发布/订阅扇出模式：事件触发多个订阅函数进行并行处理，含死信队列。" }
     }
   },
 
   "palette": {
     "title": "组件",
     "searchPlaceholder": "搜索组件...",
-    "providerAll": "全部"
+    "providerAll": "全部",
+    "group": "分组",
+    "noBlocksFound": "未找到组件",
+    "noBlocksHint": "尝试不同的搜索词或提供商"
   },
 
   "projectList": {
@@ -988,7 +1117,19 @@
     "costEstimate": "~${{amount}}/月 预估",
     "selected": "已选 {{count}} 个",
     "selectedEdges": "{{count}} 条边",
-    "errorCount": "{{count}} 个错误"
+    "errorCount": "{{count}} 个错误",
+    "node": "个节点",
+    "nodes": "个节点",
+    "edge": "条边",
+    "edges": "条边",
+    "moEst": "/月 预估",
+    "selectedCount": "已选 {{count}} 个",
+    "error": "个错误",
+    "errors": "个错误",
+    "warning": "个警告",
+    "warnings": "个警告",
+    "ram": "内存",
+    "cpu": "CPU"
   },
 
   "appBar": {
@@ -1181,7 +1322,17 @@
     "providerComparison": "供应商对比",
     "costPerRequest": "每请求成本",
     "budget": "预算目标",
-    "suggestions": "优化建议"
+    "suggestions": "优化建议",
+    "monthly": "月度",
+    "quarterly": "季度",
+    "annual": "年度",
+    "minAtBase": "最小（全部基础）",
+    "maxScaledUp": "最大（全部扩展）",
+    "dev": "开发",
+    "veryHigh": "极高",
+    "minInstances": "最小实例数",
+    "maxInstances": "最大实例数",
+    "estEgress": "预估出口流量"
   },
 
   "error": {
@@ -1212,5 +1363,128 @@
     "defaultPlaceholder": "搜索...",
     "defaultEmptyText": "无结果",
     "loading": "加载中..."
+  },
+
+  "validation": {
+    "title": "验证",
+    "noIssues": "未发现问题",
+    "errors": "错误",
+    "warnings": "警告",
+    "info": "信息",
+    "issues": "验证问题"
+  },
+
+  "table": {
+    "name": "名称",
+    "type": "类型",
+    "category": "分类",
+    "provider": "提供商",
+    "behavior": "行为",
+    "noResources": "暂无资源",
+    "noResourcesHint": "从侧边栏拖动组件以添加资源"
+  },
+
+  "appSettings": {
+    "title": "设置",
+    "tabs": {
+      "ai": "AI",
+      "appearance": "外观",
+      "language": "语言"
+    },
+    "ai": {
+      "providerTitle": "AI 提供商",
+      "providerDescription": "配置您的 AI 提供商以获取架构辅助。",
+      "connected": "AI 提供商已连接",
+      "notConfigured": "未配置 AI 提供商",
+      "anthropicKeyLabel": "Anthropic API 密钥",
+      "anthropicKeyHint": "从以下地址获取密钥",
+      "customEndpointLabel": "自定义 AI 端点（可选）",
+      "customEndpointHint": "任何兼容 OpenAI 的端点。留空则直接使用 Anthropic。",
+      "saved": "AI 配置已保存。",
+      "saveFailed": "保存 AI 配置失败。"
+    },
+    "appearance": {
+      "themeTitle": "主题模式",
+      "light": "浅色",
+      "dark": "深色",
+      "system": "跟随系统",
+      "colorTitle": "配色主题",
+      "colorDescription": "选择界面的配色方案。",
+      "openThemePicker": "打开主题选择器",
+      "fontSizeTitle": "字号",
+      "small": "小",
+      "default": "默认",
+      "large": "大"
+    },
+    "language": {
+      "title": "语言",
+      "description": "选择您的首选语言。"
+    }
+  },
+
+  "blocks": {
+    "categories": {
+      "compute": { "label": "计算", "tooltip": "运行代码的应用服务器、后台工作进程、无服务器函数和 PaaS 平台。" },
+      "scheduler": { "label": "调度", "tooltip": "基于时间的触发器 — 定时任务、周期性任务和计划工作流。" },
+      "frontend": { "label": "前端", "tooltip": "Web 前端 — 静态站点和服务端渲染应用。" },
+      "network": { "label": "网络", "tooltip": "流量入口和 API 网关，将请求路由到您的服务。" },
+      "database": { "label": "数据库", "tooltip": "托管数据库 — 跨所有云提供商的关系型、文档型、键值型和宽列存储。" },
+      "cache": { "label": "缓存", "tooltip": "用于快速读取、会话管理和实时排行榜的内存数据存储。" },
+      "messaging": { "label": "消息", "tooltip": "队列、发布/订阅主题和事件流，用于服务间的异步通信。" },
+      "storage": { "label": "存储", "tooltip": "用于文件、图片、上传、备份和静态资源的对象存储。S3、GCS、Blob、OSS、OCI、Spaces。" },
+      "security": { "label": "安全", "tooltip": "基础设施的身份认证、授权和密钥管理。" },
+      "ai": { "label": "AI", "tooltip": "AI/ML 基础设施 — LLM 网关、向量数据库和模型服务。" },
+      "analytics": { "label": "分析", "tooltip": "用于分析、报表和全文搜索的数据仓库和搜索引擎。" },
+      "monitoring": { "label": "监控", "tooltip": "跨所有服务的日志记录、告警和性能监控。" },
+      "source": { "label": "源码", "tooltip": "源代码仓库和 CI/CD 流水线。连接到服务以进行部署。" },
+      "config": { "label": "配置", "tooltip": "环境变量和配置。连接到使用它们的服务。" }
+    },
+    "computeContainer": { "name": "弹性后端", "description": "容器化服务，自动扩缩容。", "tooltip": "自动扩缩容的容器化服务，支持任意运行时 — Node.js、Python、Go、Java、.NET、Rust。运行在负载均衡器之后，具备健康检查、滚动部署和可配置的最小/最大实例数。" },
+    "computeWorker": { "name": "Worker", "description": "后台任务：图片处理、邮件发送。", "tooltip": "从队列中获取任务的长时间运行后台进程。适用于图片/视频处理、邮件发送、PDF 生成、数据导入，或任何不应阻塞 API 响应的工作。" },
+    "computeServerlessFunction": { "name": "无服务器函数", "description": "事件驱动，缩容到零。", "tooltip": "无服务器函数（Lambda、Cloud Functions、Azure Functions），根据事件运行您的代码。无需管理服务器 — 从零自动扩展到数千个并发执行。按实际计算时间付费。" },
+    "computeFunctionCompute": { "name": "函数计算", "description": "阿里云无服务器函数，事件驱动。", "tooltip": "阿里云函数计算 — 事件驱动代码的无服务器执行环境。支持 Node.js、Python、Java 和 Go。从零自动扩缩容，按执行次数付费。" },
+    "computeOCIFunctions": { "name": "OCI Functions", "description": "Oracle Cloud 无服务器，基于 Fn。", "tooltip": "Oracle Cloud Functions — 基于开源 Fn Project 构建的无服务器平台。支持多种语言，在 Docker 容器中运行，并与 OCI Events 和 API Gateway 集成。" },
+    "computeDOAppPlatform": { "name": "App Platform", "description": "DigitalOcean PaaS，Git 推送即部署。", "tooltip": "DigitalOcean App Platform — 全托管 PaaS。连接您的 GitHub 仓库，通过 git push 部署。支持静态站点、Web 服务、Worker 和后台任务，自动配置 HTTPS。" },
+    "computeCronJob": { "name": "定时任务", "description": "按计划运行。报表、清理、同步。", "tooltip": "按 cron 计划运行。适用于夜间报表、数据库清理、缓存预热、计费周期或定期数据同步。运行一次即退出 — 不是长期运行的进程。" },
+    "computeStaticSite": { "name": "静态站点", "description": "React/Vue 应用，含 CDN。", "tooltip": "从 CDN 分发的预构建 HTML/CSS/JS。适合 React、Vue 或 Angular 单页应用。全球高速 — 文件缓存在边缘节点。无需服务器。" },
+    "computeSSRSite": { "name": "SSR 站点", "description": "服务端渲染（Next.js、Nuxt），含 CDN。", "tooltip": "服务端渲染应用（Next.js、Nuxt、Remix）。页面在服务器上渲染，首屏加载快且利于 SEO。支持 API 路由、中间件和动态内容。CDN 缓存静态资源。" },
+    "networkVPC": { "name": "VPC", "description": "虚拟私有云，隔离网络。", "tooltip": "虚拟私有云 — 包含子网和资源的隔离私有网络。提供网络级隔离、自定义 IP 范围、路由表和安全边界。所有生产工作负载都应在 VPC 中运行。" },
+    "networkSubnet": { "name": "子网", "description": "VPC 内的网络分区。", "tooltip": "VPC 的子分区，将资源隔离为公有或私有网段。公有子网可访问互联网；私有子网在 NAT 之后受到保护。使用子网分离前端、后端和数据层。" },
+    "networkInternet": { "name": "公网流量", "description": "互联网入口，用户访问您的应用。", "tooltip": "代表来自公共互联网的用户和外部流量。将其作为架构的起点 — 所有流量从这里流入您的服务。" },
+    "networkGateway": { "name": "网关", "description": "路由流量，认证 + 限流。", "tooltip": "位于互联网和后端服务之间的 API 网关。处理请求路由、身份认证、限流、CORS 和请求/响应转换。包含 WAF 和 TLS 终止。" },
+    "networkDomain": { "name": "域名", "description": "自定义域名和 SSL 路由。", "tooltip": "自定义域名配置，自动配置 SSL。设置 app.example.com 等主机名并连接到服务以路由流量。支持自动和手动 SSL 模式。" },
+    "databasePostgreSQL": { "name": "PostgreSQL", "description": "关系型数据库，ACID 兼容。", "tooltip": "托管 PostgreSQL 数据库，自动备份、复制和故障转移。最适合具有复杂查询、连接和事务的结构化数据。支持 JSON、全文搜索和 PostGIS 等扩展。" },
+    "databaseMySQL": { "name": "MySQL", "description": "关系型数据库，经典 Web 级方案。", "tooltip": "托管 MySQL 数据库 — 部署最广泛的开源关系型数据库。针对读密集型工作负载、Web 应用和电子商务进行了优化。简单、可靠、广为人知。" },
+    "databaseMongoDB": { "name": "MongoDB", "description": "文档存储，灵活的 Schema。", "tooltip": "托管 MongoDB 文档数据库。以灵活的类 JSON 文档形式存储数据 — 无需固定 Schema。适合内容管理、商品目录、用户画像和快速迭代的数据模型。" },
+    "databaseDynamoDB": { "name": "DynamoDB", "description": "AWS NoSQL 键值存储，个位数毫秒延迟。", "tooltip": "AWS DynamoDB — 全托管 NoSQL 键值和文档数据库。任意规模下均可实现个位数毫秒性能。支持按需和预置容量、全球表和 DynamoDB Streams 变更数据捕获。" },
+    "databaseFirestore": { "name": "Firestore", "description": "Google Cloud 文档数据库，实时同步。", "tooltip": "Google Cloud Firestore — 无服务器文档数据库，支持实时同步和离线访问。数据按集合和文档组织。适合需要跨客户端实时数据更新的移动和 Web 应用。" },
+    "databaseCosmosDB": { "name": "Cosmos DB", "description": "Azure 多模型数据库，全球分布。", "tooltip": "Azure Cosmos DB — 全球分布式多模型数据库。支持 NoSQL、MongoDB、Cassandra、Gremlin 和 Table API。保证个位数毫秒读写，提供五种一致性级别和一键全球复制。" },
+    "databaseTablestore": { "name": "Tablestore", "description": "阿里云 NoSQL 宽列存储，无服务器。", "tooltip": "阿里云表格存储 — 无服务器 NoSQL 宽列存储，针对时序数据、IoT 和元数据进行了优化。自动扩缩容，无需容量规划。" },
+    "databaseAutonomousDB": { "name": "Autonomous DB", "description": "Oracle Cloud 自治数据库。", "tooltip": "Oracle Cloud 自治数据库 — 自动驾驶、自动安全、自动修复。自动调优、补丁和扩缩容。支持 OLTP、数据仓库、JSON 和 APEX 工作负载。" },
+    "databaseDOManagedDB": { "name": "托管数据库", "description": "DigitalOcean 托管数据库。Postgres/MySQL/Redis。", "tooltip": "DigitalOcean 托管数据库 — 简单可靠的托管数据库。支持 PostgreSQL、MySQL 和 Redis，提供自动故障转移、备份和端到端加密。" },
+    "databaseRedis": { "name": "Redis", "description": "内存存储，亚毫秒级读取。", "tooltip": "托管 Redis 内存数据存储。用于缓存 API 响应、会话存储、限流计数器、实时排行榜和发布/订阅消息。亚毫秒延迟。" },
+    "messagingSQS": { "name": "SQS", "description": "AWS 托管队列，保证送达。", "tooltip": "AWS Simple Queue Service — 全托管消息队列。消息持久存储，至少送达一次。支持 FIFO 排序和失败消息的死信队列。自动扩缩容。" },
+    "messagingSNS": { "name": "SNS", "description": "AWS 发布/订阅通知。", "tooltip": "AWS Simple Notification Service — 扇出发布/订阅消息。一条消息可触发多个订阅者（SQS 队列、Lambda 函数、HTTP 端点、邮件、短信）。非常适合事件驱动架构。" },
+    "messagingRabbitMQ": { "name": "RabbitMQ", "description": "开源消息代理。", "tooltip": "支持 AMQP、MQTT 和 STOMP 协议的开源消息代理。通过交换器、队列和绑定实现灵活路由。可在任意环境运行 — 云端或 Kubernetes 自托管。" },
+    "messagingTopic": { "name": "事件流", "description": "实时事件（Kafka、Kinesis）。", "tooltip": "高吞吐量事件流平台（Kafka、Kinesis）。有序、持久的事件日志，多个消费者可独立读取。用于实时分析、事件溯源和数据管道。" },
+    "messagingCloudPubSub": { "name": "Cloud Pub/Sub", "description": "Google Cloud 托管发布/订阅，全球化。", "tooltip": "Google Cloud Pub/Sub — 全托管实时消息服务。将消息发布到主题并全球分发给多个订阅者。支持推送和拉取投递、死信主题和精确一次处理。" },
+    "messagingServiceBus": { "name": "Service Bus", "description": "Azure 企业级消息，队列 + 主题。", "tooltip": "Azure Service Bus — 企业级消息代理，支持队列和发布-订阅主题。支持会话、事务、死信和计划投递。适合解耦应用和构建可靠的分布式系统。" },
+    "storageBucket": { "name": "存储", "description": "文件、图片、上传。S3/GCS/Blob。", "tooltip": "对象存储（S3、GCS、Azure Blob、阿里云 OSS、OCI Object Storage、DO Spaces），用于文件、图片、视频、备份和静态资源。容量几乎无限，高持久性。支持版本控制、生命周期策略和预签名 URL。" },
+    "storageOSS": { "name": "OSS", "description": "阿里云对象存储，中国优化 CDN。", "tooltip": "阿里云对象存储服务 — 大规模可扩展对象存储，集成中国优化 CDN。支持标准、低频访问、归档和冷归档存储类型。" },
+    "storageOCIObjectStorage": { "name": "OCI Object Storage", "description": "Oracle Cloud 企业级对象存储，分层。", "tooltip": "Oracle Cloud Object Storage — 企业级对象存储，在标准层和归档层之间自动分层。跨故障域内置冗余，高持久性。" },
+    "storageDOSpaces": { "name": "Spaces", "description": "DigitalOcean S3 兼容对象存储。", "tooltip": "DigitalOcean Spaces — 简单的 S3 兼容对象存储，内置 CDN。固定定价，无出站流量意外费用。适合静态资源、备份和用户上传。" },
+    "securityIdentity": { "name": "认证", "description": "登录、注册、权限管理。", "tooltip": "托管身份认证服务（Cognito、Firebase Auth、Entra ID）。处理用户注册、登录、多因素认证、社交登录（Google、GitHub）、JWT 令牌和基于角色的访问控制。" },
+    "securitySecret": { "name": "密钥", "description": "API 密钥、数据库密码、令牌。", "tooltip": "用于存储 API 密钥、数据库密码、OAuth 令牌和证书的密钥管理器。静态加密，通过 API 访问，支持自动轮换和审计日志。" },
+    "securityWAF": { "name": "WAF", "description": "Web 应用防火墙，DDoS 和注入防护。", "tooltip": "Web 应用防火墙，保护 API 和 Web 应用免受常见攻击 — SQL 注入、XSS、DDoS 攻击、机器人流量和 OWASP Top 10 漏洞。部署在 API 网关或负载均衡器前面。" },
+    "securityCertificate": { "name": "SSL 证书", "description": "域名的 HTTPS 证书。", "tooltip": "托管 SSL/TLS 证书，用于 HTTPS。自动申请和自动续期自定义域名的证书。大多数云提供商免费提供（ACM、Managed SSL、Key Vault）。" },
+    "aiLLMGateway": { "name": "LLM 网关", "description": "LLM API 代理，限流 + 故障转移。", "tooltip": "LLM API 调用的代理/路由器（OpenAI、Anthropic、Cohere）。集中管理 API 密钥，添加限流、请求缓存、成本追踪和模型间自动故障转移。" },
+    "aiVectorDB": { "name": "向量数据库", "description": "嵌入向量 + 相似性搜索。", "tooltip": "用于存储和查询嵌入向量的向量数据库。支持语义搜索、RAG（检索增强生成）、推荐引擎和图像相似性搜索。支持 Pinecone、pgvector、Weaviate 等。" },
+    "aiModelServing": { "name": "ML 模型", "description": "部署和提供 ML 模型服务。", "tooltip": "用于在生产环境中提供 ML 模型服务的托管端点。处理模型版本管理、A/B 测试、自动扩缩容和 GPU 分配。支持 PyTorch、TensorFlow 和自定义容器。" },
+    "analyticsDataWarehouse": { "name": "数据仓库", "description": "列式分析，大规模 SQL。", "tooltip": "列式数据仓库，用于对 TB 级数据进行分析查询。在数秒内运行复杂的 SQL 聚合、连接和窗口函数。支持 BigQuery、Redshift 和 Synapse。" },
+    "analyticsSearch": { "name": "搜索", "description": "全文搜索。Elasticsearch/OpenSearch。", "tooltip": "全文搜索和分析引擎。索引文档并通过模糊匹配、分面搜索、自动补全和相关性评分进行查询。驱动搜索栏、日志分析和实时仪表板。" },
+    "monitoringLog": { "name": "日志", "description": "错误、性能、告警。", "tooltip": "集中式日志记录和监控。收集所有服务的日志，支持搜索和过滤，在错误或异常时触发告警，并提供性能仪表板。" },
+    "monitoringTerminal": { "name": "日志终端", "description": "实时流式日志查看器。", "tooltip": "终端风格的日志查看器，支持颜色编码级别、自动滚动和点击复制。从连接的服务实时流式传输日志。" },
+    "sourceRepository": { "name": "GitHub 仓库", "description": "源代码。连接到服务以部署。", "tooltip": "GitHub 仓库作为部署源。指定仓库、分支、构建命令和输出目录。连接到任何服务以定义其代码来源。支持推送时自动部署。" },
+    "configEnvironment": { "name": "环境变量", "description": "键值对环境变量。", "tooltip": "环境变量和配置值。定义 DATABASE_URL、API 密钥和功能标志等键值对。连接到使用它们的服务。" }
   }
 }

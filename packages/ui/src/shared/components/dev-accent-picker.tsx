@@ -626,6 +626,7 @@ function applyPalette(p: ThemePalette) {
   s.setProperty('--ice-bg-active', p.active);
   s.setProperty('--ice-bg-toolbar', p.toolbar);
   s.setProperty('--ice-border', p.border);
+  s.setProperty('--ice-border-subtle', p.text3 + '30');
   s.setProperty('--ice-border-strong', p.borderStrong);
   s.setProperty('--ice-text-primary', p.text1);
   s.setProperty('--ice-text-secondary', p.text2);
@@ -647,6 +648,7 @@ const ALL_PROPS = [
   '--ice-bg-active',
   '--ice-bg-toolbar',
   '--ice-border',
+  '--ice-border-subtle',
   '--ice-border-strong',
   '--ice-text-primary',
   '--ice-text-secondary',

@@ -664,7 +664,7 @@ export const AiChatPanel: React.FC = () => {
           />
           <button
             id="ice-ai-btn-send"
-            aria-label="Send message"
+            aria-label={t('ai.chat.sendMessage')}
             onClick={handleSubmit}
             disabled={!input.trim() || isProcessing}
             className={cn(
@@ -682,7 +682,7 @@ export const AiChatPanel: React.FC = () => {
           </button>
         </div>
         <p className="text-center text-ice-2xs text-ice-text-3/30 mt-1.5">
-          Enter to send · Shift+Enter for new line
+          {t('ai.chat.inputHint')}
         </p>
       </div>
     </div>

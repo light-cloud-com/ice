@@ -558,10 +558,8 @@ export const ProjectTree: React.FC = () => {
           {t('projectTree.newFolder')}
         </button>
       </div>
-
       {/* Divider */}
       <div className="h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent mx-3" />
-
       {/* Tree */}
       <div
         className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar py-2"
@@ -619,7 +617,6 @@ export const ProjectTree: React.FC = () => {
           </div>
         )}
       </div>
-
       {/* Context Menu */}
       {contextMenu &&
         (() => {

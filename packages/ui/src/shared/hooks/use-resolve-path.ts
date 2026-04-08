@@ -1,8 +1,8 @@
 /**
  * Resolves a URL path into folder/project IDs.
  *
- * First segment is org slug (skipped).
- * Rest: /folder/nested/project/settings
+ * Community edition: no org prefix required.
+ * Platform edition: first segment is org slug (skipped).
  */
 
 import { useEffect, useState } from 'react';
@@ -21,7 +21,7 @@ interface ResolvedPath {
   orgPrefix: string;
 }
 
-const PROJECT_SUBPAGES = new Set(['settings', 'deployments', 'activity', 'table', 'environments']);
+const PROJECT_SUBPAGES = new Set(['settings', 'deploy', 'deployments', 'activity', 'table']);
 
 export function useResolvePath(allSegments: string[]): ResolvedPath {
   const selectedOrg = useSelector((s: RootState) => s.account?.selectedOrg);
@@ -42,36 +42,32 @@ export function useResolvePath(allSegments: string[]): ResolvedPath {
     const orgSlug = selectedOrg ? toSlug(selectedOrg.name) : '';
     const orgPrefix = orgSlug ? `/${orgSlug}` : '';
 
-    if (!selectedOrg || allSegments.length === 0) {
+    if (allSegments.length === 0) {
       setResult({ loading: false, type: 'root', id: null, name: '', subpage: 'canvas', breadcrumbs: [], orgPrefix });
       return;
     }
 
-    // First segment must be an org slug
+    // Determine path segments: skip org slug if it matches, otherwise treat all as path
     let pathSegments = allSegments;
     const firstSeg = allSegments[0];
-    const matchedOrg = user?.organisations?.find((o) => toSlug(o.name) === firstSeg);
 
-    if (matchedOrg) {
-      pathSegments = allSegments.slice(1);
+    if (selectedOrg) {
+      const matchedOrg = user?.organisations?.find((o) => toSlug(o.name) === firstSeg);
+      if (matchedOrg) {
+        pathSegments = allSegments.slice(1);
+      }
     } else {
-      // First segment doesn't match any org — 404
-      setResult({
-        loading: false,
-        type: 'notFound',
-        id: null,
-        name: '',
-        subpage: 'canvas',
-        breadcrumbs: [],
-        orgPrefix,
-      });
-      return;
+      // Community edition — no org prefix, all segments are path
+      pathSegments = allSegments;
     }
 
     if (pathSegments.length === 0) {
       setResult({ loading: false, type: 'root', id: null, name: '', subpage: 'canvas', breadcrumbs: [], orgPrefix });
       return;
     }
+
+    // Use orgId from selectedOrg or pass nothing (backend will use JWT or fallback)
+    const orgId = selectedOrg?.id;
 
     let cancelled = false;
 
@@ -99,7 +95,7 @@ export function useResolvePath(allSegments: string[]): ResolvedPath {
           }
 
           const res = await axiosInstance.post('/canvas/projects', {
-            organisationId: selectedOrg.id,
+            ...(orgId ? { organisationId: orgId } : {}),
             parentId: currentParentId,
           });
 
@@ -129,7 +125,6 @@ export function useResolvePath(allSegments: string[]): ResolvedPath {
       }
 
       if (!cancelled) {
-        // If we had path segments but resolved nothing, it's a 404
         const isNotFound = pathSegments.length > 0 && resolvedType === 'root' && breadcrumbs.length === 0;
         setResult({
           loading: false,

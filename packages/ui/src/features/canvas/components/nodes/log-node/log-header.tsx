@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
-import { FoldButton } from '../_shared/fold-button';
 import { CopyButton } from './copy-button';
 import { LiveIndicator } from './live-indicator';
+import { FoldButton } from '../_shared/fold-button';
 
 interface LogHeaderProps {
   label: string;

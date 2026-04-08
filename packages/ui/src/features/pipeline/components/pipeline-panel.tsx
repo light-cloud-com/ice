@@ -526,10 +526,10 @@ const TriggerRow: React.FC<{
             {branches.map((b) => (
               <option key={b.name} value={b.name}>
                 {b.name}
-                {b.protected ? ' (protected)' : ''}
+                {b.protected ? ` ${t('pipeline.branchProtected')}` : ''}
               </option>
             ))}
-            <option value="*">* (any branch)</option>
+            <option value="*">{t('pipeline.anyBranch')}</option>
           </>
         ) : (
           <>
@@ -539,7 +539,7 @@ const TriggerRow: React.FC<{
             )}
             <option value="main">main</option>
             <option value="master">master</option>
-            <option value="*">* (any branch)</option>
+            <option value="*">{t('pipeline.anyBranch')}</option>
           </>
         )}
       </select>
@@ -552,9 +552,9 @@ const TriggerRow: React.FC<{
         onChange={(e) => onChangeEnvironment(e.target.value)}
         className="px-1.5 py-0.5 text-xs rounded border border-ice-border bg-ice-base text-ice-text-1"
       >
-        <option value="production">production</option>
-        <option value="staging">staging</option>
-        <option value="development">development</option>
+        <option value="production">{t('pipeline.envProduction')}</option>
+        <option value="staging">{t('pipeline.envStaging')}</option>
+        <option value="development">{t('pipeline.envDevelopment')}</option>
       </select>
 
       {/* Delete */}

@@ -14,6 +14,7 @@
  */
 
 // Account components not needed in community (single user)
+import { DeployPanel } from '@ui/features/deploy/components/deploy-panel';
 import { DebugOverlay } from '@ui/features/debug/components/debug-overlay';
 import { OnboardingPage, OnboardingChecklist } from '@ui/features/onboarding';
 import { ProjectWizard } from '@ui/features/wizard';
@@ -31,10 +32,10 @@ import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import type { RootState, AppDispatch } from '@ui/store';
+import { AppSettings } from '@/pages/app-settings';
 import { FolderView } from '@/pages/folder-view';
 import { ProjectActivity } from '@/pages/project/activity';
 import { ProjectDeployments } from '@/pages/project/deployments';
-import { ProjectEnvironments } from '@/pages/project/environments';
 import { ProjectSettings } from '@/pages/project/settings';
 import { TemplateGalleryPage } from '@/pages/template-gallery';
 
@@ -144,7 +145,7 @@ const DynamicContent: React.FC = () => {
         )}
 
         {resolved.subpage === 'settings' && (
-          <MainLayout projectId={resolved.id!} projectName={resolved.name}>
+          <MainLayout projectId={resolved.id!} projectName={resolved.name} basePath={projectBasePath} subpage="settings">
             <div className="h-full overflow-y-auto bg-ice-base">
               <ProjectSettings projectId={resolved.id!} />
             </div>
@@ -152,7 +153,7 @@ const DynamicContent: React.FC = () => {
         )}
 
         {resolved.subpage === 'deployments' && (
-          <MainLayout projectId={resolved.id!} projectName={resolved.name}>
+          <MainLayout projectId={resolved.id!} projectName={resolved.name} basePath={projectBasePath} subpage="deployments">
             <div className="h-full overflow-y-auto bg-ice-base">
               <ProjectDeployments projectId={resolved.id!} />
             </div>
@@ -160,18 +161,16 @@ const DynamicContent: React.FC = () => {
         )}
 
         {resolved.subpage === 'activity' && (
-          <MainLayout projectId={resolved.id!} projectName={resolved.name}>
+          <MainLayout projectId={resolved.id!} projectName={resolved.name} basePath={projectBasePath} subpage="activity">
             <div className="h-full overflow-y-auto bg-ice-base">
               <ProjectActivity projectId={resolved.id!} />
             </div>
           </MainLayout>
         )}
 
-        {resolved.subpage === 'environments' && (
-          <MainLayout projectId={resolved.id!} projectName={resolved.name}>
-            <div className="h-full overflow-y-auto bg-ice-base">
-              <ProjectEnvironments projectId={resolved.id!} />
-            </div>
+        {resolved.subpage === 'deploy' && (
+          <MainLayout projectId={resolved.id!} projectName={resolved.name} basePath={projectBasePath} subpage="deploy">
+            <DeployPanel isOpen={true} mode="page" />
           </MainLayout>
         )}
 
@@ -209,6 +208,19 @@ const App: React.FC = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/onboarding" element={<OnboardingPage />} />
+            <Route
+              path="/settings"
+              element={
+                <ErrorBoundary name="AppSettings">
+                  <div className="h-full flex flex-col bg-background">
+                    <AppBar />
+                    <div className="flex-1 overflow-y-auto">
+                      <AppSettings />
+                    </div>
+                  </div>
+                </ErrorBoundary>
+              }
+            />
             <Route
               path="/templates"
               element={

@@ -1,12 +1,12 @@
 import React, { memo } from 'react';
 import { CORNER_RADIUS } from '../../../../../config/canvas-constants';
-import { SelectionRing } from '../_shared/selection-ring';
-import { DragOverGlow } from '../_shared/drag-over-glow';
 import { ChildExitingIndicator } from '../_shared/child-exiting-indicator';
+import { CostLabel } from '../_shared/cost-label';
+import { DragOverGlow } from '../_shared/drag-over-glow';
+import { EmptyStateText } from '../_shared/empty-state-text';
 import { FoldButton } from '../_shared/fold-button';
 import { ResizeHandle } from '../_shared/resize-handle';
-import { EmptyStateText } from '../_shared/empty-state-text';
-import { CostLabel } from '../_shared/cost-label';
+import { SelectionRing } from '../_shared/selection-ring';
 import type { BlockNodeProps } from './types';
 
 const FONT = "'JetBrains Mono Variable', monospace";
@@ -15,9 +15,24 @@ const ACCENT_BAR_WIDTH = 4;
 
 export const BlockNode: React.FC<BlockNodeProps> = memo(
   ({
-    node, x, y, nodeWidth, nodeHeight, displayLabel, folded, childCount,
-    accentColor, blockIcon, isSelected, isHovered, isDragOver, isDragging,
-    isChildExiting, onMouseEnter, onMouseLeave, onToggleFold,
+    node,
+    x,
+    y,
+    nodeWidth,
+    nodeHeight,
+    displayLabel,
+    folded,
+    childCount,
+    accentColor,
+    blockIcon,
+    isSelected,
+    isHovered,
+    isDragOver,
+    isDragging,
+    isChildExiting,
+    onMouseEnter,
+    onMouseLeave,
+    onToggleFold,
   }) => {
     const estimatedCost = (node.data?.estimatedCost as string) || '';
 
@@ -36,8 +51,12 @@ export const BlockNode: React.FC<BlockNodeProps> = memo(
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >
-        {isSelected && <SelectionRing x={x} y={y} width={nodeWidth} height={nodeHeight} stroke={accentColor} padding={2} />}
-        {isDragOver && <DragOverGlow x={x} y={y} width={nodeWidth} height={nodeHeight} stroke="#22c55e" strokeDasharray="8 4" />}
+        {isSelected && (
+          <SelectionRing x={x} y={y} width={nodeWidth} height={nodeHeight} stroke={accentColor} padding={2} />
+        )}
+        {isDragOver && (
+          <DragOverGlow x={x} y={y} width={nodeWidth} height={nodeHeight} stroke="#22c55e" strokeDasharray="8 4" />
+        )}
         {isChildExiting && <ChildExitingIndicator x={x} y={y} width={nodeWidth} height={nodeHeight} />}
 
         <foreignObject x={x} y={y} width={nodeWidth} height={nodeHeight}>
@@ -104,7 +123,16 @@ export const BlockNode: React.FC<BlockNodeProps> = memo(
                 {displayLabel}
               </span>
               {childCount > 0 && (
-                <span style={{ color: accentColor, fontSize: 10, fontWeight: 500, fontFamily: FONT_MONO, opacity: 0.7, flexShrink: 0 }}>
+                <span
+                  style={{
+                    color: accentColor,
+                    fontSize: 10,
+                    fontWeight: 500,
+                    fontFamily: FONT_MONO,
+                    opacity: 0.7,
+                    flexShrink: 0,
+                  }}
+                >
                   {childCount}
                 </span>
               )}

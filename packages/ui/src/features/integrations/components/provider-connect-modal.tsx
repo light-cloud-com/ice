@@ -240,65 +240,39 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
                 <details className="group">
                   <summary className="flex items-center gap-2 text-xs font-medium text-ice-accent cursor-pointer hover:underline">
                     <ExternalLink className="w-3 h-3" />
-                    How to create a service account key
+                    {t('providerConnect.gcp.guide.title')}
                   </summary>
                   <div className="mt-2 p-3 rounded-lg bg-ice-surface border border-ice-border text-xs text-ice-text-2 space-y-2">
-                    <p className="font-medium text-ice-text-1">Step 1 — Create a service account</p>
+                    <p className="font-medium text-ice-text-1">{t('providerConnect.gcp.guide.step1Title')}</p>
                     <ol className="list-decimal pl-4 space-y-1">
+                      <li>{t('providerConnect.gcp.guide.step1_1')}</li>
+                      <li>{t('providerConnect.gcp.guide.step1_2')}</li>
                       <li>
-                        Open{' '}
-                        <a
-                          href="https://console.cloud.google.com/iam-admin/serviceaccounts/create"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-ice-accent hover:underline"
-                        >
-                          GCP Console &rarr; IAM &rarr; Service Accounts &rarr; Create
-                        </a>
-                      </li>
-                      <li>
-                        Name it (e.g.{' '}
-                        <code className="px-1 py-0.5 rounded bg-ice-hover text-ice-2xs">ice-deployer</code>), click{' '}
-                        <strong>Create and Continue</strong>
-                      </li>
-                      <li>
-                        Grant <strong>two roles</strong> (click "+ Add Another Role" for the second):
+                        {t('providerConnect.gcp.guide.step1_3')}
                         <ul className="list-disc pl-4 mt-1 space-y-0.5">
-                          <li>
-                            <strong>Owner</strong> — for creating and managing resources
-                          </li>
-                          <li>
-                            <strong>Service Usage Admin</strong> — required for ICE to auto-enable GCP APIs (Cloud Run,
-                            Storage, etc.) during deployment. Without this, you'll need to enable each API manually.
-                          </li>
+                          <li>{t('providerConnect.gcp.guide.step1_3_role1')}</li>
+                          <li>{t('providerConnect.gcp.guide.step1_3_role2')}</li>
                         </ul>
                       </li>
-                      <li>
-                        Skip "Grant users access" (step 3) — click <strong>Done</strong>
-                      </li>
+                      <li>{t('providerConnect.gcp.guide.step1_4')}</li>
                     </ol>
 
-                    <p className="font-medium text-ice-text-1 pt-1">Step 2 — Download the JSON key</p>
+                    <p className="font-medium text-ice-text-1 pt-1">{t('providerConnect.gcp.guide.step2Title')}</p>
                     <ol className="list-decimal pl-4 space-y-1">
-                      <li>Click the newly created service account</li>
-                      <li>
-                        Go to the <strong>Keys</strong> tab
-                      </li>
-                      <li>
-                        Click <strong>Add Key</strong> &rarr; <strong>Create new key</strong> &rarr;{' '}
-                        <strong>JSON</strong>
-                      </li>
-                      <li>Download the file and paste its contents into the field above</li>
+                      <li>{t('providerConnect.gcp.guide.step2_1')}</li>
+                      <li>{t('providerConnect.gcp.guide.step2_2')}</li>
+                      <li>{t('providerConnect.gcp.guide.step2_3')}</li>
+                      <li>{t('providerConnect.gcp.guide.step2_4')}</li>
                     </ol>
 
                     <div className="pt-2 border-t border-ice-border space-y-1.5">
-                      <p className="font-medium text-ice-text-1">Troubleshooting</p>
+                      <p className="font-medium text-ice-text-1">{t('providerConnect.gcp.troubleshooting.title')}</p>
                       <p>
-                        <strong>Can't create keys?</strong> Your organisation may enforce{' '}
+                        <strong>{t('providerConnect.gcp.troubleshooting.cantCreateKeys')}</strong>{' '}
                         <code className="px-1 py-0.5 rounded bg-ice-hover text-ice-2xs">
                           iam.disableServiceAccountKeyCreation
                         </code>
-                        . An admin can override this for your project in{' '}
+                        {' → '}
                         <a
                           href="https://console.cloud.google.com/iam-admin/orgpolicies/iam-disableServiceAccountKeyCreation"
                           target="_blank"
@@ -306,12 +280,10 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
                           className="text-ice-accent hover:underline"
                         >
                           Organisation Policies
-                        </a>{' '}
-                        &rarr; select your project &rarr; Override parent's policy &rarr; Not enforced.
+                        </a>
                       </p>
                       <p>
-                        <strong>OAuth not working for deployments?</strong> Google Workspace accounts with
-                        re-authentication policies (RAPT) require a service account. Alternatively, disable RAPT in{' '}
+                        <strong>{t('providerConnect.gcp.troubleshooting.oauthNotWorking')}</strong>{' '}
                         <a
                           href="https://admin.google.com/ac/security/reauth"
                           target="_blank"
@@ -320,7 +292,6 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
                         >
                           Workspace Admin &rarr; Security &rarr; Google Cloud session control
                         </a>
-                        .
                       </p>
                     </div>
                   </div>

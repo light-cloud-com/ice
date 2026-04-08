@@ -247,20 +247,20 @@ export const CostPanel: React.FC = () => {
         {/* ── 2. Time Projections ───────────────────────────────────── */}
         <Section title={t('cost.timeProjections')} icon={<DollarSign className="w-3 h-3" />} defaultOpen={false}>
           <div className="space-y-1.5">
-            <ProjectionRow label="Monthly" value={totalMonthlyCost} />
-            <ProjectionRow label="Quarterly" value={totalMonthlyCost * 3} />
-            <ProjectionRow label="Annual" value={totalMonthlyCost * 12} />
+            <ProjectionRow label={t('cost.monthly')} value={totalMonthlyCost} />
+            <ProjectionRow label={t('cost.quarterly')} value={totalMonthlyCost * 3} />
+            <ProjectionRow label={t('cost.annual')} value={totalMonthlyCost * 12} />
             {scalableNodeCount > 0 && (
               <div className="mt-2 pt-2 border-t border-ice-border/50">
                 <div className="text-ice-xs text-ice-text-3 mb-1.5">{t('cost.annualRange')}</div>
                 <div className="flex items-center justify-between">
-                  <span className="text-ice-xs text-ice-text-2">Min (all at base)</span>
+                  <span className="text-ice-xs text-ice-text-2">{t('cost.minAtBase')}</span>
                   <span className="text-ice-sm text-ice-text-1 font-mono">
                     {formatCostRaw((scalingRange.minCost + dataTransfer.monthlyCost) * 12)}/yr
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-ice-xs text-ice-text-2">Max (all scaled up)</span>
+                  <span className="text-ice-xs text-ice-text-2">{t('cost.maxScaledUp')}</span>
                   <span className="text-ice-sm text-red-400 font-mono">
                     {formatCostRaw((scalingRange.maxCost + dataTransfer.monthlyCost) * 12)}/yr
                   </span>
@@ -319,14 +319,14 @@ export const CostPanel: React.FC = () => {
               className="w-full h-1.5 bg-ice-border rounded-full appearance-none cursor-pointer accent-emerald-500"
             />
             <div className="flex justify-between text-ice-xs text-ice-text-3">
-              <span>Dev</span>
+              <span>{t('cost.dev')}</span>
               <span className="text-emerald-400 font-medium">{currentTier.label}</span>
-              <span>Very High</span>
+              <span>{t('cost.veryHigh')}</span>
             </div>
 
             <div className="mt-1 space-y-1">
               <div className="flex items-center justify-between">
-                <span className="text-ice-xs text-ice-text-2">Est. egress</span>
+                <span className="text-ice-xs text-ice-text-2">{t('cost.estEgress')}</span>
                 <span className="text-ice-xs text-ice-text-1 font-mono">
                   {dataTransfer.estimatedGb < 1
                     ? `${Math.round(dataTransfer.estimatedGb * 1024)} MB`
@@ -500,8 +500,8 @@ const ScalingRangeBar: React.FC<{ range: { minCost: number; currentCost: number;
   return (
     <div>
       <div className="flex items-center justify-between text-ice-xs text-ice-text-3 mb-1">
-        <span>Min instances</span>
-        <span>Max instances</span>
+        <span>{t('cost.minInstances')}</span>
+        <span>{t('cost.maxInstances')}</span>
       </div>
       <div className="relative h-3 bg-ice-border rounded-full overflow-hidden">
         {/* Gradient from green to red */}

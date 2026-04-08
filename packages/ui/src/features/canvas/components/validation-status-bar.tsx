@@ -8,12 +8,14 @@
 import { AlertTriangle, CheckCircle, ChevronUp, ChevronDown, X } from 'lucide-react';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation } from '../../../i18n';
 import { selectActiveCard } from '../../../store/slices/cards-slice';
 import { setSelectedNodes } from '../../../store/slices/selection-slice';
 import type { RootState } from '../../../store';
 import type { CanvasIssue } from '../../../store/slices/validation-slice';
 
 export const ValidationStatusBar: React.FC = () => {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const dispatch = useDispatch();
 
@@ -42,7 +44,7 @@ export const ValidationStatusBar: React.FC = () => {
       {expanded && visibleIssues.length > 0 && (
         <div className="bg-ice-bg-surface/95 backdrop-blur-md border-t border-ice-border max-h-48 overflow-y-auto">
           <div className="flex items-center justify-between px-3 py-1.5 border-b border-ice-border/50">
-            <span className="text-ice-2xs font-medium text-ice-text-2">Validation Issues ({visibleIssues.length})</span>
+            <span className="text-ice-2xs font-medium text-ice-text-2">{t('validation.issues')} ({visibleIssues.length})</span>
             <button onClick={() => setExpanded(false)} className="p-0.5 hover:bg-ice-bg-raised rounded">
               <X className="w-3 h-3 text-ice-text-3" />
             </button>
@@ -90,16 +92,16 @@ export const ValidationStatusBar: React.FC = () => {
         <span className="text-ice-text-2">
           {errors > 0 && (
             <span className="text-red-400 font-medium">
-              {errors} error{errors > 1 ? 's' : ''}
+              {errors} {errors > 1 ? t('statusBar.errors') : t('statusBar.error')}
             </span>
           )}
           {errors > 0 && warnings > 0 && <span className="text-ice-text-3 mx-1">·</span>}
           {warnings > 0 && (
             <span className="text-amber-400">
-              {warnings} warning{warnings > 1 ? 's' : ''}
+              {warnings} {warnings > 1 ? t('statusBar.warnings') : t('statusBar.warning')}
             </span>
           )}
-          {!hasIssues && <span className="text-emerald-400">Valid</span>}
+          {!hasIssues && <span className="text-emerald-400">{t('common.labels.valid')}</span>}
         </span>
 
         {/* Expand arrow */}

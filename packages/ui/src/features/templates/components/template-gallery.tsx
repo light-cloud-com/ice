@@ -41,6 +41,7 @@ import {
 } from 'lucide-react';
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { getBrandIcon } from '../../../assets/icons/brand-registry';
 import { SECURITY_LEVEL_COLORS } from '../../../config/color-palette';
 import {
   ALL_TEMPLATES,
@@ -56,9 +57,11 @@ import { Badge } from '../../../shared/components/ui/badge';
 import { Dialog, DialogContent } from '../../../shared/components/ui/dialog';
 import { SearchInput } from '../../../shared/components/ui/search-input';
 import { cn } from '../../../shared/utils/cn';
-import { addToActiveCard } from '../../../store/slices/cards-slice';
+import axiosInstance from '../../../shared/api/axios-instance';
+import { toSlug } from '../../../shared/utils/slug';
 import { closeTemplateGallery } from '../../../store/slices/ui-slice';
 import type { ComposedTemplate, TemplateCategory, TemplateCategoryMeta } from '../../../config/templates';
+import { store } from '../../../store';
 import type { AppDispatch, RootState } from '../../../store';
 
 // =============================================================================
@@ -88,19 +91,23 @@ const ICON_MAP: Record<string, React.ElementType> = {
   GraduationCap,
 };
 
-const DIFFICULTY_LABELS: Record<string, { label: string; dots: number }> = {
-  starter: { label: 'Starter', dots: 1 },
-  intermediate: { label: 'Intermediate', dots: 2 },
-  advanced: { label: 'Advanced', dots: 3 },
-  expert: { label: 'Expert', dots: 4 },
-};
+function getDifficultyLabels(t: (key: string) => string): Record<string, { label: string; dots: number }> {
+  return {
+    starter: { label: t('templates.gallery.difficultyStarter'), dots: 1 },
+    intermediate: { label: t('templates.gallery.difficultyIntermediate'), dots: 2 },
+    advanced: { label: t('templates.gallery.difficultyAdvanced'), dots: 3 },
+    expert: { label: t('templates.gallery.difficultyExpert'), dots: 4 },
+  };
+}
 
 // =============================================================================
 // Sub-components
 // =============================================================================
 
 const DifficultyDots: React.FC<{ level?: string }> = ({ level }) => {
-  const info = DIFFICULTY_LABELS[level || 'starter'] || DIFFICULTY_LABELS.starter;
+  const { t } = useTranslation();
+  const labels = getDifficultyLabels(t);
+  const info = labels[level || 'starter'] || labels.starter;
   return (
     <span className="flex items-center gap-0.5" title={info.label}>
       {[1, 2, 3, 4].map((i) => (
@@ -124,6 +131,7 @@ const ProviderBadges: React.FC<{ providers?: string[] }> = ({ providers }) => {
 };
 
 const TrustBadge: React.FC<{ trust?: string }> = ({ trust }) => {
+  const { t } = useTranslation();
   if (!trust || trust === 'community') return null;
   return (
     <span
@@ -132,7 +140,27 @@ const TrustBadge: React.FC<{ trust?: string }> = ({ trust }) => {
         trust === 'official' ? 'bg-ice-accent/15 text-ice-accent' : 'bg-emerald-500/15 text-emerald-400',
       )}
     >
-      {trust === 'official' ? 'Official' : 'Verified'}
+      {trust === 'official' ? t('templates.gallery.official') : t('templates.gallery.verified')}
+    </span>
+  );
+};
+
+const TechStackLogos: React.FC<{ tags: string[]; max?: number }> = ({ tags, max = 5 }) => {
+  const resolved = useMemo(() => {
+    const items: { key: string; url: string; label: string }[] = [];
+    for (const tag of tags) {
+      if (items.length >= max) break;
+      const brand = getBrandIcon(tag);
+      if (brand) items.push({ key: tag, url: brand.url, label: brand.label });
+    }
+    return items;
+  }, [tags, max]);
+  if (resolved.length === 0) return null;
+  return (
+    <span className="flex items-center gap-2">
+      {resolved.map((b) => (
+        <img key={b.key} src={b.url} alt={b.label} title={b.label} width={18} height={18} className="shrink-0" />
+      ))}
     </span>
   );
 };
@@ -147,6 +175,7 @@ interface TemplateCardProps {
 }
 
 const TemplateCard: React.FC<TemplateCardProps> = React.memo(({ template, onSelect }) => {
+  const { t } = useTranslation();
   const Icon = ICON_MAP[template.icon] || Rocket;
   const catMeta = TEMPLATE_CATEGORIES.find((c) => c.id === template.category);
   const color = catMeta?.color || '#3b82f6';
@@ -170,7 +199,7 @@ const TemplateCard: React.FC<TemplateCardProps> = React.memo(({ template, onSele
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <span className="text-sm font-semibold text-ice-text-1 truncate">{template.name}</span>
+            <span className="text-sm font-semibold text-ice-text-1 truncate">{t(`templates.items.${template.id}.name`)}</span>
             <TrustBadge trust={template.trust} />
           </div>
           <span className="text-ice-xs text-ice-text-3">{template.estimatedCost}</span>
@@ -179,25 +208,21 @@ const TemplateCard: React.FC<TemplateCardProps> = React.memo(({ template, onSele
       </div>
 
       {/* Description */}
-      <p className="text-ice-xs text-ice-text-2 leading-snug line-clamp-2">{template.description}</p>
+      <p className="text-ice-xs text-ice-text-2 leading-snug line-clamp-2">{t(`templates.items.${template.id}.description`)}</p>
 
       {/* Meta row */}
       <div className="flex items-center gap-1.5 flex-wrap">
         <DifficultyDots level={template.difficulty} />
-        <span className="text-ice-2xs text-ice-text-3">{template.blocks.length} blocks</span>
+        <span className="text-ice-2xs text-ice-text-3">{template.blocks.length} {t('templates.gallery.blocks')}</span>
         {template.connections.length > 0 && (
-          <span className="text-ice-2xs text-ice-text-3">{template.connections.length} connections</span>
+          <span className="text-ice-2xs text-ice-text-3">{template.connections.length} {t('templates.gallery.connections')}</span>
         )}
         <ProviderBadges providers={template.providers} />
       </div>
 
-      {/* Tags */}
-      <div className="flex gap-1 flex-wrap">
-        {template.tags.slice(0, 4).map((tag) => (
-          <Badge key={tag} variant="secondary" className="text-ice-2xs px-1.5 py-0">
-            {tag}
-          </Badge>
-        ))}
+      {/* Tech stack icons */}
+      <div className="flex items-center gap-1">
+        <TechStackLogos tags={template.tags} max={6} />
       </div>
     </button>
   );
@@ -219,6 +244,7 @@ const TemplateDetail: React.FC<TemplateDetailProps> = ({ template, onBack, onUse
   const Icon = ICON_MAP[template.icon] || Rocket;
   const catMeta = TEMPLATE_CATEGORIES.find((c) => c.id === template.category);
   const secColor = SECURITY_LEVEL_COLORS[template.securityLevel] || '#6b7280';
+  const DIFFICULTY_LABELS = getDifficultyLabels(t);
   const diffInfo = DIFFICULTY_LABELS[template.difficulty || 'starter'] || DIFFICULTY_LABELS.starter;
 
   const blocksByCategory = useMemo(() => {
@@ -263,7 +289,7 @@ const TemplateDetail: React.FC<TemplateDetailProps> = ({ template, onBack, onUse
               <Icon className="h-6 w-6" style={{ color: catMeta?.color || '#3b82f6' }} />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-ice-text-1">{template.name}</h2>
+              <h2 className="text-base font-semibold text-ice-text-1">{t(`templates.items.${template.id}.name`)}</h2>
               <div className="flex items-center gap-2 mt-1">
                 <TrustBadge trust={template.trust} />
                 {catMeta && (
@@ -277,11 +303,11 @@ const TemplateDetail: React.FC<TemplateDetailProps> = ({ template, onBack, onUse
               </div>
             </div>
           </div>
-          <p className="text-ice-sm text-ice-text-2 leading-relaxed">{template.description}</p>
+          <p className="text-ice-sm text-ice-text-2 leading-relaxed">{t(`templates.items.${template.id}.description`)}</p>
         </div>
 
         {/* Stats grid */}
-        <div className="grid grid-cols-3 gap-px bg-ice-border mx-5 rounded-lg overflow-hidden mb-4">
+        <div className="grid grid-cols-2 gap-px bg-ice-border mx-5 rounded-lg overflow-hidden mb-4">
           <div className="bg-ice-surface px-3 py-2.5 text-center">
             <div className="text-sm font-semibold text-ice-text-1">{template.estimatedCost}</div>
             <div className="text-ice-2xs text-ice-text-3">{t('templates.gallery.costEstimate')}</div>
@@ -289,12 +315,6 @@ const TemplateDetail: React.FC<TemplateDetailProps> = ({ template, onBack, onUse
           <div className="bg-ice-surface px-3 py-2.5 text-center">
             <div className="text-sm font-semibold text-ice-text-1">{diffInfo.label}</div>
             <div className="text-ice-2xs text-ice-text-3">{t('templates.gallery.difficulty')}</div>
-          </div>
-          <div className="bg-ice-surface px-3 py-2.5 text-center">
-            <div className="text-sm font-semibold" style={{ color: secColor }}>
-              {template.securityLevel}
-            </div>
-            <div className="text-ice-2xs text-ice-text-3">{t('templates.gallery.security')}</div>
           </div>
         </div>
 
@@ -358,7 +378,7 @@ const TemplateDetail: React.FC<TemplateDetailProps> = ({ template, onBack, onUse
         {/* Compliance */}
         {template.compliance && template.compliance.length > 0 && (
           <div className="px-5 mb-4">
-            <div className="text-ice-2xs font-medium text-ice-text-3 uppercase tracking-wider mb-1.5">Compliance</div>
+            <div className="text-ice-2xs font-medium text-ice-text-3 uppercase tracking-wider mb-1.5">{t('templates.gallery.compliance')}</div>
             <div className="flex gap-1.5">
               {template.compliance.map((tag) => (
                 <span
@@ -382,7 +402,7 @@ const TemplateDetail: React.FC<TemplateDetailProps> = ({ template, onBack, onUse
               <div key={category} className="flex items-start gap-2 text-ice-xs">
                 <Box className="w-3 h-3 text-ice-text-3 mt-0.5 shrink-0" />
                 <div>
-                  <span className="font-medium text-ice-text-2">{category}</span>
+                  <span className="font-medium text-ice-text-2">{t(`blocks.categories.${category.toLowerCase()}.label`)}</span>
                   <span className="text-ice-text-3 ml-1">{labels.join(', ')}</span>
                 </div>
               </div>
@@ -447,7 +467,7 @@ const TemplateDetail: React.FC<TemplateDetailProps> = ({ template, onBack, onUse
               rel="noopener noreferrer"
               className="text-ice-xs text-ice-accent hover:underline flex items-center gap-1"
             >
-              <GitBranch className="w-3 h-3" /> View Repository
+              <GitBranch className="w-3 h-3" /> {t('templates.gallery.viewRepository')}
             </a>
           </div>
         )}
@@ -460,11 +480,8 @@ const TemplateDetail: React.FC<TemplateDetailProps> = ({ template, onBack, onUse
           className="flex items-center justify-center gap-2 w-full text-sm font-medium px-4 py-2.5 rounded-lg bg-ice-accent text-ice-text-1 hover:bg-ice-accent-hover transition-colors"
         >
           <Plus className="w-4 h-4" />
-          Add to Canvas
+          {t('wizard.createButton')}
         </button>
-        <p className="text-ice-2xs text-ice-text-3 text-center mt-1.5">
-          Adds to your current design — won't replace existing blocks
-        </p>
       </div>
     </div>
   );
@@ -521,20 +538,62 @@ export const TemplateGalleryDialog: React.FC = () => {
     return groups;
   }, [filtered, showFeatured]);
 
-  // Add template to ACTIVE canvas (not replace)
+  // Create a new project with the selected template
   const handleUseTemplate = useCallback(
-    (template: ComposedTemplate) => {
-      const { nodes, edges } = expandComposedTemplate(template);
-      // addToActiveCard merges with existing canvas — offsets new nodes to avoid overlap
-      dispatch(addToActiveCard({ nodes, edges }));
-      dispatch(closeTemplateGallery());
+    async (template: ComposedTemplate) => {
+      const rootState = store.getState() as RootState;
+      const orgId = rootState.account.selectedOrg?.id;
+      const orgName = rootState.account.selectedOrg?.name;
+      let project: any = null;
 
-      // Sync to backend
-      import('../../../shared/api/api-adapter').then(({ getApi }) => {
-        getApi()
-          .templates.loadToGraph({ name: template.name, nodes, edges })
-          .catch((err: unknown) => console.warn('Failed to sync template to backend:', err));
-      });
+      try {
+        // 1. Create project
+        const res = await axiosInstance.post('/canvas/projects/create', {
+          name: template.name,
+          type: 'project',
+          organisationId: orgId,
+        });
+        project = res.data;
+
+        // Non-critical steps — don't block navigation if they fail
+        try {
+          // 2. Set provider
+          if (template.provider) {
+            await axiosInstance.post('/canvas/projects/update', {
+              projectId: project.id,
+              provider: template.provider,
+              region: template.environmentPresets[0]?.region || '',
+            });
+          }
+
+          // 3. Fetch the project to get the card created by bootstrapProductionEnvironment
+          const projectRes = await axiosInstance.post('/canvas/projects/get', { projectId: project.id });
+          const cardId = projectRes.data.cards?.[0]?.id;
+
+          // 4. Apply template to the production card
+          const { nodes, edges } = expandComposedTemplate(template, template.provider);
+          if (cardId) {
+            await axiosInstance.post('/canvas/cards/update', { cardId, nodes, edges });
+          }
+
+          // 4. Refresh sidebar
+          if (orgId) {
+            const { fetchProjectTree } = await import('../../../store/slices/projects-slice');
+            dispatch(fetchProjectTree(orgId));
+          }
+        } catch (err) {
+          console.warn('Non-critical template step failed:', err);
+        }
+      } catch (err) {
+        console.error('Failed to create project:', err);
+        return;
+      }
+
+      // Always close and navigate if project was created
+      dispatch(closeTemplateGallery());
+      const slug = project.slug || toSlug(template.name);
+      const basePath = orgName ? `/${toSlug(orgName)}/${slug}` : `/${slug}`;
+      window.location.href = basePath;
     },
     [dispatch],
   );

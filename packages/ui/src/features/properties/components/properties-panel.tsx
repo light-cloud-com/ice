@@ -10,7 +10,7 @@
  * 3. Edge selected → Relationship, protocol, port fields
  */
 
-import { ChevronRight, Info } from 'lucide-react';
+import { Info } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { getIcon, DEFAULT_ICON, type Provider } from '../../../assets/icons';
@@ -394,7 +394,7 @@ const ListField: React.FC<{
         onClick={() => onChange([...value, ''])}
         className="text-ice-2xs text-ice-text-3/50 hover:text-ice-accent transition-colors"
       >
-        + {addLabel || 'Add item'}
+        + {addLabel || t('properties.addItem')}
       </button>
     </div>
   </div>
@@ -661,7 +661,6 @@ const PropertyFields: React.FC<{
   /** Validation issues mapped by propertyPath */
   propertyIssues?: Map<string, { severity: string; message: string }>;
 }> = ({ properties, nodeData, onFieldChange, propertyIssues }) => {
-  const [showMore, setShowMore] = React.useState(false);
   const provider = ((nodeData.provider as string) || '').toLowerCase();
 
   // Filter optionDetails by the node's cloud provider
@@ -671,16 +670,14 @@ const PropertyFields: React.FC<{
     return filtered.length > 0 ? { ...prop, optionDetails: filtered } : prop;
   };
 
-  const essential = properties.filter((p) => !p.tier || p.tier === 'essential');
-  const detailed = properties.filter((p) => p.tier === 'detailed');
-  // advanced tier is intentionally hidden from the UI
+  // Show all properties (essential + detailed); advanced tier is intentionally hidden
+  const visible = properties.filter((p) => !p.tier || p.tier === 'essential' || p.tier === 'detailed');
 
   return (
     <>
-      {/* Essential fields — always visible */}
-      {essential.length > 0 && (
-        <Section title="Configuration">
-          {essential.map((prop) => (
+      {visible.length > 0 && (
+        <Section title={t('properties.config.title')}>
+          {visible.map((prop) => (
             <div key={prop.name}>
               {renderPropertyField(filterByProvider(prop), nodeData[prop.name], onFieldChange, nodeData)}
               {propertyIssues?.has(prop.name) && (
@@ -695,37 +692,6 @@ const PropertyFields: React.FC<{
             </div>
           ))}
         </Section>
-      )}
-
-      {/* Detailed fields — behind "More options" */}
-      {detailed.length > 0 && (
-        <>
-          <button
-            onClick={() => setShowMore(!showMore)}
-            className="w-full flex items-center gap-1 px-3 py-2 text-ice-2xs text-ice-text-3/50 hover:text-ice-text-2 transition-colors"
-          >
-            <ChevronRight className={`w-3 h-3 transition-transform duration-150 ${showMore ? 'rotate-90' : ''}`} />
-            {showMore ? 'Fewer options' : `More options (${detailed.length})`}
-          </button>
-          {showMore && (
-            <Section title="Details">
-              {detailed.map((prop) => (
-                <div key={prop.name}>
-                  {renderPropertyField(filterByProvider(prop), nodeData[prop.name], onFieldChange, nodeData)}
-                  {propertyIssues?.has(prop.name) && (
-                    <div
-                      className={`px-3 pb-1 text-ice-2xs ${
-                        propertyIssues.get(prop.name)!.severity === 'error' ? 'text-red-400' : 'text-amber-400'
-                      }`}
-                    >
-                      {propertyIssues.get(prop.name)!.message}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </Section>
-          )}
-        </>
       )}
     </>
   );
@@ -1670,7 +1636,7 @@ const PipelineSection: React.FC<{
                 />
               </button>
 
-              <span className="text-ice-text-3">push</span>
+              <span className="text-ice-text-3">{t('pipeline.push')}</span>
 
               {/* Branch */}
               <select
@@ -1707,9 +1673,9 @@ const PipelineSection: React.FC<{
                 }
                 className="px-1 py-0.5 text-ice-xs rounded border border-ice-border bg-ice-base text-ice-text-1 max-w-[85px]"
               >
-                <option value="production">production</option>
-                <option value="staging">staging</option>
-                <option value="development">development</option>
+                <option value="production">{t('pipeline.envProduction')}</option>
+                <option value="staging">{t('pipeline.envStaging')}</option>
+                <option value="development">{t('pipeline.envDevelopment')}</option>
               </select>
 
               {/* Delete */}
@@ -2363,7 +2329,7 @@ const ConnectionCard: React.FC<{
       <button
         onClick={() => dispatch(deleteCardEdge(edge.id))}
         className="ml-1 p-1 text-ice-text-3 hover:text-red-400 transition-colors shrink-0 rounded opacity-0 group-hover:opacity-100"
-        title="Remove connection"
+        title={t('properties.removeConnection')}
       >
         &times;
       </button>
@@ -2449,7 +2415,7 @@ const RepoDeployList: React.FC<{
                       </div>
                     ))
                   ) : (
-                    <div className="text-ice-2xs font-mono text-slate-500">No logs recorded</div>
+                    <div className="text-ice-2xs font-mono text-slate-500">{t('properties.noLogsRecorded')}</div>
                   )}
                   {ev.error && (
                     <div className="text-ice-2xs font-mono text-red-400 pt-1 border-t border-slate-800">{ev.error}</div>
@@ -2478,7 +2444,7 @@ const RepoDeployList: React.FC<{
                       }}
                       className="mt-1 px-2 py-0.5 text-ice-2xs font-medium rounded bg-amber-600 text-white hover:bg-amber-700 transition-colors"
                     >
-                      Retry
+                      {t('common.buttons.retry')}
                     </button>
                   )}
                 </div>

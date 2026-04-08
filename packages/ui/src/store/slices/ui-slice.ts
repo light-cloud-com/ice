@@ -72,6 +72,7 @@ interface UIState {
   contextMenu: {
     isOpen: boolean;
     position: { x: number; y: number };
+    canvasPosition: { x: number; y: number };
     type: 'canvas' | 'node' | 'edge' | null;
     targetId: string | null;
   };
@@ -205,6 +206,7 @@ const initialState: UIState = {
   contextMenu: {
     isOpen: false,
     position: { x: 0, y: 0 },
+    canvasPosition: { x: 0, y: 0 },
     type: null,
     targetId: null,
   },
@@ -292,6 +294,7 @@ const uiSlice = createSlice({
       state,
       action: PayloadAction<{
         position: { x: number; y: number };
+        canvasPosition?: { x: number; y: number };
         type: 'canvas' | 'node' | 'edge';
         targetId?: string;
       }>,
@@ -299,6 +302,7 @@ const uiSlice = createSlice({
       state.contextMenu = {
         isOpen: true,
         position: action.payload.position,
+        canvasPosition: action.payload.canvasPosition || { x: 0, y: 0 },
         type: action.payload.type,
         targetId: action.payload.targetId || null,
       };

@@ -60,6 +60,7 @@ export const ProjectWizard: React.FC = () => {
   // ── Create handler ────────────────────────────────────────────────────────
 
   const handleCreate = useCallback(async () => {
+    let project: any = null;
     try {
       // 1. Create project in backend DB
       const orgId = selectedOrg?.id;
@@ -69,75 +70,68 @@ export const ProjectWizard: React.FC = () => {
         type: 'project',
         organisationId: orgId,
       });
-      const project = res.data;
+      project = res.data;
 
-      // 2. Save provider & region to project
-      if (state.provider) {
-        const firstEnv = state.environments.find((e) => e.enabled);
-        await axiosInstance.post('/canvas/projects/update', {
-          projectId: project.id,
-          provider: state.provider,
-          region: firstEnv?.region || '',
-        });
-      }
+      // Non-critical steps — don't block navigation if they fail
+      try {
+        // 2. Save provider & region to project
+        if (state.provider) {
+          const firstEnv = state.environments.find((e) => e.enabled);
+          await axiosInstance.post('/canvas/projects/update', {
+            projectId: project.id,
+            provider: state.provider,
+            region: firstEnv?.region || '',
+          });
+        }
 
-      // 3. If template selected, create card with template nodes
-      const template = state.selectedTemplateId
-        ? COMPOSED_TEMPLATES.find((t) => t.id === state.selectedTemplateId) || null
-        : null;
+        // 3. If template selected, create card with template nodes
+        const template = state.selectedTemplateId
+          ? COMPOSED_TEMPLATES.find((t) => t.id === state.selectedTemplateId) || null
+          : null;
 
-      if (template) {
-        // Create a card
-        const cardRes = await axiosInstance.post('/canvas/cards/create', {
-          name: state.projectName,
-          projectId: project.id,
-        });
-        const card = cardRes.data;
+        if (template) {
+          const cardRes = await axiosInstance.post('/canvas/cards/create', {
+            name: state.projectName,
+            projectId: project.id,
+          });
+          const expanded = expandComposedTemplate(template, state.provider);
+          await axiosInstance.post('/canvas/cards/update', {
+            cardId: cardRes.data.id,
+            nodes: expanded.nodes,
+            edges: expanded.edges,
+          });
+        }
 
-        // Expand template and save to card
-        const expanded = expandComposedTemplate(template, state.provider);
-        await axiosInstance.post('/canvas/cards/update', {
-          cardId: card.id,
-          nodes: expanded.nodes,
-          edges: expanded.edges,
-        });
-      }
-
-      // 4. Create additional environments from wizard config (production already created by backend)
-      const enabledEnvs = state.environments.filter((e) => e.enabled && e.type !== 'production');
-      for (const env of enabledEnvs) {
-        try {
+        // 4. Create additional environments
+        for (const env of state.environments.filter((e) => e.enabled && e.type !== 'production')) {
           await axiosInstance.post('/environments/create', {
             projectId: project.id,
             name: env.name.toLowerCase(),
             type: env.type,
             region: env.region || undefined,
-          });
-        } catch (envErr) {
-          console.warn(`Failed to create ${env.name} environment:`, envErr);
+          }).catch(() => {});
         }
-      }
 
-      // 5. Refresh project tree in sidebar
-      if (orgId) {
-        const { fetchProjectTree } = await import('../../../store/slices/projects-slice');
-        dispatch(fetchProjectTree(orgId));
-      }
-
-      // 6. Close wizard
-      handleClose();
-
-      // 7. Navigate to the new project
-      if (selectedOrg) {
-        const orgSlug = toSlug(selectedOrg.name);
-        const projectSlug = project.slug || toSlug(state.projectName);
-        navigate(`/${orgSlug}/${projectSlug}`);
-      } else {
-        // Fallback: reload current page to show the new project
-        window.location.reload();
+        // 5. Refresh project tree in sidebar
+        if (orgId) {
+          const { fetchProjectTree } = await import('../../../store/slices/projects-slice');
+          dispatch(fetchProjectTree(orgId));
+        }
+      } catch (err) {
+        console.warn('Non-critical wizard step failed:', err);
       }
     } catch (err) {
       console.error('Failed to create project:', err);
+      return; // Only bail if project creation itself failed
+    }
+
+    // Always close and navigate if project was created
+    handleClose();
+    const projectSlug = project.slug || toSlug(state.projectName);
+    if (selectedOrg) {
+      navigate(`/${toSlug(selectedOrg.name)}/${projectSlug}`);
+    } else {
+      navigate(`/${projectSlug}`);
     }
   }, [state, selectedOrg, navigate, handleClose, dispatch]);
 
@@ -145,7 +139,7 @@ export const ProjectWizard: React.FC = () => {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="max-w-lg bg-ice-base border-ice-border text-ice-text-1 p-0 gap-0">
+      <DialogContent className="max-w-2xl bg-ice-base border-ice-border text-ice-text-1 p-0 gap-0 max-h-[85vh] flex flex-col">
         {/* Header */}
         <DialogHeader className="px-5 pt-5 pb-0">
           <DialogTitle className="text-base font-semibold text-ice-text-1">{t('wizard.title')}</DialogTitle>
@@ -156,7 +150,7 @@ export const ProjectWizard: React.FC = () => {
         <StepIndicator currentStep={state.step} totalSteps={4} labels={STEP_LABELS} />
 
         {/* Step content */}
-        <div className="px-5 pb-2 min-h-[320px]">
+        <div className="px-5 pb-2 min-h-[320px] flex-1 overflow-y-auto">
           {state.step === 1 && (
             <ProjectInfoStep
               projectName={state.projectName}

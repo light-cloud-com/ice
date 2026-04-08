@@ -1,4 +1,5 @@
 import React, { memo } from 'react';
+import { t } from '../../../../../i18n';
 import { FONT_MONO } from '../_shared/fonts';
 import { StepperButton } from '../_shared/stepper-button';
 
@@ -22,7 +23,7 @@ export const ScalingRow: React.FC<ScalingRowProps> = memo(
         </>
       )}
       <span style={{ color: 'var(--ice-text-secondary)', fontSize: 9, fontFamily: FONT_MONO, opacity: 0.7 }}>
-        {activeInstances != null ? 'active' : 'instances'}
+        {activeInstances != null ? t('canvas.nodes.active') : t('canvas.nodes.instances')}
       </span>
 
       {/* Min stepper */}

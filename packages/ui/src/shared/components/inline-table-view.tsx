@@ -8,6 +8,7 @@
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation } from '../../i18n';
 import { selectActiveCard } from '../../store/slices/cards-slice';
 import { setSelectedNodes } from '../../store/slices/selection-slice';
 import { toggleProperties } from '../../store/slices/ui-slice';
@@ -30,6 +31,7 @@ interface Row {
 }
 
 export const InlineTableView: React.FC = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const activeCard = useSelector(selectActiveCard);
   const selectedNodes = useSelector((s: RootState) => s.selection.selectedNodes);
@@ -111,11 +113,11 @@ export const InlineTableView: React.FC = () => {
     <div className="h-full flex flex-col bg-ice-base">
       {/* Header */}
       <div className="grid grid-cols-[1fr_140px_100px_90px_80px_60px_60px] gap-2 px-4 py-2 border-b border-ice-border bg-ice-raised shrink-0">
-        <SortHeader col="label" label="Name" />
-        <SortHeader col="iceType" label="Type" />
-        <SortHeader col="category" label="Category" />
-        <SortHeader col="provider" label="Provider" />
-        <SortHeader col="behavior" label="Behavior" />
+        <SortHeader col="label" label={t('table.name')} />
+        <SortHeader col="iceType" label={t('table.type')} />
+        <SortHeader col="category" label={t('table.category')} />
+        <SortHeader col="provider" label={t('table.provider')} />
+        <SortHeader col="behavior" label={t('table.behavior')} />
         <span className="text-ice-sm font-medium text-ice-text-3 uppercase tracking-wider">X</span>
         <span className="text-ice-sm font-medium text-ice-text-3 uppercase tracking-wider">Y</span>
       </div>
@@ -124,8 +126,8 @@ export const InlineTableView: React.FC = () => {
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         {sorted.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-ice-text-3 text-sm">No resources yet</p>
-            <p className="text-ice-text-3 text-xs mt-1">Drag blocks from the sidebar to add resources</p>
+            <p className="text-ice-text-3 text-sm">{t('table.noResources')}</p>
+            <p className="text-ice-text-3 text-xs mt-1">{t('table.noResourcesHint')}</p>
           </div>
         ) : (
           sorted.map((row) => {

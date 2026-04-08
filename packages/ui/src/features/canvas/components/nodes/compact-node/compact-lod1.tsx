@@ -1,8 +1,9 @@
 import React, { memo } from 'react';
+import { t } from '../../../../../i18n';
 import { CARD_WIDTH, CARD_HEIGHT, CORNER_RADIUS } from '../../../../../config/canvas-constants';
-import { SelectionRing } from '../_shared/selection-ring';
 import { ConnectionDragGlow } from '../_shared/connection-drag-glow';
 import { ConnectionPorts } from '../_shared/connection-ports';
+import { SelectionRing } from '../_shared/selection-ring';
 import type { NodePipelineStatus } from './types';
 
 interface CompactLod1Props {
@@ -94,7 +95,7 @@ export const CompactLod1: React.FC<CompactLod1Props> = memo(
             {/* Large centered icon */}
             <img
               src={brandIconUrl || providerUrl}
-              alt={label || 'Resource'}
+              alt={label || t('canvas.nodes.resource')}
               width={56}
               height={56}
               style={{ objectFit: 'contain' }}

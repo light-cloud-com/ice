@@ -105,16 +105,38 @@ All services support create, update, and delete with real-time progress streamin
 ## Scripts
 
 ```bash
+# Development
 pnpm dev:all            # Start everything (Docker + gateway + web)
 pnpm dev:gateway        # API gateway only (port 5002)
 pnpm dev:web            # Web app only (Vite, port 5174)
 pnpm dev:desktop        # Electron desktop app
+
+# Build
 pnpm build              # Build all packages
 pnpm dist:desktop       # Package Electron for distribution
+
+# Testing
+pnpm test:unit          # Vitest unit tests
 pnpm test:e2e           # Playwright E2E tests
+pnpm test:gcp           # GCP integration tests (requires env vars)
+pnpm test:dashboard     # Interactive GCP test dashboard (port 15200)
+
+# Quality
 pnpm typecheck          # TypeScript check all packages
 pnpm lint               # Lint all packages
+pnpm format             # Prettier format all files
 ```
+
+## GCP Integration Testing
+
+Test all ICE templates against real GCP infrastructure with a visible browser:
+
+```bash
+pnpm dev:all            # Terminal 1
+pnpm test:dashboard     # Terminal 2 — opens http://localhost:15200
+```
+
+The dashboard provides template selection (checkboxes), GCP/GitHub configuration, test repo creation, run/stop controls, live progress, and HTML report generation. See [docs/testing.md](docs/testing.md) for the full guide.
 
 ## Tech Stack
 
@@ -137,6 +159,7 @@ See the [`docs/`](docs/) folder:
 - [Desktop](docs/desktop.md) — Electron architecture
 - [Database](docs/database.md) — Prisma schema
 - [AI System](docs/ai-system.md) — Claude integration
+- [Testing](docs/testing.md) — E2E tests, GCP integration tests, test dashboard
 - [Community Edition](docs/community-edition.md) — what differs from SaaS
 
 ## Contributing

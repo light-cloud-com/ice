@@ -22,8 +22,19 @@
 ## Development
 
 - [development.md](./development.md) — Local setup, scripts, workspace commands
-- [testing.md](./testing.md) — E2E and unit test setup
+- [testing.md](./testing.md) — E2E tests, GCP integration tests, test dashboard, CI pipeline
 - [community-edition.md](./community-edition.md) — What differs from SaaS
+
+## GCP Integration Testing
+
+See [testing.md#gcp-integration-tests](./testing.md#gcp-integration-tests) for the full guide. Quick start:
+
+```bash
+pnpm dev:all          # Terminal 1: start ICE
+pnpm test:dashboard   # Terminal 2: open http://localhost:15200
+```
+
+The test dashboard lets you select templates, configure GCP credentials, create test repos, run tests with a visible browser, and view HTML reports with per-template results.
 
 ## Backlog
 

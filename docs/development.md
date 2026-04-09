@@ -2,9 +2,10 @@
 
 ## Prerequisites
 
-- Node.js >= 18
-- pnpm >= 8
+- Node.js >= 22
+- pnpm >= 10
 - Docker (for PostgreSQL + Redis)
+- gcloud CLI (for GCP integration tests)
 
 ## Initial Setup
 
@@ -33,13 +34,19 @@ pnpm dev:saas
 
 | Command | Description |
 |---|---|
-| `pnpm dev:saas` | Start gateway (5001) + web (5173) concurrently |
+| `pnpm dev:all` | Docker (Postgres+Redis) + gateway (5002) + web (5174) |
+| `pnpm dev:saas` | Gateway + web (no Docker) |
 | `pnpm dev:web` | Web frontend only |
 | `pnpm dev:gateway` | API gateway only |
+| `pnpm dev:desktop` | Full Electron desktop app (embedded gateway + web) |
+| `pnpm build` | Build all packages |
 | `pnpm build:web` | Production build of web app |
 | `pnpm build:core` | Compile core engine |
 | `pnpm build:gateway` | Compile gateway |
+| `pnpm test:unit` | Run Vitest unit tests |
 | `pnpm test:e2e` | Run Playwright E2E tests |
+| `pnpm test:gcp` | Run GCP integration tests (requires env vars) |
+| `pnpm test:dashboard` | Start interactive GCP test dashboard (port 15200) |
 | `pnpm typecheck` | TypeScript check all packages |
 | `pnpm lint` | Lint all packages |
 | `pnpm format` | Prettier format all files |
@@ -66,8 +73,11 @@ pnpm -r build
 
 | Service | Port | Details |
 |---|---|---|
-| PostgreSQL 16 | 5555 → 5432 | Database `ice_saas`, user `ice`, password `ice_password` |
-| Redis 7 | 6379 | Queue backend for BullMQ |
+| PostgreSQL 16 | 5557 | Database `ice_community`, user `ice`, password `icedev` |
+| Redis 7 | 6380 | Queue backend for BullMQ |
+| ICE Gateway | 5002 | API server (dev mode) |
+| ICE Frontend | 5174 | Vite dev server |
+| GCP Test Dashboard | 15200 | Interactive test runner UI |
 
 ```bash
 docker compose up -d     # Start
@@ -169,6 +179,11 @@ ice-saas/
 │   ├── engine/           Schema + resource metadata API
 │   └── iam/              Auth, users, orgs
 ├── e2e/                  Playwright E2E tests
+│   ├── tests/            Test specs (smoke, deploy, GCP integration)
+│   ├── fixtures/         Playwright fixtures (base, canvas, template-deploy)
+│   ├── utils/            Test utilities (gcp-verify, error-classifier, reporters)
+│   ├── dashboard/        Interactive GCP test dashboard (server + UI)
+│   └── repos/            GitHub test repo creation for Cloud Run
 ├── docker-compose.yml    Local dev infrastructure
 └── package.json          Root workspace config
 ```

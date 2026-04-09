@@ -65,14 +65,16 @@ const SUB_PAGES = [
 // ── Small helpers ──────────────────────────────────────────────────────────
 
 const TBtn: React.FC<{
+  id?: string;
   icon: React.ElementType;
   onClick: () => void;
   tip?: string;
   className?: string;
   disabled?: boolean;
-}> = ({ icon: I, onClick, tip, className, disabled }) => {
+}> = ({ id, icon: I, onClick, tip, className, disabled }) => {
   const btn = (
     <button
+      id={id}
       onClick={onClick}
       aria-label={tip}
       disabled={disabled}
@@ -304,6 +306,7 @@ export const ProjectToolbar: React.FC<ProjectToolbarProps> = ({ basePath, active
         )}
         <TSep />
         <TBtn
+          id="ice-btn-deploy"
           icon={Rocket}
           onClick={() => handleNavigate('deploy')}
           tip={t('appBar.deploy')}

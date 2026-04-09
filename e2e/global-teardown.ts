@@ -6,7 +6,7 @@
 
 import { type FullConfig } from '@playwright/test';
 
-const BACKEND_URL = 'http://localhost:5001/api';
+const BACKEND_URL = 'http://localhost:5002/api';
 const TEST_EMAIL = 'test@ice-saas.dev';
 const TEST_PASSWORD = 'password123';
 

@@ -6,7 +6,7 @@
 
 import { test, expect } from '../fixtures/base.fixture';
 
-const BACKEND_URL = 'http://localhost:5001/api';
+const BACKEND_URL = 'http://localhost:5002/api';
 
 // ─── BE-2: Billing routes use requireAuth (not broken passport-jwt) ─────────
 

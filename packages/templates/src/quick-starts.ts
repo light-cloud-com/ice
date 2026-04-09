@@ -24,6 +24,7 @@ const quickStartWebsiteDb: ComposedTemplate = {
   trust: 'official',
   featured: true,
   author: { name: 'ICE Team' },
+  repo: { url: 'https://github.com/light-cloud-com/ice-test-hello-api', branch: 'main', framework: 'express', language: 'javascript' },
   environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'basic' }],
   blocks: [
     { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 100, y: 200 }, data: {} },
@@ -62,6 +63,7 @@ const quickStartWebAppApi: ComposedTemplate = {
   trust: 'official',
   featured: true,
   author: { name: 'ICE Team' },
+  repo: { url: 'https://github.com/light-cloud-com/ice-test-hello-api', branch: 'main', framework: 'express', language: 'javascript' },
   environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'basic' }],
   blocks: [
     { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 100, y: 200 }, data: {} },
@@ -108,6 +110,7 @@ const quickStartApiOnly: ComposedTemplate = {
   difficulty: 'starter',
   trust: 'official',
   author: { name: 'ICE Team' },
+  repo: { url: 'https://github.com/light-cloud-com/ice-test-hello-api', branch: 'main', framework: 'express', language: 'javascript' },
   environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'basic' }],
   blocks: [
     { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 100, y: 200 }, data: {} },
@@ -147,6 +150,7 @@ const quickStartDataPipeline: ComposedTemplate = {
   difficulty: 'starter',
   trust: 'official',
   author: { name: 'ICE Team' },
+  repo: { url: 'https://github.com/light-cloud-com/ice-test-hello-data', branch: 'main', framework: 'python', language: 'python' },
   environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'basic' }],
   blocks: [
     { iceType: 'Messaging.SQS', label: 'Job Queue', position: { x: 200, y: 200 }, data: { queue_type: 'standard' } },
@@ -191,6 +195,7 @@ const quickStartStaticSite: ComposedTemplate = {
   difficulty: 'starter',
   trust: 'official',
   author: { name: 'ICE Team' },
+  repo: { url: 'https://github.com/light-cloud-com/ice-test-hello-static', branch: 'main', framework: 'static', language: 'html' },
   environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'basic' }],
   blocks: [
     { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 100, y: 200 }, data: {} },
@@ -219,6 +224,7 @@ const quickStartFunction: ComposedTemplate = {
   difficulty: 'starter',
   trust: 'official',
   author: { name: 'ICE Team' },
+  repo: { url: 'https://github.com/light-cloud-com/ice-test-hello-api', branch: 'main', framework: 'express', language: 'javascript' },
   environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'basic' }],
   blocks: [
     { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 100, y: 200 }, data: {} },

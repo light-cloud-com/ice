@@ -2,61 +2,41 @@
  * Canvas Fixture — Canvas interaction helpers
  *
  * Extends base fixture with drag/drop, connect, zoom helpers.
- * Overrides authenticatedPage to create a project and navigate to its canvas.
+ * Creates a project via UI navigation (no API calls).
  */
 
 import { type Page } from '@playwright/test';
 import { test as base, expect } from './base.fixture';
-
-const BACKEND_URL = 'http://localhost:5001/api';
-
-function toSlug(name: string): string {
-  return (
-    name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '') || 'org'
-  );
-}
 
 export const test = base.extend<{
   canvas: CanvasHelper;
   authenticatedPage: Page;
 }>({
   authenticatedPage: async ({ authenticatedPage }, use) => {
-    const token = await authenticatedPage.evaluate(() => localStorage.getItem('ice-token'));
+    // Community edition auto-seeds user, lands on folder view or canvas
+    // Wait for the app to load
+    await authenticatedPage.waitForSelector(
+      '[data-testid="svg-canvas"], #ice-folder-panel, #ice-canvas-svg',
+      { timeout: 15000 },
+    );
 
-    // Get user profile to find org name
-    const profileRes = await fetch(`${BACKEND_URL}/auth/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const profile = await profileRes.json();
-    const orgName = profile.organisations?.[0]?.name || "Test User's Org";
-    const orgSlug = toSlug(orgName);
+    // If we're on the folder view, create a new project via UI
+    const onCanvas = await authenticatedPage.locator('[data-testid="svg-canvas"], #ice-canvas-svg').isVisible();
+    if (!onCanvas) {
+      // Click "New Project" button if visible
+      const newProjectBtn = authenticatedPage.locator(
+        'button:has-text("New Project"), button:has-text("Create"), [data-testid="new-project"]',
+      );
+      if (await newProjectBtn.first().isVisible({ timeout: 3000 }).catch(() => false)) {
+        await newProjectBtn.first().click();
+        await authenticatedPage.waitForTimeout(1000);
+      }
 
-    // Create a project for canvas tests
-    const projRes = await fetch(`${BACKEND_URL}/canvas/projects/create`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ name: `E2E Canvas ${Date.now()}` }),
-    });
-    const project = await projRes.json();
-
-    if (!project.slug && !project.name) {
-      throw new Error(`Project creation failed: ${JSON.stringify(project)}`);
+      // Wait for canvas to appear after project creation
+      await authenticatedPage
+        .locator('[data-testid="svg-canvas"], #ice-canvas-svg')
+        .waitFor({ state: 'visible', timeout: 15000 });
     }
-
-    const projectSlug = project.slug || toSlug(project.name);
-    const canvasUrl = `/${orgSlug}/${projectSlug}`;
-
-    // Navigate to the project canvas — use networkidle to ensure profile loads
-    await authenticatedPage.goto(canvasUrl, { waitUntil: 'networkidle' });
-
-    // Wait for canvas to appear
-    await authenticatedPage.locator('[data-testid="svg-canvas"]').waitFor({ state: 'visible', timeout: 20000 });
 
     await use(authenticatedPage);
   },

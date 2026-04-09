@@ -1,6 +1,6 @@
 {
   "name": "ice",
-  "version": "0.1.23",
+  "version": "0.1.24",
   "description": "ICE - Integrated Cloud Environment (Web + Backend)",
   "private": true,
   "type": "module",
@@ -22,6 +22,8 @@
     "dist:desktop:linux": "pnpm --filter @ice/desktop dist:linux",
     "test:unit": "vitest run --root .",
     "test:e2e": "playwright test --config e2e/playwright.config.ts",
+    "test:gcp": "playwright test --config e2e/playwright.config.ts --project=gcp-integration",
+    "test:dashboard": "tsx e2e/dashboard/server.ts",
     "test:build": "pnpm --filter @ice/web exec vite build",
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint packages/*/src services/*/src apps/*/src --fix",

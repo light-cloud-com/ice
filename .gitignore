@@ -70,6 +70,11 @@ packages/web/src/**/*.d.ts.map
 # Screenshots (temporary — don't commit to repo)
 *.png
 
+# GCP service account keys
+lc-ice-*.json
+*-sa-key*.json
+*service-account*.json
+
 # Misc
 *.tgz
 .cache/

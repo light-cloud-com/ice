@@ -75,7 +75,7 @@ export function isEnvConfig(t: string): boolean {
 }
 
 export function isDomain(t: string): boolean {
-  return t === 'Network.Domain' || /Domain|DNS/i.test(t);
+  return t === 'Network.PublicEndpoint' || /Domain|DNS/i.test(t);
 }
 
 export function isContainer(iceType: string, nodeType?: string): boolean {

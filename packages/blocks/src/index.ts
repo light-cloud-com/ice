@@ -21,7 +21,6 @@ import { alibabaStaticSiteBlueprint } from './alibaba/frontend/static-site';
 import { alibabaEventStreamBlueprint } from './alibaba/messaging/event-stream';
 import { alibabaRabbitmqBlueprint } from './alibaba/messaging/rabbitmq';
 import { alibabaGatewayBlueprint } from './alibaba/networking/gateway';
-import { alibabaPublicTrafficBlueprint } from './alibaba/networking/public-traffic';
 import { ossBlueprint } from './alibaba/storage/oss';
 import { alibabaStorageBlueprint } from './alibaba/storage/storage';
 import { awsLlmGatewayBlueprint } from './aws/ai/llm-gateway';
@@ -45,7 +44,6 @@ import { awsRabbitmqBlueprint } from './aws/messaging/rabbitmq';
 import { snsBlueprint } from './aws/messaging/sns';
 import { sqsBlueprint } from './aws/messaging/sqs';
 import { awsGatewayBlueprint } from './aws/networking/gateway';
-import { awsPublicTrafficBlueprint } from './aws/networking/public-traffic';
 import { awsSubnetBlueprint } from './aws/networking/subnet';
 import { awsVpcBlueprint } from './aws/networking/vpc';
 import { awsLogTerminalBlueprint } from './aws/observability/log-terminal';
@@ -74,7 +72,6 @@ import { azureEventStreamBlueprint } from './azure/messaging/event-stream';
 import { azureRabbitmqBlueprint } from './azure/messaging/rabbitmq';
 import { serviceBusBlueprint } from './azure/messaging/service-bus';
 import { azureGatewayBlueprint } from './azure/networking/gateway';
-import { azurePublicTrafficBlueprint } from './azure/networking/public-traffic';
 import { azureSubnetBlueprint } from './azure/networking/subnet';
 import { azureVpcBlueprint } from './azure/networking/vpc';
 import { azureLogTerminalBlueprint } from './azure/observability/log-terminal';
@@ -85,7 +82,8 @@ import { azureSslCertificateBlueprint } from './azure/security/ssl-certificate';
 import { azureWafBlueprint } from './azure/security/waf';
 import { azureStorageBlueprint } from './azure/storage/storage';
 import { envConfigBlueprint } from './common/config/env-config';
-import { domainBlueprint } from './common/networking/domain';
+import { customDomainBlueprint } from './common/networking/custom-domain';
+import { publicEndpointBlueprint } from './common/networking/public-endpoint';
 import { githubRepositoryBlueprint } from './common/source/github-repository';
 import { digitaloceanScheduledTaskBlueprint } from './digitalocean/backend/scheduled-task';
 import { doAppPlatformBlueprint } from './digitalocean/compute/do-app-platform';
@@ -96,7 +94,6 @@ import { digitaloceanStaticSiteBlueprint } from './digitalocean/frontend/static-
 import { digitaloceanEventStreamBlueprint } from './digitalocean/messaging/event-stream';
 import { digitaloceanRabbitmqBlueprint } from './digitalocean/messaging/rabbitmq';
 import { digitaloceanGatewayBlueprint } from './digitalocean/networking/gateway';
-import { digitaloceanPublicTrafficBlueprint } from './digitalocean/networking/public-traffic';
 import { doSpacesBlueprint } from './digitalocean/storage/do-spaces';
 import { digitaloceanStorageBlueprint } from './digitalocean/storage/storage';
 import { gcpLlmGatewayBlueprint } from './gcp/ai/llm-gateway';
@@ -119,7 +116,6 @@ import { cloudPubsubBlueprint } from './gcp/messaging/cloud-pubsub';
 import { gcpEventStreamBlueprint } from './gcp/messaging/event-stream';
 import { gcpRabbitmqBlueprint } from './gcp/messaging/rabbitmq';
 import { gcpGatewayBlueprint } from './gcp/networking/gateway';
-import { gcpPublicTrafficBlueprint } from './gcp/networking/public-traffic';
 import { gcpSubnetBlueprint } from './gcp/networking/subnet';
 import { gcpVpcBlueprint } from './gcp/networking/vpc';
 import { gcpLogTerminalBlueprint } from './gcp/observability/log-terminal';
@@ -140,7 +136,6 @@ import { kubernetesStaticSiteBlueprint } from './kubernetes/frontend/static-site
 import { kubernetesEventStreamBlueprint } from './kubernetes/messaging/event-stream';
 import { kubernetesRabbitmqBlueprint } from './kubernetes/messaging/rabbitmq';
 import { kubernetesGatewayBlueprint } from './kubernetes/networking/gateway';
-import { kubernetesPublicTrafficBlueprint } from './kubernetes/networking/public-traffic';
 import { kubernetesLogTerminalBlueprint } from './kubernetes/observability/log-terminal';
 import { kubernetesLogsBlueprint } from './kubernetes/observability/logs';
 import { kubernetesStorageBlueprint } from './kubernetes/storage/storage';
@@ -152,7 +147,6 @@ import { ociStaticSiteBlueprint } from './oci/frontend/static-site';
 import { ociEventStreamBlueprint } from './oci/messaging/event-stream';
 import { ociRabbitmqBlueprint } from './oci/messaging/rabbitmq';
 import { ociGatewayBlueprint } from './oci/networking/gateway';
-import { ociPublicTrafficBlueprint } from './oci/networking/public-traffic';
 import { ociObjectStorageBlueprint } from './oci/storage/oci-object-storage';
 import { ociStorageBlueprint } from './oci/storage/storage';
 import type { BlockBlueprint } from './types';
@@ -177,7 +171,6 @@ export const BLOCK_BLUEPRINTS: BlockBlueprint[] = [
   dynamodbBlueprint,
   awsStorageBlueprint,
   awsGatewayBlueprint,
-  awsPublicTrafficBlueprint,
   awsVpcBlueprint,
   awsSubnetBlueprint,
   awsRabbitmqBlueprint,
@@ -209,7 +202,6 @@ export const BLOCK_BLUEPRINTS: BlockBlueprint[] = [
   firestoreBlueprint,
   gcpStorageBlueprint,
   gcpGatewayBlueprint,
-  gcpPublicTrafficBlueprint,
   gcpVpcBlueprint,
   gcpSubnetBlueprint,
   gcpRabbitmqBlueprint,
@@ -239,7 +231,6 @@ export const BLOCK_BLUEPRINTS: BlockBlueprint[] = [
   cosmosdbBlueprint,
   azureStorageBlueprint,
   azureGatewayBlueprint,
-  azurePublicTrafficBlueprint,
   azureVpcBlueprint,
   azureSubnetBlueprint,
   azureRabbitmqBlueprint,
@@ -265,7 +256,6 @@ export const BLOCK_BLUEPRINTS: BlockBlueprint[] = [
   kubernetesRedisCacheBlueprint,
   kubernetesStorageBlueprint,
   kubernetesGatewayBlueprint,
-  kubernetesPublicTrafficBlueprint,
   kubernetesRabbitmqBlueprint,
   kubernetesEventStreamBlueprint,
   kubernetesLogsBlueprint,
@@ -280,7 +270,6 @@ export const BLOCK_BLUEPRINTS: BlockBlueprint[] = [
   alibabaStorageBlueprint,
   ossBlueprint,
   alibabaGatewayBlueprint,
-  alibabaPublicTrafficBlueprint,
   alibabaRabbitmqBlueprint,
   alibabaEventStreamBlueprint,
   functionComputeBlueprint,
@@ -292,7 +281,6 @@ export const BLOCK_BLUEPRINTS: BlockBlueprint[] = [
   ociStorageBlueprint,
   ociObjectStorageBlueprint,
   ociGatewayBlueprint,
-  ociPublicTrafficBlueprint,
   ociRabbitmqBlueprint,
   ociEventStreamBlueprint,
   ociFunctionsBlueprint,
@@ -305,14 +293,14 @@ export const BLOCK_BLUEPRINTS: BlockBlueprint[] = [
   digitaloceanStorageBlueprint,
   doSpacesBlueprint,
   digitaloceanGatewayBlueprint,
-  digitaloceanPublicTrafficBlueprint,
   digitaloceanRabbitmqBlueprint,
   digitaloceanEventStreamBlueprint,
   doAppPlatformBlueprint,
-  // Common (3)
+  // Common (4)
   githubRepositoryBlueprint,
   envConfigBlueprint,
-  domainBlueprint,
+  publicEndpointBlueprint,
+  customDomainBlueprint,
 ];
 
 /**
@@ -340,7 +328,7 @@ for (const bp of BLOCK_BLUEPRINTS) {
  * @example
  * getBlueprint('Database.PostgreSQL', 'aws')  // → AWS PostgreSQL blueprint
  * getBlueprint('Database.PostgreSQL', 'gcp')  // → GCP Cloud SQL blueprint
- * getBlueprint('Network.Domain')              // → Domain blueprint (cross-provider)
+ * getBlueprint('Network.PublicEndpoint')              // → Domain blueprint (cross-provider)
  */
 export function getBlueprint(iceType: string, provider?: string): BlockBlueprint | undefined {
   if (provider) {

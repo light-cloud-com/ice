@@ -144,7 +144,7 @@ export const iotDeviceManagementTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 50, y: 86 }, data: { domain: 'iot.devices.io', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true } },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
 
@@ -205,8 +205,6 @@ export const iotDeviceManagementTemplate: ComposedTemplate = {
     // ── Ungrouped (control plane) ─────────────────────────────────────────
     // 10: Secrets
     { iceType: 'Security.Secret', label: 'Secrets', position: { x: 50, y: 1080 }, data: {} },
-    // 11: Domain
-    { iceType: 'Network.Domain', label: 'Domain', position: { x: 306, y: 1080 }, data: { hostname: 'iot.devices.io' } },
     // 12: Repo
     {
       iceType: 'Source.Repository',
@@ -215,8 +213,7 @@ export const iotDeviceManagementTemplate: ComposedTemplate = {
       data: { repository: '', branch: 'main' },
     },
     // 13: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 50, y: 1256 }, data: {} },
-  ],
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 50, y: 1256 }, data: {} },],
 
   connections: [
     // Internet → WAF → Gateway
@@ -240,11 +237,11 @@ export const iotDeviceManagementTemplate: ComposedTemplate = {
     // Telemetry Worker → Device Logs (Service→Monitoring rule)
     { fromBlock: 7, toBlock: 9, relationship: 'connects_to' },
     // Domain → Device Gateway (Domain→Routable rule)
-    { fromBlock: 11, toBlock: 2, relationship: 'connects_to' },
+    { fromBlock: 0, toBlock: 2, relationship: 'connects_to' },
     // Repo → Device API (Repo→Service pipeline rule)
-    { fromBlock: 12, toBlock: 3, relationship: 'connects_to' },
+    { fromBlock: 11, toBlock: 3, relationship: 'connects_to' },
     // Device API → Env (Service→EnvConfig config rule)
-    { fromBlock: 3, toBlock: 13, relationship: 'depends_on' },
+    { fromBlock: 3, toBlock: 12, relationship: 'depends_on' },
   ],
 };
 
@@ -329,7 +326,7 @@ export const iotSmartHomeTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 50, y: 86 }, data: { domain: 'home.smart.io', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true } },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
 
@@ -378,8 +375,6 @@ export const iotSmartHomeTemplate: ComposedTemplate = {
     { iceType: 'Security.Identity', label: 'Auth', position: { x: 50, y: 1080 }, data: {} },
     // 9: Secrets
     { iceType: 'Security.Secret', label: 'Secrets', position: { x: 306, y: 1080 }, data: {} },
-    // 10: Domain
-    { iceType: 'Network.Domain', label: 'Domain', position: { x: 562, y: 1080 }, data: { hostname: 'home.smart.io' } },
     // 11: Repo
     {
       iceType: 'Source.Repository',
@@ -388,8 +383,7 @@ export const iotSmartHomeTemplate: ComposedTemplate = {
       data: { repository: '', branch: 'main' },
     },
     // 12: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 306, y: 1256 }, data: {} },
-  ],
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 306, y: 1256 }, data: {} },],
 
   connections: [
     // Internet → WAF → Gateway
@@ -409,10 +403,10 @@ export const iotSmartHomeTemplate: ComposedTemplate = {
     // Home API → Home Logs (Service→Monitoring rule)
     { fromBlock: 3, toBlock: 7, relationship: 'connects_to' },
     // Domain → Gateway (Domain→Routable rule)
-    { fromBlock: 10, toBlock: 2, relationship: 'connects_to' },
+    { fromBlock: 0, toBlock: 2, relationship: 'connects_to' },
     // Repo → Home API (Repo→Service pipeline rule)
-    { fromBlock: 11, toBlock: 3, relationship: 'connects_to' },
+    { fromBlock: 10, toBlock: 3, relationship: 'connects_to' },
     // Home API → Env (Service→EnvConfig config rule)
-    { fromBlock: 3, toBlock: 12, relationship: 'depends_on' },
+    { fromBlock: 3, toBlock: 11, relationship: 'depends_on' },
   ],
 };

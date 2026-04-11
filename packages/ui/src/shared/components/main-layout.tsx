@@ -8,7 +8,7 @@
  * Collapsed sidebars show a WebStorm-style narrow strip with icons + vertical text.
  */
 
-import { FolderOpen, Blocks, PanelRight, MessageSquare, DollarSign, LayoutTemplate, ShieldCheck } from 'lucide-react';
+import { FolderOpen, Blocks, PanelRight, MessageSquare, DollarSign, LayoutTemplate, ShieldCheck, Rocket } from 'lucide-react';
 import { ProjectToolbar } from './project-toolbar';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
@@ -22,6 +22,7 @@ import { SidebarStrip } from './ui/sidebar-strip';
 import { AiChatPanel } from '../../features/ai/components/ai-chat-panel';
 import { SvgCanvas } from '../../features/canvas/components/svg-canvas';
 import { CostPanel } from '../../features/cost/components/cost-panel';
+import { DeployPanel } from '../../features/deploy/components/deploy-panel';
 import { ResourcePalette } from '../../features/palette/components/resource-palette';
 import { PropertiesPanel } from '../../features/properties/components/properties-panel';
 import { ValidationPanel } from '../../features/validation/components/validation-panel';
@@ -35,6 +36,7 @@ import {
   toggleTemplates,
   toggleValidation,
 } from '../../store/slices/ui-slice';
+import { openDeployPanel, closeDeployPanel } from '../../store/slices/deploy-slice';
 import axiosInstance from '../api/axios-instance';
 import type { RootState, AppDispatch } from '../../store';
 import type { SidebarStripTab } from './ui/sidebar-strip';
@@ -148,6 +150,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   const dispatch = useDispatch<AppDispatch>();
   const { showPalette, showBlocks, showProperties, showAiChat, showCostPanel, showTemplates, showValidation } =
     useSelector((state: RootState) => state.ui);
+  const showDeployPanel = useSelector((state: RootState) => state.deploy.isOpen);
   const isPortrait = useIsPortrait();
   const isCanvasView = view === 'canvas' && !children;
 
@@ -265,6 +268,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         onClick: () => dispatch(toggleCostPanel()),
       });
       tabs.push({
+        id: 'deploy',
+        label: t('deploy.title'),
+        icon: Rocket,
+        active: showDeployPanel,
+        onClick: () => dispatch(showDeployPanel ? closeDeployPanel() : openDeployPanel()),
+      });
+      tabs.push({
         id: 'ai',
         label: t('layout.sidebar.aiChat'),
         icon: MessageSquare,
@@ -273,7 +283,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
       });
     }
     return tabs;
-  }, [showProperties, showCostPanel, showAiChat, showValidation, isCanvasView, dispatch]);
+  }, [showProperties, showCostPanel, showDeployPanel, showAiChat, showValidation, isCanvasView, dispatch, t]);
 
   // ── Content ─────────────────────────────────────────────────────────────
 
@@ -293,6 +303,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
     showProperties ||
     (isCanvasView && showAiChat) ||
     (isCanvasView && showCostPanel) ||
+    (isCanvasView && showDeployPanel) ||
     (isCanvasView && showValidation);
 
   // Render right panel content — panels are rendered conditionally but in stable
@@ -302,6 +313,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   if (isCanvasView && showValidation) rightPanels.push({ key: 'validation', node: <ValidationPanel /> });
   if (isCanvasView && showAiChat) rightPanels.push({ key: 'ai', node: <AiChatPanel /> });
   if (isCanvasView && showCostPanel) rightPanels.push({ key: 'cost', node: <CostPanel /> });
+  if (isCanvasView && showDeployPanel) rightPanels.push({ key: 'deploy', node: <DeployPanel /> });
   if (showProperties) rightPanels.push({ key: 'props', node: <PropertiesPanel /> });
 
   const rightPanelContent =

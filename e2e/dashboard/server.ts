@@ -155,7 +155,9 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse) {
         const reposPath = resolve(process.cwd(), 'e2e/repos/index.ts');
         const { ensureTestRepos } = await import(reposPath);
         const result = await ensureTestRepos();
-        json(res, { success: true, repos: result.repos });
+        // Forward the per-repo statuses AND the manifest's own success flag —
+        // hardcoding success:true hid real 403/permission failures from the UI.
+        json(res, { success: result.success !== false, repos: result.repos });
       } catch (err: any) {
         json(res, { success: false, error: err.message }, 500);
       }
@@ -165,11 +167,19 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse) {
     // ── API: Delete Test Repos ───────────────────────────────
     if (method === 'POST' && path === '/api/repos/delete') {
       try {
+        const raw = await readBody(req).catch(() => '');
+        const body = raw ? JSON.parse(raw) : {};
+        if (body.githubToken) process.env.ICE_TEST_GITHUB_TOKEN = body.githubToken;
         const { resolve } = await import('path');
         const reposPath = resolve(process.cwd(), 'e2e/repos/index.ts');
         const { cleanupTestRepos } = await import(reposPath);
-        await cleanupTestRepos();
-        json(res, { success: true });
+        const result = await cleanupTestRepos();
+        json(res, {
+          success: result.success,
+          discovered: result.discovered,
+          deleted: result.deleted,
+          failed: result.failed,
+        });
       } catch (err: any) {
         json(res, { success: false, error: err.message }, 500);
       }

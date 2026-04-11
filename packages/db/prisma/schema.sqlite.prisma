@@ -229,23 +229,49 @@ model CanvasDeployment {
   id          String   @id @default(cuid())
   card_id     String
   user_id     String?  // who triggered the deployment
-  status      String   // 'planning', 'deploying', 'success', 'failed'
+  status      String   // 'planning', 'planned', 'deploying', 'success', 'partial', 'failed', 'cancelled'
+  action_type String   @default("apply") // 'plan' | 'apply' | 'destroy' | 'rollback'
   provider    String
   region      String
   environment String
   plan        Json?    // Deploy plan snapshot
   results     Json?    // Deploy results
+  summary     Json?    // { created, updated, deleted, failed } counts for history UI
+  snapshot    Json?    // Latest DeployProgressSnapshot persisted across gateway restarts
   duration_ms Int?
   error       String?  // Error message if failed
+  pinned      Boolean  @default(false)
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 
-  deploy_jobs DeployJob[]
-  user        User?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  deploy_jobs   DeployJob[]
+  deploy_events DeployEvent[]
+  user          User?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
 
   @@index([card_id, status, created_at])
+  @@index([card_id, environment, created_at])
+  @@index([card_id, action_type, created_at])
   @@index([user_id])
   @@map("canvas_deployment")
+}
+
+// ─── Deploy Event Log (append-only replay tape) ─────────────────────────────
+
+model DeployEvent {
+  id            String   @id @default(cuid())
+  deployment_id String
+  card_id       String
+  seq           Int
+  type          String   // 'progress' | 'resource_result' | 'log' | 'complete'
+  payload       Json
+  created_at    DateTime @default(now())
+
+  deployment CanvasDeployment @relation(fields: [deployment_id], references: [id], onDelete: Cascade)
+
+  @@unique([deployment_id, seq])
+  @@index([card_id, created_at])
+  @@index([deployment_id, seq])
+  @@map("deploy_event")
 }
 
 // ─── Job Queue ───────────────────────────────────────────────────────────────

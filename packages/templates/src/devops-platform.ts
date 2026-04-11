@@ -137,7 +137,7 @@ export const devopsMonitoringTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 50, y: 86 }, data: { domain: 'metrics.myapp.com', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true } },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
 
@@ -191,13 +191,6 @@ export const devopsMonitoringTemplate: ComposedTemplate = {
     },
     // 9: Secrets
     { iceType: 'Security.Secret', label: 'Secrets', position: { x: 306, y: 1080 }, data: {} },
-    // 10: Domain
-    {
-      iceType: 'Network.Domain',
-      label: 'Domain',
-      position: { x: 50, y: 1256 },
-      data: { hostname: 'metrics.myapp.com' },
-    },
     // 11: Repo
     {
       iceType: 'Source.Repository',
@@ -206,8 +199,7 @@ export const devopsMonitoringTemplate: ComposedTemplate = {
       data: { repository: '', branch: 'main' },
     },
     // 12: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },
-  ],
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },],
 
   connections: [
     // Internet → WAF → Gateway
@@ -228,11 +220,11 @@ export const devopsMonitoringTemplate: ComposedTemplate = {
     // Metrics API → Monitoring Logs (Service→Monitoring rule)
     { fromBlock: 3, toBlock: 7, relationship: 'connects_to' },
     // Domain → Gateway (Domain→Routable rule)
-    { fromBlock: 10, toBlock: 2, relationship: 'connects_to' },
+    { fromBlock: 0, toBlock: 2, relationship: 'connects_to' },
     // Repo → Metrics API (Repo→Service rule)
-    { fromBlock: 11, toBlock: 3, relationship: 'connects_to' },
+    { fromBlock: 10, toBlock: 3, relationship: 'connects_to' },
     // Metrics API → Env (Service→Env rule)
-    { fromBlock: 3, toBlock: 12, relationship: 'depends_on' },
+    { fromBlock: 3, toBlock: 11, relationship: 'depends_on' },
   ],
 };
 

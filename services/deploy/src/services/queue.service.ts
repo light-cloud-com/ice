@@ -307,7 +307,7 @@ async function processPipelineJob(data: any) {
     for (const edge of connectedEdges) {
       const otherId = edge.source === nodeId ? edge.target : edge.source;
       const otherNode = nodes.find((n: any) => n.id === otherId);
-      if (otherNode?.data?.iceType === 'Network.Domain') {
+      if (otherNode?.data?.iceType === 'Network.PublicEndpoint') {
         const hostname = otherNode.data.hostname || otherNode.data.subdomain;
         if (hostname) customDomain = hostname as string;
       }

@@ -150,10 +150,15 @@ const SERVICE_NAMES: Record<string, Record<string, string>> = {
     gcp: 'GCP Public Traffic',
     azure: 'Azure Public Traffic',
   },
-  'Network.Domain': {
+  'Network.PublicEndpoint': {
     aws: 'Amazon Route 53',
     gcp: 'Cloud DNS',
     azure: 'Azure DNS',
+  },
+  'Network.CustomDomain': {
+    aws: 'Custom Domain',
+    gcp: 'Custom Domain',
+    azure: 'Custom Domain',
   },
   'Network.Route53': { aws: 'Amazon Route 53' },
   'Network.VPC': {

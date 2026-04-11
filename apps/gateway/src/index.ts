@@ -11,7 +11,13 @@ import { startLocalAiServer, stopLocalAiServer } from '@ice/ai';
 import { createAiRouter } from '@ice/service-ai';
 import { createCanvasRouter } from '@ice/service-canvas';
 import { createCredentialsRouter } from '@ice/service-credentials';
-import { createDeployRouter, startDeployWorker, startCronJobs } from '@ice/service-deploy';
+import {
+  createDeployRouter,
+  startDeployWorker,
+  startCronJobs,
+  startRequirementPoller,
+  cleanupAllTempDirs,
+} from '@ice/service-deploy';
 import { createEngineRouter } from '@ice/service-engine';
 import { createIamRouter } from '@ice/service-iam';
 import { setupSocketService, setDesktopUser } from '@ice/shared';
@@ -214,15 +220,38 @@ app.use('/api', createCredentialsRouter());
   }
 
   const { existsSync } = await import('fs');
-  if (existsSync(webDistPath)) {
-    app.use(express.static(webDistPath));
+  const serveWebDist = existsSync(webDistPath) && process.env.NODE_ENV !== 'development';
+  if (serveWebDist) {
+    // In prod/desktop mode: gateway serves the compiled web bundle directly.
+    // In dev mode: we skip this and expect vite dev server (port 5174) to
+    // serve the frontend with live HMR. Otherwise a stale `web/dist` silently
+    // shadows every frontend source change and the user sees "no difference
+    // whatsoever" when editing UI code.
+    app.use(
+      express.static(webDistPath, {
+        // Tell the browser not to cache the bundle — we bust cache via
+        // `[name]-<buildId>-<hash>.js` output names, but the index.html
+        // pointer itself should always be re-fetched so new buildIds land.
+        setHeaders: (res, filePath) => {
+          if (filePath.endsWith('index.html')) {
+            res.setHeader('Cache-Control', 'no-store, must-revalidate');
+          }
+        },
+      }),
+    );
 
     // SPA fallback — serve index.html for all non-API routes
     app.get('*', (req, res, next) => {
       if (req.path.startsWith('/api') || req.path.startsWith('/socket.io')) return next();
+      res.setHeader('Cache-Control', 'no-store, must-revalidate');
       res.sendFile(join(webDistPath, 'index.html'));
     });
-    console.log('[gateway] Serving web app from', webDistPath);
+    console.log('[gateway] Serving compiled web app from', webDistPath);
+  } else if (existsSync(webDistPath)) {
+    console.log(
+      '[gateway] NODE_ENV=development — skipping web/dist serving. ' +
+        'Open the vite dev server (http://localhost:5174) to see live frontend changes.',
+    );
   }
 }
 
@@ -238,11 +267,18 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 // ─── Start ──────────────────────────────────────────────────────────────────
 
 httpServer.listen(PORT, () => {
+  const nodeEnv = process.env.NODE_ENV || 'unset';
   console.log(`ICE Community gateway running on port ${PORT}`);
+  console.log(`[gateway] NODE_ENV=${nodeEnv}`);
+  if (nodeEnv === 'development') {
+    console.log(`[gateway] → Open vite dev server at http://localhost:5174 for live frontend HMR`);
+    console.log(`[gateway] → http://localhost:${PORT} serves API + socket.io only in dev mode`);
+  }
 
   // Start background services (non-blocking)
   startDeployWorker();
   startCronJobs();
+  startRequirementPoller();
 
   // Start local AI server if configured — non-blocking
   // Only starts when ICE_AI_PROVIDER is set to 'openai-compat' with a local URL
@@ -255,6 +291,15 @@ httpServer.listen(PORT, () => {
 
 function shutdown(signal: string) {
   console.log(`\n${signal} received — shutting down gracefully...`);
+
+  // Scrub any temp SA-key directories left behind by in-flight deploys.
+  // Phase 0 fix: without this, crashed or signal-killed deploys leak live
+  // service account keys to /tmp.
+  try {
+    cleanupAllTempDirs();
+  } catch (err) {
+    console.error('Temp credential cleanup failed:', err);
+  }
 
   // Stop local AI server if we started it
   stopLocalAiServer().catch(() => {});
@@ -275,5 +320,12 @@ function shutdown(signal: string) {
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception:', err);
+  try {
+    cleanupAllTempDirs();
+  } catch {}
+  process.exit(1);
+});
 
 export { io };

@@ -889,6 +889,82 @@ export const PropertiesPanel: React.FC = () => {
 
         {/* Properties */}
         <Section title={t('properties.edge.propertiesSection')}>
+          {/* Subdomain — shown when either end of the edge is a
+              Network.PublicEndpoint OR Network.CustomDomain, so users
+              can route each service on a different host
+              (api.example.com, app.example.com, etc.) without needing
+              separate endpoint blocks. Empty = root. Validated against
+              RFC 1035 DNS label rules: lowercase, digits, hyphens; no
+              leading/trailing hyphen; ≤63 chars. */}
+          {(srcIceType === 'Network.PublicEndpoint' ||
+            tgtIceType === 'Network.PublicEndpoint' ||
+            srcIceType === 'Network.CustomDomain' ||
+            tgtIceType === 'Network.CustomDomain') && (() => {
+            const endpointNode =
+              srcIceType === 'Network.PublicEndpoint' || srcIceType === 'Network.CustomDomain'
+                ? sourceNode
+                : targetNode;
+            const rootDomain = ((endpointNode?.data?.domain as string) || '').trim();
+            const currentSubdomain = (edgeData.subdomain as string) || '';
+
+            // Normalize aggressive input: strip protocol, host, dots,
+            // trailing dash, and force lowercase. Users often paste a
+            // full URL or type `api.` and we want the block to not
+            // reject them on a typo.
+            const normalize = (raw: string): string => {
+              let s = raw.toLowerCase().trim();
+              s = s.replace(/^https?:\/\//, '');
+              // If they typed `api.example.com`, keep only the first label.
+              const dotIdx = s.indexOf('.');
+              if (dotIdx !== -1) s = s.slice(0, dotIdx);
+              // Only allow RFC 1035 DNS label characters (plus the empty
+              // string for "root" deploys).
+              s = s.replace(/[^a-z0-9-]/g, '');
+              // Trim leading/trailing hyphens — GCP rejects them.
+              s = s.replace(/^-+/, '').replace(/-+$/, '');
+              if (s.length > 63) s = s.slice(0, 63);
+              return s;
+            };
+
+            const validationError = (() => {
+              if (!currentSubdomain) return null;
+              if (!/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/.test(currentSubdomain)) {
+                return 'Subdomain must be lowercase letters, digits, hyphens (not starting/ending). Max 63 chars.';
+              }
+              return null;
+            })();
+
+            const previewHost =
+              currentSubdomain && rootDomain
+                ? `${currentSubdomain}.${rootDomain}`
+                : rootDomain || '(no domain set)';
+            return (
+              <div className="space-y-1 mb-2">
+                <label className="text-ice-2xs text-ice-text-3">Subdomain</label>
+                <input
+                  type="text"
+                  value={currentSubdomain}
+                  onChange={(e) => {
+                    const cleaned = normalize(e.target.value);
+                    updateEdgeField('subdomain', cleaned || null);
+                  }}
+                  placeholder="api (leave blank for root)"
+                  className={cn(
+                    'w-full px-1.5 py-1.5 text-ice-sm rounded border bg-ice-base text-ice-text-1 font-mono focus:outline-none focus:ring-1',
+                    validationError
+                      ? 'border-red-500/50 focus:ring-red-500'
+                      : 'border-ice-border focus:ring-blue-500',
+                  )}
+                />
+                {validationError ? (
+                  <div className="text-ice-2xs text-red-400">{validationError}</div>
+                ) : (
+                  <div className="text-ice-2xs text-ice-text-3 font-mono">→ {previewHost}</div>
+                )}
+              </div>
+            );
+          })()}
+
           {/* Port — unified with env var when EnvVars block is connected */}
           {(() => {
             const sourceId = selectedEdge.source;
@@ -1069,6 +1145,46 @@ export const PropertiesPanel: React.FC = () => {
           />
         )}
 
+        {/* ── Custom Domain inheritance banner ──
+            When this node is the target of a Network.CustomDomain edge,
+            its `domain` property is force-managed by the Custom Domain
+            block (the canvas effect in svg-canvas.tsx keeps it in sync).
+            Surface this prominently so the user understands why editing
+            the domain field gets immediately overwritten. */}
+        {(() => {
+          if (!activeCard || !selectedNode) return null;
+          const customDomainEdge = activeCard.edges.find((e: any) => {
+            if (e.source !== selectedNode.id && e.target !== selectedNode.id) return false;
+            const otherId = e.source === selectedNode.id ? e.target : e.source;
+            const otherNode = activeCard.nodes.find((n: any) => n.id === otherId);
+            return otherNode?.data?.iceType === 'Network.CustomDomain';
+          });
+          if (!customDomainEdge) return null;
+          const otherId =
+            customDomainEdge.source === selectedNode.id ? customDomainEdge.target : customDomainEdge.source;
+          const cdNode = activeCard.nodes.find((n: any) => n.id === otherId);
+          const cdLabel = (cdNode?.data?.label as string) || 'Custom Domain';
+          const inheritedDomain = (selectedNode.data?.domain as string) || '';
+          return (
+            <div className="px-3 py-2 border-b border-ice-border bg-blue-500/5">
+              <div className="flex items-center gap-1.5 text-ice-2xs text-blue-400">
+                <span>🌐</span>
+                <span className="font-medium">Domain managed by</span>
+                <span className="font-mono">{cdLabel}</span>
+              </div>
+              {inheritedDomain && (
+                <div className="mt-0.5 text-ice-xs font-mono text-ice-text-1 truncate" title={inheritedDomain}>
+                  {inheritedDomain}
+                </div>
+              )}
+              <div className="mt-0.5 text-ice-2xs text-ice-text-3 leading-snug">
+                Edit the route on the Custom Domain block to change this. Disconnect the edge to set a domain
+                manually.
+              </div>
+            </div>
+          );
+        })()}
+
         {/* ── Navigation Tabs ── */}
         {(() => {
           const hasDeployment = !!selectedNode.data?.provider_id;
@@ -1078,13 +1194,18 @@ export const PropertiesPanel: React.FC = () => {
 
           // Tabs are derived from the node's actual content — not hardcoded
           const tabs: Array<{ id: string; label: string; show: boolean; dot?: boolean }> = [];
-          if (dbProperties.length > 0 || iceType === 'Config.Environment' || iceType === 'Network.Domain') {
+          if (
+            dbProperties.length > 0 ||
+            iceType === 'Config.Environment' ||
+            iceType === 'Network.PublicEndpoint' ||
+            iceType === 'Network.CustomDomain'
+          ) {
             tabs.push({ id: 'config', label: t('properties.tabs.config'), show: true });
           }
           if (isScalable) {
             tabs.push({ id: 'scaling', label: t('properties.tabs.scaling'), show: true });
           }
-          if (iceType === 'Network.Domain') {
+          if (iceType === 'Network.PublicEndpoint' || iceType === 'Network.CustomDomain') {
             tabs.push({ id: 'domain', label: t('properties.tabs.domain'), show: true });
           }
           if (hasSource || iceType === 'Source.Repository') {
@@ -1270,7 +1391,7 @@ export const PropertiesPanel: React.FC = () => {
               )}
 
               {/* ════ DOMAIN TAB ════ */}
-              {activeTab === 'domain' && iceType === 'Network.Domain' && (
+              {activeTab === 'domain' && iceType === 'Network.PublicEndpoint' && (
                 <Section title="">
                   <div className="space-y-2">
                     <TextField
@@ -1299,6 +1420,17 @@ export const PropertiesPanel: React.FC = () => {
                     />
                   </div>
                 </Section>
+              )}
+
+              {/* ════ CUSTOM DOMAIN — DOMAIN TAB ════ */}
+              {activeTab === 'domain' && iceType === 'Network.CustomDomain' && (
+                <CustomDomainPanel
+                  selectedNode={selectedNode}
+                  outgoingEdges={outgoingEdges}
+                  activeCard={activeCard}
+                  updateNodeField={updateNodeField}
+                  dispatch={dispatch}
+                />
               )}
 
               {/* ════ CONNECTIONS TAB ════ */}
@@ -1407,6 +1539,19 @@ export const PropertiesPanel: React.FC = () => {
                     />
                   )}
 
+                  {/* Custom Domain — config tab mirrors the domain tab so
+                      the user sees the root domain field + subdomain
+                      routing list as soon as they click the block. */}
+                  {iceType === 'Network.CustomDomain' && (
+                    <CustomDomainPanel
+                      selectedNode={selectedNode}
+                      outgoingEdges={outgoingEdges}
+                      activeCard={activeCard}
+                      updateNodeField={updateNodeField}
+                      dispatch={dispatch}
+                    />
+                  )}
+
                   {/* Cost */}
                   {estimatedCost && (
                     <Section title={t('properties.config.cost')}>
@@ -1490,6 +1635,230 @@ export const PropertiesPanel: React.FC = () => {
           </p>
         </div>
       )}
+    </div>
+  );
+};
+
+// ─── Custom Domain Panel (inline in Properties panel) ──────────────────────
+//
+// Mirrors the canvas renderer ONE-TO-ONE: shows the same routes, in the
+// same order, with the same subdomain edits. Both views read and write
+// `selectedNode.data.routes` so editing in either place updates both.
+//
+// Layout:
+//   - Root domain field — writes to `node.data.domain`
+//   - Routes list — one row per route (NOT per edge); each row is:
+//       · subdomain input (writes back to `routes[i].subdomain`)
+//       · live host preview
+//       · connected target label (or "—" if unconnected)
+//       · delete button (only if more than one route)
+//   - + Add subdomain route — appends a new route
+//   - DNS records — pulled from any connected target's deploy outputs
+
+interface CustomDomainRoute {
+  id: string;
+  subdomain: string;
+}
+
+const CustomDomainPanel: React.FC<{
+  selectedNode: any;
+  outgoingEdges: any[];
+  activeCard: any;
+  updateNodeField: (field: string, value: unknown) => void;
+  dispatch: AppDispatch;
+}> = ({ selectedNode, outgoingEdges, activeCard, updateNodeField, dispatch }) => {
+  const rootDomain = (selectedNode?.data?.domain as string) || '';
+  const routes = ((selectedNode?.data?.routes as CustomDomainRoute[] | undefined) || []).slice();
+
+  // Build a per-route view: route + the connected edge (if any) + the
+  // connected target node (if any) + DNS records from the target.
+  const routeViews = routes.map((route) => {
+    const matchingEdge = outgoingEdges.find((e) => (e.data as any)?.routeId === route.id);
+    let targetNode: any = null;
+    if (matchingEdge) {
+      const targetId =
+        matchingEdge.source === selectedNode.id ? matchingEdge.target : matchingEdge.source;
+      targetNode = (activeCard.nodes || []).find((n: any) => n.id === targetId) || null;
+    }
+    const targetIce = (targetNode?.data?.iceType as string) || '';
+    const targetLabel = (targetNode?.data?.label as string) || targetNode?.id?.slice(0, 8) || '';
+    const targetId = targetNode?.id || '';
+    const subdomain = (route.subdomain || '').trim();
+    const host = subdomain && rootDomain ? `${subdomain}.${rootDomain}` : rootDomain;
+    const dnsRecords = targetNode
+      ? (((targetNode.data as any)?.custom_domain_dns_records ||
+          (targetNode.data as any)?.deploy_outputs?.custom_domain_dns_records ||
+          []) as Array<{ type: string; domain: string; value: string }>)
+      : [];
+    return { route, edge: matchingEdge, targetNode, targetIce, targetLabel, targetId, subdomain, host, dnsRecords };
+  });
+
+  const normalizeSubdomain = (raw: string): string => {
+    let s = raw.toLowerCase().trim();
+    s = s.replace(/^https?:\/\//, '');
+    const dotIdx = s.indexOf('.');
+    if (dotIdx !== -1) s = s.slice(0, dotIdx);
+    s = s.replace(/[^a-z0-9-]/g, '').replace(/^-+/, '').replace(/-+$/, '');
+    if (s.length > 63) s = s.slice(0, 63);
+    return s;
+  };
+
+  const updateRouteSubdomain = (routeId: string, value: string) => {
+    const next = routes.map((r) => (r.id === routeId ? { ...r, subdomain: normalizeSubdomain(value) } : r));
+    updateNodeField('routes', next);
+  };
+
+  const addRoute = () => {
+    const newId = `route-${Math.random().toString(36).slice(2, 10)}`;
+    updateNodeField('routes', [...routes, { id: newId, subdomain: '' }]);
+  };
+
+  const deleteRoute = (routeId: string) => {
+    updateNodeField(
+      'routes',
+      routes.filter((r) => r.id !== routeId),
+    );
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* Root domain field */}
+      <Section title="Root domain">
+        <input
+          type="text"
+          value={rootDomain}
+          placeholder="example.com"
+          onChange={(e) => updateNodeField('domain', e.target.value.toLowerCase().trim())}
+          className="w-full px-2 py-1.5 text-ice-sm rounded border border-ice-border bg-ice-base text-ice-text-1 font-mono focus:outline-none focus:ring-1 focus:ring-blue-500"
+        />
+        <p className="mt-1 text-ice-2xs text-ice-text-3 leading-relaxed">
+          The root domain for this block. Leave blank to disable. Add a route below for each subdomain you want
+          to expose, then drag the matching dot on the canvas block to a publicly-facing service.
+        </p>
+      </Section>
+
+      {/* Routes — same data the canvas block reads from */}
+      <Section title={`Routes (${routeViews.length})`}>
+        {routeViews.length === 0 && (
+          <p className="text-ice-2xs text-ice-text-3 leading-relaxed py-2">
+            No routes yet. Click + below to add a subdomain slot.
+          </p>
+        )}
+        {routeViews.length > 0 && (
+          <div className="space-y-2">
+            {routeViews.map(({ route, edge, targetIce, targetLabel, targetId, subdomain, host }) => (
+              <div
+                key={route.id}
+                className="rounded border border-ice-border bg-ice-base/40 px-2 py-2 space-y-1.5"
+              >
+                {/* Top row: target label + live host preview */}
+                <div className="flex items-center justify-between gap-2">
+                  <span
+                    className="text-ice-2xs text-ice-text-3 truncate"
+                    title={targetIce ? `${targetIce} · ${targetId}` : 'unconnected'}
+                  >
+                    {edge && targetId ? (
+                      <>
+                        → {targetLabel} <span className="text-ice-text-3/60">({targetId.slice(0, 8)})</span>
+                      </>
+                    ) : (
+                      <span className="italic">unconnected — drag the dot to wire up</span>
+                    )}
+                  </span>
+                  <span
+                    className="text-ice-2xs font-mono text-blue-400 truncate"
+                    title={host || '(no domain)'}
+                  >
+                    {host || '(no domain)'}
+                  </span>
+                </div>
+
+                {/* Bottom row: subdomain editor + delete */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-ice-2xs text-ice-text-3 shrink-0">subdomain</span>
+                  <input
+                    type="text"
+                    value={subdomain}
+                    placeholder="api (blank = root)"
+                    onChange={(e) => updateRouteSubdomain(route.id, e.target.value)}
+                    className="flex-1 min-w-0 px-1.5 py-1 text-ice-xs rounded border border-ice-border bg-ice-base text-ice-text-1 font-mono focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                  {routes.length > 1 && (
+                    <button
+                      onClick={() => deleteRoute(route.id)}
+                      title="Delete route"
+                      className="shrink-0 w-6 h-6 flex items-center justify-center text-ice-text-3 hover:text-red-400 hover:bg-red-500/10 rounded"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        <button
+          onClick={addRoute}
+          className="mt-2 w-full px-3 py-1.5 text-ice-xs text-ice-text-2 border border-dashed border-ice-border rounded hover:bg-ice-base/40"
+        >
+          + Add subdomain route
+        </button>
+      </Section>
+
+      {/* DNS records (post-deploy) */}
+      {(() => {
+        const allDnsRows = routeViews.flatMap((rv) =>
+          rv.dnsRecords.map((rec) => ({
+            ...rec,
+            host: rv.host || rec.domain,
+            targetLabel: rv.targetLabel,
+          })),
+        );
+        if (allDnsRows.length === 0) {
+          return (
+            <Section title="DNS records">
+              <p className="text-ice-2xs text-ice-text-3 leading-relaxed">
+                After deploy, the DNS records you need to add at your registrar will appear here. Verify the
+                domain at your DNS provider, and the connected service (e.g. Firebase Hosting) will automatically
+                provision a managed SSL certificate.
+              </p>
+            </Section>
+          );
+        }
+        return (
+          <Section title={`DNS records (${allDnsRows.length})`}>
+            <div className="space-y-1">
+              {allDnsRows.map((rec, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-2 text-ice-2xs font-mono bg-ice-base/40 border border-ice-border px-2 py-1.5 rounded"
+                >
+                  <span className="font-semibold text-blue-400 w-10 shrink-0">{rec.type}</span>
+                  <span className="text-ice-text-3 truncate flex-shrink min-w-0" title={rec.host}>
+                    {rec.host}
+                  </span>
+                  <span className="text-ice-text-1 truncate flex-1 min-w-0" title={rec.value}>
+                    {rec.value}
+                  </span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(rec.value).catch(() => undefined);
+                    }}
+                    className="shrink-0 px-1.5 py-0.5 text-[10px] rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-300"
+                    title="Copy value to clipboard"
+                  >
+                    Copy
+                  </button>
+                </div>
+              ))}
+            </div>
+            <p className="mt-2 text-ice-2xs text-ice-text-3 leading-relaxed">
+              Add each row at your DNS registrar. After they propagate (usually a few minutes), Firebase Hosting
+              will issue a managed SSL certificate automatically.
+            </p>
+          </Section>
+        );
+      })()}
     </div>
   );
 };
@@ -2201,14 +2570,30 @@ const SourceRepositorySection: React.FC<{
 
 // ─── Deploy History ──────────────────────────────────────────────────────────
 
+const ACTION_LABELS: Record<string, string> = {
+  plan: 'Plan',
+  apply: 'Deploy',
+  destroy: 'Destroy',
+  rollback: 'Rollback',
+};
+
+const ACTION_COLORS: Record<string, string> = {
+  plan: 'text-slate-400 bg-slate-950/30',
+  apply: 'text-blue-400 bg-blue-950/30',
+  destroy: 'text-orange-400 bg-orange-950/30',
+  rollback: 'text-purple-400 bg-purple-950/30',
+};
+
 const DeployHistory: React.FC<{ cardId: string }> = ({ cardId }) => {
   const [history, setHistory] = useState<any[]>([]);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
         const data = await getApi().deploy.getDeployments(cardId);
-        setHistory(Array.isArray(data) ? data.slice(0, 10) : []);
+        setHistory(Array.isArray(data) ? data : []);
       } catch {
         // ignore
       }
@@ -2217,10 +2602,21 @@ const DeployHistory: React.FC<{ cardId: string }> = ({ cardId }) => {
 
   if (history.length === 0) return null;
 
+  const visible = showAll ? history : history.slice(0, 15);
+
+  const toggleExpand = (id: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   return (
     <Section title={t('properties.deploy.history')}>
-      <div className="space-y-1">
-        {history.map((d, i) => {
+      <div className="space-y-0.5">
+        {visible.map((d, i) => {
           const date = new Date(d.created_at);
           const time = date.toLocaleString(undefined, {
             month: 'short',
@@ -2230,32 +2626,92 @@ const DeployHistory: React.FC<{ cardId: string }> = ({ cardId }) => {
           });
           const duration = d.duration_ms ? `${(d.duration_ms / 1000).toFixed(1)}s` : '';
           const isSuccess = d.status === 'success';
-          const isFailed = d.status === 'failed';
+          const isFailed = d.status === 'failed' || d.status === 'cancelled';
+          const isPartial = d.status === 'partial';
+          const isPending = d.status === 'deploying' || d.status === 'planning' || d.status === 'planned';
+          const actionType = (d.action_type as string) || 'apply';
+          const actionLabel = ACTION_LABELS[actionType] || actionType;
+          const actionColor = ACTION_COLORS[actionType] || 'text-slate-400 bg-slate-950/30';
+          const summary = (d.summary as Record<string, number> | null) || null;
+          const summaryText = summary
+            ? [
+                summary.created > 0 ? `${summary.created} created` : null,
+                summary.updated > 0 ? `${summary.updated} updated` : null,
+                summary.deleted > 0 ? `${summary.deleted} deleted` : null,
+                summary.failed > 0 ? `${summary.failed} failed` : null,
+              ]
+                .filter(Boolean)
+                .join(' · ')
+            : '';
+          const isExpanded = expanded.has(d.id);
           return (
-            <div key={d.id || i} className="flex items-center gap-2 py-1 text-ice-xs">
+            <div key={d.id || i} className="text-ice-xs">
               <div
-                className={cn(
-                  'w-1.5 h-1.5 rounded-full shrink-0',
-                  isSuccess ? 'bg-emerald-500' : isFailed ? 'bg-red-500' : 'bg-amber-500',
-                )}
-              />
-              <span className="text-ice-text-2 truncate">{time}</span>
-              <span
-                className={cn(
-                  'text-ice-2xs px-1 py-0.5 rounded',
-                  isSuccess
-                    ? 'text-emerald-400 bg-emerald-950/30'
-                    : isFailed
-                      ? 'text-red-400 bg-red-950/30'
-                      : 'text-amber-400 bg-amber-950/30',
-                )}
+                className="flex items-center gap-2 py-1 cursor-pointer hover:bg-ice-bg-2/50 -mx-1 px-1 rounded"
+                onClick={() => toggleExpand(d.id)}
               >
-                {d.status}
-              </span>
-              {duration && <span className="ml-auto text-ice-text-3 font-mono">{duration}</span>}
+                <div
+                  className={cn(
+                    'w-1.5 h-1.5 rounded-full shrink-0',
+                    isSuccess
+                      ? 'bg-emerald-500'
+                      : isFailed
+                        ? 'bg-red-500'
+                        : isPartial
+                          ? 'bg-amber-500'
+                          : isPending
+                            ? 'bg-blue-500 animate-pulse'
+                            : 'bg-slate-500',
+                  )}
+                />
+                <span className={cn('text-ice-2xs px-1 py-0.5 rounded', actionColor)}>{actionLabel}</span>
+                <span className="text-ice-text-2 truncate">{time}</span>
+                {d.environment && (
+                  <span className="text-ice-2xs text-ice-text-3">{d.environment}</span>
+                )}
+                {duration && <span className="ml-auto text-ice-text-3 font-mono">{duration}</span>}
+              </div>
+              {summaryText && !isExpanded && (
+                <div className="pl-4 pb-1 text-ice-2xs text-ice-text-3">{summaryText}</div>
+              )}
+              {isExpanded && (
+                <div className="pl-4 pb-2 space-y-1 text-ice-2xs">
+                  {d.error && (
+                    <div className="text-red-400 break-words">{d.error}</div>
+                  )}
+                  {summaryText && <div className="text-ice-text-2">{summaryText}</div>}
+                  {Array.isArray(d.results?.resources) && d.results.resources.length > 0 && (
+                    <div className="space-y-0.5">
+                      {d.results.resources.map((r: any, idx: number) => (
+                        <div key={idx} className="flex items-center gap-2 font-mono">
+                          <span
+                            className={cn(
+                              'w-1 h-1 rounded-full shrink-0',
+                              r.success ? 'bg-emerald-500' : 'bg-red-500',
+                            )}
+                          />
+                          <span className="text-ice-text-3 truncate">{r.type}</span>
+                          <span className="text-ice-text-2 truncate">{r.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="text-ice-text-3 font-mono">
+                    {d.provider} · {d.region} · {d.id.slice(0, 8)}
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}
+        {!showAll && history.length > 15 && (
+          <button
+            className="text-ice-2xs text-ice-text-3 hover:text-ice-text-2 pt-1"
+            onClick={() => setShowAll(true)}
+          >
+            Show all {history.length} deploys
+          </button>
+        )}
       </div>
     </Section>
   );

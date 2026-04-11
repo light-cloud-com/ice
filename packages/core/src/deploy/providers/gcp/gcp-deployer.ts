@@ -6,9 +6,16 @@
  */
 
 import { initialize_gcp_clients, create_rest_client } from './sdk-loader.js';
-import { isApiNotEnabledError, extractApiName, GCP_DEPLOYER_MESSAGES, buildApiEnableUrl } from '../../messages.js';
+import { GCP_DEPLOYER_MESSAGES } from '../../messages.js';
+import {
+  isApiNotEnabledError,
+  isResourceNotFoundError,
+  extractApiName,
+  buildApiEnableUrl,
+} from './messages.js';
 // Import handlers
 import { api_gateway_handler } from './handlers/api-gateway.js';
+import { backend_bucket_handler } from './handlers/backend-bucket.js';
 import { bigquery_handler } from './handlers/bigquery.js';
 import { cloud_functions_handler } from './handlers/cloud-functions.js';
 import { cloud_run_handler } from './handlers/cloud-run.js';
@@ -18,11 +25,13 @@ import { cloud_storage_handler } from './handlers/cloud-storage.js';
 import { dataflow_handler } from './handlers/dataflow.js';
 import { discovery_engine_handler } from './handlers/discovery-engine.js';
 import { domain_mapping_handler } from './handlers/domain-mapping.js';
+import { firebase_hosting_handler } from './handlers/firebase-hosting.js';
 import { firestore_handler } from './handlers/firestore.js';
 import { gke_handler } from './handlers/gke.js';
 import { identity_platform_handler } from './handlers/identity-platform.js';
 import { load_balancer_handler } from './handlers/load-balancer.js';
 import { logging_handler } from './handlers/logging.js';
+import { managed_ssl_certificate_handler } from './handlers/managed-ssl-certificate.js';
 import { memorystore_handler } from './handlers/memorystore.js';
 import { pubsub_handler } from './handlers/pubsub.js';
 import { secret_manager_handler } from './handlers/secret-manager.js';
@@ -54,6 +63,13 @@ const API_FOR_TYPE: Record<string, string> = {
   'gcp.dataflow.': 'dataflow.googleapis.com',
   'gcp.discoveryengine.': 'discoveryengine.googleapis.com',
   'gcp.container.': 'container.googleapis.com',
+  // Firebase Hosting needs both APIs. The dispatcher only resolves one
+  // per type prefix, so we list the Hosting API here (the more specific
+  // longer prefix wins). The Firebase Management API is added to the
+  // service-level requiredApis list in deploy.service.ts so it's enabled
+  // BEFORE the handler runs (which is when we'd otherwise hit the 403).
+  'gcp.firebase.hosting': 'firebasehosting.googleapis.com',
+  'gcp.firebase.': 'firebase.googleapis.com',
 };
 
 // =============================================================================
@@ -87,7 +103,12 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: GCPResourceHandler }> =
   { prefix: 'gcp.bigquery.', handler: bigquery_handler },
   // API Gateway
   { prefix: 'gcp.apigateway.', handler: api_gateway_handler },
-  // Compute (load balancer, forwarding rules)
+  // Phase 8 — specific compute handlers must precede the generic prefix.
+  // Managed SSL certificate (Custom Domain block)
+  { prefix: 'gcp.compute.managedSslCertificate', handler: managed_ssl_certificate_handler },
+  // Backend bucket (static site wiring)
+  { prefix: 'gcp.compute.backendBucket', handler: backend_bucket_handler },
+  // Compute (load balancer, forwarding rules, fallthrough for everything else)
   { prefix: 'gcp.compute.', handler: load_balancer_handler },
   // Cloud Logging
   { prefix: 'gcp.logging.', handler: logging_handler },
@@ -99,6 +120,8 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: GCPResourceHandler }> =
   { prefix: 'gcp.discoveryengine.', handler: discovery_engine_handler },
   // GKE
   { prefix: 'gcp.container.', handler: gke_handler },
+  // Firebase Hosting (static site preferred path on GCP)
+  { prefix: 'gcp.firebase.hosting', handler: firebase_hosting_handler },
 ];
 
 // =============================================================================
@@ -110,9 +133,16 @@ export class GCPDeployer implements ProviderDeployer {
 
   private ctx: GCPHandlerContext | null = null;
   private on_log?: (message: string) => void;
+  private on_progress?: (
+    resource: string,
+    action: string,
+    status: string,
+    extra?: { step?: { label: string; index: number; total: number } },
+  ) => void;
 
   async initialize(options: DeployOptions): Promise<void> {
     this.on_log = options.on_log;
+    this.on_progress = options.on_progress;
     if (!options.project) {
       throw new Error(GCP_DEPLOYER_MESSAGES.PROJECT_REQUIRED);
     }
@@ -121,11 +151,23 @@ export class GCPDeployer implements ProviderDeployer {
     const region = options.regions?.[0] || 'us-central1';
 
     // Initialize SDK clients and REST client in parallel.
-    // Pass auth_client through — in Electron, dynamic import can't resolve
-    // google-auth-library from compiled core dist, so the main process
-    // creates the auth client and passes it here.
+    //
+    // The SDK clients accept scoped auth via keyFilename / credentials /
+    // authClient. We prefer `keyFilename` because every Google Cloud Node
+    // SDK accepts it consistently; the earlier attempt to pass a resolved
+    // auth client didn't work for `@google-cloud/storage` because its
+    // constructor expects a GoogleAuth factory, not a sub-client.
+    // `deploy.service.ts` writes the SA key to a 0600 temp file and passes
+    // the path via `options.auth_key_file`.
+    //
+    // The REST client keeps using the already-resolved `auth_client`
+    // because it only needs an authorized `request()` method.
     const [clients, rest_client] = await Promise.all([
-      initialize_gcp_clients(project),
+      initialize_gcp_clients(project, {
+        keyFilename: options.auth_key_file,
+        credentials: options.auth_credentials,
+        authClient: options.auth_client,
+      }),
       create_rest_client(project, options.auth_client),
     ]);
 
@@ -135,6 +177,10 @@ export class GCPDeployer implements ProviderDeployer {
       clients,
       rest_client,
       on_log: options.on_log,
+      // Phase 2: forward sub-step events from handlers up to the service.
+      on_step: (resource, step) => {
+        this.on_progress?.(resource, 'create', 'step', { step });
+      },
     };
   }
 
@@ -169,6 +215,25 @@ export class GCPDeployer implements ProviderDeployer {
     options: Record<string, unknown>,
   ): Promise<ResourceDeployResult> {
     return this.dispatch('delete', type, name, {}, provider_id, {}, options);
+  }
+
+  /**
+   * Phase 7 — describe a resource for drift detection. Returns
+   * `{ exists: false }` for resource types whose handlers don't implement
+   * describe yet, which the caller treats as "drift detection unavailable."
+   */
+  async describe(
+    type: string,
+    name: string,
+    provider_id: string,
+  ): Promise<{ exists: boolean; properties?: Record<string, unknown>; error?: string; supported: boolean }> {
+    if (!this.ctx) return { exists: false, supported: false, error: 'Deployer not initialized' };
+    const handler = this.get_handler(type);
+    if (!handler || typeof handler.describe !== 'function') {
+      return { exists: false, supported: false };
+    }
+    const result = await handler.describe(name, provider_id, this.ctx);
+    return { ...result, supported: true };
   }
 
   // ==========================================================================
@@ -211,6 +276,24 @@ export class GCPDeployer implements ProviderDeployer {
 
     // First attempt
     let result = await this.call_handler(handler, action, name, properties, provider_id, current_properties);
+
+    // Generic delete-not-found tolerance: a delete that finds the
+    // resource missing has effectively achieved its goal — flip it to
+    // success so partial-failure retries don't keep marking the same
+    // already-gone resource as failed forever. Each handler is supposed
+    // to do this individually, but human-readable GCP error text comes
+    // in many flavors ("was not found", "NOT_FOUND", "404", "notFound",
+    // "does not exist") and at least one handler missed it on the user
+    // report that triggered this fix. Centralizing keeps every handler
+    // covered automatically.
+    if (action === 'delete' && !result.success && isResourceNotFoundError(result.error)) {
+      this.on_log?.(`[gcp-deployer] ${type} '${name}' was already gone — treating delete as success.`);
+      result = {
+        ...result,
+        success: true,
+        error: undefined,
+      };
+    }
 
     // Auto-enable API and retry on PERMISSION_DENIED / "API not enabled"
     if (!result.success && isApiNotEnabledError(result.error)) {

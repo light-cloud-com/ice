@@ -148,7 +148,7 @@ export const educationLmsTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 50, y: 86 }, data: { domain: 'learn.acme.io', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true } },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
     // 2: Student Portal (SSR)
@@ -213,8 +213,6 @@ export const educationLmsTemplate: ComposedTemplate = {
     { iceType: 'Security.Secret', label: 'Secrets', position: { x: 306, y: 1080 }, data: {} },
     // 12: Search
     { iceType: 'Analytics.Search', label: 'Course Search', position: { x: 562, y: 1080 }, data: {} },
-    // 13: Domain
-    { iceType: 'Network.Domain', label: 'Domain', position: { x: 50, y: 1256 }, data: { hostname: 'learn.acme.io' } },
     // 14: Repo
     {
       iceType: 'Source.Repository',
@@ -223,8 +221,7 @@ export const educationLmsTemplate: ComposedTemplate = {
       data: { repository: '', branch: 'main' },
     },
     // 15: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },
-  ],
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },],
 
   connections: [
     // Internet → WAF (Internet→WAF rule)
@@ -256,11 +253,10 @@ export const educationLmsTemplate: ComposedTemplate = {
     // Notification Worker → Course DB (Worker→Database rule)
     { fromBlock: 8, toBlock: 5, relationship: 'depends_on', protocol: 'TCP', port: 5432 },
     // Domain → Student Portal (Domain→Routable rule)
-    { fromBlock: 13, toBlock: 2, relationship: 'connects_to' },
     // Repo → Course API (Repo→Service pipeline rule)
-    { fromBlock: 14, toBlock: 4, relationship: 'connects_to' },
+    { fromBlock: 13, toBlock: 4, relationship: 'connects_to' },
     // Course API → Env (Service→EnvConfig config rule)
-    { fromBlock: 4, toBlock: 15, relationship: 'depends_on' },
+    { fromBlock: 4, toBlock: 14, relationship: 'depends_on' },
   ],
 };
 
@@ -346,7 +342,7 @@ export const educationExamPlatformTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 50, y: 86 }, data: { domain: 'exam.acme.io', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true } },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
     // 2: Exam App (SSR)
@@ -409,8 +405,6 @@ export const educationExamPlatformTemplate: ComposedTemplate = {
       position: { x: 562, y: 1080 },
       data: { size: '1-2048', runtime: 'nodejs20' },
     },
-    // 12: Domain
-    { iceType: 'Network.Domain', label: 'Domain', position: { x: 50, y: 1256 }, data: { hostname: 'exam.acme.io' } },
     // 13: Repo
     {
       iceType: 'Source.Repository',
@@ -419,8 +413,7 @@ export const educationExamPlatformTemplate: ComposedTemplate = {
       data: { repository: '', branch: 'main' },
     },
     // 14: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },
-  ],
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },],
 
   connections: [
     // Internet → WAF (Internet→WAF rule)
@@ -450,10 +443,9 @@ export const educationExamPlatformTemplate: ComposedTemplate = {
     // Exam API → Exam Logs (Service→Monitoring rule)
     { fromBlock: 4, toBlock: 8, relationship: 'connects_to' },
     // Domain → Exam App (Domain→Routable rule)
-    { fromBlock: 12, toBlock: 2, relationship: 'connects_to' },
     // Repo → Exam API (Repo→Service pipeline rule)
-    { fromBlock: 13, toBlock: 4, relationship: 'connects_to' },
+    { fromBlock: 12, toBlock: 4, relationship: 'connects_to' },
     // Exam API → Env (Service→EnvConfig config rule)
-    { fromBlock: 4, toBlock: 14, relationship: 'depends_on' },
+    { fromBlock: 4, toBlock: 13, relationship: 'depends_on' },
   ],
 };

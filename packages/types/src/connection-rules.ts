@@ -108,7 +108,18 @@ export function isEnvConfig(t: string): boolean {
   return t === 'Config.Environment';
 }
 export function isDomain(t: string): boolean {
-  return t === 'Network.Domain' || /Domain|DNS/i.test(t);
+  return t === 'Network.PublicEndpoint' || t === 'Network.CustomDomain' || /Domain|DNS/i.test(t);
+}
+/**
+ * `Network.CustomDomain` is the public-facing variant of the domain
+ * block — it routes DNS to services that already have their own public
+ * endpoint (Firebase Hosting, etc.) instead of compiling to a load
+ * balancer. The parent-aware connection check uses this distinction to
+ * decide whether targeting a VPC-private service is allowed (it's NOT,
+ * for either variant — both demand internet-reachable targets).
+ */
+export function isCustomDomain(t: string): boolean {
+  return t === 'Network.CustomDomain';
 }
 export function isContainer(iceType: string, nodeType?: string): boolean {
   if (nodeType === 'container' || nodeType === 'group') return true;
@@ -459,17 +470,82 @@ export const CONNECTION_RULES: ConnectionRule[] = [
 // ─── Derived Functions ──────────────────────────────────────────────────────
 
 /**
+ * Minimal node shape used for parent-aware connection rules. Only needs
+ * the fields the rules actually inspect — full canvas nodes are a
+ * superset and pass through unchanged.
+ */
+export interface NodeForConnectionCheck {
+  id: string;
+  parentId?: string | null;
+  data?: Record<string, unknown>;
+  type?: string;
+}
+
+/**
+ * Walk a node's parent chain looking for a container iceType (VPC,
+ * Subnet, or any Group.*). Returns true if any ancestor is a container.
+ * Used by parent-aware rules like "Public Traffic can only target
+ * non-VPC services."
+ */
+export function isInsideContainer(
+  nodeId: string,
+  allNodes: NodeForConnectionCheck[],
+): boolean {
+  const byId = new Map(allNodes.map((n) => [n.id, n]));
+  let cur = byId.get(nodeId);
+  let depth = 0;
+  while (cur?.parentId && depth < 20) {
+    const parent = byId.get(cur.parentId);
+    if (!parent) return false;
+    const pIce = (parent.data?.iceType as string) || '';
+    if (isContainer(pIce, parent.type)) return true;
+    cur = parent;
+    depth++;
+  }
+  return false;
+}
+
+/**
  * Check if two block types can be connected.
  * Returns true if any CONNECTION_RULE matches (in either direction).
+ *
+ * The optional `context` parameter unlocks parent-aware rules. Without
+ * it, only iceType-level checks run (which is fine for the AI assistant,
+ * type discovery, etc. that don't have a canvas to inspect). The svg
+ * canvas drag-handler passes context so it can enforce "Public Traffic
+ * blocks can only connect to publicly-facing services" — i.e. targets
+ * NOT inside a VPC subnet.
  */
 export function canConnect(
   srcIceType: string,
   tgtIceType: string,
   srcNodeType?: string,
   tgtNodeType?: string,
+  context?: {
+    srcNode?: NodeForConnectionCheck;
+    tgtNode?: NodeForConnectionCheck;
+    allNodes?: NodeForConnectionCheck[];
+  },
 ): boolean {
   // Containers can never have edges
   if (isContainer(srcIceType, srcNodeType) || isContainer(tgtIceType, tgtNodeType)) return false;
+
+  // Public Traffic / Public Endpoint blocks expose services to the
+  // open internet. They MUST NOT terminate inside a VPC — anything
+  // behind a VPC subnet is private by design and reaching it requires
+  // a load balancer / gateway / NAT, not a direct edge from the public
+  // entry point. We enforce this in both directions so the user can't
+  // drag in either order. Skipped if context isn't provided (callers
+  // without canvas state are non-authoritative on parent topology).
+  if (context?.allNodes && context.allNodes.length > 0) {
+    if (isDomain(srcIceType) && context.tgtNode) {
+      if (isInsideContainer(context.tgtNode.id, context.allNodes)) return false;
+    }
+    if (isDomain(tgtIceType) && context.srcNode) {
+      if (isInsideContainer(context.srcNode.id, context.allNodes)) return false;
+    }
+  }
+
   // Self-connection is never valid (checked at type level — same iceType is fine, same instance is caught elsewhere)
   return CONNECTION_RULES.some((r) => r.source(srcIceType) && r.target(tgtIceType));
 }

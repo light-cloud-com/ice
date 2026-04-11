@@ -182,7 +182,26 @@ test.describe('GCP Template Integration Suite', () => {
         const resources = deployResult.result.resources;
         const ok = resources.filter((r: any) => r.success).length;
         const failed = resources.filter((r: any) => !r.success).length;
-        progress.setResources(template.id, resources.length, ok, failed);
+        progress.setResources(
+          template.id,
+          resources.length,
+          ok,
+          failed,
+          resources.map((r: any) => ({
+            name: r.name,
+            type: r.type,
+            success: r.success,
+            error: r.error,
+          })),
+        );
+
+        // The deploy API returns top-level `errors: []` even when individual
+        // resources fail — surface those to the dashboard so users see WHY.
+        for (const r of resources) {
+          if (!r.success && r.error) {
+            progress.addError(template.id, `${r.type}/${r.name}: ${r.error}`);
+          }
+        }
       }
 
       collector.addScreenshot('deploy', await templateDeploy.screenshot(`${template.id}-05-deploy`));
@@ -208,6 +227,41 @@ test.describe('GCP Template Integration Suite', () => {
         const verified = verifications.filter((v) => v.exists).length;
         progress.addLog(`Verified: ${verified}/${verifications.length} resources exist in GCP`);
       }
+
+      // Phase A regression guard: when a deploy succeeds, every compute
+      // block's overlay should carry at least a `url` OR `default_url` —
+      // the handler emits one of these and `getNodeDeploymentOverlay`
+      // preserves the node's own URL even when a custom domain propagates
+      // over the top. If this assertion breaks, the extractor or the
+      // overlay propagation regressed and users are seeing empty pills.
+      if (deployResult.success) {
+        const overlay = await templateDeploy.fetchNodeOverlay().catch(() => null);
+        if (overlay && Object.keys(overlay).length > 0) {
+          const computeEntries = Object.entries(overlay).filter(
+            ([, data]: [string, any]) =>
+              typeof data?.deploy_resource_type === 'string' &&
+              /^gcp\.(storage\.bucket|run\.|cloudfunctions\.)/.test(data.deploy_resource_type),
+          );
+          const withUrl = computeEntries.filter(([, data]: [string, any]) => {
+            const out = (data?.deploy_outputs || {}) as Record<string, unknown>;
+            return Boolean(out.url || out.default_url);
+          });
+          if (computeEntries.length > 0) {
+            progress.addLog(
+              `URL propagation: ${withUrl.length}/${computeEntries.length} compute blocks carry a reachable URL`,
+            );
+            // Soft-assert — log a warning but don't fail the suite on
+            // templates that don't have a compute block at all.
+            if (withUrl.length === 0) {
+              progress.addError(
+                template.id,
+                `Phase A regression: compute blocks have no url/default_url in overlay (${computeEntries.length} blocks checked)`,
+              );
+            }
+          }
+        }
+      }
+
       collector.addScreenshot('verify', await templateDeploy.screenshot(`${template.id}-06-verify`));
       collector.endPhase('verify', { success: true });
       progress.endPhase(template.id, 'verify', true, collector.record.phases.verify.duration_ms);

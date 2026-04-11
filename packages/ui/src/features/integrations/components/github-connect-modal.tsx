@@ -120,11 +120,20 @@ export const GitHubConnectModal: React.FC<GitHubConnectModalProps> = ({ isOpen, 
               <div>
                 <label className="text-sm font-medium text-ice-text-1">{t('integrations.github.patLabel')}</label>
                 <input
-                  type="password"
+                  // Plain text so users can see what they're pasting. A
+                  // mistyped / truncated PAT is the #1 "it doesn't work"
+                  // source, and a masked field made it impossible to
+                  // diagnose visually. The value is still cleared from
+                  // the component state as soon as the request lands.
+                  type="text"
+                  spellCheck={false}
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  autoComplete="off"
                   value={patToken}
                   onChange={(e) => setPatToken(e.target.value)}
                   placeholder={t('integrations.github.patPlaceholder')}
-                  className="mt-1 w-full px-3 py-2 text-sm rounded-md border border-ice-border bg-ice-base text-ice-text-1 placeholder:text-ice-text-3 focus:outline-none focus:border-ice-accent focus:ring-2 focus:ring-ice-accent-muted"
+                  className="mt-1 w-full px-3 py-2 text-sm font-mono rounded-md border border-ice-border bg-ice-base text-ice-text-1 placeholder:text-ice-text-3 focus:outline-none focus:border-ice-accent focus:ring-2 focus:ring-ice-accent-muted"
                   onKeyDown={(e) => e.key === 'Enter' && handlePATConnect()}
                 />
                 <p className="mt-1 text-xs text-ice-text-3">{t('integrations.github.patHelp')}</p>

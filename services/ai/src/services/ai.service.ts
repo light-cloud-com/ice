@@ -440,7 +440,7 @@ Note: use type "container" for VPC/Subnet (not "group"). Always include behavior
 
 The canvas has a built-in "Public Traffic" user icon that AUTOMATICALLY appears and connects to all publicly exposed services. You do NOT need to add a public-traffic block — it is handled by the canvas UI.
 
-**NEVER use addBlueprint with iceType "Network.Internet".** The canvas auto-detects exposed services and draws the user traffic icon for them.
+**NEVER use addBlueprint with iceType "Network.PublicEndpoint".** The canvas auto-detects exposed services and draws the user traffic icon for them.
 
 **How the canvas decides what's exposed:**
 - Services with a domain, URL, or subdomain property are considered public entry points

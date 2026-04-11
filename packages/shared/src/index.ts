@@ -5,6 +5,7 @@ export {
   generateToken,
   generateRefreshToken,
   setDesktopUser,
+  isDesktopMode,
 } from './auth/middleware.js';
 export type { AuthRequest } from './auth/middleware.js';
 export { encryptCredentials, decryptCredentials, encryptString, decryptString } from './crypto';

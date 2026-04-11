@@ -158,7 +158,7 @@ export const healthcarePatientPortalTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 50, y: 86 }, data: { domain: 'portal.health.io', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true } },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
 
@@ -216,15 +216,6 @@ export const healthcarePatientPortalTemplate: ComposedTemplate = {
     // ── Monitoring (outside VPC) ──────────────────────────────────────────
     // 11: Audit Log
     { iceType: 'Monitoring.Log', label: 'Audit Log', position: { x: 872, y: 870 }, data: { keep_logs: '90 days' } },
-
-    // ── Ungrouped (control plane) ─────────────────────────────────────────
-    // 12: Domain
-    {
-      iceType: 'Network.Domain',
-      label: 'Domain',
-      position: { x: 50, y: 1080 },
-      data: { hostname: 'portal.health.io' },
-    },
     // 13: Repo
     {
       iceType: 'Source.Repository',
@@ -233,8 +224,7 @@ export const healthcarePatientPortalTemplate: ComposedTemplate = {
       data: { repository: '', branch: 'main' },
     },
     // 14: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1080 }, data: {} },
-  ],
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1080 }, data: {} },],
 
   connections: [
     // Internet → WAF → Gateway
@@ -255,11 +245,11 @@ export const healthcarePatientPortalTemplate: ComposedTemplate = {
     // Scheduler → Records DB (CronJob→Database rule)
     { fromBlock: 7, toBlock: 4, relationship: 'depends_on', protocol: 'TCP', port: 5432 },
     // Domain → Gateway (Domain→Routable rule)
-    { fromBlock: 12, toBlock: 2, relationship: 'connects_to' },
+    { fromBlock: 0, toBlock: 2, relationship: 'connects_to' },
     // Repo → Patient API (Repo→Service pipeline rule)
-    { fromBlock: 13, toBlock: 3, relationship: 'connects_to' },
+    { fromBlock: 12, toBlock: 3, relationship: 'connects_to' },
     // Patient API → Env (Service→EnvConfig config rule)
-    { fromBlock: 3, toBlock: 14, relationship: 'depends_on' },
+    { fromBlock: 3, toBlock: 13, relationship: 'depends_on' },
   ],
 };
 
@@ -346,7 +336,7 @@ export const healthcareTelemedicineTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 50, y: 86 }, data: { domain: 'telehealth.care.io', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true } },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
 
@@ -402,13 +392,6 @@ export const healthcareTelemedicineTemplate: ComposedTemplate = {
     { iceType: 'Security.Identity', label: 'Auth', position: { x: 50, y: 1080 }, data: {} },
     // 10: Secrets
     { iceType: 'Security.Secret', label: 'Secrets', position: { x: 306, y: 1080 }, data: {} },
-    // 11: Domain
-    {
-      iceType: 'Network.Domain',
-      label: 'Domain',
-      position: { x: 562, y: 1080 },
-      data: { hostname: 'telehealth.care.io' },
-    },
     // 12: Repo
     {
       iceType: 'Source.Repository',
@@ -417,8 +400,7 @@ export const healthcareTelemedicineTemplate: ComposedTemplate = {
       data: { repository: '', branch: 'main' },
     },
     // 13: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 306, y: 1256 }, data: {} },
-  ],
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 306, y: 1256 }, data: {} },],
 
   connections: [
     // Internet → WAF → Gateway
@@ -438,10 +420,10 @@ export const healthcareTelemedicineTemplate: ComposedTemplate = {
     // Notification Worker → Patient DB (Worker→Database rule)
     { fromBlock: 7, toBlock: 4, relationship: 'depends_on', protocol: 'TCP', port: 5432 },
     // Domain → Gateway (Domain→Routable rule)
-    { fromBlock: 11, toBlock: 2, relationship: 'connects_to' },
+    { fromBlock: 0, toBlock: 2, relationship: 'connects_to' },
     // Repo → Video Service (Repo→Service pipeline rule)
-    { fromBlock: 12, toBlock: 3, relationship: 'connects_to' },
+    { fromBlock: 11, toBlock: 3, relationship: 'connects_to' },
     // Video Service → Env (Service→EnvConfig config rule)
-    { fromBlock: 3, toBlock: 13, relationship: 'depends_on' },
+    { fromBlock: 3, toBlock: 12, relationship: 'depends_on' },
   ],
 };

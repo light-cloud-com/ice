@@ -52,6 +52,9 @@ interface IntegrationsState {
     branches: Record<string, GitHubBranch[]>;
     deviceFlow: DeviceFlowState | null;
     loading: boolean;
+    /** Last error from fetchGitHubRepos, rendered inline in the RepoSelector. */
+    reposError?: string;
+    reposFetchedAt?: string;
   };
 }
 
@@ -267,13 +270,20 @@ const integrationsSlice = createSlice({
       })
       .addCase(fetchGitHubRepos.pending, (state) => {
         state.github.loading = true;
+        state.github.reposError = undefined;
       })
       .addCase(fetchGitHubRepos.fulfilled, (state, action) => {
         state.github.repos = action.payload;
         state.github.loading = false;
+        state.github.reposError = undefined;
+        state.github.reposFetchedAt = new Date().toISOString();
       })
-      .addCase(fetchGitHubRepos.rejected, (state) => {
+      .addCase(fetchGitHubRepos.rejected, (state, action) => {
         state.github.loading = false;
+        state.github.reposError =
+          (action.payload as string | undefined) ||
+          action.error?.message ||
+          'Failed to load repositories.';
       })
       .addCase(fetchGitHubBranches.fulfilled, (state, action) => {
         state.github.branches[action.payload.repository] = action.payload.branches;

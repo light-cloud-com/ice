@@ -792,7 +792,7 @@ export function autoLayout(
  *   Tier 4 — Data / Storage (Databases, Cache, Object Storage)
  *
  * Actual iceType values (from blocks registry):
- *   Application.StaticSite, Application.SSRSite, Network.Internet,
+ *   Application.StaticSite, Application.SSRSite, Network.PublicEndpoint,
  *   Network.Gateway, Application.Container, Application.Worker,
  *   Application.ServerlessFunction, Application.CronJob,
  *   Messaging.RabbitMQ, Messaging.CloudPubSub, Messaging.Topic,

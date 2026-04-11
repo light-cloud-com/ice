@@ -24,10 +24,15 @@ const quickStartWebsiteDb: ComposedTemplate = {
   trust: 'official',
   featured: true,
   author: { name: 'ICE Team' },
-  repo: { url: 'https://github.com/light-cloud-com/ice-test-hello-api', branch: 'main', framework: 'express', language: 'javascript' },
+  repo: {
+    url: 'https://github.com/light-cloud-com/ice-test-hello-api',
+    branch: 'main',
+    framework: 'express',
+    language: 'javascript',
+  },
   environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'basic' }],
   blocks: [
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 100, y: 200 }, data: {} },
+    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 100, y: 200 }, data: {} },
     {
       iceType: 'Compute.SSRSite',
       label: 'SSR Site',
@@ -63,10 +68,15 @@ const quickStartWebAppApi: ComposedTemplate = {
   trust: 'official',
   featured: true,
   author: { name: 'ICE Team' },
-  repo: { url: 'https://github.com/light-cloud-com/ice-test-hello-api', branch: 'main', framework: 'express', language: 'javascript' },
+  repo: {
+    url: 'https://github.com/light-cloud-com/ice-test-hello-api',
+    branch: 'main',
+    framework: 'express',
+    language: 'javascript',
+  },
   environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'basic' }],
   blocks: [
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 100, y: 200 }, data: {} },
+    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 100, y: 200 }, data: {} },
     {
       iceType: 'Compute.StaticSite',
       label: 'Web App',
@@ -110,10 +120,15 @@ const quickStartApiOnly: ComposedTemplate = {
   difficulty: 'starter',
   trust: 'official',
   author: { name: 'ICE Team' },
-  repo: { url: 'https://github.com/light-cloud-com/ice-test-hello-api', branch: 'main', framework: 'express', language: 'javascript' },
+  repo: {
+    url: 'https://github.com/light-cloud-com/ice-test-hello-api',
+    branch: 'main',
+    framework: 'express',
+    language: 'javascript',
+  },
   environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'basic' }],
   blocks: [
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 100, y: 200 }, data: {} },
+    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 100, y: 200 }, data: {} },
     { iceType: 'Network.Gateway', label: 'API Gateway', position: { x: 380, y: 200 }, data: { protocol: 'http' } },
     {
       iceType: 'Compute.Container',
@@ -150,7 +165,12 @@ const quickStartDataPipeline: ComposedTemplate = {
   difficulty: 'starter',
   trust: 'official',
   author: { name: 'ICE Team' },
-  repo: { url: 'https://github.com/light-cloud-com/ice-test-hello-data', branch: 'main', framework: 'python', language: 'python' },
+  repo: {
+    url: 'https://github.com/light-cloud-com/ice-test-hello-data',
+    branch: 'main',
+    framework: 'python',
+    language: 'python',
+  },
   environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'basic' }],
   blocks: [
     { iceType: 'Messaging.SQS', label: 'Job Queue', position: { x: 200, y: 200 }, data: { queue_type: 'standard' } },
@@ -184,29 +204,68 @@ const quickStartDataPipeline: ComposedTemplate = {
 const quickStartStaticSite: ComposedTemplate = {
   id: 'qs-static-site',
   name: 'Static Site',
-  description: 'CDN-backed static site — the simplest deploy',
+  description: 'CDN-backed static site with managed SSL — the simplest HTTPS-ready deploy',
   icon: 'Globe',
   estimatedCost: '$0-5/mo',
   category: 'quick-start',
   provider: 'gcp',
   providers: ['gcp', 'aws', 'azure'],
-  tags: ['Static', 'CDN', 'Jamstack'],
+  tags: ['Static', 'CDN', 'Jamstack', 'HTTPS'],
   securityLevel: 'basic',
   difficulty: 'starter',
   trust: 'official',
   author: { name: 'ICE Team' },
-  repo: { url: 'https://github.com/light-cloud-com/ice-test-hello-static', branch: 'main', framework: 'static', language: 'html' },
+  repo: {
+    url: 'https://github.com/light-cloud-com/ice-test-hello-static',
+    branch: 'main',
+    framework: 'static',
+    language: 'html',
+  },
   environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'basic' }],
   blocks: [
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 100, y: 200 }, data: {} },
+    // 0 — Compute.StaticSite (Firebase Hosting on GCP, AWS Amplify on AWS,
+    //     Azure Static Web Apps on Azure). No Public Endpoint needed —
+    //     all of these services include HTTPS, CDN, managed cert, and
+    //     custom domain support out of the box. Set the `domain` field
+    //     on the block itself to wire a custom domain.
     {
       iceType: 'Compute.StaticSite',
       label: 'Static Site',
-      position: { x: 380, y: 200 },
-      data: { framework: 'react', domain: 'mysite.com' },
+      position: { x: 100, y: 200 },
+      data: {
+        framework: 'static',
+        domain: 'example.com',
+        repository: 'light-cloud-com/ice-test-hello-static',
+        source: { repo: 'light-cloud-com/ice-test-hello-static', branch: 'main' },
+        branch: 'main',
+      },
+    },
+    // 1 — Source.Repository (GitHub repo block connected to the static site).
+    // The hello-static demo repo ships HTML at the root, no build step.
+    // outputDirectory is empty so Firebase Hosting publishes everything
+    // it finds at the repo root. For frameworks that need a build, set
+    // this to e.g. 'dist' (Vite/Vue) or 'build' (Create React App) AND
+    // commit the built output, OR pre-build before deploying.
+    {
+      iceType: 'Source.Repository',
+      label: 'Static Site Source',
+      position: { x: 100, y: 380 },
+      data: {
+        repository: 'light-cloud-com/ice-test-hello-static',
+        branch: 'main',
+        path: '/',
+        buildCommand: '',
+        outputDirectory: '',
+        autoDeploy: true,
+      },
     },
   ],
-  connections: [{ fromBlock: 0, toBlock: 1, relationship: 'connects_to', protocol: 'HTTPS', port: 443 }],
+  connections: [
+    // Source.Repository → StaticSite tells the pipeline where to pull
+    // the built static output from. The static site itself is publicly
+    // reachable without a separate Public Endpoint.
+    { fromBlock: 1, toBlock: 0, relationship: 'deploys_from' },
+  ],
 };
 
 /** Serverless Function: Single function — simplest compute */
@@ -224,16 +283,28 @@ const quickStartFunction: ComposedTemplate = {
   difficulty: 'starter',
   trust: 'official',
   author: { name: 'ICE Team' },
-  repo: { url: 'https://github.com/light-cloud-com/ice-test-hello-api', branch: 'main', framework: 'express', language: 'javascript' },
+  repo: {
+    url: 'https://github.com/light-cloud-com/ice-test-hello-api',
+    branch: 'main',
+    framework: 'express',
+    language: 'javascript',
+  },
   environmentPresets: [{ type: 'production', name: 'Production', region: 'us-central1', securityLevel: 'basic' }],
   blocks: [
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 100, y: 200 }, data: {} },
+    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 100, y: 200 }, data: {} },
     { iceType: 'Network.Gateway', label: 'API Gateway', position: { x: 380, y: 200 }, data: { protocol: 'http' } },
     {
       iceType: 'Compute.ServerlessFunction',
       label: 'Cloud Function',
       position: { x: 660, y: 200 },
-      data: { memory: '256', timeout: '30', runtime: 'nodejs22.x' },
+      data: {
+        memory: '256',
+        timeout: '30',
+        runtime: 'nodejs22.x',
+        repository: 'light-cloud-com/ice-test-hello-api',
+        source: { repo: 'light-cloud-com/ice-test-hello-api', branch: 'main' },
+        branch: 'main',
+      },
     },
   ],
   connections: [

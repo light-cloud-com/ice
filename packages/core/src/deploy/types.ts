@@ -111,12 +111,23 @@ export interface DeployOptions {
   dry_run?: boolean;
   /** Auto-approve without confirmation */
   auto_approve?: boolean;
-  /** Progress callback */
-  on_progress?: (resource: string, action: string, status: string) => void;
+  /** Progress callback. `extra.step` carries sub-step info when available. */
+  on_progress?: (
+    resource: string,
+    action: string,
+    status: string,
+    extra?: { step?: { label: string; index: number; total: number } },
+  ) => void;
   /** Log callback for informational messages during deployment */
   on_log?: (message: string) => void;
   /** Pre-authenticated client (passed from host environment, e.g. Electron main process) */
   auth_client?: unknown;
+  /** Phase 0 regression fix — absolute path to the temp SA key file the
+   *  service already wrote with 0600 perms. When present, SDK clients are
+   *  initialized with `{ keyFilename }` instead of falling back to ADC. */
+  auth_key_file?: string;
+  /** Alternative to auth_key_file: raw parsed SA key object. */
+  auth_credentials?: Record<string, unknown>;
 }
 
 /**

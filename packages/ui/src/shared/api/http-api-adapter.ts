@@ -19,15 +19,68 @@ export function emitMenuAction(action: string) {
 }
 
 // ─── Socket.IO for deploy progress ──────────────────────────────────────────
+//
+// The socket carries every live deploy event (progress, logs, resource
+// results, completion). If the connection is broken, the user has to
+// refresh the page to see ANY deploy state changes — the HTTP replay
+// endpoint (`/stream/:cardId`) is the only fallback.
+//
+// We aggressively log connection state and force reconnection on errors
+// so silent failures are visible in the browser console.
 
 let socket: Socket | null = null;
 
 function getSocket(): Socket {
   if (!socket) {
     const wsUrl = import.meta.env.VITE_WS_URL || window.location.origin;
+    // `auth: {}` is intentionally an empty object rather than omitted so
+    // the server sees `handshake.auth` as defined (some middlewares read
+    // it unconditionally). In community edition the server ignores it
+    // entirely via the `isDesktopMode` bypass.
+    const token = (() => {
+      try {
+        return localStorage.getItem('ice-token') || undefined;
+      } catch {
+        return undefined;
+      }
+    })();
+
     socket = io(wsUrl, {
       withCredentials: true,
       autoConnect: true,
+      // Force websocket first, fall back to polling. This avoids certain
+      // proxy/CDN setups that strip the upgrade header.
+      transports: ['websocket', 'polling'],
+      // Retry forever with exponential backoff — don't silently give up
+      // if the first connection fails due to a stale gateway restart.
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 500,
+      reconnectionDelayMax: 5000,
+      auth: token ? { token } : {},
+    });
+
+    // ── Visibility into connection state ───────────────────────────
+    // These logs are essential for diagnosing "why don't live updates
+    // reach my UI" bugs. Leave them in — they're cheap and invaluable.
+    socket.on('connect', () => {
+      console.log('[ice-socket] connected id=', socket?.id);
+    });
+    socket.on('disconnect', (reason: string) => {
+      console.warn('[ice-socket] disconnected:', reason);
+    });
+    socket.on('connect_error', (err: Error) => {
+      console.error('[ice-socket] connect_error:', err.message);
+      // Try again with polling transport if websocket upgrade failed.
+      if (socket && (err as any)?.message?.includes('websocket')) {
+        (socket.io as any).opts.transports = ['polling', 'websocket'];
+      }
+    });
+    socket.io.on('reconnect', (attempt: number) => {
+      console.log('[ice-socket] reconnected after', attempt, 'attempts');
+    });
+    socket.io.on('reconnect_error', (err: Error) => {
+      console.warn('[ice-socket] reconnect_error:', err.message);
     });
   }
   return socket;
@@ -290,6 +343,13 @@ export function createHttpApiAdapter(): IceAPI {
         const res = await axiosInstance.post('/canvas/deploy/destroy', { cardId, options });
         return res.data;
       },
+      destroyAll: async (cardId: string, options?: { gcpProject?: string }) => {
+        const res = await axiosInstance.post('/canvas/deploy/destroy-all', {
+          cardId,
+          gcpProject: options?.gcpProject,
+        });
+        return res.data;
+      },
       getStatus: async (deploymentId) => {
         const res = await axiosInstance.get(`/canvas/deploy/status/${deploymentId}`);
         return res.data;
@@ -304,6 +364,30 @@ export function createHttpApiAdapter(): IceAPI {
       },
       getDeployments: async (cardId) => {
         const res = await axiosInstance.get(`/canvas/deploy/history/${cardId}`);
+        return res.data;
+      },
+      requirements: async (cardId: string, nodes: any[], options: any) => {
+        const res = await axiosInstance.post('/canvas/deploy/requirements', { cardId, nodes, options });
+        return res.data;
+      },
+      getCurrentDeploy: async (cardId: string) => {
+        const res = await axiosInstance.get(`/canvas/deploy/current/${cardId}`);
+        return res.data;
+      },
+      getDeployStream: async (cardId: string, since = 0, deploymentId?: string) => {
+        const res = await axiosInstance.get(`/canvas/deploy/stream/${cardId}`, {
+          params: { since, ...(deploymentId ? { deployment_id: deploymentId } : {}) },
+        });
+        return res.data;
+      },
+      getNodeOutputs: async (cardId: string, environment?: string) => {
+        const res = await axiosInstance.get(`/canvas/deploy/node-outputs/${cardId}`, {
+          params: environment ? { environment } : undefined,
+        });
+        return res.data;
+      },
+      cleanupOrphans: async (args?: { gcpProject?: string; dryRun?: boolean }) => {
+        const res = await axiosInstance.post('/canvas/deploy/cleanup-orphans', args || {});
         return res.data;
       },
       openExternal: (url: string) => {
@@ -394,9 +478,13 @@ export function createHttpApiAdapter(): IceAPI {
     // ── Deploy progress (Socket.IO) ────────────────────────────────────
     onDeployProgress: (callback: (event: any) => void) => {
       const s = getSocket();
-      s.on('deploy:progress', callback);
+      const wrapped = (event: any) => {
+        console.log('[ice-socket] deploy:progress', event?.type, event?.resource || '', event?.status || '');
+        callback(event);
+      };
+      s.on('deploy:progress', wrapped);
       return () => {
-        s.off('deploy:progress', callback);
+        s.off('deploy:progress', wrapped);
       };
     },
 
@@ -420,8 +508,20 @@ export function createHttpApiAdapter(): IceAPI {
     // ── Deploy room subscription (for Socket.IO room-based events) ───
     subscribeDeployProgress: (cardId: string) => {
       const s = getSocket();
-      s.emit('subscribe:deploy', cardId);
+      const emitSubscribe = () => {
+        console.log('[ice-socket] subscribe:deploy', cardId, 'connected=', s.connected);
+        s.emit('subscribe:deploy', cardId);
+      };
+      // Always emit immediately — socket.io buffers emits on disconnected
+      // sockets and flushes them on connect, so this works regardless of
+      // current connection state. Also register a connect listener so the
+      // subscribe replays on every reconnect (without re-subscribing, a
+      // dropped socket that reconnects loses its room membership and live
+      // events stop reaching the client until the next full refresh).
+      emitSubscribe();
+      s.on('connect', emitSubscribe);
       return () => {
+        s.off('connect', emitSubscribe);
         s.emit('unsubscribe:deploy', cardId);
       };
     },

@@ -98,12 +98,91 @@ export const cloud_functions_handler: GCPResourceHandler = {
       const func_name = `projects/${ctx.project}/locations/${region}/functions/${name}`;
       await ctx.rest_client.delete(`${BASE_URL}/${func_name}`);
 
+      // Clean up source archives the Functions Framework uploaded to the
+      // auto-managed staging bucket. These are named after the function
+      // and accumulate on every deploy otherwise. Best-effort — tolerate
+      // 404 and permission errors.
+      await deleteFunctionsSourceArchives(ctx, name, region).catch((err) => {
+        ctx.on_log?.(
+          `[cloud-functions] Function deleted but source archive cleanup failed: ${err?.message || err}. ` +
+            `You can manually delete them at https://console.cloud.google.com/storage/browser/gcf-v2-uploads-${ctx.project}-${region}`,
+        );
+      });
+
+      // Also delete any Artifact Registry container images Cloud Functions
+      // v2 created during the build.
+      await deleteFunctionsArtifactRegistryImages(ctx, name, region).catch((err) => {
+        ctx.on_log?.(
+          `[cloud-functions] Function deleted but Artifact Registry cleanup failed: ${err?.message || err}`,
+        );
+      });
+
       return result(name, 'delete', start);
     } catch (error) {
       return fail(name, 'delete', start, error instanceof Error ? error.message : String(error));
     }
   },
 };
+
+/**
+ * Delete the source zip that Functions Framework uploaded to the
+ * auto-managed `gcf-v2-uploads-<project>-<region>` bucket for this
+ * function. Cloud Functions v2 names source archives by function name
+ * so we can target them directly without a full bucket scan.
+ */
+async function deleteFunctionsSourceArchives(
+  ctx: GCPHandlerContext,
+  functionName: string,
+  region: string,
+): Promise<void> {
+  const bucketName = `gcf-v2-uploads-${ctx.project}-${region}`;
+  const listUrl = `https://storage.googleapis.com/storage/v1/b/${bucketName}/o?prefix=${encodeURIComponent(functionName)}`;
+
+  let listResponse: any;
+  try {
+    listResponse = await ctx.rest_client.get(listUrl);
+  } catch (err: any) {
+    const msg = err?.message || String(err);
+    if (msg.includes('404') || msg.includes('NOT_FOUND')) return;
+    throw err;
+  }
+
+  const items = (listResponse?.items || []) as Array<{ name: string }>;
+  for (const item of items) {
+    if (!item.name) continue;
+    const deleteUrl = `https://storage.googleapis.com/storage/v1/b/${bucketName}/o/${encodeURIComponent(item.name)}`;
+    try {
+      await ctx.rest_client.delete(deleteUrl);
+    } catch (err: any) {
+      const msg = err?.message || String(err);
+      if (!msg.includes('404') && !msg.includes('NOT_FOUND')) {
+        ctx.on_log?.(`[cloud-functions] Could not delete source archive ${item.name}: ${msg}`);
+      }
+    }
+  }
+}
+
+/**
+ * Cloud Functions v2 uses Cloud Run under the hood, so the container
+ * image lives in Artifact Registry just like Cloud Run services. Delete
+ * the matching package so we don't leave containers lying around.
+ */
+async function deleteFunctionsArtifactRegistryImages(
+  ctx: GCPHandlerContext,
+  functionName: string,
+  region: string,
+): Promise<void> {
+  // Functions v2 uses the `gcf-artifacts` repo by default.
+  const arRepo = 'gcf-artifacts';
+  const packagePath = `https://artifactregistry.googleapis.com/v1/projects/${ctx.project}/locations/${region}/repositories/${arRepo}/packages/${encodeURIComponent(functionName)}`;
+  try {
+    await ctx.rest_client.delete(packagePath);
+  } catch (err: any) {
+    const msg = err?.message || String(err);
+    if (msg.includes('404') || msg.includes('NOT_FOUND') || msg.includes('notFound')) return;
+    throw err;
+  }
+}
 
 function build_function_spec(
   name: string,

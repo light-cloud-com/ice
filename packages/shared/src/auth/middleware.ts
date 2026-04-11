@@ -30,6 +30,20 @@ export function setDesktopUser(userId: string, orgId: string) {
   _desktopOrgId = orgId;
 }
 
+/**
+ * Whether the gateway is running in community (desktop) edition with an
+ * auto-seeded local user. Both HTTP middleware and the socket.io handshake
+ * use this to bypass JWT validation — without the bypass, community-edition
+ * clients (which don't have a JWT) can't open socket connections and all
+ * live deploy progress events are lost.
+ */
+export function isDesktopMode(): { userId: string; orgId: string } | null {
+  if (_desktopUserId) {
+    return { userId: _desktopUserId, orgId: _desktopOrgId || '' };
+  }
+  return null;
+}
+
 export function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
   // Community edition: skip JWT validation, use auto-seeded local user
   if (_desktopUserId) {

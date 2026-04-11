@@ -139,7 +139,7 @@ export const mediaStreamingTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 50, y: 86 }, data: { domain: 'stream.acme.io', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true } },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
 
@@ -202,8 +202,6 @@ export const mediaStreamingTemplate: ComposedTemplate = {
     { iceType: 'Security.Secret', label: 'App Secrets', position: { x: 50, y: 1080 }, data: {} },
     // 11: Search
     { iceType: 'Analytics.Search', label: 'Content Search', position: { x: 306, y: 1080 }, data: {} },
-    // 12: Domain
-    { iceType: 'Network.Domain', label: 'Domain', position: { x: 50, y: 1256 }, data: { hostname: 'stream.acme.io' } },
     // 13: Repo
     {
       iceType: 'Source.Repository',
@@ -212,8 +210,7 @@ export const mediaStreamingTemplate: ComposedTemplate = {
       data: { repository: '', branch: 'main' },
     },
     // 14: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },
-  ],
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },],
 
   connections: [
     // Internet → WAF → CDN Gateway (Internet→WAF, WAF→Gateway rules)
@@ -240,11 +237,11 @@ export const mediaStreamingTemplate: ComposedTemplate = {
     // Transcoding Worker → Logs (Service→Monitoring rule)
     { fromBlock: 8, toBlock: 9, relationship: 'connects_to' },
     // Domain → CDN Gateway (Domain→Routable rule)
-    { fromBlock: 12, toBlock: 2, relationship: 'connects_to' },
+    { fromBlock: 0, toBlock: 2, relationship: 'connects_to' },
     // Repo → Streaming API (Repo→Service pipeline rule)
-    { fromBlock: 13, toBlock: 3, relationship: 'connects_to' },
+    { fromBlock: 12, toBlock: 3, relationship: 'connects_to' },
     // Streaming API → Env (Service→EnvConfig config rule)
-    { fromBlock: 3, toBlock: 14, relationship: 'depends_on' },
+    { fromBlock: 3, toBlock: 13, relationship: 'depends_on' },
   ],
 };
 
@@ -325,7 +322,7 @@ export const mediaPodcastTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 50, y: 86 }, data: { domain: 'podcast.acme.io', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true } },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
     // 2: Podcast App (SSR)
@@ -372,8 +369,6 @@ export const mediaPodcastTemplate: ComposedTemplate = {
     { iceType: 'Security.Secret', label: 'App Secrets', position: { x: 50, y: 904 }, data: {} },
     // 9: Search
     { iceType: 'Analytics.Search', label: 'Episode Search', position: { x: 306, y: 904 }, data: {} },
-    // 10: Domain
-    { iceType: 'Network.Domain', label: 'Domain', position: { x: 50, y: 1080 }, data: { hostname: 'podcast.acme.io' } },
     // 11: Repo
     {
       iceType: 'Source.Repository',
@@ -382,8 +377,7 @@ export const mediaPodcastTemplate: ComposedTemplate = {
       data: { repository: '', branch: 'main' },
     },
     // 12: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1080 }, data: {} },
-  ],
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1080 }, data: {} },],
 
   connections: [
     // Internet → WAF → Gateway (Internet→WAF, WAF→Gateway rules)
@@ -403,10 +397,9 @@ export const mediaPodcastTemplate: ComposedTemplate = {
     // Podcast API → Logs (Service→Monitoring rule)
     { fromBlock: 4, toBlock: 7, relationship: 'connects_to' },
     // Domain → Podcast App (Domain→Routable rule)
-    { fromBlock: 10, toBlock: 2, relationship: 'connects_to' },
     // Repo → Podcast API (Repo→Service pipeline rule)
-    { fromBlock: 11, toBlock: 4, relationship: 'connects_to' },
+    { fromBlock: 10, toBlock: 4, relationship: 'connects_to' },
     // Podcast API → Env (Service→EnvConfig config rule)
-    { fromBlock: 4, toBlock: 12, relationship: 'depends_on' },
+    { fromBlock: 4, toBlock: 11, relationship: 'depends_on' },
   ],
 };

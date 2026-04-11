@@ -178,7 +178,18 @@ reg(['cassandra', 'database.cassandra'], cassandra, 'Cassandra');
 reg(['couchdb', 'couchbase', 'database.couchdb'], couchdb, 'CouchDB');
 reg(['influxdb', 'database.influxdb'], influxdb, 'InfluxDB');
 reg(['supabase', 'database.supabase'], supabase, 'Supabase');
-reg(['firestore', 'firebase', 'database.firestore'], firebase, 'Firebase');
+reg(
+  [
+    'firestore',
+    'firebase',
+    'database.firestore',
+    'firebase-hosting',
+    'firebase.hosting',
+    'gcp.firebase.hosting',
+  ],
+  firebase,
+  'Firebase',
+);
 reg(['dynamodb', 'database.dynamodb'], dynamodb, 'DynamoDB');
 reg(['clickhouse', 'database.clickhouse'], clickhouse, 'ClickHouse');
 reg(['mssql', 'sqlserver', 'database.mssql', 'database.sqlserver'], microsoftsqlserver, 'SQL Server');

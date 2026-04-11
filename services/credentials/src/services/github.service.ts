@@ -151,16 +151,44 @@ export async function getStoredUser(userId: string): Promise<GitHubUser | null> 
 
 // ─── API ────────────────────────────────────────────────────────────────────
 
-export async function listRepos(userId: string, page = 1, perPage = 30): Promise<GitHubRepo[]> {
+export async function listRepos(userId: string, page = 1, perPage = 100): Promise<GitHubRepo[]> {
   const token = await getToken(userId);
   if (!token) throw new Error('Not connected to GitHub');
 
-  const response = await fetch(`${GITHUB_API}/user/repos?sort=updated&per_page=${perPage}&page=${page}&type=all`, {
-    headers: { Authorization: `Bearer ${token}`, ...GITHUB_HEADERS },
-  });
+  // When the caller passes an explicit page, honor it (single page fetch).
+  // When no page is passed (page === 1 via default) we walk the paginator
+  // up to a safe ceiling so accounts with more than 100 repos still get a
+  // complete list. GitHub's per_page max is 100 for /user/repos.
+  const fetchPage = async (p: number): Promise<GitHubRepo[]> => {
+    const response = await fetch(
+      `${GITHUB_API}/user/repos?sort=updated&per_page=${perPage}&page=${p}&type=all`,
+      { headers: { Authorization: `Bearer ${token}`, ...GITHUB_HEADERS } },
+    );
+    if (response.status === 401 || response.status === 403) {
+      throw new Error(
+        `GitHub rejected the request (${response.status}). Your token may be expired or missing the 'repo' scope.`,
+      );
+    }
+    if (!response.ok) {
+      throw new Error(`Failed to list repos: ${response.status}`);
+    }
+    return (await response.json()) as GitHubRepo[];
+  };
 
-  if (!response.ok) throw new Error(`Failed to list repos: ${response.status}`);
-  return response.json() as Promise<GitHubRepo[]>;
+  // Single-page mode (explicit page parameter) for callers that want to paginate themselves.
+  const firstPage = await fetchPage(page);
+  if (page !== 1 || firstPage.length < perPage) return firstPage;
+
+  // Walk additional pages until we hit an empty response or the safety cap.
+  const MAX_PAGES = 10; // 10 × 100 = 1000 repos is enough for real accounts.
+  const all: GitHubRepo[] = [...firstPage];
+  for (let p = 2; p <= MAX_PAGES; p++) {
+    const next = await fetchPage(p);
+    if (next.length === 0) break;
+    all.push(...next);
+    if (next.length < perPage) break; // last page
+  }
+  return all;
 }
 
 export async function listBranches(userId: string, owner: string, repo: string): Promise<GitHubBranch[]> {

@@ -1,9 +1,147 @@
 /**
- * GCP Handler Messages — SDK registry, operation helpers, service names
+ * GCP Handler Messages — SDK registry, operation helpers, service names,
+ * and GCP-specific error classification.
  *
  * Centralizes the repeated "SDK not available" / "operation failed" /
- * "operation timed out" strings used across all GCP handler modules.
+ * "operation timed out" strings used across all GCP handler modules,
+ * plus the regex/pattern detectors that classify GCP error responses
+ * (API not enabled, auth missing, resource not found, etc.).
+ *
+ * GCP-specific by design — every cloud returns errors in a different
+ * shape, so the pattern matchers live with the provider that emits
+ * them. The generic `core/deploy/messages.ts` re-exports these for
+ * backwards-compat but new code should import from this file directly
+ * via `'../messages.js'` (handler) or `'./messages.js'` (gcp-deployer).
  */
+
+// =============================================================================
+// Error detection patterns
+// =============================================================================
+
+export const API_NOT_ENABLED_PATTERNS = [
+  'has not been used in project',
+  'it is disabled',
+  'API has not been enabled',
+] as const;
+
+export const AUTH_MISSING_PATTERNS = [
+  'Could not load the default credentials',
+  'default credentials',
+] as const;
+
+export const AUTH_EXPIRED_PATTERNS = ['refresh token', 'expired', 'invalid_grant'] as const;
+
+/**
+ * Patterns that indicate "the resource you tried to delete or describe
+ * doesn't exist" — covers GCP REST + SDK + raw HTTP. A delete that hits
+ * any of these has effectively succeeded (the goal was to make the
+ * resource gone, and it's gone).
+ *
+ * The exact wording varies by service: Cloud Compute returns
+ * "The resource '...' was not found", Cloud Storage returns "404",
+ * Cloud Run returns "NOT_FOUND" inside the proto error. Match all
+ * common variants so the dispatcher's delete-tolerance covers every
+ * handler without each one needing its own check.
+ */
+export const RESOURCE_NOT_FOUND_PATTERNS = [
+  'was not found',
+  'NOT_FOUND',
+  'notFound',
+  'not found',
+  'does not exist',
+  'no longer exists',
+] as const;
+
+// =============================================================================
+// Detection functions
+// =============================================================================
+
+/**
+ * Detect if an error is a "API not enabled" error.
+ * GCP returns these as PERMISSION_DENIED with a specific message pattern.
+ */
+export function isApiNotEnabledError(error?: string): boolean {
+  if (!error) return false;
+  return (
+    API_NOT_ENABLED_PATTERNS.some((p) => error.includes(p)) ||
+    (error.includes('PERMISSION_DENIED') && error.includes('googleapis.com'))
+  );
+}
+
+/**
+ * Detect if an error is an auth-missing error.
+ */
+export function isAuthMissingError(error?: string): boolean {
+  if (!error) return false;
+  return AUTH_MISSING_PATTERNS.some((p) => error.includes(p));
+}
+
+/**
+ * Detect if an error is an auth-expired error.
+ */
+export function isAuthExpiredError(error?: string): boolean {
+  if (!error) return false;
+  return AUTH_EXPIRED_PATTERNS.some((p) => error.includes(p));
+}
+
+/**
+ * Detect if an error is any kind of auth issue (missing or expired).
+ */
+export function isAuthError(error?: string): boolean {
+  return isAuthMissingError(error) || isAuthExpiredError(error);
+}
+
+/**
+ * Detect if an error indicates the target resource doesn't exist.
+ * Used by the deploy dispatcher to make delete actions idempotent — a
+ * delete on a non-existent resource is treated as success since the
+ * goal (resource is gone) is already met.
+ *
+ * Also catches plain HTTP 404 status codes that some handlers leak
+ * into the error message via `${response.status}` interpolation.
+ */
+export function isResourceNotFoundError(error?: string): boolean {
+  if (!error) return false;
+  if (RESOURCE_NOT_FOUND_PATTERNS.some((p) => error.includes(p))) return true;
+  // HTTP status code patterns that handlers commonly emit:
+  //   "Request failed with status code 404"
+  //   "404 Not Found"
+  //   "GCP DELETE 404: ..."
+  if (/\b404\b/.test(error)) return true;
+  return false;
+}
+
+/**
+ * Extract the API service name from a GCP "not enabled" error message.
+ * E.g., "Enable it by visiting .../apis/api/run.googleapis.com/..." → "run.googleapis.com"
+ */
+export function extractApiName(error?: string): string | null {
+  if (!error) return null;
+  // Pattern: "apis/api/<service>/overview" in the console URL
+  const url_match = error.match(/apis\/api\/([a-z0-9.-]+\.googleapis\.com)\//);
+  if (url_match?.[1]) return url_match[1];
+  // Pattern: "<service> API has not been used"
+  const name_match = error.match(/([a-z0-9.-]+\.googleapis\.com)/);
+  if (name_match?.[1]) return name_match[1];
+  return null;
+}
+
+/**
+ * Extract a console URL from an error message.
+ */
+export function extractApiEnableUrl(error?: string): string | null {
+  if (!error) return null;
+  const urlMatch = error.match(/(https:\/\/console\.developers\.google\.com\/[^\s]+)/);
+  return urlMatch?.[1] ?? null;
+}
+
+/**
+ * Build a GCP Console URL for enabling an API.
+ */
+export function buildApiEnableUrl(apiName: string, project: string): string {
+  return `https://console.developers.google.com/apis/api/${apiName}/overview?project=${project}`;
+}
+
 
 // =============================================================================
 // Service Names (human-readable labels for log messages)

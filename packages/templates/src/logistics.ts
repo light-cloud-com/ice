@@ -142,7 +142,7 @@ export const logisticsFleetTrackingTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 50, y: 86 }, data: { domain: 'fleet.logistics.io', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true } },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
 
@@ -196,13 +196,6 @@ export const logisticsFleetTrackingTemplate: ComposedTemplate = {
     // ── Ungrouped (control plane) ─────────────────────────────────────────
     // 9: Secrets
     { iceType: 'Security.Secret', label: 'Secrets', position: { x: 50, y: 1080 }, data: {} },
-    // 10: Domain
-    {
-      iceType: 'Network.Domain',
-      label: 'Domain',
-      position: { x: 306, y: 1080 },
-      data: { hostname: 'fleet.logistics.io' },
-    },
     // 11: Repo
     {
       iceType: 'Source.Repository',
@@ -211,8 +204,7 @@ export const logisticsFleetTrackingTemplate: ComposedTemplate = {
       data: { repository: '', branch: 'main' },
     },
     // 12: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 818, y: 1080 }, data: {} },
-  ],
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 818, y: 1080 }, data: {} },],
 
   connections: [
     // Internet → WAF (Internet→WAF rule)
@@ -238,11 +230,11 @@ export const logisticsFleetTrackingTemplate: ComposedTemplate = {
     // Route Worker → Fleet Logs (Service→Monitoring rule)
     { fromBlock: 7, toBlock: 8, relationship: 'connects_to' },
     // Domain → Gateway (Domain→Routable rule)
-    { fromBlock: 10, toBlock: 2, relationship: 'connects_to' },
+    { fromBlock: 0, toBlock: 2, relationship: 'connects_to' },
     // Repo → Tracking API (Repo→Service pipeline rule)
-    { fromBlock: 11, toBlock: 3, relationship: 'connects_to' },
+    { fromBlock: 10, toBlock: 3, relationship: 'connects_to' },
     // Tracking API → Env (Service→EnvConfig config rule)
-    { fromBlock: 3, toBlock: 12, relationship: 'depends_on' },
+    { fromBlock: 3, toBlock: 11, relationship: 'depends_on' },
   ],
 };
 
@@ -327,7 +319,7 @@ export const logisticsWarehouseTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 50, y: 86 }, data: { domain: 'wms.logistics.io', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true } },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
 
@@ -388,13 +380,6 @@ export const logisticsWarehouseTemplate: ComposedTemplate = {
     // ── Ungrouped (control plane) ─────────────────────────────────────────
     // 10: Secrets
     { iceType: 'Security.Secret', label: 'Secrets', position: { x: 50, y: 1080 }, data: {} },
-    // 11: Domain
-    {
-      iceType: 'Network.Domain',
-      label: 'Domain',
-      position: { x: 306, y: 1080 },
-      data: { hostname: 'wms.logistics.io' },
-    },
     // 12: Repo
     {
       iceType: 'Source.Repository',
@@ -403,8 +388,7 @@ export const logisticsWarehouseTemplate: ComposedTemplate = {
       data: { repository: '', branch: 'main' },
     },
     // 13: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 818, y: 1080 }, data: {} },
-  ],
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 818, y: 1080 }, data: {} },],
 
   connections: [
     // Internet → WAF (Internet→WAF rule)
@@ -432,10 +416,10 @@ export const logisticsWarehouseTemplate: ComposedTemplate = {
     // Fulfillment Worker → Warehouse Logs (Service→Monitoring rule)
     { fromBlock: 7, toBlock: 9, relationship: 'connects_to' },
     // Domain → Gateway (Domain→Routable rule)
-    { fromBlock: 11, toBlock: 2, relationship: 'connects_to' },
+    { fromBlock: 0, toBlock: 2, relationship: 'connects_to' },
     // Repo → Warehouse API (Repo→Service pipeline rule)
-    { fromBlock: 12, toBlock: 3, relationship: 'connects_to' },
+    { fromBlock: 11, toBlock: 3, relationship: 'connects_to' },
     // Warehouse API → Env (Service→EnvConfig config rule)
-    { fromBlock: 3, toBlock: 13, relationship: 'depends_on' },
+    { fromBlock: 3, toBlock: 12, relationship: 'depends_on' },
   ],
 };

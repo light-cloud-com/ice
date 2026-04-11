@@ -128,10 +128,32 @@ body { background:var(--bg); color:var(--text); font-family:'Inter',-apple-syste
 .phase-dot.running { background:var(--accent); animation:pulse 1s infinite; }
 .progress-detail { font-size:11px; color:var(--dim); grid-column:2/6; padding-left:4px; padding-top:2px; }
 
+/* Per-resource breakdown under a failing template row */
+.resource-list { margin:4px 0 6px 44px; display:flex; flex-direction:column; gap:3px; }
+.resource-row { display:flex; align-items:flex-start; gap:8px; padding:6px 10px; background:var(--surface-2); border:1px solid var(--border); border-radius:6px; font-size:11px; font-family:'SF Mono','Fira Code',Monaco,Consolas,monospace; }
+.resource-row.fail { border-color:rgba(248,113,113,.35); background:rgba(248,113,113,.05); }
+.resource-row.ok { opacity:.55; }
+.resource-icon { flex-shrink:0; font-weight:700; font-size:10px; }
+.resource-row.fail .resource-icon { color:var(--fail); }
+.resource-row.ok .resource-icon { color:var(--pass); }
+.resource-name { color:var(--text); font-weight:600; flex-shrink:0; }
+.resource-type { color:var(--dim); flex-shrink:0; }
+.resource-error { color:var(--fail); flex:1; word-break:break-word; white-space:pre-wrap; }
+
 /* ── Logs ────────────────────────────────────────────────── */
 .logs-section { margin-top:20px; }
 .logs-section h2 { font-size:15px; font-weight:600; margin-bottom:8px; }
 .log-box { background:#080a10; border:1px solid var(--border); border-radius:var(--radius); padding:14px; font-family:'SF Mono','Fira Code',Monaco,Consolas,monospace; font-size:11px; line-height:1.7; min-height:120px; max-height:400px; overflow-y:auto; color:var(--dim); overscroll-behavior:contain; white-space:pre-wrap; word-break:break-word; }
+.log-line { display:block; }
+.log-line.error { color:var(--fail); }
+.log-line.warn { color:var(--partial); }
+.log-line.success { color:var(--pass); }
+.log-line.info { color:var(--text); }
+.log-line.gateway { color:#60a5fa; }
+.log-line.frontend { color:#a78bfa; }
+.log-line.phase { color:var(--accent-hover); font-weight:600; }
+.log-line.dim { color:var(--dim); }
+.log-ts { color:#4b5163; margin-right:6px; }
 
 /* ── Errors ──────────────────────────────────────────────── */
 .error-section { margin-top:16px; }
@@ -201,7 +223,7 @@ h2 { font-size:15px; margin-bottom:8px; }
     </div>
     <div class="config-field">
       <label for="cfg-gh-token">GitHub PAT</label>
-      <input id="cfg-gh-token" name="githubToken" type="password" placeholder="ghp_&hellip;" autocomplete="off" spellcheck="false">
+      <input id="cfg-gh-token" name="githubToken" type="text" placeholder="ghp_&hellip;" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="font-family: 'SF Mono','Fira Code',Monaco,Consolas,monospace">
     </div>
   </div>
 
@@ -593,6 +615,27 @@ function updateProgressUI(p) {
     html += '<div class="dim" style="font-variant-numeric:tabular-nums">'+(t.resources?t.resources.success+'/'+t.resources.total:'\u2014')+'</div>';
     html += '</div>';
     if (t.currentDetail) html += '<div class="progress-detail">\u2514 '+escHtml(t.currentDetail)+'</div>';
+
+    // Per-resource breakdown — show failed rows always, collapse successes if any failed.
+    const details = t.resourceDetails || [];
+    if (details.length) {
+      const anyFailed = details.some(d => !d.success);
+      const rows = anyFailed ? details.filter(d => !d.success) : [];
+      if (rows.length) {
+        html += '<div class="resource-list">';
+        for (const r of rows) {
+          const cls = r.success ? 'ok' : 'fail';
+          const icon = r.success ? '\u2713' : '\u2717';
+          html += '<div class="resource-row '+cls+'">';
+          html += '<span class="resource-icon">'+icon+'</span>';
+          html += '<span class="resource-name">'+escHtml(r.name||'')+'</span>';
+          html += '<span class="resource-type">'+escHtml(r.type||'')+'</span>';
+          if (r.error) html += '<span class="resource-error">'+escHtml(r.error)+'</span>';
+          html += '</div>';
+        }
+        html += '</div>';
+      }
+    }
   }
   document.getElementById('progress-list').innerHTML = html;
 
@@ -607,12 +650,38 @@ function updateProgressUI(p) {
 }
 
 // ── Output Log ─────────────────────────────────────────────
+function classifyLogLine(line) {
+  const s = String(line);
+  const lower = s.toLowerCase();
+  if (/\b(error|fail(ed|ure)?|exception|rejected|denied|unauthori[sz]ed|ERR|XX)\b/i.test(s)) return 'error';
+  if (/\b(warn(ing)?|deprecat|skipped|partial|!!)\b/i.test(s)) return 'warn';
+  if (/\b(success|succeeded|passed|done|completed|ready|OK|\u2713)\b/i.test(s)) return 'success';
+  if (/^\s*\[gw\]/i.test(s)) return 'gateway';
+  if (/^\s*\[(web|fe|vite)\]/i.test(s)) return 'frontend';
+  if (/\b(plan|deploy|verify|destroy|phase|template)\b/i.test(lower) && /:|>|starting|running/i.test(lower)) return 'phase';
+  return 'info';
+}
+
+function renderLogLine(line) {
+  const cls = classifyLogLine(line);
+  // Pull out leading timestamp like [14:43:03] or 14:43:03 for dim styling
+  const m = String(line).match(/^(\[?\d{2}:\d{2}:\d{2}\]?)\s+(.*)$/);
+  if (m) {
+    return '<span class="log-line ' + cls + '"><span class="log-ts">' + escHtml(m[1]) + '</span>' + escHtml(m[2]) + '</span>';
+  }
+  return '<span class="log-line ' + cls + '">' + escHtml(line) + '</span>';
+}
+
+function renderAllOutput() {
+  const box = document.getElementById('log-box');
+  box.innerHTML = outputLines.map(renderLogLine).join('\n');
+  box.scrollTop = box.scrollHeight;
+}
+
 function appendOutput(line) {
   outputLines.push(line);
   if (outputLines.length > 500) outputLines = outputLines.slice(-500);
-  const box = document.getElementById('log-box');
-  box.textContent = outputLines.join('\n');
-  box.scrollTop = box.scrollHeight;
+  renderAllOutput();
 }
 
 // ── Helpers ────────────────────────────────────────────────
@@ -643,14 +712,42 @@ async function createTestRepos() {
       body: JSON.stringify({ githubToken: token }),
     });
     const data = await res.json();
-    if (data.success) {
-      const created = data.repos.filter(r => r.created).length;
-      const existing = data.repos.filter(r => !r.created).length;
-      statusEl.textContent = `${data.repos.length} repos ready (${created} created, ${existing} existed)`;
-      statusEl.style.color = 'var(--pass)';
-    } else {
-      statusEl.textContent = 'Failed: ' + data.error;
+    const repos = Array.isArray(data.repos) ? data.repos : [];
+    const created = repos.filter(r => r.status === 'created').length;
+    const existed = repos.filter(r => r.status === 'existed').length;
+    const failed = repos.filter(r => r.status === 'failed');
+
+    if (failed.length > 0) {
+      // Any per-repo failure — surface the real GitHub errors regardless of
+      // whether the top-level success flag came back true or false.
+      statusEl.textContent = failed.length + '/' + repos.length + ' repo(s) failed'
+        + ' (' + created + ' created, ' + existed + ' existed)';
       statusEl.style.color = 'var(--fail)';
+
+      const errSection = document.getElementById('error-section');
+      const errHeading = document.getElementById('error-heading');
+      const errList = document.getElementById('error-list');
+      if (errSection && errHeading && errList) {
+        errSection.style.display = 'block';
+        errHeading.textContent = 'Repo creation errors (' + failed.length + ')';
+        errList.innerHTML = failed.map(r =>
+          '<div class="error-item"><strong>' + escHtml(r.fullName || r.name) + '</strong>: ' + escHtml(r.error || 'unknown') + '</div>'
+        ).join('');
+      }
+      appendOutput('Repo creation: ' + failed.length + '/' + repos.length + ' failed');
+      for (const r of failed) appendOutput('  ' + (r.fullName || r.name) + ': ' + (r.error || 'unknown'));
+
+      // Hint at the most common root cause without being preachy about it.
+      if (failed.some(r => /403|not accessible/i.test(r.error || ''))) {
+        appendOutput('Hint: fine-grained PATs need org Administration: Read and write, approved by a light-cloud-com owner. Classic PATs need repo + delete_repo + admin:org (SSO-authorized).');
+      }
+    } else if (data.success === false) {
+      // Request itself failed server-side and no per-repo data came back.
+      statusEl.textContent = 'Failed: ' + (data.error || 'unknown error');
+      statusEl.style.color = 'var(--fail)';
+    } else {
+      statusEl.textContent = repos.length + ' repos ready (' + created + ' created, ' + existed + ' existed)';
+      statusEl.style.color = 'var(--pass)';
     }
   } catch (err) {
     statusEl.textContent = 'Error: ' + err.message;
@@ -662,18 +759,50 @@ async function createTestRepos() {
 async function deleteTestRepos() {
   if (!confirm('Delete all ice-test-* repos from light-cloud-com?')) return;
   const statusEl = document.getElementById('repo-status');
+  const token = document.getElementById('cfg-gh-token').value.trim();
   statusEl.textContent = 'Deleting test repos\u2026';
   statusEl.style.color = 'var(--partial)';
 
   try {
-    const res = await fetch('/api/repos/delete', { method: 'POST' });
+    const res = await fetch('/api/repos/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ githubToken: token }),
+    });
     const data = await res.json();
-    if (data.success) {
-      statusEl.textContent = 'Test repos deleted';
+
+    const deleted = Array.isArray(data.deleted) ? data.deleted : [];
+    const failed = Array.isArray(data.failed) ? data.failed : [];
+    const discovered = typeof data.discovered === 'number' ? data.discovered : deleted.length + failed.length;
+
+    if (failed.length > 0) {
+      statusEl.textContent = failed.length + '/' + discovered + ' repo(s) failed to delete (' + deleted.length + ' deleted)';
+      statusEl.style.color = 'var(--fail)';
+      const errSection = document.getElementById('error-section');
+      const errHeading = document.getElementById('error-heading');
+      const errList = document.getElementById('error-list');
+      if (errSection && errHeading && errList) {
+        errSection.style.display = 'block';
+        errHeading.textContent = 'Repo delete errors (' + failed.length + ')';
+        errList.innerHTML = failed.map(r =>
+          '<div class="error-item"><strong>' + escHtml(r.name) + '</strong>: ' + escHtml(r.error || 'unknown') + '</div>'
+        ).join('');
+      }
+      appendOutput('Repo delete: ' + failed.length + '/' + discovered + ' failed');
+      for (const r of failed) appendOutput('  ' + r.name + ': ' + (r.error || 'unknown'));
+      if (failed.some(r => /403|not accessible/i.test(r.error || ''))) {
+        appendOutput('Hint: deletion needs Repository permissions -> Administration: Read and write on the fine-grained PAT.');
+      }
+    } else if (data.success === false) {
+      statusEl.textContent = 'Failed: ' + (data.error || 'unknown error');
+      statusEl.style.color = 'var(--fail)';
+    } else if (discovered === 0) {
+      statusEl.textContent = 'No ice-test-* repos found in light-cloud-com';
       statusEl.style.color = 'var(--dim)';
     } else {
-      statusEl.textContent = 'Failed: ' + data.error;
-      statusEl.style.color = 'var(--fail)';
+      statusEl.textContent = deleted.length + ' repo(s) deleted';
+      statusEl.style.color = 'var(--dim)';
+      appendOutput('Deleted ' + deleted.length + ' test repo(s): ' + deleted.join(', '));
     }
   } catch (err) {
     statusEl.textContent = 'Error: ' + err.message;

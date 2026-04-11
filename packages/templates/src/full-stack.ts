@@ -110,7 +110,7 @@ export const fullStackTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 50, y: 86 }, data: { domain: 'app.acme.io', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true } },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
     // 2: Static Site (CDN)
@@ -162,8 +162,6 @@ export const fullStackTemplate: ComposedTemplate = {
     // ── Ungrouped (control plane) ─────────────────────────────────────────
     // 9: Secrets
     { iceType: 'Security.Secret', label: 'App Secrets', position: { x: 50, y: 1080 }, data: {} },
-    // 10: Domain
-    { iceType: 'Network.Domain', label: 'Domain', position: { x: 306, y: 1080 }, data: { hostname: 'app.acme.io' } },
     // 11: Repo
     {
       iceType: 'Source.Repository',
@@ -172,15 +170,16 @@ export const fullStackTemplate: ComposedTemplate = {
       data: { repository: '', branch: 'main' },
     },
     // 12: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 50, y: 1256 }, data: {} },
-  ],
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 50, y: 1256 }, data: {} },],
 
   connections: [
     // Internet → WAF → Gateway (Gateway→Gateway rule)
     { fromBlock: 0, toBlock: 1, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
     { fromBlock: 1, toBlock: 3, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
-    // Internet → Static Site (Gateway→Frontend rule)
-    { fromBlock: 0, toBlock: 2, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
+    // Static Site is publicly reachable on its own — Firebase Hosting
+    // (GCP), AWS Amplify, and Azure Static Web Apps all include HTTPS,
+    // CDN, and custom domain. The `domain` field on the StaticSite
+    // block does the wiring; no Public Endpoint edge needed.
     // Gateway → Service (Gateway→Backend rule)
     { fromBlock: 3, toBlock: 4, relationship: 'connects_to', protocol: 'HTTP', port: 8080 },
     // Service → Data (Backend→Database, Backend→Cache, Backend→Storage rules)
@@ -192,10 +191,9 @@ export const fullStackTemplate: ComposedTemplate = {
     // Service → Logs (Service→Monitoring rule)
     { fromBlock: 4, toBlock: 8, relationship: 'connects_to' },
     // Domain → Static Site (Domain→Routable rule)
-    { fromBlock: 10, toBlock: 2, relationship: 'connects_to' },
     // Repo → Service (Repo→Service pipeline rule)
-    { fromBlock: 11, toBlock: 4, relationship: 'connects_to' },
+    { fromBlock: 10, toBlock: 4, relationship: 'connects_to' },
     // Service → Env (Service→EnvConfig config rule)
-    { fromBlock: 4, toBlock: 12, relationship: 'depends_on' },
+    { fromBlock: 4, toBlock: 11, relationship: 'depends_on' },
   ],
 };

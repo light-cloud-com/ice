@@ -126,7 +126,7 @@ export function validateStructure(nodes: readonly ValidatableNode[], edges: read
     // Skip containers, groups, monitoring (often standalone), domain, env config
     if (isContainer(iceType, node.type)) continue;
     if (node.type === 'container' || node.type === 'group') continue;
-    if (iceType === 'Config.Environment' || iceType === 'Network.Domain') continue;
+    if (iceType === 'Config.Environment' || iceType === 'Network.PublicEndpoint') continue;
     if (iceType.startsWith('Monitoring.')) continue;
 
     if (!connectedNodes.has(node.id)) {

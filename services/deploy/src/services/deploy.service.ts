@@ -6,16 +6,154 @@
  */
 
 import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import prisma from '@ice/db';
 import * as providerService from '@ice/service-credentials';
-import { emitDeployProgress } from '@ice/shared';
+import { emitDeployProgress as wireEmitDeployProgress } from '@ice/shared';
+import {
+  acquireDeployLock,
+  cancelDeploy as cancelLockDeploy,
+  DeployLockError,
+  finishDeploySnapshot,
+  getDeploySnapshot,
+  registerTempDir,
+  releaseTempDir,
+  setSnapshotPersister,
+  startDeploySnapshot,
+  updateDeploySnapshot,
+  updateDeploySnapshotNode,
+  type DeployProgressSnapshot,
+} from './deploy-locks.js';
+import { recordDeployEvent } from './deploy-event-log.js';
+import { resolveProviderAuth, cleanupProviderAuth } from '../providers/registry.js';
 
-/** Clean up a specific temp credentials file */
-function cleanupTempCredentialsFile(filePath: string | undefined) {
-  if (filePath && filePath.includes('ice-sa-')) {
-    try {
-      fs.unlinkSync(filePath);
-    } catch {}
+// ── Snapshot persistence ─────────────────────────────────────────────────────
+//
+// Install a DB persister for `DeployProgressSnapshot` so the latest state
+// is always durable on `CanvasDeployment.snapshot`. This is what lets a
+// refreshed page see live progress even after a gateway restart: the
+// in-memory snapshot is lost but the DB copy survives and `/current/:cardId`
+// falls back to it. We throttle writes to once every 500ms per card so a
+// burst of progress events doesn't hammer the DB.
+const pendingSnapshotWrites = new Map<string, NodeJS.Timeout>();
+const SNAPSHOT_WRITE_INTERVAL_MS = 500;
+
+setSnapshotPersister((snapshot: DeployProgressSnapshot) => {
+  if (!snapshot.deploymentId) return;
+  const cardId = snapshot.cardId;
+  if (pendingSnapshotWrites.has(cardId)) return; // a write is already queued
+  const timer = setTimeout(() => {
+    pendingSnapshotWrites.delete(cardId);
+    const latest = getDeploySnapshot(cardId);
+    if (!latest?.deploymentId) return;
+    prisma.canvasDeployment
+      .update({
+        where: { id: latest.deploymentId },
+        data: { snapshot: latest as any },
+      })
+      .catch((err: any) => {
+        console.warn('[snapshot-persist] write failed:', err.message);
+      });
+  }, SNAPSHOT_WRITE_INTERVAL_MS);
+  timer.unref?.();
+  pendingSnapshotWrites.set(cardId, timer);
+});
+
+/**
+ * Emit a deploy event: sends it live over socket.io AND appends it to the
+ * persistent event log so a client can replay the full narrative on
+ * reload/reconnect. Always prefer this over the raw `emitDeployProgress`
+ * from `@ice/shared` — going through the wrapper is the only way the
+ * event tape stays complete.
+ */
+function emitDeployProgress(cardId: string, event: any): void {
+  console.log('[deploy] emit cardId=' + cardId + ' type=' + (event?.type || '?') + ' msg=' + (event?.message || event?.resource || '').toString().slice(0, 80));
+  wireEmitDeployProgress(cardId, event);
+  try {
+    recordDeployEvent(cardId, event?.type || 'log', event);
+  } catch (err: any) {
+    // Event-log failures must never break the live emit.
+    console.warn('[deploy] recordDeployEvent failed: ' + err.message);
+  }
+}
+
+export type { DeployProgressSnapshot } from './deploy-locks.js';
+
+/** Public re-export so routes can hit the cancel machinery directly. */
+export function requestDeployCancel(cardId: string): boolean {
+  return cancelLockDeploy(cardId);
+}
+
+/** Read the in-memory snapshot of an in-flight deploy for a card. */
+export function getCurrentDeploySnapshot(cardId: string) {
+  return getDeploySnapshot(cardId);
+}
+
+/**
+ * Compute a resource-count summary for the history UI from a deploy result.
+ * Returns `{ created, updated, deleted, failed, total }` so the history row
+ * can render "3 created · 1 updated · 2 failed" without re-walking results.
+ */
+function computeDeploySummary(result: any): Record<string, number> {
+  const resources = (result?.resources || []) as any[];
+  let created = 0, updated = 0, deleted = 0, failed = 0;
+  for (const r of resources) {
+    if (!r.success) {
+      failed += 1;
+      continue;
+    }
+    const action = (r.action as string) || 'create';
+    if (action === 'create') created += 1;
+    else if (action === 'update') updated += 1;
+    else if (action === 'delete') deleted += 1;
+  }
+  return { created, updated, deleted, failed, total: resources.length };
+}
+import {
+  getExistingNameMap,
+  seedMappingsFromHistory,
+  upsertResourceMapping,
+  removeResourceMapping,
+} from './resource-mapping.service.js';
+
+/**
+ * Creates a per-deploy temp directory with mode 0700 and writes the SA key to
+ * `sa.json` inside it with mode 0600. Returns the key file path AND the
+ * directory path — callers must release the directory (not the file) when
+ * done so the registry stays in sync.
+ */
+function writeTempCredentials(keyJson: string): { keyPath: string; dir: string } {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ice-deploy-'));
+  try {
+    fs.chmodSync(dir, 0o700);
+  } catch {
+    // On some filesystems chmod is a no-op; the mkdtemp default is usually already 0700.
+  }
+  const keyPath = path.join(dir, 'sa.json');
+  fs.writeFileSync(keyPath, keyJson, { mode: 0o600 });
+  registerTempDir(dir);
+  return { keyPath, dir };
+}
+
+/**
+ * Validate that a parsed service-account JSON has the minimum fields GCP
+ * will actually accept. Catches the "user pasted an empty or truncated key"
+ * case early with a clear error instead of a cryptic auth failure at deploy
+ * time.
+ */
+function validateSaKey(parsed: unknown): void {
+  if (!parsed || typeof parsed !== 'object') {
+    throw new Error('Service account key is not a valid JSON object');
+  }
+  const obj = parsed as Record<string, unknown>;
+  const required = ['type', 'project_id', 'private_key', 'client_email'];
+  const missing = required.filter((k) => !obj[k]);
+  if (missing.length) {
+    throw new Error(`Service account key is missing required fields: ${missing.join(', ')}`);
+  }
+  if (obj.type !== 'service_account') {
+    throw new Error(`Expected type='service_account' in SA key, got '${obj.type}'`);
   }
 }
 
@@ -29,6 +167,13 @@ export async function planDeployment(cardId: string, nodes: any[], edges: any[],
   try {
     const core = await getCoreEngine();
     const { translate_card_to_graph } = core;
+
+    const environment = options.environment || 'development';
+
+    // Seed the mapping table from history on first use after the Phase 1
+    // upgrade, then load the name map so the translator reuses stable names.
+    await seedMappingsFromHistory(cardId, environment);
+    const existingNames = await getExistingNameMap(cardId, environment);
 
     const translation = translate_card_to_graph({
       nodes: nodes.map((n: any) => ({
@@ -44,13 +189,29 @@ export async function planDeployment(cardId: string, nodes: any[], edges: any[],
       })),
       provider: options.provider || 'gcp',
       projectName: options.projectName || 'untitled',
-      environment: options.environment || 'development',
+      environment,
       gcpProject: options.gcpProject,
       region: options.region || 'us-central1',
+      existing_names: existingNames,
+      cardId,
     });
 
+    // Build a proper plan shape the UI expects: creates/updates/deletes as arrays
+    // of { name, type, action }. For now we only emit `creates` — update/delete
+    // diffing happens at apply time against the last-deployed graph.
+    const creates = (translation.deployables || []).map((d: any) => ({
+      name: d.resource_name,
+      type: d.resource_type,
+      action: 'create' as const,
+      source_node_id: d.node_id,
+      label: d.label,
+    }));
+
     const plan = {
-      creates: translation.deployable_count || 0,
+      _schema_version: 1,
+      creates,
+      updates: [] as Array<{ name: string; type: string; action: 'update' }>,
+      deletes: [] as Array<{ name: string; type: string; action: 'delete' }>,
       deployable_count: translation.deployable_count,
       skipped: translation.skipped || [],
       warnings: translation.warnings || [],
@@ -65,6 +226,7 @@ export async function planDeployment(cardId: string, nodes: any[], edges: any[],
         card_id: cardId,
         user_id: userId,
         status: 'planned',
+        action_type: 'plan',
         provider: options.provider || 'gcp',
         region: options.region || 'us-central1',
         environment: options.environment || 'development',
@@ -86,7 +248,16 @@ async function fallbackPlan(cardId: string, nodes: any[], edges: any[], options:
   );
 
   const plan = {
-    creates: deployableNodes.length,
+    _schema_version: 1,
+    creates: deployableNodes.map((n: any) => ({
+      name: n.data?.label || n.id,
+      type: n.data?.iceType || 'unknown',
+      action: 'create' as const,
+      source_node_id: n.id,
+      label: n.data?.label || n.id,
+    })),
+    updates: [] as Array<{ name: string; type: string; action: 'update' }>,
+    deletes: [] as Array<{ name: string; type: string; action: 'delete' }>,
     deployable_count: deployableNodes.length,
     skipped: (nodes || [])
       .filter((n: any) => n.type === 'resource' && n.data?.provider !== (options?.provider || 'gcp'))
@@ -104,6 +275,7 @@ async function fallbackPlan(cardId: string, nodes: any[], edges: any[], options:
       card_id: cardId,
       user_id: userId,
       status: 'planned',
+      action_type: 'plan',
       provider: options?.provider || 'gcp',
       region: options?.region || 'us-central1',
       environment: options?.environment || 'development',
@@ -122,9 +294,30 @@ export async function applyDeployment(
   orgId: string,
   userId?: string,
 ) {
+  // Per-card lock — prevents concurrent applies to the same card from racing
+  // each other (credential env pollution, duplicate resource creation, etc.).
+  // The lock also hands back the AbortSignal that the cancel endpoint flips.
+  let releaseLock: () => void;
+  let cancelSignal: AbortSignal;
+  try {
+    const lock = acquireDeployLock(cardId, 'apply');
+    releaseLock = lock.release;
+    cancelSignal = lock.signal;
+  } catch (err) {
+    if (err instanceof DeployLockError) {
+      return {
+        success: false,
+        error: err.message,
+        code: err.code,
+      };
+    }
+    throw err;
+  }
+
   // 1. Get user's provider credentials
   const credentials = await providerService.getDecryptedCredentials(orgId, options.provider || 'gcp');
   if (!credentials) {
+    releaseLock();
     throw new Error('Provider not connected. Please connect your cloud provider first.');
   }
 
@@ -134,14 +327,20 @@ export async function applyDeployment(
       card_id: cardId,
       user_id: userId,
       status: 'deploying',
+      action_type: 'apply',
       provider: options.provider || 'gcp',
       region: options.region || 'us-central1',
       environment: options.environment || 'development',
     },
   });
 
+  // Seed the in-memory progress snapshot so any tab that opens the same
+  // project mid-deploy can fetch the current state via /deploy/current/:cardId
+  // without waiting for the next socket event.
+  startDeploySnapshot(cardId, deployment.id);
+
   const startTime = Date.now();
-  let tempCredentialsPath: string | undefined;
+  let tempCredentialsDir: string | undefined;
 
   emitDeployProgress(cardId, {
     type: 'log',
@@ -153,6 +352,13 @@ export async function applyDeployment(
     const { translate_card_to_graph, deploy_graph, GCPDeployer } = core;
 
     // 3. Translate card nodes to deployable graph
+    const environment = options.environment || 'development';
+
+    // Phase 1: seed + load the stable name map before translation so updates
+    // hit existing resources instead of creating duplicates.
+    await seedMappingsFromHistory(cardId, environment);
+    const existingNames = await getExistingNameMap(cardId, environment);
+
     const translation = translate_card_to_graph({
       nodes: nodes.map((n: any) => ({
         id: n.id,
@@ -167,15 +373,125 @@ export async function applyDeployment(
       })),
       provider: options.provider || 'gcp',
       projectName: options.projectName || 'untitled',
-      environment: options.environment || 'development',
+      environment,
       gcpProject: options.gcpProject || credentials.project_id,
       region: options.region || 'us-central1',
+      existing_names: existingNames,
+      cardId,
     });
 
     emitDeployProgress(cardId, {
       type: 'log',
       message: `Translated ${translation.deployable_count} resources for deployment`,
     });
+
+    // Surface translator warnings (anti-patterns, dropped backends, etc.)
+    // so the user sees them in the deploy log instead of having to dig
+    // through the canvas validation panel.
+    if (translation.warnings && translation.warnings.length > 0) {
+      for (const w of translation.warnings) {
+        emitDeployProgress(cardId, {
+          type: 'log',
+          message: `[translator] ${w}`,
+        });
+      }
+    }
+
+    // Diagnostic: show every Source.Repository → Compute edge the
+    // deploy service found in the canvas input. The most common
+    // "github repo not deploying" cause is that the Source.Repository
+    // node has an empty `repository` field — this log makes that
+    // immediately obvious without needing to inspect Redux state.
+    try {
+      const repoNodes = (nodes as any[]).filter(
+        (n) => (n.data?.iceType as string) === 'Source.Repository',
+      );
+      if (repoNodes.length > 0) {
+        emitDeployProgress(cardId, {
+          type: 'log',
+          message: `[diagnostic] Found ${repoNodes.length} Source.Repository node(s) in canvas`,
+        });
+        for (const r of repoNodes) {
+          const repoVal = String(r.data?.repository || '').trim();
+          const branchVal = String(r.data?.branch || 'main').trim();
+          const connectedEdges = (edges as any[]).filter(
+            (e) => e.source === r.id || e.target === r.id,
+          );
+          const connectedTargets = connectedEdges
+            .map((e) => (e.source === r.id ? e.target : e.source))
+            .map((tid) => (nodes as any[]).find((n) => n.id === tid))
+            .filter(Boolean);
+          if (!repoVal) {
+            emitDeployProgress(cardId, {
+              type: 'log',
+              message: `[diagnostic] Source.Repository ${r.id.slice(0, 8)} has EMPTY repository field — open its properties panel and pick a repo, then redeploy.`,
+            });
+          } else if (connectedTargets.length === 0) {
+            emitDeployProgress(cardId, {
+              type: 'log',
+              message: `[diagnostic] Source.Repository ${r.id.slice(0, 8)} (${repoVal}) has NO connected targets — drag an edge to a compute block.`,
+            });
+          } else {
+            const targetSummary = connectedTargets
+              .map((tn: any) => `${(tn.data?.label as string) || tn.id.slice(0, 8)} (${tn.data?.iceType})`)
+              .join(', ');
+            emitDeployProgress(cardId, {
+              type: 'log',
+              message: `[diagnostic] Source.Repository ${r.id.slice(0, 8)} → ${repoVal}#${branchVal} → ${targetSummary}`,
+            });
+          }
+        }
+      }
+    } catch (e: any) {
+      // Diagnostic must never fail the deploy
+      emitDeployProgress(cardId, {
+        type: 'log',
+        message: `[diagnostic] Source.Repository scan failed: ${e?.message || e}`,
+      });
+    }
+
+    // 3.5. Auto-register deployment rules for any Source.Repository →
+    // Compute edges. This is what makes "push to GitHub auto-redeploys
+    // my Firebase Hosting site" work without the user manually clicking
+    // into the Source.Repository properties panel. Idempotent — re-uses
+    // existing rules and webhooks.
+    if (userId) {
+      try {
+        const { ensureRulesForCanvas } = await import('./pipeline.service.js');
+        const ruleResult = await ensureRulesForCanvas(
+          cardId,
+          nodes,
+          edges,
+          orgId,
+          userId,
+          options.environment || 'development',
+        );
+        for (const rule of ruleResult.created) {
+          const webhookNote =
+            rule.webhookStatus === 'active'
+              ? 'webhook active — pushes will auto-redeploy'
+              : rule.webhookStatus === 'failed'
+                ? 'webhook NOT registered (PAT missing repo:admin scope) — manual deploys only'
+                : 'webhook pending';
+          emitDeployProgress(cardId, {
+            type: 'log',
+            message: `[pipeline] Source.Repository → ${rule.repository} wired to node ${rule.nodeId.slice(0, 8)} (${webhookNote})`,
+          });
+        }
+        for (const err of ruleResult.errors) {
+          emitDeployProgress(cardId, {
+            type: 'log',
+            message: `[pipeline] Could not register auto-deploy rule for ${err.repository}: ${err.error}`,
+          });
+        }
+      } catch (err: any) {
+        // Non-fatal — auto-rule registration is best-effort.
+        emitDeployProgress(cardId, {
+          type: 'log',
+          message: `[pipeline] Auto-rule registration failed (non-fatal): ${err?.message || err}`,
+        });
+      }
+    }
 
     // 4. Create deployer with user's credentials
     let deployer: any;
@@ -189,79 +505,25 @@ export async function applyDeployment(
       deployer = new GCPDeployer();
     }
 
-    // Build auth client based on credential type
-    let authClient: any = credentials;
-    if (credentials._auth_type === 'oauth') {
-      // OAuth flow — use access token via OAuth2Client.
-      // Note: Google Workspace accounts with RAPT policies may block OAuth deployments.
-      // In that case, users should use a service account key instead.
-      const accessToken = await providerService.getValidGCPAccessToken(orgId, credentials);
-      if (!accessToken) {
-        throw new Error(
-          'GCP OAuth token expired. Please reconnect via Cloud Providers settings.\n' +
-            'For Google Workspace accounts, we recommend using a Service Account Key instead.',
-        );
-      }
-
-      const { OAuth2Client } = await import('google-auth-library');
-      const oauthClient = new OAuth2Client();
-      oauthClient.setCredentials({ access_token: accessToken });
-      authClient = oauthClient;
-
-      emitDeployProgress(cardId, {
-        type: 'log',
-        message: 'Authenticating via Google OAuth...',
-      });
-    } else {
-      // Service account key flow — create a proper GoogleAuth client
-      // AND set GOOGLE_APPLICATION_CREDENTIALS so SDK clients (Storage, Run, etc.)
-      // also use the service account instead of ADC/gcloud credentials.
-      const key = credentials.service_account_key || credentials.key;
-      if (key) {
-        try {
-          const parsed = typeof key === 'string' ? JSON.parse(key) : key;
-          const { GoogleAuth } = await import('google-auth-library');
-          const auth = new GoogleAuth({
-            credentials: parsed,
-            scopes: ['https://www.googleapis.com/auth/cloud-platform'],
-          });
-          authClient = await auth.getClient();
-
-          // Write temp credentials file for SDK clients
-          const fsAsync = await import('fs');
-          const os = await import('os');
-          const path = await import('path');
-          const tmpPath = path.join(os.tmpdir(), `ice-sa-${deployment.id}-${Date.now()}.json`);
-          fsAsync.writeFileSync(tmpPath, typeof key === 'string' ? key : JSON.stringify(parsed));
-          tempCredentialsPath = tmpPath;
-          process.env.GOOGLE_APPLICATION_CREDENTIALS = tmpPath;
-
-          emitDeployProgress(cardId, {
-            type: 'log',
-            message: 'Authenticating via Service Account...',
-          });
-        } catch (err: any) {
-          throw new Error(`Invalid service account key: ${err.message}`, { cause: err });
-        }
-      }
-    }
+    // Resolve provider auth via the credential resolver registry. Replaces
+    // the copy-pasted OAuth2Client / GoogleAuth / SA-key block that used to
+    // live in every deploy function (Phase D of the reliability rework).
+    const scopedAuth = await resolveProviderAuth(options.provider || 'gcp', {
+      orgId,
+      credentials,
+      requestedScope: {
+        project: options.gcpProject || credentials.project_id,
+        region: options.region,
+      },
+      onLog: (msg) => emitDeployProgress(cardId, { type: 'log', message: msg }),
+    });
+    const authClient: any = scopedAuth.authClient;
+    tempCredentialsDir = scopedAuth.tempDir;
 
     // Auto-enable required GCP APIs before deploying
-    const gcpProject = options.gcpProject || credentials.project_id || authClient.project_id;
+    const gcpProject = scopedAuth.scope.project || authClient?.projectId || authClient?.project_id;
     if ((options.provider || 'gcp') === 'gcp') {
-      let accessToken: string | null = null;
-      if (credentials._auth_type === 'oauth') {
-        accessToken = await providerService.getValidGCPAccessToken(orgId, credentials);
-      } else if (authClient?.getAccessToken) {
-        // Service account — get token from the auth client
-        try {
-          const tokenRes = await authClient.getAccessToken();
-          accessToken = tokenRes?.token || tokenRes?.access_token || null;
-          console.log('SA access token obtained:', !!accessToken);
-        } catch (err: any) {
-          console.error('Failed to get SA access token for auto-enable:', err.message);
-        }
-      }
+      const accessToken = scopedAuth.accessToken || null;
       console.log('Auto-enable: project=', gcpProject, 'hasToken=', !!accessToken);
       if (accessToken) {
         await autoEnableGCPApis(gcpProject, accessToken, nodes, (msg: string) => {
@@ -276,8 +538,17 @@ export async function applyDeployment(
     const { MutableGraph } = await import('@ice/core/graph');
     const currentGraph = new MutableGraph('current');
 
+    // Phase 1 baseline fix: include partial-success deployments and filter by
+    // environment. Previously this only looked at status='success', so a single
+    // resource failure poisoned the entire update path until the next fully
+    // successful deploy. Also missed cross-environment isolation — a dev
+    // deploy could influence a prod diff.
     const lastDeploy = await prisma.canvasDeployment.findFirst({
-      where: { card_id: cardId, status: 'success' },
+      where: {
+        card_id: cardId,
+        environment,
+        status: { in: ['success', 'partial'] },
+      },
       orderBy: { created_at: 'desc' },
     });
 
@@ -319,9 +590,44 @@ export async function applyDeployment(
       currentNodes.map((n: any) => `${n.type}::${n.name}`),
     );
 
-    // Track progress across resources
+    // Exact resource_name → canvas node_id lookup built at translation time.
+    // Avoids fuzzy string matching that was returning NONE for names like
+    // "staticsite-7358-1" vs a long node uuid.
+    const nameToNodeId = new Map<string, string>();
+    const nameToLabel = new Map<string, string>();
+    for (const d of translation.deployables || []) {
+      nameToNodeId.set(d.resource_name, d.node_id);
+      nameToLabel.set(d.resource_name, d.label);
+    }
+    const findSourceNodeId = (res: any): string | undefined => {
+      const candidates = [res?.name, res?.resource_id].filter(Boolean) as string[];
+      for (const c of candidates) {
+        if (nameToNodeId.has(c)) return nameToNodeId.get(c);
+      }
+      // Handler may append a suffix like "-0", "-1", "-proxy", "-url-map".
+      // Strip trailing segments until we hit a known base name.
+      for (const c of candidates) {
+        const parts = c.split('-');
+        while (parts.length > 1) {
+          parts.pop();
+          const base = parts.join('-');
+          if (nameToNodeId.has(base)) return nameToNodeId.get(base);
+        }
+      }
+      return undefined;
+    };
+
+    // Track progress across resources. Phase 2: emit 'started' events when a
+    // resource begins so the progress bar moves in real time, not just on
+    // completion. Progress is fractional — in-flight resources count for 0.5.
     const totalResources = translation.deployable_count || 1;
     let completedResources = 0;
+    let inFlightResources = 0;
+
+    const computeOverallProgress = () => {
+      const effective = completedResources + inFlightResources * 0.5;
+      return Math.min(Math.round((effective / totalResources) * 100), 99);
+    };
 
     const result = await deploy_graph(translation.graph, currentGraph, deployer, {
       provider: options.provider || 'gcp',
@@ -329,33 +635,61 @@ export async function applyDeployment(
       regions: [options.region || 'us-central1'],
       continue_on_error: true,
       auth_client: authClient,
-      on_progress: (resource: string, action: string, status: string) => {
-        if (status === 'completed' || status === 'failed') {
+      auth_key_file: (authClient as any)?._ice_key_file_path,
+      auth_credentials: (authClient as any)?._ice_parsed_credentials,
+      on_progress: (resource: string, action: string, status: string, extra?: any) => {
+        // 'running' = started this resource; 'completed'/'failed' = finished.
+        // 'step' is a new Phase 2 sub-step event that carries `{ label, index, total }`.
+        if (status === 'running') {
+          inFlightResources++;
+        } else if (status === 'completed' || status === 'failed') {
+          inFlightResources = Math.max(0, inFlightResources - 1);
           completedResources++;
         }
-        const progress = Math.min(Math.round((completedResources / totalResources) * 100), 99);
+        const source_node_id = findSourceNodeId({ name: resource });
+        const progress = computeOverallProgress();
         emitDeployProgress(cardId, {
           type: 'progress',
           progress,
           resource,
-          message: `${action} ${resource}: ${status}`,
+          action,
+          status,
+          step: extra?.step,
+          source_node_id,
+          message: extra?.step
+            ? `${resource}: ${extra.step.label} (${extra.step.index}/${extra.step.total})`
+            : `${action} ${resource}: ${status}`,
+        } as any);
+
+        // Mirror the update into the in-memory snapshot so new tabs can
+        // hydrate their state without waiting for a socket round-trip.
+        updateDeploySnapshot(cardId, {
+          progress,
+          currentResource: resource,
+          currentStep: extra?.step,
         });
+        if (source_node_id) {
+          const nodeStatus =
+            status === 'running'
+              ? 'deploying'
+              : status === 'completed'
+                ? 'active'
+                : status === 'failed'
+                  ? 'error'
+                  : 'deploying';
+          updateDeploySnapshotNode(cardId, source_node_id, nodeStatus, extra?.step);
+        }
       },
       on_log: (message: string) => {
         emitDeployProgress(cardId, { type: 'log', message });
       },
       on_resource_result: (resourceResult: any) => {
-        // Find the source canvas node for this resource
-        const sourceNode = nodes.find(
-          (n: any) =>
-            resourceResult.resource_id?.includes(n.id) ||
-            resourceResult.name?.includes(n.id?.split('-').slice(0, -1).join('-')),
-        );
+        const source_node_id = findSourceNodeId(resourceResult);
         emitDeployProgress(cardId, {
           type: 'resource_result',
           result: {
             ...resourceResult,
-            source_node_id: sourceNode?.id,
+            source_node_id,
           },
         });
       },
@@ -392,49 +726,154 @@ export async function applyDeployment(
       }
     }
 
-    const durationMs = Date.now() - startTime;
-
-    // 6. Emit individual resource results (if on_resource_result wasn't called by core)
-    if (result.resources?.length > 0) {
-      for (const res of result.resources) {
-        // Find source canvas node by matching resource name/id to node id or label
-        const sourceNode = nodes.find((n: any) => {
-          if (n.type !== 'resource') return false;
-          const nodeId = (n.id || '').toLowerCase();
-          const label = (n.data?.label || '').toLowerCase().replace(/\s+/g, '-');
-          const resName = (res.name || '').toLowerCase();
-          const resId = (res.resource_id || '').toLowerCase();
-          // Match: resource name starts with label, or contains node id
-          return (
-            (label && resName.startsWith(label)) ||
-            (label && resId.startsWith(label)) ||
-            resName.includes(nodeId) ||
-            resId.includes(nodeId)
-          );
-        });
-        console.log(
-          `Resource result: ${res.name} → matched node: ${sourceNode?.id || 'NONE'} (label: ${sourceNode?.data?.label || '-'})`,
-        );
+    // Auto-cleanup on backend bucket quota error + retry once. The
+    // user's pain point: hitting the GCP default 3-backend-bucket
+    // limit during iteration leaves the user staring at a "Cleanup
+    // Orphans" button that they didn't know they had to click. Instead
+    // we detect the quota error in the deploy result, run orphan
+    // cleanup automatically, and re-run the failed resources.
+    const QUOTA_PATTERNS = ['QUOTA_EXCEEDED', "Quota 'BACKEND_BUCKETS'", 'Backend bucket quota exceeded'];
+    const hasQuotaFailure = (result.resources || []).some(
+      (r: any) => !r.success && r.error && QUOTA_PATTERNS.some((p) => String(r.error).includes(p)),
+    );
+    if (hasQuotaFailure) {
+      emitDeployProgress(cardId, {
+        type: 'log',
+        message:
+          '[auto-cleanup] Backend bucket quota exceeded — scanning for orphaned ICE resources to free up the slot...',
+      });
+      try {
+        const { cleanupOrphanedIceResources } = await import('./orphan-cleanup.service.js');
+        const cleanup = await cleanupOrphanedIceResources(orgId, gcpProject, { dryRun: false });
+        const deletedCount = cleanup.deleted.length;
         emitDeployProgress(cardId, {
-          type: 'resource_result',
-          result: {
-            ...res,
-            source_node_id: sourceNode?.id,
-          },
+          type: 'log',
+          message:
+            deletedCount > 0
+              ? `[auto-cleanup] Freed ${deletedCount} orphaned resource${deletedCount === 1 ? '' : 's'} — retrying failed resources.`
+              : '[auto-cleanup] No orphans found. Quota is exhausted by active deployments — destroy an old project or request a quota increase.',
+        });
+
+        if (deletedCount > 0) {
+          // Re-run only the resources that failed with a quota error.
+          // We rebuild a sub-graph by filtering the original translation
+          // to only the failed names + their dependencies. The
+          // forwarding rule + URL map + target proxy chain depends on
+          // the backend bucket, so freeing one slot fixes the whole
+          // downstream chain on retry.
+          emitDeployProgress(cardId, {
+            type: 'log',
+            message: '[auto-cleanup] Retrying deploy after orphan cleanup...',
+          });
+          const retryResult = await deploy_graph(translation.graph, currentGraph, deployer, {
+            provider: options.provider || 'gcp',
+            project: gcpProject,
+            regions: [options.region || 'us-central1'],
+            continue_on_error: true,
+            auth_client: authClient,
+            auth_key_file: (authClient as any)?._ice_key_file_path,
+            auth_credentials: (authClient as any)?._ice_parsed_credentials,
+            on_log: (message: string) => emitDeployProgress(cardId, { type: 'log', message }),
+            on_progress: (resource: string, action: string, status: string) =>
+              emitDeployProgress(cardId, { type: 'progress', resource, action, status, source_node_id: findSourceNodeId({ name: resource }) }),
+          });
+          // Merge retry results into the primary result: any resource
+          // that succeeded on retry overrides its failed entry from the
+          // first attempt. The deploy engine internally skips already-
+          // existing resources via ALREADY_EXISTS handling.
+          if (retryResult.resources?.length > 0) {
+            const byName = new Map<string, any>();
+            for (const r of result.resources) byName.set(r.name, r);
+            for (const r of retryResult.resources) {
+              if (r.success) byName.set(r.name, r);
+            }
+            result.resources = Array.from(byName.values());
+            result.success = result.resources.every((r: any) => r.success);
+            if (result.summary) {
+              result.summary.failed = result.resources.filter((r: any) => !r.success).length;
+            }
+          }
+        }
+      } catch (cleanupErr: any) {
+        emitDeployProgress(cardId, {
+          type: 'log',
+          message: `[auto-cleanup] Cleanup attempt failed: ${cleanupErr?.message || cleanupErr}`,
         });
       }
     }
+
+    const durationMs = Date.now() - startTime;
+
+    // 6. Emit individual resource results + upsert the stable name mapping.
+    // Phase 1: every successful resource's (node_id → name + provider_id)
+    // becomes the source of truth for future plans, surviving label changes.
+    //
+    // Critical: mutate `res.source_node_id` IN PLACE on the result.resources
+    // array so the persisted DB row has it. The live socket emit at
+    // `emitDeployProgress({type: 'resource_result', ...})` augments a
+    // copy of the result, but the persisted `result.resources` array
+    // (written below in `prisma.canvasDeployment.update`) was missing
+    // the source_node_id field — which made `getNodeDeploymentOverlay`
+    // return an empty overlay because every entry was filtered by
+    // `if (!res.source_node_id) continue`. Without source_node_id on
+    // the persisted row, the canvas block never showed any URL or
+    // status after a refresh.
+    if (result.resources?.length > 0) {
+      for (const res of result.resources) {
+        const source_node_id = findSourceNodeId(res);
+        if (source_node_id) {
+          res.source_node_id = source_node_id;
+        }
+        const label = source_node_id ? nameToLabel.get(res.name) || '-' : '-';
+        console.log(
+          `Resource result: ${res.name} → matched node: ${source_node_id || 'NONE'} (label: ${label})`,
+        );
+        emitDeployProgress(cardId, {
+          type: 'resource_result',
+          result: res,
+        });
+
+        if (source_node_id && res.success && res.name && res.type) {
+          await upsertResourceMapping({
+            cardId,
+            nodeId: source_node_id,
+            environment,
+            resourceType: res.type,
+            resourceName: res.name,
+            providerId: res.provider_id,
+          }).catch((err: any) => {
+            console.warn(`Failed to upsert resource mapping for ${res.name}:`, err.message);
+          });
+        }
+      }
+    }
+
+    // Phase 1: distinguish partial-success from full-failure so the baseline
+    // query above can pick it up next time. `success` still means "every
+    // resource created cleanly"; `partial` means "at least one succeeded
+    // but not all"; `failed` means "nothing landed."
+    const hasAnyResourceSuccess = (result.resources || []).some((r: any) => r.success);
+    const finalStatus: 'success' | 'partial' | 'failed' = result.success
+      ? 'success'
+      : hasAnyResourceSuccess
+        ? 'partial'
+        : 'failed';
 
     // Update deployment record
     await prisma.canvasDeployment.update({
       where: { id: deployment.id },
       data: {
-        status: result.success ? 'success' : 'failed',
+        status: finalStatus,
         results: result as any,
+        summary: computeDeploySummary(result) as any,
         duration_ms: durationMs,
         error: result.errors?.length > 0 ? result.errors.map((e: any) => e.message).join('; ') : null,
       },
     });
+
+    // Finalize the in-memory snapshot so late-joining clients see the
+    // terminal state for a short grace window before it's cleared.
+    finishDeploySnapshot(cardId, finalStatus);
 
     await deployer.cleanup();
 
@@ -482,6 +921,8 @@ export async function applyDeployment(
       },
     });
 
+    finishDeploySnapshot(cardId, 'failed');
+
     emitDeployProgress(cardId, {
       type: 'complete',
       success: false,
@@ -490,30 +931,315 @@ export async function applyDeployment(
 
     return { success: false, deploymentId: deployment.id, duration_ms: durationMs, error: err.message };
   } finally {
-    // Always clean up temp credentials file, even on crash
-    cleanupTempCredentialsFile(tempCredentialsPath);
-    if (process.env.GOOGLE_APPLICATION_CREDENTIALS === tempCredentialsPath) {
-      delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    // Always clean up temp credential directory (directory + file inside).
+    releaseTempDir(tempCredentialsDir);
+    releaseLock();
+  }
+}
+
+/**
+ * Destroy EVERY ICE-managed resource for a card across all historical
+ * deployments and environments. Unlike `destroyDeployment` (which only
+ * destroys the latest success/partial row), this function walks the
+ * full `DeployedResourceMapping` table for the card, every
+ * `canvasDeployment` row's `results.resources`, and the card's parent
+ * project's GCP backend-bucket/URL-map/forwarding-rule collection,
+ * deduping and destroying anything labeled `ice-managed=true`.
+ *
+ * This is the "nuke" button — user explicitly wants a clean slate for
+ * this project before starting fresh. Used when iterating on templates
+ * accumulated orphaned resources that hit GCP quotas.
+ */
+export async function destroyAllForCard(
+  cardId: string,
+  orgId: string,
+  userId?: string,
+  options: { gcpProject?: string } = {},
+) {
+  let releaseLock: () => void;
+  try {
+    releaseLock = acquireDeployLock(cardId, 'destroy').release;
+  } catch (err) {
+    if (err instanceof DeployLockError) throw new Error(err.message);
+    throw err;
+  }
+
+  try {
+    // Load every resource ICE has ever deployed for this card, from both
+    // the stable mapping table (Phase 1) and from historical deployment
+    // results (legacy pre-Phase-1 data, or rows that were never mapped).
+    const mappings = await prisma.deployedResourceMapping.findMany({ where: { card_id: cardId } });
+    const historicalDeploys = await prisma.canvasDeployment.findMany({
+      where: {
+        card_id: cardId,
+        status: { in: ['success', 'partial', 'failed'] },
+        results: { not: null as any },
+      },
+      orderBy: { created_at: 'desc' },
+    });
+
+    // Collect unique (type, name, provider_id, region, environment) tuples.
+    const targets = new Map<
+      string,
+      { type: string; name: string; providerId?: string; region?: string; environment?: string }
+    >();
+    for (const m of mappings) {
+      targets.set(`${m.resource_type}::${m.resource_name}`, {
+        type: m.resource_type,
+        name: m.resource_name,
+        providerId: m.provider_id ?? undefined,
+        environment: m.environment,
+      });
     }
+    for (const d of historicalDeploys) {
+      const results = d.results as any;
+      const resources = (results?.resources || []) as any[];
+      for (const r of resources) {
+        if (!r?.name || !r?.type) continue;
+        const key = `${r.type}::${r.name}`;
+        if (targets.has(key)) continue;
+        targets.set(key, {
+          type: r.type,
+          name: r.name,
+          providerId: r.provider_id,
+          region: d.region,
+          environment: d.environment,
+        });
+      }
+    }
+
+    if (targets.size === 0) {
+      releaseLock();
+      return { success: true, deleted: [], failed: [], total: 0 };
+    }
+
+    const provider = historicalDeploys[0]?.provider || 'gcp';
+    const credentials = await providerService.getDecryptedCredentials(orgId, provider);
+    if (!credentials) {
+      releaseLock();
+      throw new Error('Provider not connected');
+    }
+
+    // Resolve the GCP project ID — the deployer's SDK clients need an
+    // explicit project at initialize time. Priority order:
+    //   1. Explicit `gcpProject` passed in the request body (frontend
+    //      forwards `deploy.gcpProject` from Redux).
+    //   2. `credentials.project_id` from the stored ProviderCredential row.
+    //   3. Extracted from any historical resource's `provider_id` (e.g.
+    //      `projects/lc-ice/global/sslCertificates/...`) — this is the
+    //      fallback when neither of the above is populated.
+    let gcpProject = options.gcpProject || (credentials as any).project_id || '';
+    if (!gcpProject) {
+      for (const t of targets.values()) {
+        const match = (t.providerId || '').match(/^projects\/([^/]+)\//);
+        if (match?.[1]) {
+          gcpProject = match[1];
+          break;
+        }
+      }
+    }
+    if (!gcpProject) {
+      releaseLock();
+      throw new Error(
+        'Cannot resolve GCP project id for destroy-all. Pass the project in the request body or reconnect the ' +
+          'provider credential with a non-null project_id.',
+      );
+    }
+
+    const destroyRecord = await prisma.canvasDeployment.create({
+      data: {
+        card_id: cardId,
+        user_id: userId,
+        status: 'deploying',
+        action_type: 'destroy',
+        provider,
+        region: historicalDeploys[0]?.region || 'us-central1',
+        environment: historicalDeploys[0]?.environment || 'development',
+      },
+    });
+
+    emitDeployProgress(cardId, {
+      type: 'log',
+      message: `Destroying ${targets.size} ICE-managed resources across all historical deploys for this card...`,
+    });
+
+    const core = await getCoreEngine();
+    const { GCPDeployer, AWSDeployer, AzureDeployer } = core;
+    let deployer: any;
+    if (provider === 'aws') deployer = new AWSDeployer();
+    else if (provider === 'azure') deployer = new AzureDeployer();
+    else deployer = new GCPDeployer();
+
+    const scopedAuth = await resolveProviderAuth(provider, {
+      orgId,
+      credentials,
+      requestedScope: { project: gcpProject },
+      onLog: (msg) => emitDeployProgress(cardId, { type: 'log', message: msg }),
+    });
+    const authClient: any = scopedAuth.authClient;
+    let tempCredentialsDir: string | undefined = scopedAuth.tempDir;
+
+    try {
+      await deployer.initialize({
+        provider,
+        project: gcpProject,
+        regions: [historicalDeploys[0]?.region || 'us-central1'],
+        continue_on_error: true,
+        auth_client: authClient,
+        auth_key_file: scopedAuth.keyFilePath,
+        auth_credentials: scopedAuth.parsedCredentials,
+        on_log: (message: string) => emitDeployProgress(cardId, { type: 'log', message }),
+        on_progress: (resource: string, action: string, status: string) => {
+          emitDeployProgress(cardId, { type: 'progress', resource, action, status });
+        },
+      });
+
+      // Destroy in a dependency-aware order: dependent resources first, origins last.
+      const orderPriority = (type: string): number => {
+        // Lower numbers delete first.
+        if (type.includes('globalForwardingRule')) return 1;
+        if (type.includes('targetHttpsProxy') || type.includes('targetHttpProxy')) return 2;
+        if (type.includes('urlMap')) return 3;
+        if (type.includes('backendBucket')) return 4;
+        if (type.includes('backendService')) return 5;
+        if (type.includes('storage.bucket')) return 6;
+        if (type.includes('managedSslCertificate') || type.includes('sslCertificate')) return 7;
+        return 50;
+      };
+      const ordered = [...targets.values()].sort(
+        (a, b) => orderPriority(a.type) - orderPriority(b.type),
+      );
+
+      const deleted: Array<{ type: string; name: string }> = [];
+      const failed: Array<{ type: string; name: string; error: string }> = [];
+      for (const t of ordered) {
+        try {
+          const res = await deployer.delete(t.type, t.name, t.providerId || t.name, {
+            provider,
+            project: gcpProject,
+          });
+          if (res.success || res.error?.includes('NOT_FOUND') || res.error?.includes('404')) {
+            deleted.push({ type: t.type, name: t.name });
+            // Clean up the mapping row for this resource.
+            await prisma.deployedResourceMapping
+              .deleteMany({ where: { card_id: cardId, resource_name: t.name, resource_type: t.type } })
+              .catch(() => undefined);
+          } else {
+            failed.push({ type: t.type, name: t.name, error: res.error || 'delete returned non-success' });
+          }
+        } catch (err: any) {
+          const msg = err?.message || String(err);
+          if (msg.includes('NOT_FOUND') || msg.includes('404')) {
+            deleted.push({ type: t.type, name: t.name });
+            await prisma.deployedResourceMapping
+              .deleteMany({ where: { card_id: cardId, resource_name: t.name, resource_type: t.type } })
+              .catch(() => undefined);
+          } else {
+            failed.push({ type: t.type, name: t.name, error: msg });
+          }
+        }
+      }
+
+      await deployer.cleanup();
+      const allSuccess = failed.length === 0;
+      await prisma.canvasDeployment.update({
+        where: { id: destroyRecord.id },
+        data: {
+          status: allSuccess ? 'success' : 'partial',
+          results: { action: 'destroy_all', deleted, failed } as any,
+          summary: {
+            created: 0,
+            updated: 0,
+            deleted: deleted.length,
+            failed: failed.length,
+            total: targets.size,
+          } as any,
+          duration_ms: Date.now() - Date.parse(destroyRecord.created_at.toISOString()),
+        },
+      });
+
+      emitDeployProgress(cardId, {
+        type: 'complete',
+        success: allSuccess,
+        results: { deleted, failed, total: targets.size },
+      });
+
+      return { success: allSuccess, deleted, failed, total: targets.size, deploymentId: destroyRecord.id };
+    } finally {
+      releaseTempDir(tempCredentialsDir);
+    }
+  } finally {
+    releaseLock();
   }
 }
 
 export async function destroyDeployment(cardId: string, orgId: string, userId?: string) {
-  // Find latest successful deployment
-  const deployment = await prisma.canvasDeployment.findFirst({
-    where: { card_id: cardId, status: 'success' },
+  console.log('[destroy] ENTRY cardId=' + cardId + ' orgId=' + orgId);
+  // Per-card lock — no concurrent destroys on the same card.
+  let releaseLock: () => void;
+  try {
+    releaseLock = acquireDeployLock(cardId, 'destroy').release;
+    console.log('[destroy] lock acquired cardId=' + cardId);
+  } catch (err) {
+    console.warn('[destroy] LOCK FAILED cardId=' + cardId + ' err=' + (err as any)?.message);
+    if (err instanceof DeployLockError) {
+      throw new Error(err.message);
+    }
+    throw err;
+  }
+  // Find the latest APPLY baseline — filtering by action_type='apply' is
+  // load-bearing: without it, a card that was apply → destroy would
+  // pick up its own destroy row (which has no provider_ids to delete)
+  // and silently do nothing on the next destroy click, leaving the user
+  // thinking "destroy is broken" when actually nothing was deployed.
+  //
+  // Also check if there's a newer destroy row — if so, this apply was
+  // already rolled back and there's nothing to destroy.
+  const latestApply = await prisma.canvasDeployment.findFirst({
+    where: {
+      card_id: cardId,
+      status: { in: ['success', 'partial'] },
+      action_type: 'apply',
+    },
     orderBy: { created_at: 'desc' },
   });
 
-  if (!deployment || !deployment.results) {
-    throw new Error('No successful deployment found to destroy');
+  if (!latestApply || !latestApply.results) {
+    console.warn('[destroy] NO APPLY BASELINE cardId=' + cardId + ' — nothing to destroy.');
+    releaseLock();
+    throw new Error('No deployment found to destroy. Use destroy-everything mode if you need to clean up orphaned resources.');
   }
+
+  const newerDestroy = await prisma.canvasDeployment.findFirst({
+    where: {
+      card_id: cardId,
+      action_type: 'destroy',
+      status: { in: ['success', 'partial'] },
+      created_at: { gt: latestApply.created_at },
+    },
+    orderBy: { created_at: 'desc' },
+  });
+  if (newerDestroy) {
+    console.warn(
+      '[destroy] apply@' + latestApply.id + ' was already destroyed@' + newerDestroy.id + ' — nothing to do.',
+    );
+    releaseLock();
+    throw new Error(
+      'This card was already destroyed. Use destroy-everything mode to clean up any orphaned resources from failed deploys.',
+    );
+  }
+
+  const deployment = latestApply;
+  console.log('[destroy] baseline found deploymentId=' + deployment.id + ' status=' + deployment.status);
 
   const provider = deployment.provider || 'gcp';
   const credentials = await providerService.getDecryptedCredentials(orgId, provider);
   if (!credentials) {
+    console.warn('[destroy] NO CREDENTIALS orgId=' + orgId + ' provider=' + provider);
+    releaseLock();
     throw new Error('Provider not connected');
   }
+  console.log('[destroy] credentials resolved provider=' + provider);
 
   // Create destroy record
   const destroyRecord = await prisma.canvasDeployment.create({
@@ -521,6 +1247,7 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
       card_id: cardId,
       user_id: userId,
       status: 'deploying',
+      action_type: 'destroy',
       provider,
       region: deployment.region,
       environment: deployment.environment,
@@ -528,7 +1255,7 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
   });
 
   const startTime = Date.now();
-  let tempCredentialsPath: string | undefined;
+  let tempCredentialsDir: string | undefined;
 
   emitDeployProgress(cardId, {
     type: 'log',
@@ -548,47 +1275,18 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
       deployer = new GCPDeployer();
     }
 
-    let authClient: any = credentials;
-    if (credentials._auth_type === 'oauth') {
-      const accessToken = await providerService.getValidGCPAccessToken(orgId, credentials);
-      if (!accessToken) {
-        throw new Error(
-          'GCP OAuth token expired. Please reconnect via Cloud Providers settings.\n' +
-            'For Google Workspace accounts, we recommend using a Service Account Key instead.',
-        );
-      }
-      const { OAuth2Client } = await import('google-auth-library');
-      const oauthClient = new OAuth2Client();
-      oauthClient.setCredentials({ access_token: accessToken });
-      authClient = oauthClient;
-    } else {
-      const key = credentials.service_account_key || credentials.key;
-      if (key) {
-        try {
-          const parsed = typeof key === 'string' ? JSON.parse(key) : key;
-          const { GoogleAuth } = await import('google-auth-library');
-          const auth = new GoogleAuth({
-            credentials: parsed,
-            scopes: ['https://www.googleapis.com/auth/cloud-platform'],
-          });
-          authClient = await auth.getClient();
-
-          // Write temp credentials file for SDK clients
-          const os = await import('os');
-          const path = await import('path');
-          const tmpPath = path.join(os.tmpdir(), `ice-sa-${destroyRecord.id}-${Date.now()}.json`);
-          fs.writeFileSync(tmpPath, typeof key === 'string' ? key : JSON.stringify(parsed));
-          tempCredentialsPath = tmpPath;
-          process.env.GOOGLE_APPLICATION_CREDENTIALS = tmpPath;
-        } catch (err: any) {
-          throw new Error(`Invalid service account key: ${err.message}`, { cause: err });
-        }
-      }
-    }
+    const scopedAuth = await resolveProviderAuth(provider, {
+      orgId,
+      credentials,
+      requestedScope: { project: credentials.project_id, region: deployment.region },
+      onLog: (msg) => emitDeployProgress(cardId, { type: 'log', message: msg }),
+    });
+    const authClient: any = scopedAuth.authClient;
+    tempCredentialsDir = scopedAuth.tempDir;
 
     await deployer.initialize({
       provider,
-      project: credentials.project_id || authClient.project_id,
+      project: scopedAuth.scope.project || authClient?.projectId || authClient?.project_id,
       regions: [deployment.region],
       continue_on_error: true,
       on_progress: (resource: string, action: string, status: string) => {
@@ -598,20 +1296,43 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
         emitDeployProgress(cardId, { type: 'log', message });
       },
       auth_client: authClient,
+      auth_key_file: scopedAuth.keyFilePath,
+      auth_credentials: scopedAuth.parsedCredentials,
     });
 
-    // Delete each resource from the previous deployment results
+    // Delete resources in REVERSE deployment order so dependency-ordered
+    // creates become dependency-ordered destroys. Phase 0 fix: without this,
+    // a load-balancer destroy would try to delete the backend service before
+    // the forwarding rule that references it.
     const results = deployment.results as any;
-    const resources = results.resources || [];
+    const resources = ((results.resources as any[]) || []).slice().reverse();
     const deleteResults: any[] = [];
 
+    const destroyProject = scopedAuth.scope.project || (authClient as any)?.projectId || (authClient as any)?.project_id;
+    console.log(
+      '[destroy] begin delete loop project=' +
+        destroyProject +
+        ' resources=' +
+        resources.length +
+        ' (will delete in reverse deployment order)',
+    );
     for (const res of resources) {
       if (res.success && res.provider_id) {
+        console.log('[destroy] deleting ' + res.type + '/' + res.name + ' provider_id=' + res.provider_id);
         try {
           const deleteResult = await deployer.delete(res.type, res.name, res.provider_id, {
             provider,
-            project: credentials.project_id || authClient.project_id,
+            project: destroyProject,
           });
+          console.log(
+            '[destroy]   → ' +
+              res.type +
+              '/' +
+              res.name +
+              ' success=' +
+              deleteResult.success +
+              (deleteResult.error ? ' error=' + deleteResult.error : ''),
+          );
           deleteResults.push(deleteResult);
           emitDeployProgress(cardId, {
             type: 'progress',
@@ -619,6 +1340,16 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
             action: 'delete',
             status: deleteResult.success ? 'completed' : 'failed',
           });
+          // Phase 1: remove the stable name mapping once the resource is gone.
+          if (deleteResult.success && res.source_node_id) {
+            await removeResourceMapping({
+              cardId,
+              nodeId: res.source_node_id,
+              environment: deployment.environment,
+            }).catch(() => {
+              // Non-fatal — the mapping may not exist yet for older rows.
+            });
+          }
         } catch (err: any) {
           deleteResults.push({ resource_id: res.resource_id, success: false, error: err.message });
           emitDeployProgress(cardId, {
@@ -634,11 +1365,20 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
     const durationMs = Date.now() - startTime;
     const allSuccess = deleteResults.every((r: any) => r.success);
 
+    const deletedCount = deleteResults.filter((r: any) => r.success).length;
+    const failedCount = deleteResults.filter((r: any) => !r.success).length;
     await prisma.canvasDeployment.update({
       where: { id: destroyRecord.id },
       data: {
         status: allSuccess ? 'success' : 'failed',
         results: { action: 'destroy', resources: deleteResults } as any,
+        summary: {
+          created: 0,
+          updated: 0,
+          deleted: deletedCount,
+          failed: failedCount,
+          total: deleteResults.length,
+        } as any,
         duration_ms: durationMs,
       },
     });
@@ -669,40 +1409,52 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
 
     return { success: false, deploymentId: destroyRecord.id, error: err.message };
   } finally {
-    // BE-12: Always clean up temp credentials file
-    cleanupTempCredentialsFile(tempCredentialsPath);
-    if (process.env.GOOGLE_APPLICATION_CREDENTIALS === tempCredentialsPath) {
-      delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
-    }
+    releaseTempDir(tempCredentialsDir);
+    releaseLock();
   }
 }
 
 export async function rollbackDeployment(deploymentId: string, cardId: string, orgId: string, userId?: string) {
+  // Per-card lock — rollback is a deploy variant; blocks concurrent applies.
+  let releaseLock: () => void;
+  try {
+    releaseLock = acquireDeployLock(cardId, 'rollback').release;
+  } catch (err) {
+    if (err instanceof DeployLockError) {
+      throw new Error(err.message);
+    }
+    throw err;
+  }
   // 1. Find the target deployment to roll back to
   const targetDeployment = await prisma.canvasDeployment.findUnique({
     where: { id: deploymentId },
   });
 
   if (!targetDeployment) {
+    releaseLock();
     throw new Error('Target deployment not found');
   }
 
   if (targetDeployment.card_id !== cardId) {
+    releaseLock();
     throw new Error('Deployment does not belong to this card');
   }
 
   if (targetDeployment.status !== 'success') {
+    releaseLock();
     throw new Error('Can only roll back to a successful deployment');
   }
 
   const targetResults = targetDeployment.results as any;
   if (!targetResults?.resources) {
+    releaseLock();
     throw new Error('Target deployment has no resource data to roll back to');
   }
 
   const provider = targetDeployment.provider || 'gcp';
   const credentials = await providerService.getDecryptedCredentials(orgId, provider);
   if (!credentials) {
+    releaseLock();
     throw new Error('Provider not connected. Please connect your cloud provider first.');
   }
 
@@ -712,6 +1464,7 @@ export async function rollbackDeployment(deploymentId: string, cardId: string, o
       card_id: cardId,
       user_id: userId,
       status: 'deploying',
+      action_type: 'rollback',
       provider,
       region: targetDeployment.region,
       environment: targetDeployment.environment,
@@ -720,7 +1473,7 @@ export async function rollbackDeployment(deploymentId: string, cardId: string, o
   });
 
   const startTime = Date.now();
-  let tempCredentialsPath: string | undefined;
+  let tempCredentialsDir: string | undefined;
 
   emitDeployProgress(cardId, {
     type: 'log',
@@ -740,38 +1493,15 @@ export async function rollbackDeployment(deploymentId: string, cardId: string, o
       deployer = new GCPDeployer();
     }
 
-    // Set up auth
-    let authClient: any = credentials;
-    const gcpProject = credentials.project_id;
-
-    if (credentials._auth_type === 'oauth') {
-      const accessToken = await providerService.getValidGCPAccessToken(orgId, credentials);
-      if (!accessToken) {
-        throw new Error('GCP OAuth token expired. Please reconnect via Cloud Providers settings.');
-      }
-      const { OAuth2Client } = await import('google-auth-library');
-      const oauthClient = new OAuth2Client();
-      oauthClient.setCredentials({ access_token: accessToken });
-      authClient = oauthClient;
-    } else {
-      const key = credentials.service_account_key || credentials.key;
-      if (key) {
-        const parsed = typeof key === 'string' ? JSON.parse(key) : key;
-        const { GoogleAuth } = await import('google-auth-library');
-        const auth = new GoogleAuth({
-          credentials: parsed,
-          scopes: ['https://www.googleapis.com/auth/cloud-platform'],
-        });
-        authClient = await auth.getClient();
-
-        const os = await import('os');
-        const path = await import('path');
-        const tmpPath = path.join(os.tmpdir(), `ice-sa-${rollbackRecord.id}-${Date.now()}.json`);
-        fs.writeFileSync(tmpPath, typeof key === 'string' ? key : JSON.stringify(parsed));
-        process.env.GOOGLE_APPLICATION_CREDENTIALS = tmpPath;
-        tempCredentialsPath = tmpPath;
-      }
-    }
+    const scopedAuth = await resolveProviderAuth(provider, {
+      orgId,
+      credentials,
+      requestedScope: { project: credentials.project_id, region: targetDeployment.region },
+      onLog: (msg) => emitDeployProgress(cardId, { type: 'log', message: msg }),
+    });
+    const authClient: any = scopedAuth.authClient;
+    const gcpProject = scopedAuth.scope.project || authClient?.projectId || authClient?.project_id;
+    tempCredentialsDir = scopedAuth.tempDir;
 
     await deployer.authenticate(authClient, gcpProject);
 
@@ -834,6 +1564,9 @@ export async function rollbackDeployment(deploymentId: string, cardId: string, o
       provider,
       project: gcpProject,
       regions: [targetDeployment.region || 'us-central1'],
+      auth_client: authClient,
+      auth_key_file: (authClient as any)?._ice_key_file_path,
+      auth_credentials: (authClient as any)?._ice_parsed_credentials,
     });
 
     const durationMs = Date.now() - startTime;
@@ -843,6 +1576,7 @@ export async function rollbackDeployment(deploymentId: string, cardId: string, o
       data: {
         status: result.success ? 'success' : 'failed',
         results: result as any,
+        summary: computeDeploySummary(result) as any,
         duration_ms: durationMs,
         error: result.errors?.length > 0 ? result.errors.map((e: any) => e.message).join('; ') : null,
       },
@@ -886,10 +1620,8 @@ export async function rollbackDeployment(deploymentId: string, cardId: string, o
 
     return { success: false, deploymentId: rollbackRecord.id, duration_ms: durationMs, error: err.message };
   } finally {
-    cleanupTempCredentialsFile(tempCredentialsPath);
-    if (process.env.GOOGLE_APPLICATION_CREDENTIALS === tempCredentialsPath) {
-      delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
-    }
+    releaseTempDir(tempCredentialsDir);
+    releaseLock();
   }
 }
 
@@ -905,141 +1637,435 @@ export async function getDeployedResources(cardId: string) {
   return deployment?.results || [];
 }
 
-export async function checkDrift(cardId: string, nodes: any[]) {
-  // Compare canvas desired state against last successful deployment
+/**
+ * Compute a per-node overlay of deploy state for a card. Used by the
+ * frontend on card load to hydrate canvas block node data with:
+ *
+ *   - deploy_status (active / error / idle)
+ *   - deploy_outputs (raw resource outputs from GCP)
+ *   - provider_id
+ *   - last_deployed_at
+ *   - domain (the custom domain URL, propagated from CustomDomain blocks to
+ *     every compute block they're connected to so the Static Site block
+ *     displays "https://mysite.com" instead of only the bucket URL)
+ *
+ * This is the second half of the fix for "user doesn't see the domain
+ * attached to deployed resources" — outputs are now read at load time
+ * without requiring a live socket event or a panel to be open.
+ */
+export async function getNodeDeploymentOverlay(
+  cardId: string,
+  environment = 'development',
+): Promise<Record<string, any>> {
+  // Load the latest deploy for the card+env. Accept success OR partial so
+  // half-successful deploys still show up on the canvas.
   const deployment = await prisma.canvasDeployment.findFirst({
-    where: { card_id: cardId, status: 'success' },
+    where: {
+      card_id: cardId,
+      environment,
+      status: { in: ['success', 'partial'] },
+    },
     orderBy: { created_at: 'desc' },
   });
+  if (!deployment?.results) return {};
 
-  if (!deployment?.results) {
-    return { driftResults: [] };
+  const results = deployment.results as any;
+  const resources = (results.resources || []) as any[];
+  const overlay: Record<string, any> = {};
+
+  // Primary pass — raw outputs per resource keyed by source_node_id.
+  // Seed `default_url` from the handler's own output so it's available even
+  // when no Internet/LB edge exists — it's the URL the user can always hit
+  // regardless of custom-domain status.
+  //
+  // Also normalize known-broken stored URLs at read time:
+  //   - `https://storage.googleapis.com/<bucket>/` (trailing slash, no
+  //     object) is a bucket-list request and returns 403 even with
+  //     allUsers:objectViewer. Rewrite to `/<index_page>` so existing
+  //     deploy rows render a URL that actually works — the user doesn't
+  //     need to destroy and redeploy to pick up the fix.
+  for (const res of resources) {
+    if (!res.source_node_id) continue;
+    const handlerOutputs = { ...(res.outputs || {}) };
+    const rawUrl = handlerOutputs.url as string | undefined;
+    if (
+      typeof rawUrl === 'string' &&
+      /^gcp\.storage\.bucket$/.test(res.type || '') &&
+      /^https:\/\/storage\.googleapis\.com\/[^/]+\/?$/.test(rawUrl)
+    ) {
+      const bucketName = rawUrl.replace(/\/$/, '').split('/').pop() || '';
+      const indexPage = (handlerOutputs.index_page as string) || 'index.html';
+      handlerOutputs.url = `https://storage.googleapis.com/${bucketName}/${indexPage}`;
+    }
+    const ownUrl = handlerOutputs.url as string | undefined;
+    overlay[res.source_node_id] = {
+      deploy_status: res.success ? 'active' : 'error',
+      deploy_outputs: {
+        ...handlerOutputs,
+        default_url: ownUrl || handlerOutputs.default_url,
+      },
+      provider_id: res.provider_id,
+      deploy_error: res.success ? undefined : res.error,
+      last_deployed_at: deployment.updated_at.toISOString(),
+      deploy_resource_type: res.type,
+      deploy_resource_name: res.name,
+    };
   }
 
-  const deployedResults = deployment.results as any;
-  const deployedResources = (deployedResults.resources || []).filter((r: any) => r.success);
+  // Second pass — propagate a CustomDomain URL to every deployable node
+  // connected to the forwarding rule that references its cert. The load
+  // balancer handler emits `url`, `domain`, and `ssl_certificate` onto its
+  // own outputs (see `handlers/load-balancer.ts`); we forward those to the
+  // StaticSite / Cloud Run block so the user sees the friendly URL on the
+  // block they actually think of as "their site."
+  //
+  // Non-destructive: the compute block's own URL (e.g. the bucket's
+  // `https://storage.googleapis.com/...` or Cloud Run's `.run.app` URL) is
+  // preserved as `default_url` so the UI can render both — custom domain
+  // primary, default fallback underneath. Overwriting would make the user
+  // lose sight of the always-available internal URL.
+  const card = await prisma.canvasCard.findUnique({ where: { id: cardId } });
+  if (!card) return overlay;
 
-  // Build lookup of deployed resources by name+type
-  const deployedMap = new Map<string, any>();
-  for (const res of deployedResources) {
-    deployedMap.set(`${res.type}::${res.name}`, res);
+  const nodes = (card.nodes as any[]) || [];
+  const edges = (card.edges as any[]) || [];
+  const findNode = (id: string) => nodes.find((n: any) => n.id === id);
+
+  // Find forwarding rule node(s) that carry a domain/url in their outputs.
+  for (const [nodeId, entry] of Object.entries(overlay)) {
+    const node = findNode(nodeId);
+    if (!node) continue;
+    const iceType = node.data?.iceType as string | undefined;
+    if (iceType !== 'Network.PublicEndpoint') continue;
+    const lbUrl = entry.deploy_outputs?.url as string | undefined;
+    const lbDomain = entry.deploy_outputs?.domain as string | undefined;
+    const lbIp = (entry.deploy_outputs?.ip_address || entry.deploy_outputs?.IPAddress) as string | undefined;
+    if (!lbUrl && !lbDomain && !lbIp) continue;
+
+    // Walk every edge touching this PublicEndpoint node, find the compute
+    // block on the other side, and overlay the right URL onto it. With
+    // per-edge subdomain support, each compute block gets its own host
+    // (`<subdomain>.<rootDomain>`) rather than the bare root domain.
+    const rootDomain = (lbDomain || (node.data?.domain as string) || '').trim();
+    for (const edge of edges) {
+      const otherId = edge.source === nodeId ? edge.target : edge.target === nodeId ? edge.source : null;
+      if (!otherId) continue;
+      const other = findNode(otherId);
+      if (!other) continue;
+      const otherIce = (other.data?.iceType as string | undefined) || '';
+      if (!/^Compute\./.test(otherIce)) continue;
+      const subdomain = ((edge.data as any)?.subdomain as string | undefined)?.trim() || '';
+      const host = subdomain && rootDomain ? `${subdomain}.${rootDomain}` : rootDomain;
+      const existing = overlay[otherId] || {};
+      const existingOutputs = existing.deploy_outputs || {};
+      // Preserve the compute block's own URL as `default_url` so the UI
+      // can always show "Default: <internal url>" next to the public URL.
+      const nodeOwnUrl = existingOutputs.url as string | undefined;
+      const nodeOwnDefault = existingOutputs.default_url as string | undefined;
+      const defaultUrl = nodeOwnDefault || nodeOwnUrl;
+      // Primary URL priority: per-edge host > LB url > node's own url.
+      const primaryUrl = (host ? `https://${host}` : undefined) || lbUrl || nodeOwnUrl;
+      overlay[otherId] = {
+        ...existing,
+        deploy_outputs: {
+          ...existingOutputs,
+          domain: host || existingOutputs.domain,
+          url: primaryUrl,
+          default_url: defaultUrl,
+          ip_address: lbIp || existingOutputs.ip_address,
+        },
+      };
+    }
   }
 
-  // Build lookup of canvas nodes (resource type only)
-  const canvasResources = nodes.filter((n: any) => n.type === 'resource' && n.data?.iceType);
+  // Third pass — mirror the deployed domain onto the PublicEndpoint block
+  // itself so the canvas block shows `https://<domain>` directly.
+  for (const node of nodes) {
+    if ((node.data?.iceType as string | undefined) !== 'Network.PublicEndpoint') continue;
+    const domain = String(node.data?.domain || '').trim();
+    if (!domain) continue;
+    const existing = overlay[node.id] || {};
+    overlay[node.id] = {
+      ...existing,
+      deploy_outputs: {
+        ...(existing.deploy_outputs || {}),
+        domain,
+        url: `https://${domain}`,
+      },
+    };
+  }
+
+  return overlay;
+}
+
+/**
+ * Phase 7 — real drift detection.
+ *
+ * Compares the canvas desired state against *actual* GCP state by calling
+ * each handler's `describe` method. This catches drift that the old
+ * stored-vs-canvas comparison missed entirely (e.g., someone deleted a
+ * bucket in the console — the old check would report in_sync because the
+ * stored record still showed it as deployed).
+ *
+ * Sources of truth:
+ *   - Mapping table (`DeployedResourceMapping`): the node_id → resource_name
+ *     contract that survived Phase 1.
+ *   - GCP `describe` calls: the real cloud state.
+ *   - Canvas desired state: what the user wants right now.
+ */
+export async function checkDrift(cardId: string, nodes: any[], options?: { environment?: string; orgId?: string }) {
+  const environment = options?.environment || 'development';
+
+  const mapping = await prisma.deployedResourceMapping.findMany({
+    where: { card_id: cardId, environment },
+  });
+  if (mapping.length === 0) {
+    return { driftResults: [], checkedAt: new Date().toISOString(), unsupported: false };
+  }
+
+  // If we have an org id, spin up a real deployer so describe calls can hit GCP.
+  // Without one, we fall back to stored-state comparison which is still better
+  // than nothing for sanity checking canvas consistency.
+  const canQueryGcp = Boolean(options?.orgId);
+  let deployer: any = null;
+  let driftScopedAuth: any = null;
+  if (canQueryGcp) {
+    try {
+      const credentials = await providerService.getDecryptedCredentials(options!.orgId!, 'gcp');
+      if (credentials) {
+        const core = await getCoreEngine();
+        const { GCPDeployer } = core;
+        deployer = new GCPDeployer();
+        driftScopedAuth = await resolveProviderAuth('gcp', {
+          orgId: options!.orgId!,
+          credentials,
+          requestedScope: { project: credentials.project_id },
+        });
+        await deployer.initialize({
+          provider: 'gcp',
+          project: driftScopedAuth.scope.project || (driftScopedAuth.authClient as any)?.projectId,
+          regions: ['us-central1'],
+          auth_client: driftScopedAuth.authClient,
+          auth_credentials: driftScopedAuth.parsedCredentials,
+          auth_key_file: driftScopedAuth.keyFilePath,
+        });
+      }
+    } catch (err: any) {
+      console.warn('[drift] failed to initialize deployer, falling back to stored-state drift:', err.message);
+      deployer = null;
+    }
+  }
 
   const driftResults: Array<{
     nodeId: string;
-    status: 'in_sync' | 'drifted' | 'missing' | 'extra';
+    status: 'in_sync' | 'drifted' | 'missing' | 'extra' | 'unknown';
     changes: Array<{ path: string; desired: unknown; actual: unknown }>;
   }> = [];
 
-  // Check each canvas node against deployed state
-  for (const node of canvasResources) {
-    const label = (node.data?.label as string) || '';
+  const canvasById = new Map<string, any>();
+  for (const n of nodes) if (n.type === 'resource') canvasById.set(n.id, n);
 
-    // Try to find matching deployed resource
-    let deployed: any = null;
-    for (const [key, res] of deployedMap.entries()) {
-      if (res.source_node_id === node.id) {
-        deployed = res;
-        deployedMap.delete(key);
-        break;
-      }
-    }
+  try {
+    // 1. For every mapped (node_id → resource) entry, describe the real resource.
+    for (const m of mapping) {
+      const canvasNode = canvasById.get(m.node_id);
 
-    // Fallback: match by name
-    if (!deployed) {
-      for (const [key, res] of deployedMap.entries()) {
-        if (res.name === label || key.endsWith(`::${label}`)) {
-          deployed = res;
-          deployedMap.delete(key);
-          break;
+      if (deployer && typeof deployer.describe === 'function') {
+        const desc = await deployer.describe(m.resource_type, m.resource_name, m.provider_id || m.resource_name);
+        if (desc.supported === false) {
+          driftResults.push({ nodeId: m.node_id, status: 'unknown', changes: [] });
+          continue;
         }
+        if (!desc.exists) {
+          // Deleted externally — report as missing regardless of canvas state.
+          driftResults.push({ nodeId: m.node_id, status: 'missing', changes: [] });
+          continue;
+        }
+
+        // Compare desired (from canvas) vs actual (from GCP).
+        const changes: Array<{ path: string; desired: unknown; actual: unknown }> = [];
+        if (canvasNode) {
+          const desiredProps = (canvasNode.data?.properties || {}) as Record<string, unknown>;
+          const actualProps = (desc.properties || {}) as Record<string, unknown>;
+          for (const [key, desiredVal] of Object.entries(desiredProps)) {
+            if (key.startsWith('_') || desiredVal == null || desiredVal === '') continue;
+            const actualVal = actualProps[key];
+            if (actualVal === undefined) continue; // ICE doesn't manage this field for this type
+            if (JSON.stringify(actualVal) !== JSON.stringify(desiredVal)) {
+              changes.push({ path: key, desired: desiredVal, actual: actualVal });
+            }
+          }
+        }
+        driftResults.push({
+          nodeId: m.node_id,
+          status: changes.length > 0 ? 'drifted' : canvasNode ? 'in_sync' : 'extra',
+          changes,
+        });
+      } else {
+        // No GCP query available — fall back to "if canvas has it, call it in-sync".
+        driftResults.push({
+          nodeId: m.node_id,
+          status: canvasNode ? 'in_sync' : 'extra',
+          changes: [],
+        });
       }
     }
 
-    if (!deployed) {
-      // Node exists on canvas but was never deployed
-      if (node.data?.provider_id) {
-        // Was deployed before but not in latest — drifted
-        driftResults.push({ nodeId: node.id, status: 'missing', changes: [] });
-      }
-      continue;
-    }
-
-    // Compare key properties
-    const changes: Array<{ path: string; desired: unknown; actual: unknown }> = [];
-    const nodeProps = (node.data?.properties || {}) as Record<string, unknown>;
-    const deployedOutputs = deployed.outputs || {};
-
-    // Check if any configured properties differ from deployed outputs
-    for (const [key, desiredVal] of Object.entries(nodeProps)) {
-      if (key.startsWith('_') || desiredVal === undefined || desiredVal === null || desiredVal === '') continue;
-      const actualVal = deployedOutputs[key];
-      if (actualVal !== undefined && String(actualVal) !== String(desiredVal)) {
-        changes.push({ path: key, desired: desiredVal, actual: actualVal });
+    // 2. Canvas nodes with no mapping are new (never deployed).
+    for (const [nodeId, node] of canvasById.entries()) {
+      if (!node.data?.iceType) continue;
+      if (!mapping.find((m) => m.node_id === nodeId)) {
+        // Not yet deployed — report as unknown so the UI can show it distinctly.
+        driftResults.push({ nodeId, status: 'unknown', changes: [] });
       }
     }
-
-    driftResults.push({
-      nodeId: node.id,
-      status: changes.length > 0 ? 'drifted' : 'in_sync',
-      changes,
-    });
+  } finally {
+    if (deployer) {
+      try { await deployer.cleanup(); } catch {}
+    }
+    if (driftScopedAuth) {
+      try { await cleanupProviderAuth('gcp', driftScopedAuth); } catch {}
+    }
   }
 
-  // Resources deployed but no longer on canvas
-  for (const [, res] of deployedMap.entries()) {
-    driftResults.push({
-      nodeId: res.source_node_id || `extra-${res.name}`,
-      status: 'extra',
-      changes: [],
-    });
-  }
-
-  return { driftResults };
+  return { driftResults, checkedAt: new Date().toISOString(), unsupported: !deployer };
 }
 
-export async function getDeploymentHistory(cardId: string) {
+export async function getDeploymentHistory(
+  cardId: string,
+  options: {
+    environment?: string;
+    actionType?: 'plan' | 'apply' | 'destroy' | 'rollback';
+    limit?: number;
+  } = {},
+) {
+  const { environment, actionType, limit = 100 } = options;
   return prisma.canvasDeployment.findMany({
-    where: { card_id: cardId },
+    where: {
+      card_id: cardId,
+      ...(environment ? { environment } : {}),
+      ...(actionType ? { action_type: actionType } : {}),
+    },
     orderBy: { created_at: 'desc' },
-    take: 20,
+    take: Math.min(Math.max(limit, 1), 500),
   });
 }
 
 // ── GCP API Auto-Enable ──────────────────────────────────────────────────────
 
-/** Map resource types to required GCP APIs */
-const RESOURCE_API_MAP: Record<string, string[]> = {
-  'gcp.run.service': ['run.googleapis.com', 'artifactregistry.googleapis.com', 'cloudbuild.googleapis.com'],
-  'gcp.run.job': ['run.googleapis.com', 'artifactregistry.googleapis.com', 'cloudbuild.googleapis.com'],
-  'gcp.storage.bucket': ['storage.googleapis.com'],
-  'gcp.cloudfunctions.function': [
+/**
+ * Map canvas iceType → required Google Cloud APIs.
+ *
+ * Using iceType (not the GCP resource type name) as the key because that's
+ * what the canvas actually puts on node data, and because string-matching
+ * on resource type names like `gcp.compute.backendBucket` against a list
+ * of fragment patterns ("compute", "storage") was creating false positives
+ * and missing genuine matches. An explicit map is dumb and correct.
+ *
+ * Every block type that hits a Google API during deploy or preflight
+ * requirements MUST appear here, otherwise the user gets a cryptic
+ * SERVICE_DISABLED error deep in the deploy flow.
+ */
+const ICE_TYPE_API_MAP: Record<string, string[]> = {
+  // Compute
+  // Static sites compile to Firebase Hosting on GCP. Two APIs needed:
+  //   - firebase.googleapis.com — Firebase Management API for the
+  //     `addFirebase` call that turns a plain GCP project into a
+  //     Firebase project. Required even on projects that have used
+  //     other Firebase products before.
+  //   - firebasehosting.googleapis.com — the Hosting REST API itself
+  //     (sites/versions/releases). The handler hits this for every
+  //     deploy step.
+  'Compute.StaticSite': ['firebase.googleapis.com', 'firebasehosting.googleapis.com'],
+  'Compute.SSRSite': ['run.googleapis.com', 'artifactregistry.googleapis.com', 'cloudbuild.googleapis.com'],
+  'Compute.Container': ['run.googleapis.com', 'artifactregistry.googleapis.com', 'cloudbuild.googleapis.com'],
+  'Compute.BackendAPI': ['run.googleapis.com', 'artifactregistry.googleapis.com', 'cloudbuild.googleapis.com'],
+  'Compute.Worker': ['run.googleapis.com', 'artifactregistry.googleapis.com', 'cloudbuild.googleapis.com'],
+  'Compute.ServerlessFunction': [
     'cloudfunctions.googleapis.com',
     'cloudbuild.googleapis.com',
     'artifactregistry.googleapis.com',
+    'run.googleapis.com', // Cloud Functions v2 runs on Cloud Run
   ],
-  'gcp.pubsub.topic': ['pubsub.googleapis.com'],
-  'gcp.pubsub.subscription': ['pubsub.googleapis.com'],
-  'gcp.secretmanager.secret': ['secretmanager.googleapis.com'],
-  'gcp.bigquery.dataset': ['bigquery.googleapis.com'],
-  'gcp.firestore.database': ['firestore.googleapis.com'],
-  'gcp.sql.instance': ['sqladmin.googleapis.com'],
-  'gcp.redis.instance': ['redis.googleapis.com'],
-  'gcp.scheduler.job': ['cloudscheduler.googleapis.com'],
-  'gcp.logging.sink': ['logging.googleapis.com'],
-  'gcp.compute.instance': ['compute.googleapis.com'],
-  'gcp.container.cluster': ['container.googleapis.com'],
-  'gcp.aiplatform.endpoint': ['aiplatform.googleapis.com'],
+  'Compute.CronJob': ['cloudscheduler.googleapis.com', 'run.googleapis.com'],
+
+  // Storage
+  'Storage.Bucket': ['storage.googleapis.com'],
+  'Storage.ObjectStorage': ['storage.googleapis.com'],
+
+  // Database
+  'Database.PostgreSQL': ['sqladmin.googleapis.com'],
+  'Database.MySQL': ['sqladmin.googleapis.com'],
+  'Database.Firestore': ['firestore.googleapis.com'],
+  'Database.Redis': ['redis.googleapis.com'],
+
+  // Network
+  // `Network.PublicEndpoint` compiles to the full load-balancer chain
+  // plus an optional managed SSL cert. The cert flow also uses the site
+  // verification API (called during Plan BEFORE autoEnableGCPApis runs,
+  // so we eagerly re-enable it in google-verification on 403 as well).
+  'Network.PublicEndpoint': ['compute.googleapis.com', 'siteverification.googleapis.com'],
+  'Network.LoadBalancer': ['compute.googleapis.com'],
+  'Network.Gateway': ['apigateway.googleapis.com', 'servicecontrol.googleapis.com', 'servicemanagement.googleapis.com'],
+  'Network.VPC': ['compute.googleapis.com'],
+  'Network.Subnet': ['compute.googleapis.com'],
+
+  // Messaging
+  'Messaging.CloudPubSub': ['pubsub.googleapis.com'],
+  'Messaging.Queue': ['pubsub.googleapis.com'],
+  'Messaging.Topic': ['pubsub.googleapis.com'],
+
+  // Security
+  'Security.Secret': ['secretmanager.googleapis.com'],
+  'Security.Identity': ['identitytoolkit.googleapis.com'],
+
+  // Monitoring
+  'Monitoring.Log': ['logging.googleapis.com'],
+
+  // AI / Analytics
+  'AI.VectorDB': ['aiplatform.googleapis.com'],
+  'AI.LLMGateway': ['aiplatform.googleapis.com'],
+  'AI.ModelServing': ['aiplatform.googleapis.com'],
+  'Analytics.DataWarehouse': ['bigquery.googleapis.com'],
+  'Analytics.Search': ['discoveryengine.googleapis.com'],
+
+  // GKE / Container orchestration
+  'Compute.GKE': ['container.googleapis.com'],
 };
 
 /** Always enable these APIs for any GCP deployment */
 const BASE_APIS = ['serviceusage.googleapis.com', 'cloudresourcemanager.googleapis.com'];
 
+/**
+ * Public helper so the google-verification service (which runs during the
+ * requirements resolver BEFORE the deploy flow triggers autoEnableGCPApis)
+ * can lazily enable the Site Verification API on first use. Idempotent —
+ * Service Usage API returns an empty operation if the API is already on.
+ */
+export async function enableGcpApi(project: string, apiName: string, accessToken: string): Promise<boolean> {
+  try {
+    const res = await fetch(
+      `https://serviceusage.googleapis.com/v1/projects/${project}/services/${apiName}:enable`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: '{}',
+      },
+    );
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 async function autoEnableGCPApis(project: string, accessToken: string, canvasNodes: any[], log: (msg: string) => void) {
-  // Collect required APIs from the actual canvas resource nodes
+  // Collect required APIs from the actual canvas resource nodes. Match by
+  // iceType directly (see ICE_TYPE_API_MAP above) — no more string-prefix
+  // pattern matching that was both over-eager (false positives) and
+  // incomplete (missed new Phase 8 types).
   console.log(
     'autoEnableGCPApis called, nodes:',
     canvasNodes.length,
@@ -1050,39 +2076,10 @@ async function autoEnableGCPApis(project: string, accessToken: string, canvasNod
 
   for (const node of canvasNodes) {
     if (node.type !== 'resource') continue;
-    // Try to match the resource type against our API map
-    const resourceId = node.data?.resourceId || '';
-    const iceType = node.data?.iceType || '';
-    const blockType = node.data?.blockTypeName || '';
-
-    // Match by resource ID patterns, iceType, or blockType
-    for (const [pattern, apis] of Object.entries(RESOURCE_API_MAP)) {
-      const parts = pattern.split('.');
-      const service = parts[1] || ''; // e.g. 'run', 'storage', 'pubsub'
-      if (
-        resourceId.includes(service) ||
-        iceType.toLowerCase().includes(service) ||
-        blockType.toLowerCase().includes(service) ||
-        // Also check for broader matches
-        (service === 'run' &&
-          (iceType.includes('Container') || blockType.includes('Service') || resourceId.includes('container'))) ||
-        (service === 'storage' &&
-          (iceType.includes('Storage') ||
-            blockType.includes('Static') ||
-            blockType.includes('Bucket') ||
-            resourceId.includes('static'))) ||
-        (service === 'cloudfunctions' && (iceType.includes('Function') || blockType.includes('Function'))) ||
-        (service === 'pubsub' && (iceType.includes('PubSub') || iceType.includes('Messaging'))) ||
-        (service === 'sql' &&
-          (iceType.includes('SQL') || iceType.includes('PostgreSQL') || iceType.includes('MySQL'))) ||
-        (service === 'redis' && iceType.includes('Redis')) ||
-        (service === 'secretmanager' && iceType.includes('Secret')) ||
-        (service === 'bigquery' && iceType.includes('BigQuery')) ||
-        (service === 'firestore' && iceType.includes('Firestore')) ||
-        (service === 'scheduler' && iceType.includes('Scheduler'))
-      ) {
-        apis.forEach((api) => requiredApis.add(api));
-      }
+    const iceType = (node.data?.iceType as string) || '';
+    const apis = ICE_TYPE_API_MAP[iceType];
+    if (apis) {
+      for (const api of apis) requiredApis.add(api);
     }
   }
 

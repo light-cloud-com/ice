@@ -100,6 +100,12 @@ export interface DeployState {
   // Status
   status: DeployStatus;
   error: string | null;
+  /**
+   * Phase 5.1 (partial) — id of the card whose deploy is currently in flight.
+   * Used by the project tree to show a spinner on the corresponding env row,
+   * independent of which card the deploy panel is currently displaying.
+   */
+  currentDeployCardId?: string;
 
   // Plan
   plan: DeployPlan | null;
@@ -107,6 +113,8 @@ export interface DeployState {
   // Progress
   progress: number; // 0-100
   currentResource: string;
+  /** Phase 2: current resource's sub-step (e.g., LB "creating backend service 2/4"). */
+  currentStep?: { label: string; index: number; total: number };
   logs: string[];
 
   // Results
@@ -121,6 +129,32 @@ export interface DeployState {
   // Drift detection
   driftByNode: Record<string, NodeDriftInfo>;
   driftCheckLoading: boolean;
+
+  // Phase 8 — block requirements (DNS, domain verification, cert issuance, etc.)
+  requirements: ResolvedRequirementState[];
+  requirementsLoading: boolean;
+  requirementsFetchedAt?: string;
+}
+
+export interface ResolvedRequirementState {
+  definitionId: string;
+  scope: 'block' | 'card' | 'global';
+  timing: 'before-deploy' | 'post-deploy';
+  blocking: boolean;
+  title: string;
+  description?: string;
+  result: {
+    status: 'unknown' | 'checking' | 'unmet' | 'met' | 'verified' | 'expired';
+    message?: string;
+    lastCheckedAt: string;
+    details?: unknown;
+  };
+  action?: {
+    type: string;
+    label: string;
+    payload?: Record<string, unknown>;
+  } | null;
+  nodeId?: string;
 }
 
 const initialState: DeployState = {
@@ -140,6 +174,8 @@ const initialState: DeployState = {
   deployedResources: [],
   driftByNode: {},
   driftCheckLoading: false,
+  requirements: [],
+  requirementsLoading: false,
 };
 
 // ─── Slice ──────────────────────────────────────────────────────────────────
@@ -193,30 +229,57 @@ const deploySlice = createSlice({
       state.logs = [t('deploy.slice.planning')];
     },
     setPlan(state, action: PayloadAction<DeployPlan>) {
+      // Normalize plan shape — backend may omit updates/deletes or send numbers
+      // instead of arrays in older responses. Guarantee arrays downstream.
+      const raw = (action.payload || {}) as Partial<DeployPlan>;
+      const normalized: DeployPlan = {
+        creates: Array.isArray(raw.creates) ? raw.creates : [],
+        updates: Array.isArray(raw.updates) ? raw.updates : [],
+        deletes: Array.isArray(raw.deletes) ? raw.deletes : [],
+        skipped: Array.isArray(raw.skipped) ? raw.skipped : [],
+        warnings: Array.isArray(raw.warnings) ? raw.warnings : [],
+      };
       state.status = 'planned';
-      state.plan = action.payload;
+      state.plan = normalized;
       state.logs.push(
         t('deploy.slice.planReady', {
-          creates: action.payload.creates.length,
-          updates: action.payload.updates.length,
-          deletes: action.payload.deletes.length,
+          creates: normalized.creates.length,
+          updates: normalized.updates.length,
+          deletes: normalized.deletes.length,
         }),
       );
     },
 
     // Deploy execution
-    startDeploying(state) {
+    startDeploying(state, action: PayloadAction<{ cardId?: string } | undefined>) {
+      // Idempotent: a no-op if a deploy is already in flight. Used both
+      // by the user-initiated path (Plan → Deploy click) and by the
+      // socket subscription hook when an externally-triggered deploy
+      // (e.g. GitHub push webhook) starts streaming events. The
+      // subscription hook can't tell whether the slice is already in a
+      // deploy state, so it dispatches blindly and we deduplicate here.
+      if (state.status === 'deploying' || state.status === 'planning') return;
       state.status = 'deploying';
       state.progress = 0;
       state.currentResource = '';
       state.results = [];
       state.error = null;
+      state.currentDeployCardId = action?.payload?.cardId ?? state.currentDeployCardId;
       state.logs.push(t('deploy.slice.deploying'));
     },
-    setDeployProgress(state, action: PayloadAction<{ progress: number; resource: string; message: string }>) {
+    setDeployProgress(
+      state,
+      action: PayloadAction<{
+        progress: number;
+        resource: string;
+        message: string;
+        step?: { label: string; index: number; total: number };
+      }>,
+    ) {
       state.progress = action.payload.progress;
       state.currentResource = action.payload.resource;
-      state.logs.push(action.payload.message);
+      state.currentStep = action.payload.step;
+      if (action.payload.message) state.logs.push(action.payload.message);
     },
     addResourceResult(state, action: PayloadAction<DeployResourceResult>) {
       state.results.push(action.payload);
@@ -227,6 +290,7 @@ const deploySlice = createSlice({
       state.status = 'success';
       state.progress = 100;
       state.currentResource = '';
+      state.currentDeployCardId = undefined;
       state.logs.push(t('deploy.slice.completed', { seconds: (action.payload.duration_ms / 1000).toFixed(1) }));
 
       // Add to history (capped at 50 entries)
@@ -248,6 +312,7 @@ const deploySlice = createSlice({
     deployError(state, action: PayloadAction<string>) {
       state.status = 'error';
       state.error = action.payload;
+      state.currentDeployCardId = undefined;
       state.logs.push(t('deploy.slice.error', { error: action.payload }));
     },
 
@@ -258,6 +323,7 @@ const deploySlice = createSlice({
       state.plan = null;
       state.progress = 0;
       state.currentResource = '';
+      state.currentDeployCardId = undefined;
       state.logs = [];
       state.results = [];
     },
@@ -286,6 +352,30 @@ const deploySlice = createSlice({
       state.driftByNode = {};
       state.driftCheckLoading = false;
     },
+    // Phase 8 — block requirements
+    startRequirementsFetch(state) {
+      state.requirementsLoading = true;
+    },
+    setRequirements(state, action: PayloadAction<ResolvedRequirementState[]>) {
+      state.requirements = action.payload;
+      state.requirementsLoading = false;
+      state.requirementsFetchedAt = new Date().toISOString();
+    },
+    updateRequirement(state, action: PayloadAction<ResolvedRequirementState>) {
+      const idx = state.requirements.findIndex(
+        (r) => r.definitionId === action.payload.definitionId && r.nodeId === action.payload.nodeId,
+      );
+      if (idx >= 0) {
+        state.requirements[idx] = action.payload;
+      } else {
+        state.requirements.push(action.payload);
+      }
+    },
+    clearRequirements(state) {
+      state.requirements = [];
+      state.requirementsLoading = false;
+      state.requirementsFetchedAt = undefined;
+    },
   },
 });
 
@@ -312,6 +402,10 @@ export const {
   setDriftCheckLoading,
   setDriftResults,
   clearDrift,
+  startRequirementsFetch,
+  setRequirements,
+  updateRequirement,
+  clearRequirements,
 } = deploySlice.actions;
 
 export default deploySlice.reducer;

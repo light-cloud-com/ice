@@ -84,7 +84,7 @@ export const budgetWebAppTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 50, y: 86 }, data: { domain: 'app.mysite.com', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true } },
     // 1: Static Site
     {
       iceType: 'Compute.StaticSite',
@@ -123,16 +123,17 @@ export const budgetWebAppTemplate: ComposedTemplate = {
     // ── Ungrouped (control plane) ─────────────────────────────────────────
     // 6: Secret
     { iceType: 'Security.Secret', label: 'App Secrets', position: { x: 50, y: 814 }, data: {} },
-    // 7: Domain
-    { iceType: 'Network.Domain', label: 'Domain', position: { x: 306, y: 814 }, data: { hostname: 'app.mysite.com' } },
     // 8: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 814 }, data: {} },
-  ],
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 814 }, data: {} },],
 
   connections: [
-    // Internet → Static Site (Gateway→Frontend rule)
-    { fromBlock: 0, toBlock: 1, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
-    // Internet → Gateway (Gateway→Gateway rule)
+    // Static Site is publicly reachable without going through the
+    // Public Endpoint — Firebase Hosting (GCP), AWS Amplify, and Azure
+    // Static Web Apps all include HTTPS, CDN, and custom domain. The
+    // `domain` field on the StaticSite block is enough.
+    //
+    // Public Endpoint → Gateway: the API gateway DOES need a public
+    // entry point with the custom subdomain (api.mysite.com).
     { fromBlock: 0, toBlock: 2, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
     // Gateway → Function (Gateway→Backend rule)
     { fromBlock: 2, toBlock: 3, relationship: 'connects_to', protocol: 'HTTP' },
@@ -142,8 +143,7 @@ export const budgetWebAppTemplate: ComposedTemplate = {
     // Function → Secrets (Service→Secrets config rule)
     { fromBlock: 3, toBlock: 6, relationship: 'depends_on' },
     // Domain → Static Site (Domain→Routable rule)
-    { fromBlock: 7, toBlock: 1, relationship: 'connects_to' },
     // Function → Env (Service→EnvConfig config rule)
-    { fromBlock: 3, toBlock: 8, relationship: 'depends_on' },
+    { fromBlock: 3, toBlock: 7, relationship: 'depends_on' },
   ],
 };

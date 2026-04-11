@@ -44,6 +44,104 @@ export interface FrameworkDetection {
   detectedFiles: string[];
 }
 
+// ─── Auto-create rules from canvas edges ────────────────────────────────────
+
+/**
+ * Walk the deploy graph for Source.Repository → Compute edges and ensure
+ * a DeploymentRule + GitHub webhook exists for each pair. Idempotent —
+ * if a rule already exists, it's left alone (createRule's existing
+ * findFirst+update path handles that).
+ *
+ * Why this lives here and not in the UI properties panel: the user
+ * shouldn't have to click into the Source.Repository block's properties
+ * just to enable push-to-deploy. The deploy is the moment they say "I
+ * want this connected to my repo" — so we set up the webhook then.
+ *
+ * Returns the rules that were created or adopted, plus any errors so
+ * the caller can surface them in the deploy log without failing the
+ * deploy itself.
+ */
+export async function ensureRulesForCanvas(
+  cardId: string,
+  nodes: Array<{ id: string; type?: string; data?: Record<string, unknown> }>,
+  edges: Array<{ source: string; target: string }>,
+  organisationId: string,
+  userId: string,
+  defaultEnvironment: string,
+): Promise<{
+  created: Array<{ ruleId: string; nodeId: string; repository: string; webhookStatus?: string }>;
+  errors: Array<{ nodeId: string; repository: string; error: string }>;
+}> {
+  const created: Array<{ ruleId: string; nodeId: string; repository: string; webhookStatus?: string }> = [];
+  const errors: Array<{ nodeId: string; repository: string; error: string }> = [];
+
+  const nodesById = new Map(nodes.map((n) => [n.id, n]));
+
+  for (const edge of edges) {
+    const src = nodesById.get(edge.source);
+    const dst = nodesById.get(edge.target);
+    if (!src || !dst) continue;
+
+    let repoNode: typeof src | null = null;
+    let computeNode: typeof src | null = null;
+    if ((src.data?.iceType as string) === 'Source.Repository') {
+      repoNode = src;
+      computeNode = dst;
+    } else if ((dst.data?.iceType as string) === 'Source.Repository') {
+      repoNode = dst;
+      computeNode = src;
+    } else {
+      continue;
+    }
+
+    const computeIce = (computeNode.data?.iceType as string) || '';
+    if (!computeIce.startsWith('Compute.')) continue;
+
+    // Repo data lives on the Source.Repository node OR (if the user
+    // typed it directly into the compute block's properties) on the
+    // compute node itself. Prefer the source node value.
+    const repository = String(
+      repoNode.data?.repository || (computeNode.data as any)?.repository || '',
+    ).trim();
+    if (!repository) continue;
+
+    const branch = String(repoNode.data?.branch || (computeNode.data as any)?.branch || 'main').trim() || 'main';
+    const buildCommand = String(repoNode.data?.buildCommand || '').trim() || undefined;
+    const installCommand = String(repoNode.data?.installCommand || '').trim() || undefined;
+    const outputDir = String(repoNode.data?.outputDirectory || '').trim() || undefined;
+    const framework = String(repoNode.data?.framework || (computeNode.data as any)?.framework || '').trim() || undefined;
+
+    try {
+      const rule = await createRule(
+        {
+          cardId,
+          nodeId: computeNode.id,
+          repository,
+          triggerType: 'push',
+          branchPattern: branch,
+          environment: defaultEnvironment,
+          buildCommand,
+          installCommand,
+          outputDir,
+          framework,
+        },
+        organisationId,
+        userId,
+      );
+      created.push({
+        ruleId: rule.id,
+        nodeId: computeNode.id,
+        repository,
+        webhookStatus: (rule as any).webhook_status,
+      });
+    } catch (err: any) {
+      errors.push({ nodeId: computeNode.id, repository, error: err?.message || String(err) });
+    }
+  }
+
+  return { created, errors };
+}
+
 // ─── Constants ──────────────────────────────────────────────────────────────
 
 const GITHUB_API = 'https://api.github.com';
@@ -55,6 +153,44 @@ const GITHUB_HEADERS = {
 // ─── Rule CRUD ──────────────────────────────────────────────────────────────
 
 export async function createRule(input: CreateRuleInput, organisationId: string, userId: string) {
+  const branchPattern = input.branchPattern || 'main';
+
+  // Idempotent by design: if a rule for this (card_id, node_id, branch_pattern)
+  // already exists, return it and update any changed fields. The DB has a
+  // unique index on those three columns, so a blind `.create()` throws
+  // P2002 on the second call. Callers (the UI, React StrictMode double-
+  // mount, tests) legitimately re-trigger creation and expect idempotency.
+  const existing = await prisma.deploymentRule.findFirst({
+    where: {
+      card_id: input.cardId,
+      node_id: input.nodeId,
+      branch_pattern: branchPattern,
+    },
+  });
+
+  if (existing) {
+    // Update mutable fields (repository, framework, commands, environment)
+    // but keep the webhook_secret / webhook_id stable — rotating the
+    // secret would invalidate the existing GitHub webhook.
+    const updated = await prisma.deploymentRule.update({
+      where: { id: existing.id },
+      data: {
+        repository: input.repository,
+        trigger_type: input.triggerType || existing.trigger_type,
+        environment: input.environment || existing.environment,
+        build_command: input.buildCommand ?? existing.build_command,
+        install_command: input.installCommand ?? existing.install_command,
+        output_dir: input.outputDir ?? existing.output_dir,
+        framework: input.framework ?? existing.framework,
+      },
+    });
+    return {
+      ...updated,
+      webhook_status: existing.webhook_status,
+      webhook_error: existing.webhook_error,
+    };
+  }
+
   const webhookSecret = crypto.randomBytes(32).toString('hex');
 
   const rule = await prisma.deploymentRule.create({
@@ -63,7 +199,7 @@ export async function createRule(input: CreateRuleInput, organisationId: string,
       node_id: input.nodeId,
       repository: input.repository,
       trigger_type: input.triggerType || 'push',
-      branch_pattern: input.branchPattern || 'main',
+      branch_pattern: branchPattern,
       environment: input.environment || 'production',
       build_command: input.buildCommand,
       install_command: input.installCommand,
@@ -75,20 +211,35 @@ export async function createRule(input: CreateRuleInput, organisationId: string,
     },
   });
 
-  // Register webhook on GitHub (best-effort — don't fail rule creation)
-  try {
-    const webhookId = await registerGitHubWebhook(userId, input.repository, webhookSecret);
-    if (webhookId) {
-      await prisma.deploymentRule.update({
-        where: { id: rule.id },
-        data: { webhook_id: webhookId },
-      });
-    }
-  } catch (err) {
-    console.warn(`Failed to register webhook for ${input.repository}:`, err);
+  // Register webhook on GitHub (best-effort — don't fail rule creation).
+  //
+  // Webhook registration is a separate concern from the rule itself: the
+  // rule is useful even without a webhook (manual triggers still work),
+  // and fine-grained PATs often lack the repo:admin permission needed to
+  // create webhooks. Previously the caller only saw a generic stack trace
+  // in the gateway log; now the failure mode and remediation are stored
+  // on the rule row and surfaced to the UI via `webhook_status` /
+  // `webhook_error`.
+  const webhookResult = await registerGitHubWebhook(userId, input.repository, webhookSecret);
+  await prisma.deploymentRule.update({
+    where: { id: rule.id },
+    data: {
+      webhook_id: webhookResult.webhookId,
+      webhook_status: webhookResult.status,
+      webhook_error: webhookResult.error,
+    },
+  });
+
+  if (webhookResult.status === 'failed') {
+    // Single clean warning line — no stack trace, no misleading "Error:"
+    // prefix. The details are persisted on the rule for the UI to show.
+    console.warn(
+      `[pipeline] Webhook not registered for ${input.repository} — ${webhookResult.error}. ` +
+        `The rule was created and works for manual deploys; auto-deploy on push will not trigger until this is resolved.`,
+    );
   }
 
-  return rule;
+  return { ...rule, webhook_status: webhookResult.status, webhook_error: webhookResult.error };
 }
 
 export async function updateRule(
@@ -312,45 +463,93 @@ export async function shouldSkipDuplicate(ruleId: string, commitSha: string): Pr
 
 // ─── GitHub Webhook Registration ────────────────────────────────────────────
 
-async function registerGitHubWebhook(userId: string, repository: string, secret: string): Promise<number | null> {
+interface WebhookRegistrationResult {
+  status: 'registered' | 'failed' | 'skipped';
+  webhookId?: number;
+  error?: string;
+}
+
+async function registerGitHubWebhook(
+  userId: string,
+  repository: string,
+  secret: string,
+): Promise<WebhookRegistrationResult> {
   const token = await getGitHubToken(userId);
-  if (!token) return null;
+  if (!token) {
+    return {
+      status: 'skipped',
+      error: 'GitHub is not connected. Connect GitHub in Settings to enable auto-deploy on push.',
+    };
+  }
 
   const callbackUrl = getWebhookCallbackUrl();
   const [owner, repo] = repository.split('/');
 
-  const response = await fetch(`${GITHUB_API}/repos/${owner}/${repo}/hooks`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      ...GITHUB_HEADERS,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      name: 'web',
-      active: true,
-      events: ['push', 'pull_request'],
-      config: {
-        url: callbackUrl,
-        content_type: 'json',
-        secret,
-        insecure_ssl: '0',
+  let response: Response;
+  try {
+    response = await fetch(`${GITHUB_API}/repos/${owner}/${repo}/hooks`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        ...GITHUB_HEADERS,
+        'Content-Type': 'application/json',
       },
-    }),
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    // 422 = hook already exists for this URL, which is fine
-    if (response.status === 422 && text.includes('already exists')) {
-      console.log(`Webhook already exists for ${repository}`);
-      return null;
-    }
-    throw new Error(`Failed to register webhook: ${response.status} ${text}`);
+      body: JSON.stringify({
+        name: 'web',
+        active: true,
+        events: ['push', 'pull_request'],
+        config: {
+          url: callbackUrl,
+          content_type: 'json',
+          secret,
+          insecure_ssl: '0',
+        },
+      }),
+    });
+  } catch (err: any) {
+    return {
+      status: 'failed' as const,
+      error: `Network error contacting GitHub: ${err?.message || err}`,
+    };
   }
 
-  const hook = (await response.json()) as { id: number };
-  return hook.id;
+  if (response.ok) {
+    const hook = (await response.json()) as { id: number };
+    return { status: 'registered' as const, webhookId: hook.id };
+  }
+
+  const text = await response.text().catch(() => '');
+  // 422 = hook already exists for this URL — treat as success with no new id.
+  if (response.status === 422 && text.includes('already exists')) {
+    return { status: 'registered' as const };
+  }
+  // 403 on webhook creation is the classic "PAT doesn't have repo:admin"
+  // or "user doesn't have admin rights on this org repo" case. Surface it
+  // with a clear remediation hint rather than the raw GitHub message.
+  if (response.status === 403) {
+    return {
+      status: 'failed' as const,
+      error:
+        `GitHub denied webhook creation (403). Your token needs 'repo' scope and admin access to ${repository}. ` +
+        `If this is an organization repo you don't own, auto-deploy on push won't work until an owner sets up the webhook.`,
+    };
+  }
+  if (response.status === 401) {
+    return {
+      status: 'failed' as const,
+      error: 'GitHub token is invalid or expired. Reconnect GitHub in Settings → Integrations.',
+    };
+  }
+  if (response.status === 404) {
+    return {
+      status: 'failed' as const,
+      error: `Repository ${repository} not found or not accessible by your token.`,
+    };
+  }
+  return {
+    status: 'failed' as const,
+    error: `GitHub returned ${response.status}: ${text.slice(0, 200)}`,
+  };
 }
 
 async function unregisterGitHubWebhook(userId: string, repository: string, webhookId: number) {

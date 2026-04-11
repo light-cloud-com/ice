@@ -77,6 +77,83 @@ export const CompactLod3: React.FC<CompactLod3Props> = memo(
     const hasPipeline = effectivePipelineStatus && effectivePipelineStatus.status !== 'idle';
     const hasStatusLine = !!(statusLabel || estimatedCost);
 
+    // Phase 2 — live deploy overlay. Pulls the deploy-specific fields the
+    // panel already writes into node data and renders a visible overlay so
+    // the user can see which block is currently deploying without having
+    // the deploy panel open.
+    const deployStatus = (node.data?.deploy_status as string) || '';
+    const deployProgress = node.data?.deploy_progress as
+      | { step_label?: string; step_index?: number; step_total?: number }
+      | undefined;
+    const deployError = (node.data?.deploy_error as string) || '';
+    const providerId = (node.data?.provider_id as string) || '';
+    const deployOutputs = (node.data?.deploy_outputs as Record<string, unknown> | undefined) || {};
+    const isDeploying = deployStatus === 'deploying';
+    const isActive = deployStatus === 'active';
+    const isError = deployStatus === 'error';
+    const deployBorderColor = isDeploying
+      ? '#3b82f6'
+      : isActive
+        ? '#22c55e'
+        : isError
+          ? '#ef4444'
+          : null;
+    const deployBorderWidth = isDeploying || isError ? 2 : isActive ? 1.5 : 0;
+
+    // Pick the single most important output to show as a pill under the
+    // block label when active. This is a compact version of the logic in
+    // `packages/ui/src/features/deploy/output-extractors.ts`.
+    //
+    // Priority order:
+    //   1. Custom domain URL (propagated from CustomDomain via the node
+    //      overlay endpoint) — the friendliest URL the user will actually
+    //      visit.
+    //   2. Any other URL output (Cloud Run service URL, etc.).
+    //   3. Default URL preserved from the handler (bucket HTTPS, run.app URL).
+    //   4. For buckets specifically, the gs:// path.
+    //   5. Raw IP address for forwarding rules.
+    //   6. provider_id as a last-resort fallback so the user always sees
+    //      SOMETHING clickable.
+    // The block can show two URLs simultaneously:
+    //   - PRIMARY: the user-meaningful URL (custom domain when present)
+    //   - SECONDARY: the always-live provider URL underneath (firebase
+    //     `<site>.web.app`, bucket HTTPS, raw IP)
+    //
+    // For Firebase Hosting + custom domain: primary = `https://app.example.com`,
+    // secondary = `https://<site>.web.app`. The user wants to see BOTH
+    // because the custom domain may not resolve until DNS is set up,
+    // and the firebase URL is always reachable in the meantime.
+    const customDomainUrl = deployOutputs.custom_domain_url as string | undefined;
+    const defaultUrlValue = deployOutputs.default_url as string | undefined;
+
+    const primaryOutputText: string | null = (() => {
+      if (!isActive) return null;
+      const type = (node.data?.iceType as string) || '';
+      if (customDomainUrl && String(customDomainUrl).trim()) return String(customDomainUrl).trim();
+      const domain = deployOutputs.domain as string | undefined;
+      if (domain && String(domain).trim()) return `https://${String(domain).trim()}`;
+      if (deployOutputs.url) return String(deployOutputs.url);
+      if (defaultUrlValue) return String(defaultUrlValue);
+      if (type.includes('StaticSite') || providerId.startsWith('gs://')) {
+        return providerId || (deployOutputs.name ? `gs://${deployOutputs.name}` : null);
+      }
+      if (deployOutputs.ip_address || deployOutputs.IPAddress) {
+        const ip = String(deployOutputs.ip_address || deployOutputs.IPAddress);
+        return `http://${ip}`;
+      }
+      return providerId || null;
+    })();
+
+    // Secondary URL: always show the firebase URL (or any default_url)
+    // underneath the primary when it's distinct. Lets the user click
+    // through to the always-live endpoint while the custom domain is
+    // still propagating DNS.
+    const secondaryOutputText: string | null = (() => {
+      if (!isActive || !primaryOutputText) return null;
+      if (defaultUrlValue && defaultUrlValue !== primaryOutputText) return String(defaultUrlValue);
+      return null;
+    })();
+
     const headerTrailing = folded ? (
       <>
         {runtimeLabel && (
@@ -103,13 +180,73 @@ export const CompactLod3: React.FC<CompactLod3Props> = memo(
         {isDragOver && <DragOverGlow x={x} y={y} width={W} height={H} />}
         {isValidTarget && <ConnectionDragGlow x={x} y={y} width={W} height={H} reducedMotion={reducedMotion} />}
 
+        {/* Phase 2 — pulsing deploy overlay. Rendered as an SVG rect outside
+            the foreignObject so the animation is smooth regardless of the
+            block's HTML content. */}
+        {isDeploying && !reducedMotion && (
+          <rect
+            x={x - 3}
+            y={y - 3}
+            width={W + 6}
+            height={H + 6}
+            rx={12}
+            fill="none"
+            stroke="#3b82f6"
+            strokeWidth={2}
+            strokeDasharray="8 4"
+            opacity={0.85}
+          >
+            <animate
+              attributeName="stroke-dashoffset"
+              from="0"
+              to="-24"
+              dur="1.2s"
+              repeatCount="indefinite"
+            />
+            <animate
+              attributeName="opacity"
+              values="0.5;0.95;0.5"
+              dur="1.5s"
+              repeatCount="indefinite"
+            />
+          </rect>
+        )}
+        {isDeploying && reducedMotion && (
+          <rect
+            x={x - 2}
+            y={y - 2}
+            width={W + 4}
+            height={H + 4}
+            rx={11}
+            fill="none"
+            stroke="#3b82f6"
+            strokeWidth={2}
+            opacity={0.9}
+          />
+        )}
+        {isError && (
+          <rect
+            x={x - 2}
+            y={y - 2}
+            width={W + 4}
+            height={H + 4}
+            rx={11}
+            fill="none"
+            stroke="#ef4444"
+            strokeWidth={2}
+            opacity={0.9}
+          />
+        )}
+
         <foreignObject x={x} y={y} width={W} height={H}>
           <div
             style={{
               width: W,
               height: H,
               background: 'var(--ice-bg-surface)',
-              border: `${isSelected ? 1.5 : 1}px solid ${isValidTarget ? '#22c55e' : border}`,
+              border: `${deployBorderWidth || (isSelected ? 1.5 : 1)}px solid ${
+                isValidTarget ? '#22c55e' : deployBorderColor || border
+              }`,
               borderRadius: CORNER_RADIUS,
               display: 'flex',
               flexDirection: 'column',
@@ -118,6 +255,7 @@ export const CompactLod3: React.FC<CompactLod3Props> = memo(
               position: 'relative',
               padding: folded ? '0 12px' : `10px ${CARD_PX}px 0`,
               justifyContent: folded ? 'center' : undefined,
+              boxShadow: isDeploying ? '0 0 16px rgba(59, 130, 246, 0.35)' : undefined,
             }}
           >
             <NodeHeader
@@ -167,6 +305,108 @@ export const CompactLod3: React.FC<CompactLod3Props> = memo(
 
                 {hasStatusLine && (
                   <StatusCostLine statusLabel={statusLabel} statusColor={statusColor} estimatedCost={estimatedCost} />
+                )}
+
+                {/* Phase 2 — live deploy feedback. Rendered absolute-positioned
+                    at the bottom of the block so it doesn't push layout
+                    around as status changes. */}
+                {isDeploying && deployProgress?.step_label && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: 8,
+                      right: 8,
+                      bottom: 4,
+                      fontSize: 10,
+                      color: '#3b82f6',
+                      fontFamily: FONT_MONO,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      pointerEvents: 'none',
+                    }}
+                  >
+                    {deployProgress.step_index != null && deployProgress.step_total != null
+                      ? `${deployProgress.step_label} (${deployProgress.step_index}/${deployProgress.step_total})`
+                      : deployProgress.step_label}
+                  </div>
+                )}
+
+                {isActive && primaryOutputText && (() => {
+                  // Click behavior:
+                  //   - If the text is an http(s) URL → open in a new tab
+                  //     so users can actually VISIT their deployed site.
+                  //   - Shift+click always copies (escape hatch when users
+                  //     want the URL on the clipboard without navigating).
+                  //   - Non-URLs (gs://, raw IP, provider_id) copy since
+                  //     there's nothing to open.
+                  const renderUrlRow = (text: string, color: string, bottom: number) => {
+                    const isHttpUrl = /^https?:\/\//.test(text);
+                    const tooltip = isHttpUrl
+                      ? `Click to open · Shift+click to copy: ${text}`
+                      : `Click to copy: ${text}`;
+                    return (
+                      <div
+                        key={`${text}-${bottom}`}
+                        style={{
+                          position: 'absolute',
+                          left: 8,
+                          right: 8,
+                          bottom,
+                          fontSize: 10,
+                          color,
+                          fontFamily: FONT_MONO,
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          cursor: 'pointer',
+                          textDecoration: isHttpUrl ? 'underline' : undefined,
+                        }}
+                        title={tooltip}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (isHttpUrl && !e.shiftKey) {
+                            window.open(text, '_blank', 'noopener,noreferrer');
+                          } else {
+                            navigator.clipboard?.writeText(text).catch(() => {});
+                          }
+                        }}
+                      >
+                        ↗ {text}
+                      </div>
+                    );
+                  };
+                  return (
+                    <>
+                      {/* Primary (custom domain when present, otherwise default).
+                          Sits ABOVE the secondary so the custom domain is visually
+                          prominent. */}
+                      {renderUrlRow(primaryOutputText, '#22c55e', secondaryOutputText ? 18 : 4)}
+                      {/* Secondary (firebase / provider default URL) — dimmer, below */}
+                      {secondaryOutputText &&
+                        renderUrlRow(secondaryOutputText, 'var(--ice-text-3, #94a3b8)', 4)}
+                    </>
+                  );
+                })()}
+
+                {isError && deployError && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: 8,
+                      right: 8,
+                      bottom: 4,
+                      fontSize: 10,
+                      color: '#ef4444',
+                      fontFamily: FONT_MONO,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                    title={deployError}
+                  >
+                    ✗ {deployError}
+                  </div>
                 )}
 
                 <div style={{ position: 'absolute', top: 4, right: 4 }}>

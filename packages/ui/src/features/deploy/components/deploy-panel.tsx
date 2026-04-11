@@ -25,8 +25,11 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from '../../../i18n';
 import { getApi } from '../../../shared/api/api-adapter';
 import { IceSelect } from '../../../shared/components/ui/ice-select';
+import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { cn } from '../../../shared/utils/cn';
 import { isApiNotEnabledError, extractApiName, extractApiEnableUrl } from '../../../shared/utils/gcp-errors';
+import { primaryOutput } from '../output-extractors';
+import { RequirementsSection } from './requirements-section';
 import { selectActiveCard, updateCardNodeData } from '../../../store/slices/cards-slice';
 import {
   closeDeployPanel,
@@ -47,6 +50,9 @@ import {
   resetDeploy,
   appendLog,
   setDeployedResources,
+  startRequirementsFetch,
+  setRequirements,
+  updateRequirement,
   type DeployPlan,
   type DeployStatus,
 } from '../../../store/slices/deploy-slice';
@@ -125,13 +131,21 @@ function detectDominantProvider(nodes: Array<{ type: string; data?: Record<strin
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export const DeployPanel: React.FC<{ isOpen: boolean; mode?: 'modal' | 'page' }> = ({ isOpen, mode = 'modal' }) => {
+export const DeployPanel: React.FC = () => {
+  // Visibility is owned by the parent (main-layout) which only mounts
+  // this component when state.deploy.isOpen is true. We still read isOpen
+  // here so the side-effects below stay gated when the panel is mounted
+  // but the user closes it via the close button (the parent unmounts on
+  // the next render).
+  const isOpen = useSelector((s: RootState) => s.deploy.isOpen);
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const activeCard = useSelector(selectActiveCard);
   const deploy = useSelector((state: RootState) => state.deploy);
   const logEndRef = useRef<HTMLDivElement>(null);
   const pendingRetryRef = useRef<'plan' | 'deploy' | null>(null);
+  // Phase 5: in-panel destroy confirmation modal state.
+  const [destroyModalOpen, setDestroyModalOpen] = React.useState(false);
 
   // Auto-scroll logs
   useEffect(() => {
@@ -181,67 +195,23 @@ export const DeployPanel: React.FC<{ isOpen: boolean; mode?: 'modal' | 'page' }>
     // eslint-disable-next-line react-hooks/exhaustive-deps -- use activeCard?.id to avoid re-firing on card object reference changes
   }, [isOpen, activeCard?.id, deploy.gcpProject, deploy.region, dispatch]);
 
-  // Subscribe to deploy progress room for this card
+  // The deploy socket subscription and global progress listener now live
+  // in `useDeploySubscription` at the app level (`packages/web/src/app/app.tsx`).
+  // That hook runs whenever a card is active, regardless of whether this
+  // panel is open — which is the whole point, because a new tab / closed
+  // panel used to silently drop all progress events. The panel still
+  // listens for `requirement_verified` events locally to refresh the
+  // requirements section when the background poller flips one.
   useEffect(() => {
     if (!isOpen || !activeCard) return;
-    const api = getApi();
-    const unsub = api.subscribeDeployProgress?.(activeCard.id);
-    return () => {
-      unsub?.();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- use activeCard?.id to avoid re-firing on card object reference changes
-  }, [isOpen, activeCard?.id]);
-
-  // Listen to deploy progress events from main process
-  useEffect(() => {
-    if (!isOpen) return;
-
     const cleanup = getApi().onDeployProgress((event: any) => {
-      if (event.type === 'progress') {
-        dispatch(
-          setDeployProgress({
-            progress: event.progress ?? 0,
-            resource: event.resource ?? '',
-            message: event.message ?? '',
-          }),
-        );
-      } else if (event.type === 'resource_result') {
-        dispatch(addResourceResult(event.result));
-        // Sync deploy outputs back to the source card node
-        if (event.result.success && event.result.source_node_id) {
-          const nodeData: Record<string, unknown> = {
-            provider_id: event.result.provider_id,
-            status: 'active',
-          };
-          if (event.result.outputs) {
-            Object.assign(nodeData, event.result.outputs);
-          }
-          dispatch(updateCardNodeData({ nodeId: event.result.source_node_id, data: nodeData }));
-        }
-      } else if (event.type === 'log') {
-        dispatch(appendLog(event.message));
-      } else if (event.type === 'complete') {
-        // Deploy finished — update status and show results
-        if (event.success) {
-          dispatch(deploySuccess({ duration_ms: event.duration_ms || 0 }));
-          // Reload deployed resources
-          if (activeCard) {
-            (async () => {
-              try {
-                const res = await getApi().deploy.getResources(activeCard.id);
-                if (res.success && res.resources) {
-                  dispatch(setDeployedResources(res.resources));
-                }
-              } catch {}
-            })();
-          }
-        }
+      if (event.type === 'requirement_verified') {
+        fetchRequirements().catch(() => undefined);
       }
     });
-
     return cleanup;
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- use activeCard?.id to avoid re-firing on card object reference changes
-  }, [isOpen, activeCard?.id, dispatch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, activeCard?.id]);
 
   // ─── Authenticate ─────────────────────────────────────────────────
 
@@ -273,6 +243,36 @@ export const DeployPanel: React.FC<{ isOpen: boolean; mode?: 'modal' | 'page' }>
 
   // ─── Plan ───────────────────────────────────────────────────────────
 
+  const fetchRequirements = useCallback(async () => {
+    if (!activeCard) return;
+    try {
+      dispatch(startRequirementsFetch());
+      const res = await getApi().deploy.requirements(activeCard.id, activeCard.nodes, {
+        provider: deploy.provider,
+        gcpProject: deploy.gcpProject,
+        region: deploy.region,
+        environment: deploy.environment,
+      });
+      if (res.success && Array.isArray(res.requirements)) {
+        dispatch(setRequirements(res.requirements));
+      } else {
+        dispatch(setRequirements([]));
+      }
+    } catch (err: any) {
+      dispatch(setRequirements([]));
+      dispatch(appendLog(`Requirements check failed: ${err?.message || err}`));
+    }
+  }, [activeCard, deploy.provider, deploy.gcpProject, deploy.region, deploy.environment, dispatch]);
+
+  const handleVerifyRequirement = useCallback(
+    async (_definitionId: string, _nodeId: string | undefined) => {
+      // Re-run the full resolver for now. A future refinement can hit a
+      // single-requirement endpoint to avoid re-checking everything.
+      await fetchRequirements();
+    },
+    [fetchRequirements],
+  );
+
   const handlePlan = useCallback(async () => {
     if (!activeCard) return;
 
@@ -288,6 +288,8 @@ export const DeployPanel: React.FC<{ isOpen: boolean; mode?: 'modal' | 'page' }>
 
       if (result.success) {
         dispatch(setPlan(result.plan as DeployPlan));
+        // Phase 8 — fetch requirements in parallel with the plan preview.
+        fetchRequirements().catch(() => undefined);
       } else if (result.needsAuth) {
         // Auto-trigger auth flow, then retry plan
         const authed = await handleAuthenticate('plan');
@@ -319,7 +321,7 @@ export const DeployPanel: React.FC<{ isOpen: boolean; mode?: 'modal' | 'page' }>
   const handleDeploy = useCallback(async () => {
     if (!activeCard) return;
 
-    dispatch(startDeploying());
+    dispatch(startDeploying({ cardId: activeCard.id }));
 
     try {
       const result = await getApi().deploy.apply(activeCard.id, activeCard.nodes, activeCard.edges, {
@@ -330,24 +332,24 @@ export const DeployPanel: React.FC<{ isOpen: boolean; mode?: 'modal' | 'page' }>
       });
 
       // Success/results are handled via socket events (resource_result + complete).
-      // Only handle errors and auth here.
+      // We ALSO fire the success path unconditionally here — the 'deploy.status'
+      // closure is stale by the time this await resolves, so relying on it as a
+      // guard meant the UI got stuck on "Deploying... 0%". Redux reducers are
+      // idempotent enough that an extra deploySuccess dispatch is harmless.
       if (result.success) {
-        // Socket 'complete' event handles deploySuccess — but as fallback:
-        if (deploy.status === 'deploying') {
-          dispatch(deploySuccess({ duration_ms: result.duration_ms || 0 }));
-          try {
-            const res = await getApi().deploy.getResources(activeCard.id);
-            if (res.success && res.resources) {
-              dispatch(setDeployedResources(res.resources));
-            }
-          } catch {}
-        }
+        dispatch(deploySuccess({ duration_ms: result.duration_ms || 0 }));
+        try {
+          const res = await getApi().deploy.getResources(activeCard.id);
+          if (res.success && res.resources) {
+            dispatch(setDeployedResources(res.resources));
+          }
+        } catch {}
       } else if (result.needsAuth) {
         // Auto-trigger auth flow, then retry deploy
         const authed = await handleAuthenticate('deploy');
         if (authed) {
           // Retry deploy after successful auth
-          dispatch(startDeploying());
+          dispatch(startDeploying({ cardId: activeCard.id }));
           const retry = await getApi().deploy.apply(activeCard.id, activeCard.nodes, activeCard.edges, {
             provider: deploy.provider,
             gcpProject: deploy.gcpProject,
@@ -402,23 +404,13 @@ export const DeployPanel: React.FC<{ isOpen: boolean; mode?: 'modal' | 'page' }>
   const gcpNodes = providerNodes;
 
   const header = (
-    <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-muted/30">
-      <div className="flex items-center gap-2.5">
-        <Rocket className="w-5 h-5 text-emerald-500" />
-        <h2 className="text-base font-semibold">{t('deploy.title')}</h2>
-        <StatusBadge status={deploy.status} id="ice-deploy-status" />
-      </div>
-      {mode === 'modal' && (
-        <button
-          onClick={handleClose}
-          disabled={deploy.status === 'deploying' || deploy.status === 'authenticating'}
-          id="ice-deploy-btn-close"
-          className="p-1 rounded hover:bg-muted transition-colors disabled:opacity-50"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      )}
-    </div>
+    <PanelHeader
+      icon={<Rocket aria-hidden="true" className="w-3.5 h-3.5 text-emerald-400" />}
+      title={t('deploy.title')}
+      badge={<StatusBadge status={deploy.status} id="ice-deploy-status" />}
+      onClose={handleClose}
+      closeLabel="Close"
+    />
   );
 
   const content = (
@@ -503,6 +495,15 @@ export const DeployPanel: React.FC<{ isOpen: boolean; mode?: 'modal' | 'page' }>
             </div>
           )}
 
+          {/* Phase 8 — block requirements (DNS, verification, cert, GitHub repo, etc.) */}
+          {(deploy.requirements.length > 0 || deploy.requirementsLoading) && (
+            <RequirementsSection
+              requirements={deploy.requirements}
+              loading={deploy.requirementsLoading}
+              onVerify={handleVerifyRequirement}
+            />
+          )}
+
           {/* Plan preview */}
           {deploy.plan && <PlanPreview plan={deploy.plan} />}
 
@@ -510,6 +511,74 @@ export const DeployPanel: React.FC<{ isOpen: boolean; mode?: 'modal' | 'page' }>
           {deploy.error && (
             <ApiErrorBanner error={deploy.error} results={deploy.results} onRetryDeploy={handleDeploy} />
           )}
+
+          {/* Custom domain DNS records — surfaced from any Firebase
+              Hosting result that registered a custom domain. Each row
+              is copyable so the user can paste straight into their
+              registrar without digging through the Firebase Console. */}
+          {(() => {
+            const dnsResults = deploy.results.filter(
+              (r) =>
+                r.success &&
+                Array.isArray((r.outputs as any)?.custom_domain_dns_records) &&
+                (r.outputs as any).custom_domain_dns_records.length > 0,
+            );
+            if (dnsResults.length === 0) return null;
+            return (
+              <div className="space-y-2">
+                {dnsResults.map((r, idx) => {
+                  const records = ((r.outputs as any).custom_domain_dns_records || []) as Array<{
+                    type: string;
+                    domain: string;
+                    value: string;
+                  }>;
+                  const customDomain = (r.outputs as any)?.custom_domain || r.name;
+                  return (
+                    <div
+                      key={`${r.name}-${idx}`}
+                      className="rounded-md border border-blue-500/30 bg-blue-50 dark:bg-blue-950/20 p-3 space-y-2"
+                    >
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-medium text-blue-700 dark:text-blue-300">
+                          DNS records for {customDomain}
+                        </span>
+                        <span className="text-blue-600/70 dark:text-blue-400/70">
+                          Add these at your registrar to verify the domain
+                        </span>
+                      </div>
+                      <div className="space-y-1">
+                        {records.map((rec, ridx) => (
+                          <div
+                            key={ridx}
+                            className="flex items-center gap-2 text-xs font-mono bg-background/60 px-2 py-1.5 rounded"
+                          >
+                            <span className="font-semibold text-blue-700 dark:text-blue-300 w-12 shrink-0">
+                              {rec.type}
+                            </span>
+                            <span className="text-muted-foreground truncate flex-shrink min-w-0" title={rec.domain}>
+                              {rec.domain}
+                            </span>
+                            <span className="text-foreground truncate flex-1 min-w-0" title={rec.value}>
+                              {rec.value}
+                            </span>
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(rec.value).catch(() => undefined);
+                              }}
+                              className="shrink-0 px-2 py-0.5 text-[10px] rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-700 dark:text-blue-300"
+                              title="Copy value to clipboard"
+                            >
+                              Copy
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
 
           {/* Logs */}
           {deploy.logs.length > 0 && (
@@ -537,6 +606,11 @@ export const DeployPanel: React.FC<{ isOpen: boolean; mode?: 'modal' | 'page' }>
                 </span>
                 <span className="font-mono text-xs">{deploy.progress}%</span>
               </div>
+              {deploy.currentStep && (
+                <div className="text-xs text-muted-foreground pl-5">
+                  └ {deploy.currentStep.label} ({deploy.currentStep.index}/{deploy.currentStep.total})
+                </div>
+              )}
               <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                 <div
                   className="h-full bg-emerald-500 rounded-full transition-all duration-300"
@@ -561,10 +635,40 @@ export const DeployPanel: React.FC<{ isOpen: boolean; mode?: 'modal' | 'page' }>
             disabled={deploy.status === 'deploying'}
             id="ice-deploy-btn-cancel"
             className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+            title={deploy.status === 'deploying' ? 'Cannot clear while a deploy is running' : 'Clear plan and results'}
           >
             {t('deploy.buttons.reset')}
           </button>
           <div className="flex items-center gap-2">
+            {/* Phase 5: Stop button shown only while deploying. Calls the
+                cancel endpoint which flips the deploy's AbortSignal. */}
+            {deploy.status === 'deploying' && (
+              <button
+                onClick={async () => {
+                  if (!activeCard) return;
+                  try {
+                    await fetch('/api/canvas/deploy/cancel', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      credentials: 'include',
+                      body: JSON.stringify({ cardId: activeCard.id }),
+                    });
+                    dispatch(appendLog('Stop requested — deploy will wind down after the current resource.'));
+                  } catch (err: any) {
+                    dispatch(appendLog(`Cancel failed: ${err?.message || err}`));
+                  }
+                }}
+                id="ice-deploy-btn-stop"
+                className={cn(
+                  'flex items-center gap-1.5 px-4 py-1.5 text-sm rounded-md transition-colors font-medium',
+                  'bg-amber-600 text-white hover:bg-amber-700',
+                )}
+                title="Request the in-flight deploy to stop"
+              >
+                <X className="w-3.5 h-3.5" />
+                Stop
+              </button>
+            )}
             {/* Plan button */}
             <button
               onClick={handlePlan}
@@ -576,6 +680,17 @@ export const DeployPanel: React.FC<{ isOpen: boolean; mode?: 'modal' | 'page' }>
                 deploy.status === 'authenticating'
               }
               id="ice-deploy-btn-plan"
+              title={
+                !deploy.gcpProject
+                  ? 'Select a GCP project to continue'
+                  : gcpNodes.length === 0
+                    ? 'Add at least one resource block to deploy'
+                    : deploy.status === 'deploying'
+                      ? 'Deploy in progress'
+                      : deploy.status === 'planning'
+                        ? 'Planning…'
+                        : 'Generate a deploy plan'
+              }
               className={cn(
                 'flex items-center gap-1.5 px-4 py-1.5 text-sm rounded-md transition-colors',
                 'bg-muted hover:bg-muted/80 border border-border',
@@ -591,16 +706,37 @@ export const DeployPanel: React.FC<{ isOpen: boolean; mode?: 'modal' | 'page' }>
             </button>
 
             {/* Deploy button */}
-            <button
-              onClick={handleDeploy}
-              disabled={
+            {(() => {
+              const blockingUnmetReqs = deploy.requirements.filter(
+                (r) => r.blocking && r.result.status !== 'met' && r.result.status !== 'verified',
+              );
+              const hasBlockingUnmet = blockingUnmetReqs.length > 0;
+              const deployDisabled =
                 !deploy.gcpProject ||
                 gcpNodes.length === 0 ||
                 deploy.status === 'deploying' ||
                 deploy.status === 'planning' ||
-                deploy.status === 'authenticating'
-              }
+                deploy.status === 'authenticating' ||
+                hasBlockingUnmet;
+              const deployTitle = !deploy.gcpProject
+                ? 'Select a GCP project to continue'
+                : gcpNodes.length === 0
+                  ? `Add at least one ${deploy.provider.toUpperCase()} resource block to deploy`
+                  : deploy.status === 'deploying'
+                    ? 'Deploy in progress — click Stop to cancel'
+                    : deploy.status === 'planning'
+                      ? 'Waiting for plan to finish'
+                      : hasBlockingUnmet
+                        ? `Blocked by ${blockingUnmetReqs.length} requirement(s): ${blockingUnmetReqs.map((r) => r.title).join(', ')}`
+                        : deploy.deployedResources.length > 0
+                          ? 'Deploy updated infrastructure'
+                          : 'Deploy to cloud';
+              return (
+            <button
+              onClick={handleDeploy}
+              disabled={deployDisabled}
               id="ice-deploy-btn-apply"
+              title={deployTitle}
               className={cn(
                 'flex items-center gap-1.5 px-4 py-1.5 text-sm rounded-md transition-colors font-medium',
                 'bg-emerald-600 text-white hover:bg-emerald-700',
@@ -616,28 +752,23 @@ export const DeployPanel: React.FC<{ isOpen: boolean; mode?: 'modal' | 'page' }>
                 ? t('deploy.buttons.updateInfrastructure')
                 : t('deploy.buttons.deploy')}
             </button>
+              );
+            })()}
 
             {/* Destroy button — only when resources are deployed */}
-            {deploy.deployedResources.length > 0 && deploy.status !== 'deploying' && (
+            {/* Destroy button — shown whenever there are deployed resources
+                OR any historical deployment (even failed ones) might have
+                leftover infrastructure. The destroy modal itself handles the
+                "last deploy only" vs "everything ever" split via a toggle. */}
+            {deploy.status !== 'deploying' && (
               <button
-                onClick={async () => {
-                  if (!activeCard || !confirm(t('deploy.errors.destroyConfirm'))) return;
-                  try {
-                    await getApi().deploy.destroy(activeCard.id, {
-                      provider: deploy.provider,
-                      region: deploy.region,
-                      environment: deploy.environment,
-                    });
-                    dispatch(resetDeploy());
-                  } catch (err: any) {
-                    dispatch(deployError(err.message || 'Destroy failed'));
-                  }
-                }}
+                onClick={() => setDestroyModalOpen(true)}
                 id="ice-deploy-btn-destroy"
                 className={cn(
                   'flex items-center gap-1.5 px-4 py-1.5 text-sm rounded-md transition-colors font-medium',
                   'bg-red-600 text-white hover:bg-red-700',
                 )}
+                title="Destroy deployed resources — including orphaned leftovers from failed deploys"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 {t('deploy.buttons.destroy')}
@@ -645,27 +776,68 @@ export const DeployPanel: React.FC<{ isOpen: boolean; mode?: 'modal' | 'page' }>
             )}
           </div>
         </div>
+        {destroyModalOpen && activeCard && (
+          <DestroyConfirmModal
+            cardName={activeCard.name}
+            resources={deploy.deployedResources}
+            onCancel={() => setDestroyModalOpen(false)}
+            onConfirm={async (destroyEverything: boolean) => {
+              setDestroyModalOpen(false);
+              try {
+                if (destroyEverything) {
+                  console.log('[destroy] destroyAll starting', { cardId: activeCard.id, gcpProject: deploy.gcpProject });
+                  const res = await getApi().deploy.destroyAll(activeCard.id, {
+                    gcpProject: deploy.gcpProject,
+                  });
+                  console.log('[destroy] destroyAll response', res);
+                  if (res.success === false && !res.deleted) {
+                    dispatch(deployError(res.error || 'Destroy failed with no details'));
+                    return;
+                  }
+                  if (res.success || res.deleted) {
+                    dispatch(appendLog(
+                      `Destroyed ${res.deleted?.length || 0} resource${(res.deleted?.length || 0) === 1 ? '' : 's'} across all historical deploys.`,
+                    ));
+                    for (const f of res.failed || []) {
+                      dispatch(appendLog(`Failed to delete ${f.type}/${f.name}: ${f.error}`));
+                    }
+                  }
+                } else {
+                  console.log('[destroy] destroy starting', {
+                    cardId: activeCard.id,
+                    provider: deploy.provider,
+                    environment: deploy.environment,
+                  });
+                  const res = await getApi().deploy.destroy(activeCard.id, {
+                    provider: deploy.provider,
+                    region: deploy.region,
+                    environment: deploy.environment,
+                  });
+                  console.log('[destroy] destroy response', res);
+                  if (res?.success === false) {
+                    dispatch(deployError(res.error || 'Destroy failed'));
+                    return;
+                  }
+                }
+                dispatch(resetDeploy());
+              } catch (err: any) {
+                console.error('[destroy] caught error', err);
+                dispatch(deployError(err.message || 'Destroy failed'));
+              }
+            }}
+          />
+        )}
     </>
   );
 
-  if (mode === 'page') {
-    return (
-      <div id="ice-deploy-panel" className="h-full flex flex-col bg-background">
-        {content}
-      </div>
-    );
-  }
-
-  return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
-      <div
-        id="ice-deploy-panel"
-        className="w-[900px] max-h-[85vh] bg-background rounded-lg shadow-xl overflow-hidden flex flex-col border border-border"
-      >
-        {content}
-      </div>
-    </div>,
-    document.body,
+  // Renders inline as a standard right-sidebar panel — same structure
+  // and styling as Cost / Properties / Validation. The wrapping
+  // ResizablePanel comes from main-layout.tsx, which mounts <DeployPanel />
+  // alongside the other right-side panels when `state.deploy.isOpen` is true.
+  return (
+    <div id="ice-deploy-panel" className="h-full flex flex-col bg-inherit border-l border-ice-border">
+      {content}
+    </div>
   );
 };
 
@@ -846,9 +1018,13 @@ const ConfigSection: React.FC<{
 
 const PlanPreview: React.FC<{ plan: DeployPlan }> = ({ plan }) => {
   const { t } = useTranslation();
-  const total = plan.creates.length + plan.updates.length + plan.deletes.length;
+  const creates = Array.isArray(plan.creates) ? plan.creates : [];
+  const updates = Array.isArray(plan.updates) ? plan.updates : [];
+  const deletes = Array.isArray(plan.deletes) ? plan.deletes : [];
+  const skipped = Array.isArray(plan.skipped) ? plan.skipped : [];
+  const total = creates.length + updates.length + deletes.length;
 
-  if (total === 0 && plan.skipped.length === 0) {
+  if (total === 0 && skipped.length === 0) {
     return (
       <div className="rounded-md border border-border bg-muted/20 p-4 text-sm text-muted-foreground text-center">
         {t('deploy.plan.noChanges')}
@@ -863,24 +1039,24 @@ const PlanPreview: React.FC<{ plan: DeployPlan }> = ({ plan }) => {
         {t('deploy.plan.changes', { total })}
       </div>
       <div className="divide-y divide-border max-h-64 overflow-y-auto">
-        {plan.creates.map((r, i) => (
+        {creates.map((r, i) => (
           <ChangeRow key={`c-${i}`} name={r.name} type={r.type} action="create" />
         ))}
-        {plan.updates.map((r, i) => (
+        {updates.map((r, i) => (
           <ChangeRow key={`u-${i}`} name={r.name} type={r.type} action="update" />
         ))}
-        {plan.deletes.map((r, i) => (
+        {deletes.map((r, i) => (
           <ChangeRow key={`d-${i}`} name={r.name} type={r.type} action="delete" />
         ))}
-        {plan.skipped.map((s, i) => (
+        {skipped.map((s: any, i) => (
           <div key={`s-${i}`} className="px-4 py-2 text-xs text-muted-foreground flex items-center gap-2">
             <span className="w-16 text-gray-500">{t('deploy.plan.skip')}</span>
-            <span>{s.name}</span>
+            <span>{s.name || s.label || s.nodeId}</span>
             <span className="ml-auto text-gray-500">{s.reason}</span>
           </div>
         ))}
       </div>
-      {plan.warnings.length > 0 && (
+      {Array.isArray(plan.warnings) && plan.warnings.length > 0 && (
         <div className="px-4 py-2 bg-yellow-50 dark:bg-yellow-900/10 border-t border-border">
           {plan.warnings.map((w, i) => (
             <div key={i} className="text-xs text-yellow-700 dark:text-yellow-400">
@@ -931,6 +1107,153 @@ function openExternalUrl(url: string) {
  * Error banner that detects API-not-enabled errors and shows
  * actionable "Enable API" buttons with a retry option.
  */
+/**
+ * Specialized error banner for quota exhaustion — the common case where
+ * repeated template deploys accumulate orphaned GCP resources and hit the
+ * default backend-bucket limit (3 per project). Offers a one-click cleanup
+ * action that calls the `/cleanup-orphans` endpoint and reports what was
+ * deleted.
+ */
+const QuotaErrorBanner: React.FC<{
+  error: string;
+  results: Array<{ error?: string }>;
+  onRetryDeploy: () => void;
+}> = ({ error, results, onRetryDeploy }) => {
+  const [state, setState] = React.useState<'idle' | 'running' | 'done' | 'failed'>('idle');
+  const [report, setReport] = React.useState<{
+    deleted?: Array<{ type: string; name: string }>;
+    errors?: Array<{ type: string; name: string; error: string }>;
+  }>({});
+  const [errorMsg, setErrorMsg] = React.useState<string>('');
+
+  const fullError = [error, ...results.map((r) => r.error).filter(Boolean)].join(' ');
+  const projectMatch = fullError.match(/project[=/]([a-z0-9-]+)/i);
+  const projectId = projectMatch?.[1] || '';
+
+  const runCleanup = async () => {
+    setState('running');
+    setErrorMsg('');
+    try {
+      const res = await getApi().deploy.cleanupOrphans({ gcpProject: projectId || undefined });
+      if (res.success) {
+        setReport(res.report || {});
+        setState('done');
+      } else {
+        setErrorMsg(res.error || 'Cleanup failed');
+        setState('failed');
+      }
+    } catch (err: any) {
+      setErrorMsg(err?.message || String(err));
+      setState('failed');
+    }
+  };
+
+  const deletedCount = report.deleted?.length || 0;
+
+  return (
+    <div className="rounded-md border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 p-4 space-y-3">
+      <div className="flex items-start gap-2 text-sm text-amber-800 dark:text-amber-200">
+        <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+        <div>
+          <p className="font-medium">GCP quota exceeded</p>
+          <p className="mt-1 text-amber-700 dark:text-amber-300 text-xs">
+            Your project has reached a GCP quota limit (most commonly the default 3-backend-bucket
+            ceiling). ICE can scan for orphaned resources from previous deploys and delete them, or
+            you can request a quota increase in the GCP console.
+          </p>
+        </div>
+      </div>
+      {state === 'idle' && (
+        <>
+          <button
+            onClick={runCleanup}
+            className={cn(
+              'w-full flex items-center justify-center gap-1.5 px-3 py-2 text-sm rounded-md transition-colors font-medium',
+              'bg-amber-600 text-white hover:bg-amber-700',
+            )}
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            Clean up orphaned ICE resources
+          </button>
+          {projectId && (
+            <button
+              onClick={() =>
+                openExternalUrl(
+                  `https://console.cloud.google.com/iam-admin/quotas?project=${projectId}&filter=metric:BACKEND-BUCKETS-per-project`,
+                )
+              }
+              className={cn(
+                'w-full flex items-center justify-center gap-1.5 px-3 py-2 text-sm rounded-md transition-colors',
+                'bg-muted hover:bg-muted/80 border border-border',
+              )}
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              Request quota increase in GCP
+            </button>
+          )}
+        </>
+      )}
+      {state === 'running' && (
+        <div className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-300">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          Scanning and deleting orphaned resources…
+        </div>
+      )}
+      {state === 'done' && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300">
+            <CheckCircle className="w-4 h-4" />
+            Cleanup complete — deleted {deletedCount} resource{deletedCount === 1 ? '' : 's'}
+          </div>
+          {deletedCount > 0 && (
+            <div className="text-xs text-muted-foreground max-h-32 overflow-y-auto font-mono space-y-0.5">
+              {(report.deleted || []).map((d, i) => (
+                <div key={i}>
+                  <span className="text-emerald-500">✓</span> {d.type}/{d.name}
+                </div>
+              ))}
+            </div>
+          )}
+          {(report.errors || []).length > 0 && (
+            <div className="text-xs text-red-500 space-y-0.5">
+              {(report.errors || []).map((e, i) => (
+                <div key={i}>
+                  ✗ {e.type}/{e.name}: {e.error}
+                </div>
+              ))}
+            </div>
+          )}
+          <button
+            onClick={onRetryDeploy}
+            className={cn(
+              'w-full flex items-center justify-center gap-1.5 px-3 py-2 text-sm rounded-md transition-colors font-medium',
+              'bg-emerald-600 text-white hover:bg-emerald-700',
+            )}
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Retry deploy
+          </button>
+        </div>
+      )}
+      {state === 'failed' && (
+        <div className="space-y-2">
+          <div className="text-xs text-red-500">Cleanup failed: {errorMsg}</div>
+          <button
+            onClick={runCleanup}
+            className={cn(
+              'w-full flex items-center justify-center gap-1.5 px-3 py-2 text-sm rounded-md transition-colors',
+              'bg-muted hover:bg-muted/80 border border-border',
+            )}
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Retry cleanup
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const ApiErrorBanner: React.FC<{
   error: string;
   results: Array<{ error?: string; api_enable_url?: string }>;
@@ -952,6 +1275,17 @@ const ApiErrorBanner: React.FC<{
   }
 
   const hasApiErrors = enableUrls.size > 0;
+
+  // Quota exhaustion. Matches the family of GCP quota errors: backend
+  // buckets, in-use IP addresses, forwarding rules, URL maps, etc. —
+  // all of which leak together when template deploys partially fail.
+  const QUOTA_PATTERN = /QUOTA_EXCEEDED|quota.*exceeded|BACKEND_BUCKETS|IN_USE_ADDRESSES|IN-USE-ADDRESSES|FORWARDING_RULES|URL_MAPS|TARGET_(HTTPS?)_PROXIES|BACKEND_SERVICES|SSL_CERTIFICATES/i;
+  const isQuotaError =
+    QUOTA_PATTERN.test(error) || results.some((r) => r.error && QUOTA_PATTERN.test(r.error));
+
+  if (isQuotaError) {
+    return <QuotaErrorBanner error={error} results={results} onRetryDeploy={onRetryDeploy} />;
+  }
 
   // Check for billing errors
   const isBillingError =
@@ -1117,6 +1451,154 @@ const ApiErrorBanner: React.FC<{
   );
 };
 
+/**
+ * Phase 5 — in-panel destroy confirmation.
+ *
+ * Replaces the old browser `confirm()` dialog with a modal that:
+ *   - shows every deployed resource by name and type (users know exactly
+ *     what's about to go away),
+ *   - requires the user to type the card name to unlock the red button
+ *     (deliberate high-friction for a destructive action),
+ *   - is keyboard accessible (Esc cancels).
+ */
+const DestroyConfirmModal: React.FC<{
+  cardName: string;
+  resources: Array<{ name: string; type: string }>;
+  onCancel: () => void;
+  onConfirm: (destroyEverything: boolean) => void;
+}> = ({ cardName, resources, onCancel, onConfirm }) => {
+  const [typed, setTyped] = React.useState('');
+  const [destroyEverything, setDestroyEverything] = React.useState(resources.length === 0);
+  const canConfirm = typed.trim() === cardName;
+
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCancel();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onCancel]);
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onCancel();
+      }}
+    >
+      <div
+        className="w-[560px] max-h-[85vh] bg-background rounded-lg shadow-xl overflow-hidden flex flex-col border border-red-500/30"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="px-5 py-3 border-b border-border flex items-center gap-2 bg-red-50 dark:bg-red-950/20">
+          <Trash2 className="w-4 h-4 text-red-500" />
+          <h2 className="text-base font-semibold text-red-700 dark:text-red-300">
+            {destroyEverything ? 'Destroy all infrastructure?' : 'Destroy deployment?'}
+          </h2>
+        </div>
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+          {!destroyEverything && resources.length > 0 && (
+            <>
+              <p className="text-sm text-muted-foreground">
+                This will permanently delete the following {resources.length} resource
+                {resources.length === 1 ? '' : 's'} from the cloud:
+              </p>
+              <div className="rounded-md border border-border divide-y divide-border max-h-40 overflow-y-auto">
+                {resources.map((r, i) => (
+                  <div key={i} className="px-3 py-2 text-sm flex items-center gap-2">
+                    <span className="font-medium">{r.name}</span>
+                    <span className="text-xs text-muted-foreground font-mono ml-auto">{r.type}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {destroyEverything && (
+            <>
+              <p className="text-sm text-muted-foreground">
+                This will scan every historical deployment for this card — including{' '}
+                <span className="font-medium">failed and partial deploys</span> — and delete every ICE-managed
+                resource it finds in GCP. Use this when a normal destroy can't find orphaned leftovers or
+                you've hit a GCP quota from accumulated resources.
+              </p>
+              <div className="rounded-md border border-amber-500/30 bg-amber-50 dark:bg-amber-950/20 p-3 text-xs text-amber-700 dark:text-amber-300">
+                Deletes in dependency order: forwarding rules → target proxies → URL maps → backend buckets →
+                backend services → storage buckets → SSL certificates. Resources are destroyed in reverse
+                creation order to avoid "still in use" errors.
+              </div>
+            </>
+          )}
+
+          {!destroyEverything && resources.length === 0 && (
+            <div className="rounded-md border border-border p-3 text-sm text-muted-foreground">
+              No resources tracked for this card. If you previously ran a deploy that failed,
+              enable "Destroy everything" to scan for orphaned leftovers.
+            </div>
+          )}
+
+          {/* Scope toggle */}
+          <label className="flex items-start gap-2 p-3 rounded-md border border-border bg-muted/30 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={destroyEverything}
+              onChange={(e) => setDestroyEverything(e.target.checked)}
+              className="mt-0.5"
+            />
+            <div className="text-xs">
+              <div className="font-medium text-foreground">Destroy everything for this project</div>
+              <div className="text-muted-foreground mt-0.5">
+                Walks every historical deployment (success, partial, failed) and the resource mapping table.
+                Useful when the normal destroy misses orphans from failed deploys.
+              </div>
+            </div>
+          </label>
+
+          <div className="flex items-start gap-2 p-3 rounded-md bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30">
+            <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-red-700 dark:text-red-300">
+              This cannot be undone. Any data stored in these resources will be lost.
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">
+              Type <span className="font-mono font-semibold text-foreground">{cardName}</span> to confirm:
+            </label>
+            <input
+              autoFocus
+              type="text"
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              className="w-full px-3 py-1.5 text-sm rounded-md border border-border bg-background focus:outline-none focus:ring-2 focus:ring-red-500/40"
+              placeholder={cardName}
+            />
+          </div>
+        </div>
+        <div className="px-5 py-3 border-t border-border bg-muted/30 flex items-center justify-end gap-2">
+          <button
+            onClick={onCancel}
+            className="px-4 py-1.5 text-sm rounded-md border border-border hover:bg-muted transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => onConfirm(destroyEverything)}
+            disabled={!canConfirm}
+            className={cn(
+              'px-4 py-1.5 text-sm rounded-md font-medium transition-colors',
+              'bg-red-600 text-white hover:bg-red-700',
+              'disabled:opacity-40 disabled:cursor-not-allowed',
+            )}
+          >
+            {destroyEverything ? 'Destroy everything' : 'Destroy'}
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+};
+
 const ResultsSummary: React.FC<{
   results: Array<{
     name: string;
@@ -1186,6 +1668,86 @@ const ResultsSummary: React.FC<{
                 </button>
               </div>
             )}
+            {(() => {
+              // Phase 2: primary output pill + GCP console deep-link.
+              // When a custom domain is the primary URL, also surface the
+              // default URL underneath so the user can hit the always-live
+              // internal endpoint (bucket HTTPS, run.app URL, LB IP).
+              const po = primaryOutput(r.type, r.outputs, r.provider_id);
+              if (!po) return null;
+              const defaultUrl = (r.outputs?.default_url as string) || '';
+              const showDefault = defaultUrl && defaultUrl !== po.value && defaultUrl !== po.url;
+
+              // Click on URL text:
+              //   - If it's an http(s) URL, open in a new tab (what users
+              //     actually want — they click a URL to VISIT the site).
+              //   - Shift+click or anything that's not an http URL copies
+              //     to clipboard.
+              const handleUrlClick = (text: string) => (e: React.MouseEvent) => {
+                const isHttp = /^https?:\/\//.test(text);
+                if (isHttp && !e.shiftKey) {
+                  openExternalUrl(text);
+                } else {
+                  navigator.clipboard.writeText(text);
+                }
+              };
+              const isHttp = (text: string) => /^https?:\/\//.test(text);
+
+              return (
+                <>
+                  <div className="flex items-center gap-1.5 pl-6">
+                    <span className="text-ice-xs font-medium text-muted-foreground">{po.label}:</span>
+                    <span
+                      className={cn(
+                        'text-ice-xs font-mono truncate max-w-[400px] cursor-pointer hover:text-foreground',
+                        isHttp(po.value) && 'text-blue-500 dark:text-blue-400 underline',
+                      )}
+                      title={
+                        isHttp(po.value)
+                          ? `Click to open · Shift+click to copy: ${po.value}`
+                          : `Click to copy: ${po.value}`
+                      }
+                      onClick={handleUrlClick(po.value)}
+                    >
+                      {po.value}
+                    </span>
+                    {po.url && (
+                      <button
+                        onClick={() => openExternalUrl(po.url!)}
+                        className="text-ice-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                  {showDefault && (
+                    <div className="flex items-center gap-1.5 pl-6">
+                      <span className="text-ice-xs font-medium text-muted-foreground">Default:</span>
+                      <span
+                        className={cn(
+                          'text-ice-xs font-mono truncate max-w-[400px] cursor-pointer hover:text-foreground',
+                          isHttp(defaultUrl) && 'text-blue-500 dark:text-blue-400 underline',
+                        )}
+                        title={
+                          isHttp(defaultUrl)
+                            ? `Click to open · Shift+click to copy: ${defaultUrl}`
+                            : `Click to copy: ${defaultUrl}`
+                        }
+                        onClick={handleUrlClick(defaultUrl)}
+                      >
+                        {defaultUrl}
+                      </span>
+                      <button
+                        onClick={() => openExternalUrl(defaultUrl)}
+                        className="text-ice-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
             {r.error &&
               (() => {
                 const enableUrl =
@@ -1204,8 +1766,18 @@ const ResultsSummary: React.FC<{
                   );
                 }
                 return (
-                  <div className="pl-6 text-xs text-red-500 truncate max-w-[500px]" title={r.error}>
-                    {r.error}
+                  <div
+                    className="pl-6 text-xs text-red-500 break-words"
+                    title={r.error}
+                  >
+                    <span>{r.error}</span>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(r.error!)}
+                      className="ml-2 text-muted-foreground hover:text-foreground"
+                      title="Copy error"
+                    >
+                      [copy]
+                    </button>
                   </div>
                 );
               })()}

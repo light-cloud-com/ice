@@ -15,7 +15,6 @@ import { useNavigate } from 'react-router-dom';
 import { Breadcrumbs } from './breadcrumbs';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './ui/tooltip';
 import { Logo } from '../../assets/logo';
-import { DeployPanel } from '../../features/deploy/components/deploy-panel';
 import { PromoteModal } from '../../features/environments/components/promote-modal';
 import { GitHubConnectModal } from '../../features/integrations/components/github-connect-modal';
 import { ProviderConnectModal } from '../../features/integrations/components/provider-connect-modal';
@@ -47,7 +46,6 @@ export const AppBar: React.FC = memo(() => {
   const { isElectron, showTrafficLightPad } = useElectronTitleBar();
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const deployIsOpen = useSelector((s: RootState) => s.deploy.isOpen);
   const githubStatus = useSelector((s: RootState) => s.integrations.integrations.github?.status);
   const gcpStatus = useSelector((s: RootState) => s.integrations.integrations.gcp?.status);
   const [showGitHub, setShowGitHub] = useState(false);
@@ -207,7 +205,6 @@ export const AppBar: React.FC = memo(() => {
         ]}
       />
 
-      <DeployPanel isOpen={deployIsOpen} />
       <PromoteModal />
     </>
   );

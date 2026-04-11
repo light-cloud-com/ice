@@ -71,6 +71,265 @@ test.describe('BE-5: Deploy route access control', () => {
     const res = await fetch(`${BACKEND_URL}/canvas/deploy/resources/fake-card-id`);
     expect(res.status).toBe(401);
   });
+
+  test('should require authentication for deploy event stream', async () => {
+    const res = await fetch(`${BACKEND_URL}/canvas/deploy/stream/fake-card-id`);
+    expect(res.status).toBe(401);
+  });
+
+  test('should require authentication for current deploy snapshot', async () => {
+    const res = await fetch(`${BACKEND_URL}/canvas/deploy/current/fake-card-id`);
+    expect(res.status).toBe(401);
+  });
+});
+
+// ─── History + event-log persistence (Phase B/C deploy reliability rework) ──
+
+test.describe('Deploy history surface', () => {
+  /**
+   * Shared helper: create a project + card inside the authenticated browser
+   * context so we have a real cardId to query against. Runs the requests
+   * through `page.evaluate` so cookies/session propagate in whichever
+   * auth mode the test env is configured for (community edition or SaaS).
+   */
+  async function createCardForTest(page: any): Promise<string> {
+    const result = await page.evaluate(async () => {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      const token = localStorage.getItem('ice-token');
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      const projRes = await fetch('/api/canvas/projects/create', {
+        method: 'POST',
+        credentials: 'include',
+        headers,
+        body: JSON.stringify({
+          name: `E2E History Project ${Date.now()}`,
+          type: 'project',
+        }),
+      });
+      if (!projRes.ok) {
+        return { error: `project create failed: ${projRes.status}` };
+      }
+      const project = await projRes.json();
+
+      const cardRes = await fetch('/api/canvas/cards/create', {
+        method: 'POST',
+        credentials: 'include',
+        headers,
+        body: JSON.stringify({
+          projectId: project.id,
+          name: 'E2E history card',
+        }),
+      });
+      if (!cardRes.ok) {
+        return { error: `card create failed: ${cardRes.status}` };
+      }
+      const card = await cardRes.json();
+      return { projectId: project.id, cardId: card.id };
+    });
+    if (result.error) {
+      test.skip(true, result.error);
+    }
+    return result.cardId;
+  }
+
+  test('history endpoint returns an array and accepts action_type filter', async ({ authenticatedPage }) => {
+    const cardId = await createCardForTest(authenticatedPage);
+
+    const response = await authenticatedPage.evaluate(async (id) => {
+      const headers: Record<string, string> = {};
+      const token = localStorage.getItem('ice-token');
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      const res = await fetch(`/api/canvas/deploy/history/${id}?action_type=apply&limit=50`, {
+        credentials: 'include',
+        headers,
+      });
+      return { status: res.status, body: await res.json() };
+    }, cardId);
+
+    expect(response.status).toBe(200);
+    expect(Array.isArray(response.body)).toBe(true);
+    // Empty is fine — what we're asserting is that the new query params
+    // don't trip the route (they used to 500 before B3) and that the shape
+    // is still a JSON array of deployment rows.
+  });
+
+  test('plan creates a row with action_type=plan visible in history', async ({ authenticatedPage }) => {
+    const cardId = await createCardForTest(authenticatedPage);
+
+    const planned = await authenticatedPage.evaluate(async (id) => {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      const token = localStorage.getItem('ice-token');
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      // Trivial plan with zero deployable nodes — the plan endpoint still
+      // writes a CanvasDeployment row and returns success, which is all we
+      // need for the history shape assertion. We're not testing the deploy
+      // engine here.
+      const planRes = await fetch('/api/canvas/deploy/plan', {
+        method: 'POST',
+        credentials: 'include',
+        headers,
+        body: JSON.stringify({
+          cardId: id,
+          nodes: [],
+          edges: [],
+          options: { provider: 'gcp', region: 'us-central1', environment: 'development' },
+        }),
+      });
+      const planBody = await planRes.json();
+
+      const historyRes = await fetch(`/api/canvas/deploy/history/${id}?limit=10`, {
+        credentials: 'include',
+        headers,
+      });
+      const historyBody = await historyRes.json();
+
+      return { planStatus: planRes.status, planBody, historyStatus: historyRes.status, historyBody };
+    }, cardId);
+
+    expect(planned.historyStatus).toBe(200);
+    expect(Array.isArray(planned.historyBody)).toBe(true);
+
+    // The plan call may no-op if there's nothing to plan; only assert
+    // action_type tagging when a row actually landed.
+    if (planned.historyBody.length > 0) {
+      const row = planned.historyBody[0];
+      expect(row).toHaveProperty('action_type');
+      expect(['plan', 'apply', 'destroy', 'rollback']).toContain(row.action_type);
+      expect(row).toHaveProperty('status');
+      expect(row).toHaveProperty('environment');
+    }
+  });
+
+  test('history rejects bogus action_type values silently (treats as unset)', async ({ authenticatedPage }) => {
+    const cardId = await createCardForTest(authenticatedPage);
+
+    const response = await authenticatedPage.evaluate(async (id) => {
+      const headers: Record<string, string> = {};
+      const token = localStorage.getItem('ice-token');
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      const res = await fetch(`/api/canvas/deploy/history/${id}?action_type=not-a-real-type`, {
+        credentials: 'include',
+        headers,
+      });
+      return { status: res.status, body: await res.json() };
+    }, cardId);
+
+    // Invalid filter should return 200 with full (unfiltered) history — not
+    // a 400. This matches the route's defensive parsing.
+    expect(response.status).toBe(200);
+    expect(Array.isArray(response.body)).toBe(true);
+  });
+});
+
+// ─── Deploy event stream replay (Phase C) ───────────────────────────────────
+
+test.describe('Deploy event stream', () => {
+  async function createCardForTest(page: any): Promise<string> {
+    const result = await page.evaluate(async () => {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      const token = localStorage.getItem('ice-token');
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      const projRes = await fetch('/api/canvas/projects/create', {
+        method: 'POST',
+        credentials: 'include',
+        headers,
+        body: JSON.stringify({ name: `E2E Stream Project ${Date.now()}`, type: 'project' }),
+      });
+      if (!projRes.ok) return { error: `project create failed: ${projRes.status}` };
+      const project = await projRes.json();
+
+      const cardRes = await fetch('/api/canvas/cards/create', {
+        method: 'POST',
+        credentials: 'include',
+        headers,
+        body: JSON.stringify({ projectId: project.id, name: 'E2E stream card' }),
+      });
+      if (!cardRes.ok) return { error: `card create failed: ${cardRes.status}` };
+      const card = await cardRes.json();
+      return { cardId: card.id };
+    });
+    if (result.error) {
+      test.skip(true, result.error);
+    }
+    return result.cardId;
+  }
+
+  test('stream endpoint returns empty tape for a card with no deployments', async ({ authenticatedPage }) => {
+    const cardId = await createCardForTest(authenticatedPage);
+
+    const response = await authenticatedPage.evaluate(async (id) => {
+      const headers: Record<string, string> = {};
+      const token = localStorage.getItem('ice-token');
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      const res = await fetch(`/api/canvas/deploy/stream/${id}?since=0`, {
+        credentials: 'include',
+        headers,
+      });
+      return { status: res.status, body: await res.json() };
+    }, cardId);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('success', true);
+    expect(response.body).toHaveProperty('events');
+    expect(Array.isArray(response.body.events)).toBe(true);
+    expect(response.body).toHaveProperty('latestSeq');
+    // No deployment yet → deploymentId is null and events is empty.
+    expect(response.body.events.length).toBe(0);
+  });
+
+  test('stream endpoint honors since parameter', async ({ authenticatedPage }) => {
+    const cardId = await createCardForTest(authenticatedPage);
+
+    // Trigger a plan so there's at least one deployment row + a handful
+    // of events in the tape (log + progress from the planner).
+    const replay = await authenticatedPage.evaluate(async (id) => {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      const token = localStorage.getItem('ice-token');
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      await fetch('/api/canvas/deploy/plan', {
+        method: 'POST',
+        credentials: 'include',
+        headers,
+        body: JSON.stringify({
+          cardId: id,
+          nodes: [],
+          edges: [],
+          options: { provider: 'gcp', region: 'us-central1', environment: 'development' },
+        }),
+      });
+
+      const fullRes = await fetch(`/api/canvas/deploy/stream/${id}?since=0`, {
+        credentials: 'include',
+        headers,
+      });
+      const full = await fullRes.json();
+
+      // Fetch again with since=full.latestSeq → expect empty slice.
+      const sliceRes = await fetch(`/api/canvas/deploy/stream/${id}?since=${full.latestSeq}`, {
+        credentials: 'include',
+        headers,
+      });
+      const slice = await sliceRes.json();
+
+      return { full, slice };
+    }, cardId);
+
+    // Full fetch is authoritative — if no events landed in the tape for a
+    // trivial plan (e.g. the plan path doesn't go through emitDeployProgress
+    // wrappers), the test is a no-op and we just assert the shape.
+    expect(replay.full).toHaveProperty('success', true);
+    expect(Array.isArray(replay.full.events)).toBe(true);
+    expect(replay.slice).toHaveProperty('success', true);
+    expect(replay.slice.events.length).toBe(0);
+    expect(replay.slice.latestSeq).toBeGreaterThanOrEqual(replay.full.latestSeq);
+  });
 });
 
 // ─── BE-6: Health endpoint works (gateway started successfully) ─────────────

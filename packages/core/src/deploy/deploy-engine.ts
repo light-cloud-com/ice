@@ -283,6 +283,19 @@ function order_by_dependencies(
     }
   }
 
+  // Cycle detection: any node with in_degree > 0 was never enqueued, which
+  // means it participates in a cycle. Previously these were silently dropped
+  // from the plan — now we fail loudly so users can fix the canvas.
+  if (sorted.length !== changes.length) {
+    const stranded = [...in_degree.entries()]
+      .filter(([, degree]) => degree > 0)
+      .map(([name]) => name);
+    throw new Error(
+      `Cycle detected in deployment graph. ${stranded.length} node(s) participate in a cycle: ` +
+        `${stranded.join(', ')}. Review the canvas edges to break the loop before deploying.`,
+    );
+  }
+
   // Map sorted names back to changes
   const name_to_change = new Map(changes.map((c) => [c.name, c]));
   const ordered = sorted.map((name) => name_to_change.get(name)!).filter(Boolean);

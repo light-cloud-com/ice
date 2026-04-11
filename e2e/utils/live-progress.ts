@@ -20,6 +20,7 @@ export interface TemplateProgressEntry {
   phases: Record<string, { status: 'pending' | 'running' | 'done' | 'fail'; duration_ms?: number }>;
   duration_ms: number;
   resources?: { total: number; success: number; failed: number };
+  resourceDetails?: Array<{ name: string; type: string; success: boolean; error?: string }>;
   errors: string[];
 }
 
@@ -143,10 +144,24 @@ export class LiveProgress {
 
   // ── Resources ──────────────────────────────────────────────
 
-  setResources(templateId: string, total: number, success: number, failed: number): void {
+  setResources(
+    templateId: string,
+    total: number,
+    success: number,
+    failed: number,
+    details?: Array<{ name: string; type: string; success: boolean; error?: string }>,
+  ): void {
     const entry = this.findTemplate(templateId);
     if (entry) {
       entry.resources = { total, success, failed };
+      if (details) {
+        entry.resourceDetails = details.map((d) => ({
+          name: d.name,
+          type: d.type,
+          success: d.success,
+          error: d.error,
+        }));
+      }
     }
     this.flush();
   }

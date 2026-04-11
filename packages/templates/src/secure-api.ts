@@ -114,7 +114,7 @@ export const secureApiTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 50, y: 86 }, data: { domain: 'api.secure.io', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true } },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
 
@@ -154,10 +154,6 @@ export const secureApiTemplate: ComposedTemplate = {
     { iceType: 'Security.Identity', label: 'Auth Provider', position: { x: 562, y: 674 }, data: {} },
     // 9: Audit Trail
     { iceType: 'Monitoring.Log', label: 'Audit Trail', position: { x: 818, y: 674 }, data: { keep_logs: '30 days' } },
-
-    // ── Ungrouped (control plane) ─────────────────────────────────────────
-    // 10: Domain
-    { iceType: 'Network.Domain', label: 'Domain', position: { x: 50, y: 884 }, data: { hostname: 'api.secure.io' } },
     // 11: Repo
     {
       iceType: 'Source.Repository',
@@ -166,8 +162,7 @@ export const secureApiTemplate: ComposedTemplate = {
       data: { repository: '', branch: 'main' },
     },
     // 12: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 884 }, data: {} },
-  ],
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 884 }, data: {} },],
 
   connections: [
     // Internet → WAF → Gateway (Gateway→Gateway rule)
@@ -188,10 +183,10 @@ export const secureApiTemplate: ComposedTemplate = {
     { fromBlock: 1, toBlock: 9, relationship: 'connects_to' },
     { fromBlock: 2, toBlock: 9, relationship: 'connects_to' },
     // Domain → Gateway (Domain→Routable rule)
-    { fromBlock: 10, toBlock: 2, relationship: 'connects_to' },
+    { fromBlock: 0, toBlock: 2, relationship: 'connects_to' },
     // Repo → Service (Repo→Service pipeline rule)
-    { fromBlock: 11, toBlock: 3, relationship: 'connects_to' },
+    { fromBlock: 10, toBlock: 3, relationship: 'connects_to' },
     // Service → Env (Service→EnvConfig config rule)
-    { fromBlock: 3, toBlock: 12, relationship: 'depends_on' },
+    { fromBlock: 3, toBlock: 11, relationship: 'depends_on' },
   ],
 };

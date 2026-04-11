@@ -144,6 +144,18 @@ export const cloud_sql_handler: GCPResourceHandler = {
         await wait_for_operation(ctx, op.name);
       }
 
+      // Cloud SQL automated backups persist for the project's backup
+      // retention window (default 7 days) after the instance is deleted.
+      // We deliberately do NOT auto-delete these — they're the last line
+      // of defense against "oh no I destroyed the wrong instance" — but
+      // we tell the user where to find them in case they want a manual
+      // cleanup.
+      ctx.on_log?.(
+        `[cloud-sql] Instance ${name} deleted. Automated backups persist for the configured retention window ` +
+          `(default 7 days). If you need to delete them manually, go to ` +
+          `https://console.cloud.google.com/sql/instances and use the Backups tab before the retention window expires.`,
+      );
+
       return result(name, 'delete', start);
     } catch (error) {
       return fail(name, 'delete', start, error instanceof Error ? error.message : String(error));

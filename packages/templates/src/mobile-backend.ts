@@ -148,7 +148,7 @@ export const mobileAppBackendTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 50, y: 86 }, data: { domain: 'api.mobile.io', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true } },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
 
@@ -211,8 +211,6 @@ export const mobileAppBackendTemplate: ComposedTemplate = {
     { iceType: 'Security.Identity', label: 'Auth', position: { x: 50, y: 1080 }, data: {} },
     // 11: Secrets
     { iceType: 'Security.Secret', label: 'App Secrets', position: { x: 306, y: 1080 }, data: {} },
-    // 12: Domain
-    { iceType: 'Network.Domain', label: 'Domain', position: { x: 50, y: 1256 }, data: { hostname: 'api.mobile.io' } },
     // 13: Repo
     {
       iceType: 'Source.Repository',
@@ -221,8 +219,7 @@ export const mobileAppBackendTemplate: ComposedTemplate = {
       data: { repository: '', branch: 'main' },
     },
     // 14: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },
-  ],
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },],
 
   connections: [
     // Internet → WAF → Gateway (Internet→WAF, WAF→Gateway rules)
@@ -245,11 +242,11 @@ export const mobileAppBackendTemplate: ComposedTemplate = {
     // Mobile API → API Logs (Service→Monitoring rule)
     { fromBlock: 3, toBlock: 9, relationship: 'connects_to' },
     // Domain → API Gateway (Domain→Routable rule)
-    { fromBlock: 12, toBlock: 2, relationship: 'connects_to' },
+    { fromBlock: 0, toBlock: 2, relationship: 'connects_to' },
     // Repo → Mobile API (Repo→Service pipeline rule)
-    { fromBlock: 13, toBlock: 3, relationship: 'connects_to' },
+    { fromBlock: 12, toBlock: 3, relationship: 'connects_to' },
     // Mobile API → Env (Service→EnvConfig config rule)
-    { fromBlock: 3, toBlock: 14, relationship: 'depends_on' },
+    { fromBlock: 3, toBlock: 13, relationship: 'depends_on' },
   ],
 };
 
@@ -334,7 +331,7 @@ export const mobileSocialAppTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 50, y: 86 }, data: { domain: 'api.social.io', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true } },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
 
@@ -399,8 +396,6 @@ export const mobileSocialAppTemplate: ComposedTemplate = {
     { iceType: 'Security.Secret', label: 'App Secrets', position: { x: 306, y: 1080 }, data: {} },
     // 12: Search
     { iceType: 'Analytics.Search', label: 'Search', position: { x: 562, y: 1080 }, data: {} },
-    // 13: Domain
-    { iceType: 'Network.Domain', label: 'Domain', position: { x: 50, y: 1256 }, data: { hostname: 'api.social.io' } },
     // 14: Repo
     {
       iceType: 'Source.Repository',
@@ -409,8 +404,7 @@ export const mobileSocialAppTemplate: ComposedTemplate = {
       data: { repository: '', branch: 'main' },
     },
     // 15: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },
-  ],
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },],
 
   connections: [
     // Internet → WAF → Gateway (Internet→WAF, WAF→Gateway rules)
@@ -439,10 +433,10 @@ export const mobileSocialAppTemplate: ComposedTemplate = {
     // Feed Worker → Social Logs (Service→Monitoring rule)
     { fromBlock: 8, toBlock: 9, relationship: 'connects_to' },
     // Domain → API Gateway (Domain→Routable rule)
-    { fromBlock: 13, toBlock: 2, relationship: 'connects_to' },
+    { fromBlock: 0, toBlock: 2, relationship: 'connects_to' },
     // Repo → Social API (Repo→Service pipeline rule)
-    { fromBlock: 14, toBlock: 3, relationship: 'connects_to' },
+    { fromBlock: 13, toBlock: 3, relationship: 'connects_to' },
     // Social API → Env (Service→EnvConfig config rule)
-    { fromBlock: 3, toBlock: 15, relationship: 'depends_on' },
+    { fromBlock: 3, toBlock: 14, relationship: 'depends_on' },
   ],
 };

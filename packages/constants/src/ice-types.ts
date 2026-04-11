@@ -96,10 +96,18 @@ export const TREE = {
     category: Cat.Network,
     resources: {
       Gateway: { id: 'api-gateway', required: ['protocol'] },
-      Internet: { id: 'public-traffic', aliases: ['LoadBalancer'] },
+      // `PublicEndpoint` is the load-balancer entry point for
+      // VPC-private services that need to be exposed to the internet.
+      // Distinct from `CustomDomain` (which is just DNS routing for
+      // services that already have their own public URL).
+      PublicEndpoint: { id: 'public-endpoint', aliases: ['LoadBalancer'] },
+      // `CustomDomain` carries a root domain + per-edge subdomains and
+      // routes to publicly-facing services (Firebase Hosting, AWS
+      // Amplify, public Cloud Run, etc.). UI/translator-only — does
+      // not compile to a deployable resource.
+      CustomDomain: { id: 'custom-domain' },
       VPC: { id: 'vpc-network' },
       Subnet: { id: 'subnet' },
-      Domain: { id: 'domain', required: ['hostname'] },
     },
   },
   Security: {
@@ -193,10 +201,10 @@ export const ICE = {
   },
   Network: {
     Gateway: 'Network.Gateway',
-    Internet: 'Network.Internet',
+    PublicEndpoint: 'Network.PublicEndpoint',
+    CustomDomain: 'Network.CustomDomain',
     VPC: 'Network.VPC',
     Subnet: 'Network.Subnet',
-    Domain: 'Network.Domain',
   },
   Security: {
     Identity: 'Security.Identity',

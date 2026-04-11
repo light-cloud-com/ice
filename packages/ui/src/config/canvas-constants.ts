@@ -56,11 +56,15 @@ export const STATUS_COLORS: Record<string, string> = {
   creating: '#f59e0b',
   updating: '#3b82f6',
   deploying: '#3b82f6',
+  planning: '#3b82f6',
+  drifted: '#f59e0b',
   error: '#ef4444',
   failed: '#ef4444',
   deleting: '#ef4444',
+  destroying: '#f97316',
   stopped: '#64748b',
   inactive: '#64748b',
+  idle: '#64748b',
 };
 
 // ─── Category Style ────────────────────────────────────────────────────────

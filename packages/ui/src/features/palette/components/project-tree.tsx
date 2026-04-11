@@ -21,6 +21,7 @@ import {
   Check,
   X,
   Layers,
+  Loader2,
 } from 'lucide-react';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
@@ -104,6 +105,10 @@ export const ProjectTree: React.FC = () => {
   const folders = useSelector(selectFoldersByOrg(orgId));
   const activeProjectId = useSelector(selectActiveProjectId);
   const activeEnvId = useSelector(selectActiveEnvironmentId);
+  // Phase 5 — show a live spinner on the env whose card is currently
+  // deploying, even if the user navigates away from the deploy panel.
+  const deployingCardId = useSelector((state: RootState) => state.deploy.currentDeployCardId);
+  const deployStatus = useSelector((state: RootState) => state.deploy.status);
   const panes = useSelector((state: RootState) => state.ui.splitView.panes);
 
   // Fetch project tree from backend when org changes
@@ -336,6 +341,9 @@ export const ProjectTree: React.FC = () => {
   const renderEnvironment = (env: Environment, project: Project, depth: number) => {
     const isActiveEnv = activeEnvId === env.id && activeProjectId === project.id;
     const dotColor = ENV_DOT_COLOR[env.type] || 'bg-gray-500';
+    const isDeploying =
+      deployingCardId === env.cardId && (deployStatus === 'deploying' || deployStatus === 'planning');
+    const isDeployFailed = deployingCardId === env.cardId && deployStatus === 'error';
 
     return (
       <div
@@ -344,12 +352,21 @@ export const ProjectTree: React.FC = () => {
         className={cn(
           'flex items-center gap-2 px-2 py-1 cursor-pointer rounded-md mx-1 transition-colors',
           isActiveEnv ? 'bg-blue-500/10 text-ice-text-1' : 'text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-2',
+          isDeploying && 'bg-blue-500/20 ring-1 ring-blue-500/40 animate-pulse',
+          isDeployFailed && 'bg-red-500/10 ring-1 ring-red-500/40',
         )}
         style={{ paddingLeft: `calc(${depth * TREE_INDENT_PX + TREE_INDENT_BASE}px * var(--ice-space-scale, 1))` }}
+        title={isDeploying ? 'Deploying…' : isDeployFailed ? 'Last deploy failed' : undefined}
       >
-        <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', dotColor)} />
+        {isDeploying ? (
+          <Loader2 className="w-3 h-3 shrink-0 text-blue-400 animate-spin" />
+        ) : (
+          <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', dotColor)} />
+        )}
         <span className="text-ice-sm truncate">{env.name}</span>
-        <span className="text-ice-2xs text-ice-text-3 ml-auto shrink-0">{env.region}</span>
+        <span className="text-ice-2xs text-ice-text-3 ml-auto shrink-0">
+          {isDeploying ? 'deploying' : env.region}
+        </span>
       </div>
     );
   };

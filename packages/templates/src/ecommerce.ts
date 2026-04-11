@@ -144,7 +144,7 @@ export const ecommerceStoreTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 50, y: 86 }, data: { domain: 'shop.acme.io', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true } },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
     // 2: Storefront (SSR)
@@ -211,8 +211,6 @@ export const ecommerceStoreTemplate: ComposedTemplate = {
     { iceType: 'Security.Secret', label: 'App Secrets', position: { x: 306, y: 1080 }, data: {} },
     // 13: Search
     { iceType: 'Analytics.Search', label: 'Product Search', position: { x: 562, y: 1080 }, data: {} },
-    // 14: Domain
-    { iceType: 'Network.Domain', label: 'Domain', position: { x: 50, y: 1256 }, data: { hostname: 'shop.acme.io' } },
     // 15: Repo
     {
       iceType: 'Source.Repository',
@@ -221,8 +219,7 @@ export const ecommerceStoreTemplate: ComposedTemplate = {
       data: { repository: '', branch: 'main' },
     },
     // 16: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },
-  ],
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },],
 
   connections: [
     // Internet → WAF → Gateway (Internet→WAF, WAF→Gateway rules)
@@ -251,11 +248,10 @@ export const ecommerceStoreTemplate: ComposedTemplate = {
     // Store API → Logs (Service→Monitoring rule)
     { fromBlock: 4, toBlock: 10, relationship: 'connects_to' },
     // Domain → Storefront (Domain→Routable rule)
-    { fromBlock: 14, toBlock: 2, relationship: 'connects_to' },
     // Repo → Store API (Repo→Service pipeline rule)
-    { fromBlock: 15, toBlock: 4, relationship: 'connects_to' },
+    { fromBlock: 14, toBlock: 4, relationship: 'connects_to' },
     // Store API → Env (Service→EnvConfig config rule)
-    { fromBlock: 4, toBlock: 16, relationship: 'depends_on' },
+    { fromBlock: 4, toBlock: 15, relationship: 'depends_on' },
   ],
 };
 
@@ -336,7 +332,7 @@ export const ecommerceMarketplaceTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 50, y: 86 }, data: { domain: 'market.acme.io', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true } },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
     // 2: Marketplace App (SSR)
@@ -408,8 +404,6 @@ export const ecommerceMarketplaceTemplate: ComposedTemplate = {
     { iceType: 'Security.Secret', label: 'App Secrets', position: { x: 306, y: 1080 }, data: {} },
     // 13: Search
     { iceType: 'Analytics.Search', label: 'Catalog Search', position: { x: 562, y: 1080 }, data: {} },
-    // 14: Domain
-    { iceType: 'Network.Domain', label: 'Domain', position: { x: 50, y: 1256 }, data: { hostname: 'market.acme.io' } },
     // 15: Repo
     {
       iceType: 'Source.Repository',
@@ -418,8 +412,7 @@ export const ecommerceMarketplaceTemplate: ComposedTemplate = {
       data: { repository: '', branch: 'main' },
     },
     // 16: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },
-  ],
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },],
 
   connections: [
     // Internet → WAF → Gateway (Internet→WAF, WAF→Gateway rules)
@@ -460,10 +453,9 @@ export const ecommerceMarketplaceTemplate: ComposedTemplate = {
     // Buyer API → Logs (Service→Monitoring rule)
     { fromBlock: 5, toBlock: 10, relationship: 'connects_to' },
     // Domain → Marketplace App (Domain→Routable rule)
-    { fromBlock: 14, toBlock: 2, relationship: 'connects_to' },
     // Repo → Seller API (Repo→Service pipeline rule)
-    { fromBlock: 15, toBlock: 4, relationship: 'connects_to' },
+    { fromBlock: 14, toBlock: 4, relationship: 'connects_to' },
     // Seller API → Env (Service→EnvConfig config rule)
-    { fromBlock: 4, toBlock: 16, relationship: 'depends_on' },
+    { fromBlock: 4, toBlock: 15, relationship: 'depends_on' },
   ],
 };

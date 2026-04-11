@@ -145,7 +145,7 @@ export const gamingMultiplayerTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 50, y: 86 }, data: { domain: 'play.game.io', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true } },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
 
@@ -201,8 +201,6 @@ export const gamingMultiplayerTemplate: ComposedTemplate = {
     { iceType: 'Security.Identity', label: 'Player Auth', position: { x: 50, y: 1080 }, data: {} },
     // 10: Secrets
     { iceType: 'Security.Secret', label: 'Secrets', position: { x: 306, y: 1080 }, data: {} },
-    // 11: Domain
-    { iceType: 'Network.Domain', label: 'Domain', position: { x: 562, y: 1080 }, data: { hostname: 'play.game.io' } },
     // 12: Repo
     {
       iceType: 'Source.Repository',
@@ -211,8 +209,7 @@ export const gamingMultiplayerTemplate: ComposedTemplate = {
       data: { repository: '', branch: 'main' },
     },
     // 13: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 306, y: 1256 }, data: {} },
-  ],
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 306, y: 1256 }, data: {} },],
 
   connections: [
     // Internet → WAF → Gateway
@@ -236,11 +233,11 @@ export const gamingMultiplayerTemplate: ComposedTemplate = {
     // Game Server → Game Logs (Service→Monitoring rule)
     { fromBlock: 3, toBlock: 8, relationship: 'connects_to' },
     // Domain → Game Gateway (Domain→Routable rule)
-    { fromBlock: 11, toBlock: 2, relationship: 'connects_to' },
+    { fromBlock: 0, toBlock: 2, relationship: 'connects_to' },
     // Repo → Game Server (Repo→Service pipeline rule)
-    { fromBlock: 12, toBlock: 3, relationship: 'connects_to' },
+    { fromBlock: 11, toBlock: 3, relationship: 'connects_to' },
     // Game Server → Env (Service→EnvConfig config rule)
-    { fromBlock: 3, toBlock: 13, relationship: 'depends_on' },
+    { fromBlock: 3, toBlock: 12, relationship: 'depends_on' },
   ],
 };
 
@@ -325,7 +322,7 @@ export const gamingMobileGameTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 50, y: 86 }, data: { domain: 'mobile.game.io', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true } },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
 
@@ -376,8 +373,6 @@ export const gamingMobileGameTemplate: ComposedTemplate = {
     { iceType: 'Security.Secret', label: 'Secrets', position: { x: 306, y: 1080 }, data: {} },
     // 10: Push Queue
     { iceType: 'Messaging.SQS', label: 'Push Queue', position: { x: 562, y: 1080 }, data: { queue_type: 'standard' } },
-    // 11: Domain
-    { iceType: 'Network.Domain', label: 'Domain', position: { x: 50, y: 1256 }, data: { hostname: 'mobile.game.io' } },
     // 12: Repo
     {
       iceType: 'Source.Repository',
@@ -386,8 +381,7 @@ export const gamingMobileGameTemplate: ComposedTemplate = {
       data: { repository: '', branch: 'main' },
     },
     // 13: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },
-  ],
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },],
 
   connections: [
     // Internet → WAF → Gateway
@@ -408,10 +402,10 @@ export const gamingMobileGameTemplate: ComposedTemplate = {
     // Game API → Game Logs (Service→Monitoring rule)
     { fromBlock: 3, toBlock: 7, relationship: 'connects_to' },
     // Domain → Gateway (Domain→Routable rule)
-    { fromBlock: 11, toBlock: 2, relationship: 'connects_to' },
+    { fromBlock: 0, toBlock: 2, relationship: 'connects_to' },
     // Repo → Game API (Repo→Service pipeline rule)
-    { fromBlock: 12, toBlock: 3, relationship: 'connects_to' },
+    { fromBlock: 11, toBlock: 3, relationship: 'connects_to' },
     // Game API → Env (Service→EnvConfig config rule)
-    { fromBlock: 3, toBlock: 13, relationship: 'depends_on' },
+    { fromBlock: 3, toBlock: 12, relationship: 'depends_on' },
   ],
 };

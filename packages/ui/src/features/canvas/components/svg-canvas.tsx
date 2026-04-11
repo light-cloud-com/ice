@@ -33,6 +33,7 @@ import {
   toggleCardNodeFold,
   updateCardNodeParent,
   updateCardNodeData,
+  updateCardEdgeData,
   deleteCardNode,
   deleteCardEdge,
   autoOrganizeCard,
@@ -50,6 +51,7 @@ import {
   CATEGORY_TO_RELATIONSHIP,
 } from '../utils/connection-rules';
 import { SvgCompactNode, computeCompactNodeHeight, computeCompactNodeWidth } from './nodes/compact-node';
+import { SvgCustomDomainNode, computeCustomDomainHeight, computeCustomDomainWidth } from './nodes/custom-domain';
 import { SvgGroupNode } from './nodes/group-node';
 import { SelectionFrame } from './selection-frame';
 import { SvgConnectionPath, EDGE_COLORS, type ConnectionTooltipInfo } from './svg-connection-path';
@@ -148,6 +150,16 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   // Redux state - use specified card or active card for nodes/edges
   const activeCard = useSelector(selectActiveCard);
   const allCards = useSelector((state: RootState) => state.cards.cards);
+  // Phase 2/5 — canvas-level deploy banner. Fires whenever a deploy for
+  // this canvas's active card is in flight, even with the deploy panel
+  // closed. Gives the user one-glance confirmation that work is happening.
+  const deployStatus = useSelector((state: RootState) => state.deploy.status);
+  const deployingCardId = useSelector((state: RootState) => state.deploy.currentDeployCardId);
+  const deployProgress = useSelector((state: RootState) => state.deploy.progress);
+  const deployCurrentResource = useSelector((state: RootState) => state.deploy.currentResource);
+  const deployCurrentStep = useSelector((state: RootState) => state.deploy.currentStep);
+  const showDeployBanner =
+    activeCard?.id && deployingCardId === activeCard.id && (deployStatus === 'deploying' || deployStatus === 'planning');
   const card = cardId ? allCards.find((c) => c.id === cardId) : activeCard;
   const selectedNodes = useSelector((state: RootState) => state.selection.selectedNodes);
   const selectedEdges = useSelector((state: RootState) => state.selection.selectedEdges);
@@ -171,6 +183,124 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   // Get nodes and edges from the card
   const nodes = useMemo(() => card?.nodes || [], [card?.nodes]);
   const edges = useMemo(() => card?.edges || [], [card?.edges]);
+
+  // ── Custom Domain → target.domain reactive sync ──
+  //
+  // When the user edits a Network.CustomDomain block's root domain or
+  // a route's subdomain, the connected target services need to see the
+  // updated host on their `domain` property immediately. This mirrors
+  // how the GitHub repo block keeps connected services' `repository`
+  // field in sync — the source-of-truth block "forces" its value onto
+  // the connected nodes.
+  //
+  // ALSO handles route deletion: when a route is removed from the
+  // CustomDomain block, every edge whose `routeId` referenced that
+  // route is removed too. Without this, the orphan edges fall back to
+  // generic side-routing on the canvas and the user has to manually
+  // delete them, which is exactly the kind of ghost state we want to
+  // avoid.
+  //
+  // We walk every CustomDomain → Compute edge, resolve the host, and
+  // dispatch updateCardNodeData if the target's current `domain` is
+  // out of sync. The dispatch is conditional so this effect doesn't
+  // loop on its own writes (Redux equality short-circuits identical
+  // updates, but we double-check here for safety).
+  useEffect(() => {
+    if (!card) return;
+
+    // ── Pass 1: backfill missing routeIds on CustomDomain edges ──
+    //
+    // Edges created before the routes data model existed (or via paths
+    // that don't capture `data-route-id`) have no `routeId`. The
+    // connection path then falls back to generic right-side midpoint
+    // positioning, which doesn't align with the per-row port circles.
+    // We claim a free route slot for each such edge so the renderer
+    // can anchor the path to the correct row.
+    //
+    // Strategy: per CustomDomain block, walk its outgoing edges and
+    // assign route ids in order from the block's `routes` array,
+    // skipping route ids that are already claimed by another edge.
+    // If we run out of routes, we leave the edge unassigned (the
+    // generic fallback still draws it).
+    const customDomainBlocks = nodes.filter(
+      (n: any) => (n.data?.iceType as string) === 'Network.CustomDomain',
+    );
+    for (const cdNode of customDomainBlocks) {
+      const cdRoutes =
+        ((cdNode.data?.routes as Array<{ id: string; subdomain: string }> | undefined) || []);
+      if (cdRoutes.length === 0) continue;
+      const outgoingEdges = edges.filter(
+        (e: any) => e.source === cdNode.id || e.target === cdNode.id,
+      );
+      const claimedRouteIds = new Set<string>();
+      // First pass: collect already-assigned routeIds so the backfill
+      // doesn't double-claim a slot.
+      for (const e of outgoingEdges) {
+        const rid = (e.data as any)?.routeId as string | undefined;
+        if (rid && cdRoutes.some((r) => r.id === rid)) claimedRouteIds.add(rid);
+      }
+      // Second pass: assign free slots to unassigned edges in order.
+      for (const e of outgoingEdges) {
+        const rid = (e.data as any)?.routeId as string | undefined;
+        if (rid && cdRoutes.some((r) => r.id === rid)) continue;
+        const freeRoute = cdRoutes.find((r) => !claimedRouteIds.has(r.id));
+        if (!freeRoute) break;
+        claimedRouteIds.add(freeRoute.id);
+        dispatch(updateCardEdgeData({ edgeId: e.id, data: { routeId: freeRoute.id } }));
+      }
+    }
+
+    // ── Pass 2: orphan deletion + reactive domain sync ──
+    for (const edge of edges) {
+      const src = nodes.find((n: any) => n.id === edge.source);
+      const dst = nodes.find((n: any) => n.id === edge.target);
+      if (!src || !dst) continue;
+      const srcIce = (src.data?.iceType as string) || '';
+      const dstIce = (dst.data?.iceType as string) || '';
+      let domainNode: any = null;
+      let targetNode: any = null;
+      if (srcIce === 'Network.CustomDomain') {
+        domainNode = src;
+        targetNode = dst;
+      } else if (dstIce === 'Network.CustomDomain') {
+        domainNode = dst;
+        targetNode = src;
+      } else {
+        continue;
+      }
+      const targetIce = (targetNode.data?.iceType as string) || '';
+      if (!/^Compute\./.test(targetIce)) continue;
+
+      // Resolve subdomain via routeId (preferred) or legacy edge.subdomain.
+      // If the edge references a routeId that no longer exists on the
+      // CustomDomain block (the user deleted the row), drop the edge
+      // entirely — its source slot is gone.
+      const routeId = (edge.data as any)?.routeId as string | undefined;
+      let subdomain = '';
+      if (routeId) {
+        const routes =
+          (domainNode.data?.routes as Array<{ id: string; subdomain: string }> | undefined) || [];
+        const route = routes.find((r) => r.id === routeId);
+        if (!route) {
+          dispatch(deleteCardEdge(edge.id));
+          continue;
+        }
+        subdomain = (route.subdomain || '').trim();
+      } else {
+        subdomain = (((edge.data as any)?.subdomain as string | undefined) || '').trim();
+      }
+
+      const rootDomain = String(domainNode.data?.domain || '').trim();
+      if (!rootDomain || rootDomain === 'example.com') continue;
+
+      const fullHost = subdomain ? `${subdomain}.${rootDomain}` : rootDomain;
+
+      const currentDomain = String(targetNode.data?.domain || '').trim();
+      if (currentDomain !== fullHost) {
+        dispatch(updateCardNodeData({ nodeId: targetNode.id, data: { domain: fullHost } }));
+      }
+    }
+  }, [card, nodes, edges, dispatch]);
 
   // Use pane viewport if available, otherwise fall back to card viewport
   const paneViewport = pane?.viewport;
@@ -302,14 +432,25 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       const isGroup = iceType.startsWith('Group.') || node.type === 'container' || node.type === ('group' as any);
       const isBlock = node.type === 'block';
       const folded = !!node.data?.folded;
-      const defaultWidth = computeCompactNodeWidth(isBlock || isGroup);
+      const isCustomDomain = iceType === 'Network.CustomDomain';
       const nodeData = (node.data as Record<string, unknown>) || {};
       const hasPipelineStatus = !!(pipelineNodeStatus[node.id] && pipelineNodeStatus[node.id].status !== 'idle');
-      const defaultHeight = computeCompactNodeHeight(nodeData, isBlock || isGroup, hasPipelineStatus);
+      // Custom Domain has a dynamic-height renderer that grows with the
+      // routes count. Other nodes use the fixed compact-node sizing.
+      const defaultWidth = isCustomDomain
+        ? computeCustomDomainWidth()
+        : computeCompactNodeWidth(isBlock || isGroup);
+      const defaultHeight = isCustomDomain
+        ? computeCustomDomainHeight(nodeData)
+        : computeCompactNodeHeight(nodeData, isBlock || isGroup, hasPipelineStatus);
 
-      // Visual height: folded groups = 36px, folded blocks/resources = 38px
-      const expandedHeight = Math.max(node.height || 0, defaultHeight);
-      const visualHeight = folded ? (isGroup ? 36 : 38) : expandedHeight;
+      // Visual height: folded groups = 36px, folded blocks/resources = 38px.
+      // Custom Domain ALWAYS uses its dynamic height (folding it would
+      // hide the route slots — the whole point of the block).
+      const expandedHeight = isCustomDomain
+        ? defaultHeight
+        : Math.max(node.height || 0, defaultHeight);
+      const visualHeight = folded && !isCustomDomain ? (isGroup ? 36 : 38) : expandedHeight;
 
       return {
         id: node.id,
@@ -478,8 +619,8 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   // Uses edge topology to find true graph sources (no incoming connects_to)
   const exposedServices = useExposedServices(effectiveNodes, edges, canvasNodes);
 
-  // Suppress virtual user traffic icon when an explicit Network.Internet block exists on canvas
-  const hasExplicitTrafficBlock = canvasNodes.some((n) => (n.data?.iceType as string) === 'Network.Internet');
+  // Suppress virtual user traffic icon when an explicit Network.PublicEndpoint block exists on canvas
+  const hasExplicitTrafficBlock = canvasNodes.some((n) => (n.data?.iceType as string) === 'Network.PublicEndpoint');
   const showVirtualUserNode = !hasExplicitTrafficBlock;
 
   // Pinned position for user traffic node — independent of connected node positions.
@@ -1963,6 +2104,8 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
   const [drawingConnection, setDrawingConnection] = useState<{
     sourceId: string;
+    /** Route id when the drag started from a Network.CustomDomain row port. */
+    sourceRouteId?: string;
     sourcePoint: { x: number; y: number };
     currentPoint: { x: number; y: number };
   } | null>(null);
@@ -1981,7 +2124,11 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     for (const node of effectiveNodes) {
       if (node.id === drawingConnection.sourceId) continue;
       const tgtIceType = (node.data?.iceType as string) || '';
-      const isValid = canConnect(srcIceType, tgtIceType, srcNodeType, node.type);
+      const isValid = canConnect(srcIceType, tgtIceType, srcNodeType, node.type, {
+        srcNode: sourceNode,
+        tgtNode: node,
+        allNodes: effectiveNodes,
+      });
       targets.set(node.id, isValid ? 'valid-target' : 'invalid-target');
     }
     return targets;
@@ -1999,10 +2146,17 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       const nodeId = target.getAttribute('data-node-id');
       if (!nodeId) return;
 
+      // Network.CustomDomain ports carry `data-route-id` so we know
+      // which route slot this drag started from. Other nodes don't set
+      // this attribute, in which case sourceRouteId stays undefined and
+      // the resulting edge gets no routeId.
+      const routeId = target.getAttribute('data-route-id') || undefined;
+
       const canvasPos = screenToCanvas(e.clientX, e.clientY);
 
       setDrawingConnection({
         sourceId: nodeId,
+        sourceRouteId: routeId,
         sourcePoint: canvasPos,
         currentPoint: canvasPos,
       });
@@ -2027,10 +2181,19 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
       const canvasPos = screenToCanvas(e.clientX, e.clientY);
 
-      // Find node at drop position (excluding source)
+      // Find node at drop position (excluding source).
+      //
+      // Pick the SMALLEST containing node, not the first hit. The
+      // canvas allows nesting (Container inside Subnet inside VPC), and
+      // the drop position can be inside multiple stacked rectangles.
+      // First-hit-wins fails when the parent group happens to be later
+      // in the node array than its children — which is order-dependent
+      // on how the user dragged things around. The smallest area is
+      // always the most-specific (deepest) target, which is what the
+      // user means by "drop on this block."
       let targetNode: LocalCanvasNode | null = null;
-      for (let i = effectiveNodes.length - 1; i >= 0; i--) {
-        const node = effectiveNodes[i];
+      let targetArea = Number.POSITIVE_INFINITY;
+      for (const node of effectiveNodes) {
         if (node.id === drawingConnection.sourceId) continue;
         if (
           canvasPos.x >= node.x &&
@@ -2038,8 +2201,11 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
           canvasPos.y >= node.y &&
           canvasPos.y <= node.y + node.height
         ) {
-          targetNode = node;
-          break;
+          const area = node.width * node.height;
+          if (area < targetArea) {
+            targetNode = node;
+            targetArea = area;
+          }
         }
       }
 
@@ -2049,7 +2215,13 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
         const tgtIceTypeCheck = (targetNode.data?.iceType as string) || '';
 
         // ── Block invalid connections based on CONNECTION_RULES ──
-        if (!canConnect(srcIceTypeCheck, tgtIceTypeCheck, sourceNode?.type, targetNode.type)) {
+        if (
+          !canConnect(srcIceTypeCheck, tgtIceTypeCheck, sourceNode?.type, targetNode.type, {
+            srcNode: sourceNode,
+            tgtNode: targetNode,
+            allNodes: effectiveNodes,
+          })
+        ) {
           setDrawingConnection(null);
           return;
         }
@@ -2154,6 +2326,13 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
         const edgeSource = meta.flip ? targetNode.id : drawingConnection.sourceId;
         const edgeTarget = meta.flip ? drawingConnection.sourceId : targetNode.id;
 
+        // When the drag started from a Network.CustomDomain row port,
+        // the edge carries the source route id so the translator + the
+        // target's properties panel can resolve the subdomain. The
+        // direction never flips here (CustomDomain → service is the
+        // canonical orientation per the connection rules).
+        const sourceRouteId = drawingConnection.sourceRouteId;
+
         const edgeId = `edge-${Date.now()}`;
         const newEdge: CardEdge = {
           id: edgeId,
@@ -2167,6 +2346,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             ...(meta.envVarName && { envVarName: meta.envVarName }),
             ...(meta.lineStyle !== 'solid' && { lineStyle: meta.lineStyle }),
             ...(meta.color && { color: meta.color }),
+            ...(sourceRouteId && { routeId: sourceRouteId }),
           },
         };
         dispatch(addEdgeToCard(newEdge));
@@ -2203,6 +2383,30 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
               dispatch(setSelectedNodes([sourceNode.id]));
             }
           }
+
+          // Custom Domain → service: same pattern as Source.Repository →
+          // service. Resolve the route's subdomain on the source block,
+          // build `<subdomain>.<rootDomain>`, and force it onto the
+          // target's `domain` property in Redux. The user sees the host
+          // in the target's properties panel immediately, and the
+          // domain field becomes read-only because the CustomDomain
+          // edge is now the source of truth.
+          //
+          // The deploy translator does the same propagation at deploy
+          // time, but this Redux mirror makes the UX feel instant.
+          const sourceIsCustomDomain = srcIceType === 'Network.CustomDomain';
+          const targetIsRoutable = targetIsService;
+          if (sourceIsCustomDomain && targetIsRoutable && sourceRouteId) {
+            const rootDomain = String(sourceNode.data?.domain || '').trim();
+            const sourceRoutes =
+              ((sourceNode.data?.routes as Array<{ id: string; subdomain: string }> | undefined) || []);
+            const matchedRoute = sourceRoutes.find((r) => r.id === sourceRouteId);
+            const sub = (matchedRoute?.subdomain || '').trim();
+            if (rootDomain && rootDomain !== 'example.com') {
+              const fullHost = sub ? `${sub}.${rootDomain}` : rootDomain;
+              dispatch(updateCardNodeData({ nodeId: targetNode.id, data: { domain: fullHost } }));
+            }
+          }
         }
 
         // Connection is fully auto-configured — no popover needed
@@ -2230,6 +2434,100 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       onDragOver={handleDragOver}
       onMouseDown={handleCanvasClick}
     >
+      {/* Phase 2/5 — canvas-level deploy banner */}
+      {showDeployBanner && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 12,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 100,
+            background: 'rgba(59, 130, 246, 0.15)',
+            border: '1px solid rgba(59, 130, 246, 0.55)',
+            color: '#93c5fd',
+            padding: '8px 14px',
+            borderRadius: 10,
+            fontSize: 12,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            boxShadow: '0 4px 20px rgba(59, 130, 246, 0.25)',
+            pointerEvents: 'none',
+            minWidth: 320,
+            maxWidth: 520,
+          }}
+        >
+          <span
+            style={{
+              display: 'inline-block',
+              width: 10,
+              height: 10,
+              borderRadius: '50%',
+              background: '#3b82f6',
+              boxShadow: '0 0 8px #3b82f6',
+              flexShrink: 0,
+              animation: 'iceDeployPulse 1.2s ease-in-out infinite',
+            }}
+          />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 600, color: '#dbeafe' }}>
+              {deployStatus === 'planning' ? 'Planning deployment…' : 'Deploying…'}
+              {deployStatus === 'deploying' && (
+                <span style={{ marginLeft: 8, color: '#93c5fd', fontVariantNumeric: 'tabular-nums' }}>
+                  {deployProgress}%
+                </span>
+              )}
+            </div>
+            {deployCurrentResource && (
+              <div
+                style={{
+                  fontSize: 11,
+                  color: '#93c5fd',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  fontFamily: 'SF Mono, Fira Code, monospace',
+                }}
+              >
+                {deployCurrentResource}
+                {deployCurrentStep &&
+                  ` · ${deployCurrentStep.label} (${deployCurrentStep.index}/${deployCurrentStep.total})`}
+              </div>
+            )}
+          </div>
+          {deployStatus === 'deploying' && (
+            <div
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: 2,
+                background: 'rgba(59, 130, 246, 0.15)',
+                borderBottomLeftRadius: 10,
+                borderBottomRightRadius: 10,
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  height: '100%',
+                  width: `${deployProgress}%`,
+                  background: '#3b82f6',
+                  transition: 'width 300ms ease',
+                }}
+              />
+            </div>
+          )}
+        </div>
+      )}
+      <style>{`
+        @keyframes iceDeployPulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(0.85); }
+        }
+      `}</style>
       <svg
         ref={svgRef}
         width={dimensions.width}
@@ -2458,6 +2756,24 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                 );
               }
 
+              // Custom Domain — owns its own renderer with dynamic per-route
+              // rows + per-row connection ports. Lives outside the
+              // compact-node tree so it can have variable height and
+              // multiple right-side ports.
+              if (iceType === 'Network.CustomDomain') {
+                return wrapLift(
+                  <SvgCustomDomainNode
+                    key={isLifted ? undefined : `${node.id}-routes${((node.data?.routes as unknown[]) || []).length}`}
+                    node={node}
+                    isSelected={selectedNodes.includes(node.id)}
+                    isDragOver={dragOverGroupId === node.id}
+                    onNodeHover={handleNodeHover}
+                    onUpdateData={handleUpdateNodeData}
+                    connectionDragState={connectionDragTargets?.get(node.id) ?? null}
+                  />,
+                );
+              }
+
               // Groups always render as containers
               if (isGroup) {
                 return wrapLift(
@@ -2593,7 +2909,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
               );
             })()}
 
-          {/* User traffic connections (same styling as regular connections) — only when no explicit Network.Internet block */}
+          {/* User traffic connections (same styling as regular connections) — only when no explicit Network.PublicEndpoint block */}
           {showVirtualUserNode && userConnections.length > 0 && (
             <g className="user-traffic-connections-layer">
               {userConnections.map((conn) => (
@@ -2615,7 +2931,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             </g>
           )}
 
-          {/* User traffic icon for exposed services — only when no explicit Network.Internet block */}
+          {/* User traffic icon for exposed services — only when no explicit Network.PublicEndpoint block */}
           {showVirtualUserNode && pinnedUserPos && (
             <SvgUserNode position={pinnedUserPos} scale={viewport.zoom} onPositionChange={setUserNodePos} />
           )}

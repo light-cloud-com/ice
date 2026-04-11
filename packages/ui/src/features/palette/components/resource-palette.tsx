@@ -160,9 +160,12 @@ const COMPONENTS: ComponentDef[] = [
   def('Compute.StaticSite', Globe, ['aws', 'gcp', 'azure'], 'Frontend'),
   def('Compute.SSRSite', Globe, ['aws', 'gcp', 'azure', 'kubernetes'], 'Frontend'),
   // ── Network ──
+  // `Network.PublicEndpoint` is registered once below in the
+  // "Networking (cross-provider)" section so the icon + provider list
+  // match the new unified block. Don't add a second entry here or the
+  // palette renders two identical "Public Endpoint" tiles.
   def('Network.VPC', Network, ['aws', 'gcp', 'azure'], 'Network'),
   def('Network.Subnet', Layers, ['aws', 'gcp', 'azure'], 'Network'),
-  def('Network.Internet', Users, ['aws', 'gcp', 'azure'], 'Network'),
   def('Network.Gateway', GitBranch, ['aws', 'gcp', 'azure'], 'Network'),
   // ── Database ──
   def('Database.PostgreSQL', Database, ['aws', 'gcp', 'azure', 'digitalocean'], 'Database'),
@@ -207,8 +210,9 @@ const COMPONENTS: ComponentDef[] = [
   def('Source.Repository', GitBranch, ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean'], 'Source'),
   // ── Config ──
   def('Config.Environment', Cog, ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean'], 'Config'),
-  // ── Networking ── (domain is provider-agnostic)
-  def('Network.Domain', Globe, ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean'], 'Network'),
+  // ── Networking ── (domain blocks are provider-agnostic)
+  def('Network.PublicEndpoint', Globe, ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean'], 'Network'),
+  def('Network.CustomDomain', Globe, ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean'], 'Network'),
 ];
 
 let groupColorIndex = 0;

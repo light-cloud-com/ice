@@ -142,7 +142,7 @@ export const backendApiTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 50, y: 86 }, data: { domain: 'api.myapp.com', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true } },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
 
@@ -180,8 +180,6 @@ export const backendApiTemplate: ComposedTemplate = {
     // ── Ungrouped (control plane) ─────────────────────────────────────────
     // 7: Secret
     { iceType: 'Security.Secret', label: 'API Secrets', position: { x: 50, y: 884 }, data: {} },
-    // 8: Domain
-    { iceType: 'Network.Domain', label: 'Domain', position: { x: 306, y: 884 }, data: { hostname: 'api.myapp.com' } },
     // 9: Repo
     {
       iceType: 'Source.Repository',
@@ -190,8 +188,7 @@ export const backendApiTemplate: ComposedTemplate = {
       data: { repository: '', branch: 'main' },
     },
     // 10: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 306, y: 1060 }, data: {} },
-  ],
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 306, y: 1060 }, data: {} },],
 
   connections: [
     // Internet → WAF → Gateway (Gateway→Gateway rule)
@@ -207,11 +204,11 @@ export const backendApiTemplate: ComposedTemplate = {
     // Service → Logs (Service→Monitoring rule)
     { fromBlock: 3, toBlock: 6, relationship: 'connects_to' },
     // Domain → Gateway (Domain→Routable rule)
-    { fromBlock: 8, toBlock: 2, relationship: 'connects_to' },
+    { fromBlock: 0, toBlock: 2, relationship: 'connects_to' },
     // Repo → Service (Repo→Service pipeline rule)
-    { fromBlock: 9, toBlock: 3, relationship: 'connects_to' },
+    { fromBlock: 8, toBlock: 3, relationship: 'connects_to' },
     // Service → Env (Service→EnvConfig config rule)
-    { fromBlock: 3, toBlock: 10, relationship: 'depends_on' },
+    { fromBlock: 3, toBlock: 9, relationship: 'depends_on' },
   ],
 };
 
@@ -303,7 +300,7 @@ export const microservicesTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 50, y: 86 }, data: { domain: 'api.myapp.com', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true } },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
 
@@ -372,8 +369,6 @@ export const microservicesTemplate: ComposedTemplate = {
     // ── Ungrouped (control plane) ─────────────────────────────────────────
     // 11: Secret
     { iceType: 'Security.Secret', label: 'App Secrets', position: { x: 50, y: 1256 }, data: {} },
-    // 12: Domain
-    { iceType: 'Network.Domain', label: 'Domain', position: { x: 306, y: 1256 }, data: { hostname: 'api.myapp.com' } },
     // 13: Repo
     {
       iceType: 'Source.Repository',
@@ -382,8 +377,7 @@ export const microservicesTemplate: ComposedTemplate = {
       data: { repository: '', branch: 'main' },
     },
     // 14: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 306, y: 1432 }, data: {} },
-  ],
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 306, y: 1432 }, data: {} },],
 
   connections: [
     // Internet → WAF → Gateway (Gateway→Gateway rule)
@@ -411,10 +405,10 @@ export const microservicesTemplate: ComposedTemplate = {
     { fromBlock: 4, toBlock: 10, relationship: 'connects_to' },
     { fromBlock: 5, toBlock: 10, relationship: 'connects_to' },
     // Domain → Gateway (Domain→Routable rule)
-    { fromBlock: 12, toBlock: 2, relationship: 'connects_to' },
+    { fromBlock: 0, toBlock: 2, relationship: 'connects_to' },
     // Repo → Service (Repo→Service pipeline rule)
-    { fromBlock: 13, toBlock: 3, relationship: 'connects_to' },
+    { fromBlock: 12, toBlock: 3, relationship: 'connects_to' },
     // Service → Env (Service→EnvConfig config rule)
-    { fromBlock: 3, toBlock: 14, relationship: 'depends_on' },
+    { fromBlock: 3, toBlock: 13, relationship: 'depends_on' },
   ],
 };

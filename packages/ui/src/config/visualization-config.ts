@@ -66,7 +66,13 @@ export const RESOURCE_CATEGORIES = {
   ],
 
   // Architecture-level networking (how traffic flows between services)
-  gateway: ['Network.Gateway', 'Network.CDN', 'Network.LoadBalancer', 'Network.Internet'],
+  gateway: [
+    'Network.Gateway',
+    'Network.CDN',
+    'Network.LoadBalancer',
+    'Network.PublicEndpoint',
+    'Network.CustomDomain',
+  ],
 
   // Auth & secrets (architecture-level — every app needs these)
   auth: ['Security.Identity', 'Security.Secret'],

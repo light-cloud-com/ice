@@ -13,4 +13,8 @@ export const LEVEL_VISIBLE_CATEGORIES: Record<1 | 2 | 3, NodeCategory[]> = {
 
 export const NETWORK_CONTAINER_TYPES = [ICE.Network.VPC, ICE.Network.Subnet];
 
-export const L1_VISIBLE_NETWORK_TYPES = [ICE.Network.Internet, ICE.Network.Gateway];
+export const L1_VISIBLE_NETWORK_TYPES = [
+  ICE.Network.PublicEndpoint,
+  ICE.Network.CustomDomain,
+  ICE.Network.Gateway,
+];

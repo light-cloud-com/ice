@@ -76,10 +76,21 @@ export interface IceAPI {
     plan: (cardId: string, nodes: any[], edges: any[], options: any) => Promise<any>;
     apply: (cardId: string, nodes: any[], edges: any[], options: any) => Promise<any>;
     destroy: (cardId: string, options: any) => Promise<any>;
+    /** Destroy every ICE-managed resource ever deployed for this card. */
+    destroyAll: (cardId: string, options?: { gcpProject?: string }) => Promise<any>;
     getStatus: (deploymentId: string) => Promise<any>;
     authenticate: () => Promise<any>;
     getResources: (cardId: string) => Promise<any>;
     getDeployments: (cardId: string) => Promise<any>;
+    requirements: (cardId: string, nodes: any[], options: any) => Promise<any>;
+    /** In-flight deploy snapshot — used for cross-tab hydration. */
+    getCurrentDeploy: (cardId: string) => Promise<any>;
+    /** Replay tape for a deploy — events with seq > `since`. Used to hydrate logs + progress on page reload. */
+    getDeployStream: (cardId: string, since?: number, deploymentId?: string) => Promise<any>;
+    /** Per-node deploy overlay — used on card mount. */
+    getNodeOutputs: (cardId: string, environment?: string) => Promise<any>;
+    /** Scan + delete orphaned ICE resources in the GCP project. */
+    cleanupOrphans: (args?: { gcpProject?: string; dryRun?: boolean }) => Promise<any>;
     openExternal: (url: string) => void;
   };
 

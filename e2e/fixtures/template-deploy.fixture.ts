@@ -436,6 +436,44 @@ export class TemplateDeployHelper {
     return log;
   }
 
+  // ── Deploy overlay fetch (Phase A/C) ───────────────────────
+
+  /**
+   * Read the persisted node overlay for the currently active card via
+   * the `/canvas/deploy/node-outputs/:cardId` endpoint. Used by the
+   * Phase A regression check that asserts compute blocks carry a
+   * `url` or `default_url` after deploy.
+   *
+   * Returns null when the active cardId can't be resolved (e.g. the
+   * test is running outside a card context). Callers should treat
+   * null as "skip the assertion", not as a failure.
+   */
+  async fetchNodeOverlay(environment = 'development'): Promise<Record<string, any> | null> {
+    return this.page.evaluate(async (env) => {
+      try {
+        const stored = localStorage.getItem('ice-cards');
+        if (!stored) return null;
+        const parsed = JSON.parse(stored);
+        const cardId: string | null = parsed?.activeCardId || null;
+        if (!cardId) return null;
+
+        const headers: Record<string, string> = {};
+        const token = localStorage.getItem('ice-token');
+        if (token) headers.Authorization = `Bearer ${token}`;
+
+        const res = await fetch(
+          `/api/canvas/deploy/node-outputs/${cardId}?environment=${encodeURIComponent(env)}`,
+          { credentials: 'include', headers },
+        );
+        if (!res.ok) return null;
+        const body = await res.json();
+        return body?.overlay || null;
+      } catch {
+        return null;
+      }
+    }, environment);
+  }
+
   // ── GCP Verification (gcloud CLI) ────────────────────────
 
   verifyResources(

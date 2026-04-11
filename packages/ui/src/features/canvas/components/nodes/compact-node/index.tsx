@@ -76,7 +76,9 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
   const repository = (data.repository as string) || (data.github as string) || (data.repo as string) || '';
   const version = (data.version as string) || '';
   const estimatedCost = (data.estimatedCost as string) || '';
-  const status = (data.status as string) || '';
+  // Phase 2 — prefer `deploy_status` (set by the deploy pipeline) over the
+  // legacy `status` field. Both are supported so existing blocks keep working.
+  const status = (data.deploy_status as string) || (data.status as string) || '';
 
   const isSourceRepo = (data.iceType as string) === 'Source.Repository' || data.behavior === 'source';
 

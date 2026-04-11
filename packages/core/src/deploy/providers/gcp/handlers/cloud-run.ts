@@ -197,9 +197,72 @@ export const cloud_run_handler: GCPResourceHandler = {
         await operation.promise();
       }
 
+      // Also delete the Artifact Registry images that ICE pushed for this
+      // service. Without this, every deploy leaves a container image in
+      // Artifact Registry that the user pays for indefinitely. Best-effort:
+      // we tolerate 404 (already gone), permission errors, and missing
+      // repositories without failing the Cloud Run delete itself.
+      await deleteArtifactRegistryImagesForService(ctx, name, region, type).catch((err) => {
+        ctx.on_log?.(
+          `[cloud-run] Cloud Run service deleted but Artifact Registry image cleanup failed: ${err?.message || err}. ` +
+            `You can manually delete the image at https://console.cloud.google.com/artifacts/docker/${ctx.project}/${region}/ice-deploy/${name}`,
+        );
+      });
+
       return result(name, type, 'delete', start);
     } catch (error) {
       return fail(name, type, 'delete', start, error instanceof Error ? error.message : String(error));
+    }
+  },
+
+  /**
+   * Phase 7 — describe for drift detection. Projects the Cloud Run service
+   * to the fields ICE manages (image, env vars, scaling, concurrency).
+   */
+  async describe(name, provider_id, ctx) {
+    try {
+      const is_job = provider_id.includes('/jobs/');
+      const region = extract_region(provider_id) || ctx.region;
+      if (is_job) {
+        const jobs_client = ctx.clients.get('run.jobs') as any;
+        if (!jobs_client) return { exists: false, error: 'Cloud Run jobs client unavailable' };
+        const [job] = await jobs_client.getJob({
+          name: `projects/${ctx.project}/locations/${region}/jobs/${name}`,
+        });
+        return {
+          exists: true,
+          raw: job,
+          properties: {
+            name: job.name,
+            labels: job.labels || {},
+            image: job.template?.template?.containers?.[0]?.image,
+          },
+        };
+      }
+      const services_client = ctx.clients.get('run.services') as any;
+      if (!services_client) return { exists: false, error: 'Cloud Run services client unavailable' };
+      const [svc] = await services_client.getService({
+        name: `projects/${ctx.project}/locations/${region}/services/${name}`,
+      });
+      const container = svc.template?.containers?.[0];
+      return {
+        exists: true,
+        raw: svc,
+        properties: {
+          name: svc.name,
+          labels: svc.labels || {},
+          image: container?.image,
+          env: (container?.env || []).map((e: any) => ({ name: e.name, value: e.value })),
+          min_instances: svc.template?.scaling?.minInstanceCount,
+          max_instances: svc.template?.scaling?.maxInstanceCount,
+          concurrency: container?.resources?.limits?.cpu,
+          url: svc.uri,
+        },
+      };
+    } catch (error: any) {
+      const code = error?.code || error?.response?.status;
+      if (code === 5 || code === 404) return { exists: false };
+      return { exists: false, error: error instanceof Error ? error.message : String(error) };
     }
   },
 };
@@ -207,6 +270,45 @@ export const cloud_run_handler: GCPResourceHandler = {
 // =============================================================================
 // Helpers
 // =============================================================================
+
+/**
+ * Delete every Artifact Registry container image ICE pushed for this
+ * Cloud Run service. The image name in Artifact Registry matches the
+ * service name (see `resolve_image` above — `${region}-docker.pkg.dev/
+ * ${project}/ice-images/${name}:latest`), so we can target a single
+ * repository path and delete all tags + manifests under it.
+ *
+ * Best-effort: 404 and permission errors are tolerated. The Cloud Run
+ * delete itself should not fail just because the image couldn't be
+ * cleaned up — we log and move on.
+ */
+async function deleteArtifactRegistryImagesForService(
+  ctx: GCPHandlerContext,
+  serviceName: string,
+  region: string,
+  _type: string,
+): Promise<void> {
+  const arRepo = 'ice-images';
+  const base = `https://artifactregistry.googleapis.com/v1/projects/${ctx.project}/locations/${region}/repositories/${arRepo}`;
+
+  // 1. List all tags under the package so we can delete each one
+  //    (GCP won't let you delete a manifest while tags still reference it).
+  const packagePath = `${base}/packages/${encodeURIComponent(serviceName)}`;
+  try {
+    // Delete the whole package. This cascades to all versions and tags.
+    // If the package doesn't exist we'll get a 404, which is fine.
+    const op = (await ctx.rest_client.delete(packagePath)) as any;
+    // Artifact Registry delete returns a long-running operation — we don't
+    // need to wait for it to complete, the cascade happens asynchronously.
+    void op;
+  } catch (err: any) {
+    const msg = err?.message || String(err);
+    if (msg.includes('404') || msg.includes('NOT_FOUND') || msg.includes('notFound')) {
+      return;
+    }
+    throw err;
+  }
+}
 
 async function resolve_image(
   name: string,

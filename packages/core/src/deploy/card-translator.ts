@@ -128,6 +128,13 @@ const GCP_TYPE_MAP: Record<string, string> = {
   // are set, and the URL map host rules are populated from each
   // outgoing edge's `subdomain` field.
   'Network.PublicEndpoint': 'gcp.compute.globalForwardingRule',
+  // `Network.SecureGroup` is a container block that bundles VPC + Subnet
+  // + a public load balancer. On the canvas it nests children; in the
+  // deploy graph it compiles to the same forwarding rule + LB chain that
+  // PublicEndpoint produces. The Pass 1.5 wiring below treats both
+  // iceTypes uniformly when computing host_rules, backends, and the
+  // managed SSL cert.
+  'Network.SecureGroup': 'gcp.compute.globalForwardingRule',
   'Network.LoadBalancer': 'gcp.compute.globalForwardingRule',
   'Messaging.CloudPubSub': 'gcp.pubsub.topic',
   'Messaging.Queue': 'gcp.pubsub.topic',
@@ -906,18 +913,27 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
   };
   const endpointToBackends = new Map<string, BackendEntry[]>();
 
+  // Match both PublicEndpoint AND SecureGroup as endpoint blocks. They
+  // both compile to gcp.compute.globalForwardingRule and share the same
+  // wiring logic — the only differences are visual (SecureGroup is a
+  // container with a custom renderer) and topological (SecureGroup
+  // children are nested inside the block on the canvas, but in the
+  // deploy graph they're independent resources wired via host_rules
+  // exactly like PublicEndpoint backends).
+  const isEndpointIceType = (t: string) =>
+    t === 'Network.PublicEndpoint' || t === 'Network.SecureGroup';
+
   for (const edge of edges) {
     const src = nodes.find((n) => n.id === edge.source);
     const dst = nodes.find((n) => n.id === edge.target);
     if (!src || !dst) continue;
     const srcIce = (src.data?.iceType as string) || '';
     const dstIce = (dst.data?.iceType as string) || '';
-    const isEndpointEdge =
-      srcIce === 'Network.PublicEndpoint' || dstIce === 'Network.PublicEndpoint';
+    const isEndpointEdge = isEndpointIceType(srcIce) || isEndpointIceType(dstIce);
     if (!isEndpointEdge) continue;
 
-    const endpointNode = srcIce === 'Network.PublicEndpoint' ? src : dst;
-    const targetNode = srcIce === 'Network.PublicEndpoint' ? dst : src;
+    const endpointNode = isEndpointIceType(srcIce) ? src : dst;
+    const targetNode = isEndpointIceType(srcIce) ? dst : src;
     const targetIce = (targetNode.data?.iceType as string) || '';
 
     // Only compute targets are valid backends. Skip edges to requirements,
@@ -927,7 +943,24 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
     const targetResourceName = card_id_to_name.get(targetNode.id);
     if (!targetResourceName) continue;
 
-    const subdomain = ((edge.data as any)?.subdomain as string | undefined)?.trim() || '';
+    // Subdomain resolution priority for endpoint backends:
+    //   1. edge.data.routeId → look up the route on the source endpoint
+    //      block (the per-row port model used by SecureGroup and the
+    //      Custom Domain block)
+    //   2. edge.data.subdomain → legacy single-subdomain edge field
+    //      (kept for back-compat with older PublicEndpoint edges
+    //      created before routes existed)
+    //   3. blank → root domain
+    let subdomain = '';
+    const routeId = (edge.data as any)?.routeId as string | undefined;
+    if (routeId) {
+      const routes =
+        ((endpointNode.data?.routes as Array<{ id: string; subdomain: string }> | undefined) || []);
+      const route = routes.find((r) => r.id === routeId);
+      subdomain = (route?.subdomain || '').trim();
+    } else {
+      subdomain = ((edge.data as any)?.subdomain as string | undefined)?.trim() || '';
+    }
 
     const list = endpointToBackends.get(endpointNode.id) || [];
     list.push({

@@ -17,7 +17,11 @@ export const managedCertIssuanceRequirement: RequirementDefinition = {
   blocking: false,
   applies: (ctx) => {
     const iceType = ctx.block.data?.iceType as string | undefined;
-    if (iceType !== 'Network.PublicEndpoint') return false;
+    // PublicEndpoint and SecureGroup both compile to a forwarding rule
+    // + managed SSL cert chain. The cert issuance lifecycle is identical
+    // for both — same `gcp.compute.managedSslCertificate` resource type,
+    // same status enum, same poll cadence.
+    if (iceType !== 'Network.PublicEndpoint' && iceType !== 'Network.SecureGroup') return false;
     const domain = (ctx.block.data?.domain as string | undefined) || '';
     if (!domain.trim()) return false;
     return ctx.block.data?.autoProvisionCert !== false;

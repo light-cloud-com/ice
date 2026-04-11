@@ -106,6 +106,12 @@ export const TREE = {
       // Amplify, public Cloud Run, etc.). UI/translator-only — does
       // not compile to a deployable resource.
       CustomDomain: { id: 'custom-domain' },
+      // `SecureGroup` is a high-level container that bundles VPC +
+      // Subnet + a built-in load balancer with subdomain routing.
+      // Children deployed inside it land in the synthesized subnet
+      // with private ingress; the LB chain exposes them via per-row
+      // routes on the Secure Group's header.
+      SecureGroup: { id: 'secure-group' },
       VPC: { id: 'vpc-network' },
       Subnet: { id: 'subnet' },
     },
@@ -203,6 +209,7 @@ export const ICE = {
     Gateway: 'Network.Gateway',
     PublicEndpoint: 'Network.PublicEndpoint',
     CustomDomain: 'Network.CustomDomain',
+    SecureGroup: 'Network.SecureGroup',
     VPC: 'Network.VPC',
     Subnet: 'Network.Subnet',
   },

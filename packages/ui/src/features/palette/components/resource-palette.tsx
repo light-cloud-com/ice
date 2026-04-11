@@ -33,6 +33,7 @@ import {
   Blocks,
   Check,
   ChevronDown,
+  Shield,
   ShieldAlert,
   Lock,
   Network,
@@ -213,6 +214,7 @@ const COMPONENTS: ComponentDef[] = [
   // ── Networking ── (domain blocks are provider-agnostic)
   def('Network.PublicEndpoint', Globe, ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean'], 'Network'),
   def('Network.CustomDomain', Globe, ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean'], 'Network'),
+  def('Network.SecureGroup', Shield, ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean'], 'Network'),
 ];
 
 let groupColorIndex = 0;

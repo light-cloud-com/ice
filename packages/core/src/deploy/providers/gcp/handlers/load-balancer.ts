@@ -378,6 +378,27 @@ export const load_balancer_handler: GCPResourceHandler = {
         // Non-fatal — we can still return success without the IP.
       }
 
+      // Fetch the SSL cert status so the SecureGroup / PublicEndpoint
+      // block header can show "Provisioning SSL cert..." right after
+      // deploy. This is the INITIAL status — the post-deploy
+      // managedCertIssuanceRequirement polls every 60s for live updates
+      // and surfaces them in the deploy panel's Requirements section.
+      let certStatus: string | undefined;
+      let certDomainStatuses: Record<string, string> | undefined;
+      if (sslCertificateName) {
+        try {
+          const cert = (await ctx.rest_client.get(
+            `${BASE_URL}/projects/${ctx.project}/global/sslCertificates/${sslCertificateName}`,
+          )) as any;
+          certStatus = cert?.managed?.status || 'PROVISIONING';
+          certDomainStatuses = cert?.managed?.domainStatus;
+        } catch {
+          // Cert might not be ready to read yet; the requirement poll
+          // will pick it up shortly.
+          certStatus = 'PROVISIONING';
+        }
+      }
+
       // Primary URL priority:
       //   1. Custom domain (user's intended public URL)
       //   2. HTTPS IP (shouldn't usually be visited but technically works)
@@ -409,6 +430,12 @@ export const load_balancer_handler: GCPResourceHandler = {
           IPAddress: ipAddress,
           url: primaryUrl,
           ssl_certificate: sslCertificateName || undefined,
+          // `cert_status` is read by the SecureGroup block renderer to
+          // show the "Provisioning SSL cert..." indicator on the header.
+          // The managedCertIssuanceRequirement polls live updates after
+          // deploy; this field is the INITIAL value at deploy time.
+          cert_status: certStatus,
+          cert_domain_statuses: certDomainStatuses,
           http_redirect_rule: redirectForwardingRuleName,
           domain: customDomain || undefined,
           hosts: routedHosts.length > 0 ? routedHosts : undefined,
@@ -452,6 +479,25 @@ export const load_balancer_handler: GCPResourceHandler = {
           ? `http://${ipAddress}`
           : undefined;
 
+    // Re-fetch the cert status on every update so the SecureGroup
+    // header reflects the current state. This is what makes "click
+    // Deploy again 30min after the original create" actually update
+    // the block to ACTIVE without forcing the user to wait for the
+    // background poller.
+    let certStatus: string | undefined;
+    let certDomainStatuses: Record<string, string> | undefined;
+    if (sslCertificateName) {
+      try {
+        const cert = (await ctx.rest_client.get(
+          `${BASE_URL}/projects/${ctx.project}/global/sslCertificates/${sslCertificateName}`,
+        )) as any;
+        certStatus = cert?.managed?.status;
+        certDomainStatuses = cert?.managed?.domainStatus;
+      } catch {
+        // Cert was deleted or unreadable — leave undefined.
+      }
+    }
+
     return result(name, 'update', start, {
       provider_id,
       outputs: {
@@ -460,6 +506,8 @@ export const load_balancer_handler: GCPResourceHandler = {
         url: primaryUrl,
         domain: customDomain || undefined,
         ssl_certificate: sslCertificateName || undefined,
+        cert_status: certStatus,
+        cert_domain_statuses: certDomainStatuses,
       },
     });
   },

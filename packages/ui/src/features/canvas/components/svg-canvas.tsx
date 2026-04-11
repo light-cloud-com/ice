@@ -53,6 +53,7 @@ import {
 import { SvgCompactNode, computeCompactNodeHeight, computeCompactNodeWidth } from './nodes/compact-node';
 import { SvgCustomDomainNode, computeCustomDomainHeight, computeCustomDomainWidth } from './nodes/custom-domain';
 import { SvgGroupNode } from './nodes/group-node';
+import { SvgSecureGroupNode, computeSecureGroupHeight, computeSecureGroupWidth } from './nodes/secure-group';
 import { SelectionFrame } from './selection-frame';
 import { SvgConnectionPath, EDGE_COLORS, type ConnectionTooltipInfo } from './svg-connection-path';
 import {
@@ -210,7 +211,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   useEffect(() => {
     if (!card) return;
 
-    // ── Pass 1: backfill missing routeIds on CustomDomain edges ──
+    // ── Pass 1: backfill missing routeIds on CustomDomain + SecureGroup edges ──
     //
     // Edges created before the routes data model existed (or via paths
     // that don't capture `data-route-id`) have no `routeId`. The
@@ -219,14 +220,15 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     // We claim a free route slot for each such edge so the renderer
     // can anchor the path to the correct row.
     //
-    // Strategy: per CustomDomain block, walk its outgoing edges and
-    // assign route ids in order from the block's `routes` array,
-    // skipping route ids that are already claimed by another edge.
-    // If we run out of routes, we leave the edge unassigned (the
-    // generic fallback still draws it).
-    const customDomainBlocks = nodes.filter(
-      (n: any) => (n.data?.iceType as string) === 'Network.CustomDomain',
-    );
+    // Strategy: per row-port block (CustomDomain or SecureGroup), walk
+    // its outgoing edges and assign route ids in order from the block's
+    // `routes` array, skipping route ids that are already claimed by
+    // another edge. If we run out of routes, we leave the edge
+    // unassigned (the generic fallback still draws it).
+    const customDomainBlocks = nodes.filter((n: any) => {
+      const t = (n.data?.iceType as string) || '';
+      return t === 'Network.CustomDomain' || t === 'Network.SecureGroup';
+    });
     for (const cdNode of customDomainBlocks) {
       const cdRoutes =
         ((cdNode.data?.routes as Array<{ id: string; subdomain: string }> | undefined) || []);
@@ -253,6 +255,8 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     }
 
     // ── Pass 2: orphan deletion + reactive domain sync ──
+    const isRowPortBlock = (t: string) =>
+      t === 'Network.CustomDomain' || t === 'Network.SecureGroup';
     for (const edge of edges) {
       const src = nodes.find((n: any) => n.id === edge.source);
       const dst = nodes.find((n: any) => n.id === edge.target);
@@ -261,10 +265,10 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       const dstIce = (dst.data?.iceType as string) || '';
       let domainNode: any = null;
       let targetNode: any = null;
-      if (srcIce === 'Network.CustomDomain') {
+      if (isRowPortBlock(srcIce)) {
         domainNode = src;
         targetNode = dst;
-      } else if (dstIce === 'Network.CustomDomain') {
+      } else if (isRowPortBlock(dstIce)) {
         domainNode = dst;
         targetNode = src;
       } else {
@@ -431,28 +435,39 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     return nodes.map((node) => {
       const iceType = (node.data?.iceType as string) || 'Resource.Unknown';
 
-      const isGroup = iceType.startsWith('Group.') || node.type === 'container' || node.type === ('group' as any);
+      const isSecureGroup = iceType === 'Network.SecureGroup';
+      const isGroup =
+        iceType.startsWith('Group.') ||
+        node.type === 'container' ||
+        node.type === ('group' as any) ||
+        isSecureGroup;
       const isBlock = node.type === 'block';
       const folded = !!node.data?.folded;
       const isCustomDomain = iceType === 'Network.CustomDomain';
       const nodeData = (node.data as Record<string, unknown>) || {};
       const hasPipelineStatus = !!(pipelineNodeStatus[node.id] && pipelineNodeStatus[node.id].status !== 'idle');
-      // Custom Domain has a dynamic-height renderer that grows with the
-      // routes count. Other nodes use the fixed compact-node sizing.
+      // Custom Domain + Secure Group have dynamic-height renderers that
+      // grow with the routes count. Other nodes use the fixed compact-node
+      // sizing.
       const defaultWidth = isCustomDomain
         ? computeCustomDomainWidth()
-        : computeCompactNodeWidth(isBlock || isGroup);
+        : isSecureGroup
+          ? computeSecureGroupWidth(node.width || 0)
+          : computeCompactNodeWidth(isBlock || isGroup);
       const defaultHeight = isCustomDomain
         ? computeCustomDomainHeight(nodeData)
-        : computeCompactNodeHeight(nodeData, isBlock || isGroup, hasPipelineStatus);
+        : isSecureGroup
+          ? computeSecureGroupHeight(nodeData, node.height || 0)
+          : computeCompactNodeHeight(nodeData, isBlock || isGroup, hasPipelineStatus);
 
       // Visual height: folded groups = 36px, folded blocks/resources = 38px.
-      // Custom Domain ALWAYS uses its dynamic height (folding it would
-      // hide the route slots — the whole point of the block).
-      const expandedHeight = isCustomDomain
-        ? defaultHeight
-        : Math.max(node.height || 0, defaultHeight);
-      const visualHeight = folded && !isCustomDomain ? (isGroup ? 36 : 38) : expandedHeight;
+      // Custom Domain + Secure Group ALWAYS use their dynamic height
+      // (folding them would hide the route slots — the whole point of
+      // the blocks).
+      const expandedHeight =
+        isCustomDomain || isSecureGroup ? defaultHeight : Math.max(node.height || 0, defaultHeight);
+      const visualHeight =
+        folded && !isCustomDomain && !isSecureGroup ? (isGroup ? 36 : 38) : expandedHeight;
 
       return {
         id: node.id,
@@ -557,7 +572,8 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             n.type === ('group' as any) ||
             ((n.data?.iceType as string) || '').startsWith('Group.') ||
             (n.data?.iceType as string) === 'Network.VPC' ||
-            (n.data?.iceType as string) === 'Network.Subnet',
+            (n.data?.iceType as string) === 'Network.Subnet' ||
+            (n.data?.iceType as string) === 'Network.SecureGroup',
         )
         .map((n) => n.id),
     );
@@ -1526,7 +1542,8 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       node.type === 'container' ||
       node.type === ('group' as any) ||
       iceType === 'Network.VPC' ||
-      iceType === 'Network.Subnet'
+      iceType === 'Network.Subnet' ||
+      iceType === 'Network.SecureGroup'
     );
   }, []);
 
@@ -1646,7 +1663,8 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             node.type === 'container' ||
             node.type === ('group' as any) ||
             nodeIceType === 'Network.VPC' ||
-            nodeIceType === 'Network.Subnet';
+            nodeIceType === 'Network.Subnet' ||
+            nodeIceType === 'Network.SecureGroup';
           if (!isNodeContainer) continue;
 
           // Check if the center of the dragged node is inside this container
@@ -2386,19 +2404,21 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             }
           }
 
-          // Custom Domain → service: same pattern as Source.Repository →
-          // service. Resolve the route's subdomain on the source block,
-          // build `<subdomain>.<rootDomain>`, and force it onto the
-          // target's `domain` property in Redux. The user sees the host
-          // in the target's properties panel immediately, and the
-          // domain field becomes read-only because the CustomDomain
-          // edge is now the source of truth.
+          // Custom Domain / Secure Group → service: same pattern as
+          // Source.Repository → service. Resolve the route's subdomain
+          // on the source block, build `<subdomain>.<rootDomain>`, and
+          // force it onto the target's `domain` property in Redux. The
+          // user sees the host in the target's properties panel
+          // immediately, and the domain field becomes read-only because
+          // the CustomDomain / SecureGroup edge is now the source of
+          // truth.
           //
           // The deploy translator does the same propagation at deploy
           // time, but this Redux mirror makes the UX feel instant.
-          const sourceIsCustomDomain = srcIceType === 'Network.CustomDomain';
+          const sourceIsRowPortBlock =
+            srcIceType === 'Network.CustomDomain' || srcIceType === 'Network.SecureGroup';
           const targetIsRoutable = targetIsService;
-          if (sourceIsCustomDomain && targetIsRoutable && sourceRouteId) {
+          if (sourceIsRowPortBlock && targetIsRoutable && sourceRouteId) {
             const rootDomain = String(sourceNode.data?.domain || '').trim();
             const sourceRoutes =
               ((sourceNode.data?.routes as Array<{ id: string; subdomain: string }> | undefined) || []);
@@ -2657,7 +2677,13 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             {sortedNodes
               .filter((n) => {
                 const t = (n.data?.iceType as string) || '';
-                return n.type === 'container' || n.type === 'block' || t === 'Network.VPC' || t === 'Network.Subnet';
+                return (
+                  n.type === 'container' ||
+                  n.type === 'block' ||
+                  t === 'Network.VPC' ||
+                  t === 'Network.Subnet' ||
+                  t === 'Network.SecureGroup'
+                );
               })
               .map((n) => (
                 <clipPath key={`parent-clip-${n.id}`} id={`parent-clip-${n.id}`}>
@@ -2674,7 +2700,12 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
               const isLogNode =
                 iceType === 'Monitoring.Terminal' || iceType === 'Observability.Logs' || iceType.startsWith('Log.');
               const isVpcOrSubnet = iceType === 'Network.VPC' || iceType === 'Network.Subnet';
-              const isGroup = node.type === 'container' || node.type === ('group' as any) || isVpcOrSubnet;
+              const isSecureGroupContainer = iceType === 'Network.SecureGroup';
+              const isGroup =
+                node.type === 'container' ||
+                node.type === ('group' as any) ||
+                isVpcOrSubnet ||
+                isSecureGroupContainer;
               const isBlock = node.type === 'block';
 
               // Entrance animation for AI-generated nodes
@@ -2765,6 +2796,25 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
               if (iceType === 'Network.CustomDomain') {
                 return wrapLift(
                   <SvgCustomDomainNode
+                    key={isLifted ? undefined : `${node.id}-routes${((node.data?.routes as unknown[]) || []).length}`}
+                    node={node}
+                    isSelected={selectedNodes.includes(node.id)}
+                    isDragOver={dragOverGroupId === node.id}
+                    onNodeHover={handleNodeHover}
+                    onUpdateData={handleUpdateNodeData}
+                    connectionDragState={connectionDragTargets?.get(node.id) ?? null}
+                  />,
+                );
+              }
+
+              // Secure Group — composite container + route header. Children
+              // (Cloud Run, Postgres, etc.) nest inside via parentId and
+              // render through the standard dispatcher loop on top of the
+              // SecureGroup frame. Must come BEFORE the generic group
+              // dispatch below or it would render as a plain SvgGroupNode.
+              if (iceType === 'Network.SecureGroup') {
+                return wrapLift(
+                  <SvgSecureGroupNode
                     key={isLifted ? undefined : `${node.id}-routes${((node.data?.routes as unknown[]) || []).length}`}
                     node={node}
                     isSelected={selectedNodes.includes(node.id)}

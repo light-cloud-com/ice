@@ -160,19 +160,26 @@ async function checkOne(row: PollerRow): Promise<void> {
       },
     });
 
-    // Notify the UI when a requirement transitions to verified.
-    if (!wasVerified && nowVerified) {
-      try {
-        emitDeployProgress(row.card_id, {
-          type: 'requirement_verified',
-          requirement_id: row.requirement_id,
-          node_id: row.node_id,
-          environment: row.environment,
-          message: result.message,
-        } as any);
-      } catch {
-        // Non-fatal.
-      }
+    // Notify the UI on every status check so the SecureGroup /
+    // PublicEndpoint block headers can show live "Provisioning…" /
+    // "Active" status without waiting for the user to redeploy. The
+    // payload now includes the actual status + details so the UI can
+    // mirror it onto node.data.cert_status (and similar) for in-block
+    // display. We still send `requirement_verified` (not a new event
+    // type) for back-compat with the existing subscription handler.
+    try {
+      emitDeployProgress(row.card_id, {
+        type: 'requirement_verified',
+        requirement_id: row.requirement_id,
+        node_id: row.node_id,
+        environment: row.environment,
+        message: result.message,
+        status: nextStatus,
+        verified: nowVerified,
+        details: result.details,
+      } as any);
+    } catch {
+      // Non-fatal.
     }
   } catch (err: any) {
     await prisma.blockRequirementStatus

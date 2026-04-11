@@ -72,6 +72,7 @@ export const RESOURCE_CATEGORIES = {
     'Network.LoadBalancer',
     'Network.PublicEndpoint',
     'Network.CustomDomain',
+    'Network.SecureGroup',
   ],
 
   // Auth & secrets (architecture-level — every app needs these)

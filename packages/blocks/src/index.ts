@@ -84,6 +84,7 @@ import { azureStorageBlueprint } from './azure/storage/storage';
 import { envConfigBlueprint } from './common/config/env-config';
 import { customDomainBlueprint } from './common/networking/custom-domain';
 import { publicEndpointBlueprint } from './common/networking/public-endpoint';
+import { secureGroupBlueprint } from './common/networking/secure-group';
 import { githubRepositoryBlueprint } from './common/source/github-repository';
 import { digitaloceanScheduledTaskBlueprint } from './digitalocean/backend/scheduled-task';
 import { doAppPlatformBlueprint } from './digitalocean/compute/do-app-platform';
@@ -296,11 +297,12 @@ export const BLOCK_BLUEPRINTS: BlockBlueprint[] = [
   digitaloceanRabbitmqBlueprint,
   digitaloceanEventStreamBlueprint,
   doAppPlatformBlueprint,
-  // Common (4)
+  // Common (5)
   githubRepositoryBlueprint,
   envConfigBlueprint,
   publicEndpointBlueprint,
   customDomainBlueprint,
+  secureGroupBlueprint,
 ];
 
 /**

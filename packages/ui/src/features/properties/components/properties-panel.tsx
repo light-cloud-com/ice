@@ -1805,15 +1805,26 @@ const CustomDomainPanel: React.FC<{
         </button>
       </Section>
 
-      {/* DNS records (post-deploy) */}
+      {/* DNS records (post-deploy) — split into ADD and REMOVE sections */}
       {(() => {
-        const allDnsRows = routeViews.flatMap((rv) =>
+        type DnsRow = {
+          type: string;
+          domain: string;
+          value: string;
+          required_action?: string;
+          host: string;
+          targetLabel: string;
+        };
+        const allDnsRows: DnsRow[] = routeViews.flatMap((rv) =>
           rv.dnsRecords.map((rec) => ({
-            ...rec,
-            host: rv.host || rec.domain,
+            ...(rec as any),
+            host: rv.host || (rec as any).domain,
             targetLabel: rv.targetLabel,
           })),
         );
+        const addRows = allDnsRows.filter((r) => (r.required_action || 'add') !== 'remove');
+        const removeRows = allDnsRows.filter((r) => r.required_action === 'remove');
+
         if (allDnsRows.length === 0) {
           return (
             <Section title="DNS records">
@@ -1825,36 +1836,85 @@ const CustomDomainPanel: React.FC<{
             </Section>
           );
         }
+
+        const renderHeader = () => (
+          <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-wider text-ice-text-3 px-2 pb-1">
+            <span className="w-10 shrink-0">Type</span>
+            <span className="flex-shrink min-w-0">Domain name</span>
+            <span className="flex-1 min-w-0">Value</span>
+            <span className="w-10 shrink-0" />
+          </div>
+        );
+
+        const renderRow = (
+          rec: DnsRow,
+          i: number,
+          palette: { bg: string; type: string; chip: string },
+        ) => (
+          <div
+            key={i}
+            className={cn(
+              'flex items-center gap-2 text-ice-2xs font-mono border border-ice-border px-2 py-1.5 rounded',
+              palette.bg,
+            )}
+          >
+            <span className={cn('font-semibold w-10 shrink-0', palette.type)}>{rec.type}</span>
+            <span className="text-ice-text-3 truncate flex-shrink min-w-0" title={rec.host}>
+              {rec.host}
+            </span>
+            <span className="text-ice-text-1 truncate flex-1 min-w-0" title={rec.value}>
+              {rec.value}
+            </span>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(rec.value).catch(() => undefined);
+              }}
+              className={cn('shrink-0 px-1.5 py-0.5 text-[10px] rounded', palette.chip)}
+              title="Copy value to clipboard"
+            >
+              Copy
+            </button>
+          </div>
+        );
+
         return (
           <Section title={`DNS records (${allDnsRows.length})`}>
-            <div className="space-y-1">
-              {allDnsRows.map((rec, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-2 text-ice-2xs font-mono bg-ice-base/40 border border-ice-border px-2 py-1.5 rounded"
-                >
-                  <span className="font-semibold text-blue-400 w-10 shrink-0">{rec.type}</span>
-                  <span className="text-ice-text-3 truncate flex-shrink min-w-0" title={rec.host}>
-                    {rec.host}
-                  </span>
-                  <span className="text-ice-text-1 truncate flex-1 min-w-0" title={rec.value}>
-                    {rec.value}
-                  </span>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(rec.value).catch(() => undefined);
-                    }}
-                    className="shrink-0 px-1.5 py-0.5 text-[10px] rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-300"
-                    title="Copy value to clipboard"
-                  >
-                    Copy
-                  </button>
+            {addRows.length > 0 && (
+              <div className="space-y-1">
+                <div className="text-ice-2xs text-blue-400 leading-relaxed">
+                  Add the records below at your DNS provider to verify the domain.
                 </div>
-              ))}
-            </div>
+                {renderHeader()}
+                {addRows.map((rec, i) =>
+                  renderRow(rec, i, {
+                    bg: 'bg-ice-base/40',
+                    type: 'text-blue-400',
+                    chip: 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-300',
+                  }),
+                )}
+              </div>
+            )}
+
+            {removeRows.length > 0 && (
+              <div className="space-y-1 mt-3">
+                <div className="text-ice-2xs text-amber-400 leading-relaxed">
+                  Remove the records below from your DNS provider — they conflict with the new configuration and
+                  block verification.
+                </div>
+                {renderHeader()}
+                {removeRows.map((rec, i) =>
+                  renderRow(rec, i, {
+                    bg: 'bg-amber-500/5',
+                    type: 'text-amber-400',
+                    chip: 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300',
+                  }),
+                )}
+              </div>
+            )}
+
             <p className="mt-2 text-ice-2xs text-ice-text-3 leading-relaxed">
-              Add each row at your DNS registrar. After they propagate (usually a few minutes), Firebase Hosting
-              will issue a managed SSL certificate automatically.
+              After the records propagate (usually a few minutes), Firebase Hosting will issue a managed SSL
+              certificate automatically.
             </p>
           </Section>
         );

@@ -159,7 +159,9 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   const deployCurrentResource = useSelector((state: RootState) => state.deploy.currentResource);
   const deployCurrentStep = useSelector((state: RootState) => state.deploy.currentStep);
   const showDeployBanner =
-    activeCard?.id && deployingCardId === activeCard.id && (deployStatus === 'deploying' || deployStatus === 'planning');
+    activeCard?.id &&
+    deployingCardId === activeCard.id &&
+    (deployStatus === 'deploying' || deployStatus === 'planning' || deployStatus === 'destroying');
   const card = cardId ? allCards.find((c) => c.id === cardId) : activeCard;
   const selectedNodes = useSelector((state: RootState) => state.selection.selectedNodes);
   const selectedEdges = useSelector((state: RootState) => state.selection.selectedEdges);

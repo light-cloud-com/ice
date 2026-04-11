@@ -518,7 +518,15 @@ export interface FirebaseHostingDnsRecord {
   type: 'A' | 'AAAA' | 'TXT' | 'CNAME';
   domain: string;
   value: string;
-  required_action: 'add' | 'verify';
+  /**
+   * `add` — record the user MUST add at their registrar
+   * `remove` — record currently at the registrar that CONFLICTS with
+   *            the desired state and must be removed (e.g. an existing
+   *            A record from the user's old hosting that's blocking
+   *            the new CNAME)
+   * `verify` — record currently being checked (informational)
+   */
+  required_action: 'add' | 'remove' | 'verify';
 }
 
 /**
@@ -563,14 +571,16 @@ async function registerHostingDomain(
     { acceptStatuses: [404] },
   );
   if (getRes.ok && getRes.status !== 404 && getRes.data?.name) {
+    const records = extractDnsRecords(getRes.data);
+    const requiredDnsKeys = Object.keys(getRes.data?.requiredDnsUpdates || {}).join(',');
     ctx.on_log?.(
-      `[firebase-hosting] Adopted existing customDomain ${customDomain} (status=${getRes.data?.hostState || 'unknown'})`,
+      `[firebase-hosting] Adopted existing customDomain ${customDomain} (status=${getRes.data?.hostState || 'unknown'}, dnsRecordCount=${records.length}, requiredDnsUpdates.keys=[${requiredDnsKeys}], topKeys=[${Object.keys(getRes.data || {}).join(',')}])`,
     );
     return {
       ok: true,
       domainName: customDomain,
       status: getRes.data?.hostState || 'pending',
-      dnsRecords: extractDnsRecords(getRes.data),
+      dnsRecords: records,
       rawResponse: getRes.data,
     };
   }
@@ -683,38 +693,66 @@ function extractDnsRecords(domainData: any): FirebaseHostingDnsRecord[] {
     domainData.domain ||
     '';
 
-  // Shape 1: requiredDnsUpdates.{discovered,checking,checks}[]
-  const sources = [
-    ...(domainData.requiredDnsUpdates?.discovered || []),
-    ...(domainData.requiredDnsUpdates?.checking || []),
-    ...(domainData.requiredDnsUpdates?.checks || []),
-  ];
-  for (const check of sources) {
-    const checkDomain = check?.domainName || fallbackDomain;
-    const records = check?.records || check?.checkError?.records || [];
+  // Walk a record set and emit entries with the given action.
+  // `recordSet` can be a CheckResult (with `records`) or a RecordSet
+  // (with `rdata` directly). We handle both shapes.
+  const walkRecords = (
+    recordSet: any,
+    action: 'add' | 'remove',
+  ): void => {
+    const setDomain = recordSet?.domainName || fallbackDomain;
+    const records = recordSet?.records || recordSet?.checkError?.records || [];
     for (const r of records) {
-      const value = r.requiredText ?? r.required ?? r.value ?? r.rdata;
+      // domainUpdateAction overrides the default action when present.
+      // Firebase tags individual records as ADD/REMOVE so a single set
+      // can carry both ("add this CNAME, remove that A").
+      const recordAction = (() => {
+        const ua = (r.domainUpdateAction || r.action || '').toUpperCase();
+        if (ua === 'ADD') return 'add';
+        if (ua === 'REMOVE') return 'remove';
+        return action;
+      })();
+      const value = r.requiredText ?? r.required ?? r.value ?? r.rdata ?? r.target;
       if (r.type && value !== undefined && value !== null) {
         push({
           type: r.type as 'A' | 'AAAA' | 'TXT' | 'CNAME',
-          domain: checkDomain,
+          domain: setDomain,
           value: String(value),
-          required_action: 'add',
+          required_action: recordAction as 'add' | 'remove',
         });
       }
     }
+  };
+
+  // Shape 1: requiredDnsUpdates with desired/discovered/checking split.
+  // - `desired[]` = records the user must ADD to verify the domain
+  //   (typically a CNAME pointing at `<site>.web.app` for subdomains,
+  //    or A records pointing at Firebase's IPs for apex domains).
+  // - `discovered[]` = records currently at the user's registrar that
+  //   CONFLICT with the desired ones and must be REMOVED for verification
+  //   to succeed (this is where the user's existing A records to their
+  //   old hosting end up).
+  // - `checking[]` = records currently being verified (treat as add).
+  for (const set of domainData.requiredDnsUpdates?.desired || []) {
+    walkRecords(set, 'add');
+  }
+  for (const set of domainData.requiredDnsUpdates?.discovered || []) {
+    walkRecords(set, 'remove');
+  }
+  for (const set of domainData.requiredDnsUpdates?.checking || []) {
+    walkRecords(set, 'add');
+  }
+  // Older shape: `checks[]` (single flat array, individual records carry
+  // their own action via `domainUpdateAction`).
+  for (const set of domainData.requiredDnsUpdates?.checks || []) {
+    walkRecords(set, 'add');
   }
 
-  // Shape 2: dnsRecordSets[] — newer API top-level
+  // Shape 2: dnsRecordSets[] — newer API top-level. Same record-level
+  // action handling as above.
   const sets = domainData.dnsRecordSets || domainData.dnsUpdates?.dnsRecordSets || [];
   for (const s of sets) {
-    const setDomain = s.domainName || fallbackDomain;
-    for (const r of s.records || []) {
-      const value = r.rdata || r.value || r.requiredText;
-      if (r.type && value) {
-        push({ type: r.type as any, domain: setDomain, value: String(value), required_action: 'add' });
-      }
-    }
+    walkRecords(s, 'add');
   }
 
   // Shape 3: provisioning.dnsStatus[] — legacy domains endpoint

@@ -1,5 +1,19 @@
 # Phase 8 — Custom Domains, DNS Feedback, Managed HTTPS
 
+> ## ⚠️ SUPERSEDED — 2026-04-11
+>
+> This phase's load-balancer + GCS + managed-cert approach is **superseded** by [firebase-hosting-and-custom-domain.md](./firebase-hosting-and-custom-domain.md).
+>
+> **Why**: Phase 8's stack (`gcp.storage.bucket` + `gcp.compute.backendBucket` + URL map + global forwarding rule + managed SSL cert) is impossible under common enterprise GCP org policies. With both `iam.allowedPolicyMemberDomains` and `storage.uniformBucketLevelAccess` enforced — a routine combination in hardened projects — no Cloud Storage bucket can be made publicly readable, which means the backend bucket can't fetch and the LB returns 502. We tried IAM grants, legacy ACL fallbacks, and UBLA-disable workarounds; the constraint combination is structurally unworkable.
+>
+> **What replaced it**: GCP `Compute.StaticSite` now compiles to **`gcp.firebase.hosting`**, which has its own access model and bypasses the GCS org policies entirely. A new **`Network.CustomDomain`** block (separate from `Network.PublicEndpoint`) handles the multi-subdomain DNS routing piece. See the new doc for the full architecture, file map, and propagation paths.
+>
+> **What's still alive from Phase 8**: The load-balancer chain itself (`load-balancer.ts`, `backend-bucket.ts`, `managed-ssl-certificate.ts`) is still used by `Network.PublicEndpoint → Compute.Container/SSRSite/etc.` flows where a real load balancer is genuinely needed. The cert handler and backend-bucket handler are not deleted — only the static-site → bucket compile path is.
+>
+> The text below is preserved as historical context for the original investigation and design.
+
+---
+
 **Effort:** 6–8 engineer-days
 **Dependencies:** Phase 0 (safety), Phase 1 (stable identity for cert resource naming), Phase 2 (block output rendering), Phase 4 backend (requirements framework)
 **Builds on:** Phase 4's `dnsARecordRequirement` — this phase finally surfaces it in the UI and extends it with sibling requirements for domain verification and certificate issuance.

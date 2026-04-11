@@ -133,6 +133,10 @@ sequenceDiagram
     Deploy-->>API: Save to CanvasDeployment
 ```
 
+### Static sites on GCP
+
+`Compute.StaticSite` on GCP compiles to **`gcp.firebase.hosting`**, not `gcp.storage.bucket`. The Firebase Hosting handler downloads the connected `Source.Repository` tarball from GitHub and uploads files via the Hosting REST API. Custom domains are routed through a separate `Network.CustomDomain` block (one block per root domain, one route per subdomain) — distinct from `Network.PublicEndpoint`, which compiles to a load balancer for VPC-private services. See [`deployment-fixes-docs/firebase-hosting-and-custom-domain.md`](../deployment-fixes-docs/firebase-hosting-and-custom-domain.md) for the full architecture, file map, and the rationale for why this replaced the original Phase 8 load-balancer + GCS approach.
+
 ## Data Flow: AI Intent
 
 ```mermaid

@@ -350,6 +350,57 @@ const cardsSlice = createSlice({
       }
     },
 
+    // Clear all deploy-related overlay fields from every node in the
+    // active card. Used after a successful destroy so the canvas blocks
+    // and properties panel stop showing "Live" / URL pills for resources
+    // that no longer exist. The fields wiped here mirror the ones the
+    // deploy subscription hook + node-outputs hydrator set when a deploy
+    // succeeds; missing one would leave a ghost field on the block.
+    clearCardDeployOverlay: (state, action: PayloadAction<{ cardId?: string }>) => {
+      pushSnapshot(state);
+      const cardId = action.payload?.cardId || state.activeCardId;
+      const card = state.cards.find((c) => c.id === cardId);
+      if (!card) return;
+      const fieldsToClear = [
+        'provider_id',
+        'deploy_status',
+        'deploy_progress',
+        'deploy_error',
+        'deploy_outputs',
+        'last_deployed_at',
+        'deployed_image',
+        'url',
+        'default_url',
+        'firebaseapp_url',
+        'console_url',
+        'site_id',
+        'source_repo',
+        'source_branch',
+        'republished_from_repo',
+        'custom_domain',
+        'custom_domain_url',
+        'custom_domain_status',
+        'custom_domain_dns_records',
+        'public_grant_failed',
+        'public_grant_error',
+        'public_grant_strategy',
+        'ip_address',
+        'IPAddress',
+      ];
+      for (const node of card.nodes) {
+        if (!node.data) continue;
+        const next = { ...node.data };
+        let changed = false;
+        for (const key of fieldsToClear) {
+          if (next[key] !== undefined) {
+            delete next[key];
+            changed = true;
+          }
+        }
+        if (changed) node.data = next;
+      }
+    },
+
     // Update edge data in active card
     updateCardEdgeData: (state, action: PayloadAction<{ edgeId: string; data: Record<string, unknown> }>) => {
       pushSnapshot(state);
@@ -990,6 +1041,7 @@ export const {
   renameCard,
   addNodeToCard,
   addEdgeToCard,
+  clearCardDeployOverlay,
   updateCardEdgeData,
   reverseCardEdge,
   updateCardNodePosition,

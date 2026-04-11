@@ -30,7 +30,7 @@ import { cn } from '../../../shared/utils/cn';
 import { isApiNotEnabledError, extractApiName, extractApiEnableUrl } from '../../../shared/utils/gcp-errors';
 import { primaryOutput } from '../output-extractors';
 import { RequirementsSection } from './requirements-section';
-import { selectActiveCard, updateCardNodeData } from '../../../store/slices/cards-slice';
+import { selectActiveCard, updateCardNodeData, clearCardDeployOverlay } from '../../../store/slices/cards-slice';
 import {
   closeDeployPanel,
   setProvider,
@@ -43,6 +43,7 @@ import {
   startPlanning,
   setPlan,
   startDeploying,
+  startDestroying,
   setDeployProgress,
   addResourceResult,
   deploySuccess,
@@ -391,7 +392,12 @@ export const DeployPanel: React.FC = () => {
   // ─── Close ──────────────────────────────────────────────────────────
 
   const handleClose = useCallback(() => {
-    if (deploy.status === 'deploying' || deploy.status === 'authenticating') return;
+    if (
+      deploy.status === 'deploying' ||
+      deploy.status === 'destroying' ||
+      deploy.status === 'authenticating'
+    )
+      return;
     dispatch(closeDeployPanel());
     dispatch(resetDeploy());
   }, [deploy.status, dispatch]);
@@ -517,6 +523,7 @@ export const DeployPanel: React.FC = () => {
               is copyable so the user can paste straight into their
               registrar without digging through the Firebase Console. */}
           {(() => {
+            type DnsRec = { type: string; domain: string; value: string; required_action?: string };
             const dnsResults = deploy.results.filter(
               (r) =>
                 r.success &&
@@ -524,55 +531,96 @@ export const DeployPanel: React.FC = () => {
                 (r.outputs as any).custom_domain_dns_records.length > 0,
             );
             if (dnsResults.length === 0) return null;
+
+            const renderRecord = (
+              rec: DnsRec,
+              ridx: number,
+              palette: { bg: string; type: string; chip: string; chipHover: string },
+            ) => (
+              <div
+                key={ridx}
+                className={cn('flex items-center gap-2 text-xs font-mono px-2 py-1.5 rounded', palette.bg)}
+              >
+                <span className={cn('font-semibold w-12 shrink-0', palette.type)}>{rec.type}</span>
+                <span className="text-muted-foreground truncate flex-shrink min-w-0" title={rec.domain}>
+                  {rec.domain}
+                </span>
+                <span className="text-foreground truncate flex-1 min-w-0" title={rec.value}>
+                  {rec.value}
+                </span>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(rec.value).catch(() => undefined);
+                  }}
+                  className={cn('shrink-0 px-2 py-0.5 text-[10px] rounded', palette.chip, palette.chipHover)}
+                  title="Copy value to clipboard"
+                >
+                  Copy
+                </button>
+              </div>
+            );
+
+            const renderHeader = () => (
+              <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-wider text-muted-foreground px-2 pb-1">
+                <span className="w-12 shrink-0">Type</span>
+                <span className="flex-shrink min-w-0">Domain name</span>
+                <span className="flex-1 min-w-0">Value</span>
+                <span className="w-10 shrink-0" />
+              </div>
+            );
+
             return (
               <div className="space-y-2">
                 {dnsResults.map((r, idx) => {
-                  const records = ((r.outputs as any).custom_domain_dns_records || []) as Array<{
-                    type: string;
-                    domain: string;
-                    value: string;
-                  }>;
+                  const allRecords = ((r.outputs as any).custom_domain_dns_records || []) as DnsRec[];
+                  const addRecords = allRecords.filter((rec) => (rec.required_action || 'add') !== 'remove');
+                  const removeRecords = allRecords.filter((rec) => rec.required_action === 'remove');
                   const customDomain = (r.outputs as any)?.custom_domain || r.name;
                   return (
                     <div
                       key={`${r.name}-${idx}`}
-                      className="rounded-md border border-blue-500/30 bg-blue-50 dark:bg-blue-950/20 p-3 space-y-2"
+                      className="rounded-md border border-blue-500/30 bg-blue-50 dark:bg-blue-950/20 p-3 space-y-3"
                     >
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-medium text-blue-700 dark:text-blue-300">
                           DNS records for {customDomain}
                         </span>
-                        <span className="text-blue-600/70 dark:text-blue-400/70">
-                          Add these at your registrar to verify the domain
-                        </span>
                       </div>
-                      <div className="space-y-1">
-                        {records.map((rec, ridx) => (
-                          <div
-                            key={ridx}
-                            className="flex items-center gap-2 text-xs font-mono bg-background/60 px-2 py-1.5 rounded"
-                          >
-                            <span className="font-semibold text-blue-700 dark:text-blue-300 w-12 shrink-0">
-                              {rec.type}
-                            </span>
-                            <span className="text-muted-foreground truncate flex-shrink min-w-0" title={rec.domain}>
-                              {rec.domain}
-                            </span>
-                            <span className="text-foreground truncate flex-1 min-w-0" title={rec.value}>
-                              {rec.value}
-                            </span>
-                            <button
-                              onClick={() => {
-                                navigator.clipboard.writeText(rec.value).catch(() => undefined);
-                              }}
-                              className="shrink-0 px-2 py-0.5 text-[10px] rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-700 dark:text-blue-300"
-                              title="Copy value to clipboard"
-                            >
-                              Copy
-                            </button>
+
+                      {addRecords.length > 0 && (
+                        <div className="space-y-1">
+                          <div className="text-[11px] font-medium text-blue-700 dark:text-blue-300">
+                            Add the records below at your DNS provider to verify that you own {customDomain}
                           </div>
-                        ))}
-                      </div>
+                          {renderHeader()}
+                          {addRecords.map((rec, ridx) =>
+                            renderRecord(rec, ridx, {
+                              bg: 'bg-background/60',
+                              type: 'text-blue-700 dark:text-blue-300',
+                              chip: 'bg-blue-500/20 text-blue-700 dark:text-blue-300',
+                              chipHover: 'hover:bg-blue-500/30',
+                            }),
+                          )}
+                        </div>
+                      )}
+
+                      {removeRecords.length > 0 && (
+                        <div className="space-y-1">
+                          <div className="text-[11px] font-medium text-amber-700 dark:text-amber-300">
+                            Remove the records below from your DNS provider — they conflict with the new
+                            configuration and block verification
+                          </div>
+                          {renderHeader()}
+                          {removeRecords.map((rec, ridx) =>
+                            renderRecord(rec, ridx, {
+                              bg: 'bg-amber-50 dark:bg-amber-950/30',
+                              type: 'text-amber-700 dark:text-amber-300',
+                              chip: 'bg-amber-500/20 text-amber-700 dark:text-amber-300',
+                              chipHover: 'hover:bg-amber-500/30',
+                            }),
+                          )}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -632,10 +680,16 @@ export const DeployPanel: React.FC = () => {
         <div className="flex items-center justify-between px-5 py-3 border-t border-border bg-muted/30">
           <button
             onClick={() => dispatch(resetDeploy())}
-            disabled={deploy.status === 'deploying'}
+            disabled={deploy.status === 'deploying' || deploy.status === 'destroying'}
             id="ice-deploy-btn-cancel"
             className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
-            title={deploy.status === 'deploying' ? 'Cannot clear while a deploy is running' : 'Clear plan and results'}
+            title={
+              deploy.status === 'deploying'
+                ? 'Cannot clear while a deploy is running'
+                : deploy.status === 'destroying'
+                  ? 'Cannot clear while a destroy is running'
+                  : 'Clear plan and results'
+            }
           >
             {t('deploy.buttons.reset')}
           </button>
@@ -677,6 +731,7 @@ export const DeployPanel: React.FC = () => {
                 gcpNodes.length === 0 ||
                 deploy.status === 'planning' ||
                 deploy.status === 'deploying' ||
+                deploy.status === 'destroying' ||
                 deploy.status === 'authenticating'
               }
               id="ice-deploy-btn-plan"
@@ -715,6 +770,7 @@ export const DeployPanel: React.FC = () => {
                 !deploy.gcpProject ||
                 gcpNodes.length === 0 ||
                 deploy.status === 'deploying' ||
+                deploy.status === 'destroying' ||
                 deploy.status === 'planning' ||
                 deploy.status === 'authenticating' ||
                 hasBlockingUnmet;
@@ -783,6 +839,12 @@ export const DeployPanel: React.FC = () => {
             onCancel={() => setDestroyModalOpen(false)}
             onConfirm={async (destroyEverything: boolean) => {
               setDestroyModalOpen(false);
+              // Flip the slice into 'destroying' state BEFORE the API
+              // call so progress events arriving via the socket
+              // subscription don't auto-flip it back to 'deploying'.
+              // The subscription hook's `startDeploying` dispatch is a
+              // no-op while status === 'destroying'.
+              dispatch(startDestroying({ cardId: activeCard.id }));
               try {
                 if (destroyEverything) {
                   console.log('[destroy] destroyAll starting', { cardId: activeCard.id, gcpProject: deploy.gcpProject });
@@ -819,6 +881,14 @@ export const DeployPanel: React.FC = () => {
                     return;
                   }
                 }
+                // Wipe deploy overlay from the canvas (provider_id, url,
+                // deploy_status, custom domain fields, etc.) so blocks
+                // and the properties panel stop showing "Live" / URL
+                // pills for resources that no longer exist.
+                dispatch(clearCardDeployOverlay({ cardId: activeCard.id }));
+                // Drop the deploy panel's "previously deployed" list too
+                // so the next deploy starts from a clean slate.
+                dispatch(setDeployedResources([]));
                 dispatch(resetDeploy());
               } catch (err: any) {
                 console.error('[destroy] caught error', err);
@@ -863,6 +933,10 @@ const StatusBadge: React.FC<{ status: DeployStatus; id?: string }> = ({ status, 
     deploying: {
       label: t('deploy.status.deploying'),
       color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+    },
+    destroying: {
+      label: 'Destroying',
+      color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
     },
     success: {
       label: t('deploy.status.success'),

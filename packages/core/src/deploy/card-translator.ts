@@ -128,13 +128,13 @@ const GCP_TYPE_MAP: Record<string, string> = {
   // are set, and the URL map host rules are populated from each
   // outgoing edge's `subdomain` field.
   'Network.PublicEndpoint': 'gcp.compute.globalForwardingRule',
-  // `Network.SecureGroup` is a container block that bundles VPC + Subnet
-  // + a public load balancer. On the canvas it nests children; in the
-  // deploy graph it compiles to the same forwarding rule + LB chain that
-  // PublicEndpoint produces. The Pass 1.5 wiring below treats both
-  // iceTypes uniformly when computing host_rules, backends, and the
-  // managed SSL cert.
-  'Network.SecureGroup': 'gcp.compute.globalForwardingRule',
+  // `Network.PrivateNetwork` is a UI-level grouping container — it's a
+  // walled visual boundary on the canvas but does not compile to a
+  // deployable resource in v1. Children inside deploy as normal; a
+  // nested `Network.CustomDomain` (when Open) compiles to the LB chain
+  // that routes traffic to sibling services. See UI_ONLY_TYPES below.
+  // Future: egress firewall rules from node.data.egress will compile
+  // to gcp.compute.firewall entries once the handler exists.
   'Network.LoadBalancer': 'gcp.compute.globalForwardingRule',
   'Messaging.CloudPubSub': 'gcp.pubsub.topic',
   'Messaging.Queue': 'gcp.pubsub.topic',
@@ -228,14 +228,37 @@ const UI_ONLY_TYPES = new Set([
   'Monitoring.Terminal',
   'Source.Repository',
   'Config.Environment',
-  // Network.CustomDomain is metadata-only on the canvas: it carries a
-  // root domain + per-edge subdomains and is consumed by Pass 1.45 to
-  // propagate the full host onto each connected target's `domain`
-  // property. Provider handlers (Firebase Hosting in particular) then
-  // register the custom domain through their native API. There's no
-  // dedicated DNS resource to deploy.
-  'Network.CustomDomain',
+  // Network.PrivateNetwork is a UI-level grouping container. It
+  // visually walls off its children and hosts a nested Custom Domain
+  // for ingress, but it doesn't compile to a dedicated resource in v1
+  // — the children deploy as normal and the nested CD handles routing.
+  'Network.PrivateNetwork',
 ]);
+
+/**
+ * Network.CustomDomain has two modes:
+ *
+ *   1. STANDALONE (no parent, or parent is not a PrivateNetwork):
+ *      metadata-only — it carries a root domain + per-edge subdomains
+ *      and is consumed by Pass 1.6 to propagate the full host onto
+ *      each connected target's `domain` property. Firebase Hosting
+ *      (et al.) then registers the custom domain via its native API.
+ *      NO dedicated resource is deployed.
+ *
+ *   2. NESTED inside a Network.PrivateNetwork: the CD is that
+ *      network's public ingress gateway. It compiles to the full LB
+ *      chain (forwarding rule + URL map + backend services) targeting
+ *      sibling services inside the parent VPC.
+ */
+function isCustomDomainStandalone(
+  node: { data: Record<string, unknown>; parentId?: string | null },
+  allNodes: Array<{ id: string; data: Record<string, unknown> }>,
+): boolean {
+  if (node.data?.iceType !== 'Network.CustomDomain') return false;
+  if (!node.parentId) return true;
+  const parent = allNodes.find((n) => n.id === node.parentId);
+  return parent?.data?.iceType !== 'Network.PrivateNetwork';
+}
 
 // iceTypes that are external services (not GCP-managed)
 const EXTERNAL_TYPES = new Set(['Database.MongoDB']);
@@ -640,6 +663,18 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
       continue;
     }
 
+    // Standalone Network.CustomDomain is UI-only (metadata for Pass 1.6
+    // propagation). Nested inside a PrivateNetwork it becomes deployable
+    // — see isCustomDomainStandalone + the dynamic type lookup below.
+    if (isCustomDomainStandalone(node, nodes)) {
+      skipped.push({
+        nodeId: node.id,
+        label: (node.data.label as string) || node.id,
+        reason: 'Standalone Network.CustomDomain is metadata-only (handled by Pass 1.6)',
+      });
+      continue;
+    }
+
     // Skip external types
     if (EXTERNAL_TYPES.has(ice_type)) {
       skipped.push({
@@ -650,8 +685,14 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
       continue;
     }
 
-    // Look up the deployer type
-    const gcp_type = type_map[ice_type];
+    // Look up the deployer type. Nested Network.CustomDomain inside a
+    // PrivateNetwork compiles to the global forwarding rule (same as
+    // Network.PublicEndpoint) — the nested case isn't in the type map
+    // because standalone CDs are UI-only, so we resolve it inline here.
+    const gcp_type =
+      ice_type === 'Network.CustomDomain'
+        ? 'gcp.compute.globalForwardingRule'
+        : type_map[ice_type];
     if (!gcp_type) {
       warnings.push(`No ${provider} mapping for iceType "${ice_type}" (node: ${node.data.label || node.id}). Skipped.`);
       skipped.push({
@@ -913,15 +954,23 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
   };
   const endpointToBackends = new Map<string, BackendEntry[]>();
 
-  // Match both PublicEndpoint AND SecureGroup as endpoint blocks. They
-  // both compile to gcp.compute.globalForwardingRule and share the same
-  // wiring logic — the only differences are visual (SecureGroup is a
-  // container with a custom renderer) and topological (SecureGroup
-  // children are nested inside the block on the canvas, but in the
-  // deploy graph they're independent resources wired via host_rules
-  // exactly like PublicEndpoint backends).
-  const isEndpointIceType = (t: string) =>
-    t === 'Network.PublicEndpoint' || t === 'Network.SecureGroup';
+  // Match both PublicEndpoint AND CustomDomain-nested-inside-PrivateNetwork
+  // as endpoint blocks. Both compile to gcp.compute.globalForwardingRule.
+  //
+  // - PublicEndpoint: standalone public LB for VPC-internal services.
+  // - CustomDomain nested inside PrivateNetwork: the nested CD acts as
+  //   the PrivateNetwork's public gateway, compiling to the same LB
+  //   chain but targeting sibling services inside the parent VPC.
+  //   Standalone CustomDomain (no parent) stays DNS-only and is NOT an
+  //   endpoint — it's handled in Pass 1.6 instead.
+  const isEndpointIceType = (t: string, node?: { parentId?: string | null }) => {
+    if (t === 'Network.PublicEndpoint') return true;
+    if (t === 'Network.CustomDomain' && node?.parentId) {
+      const parent = nodes.find((n) => n.id === node.parentId);
+      return parent?.data?.iceType === 'Network.PrivateNetwork';
+    }
+    return false;
+  };
 
   for (const edge of edges) {
     const src = nodes.find((n) => n.id === edge.source);
@@ -929,11 +978,12 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
     if (!src || !dst) continue;
     const srcIce = (src.data?.iceType as string) || '';
     const dstIce = (dst.data?.iceType as string) || '';
-    const isEndpointEdge = isEndpointIceType(srcIce) || isEndpointIceType(dstIce);
-    if (!isEndpointEdge) continue;
+    const srcIsEndpoint = isEndpointIceType(srcIce, src);
+    const dstIsEndpoint = isEndpointIceType(dstIce, dst);
+    if (!srcIsEndpoint && !dstIsEndpoint) continue;
 
-    const endpointNode = isEndpointIceType(srcIce) ? src : dst;
-    const targetNode = isEndpointIceType(srcIce) ? dst : src;
+    const endpointNode = srcIsEndpoint ? src : dst;
+    const targetNode = srcIsEndpoint ? dst : src;
     const targetIce = (targetNode.data?.iceType as string) || '';
 
     // Only compute targets are valid backends. Skip edges to requirements,
@@ -945,8 +995,8 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
 
     // Subdomain resolution priority for endpoint backends:
     //   1. edge.data.routeId → look up the route on the source endpoint
-    //      block (the per-row port model used by SecureGroup and the
-    //      Custom Domain block)
+    //      block (the per-row port model used by the Custom Domain
+    //      block — standalone or nested inside a Private Network)
     //   2. edge.data.subdomain → legacy single-subdomain edge field
     //      (kept for back-compat with older PublicEndpoint edges
     //      created before routes existed)

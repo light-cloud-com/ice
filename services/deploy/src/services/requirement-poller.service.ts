@@ -160,8 +160,8 @@ async function checkOne(row: PollerRow): Promise<void> {
       },
     });
 
-    // Notify the UI on every status check so the SecureGroup /
-    // PublicEndpoint block headers can show live "Provisioning…" /
+    // Notify the UI on every status check so the PublicEndpoint /
+    // Custom Domain block headers can show live "Provisioning…" /
     // "Active" status without waiting for the user to redeploy. The
     // payload now includes the actual status + details so the UI can
     // mirror it onto node.data.cert_status (and similar) for in-block

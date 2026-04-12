@@ -77,7 +77,7 @@ export function validateStructure(nodes: readonly ValidatableNode[], edges: read
         code: 'PARENT_NOT_CONTAINER',
         message: `Parent "${(parent.data.label as string) || parent.id}" is not a container`,
         nodeId: node.id,
-        suggestion: 'Resources can only be placed inside VPC, Subnet, or Group containers',
+        suggestion: 'Resources can only be placed inside VPC, Subnet, Private Network, or Group containers',
       });
     }
   }

@@ -160,10 +160,10 @@ const SERVICE_NAMES: Record<string, Record<string, string>> = {
     gcp: 'Custom Domain',
     azure: 'Custom Domain',
   },
-  'Network.SecureGroup': {
-    aws: 'VPC + ALB',
-    gcp: 'VPC + Load Balancer',
-    azure: 'VNet + App Gateway',
+  'Network.PrivateNetwork': {
+    aws: 'VPC',
+    gcp: 'VPC Network',
+    azure: 'Virtual Network',
   },
   'Network.Route53': { aws: 'Amazon Route 53' },
   'Network.VPC': {

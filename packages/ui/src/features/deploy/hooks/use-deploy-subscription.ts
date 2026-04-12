@@ -110,7 +110,7 @@ function applyDeployEvent(dispatch: AppDispatch, event: any, cardId?: string): v
     // The requirement-poller emits this on every check (not only on
     // first verification). When the requirement is the managed cert
     // issuance one, mirror its status onto the source node so the
-    // SecureGroup / PublicEndpoint block header shows live cert state
+    // PublicEndpoint / Custom Domain block header shows live cert state
     // without waiting for a redeploy.
     if (event.requirement_id === 'managed-cert-issuance' && event.node_id) {
       const detailStatus = event.details?.managed_status as string | undefined;

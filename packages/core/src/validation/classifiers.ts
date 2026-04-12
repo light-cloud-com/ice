@@ -80,7 +80,12 @@ export function isDomain(t: string): boolean {
 
 export function isContainer(iceType: string, nodeType?: string): boolean {
   if (nodeType === 'container' || nodeType === 'group') return true;
-  return iceType === 'Network.VPC' || iceType === 'Network.Subnet' || iceType.startsWith('Group.');
+  return (
+    iceType === 'Network.VPC' ||
+    iceType === 'Network.Subnet' ||
+    iceType === 'Network.PrivateNetwork' ||
+    iceType.startsWith('Group.')
+  );
 }
 
 function isService(t: string): boolean {

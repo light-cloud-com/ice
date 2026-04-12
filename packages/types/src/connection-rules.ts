@@ -108,48 +108,41 @@ export function isEnvConfig(t: string): boolean {
   return t === 'Config.Environment';
 }
 export function isDomain(t: string): boolean {
-  return (
-    t === 'Network.PublicEndpoint' ||
-    t === 'Network.CustomDomain' ||
-    t === 'Network.SecureGroup' ||
-    /Domain|DNS/i.test(t)
-  );
+  return t === 'Network.PublicEndpoint' || t === 'Network.CustomDomain' || /Domain|DNS/i.test(t);
 }
 /**
  * `Network.CustomDomain` is the variant of the domain block that routes
  * DNS to services that already have their own public endpoint (Firebase
- * Hosting, etc.) instead of compiling to a load balancer. The parent-
- * aware connection check rejects CustomDomain → VPC-internal targets
- * because plain DNS can't penetrate a VPC.
+ * Hosting, etc.). It's also used NESTED inside a `Network.PrivateNetwork`
+ * container to act as that network's public ingress gateway — in the
+ * nested case, its routes wire to sibling services inside the parent
+ * network's VPC and it compiles to a full LB chain instead of DNS-only.
  *
- * `Network.PublicEndpoint` and `Network.SecureGroup` BOTH compile to a
- * load balancer chain and CAN target VPC-internal services — that's
- * literally the use case (LBs are designed to expose private services).
- * The parent-aware check distinguishes these cases via `isCustomDomain`.
+ * The parent-aware connection check rejects CustomDomain → VPC-internal
+ * targets ONLY when the CD is top-level (standalone DNS can't penetrate
+ * a VPC). Nested CDs inside a PrivateNetwork can target their siblings
+ * because the compiler will synthesize the LB.
  */
 export function isCustomDomain(t: string): boolean {
   return t === 'Network.CustomDomain';
 }
 /**
- * `Network.SecureGroup` is a container block that bundles VPC + Subnet
- * + a public load balancer. It's BOTH a domain-like block (carries
- * routes that compile to host_rules) AND a container (children nest
- * inside via parentId). The connection rule layer treats it as a
- * domain block for "Domain → Routable" matching, and the canvas treats
- * it as a container for the parent-child nesting machinery.
+ * `Network.PrivateNetwork` is a pure container block. Children nest
+ * inside via parentId. It has NO ports — all routing goes through a
+ * nested `Network.CustomDomain` child when the user wants public
+ * ingress.
  */
-export function isSecureGroup(t: string): boolean {
-  return t === 'Network.SecureGroup';
+export function isPrivateNetwork(t: string): boolean {
+  return t === 'Network.PrivateNetwork';
 }
 export function isContainer(iceType: string, nodeType?: string): boolean {
-  // Note: Network.SecureGroup is intentionally NOT in this list. It IS a
-  // container for canvas nesting purposes (children nest via parentId)
-  // but it MUST be allowed to have edges (the per-row ports on its
-  // header are how children get wired to subdomains). The canvas-side
-  // nesting check (svg-canvas.tsx `isContainerNode`) lists SecureGroup
-  // separately so the two concepts don't collide.
   if (nodeType === 'container' || nodeType === 'group') return true;
-  return iceType === 'Network.VPC' || iceType === 'Network.Subnet' || iceType.startsWith('Group.');
+  return (
+    iceType === 'Network.VPC' ||
+    iceType === 'Network.Subnet' ||
+    iceType === 'Network.PrivateNetwork' ||
+    iceType.startsWith('Group.')
+  );
 }
 
 /** Composite: anything deployable (backend + frontend) */
@@ -481,21 +474,6 @@ export const CONNECTION_RULES: ConnectionRule[] = [
   },
 
   // ── DNS ────────────────────────────────────────────────────────────────
-  // Service → SecureGroup ingress: external service connecting INTO
-  // the SecureGroup's top ingress port. Edge direction is PRESERVED
-  // (no `reverse: true`) because the semantic is "this service is
-  // allowed to call into the secure group" — the source is the
-  // initiator, not the target. Listed BEFORE the generic Domain rules
-  // so `findConnectionRule` matches it first and skips the flip
-  // semantics.
-  {
-    label: 'Service → SecureGroup (ingress allowlist)',
-    source: isRoutable,
-    target: isSecureGroup,
-    category: 'traffic',
-    trafficType: 'request',
-    lineStyle: 'solid',
-  },
   { label: 'Domain → Routable', source: isDomain, target: isRoutable, category: 'dns', lineStyle: 'solid' },
   // Reverse: user drags service→domain, we flip
   {
@@ -547,33 +525,6 @@ export function isInsideContainer(
 }
 
 /**
- * Walk a node's parent chain looking for a specific ancestor id.
- * Returns true if `nodeId` is a descendant of `ancestorId`.
- *
- * Used by Secure Group's "routes can only target services nested
- * inside this same group" rule. The semantic intent of a Secure
- * Group is "everything inside this box is private; the routes at
- * the top expose the inside services to the public" — so a route
- * connecting to a service OUTSIDE the group makes no sense.
- */
-export function isDescendantOf(
-  nodeId: string,
-  ancestorId: string,
-  allNodes: NodeForConnectionCheck[],
-): boolean {
-  if (nodeId === ancestorId) return false;
-  const byId = new Map(allNodes.map((n) => [n.id, n]));
-  let cur = byId.get(nodeId);
-  let depth = 0;
-  while (cur?.parentId && depth < 20) {
-    if (cur.parentId === ancestorId) return true;
-    cur = byId.get(cur.parentId);
-    depth++;
-  }
-  return false;
-}
-
-/**
  * Check if two block types can be connected.
  * Returns true if any CONNECTION_RULE matches (in either direction).
  *
@@ -595,52 +546,34 @@ export function canConnect(
     allNodes?: NodeForConnectionCheck[];
   },
 ): boolean {
-  // Containers can never have edges (VPC, Subnet, Group.*). Note that
-  // Network.SecureGroup is intentionally NOT a container per
-  // `isContainer` because it MUST be allowed to have edges from its
-  // route-row ports — that's how the LB gets wired to children.
+  // Containers can never have edges (VPC, Subnet, PrivateNetwork, Group.*).
   if (isContainer(srcIceType, srcNodeType) || isContainer(tgtIceType, tgtNodeType)) return false;
 
-  // Custom Domain blocks are pure DNS — they can't penetrate a VPC.
-  // Reject Custom Domain → VPC-internal targets in both directions.
-  //
-  // Public Endpoint and Secure Group BOTH compile to a load balancer
-  // chain and CAN target VPC-internal services — that's literally the
-  // use case (LBs are designed to expose private services to the
-  // internet via Serverless NEG / backend bucket / etc.). The check
-  // below specifically allows them.
-  //
-  // Secure Group has an additional constraint: its routes can ONLY
-  // target services that are NESTED inside the same Secure Group. The
-  // semantic is "routes at the top of this private network expose its
-  // inside services to the public" — connecting a route to something
-  // OUTSIDE the box would be a topology error.
+  // Custom Domain blocks are pure DNS at the top level — they can't
+  // penetrate a VPC. Reject Custom Domain → VPC-internal targets in
+  // both directions, UNLESS the CD is nested inside the same container
+  // as the target (e.g. CD inside a PrivateNetwork targeting sibling
+  // services — the compiler synthesizes the LB in that case).
   //
   // Skipped if context isn't provided (callers without canvas state are
   // non-authoritative on parent topology).
   if (context?.allNodes && context.allNodes.length > 0) {
-    if (isCustomDomain(srcIceType) && context.tgtNode) {
-      if (isInsideContainer(context.tgtNode.id, context.allNodes)) return false;
+    if (isCustomDomain(srcIceType) && context.srcNode && context.tgtNode) {
+      const srcParent = context.srcNode.parentId || null;
+      const tgtParent = context.tgtNode.parentId || null;
+      // Allow nested CD → sibling inside the same PrivateNetwork.
+      const sameParentNetwork = !!srcParent && srcParent === tgtParent;
+      if (!sameParentNetwork && isInsideContainer(context.tgtNode.id, context.allNodes)) {
+        return false;
+      }
     }
-    if (isCustomDomain(tgtIceType) && context.srcNode) {
-      if (isInsideContainer(context.srcNode.id, context.allNodes)) return false;
-    }
-    if (isSecureGroup(srcIceType) && context.srcNode && context.tgtNode) {
-      // SecureGroup → out: row port routes can ONLY target services
-      // nested inside this same group (the "expose inside services
-      // via subdomain" case). External targets make no sense for the
-      // route ports.
-      if (!isDescendantOf(context.tgtNode.id, context.srcNode.id, context.allNodes)) return false;
-    }
-    if (isSecureGroup(tgtIceType) && context.tgtNode && context.srcNode) {
-      // → SecureGroup ingress: external services connecting INTO the
-      // SecureGroup's top ingress port. The semantic is "this service
-      // is allowed to send traffic into the secure area" — an
-      // allowlist of inbound sources, like a firewall or Cloud Armor
-      // rule. So source must NOT be a child of the SecureGroup
-      // (children connecting to their own parent makes no sense).
-      // Source can be any external block.
-      if (isDescendantOf(context.srcNode.id, context.tgtNode.id, context.allNodes)) return false;
+    if (isCustomDomain(tgtIceType) && context.srcNode && context.tgtNode) {
+      const srcParent = context.srcNode.parentId || null;
+      const tgtParent = context.tgtNode.parentId || null;
+      const sameParentNetwork = !!tgtParent && srcParent === tgtParent;
+      if (!sameParentNetwork && isInsideContainer(context.srcNode.id, context.allNodes)) {
+        return false;
+      }
     }
   }
 

@@ -378,7 +378,7 @@ export const load_balancer_handler: GCPResourceHandler = {
         // Non-fatal — we can still return success without the IP.
       }
 
-      // Fetch the SSL cert status so the SecureGroup / PublicEndpoint
+      // Fetch the SSL cert status so the Custom Domain / PublicEndpoint
       // block header can show "Provisioning SSL cert..." right after
       // deploy. This is the INITIAL status — the post-deploy
       // managedCertIssuanceRequirement polls every 60s for live updates
@@ -430,7 +430,7 @@ export const load_balancer_handler: GCPResourceHandler = {
           IPAddress: ipAddress,
           url: primaryUrl,
           ssl_certificate: sslCertificateName || undefined,
-          // `cert_status` is read by the SecureGroup block renderer to
+          // `cert_status` is read by the Custom Domain block renderer to
           // show the "Provisioning SSL cert..." indicator on the header.
           // The managedCertIssuanceRequirement polls live updates after
           // deploy; this field is the INITIAL value at deploy time.
@@ -479,7 +479,7 @@ export const load_balancer_handler: GCPResourceHandler = {
           ? `http://${ipAddress}`
           : undefined;
 
-    // Re-fetch the cert status on every update so the SecureGroup
+    // Re-fetch the cert status on every update so the Custom Domain
     // header reflects the current state. This is what makes "click
     // Deploy again 30min after the original create" actually update
     // the block to ACTIVE without forcing the user to wait for the

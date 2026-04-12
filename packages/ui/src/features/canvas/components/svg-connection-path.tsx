@@ -14,7 +14,6 @@ import { EDGE_COLORS } from '../../../config/color-palette';
 import { useReducedMotion } from '../../../shared/hooks/use-reduced-motion';
 import { inferConnectionMeta, type ConnectionCategory } from '../utils/connection-rules';
 import { getCustomDomainRoutePortY } from './nodes/custom-domain';
-import { getSecureGroupRoutePortPosition } from './nodes/secure-group';
 import type { CanvasNode, CanvasConnection } from './svg-canvas';
 import type { EdgeStyle } from '../../../store/slices/ui-slice';
 
@@ -346,12 +345,12 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
 
       const fromIce = (fromNode.data?.iceType as string) || '';
       const routeId = (connection.data as any)?.routeId as string | undefined;
-      // Both Network.CustomDomain and Network.SecureGroup expose
-      // per-row connection ports that the path should anchor to
-      // EXACTLY (not at the generic right-side midpoint).
+      // Network.CustomDomain exposes per-row connection ports that the
+      // path should anchor to EXACTLY (not at the generic right-side
+      // midpoint). Works for standalone and nested-inside-PrivateNetwork
+      // usage alike — the CD's routes are always on its own right edge.
       const isCustomDomainSource = fromIce === 'Network.CustomDomain' && !!routeId;
-      const isSecureGroupSource = fromIce === 'Network.SecureGroup' && !!routeId;
-      const isRowSource = isCustomDomainSource || isSecureGroupSource;
+      const isRowSource = isCustomDomainSource;
 
       let exitSide: Side;
       let entrySide: Side;
@@ -362,22 +361,11 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
           ((fromNode.data?.routes as Array<{ id: string; subdomain: string }> | undefined) || []);
         const rowIndex = routes.findIndex((r) => r.id === routeId);
         if (rowIndex >= 0) {
-          // SecureGroup ports live on the LEFT sidebar's inner edge
-          // (pointing INTO children inside the same block). Custom
-          // Domain ports live on the right edge (pointing OUT to
-          // services elsewhere on the canvas). The two helpers return
-          // node-relative coordinates accordingly.
-          if (isSecureGroupSource) {
-            const portPos = getSecureGroupRoutePortPosition(rowIndex);
-            exitSide = 'right';
-            start = { x: effFrom.x + portPos.x, y: effFrom.y + portPos.y };
-          } else {
-            exitSide = 'right';
-            start = {
-              x: effFrom.x + effFrom.width,
-              y: effFrom.y + getCustomDomainRoutePortY(rowIndex),
-            };
-          }
+          exitSide = 'right';
+          start = {
+            x: effFrom.x + effFrom.width,
+            y: effFrom.y + getCustomDomainRoutePortY(rowIndex),
+          };
           // Entry side picked relative to where the start point sits,
           // not the source bounds midpoint, so the curve doesn't loop
           // back if the target is above/below the row.

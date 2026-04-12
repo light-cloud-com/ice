@@ -53,7 +53,11 @@ import {
 import { SvgCompactNode, computeCompactNodeHeight, computeCompactNodeWidth } from './nodes/compact-node';
 import { SvgCustomDomainNode, computeCustomDomainHeight, computeCustomDomainWidth } from './nodes/custom-domain';
 import { SvgGroupNode } from './nodes/group-node';
-import { SvgSecureGroupNode, computeSecureGroupHeight, computeSecureGroupWidth } from './nodes/secure-group';
+import {
+  SvgPrivateNetworkNode,
+  computePrivateNetworkHeight,
+  computePrivateNetworkWidth,
+} from './nodes/private-network';
 import { SelectionFrame } from './selection-frame';
 import { SvgConnectionPath, EDGE_COLORS, type ConnectionTooltipInfo } from './svg-connection-path';
 import {
@@ -211,23 +215,15 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   useEffect(() => {
     if (!card) return;
 
-    // ── Pass 1: backfill missing routeIds on CustomDomain + SecureGroup edges ──
+    // ── Pass 1: backfill missing routeIds on CustomDomain edges ──
     //
     // Edges created before the routes data model existed (or via paths
-    // that don't capture `data-route-id`) have no `routeId`. The
-    // connection path then falls back to generic right-side midpoint
-    // positioning, which doesn't align with the per-row port circles.
-    // We claim a free route slot for each such edge so the renderer
-    // can anchor the path to the correct row.
-    //
-    // Strategy: per row-port block (CustomDomain or SecureGroup), walk
-    // its outgoing edges and assign route ids in order from the block's
-    // `routes` array, skipping route ids that are already claimed by
-    // another edge. If we run out of routes, we leave the edge
-    // unassigned (the generic fallback still draws it).
+    // that don't capture `data-route-id`) have no `routeId`. We claim a
+    // free route slot for each such edge so the renderer can anchor the
+    // path to the correct row.
     const customDomainBlocks = nodes.filter((n: any) => {
       const t = (n.data?.iceType as string) || '';
-      return t === 'Network.CustomDomain' || t === 'Network.SecureGroup';
+      return t === 'Network.CustomDomain';
     });
     for (const cdNode of customDomainBlocks) {
       const cdRoutes =
@@ -255,8 +251,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     }
 
     // ── Pass 2: orphan deletion + reactive domain sync ──
-    const isRowPortBlock = (t: string) =>
-      t === 'Network.CustomDomain' || t === 'Network.SecureGroup';
+    const isRowPortBlock = (t: string) => t === 'Network.CustomDomain';
     for (const edge of edges) {
       const src = nodes.find((n: any) => n.id === edge.source);
       const dst = nodes.find((n: any) => n.id === edge.target);
@@ -435,12 +430,12 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     return nodes.map((node) => {
       const iceType = (node.data?.iceType as string) || 'Resource.Unknown';
 
-      const isSecureGroup = iceType === 'Network.SecureGroup';
+      const isPrivateNetwork = iceType === 'Network.PrivateNetwork';
       const isGroup =
         iceType.startsWith('Group.') ||
         node.type === 'container' ||
         node.type === ('group' as any) ||
-        isSecureGroup;
+        isPrivateNetwork;
       const isBlock = node.type === 'block';
       const folded = !!node.data?.folded;
       const isCustomDomain = iceType === 'Network.CustomDomain';
@@ -451,13 +446,13 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       // sizing.
       const defaultWidth = isCustomDomain
         ? computeCustomDomainWidth()
-        : isSecureGroup
-          ? computeSecureGroupWidth(node.width || 0)
+        : isPrivateNetwork
+          ? computePrivateNetworkWidth(node.width || 0)
           : computeCompactNodeWidth(isBlock || isGroup);
       const defaultHeight = isCustomDomain
         ? computeCustomDomainHeight(nodeData)
-        : isSecureGroup
-          ? computeSecureGroupHeight(nodeData, node.height || 0)
+        : isPrivateNetwork
+          ? computePrivateNetworkHeight(node.height || 0)
           : computeCompactNodeHeight(nodeData, isBlock || isGroup, hasPipelineStatus);
 
       // Visual height: folded groups = 36px, folded blocks/resources = 38px.
@@ -465,9 +460,9 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       // (folding them would hide the route slots — the whole point of
       // the blocks).
       const expandedHeight =
-        isCustomDomain || isSecureGroup ? defaultHeight : Math.max(node.height || 0, defaultHeight);
+        isCustomDomain || isPrivateNetwork ? defaultHeight : Math.max(node.height || 0, defaultHeight);
       const visualHeight =
-        folded && !isCustomDomain && !isSecureGroup ? (isGroup ? 36 : 38) : expandedHeight;
+        folded && !isCustomDomain && !isPrivateNetwork ? (isGroup ? 36 : 38) : expandedHeight;
 
       return {
         id: node.id,
@@ -573,7 +568,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             ((n.data?.iceType as string) || '').startsWith('Group.') ||
             (n.data?.iceType as string) === 'Network.VPC' ||
             (n.data?.iceType as string) === 'Network.Subnet' ||
-            (n.data?.iceType as string) === 'Network.SecureGroup',
+            (n.data?.iceType as string) === 'Network.PrivateNetwork',
         )
         .map((n) => n.id),
     );
@@ -1543,7 +1538,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       node.type === ('group' as any) ||
       iceType === 'Network.VPC' ||
       iceType === 'Network.Subnet' ||
-      iceType === 'Network.SecureGroup'
+      iceType === 'Network.PrivateNetwork'
     );
   }, []);
 
@@ -1664,7 +1659,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             node.type === ('group' as any) ||
             nodeIceType === 'Network.VPC' ||
             nodeIceType === 'Network.Subnet' ||
-            nodeIceType === 'Network.SecureGroup';
+            nodeIceType === 'Network.PrivateNetwork';
           if (!isNodeContainer) continue;
 
           // Check if the center of the dragged node is inside this container
@@ -2410,13 +2405,11 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
           // force it onto the target's `domain` property in Redux. The
           // user sees the host in the target's properties panel
           // immediately, and the domain field becomes read-only because
-          // the CustomDomain / SecureGroup edge is now the source of
-          // truth.
+          // the CustomDomain edge is now the source of truth.
           //
           // The deploy translator does the same propagation at deploy
           // time, but this Redux mirror makes the UX feel instant.
-          const sourceIsRowPortBlock =
-            srcIceType === 'Network.CustomDomain' || srcIceType === 'Network.SecureGroup';
+          const sourceIsRowPortBlock = srcIceType === 'Network.CustomDomain';
           const targetIsRoutable = targetIsService;
           if (sourceIsRowPortBlock && targetIsRoutable && sourceRouteId) {
             const rootDomain = String(sourceNode.data?.domain || '').trim();
@@ -2682,7 +2675,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                   n.type === 'block' ||
                   t === 'Network.VPC' ||
                   t === 'Network.Subnet' ||
-                  t === 'Network.SecureGroup'
+                  t === 'Network.PrivateNetwork'
                 );
               })
               .map((n) => (
@@ -2700,12 +2693,12 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
               const isLogNode =
                 iceType === 'Monitoring.Terminal' || iceType === 'Observability.Logs' || iceType.startsWith('Log.');
               const isVpcOrSubnet = iceType === 'Network.VPC' || iceType === 'Network.Subnet';
-              const isSecureGroupContainer = iceType === 'Network.SecureGroup';
+              const isPrivateNetworkContainer = iceType === 'Network.PrivateNetwork';
               const isGroup =
                 node.type === 'container' ||
                 node.type === ('group' as any) ||
                 isVpcOrSubnet ||
-                isSecureGroupContainer;
+                isPrivateNetworkContainer;
               const isBlock = node.type === 'block';
 
               // Entrance animation for AI-generated nodes
@@ -2807,15 +2800,17 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                 );
               }
 
-              // Secure Group — composite container + route header. Children
-              // (Cloud Run, Postgres, etc.) nest inside via parentId and
-              // render through the standard dispatcher loop on top of the
-              // SecureGroup frame. Must come BEFORE the generic group
-              // dispatch below or it would render as a plain SvgGroupNode.
-              if (iceType === 'Network.SecureGroup') {
+              // Private Network — pure container with a header that
+              // shows identity (shield icon + title + subtitle) and the
+              // Open/Sealed ingress toggle. Children nest inside via
+              // parentId and render through the standard dispatcher loop
+              // on top of the Private Network frame. Must come BEFORE
+              // the generic group dispatch below or it would render as a
+              // plain SvgGroupNode.
+              if (iceType === 'Network.PrivateNetwork') {
                 return wrapLift(
-                  <SvgSecureGroupNode
-                    key={isLifted ? undefined : `${node.id}-routes${((node.data?.routes as unknown[]) || []).length}`}
+                  <SvgPrivateNetworkNode
+                    key={isLifted ? undefined : `${node.id}-pn${(node.data?.ingress as string) || 'open'}`}
                     node={node}
                     isSelected={selectedNodes.includes(node.id)}
                     isDragOver={dragOverGroupId === node.id}

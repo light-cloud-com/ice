@@ -452,18 +452,66 @@ Each concept: blueprint + visual + info (overview + snippets). Mechanical once S
 
 **Risk flag**: riskiest slice (see section 5).
 
-### Slice 5 — Palette cleanup + migration (M, ~2-3 days)
+### Slice 5 — Palette cleanup (S, ~1-2 days)
 
 - Refactor `resource-palette.tsx` to render from `BLOCK_BLUEPRINTS` filtered by `hiddenFromPalette`.
 - Hide the ~124 per-provider raw blocks via the factory default.
-- Update templates in `packages/ui/src/features/templates/` to use concepts where possible.
 - Verify existing projects with raw blocks still open and render correctly (no palette-driven breakage).
 
 **Risk**: palette is currently hand-coded — refactoring to data-driven may reveal hidden assumptions (category ordering, icon overrides). Budget half-day contingency.
 
+### Slice 6 — Template migration (M, ~2-4 days)
+
+Templates live in `packages/templates/src/` (22 files, ~600 iceType references total). They must be audited, rewritten to use the 23 Concept iceTypes, or retired. **Do this after Slice 5** so the palette is the source of truth when deciding what to keep.
+
+#### Per-template decision matrix
+
+| Template | File | Blocks | Decision | Rationale |
+|---|---|---|---|---|
+| **Quick-starts** (7) | `quick-starts.ts` | 21 | **Rewrite with concepts** | Highest user visibility — first thing new users see. Must match palette. |
+| Full Stack | `full-stack.ts` | 15 | **Rewrite with concepts** | Core general-purpose template. Showcases Static/SSR + Backend + Postgres. |
+| SaaS Starter | `saas-starter.ts` | 21 | **Rewrite with concepts** | Core general-purpose. |
+| Backend API | `backend-api.ts` | 30 | **Rewrite with concepts** | Core general-purpose. |
+| Serverless API | `serverless-api.ts` | 19 | **Rewrite with concepts** | Core general-purpose. |
+| Secure API | `secure-api.ts` | 15 | **Rewrite with concepts** | Showcases Private Network + Custom Domain (both validated blocks). |
+| Budget Webapp | `budget-webapp.ts` | 10 | **Rewrite with concepts** | Small, cheap, high signal. |
+| AI/ML | `ai-ml.ts` | 15 | **Rewrite with concepts** | Showcases LLM Gateway + Vector DB. |
+| RAG Chatbot | `rag-chatbot.ts` | 19 | **Rewrite with concepts** | Showcases LLM Gateway + Vector DB + Postgres. |
+| EU Compliance | `eu-compliance.ts` | 13 | **Rewrite with concepts** | Compliance story — keep. |
+| Healthcare | `healthcare.ts` | 33 | **Delete** | Industry showcase; deferred until after core palette proves out. |
+| Fintech | `fintech.ts` | 34 | **Delete** | Industry showcase; deferred. |
+| E-commerce | `ecommerce.ts` | 38 | **Delete** | Industry showcase; deferred. |
+| SaaS Platform | `saas-platform.ts` | 35 | **Rewrite with concepts** | Core showcase — stays. |
+| Mobile Backend | `mobile-backend.ts` | 35 | **Delete** | Industry showcase; deferred. |
+| IoT | `iot.ts` | 31 | **Delete** | Niche. Heavy on event streams + device-specific infra. |
+| Gaming | `gaming.ts` | 32 | **Delete** | Niche. |
+| Logistics | `logistics.ts` | 31 | **Delete** | Niche. |
+| Education | `education.ts` | 35 | **Delete** | Niche. |
+| Media | `media.ts` | 32 | **Delete** | Niche. |
+| DevOps Platform | `devops-platform.ts` | 25 | **Delete** | CI/CD infrastructure ICE doesn't fully model yet. |
+| Data Pipeline | `data-pipeline.ts` | 27 | **Delete** | Depends on Data Warehouse, which is deferred (see `concepts-palette.md`). |
+
+**Net**: 11 rewritten + 11 deleted = **11 templates shipped** with the concepts palette. Deleted templates are removed from the repo; if any need to come back, they'll be re-authored from scratch against the concepts palette.
+
+#### Execution approach
+
+1. **Map iceTypes first.** Build a mapping table from old raw iceTypes to new concept iceTypes (most are already 1:1 via `HIGH_LEVEL_CATEGORIES`). Put it in `packages/templates/src/_migration/icetype-map.ts`. This becomes the source of truth for the rewrites.
+2. **Write a codemod** that reads each template, swaps iceTypes via the map, removes blocks that have no concept equivalent (or flags them for manual review). Run it against the 10 core templates.
+3. **Manually review and tighten** each rewritten template: verify connections still make sense, drop redundant blocks now absorbed by concepts (e.g., separate LB + Container → one Scalable Backend), update `description`/`metadata` to reflect the simpler structure.
+4. **Delete the 11 non-kept template files** from `packages/templates/src/`. Git history preserves them if ever needed.
+5. **Update template registry** in `packages/templates/src/index.ts` to export only the 11 kept templates.
+6. **Update UI catalog** in `packages/ui/src/features/templates/` to match. Verify template previews still render.
+7. **Sanity test**: open each kept template, deploy to GCP via the existing E2E harness (see the GCP Testing Suite memory), confirm it still produces a working stack.
+
+#### Risks
+
+- **Connections may break.** A rewritten template with fewer blocks means fewer edges — the codemod must preserve semantic connections (e.g., "Backend → Postgres" stays even if the intermediate Load Balancer block gets absorbed).
+- **Template previews** (`ui/src/features/templates/`) may have hardcoded image thumbnails referencing the old block layout. Budget time to regenerate screenshots.
+- **Deletion is intentional.** The 11 removed templates will not be resurrected from git — if any come back, they'll be re-authored against the concepts palette. This keeps the repo clean and commits the team to the simpler template set.
+
 ### Total rough estimate
 
-S (2-3d) + M (3-4d) + L (5-8d) + M (2d) + M (2-3d) ≈ **14-20 working days**, solo, excluding info modal content writing at scale.
+S (2-3d) + M (3-4d) + L (5-8d) + M (2d) + S (1-2d) + M (2-4d) ≈ **15-23 working days**, solo, excluding info modal content writing at scale.
 
 ---
 
@@ -512,4 +560,4 @@ S (2-3d) + M (3-4d) + L (5-8d) + M (2d) + M (2-3d) ≈ **14-20 working days**, s
 
 ## Open questions
 
-None at this time — all major decisions are locked in. The per-block zoom-state design is flexible enough that individual concepts can be tuned during implementation without blocking the overall plan.
+None at this time — all major decisions are locked in.

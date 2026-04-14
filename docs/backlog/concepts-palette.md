@@ -1,8 +1,8 @@
 # Concepts Palette Redesign
 
-Move the default block palette from ~147 low-level provider-specific blocks to a curated set of ~23 high-level, provider-agnostic **Concept** blocks. Low-level blocks remain available behind a "Raw Infrastructure" toggle (Level 2 in `visualization-config.ts`) — this also becomes the natural Free/Pro split.
+Move the default block palette from ~147 low-level provider-specific blocks to a curated set of 26 high-level, provider-agnostic **Concept** blocks. Low-level blocks remain registered for backwards compat but are hidden from the palette (see `concepts-palette-implementation.md` for the correct model — zoom states + (i) panel, not a palette toggle).
 
-## Default palette: 23 Concept blocks
+## Default palette: 26 Concept blocks
 
 | # | Block | Replaces (low-level) |
 |---|---|---|
@@ -27,8 +27,11 @@ Move the default block palette from ~147 low-level provider-specific blocks to a
 | 19 | LLM Gateway | bedrock, vertex-ai, azure-openai |
 | 20 | Private AI Service | self-hosted LLM preset |
 | 21 | Observability | cloudwatch, cloud-logging, app-insights |
-| 22 | Secret Store | secrets-manager, secret-manager, key-vault |
-| 23 | GitHub Repo | already in common/ |
+| 22 | Log Terminal | live log viewer (canvas-only, no infra) — downstream of services / Observability, streams their logs |
+| 23 | Public Traffic | symbolic source node representing the internet / outside users (canvas-only, no infra) — upstream of Public Endpoint / Custom Domain / Scalable Backend, shows "traffic comes from here" |
+| 24 | Group | generic visual container for organizing blocks on the canvas (canvas-only, no infra) |
+| 25 | Secret Store | secrets-manager, secret-manager, key-vault |
+| 26 | GitHub Repo | already in common/ |
 
 ## Explicitly dropped (absorbed or not a concept)
 

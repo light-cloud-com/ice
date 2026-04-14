@@ -1,6 +1,45 @@
 # Concepts Palette — Implementation Plan
 
-Companion to `concepts-palette.md`. That doc defines **what** the 23 Concept blocks are and **why** they were chosen. This doc defines **how** to build them.
+Companion to `concepts-palette.md`. That doc defines **what** the 26 Concept blocks are and **why** they were chosen. This doc defines **how** to build them.
+
+## Canvas-only concepts (Log Terminal, Public Traffic, Group)
+
+Three of the 26 concepts are special: they are **canvas-only**, not infrastructure. They do not provision any cloud resources. They are semantic/visual affordances on the diagram — different in purpose, but united by having no compiler output.
+
+### Shared treatment
+
+- **No compiler output.** Placing any of these on the canvas emits zero Terraform/Pulumi resources. `card-translator.ts` must skip them via a `CANVAS_ONLY_ICE_TYPES` set that short-circuits translation.
+- **Bespoke visuals.** None fit the standard 6 visual families. Each registers its own component in `VISUAL_REGISTRY` as an override.
+- **Info (i) panel "Compiles To" tab** explicitly says "No infrastructure — canvas-only block." The Overview tab explains its purpose and valid connections.
+- **Connection rules** must allow their edges as special (data-feed, containment, or source) rather than standard infra wiring.
+- **Read-only at deploy time.** They do not appear in deploy output or project exports.
+
+### Per-concept details
+
+**Log Terminal** — already exists as `Monitoring.Terminal` in `packages/blocks/src/{aws,gcp,azure,kubernetes}/observability/log-terminal.ts` (icon `Terminal`, keyed to resource `log-group`). Promote to `common/concepts/log-terminal/`.
+
+- Role: **downstream log viewer.** Consumes logs from a connected service.
+- Connects FROM: Scalable Backend, Serverless Function, Worker, Scheduled Task, SSR Site, API Gateway, Observability.
+- Edge semantics: the edge carries the log source identifier so the runtime knows what to tail.
+- Visual: small terminal window with streaming text.
+- Zoom states: summary = last log line + source name; detailed = several lines + pause/resume controls.
+
+**Public Traffic** — already exists as `Network.PublicTraffic` iceType (referenced in `packages/ui/src/assets/icons/service-names.ts:148` and `packages/ui/src/features/canvas/components/nodes/compact-node/context-lines.ts:189`), but has no dedicated blueprint yet. Create `common/concepts/public-traffic/`.
+
+- Role: **symbolic upstream source.** Represents the internet / outside world / end users as the origin of public traffic on the diagram — the classic "cloud labeled Users" icon in architecture diagrams. It is NOT a request log viewer; it is a source node that makes the diagram legible by saying "traffic enters the system here."
+- Connects TO: Public Endpoint, Custom Domain, API Gateway, Scalable Backend, SSR Site, Static Site.
+- Edge semantics: represents the public ingress path. The edge has no runtime data — it's pure documentation.
+- Visual: cloud/globe/users silhouette with a subtle animated indicator (optional traffic ripple) to hint at "live traffic."
+- Zoom states: summary = just the icon + "Internet"; detailed = same plus a small count of connected ingress points and (if available) a live RPS reading sourced from the downstream endpoint.
+
+**Group** — the generic visual container for organizing blocks on the canvas. Already exists and is on the **validated blocks list** (do not change functionality). The existing node renderer and container behavior stay as-is.
+
+- Role: **visual organization only.** A Group is a labeled container that holds other blocks; it has no semantic meaning for deployment. Users drop related blocks inside a Group to bucket them visually ("Frontend stack", "Data layer", "Team A's services").
+- Contains: any block. No type restrictions.
+- Edge semantics: none — Group uses containment, not edges.
+- Visual: existing design (validated). Do not re-style.
+- Zoom states: whatever the existing Group node currently does (see `packages/ui/src/features/canvas/components/nodes/group-node/group-lod1.tsx`, `group-lod2.tsx`, `group-lod3.tsx` — already has level-of-detail rendering). Do not invent new states.
+- Migration: create `common/concepts/group/` as a thin wrapper that registers the existing Group renderer in `VISUAL_REGISTRY`. No functional changes.
 
 ## Validated blocks — preserve functionality
 
@@ -33,13 +72,13 @@ Three independent concerns the plan must keep separated:
 2. **Zoom states** are small visual refinements to the same card as the user zooms in/out. Examples: at low zoom a block shows just its name + icon; at higher zoom it also shows cost, instance count, status badge, a small chart. **These are cosmetic details on the same card.** A Private Network block at any zoom level is still "a box labeled Private Network" — it does NOT reveal VPC/subnet/NAT primitives inside itself.
 3. **The info (i) panel** is where the concept-to-raw breakdown lives. Opening Private Network's info panel shows the user what it compiles to on each provider: VPC + subnets + NAT gateway + route tables. This is documentation, not a canvas reveal.
 
-The palette only shows the 23 Concept blocks. Raw provider-specific blocks stay registered for backwards compat with existing projects but are not in the palette. `Level 1 / Level 2` in `visualization-config.ts` is left alone — unrelated to this redesign.
+The palette only shows the 26 Concept blocks. Raw provider-specific blocks stay registered for backwards compat with existing projects but are not in the palette. `Level 1 / Level 2` in `visualization-config.ts` is left alone — unrelated to this redesign.
 
 ## Grounding: what already exists
 
 - **Schema source of truth**: `packages/core/src/resources/high-level-resources.ts` (6212 lines). `HIGH_LEVEL_CATEGORIES` with `HighLevelResource` entries — each has `id`, `name`, `icon`, `behavior`, `providers`, `implementations[]` (per-provider resource_type mapping), `keywords[]`, and `HighLevelProperty[]` (with `tier`, `optionDetails`, `customInput`, `tooltip`). This is already the de-facto Concept model for most of the 23. The redesign does **not** rebuild this — it adds missing entries and layers visuals/info on top.
 - **Per-provider blueprint wrappers**: ~124 thin files in `packages/blocks/src/{aws,gcp,azure,kubernetes,alibaba,oci,digitalocean}/**`, each calling `createBlueprintFromResource(resourceId, {...})` from `packages/core/src/resources/blueprint-factory.ts`. They contribute: `iceType`, `category`, provider-specific `name`, `nodeDataDefaults`, sparse `providerVariants`. Concept-per-provider compilation already happens here via resourceId lookup — no re-architecting.
-- **Common provider-agnostic blocks**: `packages/blocks/src/common/{config,networking,source}/` already holds 5 blocks (`githubRepositoryBlueprint`, `envConfigBlueprint`, `publicEndpointBlueprint`, `customDomainBlueprint`, `privateNetworkBlueprint`). These are full `BlockBlueprint` objects (not factory-generated) because they're provider-agnostic. **This is exactly the shape the 23 Concepts should take.**
+- **Common provider-agnostic blocks**: `packages/blocks/src/common/{config,networking,source}/` already holds 5 blocks (`githubRepositoryBlueprint`, `envConfigBlueprint`, `publicEndpointBlueprint`, `customDomainBlueprint`, `privateNetworkBlueprint`). These are full `BlockBlueprint` objects (not factory-generated) because they're provider-agnostic. **This is exactly the shape the 26 Concepts should take.**
 - **Registry**: `packages/blocks/src/index.ts` aggregates all ~130 blueprints into `BLOCK_BLUEPRINTS` with lookup by `iceType` + optional provider.
 - **View level system**: `packages/ui/src/config/visualization-config.ts` already has `VIEW_LEVELS: Record<1|2, ViewLevelConfig>` with `visibleCategories[]` driving `isTypeVisibleAtLevel()`. Currently gates canvas rendering. The redesign repurposes it to also gate palette entries; Level 1 = 23 Concepts, Level 2 = Concepts + raw provider blocks.
 - **Canvas nodes**: `SvgGroupNode` at `packages/ui/src/features/canvas/components/nodes/group-node/index.tsx` is the dispatcher; delegates to `BlockNode` (`group-node/block-node.tsx`) for block-behavior nodes. `svg-canvas.tsx` (lines 54-57, 433, 441) already hand-dispatches two custom shapes: `SvgPrivateNetworkNode` and `SvgCustomDomainNode`. **This is the existing visual-variant escape hatch — the plan formalizes it.**
@@ -89,16 +128,16 @@ packages/blocks/src/common/
     observability/{...}
     secret-store/{...}
     github-repo/{...}                    (migrate from common/source/github-repository.ts)
-    index.ts                             aggregates all 23 into CONCEPT_BLUEPRINTS[], plus registers
+    index.ts                             aggregates all 26 into CONCEPT_BLUEPRINTS[], plus registers
                                          visual + info maps in one place
 ```
 
 ### Why this shape
 
 - **Blueprint / visual / info as siblings** — a Concept has three artifacts that change together (schema, appearance, docs). Colocating avoids hunting across three package trees when editing one concept.
-- **`_shared/`** — signals "helpers for the 23 concepts only," not "shared with the rest of the repo."
+- **`_shared/`** — signals "helpers for the 26 concepts only," not "shared with the rest of the repo."
 - **`index.ts` barrel per concept** — lets the top-level `concepts/index.ts` import each concept as a single symbol and keeps registry hydration (visual/info map writes) centralized.
-- **Migrate the 3 existing common blocks** (`github-repository`, `custom-domain`, `private-network`) into this new shape so the layout is uniform across all 23. Mechanical: rename + add `visual.tsx` + `info.ts`. The `BLOCK_BLUEPRINTS` registry replaces the three direct imports with `...CONCEPT_BLUEPRINTS`.
+- **Migrate the 3 existing common blocks** (`github-repository`, `custom-domain`, `private-network`) into this new shape so the layout is uniform across all 26. Mechanical: rename + add `visual.tsx` + `info.ts`. The `BLOCK_BLUEPRINTS` registry replaces the three direct imports with `...CONCEPT_BLUEPRINTS`.
 - **`diagrams/` co-located** — SVG assets live next to their `info.ts`, resolved by Vite as module imports. Keeps each concept hermetic.
 
 ---
@@ -226,7 +265,7 @@ Two mount points, both use the same `ConceptInfoTrigger`:
 ### Code snippets — 6 languages from day one
 
 - `SnippetLanguage = 'ts' | 'py' | 'go' | 'java' | 'csharp' | 'rust'` in `_shared/code-snippets.ts`.
-- Every `info.ts` file is typed `InfoContent<SnippetLanguage>`, so removing a language causes a TS error in all 23 files simultaneously.
+- Every `info.ts` file is typed `InfoContent<SnippetLanguage>`, so removing a language causes a TS error in all 26 files simultaneously.
 - **Transitional rollout**: make the snippets map `Partial<Record<SnippetLanguage, string>>`. The UI tab hides languages with no snippet for the current concept. This lets you ship a concept with TS snippets first and backfill the other 5 languages without blocking the feature.
 - Plan: seed all concepts with TS + Py + Go at minimum during Slice 3. Backfill Java/C#/Rust in a later pass.
 
@@ -365,7 +404,7 @@ Add optional field to `packages/blocks/src/types.ts`:
 ```
 hiddenFromPalette?: boolean  // when true, block exists in registry but is not shown in the palette
 ```
-Default false. The ~124 provider-specific blueprints all get `hiddenFromPalette: true`. The 23 concepts stay false.
+Default false. The ~124 provider-specific blueprints all get `hiddenFromPalette: true`. The 26 concepts stay false.
 
 Rather than editing 124 files by hand: extend `createBlueprintFromResource` factory to default `hiddenFromPalette: true` for anything called from per-provider directories. Concepts explicitly override to `false` (or use a different factory entry point).
 
@@ -378,7 +417,7 @@ const paletteBlocks = useMemo(
   []
 );
 ```
-Group by `bp.category`. **No view-level toggle.** Palette always shows just the 23 concepts.
+Group by `bp.category`. **No view-level toggle.** Palette always shows just the 26 concepts.
 
 ### Existing projects with low-level blocks
 
@@ -418,7 +457,7 @@ Goal: one concept end-to-end so patterns solidify before fanning out.
 
 **Risk**: `BlockNode` refactor may ripple into canvas hit-testing. Mitigate by keeping the outer `<foreignObject>` dimensions identical.
 
-### Slice 2 — Infrastructure for all 23 (M, ~3-4 days)
+### Slice 2 — Infrastructure for all 26 (M, ~3-4 days)
 
 - Finish remaining 5 family renderers (`compute`, `data`, `messaging`, `edge`, `ai`).
 - Finish info modal: all 3 tabs, markdown rendering, language picker with all 6 languages.
@@ -427,19 +466,19 @@ Goal: one concept end-to-end so patterns solidify before fanning out.
 - Audit `HIGH_LEVEL_CATEGORIES`, add missing entries for concepts that lack a schema.
 - Define `rawInfrastructure` flag on `BlockBlueprint` (don't wire the filter yet).
 
-### Slice 3 — The other 22 concepts (L, ~5-8 days)
+### Slice 3 — The other 25 concepts (L, ~5-8 days)
 
 Priority order so highest-value ones hit the palette early:
 
 **High priority** (most common in apps): SSR Site, Scalable Backend, Serverless Function, Postgres, Redis Cache, Object Storage, Custom Domain, API Gateway, Secret Store, GitHub Repo (migrate).
 
-**Medium**: MySQL, MongoDB, Message Queue, Observability, Private Network (migrate), Scheduled Task, Worker.
+**Medium**: MySQL, MongoDB, Message Queue, Observability, Log Terminal, Public Traffic, Group (migrate), Private Network (migrate), Scheduled Task, Worker.
 
 **Lower**: Vector DB, Event Stream, Email Service, LLM Gateway, Private AI Service.
 
 Each concept: blueprint + visual + info (overview + snippets). Mechanical once Slice 1+2 exist. ~1-2 hours per concept if info content is drafted.
 
-**Snippets**: seed TS+Py+Go at minimum for all 23 in Slice 3. Backfill Java/C#/Rust in a follow-up pass.
+**Snippets**: seed TS+Py+Go at minimum for all 26 in Slice 3. Backfill Java/C#/Rust in a follow-up pass.
 
 **Risk**: content quality for info modals. Allocate one session per batch of 5 concepts to review prose.
 

@@ -43,6 +43,14 @@ export interface BlockBlueprint {
   nodeData: Record<string, unknown>;
   /** Provider-specific overrides */
   providerVariants?: ProviderVariant[];
+  /**
+   * When true, this blueprint is registered in the registry (for backwards
+   * compat with existing projects) but is NOT shown in the default palette.
+   * Used to hide the ~124 per-provider raw blueprints so only the 26 high-level
+   * Concept blocks appear in the palette. See the Concepts Palette redesign
+   * in docs/backlog/concepts-palette.md.
+   */
+  hiddenFromPalette?: boolean;
 }
 
 /**

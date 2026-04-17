@@ -46,6 +46,11 @@
       "import": "./src/validation/index.ts",
       "default": "./src/validation/index.ts"
     },
+    "./compute": {
+      "types": "./dist/compute/index.d.ts",
+      "import": "./src/compute/index.ts",
+      "default": "./src/compute/index.ts"
+    },
     "./src/*": "./src/*"
   },
   "files": [

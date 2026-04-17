@@ -233,7 +233,53 @@ const UI_ONLY_TYPES = new Set([
   // for ingress, but it doesn't compile to a dedicated resource in v1
   // — the children deploy as normal and the nested CD handles routing.
   'Network.PrivateNetwork',
+  // Network.PublicTraffic is a symbolic source node representing
+  // "the internet / outside users" on the diagram. Canvas-only
+  // documentation — no infrastructure emitted.
+  'Network.PublicTraffic',
 ]);
+
+/**
+ * iceTypes whose compute is treated as a service backend. Shared between
+ * the LB-wiring path (line ~1059) and the Private Network ingress-override
+ * logic below.
+ */
+const SERVICE_BACKEND_ICE_TYPES_FOR_INGRESS = new Set([
+  'Compute.Container',
+  'Compute.BackendAPI',
+  'Compute.SSRSite',
+  'Compute.Worker',
+  'Compute.ServerlessFunction',
+]);
+
+/**
+ * Walk the parent chain to check whether any ancestor is a Private Network.
+ *
+ * When a service backend (Compute.Container / SSR / Worker / etc.) is nested
+ * inside a Network.PrivateNetwork, the compiler should emit the internal-only
+ * variant of the underlying compute resource:
+ *   - GCP Cloud Run:      ingress = 'internal-and-cloud-load-balancing'
+ *   - AWS ECS:            no public ALB; rely on nested Custom Domain for ingress
+ *   - Azure Container App: internal ingress
+ *
+ * The nested Custom Domain (if present) acts as the sole external entry
+ * point via its own LB chain — see lines 957-970 for that path.
+ */
+function hasPrivateNetworkAncestor(
+  node: { id: string; parentId?: string | null },
+  allNodes: Array<{ id: string; parentId?: string | null; data: Record<string, unknown> }>,
+): boolean {
+  let currentParentId = node.parentId;
+  const visited = new Set<string>();
+  while (currentParentId && !visited.has(currentParentId)) {
+    visited.add(currentParentId);
+    const parent = allNodes.find((n) => n.id === currentParentId);
+    if (!parent) return false;
+    if (parent.data?.iceType === 'Network.PrivateNetwork') return true;
+    currentParentId = parent.parentId;
+  }
+  return false;
+}
 
 /**
  * Network.CustomDomain has two modes:
@@ -706,6 +752,31 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
     // Extract deployment properties
     const extractor = PROPERTY_EXTRACTORS[gcp_type];
     const properties = extractor ? extractor(node.data, region) : { region, labels: {} };
+
+    // Private Network ingress override.
+    //
+    // When a service backend (Scalable Backend / SSR Site / Worker /
+    // Serverless Function) is nested inside a Network.PrivateNetwork,
+    // emit the internal-only variant of the underlying compute resource.
+    // A nested Custom Domain (if present) remains the sole external
+    // entry point via its own LB chain; see isCustomDomainStandalone +
+    // the backend-wiring at ~line 1100.
+    if (
+      SERVICE_BACKEND_ICE_TYPES_FOR_INGRESS.has(ice_type) &&
+      hasPrivateNetworkAncestor(node, nodes)
+    ) {
+      const props = properties as Record<string, unknown>;
+      if (gcp_type === 'gcp.run.service') {
+        // Internal Cloud Run — only reachable via VPC or internal LB.
+        props.allow_unauthenticated = false;
+        props.ingress = 'internal-and-cloud-load-balancing';
+      } else if (gcp_type === 'aws.ecs.service') {
+        props.assign_public_ip = false;
+        props.internal = true;
+      } else if (gcp_type === 'azure.containerapp.containerApp') {
+        props.ingress_external = false;
+      }
+    }
 
     // Phase 1 — stable resource identity.
     //

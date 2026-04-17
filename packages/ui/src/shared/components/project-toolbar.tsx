@@ -248,6 +248,7 @@ export const ProjectToolbar: React.FC<ProjectToolbarProps> = ({ basePath, active
               onClick={() => {
                 dispatch(autoOrganizeCard({ direction: 'vertical', containerId: selectedContainerId, zoom: currentZoom }));
                 dispatch(setAutoOrganizeStyle('vertical'));
+                dispatch(setEdgeStyle('rectangular'));
               }}
               tip={selectedContainerId ? 'Organize group (vertical)' : 'Auto-organize all (vertical)'}
             />
@@ -256,6 +257,7 @@ export const ProjectToolbar: React.FC<ProjectToolbarProps> = ({ basePath, active
               onClick={() => {
                 dispatch(autoOrganizeCard({ direction: 'horizontal', containerId: selectedContainerId, zoom: currentZoom }));
                 dispatch(setAutoOrganizeStyle('horizontal'));
+                dispatch(setEdgeStyle('rectangular'));
               }}
               tip={selectedContainerId ? 'Organize group (horizontal)' : 'Auto-organize all (horizontal)'}
             />

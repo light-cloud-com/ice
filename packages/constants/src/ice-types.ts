@@ -90,6 +90,12 @@ export const TREE = {
       },
       ServiceBus: { id: 'service-bus', envVar: 'SERVICE_BUS_CONNECTION' },
       Topic: { id: 'sns' },
+      // Concepts Palette — provider-agnostic message queue (compiles per provider)
+      Queue: { id: 'message-queue', envVar: 'QUEUE_URL' },
+      // Concepts Palette — provider-agnostic pub/sub event stream
+      EventStream: { id: 'event-stream', envVar: 'EVENT_STREAM_URL' },
+      // Concepts Palette — transactional email service
+      Email: { id: 'email-service', envVar: 'EMAIL_SERVICE_URL' },
     },
   },
   Network: {
@@ -113,6 +119,9 @@ export const TREE = {
       PrivateNetwork: { id: 'private-network' },
       VPC: { id: 'vpc-network' },
       Subnet: { id: 'subnet' },
+      // Concepts Palette — symbolic source node representing the internet / outside users.
+      // Canvas-only (no infrastructure emitted).
+      PublicTraffic: { id: 'public-traffic' },
     },
   },
   Security: {
@@ -137,6 +146,8 @@ export const TREE = {
       VectorDB: { id: 'vector-db', envVar: 'VECTOR_DB_URL' },
       LLMGateway: { id: 'llm-gateway', envVar: 'LLM_API_URL' },
       ModelServing: { id: 'ml-model' },
+      // Concepts Palette — self-hosted LLM preset (GPU compute + vector DB + model server).
+      PrivateAIService: { id: 'private-ai-service', envVar: 'PRIVATE_AI_URL' },
     },
   },
   Analytics: {
@@ -203,6 +214,9 @@ export const ICE = {
     CloudPubSub: 'Messaging.CloudPubSub',
     ServiceBus: 'Messaging.ServiceBus',
     Topic: 'Messaging.Topic',
+    Queue: 'Messaging.Queue',
+    EventStream: 'Messaging.EventStream',
+    Email: 'Messaging.Email',
   },
   Network: {
     Gateway: 'Network.Gateway',
@@ -211,6 +225,7 @@ export const ICE = {
     PrivateNetwork: 'Network.PrivateNetwork',
     VPC: 'Network.VPC',
     Subnet: 'Network.Subnet',
+    PublicTraffic: 'Network.PublicTraffic',
   },
   Security: {
     Identity: 'Security.Identity',
@@ -226,6 +241,7 @@ export const ICE = {
     VectorDB: 'AI.VectorDB',
     LLMGateway: 'AI.LLMGateway',
     ModelServing: 'AI.ModelServing',
+    PrivateAIService: 'AI.PrivateAIService',
   },
   Analytics: {
     Search: 'Analytics.Search',

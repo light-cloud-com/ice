@@ -100,7 +100,7 @@ export const SvgPrivateNetworkNode: React.FC<SvgCompactNodeProps> = ({
         ? '#ef4444'
         : isSelected || isHovered
           ? categoryGlow
-          : 'var(--ice-border)';
+          : categoryGlow + '55';
 
   const onEnter = useCallback(() => {
     setIsHovered(true);
@@ -123,14 +123,18 @@ export const SvgPrivateNetworkNode: React.FC<SvgCompactNodeProps> = ({
             width: W,
             height: H,
             background: 'var(--ice-bg-surface)',
-            border: `${isSelected ? 1.5 : 1}px solid ${border}`,
+            border: `1px solid ${border}`,
             borderRadius: CORNER_RADIUS,
             display: 'flex',
             flexDirection: 'column',
             boxSizing: 'border-box',
             overflow: 'hidden',
             position: 'relative',
-            boxShadow: isSelected ? `0 0 0 1px ${categoryGlow}` : undefined,
+            boxShadow: isSelected
+              ? `0 0 0 1.5px ${categoryGlow}, 0 4px 14px -4px ${categoryGlow}33`
+              : isHovered
+                ? '0 2px 8px -2px rgba(0,0,0,0.15)'
+                : '0 1px 3px rgba(0,0,0,0.06)',
             opacity: isSource ? 0.85 : 1,
           }}
         >

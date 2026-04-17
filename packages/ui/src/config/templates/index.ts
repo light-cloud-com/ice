@@ -20,7 +20,8 @@ export {
   filterByProvider,
   // Expansion
   expandComposedTemplate,
-  // Individual templates
+  // Individual templates (11 kept after Slice 6 cut — see
+  // docs/backlog/concepts-palette-implementation.md)
   fullStackTemplate,
   aiMlTemplate,
   ragChatbotTemplate,
@@ -32,30 +33,8 @@ export {
   eventDrivenServerlessTemplate,
   secureApiTemplate,
   budgetWebAppTemplate,
-  healthcarePatientPortalTemplate,
-  healthcareTelemedicineTemplate,
-  fintechPaymentGatewayTemplate,
-  fintechTradingPlatformTemplate,
-  mediaStreamingTemplate,
-  mediaPodcastTemplate,
   saasMultiTenantTemplate,
   saasAnalyticsDashboardTemplate,
-  iotDeviceManagementTemplate,
-  iotSmartHomeTemplate,
-  gamingMultiplayerTemplate,
-  gamingMobileGameTemplate,
-  logisticsFleetTrackingTemplate,
-  logisticsWarehouseTemplate,
-  educationLmsTemplate,
-  educationExamPlatformTemplate,
-  etlPipelineTemplate,
-  eventStreamingTemplate,
-  ecommerceStoreTemplate,
-  ecommerceMarketplaceTemplate,
-  mobileAppBackendTemplate,
-  mobileSocialAppTemplate,
-  devopsMonitoringTemplate,
-  devopsCiCdTemplate,
 } from '@ice/templates';
 
 // Re-export types

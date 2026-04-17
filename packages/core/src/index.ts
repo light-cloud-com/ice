@@ -120,6 +120,9 @@ export * from './diff';
 // Re-export deploy module
 export * from './deploy';
 
+// Re-export computing flows engine
+export { computeDerived, diffPatches, PROPAGATION_RULES, AGGREGATE_RULES } from './compute';
+
 // Re-export export module (Terraform/Pulumi exporters)
 // Use explicit exports to avoid conflicts with importer module
 export {

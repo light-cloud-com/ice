@@ -33,7 +33,6 @@ import {
   toggleCardNodeFold,
   updateCardNodeParent,
   updateCardNodeData,
-  updateCardEdgeData,
   deleteCardNode,
   deleteCardEdge,
   autoOrganizeCard,
@@ -58,6 +57,32 @@ import {
   computePrivateNetworkHeight,
   computePrivateNetworkWidth,
 } from './nodes/private-network';
+// ─── Concept block canvas nodes (one folder per block, individually customizable) ───
+import { SvgStaticSiteNode } from './nodes/static-site';
+import { SvgSsrSiteNode } from './nodes/ssr-site';
+import { SvgScalableBackendNode } from './nodes/scalable-backend';
+import { SvgServerlessFunctionNode } from './nodes/serverless-function';
+import { SvgWorkerNode } from './nodes/worker';
+import { SvgScheduledTaskNode } from './nodes/scheduled-task';
+import { SvgPostgresNode } from './nodes/postgres';
+import { SvgMysqlNode } from './nodes/mysql';
+import { SvgMongodbNode } from './nodes/mongodb';
+import { SvgRedisCacheNode } from './nodes/redis-cache';
+import { SvgObjectStorageNode } from './nodes/object-storage';
+import { SvgVectorDbNode } from './nodes/vector-db';
+import { SvgEventStreamNode } from './nodes/event-stream';
+import { SvgApiGatewayNode } from './nodes/api-gateway';
+import { SvgLlmGatewayNode } from './nodes/llm-gateway';
+import { SvgPrivateAiServiceNode } from './nodes/private-ai-service';
+import { SvgObservabilityNode } from './nodes/observability';
+import { SvgGithubRepoNode } from './nodes/github-repo';
+import { SvgLogTerminalNode } from './nodes/log-terminal';
+import { SvgPublicTrafficNode } from './nodes/public-traffic';
+// Bespoke-from-day-one nodes with inline editing
+import { SvgMessageQueueNode, computeMessageQueueHeight } from './nodes/message-queue';
+import { SvgSecretStoreNode, computeSecretStoreHeight } from './nodes/secret-store';
+import { SvgEnvConfigNode, computeEnvConfigHeight } from './nodes/env-config';
+import { SvgEmailServiceNode, computeEmailServiceHeight } from './nodes/email-service';
 import { SelectionFrame } from './selection-frame';
 import { SvgConnectionPath, EDGE_COLORS, type ConnectionTooltipInfo } from './svg-connection-path';
 import {
@@ -90,7 +115,54 @@ import {
 import { setPaneViewport, openContextMenu } from '../../../store/slices/ui-slice';
 import { useCanvasInteractions, type CanvasItem } from '../hooks/use-canvas-interactions';
 import { useCanvasValidation } from '../hooks/use-canvas-validation';
+import { useComputingFlows } from '../hooks/use-computing-flows';
 import type { RootState, AppDispatch } from '../../../store';
+
+// =============================================================================
+// Per-concept block renderer table
+// =============================================================================
+//
+// Maps iceType → per-block canvas node component. The block branch of the
+// dispatcher loop checks this table first and falls back to SvgCompactNode
+// when no bespoke renderer is registered. Each entry lives in its own
+// folder under ./nodes/<name>/ so customizing one block = editing one file.
+
+import type { SvgCompactNodeProps } from './nodes/compact-node/types';
+
+const CONCEPT_NODE_RENDERERS: Record<string, React.FC<SvgCompactNodeProps>> = {
+  // Frontend
+  'Compute.StaticSite': SvgStaticSiteNode,
+  'Compute.SSRSite': SvgSsrSiteNode,
+  // Compute
+  'Compute.Container': SvgScalableBackendNode,
+  'Compute.BackendAPI': SvgScalableBackendNode,
+  'Compute.ServerlessFunction': SvgServerlessFunctionNode,
+  'Compute.Worker': SvgWorkerNode,
+  'Compute.CronJob': SvgScheduledTaskNode,
+  // Data
+  'Database.PostgreSQL': SvgPostgresNode,
+  'Database.MySQL': SvgMysqlNode,
+  'Database.MongoDB': SvgMongodbNode,
+  'Database.Redis': SvgRedisCacheNode,
+  'Storage.Bucket': SvgObjectStorageNode,
+  // AI
+  'AI.VectorDB': SvgVectorDbNode,
+  'AI.LLMGateway': SvgLlmGatewayNode,
+  'AI.PrivateAIService': SvgPrivateAiServiceNode,
+  // Messaging
+  'Messaging.Queue': SvgMessageQueueNode,
+  'Messaging.EventStream': SvgEventStreamNode,
+  'Messaging.Email': SvgEmailServiceNode,
+  // Network / Edge
+  'Network.Gateway': SvgApiGatewayNode,
+  'Network.PublicTraffic': SvgPublicTrafficNode,
+  // Ops
+  'Monitoring.Log': SvgObservabilityNode,
+  'Monitoring.Terminal': SvgLogTerminalNode,
+  'Security.Secret': SvgSecretStoreNode,
+  'Config.Environment': SvgEnvConfigNode,
+  'Source.Repository': SvgGithubRepoNode,
+};
 
 // =============================================================================
 // Types
@@ -182,6 +254,8 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   useUndoRedo();
   // Canvas validation — runs on debounced timer after node/edge changes
   useCanvasValidation();
+  // Computing flows — reactive property propagation across connected blocks
+  useComputingFlows();
 
   // Get pane viewport if paneId provided
   const splitView = useSelector((state: RootState) => state.ui.splitView);
@@ -191,117 +265,9 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   const nodes = useMemo(() => card?.nodes || [], [card?.nodes]);
   const edges = useMemo(() => card?.edges || [], [card?.edges]);
 
-  // ── Custom Domain → target.domain reactive sync ──
-  //
-  // When the user edits a Network.CustomDomain block's root domain or
-  // a route's subdomain, the connected target services need to see the
-  // updated host on their `domain` property immediately. This mirrors
-  // how the GitHub repo block keeps connected services' `repository`
-  // field in sync — the source-of-truth block "forces" its value onto
-  // the connected nodes.
-  //
-  // ALSO handles route deletion: when a route is removed from the
-  // CustomDomain block, every edge whose `routeId` referenced that
-  // route is removed too. Without this, the orphan edges fall back to
-  // generic side-routing on the canvas and the user has to manually
-  // delete them, which is exactly the kind of ghost state we want to
-  // avoid.
-  //
-  // We walk every CustomDomain → Compute edge, resolve the host, and
-  // dispatch updateCardNodeData if the target's current `domain` is
-  // out of sync. The dispatch is conditional so this effect doesn't
-  // loop on its own writes (Redux equality short-circuits identical
-  // updates, but we double-check here for safety).
-  useEffect(() => {
-    if (!card) return;
-
-    // ── Pass 1: backfill missing routeIds on CustomDomain edges ──
-    //
-    // Edges created before the routes data model existed (or via paths
-    // that don't capture `data-route-id`) have no `routeId`. We claim a
-    // free route slot for each such edge so the renderer can anchor the
-    // path to the correct row.
-    const customDomainBlocks = nodes.filter((n: any) => {
-      const t = (n.data?.iceType as string) || '';
-      return t === 'Network.CustomDomain';
-    });
-    for (const cdNode of customDomainBlocks) {
-      const cdRoutes =
-        ((cdNode.data?.routes as Array<{ id: string; subdomain: string }> | undefined) || []);
-      if (cdRoutes.length === 0) continue;
-      const outgoingEdges = edges.filter(
-        (e: any) => e.source === cdNode.id || e.target === cdNode.id,
-      );
-      const claimedRouteIds = new Set<string>();
-      // First pass: collect already-assigned routeIds so the backfill
-      // doesn't double-claim a slot.
-      for (const e of outgoingEdges) {
-        const rid = (e.data as any)?.routeId as string | undefined;
-        if (rid && cdRoutes.some((r) => r.id === rid)) claimedRouteIds.add(rid);
-      }
-      // Second pass: assign free slots to unassigned edges in order.
-      for (const e of outgoingEdges) {
-        const rid = (e.data as any)?.routeId as string | undefined;
-        if (rid && cdRoutes.some((r) => r.id === rid)) continue;
-        const freeRoute = cdRoutes.find((r) => !claimedRouteIds.has(r.id));
-        if (!freeRoute) break;
-        claimedRouteIds.add(freeRoute.id);
-        dispatch(updateCardEdgeData({ edgeId: e.id, data: { routeId: freeRoute.id } }));
-      }
-    }
-
-    // ── Pass 2: orphan deletion + reactive domain sync ──
-    const isRowPortBlock = (t: string) => t === 'Network.CustomDomain';
-    for (const edge of edges) {
-      const src = nodes.find((n: any) => n.id === edge.source);
-      const dst = nodes.find((n: any) => n.id === edge.target);
-      if (!src || !dst) continue;
-      const srcIce = (src.data?.iceType as string) || '';
-      const dstIce = (dst.data?.iceType as string) || '';
-      let domainNode: any = null;
-      let targetNode: any = null;
-      if (isRowPortBlock(srcIce)) {
-        domainNode = src;
-        targetNode = dst;
-      } else if (isRowPortBlock(dstIce)) {
-        domainNode = dst;
-        targetNode = src;
-      } else {
-        continue;
-      }
-      const targetIce = (targetNode.data?.iceType as string) || '';
-      if (!/^Compute\./.test(targetIce)) continue;
-
-      // Resolve subdomain via routeId (preferred) or legacy edge.subdomain.
-      // If the edge references a routeId that no longer exists on the
-      // CustomDomain block (the user deleted the row), drop the edge
-      // entirely — its source slot is gone.
-      const routeId = (edge.data as any)?.routeId as string | undefined;
-      let subdomain = '';
-      if (routeId) {
-        const routes =
-          (domainNode.data?.routes as Array<{ id: string; subdomain: string }> | undefined) || [];
-        const route = routes.find((r) => r.id === routeId);
-        if (!route) {
-          dispatch(deleteCardEdge(edge.id));
-          continue;
-        }
-        subdomain = (route.subdomain || '').trim();
-      } else {
-        subdomain = (((edge.data as any)?.subdomain as string | undefined) || '').trim();
-      }
-
-      const rootDomain = String(domainNode.data?.domain || '').trim();
-      if (!rootDomain || rootDomain === 'example.com') continue;
-
-      const fullHost = subdomain ? `${subdomain}.${rootDomain}` : rootDomain;
-
-      const currentDomain = String(targetNode.data?.domain || '').trim();
-      if (currentDomain !== fullHost) {
-        dispatch(updateCardNodeData({ nodeId: targetNode.id, data: { domain: fullHost } }));
-      }
-    }
-  }, [card, nodes, edges, dispatch]);
+  // ── Reactive propagation (domain sync, routeId backfill, orphan cleanup,
+  // network policy, secret injection, etc.) is now handled by useComputingFlows()
+  // called above. See packages/core/src/compute/ for the rule definitions.
 
   // Use pane viewport if available, otherwise fall back to card viewport
   const paneViewport = pane?.viewport;
@@ -1426,37 +1392,14 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     setRenamingNodeId(null);
   }, []);
 
-  // Update node data fields (for inline controls like +/- scaling)
-  // Also propagates repo changes from Source.Repository nodes to connected services.
+  // Update node data fields (for inline controls like +/- scaling).
+  // Property propagation (repo sync, domain sync, etc.) is handled
+  // reactively by useComputingFlows() — no manual forwarding needed.
   const handleUpdateNodeData = useCallback(
     (nodeId: string, data: Record<string, unknown>) => {
       dispatch(updateCardNodeData({ nodeId, data }));
-
-      // If this is a Source.Repository node and repository changed, propagate to connected services
-      if (data.repository && card) {
-        const cardNodes = card.nodes as CardNode[];
-        const cardEdges = card.edges as CardEdge[];
-        const sourceNode = cardNodes.find((n) => n.id === nodeId);
-        const iceType = (sourceNode?.data?.iceType as string) || '';
-        const isSourceRepo = iceType === 'Source.Repository' || sourceNode?.data?.behavior === 'source';
-
-        if (isSourceRepo) {
-          // Find all service nodes connected to this source via edges
-          const connectedEdges = cardEdges.filter((e) => e.source === nodeId || e.target === nodeId);
-          for (const edge of connectedEdges) {
-            const serviceNodeId = edge.source === nodeId ? edge.target : edge.source;
-            const serviceNode = cardNodes.find((n) => n.id === serviceNodeId);
-            const serviceIceType = (serviceNode?.data?.iceType as string) || '';
-            if (serviceNode && serviceNode.type === 'resource' && !serviceIceType.startsWith('Source.')) {
-              const repoData: Record<string, unknown> = { repository: data.repository };
-              if (data.branch) repoData.branch = data.branch;
-              dispatch(updateCardNodeData({ nodeId: serviceNodeId, data: repoData }));
-            }
-          }
-        }
-      }
     },
-    [dispatch, card],
+    [dispatch],
   );
 
   // Select node to show pipeline in properties panel
@@ -2366,63 +2309,10 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
         };
         dispatch(addEdgeToCard(newEdge));
 
-        // ── Pipeline: auto-configure when Source.Repository connects to a service ──
-        if (sourceNode && targetNode) {
-          const sourceIsRepo = srcIceType === 'Source.Repository' || sourceNode.data?.behavior === 'source';
-          const targetIsService = targetNode.type === 'resource' && !tgtIceType.startsWith('Source.');
-
-          // Source → Service: copy repo data to service and open pipeline
-          if (sourceIsRepo && targetIsService) {
-            const repo = (sourceNode.data?.repository as string) || '';
-            const branch = (sourceNode.data?.branch as string) || 'main';
-            if (repo) {
-              const repoData: Record<string, unknown> = { repository: repo, branch };
-              if (sourceNode.data?.buildCommand) repoData.buildCommand = sourceNode.data.buildCommand;
-              if (sourceNode.data?.outputDirectory) repoData.outputDirectory = sourceNode.data.outputDirectory;
-              dispatch(updateCardNodeData({ nodeId: targetNode.id, data: repoData }));
-              dispatch(setSelectedNodes([targetNode.id]));
-            }
-          }
-
-          // Service → Source (reversed direction): same behavior
-          const targetIsRepo = tgtIceType === 'Source.Repository' || targetNode.data?.behavior === 'source';
-          const sourceIsService = sourceNode.type === 'resource' && !srcIceType.startsWith('Source.');
-          if (targetIsRepo && sourceIsService) {
-            const repo = (targetNode.data?.repository as string) || '';
-            const branch = (targetNode.data?.branch as string) || 'main';
-            if (repo) {
-              const repoData: Record<string, unknown> = { repository: repo, branch };
-              if (targetNode.data?.buildCommand) repoData.buildCommand = targetNode.data.buildCommand;
-              if (targetNode.data?.outputDirectory) repoData.outputDirectory = targetNode.data.outputDirectory;
-              dispatch(updateCardNodeData({ nodeId: sourceNode.id, data: repoData }));
-              dispatch(setSelectedNodes([sourceNode.id]));
-            }
-          }
-
-          // Custom Domain / Secure Group → service: same pattern as
-          // Source.Repository → service. Resolve the route's subdomain
-          // on the source block, build `<subdomain>.<rootDomain>`, and
-          // force it onto the target's `domain` property in Redux. The
-          // user sees the host in the target's properties panel
-          // immediately, and the domain field becomes read-only because
-          // the CustomDomain edge is now the source of truth.
-          //
-          // The deploy translator does the same propagation at deploy
-          // time, but this Redux mirror makes the UX feel instant.
-          const sourceIsRowPortBlock = srcIceType === 'Network.CustomDomain';
-          const targetIsRoutable = targetIsService;
-          if (sourceIsRowPortBlock && targetIsRoutable && sourceRouteId) {
-            const rootDomain = String(sourceNode.data?.domain || '').trim();
-            const sourceRoutes =
-              ((sourceNode.data?.routes as Array<{ id: string; subdomain: string }> | undefined) || []);
-            const matchedRoute = sourceRoutes.find((r) => r.id === sourceRouteId);
-            const sub = (matchedRoute?.subdomain || '').trim();
-            if (rootDomain && rootDomain !== 'example.com') {
-              const fullHost = sub ? `${sub}.${rootDomain}` : rootDomain;
-              dispatch(updateCardNodeData({ nodeId: targetNode.id, data: { domain: fullHost } }));
-            }
-          }
-        }
+        // All property propagation (repo sync, domain sync, secrets, env vars,
+        // network policy) is handled reactively by useComputingFlows() — no
+        // one-shot logic needed here. The hook picks up the new edge on the
+        // next render and applies all matching PROPAGATION_RULES.
 
         // Connection is fully auto-configured — no popover needed
       }
@@ -2845,10 +2735,71 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                 );
               }
 
-              // Blocks: render as flat compact cards (no container)
+              // Blocks: check for a per-concept renderer first, fall back
+              // to the generic SvgCompactNode. Each block in the Concepts
+              // Palette has its own folder under nodes/, so editing one
+              // block's look only touches one file.
               if (isBlock) {
+                const ConceptRenderer = CONCEPT_NODE_RENDERERS[iceType];
+                if (ConceptRenderer) {
+                  return wrapLift(
+                    <ConceptRenderer
+                      key={isLifted ? undefined : `${node.id}-lod${lod}`}
+                      node={node}
+                      isSelected={selectedNodes.includes(node.id)}
+                      childNodes={sortedNodes.filter((n) => n.parentId === node.id)}
+                      onToggleFold={handleToggleFold}
+                      isDragOver={dragOverGroupId === node.id}
+                      onNodeHover={handleNodeHover}
+                      isRenaming={renamingNodeId === node.id}
+                      onDoubleClickLabel={() => handleNodeDoubleClick(node.id)}
+                      onRenameCommit={(newLabel) => handleRenameCommit(node.id, newLabel)}
+                      onRenameCancel={handleRenameCancel}
+                      onUpdateData={handleUpdateNodeData}
+                      pipelineStatus={pipelineNodeStatus[node.id]}
+                      onPipelineClick={handlePipelineClick}
+                      connectedPipelineStatuses={getConnectedPipelineStatuses(node)}
+                      lod={lod}
+                      zoom={viewport.zoom}
+                      connectionDragState={connectionDragTargets?.get(node.id) ?? null}
+                      validationSeverity={nodeValidationMap.get(node.id)?.severity ?? null}
+                      validationCount={nodeValidationMap.get(node.id)?.count ?? 0}
+                    />,
+                  );
+                }
                 return wrapLift(
                   <SvgCompactNode
+                    key={isLifted ? undefined : `${node.id}-lod${lod}`}
+                    node={node}
+                    isSelected={selectedNodes.includes(node.id)}
+                    childNodes={sortedNodes.filter((n) => n.parentId === node.id)}
+                    onToggleFold={handleToggleFold}
+                    isDragOver={dragOverGroupId === node.id}
+                    onNodeHover={handleNodeHover}
+                    isRenaming={renamingNodeId === node.id}
+                    onDoubleClickLabel={() => handleNodeDoubleClick(node.id)}
+                    onRenameCommit={(newLabel) => handleRenameCommit(node.id, newLabel)}
+                    onRenameCancel={handleRenameCancel}
+                    onUpdateData={handleUpdateNodeData}
+                    pipelineStatus={pipelineNodeStatus[node.id]}
+                    onPipelineClick={handlePipelineClick}
+                    connectedPipelineStatuses={getConnectedPipelineStatuses(node)}
+                    lod={lod}
+                    zoom={viewport.zoom}
+                    connectionDragState={connectionDragTargets?.get(node.id) ?? null}
+                    validationSeverity={nodeValidationMap.get(node.id)?.severity ?? null}
+                    validationCount={nodeValidationMap.get(node.id)?.count ?? 0}
+                  />,
+                );
+              }
+
+              // Fallthrough (resource nodes and anything else): same
+              // concept-renderer check as the isBlock branch, because
+              // palette drops create nodes with type='resource' not 'block'.
+              const ConceptFallbackRenderer = CONCEPT_NODE_RENDERERS[iceType];
+              if (ConceptFallbackRenderer) {
+                return wrapLift(
+                  <ConceptFallbackRenderer
                     key={isLifted ? undefined : `${node.id}-lod${lod}`}
                     node={node}
                     isSelected={selectedNodes.includes(node.id)}

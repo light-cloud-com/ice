@@ -10,11 +10,28 @@ interface NodeHeaderProps {
   onDoubleClickLabel?: () => void;
   /** Content rendered after the label (provider pill, runtime label, fold button, etc.) */
   trailing?: React.ReactNode;
+  /** Hide the inline category icon (e.g., when a sidebar already shows it). */
+  hideIcon?: boolean;
+  /** Override category icon size. */
+  iconSize?: number;
+  /** Override the NodeLabel font size. */
+  labelFontSize?: number;
   style?: React.CSSProperties;
 }
 
 export const NodeHeader: React.FC<NodeHeaderProps> = memo(
-  ({ category, categoryColor, label, maxChars, onDoubleClickLabel, trailing, style }) => (
+  ({
+    category,
+    categoryColor,
+    label,
+    maxChars,
+    onDoubleClickLabel,
+    trailing,
+    hideIcon = false,
+    iconSize,
+    labelFontSize,
+    style,
+  }) => (
     <div
       style={{
         display: 'flex',
@@ -23,8 +40,14 @@ export const NodeHeader: React.FC<NodeHeaderProps> = memo(
         ...style,
       }}
     >
-      <CategoryIcon category={category} color={categoryColor} />
-      <NodeLabel label={label} maxChars={maxChars} interactive={!!onDoubleClickLabel} onDoubleClick={onDoubleClickLabel} />
+      {!hideIcon && <CategoryIcon category={category} color={categoryColor} size={iconSize} />}
+      <NodeLabel
+        label={label}
+        maxChars={maxChars}
+        fontSize={labelFontSize}
+        interactive={!!onDoubleClickLabel}
+        onDoubleClick={onDoubleClickLabel}
+      />
       {trailing}
     </div>
   ),

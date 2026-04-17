@@ -12,7 +12,6 @@ import { SAMPLE_MESSAGES, generateTimestamp } from './log-data';
 import { LogHeader } from './log-header';
 import { CORNER_RADIUS } from '../../../../../config/canvas-constants';
 import { useReducedMotion } from '../../../../../shared/hooks/use-reduced-motion';
-import { SelectionRing } from '../_shared/selection-ring';
 import type { SvgLogNodeProps, LogEntry } from './types';
 
 export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, onToggleFold }) => {
@@ -149,11 +148,6 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, o
       onMouseLeave={() => setIsHovered(false)}
       onWheel={handleWheel as unknown as React.WheelEventHandler<SVGGElement>}
     >
-      {/* Selection indicator */}
-      {isSelected && (
-        <SelectionRing x={x} y={y} width={nodeWidth} height={nodeHeight} stroke="#22c55e" strokeDasharray="6 3" />
-      )}
-
       {/* HTML card */}
       <foreignObject x={x} y={y} width={nodeWidth} height={nodeHeight}>
         <div
@@ -161,12 +155,17 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, o
             width: nodeWidth,
             height: nodeHeight,
             background: 'var(--ice-bg-base)',
-            border: `${isSelected ? 2 : 1}px solid ${isSelected ? '#22c55e' : isHovered ? '#4ade80' : 'var(--ice-border)'}`,
+            border: `1px solid ${isSelected || isHovered ? '#22c55e' : '#22c55e55'}`,
             borderRadius: CORNER_RADIUS,
             display: 'flex',
             flexDirection: 'column',
             boxSizing: 'border-box',
             overflow: 'hidden',
+            boxShadow: isSelected
+              ? '0 0 0 1.5px #22c55e, 0 4px 14px -4px rgba(34, 197, 94, 0.2)'
+              : isHovered
+                ? '0 2px 8px -2px rgba(0,0,0,0.15)'
+                : '0 1px 3px rgba(0,0,0,0.06)',
           }}
         >
           <LogHeader

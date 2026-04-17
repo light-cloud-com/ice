@@ -10,7 +10,7 @@
  * 3. Edge selected → Relationship, protocol, port fields
  */
 
-import { Info } from 'lucide-react';
+import { Info, List } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { getIcon, DEFAULT_ICON, type Provider } from '../../../assets/icons';
@@ -70,7 +70,7 @@ interface CustomInputConfig {
 interface HighLevelProperty {
   name: string;
   label: string;
-  type: 'string' | 'number' | 'boolean' | 'select' | 'list';
+  type: 'string' | 'number' | 'boolean' | 'select' | 'list' | 'queue_list';
   required: boolean;
   description: string;
   options?: string[];
@@ -400,6 +400,111 @@ const ListField: React.FC<{
   </div>
 );
 
+/**
+ * QueueListField — bespoke renderer for message queue lists.
+ *
+ * Unlike ListField (plain strings), each queue is shown as a labeled pill
+ * with a queue icon, FIFO toggle, and visually-distinct styling so the
+ * user knows "each item is a real queue that will be provisioned".
+ *
+ * Queues are stored as JSON strings: `{"name": "orders", "fifo": false}`.
+ * For backwards compat, plain string entries are auto-upgraded on read.
+ */
+interface QueueSpec {
+  name: string;
+  fifo?: boolean;
+}
+
+function parseQueue(raw: string): QueueSpec {
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && typeof parsed.name === 'string') {
+      return { name: parsed.name, fifo: !!parsed.fifo };
+    }
+  } catch {
+    /* fall through */
+  }
+  return { name: raw, fifo: false };
+}
+
+function stringifyQueue(q: QueueSpec): string {
+  return JSON.stringify({ name: q.name, fifo: !!q.fifo });
+}
+
+const QueueListField: React.FC<{
+  label: string;
+  value: string[];
+  onChange: (v: string[]) => void;
+  placeholder?: string;
+  addLabel?: string;
+}> = ({ label, value, onChange, placeholder, addLabel }) => {
+  const queues = value.map(parseQueue);
+  const update = (i: number, next: QueueSpec) => {
+    const arr = [...value];
+    arr[i] = stringifyQueue(next);
+    onChange(arr);
+  };
+  return (
+    <div className="py-1 space-y-2">
+      <span className="text-ice-xs text-ice-text-3">{label}</span>
+      <div className="space-y-1.5">
+        {queues.map((q, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-2 px-2 py-1.5 rounded-md border border-ice-border/40 bg-ice-bg-raised/40 hover:border-ice-accent/40 transition-colors group"
+          >
+            {/* Queue icon */}
+            <div
+              className="flex-shrink-0 w-6 h-6 rounded flex items-center justify-center"
+              style={{
+                background: 'linear-gradient(135deg, rgba(139,92,246,0.18), rgba(139,92,246,0.06))',
+                border: '1px solid rgba(139,92,246,0.35)',
+              }}
+            >
+              <List className="w-3 h-3 text-purple-300" />
+            </div>
+            {/* Name */}
+            <input
+              type="text"
+              value={q.name}
+              onChange={(e) => update(i, { ...q, name: e.target.value })}
+              placeholder={placeholder || 'queue-name'}
+              className="flex-1 min-w-0 bg-transparent text-ice-xs text-ice-text-1 font-mono outline-none placeholder:text-ice-text-3/40"
+            />
+            {/* FIFO toggle */}
+            <button
+              onClick={() => update(i, { ...q, fifo: !q.fifo })}
+              title={q.fifo ? 'FIFO — ordered, exactly-once' : 'Standard — unordered, at-least-once'}
+              className="flex-shrink-0 px-1.5 py-0.5 rounded text-ice-2xs font-medium transition-colors"
+              style={{
+                background: q.fifo ? 'rgba(139,92,246,0.2)' : 'rgba(255,255,255,0.04)',
+                color: q.fifo ? 'rgb(196,181,253)' : 'var(--ice-text-tertiary)',
+                border: `1px solid ${q.fifo ? 'rgba(139,92,246,0.35)' : 'rgba(255,255,255,0.08)'}`,
+              }}
+            >
+              {q.fifo ? 'FIFO' : 'Std'}
+            </button>
+            {/* Remove */}
+            <button
+              onClick={() => onChange(value.filter((_, j) => j !== i))}
+              className="flex-shrink-0 p-0.5 text-ice-text-3/40 hover:text-red-400 transition-colors text-ice-sm opacity-0 group-hover:opacity-100"
+              title="Remove queue"
+            >
+              &times;
+            </button>
+          </div>
+        ))}
+      </div>
+      <button
+        onClick={() => onChange([...value, stringifyQueue({ name: '', fifo: false })])}
+        className="w-full text-ice-2xs text-ice-text-3/60 hover:text-ice-accent transition-colors py-1.5 rounded border border-dashed border-ice-border/40 hover:border-ice-accent/40"
+      >
+        + {addLabel || 'Add a queue'}
+      </button>
+    </div>
+  );
+};
+
 const StepperField: React.FC<{
   label: string;
   value: number;
@@ -586,6 +691,19 @@ function renderPropertyField(
     const listVal = Array.isArray(value) ? (value as string[]) : [];
     return (
       <ListField
+        key={prop.name}
+        label={prop.label}
+        value={listVal}
+        onChange={(v) => onChange(prop.name, v)}
+        placeholder={prop.placeholder}
+        addLabel={prop.addLabel}
+      />
+    );
+  }
+  if (prop.type === 'queue_list') {
+    const listVal = Array.isArray(value) ? (value as string[]) : [];
+    return (
+      <QueueListField
         key={prop.name}
         label={prop.label}
         value={listVal}

@@ -115,10 +115,12 @@ export function getContextLines(data: Record<string, unknown>, iceType: string):
       break;
 
     // ── Messaging ──
-    case 'message-queue':
-      if (purpose) lines.push(purpose);
-      lines.push(orderMatters ? 'FIFO (ordered)' : 'Standard');
+    case 'message-queue': {
+      const qCount = listCount(data.queues);
+      if (qCount > 0) lines.push(`${qCount} ${qCount === 1 ? 'queue' : 'queues'}`);
+      else lines.push(orderMatters ? 'FIFO (ordered)' : ph('No queues yet'));
       break;
+    }
 
     case 'event-bus': {
       if (purpose) lines.push(purpose);
@@ -156,6 +158,13 @@ export function getContextLines(data: Record<string, unknown>, iceType: string):
       if (purpose) lines.push(purpose);
       if (keepData) lines.push(`retain: ${keepData}`);
       break;
+
+    case 'email-service': {
+      const fromAddr = (data.from_address as string) || '';
+      if (fromAddr) lines.push(truncate(fromAddr, 32));
+      else lines.push(ph('noreply@example.com'));
+      break;
+    }
 
     // ── Storage ──
     case 'object-storage':
@@ -225,6 +234,14 @@ export function getContextLines(data: Record<string, unknown>, iceType: string):
       if (purpose) lines.push(purpose);
       if (framework) lines.push(framework);
       break;
+
+    case 'private-ai-service': {
+      const model = (data.model as string) || '';
+      const gpu = (data.gpu_type as string) || '';
+      if (model) lines.push(model);
+      if (gpu) lines.push(gpu);
+      break;
+    }
 
     // ── Source / fallback ──
     default:

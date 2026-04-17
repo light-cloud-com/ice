@@ -1,4 +1,5 @@
 import React, { memo } from 'react';
+import { ConceptInfoTrigger } from '../../../../concept-info';
 import { ConnectedPipelineDots } from './connected-pipeline-dots';
 import { MetadataLines } from './metadata-lines';
 import { PipelineRow } from './pipeline-row';
@@ -13,7 +14,6 @@ import { FoldButton } from '../_shared/fold-button';
 import { FONT_MONO } from '../_shared/fonts';
 import { NodeHeader } from '../_shared/node-header';
 import { ProviderPill } from '../_shared/provider-pill';
-import { SelectionRing } from '../_shared/selection-ring';
 import { ValidationBadge } from '../_shared/validation-badge';
 import type { NodePipelineStatus } from './types';
 import type { BrandIcon } from '../../../../../assets/icons/brand-registry';
@@ -91,14 +91,14 @@ export const CompactLod3: React.FC<CompactLod3Props> = memo(
     const isDeploying = deployStatus === 'deploying';
     const isActive = deployStatus === 'active';
     const isError = deployStatus === 'error';
-    const deployBorderColor = isDeploying
-      ? '#3b82f6'
-      : isActive
-        ? '#22c55e'
-        : isError
-          ? '#ef4444'
-          : null;
-    const deployBorderWidth = isDeploying || isError ? 2 : isActive ? 1.5 : 0;
+
+    // Deploy badge config — shown inline in the header instead of border overrides
+    const deployBadge = (() => {
+      if (isActive) return { color: '#22c55e', label: 'LIVE' };
+      if (isDeploying) return { color: '#3b82f6', label: 'DEPLOY' };
+      if (isError) return { color: '#ef4444', label: 'ERR' };
+      return null;
+    })();
 
     // Pick the single most important output to show as a pill under the
     // block label when active. This is a compact version of the logic in
@@ -154,6 +154,46 @@ export const CompactLod3: React.FC<CompactLod3Props> = memo(
       return null;
     })();
 
+    const iceTypeForInfo = (node.data?.iceType as string) || '';
+    const infoTrigger = (
+      <ConceptInfoTrigger
+        iceType={iceTypeForInfo}
+        displayName={label}
+        opacity={isHovered ? 0.85 : 0.45}
+      />
+    );
+
+    const deployBadgeEl = deployBadge ? (
+      <span
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 3,
+          padding: '1px 5px',
+          borderRadius: 3,
+          background: deployBadge.color + '18',
+          fontSize: 9,
+          fontWeight: 700,
+          fontFamily: FONT_MONO,
+          color: deployBadge.color,
+          letterSpacing: '0.04em',
+          flexShrink: 0,
+          lineHeight: 1,
+        }}
+      >
+        <span
+          style={{
+            width: 4,
+            height: 4,
+            borderRadius: '50%',
+            background: deployBadge.color,
+            animation: isDeploying && !reducedMotion ? 'pulse-opacity 1.5s ease-in-out infinite' : undefined,
+          }}
+        />
+        {deployBadge.label}
+      </span>
+    ) : null;
+
     const headerTrailing = folded ? (
       <>
         {runtimeLabel && (
@@ -161,10 +201,16 @@ export const CompactLod3: React.FC<CompactLod3Props> = memo(
             {runtimeLabel.length > 10 ? runtimeLabel.slice(0, 10) + '\u2026' : runtimeLabel}
           </span>
         )}
+        {deployBadgeEl}
+        {infoTrigger}
         <FoldButton folded onClick={onToggleFold} opacity={isHovered ? 0.8 : 0.4} />
       </>
     ) : (
-      provider ? <ProviderPill provider={provider} /> : undefined
+      <>
+        {deployBadgeEl}
+        {provider ? <ProviderPill provider={provider} /> : null}
+        {infoTrigger}
+      </>
     );
 
     return (
@@ -176,94 +222,52 @@ export const CompactLod3: React.FC<CompactLod3Props> = memo(
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >
-        {isSelected && <SelectionRing x={x} y={y} width={W} height={H} stroke={categoryGlow} />}
         {isDragOver && <DragOverGlow x={x} y={y} width={W} height={H} />}
         {isValidTarget && <ConnectionDragGlow x={x} y={y} width={W} height={H} reducedMotion={reducedMotion} />}
-
-        {/* Phase 2 — pulsing deploy overlay. Rendered as an SVG rect outside
-            the foreignObject so the animation is smooth regardless of the
-            block's HTML content. */}
-        {isDeploying && !reducedMotion && (
-          <rect
-            x={x - 3}
-            y={y - 3}
-            width={W + 6}
-            height={H + 6}
-            rx={12}
-            fill="none"
-            stroke="#3b82f6"
-            strokeWidth={2}
-            strokeDasharray="8 4"
-            opacity={0.85}
-          >
-            <animate
-              attributeName="stroke-dashoffset"
-              from="0"
-              to="-24"
-              dur="1.2s"
-              repeatCount="indefinite"
-            />
-            <animate
-              attributeName="opacity"
-              values="0.5;0.95;0.5"
-              dur="1.5s"
-              repeatCount="indefinite"
-            />
-          </rect>
-        )}
-        {isDeploying && reducedMotion && (
-          <rect
-            x={x - 2}
-            y={y - 2}
-            width={W + 4}
-            height={H + 4}
-            rx={11}
-            fill="none"
-            stroke="#3b82f6"
-            strokeWidth={2}
-            opacity={0.9}
-          />
-        )}
-        {isError && (
-          <rect
-            x={x - 2}
-            y={y - 2}
-            width={W + 4}
-            height={H + 4}
-            rx={11}
-            fill="none"
-            stroke="#ef4444"
-            strokeWidth={2}
-            opacity={0.9}
-          />
-        )}
 
         <foreignObject x={x} y={y} width={W} height={H}>
           <div
             style={{
               width: W,
               height: H,
-              background: 'var(--ice-bg-surface)',
-              border: `${deployBorderWidth || (isSelected ? 1.5 : 1)}px solid ${
-                isValidTarget ? '#22c55e' : deployBorderColor || border
-              }`,
+              background: 'var(--ice-bg-raised)',
+              border: `1px solid ${isValidTarget ? '#22c55e' : border}`,
               borderRadius: CORNER_RADIUS,
               display: 'flex',
               flexDirection: 'column',
               boxSizing: 'border-box',
               overflow: 'hidden',
               position: 'relative',
-              padding: folded ? '0 12px' : `10px ${CARD_PX}px 0`,
-              justifyContent: folded ? 'center' : undefined,
-              boxShadow: isDeploying ? '0 0 16px rgba(59, 130, 246, 0.35)' : undefined,
+              boxShadow: isSelected
+                  ? `0 0 0 1.5px ${categoryGlow}, 0 4px 14px -4px ${categoryGlow}33`
+                  : isHovered
+                    ? '0 2px 8px -2px rgba(0,0,0,0.15)'
+                    : '0 1px 3px rgba(0,0,0,0.06)',
+              transition: 'box-shadow 150ms ease, border-color 150ms ease',
             }}
           >
+            {/* Content */}
+            <div
+              style={{
+                flex: 1,
+                minWidth: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                position: 'relative',
+                padding: folded ? '0 12px' : '10px 14px 8px',
+                gap: folded ? 0 : 4,
+                justifyContent: folded ? 'center' : undefined,
+              }}
+            >
             <NodeHeader
               category={category}
               categoryColor={categoryGlow}
               label={label}
               onDoubleClickLabel={onDoubleClickLabel}
               trailing={headerTrailing}
+              hideIcon={false}
+              iconSize={16}
+              labelFontSize={folded ? 12 : 13}
             />
 
             {!folded && (
@@ -420,6 +424,7 @@ export const CompactLod3: React.FC<CompactLod3Props> = memo(
                 <ValidationBadge severity={validationSeverity} count={validationCount} small={folded} />
               </div>
             )}
+            </div>
           </div>
         </foreignObject>
 

@@ -18,3 +18,13 @@ export { CategoryIcon } from './category-icon';
 export { NodeLabel } from './node-label';
 export { NodeHeader } from './node-header';
 export { FONT_PRIMARY, FONT_MONO } from './fonts';
+
+// Card chrome + read-only display primitives for bespoke block nodes.
+// The canvas is display-only — all editing lives in the properties panel.
+export { CardShell } from './card-shell';
+export { BlockSidebar } from './block-sidebar';
+export { Pill } from './pill';
+export { Badge } from './badge';
+export { KvLine } from './kv-line';
+export { LabelLine } from './label-line';
+export { EmptyHint } from './empty-hint';

@@ -12,6 +12,7 @@ import {
   MIN_CONTAINER_HEIGHT,
 } from '../../config/canvas-constants';
 import { autoLayout, forceResolveOverlaps, type LayoutNode } from '../../shared/utils/auto-layout';
+import { isContainer as isContainerIceType } from '../../config/containment-rules';
 import type { ExpandedBlueprint } from '../../config/blocks';
 
 // =============================================================================
@@ -218,6 +219,38 @@ function pushSnapshot(state: CardsState, actionType?: string): void {
  * After an organize action, propagate container size changes upward.
  * Process deepest containers first (leaf-up) so children are sized before parents.
  */
+/**
+ * Copy each edge's routed polyline (produced by dagre during auto-layout)
+ * onto the edge's data so SvgConnectionPath can draw through it. Absent
+ * routes clear the stored waypoints so stale paths don't linger.
+ */
+/**
+ * Drop the cached `routePoints` on any edge incident to this node — once a
+ * node has moved, its dagre-computed route is stale and would render as a
+ * polyline through empty space until the next auto-organize.
+ */
+function invalidateEdgeRoutesTouching(edges: CardEdge[], nodeId: string): void {
+  for (const edge of edges) {
+    if (edge.source !== nodeId && edge.target !== nodeId) continue;
+    if (edge.data?.routePoints) delete edge.data.routePoints;
+  }
+}
+
+function applyEdgeRoutes(
+  edges: CardEdge[],
+  edgeRoutes: Map<string, Array<{ x: number; y: number }>>,
+): void {
+  for (const edge of edges) {
+    const route = edgeRoutes.get(`${edge.source}::${edge.target}`);
+    if (!edge.data) edge.data = {};
+    if (route && route.length >= 2) {
+      edge.data.routePoints = route.map((p) => ({ x: p.x, y: p.y }));
+    } else {
+      delete edge.data.routePoints;
+    }
+  }
+}
+
 function cascadeContainerReflow(nodes: CardNode[]): void {
   const containers = nodes.filter((n) => n.type === 'container');
   if (containers.length === 0) return;
@@ -449,6 +482,7 @@ const cardsSlice = createSlice({
           }
           node.position.x = x;
           node.position.y = y;
+          invalidateEdgeRoutesTouching(card.edges, action.payload.nodeId);
         }
       }
     },
@@ -476,13 +510,16 @@ const cardsSlice = createSlice({
         const skipClamp = Array.isArray(action.payload) ? false : !!action.payload.skipClamp;
 
         // First pass: apply all position updates
+        const movedIds = new Set<string>();
         for (const update of updates) {
           const node = card.nodes.find((n) => n.id === update.id);
           if (node) {
             node.position.x = update.position.x;
             node.position.y = update.position.y;
+            movedIds.add(update.id);
           }
         }
+        for (const id of movedIds) invalidateEdgeRoutesTouching(card.edges, id);
         // Second pass: clamp children to their parent bounds (skip during Shift+drag)
         if (!skipClamp) {
           for (const update of updates) {
@@ -611,7 +648,7 @@ const cardsSlice = createSlice({
           }));
 
           // Apply auto-layout
-          const organizedNodes = autoLayout(layoutNodes, layoutEdges, {
+          const { nodes: organizedNodes, edgeRoutes } = autoLayout(layoutNodes, layoutEdges, {
             startX: 50,
             startY: 50,
             nodeGap: 80,
@@ -635,6 +672,8 @@ const cardsSlice = createSlice({
             }
             return node;
           });
+
+          applyEdgeRoutes(card.edges, edgeRoutes);
         }
       }
     },
@@ -711,8 +750,17 @@ const cardsSlice = createSlice({
       const containerId = action?.payload?.containerId;
       const zoom = action?.payload?.zoom;
 
-      // Cleanup pass: strip parentId where parent is not a container.
-      const containerIds = new Set(card.nodes.filter((n) => n.type === 'container').map((n) => n.id));
+      // Cleanup pass: strip parentId where the parent isn't a valid container.
+      // A node qualifies as a container if it's typed `'container'` OR its
+      // iceType is a container type (e.g. Network.PrivateNetwork, Network.VPC,
+      // Network.Subnet, Group.*). Without the iceType check, blocks like
+      // Private Network — stored as `type: 'resource'` — would drop their
+      // children's parentId right before layout, breaking containment.
+      const containerIds = new Set(
+        card.nodes
+          .filter((n) => n.type === 'container' || isContainerIceType((n.data?.iceType as string) || ''))
+          .map((n) => n.id),
+      );
       for (const node of card.nodes) {
         if (node.parentId && !containerIds.has(node.parentId)) {
           delete node.parentId;
@@ -742,7 +790,7 @@ const cardsSlice = createSlice({
       }));
 
       // Apply auto-layout with direction and layout mode
-      const organizedNodes = autoLayout(layoutNodes, layoutEdges, {
+      const { nodes: organizedNodes, edgeRoutes } = autoLayout(layoutNodes, layoutEdges, {
         startX: 50,
         startY: 50,
         nodeGap: 36,
@@ -849,29 +897,32 @@ const cardsSlice = createSlice({
               node.position.x += dx;
               node.position.y += dy;
             }
+            // Shift routes by the same amount so they stay aligned with nodes
+            for (const [key, pts] of edgeRoutes) {
+              edgeRoutes.set(
+                key,
+                pts.map((p) => ({ x: p.x + dx, y: p.y + dy })),
+              );
+            }
           }
         }
       }
 
-      // Cascading reflow: propagate size changes upward through containment hierarchy
-      cascadeContainerReflow(card.nodes);
+      // NOTE: `cascadeContainerReflow` and `forceResolveOverlaps` are intentionally
+      // skipped here. `autoLayout` already sizes every container to
+      // `max(content + padding, MIN_CONTAINER, visual minimum)` and places
+      // siblings with 48px clearance. The legacy cascade recomputes container
+      // size from raw child content (ignoring visual minimums like Private
+      // Network's 560×320 floor) AND repositions the container around its
+      // children's centroid — both of which undo the fresh dagre layout and
+      // manifest as overlapping blocks.
 
-      // Force-directed collision resolution
-      const bodies = card.nodes.map((n) => ({
-        id: n.id,
-        x: n.position.x,
-        y: n.position.y,
-        width: n.width,
-        height: n.height,
-        parentId: n.parentId || null,
-      }));
-      forceResolveOverlaps(bodies, 16, 80);
-      for (const b of bodies) {
-        const node = card.nodes.find((n) => n.id === b.id);
-        if (node) {
-          node.position.x = b.x;
-          node.position.y = b.y;
-        }
+      // Persist dagre's routed polylines so SvgConnectionPath can draw edges
+      // that actually bend around nodes instead of cutting straight through.
+      // Only safe for master-organize: per-container organize leaves outside
+      // nodes in old positions, which would mismatch fresh routes.
+      if (!containerId) {
+        applyEdgeRoutes(card.edges, edgeRoutes);
       }
     },
 

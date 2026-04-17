@@ -130,7 +130,7 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
 
   // ── Colors ──
   const cat = CATEGORY_STYLE[category] || CATEGORY_STYLE.default;
-  const border = isDragOver ? '#22d3ee' : isSelected || isHovered ? cat.glow : 'var(--ice-border)';
+  const border = isDragOver ? '#22d3ee' : isSelected || isHovered ? cat.glow : cat.glow + '55';
 
   // ── Callbacks ──
   const handleFold = useCallback(

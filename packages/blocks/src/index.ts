@@ -13,6 +13,35 @@ export type { Provider } from './types';
 export { expandBlueprint } from './expand-blueprint';
 export type { ExpandBlueprintOptions } from './expand-blueprint';
 
+// Concepts Palette (high-level, provider-agnostic)
+export {
+  CONCEPT_BLUEPRINTS,
+} from './common/concepts';
+export type {
+  ConceptBlueprint,
+  VisualFamily,
+  ZoomState,
+  ZoomThresholds,
+  SnippetLanguage,
+  InfoContent,
+  RawPrimitive,
+  ExternalLink,
+} from './common/concepts/_shared/types';
+export {
+  SNIPPET_LANGUAGES,
+  SNIPPET_LANGUAGE_LABELS,
+  DEFAULT_ZOOM_THRESHOLDS,
+  registerConceptFamily,
+  getConceptFamily,
+  getAllRegisteredConceptIceTypes,
+} from './common/concepts/_shared/types';
+export {
+  registerInfo,
+  getInfoContent,
+  hasConceptInfo,
+  getAllRegisteredInfoIceTypes,
+} from './common/concepts/_shared/info-registry';
+
 import { alibabaScheduledTaskBlueprint } from './alibaba/backend/scheduled-task';
 import { functionComputeBlueprint } from './alibaba/compute/function-compute';
 import { alibabaRedisCacheBlueprint } from './alibaba/data/redis-cache';
@@ -82,6 +111,7 @@ import { azureSslCertificateBlueprint } from './azure/security/ssl-certificate';
 import { azureWafBlueprint } from './azure/security/waf';
 import { azureStorageBlueprint } from './azure/storage/storage';
 import { envConfigBlueprint } from './common/config/env-config';
+import { CONCEPT_BLUEPRINTS } from './common/concepts';
 import { customDomainBlueprint } from './common/networking/custom-domain';
 import { publicEndpointBlueprint } from './common/networking/public-endpoint';
 import { privateNetworkBlueprint } from './common/networking/private-network';
@@ -156,8 +186,16 @@ import type { BlockBlueprint } from './types';
 // Registry
 // =============================================================================
 
-/** All available block blueprints */
-export const BLOCK_BLUEPRINTS: BlockBlueprint[] = [
+/**
+ * Raw per-provider blueprints. These are the ~124 low-level blueprints that
+ * predate the Concepts Palette. They stay in the registry for backwards compat
+ * with existing projects but are hidden from the default palette — only the
+ * 25 Concept blocks (below) appear in the palette by default.
+ *
+ * The `hiddenFromPalette: true` flag is applied post-assembly so we don't
+ * have to edit 124 individual files.
+ */
+const RAW_BLUEPRINTS: BlockBlueprint[] = [
   // AWS (27)
   awsStaticSiteBlueprint,
   awsSsrSiteBlueprint,
@@ -297,12 +335,27 @@ export const BLOCK_BLUEPRINTS: BlockBlueprint[] = [
   digitaloceanRabbitmqBlueprint,
   digitaloceanEventStreamBlueprint,
   doAppPlatformBlueprint,
-  // Common (5)
-  githubRepositoryBlueprint,
-  envConfigBlueprint,
+  // Common — Public Endpoint stays as raw (dropped from palette but kept
+  // for backwards compat with existing projects). Env Config, GitHub Repo,
+  // Custom Domain, and Private Network are migrated into the concepts
+  // folder as thin wrappers (same blueprint data).
   publicEndpointBlueprint,
-  customDomainBlueprint,
-  privateNetworkBlueprint,
+];
+
+/**
+ * Apply `hiddenFromPalette: true` to every raw blueprint in one place so we
+ * don't have to edit 124 individual files. Concepts remain visible.
+ */
+const HIDDEN_RAW_BLUEPRINTS: BlockBlueprint[] = RAW_BLUEPRINTS.map((bp) => ({
+  ...bp,
+  hiddenFromPalette: true,
+}));
+
+/** All available block blueprints — hidden raw + concepts. */
+export const BLOCK_BLUEPRINTS: BlockBlueprint[] = [
+  ...HIDDEN_RAW_BLUEPRINTS,
+  // Concepts Palette (high-level, provider-agnostic) — palette default.
+  ...CONCEPT_BLUEPRINTS,
 ];
 
 /**

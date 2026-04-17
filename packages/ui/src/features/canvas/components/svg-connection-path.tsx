@@ -152,6 +152,71 @@ function buildStraightPath(start: Point, end: Point): { pathD: string; midX: num
   return { pathD, midX: (start.x + end.x) / 2, midY: (start.y + end.y) / 2 };
 }
 
+/**
+ * Draw a polyline through dagre's routed waypoints, orthogonalizing each
+ * segment into horizontal/vertical moves with rounded corners. We replace
+ * dagre's first/last point (which are at node centers) with the actual
+ * port-adjusted endpoints, so port disambiguation still works.
+ *
+ * Returns null if the route has too few points to justify routing — caller
+ * falls back to the plain rectangular path in that case.
+ */
+function buildDagreRoutedPath(
+  waypoints: Point[],
+  start: Point,
+  end: Point,
+): { pathD: string; midX: number; midY: number } | null {
+  if (!waypoints || waypoints.length < 3) return null;
+
+  const middle = waypoints.slice(1, -1);
+  const raw: Point[] = [start, ...middle, end];
+
+  // Orthogonalize: insert an elbow point wherever a segment is diagonal.
+  const ortho: Point[] = [raw[0]];
+  for (let i = 1; i < raw.length; i++) {
+    const prev = ortho[ortho.length - 1];
+    const cur = raw[i];
+    if (Math.abs(prev.x - cur.x) > 0.5 && Math.abs(prev.y - cur.y) > 0.5) {
+      ortho.push({ x: cur.x, y: prev.y });
+    }
+    ortho.push(cur);
+  }
+
+  // Collapse any duplicate points caused by the elbow insertion.
+  const pts = ortho.filter(
+    (p, i) => i === 0 || Math.abs(p.x - ortho[i - 1].x) > 0.5 || Math.abs(p.y - ortho[i - 1].y) > 0.5,
+  );
+  if (pts.length < 2) return null;
+
+  const R = 8;
+  let d = `M ${pts[0].x} ${pts[0].y}`;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const prev = pts[i - 1];
+    const cur = pts[i];
+    const next = pts[i + 1];
+    const dxIn = cur.x - prev.x;
+    const dyIn = cur.y - prev.y;
+    const dxOut = next.x - cur.x;
+    const dyOut = next.y - cur.y;
+    const lenIn = Math.sqrt(dxIn * dxIn + dyIn * dyIn);
+    const lenOut = Math.sqrt(dxOut * dxOut + dyOut * dyOut);
+    const r = Math.min(R, lenIn / 2, lenOut / 2);
+    if (r < 1 || lenIn < 1 || lenOut < 1) {
+      d += ` L ${cur.x} ${cur.y}`;
+      continue;
+    }
+    const beforeX = cur.x - (dxIn / lenIn) * r;
+    const beforeY = cur.y - (dyIn / lenIn) * r;
+    const afterX = cur.x + (dxOut / lenOut) * r;
+    const afterY = cur.y + (dyOut / lenOut) * r;
+    d += ` L ${beforeX} ${beforeY} Q ${cur.x} ${cur.y} ${afterX} ${afterY}`;
+  }
+  d += ` L ${pts[pts.length - 1].x} ${pts[pts.length - 1].y}`;
+
+  const mid = pts[Math.floor(pts.length / 2)];
+  return { pathD: d, midX: mid.x, midY: mid.y };
+}
+
 function buildRectangularPath(
   start: Point,
   end: Point,
@@ -393,7 +458,17 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
 
       const end = getEdgePoint(effTo, entrySide, targetPortIndex, targetPortCount);
       if (edgeStyle === 'straight') return buildStraightPath(start, end);
-      if (edgeStyle === 'rectangular') return buildRectangularPath(start, end, exitSide, entrySide);
+      if (edgeStyle === 'rectangular') {
+        // If auto-layout left us a routed polyline on this edge, follow it —
+        // dagre already bent the path around obstacles. Fall back to a plain
+        // L when the route is absent or too short.
+        const routePoints = (connection.data as { routePoints?: Point[] } | undefined)?.routePoints;
+        if (routePoints && routePoints.length >= 3) {
+          const routed = buildDagreRoutedPath(routePoints, start, end);
+          if (routed) return routed;
+        }
+        return buildRectangularPath(start, end, exitSide, entrySide);
+      }
       return buildBezierPath(start, end, exitSide, entrySide);
     }, [
       fromNode,

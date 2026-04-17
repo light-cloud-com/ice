@@ -113,20 +113,25 @@ interface ComponentDef {
   runtimes?: RuntimeOption[];
 }
 
-/** Helper: builds a ComponentDef with translated name/description/tooltip from the "blocks.*" i18n keys. */
+/** Helper: builds a ComponentDef from i18n keys with inline fallbacks for newly-added concept iceTypes. */
 function def(
   type: string,
   icon: React.ElementType,
   providers: ComponentDef['providers'],
   category: string,
   runtimes?: RuntimeOption[],
+  fallback?: { name: string; description: string; tooltip?: string },
 ): ComponentDef {
   const k = blockKey(type);
+  const i18nName = t(`blocks.${k}.name`);
+  // If the i18n key is missing, `t()` returns the key string verbatim —
+  // detect that and use the fallback.
+  const missing = i18nName === `blocks.${k}.name`;
   return {
     type,
-    name: t(`blocks.${k}.name`),
-    description: t(`blocks.${k}.description`),
-    tooltip: t(`blocks.${k}.tooltip`),
+    name: missing && fallback ? fallback.name : i18nName,
+    description: missing && fallback ? fallback.description : t(`blocks.${k}.description`),
+    tooltip: missing && fallback ? (fallback.tooltip ?? fallback.description) : t(`blocks.${k}.tooltip`),
     icon,
     providers,
     category,
@@ -134,7 +139,20 @@ function def(
   };
 }
 
+/**
+ * The Concepts Palette — 25 high-level, provider-agnostic blocks.
+ *
+ * This replaces the old per-provider block inventory (~45 entries across 7
+ * providers). Raw per-provider blueprints still exist in BLOCK_BLUEPRINTS
+ * for backwards compat with existing projects (see hiddenFromPalette flag)
+ * but are not shown in the default palette.
+ *
+ * See docs/backlog/concepts-palette.md for the full rationale.
+ */
 const COMPONENTS: ComponentDef[] = [
+  // ── Frontend ──
+  def('Compute.StaticSite', Globe, ['aws', 'gcp', 'azure'], 'Frontend'),
+  def('Compute.SSRSite', Globe, ['aws', 'gcp', 'azure', 'kubernetes'], 'Frontend'),
   // ── Compute ──
   def('Compute.Container', Server, ['aws', 'gcp', 'azure', 'kubernetes'], 'Compute', [
     { label: 'Node.js', value: 'Node.js 20' },
@@ -144,7 +162,6 @@ const COMPONENTS: ComponentDef[] = [
     { label: 'Rust', value: 'Rust 1.77' },
     { label: '.NET', value: '.NET 8' },
   ]),
-  def('Compute.Worker', Cog, ['aws', 'gcp', 'kubernetes'], 'Compute'),
   def('Compute.ServerlessFunction', Zap, ['aws', 'gcp', 'azure'], 'Compute', [
     { label: 'Node.js', value: 'Node.js 20' },
     { label: 'Python', value: 'Python 3.12' },
@@ -152,69 +169,53 @@ const COMPONENTS: ComponentDef[] = [
     { label: 'Java', value: 'Java 21' },
     { label: '.NET', value: '.NET 8' },
   ]),
-  def('Compute.FunctionCompute', Zap, ['alibaba'], 'Compute'),
-  def('Compute.OCIFunctions', Zap, ['oci'], 'Compute'),
-  def('Compute.DOAppPlatform', Server, ['digitalocean'], 'Compute'),
+  def('Compute.Worker', Cog, ['aws', 'gcp', 'azure', 'kubernetes'], 'Compute'),
   // ── Scheduler ──
   def('Compute.CronJob', Clock, ['aws', 'gcp', 'azure'], 'Scheduler'),
-  // ── Frontend ──
-  def('Compute.StaticSite', Globe, ['aws', 'gcp', 'azure'], 'Frontend'),
-  def('Compute.SSRSite', Globe, ['aws', 'gcp', 'azure', 'kubernetes'], 'Frontend'),
-  // ── Network ──
-  // `Network.PublicEndpoint` is registered once below in the
-  // "Networking (cross-provider)" section so the icon + provider list
-  // match the new unified block. Don't add a second entry here or the
-  // palette renders two identical "Public Endpoint" tiles.
-  def('Network.VPC', Network, ['aws', 'gcp', 'azure'], 'Network'),
-  def('Network.Subnet', Layers, ['aws', 'gcp', 'azure'], 'Network'),
-  def('Network.Gateway', GitBranch, ['aws', 'gcp', 'azure'], 'Network'),
   // ── Database ──
-  def('Database.PostgreSQL', Database, ['aws', 'gcp', 'azure', 'digitalocean'], 'Database'),
-  def('Database.MySQL', Database, ['aws', 'gcp', 'azure', 'digitalocean'], 'Database'),
-  def('Database.MongoDB', Database, ['aws', 'gcp', 'azure', 'digitalocean'], 'Database'),
-  def('Database.DynamoDB', Database, ['aws'], 'Database'),
-  def('Database.Firestore', Database, ['gcp'], 'Database'),
-  def('Database.CosmosDB', Database, ['azure'], 'Database'),
-  def('Database.Tablestore', Database, ['alibaba'], 'Database'),
-  def('Database.AutonomousDB', Database, ['oci'], 'Database'),
-  def('Database.DOManagedDB', Database, ['digitalocean'], 'Database'),
+  def('Database.PostgreSQL', Database, ['aws', 'gcp', 'azure'], 'Database'),
+  def('Database.MySQL', Database, ['aws', 'gcp', 'azure'], 'Database'),
+  def('Database.MongoDB', Database, ['aws', 'gcp', 'azure'], 'Database'),
   // ── Cache ──
-  def('Database.Redis', Zap, ['aws', 'gcp', 'azure', 'digitalocean'], 'Cache'),
-  // ── Messaging ──
-  def('Messaging.SQS', List, ['aws'], 'Messaging'),
-  def('Messaging.SNS', Bell, ['aws'], 'Messaging'),
-  def('Messaging.RabbitMQ', List, ['aws', 'gcp', 'azure', 'kubernetes'], 'Messaging'),
-  def('Messaging.Topic', Activity, ['aws', 'gcp', 'azure'], 'Messaging'),
-  def('Messaging.CloudPubSub', Bell, ['gcp'], 'Messaging'),
-  def('Messaging.ServiceBus', List, ['azure'], 'Messaging'),
+  def('Database.Redis', Zap, ['aws', 'gcp', 'azure', 'kubernetes'], 'Cache'),
   // ── Storage ──
-  def('Storage.Bucket', HardDrive, ['aws', 'gcp', 'azure', 'alibaba', 'oci', 'digitalocean'], 'Storage'),
-  def('Storage.OSS', HardDrive, ['alibaba'], 'Storage'),
-  def('Storage.OCIObjectStorage', HardDrive, ['oci'], 'Storage'),
-  def('Storage.DOSpaces', HardDrive, ['digitalocean'], 'Storage'),
+  def('Storage.Bucket', HardDrive, ['aws', 'gcp', 'azure'], 'Storage'),
+  // ── Messaging ──
+  def('Messaging.Queue', List, ['aws', 'gcp', 'azure'], 'Messaging', undefined, {
+    name: 'Message Queue',
+    description: 'Point-to-point async queue — producer drops a job, a Worker picks it up.',
+  }),
+  def('Messaging.EventStream', Activity, ['aws', 'gcp', 'azure'], 'Messaging', undefined, {
+    name: 'Event Stream',
+    description: 'Pub/sub fan-out stream. One event, many consumers.',
+  }),
+  def('Messaging.Email', Bell, ['aws', 'gcp', 'azure'], 'Messaging', undefined, {
+    name: 'Email Service',
+    description: 'Transactional email — confirmations, receipts, password resets.',
+  }),
+  // ── Network ──
+  def('Network.Gateway', GitBranch, ['aws', 'gcp', 'azure'], 'Network'),
+  def('Network.CustomDomain', Globe, ['aws', 'gcp', 'azure'], 'Network'),
+  def('Network.PrivateNetwork', Shield, ['aws', 'gcp', 'azure'], 'Network'),
+  // Public Traffic is NOT a draggable block — it's auto-rendered as a floating
+  // user icon above public-facing services by use-exposed-services.ts. The
+  // concept blueprint still exists for info-panel purposes.
   // ── Security ──
-  def('Security.Identity', User, ['aws', 'gcp', 'azure'], 'Security'),
   def('Security.Secret', Key, ['aws', 'gcp', 'azure'], 'Security'),
-  def('Security.WAF', ShieldAlert, ['aws', 'gcp', 'azure'], 'Security'),
-  def('Security.Certificate', Lock, ['aws', 'gcp', 'azure'], 'Security'),
   // ── AI ──
-  def('AI.LLMGateway', BrainCircuit, ['aws', 'gcp', 'azure', 'kubernetes'], 'AI'),
   def('AI.VectorDB', Waypoints, ['aws', 'gcp', 'azure'], 'AI'),
-  def('AI.ModelServing', Brain, ['aws', 'gcp', 'azure'], 'AI'),
-  // ── Analytics ──
-  def('Analytics.DataWarehouse', BarChart3, ['aws', 'gcp', 'azure'], 'Analytics'),
-  def('Analytics.Search', Search, ['aws', 'gcp', 'azure', 'kubernetes'], 'Analytics'),
+  def('AI.LLMGateway', BrainCircuit, ['aws', 'gcp', 'azure'], 'AI'),
+  def('AI.PrivateAIService', Brain, ['aws', 'gcp', 'azure'], 'AI', undefined, {
+    name: 'Private AI Service',
+    description: 'Self-hosted LLM on your own infrastructure. Data stays in your cloud.',
+  }),
   // ── Monitoring ──
-  def('Monitoring.Log', FileText, ['aws', 'gcp', 'azure', 'kubernetes'], 'Monitoring'),
+  def('Monitoring.Log', FileText, ['aws', 'gcp', 'azure'], 'Monitoring'),
   def('Monitoring.Terminal', Terminal, ['aws', 'gcp', 'azure', 'kubernetes'], 'Monitoring'),
   // ── Source ──
-  def('Source.Repository', GitBranch, ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean'], 'Source'),
+  def('Source.Repository', GitBranch, ['aws', 'gcp', 'azure'], 'Source'),
   // ── Config ──
-  def('Config.Environment', Cog, ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean'], 'Config'),
-  // ── Networking ── (domain blocks are provider-agnostic)
-  def('Network.PublicEndpoint', Globe, ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean'], 'Network'),
-  def('Network.CustomDomain', Globe, ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean'], 'Network'),
-  def('Network.PrivateNetwork', Shield, ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean'], 'Network'),
+  def('Config.Environment', Cog, ['aws', 'gcp', 'azure'], 'Config'),
 ];
 
 let groupColorIndex = 0;

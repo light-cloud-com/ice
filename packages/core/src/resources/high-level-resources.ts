@@ -58,7 +58,15 @@ export interface OptionDetail {
 export interface HighLevelProperty {
   name: string;
   label: string;
-  type: 'string' | 'number' | 'boolean' | 'select' | 'list';
+  /**
+   * Property type drives the renderer in the properties panel.
+   * - `string` / `number` / `boolean`: plain inputs
+   * - `select`: dropdown or card picker (see optionDetails)
+   * - `list`: generic string list with add/remove
+   * - `queue_list`: bespoke queue renderer — each item shows as a queue pill
+   *   with a distinct icon, FIFO badge, and queue-semantic affordances
+   */
+  type: 'string' | 'number' | 'boolean' | 'select' | 'list' | 'queue_list';
   required: boolean;
   description: string;
   options?: string[];
@@ -1754,6 +1762,100 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
               { value: 'triton', label: 'Triton', description: 'NVIDIA multi-framework server' },
               { value: 'custom', label: 'Custom', description: 'Bring your own serving code' },
             ],
+          },
+        ],
+      },
+      {
+        id: 'private-ai-service',
+        name: 'Private AI Service',
+        description: 'Self-hosted LLM running on your own GPU infrastructure — data stays in your cloud',
+        icon: 'Brain',
+        category: 'compute',
+        behavior: 'scalable' as NodeBehavior,
+        providers: ['aws', 'gcp', 'azure'],
+        implementations: [
+          { provider: 'aws', resource_type: 'aws:eks:NodeGroup', display_name: 'EKS GPU NodeGroup' },
+          { provider: 'gcp', resource_type: 'gcp:container:NodePool', display_name: 'GKE GPU Node Pool' },
+          { provider: 'azure', resource_type: 'azure:containerservice:AgentPool', display_name: 'AKS GPU Node Pool' },
+        ],
+        keywords: ['llm', 'self-hosted', 'private', 'llama', 'mistral', 'vllm', 'gpu', 'ai', 'ollama'],
+        properties: [
+          {
+            name: 'name',
+            label: 'Name',
+            type: 'string',
+            required: true,
+            tier: 'essential',
+            description: 'A friendly name for this AI service',
+            placeholder: 'My Private AI',
+          },
+          {
+            name: 'model',
+            label: 'Model',
+            type: 'select',
+            required: true,
+            tier: 'essential',
+            description: 'Open-weight model to serve',
+            default: 'llama-3-8b',
+            options: [
+              'llama-3-8b',
+              'llama-3-70b',
+              'llama-3.1-8b',
+              'llama-3.1-70b',
+              'mistral-7b',
+              'mixtral-8x7b',
+              'qwen-2.5-7b',
+              'qwen-2.5-72b',
+              'phi-3-mini',
+              'gemma-2-9b',
+              'custom',
+            ],
+          },
+          {
+            name: 'runtime',
+            label: 'Serving runtime',
+            type: 'select',
+            required: true,
+            tier: 'essential',
+            description: 'How the model is served',
+            default: 'vllm',
+            options: ['vllm', 'tgi', 'ollama', 'llama.cpp', 'triton'],
+          },
+          {
+            name: 'gpu_type',
+            label: 'GPU',
+            type: 'select',
+            required: true,
+            tier: 'essential',
+            description: 'GPU class — determines throughput and cost',
+            default: 'nvidia-l4',
+            optionDetails: [
+              { value: 'nvidia-t4', label: 'NVIDIA T4 (16GB)', description: 'Entry-level — 7B models', cost: '~$350/mo' },
+              { value: 'nvidia-l4', label: 'NVIDIA L4 (24GB)', description: 'Balanced — 7B-13B models', cost: '~$450/mo' },
+              { value: 'nvidia-a10', label: 'NVIDIA A10 (24GB)', description: 'Mid-range — 13B models', cost: '~$700/mo' },
+              { value: 'nvidia-a100-40', label: 'NVIDIA A100 40GB', description: 'High-end — 70B quantized', cost: '~$2200/mo' },
+              { value: 'nvidia-a100-80', label: 'NVIDIA A100 80GB', description: 'High-end — 70B full-precision', cost: '~$3000/mo' },
+              { value: 'nvidia-h100', label: 'NVIDIA H100 (80GB)', description: 'Top-tier — best throughput', cost: '~$5000/mo' },
+            ],
+          },
+          {
+            name: 'replicas',
+            label: 'Replicas',
+            type: 'number',
+            required: false,
+            tier: 'detailed',
+            description: 'Number of GPU pods to run. Each replica serves requests in parallel.',
+            default: 1,
+          },
+          {
+            name: 'context_length',
+            label: 'Context length',
+            type: 'select',
+            required: false,
+            tier: 'detailed',
+            description: 'Maximum tokens per request — longer contexts use more memory',
+            default: '8k',
+            options: ['2k', '4k', '8k', '16k', '32k', '128k'],
           },
         ],
       },
@@ -5151,6 +5253,16 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
             tooltip:
               'Messages that fail processing after a set number of retries are moved to a dead-letter queue. Prevents poison messages from blocking the queue. Recommended for production.',
           },
+          {
+            name: 'queues',
+            label: 'Queues',
+            type: 'queue_list',
+            required: false,
+            tier: 'essential',
+            description: 'Named queues to create on this message broker. Each entry is a queue name your code will publish to / consume from.',
+            placeholder: 'e.g. orders, emails, thumbnails',
+            addLabel: 'Add a queue',
+          },
         ],
       },
       {
@@ -5517,6 +5629,77 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
             description: 'Named topics for pub/sub messaging',
             placeholder: 'e.g. user-events',
             addLabel: 'Add a topic',
+          },
+        ],
+      },
+      {
+        id: 'email-service',
+        name: 'Email Service',
+        description: 'Transactional email — confirmations, password resets, receipts, alerts',
+        icon: 'Mail',
+        category: 'messaging',
+        behavior: 'singleton' as NodeBehavior,
+        providers: ['aws', 'gcp', 'azure'],
+        implementations: [
+          { provider: 'aws', resource_type: 'aws:ses:DomainIdentity', display_name: 'Amazon SES' },
+          { provider: 'gcp', resource_type: 'gcp:cloudfunctions:Function', display_name: 'SendGrid via Cloud Function' },
+          { provider: 'azure', resource_type: 'azure:communication:EmailService', display_name: 'Azure Communication Email' },
+        ],
+        keywords: ['email', 'smtp', 'ses', 'sendgrid', 'postmark', 'transactional', 'mail'],
+        properties: [
+          {
+            name: 'name',
+            label: 'Name',
+            type: 'string',
+            required: true,
+            tier: 'essential',
+            description: 'A friendly name for this email service',
+            placeholder: 'My Email Service',
+          },
+          {
+            name: 'from_address',
+            label: 'From address',
+            type: 'string',
+            required: true,
+            tier: 'essential',
+            description: 'The verified sender address that outgoing email will be sent from',
+            placeholder: 'noreply@example.com',
+          },
+          {
+            name: 'from_name',
+            label: 'From name',
+            type: 'string',
+            required: false,
+            tier: 'essential',
+            description: 'The human-friendly sender name shown in inbox',
+            placeholder: 'My App',
+          },
+          {
+            name: 'reply_to',
+            label: 'Reply-to address',
+            type: 'string',
+            required: false,
+            tier: 'detailed',
+            description: 'Address users see when they hit reply. Defaults to from_address if blank.',
+            placeholder: 'support@example.com',
+          },
+          {
+            name: 'domain',
+            label: 'Sending domain',
+            type: 'string',
+            required: false,
+            tier: 'detailed',
+            description: 'Domain to verify for DKIM/SPF. Required for deliverability at volume.',
+            placeholder: 'example.com',
+          },
+          {
+            name: 'daily_quota',
+            label: 'Daily send quota',
+            type: 'number',
+            required: false,
+            tier: 'detailed',
+            description: 'Soft cap on daily outbound emails — providers enforce ramp-up limits',
+            default: 200,
           },
         ],
       },

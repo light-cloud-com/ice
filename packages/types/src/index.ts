@@ -6,3 +6,4 @@ export * from './github';
 export * from './events';
 export * from './ai';
 export * from './connection-rules';
+export * from './propagation-rules';

@@ -1381,7 +1381,84 @@
     "provider": "提供商",
     "behavior": "行为",
     "noResources": "暂无资源",
-    "noResourcesHint": "从侧边栏拖动组件以添加资源"
+    "noResourcesHint": "从侧边栏拖动组件以添加资源",
+    "search": {
+      "placeholder": "搜索名称、ID、类型、区域…"
+    },
+    "filter": {
+      "clear": "清除"
+    },
+    "groupBy": {
+      "label": "分组方式",
+      "none": "无",
+      "status": "状态",
+      "provider": "提供商",
+      "family": "类别",
+      "group": "分组"
+    },
+    "density": {
+      "comfortable": "宽松",
+      "compact": "紧凑"
+    },
+    "columns": {
+      "name": "名称",
+      "type": "类型",
+      "provider": "提供商",
+      "status": "状态",
+      "endpoints": "端点",
+      "id": "ID",
+      "region": "区域",
+      "settings": "设置",
+      "updated": "更新时间"
+    },
+    "status": {
+      "idle": "空闲",
+      "queued": "排队中",
+      "building": "构建中",
+      "deploying": "部署中",
+      "live": "运行中",
+      "failed": "失败",
+      "drifted": "已漂移"
+    },
+    "endpoints": {
+      "live": "实时 URL",
+      "domain": "自定义域名",
+      "repo": "源代码仓库",
+      "image": "容器镜像",
+      "console": "提供商控制台",
+      "copy": "复制 URL",
+      "copied": "已复制"
+    },
+    "actions": {
+      "menu": "更多操作",
+      "openProperties": "打开属性",
+      "revealOnCanvas": "在画布中显示",
+      "copyId": "复制 ID",
+      "copyName": "复制名称",
+      "openInBrowser": "在浏览器中打开",
+      "openInGithub": "在 GitHub 中打开",
+      "openInConsole": "在提供商控制台中打开",
+      "delete": "删除"
+    },
+    "expand": {
+      "show": "显示详情",
+      "hide": "隐藏详情",
+      "noSettings": "无设置可显示"
+    },
+    "group": {
+      "noProvider": "无提供商",
+      "other": "其他",
+      "root": "顶层"
+    },
+    "empty": {
+      "noResults": "无匹配项",
+      "noResultsHint": "尝试清除筛选或更改搜索条件"
+    },
+    "footer": {
+      "total": "{{count}} 个资源",
+      "filtered": "{{shown}} / {{total}} 个资源",
+      "selected": "已选择 {{count}} 个"
+    }
   },
 
   "appSettings": {

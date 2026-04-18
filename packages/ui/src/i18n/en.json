@@ -1381,7 +1381,84 @@
     "provider": "Provider",
     "behavior": "Behavior",
     "noResources": "No resources yet",
-    "noResourcesHint": "Drag blocks from the sidebar to add resources"
+    "noResourcesHint": "Drag blocks from the sidebar to add resources",
+    "search": {
+      "placeholder": "Search name, id, type, region…"
+    },
+    "filter": {
+      "clear": "Clear"
+    },
+    "groupBy": {
+      "label": "Group by",
+      "none": "None",
+      "status": "Status",
+      "provider": "Provider",
+      "family": "Family",
+      "group": "Group"
+    },
+    "density": {
+      "comfortable": "Comfortable",
+      "compact": "Compact"
+    },
+    "columns": {
+      "name": "Name",
+      "type": "Type",
+      "provider": "Provider",
+      "status": "Status",
+      "endpoints": "Endpoints",
+      "id": "ID",
+      "region": "Region",
+      "settings": "Settings",
+      "updated": "Updated"
+    },
+    "status": {
+      "idle": "Idle",
+      "queued": "Queued",
+      "building": "Building",
+      "deploying": "Deploying",
+      "live": "Live",
+      "failed": "Failed",
+      "drifted": "Drifted"
+    },
+    "endpoints": {
+      "live": "Live URL",
+      "domain": "Custom domain",
+      "repo": "Source repository",
+      "image": "Container image",
+      "console": "Provider console",
+      "copy": "Copy URL",
+      "copied": "Copied"
+    },
+    "actions": {
+      "menu": "More actions",
+      "openProperties": "Open properties",
+      "revealOnCanvas": "Reveal on canvas",
+      "copyId": "Copy ID",
+      "copyName": "Copy name",
+      "openInBrowser": "Open in browser",
+      "openInGithub": "Open in GitHub",
+      "openInConsole": "Open in provider console",
+      "delete": "Delete"
+    },
+    "expand": {
+      "show": "Show details",
+      "hide": "Hide details",
+      "noSettings": "No settings to show"
+    },
+    "group": {
+      "noProvider": "No provider",
+      "other": "Other",
+      "root": "Top level"
+    },
+    "empty": {
+      "noResults": "No matches",
+      "noResultsHint": "Try clearing filters or searching differently"
+    },
+    "footer": {
+      "total": "{{count}} resources",
+      "filtered": "{{shown}} of {{total}} resources",
+      "selected": "{{count}} selected"
+    }
   },
 
   "appSettings": {

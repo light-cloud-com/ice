@@ -333,8 +333,16 @@ function dagreTreeLayout(
       if (y + gn.height > maxY) maxY = y + gn.height;
     }
 
-    const originX = ownerId === null ? opts.startX : CONTAINER_PADDING;
-    const originY = ownerId === null ? opts.startY : CONTAINER_PADDING + HEADER_HEIGHT;
+    // Inside a container, place children using grid-aligned padding so the
+    // post-layout snapToGrid pass is a no-op for the inset and the bottom
+    // padding doesn't get eaten when snap rounds the first child up.
+    // CONTAINER_PADDING (20) and HEADER_HEIGHT (36) sum to 56 — neither a
+    // multiple of GRID_STEP — so snap turns "56" into "80" while the
+    // container's pre-snap height was sized for 56, leaving 0px of bottom
+    // padding. We use the next grid multiples (40 side, 80 top) and a
+    // matching 40 bottom padding so the bookkeeping holds through snap.
+    const originX = ownerId === null ? opts.startX : GRID_STEP;
+    const originY = ownerId === null ? opts.startY : GRID_STEP * 2;
     const shiftX = originX - minX;
     const shiftY = originY - minY;
 
@@ -363,9 +371,12 @@ function dagreTreeLayout(
       // container's previously stored size, which would prevent any shrink.
       const ownerIce = (nodeMap.get(ownerId)!.iceType as string) || '';
       const visualMin = intrinsicContainerMin(ownerIce);
+      // Size the container using the same grid-aligned paddings used to
+      // place children (40 each side horizontally; 80 top header zone + 40
+      // bottom padding = 3 grid steps vertically).
       containerSize.set(ownerId, {
-        width: Math.max(contentW + CONTAINER_PADDING * 2, visualMin.width),
-        height: Math.max(contentH + CONTAINER_PADDING * 2 + HEADER_HEIGHT, visualMin.height),
+        width: Math.max(contentW + GRID_STEP * 2, visualMin.width),
+        height: Math.max(contentH + GRID_STEP * 3, visualMin.height),
       });
     }
   }
@@ -460,8 +471,10 @@ function circularLayout(
       if (y + size.height > maxY) maxY = y + size.height;
     });
 
-    const originX = ownerId === null ? opts.startX : CONTAINER_PADDING;
-    const originY = ownerId === null ? opts.startY : CONTAINER_PADDING + HEADER_HEIGHT;
+    // Mirror the dagre path: grid-aligned padding so snap is a no-op for the
+    // inset (and bottom padding doesn't get eaten).
+    const originX = ownerId === null ? opts.startX : GRID_STEP;
+    const originY = ownerId === null ? opts.startY : GRID_STEP * 2;
     const dx = originX - minX;
     const dy = originY - minY;
     for (const kid of kids) {
@@ -474,8 +487,8 @@ function circularLayout(
       const contentH = maxY - minY;
       const owner = nodeMap.get(ownerId)!;
       containerSize.set(ownerId, {
-        width: Math.max(contentW + CONTAINER_PADDING * 2, MIN_CONTAINER_WIDTH, owner.width),
-        height: Math.max(contentH + CONTAINER_PADDING * 2 + HEADER_HEIGHT, MIN_CONTAINER_HEIGHT, owner.height),
+        width: Math.max(contentW + GRID_STEP * 2, MIN_CONTAINER_WIDTH, owner.width),
+        height: Math.max(contentH + GRID_STEP * 3, MIN_CONTAINER_HEIGHT, owner.height),
       });
     }
   }

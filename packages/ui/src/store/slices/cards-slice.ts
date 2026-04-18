@@ -5,6 +5,7 @@
  */
 
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { LAYOUT_NODE_SEP } from '@ice/constants';
 import {
   CONTAINER_PADDING,
   HEADER_HEIGHT,
@@ -789,11 +790,15 @@ const cardsSlice = createSlice({
         relationship: e.data?.relationship as string | undefined,
       }));
 
-      // Apply auto-layout with direction and layout mode
+      // Apply auto-layout with direction and layout mode.
+      // nodeGap MUST be a multiple of LAYOUT_GRID_STEP (40). Using e.g. 36 makes
+      // each block-step (width 240 + gap 36 = 276) misalign with the grid, so
+      // the post-layout snapToGrid pass rounds adjacent positions inconsistently
+      // and eats one grid step (40px) out of one gap per row.
       const { nodes: organizedNodes, edgeRoutes } = autoLayout(layoutNodes, layoutEdges, {
         startX: 50,
         startY: 50,
-        nodeGap: 36,
+        nodeGap: LAYOUT_NODE_SEP,
         nodesPerRow: 3,
         containerPadding: 30,
         direction,

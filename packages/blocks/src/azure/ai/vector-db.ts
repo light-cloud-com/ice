@@ -5,11 +5,11 @@ export const azureVectorDbBlueprint: BlockBlueprint = createBlueprintFromResourc
   iceType: 'AI.VectorDB',
   category: 'ai',
   name: 'Azure Vector DB',
-  description: 'Azure AI Search. Embeddings + similarity search.',
+  description: 'Azure Cosmos DB for NoSQL (vector search). Embeddings + similarity search.',
   icon: 'Waypoints',
   providers: ['azure'],
   nodeDataDefaults: {
-    runtime: 'Azure AI Search',
+    runtime: 'Azure Cosmos DB (vector)',
     port: 443,
   },
 });

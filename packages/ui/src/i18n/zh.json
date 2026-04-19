@@ -587,8 +587,18 @@
       "deployInfra": "部署基础设施",
       "contextDeploy": "部署",
       "contextPromote": "提升到生产环境",
+      "contextRename": "重命名",
       "contextDelete": "删除环境",
       "envNamePlaceholder": "环境名称"
+    },
+    "renameModal": {
+      "title": "重命名环境",
+      "nameLabel": "名称",
+      "cancelButton": "取消",
+      "savingButton": "保存中...",
+      "saveButton": "保存",
+      "errorNameRequired": "名称是必填项",
+      "errorFallback": "重命名环境失败"
     },
     "createModal": {
       "title": "新建环境",

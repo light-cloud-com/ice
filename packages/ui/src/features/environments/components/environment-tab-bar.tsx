@@ -6,7 +6,7 @@
  * Clicking switches the active canvas card.
  */
 
-import { Lock, Plus, GitPullRequest, Loader2, ArrowUpRight, Trash2, Rocket } from 'lucide-react';
+import { Lock, Plus, GitPullRequest, Loader2, ArrowUpRight, Trash2, Rocket, Pencil } from 'lucide-react';
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from '../../../i18n';
@@ -19,6 +19,7 @@ import {
   fetchEnvironments,
   createEnvironment,
   deleteEnvironment,
+  renameEnvironment,
   setActiveEnvironment,
   compareEnvironments,
   type Environment,
@@ -40,6 +41,7 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
   const prodEnv = environments.find((e) => e.type === 'production');
   const canPromote = activeEnv && !activeEnv.is_protected && prodEnv;
   const [showCreate, setShowCreate] = useState(false);
+  const [renameTarget, setRenameTarget] = useState<Environment | null>(null);
   const [contextMenu, setContextMenu] = useState<{ envId: string; x: number; y: number } | null>(null);
   const [envDeployStatus, setEnvDeployStatus] = useState<Record<string, { status: string; url?: string }>>({});
 
@@ -288,6 +290,7 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
           const env = environments.find((e) => e.id === contextMenu.envId);
           if (!env) return null;
           const showPromote = !env.is_protected && prodEnv;
+          const showRename = !env.is_protected;
           const showDelete = !env.is_protected;
 
           return (
@@ -317,6 +320,18 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
                   {t('environments.tabBar.contextPromote')}
                 </button>
               )}
+              {showRename && (
+                <button
+                  onClick={() => {
+                    setContextMenu(null);
+                    setRenameTarget(env);
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-ice-xs text-ice-text-2 hover:bg-ice-hover transition-colors"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                  {t('environments.tabBar.contextRename')}
+                </button>
+              )}
               {showDelete && (
                 <>
                   <div className="h-px bg-ice-border my-1" />
@@ -335,7 +350,98 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
 
       {/* Create environment modal */}
       {showCreate && <CreateEnvironmentModal projectId={projectId} onClose={() => setShowCreate(false)} />}
+
+      {/* Rename environment modal */}
+      {renameTarget && (
+        <RenameEnvironmentModal
+          env={renameTarget}
+          projectId={projectId}
+          onClose={() => setRenameTarget(null)}
+        />
+      )}
     </>
+  );
+};
+
+// ─── Rename Environment Modal ───────────────────────────────────────────────
+
+const RenameEnvironmentModal: React.FC<{
+  env: Environment;
+  projectId: string;
+  onClose: () => void;
+}> = ({ env, projectId, onClose }) => {
+  const { t } = useTranslation();
+  const dispatch = useDispatch<AppDispatch>();
+  const [name, setName] = useState(env.name);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSave = async () => {
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setError(t('environments.renameModal.errorNameRequired'));
+      return;
+    }
+    if (trimmed === env.name) {
+      onClose();
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      await dispatch(renameEnvironment({ envId: env.id, projectId, name: trimmed })).unwrap();
+      onClose();
+    } catch (err: any) {
+      setError(typeof err === 'string' ? err : err?.message || t('environments.renameModal.errorFallback'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50" onClick={onClose}>
+      <div
+        className="w-[380px] bg-ice-surface border border-ice-border rounded-lg shadow-xl p-5 space-y-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="text-sm font-semibold text-ice-text-1">{t('environments.renameModal.title')}</h3>
+
+        {error && (
+          <div className="rounded bg-red-500/10 border border-red-500/20 px-3 py-2 text-ice-xs text-red-400">
+            {error}
+          </div>
+        )}
+
+        <div>
+          <label className="text-ice-xs font-medium text-ice-text-2 block mb-1">
+            {t('environments.renameModal.nameLabel')}
+          </label>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            autoFocus
+            className="w-full px-2.5 py-1.5 text-ice-sm rounded border border-ice-border bg-ice-base text-ice-text-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+          />
+        </div>
+
+        <div className="flex justify-end gap-2 pt-2">
+          <button
+            onClick={onClose}
+            className="px-3 py-1.5 text-ice-sm text-ice-text-3 hover:text-ice-text-2 transition-colors"
+          >
+            {t('environments.renameModal.cancelButton')}
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving || !name.trim() || name.trim() === env.name}
+            className="px-3 py-1.5 text-ice-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors disabled:opacity-50"
+          >
+            {saving ? t('environments.renameModal.savingButton') : t('environments.renameModal.saveButton')}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 

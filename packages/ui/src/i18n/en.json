@@ -587,8 +587,18 @@
       "deployInfra": "Deploy Infra",
       "contextDeploy": "Deploy",
       "contextPromote": "Promote to production",
+      "contextRename": "Rename",
       "contextDelete": "Delete environment",
       "envNamePlaceholder": "Environment name"
+    },
+    "renameModal": {
+      "title": "Rename Environment",
+      "nameLabel": "Name",
+      "cancelButton": "Cancel",
+      "savingButton": "Saving...",
+      "saveButton": "Save",
+      "errorNameRequired": "Name is required",
+      "errorFallback": "Failed to rename environment"
     },
     "createModal": {
       "title": "New Environment",

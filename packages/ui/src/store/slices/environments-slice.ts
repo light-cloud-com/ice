@@ -97,6 +97,19 @@ export const deleteEnvironment = createAsyncThunk(
   },
 );
 
+export const renameEnvironment = createAsyncThunk(
+  'environments/rename',
+  async ({ envId, projectId, name }: { envId: string; projectId: string; name: string }, { rejectWithValue }) => {
+    try {
+      const res = await getApi().environments.update(envId, { name });
+      if (!res.success) return rejectWithValue(res.error);
+      return { envId, projectId, name };
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  },
+);
+
 export const compareEnvironments = createAsyncThunk(
   'environments/compare',
   async ({ sourceEnvId, targetEnvId }: { sourceEnvId: string; targetEnvId: string }, { rejectWithValue }) => {
@@ -171,6 +184,12 @@ const environmentsSlice = createSlice({
           const prod = state.byProject[projectId]?.find((e) => e.type === 'production');
           state.activeEnvId[projectId] = prod?.id || '';
         }
+      })
+
+      .addCase(renameEnvironment.fulfilled, (state, action) => {
+        const { envId, projectId, name } = action.payload;
+        const env = state.byProject[projectId]?.find((e) => e.id === envId);
+        if (env) env.name = name;
       })
 
       .addCase(compareEnvironments.fulfilled, (state, action) => {

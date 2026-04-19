@@ -29,7 +29,9 @@ import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { cn } from '../../../shared/utils/cn';
 import { isApiNotEnabledError, extractApiName, extractApiEnableUrl } from '../../../shared/utils/gcp-errors';
 import { primaryOutput } from '../output-extractors';
+import { analyzePreDeploy } from '../utils/predeploy-analysis';
 import { DeployDiagnosis } from './deploy-diagnosis';
+import { PreDeployWarnings } from './predeploy-warnings';
 import { RequirementsSection } from './requirements-section';
 import { selectActiveCard, updateCardNodeData, clearCardDeployOverlay } from '../../../store/slices/cards-slice';
 import {
@@ -145,6 +147,13 @@ export const DeployPanel: React.FC = () => {
   const activeCard = useSelector(selectActiveCard);
   const deploy = useSelector((state: RootState) => state.deploy);
   const logEndRef = useRef<HTMLDivElement>(null);
+
+  // AI-Native #3 — security warnings + cost estimate, recomputed only when
+  // the plan lands. Before plan there's nothing useful to show.
+  const preDeployAnalysis = React.useMemo(() => {
+    if (deploy.status !== 'planned' || !activeCard) return null;
+    return analyzePreDeploy(activeCard.nodes, activeCard.edges);
+  }, [deploy.status, activeCard]);
   const pendingRetryRef = useRef<'plan' | 'deploy' | null>(null);
   // Phase 5: in-panel destroy confirmation modal state.
   const [destroyModalOpen, setDestroyModalOpen] = React.useState(false);
@@ -514,6 +523,9 @@ export const DeployPanel: React.FC = () => {
           {/* Plan preview */}
           {deploy.plan && <PlanPreview plan={deploy.plan} />}
 
+          {/* Pre-deploy security + cost analysis (AI-Native #3) */}
+          {preDeployAnalysis && <PreDeployWarnings analysis={preDeployAnalysis} />}
+
           {/* Error */}
           {deploy.error && (
             <>
@@ -770,6 +782,8 @@ export const DeployPanel: React.FC = () => {
                 (r) => r.blocking && r.result.status !== 'met' && r.result.status !== 'verified',
               );
               const hasBlockingUnmet = blockingUnmetReqs.length > 0;
+              const blockedByCritical =
+                preDeployAnalysis?.hasCritical === true && !deploy.criticalAcknowledged;
               const deployDisabled =
                 !deploy.gcpProject ||
                 gcpNodes.length === 0 ||
@@ -777,7 +791,8 @@ export const DeployPanel: React.FC = () => {
                 deploy.status === 'destroying' ||
                 deploy.status === 'planning' ||
                 deploy.status === 'authenticating' ||
-                hasBlockingUnmet;
+                hasBlockingUnmet ||
+                blockedByCritical;
               const deployTitle = !deploy.gcpProject
                 ? 'Select a GCP project to continue'
                 : gcpNodes.length === 0

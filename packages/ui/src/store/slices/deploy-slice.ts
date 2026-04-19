@@ -138,6 +138,10 @@ export interface DeployState {
 
   // AI-Native #2 — deploy failure diagnosis
   diagnosis: DiagnosisState;
+
+  // AI-Native #3 — pre-deploy warnings (security + cost)
+  dismissedWarnings: string[];
+  criticalAcknowledged: boolean;
 }
 
 export interface DiagnosisState {
@@ -190,6 +194,8 @@ const initialState: DeployState = {
   requirements: [],
   requirementsLoading: false,
   diagnosis: { status: 'idle', result: null, error: null },
+  dismissedWarnings: [],
+  criticalAcknowledged: false,
 };
 
 // ─── Slice ──────────────────────────────────────────────────────────────────
@@ -241,6 +247,9 @@ const deploySlice = createSlice({
       state.error = null;
       state.plan = null;
       state.logs = [t('deploy.slice.planning')];
+      // Reset per-plan UI state (AI-Native #3)
+      state.dismissedWarnings = [];
+      state.criticalAcknowledged = false;
     },
     setPlan(state, action: PayloadAction<DeployPlan>) {
       // Normalize plan shape — backend may omit updates/deletes or send numbers
@@ -425,6 +434,20 @@ const deploySlice = createSlice({
     clearDiagnosis(state) {
       state.diagnosis = { status: 'idle', result: null, error: null };
     },
+
+    // AI-Native #3 — pre-deploy warning actions
+    dismissPreDeployWarning(state, action: PayloadAction<string>) {
+      if (!state.dismissedWarnings.includes(action.payload)) {
+        state.dismissedWarnings.push(action.payload);
+      }
+    },
+    acknowledgeCritical(state, action: PayloadAction<boolean>) {
+      state.criticalAcknowledged = action.payload;
+    },
+    resetPreDeployWarnings(state) {
+      state.dismissedWarnings = [];
+      state.criticalAcknowledged = false;
+    },
   },
 });
 
@@ -460,6 +483,9 @@ export const {
   setDiagnosis,
   diagnosisError,
   clearDiagnosis,
+  dismissPreDeployWarning,
+  acknowledgeCritical,
+  resetPreDeployWarnings,
 } = deploySlice.actions;
 
 export default deploySlice.reducer;

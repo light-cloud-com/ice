@@ -8,6 +8,7 @@
  */
 
 import { createProviderAsync, getProvider, type AiProvider } from '@ice/ai';
+import prisma from '@ice/db';
 import { generateAiConnectionPrompt } from '@ice/types';
 import { createAuditEntry, finalizeAuditEntry, writeAuditEntry } from './ai-audit.service';
 import { buildSchemaContext } from './ai-schema-context.service';
@@ -66,6 +67,104 @@ function detectSkill(intent: string): AiSkill {
     if (trigger.test(intent)) return 'cloud-architect';
   }
   return 'default';
+}
+
+// =============================================================================
+// Question Intent Detection (AI Read L1)
+// =============================================================================
+
+/**
+ * Detects intents asking about current deployment state rather than building.
+ * Matches question-shaped openers ("what is", "how many", "is X running") and
+ * state-query phrases. Tight enough to avoid swallowing "add a deployed X".
+ */
+function isQuestionIntent(intent: string): boolean {
+  const trimmed = intent.trim();
+  return (
+    /^(?:what|when|why|how|is|are|does|did|show me|tell me|describe|list)\b/i.test(trimmed) ||
+    /\b(?:deployment\s+status|current\s+state|last\s+deploy|health\s*check|instance\s+count|what's\s+deployed)\b/i.test(
+      trimmed,
+    )
+  );
+}
+
+// =============================================================================
+// Deployment Context (AI Read L1)
+// =============================================================================
+
+/**
+ * Builds a markdown block describing the most recent deployment for a card.
+ * Injected into the system prompt when the user asks a question about state.
+ * Returns empty string if cardId is missing or query fails — the prompt has
+ * a fallback instruction for that case.
+ */
+async function buildDeploymentContext(cardId: string): Promise<string> {
+  try {
+    const deploy = await prisma.canvasDeployment.findFirst({
+      where: {
+        card_id: cardId,
+        action_type: 'apply',
+        status: { in: ['success', 'partial', 'failed'] },
+      },
+      orderBy: { created_at: 'desc' },
+    });
+
+    if (!deploy) {
+      return `\n## Deployment Status\n\nThis canvas has not been deployed yet.\n`;
+    }
+
+    const ageMs = Date.now() - deploy.created_at.getTime();
+    const ageLabel = formatAge(ageMs);
+    const results = (deploy.results as { resources?: Array<Record<string, unknown>> } | null)?.resources ?? [];
+
+    const lines: string[] = [
+      '',
+      '## Deployment Status',
+      '',
+      `Last deployed: ${ageLabel} (${deploy.status})`,
+      `Provider: ${deploy.provider} | Region: ${deploy.region} | Environment: ${deploy.environment}`,
+      '',
+    ];
+
+    if (results.length > 0) {
+      lines.push('Deployed resources:');
+      for (const r of results) {
+        const name = (r.name as string) || '(unnamed)';
+        const type = (r.type as string) || 'unknown';
+        const action = (r.action as string) || '';
+        const success = r.success === true ? '✓' : r.success === false ? '✗' : '';
+        const outputs = r.outputs as Record<string, unknown> | undefined;
+        const url = (outputs?.url as string) || (outputs?.endpoint as string) || (r.provider_id as string) || '';
+        const urlPart = url ? ` — ${url}` : '';
+        lines.push(`- "${name}" (${type}) ${action} ${success}${urlPart}`.replace(/\s+/g, ' ').trimEnd());
+      }
+      lines.push('');
+    }
+
+    const failed = results.filter((r) => r.success === false && r.error);
+    if (failed.length > 0) {
+      lines.push('Errors:');
+      for (const r of failed) {
+        lines.push(`- ${r.name as string}: ${r.error as string}`);
+      }
+      lines.push('');
+    }
+
+    return lines.join('\n');
+  } catch (err) {
+    console.warn('[AI] Failed to build deployment context:', (err as Error).message);
+    return '';
+  }
+}
+
+function formatAge(ms: number): string {
+  const minutes = Math.floor(ms / 60_000);
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days === 1 ? '' : 's'} ago`;
 }
 
 // =============================================================================
@@ -134,7 +233,7 @@ Only include suggestions when you BUILD something new on the canvas. Do NOT add 
 // System Prompt Builder
 // =============================================================================
 
-async function buildSystemPrompt(canvas: SerializedCanvas, intent?: string): Promise<string> {
+async function buildSystemPrompt(canvas: SerializedCanvas, intent?: string, cardId?: string): Promise<string> {
   const nodesSummary =
     canvas.nodes.length > 0
       ? canvas.nodes
@@ -511,6 +610,15 @@ Build a complete architecture. ALWAYS add addEdge operations. Think about the da
     console.log('[AI] Cloud Architect skill activated for intent:', intent?.slice(0, 80));
   }
 
+  // AI Read L1: inject deployment state when the intent is a question.
+  // The instructions block is appended unconditionally so the model knows
+  // how to behave when the context is present vs absent.
+  if (intent && cardId && isQuestionIntent(intent)) {
+    basePrompt += await buildDeploymentContext(cardId);
+    basePrompt += `\n## How to answer questions about deployment state\n\nWhen the user asks about what's deployed, running, or the current state:\n1. Use the "Deployment Status" section above — it shows what was last deployed and when.\n2. Be honest about staleness: "Based on the last deployment ${'{time}'} ago..."\n3. If the section says "not been deployed yet", tell the user exactly that.\n4. If the last deployment failed, explain what went wrong from the Errors list.\n5. Suggest running a drift check if they want current cloud state.\n6. Do NOT generate canvas operations for pure questions — return an explanation with operations: [].\n`;
+    console.log('[AI] Question intent — deployment context injected for card', cardId);
+  }
+
   return basePrompt;
 }
 
@@ -518,13 +626,17 @@ Build a complete architecture. ALWAYS add addEdge operations. Think about the da
 // Non-Streaming Response
 // =============================================================================
 
-export async function processCanvasIntent(intent: string, canvas: SerializedCanvas): Promise<AiResponse> {
+export async function processCanvasIntent(
+  intent: string,
+  canvas: SerializedCanvas,
+  cardId?: string,
+): Promise<AiResponse> {
   const provider = await getAiProvider();
   const audit = createAuditEntry(intent, canvas);
   const startTime = Date.now();
 
   try {
-    const systemPrompt = await buildSystemPrompt(canvas, intent);
+    const systemPrompt = await buildSystemPrompt(canvas, intent, cardId);
     const isArchitectMode = detectSkill(intent) === 'cloud-architect';
 
     const response = await provider.chat({
@@ -573,11 +685,16 @@ export async function processCanvasIntent(intent: string, canvas: SerializedCanv
 // Streaming Response (SSE)
 // =============================================================================
 
-export async function streamCanvasIntent(intent: string, canvas: SerializedCanvas, res: Response): Promise<void> {
+export async function streamCanvasIntent(
+  intent: string,
+  canvas: SerializedCanvas,
+  res: Response,
+  cardId?: string,
+): Promise<void> {
   const provider = await getAiProvider();
   const audit = createAuditEntry(intent, canvas);
   const startTime = Date.now();
-  const systemPrompt = await buildSystemPrompt(canvas, intent);
+  const systemPrompt = await buildSystemPrompt(canvas, intent, cardId);
 
   // Set up SSE headers
   res.writeHead(200, {

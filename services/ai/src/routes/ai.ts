@@ -47,7 +47,7 @@ router.get('/health', async (_req: AuthRequest, res: Response) => {
 // ── Canvas Intent ────────────────────────────────────────────────────────────
 
 router.post('/canvas-intent', aiLimiter, async (req: AuthRequest, res: Response) => {
-  const { intent, canvasContext } = req.body as AiCanvasIntentRequest;
+  const { intent, canvasContext, cardId } = req.body as AiCanvasIntentRequest;
 
   if (!intent || typeof intent !== 'string') {
     return res.status(400).json({ message: 'Missing intent' });
@@ -62,9 +62,9 @@ router.post('/canvas-intent', aiLimiter, async (req: AuthRequest, res: Response)
     const wantsStream = req.headers.accept?.includes('text/event-stream');
 
     if (wantsStream) {
-      await streamCanvasIntent(intent, canvasContext, res);
+      await streamCanvasIntent(intent, canvasContext, res, cardId);
     } else {
-      const result = await processCanvasIntent(intent, canvasContext);
+      const result = await processCanvasIntent(intent, canvasContext, cardId);
       res.json(result);
     }
   } catch (err: any) {

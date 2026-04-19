@@ -1,0 +1,220 @@
+{
+  "main": {
+    "id": "a2f960d0417841b7",
+    "type": "split",
+    "children": [
+      {
+        "id": "dc9231bd1ba2be2b",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "d6b5b1e0c039afc9",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "New tab"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "0c04fd57c0843020",
+    "type": "split",
+    "children": [
+      {
+        "id": "bf11f7ef130d2f9d",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "fd62fcbc81921495",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "a65dc9b57081289c",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "e68b32a69b40eb4d",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 368.5
+  },
+  "right": {
+    "id": "0878868b725ea48e",
+    "type": "split",
+    "children": [
+      {
+        "id": "b3ca3509985c32c0",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "eb97e0e0f522fe73",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "4434ef1ee77cd4f4",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "50d0d82ab2e1b9a2",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "759df36ddc0e134f",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "7ac930ff00df574a",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false,
+      "llm-wiki:Ask knowledge base": false
+    }
+  },
+  "active": "fd62fcbc81921495",
+  "lastOpenFiles": [
+    "wiki/concepts/openai-compatible-api.md",
+    "raw/backlog/concepts-palette-implementation.md",
+    "Untitled 2.base",
+    "Untitled 3.base",
+    "Untitled 1.base",
+    "Untitled.base",
+    "wiki/entities/engine-16.md",
+    "wiki/entities/engine-14.md",
+    "wiki/entities/engine-12.md",
+    "wiki/entities/engine-11.md",
+    "wiki/entities/engine-10.md",
+    "wiki/concepts/engine-service.md",
+    "wiki/sources/raw/ai-system.md",
+    "wiki/sources/raw/architecture.md",
+    "wiki/sources/raw/community-edition.md",
+    "wiki/sources/raw/core-engine.md",
+    "wiki/sources/raw/database.md",
+    "wiki/sources/raw/desktop.md",
+    "wiki/sources/raw/development.md",
+    "wiki/sources/raw/frontend.md",
+    "wiki/sources/raw/backlog/JULIA.md",
+    "wiki/sources/raw/backlog/README.md",
+    "wiki/sources/raw/backlog/ai-native-features.md",
+    "wiki/sources/raw/backlog/ai-read-capabilities.md",
+    "wiki/sources/raw/backlog/backend-services.md",
+    "wiki/sources/raw/backlog/concepts-palette-implementation.md",
+    "wiki/sources/raw/backlog/concepts-palette.md",
+    "wiki/sources/raw/backlog/context-menus.md",
+    "wiki/sources/raw/backlog/core-engine.md",
+    "wiki/sources/raw/backlog/database.md",
+    "wiki/sources/raw/backlog",
+    "Untitled.canvas",
+    "wiki/sources/raw",
+    "wiki/knowledge.json",
+    "raw",
+    "wiki/sources",
+    "wiki/concepts"
+  ]
+}

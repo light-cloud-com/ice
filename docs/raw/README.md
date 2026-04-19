@@ -1,0 +1,41 @@
+# ICE Community Edition — Documentation
+
+## Architecture
+
+- [architecture.md](architecture.md) — System design, data flow, multi-tenancy, database strategy
+- [packages.md](raw/packages.md) — Workspace packages and dependencies
+- [services.md](raw/services.md) — Backend services (canvas, deploy, ai, engine, credentials, iam)
+- [core-engine.md](raw/core-engine.md) — Graph processing, deployment, importers, providers
+- [database.md](raw/database.md) — Prisma schema, models, relationships
+
+## Frontend
+
+- [frontend.md](raw/frontend.md) — Web app structure, routing, state management
+- [desktop.md](desktop.md) — Electron app architecture, embedded gateway
+
+## Features
+
+- [ai-system.md](ai-system.md) — Claude AI assistant integration
+- [plugin-system.md](raw/plugin-system.md) — Block, template, provider registries
+- [realtime.md](raw/realtime.md) — Socket.IO rooms and events
+
+## Development
+
+- [development.md](development.md) — Local setup, scripts, workspace commands
+- [testing.md](testing.md) — E2E tests, GCP integration tests, test dashboard, CI pipeline
+- [community-edition.md](community-edition.md) — What differs from SaaS
+
+## GCP Integration Testing
+
+See [testing.md#gcp-integration-tests](testing.md#gcp-integration-tests) for the full guide. Quick start:
+
+```bash
+pnpm dev:all          # Terminal 1: start ICE
+pnpm test:dashboard   # Terminal 2: open http://localhost:15200
+```
+
+The test dashboard lets you select templates, configure GCP credentials, create test repos, run tests with a visible browser, and view HTML reports with per-template results.
+
+## Backlog
+
+- [backlog/](./backlog/) — Feature requests and technical debt

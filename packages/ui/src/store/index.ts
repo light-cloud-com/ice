@@ -12,6 +12,7 @@ import cardsReducer from './slices/cards-slice';
 import debugReducer from './slices/debug-slice';
 import deployReducer from './slices/deploy-slice';
 import environmentsReducer from './slices/environments-slice';
+import ghostsReducer from './slices/ghost-slice';
 import graphReducer from './slices/graph-slice';
 import integrationsReducer from './slices/integrations-slice';
 import onboardingReducer from './slices/onboarding-slice';
@@ -59,6 +60,7 @@ export const store = configureStore({
     ai: aiReducer,
     pipeline: pipelineReducer,
     environments: environmentsReducer,
+    ghosts: ghostsReducer,
     onboarding: onboardingReducer,
     validation: validationReducer,
   },

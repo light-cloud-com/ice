@@ -42,6 +42,10 @@ import {
   type CardNode,
   type CardEdge,
 } from '../../../store/slices/cards-slice';
+import { setGhosts, dismissGhost, clearGhosts, type GhostNode } from '../../../store/slices/ghost-slice';
+import { generateGhostSuggestions } from '../utils/ghost-suggestions';
+import { SvgGhostNode } from './ghost/svg-ghost-node';
+import { SvgGhostEdge } from './ghost/svg-ghost-edge';
 import {
   inferConnectionMeta,
   validateConnection,
@@ -264,6 +268,9 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   // Get nodes and edges from the card
   const nodes = useMemo(() => card?.nodes || [], [card?.nodes]);
   const edges = useMemo(() => card?.edges || [], [card?.edges]);
+
+  // Ghost-mode suggestions (AI-Native Feature #1)
+  const ghosts = useSelector((state: RootState) => state.ghosts.ghosts);
 
   // ── Reactive propagation (domain sync, routeId backfill, orphan cleanup,
   // network policy, secret injection, etc.) is now handled by useComputingFlows()
@@ -1904,6 +1911,11 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
           });
 
           dispatch(expandBlueprintToCard(expanded));
+          dispatch(
+            setGhosts(
+              generateGhostSuggestions(expanded.node as unknown as CardNode, nodes, edges),
+            ),
+          );
           return;
         }
         // fallback: no blueprint found — create empty resource node
@@ -1942,9 +1954,58 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
       // Add node to active card
       dispatch(addNodeToCard(newNode));
+      dispatch(setGhosts(generateGhostSuggestions(newNode, nodes, edges)));
     },
-    [screenToCanvas, findContainerAtPosition, dispatch],
+    [screenToCanvas, findContainerAtPosition, dispatch, nodes, edges],
   );
+
+  // ── Ghost-mode handlers ────────────────────────────────────────────────────
+  // Accept: expand blueprint at ghost position, wire edge to source node,
+  // remove ghost. Dismiss: just remove ghost.
+  const handleAcceptGhost = useCallback(
+    (ghost: GhostNode) => {
+      const blueprint = getBlueprint(ghost.iceType);
+      if (!blueprint) {
+        dispatch(dismissGhost(ghost.id));
+        return;
+      }
+      const expanded = expandBlueprint(blueprint, { position: ghost.position });
+      dispatch(expandBlueprintToCard(expanded));
+
+      const [source, target] =
+        ghost.edgeDirection === 'to'
+          ? [ghost.sourceNodeId, expanded.node.id]
+          : [expanded.node.id, ghost.sourceNodeId];
+
+      dispatch(
+        addEdgeToCard({
+          id: `edge-${Date.now()}`,
+          source,
+          target,
+          data: { relationship: ghost.edgeRelationship },
+        }),
+      );
+      dispatch(dismissGhost(ghost.id));
+    },
+    [dispatch],
+  );
+
+  const handleDismissGhost = useCallback(
+    (ghostId: string) => {
+      dispatch(dismissGhost(ghostId));
+    },
+    [dispatch],
+  );
+
+  // Auto-dismiss all ghosts after 10 seconds.
+  useEffect(() => {
+    if (ghosts.length === 0) return;
+    const newest = Math.max(...ghosts.map((g) => g.createdAt));
+    const elapsed = Date.now() - newest;
+    const remaining = Math.max(0, 10_000 - elapsed);
+    const timer = setTimeout(() => dispatch(clearGhosts()), remaining);
+    return () => clearTimeout(timer);
+  }, [ghosts, dispatch]);
 
   const handleDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
@@ -2977,6 +3038,21 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
               );
             })}
           </g>
+
+          {/* Ghost-mode suggestions (AI-Native #1) */}
+          {ghosts.length > 0 && (
+            <g pointerEvents="auto">
+              {ghosts.map((ghost) => {
+                const sourceNode = nodes.find((n) => n.id === ghost.sourceNodeId);
+                return (
+                  <React.Fragment key={ghost.id}>
+                    {sourceNode && <SvgGhostEdge ghost={ghost} sourceNode={sourceNode} />}
+                    <SvgGhostNode ghost={ghost} onAccept={handleAcceptGhost} onDismiss={handleDismissGhost} />
+                  </React.Fragment>
+                );
+              })}
+            </g>
+          )}
         </g>
       </svg>
 

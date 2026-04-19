@@ -1,6 +1,6 @@
 {
   "name": "ice",
-  "version": "0.1.39",
+  "version": "0.1.40",
   "description": "ICE - Integrated Cloud Environment (Web + Backend)",
   "private": true,
   "type": "module",

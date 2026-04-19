@@ -89,6 +89,7 @@ import { azureDataWarehouseBlueprint } from './azure/analytics/data-warehouse';
 import { azureSearchBlueprint } from './azure/analytics/search';
 import { azureScalableBackendBlueprint } from './azure/backend/scalable-backend';
 import { azureScheduledTaskBlueprint } from './azure/backend/scheduled-task';
+import { azureWorkerBlueprint } from './azure/backend/worker';
 import { azureServerlessFunctionBlueprint } from './azure/compute/serverless-function';
 import { cosmosdbBlueprint } from './azure/data/cosmosdb';
 import { azureMongodbBlueprint } from './azure/data/mongodb';
@@ -261,6 +262,7 @@ const RAW_BLUEPRINTS: BlockBlueprint[] = [
   azureStaticSiteBlueprint,
   azureSsrSiteBlueprint,
   azureScalableBackendBlueprint,
+  azureWorkerBlueprint,
   azureScheduledTaskBlueprint,
   azureServerlessFunctionBlueprint,
   azurePostgresqlBlueprint,

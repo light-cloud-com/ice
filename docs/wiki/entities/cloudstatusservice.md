@@ -22,6 +22,7 @@ cssclasses: []
 ## Connections
 
 - [[live-cloud-status-queries]] *(uses)*
+- [[live-cloud-status-queries]] *(uses)*
 
 ## Sources
 

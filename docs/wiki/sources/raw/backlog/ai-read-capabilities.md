@@ -11,7 +11,7 @@ cssclasses: []
 
 # raw/backlog/ai-read-capabilities.md
 
-This document outlines a plan to enhance an AI assistant's capabilities by integrating deployment context, live cloud status queries, and logs/metrics into its responses. The goal is to make the AI more useful for users who need information about their deployed infrastructure.
+This document outlines a plan to enhance an AI assistant's capabilities by integrating deployment context, live cloud status queries, and logs/metrics integration. The goal is to make the AI more aware of the user’s live infrastructure.
 
 ## Entities
 
@@ -32,3 +32,4 @@ This document outlines a plan to enhance an AI assistant's capabilities by integ
 - [[deployment-context-in-ai-prompt|Deployment Context in AI Prompt]]
 - [[live-cloud-status-queries|Live Cloud Status Queries]]
 - [[logs-metrics-integration|Logs & Metrics Integration]]
+- [[deployment-context|Deployment Context]]

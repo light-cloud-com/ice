@@ -24,6 +24,7 @@ Real-time queries of cloud provider APIs to get current status of deployed resou
 - [[pubsub|Pub/Sub]]
 - [[secretmanager|SecretManager]]
 - [[loadbalancer|LoadBalancer]]
+- [[cloudstatusservice|CloudStatusService]]
 
 ## Sources
 

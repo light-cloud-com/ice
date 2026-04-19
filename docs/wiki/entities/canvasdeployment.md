@@ -20,6 +20,7 @@ cssclasses: []
 - A canvas-only concept block that provides a downstream log viewer.
 - Contains serialized canvas state and deployment results
 - Deploy history record model
+- Contains information about deployed resources and their state
 
 ## Connections
 
@@ -27,6 +28,7 @@ cssclasses: []
 - [[deployjob]] *(uses)*
 - [[log-terminal]] *(part-of)*
 - [[deployment-context-in-ai-prompt]] *(uses)*
+- [[deployment-context]] *(part-of)*
 
 ## Sources
 

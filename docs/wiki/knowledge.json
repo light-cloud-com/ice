@@ -2435,7 +2435,8 @@
         "Added index on card_id, status, created_at; Added user_id field with relation",
         "A canvas-only concept block that provides a downstream log viewer.",
         "Contains serialized canvas state and deployment results",
-        "Deploy history record model"
+        "Deploy history record model",
+        "Contains information about deployed resources and their state"
       ],
       "sources": [
         "raw/backlog/database.md",
@@ -3330,7 +3331,8 @@
       "type": "other",
       "aliases": [],
       "facts": [
-        "GCP service for running containerized applications"
+        "GCP service for running containerized applications",
+        "GCP service used to host and run applications"
       ],
       "sources": [
         "raw/backlog/ai-read-capabilities.md"
@@ -3390,7 +3392,8 @@
       "type": "other",
       "aliases": [],
       "facts": [
-        "GCP messaging service"
+        "GCP messaging service",
+        "GCP messaging service for inter-service communication"
       ],
       "sources": [
         "raw/backlog/ai-read-capabilities.md"
@@ -3414,7 +3417,8 @@
       "type": "other",
       "aliases": [],
       "facts": [
-        "GCP load balancing service"
+        "GCP load balancing service",
+        "GCP load balancing service to distribute traffic"
       ],
       "sources": [
         "raw/backlog/ai-read-capabilities.md"
@@ -4884,7 +4888,8 @@
         "CloudFunctions",
         "Pub/Sub",
         "SecretManager",
-        "LoadBalancer"
+        "LoadBalancer",
+        "CloudStatusService"
       ],
       "sources": [
         "raw/backlog/ai-read-capabilities.md"
@@ -5303,6 +5308,18 @@
       ],
       "sources": [
         "raw/backlog/ai-native-features.md"
+      ]
+    },
+    "deployment-context": {
+      "id": "deployment-context",
+      "name": "Deployment Context",
+      "definition": "Information about the last deployment, including resources and their state.",
+      "related": [
+        "CanvasDeployment",
+        "CloudStatusService"
+      ],
+      "sources": [
+        "raw/backlog/ai-read-capabilities.md"
       ]
     }
   },
@@ -6962,6 +6979,24 @@
       "sources": [
         "raw/backlog/ai-native-features.md"
       ]
+    },
+    {
+      "from": "deployment-context",
+      "to": "canvasdeployment",
+      "type": "part-of",
+      "description": "Deployment context is derived from the CanvasDeployment table.",
+      "sources": [
+        "raw/backlog/ai-read-capabilities.md"
+      ]
+    },
+    {
+      "from": "cloudstatusservice",
+      "to": "live-cloud-status-queries",
+      "type": "uses",
+      "description": "CloudStatusService performs live cloud status queries to provide real-time data.",
+      "sources": [
+        "raw/backlog/ai-read-capabilities.md"
+      ]
     }
   ],
   "sources": {
@@ -7143,11 +7178,11 @@
     },
     "raw/backlog/ai-read-capabilities.md": {
       "id": "raw/backlog/ai-read-capabilities.md",
-      "summary": "This document outlines a plan to enhance an AI assistant's capabilities by integrating deployment context, live cloud status queries, and logs/metrics into its responses. The goal is to make the AI more useful for users who need information about their deployed infrastructure.",
+      "summary": "This document outlines a plan to enhance an AI assistant's capabilities by integrating deployment context, live cloud status queries, and logs/metrics integration. The goal is to make the AI more aware of the user’s live infrastructure.",
       "date": "2026-04-19",
-      "mtime": 1774905303980,
+      "mtime": 1776614443617,
       "origin": "user-note",
-      "contentHash": "6cfd978aafd0a5821e6d8304e7716225a12df584ab897f2e9840b0d1dd418bfb"
+      "contentHash": "5872a898a5ae761ca60cd7c0c64234c47a9b0625ff5de9ef0f6b6e3bb9d5e547"
     },
     "raw/backlog/ai-native-features.md": {
       "id": "raw/backlog/ai-native-features.md",

@@ -16,7 +16,7 @@ Single source for the state of ICE work — what's fixed, what's open, what's ne
 
 | Area | Status |
 |---|---|
-| Deploy reliability (5 blockers, 11 friction) — see [deploy-reliability.md](deploy-reliability.md) | **Open** — top priority |
+| Deploy reliability (5 blockers, 11 friction) — see [deploy-reliability.md](deploy-reliability.md) | **Done (18/22)** (2026-04-19) — 4 RBAC items skipped (community edition, single user) |
 | AI-Native #1 Ghost Mode | **Done** (2026-04-19) |
 | AI-Native #2 AI error diagnosis | **Done** (2026-04-19) |
 | AI-Native #3 Pre-deploy security/cost warnings | **Done** (2026-04-19) |
@@ -96,7 +96,7 @@ Polish items, minor provider blocks, industry templates, real-time collaboration
 
 | Document | Scope |
 |---|---|
-| [deploy-reliability.md](deploy-reliability.md) | 2026-04-19 audit — 5 blockers, 11 friction, 5 block-property gaps, 4 observability polish. Top-priority P1. |
+| [deploy-reliability.md](deploy-reliability.md) | 2026-04-19 audit — 5 blockers, 11 friction, 5 block-property gaps, 4 observability polish. **18/22 shipped**; 4 RBAC-tagged items (DR-H1, DR-H2, DR-F5, DR-O4) skipped because community edition is single-user. |
 
 ---
 

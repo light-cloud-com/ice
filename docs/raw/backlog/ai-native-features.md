@@ -413,11 +413,13 @@ You are a GCP deployment expert. A deployment just failed.
 
 ---
 
-## Feature 3: Pre-Deploy Security/Cost Warnings — **DONE** (2026-04-19)
+## Feature 3: Pre-Deploy Security Warnings — **DONE** (2026-04-19)
 
 **Priority:** P1 | **Effort:** 3-4 days | **Backend:** None | **Dependencies:** None
 
-**Shipped:** `packages/ui/src/features/deploy/utils/{security-rules,cost-estimator,predeploy-analysis}.ts` + `predeploy-warnings.tsx`. 6 security rules (public DB, missing secrets, public storage, no auth on gateway, missing monitoring, no VPC). GCP-priced cost estimator scales with replicas/size/storage. Apply button gated on `criticalAcknowledged` when any `critical` warning present. `dismissedWarnings` + `criticalAcknowledged` live in `deploy-slice.ts`, reset on each `startPlanning`.
+**Shipped:** `packages/ui/src/features/deploy/utils/{security-rules,predeploy-analysis}.ts` + `predeploy-warnings.tsx`. 6 security rules (public DB, missing secrets, public storage, no auth on gateway, missing monitoring, no VPC). Apply button gated on `criticalAcknowledged` when any `critical` warning present. `dismissedWarnings` + `criticalAcknowledged` live in `deploy-slice.ts`, reset on each `startPlanning`.
+
+**Cost estimate removed (2026-04-19):** the parallel deploy-side cost estimator (`cost-estimator.ts`) was deleted and `PreDeployAnalysis` no longer carries cost fields. The Cost Estimation panel (`features/cost/`) is the single source of truth — it reads live resource definitions, respects the traffic-tier slider, and handles multi-provider canvases. See the "Cost Engine Consolidation" section in [deploy-reliability.md](deploy-reliability.md#related-cost-engine-consolidation-2026-04-19).
 
 **Goal:** Between plan and apply, show deterministic warnings about security issues and estimated monthly costs. No AI needed. Supersedes [FEAT-11](missing-features.md).
 
@@ -426,9 +428,8 @@ You are a GCP deployment expert. A deployment just failed.
 | File | Purpose |
 |------|---------|
 | `packages/ui/src/features/deploy/utils/security-rules.ts` | `analyzeSecurityWarnings(nodes, edges) → PreDeployWarning[]`. Deterministic rules. |
-| `packages/ui/src/features/deploy/utils/cost-estimator.ts` | `estimateCosts(nodes) → { estimates: CostEstimate[], total: number }`. Static GCP price table. |
-| `packages/ui/src/features/deploy/utils/predeploy-analysis.ts` | `analyzePreDeploy(nodes, edges) → PreDeployAnalysis`. Combines security + cost. |
-| `packages/ui/src/features/deploy/components/predeploy-warnings.tsx` | Warning list component. Color-coded severity. Dismiss buttons. Critical = checkbox acknowledgment. Cost table at bottom. |
+| `packages/ui/src/features/deploy/utils/predeploy-analysis.ts` | `analyzePreDeploy(nodes, edges) → PreDeployAnalysis`. Security warnings only — cost lives in `features/cost/`. |
+| `packages/ui/src/features/deploy/components/predeploy-warnings.tsx` | Warning list component. Color-coded severity. Dismiss buttons. Critical = checkbox acknowledgment. |
 
 ### Security Rules
 
@@ -444,18 +445,7 @@ You are a GCP deployment expert. A deployment just failed.
 
 ### Cost Table (GCP)
 
-| Resource | Estimate Logic |
-|----------|---------------|
-| Cloud Run | $0.00002400/vCPU-s * replicas * 730h/mo |
-| Cloud SQL (db-f1-micro) | ~$7/mo |
-| Cloud SQL (db-n1-standard-1) | ~$52/mo |
-| Cloud Functions | $0.40/million invocations |
-| Cloud Storage | $0.020/GB/mo |
-| Memorystore Redis (1GB) | ~$35/mo |
-| Pub/Sub | $40/TB |
-| Secret Manager | ~$0.06/secret/mo |
-| Load Balancer | ~$18/mo + $0.008/GB |
-| Cloud CDN | ~$0.02-0.08/GB |
+Removed — cost estimation now lives exclusively in `features/cost/`, which uses the live resource definitions rather than a hardcoded list. Do not reintroduce a deploy-panel cost path.
 
 ### Types
 
@@ -465,25 +455,15 @@ type WarningSeverity = 'info' | 'warning' | 'critical';
 interface PreDeployWarning {
   id: string;
   severity: WarningSeverity;
-  category: 'security' | 'cost' | 'best-practice';
+  category: 'security' | 'best-practice';
   title: string;
   description: string;
   nodeId?: string;
   dismissible: boolean;
 }
 
-interface CostEstimate {
-  resourceName: string;
-  nodeId: string;
-  resourceType: string;
-  monthlyEstimate: number;  // USD
-  notes?: string;
-}
-
 interface PreDeployAnalysis {
   warnings: PreDeployWarning[];
-  costEstimates: CostEstimate[];
-  totalMonthlyCost: number;
   hasCritical: boolean;
 }
 ```
@@ -498,16 +478,15 @@ interface PreDeployAnalysis {
 ### Steps
 
 1. Create `security-rules.ts`
-2. Create `cost-estimator.ts` with price table
-3. Create `predeploy-analysis.ts`
-4. Create `PreDeployWarnings` component
-5. Add state to `deploy-slice.ts`
-6. Wire into `deploy-panel.tsx` after plan phase
+2. Create `predeploy-analysis.ts`
+3. Create `PreDeployWarnings` component
+4. Add state to `deploy-slice.ts`
+5. Wire into `deploy-panel.tsx` after plan phase
 
 ### Verify
 
 - Canvas with public database (no VPC) → "Public database" critical warning
-- Canvas with Cloud Run + Cloud SQL → cost estimate shown
+- Cost estimation shown only in the Cost Estimation panel (`features/cost/`)
 - Critical warning requires checkbox before Apply is enabled
 - Info/warning can be dismissed
 

@@ -29,6 +29,7 @@ import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { cn } from '../../../shared/utils/cn';
 import { isApiNotEnabledError, extractApiName, extractApiEnableUrl } from '../../../shared/utils/gcp-errors';
 import { primaryOutput } from '../output-extractors';
+import { DeployDiagnosis } from './deploy-diagnosis';
 import { RequirementsSection } from './requirements-section';
 import { selectActiveCard, updateCardNodeData, clearCardDeployOverlay } from '../../../store/slices/cards-slice';
 import {
@@ -515,7 +516,10 @@ export const DeployPanel: React.FC = () => {
 
           {/* Error */}
           {deploy.error && (
-            <ApiErrorBanner error={deploy.error} results={deploy.results} onRetryDeploy={handleDeploy} />
+            <>
+              <ApiErrorBanner error={deploy.error} results={deploy.results} onRetryDeploy={handleDeploy} />
+              <DeployDiagnosis error={deploy.error} results={deploy.results} />
+            </>
           )}
 
           {/* Custom domain DNS records — surfaced from any Firebase

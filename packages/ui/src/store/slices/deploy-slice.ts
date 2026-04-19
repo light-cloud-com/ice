@@ -135,6 +135,18 @@ export interface DeployState {
   requirements: ResolvedRequirementState[];
   requirementsLoading: boolean;
   requirementsFetchedAt?: string;
+
+  // AI-Native #2 — deploy failure diagnosis
+  diagnosis: DiagnosisState;
+}
+
+export interface DiagnosisState {
+  status: 'idle' | 'loading' | 'loaded' | 'error';
+  result: {
+    diagnosis: string;
+    suggestedFixes: string[];
+  } | null;
+  error: string | null;
 }
 
 export interface ResolvedRequirementState {
@@ -177,6 +189,7 @@ const initialState: DeployState = {
   driftCheckLoading: false,
   requirements: [],
   requirementsLoading: false,
+  diagnosis: { status: 'idle', result: null, error: null },
 };
 
 // ─── Slice ──────────────────────────────────────────────────────────────────
@@ -398,6 +411,20 @@ const deploySlice = createSlice({
       state.requirementsLoading = false;
       state.requirementsFetchedAt = undefined;
     },
+
+    // AI-Native #2 — diagnosis actions
+    startDiagnosis(state) {
+      state.diagnosis = { status: 'loading', result: null, error: null };
+    },
+    setDiagnosis(state, action: PayloadAction<{ diagnosis: string; suggestedFixes: string[] }>) {
+      state.diagnosis = { status: 'loaded', result: action.payload, error: null };
+    },
+    diagnosisError(state, action: PayloadAction<string>) {
+      state.diagnosis = { status: 'error', result: null, error: action.payload };
+    },
+    clearDiagnosis(state) {
+      state.diagnosis = { status: 'idle', result: null, error: null };
+    },
   },
 });
 
@@ -429,6 +456,10 @@ export const {
   setRequirements,
   updateRequirement,
   clearRequirements,
+  startDiagnosis,
+  setDiagnosis,
+  diagnosisError,
+  clearDiagnosis,
 } = deploySlice.actions;
 
 export default deploySlice.reducer;

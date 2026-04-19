@@ -17,8 +17,9 @@ import { rateLimit } from 'express-rate-limit';
 import { listAuditEntries, getAuditEntry } from '../services/ai-audit.service';
 import { processCanvasIntent, streamCanvasIntent, getAiProvider } from '../services/ai.service';
 import { validateCanvas } from '../services/canvas-validation.service';
+import { diagnoseDeploy } from '../services/diagnose-deploy.service';
 import { dryRunDeploy } from '../services/deploy-dryrun.service';
-import type { AiCanvasIntentRequest } from '@ice/types';
+import type { AiCanvasIntentRequest, DiagnoseDeployRequest } from '@ice/types';
 
 const router: RouterType = Router();
 
@@ -70,6 +71,22 @@ router.post('/canvas-intent', aiLimiter, async (req: AuthRequest, res: Response)
   } catch (err: any) {
     console.error('AI canvas-intent error:', err);
     res.status(500).json({ message: err.message || 'AI processing failed' });
+  }
+});
+
+// ── Diagnose Deploy (AI-Native #2) ───────────────────────────────────────────
+
+router.post('/diagnose-deploy', aiLimiter, async (req: AuthRequest, res: Response) => {
+  const body = req.body as DiagnoseDeployRequest;
+  if (!body?.error || !body?.canvasContext) {
+    return res.status(400).json({ message: 'Missing error or canvasContext' });
+  }
+  try {
+    const result = await diagnoseDeploy(body);
+    res.json(result);
+  } catch (err: any) {
+    console.error('AI diagnose-deploy error:', err);
+    res.status(500).json({ message: err.message || 'Diagnosis failed' });
   }
 });
 

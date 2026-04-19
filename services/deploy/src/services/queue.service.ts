@@ -238,10 +238,23 @@ async function processPipelineJob(data: any) {
                 ? 'Building application...'
                 : 'Building...';
         await updateEventProgress(eventId, phase, stageLabel, mkStep(step, status, message));
+        // Mirror stage transitions into the unified deploy feed so the main
+        // deploy panel shows "cloning / installing / building" for push-to-
+        // deploy events, not only for manual apply. Without this the deploy
+        // panel sits silent until `applyDeployment` starts minutes later.
+        try {
+          const { emitDeployProgress } = await import('@ice/shared');
+          emitDeployProgress(cardId, {
+            type: 'log',
+            message: `[build:${step}:${status}] ${stageLabel}${message ? ` — ${message}` : ''}`,
+          });
+        } catch {
+          // Non-fatal — unified feed is a UX nicety.
+        }
       },
       // Stream individual build lines via Socket.IO + persist to DB
       async (line: string) => {
-        const { emitPipelineUpdate } = await import('@ice/shared');
+        const { emitPipelineUpdate, emitDeployProgress } = await import('@ice/shared');
         emitPipelineUpdate(nodeId, {
           nodeId,
           cardId,
@@ -249,6 +262,11 @@ async function processPipelineJob(data: any) {
           deployment_stage: line,
           progress: 33,
         });
+        // Also surface the raw build line in the unified deploy panel.
+        // Prefixing with [build] makes it visually distinct from infra
+        // logs (which the apply phase emits unprefixed) so the user can
+        // tell at a glance which phase a line came from.
+        emitDeployProgress(cardId, { type: 'log', message: `[build] ${line}` });
         // Persist build line as a log step (throttled — batch every 10 lines)
         buildLogBuffer.push(line);
         if (buildLogBuffer.length >= 10) {

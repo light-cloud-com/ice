@@ -29,7 +29,6 @@ const GCP_DEPLOYABLE: Set<string> = new Set([
   'Network.Gateway',
   'Network.PublicEndpoint',
   'Network.LoadBalancer',
-  'Network.PublicEndpoint',
   'Messaging.CloudPubSub',
   'Messaging.Queue',
   'Messaging.Topic',

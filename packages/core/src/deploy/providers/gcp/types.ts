@@ -27,6 +27,12 @@ export interface GCPHandlerContext {
    * progress instead of a 0 → 100% jump.
    */
   on_step?: (resource: string, step: { label: string; index: number; total: number }) => void;
+  /**
+   * User-cancel signal from the per-card deploy lock. Handlers with long
+   * polls (Cloud Build, SQL ops) should honour this so a cancel actually
+   * stops the remote work instead of only the local loop.
+   */
+  abort_signal?: AbortSignal;
 }
 
 /**

@@ -84,18 +84,35 @@ function applyDeployEvent(dispatch: AppDispatch, event: any, cardId?: string): v
         }),
       );
     } else if (event.source_node_id && event.status === 'failed') {
+      // Set a placeholder error immediately so the node tooltip isn't empty
+      // during the gap between this event and the subsequent resource_result
+      // that carries the full error text.
+      const placeholder =
+        event.error ||
+        (event.message && !event.message.endsWith(': failed') ? event.message : null) ||
+        'Deployment failed — see deploy panel logs';
       dispatch(
-        updateCardNodeData({ nodeId: event.source_node_id, data: { deploy_status: 'error' } }),
+        updateCardNodeData({
+          nodeId: event.source_node_id,
+          data: { deploy_status: 'error', deploy_error: placeholder, deploy_progress: undefined },
+        }),
       );
     }
   } else if (event.type === 'resource_result') {
     dispatch(addResourceResult(event.result));
     if (event.result?.source_node_id) {
+      // Mirror the success path for failures: always populate `deploy_error`
+      // with at least a non-empty string so the red dot has tooltip text.
+      // `event.result.error` can be undefined when a handler throws without
+      // returning a shaped error — the fallback keeps the UX usable.
+      const errorText = event.result.success
+        ? undefined
+        : event.result.error || 'Deployment failed — see deploy panel logs';
       const nodeData: Record<string, unknown> = {
         provider_id: event.result.provider_id,
         deploy_status: event.result.success ? 'active' : 'error',
         deploy_progress: undefined,
-        deploy_error: event.result.success ? undefined : event.result.error,
+        deploy_error: errorText,
         last_deployed_at: new Date().toISOString(),
       };
       if (event.result.outputs) {
@@ -235,13 +252,17 @@ export function useDeploySubscription(cardId: string | undefined): void {
   useEffect(() => {
     if (!cardId) return;
     let cancelled = false;
-    // Reset resume counter when switching cards.
+    // Reset resume counter ONLY on card switch. Staying on the same card
+    // across re-renders (deploy env change, reconnect, etc.) should resume
+    // from the last applied seq so we don't re-render hundreds of buffered
+    // events on every replay.
     if (lastSeqRef.current.cardId !== cardId) {
       lastSeqRef.current = { cardId, seq: 0 };
     }
+    const since = lastSeqRef.current.seq || 0;
     (async () => {
       try {
-        const res = await getApi().deploy.getDeployStream(cardId, 0);
+        const res = await getApi().deploy.getDeployStream(cardId, since);
         if (cancelled) return;
         const events = (res?.events || []) as Array<{ seq: number; type: string; payload: any }>;
         for (const row of events) {

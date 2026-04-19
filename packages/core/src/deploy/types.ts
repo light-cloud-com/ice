@@ -111,12 +111,20 @@ export interface DeployOptions {
   dry_run?: boolean;
   /** Auto-approve without confirmation */
   auto_approve?: boolean;
-  /** Progress callback. `extra.step` carries sub-step info when available. */
+  /** Progress callback. `extra.step` carries sub-step info when available,
+   *  `extra.outputs` / `extra.error` are populated on completed/failed so the
+   *  host can surface per-resource URLs or error text live instead of waiting
+   *  for the post-deploy batch of resource_result events. */
   on_progress?: (
     resource: string,
     action: string,
     status: string,
-    extra?: { step?: { label: string; index: number; total: number } },
+    extra?: {
+      step?: { label: string; index: number; total: number };
+      outputs?: Record<string, unknown>;
+      error?: string;
+      provider_id?: string;
+    },
   ) => void;
   /** Log callback for informational messages during deployment */
   on_log?: (message: string) => void;
@@ -128,6 +136,13 @@ export interface DeployOptions {
   auth_key_file?: string;
   /** Alternative to auth_key_file: raw parsed SA key object. */
   auth_credentials?: Record<string, unknown>;
+  /**
+   * Abort signal from the per-card deploy lock. When fired, long-running
+   * GCP operations (Cloud Build polls, operation waits, etc.) should stop
+   * polling and — where the cloud API allows — actively cancel the
+   * remote work so the user isn't billed for a deploy they cancelled.
+   */
+  abort_signal?: AbortSignal;
 }
 
 /**

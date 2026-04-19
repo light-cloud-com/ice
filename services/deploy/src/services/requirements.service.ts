@@ -195,6 +195,22 @@ async function runCheck(
   try {
     return await def.check(ctx);
   } catch (err: any) {
+    // Distinguish the resolver deadline from a genuine check failure.
+    // The UI renders 'expired' as "timed out — will be re-checked later"
+    // while 'unmet' stays red. Collapsing both into 'unmet' misled users
+    // into thinking e.g. DNS was permanently wrong when in fact we just
+    // didn't wait long enough for propagation.
+    const isAbort =
+      err?.name === 'AbortError' ||
+      ctx.signal?.aborted === true ||
+      /aborted|timeout/i.test(String(err?.message || ''));
+    if (isAbort) {
+      return {
+        status: 'expired',
+        message: 'Check timed out — will be re-checked on next deploy or via Check again.',
+        lastCheckedAt: new Date().toISOString(),
+      };
+    }
     return {
       status: 'unmet',
       message: `Check failed: ${err?.message || err}`,

@@ -128,14 +128,33 @@ export const managed_ssl_certificate_handler: GCPResourceHandler = {
 
   /**
    * Managed certs are effectively immutable once created — you cannot
-   * change the domain list. Any update from ICE's perspective needs to be
-   * handled as a replace (destroy + recreate). Phase 3's property-diff
-   * work surfaces this to users via a "requires replacement" warning in
-   * the plan preview. For now we treat update as a no-op so re-deploys
-   * with unchanged properties don't churn the resource.
+   * change the domain list. A no-op "update" silently lies to the user
+   * when they edit the domains on the canvas; instead, detect the diff
+   * and fail loudly so the UI reports that a replacement is required.
+   * The user can then delete the cert and let ICE recreate it on the
+   * next deploy.
    */
-  async update(name, provider_id, _properties, _current, _ctx) {
+  async update(name, provider_id, properties, current, _ctx) {
     const start = Date.now();
+    const desiredDomains = Array.isArray(properties.domains)
+      ? (properties.domains as string[]).slice().sort()
+      : [];
+    const currentDomains = Array.isArray(current.domains)
+      ? (current.domains as string[]).slice().sort()
+      : [];
+    const domainsChanged =
+      desiredDomains.length !== currentDomains.length ||
+      desiredDomains.some((d, i) => d !== currentDomains[i]);
+    if (domainsChanged) {
+      return fail(
+        name,
+        'update',
+        start,
+        `Managed SSL certificate ${name} cannot change its domain list in place ` +
+          `(${currentDomains.join(',') || '∅'} → ${desiredDomains.join(',') || '∅'}). ` +
+          `Delete the Custom Domain / Public Endpoint block and redeploy to request a new cert.`,
+      );
+    }
     return result(name, 'update', start, { provider_id });
   },
 

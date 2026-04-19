@@ -9,6 +9,6 @@ export const gcpStaticSiteBlueprint: BlockBlueprint = createBlueprintFromResourc
   icon: 'Globe',
   providers: ['gcp'],
   nodeDataDefaults: {
-    domain: 'example.com',
+    domain: '',
   },
 });

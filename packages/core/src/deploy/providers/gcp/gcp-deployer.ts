@@ -181,6 +181,7 @@ export class GCPDeployer implements ProviderDeployer {
       on_step: (resource, step) => {
         this.on_progress?.(resource, 'create', 'step', { step });
       },
+      abort_signal: options.abort_signal,
     };
   }
 

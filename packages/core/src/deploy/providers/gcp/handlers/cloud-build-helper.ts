@@ -132,10 +132,35 @@ export async function build_from_source(
 
   // Poll until complete
   const statusUrl = `${buildsUrl}/${buildId}`;
+  const cancelUrl = `${statusUrl}:cancel`;
   const startTime = Date.now();
+  const signal = ctx.abort_signal;
+
+  // Active remote-cancel: when the user hits Cancel on the deploy panel,
+  // call Cloud Build's cancel API so the remote build actually stops
+  // (and stops accruing billing) instead of only aborting our local poll
+  // loop. Fire-and-forget — we still break out via the signal check below.
+  if (signal) {
+    const onAbort = () => {
+      ctx.rest_client
+        .post(cancelUrl, {})
+        .then(() => onLog?.('Cloud Build cancel requested.'))
+        .catch((err: any) => {
+          onLog?.(`Cloud Build cancel failed (may have already finished): ${err?.message || err}`);
+        });
+    };
+    if (signal.aborted) onAbort();
+    else signal.addEventListener('abort', onAbort, { once: true });
+  }
 
   while (Date.now() - startTime < BUILD_TIMEOUT_MS) {
-    await sleep(BUILD_POLL_INTERVAL_MS);
+    if (signal?.aborted) {
+      throw new Error('Cloud Build cancelled by user');
+    }
+    await sleep(BUILD_POLL_INTERVAL_MS, signal);
+    if (signal?.aborted) {
+      throw new Error('Cloud Build cancelled by user');
+    }
 
     const build = (await ctx.rest_client.get(statusUrl)) as any;
     const status = build?.status;
@@ -163,6 +188,18 @@ export async function build_from_source(
   throw new Error(BUILD_MESSAGES.BUILD_TIMED_OUT);
 }
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve) => {
+    if (signal?.aborted) return resolve();
+    const timer = setTimeout(resolve, ms);
+    timer.unref?.();
+    signal?.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(timer);
+        resolve();
+      },
+      { once: true },
+    );
+  });
 }

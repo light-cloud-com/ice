@@ -749,9 +749,27 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
       continue;
     }
 
-    // Extract deployment properties
+    // Extract deployment properties. A missing extractor used to silently
+    // fall back to `{ region, labels: {} }`, which meant all block-level
+    // config (cpu/memory/minInstances/env/image…) was dropped and the
+    // deploy reported success on a misconfigured resource. Fail loudly
+    // instead: if a type is in the map it MUST have an extractor.
     const extractor = PROPERTY_EXTRACTORS[gcp_type];
-    const properties = extractor ? extractor(node.data, region) : { region, labels: {} };
+    if (!extractor) {
+      const msg =
+        `No property extractor registered for ${gcp_type} (iceType "${ice_type}", node: ${node.data.label || node.id}). ` +
+        `All block-level config would be dropped — refusing to deploy. ` +
+        `Register an extractor in PROPERTY_EXTRACTORS before adding a type to the deployer map.`;
+      console.error('[card-translator]', msg);
+      warnings.push(msg);
+      skipped.push({
+        nodeId: node.id,
+        label: (node.data.label as string) || node.id,
+        reason: `Missing property extractor for ${gcp_type}`,
+      });
+      continue;
+    }
+    const properties = extractor(node.data, region);
 
     // Private Network ingress override.
     //

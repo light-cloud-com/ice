@@ -75,7 +75,11 @@ export async function deploy_changes(
         const node = get_node_by_name(desired, change.name);
         const result = await deployer.create(change.type, change.name, change.desired_properties || {}, { node });
         results.push(result);
-        opts.on_progress?.(change.name, 'create', result.success ? 'completed' : 'failed');
+        opts.on_progress?.(change.name, 'create', result.success ? 'completed' : 'failed', {
+          outputs: result.outputs,
+          error: result.success ? undefined : result.error,
+          provider_id: result.provider_id,
+        });
 
         if (!result.success && !opts.continue_on_error) {
           throw new Error(`Failed to create ${change.name}: ${result.error}`);
@@ -111,7 +115,11 @@ export async function deploy_changes(
           { node },
         );
         results.push(result);
-        opts.on_progress?.(change.name, 'update', result.success ? 'completed' : 'failed');
+        opts.on_progress?.(change.name, 'update', result.success ? 'completed' : 'failed', {
+          outputs: result.outputs,
+          error: result.success ? undefined : result.error,
+          provider_id: result.provider_id,
+        });
 
         if (!result.success && !opts.continue_on_error) {
           throw new Error(`Failed to update ${change.name}: ${result.error}`);
@@ -139,7 +147,11 @@ export async function deploy_changes(
         opts.on_progress?.(change.name, 'delete', 'running');
         const result = await deployer.delete(change.type, change.name, change.provider_id || '', {});
         results.push(result);
-        opts.on_progress?.(change.name, 'delete', result.success ? 'completed' : 'failed');
+        opts.on_progress?.(change.name, 'delete', result.success ? 'completed' : 'failed', {
+          outputs: result.outputs,
+          error: result.success ? undefined : result.error,
+          provider_id: result.provider_id,
+        });
 
         if (!result.success && !opts.continue_on_error) {
           throw new Error(`Failed to delete ${change.name}: ${result.error}`);

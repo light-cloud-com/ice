@@ -35,7 +35,7 @@ export const PreDeployWarnings: React.FC<PreDeployWarningsProps> = ({ analysis }
   const warnings = visible.filter((w) => w.severity === 'warning');
   const infos = visible.filter((w) => w.severity === 'info');
 
-  if (visible.length === 0 && analysis.costEstimates.length === 0) return null;
+  if (visible.length === 0) return null;
 
   return (
     <div className="space-y-2 rounded-md border border-ice-border bg-ice-surface p-3">
@@ -79,26 +79,6 @@ export const PreDeployWarnings: React.FC<PreDeployWarningsProps> = ({ analysis }
             I understand the {criticals.length} critical issue{criticals.length === 1 ? '' : 's'} above and want to deploy anyway.
           </span>
         </label>
-      )}
-
-      {analysis.costEstimates.length > 0 && (
-        <div className="mt-2 pt-2 border-t border-ice-border">
-          <div className="flex items-center justify-between text-ice-xs mb-1.5">
-            <span className="font-medium text-ice-text-1">Estimated monthly cost</span>
-            <span className="font-mono text-ice-text-1">~${analysis.totalMonthlyCost.toFixed(2)}</span>
-          </div>
-          <div className="space-y-0.5 max-h-40 overflow-y-auto">
-            {analysis.costEstimates.map((e) => (
-              <div key={e.nodeId} className="flex items-center justify-between text-ice-2xs text-ice-text-3">
-                <span className="truncate">{e.resourceName}</span>
-                <span className="font-mono shrink-0 pl-2">${e.monthlyEstimate.toFixed(2)}</span>
-              </div>
-            ))}
-          </div>
-          <div className="text-ice-2xs text-ice-text-3 mt-1 italic">
-            Rough estimates based on GCP list prices. Actual cost varies with usage.
-          </div>
-        </div>
       )}
     </div>
   );

@@ -66,8 +66,36 @@ export const gcpCredentialResolver: CredentialResolver = {
         );
       }
       const { OAuth2Client } = await import('google-auth-library');
-      const oauthClient = new OAuth2Client();
-      oauthClient.setCredentials({ access_token: token });
+      // Construct the client with client_id + client_secret so the library
+      // can auto-refresh the token mid-deploy. Without these, a 60-minute
+      // Cloud SQL / GKE / big Cloud Build deploy crosses the TTL and fails
+      // with a cryptic 403 on minute 61. Supplying refresh_token +
+      // expiry_date lets google-auth-library transparently fetch a fresh
+      // token the first time it would be about to use an expired one.
+      const oauthClient = new OAuth2Client({
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      });
+      const expiryMs = parseInt(credentials.token_expiry || '0', 10) || Date.now() + 60 * 60 * 1000;
+      oauthClient.setCredentials({
+        access_token: token,
+        refresh_token: credentials.refresh_token,
+        expiry_date: expiryMs,
+        token_type: 'Bearer',
+      });
+      // Persist refreshed tokens so the next deploy starts from a fresh
+      // state instead of re-refreshing (and to survive gateway restarts).
+      oauthClient.on('tokens', (tokens: any) => {
+        if (!tokens.access_token) return;
+        providerService
+          .updateGCPOAuthTokens?.(orgId, {
+            access_token: tokens.access_token,
+            token_expiry: tokens.expiry_date ? String(tokens.expiry_date) : undefined,
+          })
+          ?.catch((err: any) => {
+            console.warn('[credential-resolver] failed to persist refreshed OAuth token:', err?.message || err);
+          });
+      });
       authClient = oauthClient;
       accessToken = token;
       onLog?.('Authenticating via Google OAuth...');

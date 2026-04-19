@@ -252,7 +252,14 @@ router.get('/stream/:cardId', requireProjectAccess('viewer'), async (req: AuthRe
       return res.json({ success: true, events: [], latestSeq: 0, deploymentId: null });
     }
     const { events, latestSeq } = await deployEventLog.loadDeployEvents(deploymentId, since);
-    res.json({ success: true, deploymentId, events, latestSeq });
+    // DR-O1: event log is now retained longer than the deployment metadata.
+    // If the deployment row was pruned but the events still exist, or if
+    // both were pruned (empty result, deploymentId survived via client),
+    // tell the client so it can show "events pruned" rather than a silent
+    // empty list that looks like a UI bug.
+    const deploymentExists = await deployService.getDeploymentStatus(deploymentId);
+    const isPruned = !deploymentExists && events.length === 0;
+    res.json({ success: true, deploymentId, events, latestSeq, isPruned });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }

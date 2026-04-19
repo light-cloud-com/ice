@@ -61,6 +61,31 @@ setSnapshotPersister((snapshot: DeployProgressSnapshot) => {
 });
 
 /**
+ * Force a pending snapshot write to flush NOW. Called at the end of
+ * applyDeployment so a very short deploy (e.g. 400 ms no-op) that finishes
+ * before the 500 ms throttle fires still leaves its terminal state in
+ * the DB — otherwise a second tab opening right as the deploy ends sees
+ * no snapshot and can get stuck on a stale "deploying" view.
+ */
+async function flushSnapshotNow(cardId: string): Promise<void> {
+  const pending = pendingSnapshotWrites.get(cardId);
+  if (pending) {
+    clearTimeout(pending);
+    pendingSnapshotWrites.delete(cardId);
+  }
+  const latest = getDeploySnapshot(cardId);
+  if (!latest?.deploymentId) return;
+  try {
+    await prisma.canvasDeployment.update({
+      where: { id: latest.deploymentId },
+      data: { snapshot: latest as any },
+    });
+  } catch (err: any) {
+    console.warn('[snapshot-persist] final flush failed:', err.message);
+  }
+}
+
+/**
  * Emit a deploy event: sends it live over socket.io AND appends it to the
  * persistent event log so a client can replay the full narrative on
  * reload/reconnect. Always prefer this over the raw `emitDeployProgress`
@@ -112,6 +137,7 @@ function computeDeploySummary(result: any): Record<string, number> {
 }
 import {
   getExistingNameMap,
+  getResourceMap,
   seedMappingsFromHistory,
   upsertResourceMapping,
   removeResourceMapping,
@@ -321,6 +347,30 @@ export async function applyDeployment(
     throw new Error('Provider not connected. Please connect your cloud provider first.');
   }
 
+  // Short-circuit for an obviously-empty canvas before touching the DB.
+  // Prevents the "phantom success" case where a canvas with only Group
+  // nodes (or nothing at all) reports a clean deploy despite never
+  // provisioning a single cloud resource. The stricter post-translation
+  // check below catches subtler cases (e.g. every node skipped by the
+  // provider filter).
+  const hasAnyNonContainerNode = (nodes || []).some((n: any) => {
+    if (!n) return false;
+    const nt = n.type;
+    if (nt === 'container' || nt === 'group') return false;
+    const iceType = String(n.data?.iceType || '');
+    if (!iceType) return false;
+    if (iceType.startsWith('Group.')) return false;
+    return true;
+  });
+  if (!hasAnyNonContainerNode) {
+    releaseLock();
+    return {
+      success: false,
+      error: 'Nothing to deploy — add at least one resource block to the canvas before deploying.',
+      code: 'EMPTY_CANVAS',
+    };
+  }
+
   // 2. Create deployment record
   const deployment = await prisma.canvasDeployment.create({
     data: {
@@ -395,6 +445,20 @@ export async function applyDeployment(
           message: `[translator] ${w}`,
         });
       }
+    }
+
+    // If translation produced zero deployables, fail loudly instead of
+    // letting the deployer report "success" for a no-op. This catches the
+    // case where every block was filtered out by provider mismatch or
+    // skipped as non-deployable (Group/Container/etc.).
+    if (!translation.deployable_count || translation.deployable_count === 0) {
+      const skippedSummary = (translation.skipped || [])
+        .map((s: any) => `${s.label || s.nodeId}: ${s.reason}`)
+        .join('; ');
+      const detail = skippedSummary
+        ? ` All ${translation.skipped.length} block(s) were skipped (${skippedSummary}).`
+        : '';
+      throw new Error(`Nothing to deploy — 0 deployable resources after translation.${detail}`);
     }
 
     // Diagnostic: show every Source.Repository → Compute edge the
@@ -543,11 +607,18 @@ export async function applyDeployment(
     // resource failure poisoned the entire update path until the next fully
     // successful deploy. Also missed cross-environment isolation — a dev
     // deploy could influence a prod diff.
+    // Extra guard: exclude the current in-flight deployment. The row we just
+    // inserted has status='deploying' now, but if a retry or concurrent read
+    // sees it flipped to 'partial' before this findFirst runs, it would
+    // pick itself up as the baseline — its currentGraph only contains the
+    // resources that landed so far, so the next plan would re-create the
+    // missing ones and risk duplicates.
     const lastDeploy = await prisma.canvasDeployment.findFirst({
       where: {
         card_id: cardId,
         environment,
         status: { in: ['success', 'partial'] },
+        id: { not: deployment.id },
       },
       orderBy: { created_at: 'desc' },
     });
@@ -599,6 +670,20 @@ export async function applyDeployment(
       nameToNodeId.set(d.resource_name, d.node_id);
       nameToLabel.set(d.resource_name, d.label);
     }
+
+    // Rename-resilient fallback: load the persisted mapping for this
+    // card+env so we can still match a result to its canvas node when
+    // the resource was renamed (or otherwise drifted from the current
+    // translation's expected name). Keyed by both name and provider_id
+    // since some handlers report one but not the other.
+    const persistedMap = await getResourceMap(cardId, environment).catch(() => new Map());
+    const persistedNameToNodeId = new Map<string, string>();
+    const persistedProviderIdToNodeId = new Map<string, string>();
+    for (const [nodeId, entry] of persistedMap as Map<string, { name: string; providerId?: string }>) {
+      if (entry.name) persistedNameToNodeId.set(entry.name, nodeId);
+      if (entry.providerId) persistedProviderIdToNodeId.set(entry.providerId, nodeId);
+    }
+
     const findSourceNodeId = (res: any): string | undefined => {
       const candidates = [res?.name, res?.resource_id].filter(Boolean) as string[];
       for (const c of candidates) {
@@ -614,6 +699,22 @@ export async function applyDeployment(
           if (nameToNodeId.has(base)) return nameToNodeId.get(base);
         }
       }
+      // Fallback: the current translation didn't produce a matching name
+      // (likely a rename / refactor / drifted resource). Try the persisted
+      // mapping table — provider_id first (most stable), then name.
+      const providerId = res?.provider_id || res?.providerId;
+      if (providerId && persistedProviderIdToNodeId.has(providerId)) {
+        return persistedProviderIdToNodeId.get(providerId);
+      }
+      for (const c of candidates) {
+        if (persistedNameToNodeId.has(c)) return persistedNameToNodeId.get(c);
+      }
+      // Nothing matched anywhere — log so an ops engineer can correlate
+      // the stranded resource in the deploy log later.
+      console.warn(
+        `[deploy] findSourceNodeId: no match for name=${res?.name} provider_id=${providerId || '?'} ` +
+          `(card=${cardId.slice(0, 8)}). Canvas block will not receive a deploy_status overlay.`,
+      );
       return undefined;
     };
 
@@ -634,6 +735,7 @@ export async function applyDeployment(
       project: gcpProject,
       regions: [options.region || 'us-central1'],
       continue_on_error: true,
+      abort_signal: cancelSignal,
       auth_client: authClient,
       auth_key_file: (authClient as any)?._ice_key_file_path,
       auth_credentials: (authClient as any)?._ice_parsed_credentials,
@@ -646,7 +748,7 @@ export async function applyDeployment(
           inFlightResources = Math.max(0, inFlightResources - 1);
           completedResources++;
         }
-        const source_node_id = findSourceNodeId({ name: resource });
+        const source_node_id = findSourceNodeId({ name: resource, provider_id: extra?.provider_id });
         const progress = computeOverallProgress();
         emitDeployProgress(cardId, {
           type: 'progress',
@@ -660,6 +762,30 @@ export async function applyDeployment(
             ? `${resource}: ${extra.step.label} (${extra.step.index}/${extra.step.total})`
             : `${action} ${resource}: ${status}`,
         } as any);
+
+        // Surface the deployed URL the moment a compute resource lands —
+        // user no longer stares at a progress bar for 10 min wondering
+        // whether their Cloud Run is already live at minute 3. We pull
+        // the first recognisable endpoint from the handler's outputs;
+        // skip log emission when nothing useful is there.
+        if (status === 'completed' && extra?.outputs) {
+          const out = extra.outputs as Record<string, unknown>;
+          const url = (out.custom_domain_url || out.url || out.default_url || out.endpoint) as
+            | string
+            | undefined;
+          const domain = out.domain as string | undefined;
+          const ip = (out.ip_address || out.IPAddress) as string | undefined;
+          let endpoint: string | undefined;
+          if (url && String(url).trim()) endpoint = String(url).trim();
+          else if (domain && String(domain).trim()) endpoint = `https://${String(domain).trim()}`;
+          else if (ip && String(ip).trim()) endpoint = `http://${String(ip).trim()}`;
+          if (endpoint) {
+            emitDeployProgress(cardId, {
+              type: 'log',
+              message: `Deployed ${resource} → ${endpoint}`,
+            });
+          }
+        }
 
         // Mirror the update into the in-memory snapshot so new tabs can
         // hydrate their state without waiting for a socket round-trip.
@@ -933,6 +1059,11 @@ export async function applyDeployment(
   } finally {
     // Always clean up temp credential directory (directory + file inside).
     releaseTempDir(tempCredentialsDir);
+    // DR-O3: force the throttled snapshot persister to flush before the
+    // in-memory snapshot is cleared. Without this, a sub-500ms deploy
+    // could finish before the first throttled write fires, leaving a
+    // second tab with no snapshot to hydrate from.
+    await flushSnapshotNow(cardId);
     releaseLock();
   }
 }
@@ -1526,9 +1657,16 @@ export async function rollbackDeployment(deploymentId: string, cardId: string, o
     }
 
     // 4. Build current state from the latest successful deployment
+    // Must be scoped to the same environment — otherwise rolling back prod
+    // loads dev's latest success as the baseline and applies dev config to prod.
     const currentGraph = new MutableGraph('current');
     const latestDeploy = await prisma.canvasDeployment.findFirst({
-      where: { card_id: cardId, status: 'success', id: { not: rollbackRecord.id } },
+      where: {
+        card_id: cardId,
+        status: 'success',
+        environment: rollbackRecord.environment,
+        id: { not: rollbackRecord.id },
+      },
       orderBy: { created_at: 'desc' },
     });
 

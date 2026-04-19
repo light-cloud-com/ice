@@ -108,6 +108,42 @@ export function startCronJobs() {
     } catch (err: any) {
       console.error('Cron: deployment prune error:', err.message);
     }
+
+    // DR-O1: DeployEvent rows are no longer cascade-deleted with their
+    // parent CanvasDeployment, so they now need their own retention
+    // schedule. Keep them twice as long as the deployment metadata so a
+    // user can still open an old deploy's log after the deployment row
+    // itself has been pruned, but don't let them grow unbounded.
+    try {
+      const oneEightyDaysAgo = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000);
+      const eventsPruned = await prisma.deployEvent.deleteMany({
+        where: { created_at: { lt: oneEightyDaysAgo } },
+      });
+      if (eventsPruned.count > 0) {
+        console.log(`Pruned ${eventsPruned.count} deploy_event rows older than 180 days`);
+      }
+    } catch (err: any) {
+      console.error('Cron: deploy_event prune error:', err.message);
+    }
+
+    // DR-O2: prune DeployedResourceMapping rows for cards that no longer
+    // exist. Without this, a deleted card's mappings linger, drift
+    // detection reports them as "extra" cloud state, and users are
+    // forced to run cleanup-orphans for phantom nodes. Card deletion
+    // itself doesn't cascade into the mapping table because the table
+    // is keyed by a plain card_id string with no FK (intentional — the
+    // mapping outlives individual deploy rows).
+    try {
+      const staleMappings = await prisma.$executeRaw`
+        DELETE FROM "deployed_resource_mapping"
+         WHERE "card_id" NOT IN (SELECT "id" FROM "canvas_card")
+      `;
+      if (staleMappings > 0) {
+        console.log(`Pruned ${staleMappings} deployed_resource_mapping rows for deleted cards`);
+      }
+    } catch (err: any) {
+      console.error('Cron: deployed_resource_mapping prune error:', err.message);
+    }
   });
 
   // Every 5 min: detect stuck deploy jobs (running > 30 min)

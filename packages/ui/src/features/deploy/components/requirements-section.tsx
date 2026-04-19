@@ -9,7 +9,7 @@
  * progress section.
  */
 
-import { AlertCircle, CheckCircle2, Loader2, Lock, RefreshCw, Unlock } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Clock, Loader2, Lock, RefreshCw, Unlock } from 'lucide-react';
 import React from 'react';
 
 import type { ResolvedRequirementState } from '../../../store/slices/deploy-slice';
@@ -121,7 +121,8 @@ const RequirementRow: React.FC<{
 }> = ({ requirement, onVerify, verifying = false }) => {
   const { title, description, result, action, blocking, timing } = requirement;
   const isVerified = result.status === 'verified' || result.status === 'met';
-  const isUnmet = result.status === 'unmet' || result.status === 'expired';
+  const isExpired = result.status === 'expired';
+  const isUnmet = result.status === 'unmet';
   const isUnknown = result.status === 'unknown';
   const isPending = result.status === 'checking';
   // Every unresolved post-deploy requirement gets a "Check again" button so
@@ -134,6 +135,11 @@ const RequirementRow: React.FC<{
     <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
   ) : verifying || isPending ? (
     <Loader2 className="w-4 h-4 text-blue-500 animate-spin flex-shrink-0" />
+  ) : isExpired ? (
+    // Timed-out looks different from unmet — a clock, not an alert — so the
+    // user knows the check is inconclusive rather than failed. Blocks that
+    // haven't finished propagating (DNS, cert issuance) land here.
+    <Clock className="w-4 h-4 text-sky-500 flex-shrink-0" />
   ) : isUnmet ? (
     <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0" />
   ) : (
@@ -161,10 +167,21 @@ const RequirementRow: React.FC<{
           {isUnknown && (
             <span className="text-xs text-muted-foreground font-medium">unknown</span>
           )}
+          {isExpired && (
+            <span className="text-xs text-sky-600 dark:text-sky-400 font-medium">timed out</span>
+          )}
         </div>
         {description && <p className="text-xs text-muted-foreground">{description}</p>}
         {result.message && (
-          <p className={`text-xs ${isUnmet ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`}>
+          <p
+            className={`text-xs ${
+              isUnmet
+                ? 'text-amber-600 dark:text-amber-400'
+                : isExpired
+                  ? 'text-sky-600 dark:text-sky-400'
+                  : 'text-muted-foreground'
+            }`}
+          >
             {result.message}
           </p>
         )}

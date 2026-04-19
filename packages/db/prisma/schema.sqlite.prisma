@@ -266,7 +266,10 @@ model DeployEvent {
   payload       Json
   created_at    DateTime @default(now())
 
-  deployment CanvasDeployment @relation(fields: [deployment_id], references: [id], onDelete: Cascade)
+  // Survives the deployment it belongs to — pruned on its own schedule
+  // by cron.service.ts so incident archaeology still works after the
+  // parent CanvasDeployment row is removed by retention rules.
+  deployment CanvasDeployment @relation(fields: [deployment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([deployment_id, seq])
   @@index([card_id, created_at])

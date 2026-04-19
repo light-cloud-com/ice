@@ -72,8 +72,6 @@ export const TREE = {
         envVar: 'STORAGE_BUCKET',
         required: ['storage_class'],
       },
-      Spaces: { id: 'do-spaces', envVar: 'STORAGE_BUCKET' },
-      OSS: { id: 'oss-storage', envVar: 'STORAGE_BUCKET' },
     },
   },
   Messaging: {
@@ -204,8 +202,6 @@ export const ICE = {
   },
   Storage: {
     Bucket: 'Storage.Bucket',
-    Spaces: 'Storage.Spaces',
-    OSS: 'Storage.OSS',
   },
   Messaging: {
     SQS: 'Messaging.SQS',

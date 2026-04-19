@@ -168,9 +168,6 @@ export function getContextLines(data: Record<string, unknown>, iceType: string):
 
     // ── Storage ──
     case 'object-storage':
-    case 'oss':
-    case 'oci-object-storage':
-    case 'do-spaces':
       if (purpose) lines.push(purpose);
       lines.push(isPublic ? 'Public access' : 'Private');
       break;

@@ -50,7 +50,6 @@ import { alibabaStaticSiteBlueprint } from './alibaba/frontend/static-site';
 import { alibabaEventStreamBlueprint } from './alibaba/messaging/event-stream';
 import { alibabaRabbitmqBlueprint } from './alibaba/messaging/rabbitmq';
 import { alibabaGatewayBlueprint } from './alibaba/networking/gateway';
-import { ossBlueprint } from './alibaba/storage/oss';
 import { alibabaStorageBlueprint } from './alibaba/storage/storage';
 import { awsLlmGatewayBlueprint } from './aws/ai/llm-gateway';
 import { awsMlModelBlueprint } from './aws/ai/ml-model';
@@ -126,7 +125,6 @@ import { digitaloceanStaticSiteBlueprint } from './digitalocean/frontend/static-
 import { digitaloceanEventStreamBlueprint } from './digitalocean/messaging/event-stream';
 import { digitaloceanRabbitmqBlueprint } from './digitalocean/messaging/rabbitmq';
 import { digitaloceanGatewayBlueprint } from './digitalocean/networking/gateway';
-import { doSpacesBlueprint } from './digitalocean/storage/do-spaces';
 import { digitaloceanStorageBlueprint } from './digitalocean/storage/storage';
 import { gcpLlmGatewayBlueprint } from './gcp/ai/llm-gateway';
 import { gcpMlModelBlueprint } from './gcp/ai/ml-model';
@@ -179,7 +177,6 @@ import { ociStaticSiteBlueprint } from './oci/frontend/static-site';
 import { ociEventStreamBlueprint } from './oci/messaging/event-stream';
 import { ociRabbitmqBlueprint } from './oci/messaging/rabbitmq';
 import { ociGatewayBlueprint } from './oci/networking/gateway';
-import { ociObjectStorageBlueprint } from './oci/storage/oci-object-storage';
 import { ociStorageBlueprint } from './oci/storage/storage';
 import type { BlockBlueprint } from './types';
 
@@ -309,7 +306,6 @@ const RAW_BLUEPRINTS: BlockBlueprint[] = [
   alibabaRedisCacheBlueprint,
   tablestoreBlueprint,
   alibabaStorageBlueprint,
-  ossBlueprint,
   alibabaGatewayBlueprint,
   alibabaRabbitmqBlueprint,
   alibabaEventStreamBlueprint,
@@ -320,7 +316,6 @@ const RAW_BLUEPRINTS: BlockBlueprint[] = [
   ociRedisCacheBlueprint,
   autonomousDbBlueprint,
   ociStorageBlueprint,
-  ociObjectStorageBlueprint,
   ociGatewayBlueprint,
   ociRabbitmqBlueprint,
   ociEventStreamBlueprint,
@@ -332,7 +327,6 @@ const RAW_BLUEPRINTS: BlockBlueprint[] = [
   digitaloceanRedisCacheBlueprint,
   doManagedDbBlueprint,
   digitaloceanStorageBlueprint,
-  doSpacesBlueprint,
   digitaloceanGatewayBlueprint,
   digitaloceanRabbitmqBlueprint,
   digitaloceanEventStreamBlueprint,

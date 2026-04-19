@@ -5,11 +5,11 @@ export const gcpSearchBlueprint: BlockBlueprint = createBlueprintFromResource('s
   iceType: 'Analytics.Search',
   category: 'analytics',
   name: 'GCP Search',
-  description: 'Google Elasticsearch Service. Full-text search.',
+  description: 'Google Vertex AI Search (Discovery Engine). Full-text + semantic search.',
   icon: 'Search',
   providers: ['gcp'],
   nodeDataDefaults: {
-    runtime: 'Elasticsearch',
-    port: 9200,
+    runtime: 'Vertex AI Search',
+    port: 443,
   },
 });

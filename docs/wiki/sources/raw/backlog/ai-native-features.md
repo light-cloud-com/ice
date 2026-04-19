@@ -11,18 +11,16 @@ cssclasses: []
 
 # raw/backlog/ai-native-features.md
 
-This document describes the implementation of Flash-MoE as the default AI backend in ICE, integrating it into various components and services to provide zero-config AI features with local inference capabilities.
+This document describes Feature 0: Flash-MoE as Default AI Backend, part of a project to make ICE an AI-first cloud platform with self-contained AI features.
 
 ## Entities
 
-- [[icedesktop|@ice/desktop]]
-- [[iceai|@ice/ai]]
 - [[flashmoeprovider|FlashMoeProvider]]
+- [[iceai|@ice/ai]]
 - [[anthropicprovider|AnthropicProvider]]
 - [[openaicompatprovider|OpenAICompatProvider]]
 
 ## Concepts
 
-- [[ai-provider-interface|AI Provider Interface]]
-- [[auto-start-behavior|Auto-Start Behavior]]
+- [[ai-native-features|AI-native features]]
 - [[openai-compatible-api|OpenAI-compatible API]]

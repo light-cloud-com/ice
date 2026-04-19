@@ -12,14 +12,12 @@ cssclasses: []
 
 # OpenAI-compatible API
 
-API that supports streaming chat completions with SSE, compatible with various AI providers including Flash-MoE.
+An API that conforms to OpenAI's chat completion protocol, allowing seamless integration with various AI providers.
 
 ## Related
 
-- [[iceai|@ice/ai]]
 - [[flashmoeprovider|FlashMoeProvider]]
 - [[anthropicprovider|AnthropicProvider]]
-- [[openaicompatprovider|OpenAICompatProvider]]
 
 ## Sources
 

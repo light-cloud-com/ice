@@ -1,6 +1,6 @@
 ---
 type: concept
-name: Deployment Context
+name: deployment context
 aliases: []
 tags:
   - llm-wiki/concept
@@ -10,14 +10,14 @@ cssclasses: []
 ---
 
 
-# Deployment Context
+# deployment context
 
-Information about the last deployment, including resources and their state.
+Information about the last deployment, including resources deployed, their status, and errors.
 
 ## Related
 
-- [[canvasdeployment|CanvasDeployment]]
-- [[cloudstatusservice|CloudStatusService]]
+- [[ai-read-capabilities|AI Read Capabilities]]
+- [[backlog-management|backlog management]]
 
 ## Sources
 

@@ -14,7 +14,7 @@
   "cloudModel": "claude-3-5-haiku-20241022",
   "extractionOutputLanguage": "en",
   "extractionCharLimit": 12000,
-  "lastExtractionRunIso": "2026-04-19T14:46:17.660Z",
+  "lastExtractionRunIso": "2026-04-19T16:15:24.445Z",
   "queryFolders": [],
   "nightlyExtractionEnabled": false,
   "nightlyExtractionHour": 2,

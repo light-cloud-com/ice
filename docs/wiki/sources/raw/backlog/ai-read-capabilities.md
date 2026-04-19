@@ -11,25 +11,14 @@ cssclasses: []
 
 # raw/backlog/ai-read-capabilities.md
 
-This document outlines a plan to enhance an AI assistant's capabilities by integrating deployment context, live cloud status queries, and logs/metrics integration. The goal is to make the AI more aware of the user’s live infrastructure.
+The document discusses the current state and proposed solutions for enhancing an AI assistant's capabilities to provide information about deployed cloud infrastructure, including deployment context, live cloud status queries, and logs & metrics integration.
 
 ## Entities
 
+- [[ai-read-capabilities|AI Read Capabilities]]
 - [[canvasdeployment|CanvasDeployment]]
-- [[cloudstatusservice|CloudStatusService]]
-- [[resourcestatus|ResourceStatus]]
-- [[cloudrun|CloudRun]]
-- [[cloudsql|CloudSQL]]
-- [[cloudstorage|CloudStorage]]
-- [[memorystore|Memorystore]]
-- [[cloudfunctions|CloudFunctions]]
-- [[pubsub|Pub/Sub]]
-- [[secretmanager|SecretManager]]
-- [[loadbalancer|LoadBalancer]]
 
 ## Concepts
 
-- [[deployment-context-in-ai-prompt|Deployment Context in AI Prompt]]
-- [[live-cloud-status-queries|Live Cloud Status Queries]]
-- [[logs-metrics-integration|Logs & Metrics Integration]]
-- [[deployment-context|Deployment Context]]
+- [[backlog-management|backlog management]]
+- [[deployment-context|deployment context]]

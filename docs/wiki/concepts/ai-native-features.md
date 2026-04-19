@@ -1,28 +1,29 @@
 ---
 type: concept
-name: AI-Native Features
+name: AI-native features
 aliases: []
 tags:
   - llm-wiki/concept
-source-count: 1
+source-count: 2
 date-updated: 2026-04-19
 cssclasses: []
 ---
 
 
-# AI-Native Features
+# AI-native features
 
-Features that integrate AI capabilities into the ICE project, such as Flash-MoE as default backend and Ghost Mode for canvas suggestions.
+Features designed to integrate AI capabilities directly into the ICE platform with varying priorities and statuses.
 
 ## Related
 
-- [[flashmoeprovider|FlashMoeProvider]]
-- [[openaicompatprovider|OpenAICompatProvider]]
-- [[anthropicprovider|AnthropicProvider]]
+- [[flash-moe-as-default-ai-backend|Flash-MoE as Default AI Backend]]
+- [[iceai-package|@ice/ai package]]
 - [[flash-moe|Flash-MoE]]
-- [[error-diagnosis|Error Diagnosis]]
-- [[pre-deploy-securitycost-warnings|Pre-deploy Security/cost warnings]]
+- [[ghost-mode|Ghost Mode]]
+- [[ai-error-diagnosis|AI error diagnosis]]
+- [[pre-deploy-securitycost-warnings|Pre-deploy security/cost warnings]]
 
 ## Sources
 
+- [[raw/backlog/ai-native-features.md]]
 - [[raw/backlog/JULIA.md]]

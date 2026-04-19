@@ -287,6 +287,21 @@ function dagreTreeLayout(
         : childrenOf.get(ownerId) ?? [];
     if (kids.length === 0) continue;
 
+    // When a container's children have no internal flow edges, dagre puts each
+    // node in its own rank — yielding a single 1×N row (or column) of cards.
+    // Pack them into a roughly-square grid instead so containers with many
+    // isolated kids stay compact and read at a glance.
+    if (ownerId !== null && kids.length >= 2) {
+      const kidSet = new Set(kids);
+      const hasInternalEdge = flowEdges.some(
+        (e) => e.source !== e.target && kidSet.has(e.source) && kidSet.has(e.target),
+      );
+      if (!hasInternalEdge) {
+        gridPackKids(kids, ownerId, nodeMap, containerSize, relPos);
+        continue;
+      }
+    }
+
     const g = new dagre.graphlib.Graph({ compound: false, multigraph: false });
     g.setGraph({
       rankdir,
@@ -554,6 +569,66 @@ function buildPostOrder(
   };
   visit(null);
   return order;
+}
+
+/**
+/**
+ * Pack a container's isolated children into a roughly-square grid, written
+ * back as group-local positions in `relPos` and the resulting bounds as
+ * `containerSize[ownerId]`. Used in place of dagre when no kid pair shares
+ * a flow edge — dagre would otherwise stretch the children into a 1×N rank.
+ *
+ * Padding mirrors the dagre branch: GRID_STEP each side, GRID_STEP*2 on top
+ * (header zone), GRID_STEP at the bottom — all snap-no-op friendly.
+ */
+function gridPackKids(
+  kids: string[],
+  ownerId: string,
+  nodeMap: Map<string, LayoutNode>,
+  containerSize: Map<string, { width: number; height: number }>,
+  relPos: Map<string, { x: number; y: number }>,
+): void {
+  const sizeOf = (id: string) => {
+    const cs = containerSize.get(id);
+    if (cs) return cs;
+    const n = nodeMap.get(id)!;
+    return { width: n.width, height: n.height };
+  };
+  const sizes = kids.map(sizeOf);
+  const avgW = sizes.reduce((s, x) => s + x.width, 0) / kids.length;
+  const avgH = sizes.reduce((s, x) => s + x.height, 0) / kids.length;
+
+  // Aim for a roughly-square content box. cols ≈ sqrt(N * avgH/avgW) yields
+  // a layout whose width-to-height matches the average card aspect ratio.
+  const cols = Math.max(1, Math.round(Math.sqrt(kids.length * (avgH / avgW))));
+
+  const ownerIce = (nodeMap.get(ownerId)!.iceType as string) || '';
+  const visualMin = intrinsicContainerMin(ownerIce);
+
+  let cursorX = GRID_STEP;          // left padding
+  let cursorY = GRID_STEP * 2;      // header zone
+  let rowHeight = 0;
+  let maxRightEdge = 0;             // rightmost block edge across all rows
+
+  for (let i = 0; i < kids.length; i++) {
+    if (i > 0 && i % cols === 0) {
+      cursorX = GRID_STEP;
+      cursorY += rowHeight + GRID_STEP;
+      rowHeight = 0;
+    }
+    const s = sizes[i];
+    relPos.set(kids[i], { x: cursorX, y: cursorY });
+    const rightEdge = cursorX + s.width;
+    if (rightEdge > maxRightEdge) maxRightEdge = rightEdge;
+    cursorX = rightEdge + GRID_STEP;
+    if (s.height > rowHeight) rowHeight = s.height;
+  }
+  const lastBottom = cursorY + rowHeight;
+
+  containerSize.set(ownerId, {
+    width: Math.max(maxRightEdge + GRID_STEP, visualMin.width),
+    height: Math.max(lastBottom + GRID_STEP, visualMin.height),
+  });
 }
 
 /**

@@ -1,5 +1,6 @@
 {
   "name": "@ice/service-engine",
+  "license": "Apache-2.0",
   "version": "0.1.0",
   "description": "Schema/resource serving service",
   "private": true,

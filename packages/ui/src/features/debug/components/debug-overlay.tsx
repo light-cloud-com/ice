@@ -42,7 +42,7 @@ export const DebugOverlay: React.FC = () => {
   const groupCount =
     activeCard?.nodes.filter((n) => n.type === 'container' || ((n.data?.iceType as string) || '').startsWith('Group.'))
       .length ?? 0;
-  const blockCount = activeCard?.nodes.filter((n) => n.type === 'block' && n.type !== 'container').length ?? 0;
+  const blockCount = activeCard?.nodes.filter((n) => n.type === 'block').length ?? 0;
   const resourceCount = nodeCount - blockCount - groupCount;
 
   const selectedNodeIds = selection.selectedNodes ?? [];

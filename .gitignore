@@ -17,6 +17,10 @@ out/
 .env.staging
 .env.production
 
+# Desktop dev SQLite DB (auto-created by `pnpm dev:desktop:setup`)
+.desktop-dev.db
+.desktop-dev.db-journal
+
 # Logs
 *.log
 npm-debug.log*
@@ -26,7 +30,11 @@ yarn-error.log*
 
 # OS files
 .DS_Store
+**/.DS_Store
 Thumbs.db
+
+# Obsidian (not used; guard against accidental recreation)
+docs/.obsidian/
 
 # IDE
 .idea/
@@ -74,6 +82,9 @@ packages/web/src/**/*.d.ts.map
 lc-ice-*.json
 *-sa-key*.json
 *service-account*.json
+
+# Prisma migration dumps (local debug artefacts — never commit)
+packages/db/.migration-dump/
 
 # Misc
 *.tgz

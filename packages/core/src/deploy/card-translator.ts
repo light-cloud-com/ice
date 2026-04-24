@@ -52,6 +52,7 @@ export interface CardNodeInput {
   id: string;
   type: 'block' | 'resource' | 'group';
   data: Record<string, unknown>;
+  parentId?: string | null;
 }
 
 export interface CardEdgeInput {
@@ -894,8 +895,8 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
     if (!src || !dst) continue;
     const srcIce = (src.data?.iceType as string) || '';
     const dstIce = (dst.data?.iceType as string) || '';
-    let repoNode: typeof src | null = null;
-    let computeNode: typeof src | null = null;
+    let repoNode: typeof src;
+    let computeNode: typeof src;
     if (srcIce === 'Source.Repository') {
       repoNode = src;
       computeNode = dst;
@@ -955,8 +956,8 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
     if (!src || !dst) continue;
     const srcIce = (src.data?.iceType as string) || '';
     const dstIce = (dst.data?.iceType as string) || '';
-    let domainNode: typeof src | null = null;
-    let targetNode: typeof src | null = null;
+    let domainNode: typeof src;
+    let targetNode: typeof src;
     if (srcIce === 'Network.CustomDomain') {
       domainNode = src;
       targetNode = dst;
@@ -983,7 +984,7 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
     //   2. edge.data.subdomain → legacy single-subdomain edge field
     //      (kept for back-compat with edges created before routes existed)
     //   3. blank → root domain
-    let subdomain = '';
+    let subdomain: string;
     const routeId = (edge.data as any)?.routeId as string | undefined;
     if (routeId) {
       const routes = (domainNode.data?.routes as Array<{ id: string; subdomain: string }> | undefined) || [];
@@ -1090,7 +1091,7 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
     //      (kept for back-compat with older PublicEndpoint edges
     //      created before routes existed)
     //   3. blank → root domain
-    let subdomain = '';
+    let subdomain: string;
     const routeId = (edge.data as any)?.routeId as string | undefined;
     if (routeId) {
       const routes =

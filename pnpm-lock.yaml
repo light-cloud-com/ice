@@ -707,6 +707,9 @@ importers:
       '@ice/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@ice/service-deploy':
+        specifier: workspace:*
+        version: link:../deploy
       '@ice/service-iam':
         specifier: workspace:*
         version: link:../iam

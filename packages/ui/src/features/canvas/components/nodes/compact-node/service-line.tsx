@@ -1,5 +1,4 @@
 import React, { memo } from 'react';
-import { BRAND_ICON_SIZE } from '../../../../../config/canvas-constants';
 import { FONT_MONO } from '../_shared/fonts';
 import type { BrandIcon } from '../../../../../assets/icons/brand-registry';
 

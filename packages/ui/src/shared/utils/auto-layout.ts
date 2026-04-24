@@ -11,7 +11,6 @@
  *   'grid'     — alias of 'flow' (legacy — routed through dagre)
  */
 
-import dagre from 'dagre';
 import {
   LAYOUT_NODE_SEP as NODE_SEP,
   LAYOUT_RANK_SEP as RANK_SEP,
@@ -20,8 +19,8 @@ import {
   PRIVATE_NETWORK_MIN_WIDTH as PN_MIN_WIDTH,
   PRIVATE_NETWORK_MIN_HEIGHT as PN_MIN_HEIGHT,
 } from '@ice/constants';
+import dagre from 'dagre';
 import {
-  HEADER_HEIGHT,
   CONTAINER_PADDING,
   MIN_CONTAINER_WIDTH,
   MIN_CONTAINER_HEIGHT,

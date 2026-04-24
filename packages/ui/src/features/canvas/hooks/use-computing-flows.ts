@@ -10,16 +10,16 @@
  * Max 2 render cycles per change: compute → dispatch → compute → no-op.
  */
 
+import { computeDerived, diffPatches } from '@ice/core/compute';
 import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { computeDerived, diffPatches } from '@ice/core/compute';
-import type { PropagationNode, PropagationEdge } from '@ice/core/compute';
 import {
   selectActiveCard,
   updateCardNodeData,
   updateCardEdgeData,
   deleteCardEdge,
 } from '../../../store/slices/cards-slice';
+import type { PropagationNode, PropagationEdge } from '@ice/core/compute';
 
 export function useComputingFlows() {
   const dispatch = useDispatch();

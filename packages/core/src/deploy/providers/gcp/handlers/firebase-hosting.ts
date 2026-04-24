@@ -34,7 +34,6 @@
 
 import * as crypto from 'crypto';
 import { gunzipSync, gzipSync } from 'zlib';
-
 import type { ResourceDeployResult } from '../../../types.js';
 import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
 

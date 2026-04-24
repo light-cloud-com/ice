@@ -1,5 +1,6 @@
 {
   "name": "@ice/gateway",
+  "license": "Apache-2.0",
   "version": "0.1.0",
   "description": "API Gateway - composes all services into a single Express app",
   "private": true,

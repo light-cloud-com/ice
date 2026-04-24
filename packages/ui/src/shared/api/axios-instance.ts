@@ -68,7 +68,7 @@ axiosInstance.interceptors.response.use(
     }
     // Also log the full details to the console so developers can see the
     // request body / stack immediately.
-    // eslint-disable-next-line no-console
+     
     console.error(`[api] ${enriched}`, {
       status,
       path,

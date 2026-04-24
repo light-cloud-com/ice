@@ -6,7 +6,7 @@
 
 import { createSlice } from '@reduxjs/toolkit';
 
-interface DebugState {
+export interface DebugState {
   /** Whether the debug overlay panel is visible */
   panelOpen: boolean;
   /** Last Redux action type */

@@ -28,9 +28,8 @@
  * rules from `data.ingress` / `data.egress` at deploy time.
  */
 
-import React, { useCallback, useState } from 'react';
 import { Shield, ShieldCheck, ShieldAlert } from 'lucide-react';
-
+import React, { useCallback, useState } from 'react';
 import { CATEGORY_STYLE, CORNER_RADIUS } from '../../../../../config/canvas-constants';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 

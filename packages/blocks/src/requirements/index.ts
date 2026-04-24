@@ -12,12 +12,12 @@ export { domainVerificationRequirement } from './definitions/domain-verification
 export { managedCertIssuanceRequirement } from './definitions/managed-cert-issuance';
 export { publicEndpointDomainRequirement } from './definitions/public-endpoint-domain';
 
-import type { RequirementDefinition } from './types';
-import { githubRepoAttachedRequirement } from './definitions/github-repo';
 import { dnsARecordRequirement } from './definitions/dns-a-record';
 import { domainVerificationRequirement } from './definitions/domain-verification';
+import { githubRepoAttachedRequirement } from './definitions/github-repo';
 import { managedCertIssuanceRequirement } from './definitions/managed-cert-issuance';
 import { publicEndpointDomainRequirement } from './definitions/public-endpoint-domain';
+import type { RequirementDefinition } from './types';
 
 /**
  * The set of requirements that ICE resolves by default for any block.

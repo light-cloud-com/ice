@@ -55,6 +55,7 @@ export interface IceAPI {
     getProjects: (providerId: string) => Promise<any[]>;
     import: (providerId: string, projectId: string) => Promise<any>;
     exchangeGCPCode: (code: string) => Promise<any>;
+    connectGCPOAuth: (accessToken: string, expiresIn: number) => Promise<any>;
   };
 
   templates: {

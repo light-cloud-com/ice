@@ -6,16 +6,15 @@
  * Code snippets (6 languages), and external Links.
  */
 
-import React, { useMemo, useState } from 'react';
 import {
   getInfoContent,
   SNIPPET_LANGUAGES,
   SNIPPET_LANGUAGE_LABELS,
   type InfoContent,
   type RawPrimitive,
-  type SnippetLanguage,
+  type SnippetLanguage, Provider 
 } from '@ice/blocks';
-import type { Provider } from '@ice/blocks';
+import React, { useMemo, useState } from 'react';
 import { renderMarkdown } from './markdown';
 
 type Tab = 'overview' | 'compiles' | 'snippets' | 'links';

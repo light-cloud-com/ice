@@ -46,9 +46,9 @@ export default tseslint.config(
         },
       ],
 
-      // ── Import order ──
+      // ── Import order (warn — cosmetic, auto-fixable) ──
       'import-x/order': [
-        'error',
+        'warn',
         {
           groups: [
             'builtin',

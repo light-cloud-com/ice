@@ -11,9 +11,8 @@
 
 import { AlertCircle, CheckCircle2, Clock, Loader2, Lock, RefreshCw, Unlock } from 'lucide-react';
 import React from 'react';
-
-import type { ResolvedRequirementState } from '../../../store/slices/deploy-slice';
 import { DnsRecordCard } from './dns-record-card';
+import type { ResolvedRequirementState } from '../../../store/slices/deploy-slice';
 
 interface RequirementsSectionProps {
   requirements: ResolvedRequirementState[];

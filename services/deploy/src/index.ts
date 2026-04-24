@@ -2,7 +2,7 @@ import { Router } from 'express';
 import deployRoutes from './routes/canvas-deploy.js';
 import pipelineRoutes from './routes/pipeline.js';
 import webhookRoutes from './routes/webhooks.js';
-export { startDeployWorker, queueDeployment } from './services/queue.service.js';
+export { startDeployWorker, queueDeployment, getDeployQueue } from './services/queue.service.js';
 export { startCronJobs } from './services/cron.service.js';
 export { cleanupAllTempDirs } from './services/deploy-locks.js';
 export { startRequirementPoller, stopRequirementPoller } from './services/requirement-poller.service.js';

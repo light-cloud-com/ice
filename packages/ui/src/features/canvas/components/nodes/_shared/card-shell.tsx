@@ -16,12 +16,11 @@
  * chrome duplication.
  */
 
-import type { LucideIcon } from 'lucide-react';
 import React, { useCallback, useState, type ReactNode } from 'react';
-import { CATEGORY_STYLE } from '../../../../../config/canvas-constants';
-import { CORNER_RADIUS } from '../../../../../config/canvas-constants';
+import { CATEGORY_STYLE, CORNER_RADIUS  } from '../../../../../config/canvas-constants';
 import { ConceptInfoTrigger } from '../../../../concept-info';
 import type { SvgCompactNodeProps } from '../compact-node/types';
+import type { LucideIcon } from 'lucide-react';
 
 interface CardShellProps {
   node: SvgCompactNodeProps['node'];

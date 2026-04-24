@@ -46,7 +46,7 @@ export interface ProjectFolder {
   order: number;
 }
 
-interface ProjectsState {
+export interface ProjectsState {
   projects: Project[];
   folders: ProjectFolder[];
   activeProjectId: string | null;

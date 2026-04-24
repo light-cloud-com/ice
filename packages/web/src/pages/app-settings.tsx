@@ -7,8 +7,8 @@
 import { useTranslation, LOCALES, type Locale } from '@ui/i18n';
 import axiosInstance from '@ui/shared/api/axios-instance';
 import { useThemePicker } from '@ui/shared/components/dev-accent-picker';
-import { cn } from '@ui/shared/utils/cn';
 import { useTheme } from '@ui/shared/hooks/use-theme';
+import { cn } from '@ui/shared/utils/cn';
 import {
   Brain,
   Palette,

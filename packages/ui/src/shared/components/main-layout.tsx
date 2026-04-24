@@ -9,14 +9,14 @@
  */
 
 import { FolderOpen, Blocks, PanelRight, MessageSquare, DollarSign, LayoutTemplate, ShieldCheck, Rocket } from 'lucide-react';
-import { ProjectToolbar } from './project-toolbar';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { InlineTableView } from './inline-table-view';
+import { ProjectToolbar } from './project-toolbar';
 import { StatusBar } from './status-bar';
 import { useTranslation } from '../../i18n';
-import { ResizeBar } from './ui/resize-bar';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './ui/resizable';
+import { ResizeBar } from './ui/resize-bar';
 import { SidebarPanel } from './ui/sidebar-panel';
 import { SidebarStrip } from './ui/sidebar-strip';
 import { AiChatPanel } from '../../features/ai/components/ai-chat-panel';
@@ -27,6 +27,7 @@ import { ResourcePalette } from '../../features/palette/components/resource-pale
 import { PropertiesPanel } from '../../features/properties/components/properties-panel';
 import { ValidationPanel } from '../../features/validation/components/validation-panel';
 import { createCard, importToActiveCard, setActiveCard } from '../../store/slices/cards-slice';
+import { openDeployPanel, closeDeployPanel } from '../../store/slices/deploy-slice';
 import {
   togglePalette,
   toggleBlocks,
@@ -36,7 +37,6 @@ import {
   toggleTemplates,
   toggleValidation,
 } from '../../store/slices/ui-slice';
-import { openDeployPanel, closeDeployPanel } from '../../store/slices/deploy-slice';
 import axiosInstance from '../api/axios-instance';
 import type { RootState, AppDispatch } from '../../store';
 import type { SidebarStripTab } from './ui/sidebar-strip';

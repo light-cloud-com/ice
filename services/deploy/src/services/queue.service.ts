@@ -6,7 +6,7 @@
  */
 
 import prisma from '@ice/db';
-import { Queue, Worker } from 'bullmq';
+import { Queue, Worker, type Job } from 'bullmq';
 import IORedis from 'ioredis';
 import { buildFromSource, cleanupBuild } from './build.service';
 import { applyDeployment } from './deploy.service';

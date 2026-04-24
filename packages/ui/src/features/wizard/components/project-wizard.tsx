@@ -60,7 +60,7 @@ export const ProjectWizard: React.FC = () => {
   // ── Create handler ────────────────────────────────────────────────────────
 
   const handleCreate = useCallback(async () => {
-    let project: any = null;
+    let project: any;
     try {
       // 1. Create project in backend DB
       const orgId = selectedOrg?.id;

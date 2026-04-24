@@ -12,7 +12,6 @@
  */
 
 import * as providerService from '@ice/service-credentials';
-
 import { enableGcpApi } from './deploy.service.js';
 
 const API_BASE = 'https://www.googleapis.com/siteVerification/v1';

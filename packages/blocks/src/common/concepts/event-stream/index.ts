@@ -1,7 +1,7 @@
-import { registerConceptFamily } from '../_shared/types';
-import { registerInfo } from '../_shared/info-registry';
 import { eventStreamConceptBlueprint } from './blueprint';
 import { eventStreamInfo } from './info';
+import { registerInfo } from '../_shared/info-registry';
+import { registerConceptFamily } from '../_shared/types';
 
 registerConceptFamily(eventStreamConceptBlueprint.iceType, eventStreamConceptBlueprint.visualFamily);
 registerInfo(eventStreamConceptBlueprint.iceType, eventStreamInfo);

@@ -4,16 +4,16 @@
  * Manages multiple canvas cards/tabs, each with separate nodes and edges.
  */
 
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { LAYOUT_NODE_SEP } from '@ice/constants';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import {
   CONTAINER_PADDING,
   HEADER_HEIGHT,
   MIN_CONTAINER_WIDTH,
   MIN_CONTAINER_HEIGHT,
 } from '../../config/canvas-constants';
-import { autoLayout, forceResolveOverlaps, type LayoutNode } from '../../shared/utils/auto-layout';
 import { isContainer as isContainerIceType } from '../../config/containment-rules';
+import { autoLayout, type LayoutNode } from '../../shared/utils/auto-layout';
 import type { ExpandedBlueprint } from '../../config/blocks';
 
 // =============================================================================
@@ -74,7 +74,7 @@ interface CardHistory {
 
 export interface CardsState {
   cards: Card[];
-  activeCardId: string;
+  activeCardId: string | null;
   /** Per-card undo/redo stacks keyed by card ID */
   history: Record<string, CardHistory>;
 }
@@ -1129,10 +1129,12 @@ export default cardsSlice.reducer;
 export const selectActiveCard = (state: { cards: CardsState }) =>
   state.cards.cards.find((c) => c.id === state.cards.activeCardId);
 export const selectCanUndo = (state: { cards: CardsState }) => {
+  if (!state.cards.activeCardId) return false;
   const h = state.cards.history[state.cards.activeCardId];
   return h ? h.past.length > 0 : false;
 };
 export const selectCanRedo = (state: { cards: CardsState }) => {
+  if (!state.cards.activeCardId) return false;
   const h = state.cards.history[state.cards.activeCardId];
   return h ? h.future.length > 0 : false;
 };

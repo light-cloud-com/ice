@@ -530,7 +530,7 @@ const ScalingRangeBar: React.FC<{ range: { minCost: number; currentCost: number;
 const EnvironmentComparison: React.FC<{
   environments: Environment[];
   allCards: Array<{ id: string; name: string; nodes: CardNode[] }>;
-  activeCardId: string;
+  activeCardId: string | null;
   currentCost: number;
   resourceMap: ResourceMap | null;
 }> = ({ environments, allCards, activeCardId, currentCost, resourceMap }) => {

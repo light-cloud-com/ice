@@ -7,8 +7,8 @@
 
 import { ChevronRight, Home } from 'lucide-react';
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { Link, useLocation } from 'react-router-dom';
 import { useResolvePath } from '../hooks/use-resolve-path';
 import type { RootState } from '../../store';
 

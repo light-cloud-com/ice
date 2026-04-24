@@ -5,14 +5,6 @@
  * Replaces the monolithic gcp-deployer.ts with a scalable architecture.
  */
 
-import { initialize_gcp_clients, create_rest_client } from './sdk-loader.js';
-import { GCP_DEPLOYER_MESSAGES } from '../../messages.js';
-import {
-  isApiNotEnabledError,
-  isResourceNotFoundError,
-  extractApiName,
-  buildApiEnableUrl,
-} from './messages.js';
 // Import handlers
 import { api_gateway_handler } from './handlers/api-gateway.js';
 import { backend_bucket_handler } from './handlers/backend-bucket.js';
@@ -35,7 +27,15 @@ import { managed_ssl_certificate_handler } from './handlers/managed-ssl-certific
 import { memorystore_handler } from './handlers/memorystore.js';
 import { pubsub_handler } from './handlers/pubsub.js';
 import { secret_manager_handler } from './handlers/secret-manager.js';
+import {
+  isApiNotEnabledError,
+  isResourceNotFoundError,
+  extractApiName,
+  buildApiEnableUrl,
+} from './messages.js';
+import { GCP_DEPLOYER_MESSAGES } from '../../messages.js';
 import { vertex_ai_handler } from './handlers/vertex-ai.js';
+import { initialize_gcp_clients, create_rest_client } from './sdk-loader.js';
 import type { GCPHandlerContext, GCPResourceHandler } from './types.js';
 import type { DeployOptions, ResourceDeployResult, ProviderDeployer } from '../../types.js';
 

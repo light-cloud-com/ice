@@ -17,8 +17,6 @@ import {
   Folder,
   GitBranch,
   Key,
-  User,
-  Users,
   FileText,
   List,
   Cog,
@@ -34,10 +32,6 @@ import {
   Check,
   ChevronDown,
   Shield,
-  ShieldAlert,
-  Lock,
-  Network,
-  Layers,
 } from 'lucide-react';
 import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';

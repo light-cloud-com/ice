@@ -84,7 +84,7 @@ export interface FrameworkDetection {
   detectedFiles: string[];
 }
 
-interface PipelineState {
+export interface PipelineState {
   // Per-node pipeline status (for canvas badges)
   nodeStatus: Record<string, NodePipelineStatus>;
 

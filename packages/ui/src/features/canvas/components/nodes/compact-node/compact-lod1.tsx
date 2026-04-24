@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
-import { t } from '../../../../../i18n';
 import { CARD_WIDTH, CARD_HEIGHT, CORNER_RADIUS } from '../../../../../config/canvas-constants';
+import { t } from '../../../../../i18n';
 import { ConnectionDragGlow } from '../_shared/connection-drag-glow';
 import { ConnectionPorts } from '../_shared/connection-ports';
 import type { NodePipelineStatus } from './types';

@@ -217,7 +217,7 @@ export class EmbeddedSchemaProvider implements GraphSchemaProvider {
     try {
       // Dynamically import the schemas db module.
       // Graceful fallback: if the module or export doesn't exist, the provider runs without a registry.
-      const schemas: Record<string, unknown> | null = await import('../schemas/db').catch(() => null);
+      const schemas: Record<string, unknown> | null = await import("../schemas/db/index.js").catch(() => null);
 
       if (schemas && typeof schemas.get_schema_registry === 'function') {
         const factory = schemas.get_schema_registry as (dbPath?: string) => SqliteSchemaRegistry;

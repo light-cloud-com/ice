@@ -1,7 +1,7 @@
-import { registerConceptFamily } from '../_shared/types';
-import { registerInfo } from '../_shared/info-registry';
 import { logTerminalConceptBlueprint } from './blueprint';
 import { logTerminalInfo } from './info';
+import { registerInfo } from '../_shared/info-registry';
+import { registerConceptFamily } from '../_shared/types';
 
 registerConceptFamily(logTerminalConceptBlueprint.iceType, logTerminalConceptBlueprint.visualFamily);
 registerInfo(logTerminalConceptBlueprint.iceType, logTerminalInfo);

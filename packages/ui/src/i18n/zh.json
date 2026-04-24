@@ -424,7 +424,6 @@
 
   "onboarding": {
     "nav": {
-      "stepWelcome": "欢迎",
       "stepTeam": "团队",
       "stepCloud": "云服务",
       "stepGitHub": "GitHub",
@@ -434,18 +433,6 @@
       "skip": "跳过",
       "continue": "继续",
       "createAndStart": "创建并开始"
-    },
-    "welcome": {
-      "title": "欢迎使用 ICE",
-      "titleWithName": "欢迎使用 ICE，{{name}}",
-      "subtitle": "可视化设计、部署和管理云基础设施",
-      "featureCanvas": "可视化画布",
-      "featureCanvasDesc": "将基础设施组件拖放到实时画布上",
-      "featureMultiCloud": "多云支持",
-      "featureMultiCloudDesc": "GCP、AWS 和 Azure——设计一次，随处部署",
-      "featureCiCd": "内置 CI/CD",
-      "featureCiCdDesc": "连接 GitHub，每次推送自动部署",
-      "setupHint": "此设置大约需要一分钟。您可以跳过任何步骤。"
     },
     "team": {
       "title": "设置您的团队",

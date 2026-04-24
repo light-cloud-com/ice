@@ -82,8 +82,8 @@ export async function ensureRulesForCanvas(
     const dst = nodesById.get(edge.target);
     if (!src || !dst) continue;
 
-    let repoNode: typeof src | null = null;
-    let computeNode: typeof src | null = null;
+    let repoNode: typeof src;
+    let computeNode: typeof src;
     if ((src.data?.iceType as string) === 'Source.Repository') {
       repoNode = src;
       computeNode = dst;

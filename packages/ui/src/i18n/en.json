@@ -424,7 +424,6 @@
 
   "onboarding": {
     "nav": {
-      "stepWelcome": "Welcome",
       "stepTeam": "Team",
       "stepCloud": "Cloud",
       "stepGitHub": "GitHub",
@@ -434,18 +433,6 @@
       "skip": "Skip",
       "continue": "Continue",
       "createAndStart": "Create & Start"
-    },
-    "welcome": {
-      "title": "Welcome to ICE",
-      "titleWithName": "Welcome to ICE, {{name}}",
-      "subtitle": "Design, deploy, and manage cloud infrastructure visually",
-      "featureCanvas": "Visual canvas",
-      "featureCanvasDesc": "Drag-and-drop infrastructure blocks onto a live canvas",
-      "featureMultiCloud": "Multi-cloud",
-      "featureMultiCloudDesc": "GCP, AWS, and Azure — design once, deploy anywhere",
-      "featureCiCd": "CI/CD built in",
-      "featureCiCdDesc": "Connect GitHub and deploy on every push",
-      "setupHint": "This setup takes about a minute. You can skip any step."
     },
     "team": {
       "title": "Set up your team",

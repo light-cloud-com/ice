@@ -38,14 +38,14 @@ export interface GitHubBranch {
   protected: boolean;
 }
 
-interface DeviceFlowState {
+export interface DeviceFlowState {
   userCode: string;
   verificationUri: string;
   deviceCode: string;
   interval: number;
 }
 
-interface IntegrationsState {
+export interface IntegrationsState {
   integrations: Record<string, IntegrationInfo>;
   github: {
     repos: GitHubRepo[];

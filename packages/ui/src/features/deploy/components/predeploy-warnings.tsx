@@ -6,8 +6,8 @@ import {
   acknowledgeCritical,
   dismissPreDeployWarning,
 } from '../../../store/slices/deploy-slice';
-import type { PreDeployAnalysis, PreDeployWarning } from '../utils/predeploy-analysis';
 import type { RootState, AppDispatch } from '../../../store';
+import type { PreDeployAnalysis, PreDeployWarning } from '../utils/predeploy-analysis';
 
 function SeverityIcon({ severity }: { severity: PreDeployWarning['severity'] }) {
   if (severity === 'critical') return <AlertCircle className="w-4 h-4 text-red-500" />;

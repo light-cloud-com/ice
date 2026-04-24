@@ -31,10 +31,11 @@ function useElectronTitleBar() {
 
   useEffect(() => {
     if (!isElectron) return;
-    // Listen for fullscreen/maximize events from Electron main process via preload bridge
-    const cleanup = (window as any).electronAPI?.onFullscreenChange?.((fs: boolean) => {
-      setIsFullscreen(fs);
-    });
+    const api = (window as any).electronAPI;
+    // Seed from the main process on mount — an event may have fired before
+    // this component subscribed (HMR remount, late mount, etc.).
+    api.getFullscreenState?.().then((fs: boolean) => setIsFullscreen(!!fs));
+    const cleanup = api.onFullscreenChange?.((fs: boolean) => setIsFullscreen(fs));
     return cleanup;
   }, [isElectron]);
 
@@ -64,7 +65,10 @@ export const AppBar: React.FC = memo(() => {
           data-testid="toolbar"
           className="h-11 flex items-center gap-2 px-3 border-b border-ice-border bg-ice-toolbar relative z-[9999] shrink-0 transition-[padding]"
           style={{
-            paddingLeft: showTrafficLightPad ? '78px' : undefined,
+            // macOS traffic lights sit at x=12 and span ~58px (3 dots + 2 gaps),
+            // so they end near x=70. 92px leaves a comfortable ~22px gap before
+            // the logo — matches the breathing room Apple apps use.
+            paddingLeft: showTrafficLightPad ? '92px' : undefined,
             ...(isElectron ? ({ WebkitAppRegion: 'drag' } as any) : {}),
           }}
         >

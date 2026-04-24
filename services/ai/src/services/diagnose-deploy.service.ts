@@ -71,7 +71,7 @@ interface RawResponse {
 function parseResponse(raw: string): DiagnoseDeployResponse {
   const jsonMatch = raw.match(/\{[\s\S]*\}/);
   const body = jsonMatch ? jsonMatch[0] : raw;
-  let parsed: RawResponse = {};
+  let parsed: RawResponse;
   try {
     parsed = JSON.parse(body);
   } catch {

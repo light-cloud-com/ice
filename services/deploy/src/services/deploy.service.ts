@@ -11,6 +11,7 @@ import path from 'path';
 import prisma from '@ice/db';
 import * as providerService from '@ice/service-credentials';
 import { emitDeployProgress as wireEmitDeployProgress } from '@ice/shared';
+import { recordDeployEvent } from './deploy-event-log.js';
 import {
   acquireDeployLock,
   cancelDeploy as cancelLockDeploy,
@@ -25,7 +26,13 @@ import {
   updateDeploySnapshotNode,
   type DeployProgressSnapshot,
 } from './deploy-locks.js';
-import { recordDeployEvent } from './deploy-event-log.js';
+import {
+  getExistingNameMap,
+  getResourceMap,
+  seedMappingsFromHistory,
+  upsertResourceMapping,
+  removeResourceMapping,
+} from './resource-mapping.service.js';
 import { resolveProviderAuth, cleanupProviderAuth } from '../providers/registry.js';
 
 // ── Snapshot persistence ─────────────────────────────────────────────────────
@@ -135,13 +142,6 @@ function computeDeploySummary(result: any): Record<string, number> {
   }
   return { created, updated, deleted, failed, total: resources.length };
 }
-import {
-  getExistingNameMap,
-  getResourceMap,
-  seedMappingsFromHistory,
-  upsertResourceMapping,
-  removeResourceMapping,
-} from './resource-mapping.service.js';
 
 /**
  * Creates a per-deploy temp directory with mode 0700 and writes the SA key to
@@ -1091,7 +1091,7 @@ export async function destroyAllForCard(
   try {
     releaseLock = acquireDeployLock(cardId, 'destroy').release;
   } catch (err) {
-    if (err instanceof DeployLockError) throw new Error(err.message);
+    if (err instanceof DeployLockError) throw new Error(err.message, { cause: err });
     throw err;
   }
 
@@ -1208,7 +1208,7 @@ export async function destroyAllForCard(
       onLog: (msg) => emitDeployProgress(cardId, { type: 'log', message: msg }),
     });
     const authClient: any = scopedAuth.authClient;
-    let tempCredentialsDir: string | undefined = scopedAuth.tempDir;
+    const tempCredentialsDir: string | undefined = scopedAuth.tempDir;
 
     try {
       await deployer.initialize({
@@ -1314,7 +1314,7 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
   } catch (err) {
     console.warn('[destroy] LOCK FAILED cardId=' + cardId + ' err=' + (err as any)?.message);
     if (err instanceof DeployLockError) {
-      throw new Error(err.message);
+      throw new Error(err.message, { cause: err });
     }
     throw err;
   }
@@ -1552,7 +1552,7 @@ export async function rollbackDeployment(deploymentId: string, cardId: string, o
     releaseLock = acquireDeployLock(cardId, 'rollback').release;
   } catch (err) {
     if (err instanceof DeployLockError) {
-      throw new Error(err.message);
+      throw new Error(err.message, { cause: err });
     }
     throw err;
   }

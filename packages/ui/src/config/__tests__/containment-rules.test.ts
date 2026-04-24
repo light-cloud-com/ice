@@ -53,7 +53,7 @@ describe('canContain', () => {
     it('Group.Frontend should accept frontend resources', () => {
       expect(canContain('Group.Frontend', 'Compute.Container')).toBe(true);
       expect(canContain('Group.Frontend', 'Network.CDN')).toBe(true);
-      expect(canContain('Group.Frontend', 'Block.StaticSite')).toBe(true);
+      expect(canContain('Group.Frontend', 'Compute.StaticSite')).toBe(true);
     });
 
     it('Group.Frontend should reject non-frontend resources', () => {
@@ -65,48 +65,32 @@ describe('canContain', () => {
       expect(canContain('Group.Data', 'Database.PostgreSQL')).toBe(true);
       expect(canContain('Group.Data', 'Database.MySQL')).toBe(true);
       expect(canContain('Group.Data', 'Storage.Bucket')).toBe(true);
-      expect(canContain('Group.Data', 'Block.Database')).toBe(true);
     });
 
-    it('Group.Services should accept compute blocks', () => {
-      expect(canContain('Group.Services', 'Block.ScalableBackend')).toBe(true);
-      expect(canContain('Group.Services', 'Block.Worker')).toBe(true);
+    it('Group.Services should accept compute resources', () => {
       expect(canContain('Group.Services', 'Compute.Container')).toBe(true);
+      expect(canContain('Group.Services', 'Compute.Function')).toBe(true);
+      expect(canContain('Group.Services', 'Compute.Worker')).toBe(true);
     });
 
     it('Group.Messaging should accept messaging types', () => {
       expect(canContain('Group.Messaging', 'Messaging.Queue')).toBe(true);
-      expect(canContain('Group.Messaging', 'Block.Queue')).toBe(true);
+      expect(canContain('Group.Messaging', 'Messaging.Topic')).toBe(true);
     });
   });
 
-  describe('Block containment — strict rules', () => {
-    it('Block.ScalableBackend should accept compute and database', () => {
-      expect(canContain('Block.ScalableBackend', 'Compute.Container')).toBe(true);
-      expect(canContain('Block.ScalableBackend', 'Database.PostgreSQL')).toBe(true);
-      expect(canContain('Block.ScalableBackend', 'Messaging.Queue')).toBe(true);
+  describe('Block containment — blocks are leaf nodes', () => {
+    // Block.* types are not containers in the current model — they are
+    // opaque high-level abstractions that expand into resources at deploy
+    // time, not hierarchical parents on the canvas.
+    it('Block.ScalableBackend should not accept children', () => {
+      expect(canContain('Block.ScalableBackend', 'Compute.Container')).toBe(false);
+      expect(canContain('Block.ScalableBackend', 'Database.PostgreSQL')).toBe(false);
     });
 
-    it('Block.ScalableBackend should reject unrelated types', () => {
-      expect(canContain('Block.ScalableBackend', 'Storage.Bucket')).toBe(false);
-      expect(canContain('Block.ScalableBackend', 'Security.Secret')).toBe(false);
-    });
-
-    it('Block.Database should accept only database resources', () => {
-      expect(canContain('Block.Database', 'Database.PostgreSQL')).toBe(true);
-      expect(canContain('Block.Database', 'Database.MySQL')).toBe(true);
+    it('Block.Database should not accept children', () => {
+      expect(canContain('Block.Database', 'Database.PostgreSQL')).toBe(false);
       expect(canContain('Block.Database', 'Compute.Container')).toBe(false);
-    });
-
-    it('Block.Cache should accept cache instances', () => {
-      expect(canContain('Block.Cache', 'Database.Redis')).toBe(true);
-      expect(canContain('Block.Cache', 'Database.Memcached')).toBe(true);
-    });
-
-    it('Block.Cache should reject non-Database types', () => {
-      expect(canContain('Block.Cache', 'Compute.Container')).toBe(false);
-      expect(canContain('Block.Cache', 'Storage.Bucket')).toBe(false);
-      expect(canContain('Block.Cache', 'Messaging.Queue')).toBe(false);
     });
   });
 
@@ -160,10 +144,10 @@ describe('isContainer', () => {
     expect(isContainer('Group.Custom')).toBe(true);
   });
 
-  it('should return true for block types', () => {
-    expect(isContainer('Block.ScalableBackend')).toBe(true);
-    expect(isContainer('Block.Database')).toBe(true);
-    expect(isContainer('Block.Gateway')).toBe(true);
+  it('should return false for block types (blocks are leaf nodes)', () => {
+    expect(isContainer('Block.ScalableBackend')).toBe(false);
+    expect(isContainer('Block.Database')).toBe(false);
+    expect(isContainer('Block.Gateway')).toBe(false);
   });
 
   it('should return true for network containers', () => {
@@ -197,7 +181,7 @@ describe('validatePlacement', () => {
 
   it('should allow valid child in parent', () => {
     expect(validatePlacement('Network.Subnet', 'Network.VPC')).toEqual({ valid: true });
-    expect(validatePlacement('Compute.Container', 'Block.ScalableBackend')).toEqual({ valid: true });
+    expect(validatePlacement('Compute.Container', 'Group.Services')).toEqual({ valid: true });
   });
 
   it('should reject invalid child in parent with reason', () => {
@@ -221,7 +205,6 @@ describe('getAllowedParents', () => {
   it('should return valid parents for a resource type', () => {
     const parents = getAllowedParents('Compute.Container');
     expect(parents).toContain('Network.Subnet');
-    expect(parents).toContain('Block.ScalableBackend');
     expect(parents).toContain('Group.Frontend');
     expect(parents).toContain('Group.Services');
   });
@@ -254,7 +237,6 @@ describe('getContainmentDepth', () => {
   it('should return 0 for root-level types', () => {
     expect(getContainmentDepth('Group.Custom')).toBe(0);
     expect(getContainmentDepth('Group.Frontend')).toBe(0);
-    expect(getContainmentDepth('Block.ScalableBackend')).toBe(0);
     expect(getContainmentDepth('Network.VPC')).toBe(0);
   });
 
@@ -277,10 +259,9 @@ describe('getContainerTypes', () => {
     const types = getContainerTypes();
     expect(types).toContain('Network.VPC');
     expect(types).toContain('Network.Subnet');
-    expect(types).toContain('Block.ScalableBackend');
     expect(types).toContain('Group.Frontend');
     // Group.Custom is handled specially in canContain/isContainer but has no CONTAINMENT_RULES entry
-    expect(types.length).toBeGreaterThan(10);
+    expect(types.length).toBeGreaterThan(5);
   });
 
   it('should recognize Group.Custom as container via isContainer even without explicit rules', () => {

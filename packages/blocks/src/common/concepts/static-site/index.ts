@@ -6,10 +6,10 @@
  * registered separately in @ice/ui/features/concepts/static-site.tsx.
  */
 
-import { registerConceptFamily } from '../_shared/types';
-import { registerInfo } from '../_shared/info-registry';
 import { staticSiteConceptBlueprint } from './blueprint';
 import { staticSiteInfo } from './info';
+import { registerInfo } from '../_shared/info-registry';
+import { registerConceptFamily } from '../_shared/types';
 
 registerConceptFamily(staticSiteConceptBlueprint.iceType, staticSiteConceptBlueprint.visualFamily);
 registerInfo(staticSiteConceptBlueprint.iceType, staticSiteInfo);

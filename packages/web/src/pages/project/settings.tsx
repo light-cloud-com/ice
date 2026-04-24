@@ -14,8 +14,8 @@ import { Save, Loader2, Trash2, AlertTriangle, Settings, Globe, AlertOctagon } f
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import type { RootState } from '@ui/store';
 import { ProjectEnvironments } from './environments';
+import type { RootState } from '@ui/store';
 
 const PROVIDERS = [
   {

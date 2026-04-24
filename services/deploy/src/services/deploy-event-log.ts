@@ -81,7 +81,6 @@ export async function flushDeployEvents(): Promise<void> {
         type: e.type,
         payload: e.payload,
       })),
-      skipDuplicates: true,
     });
   } catch (err: any) {
     // Don't let event-log failures break the deploy. Log and drop.

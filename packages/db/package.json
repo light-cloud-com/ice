@@ -1,7 +1,8 @@
 {
   "name": "@ice/db",
+  "license": "Apache-2.0",
   "version": "0.1.0",
-  "description": "Prisma schema, migrations, and client singleton",
+  "description": "Prisma schema (SQLite) and client singleton",
   "private": true,
   "type": "module",
   "main": "./src/index.ts",
@@ -11,10 +12,6 @@
   },
   "scripts": {
     "generate": "prisma generate --schema=prisma/schema.prisma",
-    "generate:sqlite": "prisma generate --schema=prisma/schema.sqlite.prisma",
-    "db:push:sqlite": "prisma db push --schema=prisma/schema.sqlite.prisma",
-    "migrate": "prisma migrate dev --schema=prisma/schema.prisma",
-    "migrate:deploy": "prisma migrate deploy --schema=prisma/schema.prisma",
     "db:push": "prisma db push --schema=prisma/schema.prisma",
     "seed": "tsx prisma/seed.ts",
     "postinstall": "prisma generate --schema=prisma/schema.prisma",

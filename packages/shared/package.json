@@ -1,5 +1,6 @@
 {
   "name": "@ice/shared",
+  "license": "Apache-2.0",
   "version": "0.1.0",
   "description": "Shared auth middleware, crypto, and socket helpers",
   "private": true,

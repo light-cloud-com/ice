@@ -6,11 +6,11 @@
  * Only renders when the given iceType has registered info content.
  */
 
+import { hasConceptInfo } from '@ice/blocks';
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { hasConceptInfo } from '@ice/blocks';
-import type { Provider } from '@ice/blocks';
 import { ConceptInfoModal } from './concept-info-modal';
+import type { Provider } from '@ice/blocks';
 
 interface ConceptInfoTriggerProps {
   iceType: string;

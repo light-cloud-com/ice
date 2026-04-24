@@ -1,7 +1,7 @@
 import React from 'react';
 import { GHOST_NODE_HEIGHT, GHOST_NODE_WIDTH } from './svg-ghost-node';
-import type { GhostNode } from '../../../../store/slices/ghost-slice';
 import type { CardNode } from '../../../../store/slices/cards-slice';
+import type { GhostNode } from '../../../../store/slices/ghost-slice';
 
 interface SvgGhostEdgeProps {
   ghost: GhostNode;

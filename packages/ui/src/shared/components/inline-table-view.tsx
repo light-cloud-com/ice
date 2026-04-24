@@ -11,12 +11,6 @@ import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, Filter as FilterIcon, X }
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { getServiceName } from '../../assets/icons/service-names';
-import { useTranslation } from '../../i18n';
-import { selectActiveCard, deleteCardNode } from '../../store/slices/cards-slice';
-import { setSelectedNodes } from '../../store/slices/selection-slice';
-import { toggleProperties } from '../../store/slices/ui-slice';
-import { SearchInput } from './ui/search-input';
 import {
   buildEndpoints,
   deriveStatus,
@@ -26,6 +20,12 @@ import {
   type StatusContext,
 } from './inline-table-view-helpers';
 import { InlineTableRow, type TableRowData } from './inline-table-view-row';
+import { SearchInput } from './ui/search-input';
+import { getServiceName } from '../../assets/icons/service-names';
+import { useTranslation } from '../../i18n';
+import { selectActiveCard, deleteCardNode } from '../../store/slices/cards-slice';
+import { setSelectedNodes } from '../../store/slices/selection-slice';
+import { toggleProperties } from '../../store/slices/ui-slice';
 import type { AppDispatch, RootState } from '../../store';
 import type { CardNode } from '../../store/slices/cards-slice';
 
@@ -217,14 +217,16 @@ export const InlineTableView: React.FC = () => {
   const toggleStatus = (s: RowStatus) =>
     setStatusFilter((prev) => {
       const next = new Set(prev);
-      next.has(s) ? next.delete(s) : next.add(s);
+      if (next.has(s)) next.delete(s);
+      else next.add(s);
       return next;
     });
 
   const toggleProvider = (p: string) =>
     setProviderFilter((prev) => {
       const next = new Set(prev);
-      next.has(p) ? next.delete(p) : next.add(p);
+      if (next.has(p)) next.delete(p);
+      else next.add(p);
       return next;
     });
 
@@ -250,7 +252,8 @@ export const InlineTableView: React.FC = () => {
   const toggleExpand = (id: string) =>
     setExpanded((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
 

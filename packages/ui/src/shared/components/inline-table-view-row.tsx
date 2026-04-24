@@ -17,10 +17,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import React, { useState } from 'react';
-import { getBrandIcon } from '../../assets/icons/brand-registry';
-import { t } from '../../i18n';
 import {
-  buildEndpoints,
   formatRelativeTime,
   getFamilyColor,
   getSettingsChips,
@@ -30,8 +27,9 @@ import {
   type EndpointKind,
   type RowStatus,
 } from './inline-table-view-helpers';
+import { getBrandIcon } from '../../assets/icons/brand-registry';
+import { t } from '../../i18n';
 import type { CardNode } from '../../store/slices/cards-slice';
-import type { DeployedResource } from '../../store/slices/deploy-slice';
 
 // ─── Endpoint icon ──────────────────────────────────────────────────────────
 

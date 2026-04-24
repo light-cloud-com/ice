@@ -21,9 +21,10 @@ import {
   Grid3X3,
 } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../../i18n';
+import { IceSelect } from './ui/ice-select';
 import {
   autoOrganizeCard,
   undoCardChange,
@@ -35,7 +36,6 @@ import {
   importToActiveCard,
   createCard,
 } from '../../store/slices/cards-slice';
-import { openDeployPanel } from '../../store/slices/deploy-slice';
 import { fetchEnvironments, setActiveEnvironment } from '../../store/slices/environments-slice';
 import {
   setEdgeStyle,
@@ -46,7 +46,6 @@ import {
 } from '../../store/slices/ui-slice';
 import { getApi } from '../api/api-adapter';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './ui/tooltip';
-import { IceSelect } from './ui/ice-select';
 import { cn } from '../utils/cn';
 import type { RootState, AppDispatch } from '../../store';
 

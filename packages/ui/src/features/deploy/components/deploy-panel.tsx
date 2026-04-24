@@ -22,18 +22,16 @@ import {
 import React, { useCallback, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useSelector, useDispatch } from 'react-redux';
+import { DeployDiagnosis } from './deploy-diagnosis';
+import { PreDeployWarnings } from './predeploy-warnings';
+import { RequirementsSection } from './requirements-section';
 import { useTranslation } from '../../../i18n';
 import { getApi } from '../../../shared/api/api-adapter';
 import { IceSelect } from '../../../shared/components/ui/ice-select';
 import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { cn } from '../../../shared/utils/cn';
 import { isApiNotEnabledError, extractApiName, extractApiEnableUrl } from '../../../shared/utils/gcp-errors';
-import { primaryOutput } from '../output-extractors';
-import { analyzePreDeploy } from '../utils/predeploy-analysis';
-import { DeployDiagnosis } from './deploy-diagnosis';
-import { PreDeployWarnings } from './predeploy-warnings';
-import { RequirementsSection } from './requirements-section';
-import { selectActiveCard, updateCardNodeData, clearCardDeployOverlay } from '../../../store/slices/cards-slice';
+import { selectActiveCard, clearCardDeployOverlay } from '../../../store/slices/cards-slice';
 import {
   closeDeployPanel,
   setProvider,
@@ -47,8 +45,6 @@ import {
   setPlan,
   startDeploying,
   startDestroying,
-  setDeployProgress,
-  addResourceResult,
   deploySuccess,
   deployError,
   resetDeploy,
@@ -56,10 +52,11 @@ import {
   setDeployedResources,
   startRequirementsFetch,
   setRequirements,
-  updateRequirement,
   type DeployPlan,
   type DeployStatus,
 } from '../../../store/slices/deploy-slice';
+import { primaryOutput } from '../output-extractors';
+import { analyzePreDeploy } from '../utils/predeploy-analysis';
 import type { RootState, AppDispatch } from '../../../store';
 
 // ─── Provider regions ────────────────────────────────────────────────────────
@@ -450,7 +447,7 @@ export const DeployPanel: React.FC = () => {
             }}
             onProjectChange={(v) => dispatch(setGcpProject(v))}
             onRegionChange={(v) => dispatch(setRegion(v))}
-            onEnvironmentChange={(v) => dispatch(setEnvironment(v))}
+            onEnvironmentChange={(v) => dispatch(setEnvironment(v as 'production' | 'staging' | 'development'))}
           />
 
           {/* Canvas summary */}

@@ -11,7 +11,7 @@ import { toggleProperties } from '../../../../store/slices/ui-slice';
 import type { AppDispatch } from '../../../../store';
 
 interface EdgeMenuProps {
-  menuRef: React.RefObject<HTMLDivElement | null>;
+  menuRef: React.Ref<HTMLDivElement>;
   position: { x: number; y: number };
   targetId: string;
   showProperties: boolean;

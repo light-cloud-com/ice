@@ -1,5 +1,6 @@
 {
   "name": "@ice/desktop",
+  "license": "Apache-2.0",
   "version": "0.1.0",
   "description": "ICE Desktop - Standalone Electron app for cloud infrastructure design & deployment",
   "private": true,

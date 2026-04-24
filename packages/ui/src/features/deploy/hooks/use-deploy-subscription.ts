@@ -29,7 +29,6 @@
 
 import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-
 import { getApi } from '../../../shared/api/api-adapter';
 import { updateCardNodeData } from '../../../store/slices/cards-slice';
 import {

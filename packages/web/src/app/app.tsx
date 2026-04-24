@@ -14,9 +14,8 @@
  */
 
 // Account components not needed in community (single user)
-import { useDeploySubscription } from '@ui/features/deploy/hooks/use-deploy-subscription';
-import { openDeployPanel } from '@ui/store/slices/deploy-slice';
 import { DebugOverlay } from '@ui/features/debug/components/debug-overlay';
+import { useDeploySubscription } from '@ui/features/deploy/hooks/use-deploy-subscription';
 import { OnboardingPage, OnboardingChecklist } from '@ui/features/onboarding';
 import { ProjectWizard } from '@ui/features/wizard';
 import { useTranslation, LocaleProvider } from '@ui/i18n';
@@ -28,6 +27,7 @@ import { useMenuActions } from '@ui/shared/hooks/use-menu-actions';
 import { useResolvePath } from '@ui/shared/hooks/use-resolve-path';
 import { fetchProfile } from '@ui/store/slices/account-slice';
 import { selectActiveCard } from '@ui/store/slices/cards-slice';
+import { openDeployPanel } from '@ui/store/slices/deploy-slice';
 import { initializeGraph } from '@ui/store/slices/graph-slice';
 import { setActiveProject } from '@ui/store/slices/projects-slice';
 import React, { useEffect } from 'react';

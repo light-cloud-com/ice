@@ -19,10 +19,9 @@ import {
   expandComposedTemplate,
 } from '@ui/config/templates';
 import { useTranslation } from '@ui/i18n';
-import { Badge } from '@ui/shared/components/ui/badge';
+import axiosInstance from '@ui/shared/api/axios-instance';
 import { SearchInput } from '@ui/shared/components/ui/search-input';
 import { cn } from '@ui/shared/utils/cn';
-import axiosInstance from '@ui/shared/api/axios-instance';
 import { toSlug } from '@ui/shared/utils/slug';
 import { store } from '@ui/store';
 import {
@@ -51,7 +50,7 @@ import {
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
-import type { ComposedTemplate, TemplateCategoryMeta } from '@ui/config/templates/types';
+import type { ComposedTemplate, TemplateCategoryMeta } from '@ui/config/templates';
 import type { AppDispatch, RootState } from '@ui/store';
 
 // =============================================================================
@@ -549,7 +548,7 @@ export const TemplateGalleryPage: React.FC = () => {
       const rootState = store.getState() as RootState;
       const orgId = rootState.account.selectedOrg?.id;
       const orgName = rootState.account.selectedOrg?.name;
-      let project: any = null;
+      let project: any;
 
       try {
         // 1. Create project

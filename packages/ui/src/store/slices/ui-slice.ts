@@ -22,7 +22,7 @@ interface SplitPane {
   viewport: PaneViewport; // Viewport is per-pane, not per-card
 }
 
-interface SplitViewState {
+export interface SplitViewState {
   enabled: boolean;
   direction: 'horizontal' | 'vertical'; // horizontal = side-by-side, vertical = top-bottom
   panes: SplitPane[];
@@ -32,7 +32,7 @@ interface SplitViewState {
 export type EdgeStyle = 'bezier' | 'straight' | 'rectangular';
 export type OrganizeStyle = 'vertical' | 'horizontal' | 'circular';
 
-interface UIState {
+export interface UIState {
   // Panel visibility
   showPalette: boolean;
   showBlocks: boolean;
@@ -311,6 +311,7 @@ const uiSlice = createSlice({
       state.contextMenu = {
         isOpen: false,
         position: { x: 0, y: 0 },
+        canvasPosition: { x: 0, y: 0 },
         type: null,
         targetId: null,
       };

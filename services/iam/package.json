@@ -1,5 +1,6 @@
 {
   "name": "@ice/service-iam",
+  "license": "Apache-2.0",
   "version": "0.1.0",
   "description": "IAM service - auth, oauth, profile, orgs, users, onboarding",
   "private": true,

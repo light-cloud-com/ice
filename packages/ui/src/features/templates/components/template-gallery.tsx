@@ -53,15 +53,15 @@ import {
 import { formatCostRaw } from '../../../features/cost/utils/cost-calculator';
 import { compareProviderCosts } from '../../../features/cost/utils/provider-pricing';
 import { useTranslation } from '../../../i18n';
+import axiosInstance from '../../../shared/api/axios-instance';
 import { Badge } from '../../../shared/components/ui/badge';
 import { Dialog, DialogContent } from '../../../shared/components/ui/dialog';
 import { SearchInput } from '../../../shared/components/ui/search-input';
 import { cn } from '../../../shared/utils/cn';
-import axiosInstance from '../../../shared/api/axios-instance';
 import { toSlug } from '../../../shared/utils/slug';
+import { store } from '../../../store';
 import { closeTemplateGallery } from '../../../store/slices/ui-slice';
 import type { ComposedTemplate, TemplateCategory, TemplateCategoryMeta } from '../../../config/templates';
-import { store } from '../../../store';
 import type { AppDispatch, RootState } from '../../../store';
 
 // =============================================================================
@@ -544,7 +544,7 @@ export const TemplateGalleryDialog: React.FC = () => {
       const rootState = store.getState() as RootState;
       const orgId = rootState.account.selectedOrg?.id;
       const orgName = rootState.account.selectedOrg?.name;
-      let project: any = null;
+      let project: any;
 
       try {
         // 1. Create project

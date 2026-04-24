@@ -202,7 +202,11 @@ async function handlePullRequestEvent(payload: any, _rawBody: Buffer, _signature
   // ── PR opened/synchronized → create ephemeral environment ──
   if ((action === 'opened' || action === 'synchronize') && prNumber && prBranch) {
     try {
-      const { createEnvironment, findEnvironmentByName } = await import('../services/environment.service');
+      // Dynamic cross-package import — canvas depends on deploy, so we avoid
+      // a static circular dep. Typed as any because the module is resolved at runtime.
+       
+      const mod = (await import('@ice/service-canvas' as any)) as any;
+      const { createEnvironment, findEnvironmentByName } = mod;
 
       // Find projects with pr_previews_enabled that have rules for this repo
       const rules = await prisma.deploymentRule.findMany({
@@ -277,7 +281,9 @@ async function handlePullRequestEvent(payload: any, _rawBody: Buffer, _signature
   // ── PR closed → destroy ephemeral environment ──
   if (action === 'closed' && prNumber) {
     try {
-      const { closePrEnvironment } = await import('../services/environment.service');
+       
+      const mod = (await import('@ice/service-canvas' as any)) as any;
+      const { closePrEnvironment } = mod;
       await closePrEnvironment(repo, prNumber);
     } catch (err: any) {
       console.error(`Failed to close ephemeral env for PR #${prNumber}:`, err);

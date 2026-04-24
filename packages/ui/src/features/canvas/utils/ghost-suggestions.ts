@@ -1,5 +1,5 @@
-import type { GhostNode } from '../../../store/slices/ghost-slice';
 import type { CardNode, CardEdge } from '../../../store/slices/cards-slice';
+import type { GhostNode } from '../../../store/slices/ghost-slice';
 
 /**
  * Static rules mapping a dropped block's iceType to suggested companions.

@@ -1,28 +1,33 @@
 # ICE — Integrated Cloud Environment
 
+[![CI](https://github.com/light-cloud-com/ice/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/light-cloud-com/ice/actions/workflows/ci.yml)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Node](https://img.shields.io/badge/node-%3E%3D22-brightgreen)](https://nodejs.org)
+[![Electron](https://img.shields.io/badge/Electron-desktop-47848F?logo=electron)](apps/desktop)
+
 Design cloud infrastructure visually. Deploy to GCP with one click.
 
-ICE is an open-source visual infrastructure platform. Drag blocks onto a canvas, connect them, configure properties, and deploy real cloud resources. An optional AI assistant (Claude) can modify the canvas via natural language.
+ICE is a free and open-source (Apache 2.0) visual infrastructure platform. Drag blocks onto a canvas, connect them, configure properties, and deploy real cloud resources. An optional AI assistant (Claude) can modify the canvas via natural language.
 
-Ships as a **self-hosted web app** and a **standalone Electron desktop app**.
+Ships as a **self-hosted web app** and a **standalone Electron desktop app**. A fully-managed hosted version (**ICE Cloud**) is in the works — [join the waitlist](https://light-cloud.com). Self-hosting is and will always be fully supported.
 
 ## Getting Started
 
 ```bash
-# Prerequisites: Node >= 22, pnpm >= 10, Docker
+# Prerequisites: Node >= 22, pnpm >= 10
 
 # 1. Clone and install
 git clone https://github.com/light-cloud-com/ice.git
 cd ice
 pnpm install
 
-# 2. Start infrastructure + app
+# 2. Start the app
 pnpm dev:all
 ```
 
-That's it. Open **http://localhost:5174** — no login required, you're straight on the canvas.
+That's it. Open **http://localhost:5173** — no login required, you're straight on the canvas.
 
-`dev:all` starts PostgreSQL, Redis (via Docker), the API gateway on port 5002, and the web app on port 5174.
+`dev:all` starts the API gateway on port 15173 and the web app on port 5173. Storage is a workspace-local SQLite file — no Docker, PostgreSQL, or Redis required. For a production-like setup with PostgreSQL + Redis, see [docs/getting-started.md](docs/getting-started.md).
 
 ### Desktop App (Electron)
 
@@ -38,7 +43,7 @@ Copy `.env.example` to `.env`. Only three variables are required:
 
 | Variable | Required | Description |
 |---|---|---|
-| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `DATABASE_URL` | Yes | SQLite file path (dev default) or PostgreSQL URL (prod) |
 | `JWT_SECRET` | Yes | Any random string |
 | `CREDENTIAL_ENCRYPTION_KEY` | Yes | Any 32-character string |
 | `ANTHROPIC_API_KEY` | Optional | Enables AI assistant ([get a key](https://console.anthropic.com)) |
@@ -106,9 +111,9 @@ All services support create, update, and delete with real-time progress streamin
 
 ```bash
 # Development
-pnpm dev:all            # Start everything (Docker + gateway + web)
-pnpm dev:gateway        # API gateway only (port 5002)
-pnpm dev:web            # Web app only (Vite, port 5174)
+pnpm dev:all            # Start gateway + web (SQLite, no Docker)
+pnpm dev:gateway        # API gateway only (port 15173 via dev:all env, else 5002)
+pnpm dev:web            # Web app only (Vite, port 5173)
 pnpm dev:desktop        # Electron desktop app
 
 # Build
@@ -151,21 +156,28 @@ The dashboard provides template selection (checkboxes), GCP/GitHub configuration
 
 ## Documentation
 
-See the [`docs/`](docs/) folder:
+The [`docs/`](docs/) folder has long-form guides and reference pages. Start with [docs/README.md](docs/README.md) for the full index; the short list:
 
-- [Architecture](docs/architecture.md) — system design, data flow
-- [Core Engine](docs/core-engine.md) — graph processing, deploy, importers
-- [Frontend](docs/frontend.md) — web app, state management, canvas
-- [Desktop](docs/desktop.md) — Electron architecture
-- [Database](docs/database.md) — Prisma schema
-- [AI System](docs/ai-system.md) — Claude integration
-- [Testing](docs/testing.md) — E2E tests, GCP integration tests, test dashboard
-- [Community Edition](docs/community-edition.md) — what differs from SaaS
+- [Getting Started](docs/getting-started.md) — install, first run, troubleshooting
+- [Architecture](docs/architecture.md) — system overview with diagrams
+- [Deploying to GCP](docs/deploying-to-gcp.md) — end-to-end tutorial
+- [Core Engine](docs/core-engine.md) — graph, schemas, plan/apply, importers
+- [Frontend](docs/frontend.md) — React app, SVG canvas, Redux slices
+- [Services](docs/services.md) — the six backend services
+- [Database](docs/database.md) — Prisma schema, SQLite vs Postgres
+- [Desktop](docs/desktop.md) — Electron architecture and packaging status
+- [AI Assistant](docs/ai-assistant.md) — Claude integration, streaming, tool use
+- [Blocks Reference](docs/blocks-reference.md) — the concept palette
+- [Testing](docs/testing.md) — unit, integration, E2E, GCP integration dashboard
+- [Contributing](docs/contributing.md) — dev loop, where to start reading
+- [Community Edition](docs/community-edition.md) — how self-hosted relates to ICE Cloud
+
+See also [ROADMAP.md](ROADMAP.md) for what's shipped, in progress, and planned.
 
 ## Contributing
 
-ICE is source-available. We welcome issues, feature requests, and pull requests.
+ICE is open source under Apache 2.0. Issues, feature requests, and pull requests are very welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow.
 
 ## License
 
-**ICE Source Available License v1.0** — you may view, modify, and redistribute for non-production purposes. Production use requires a commercial license, except for qualifying non-profit organisations. See [LICENSE](LICENSE).
+**[Apache License, Version 2.0](LICENSE)** — free for any use, including commercial. See [NOTICE](NOTICE) for attribution and [COMMUNITY_PLEDGE.md](COMMUNITY_PLEDGE.md) for our commitment to qualifying non-profit organisations on ICE Cloud.

@@ -1,9 +1,9 @@
 import { Sparkles, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import React, { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { serializeCanvas } from '../../ai/utils/serialize-canvas';
-import { startDiagnosis, setDiagnosis, diagnosisError, clearDiagnosis } from '../../../store/slices/deploy-slice';
 import { getAccessToken } from '../../../shared/api/axios-instance';
+import { startDiagnosis, setDiagnosis, diagnosisError, clearDiagnosis } from '../../../store/slices/deploy-slice';
+import { serializeCanvas } from '../../ai/utils/serialize-canvas';
 import type { RootState, AppDispatch } from '../../../store';
 
 const API_BASE = (import.meta as any).env?.VITE_API_URL || '/api';

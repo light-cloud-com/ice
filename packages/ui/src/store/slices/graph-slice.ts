@@ -72,7 +72,7 @@ interface SerializedGraph {
   metadata: Record<string, unknown>;
 }
 
-interface GraphState {
+export interface GraphState {
   iceGraph: SerializedGraph | null;
   nodes: CanvasNode[];
   edges: CanvasEdge[];

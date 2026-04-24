@@ -1,0 +1,75 @@
+name: Bug report
+description: Something broken, wrong, or misleading in ICE
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug. Please fill in what you can — the more we have, the faster we can reproduce and fix.
+        Security issues: please **do not** open a public issue. See [SECURITY.md](../../SECURITY.md) instead.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: A clear, concrete description of the bug. Include what you expected.
+      placeholder: |
+        I clicked Deploy on a canvas with one Static Site block and the deploy hung at "planning…" for 60s then errored.
+        I expected a plan or a useful error within a few seconds.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps. A canvas export or a short script is ideal.
+      placeholder: |
+        1. Fresh `pnpm install && pnpm dev:all`.
+        2. Drag a Static Site block to the canvas.
+        3. Click Deploy.
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: ICE version
+      description: Root `package.json` → `version`.
+      placeholder: "0.1.50"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mode
+    attributes:
+      label: How were you running ICE?
+      options:
+        - Web (pnpm dev:all)
+        - Desktop (Electron)
+        - Self-hosted server
+        - Other / not sure
+    validations:
+      required: true
+
+  - type: input
+    id: env
+    attributes:
+      label: OS and Node version
+      placeholder: "macOS 14.4, Node 22.3.0, pnpm 10.2.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / stack trace / screenshots
+      description: Paste the relevant gateway or renderer output. Redact secrets.
+      render: shell
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything else
+      description: Related issues, recent changes, workarounds you tried.

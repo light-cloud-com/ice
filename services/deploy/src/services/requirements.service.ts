@@ -11,7 +11,6 @@
  * section in the deploy panel and per-block properties panel.
  */
 
-import prisma from '@ice/db';
 import {
   BUILT_IN_REQUIREMENTS,
   type RequirementContext,
@@ -19,7 +18,7 @@ import {
   type ResolvedRequirement,
   type RequirementCheckResult,
 } from '@ice/blocks/requirements';
-
+import prisma from '@ice/db';
 import {
   checkSearchConsoleVerification,
   fetchSslCertificateStatus,

@@ -1,12 +1,12 @@
 import React, { memo } from 'react';
-import { ConceptInfoTrigger } from '../../../../concept-info';
 import { ConnectedPipelineDots } from './connected-pipeline-dots';
 import { MetadataLines } from './metadata-lines';
 import { PipelineRow } from './pipeline-row';
 import { ScalingRow } from './scaling-row';
 import { ServiceLine } from './service-line';
 import { StatusCostLine } from './status-cost-line';
-import { CARD_WIDTH, CARD_HEIGHT, CORNER_RADIUS, CARD_PX } from '../../../../../config/canvas-constants';
+import { CARD_WIDTH, CARD_HEIGHT, CORNER_RADIUS } from '../../../../../config/canvas-constants';
+import { ConceptInfoTrigger } from '../../../../concept-info';
 import { ConnectionDragGlow } from '../_shared/connection-drag-glow';
 import { ConnectionPorts } from '../_shared/connection-ports';
 import { DragOverGlow } from '../_shared/drag-over-glow';

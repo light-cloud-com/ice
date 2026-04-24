@@ -18,7 +18,7 @@ import { toggleProperties } from '../../../../store/slices/ui-slice';
 import type { AppDispatch } from '../../../../store';
 
 interface NodeMenuProps {
-  menuRef: React.RefObject<HTMLDivElement | null>;
+  menuRef: React.Ref<HTMLDivElement>;
   position: { x: number; y: number };
   targetId: string;
   activeCard: any;

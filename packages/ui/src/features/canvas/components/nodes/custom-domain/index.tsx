@@ -33,9 +33,8 @@
  * routes are added/removed.
  */
 
-import React, { useCallback, useState } from 'react';
 import { Globe, Plus, X } from 'lucide-react';
-
+import React, { useCallback, useState } from 'react';
 import { CARD_WIDTH, CATEGORY_STYLE, CORNER_RADIUS } from '../../../../../config/canvas-constants';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 

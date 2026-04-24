@@ -8,20 +8,10 @@
 
 export * from './_shared';
 
-import type { ConceptBlueprint } from './_shared/types';
 
 // Frontend / Compute (6)
-import { staticSiteConceptBlueprint } from './static-site';
-import { ssrSiteConceptBlueprint } from './ssr-site';
-import { scalableBackendConceptBlueprint } from './scalable-backend';
-import { serverlessFunctionConceptBlueprint } from './serverless-function';
-import { workerConceptBlueprint } from './worker';
-import { scheduledTaskConceptBlueprint } from './scheduled-task';
 
 // Data (6)
-import { postgresConceptBlueprint } from './postgres';
-import { mysqlConceptBlueprint } from './mysql';
-import { mongodbConceptBlueprint } from './mongodb';
 import { redisCacheConceptBlueprint } from './redis-cache';
 import { objectStorageConceptBlueprint } from './object-storage';
 import { vectorDbConceptBlueprint } from './vector-db';
@@ -48,7 +38,17 @@ import { envConfigConceptBlueprint } from './env-config';
 
 // Canvas-only viewers (2 — Group is a UI-level primitive, registered separately)
 import { logTerminalConceptBlueprint } from './log-terminal';
+import { mongodbConceptBlueprint } from './mongodb';
+import { mysqlConceptBlueprint } from './mysql';
+import { postgresConceptBlueprint } from './postgres';
 import { publicTrafficConceptBlueprint } from './public-traffic';
+import { scalableBackendConceptBlueprint } from './scalable-backend';
+import { scheduledTaskConceptBlueprint } from './scheduled-task';
+import { serverlessFunctionConceptBlueprint } from './serverless-function';
+import { ssrSiteConceptBlueprint } from './ssr-site';
+import { staticSiteConceptBlueprint } from './static-site';
+import { workerConceptBlueprint } from './worker';
+import type { ConceptBlueprint } from './_shared/types';
 
 /**
  * All Concept blueprints. 25 so far (Group is a UI-level primitive handled

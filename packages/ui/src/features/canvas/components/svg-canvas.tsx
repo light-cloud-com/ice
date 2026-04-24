@@ -13,14 +13,20 @@
 
 import React, { useRef, useEffect, useMemo, useCallback, useState, type CSSProperties } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { t } from '../../../i18n';
 // Note: Graph actions no longer used - all node operations go through cardsSlice
 // Viewport is now stored per-pane in uiSlice (for split view support)
 import { CanvasGrid } from './canvas-grid';
 import { CanvasContextMenu } from './context/canvas-context-menu';
 import { ControlsHelpModal } from './controls-help-modal';
 // ConnectionTypePopover removed — connections are fully auto-configured
-import { SvgLogNode } from './nodes/log-node';
+import { SvgGhostEdge } from './ghost/svg-ghost-edge';
+import { SvgApiGatewayNode } from './nodes/api-gateway';
+import { SvgEmailServiceNode } from './nodes/email-service';
+import { SvgEnvConfigNode } from './nodes/env-config';
+import { SvgEventStreamNode } from './nodes/event-stream';
+import { SvgPostgresNode } from './nodes/postgres';
+import { SvgScalableBackendNode } from './nodes/scalable-backend';
+import { SvgSsrSiteNode } from './nodes/ssr-site';
 import { getBlueprint, expandBlueprint } from '../../../config/blocks';
 import {
   selectActiveCard,
@@ -45,7 +51,6 @@ import {
 import { setGhosts, dismissGhost, clearGhosts, type GhostNode } from '../../../store/slices/ghost-slice';
 import { generateGhostSuggestions } from '../utils/ghost-suggestions';
 import { SvgGhostNode } from './ghost/svg-ghost-node';
-import { SvgGhostEdge } from './ghost/svg-ghost-edge';
 import {
   inferConnectionMeta,
   validateConnection,
@@ -63,30 +68,24 @@ import {
 } from './nodes/private-network';
 // ─── Concept block canvas nodes (one folder per block, individually customizable) ───
 import { SvgStaticSiteNode } from './nodes/static-site';
-import { SvgSsrSiteNode } from './nodes/ssr-site';
-import { SvgScalableBackendNode } from './nodes/scalable-backend';
 import { SvgServerlessFunctionNode } from './nodes/serverless-function';
+import { SvgVectorDbNode } from './nodes/vector-db';
 import { SvgWorkerNode } from './nodes/worker';
 import { SvgScheduledTaskNode } from './nodes/scheduled-task';
-import { SvgPostgresNode } from './nodes/postgres';
 import { SvgMysqlNode } from './nodes/mysql';
 import { SvgMongodbNode } from './nodes/mongodb';
 import { SvgRedisCacheNode } from './nodes/redis-cache';
 import { SvgObjectStorageNode } from './nodes/object-storage';
-import { SvgVectorDbNode } from './nodes/vector-db';
-import { SvgEventStreamNode } from './nodes/event-stream';
-import { SvgApiGatewayNode } from './nodes/api-gateway';
 import { SvgLlmGatewayNode } from './nodes/llm-gateway';
 import { SvgPrivateAiServiceNode } from './nodes/private-ai-service';
 import { SvgObservabilityNode } from './nodes/observability';
 import { SvgGithubRepoNode } from './nodes/github-repo';
+import { SvgLogNode } from './nodes/log-node';
 import { SvgLogTerminalNode } from './nodes/log-terminal';
-import { SvgPublicTrafficNode } from './nodes/public-traffic';
 // Bespoke-from-day-one nodes with inline editing
-import { SvgMessageQueueNode, computeMessageQueueHeight } from './nodes/message-queue';
-import { SvgSecretStoreNode, computeSecretStoreHeight } from './nodes/secret-store';
-import { SvgEnvConfigNode, computeEnvConfigHeight } from './nodes/env-config';
-import { SvgEmailServiceNode, computeEmailServiceHeight } from './nodes/email-service';
+import { SvgMessageQueueNode } from './nodes/message-queue';
+import { SvgPublicTrafficNode } from './nodes/public-traffic';
+import { SvgSecretStoreNode } from './nodes/secret-store';
 import { SelectionFrame } from './selection-frame';
 import { SvgConnectionPath, EDGE_COLORS, type ConnectionTooltipInfo } from './svg-connection-path';
 import {
@@ -102,13 +101,13 @@ import {
 } from '../../../config/canvas-constants';
 import { canContain, isContainer } from '../../../config/containment-rules';
 import { isTypeVisibleAtLevel, isEdgeVisibleAtLevel } from '../../../config/visualization-config';
+import { t } from '../../../i18n';
 import { SvgUserNode, USER_NODE_WIDTH, USER_NODE_HEIGHT, USER_NODE_ID } from '../../../shared/components/svg-user-node';
 import { useClipboard } from '../../../shared/hooks/use-clipboard';
 import { useExposedServices } from '../../../shared/hooks/use-exposed-services';
 import { useUndoRedo } from '../../../shared/hooks/use-undo-redo';
 import { calculateZIndex } from '../../../shared/utils/auto-layout';
 import { logCanvasRender, logDrop, logBlueprint } from '../../../shared/utils/debug-logger';
-import { inspectLayout, updateInspectorState, installInspector } from '../../../shared/utils/layout-inspector';
 import { receiveCardPipelineUpdate } from '../../../store/slices/pipeline-slice';
 import {
   setSelectedNodes,
@@ -120,6 +119,7 @@ import { setPaneViewport, openContextMenu } from '../../../store/slices/ui-slice
 import { useCanvasInteractions, type CanvasItem } from '../hooks/use-canvas-interactions';
 import { useCanvasValidation } from '../hooks/use-canvas-validation';
 import { useComputingFlows } from '../hooks/use-computing-flows';
+import { inspectLayout, updateInspectorState, installInspector } from '../../../shared/utils/layout-inspector';
 import type { RootState, AppDispatch } from '../../../store';
 
 // =============================================================================

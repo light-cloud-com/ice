@@ -8,8 +8,8 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import axiosInstance from '../../shared/api/axios-instance';
 
-interface OnboardingState {
-  currentStep: number; // 1-5
+export interface OnboardingState {
+  currentStep: number; // 1-3 (cloud, github, project)
   completed: boolean;
   loading: boolean;
 
@@ -129,8 +129,8 @@ const onboardingSlice = createSlice({
       .addCase(fetchOnboardingStatus.fulfilled, (state, action) => {
         state.loading = false;
         state.completed = action.payload.onboarding_completed;
-        // Cap step to max wizard steps to avoid blank screen if backend has step > 5
-        state.currentStep = Math.min(action.payload.onboarding_step, 5);
+        // Cap step to max wizard steps to avoid blank screen if backend has stale step
+        state.currentStep = Math.min(Math.max(action.payload.onboarding_step, 1), 3);
         state.defaultProvider = action.payload.default_provider;
         state.defaultRegion = action.payload.default_region;
       })

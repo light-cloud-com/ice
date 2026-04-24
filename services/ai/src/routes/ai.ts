@@ -17,8 +17,8 @@ import { rateLimit } from 'express-rate-limit';
 import { listAuditEntries, getAuditEntry } from '../services/ai-audit.service';
 import { processCanvasIntent, streamCanvasIntent, getAiProvider } from '../services/ai.service';
 import { validateCanvas } from '../services/canvas-validation.service';
-import { diagnoseDeploy } from '../services/diagnose-deploy.service';
 import { dryRunDeploy } from '../services/deploy-dryrun.service';
+import { diagnoseDeploy } from '../services/diagnose-deploy.service';
 import type { AiCanvasIntentRequest, DiagnoseDeployRequest } from '@ice/types';
 
 const router: RouterType = Router();

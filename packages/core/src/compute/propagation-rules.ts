@@ -96,7 +96,7 @@ export const PROPAGATION_RULES: PropagationRule[] = [
       if (!rootDomain || rootDomain === 'example.com') return null;
 
       const routeId = edge.data?.routeId as string | undefined;
-      let subdomain = '';
+      let subdomain: string;
       if (routeId) {
         const routes = (src.data?.routes as Array<{ id: string; subdomain: string }>) || [];
         const route = routes.find((r) => r.id === routeId);

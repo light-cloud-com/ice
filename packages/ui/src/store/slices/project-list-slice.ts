@@ -42,7 +42,7 @@ interface ScanResult {
   }>;
 }
 
-interface ProjectListState {
+export interface ProjectListState {
   folders: ProjectFolder[];
   files: ProjectFile[];
   rootDirectory: string | null;

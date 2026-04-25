@@ -83,7 +83,7 @@ function parseResponse(raw: string): DiagnoseDeployResponse {
   return {
     diagnosis: typeof parsed.diagnosis === 'string' ? parsed.diagnosis : 'No diagnosis provided.',
     suggestedFixes: Array.isArray(parsed.suggestedFixes)
-      ? (parsed.suggestedFixes.filter((x): x is string => typeof x === 'string'))
+      ? parsed.suggestedFixes.filter((x): x is string => typeof x === 'string')
       : [],
     operations: Array.isArray(parsed.operations) ? (parsed.operations as DiagnoseDeployResponse['operations']) : [],
   };

@@ -52,9 +52,7 @@ export const domainVerificationRequirement: RequirementDefinition = {
       const verified = await verifier.checkVerification(ctx.org.id, domain);
       return {
         status: verified ? 'verified' : 'unmet',
-        message: verified
-          ? `Verified for ${domain}`
-          : `Add the TXT record below at your registrar, then click Verify.`,
+        message: verified ? `Verified for ${domain}` : `Add the TXT record below at your registrar, then click Verify.`,
         lastCheckedAt: now,
       };
     } catch (err: any) {

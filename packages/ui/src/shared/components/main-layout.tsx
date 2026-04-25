@@ -8,7 +8,16 @@
  * Collapsed sidebars show a WebStorm-style narrow strip with icons + vertical text.
  */
 
-import { FolderOpen, Blocks, PanelRight, MessageSquare, DollarSign, LayoutTemplate, ShieldCheck, Rocket } from 'lucide-react';
+import {
+  FolderOpen,
+  Blocks,
+  PanelRight,
+  MessageSquare,
+  DollarSign,
+  LayoutTemplate,
+  ShieldCheck,
+  Rocket,
+} from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { InlineTableView } from './inline-table-view';
@@ -240,7 +249,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         onClick: () => dispatch(toggleTemplates()),
       },
     ],
-    [showPalette, showBlocks, showTemplates, dispatch],
+    [showPalette, showBlocks, showTemplates, dispatch, t],
   );
 
   const rightStripTabs: SidebarStripTab[] = useMemo(() => {
@@ -350,7 +359,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
               maxSize={35}
               className="bg-ice-surface ice-sidebar-shadow"
             >
-              <ResourcePalette showProjectSection={showPalette} showBlocksSection={showBlocks} showTemplatesSection={showTemplates} />
+              <ResourcePalette
+                showProjectSection={showPalette}
+                showBlocksSection={showBlocks}
+                showTemplatesSection={showTemplates}
+              />
             </SidebarPanel>
 
             <ResizablePanel defaultSize={75}>
@@ -411,7 +424,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         {/* Left sidebar with its own resize handle */}
         {showLeftPanel && (
           <DragResizePanel side="left" storageKey="ice-left-w" defaultWidth={260} minWidth={180} maxWidth={400}>
-            <ResourcePalette showProjectSection={showPalette} showBlocksSection={showBlocks} showTemplatesSection={showTemplates} />
+            <ResourcePalette
+              showProjectSection={showPalette}
+              showBlocksSection={showBlocks}
+              showTemplatesSection={showTemplates}
+            />
           </DragResizePanel>
         )}
 

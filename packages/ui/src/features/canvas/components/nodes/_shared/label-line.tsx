@@ -17,8 +17,7 @@ interface LabelLineProps {
   mono?: boolean;
 }
 
-const MONO_FONT =
-  'var(--font-mono, "JetBrains Mono Variable", ui-monospace, "SFMono-Regular", monospace)';
+const MONO_FONT = 'var(--font-mono, "JetBrains Mono Variable", ui-monospace, "SFMono-Regular", monospace)';
 
 export const LabelLine: React.FC<LabelLineProps> = ({ label, value, placeholder, mono = true }) => {
   const hasValue = !!value;

@@ -17,7 +17,7 @@
  */
 
 import React, { useCallback, useState, type ReactNode } from 'react';
-import { CATEGORY_STYLE, CORNER_RADIUS  } from '../../../../../config/canvas-constants';
+import { CATEGORY_STYLE, CORNER_RADIUS } from '../../../../../config/canvas-constants';
 import { ConceptInfoTrigger } from '../../../../concept-info';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 import type { LucideIcon } from 'lucide-react';
@@ -47,7 +47,7 @@ interface CardShellProps {
 export const CardShell: React.FC<CardShellProps> = ({
   node,
   isSelected,
-  isDragOver = false,
+  isDragOver: _isDragOver = false,
   onNodeHover,
   connectionDragState = null,
   icon: Icon,
@@ -69,21 +69,7 @@ export const CardShell: React.FC<CardShellProps> = ({
   const cat = CATEGORY_STYLE[category] || CATEGORY_STYLE.default;
   const ACCENT = accentColor || cat.glow;
 
-  const isValidTarget = connectionDragState === 'valid-target';
-  const isInvalidTarget = connectionDragState === 'invalid-target';
   const isSource = connectionDragState === 'source';
-
-  const border = isDragOver
-    ? '#22d3ee'
-    : isValidTarget
-      ? '#22c55e'
-      : isInvalidTarget
-        ? '#ef4444'
-        : isSelected
-          ? 'var(--ice-accent)'
-          : isHovered
-            ? ACCENT
-            : 'var(--ice-border)';
 
   const onEnter = useCallback(() => {
     setIsHovered(true);
@@ -166,11 +152,7 @@ export const CardShell: React.FC<CardShellProps> = ({
                 </div>
               )}
             </div>
-            <ConceptInfoTrigger
-              iceType={iceType}
-              displayName={title ?? label ?? ''}
-              opacity={isHovered ? 0.85 : 0.4}
-            />
+            <ConceptInfoTrigger iceType={iceType} displayName={title ?? label ?? ''} opacity={isHovered ? 0.85 : 0.4} />
             {headerTrailing}
           </div>
 

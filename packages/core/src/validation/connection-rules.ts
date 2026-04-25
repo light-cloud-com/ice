@@ -15,7 +15,7 @@ import type { CanvasIssue, ValidatableNode, ValidatableEdge, ValidationContext }
 export function validateConnections(
   nodes: readonly ValidatableNode[],
   edges: readonly ValidatableEdge[],
-  ctx: ValidationContext,
+  _ctx: ValidationContext,
 ): CanvasIssue[] {
   const issues: CanvasIssue[] = [];
   const nodeMap = new Map<string, ValidatableNode>();

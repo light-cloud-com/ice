@@ -234,7 +234,7 @@ export const PipelinePanel: React.FC = () => {
         setError(typeof err === 'string' ? err : err?.message || 'Failed to create pipeline rule');
       }
     },
-    [cardId, nodeId, repository, detection, rules, branches, dispatch],
+    [cardId, nodeId, repository, detection, rules, branches, dispatch, t],
   );
 
   const handleTriggerDeploy = useCallback(

@@ -5,7 +5,7 @@
  */
 
 import { infer_relationships } from './relationships.js';
-import { ComputeService, StorageService, AssetInventoryService, BaseGCPService } from "./services/index.js";
+import { ComputeService, StorageService, AssetInventoryService, BaseGCPService } from "./services";
 import { get_ice_type, get_behavior, map_properties } from './type-mapper.js';
 import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph.js';
 import type {

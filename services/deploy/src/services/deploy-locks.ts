@@ -211,10 +211,7 @@ export function updateDeploySnapshotNode(
   persist(current);
 }
 
-export function finishDeploySnapshot(
-  cardId: string,
-  status: 'success' | 'partial' | 'failed' | 'cancelled',
-): void {
+export function finishDeploySnapshot(cardId: string, status: 'success' | 'partial' | 'failed' | 'cancelled'): void {
   const current = progressSnapshots.get(cardId);
   if (!current) return;
   current.status = status;

@@ -40,7 +40,6 @@ import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
 const TYPE = 'gcp.firebase.hosting';
 const FIREBASE_HOSTING_API = 'https://firebasehosting.googleapis.com/v1beta1';
 const FIREBASE_MGMT_API = 'https://firebase.googleapis.com/v1beta1';
-const UPLOAD_API = 'https://upload-firebasehosting.googleapis.com/upload';
 
 function result(
   name: string,
@@ -78,7 +77,10 @@ function fail(
 
 /** Firebase Hosting site IDs must match `[a-z0-9-]{6,30}`. */
 function sanitizeSiteId(name: string): string {
-  let id = name.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/^-+|-+$/g, '');
+  let id = name
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, '-')
+    .replace(/^-+|-+$/g, '');
   if (id.length < 6) id = `${id}-site`.padEnd(6, '0');
   if (id.length > 30) id = id.slice(0, 30).replace(/-+$/, '');
   return id;
@@ -166,9 +168,7 @@ async function restRequest(
  * idempotent — returns 409 ALREADY_EXISTS if it's already a Firebase
  * project, which we treat as success.
  */
-async function ensureFirebaseProject(
-  ctx: GCPHandlerContext,
-): Promise<{ ok: boolean; error?: string }> {
+async function ensureFirebaseProject(ctx: GCPHandlerContext): Promise<{ ok: boolean; error?: string }> {
   const url = `${FIREBASE_MGMT_API}/projects/${ctx.project}:addFirebase`;
   const res = await restRequest(ctx, 'POST', url, {}, { acceptStatuses: [409, 400] });
   if (res.ok) return { ok: true };
@@ -212,12 +212,10 @@ async function ensureHostingSite(
   if (createRes.ok) {
     if (createRes.status === 409) {
       // Race / already exists — re-fetch.
-      const refetch = await restRequest(
-        ctx,
-        'GET',
-        `${FIREBASE_HOSTING_API}/projects/${ctx.project}/sites/${siteId}`,
-      );
-      return refetch.ok ? { ok: true, data: refetch.data } : { ok: false, error: 'Site exists but could not be fetched.' };
+      const refetch = await restRequest(ctx, 'GET', `${FIREBASE_HOSTING_API}/projects/${ctx.project}/sites/${siteId}`);
+      return refetch.ok
+        ? { ok: true, data: refetch.data }
+        : { ok: false, error: 'Site exists but could not be fetched.' };
     }
     return { ok: true, data: createRes.data };
   }
@@ -253,7 +251,10 @@ function parseTar(buf: Buffer): Array<{ name: string; data: Buffer }> {
     if (header[0] === 0) break;
 
     const nameField = header.subarray(0, 100).toString('utf8').replace(/\0+$/, '');
-    const sizeField = header.subarray(124, 136).toString('utf8').replace(/\0+| +$/g, '');
+    const sizeField = header
+      .subarray(124, 136)
+      .toString('utf8')
+      .replace(/\0+| +$/g, '');
     const typeFlag = String.fromCharCode(header[156] || 0);
     const prefixField = header.subarray(345, 500).toString('utf8').replace(/\0+$/, '');
 
@@ -443,13 +444,9 @@ async function publishVersion(
   const requiredSet = new Set(requiredHashes);
   for (const f of prepared) {
     if (!requiredSet.has(f.sha256)) continue;
-    const uploadRes = await restRequest(
-      ctx,
-      'POST',
-      `${uploadUrl}/${f.sha256}`,
-      f.gz,
-      { contentType: 'application/octet-stream' },
-    );
+    const uploadRes = await restRequest(ctx, 'POST', `${uploadUrl}/${f.sha256}`, f.gz, {
+      contentType: 'application/octet-stream',
+    });
     if (!uploadRes.ok) {
       return {
         ok: false,
@@ -657,9 +654,7 @@ async function registerHostingDomain(
   }
   return {
     ok: false,
-    error: String(
-      createRes.data?.error?.message || legacyRes.data?.error?.message || JSON.stringify(legacyRes.data),
-    ),
+    error: String(createRes.data?.error?.message || legacyRes.data?.error?.message || JSON.stringify(legacyRes.data)),
   };
 }
 
@@ -695,10 +690,7 @@ function extractDnsRecords(domainData: any): FirebaseHostingDnsRecord[] {
   // Walk a record set and emit entries with the given action.
   // `recordSet` can be a CheckResult (with `records`) or a RecordSet
   // (with `rdata` directly). We handle both shapes.
-  const walkRecords = (
-    recordSet: any,
-    action: 'add' | 'remove',
-  ): void => {
+  const walkRecords = (recordSet: any, action: 'add' | 'remove'): void => {
     const setDomain = recordSet?.domainName || fallbackDomain;
     const records = recordSet?.records || recordSet?.checkError?.records || [];
     for (const r of records) {
@@ -803,9 +795,7 @@ export const firebase_hosting_handler: GCPResourceHandler = {
       }
       const adopted = !!site.data?.name && !site.data?._created;
       ctx.on_log?.(
-        adopted
-          ? `[firebase-hosting] Adopted existing site ${siteId}`
-          : `[firebase-hosting] Created site ${siteId}`,
+        adopted ? `[firebase-hosting] Adopted existing site ${siteId}` : `[firebase-hosting] Created site ${siteId}`,
       );
 
       // Step 3: publish a version. If a Source.Repository is wired
@@ -868,7 +858,9 @@ export const firebase_hosting_handler: GCPResourceHandler = {
               ctx.on_log?.(`[firebase-hosting] ${publishWarnings[publishWarnings.length - 1]}`);
               publish = await publishPlaceholderVersion(ctx, siteId, placeholderIndexHtml(siteId));
             } else {
-              ctx.on_log?.(`[firebase-hosting] Publishing ${files.length} file(s) from ${parsed.owner}/${parsed.repo}#${branch}`);
+              ctx.on_log?.(
+                `[firebase-hosting] Publishing ${files.length} file(s) from ${parsed.owner}/${parsed.repo}#${branch}`,
+              );
               publish = await publishVersion(ctx, siteId, files);
             }
           } catch (repoErr: any) {
@@ -1025,9 +1017,7 @@ export const firebase_hosting_handler: GCPResourceHandler = {
             ctx.on_log?.(`[firebase-hosting] ${updateWarnings[updateWarnings.length - 1]}`);
           }
         } else {
-          ctx.on_log?.(
-            `[firebase-hosting:update] Could not parse repository '${repository}' — skipping re-deploy.`,
-          );
+          ctx.on_log?.(`[firebase-hosting:update] Could not parse repository '${repository}' — skipping re-deploy.`);
         }
       } else if (repository && buildCommand) {
         updateWarnings.push(
@@ -1063,9 +1053,7 @@ export const firebase_hosting_handler: GCPResourceHandler = {
       }
 
       const url =
-        customDomain && customDomain !== 'example.com'
-          ? `https://${customDomain}`
-          : `https://${siteId}.web.app`;
+        customDomain && customDomain !== 'example.com' ? `https://${customDomain}` : `https://${siteId}.web.app`;
 
       return result(name, 'update', start, {
         provider_id: provider_id || `firebase://sites/${siteId}`,

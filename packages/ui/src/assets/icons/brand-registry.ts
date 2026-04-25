@@ -179,14 +179,7 @@ reg(['couchdb', 'couchbase', 'database.couchdb'], couchdb, 'CouchDB');
 reg(['influxdb', 'database.influxdb'], influxdb, 'InfluxDB');
 reg(['supabase', 'database.supabase'], supabase, 'Supabase');
 reg(
-  [
-    'firestore',
-    'firebase',
-    'database.firestore',
-    'firebase-hosting',
-    'firebase.hosting',
-    'gcp.firebase.hosting',
-  ],
+  ['firestore', 'firebase', 'database.firestore', 'firebase-hosting', 'firebase.hosting', 'gcp.firebase.hosting'],
   firebase,
   'Firebase',
 );

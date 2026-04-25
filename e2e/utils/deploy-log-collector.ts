@@ -89,7 +89,14 @@ export class DeployLogCollector {
   private gcpProject?: string;
 
   constructor(
-    template: { id: string; name: string; category: string; difficulty?: string; estimatedCost?: string; blocks: unknown[] },
+    template: {
+      id: string;
+      name: string;
+      category: string;
+      difficulty?: string;
+      estimatedCost?: string;
+      blocks: unknown[];
+    },
     gcpProject?: string,
   ) {
     this.gcpProject = gcpProject;
@@ -160,15 +167,17 @@ export class DeployLogCollector {
 
   // ── Resource Results ───────────────────────────────────────
 
-  setResources(resources: Array<{
-    name: string;
-    type: string;
-    action: string;
-    success: boolean;
-    error?: string;
-    provider_id?: string;
-    duration_ms: number;
-  }>): void {
+  setResources(
+    resources: Array<{
+      name: string;
+      type: string;
+      action: string;
+      success: boolean;
+      error?: string;
+      provider_id?: string;
+      duration_ms: number;
+    }>,
+  ): void {
     this.record.resources = resources.map((r) => ({
       ...r,
       verified: false,

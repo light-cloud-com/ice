@@ -38,9 +38,7 @@ recovery) is typically available on larger tiers.
       { name: 'Cloud SQL Postgres Instance', type: 'google_sql_database_instance' },
       { name: 'Database', type: 'google_sql_database' },
     ],
-    azure: [
-      { name: 'Azure Database for PostgreSQL Flexible Server', type: 'azurerm_postgresql_flexible_server' },
-    ],
+    azure: [{ name: 'Azure Database for PostgreSQL Flexible Server', type: 'azurerm_postgresql_flexible_server' }],
   },
   snippets: defineSnippets({
     ts: `// node-postgres

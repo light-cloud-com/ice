@@ -237,10 +237,7 @@ function invalidateEdgeRoutesTouching(edges: CardEdge[], nodeId: string): void {
   }
 }
 
-function applyEdgeRoutes(
-  edges: CardEdge[],
-  edgeRoutes: Map<string, Array<{ x: number; y: number }>>,
-): void {
+function applyEdgeRoutes(edges: CardEdge[], edgeRoutes: Map<string, Array<{ x: number; y: number }>>): void {
   for (const edge of edges) {
     const route = edgeRoutes.get(`${edge.source}::${edge.target}`);
     if (!edge.data) edge.data = {};
@@ -252,6 +249,7 @@ function applyEdgeRoutes(
   }
 }
 
+// eslint-disable-next-line unused-imports/no-unused-vars
 function cascadeContainerReflow(nodes: CardNode[]): void {
   const containers = nodes.filter((n) => n.type === 'container');
   if (containers.length === 0) return;

@@ -6,7 +6,8 @@ export const workerConceptBlueprint: ConceptBlueprint = {
     iceType: 'Compute.Worker',
     category: 'backend',
     name: 'Worker',
-    description: 'Long-running background job processor. Pulls from a queue, does slow work (video encode, ETL, image processing).',
+    description:
+      'Long-running background job processor. Pulls from a queue, does slow work (video encode, ETL, image processing).',
     icon: 'Cog',
     providers: ['aws', 'gcp', 'azure', 'kubernetes'],
     nodeDataDefaults: {

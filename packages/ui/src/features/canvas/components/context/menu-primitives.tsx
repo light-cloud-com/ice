@@ -133,8 +133,13 @@ export const CategorySubMenu: React.FC<{
               label={cat.label}
               items={cat.items}
               isOpen={openCat === cat.label}
-              onEnter={() => { clearTimeout(closeTimer.current); setOpenCat(cat.label); }}
-              onLeave={() => { closeTimer.current = setTimeout(() => setOpenCat(null), 100); }}
+              onEnter={() => {
+                clearTimeout(closeTimer.current);
+                setOpenCat(cat.label);
+              }}
+              onLeave={() => {
+                closeTimer.current = setTimeout(() => setOpenCat(null), 100);
+              }}
             />
           ))}
         </div>

@@ -60,10 +60,7 @@ function buildIndex(nodes: PropagationNode[], edges: PropagationEdge[]): GraphIn
 /**
  * Detect orphan edges: CustomDomain edges whose routeId no longer exists.
  */
-function detectOrphanEdges(
-  edges: PropagationEdge[],
-  index: GraphIndex,
-): { edgeId: string }[] {
+function detectOrphanEdges(edges: PropagationEdge[], index: GraphIndex): { edgeId: string }[] {
   const deletions: { edgeId: string }[] = [];
 
   for (const edge of edges) {
@@ -231,9 +228,7 @@ export function diffPatches(
   const filteredNodePatches = patchSet.nodePatches.filter((patch) => {
     const node = nodeById.get(patch.nodeId);
     if (!node) return false;
-    return Object.entries(patch.data).some(
-      ([key, value]) => !deepEqual(node.data[key], value),
-    );
+    return Object.entries(patch.data).some(([key, value]) => !deepEqual(node.data[key], value));
   });
 
   const filteredEdgePatches = patchSet.edgePatches.filter((patch) => {

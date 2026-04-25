@@ -35,7 +35,10 @@ function resolveTemplates(): ComposedTemplate[] {
   const filter = process.env.ICE_TEST_TEMPLATES;
   if (!filter) return ALL_TEMPLATES;
 
-  const ids = filter.split(',').map((s) => s.trim()).filter(Boolean);
+  const ids = filter
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
   const result: ComposedTemplate[] = [];
 
   for (const id of ids) {
@@ -205,7 +208,11 @@ test.describe('GCP Template Integration Suite', () => {
       }
 
       collector.addScreenshot('deploy', await templateDeploy.screenshot(`${template.id}-05-deploy`));
-      collector.endPhase('deploy', { success: deployResult.success, error: deployResult.error, result: deployResult.result });
+      collector.endPhase('deploy', {
+        success: deployResult.success,
+        error: deployResult.error,
+        result: deployResult.result,
+      });
       progress.endPhase(template.id, 'deploy', deployResult.success, collector.record.phases.deploy.duration_ms);
 
       if (deployResult.success) {

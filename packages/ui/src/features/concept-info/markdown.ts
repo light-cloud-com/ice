@@ -17,7 +17,10 @@ const escapeHtml = (s: string): string =>
 const renderInline = (text: string): string => {
   let out = escapeHtml(text);
   // Inline code: `foo`
-  out = out.replace(/`([^`]+)`/g, '<code style="background:var(--ice-bg-raised);padding:1px 4px;border-radius:3px;font-family:ui-monospace,monospace;font-size:0.9em;">$1</code>');
+  out = out.replace(
+    /`([^`]+)`/g,
+    '<code style="background:var(--ice-bg-raised);padding:1px 4px;border-radius:3px;font-family:ui-monospace,monospace;font-size:0.9em;">$1</code>',
+  );
   // Bold: **foo**
   out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   // Italic: *foo*
@@ -107,7 +110,13 @@ export function renderMarkdown(src: string): string {
     closeList();
     const paraLines: string[] = [line];
     i++;
-    while (i < lines.length && lines[i].trim() !== '' && !/^(#{1,6})\s+/.test(lines[i]) && !/^\s*[-*]\s+/.test(lines[i]) && !lines[i].startsWith('```')) {
+    while (
+      i < lines.length &&
+      lines[i].trim() !== '' &&
+      !/^(#{1,6})\s+/.test(lines[i]) &&
+      !/^\s*[-*]\s+/.test(lines[i]) &&
+      !lines[i].startsWith('```')
+    ) {
       paraLines.push(lines[i]);
       i++;
     }

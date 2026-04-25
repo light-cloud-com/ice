@@ -84,7 +84,11 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  if (method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
+  if (method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
 
   try {
     // ── Serve Dashboard HTML ─────────────────────────────────
@@ -147,7 +151,10 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse) {
     if (method === 'POST' && path === '/api/repos/create') {
       const body = JSON.parse(await readBody(req));
       const token = body.githubToken;
-      if (!token) { json(res, { error: 'GitHub token required' }, 400); return; }
+      if (!token) {
+        json(res, { error: 'GitHub token required' }, 400);
+        return;
+      }
 
       process.env.ICE_TEST_GITHUB_TOKEN = token;
       try {
@@ -191,9 +198,18 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse) {
       const body = JSON.parse(await readBody(req));
       const { templates, project, region, saKeyPath, githubToken } = body;
 
-      if (!templates?.length) { json(res, { error: 'No templates selected' }, 400); return; }
-      if (!project) { json(res, { error: 'GCP project required' }, 400); return; }
-      if (!saKeyPath) { json(res, { error: 'SA key path required' }, 400); return; }
+      if (!templates?.length) {
+        json(res, { error: 'No templates selected' }, 400);
+        return;
+      }
+      if (!project) {
+        json(res, { error: 'GCP project required' }, 400);
+        return;
+      }
+      if (!saKeyPath) {
+        json(res, { error: 'SA key path required' }, 400);
+        return;
+      }
 
       const result = await runner.start({
         templates,
@@ -217,7 +233,7 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse) {
       res.writeHead(200, {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
+        Connection: 'keep-alive',
       });
 
       let lastOutputLen = 0;
@@ -261,7 +277,10 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse) {
     // ── API: Get Report JSON ─────────────────────────────────
     if (method === 'GET' && path === '/api/report') {
       const reportPath = runner.getLatestReportPath();
-      if (!reportPath) { json(res, { error: 'No report available' }, 404); return; }
+      if (!reportPath) {
+        json(res, { error: 'No report available' }, 404);
+        return;
+      }
       try {
         json(res, JSON.parse(readFileSync(reportPath, 'utf-8')));
       } catch {

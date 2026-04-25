@@ -281,9 +281,7 @@ const integrationsSlice = createSlice({
       .addCase(fetchGitHubRepos.rejected, (state, action) => {
         state.github.loading = false;
         state.github.reposError =
-          (action.payload as string | undefined) ||
-          action.error?.message ||
-          'Failed to load repositories.';
+          (action.payload as string | undefined) || action.error?.message || 'Failed to load repositories.';
       })
       .addCase(fetchGitHubBranches.fulfilled, (state, action) => {
         state.github.branches[action.payload.repository] = action.payload.branches;

@@ -45,10 +45,7 @@ export class TemplateTestReporter {
   private region: string;
   private startedAt: string;
 
-  constructor(
-    records: TemplateDeployRecord[],
-    config: { gcpProject: string; region: string; startedAt?: string },
-  ) {
+  constructor(records: TemplateDeployRecord[], config: { gcpProject: string; region: string; startedAt?: string }) {
     this.records = records;
     this.gcpProject = config.gcpProject;
     this.region = config.region;
@@ -155,9 +152,7 @@ ${JS}
 
   private renderHeader(report: TestRunReport): string {
     const elapsed = formatDuration(report.duration_ms);
-    const passRate = report.summary.total > 0
-      ? Math.round((report.summary.passed / report.summary.total) * 100)
-      : 0;
+    const passRate = report.summary.total > 0 ? Math.round((report.summary.passed / report.summary.total) * 100) : 0;
     return `
 <header>
   <h1>ICE GCP Template Test Report</h1>
@@ -362,7 +357,10 @@ ${JS}
 
   private renderLogs(t: TemplateDeployRecord): string {
     if (t.deployLogs.length === 0) return '';
-    const lines = t.deployLogs.slice(0, 200).map((l) => esc(l)).join('\n');
+    const lines = t.deployLogs
+      .slice(0, 200)
+      .map((l) => esc(l))
+      .join('\n');
     return `<h4>Deploy Logs</h4><pre class="log-block">${lines}</pre>`;
   }
 
@@ -385,11 +383,7 @@ function formatDuration(ms: number): string {
 }
 
 function esc(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 // ─── Inline CSS ────────────────────────────────────────────────────────────

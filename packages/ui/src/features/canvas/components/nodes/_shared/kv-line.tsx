@@ -18,8 +18,7 @@ interface KvLineProps {
   maskValue?: boolean;
 }
 
-const MONO_FONT =
-  'var(--font-mono, "JetBrains Mono Variable", ui-monospace, "SFMono-Regular", monospace)';
+const MONO_FONT = 'var(--font-mono, "JetBrains Mono Variable", ui-monospace, "SFMono-Regular", monospace)';
 
 export const KvLine: React.FC<KvLineProps> = ({ name, value, bullet = false, maskValue = false }) => (
   <div

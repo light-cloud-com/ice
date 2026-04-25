@@ -46,10 +46,7 @@ export class LiveProgress {
   private outputDir: string;
   private startTime: number;
 
-  constructor(
-    templates: Array<{ id: string; name: string; category: string }>,
-    outputDir: string,
-  ) {
+  constructor(templates: Array<{ id: string; name: string; category: string }>, outputDir: string) {
     this.outputDir = outputDir;
     this.startTime = Date.now();
     mkdirSync(outputDir, { recursive: true });
@@ -217,11 +214,7 @@ export class LiveProgress {
     const total = this.state.total;
     const errCount = this.state.errors.length;
 
-    const lines: string[] = [
-      '',
-      `  GCP Template Tests — ${done}/${total} done — ${elapsed}`,
-      '  ' + '─'.repeat(56),
-    ];
+    const lines: string[] = ['', `  GCP Template Tests — ${done}/${total} done — ${elapsed}`, '  ' + '─'.repeat(56)];
 
     for (const t of this.state.templates) {
       const icon = STATUS_ICONS[t.status];

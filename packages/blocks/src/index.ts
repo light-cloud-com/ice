@@ -14,9 +14,7 @@ export { expandBlueprint } from './expand-blueprint';
 export type { ExpandBlueprintOptions } from './expand-blueprint';
 
 // Concepts Palette (high-level, provider-agnostic)
-export {
-  CONCEPT_BLUEPRINTS,
-} from './common/concepts';
+export { CONCEPT_BLUEPRINTS } from './common/concepts';
 export type {
   ConceptBlueprint,
   VisualFamily,

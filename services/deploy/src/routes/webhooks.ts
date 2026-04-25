@@ -204,7 +204,7 @@ async function handlePullRequestEvent(payload: any, _rawBody: Buffer, _signature
     try {
       // Dynamic cross-package import — canvas depends on deploy, so we avoid
       // a static circular dep. Typed as any because the module is resolved at runtime.
-       
+
       const mod = (await import('@ice/service-canvas' as any)) as any;
       const { createEnvironment, findEnvironmentByName } = mod;
 
@@ -281,7 +281,6 @@ async function handlePullRequestEvent(payload: any, _rawBody: Buffer, _signature
   // ── PR closed → destroy ephemeral environment ──
   if (action === 'closed' && prNumber) {
     try {
-       
       const mod = (await import('@ice/service-canvas' as any)) as any;
       const { closePrEnvironment } = mod;
       await closePrEnvironment(repo, prNumber);

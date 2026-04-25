@@ -42,9 +42,7 @@ Set \`minInstances > 0\` if cold starts are unacceptable.
       { name: 'Task Definition', type: 'aws_ecs_task_definition' },
       { name: 'CloudWatch Log Group', type: 'aws_cloudwatch_log_group', optional: true },
     ],
-    gcp: [
-      { name: 'Cloud Run Service', type: 'google_cloud_run_v2_service', role: 'container runtime + HTTPS' },
-    ],
+    gcp: [{ name: 'Cloud Run Service', type: 'google_cloud_run_v2_service', role: 'container runtime + HTTPS' }],
     azure: [
       { name: 'Container App', type: 'azurerm_container_app', role: 'container runtime + HTTPS' },
       { name: 'Container App Environment', type: 'azurerm_container_app_environment' },

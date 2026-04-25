@@ -2,10 +2,7 @@ import { AlertCircle, AlertTriangle, Info, CheckSquare, Square } from 'lucide-re
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { cn } from '../../../shared/utils/cn';
-import {
-  acknowledgeCritical,
-  dismissPreDeployWarning,
-} from '../../../store/slices/deploy-slice';
+import { acknowledgeCritical, dismissPreDeployWarning } from '../../../store/slices/deploy-slice';
 import type { RootState, AppDispatch } from '../../../store';
 import type { PreDeployAnalysis, PreDeployWarning } from '../utils/predeploy-analysis';
 
@@ -42,10 +39,7 @@ export const PreDeployWarnings: React.FC<PreDeployWarningsProps> = ({ analysis }
       <div className="text-ice-xs font-semibold text-ice-text-1">Pre-deploy check</div>
 
       {[...criticals, ...warnings, ...infos].map((w) => (
-        <div
-          key={w.id}
-          className={cn('flex items-start gap-2 rounded border p-2.5', severityClasses(w.severity))}
-        >
+        <div key={w.id} className={cn('flex items-start gap-2 rounded border p-2.5', severityClasses(w.severity))}>
           <SeverityIcon severity={w.severity} />
           <div className="flex-1 min-w-0">
             <div className="text-ice-xs font-medium text-ice-text-1">{w.title}</div>
@@ -76,7 +70,8 @@ export const PreDeployWarnings: React.FC<PreDeployWarningsProps> = ({ analysis }
             )}
           </button>
           <span>
-            I understand the {criticals.length} critical issue{criticals.length === 1 ? '' : 's'} above and want to deploy anyway.
+            I understand the {criticals.length} critical issue{criticals.length === 1 ? '' : 's'} above and want to
+            deploy anyway.
           </span>
         </label>
       )}

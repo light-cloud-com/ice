@@ -32,7 +32,15 @@ export const GroupLabelRow: React.FC<GroupLabelRowProps> = memo(({ label, color,
       {label}
     </span>
     {childCount != null && childCount > 0 && (
-      <span style={{ color: 'var(--ice-text-tertiary)', fontSize: 10, fontWeight: 500, fontFamily: FONT_MONO, flexShrink: 0 }}>
+      <span
+        style={{
+          color: 'var(--ice-text-tertiary)',
+          fontSize: 10,
+          fontWeight: 500,
+          fontFamily: FONT_MONO,
+          flexShrink: 0,
+        }}
+      >
         {childCount}
       </span>
     )}

@@ -63,17 +63,19 @@ function isInsideVpc(node: CardNode, allNodes: CardNode[]): boolean {
   return false;
 }
 
-function hasEdgeTo(sourceId: string, targetPredicate: (n: CardNode) => boolean, edges: CardEdge[], allNodes: CardNode[]): boolean {
+function hasEdgeFromOrTo(
+  nodeId: string,
+  predicate: (n: CardNode) => boolean,
+  edges: CardEdge[],
+  allNodes: CardNode[],
+): boolean {
   return edges.some((e) => {
-    if (e.source !== sourceId) return false;
-    const target = allNodes.find((n) => n.id === e.target);
-    return target ? targetPredicate(target) : false;
-  });
-}
-
-function hasEdgeFromOrTo(nodeId: string, predicate: (n: CardNode) => boolean, edges: CardEdge[], allNodes: CardNode[]): boolean {
-  return edges.some((e) => {
-    const other = e.source === nodeId ? allNodes.find((n) => n.id === e.target) : e.target === nodeId ? allNodes.find((n) => n.id === e.source) : null;
+    const other =
+      e.source === nodeId
+        ? allNodes.find((n) => n.id === e.target)
+        : e.target === nodeId
+          ? allNodes.find((n) => n.id === e.source)
+          : null;
     return other ? predicate(other) : false;
   });
 }
@@ -157,7 +159,7 @@ export function analyzeSecurityWarnings(nodes: CardNode[], edges: CardEdge[]): P
       severity: 'info',
       category: 'best-practice',
       title: 'No monitoring blocks on canvas',
-      description: 'Add a Monitoring.Log block to capture service logs. Without it, you can\'t debug production issues.',
+      description: "Add a Monitoring.Log block to capture service logs. Without it, you can't debug production issues.",
       dismissible: true,
     });
   }

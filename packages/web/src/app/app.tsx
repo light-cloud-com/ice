@@ -170,7 +170,12 @@ const DynamicContent: React.FC = () => {
         )}
 
         {resolved.subpage === 'settings' && (
-          <MainLayout projectId={resolved.id!} projectName={resolved.name} basePath={projectBasePath} subpage="settings">
+          <MainLayout
+            projectId={resolved.id!}
+            projectName={resolved.name}
+            basePath={projectBasePath}
+            subpage="settings"
+          >
             <div className="h-full overflow-y-auto bg-ice-base">
               <ProjectSettings projectId={resolved.id!} />
             </div>
@@ -178,7 +183,12 @@ const DynamicContent: React.FC = () => {
         )}
 
         {resolved.subpage === 'deployments' && (
-          <MainLayout projectId={resolved.id!} projectName={resolved.name} basePath={projectBasePath} subpage="deployments">
+          <MainLayout
+            projectId={resolved.id!}
+            projectName={resolved.name}
+            basePath={projectBasePath}
+            subpage="deployments"
+          >
             <div className="h-full overflow-y-auto bg-ice-base">
               <ProjectDeployments projectId={resolved.id!} />
             </div>
@@ -186,7 +196,12 @@ const DynamicContent: React.FC = () => {
         )}
 
         {resolved.subpage === 'activity' && (
-          <MainLayout projectId={resolved.id!} projectName={resolved.name} basePath={projectBasePath} subpage="activity">
+          <MainLayout
+            projectId={resolved.id!}
+            projectName={resolved.name}
+            basePath={projectBasePath}
+            subpage="activity"
+          >
             <div className="h-full overflow-y-auto bg-ice-base">
               <ProjectActivity projectId={resolved.id!} />
             </div>

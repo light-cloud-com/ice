@@ -32,7 +32,6 @@ export const BlockSummaryCard: React.FC<BlockSummaryCardProps> = memo(
     const SH = BLOCK_SUMMARY_H;
     const bcat = CATEGORY_STYLE[category] || CATEGORY_STYLE.Block || CATEGORY_STYLE.default;
     const bBorder = isSelected || isHovered ? bcat.glow : bcat.glow + '55';
-    const truncated = (s: string, n: number) => (s.length > n ? s.slice(0, n) + '\u2026' : s);
 
     return (
       <g
@@ -42,8 +41,6 @@ export const BlockSummaryCard: React.FC<BlockSummaryCardProps> = memo(
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >
-
-
         <foreignObject x={x} y={y} width={SW} height={SH}>
           <div
             style={{

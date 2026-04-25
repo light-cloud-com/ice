@@ -123,8 +123,7 @@ export async function resolveForCard(args: ResolveArgs): Promise<ResolveResult> 
   // Runtime capabilities threaded onto the context so block-layer
   // requirement definitions can call them without backend imports.
   const googleVerifier = {
-    checkVerification: (reqOrgId: string, domain: string) =>
-      checkSearchConsoleVerification(reqOrgId, domain),
+    checkVerification: (reqOrgId: string, domain: string) => checkSearchConsoleVerification(reqOrgId, domain),
   };
   const certStatusChecker = {
     fetchStatus: (reqOrgId: string, reqProject: string, certName: string) =>
@@ -187,10 +186,7 @@ export async function resolveForCard(args: ResolveArgs): Promise<ResolveResult> 
   }
 }
 
-async function runCheck(
-  def: RequirementDefinition,
-  ctx: RequirementContext,
-): Promise<RequirementCheckResult> {
+async function runCheck(def: RequirementDefinition, ctx: RequirementContext): Promise<RequirementCheckResult> {
   try {
     return await def.check(ctx);
   } catch (err: any) {
@@ -200,9 +196,7 @@ async function runCheck(
     // into thinking e.g. DNS was permanently wrong when in fact we just
     // didn't wait long enough for propagation.
     const isAbort =
-      err?.name === 'AbortError' ||
-      ctx.signal?.aborted === true ||
-      /aborted|timeout/i.test(String(err?.message || ''));
+      err?.name === 'AbortError' || ctx.signal?.aborted === true || /aborted|timeout/i.test(String(err?.message || ''));
     if (isAbort) {
       return {
         status: 'expired',

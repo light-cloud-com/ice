@@ -241,11 +241,7 @@ export function getAllowedChildren(parentType: string): string[] {
 export function isContainer(nodeType: string): boolean {
   if (parentToChildrenMap.has(nodeType as ContainerType)) return true;
   // VPC/Subnet/PrivateNetwork are always containers
-  if (
-    nodeType === 'Network.VPC' ||
-    nodeType === 'Network.Subnet' ||
-    nodeType === 'Network.PrivateNetwork'
-  ) {
+  if (nodeType === 'Network.VPC' || nodeType === 'Network.Subnet' || nodeType === 'Network.PrivateNetwork') {
     return true;
   }
   // Groups are always containers

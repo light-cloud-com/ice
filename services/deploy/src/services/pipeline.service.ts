@@ -100,16 +100,15 @@ export async function ensureRulesForCanvas(
     // Repo data lives on the Source.Repository node OR (if the user
     // typed it directly into the compute block's properties) on the
     // compute node itself. Prefer the source node value.
-    const repository = String(
-      repoNode.data?.repository || (computeNode.data as any)?.repository || '',
-    ).trim();
+    const repository = String(repoNode.data?.repository || (computeNode.data as any)?.repository || '').trim();
     if (!repository) continue;
 
     const branch = String(repoNode.data?.branch || (computeNode.data as any)?.branch || 'main').trim() || 'main';
     const buildCommand = String(repoNode.data?.buildCommand || '').trim() || undefined;
     const installCommand = String(repoNode.data?.installCommand || '').trim() || undefined;
     const outputDir = String(repoNode.data?.outputDirectory || '').trim() || undefined;
-    const framework = String(repoNode.data?.framework || (computeNode.data as any)?.framework || '').trim() || undefined;
+    const framework =
+      String(repoNode.data?.framework || (computeNode.data as any)?.framework || '').trim() || undefined;
 
     try {
       const rule = await createRule(

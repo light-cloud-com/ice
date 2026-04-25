@@ -20,10 +20,7 @@
 import { BUILT_IN_REQUIREMENTS, type RequirementContext } from '@ice/blocks/requirements';
 import prisma from '@ice/db';
 import { emitDeployProgress } from '@ice/shared';
-import {
-  checkSearchConsoleVerification,
-  fetchSslCertificateStatus,
-} from './google-verification.service.js';
+import { checkSearchConsoleVerification, fetchSslCertificateStatus } from './google-verification.service.js';
 import { getResourceMap } from './resource-mapping.service.js';
 
 const POLL_INTERVAL_MS = 30_000;
@@ -145,7 +142,6 @@ async function checkOne(row: PollerRow): Promise<void> {
   try {
     const result = await def.check(ctx);
     const nextStatus = result.status;
-    const wasVerified = row.status === 'verified';
     const nowVerified = nextStatus === 'verified';
 
     await prisma.blockRequirementStatus.update({

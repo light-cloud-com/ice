@@ -422,8 +422,7 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
       let start: Point;
 
       if (isRowSource) {
-        const routes =
-          ((fromNode.data?.routes as Array<{ id: string; subdomain: string }> | undefined) || []);
+        const routes = (fromNode.data?.routes as Array<{ id: string; subdomain: string }> | undefined) || [];
         const rowIndex = routes.findIndex((r) => r.id === routeId);
         if (rowIndex >= 0) {
           exitSide = 'right';

@@ -122,11 +122,11 @@ describe('autoLayout — no-overlap invariants', () => {
     for (const cid of ['c1', 'c2']) {
       const c = byId.get(cid)!;
       const inside =
-        c.x >= pn.x &&
-        c.y >= pn.y &&
-        c.x + c.width <= pn.x + pn.width &&
-        c.y + c.height <= pn.y + pn.height;
-      expect(inside, `${cid} at ${JSON.stringify({ x: c.x, y: c.y, w: c.width, h: c.height })} escapes parent ${JSON.stringify({ x: pn.x, y: pn.y, w: pn.width, h: pn.height })}`).toBe(true);
+        c.x >= pn.x && c.y >= pn.y && c.x + c.width <= pn.x + pn.width && c.y + c.height <= pn.y + pn.height;
+      expect(
+        inside,
+        `${cid} at ${JSON.stringify({ x: c.x, y: c.y, w: c.width, h: c.height })} escapes parent ${JSON.stringify({ x: pn.x, y: pn.y, w: pn.width, h: pn.height })}`,
+      ).toBe(true);
     }
   });
 

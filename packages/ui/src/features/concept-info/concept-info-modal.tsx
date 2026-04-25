@@ -12,7 +12,8 @@ import {
   SNIPPET_LANGUAGE_LABELS,
   type InfoContent,
   type RawPrimitive,
-  type SnippetLanguage, Provider 
+  type SnippetLanguage,
+  Provider,
 } from '@ice/blocks';
 import React, { useMemo, useState } from 'react';
 import { renderMarkdown } from './markdown';
@@ -40,7 +41,11 @@ export const ConceptInfoModal: React.FC<ConceptInfoModalProps> = ({
 
   const allTabs: readonly { id: Tab; label: string; show: boolean }[] = [
     { id: 'overview' as const, label: 'Overview', show: true },
-    { id: 'compiles' as const, label: 'Compiles To', show: !!content.compilesTo && Object.keys(content.compilesTo).length > 0 },
+    {
+      id: 'compiles' as const,
+      label: 'Compiles To',
+      show: !!content.compilesTo && Object.keys(content.compilesTo).length > 0,
+    },
     { id: 'snippets' as const, label: 'Code', show: !!content.snippets && Object.keys(content.snippets).length > 0 },
     { id: 'links' as const, label: 'Links', show: !!content.links && content.links.length > 0 },
   ];
@@ -93,10 +98,7 @@ export const ConceptInfoModal: React.FC<ConceptInfoModalProps> = ({
           style={{ borderBottom: '1px solid var(--ice-border)' }}
         >
           <div className="flex items-center gap-3">
-            <span
-              className="text-base font-semibold"
-              style={{ color: 'var(--ice-text-primary)' }}
-            >
+            <span className="text-base font-semibold" style={{ color: 'var(--ice-text-primary)' }}>
               {displayName}
             </span>
             <span className="text-ice-sm font-mono" style={{ color: 'var(--ice-text-tertiary)' }}>
@@ -114,10 +116,7 @@ export const ConceptInfoModal: React.FC<ConceptInfoModalProps> = ({
         </div>
 
         {/* Tabs */}
-        <div
-          className="flex items-center gap-1 px-3"
-          style={{ borderBottom: '1px solid var(--ice-border)' }}
-        >
+        <div className="flex items-center gap-1 px-3" style={{ borderBottom: '1px solid var(--ice-border)' }}>
           {availableTabs.map((t) => (
             <button
               key={t.id}
@@ -162,10 +161,7 @@ const OverviewTab: React.FC<{ content: InfoContent }> = ({ content }) => (
 // Compiles To tab
 // =============================================================================
 
-const CompilesTab: React.FC<{ content: InfoContent; currentProvider?: Provider }> = ({
-  content,
-  currentProvider,
-}) => {
+const CompilesTab: React.FC<{ content: InfoContent; currentProvider?: Provider }> = ({ content, currentProvider }) => {
   const providers = Object.keys(content.compilesTo ?? {}) as Provider[];
   const [selected, setSelected] = useState<Provider>(
     currentProvider && providers.includes(currentProvider) ? currentProvider : providers[0],
@@ -252,9 +248,7 @@ const CompilesTab: React.FC<{ content: InfoContent; currentProvider?: Provider }
 // =============================================================================
 
 const SnippetsTab: React.FC<{ content: InfoContent }> = ({ content }) => {
-  const availableLangs: SnippetLanguage[] = SNIPPET_LANGUAGES.filter(
-    (l) => content.snippets && content.snippets[l],
-  );
+  const availableLangs: SnippetLanguage[] = SNIPPET_LANGUAGES.filter((l) => content.snippets && content.snippets[l]);
   const [lang, setLang] = useState<SnippetLanguage>(availableLangs[0] ?? 'ts');
 
   if (availableLangs.length === 0) {

@@ -11,11 +11,9 @@ import { LogContent } from './log-content';
 import { SAMPLE_MESSAGES, generateTimestamp } from './log-data';
 import { LogHeader } from './log-header';
 import { CORNER_RADIUS } from '../../../../../config/canvas-constants';
-import { useReducedMotion } from '../../../../../shared/hooks/use-reduced-motion';
 import type { SvgLogNodeProps, LogEntry } from './types';
 
 export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, onToggleFold }) => {
-  const reducedMotion = useReducedMotion();
   const { x, y, width, height, data, label } = node;
   const [isHovered, setIsHovered] = useState(false);
   const [folded, setFolded] = useState(false);
@@ -190,7 +188,9 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, o
           )}
 
           {folded && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '0 8px', flex: 1 }}>
+            <div
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '0 8px', flex: 1 }}
+            >
               <FoldedBadge logCount={logs.length} />
             </div>
           )}

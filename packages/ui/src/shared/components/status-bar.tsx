@@ -110,7 +110,10 @@ export const StatusBar: React.FC = () => {
           <StatusDivider />
           <div className="flex items-center gap-1 text-ice-green">
             <DollarSign className="w-3 h-3" />
-            <span>~${Math.round(totalCost)}{t('statusBar.moEst')}</span>
+            <span>
+              ~${Math.round(totalCost)}
+              {t('statusBar.moEst')}
+            </span>
           </div>
         </>
       )}
@@ -125,7 +128,8 @@ export const StatusBar: React.FC = () => {
             <span>
               {selectedNodes.length > 0 && t('statusBar.selectedCount', { count: selectedNodes.length })}
               {selectedNodes.length > 0 && selectedEdges.length > 0 && ', '}
-              {selectedEdges.length > 0 && `${selectedEdges.length} ${selectedEdges.length !== 1 ? t('statusBar.edges') : t('statusBar.edge')}`}
+              {selectedEdges.length > 0 &&
+                `${selectedEdges.length} ${selectedEdges.length !== 1 ? t('statusBar.edges') : t('statusBar.edge')}`}
             </span>
           </div>
           <StatusDivider />
@@ -174,9 +178,12 @@ export const StatusBar: React.FC = () => {
         <>
           <div className="flex items-center gap-3 text-ice-text-3">
             <span>
-              {t('statusBar.ram')}: {systemStats.ram >= 1024 ? `${(systemStats.ram / 1024).toFixed(1)}GB` : `${systemStats.ram}MB`}
+              {t('statusBar.ram')}:{' '}
+              {systemStats.ram >= 1024 ? `${(systemStats.ram / 1024).toFixed(1)}GB` : `${systemStats.ram}MB`}
             </span>
-            <span>{t('statusBar.cpu')}: {systemStats.cpu}%</span>
+            <span>
+              {t('statusBar.cpu')}: {systemStats.cpu}%
+            </span>
           </div>
           <StatusDivider />
         </>

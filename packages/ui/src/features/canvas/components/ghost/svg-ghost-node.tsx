@@ -32,13 +32,7 @@ export const SvgGhostNode: React.FC<SvgGhostNodeProps> = ({ ghost, onAccept, onD
         strokeDasharray="6 3"
       />
 
-      <text
-        x={14}
-        y={22}
-        fill="var(--ice-text-2, #d1d5db)"
-        fontSize={12}
-        fontWeight={500}
-      >
+      <text x={14} y={22} fill="var(--ice-text-2, #d1d5db)" fontSize={12} fontWeight={500}>
         {label}
       </text>
 

@@ -8,45 +8,34 @@
 
 export * from './_shared';
 
-
-// Frontend / Compute (6)
-
-// Data (6)
-import { redisCacheConceptBlueprint } from './redis-cache';
-import { objectStorageConceptBlueprint } from './object-storage';
-import { vectorDbConceptBlueprint } from './vector-db';
-
-// Messaging (3)
-import { messageQueueConceptBlueprint } from './message-queue';
-import { eventStreamConceptBlueprint } from './event-stream';
-import { emailServiceConceptBlueprint } from './email-service';
-
-// Edge / Network (3)
+// Frontend / Compute (6) · Data (6) · Messaging (3) · Edge / Network (3) ·
+// AI (2) · Ops (4) · Canvas-only viewers (2 — Group is a UI-level primitive,
+// registered separately).
 import { apiGatewayConceptBlueprint } from './api-gateway';
 import { customDomainConceptBlueprint } from './custom-domain';
-import { privateNetworkConceptBlueprint } from './private-network';
-
-// AI (2)
-import { llmGatewayConceptBlueprint } from './llm-gateway';
-import { privateAiServiceConceptBlueprint } from './private-ai-service';
-
-// Ops (4)
-import { observabilityConceptBlueprint } from './observability';
-import { secretStoreConceptBlueprint } from './secret-store';
-import { githubRepoConceptBlueprint } from './github-repo';
+import { emailServiceConceptBlueprint } from './email-service';
 import { envConfigConceptBlueprint } from './env-config';
-
-// Canvas-only viewers (2 — Group is a UI-level primitive, registered separately)
+import { eventStreamConceptBlueprint } from './event-stream';
+import { githubRepoConceptBlueprint } from './github-repo';
+import { llmGatewayConceptBlueprint } from './llm-gateway';
 import { logTerminalConceptBlueprint } from './log-terminal';
+import { messageQueueConceptBlueprint } from './message-queue';
 import { mongodbConceptBlueprint } from './mongodb';
 import { mysqlConceptBlueprint } from './mysql';
+import { objectStorageConceptBlueprint } from './object-storage';
+import { observabilityConceptBlueprint } from './observability';
 import { postgresConceptBlueprint } from './postgres';
+import { privateAiServiceConceptBlueprint } from './private-ai-service';
+import { privateNetworkConceptBlueprint } from './private-network';
 import { publicTrafficConceptBlueprint } from './public-traffic';
+import { redisCacheConceptBlueprint } from './redis-cache';
 import { scalableBackendConceptBlueprint } from './scalable-backend';
 import { scheduledTaskConceptBlueprint } from './scheduled-task';
+import { secretStoreConceptBlueprint } from './secret-store';
 import { serverlessFunctionConceptBlueprint } from './serverless-function';
 import { ssrSiteConceptBlueprint } from './ssr-site';
 import { staticSiteConceptBlueprint } from './static-site';
+import { vectorDbConceptBlueprint } from './vector-db';
 import { workerConceptBlueprint } from './worker';
 import type { ConceptBlueprint } from './_shared/types';
 

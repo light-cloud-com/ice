@@ -25,12 +25,7 @@ import {
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import {
-  ALL_TEMPLATES,
-  TEMPLATE_CATEGORIES,
-  getFeaturedTemplates,
-  searchTemplates,
-} from '../../../config/templates';
+import { ALL_TEMPLATES, TEMPLATE_CATEGORIES, getFeaturedTemplates, searchTemplates } from '../../../config/templates';
 import { useTranslation } from '../../../i18n';
 import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { cn } from '../../../shared/utils/cn';
@@ -74,10 +69,7 @@ export const TemplateCategoriesPanel: React.FC<TemplateCategoriesPanelProps> = (
 
   // Filter by search
   const isSearching = search.trim().length > 0;
-  const searchResults = useMemo(
-    () => (isSearching ? searchTemplates(search) : []),
-    [search, isSearching],
-  );
+  const searchResults = useMemo(() => (isSearching ? searchTemplates(search) : []), [search, isSearching]);
 
   const filteredCategories = useMemo(() => {
     if (!isSearching) return TEMPLATE_CATEGORIES;
@@ -132,7 +124,9 @@ export const TemplateCategoriesPanel: React.FC<TemplateCategoriesPanelProps> = (
               </div>
               <div className="min-w-0 flex-1">
                 <span className="text-sm font-semibold text-ice-text-1">{t('templates.gallery.allCategories')}</span>
-                <span className="text-ice-xs text-ice-text-3 block">{t('templates.gallery.templateCount', { count: ALL_TEMPLATES.length })}</span>
+                <span className="text-ice-xs text-ice-text-3 block">
+                  {t('templates.gallery.templateCount', { count: ALL_TEMPLATES.length })}
+                </span>
               </div>
               <ArrowUpRight className="w-4 h-4 text-ice-accent shrink-0" />
             </button>
@@ -142,7 +136,9 @@ export const TemplateCategoriesPanel: React.FC<TemplateCategoriesPanelProps> = (
         {/* Category list */}
         {filteredCategories.length > 0 && (
           <div className="px-3 pb-3">
-            <div className="text-ice-2xs font-medium text-ice-text-3 uppercase tracking-wider px-1 mb-2">{t('table.category')}</div>
+            <div className="text-ice-2xs font-medium text-ice-text-3 uppercase tracking-wider px-1 mb-2">
+              {t('table.category')}
+            </div>
             <div className="space-y-0.5">
               {filteredCategories.map((cat) => {
                 const CatIcon = ICON_MAP[cat.icon] || Zap;
@@ -168,8 +164,12 @@ export const TemplateCategoriesPanel: React.FC<TemplateCategoriesPanelProps> = (
                       <CatIcon className="h-3.5 w-3.5" style={{ color: cat.color }} />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <span className="text-xs font-medium text-ice-text-1">{t(`templates.categories.${cat.id}.label`)}</span>
-                      <span className="text-ice-2xs text-ice-text-3 block">{t(`templates.categories.${cat.id}.description`)}</span>
+                      <span className="text-xs font-medium text-ice-text-1">
+                        {t(`templates.categories.${cat.id}.label`)}
+                      </span>
+                      <span className="text-ice-2xs text-ice-text-3 block">
+                        {t(`templates.categories.${cat.id}.description`)}
+                      </span>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                       {count > 0 ? (
@@ -205,7 +205,9 @@ export const TemplateCategoriesPanel: React.FC<TemplateCategoriesPanelProps> = (
                     className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-left hover:bg-ice-hover transition-colors"
                   >
                     <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: catMeta?.color || '#3b82f6' }} />
-                    <span className="text-ice-xs font-medium text-ice-text-1 truncate flex-1">{t(`templates.items.${tpl.id}.name`)}</span>
+                    <span className="text-ice-xs font-medium text-ice-text-1 truncate flex-1">
+                      {t(`templates.items.${tpl.id}.name`)}
+                    </span>
                     <span className="text-ice-2xs text-ice-text-3 shrink-0">{tpl.estimatedCost}</span>
                   </button>
                 );

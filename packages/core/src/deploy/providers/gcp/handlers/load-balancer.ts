@@ -64,12 +64,14 @@ export const load_balancer_handler: GCPResourceHandler = {
     const redirectHttp = properties.redirect_http !== false && wantsHttps;
     const customDomain = (properties.domain as string | undefined) || '';
     const hostRules =
-      (properties.host_rules as Array<{
-        host: string;
-        backendName: string;
-        backendType: 'bucket' | 'service';
-        sourceServiceName?: string;
-      }> | undefined) || [];
+      (properties.host_rules as
+        | Array<{
+            host: string;
+            backendName: string;
+            backendType: 'bucket' | 'service';
+            sourceServiceName?: string;
+          }>
+        | undefined) || [];
 
     const TOTAL_STEPS = redirectHttp ? 6 : 4;
     const reportStep = (index: number, label: string) => {
@@ -88,9 +90,7 @@ export const load_balancer_handler: GCPResourceHandler = {
     // real traffic arrives, which makes "deploy succeeded" a lie.
     const verifyBackendBucketExists = async (bucketName: string): Promise<string | null> => {
       try {
-        await ctx.rest_client.get(
-          `${BASE_URL}/projects/${ctx.project}/global/backendBuckets/${bucketName}`,
-        );
+        await ctx.rest_client.get(`${BASE_URL}/projects/${ctx.project}/global/backendBuckets/${bucketName}`);
         return null;
       } catch (err: any) {
         const msg = err instanceof Error ? err.message : String(err);
@@ -159,21 +159,18 @@ export const load_balancer_handler: GCPResourceHandler = {
         reportStep(1, `Creating backend service ${rule.backendName}`);
         await ignoreConflict(
           (async () => {
-            const bsOp = (await ctx.rest_client.post(
-              `${BASE_URL}/projects/${ctx.project}/global/backendServices`,
-              {
-                name: rule.backendName,
-                loadBalancingScheme: 'EXTERNAL_MANAGED',
-                protocol: 'HTTPS',
-                timeoutSec: properties.timeout_sec || 30,
-                backends: [
-                  {
-                    group: `projects/${ctx.project}/regions/${ctx.region}/networkEndpointGroups/${negName}`,
-                  },
-                ],
-                labels: properties.labels || {},
-              },
-            )) as any;
+            const bsOp = (await ctx.rest_client.post(`${BASE_URL}/projects/${ctx.project}/global/backendServices`, {
+              name: rule.backendName,
+              loadBalancingScheme: 'EXTERNAL_MANAGED',
+              protocol: 'HTTPS',
+              timeoutSec: properties.timeout_sec || 30,
+              backends: [
+                {
+                  group: `projects/${ctx.project}/regions/${ctx.region}/networkEndpointGroups/${negName}`,
+                },
+              ],
+              labels: properties.labels || {},
+            })) as any;
             if (bsOp?.name) await wait_for_compute_op(ctx, bsOp.name);
           })(),
         );
@@ -219,16 +216,13 @@ export const load_balancer_handler: GCPResourceHandler = {
       } else {
         reportStep(1, 'Creating backend service');
         backendServiceName = `${name}-backend`;
-        const backendOp = (await ctx.rest_client.post(
-          `${BASE_URL}/projects/${ctx.project}/global/backendServices`,
-          {
-            name: backendServiceName,
-            loadBalancingScheme: properties.scheme || 'EXTERNAL',
-            protocol: properties.backend_protocol || 'HTTP',
-            timeoutSec: properties.timeout_sec || 30,
-            labels: properties.labels || {},
-          },
-        )) as any;
+        const backendOp = (await ctx.rest_client.post(`${BASE_URL}/projects/${ctx.project}/global/backendServices`, {
+          name: backendServiceName,
+          loadBalancingScheme: properties.scheme || 'EXTERNAL',
+          protocol: properties.backend_protocol || 'HTTP',
+          timeoutSec: properties.timeout_sec || 30,
+          labels: properties.labels || {},
+        })) as any;
         if (backendOp?.name) await wait_for_compute_op(ctx, backendOp.name);
         defaultServiceRef = `projects/${ctx.project}/global/backendServices/${backendServiceName}`;
       }
@@ -295,9 +289,7 @@ export const load_balancer_handler: GCPResourceHandler = {
         urlMap: `projects/${ctx.project}/global/urlMaps/${urlMapName}`,
       };
       if (wantsHttps) {
-        proxyBody.sslCertificates = [
-          `projects/${ctx.project}/global/sslCertificates/${sslCertificateName}`,
-        ];
+        proxyBody.sslCertificates = [`projects/${ctx.project}/global/sslCertificates/${sslCertificateName}`];
       }
       const proxyOp = (await ctx.rest_client.post(
         `${BASE_URL}/projects/${ctx.project}/global/${proxyEndpoint}`,
@@ -325,17 +317,14 @@ export const load_balancer_handler: GCPResourceHandler = {
       if (redirectHttp) {
         reportStep(5, 'Creating HTTP → HTTPS redirect');
         const redirectUrlMapName = `${name}-redirect-urlmap`;
-        const redirectUrlMapOp = (await ctx.rest_client.post(
-          `${BASE_URL}/projects/${ctx.project}/global/urlMaps`,
-          {
-            name: redirectUrlMapName,
-            defaultUrlRedirect: {
-              httpsRedirect: true,
-              redirectResponseCode: 'MOVED_PERMANENTLY_DEFAULT',
-              stripQuery: false,
-            },
+        const redirectUrlMapOp = (await ctx.rest_client.post(`${BASE_URL}/projects/${ctx.project}/global/urlMaps`, {
+          name: redirectUrlMapName,
+          defaultUrlRedirect: {
+            httpsRedirect: true,
+            redirectResponseCode: 'MOVED_PERMANENTLY_DEFAULT',
+            stripQuery: false,
           },
-        )) as any;
+        })) as any;
         if (redirectUrlMapOp?.name) await wait_for_compute_op(ctx, redirectUrlMapOp.name);
 
         const redirectProxyName = `${name}-redirect-proxy`;
@@ -350,17 +339,14 @@ export const load_balancer_handler: GCPResourceHandler = {
 
         reportStep(6, 'Creating HTTP forwarding rule');
         redirectForwardingRuleName = `${name}-http`;
-        const redirectFrOp = (await ctx.rest_client.post(
-          `${BASE_URL}/projects/${ctx.project}/global/forwardingRules`,
-          {
-            name: redirectForwardingRuleName,
-            loadBalancingScheme: properties.scheme || 'EXTERNAL',
-            portRange: '80',
-            IPProtocol: 'TCP',
-            target: `projects/${ctx.project}/global/targetHttpProxies/${redirectProxyName}`,
-            labels: properties.labels || {},
-          },
-        )) as any;
+        const redirectFrOp = (await ctx.rest_client.post(`${BASE_URL}/projects/${ctx.project}/global/forwardingRules`, {
+          name: redirectForwardingRuleName,
+          loadBalancingScheme: properties.scheme || 'EXTERNAL',
+          portRange: '80',
+          IPProtocol: 'TCP',
+          target: `projects/${ctx.project}/global/targetHttpProxies/${redirectProxyName}`,
+          labels: properties.labels || {},
+        })) as any;
         if (redirectFrOp?.name) await wait_for_compute_op(ctx, redirectFrOp.name);
       }
 
@@ -415,9 +401,7 @@ export const load_balancer_handler: GCPResourceHandler = {
       // overlay propagation on the backend and the canvas block pill on
       // the frontend can show the right per-subdomain URL instead of
       // only the root domain.
-      const routedHosts = hostRules
-        .map((r) => r.host)
-        .filter((h, i, arr) => h && arr.indexOf(h) === i);
+      const routedHosts = hostRules.map((r) => r.host).filter((h, i, arr) => h && arr.indexOf(h) === i);
 
       return result(name, 'create', start, {
         provider_id: `projects/${ctx.project}/global/forwardingRules/${name}`,

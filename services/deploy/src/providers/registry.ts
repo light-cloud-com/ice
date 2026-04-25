@@ -20,21 +20,17 @@ export const CREDENTIAL_RESOLVERS: Record<string, CredentialResolver> = {
  * "Provider 'azure' not supported yet" instead of a cryptic undefined
  * method error deep in the deploy engine.
  */
-export async function resolveProviderAuth(
-  provider: string,
-  options: ResolveAuthOptions,
-): Promise<ScopedDeployAuth> {
+export async function resolveProviderAuth(provider: string, options: ResolveAuthOptions): Promise<ScopedDeployAuth> {
   const resolver = CREDENTIAL_RESOLVERS[provider];
   if (!resolver) {
-    throw new Error(`Provider '${provider}' is not supported yet — register a CredentialResolver in providers/registry.ts.`);
+    throw new Error(
+      `Provider '${provider}' is not supported yet — register a CredentialResolver in providers/registry.ts.`,
+    );
   }
   return resolver.resolve(options);
 }
 
-export async function cleanupProviderAuth(
-  provider: string,
-  auth: ScopedDeployAuth,
-): Promise<void> {
+export async function cleanupProviderAuth(provider: string, auth: ScopedDeployAuth): Promise<void> {
   const resolver = CREDENTIAL_RESOLVERS[provider];
   if (!resolver) return;
   await resolver.cleanup(auth);

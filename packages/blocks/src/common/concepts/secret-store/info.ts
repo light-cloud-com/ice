@@ -22,9 +22,18 @@ credentials.
     `.trim(),
   },
   compilesTo: {
-    aws: [{ name: 'Secrets Manager Secret', type: 'aws_secretsmanager_secret' }, { name: 'Secret Version', type: 'aws_secretsmanager_secret_version' }],
-    gcp: [{ name: 'Secret Manager Secret', type: 'google_secret_manager_secret' }, { name: 'Secret Version', type: 'google_secret_manager_secret_version' }],
-    azure: [{ name: 'Key Vault', type: 'azurerm_key_vault' }, { name: 'Key Vault Secret', type: 'azurerm_key_vault_secret' }],
+    aws: [
+      { name: 'Secrets Manager Secret', type: 'aws_secretsmanager_secret' },
+      { name: 'Secret Version', type: 'aws_secretsmanager_secret_version' },
+    ],
+    gcp: [
+      { name: 'Secret Manager Secret', type: 'google_secret_manager_secret' },
+      { name: 'Secret Version', type: 'google_secret_manager_secret_version' },
+    ],
+    azure: [
+      { name: 'Key Vault', type: 'azurerm_key_vault' },
+      { name: 'Key Vault Secret', type: 'azurerm_key_vault_secret' },
+    ],
   },
   relatedConcepts: ['Compute.Container', 'Database.PostgreSQL'],
 };

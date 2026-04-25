@@ -31,8 +31,7 @@ export const awsCredentialResolver: CredentialResolver = {
 
     if (!accessKeyId || !secretAccessKey) {
       throw new Error(
-        'AWS credentials missing access_key_id / secret_access_key. ' +
-          'Reconnect via Cloud Providers settings.',
+        'AWS credentials missing access_key_id / secret_access_key. ' + 'Reconnect via Cloud Providers settings.',
       );
     }
 

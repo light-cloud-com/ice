@@ -533,7 +533,7 @@ const EnvironmentComparison: React.FC<{
   activeCardId: string | null;
   currentCost: number;
   resourceMap: ResourceMap | null;
-}> = ({ environments, allCards, activeCardId, currentCost, resourceMap }) => {
+}> = ({ environments, allCards, activeCardId, currentCost: _currentCost, resourceMap }) => {
   // Compute production baseline once
   const prodEnv = environments.find((e) => e.type === 'production');
   const prodCard = prodEnv ? allCards.find((c) => c.id === prodEnv.card_id) : null;

@@ -197,11 +197,7 @@ function resolveVisualSize(node: LayoutNode): { width: number; height: number } 
 // Public entry point
 // =============================================================================
 
-export function autoLayout(
-  nodes: LayoutNode[],
-  edges: LayoutEdge[],
-  options: LayoutOptions = {},
-): LayoutResult {
+export function autoLayout(nodes: LayoutNode[], edges: LayoutEdge[], options: LayoutOptions = {}): LayoutResult {
   if (nodes.length === 0) return { nodes: [], edgeRoutes: new Map() };
   const opts = { ...DEFAULT_OPTIONS, ...options };
 
@@ -215,11 +211,7 @@ export function autoLayout(
 // Dagre hierarchical tree layout
 // =============================================================================
 
-function dagreTreeLayout(
-  nodes: LayoutNode[],
-  edges: LayoutEdge[],
-  opts: Required<LayoutOptions>,
-): LayoutResult {
+function dagreTreeLayout(nodes: LayoutNode[], edges: LayoutEdge[], opts: Required<LayoutOptions>): LayoutResult {
   const rankdir = opts.direction === 'horizontal' ? 'LR' : 'TB';
   const nodeGap = opts.nodeGap || NODE_SEP;
 
@@ -280,10 +272,7 @@ function dagreTreeLayout(
     // At top-level, only feed dagre the flow-connected roots — isolated ones
     // are placed by repackIsolatedTopLevel. Inside a container we still lay
     // out every direct child.
-    const kids =
-      ownerId === null
-        ? rootIds.filter((id) => flowRootSet.has(id))
-        : childrenOf.get(ownerId) ?? [];
+    const kids = ownerId === null ? rootIds.filter((id) => flowRootSet.has(id)) : (childrenOf.get(ownerId) ?? []);
     if (kids.length === 0) continue;
 
     // When a container's children have no internal flow edges, dagre puts each
@@ -400,16 +389,7 @@ function dagreTreeLayout(
   // several isolated blocks, this stretches the canvas hundreds of px to the
   // side for no layout reason. Instead, keep the flow where it is and pack
   // isolated components into a grid under it (TB) or beside it (LR).
-  repackIsolatedTopLevel(
-    rootIds,
-    flowEdges,
-    childrenOf,
-    nodeMap,
-    containerSize,
-    relPos,
-    rankdir,
-    nodeGap,
-  );
+  repackIsolatedTopLevel(rootIds, flowEdges, childrenOf, nodeMap, containerSize, relPos, rankdir, nodeGap);
 
   // Walk the tree top-down, accumulating container origins to resolve
   // every descendant to absolute coordinates.
@@ -432,11 +412,7 @@ function dagreTreeLayout(
 // Circular (concentric rings) layout
 // =============================================================================
 
-function circularLayout(
-  nodes: LayoutNode[],
-  edges: LayoutEdge[],
-  opts: Required<LayoutOptions>,
-): LayoutResult {
+function circularLayout(nodes: LayoutNode[], edges: LayoutEdge[], opts: Required<LayoutOptions>): LayoutResult {
   const { childrenOf } = buildHierarchy(nodes, edges);
 
   const nodeMap = new Map<string, LayoutNode>();
@@ -452,7 +428,7 @@ function circularLayout(
   const relPos = new Map<string, { x: number; y: number }>();
 
   for (const ownerId of groupOrder) {
-    const kids = ownerId === null ? rootIds : childrenOf.get(ownerId) ?? [];
+    const kids = ownerId === null ? rootIds : (childrenOf.get(ownerId) ?? []);
     if (kids.length === 0) continue;
 
     const sizes = kids.map((kid) => {
@@ -464,7 +440,7 @@ function circularLayout(
 
     // Radius so that adjacent siblings don't overlap on the ring.
     const minArc = Math.max(maxW, maxH) + opts.nodeGap;
-    const radius = kids.length === 1 ? 0 : Math.max(minArc * kids.length / (2 * Math.PI), minArc);
+    const radius = kids.length === 1 ? 0 : Math.max((minArc * kids.length) / (2 * Math.PI), minArc);
 
     let minX = Infinity,
       minY = Infinity,
@@ -546,21 +522,16 @@ function buildHierarchy(
 }
 
 function collectRootIds(nodes: LayoutNode[], nodeMap: Map<string, LayoutNode>): string[] {
-  return nodes
-    .filter((n) => !n.parentId || !nodeMap.has(n.parentId))
-    .map((n) => n.id);
+  return nodes.filter((n) => !n.parentId || !nodeMap.has(n.parentId)).map((n) => n.id);
 }
 
-function buildPostOrder(
-  rootIds: string[],
-  childrenOf: Map<string, string[]>,
-): (string | null)[] {
+function buildPostOrder(rootIds: string[], childrenOf: Map<string, string[]>): (string | null)[] {
   const order: (string | null)[] = [];
   const visited = new Set<string | null>();
   const visit = (ownerId: string | null) => {
     if (visited.has(ownerId)) return;
     visited.add(ownerId);
-    const kids = ownerId === null ? rootIds : childrenOf.get(ownerId) ?? [];
+    const kids = ownerId === null ? rootIds : (childrenOf.get(ownerId) ?? []);
     for (const kid of kids) {
       if ((childrenOf.get(kid) ?? []).length > 0) visit(kid);
     }
@@ -604,10 +575,10 @@ function gridPackKids(
   const ownerIce = (nodeMap.get(ownerId)!.iceType as string) || '';
   const visualMin = intrinsicContainerMin(ownerIce);
 
-  let cursorX = GRID_STEP;          // left padding
-  let cursorY = GRID_STEP * 2;      // header zone
+  let cursorX = GRID_STEP; // left padding
+  let cursorY = GRID_STEP * 2; // header zone
   let rowHeight = 0;
-  let maxRightEdge = 0;             // rightmost block edge across all rows
+  let maxRightEdge = 0; // rightmost block edge across all rows
 
   for (let i = 0; i < kids.length; i++) {
     if (i > 0 && i % cols === 0) {
@@ -716,10 +687,8 @@ function repackIsolatedTopLevel(
   // narrow, multi-screen-tall column. `flowWidth` is a floor — we use the
   // larger of (flow bounding box) and (sqrt(count) × typical node width)
   // so the grid gets wide enough to visually breathe.
-  const avgW =
-    sorted.reduce((s, id) => s + sizeOf(id).width, 0) / Math.max(sorted.length, 1);
-  const avgH =
-    sorted.reduce((s, id) => s + sizeOf(id).height, 0) / Math.max(sorted.length, 1);
+  const avgW = sorted.reduce((s, id) => s + sizeOf(id).width, 0) / Math.max(sorted.length, 1);
+  const avgH = sorted.reduce((s, id) => s + sizeOf(id).height, 0) / Math.max(sorted.length, 1);
   const gridCols = Math.max(3, Math.ceil(Math.sqrt(sorted.length)));
   const targetGridWidth = gridCols * (avgW + gap);
   const targetGridHeight = Math.max(3, Math.ceil(sorted.length / gridCols)) * (avgH + gap);
@@ -889,8 +858,7 @@ export function forceResolveOverlaps<T extends ForceBody>(
   };
   for (const n of allNodes) getDesc(n.id);
 
-  const isRelated = (a: T, b: T): boolean =>
-    descOf.get(a.id)!.has(b.id) || descOf.get(b.id)!.has(a.id);
+  const isRelated = (a: T, b: T): boolean => descOf.get(a.id)!.has(b.id) || descOf.get(b.id)!.has(a.id);
 
   const topLevel = allNodes.filter((n) => !n.parentId || !nodeById.has(n.parentId));
   if (topLevel.length < 2) return;

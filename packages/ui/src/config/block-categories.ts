@@ -27,9 +27,7 @@ export const BLOCK_CATEGORIES: BlockCategoryDef[] = [
 export const BLOCK_CATEGORY_ORDER = BLOCK_CATEGORIES.map((c) => c.id);
 
 /** Case-insensitive lookup: 'compute' → 'Compute', 'ai' → 'AI' */
-const CATEGORY_LABEL_MAP = new Map(
-  BLOCK_CATEGORIES.map((c) => [c.id.toLowerCase(), c.label]),
-);
+const CATEGORY_LABEL_MAP = new Map(BLOCK_CATEGORIES.map((c) => [c.id.toLowerCase(), c.label]));
 
 export function getBlockCategoryLabel(raw: string): string {
   return CATEGORY_LABEL_MAP.get(raw.toLowerCase()) || raw.charAt(0).toUpperCase() + raw.slice(1);

@@ -14,12 +14,12 @@
 export type RequirementTiming = 'before-deploy' | 'post-deploy';
 
 export type RequirementStatus =
-  | 'unknown'   // never checked
-  | 'checking'  // check in flight
-  | 'unmet'     // checked, not satisfied
-  | 'met'       // checked, satisfied (before-deploy only)
-  | 'verified'  // checked + verified against real infrastructure (post-deploy)
-  | 'expired';  // verification timeout expired without success
+  | 'unknown' // never checked
+  | 'checking' // check in flight
+  | 'unmet' // checked, not satisfied
+  | 'met' // checked, satisfied (before-deploy only)
+  | 'verified' // checked + verified against real infrastructure (post-deploy)
+  | 'expired'; // verification timeout expired without success
 
 export interface RequirementBlock {
   id: string;
@@ -53,13 +53,7 @@ export interface RequirementCheckResult {
 }
 
 export interface RequirementAction {
-  type:
-    | 'copy-dns-record'
-    | 'attach-repo'
-    | 'install-github-app'
-    | 'open-url'
-    | 'open-gcp-billing'
-    | 'custom';
+  type: 'copy-dns-record' | 'attach-repo' | 'install-github-app' | 'open-url' | 'open-gcp-billing' | 'custom';
   label: string;
   /** Variable per action type. For example `copy-dns-record` carries `{ type, name, value, ttl }`. */
   payload?: Record<string, unknown>;

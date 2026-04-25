@@ -224,7 +224,7 @@ export const ProjectActivity: React.FC<{ projectId: string }> = ({ projectId: _p
     // Sort by timestamp descending
     items.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
     return items;
-  }, [auditEntries, infraDeploys, serviceEvents]);
+  }, [auditEntries, infraDeploys, serviceEvents, t]);
 
   // Apply filter
   const filteredItems = filter === 'all' ? activityItems : activityItems.filter((i) => i.type === filter);

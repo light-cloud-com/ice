@@ -13,6 +13,8 @@ import type { SnippetLanguage } from './types';
  * SnippetLanguage keys are used; Partial lets concepts ship with a subset
  * of languages and backfill later.
  */
-export function defineSnippets(snippets: Partial<Record<SnippetLanguage, string>>): Partial<Record<SnippetLanguage, string>> {
+export function defineSnippets(
+  snippets: Partial<Record<SnippetLanguage, string>>,
+): Partial<Record<SnippetLanguage, string>> {
   return snippets;
 }

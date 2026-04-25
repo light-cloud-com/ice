@@ -206,9 +206,7 @@ router.get('/current/:cardId', requireProjectAccess('viewer'), async (req: AuthR
   }
   try {
     const latest = await deployService.getDeploymentHistory(cardId, { limit: 10 });
-    const active = (latest as any[]).find(
-      (d) => d.status === 'deploying' || d.status === 'planning',
-    );
+    const active = (latest as any[]).find((d) => d.status === 'deploying' || d.status === 'planning');
     if (active) {
       if (active.snapshot) {
         return res.json({ success: true, snapshot: active.snapshot });

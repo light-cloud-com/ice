@@ -8,7 +8,6 @@
 import { Loader2 } from 'lucide-react';
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { useTranslation } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
 import type { RootState } from '../../../store';
 import type { IntegrationStatus } from '../../../store/slices/integrations-slice';
@@ -29,7 +28,6 @@ const PROVIDER_LABELS: Record<string, string> = {
 // Note: PROVIDER_LABELS remain hardcoded as product brand names
 
 export const IntegrationStatusDots: React.FC = () => {
-  const { t } = useTranslation();
   const integrations = useSelector((state: RootState) => state.integrations.integrations);
 
   // Only show providers that have ever been connected or are in non-default state

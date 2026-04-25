@@ -99,10 +99,7 @@ export const DeployDiagnosis: React.FC<DeployDiagnosisProps> = ({ error, results
         <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
         <div className="flex-1">
           <p>Diagnosis failed: {diagnosis.error}</p>
-          <button
-            onClick={() => dispatch(clearDiagnosis())}
-            className="mt-1 underline hover:text-red-300"
-          >
+          <button onClick={() => dispatch(clearDiagnosis())} className="mt-1 underline hover:text-red-300">
             Dismiss
           </button>
         </div>

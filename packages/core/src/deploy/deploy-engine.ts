@@ -299,9 +299,7 @@ function order_by_dependencies(
   // means it participates in a cycle. Previously these were silently dropped
   // from the plan — now we fail loudly so users can fix the canvas.
   if (sorted.length !== changes.length) {
-    const stranded = [...in_degree.entries()]
-      .filter(([, degree]) => degree > 0)
-      .map(([name]) => name);
+    const stranded = [...in_degree.entries()].filter(([, degree]) => degree > 0).map(([name]) => name);
     throw new Error(
       `Cycle detected in deployment graph. ${stranded.length} node(s) participate in a cycle: ` +
         `${stranded.join(', ')}. Review the canvas edges to break the loop before deploying.`,

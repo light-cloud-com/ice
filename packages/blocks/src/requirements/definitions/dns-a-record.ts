@@ -38,8 +38,7 @@ export const dnsARecordRequirement: RequirementDefinition = {
     const now = new Date().toISOString();
     const domain = ctx.block.data?.domain as string;
     const expectedIp =
-      (ctx.deployedOutputs?.ip_address as string | undefined) ||
-      (ctx.deployedOutputs?.IPAddress as string | undefined);
+      (ctx.deployedOutputs?.ip_address as string | undefined) || (ctx.deployedOutputs?.IPAddress as string | undefined);
     if (!expectedIp) {
       return {
         status: 'unknown',
@@ -67,8 +66,7 @@ export const dnsARecordRequirement: RequirementDefinition = {
   action: (ctx) => {
     const domain = ctx.block.data?.domain as string | undefined;
     const ip =
-      (ctx.deployedOutputs?.ip_address as string | undefined) ||
-      (ctx.deployedOutputs?.IPAddress as string | undefined);
+      (ctx.deployedOutputs?.ip_address as string | undefined) || (ctx.deployedOutputs?.IPAddress as string | undefined);
     if (!domain || !ip) return null;
     return {
       type: 'copy-dns-record',

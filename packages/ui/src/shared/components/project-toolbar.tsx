@@ -90,7 +90,9 @@ const TBtn: React.FC<{
   return (
     <Tooltip>
       <TooltipTrigger asChild>{btn}</TooltipTrigger>
-      <TooltipContent side="bottom" className="text-ice-xs">{tip}</TooltipContent>
+      <TooltipContent side="bottom" className="text-ice-xs">
+        {tip}
+      </TooltipContent>
     </Tooltip>
   );
 };
@@ -185,7 +187,10 @@ export const ProjectToolbar: React.FC<ProjectToolbarProps> = ({ basePath, active
   const handleFitView = useCallback(() => {
     if (!activeCard?.nodes?.length) return;
     const nodes = activeCard.nodes;
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
     for (const n of nodes) {
       minX = Math.min(minX, n.position.x);
       minY = Math.min(minY, n.position.y);
@@ -245,7 +250,9 @@ export const ProjectToolbar: React.FC<ProjectToolbarProps> = ({ basePath, active
             <TBtn
               icon={Rows3}
               onClick={() => {
-                dispatch(autoOrganizeCard({ direction: 'vertical', containerId: selectedContainerId, zoom: currentZoom }));
+                dispatch(
+                  autoOrganizeCard({ direction: 'vertical', containerId: selectedContainerId, zoom: currentZoom }),
+                );
                 dispatch(setAutoOrganizeStyle('vertical'));
                 dispatch(setEdgeStyle('rectangular'));
               }}
@@ -254,7 +261,9 @@ export const ProjectToolbar: React.FC<ProjectToolbarProps> = ({ basePath, active
             <TBtn
               icon={Columns3}
               onClick={() => {
-                dispatch(autoOrganizeCard({ direction: 'horizontal', containerId: selectedContainerId, zoom: currentZoom }));
+                dispatch(
+                  autoOrganizeCard({ direction: 'horizontal', containerId: selectedContainerId, zoom: currentZoom }),
+                );
                 dispatch(setAutoOrganizeStyle('horizontal'));
                 dispatch(setEdgeStyle('rectangular'));
               }}

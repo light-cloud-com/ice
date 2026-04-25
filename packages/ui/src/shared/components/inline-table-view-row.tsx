@@ -5,17 +5,7 @@
  * rest of the app); hover surfaces endpoint links and a row actions menu.
  */
 
-import {
-  Cloud,
-  Copy,
-  ExternalLink,
-  Eye,
-  Github,
-  Globe,
-  MoreHorizontal,
-  Package,
-  Trash2,
-} from 'lucide-react';
+import { Cloud, Copy, ExternalLink, Eye, Github, Globe, MoreHorizontal, Package, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import {
   formatRelativeTime,
@@ -201,22 +191,16 @@ const RowActions: React.FC<RowActionsProps> = ({
           {item(<ExternalLink className="w-3.5 h-3.5" />, t('table.actions.revealOnCanvas'), onRevealOnCanvas)}
           <div className="my-1 h-px bg-ice-border mx-1" />
           {live &&
-            item(
-              <Globe className="w-3.5 h-3.5" />,
-              t('table.actions.openInBrowser'),
-              () => window.open(live.url, '_blank', 'noopener,noreferrer'),
+            item(<Globe className="w-3.5 h-3.5" />, t('table.actions.openInBrowser'), () =>
+              window.open(live.url, '_blank', 'noopener,noreferrer'),
             )}
           {repo &&
-            item(
-              <Github className="w-3.5 h-3.5" />,
-              t('table.actions.openInGithub'),
-              () => window.open(repo.url, '_blank', 'noopener,noreferrer'),
+            item(<Github className="w-3.5 h-3.5" />, t('table.actions.openInGithub'), () =>
+              window.open(repo.url, '_blank', 'noopener,noreferrer'),
             )}
           {console_ &&
-            item(
-              <Cloud className="w-3.5 h-3.5" />,
-              t('table.actions.openInConsole'),
-              () => window.open(console_.url, '_blank', 'noopener,noreferrer'),
+            item(<Cloud className="w-3.5 h-3.5" />, t('table.actions.openInConsole'), () =>
+              window.open(console_.url, '_blank', 'noopener,noreferrer'),
             )}
           {(live || repo || console_) && <div className="my-1 h-px bg-ice-border mx-1" />}
           {item(<Copy className="w-3.5 h-3.5" />, t('table.actions.copyId'), onCopyId)}

@@ -63,13 +63,45 @@ interface CompactLod3Props {
 
 export const CompactLod3: React.FC<CompactLod3Props> = memo(
   ({
-    node, x, y, label, category, categoryGlow, provider, brandIcon, providerUrl,
-    serviceLineText, runtimeLabel, metaLines, repoLineIndex, isSourceRepo, repository,
-    statusLabel, statusColor, estimatedCost, border, isSelected, isHovered, isDragOver,
-    folded, hasScaling, minInstances, maxInstances, activeInstances,
-    effectivePipelineStatus, connectedPipelineStatuses, connectionDragState,
-    validationSeverity, validationCount, reducedMotion,
-    onMouseEnter, onMouseLeave, onToggleFold, onDoubleClickLabel, onUpdateData, onPipelineClick,
+    node,
+    x,
+    y,
+    label,
+    category,
+    categoryGlow,
+    provider,
+    brandIcon,
+    providerUrl,
+    serviceLineText,
+    runtimeLabel,
+    metaLines,
+    repoLineIndex,
+    isSourceRepo,
+    repository,
+    statusLabel,
+    statusColor,
+    estimatedCost,
+    border,
+    isSelected,
+    isHovered,
+    isDragOver,
+    folded,
+    hasScaling,
+    minInstances,
+    maxInstances,
+    activeInstances,
+    effectivePipelineStatus,
+    connectedPipelineStatuses,
+    connectionDragState,
+    validationSeverity,
+    validationCount,
+    reducedMotion,
+    onMouseEnter,
+    onMouseLeave,
+    onToggleFold,
+    onDoubleClickLabel,
+    onUpdateData,
+    onPipelineClick,
   }) => {
     const W = CARD_WIDTH;
     const H = folded ? 38 : CARD_HEIGHT;
@@ -156,11 +188,7 @@ export const CompactLod3: React.FC<CompactLod3Props> = memo(
 
     const iceTypeForInfo = (node.data?.iceType as string) || '';
     const infoTrigger = (
-      <ConceptInfoTrigger
-        iceType={iceTypeForInfo}
-        displayName={label}
-        opacity={isHovered ? 0.85 : 0.45}
-      />
+      <ConceptInfoTrigger iceType={iceTypeForInfo} displayName={label} opacity={isHovered ? 0.85 : 0.45} />
     );
 
     const deployBadgeEl = deployBadge ? (
@@ -239,10 +267,10 @@ export const CompactLod3: React.FC<CompactLod3Props> = memo(
               overflow: 'hidden',
               position: 'relative',
               boxShadow: isSelected
-                  ? `0 0 0 1.5px ${categoryGlow}, 0 4px 14px -4px ${categoryGlow}33`
-                  : isHovered
-                    ? '0 2px 8px -2px rgba(0,0,0,0.15)'
-                    : '0 1px 3px rgba(0,0,0,0.06)',
+                ? `0 0 0 1.5px ${categoryGlow}, 0 4px 14px -4px ${categoryGlow}33`
+                : isHovered
+                  ? '0 2px 8px -2px rgba(0,0,0,0.15)'
+                  : '0 1px 3px rgba(0,0,0,0.06)',
               transition: 'box-shadow 150ms ease, border-color 150ms ease',
             }}
           >
@@ -259,177 +287,189 @@ export const CompactLod3: React.FC<CompactLod3Props> = memo(
                 justifyContent: folded ? 'center' : undefined,
               }}
             >
-            <NodeHeader
-              category={category}
-              categoryColor={categoryGlow}
-              label={label}
-              onDoubleClickLabel={onDoubleClickLabel}
-              trailing={headerTrailing}
-              hideIcon={false}
-              iconSize={16}
-              labelFontSize={folded ? 12 : 13}
-            />
+              <NodeHeader
+                category={category}
+                categoryColor={categoryGlow}
+                label={label}
+                onDoubleClickLabel={onDoubleClickLabel}
+                trailing={headerTrailing}
+                hideIcon={false}
+                iconSize={16}
+                labelFontSize={folded ? 12 : 13}
+              />
 
-            {!folded && (
-              <>
-                <ServiceLine brandIcon={brandIcon} providerUrl={providerUrl} serviceLineText={serviceLineText} />
+              {!folded && (
+                <>
+                  <ServiceLine brandIcon={brandIcon} providerUrl={providerUrl} serviceLineText={serviceLineText} />
 
-                <MetadataLines
-                  metaLines={metaLines}
-                  repoLineIndex={repoLineIndex}
-                  isSelected={isSelected}
-                  isHovered={isHovered}
-                  isSourceRepo={isSourceRepo}
-                  repository={repository}
-                  nodeId={node.id}
-                  onUpdateData={onUpdateData}
-                />
-
-                {hasScaling && (
-                  <ScalingRow
+                  <MetadataLines
+                    metaLines={metaLines}
+                    repoLineIndex={repoLineIndex}
+                    isSelected={isSelected}
+                    isHovered={isHovered}
+                    isSourceRepo={isSourceRepo}
+                    repository={repository}
                     nodeId={node.id}
-                    minInstances={minInstances}
-                    maxInstances={maxInstances}
-                    activeInstances={activeInstances}
                     onUpdateData={onUpdateData}
                   />
-                )}
 
-                {hasPipeline && effectivePipelineStatus && (
-                  <PipelineRow
-                    status={effectivePipelineStatus}
-                    reducedMotion={reducedMotion}
-                    onClick={(e) => { e.stopPropagation(); onPipelineClick?.(node.id); }}
-                  />
-                )}
+                  {hasScaling && (
+                    <ScalingRow
+                      nodeId={node.id}
+                      minInstances={minInstances}
+                      maxInstances={maxInstances}
+                      activeInstances={activeInstances}
+                      onUpdateData={onUpdateData}
+                    />
+                  )}
 
-                {isSourceRepo && connectedPipelineStatuses.length > 0 && !hasPipeline && (
-                  <ConnectedPipelineDots statuses={connectedPipelineStatuses} />
-                )}
+                  {hasPipeline && effectivePipelineStatus && (
+                    <PipelineRow
+                      status={effectivePipelineStatus}
+                      reducedMotion={reducedMotion}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onPipelineClick?.(node.id);
+                      }}
+                    />
+                  )}
 
-                {hasStatusLine && (
-                  <StatusCostLine statusLabel={statusLabel} statusColor={statusColor} estimatedCost={estimatedCost} />
-                )}
+                  {isSourceRepo && connectedPipelineStatuses.length > 0 && !hasPipeline && (
+                    <ConnectedPipelineDots statuses={connectedPipelineStatuses} />
+                  )}
 
-                {/* Phase 2 — live deploy feedback. Rendered absolute-positioned
+                  {hasStatusLine && (
+                    <StatusCostLine statusLabel={statusLabel} statusColor={statusColor} estimatedCost={estimatedCost} />
+                  )}
+
+                  {/* Phase 2 — live deploy feedback. Rendered absolute-positioned
                     at the bottom of the block so it doesn't push layout
                     around as status changes. */}
-                {isDeploying && deployProgress?.step_label && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      left: 8,
-                      right: 8,
-                      bottom: 4,
-                      fontSize: 10,
-                      color: '#3b82f6',
-                      fontFamily: FONT_MONO,
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      pointerEvents: 'none',
-                    }}
-                  >
-                    {deployProgress.step_index != null && deployProgress.step_total != null
-                      ? `${deployProgress.step_label} (${deployProgress.step_index}/${deployProgress.step_total})`
-                      : deployProgress.step_label}
-                  </div>
-                )}
+                  {isDeploying && deployProgress?.step_label && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: 8,
+                        right: 8,
+                        bottom: 4,
+                        fontSize: 10,
+                        color: '#3b82f6',
+                        fontFamily: FONT_MONO,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        pointerEvents: 'none',
+                      }}
+                    >
+                      {deployProgress.step_index != null && deployProgress.step_total != null
+                        ? `${deployProgress.step_label} (${deployProgress.step_index}/${deployProgress.step_total})`
+                        : deployProgress.step_label}
+                    </div>
+                  )}
 
-                {isActive && primaryOutputText && (() => {
-                  // Click behavior:
-                  //   - If the text is an http(s) URL → open in a new tab
-                  //     so users can actually VISIT their deployed site.
-                  //   - Shift+click always copies (escape hatch when users
-                  //     want the URL on the clipboard without navigating).
-                  //   - Non-URLs (gs://, raw IP, provider_id) copy since
-                  //     there's nothing to open.
-                  const renderUrlRow = (text: string, color: string, bottom: number) => {
-                    const isHttpUrl = /^https?:\/\//.test(text);
-                    const tooltip = isHttpUrl
-                      ? `Click to open · Shift+click to copy: ${text}`
-                      : `Click to copy: ${text}`;
-                    return (
-                      <div
-                        key={`${text}-${bottom}`}
-                        style={{
-                          position: 'absolute',
-                          left: 8,
-                          right: 8,
-                          bottom,
-                          fontSize: 10,
-                          color,
-                          fontFamily: FONT_MONO,
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          cursor: 'pointer',
-                          textDecoration: isHttpUrl ? 'underline' : undefined,
-                        }}
-                        title={tooltip}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (isHttpUrl && !e.shiftKey) {
-                            window.open(text, '_blank', 'noopener,noreferrer');
-                          } else {
-                            navigator.clipboard?.writeText(text).catch(() => {});
-                          }
-                        }}
-                      >
-                        ↗ {text}
-                      </div>
-                    );
-                  };
-                  return (
-                    <>
-                      {/* Primary (custom domain when present, otherwise default).
+                  {isActive &&
+                    primaryOutputText &&
+                    (() => {
+                      // Click behavior:
+                      //   - If the text is an http(s) URL → open in a new tab
+                      //     so users can actually VISIT their deployed site.
+                      //   - Shift+click always copies (escape hatch when users
+                      //     want the URL on the clipboard without navigating).
+                      //   - Non-URLs (gs://, raw IP, provider_id) copy since
+                      //     there's nothing to open.
+                      const renderUrlRow = (text: string, color: string, bottom: number) => {
+                        const isHttpUrl = /^https?:\/\//.test(text);
+                        const tooltip = isHttpUrl
+                          ? `Click to open · Shift+click to copy: ${text}`
+                          : `Click to copy: ${text}`;
+                        return (
+                          <div
+                            key={`${text}-${bottom}`}
+                            style={{
+                              position: 'absolute',
+                              left: 8,
+                              right: 8,
+                              bottom,
+                              fontSize: 10,
+                              color,
+                              fontFamily: FONT_MONO,
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              cursor: 'pointer',
+                              textDecoration: isHttpUrl ? 'underline' : undefined,
+                            }}
+                            title={tooltip}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (isHttpUrl && !e.shiftKey) {
+                                window.open(text, '_blank', 'noopener,noreferrer');
+                              } else {
+                                navigator.clipboard?.writeText(text).catch(() => {});
+                              }
+                            }}
+                          >
+                            ↗ {text}
+                          </div>
+                        );
+                      };
+                      return (
+                        <>
+                          {/* Primary (custom domain when present, otherwise default).
                           Sits ABOVE the secondary so the custom domain is visually
                           prominent. */}
-                      {renderUrlRow(primaryOutputText, '#22c55e', secondaryOutputText ? 18 : 4)}
-                      {/* Secondary (firebase / provider default URL) — dimmer, below */}
-                      {secondaryOutputText &&
-                        renderUrlRow(secondaryOutputText, 'var(--ice-text-3, #94a3b8)', 4)}
-                    </>
-                  );
-                })()}
+                          {renderUrlRow(primaryOutputText, '#22c55e', secondaryOutputText ? 18 : 4)}
+                          {/* Secondary (firebase / provider default URL) — dimmer, below */}
+                          {secondaryOutputText && renderUrlRow(secondaryOutputText, 'var(--ice-text-3, #94a3b8)', 4)}
+                        </>
+                      );
+                    })()}
 
-                {isError && deployError && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      left: 8,
-                      right: 8,
-                      bottom: 4,
-                      fontSize: 10,
-                      color: '#ef4444',
-                      fontFamily: FONT_MONO,
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}
-                    title={deployError}
-                  >
-                    ✗ {deployError}
+                  {isError && deployError && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: 8,
+                        right: 8,
+                        bottom: 4,
+                        fontSize: 10,
+                        color: '#ef4444',
+                        fontFamily: FONT_MONO,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                      title={deployError}
+                    >
+                      ✗ {deployError}
+                    </div>
+                  )}
+
+                  <div style={{ position: 'absolute', top: 4, right: 4 }}>
+                    <FoldButton folded={false} onClick={onToggleFold} opacity={isHovered ? 0.7 : 0} />
                   </div>
-                )}
+                </>
+              )}
 
-                <div style={{ position: 'absolute', top: 4, right: 4 }}>
-                  <FoldButton folded={false} onClick={onToggleFold} opacity={isHovered ? 0.7 : 0} />
+              {validationSeverity && validationSeverity !== 'info' && (
+                <div style={{ position: 'absolute', top: -2, right: -2 }}>
+                  <ValidationBadge severity={validationSeverity} count={validationCount} small={folded} />
                 </div>
-              </>
-            )}
-
-            {validationSeverity && validationSeverity !== 'info' && (
-              <div style={{ position: 'absolute', top: -2, right: -2 }}>
-                <ValidationBadge severity={validationSeverity} count={validationCount} small={folded} />
-              </div>
-            )}
+              )}
             </div>
           </div>
         </foreignObject>
 
         {(isHovered || isValidTarget) && (
-          <ConnectionPorts nodeId={node.id} x={x} y={y} width={W} height={H} color={categoryGlow} isValidTarget={isValidTarget} />
+          <ConnectionPorts
+            nodeId={node.id}
+            x={x}
+            y={y}
+            width={W}
+            height={H}
+            color={categoryGlow}
+            isValidTarget={isValidTarget}
+          />
         )}
       </g>
     );

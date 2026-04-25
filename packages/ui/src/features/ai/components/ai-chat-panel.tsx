@@ -681,9 +681,7 @@ export const AiChatPanel: React.FC = () => {
             )}
           </button>
         </div>
-        <p className="text-center text-ice-2xs text-ice-text-3/30 mt-1.5">
-          {t('ai.chat.inputHint')}
-        </p>
+        <p className="text-center text-ice-2xs text-ice-text-3/30 mt-1.5">{t('ai.chat.inputHint')}</p>
       </div>
     </div>
   );

@@ -112,9 +112,7 @@ export const cloud_functions_handler: GCPResourceHandler = {
       // Also delete any Artifact Registry container images Cloud Functions
       // v2 created during the build.
       await deleteFunctionsArtifactRegistryImages(ctx, name, region).catch((err) => {
-        ctx.on_log?.(
-          `[cloud-functions] Function deleted but Artifact Registry cleanup failed: ${err?.message || err}`,
-        );
+        ctx.on_log?.(`[cloud-functions] Function deleted but Artifact Registry cleanup failed: ${err?.message || err}`);
       });
 
       return result(name, 'delete', start);

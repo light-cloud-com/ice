@@ -9,11 +9,7 @@
  */
 
 import { DEFAULT_PORTS, DEFAULT_ENV_VARS } from '@ice/constants';
-import type {
-  PropagationRule,
-  AggregateRule,
-  PropagationNode,
-} from './types.js';
+import type { PropagationRule, AggregateRule, PropagationNode } from './types.js';
 
 // ─── Block Type Classifiers ─────────────────────────────────────────────────
 // Minimal copies of the classifiers from @ice/types/connection-rules.
@@ -21,8 +17,7 @@ import type {
 
 function isBackend(t: string): boolean {
   return (
-    /Backend|Container|Worker|Function|CronJob|Scheduled|AppPlatform|OCIFunctions/i.test(t) ||
-    t.startsWith('Compute.')
+    /Backend|Container|Worker|Function|CronJob|Scheduled|AppPlatform|OCIFunctions/i.test(t) || t.startsWith('Compute.')
   );
 }
 function isFrontend(t: string): boolean {

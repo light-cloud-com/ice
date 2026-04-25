@@ -24,10 +24,7 @@ export const API_NOT_ENABLED_PATTERNS = [
   'API has not been enabled',
 ] as const;
 
-export const AUTH_MISSING_PATTERNS = [
-  'Could not load the default credentials',
-  'default credentials',
-] as const;
+export const AUTH_MISSING_PATTERNS = ['Could not load the default credentials', 'default credentials'] as const;
 
 export const AUTH_EXPIRED_PATTERNS = ['refresh token', 'expired', 'invalid_grant'] as const;
 
@@ -141,7 +138,6 @@ export function extractApiEnableUrl(error?: string): string | null {
 export function buildApiEnableUrl(apiName: string, project: string): string {
   return `https://console.developers.google.com/apis/api/${apiName}/overview?project=${project}`;
 }
-
 
 // =============================================================================
 // Service Names (human-readable labels for log messages)

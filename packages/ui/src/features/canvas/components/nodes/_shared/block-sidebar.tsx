@@ -99,8 +99,7 @@ export const BlockSidebar: React.FC<BlockSidebarProps> = ({ icon, iceType, provi
             // Makes the tile feel like a luxury brand mark, not a flat square.
             background: `linear-gradient(180deg, ${accent}22 0%, ${accent}10 100%)`,
             border: `1px solid ${accent}3b`,
-            boxShadow:
-              '0 1px 0 0 rgba(255, 255, 255, 0.06) inset, 0 1px 2px rgba(0, 0, 0, 0.18)',
+            boxShadow: '0 1px 0 0 rgba(255, 255, 255, 0.06) inset, 0 1px 2px rgba(0, 0, 0, 0.18)',
           }}
         >
           {icon}
@@ -110,9 +109,7 @@ export const BlockSidebar: React.FC<BlockSidebarProps> = ({ icon, iceType, provi
       {/* ── Slot 2 — resource short name (wraps to 2 lines if needed) ── */}
       {shortName && (
         <>
-          <div
-            style={{ height: 1, background: 'var(--ice-border-subtle, var(--ice-border))' }}
-          />
+          <div style={{ height: 1, background: 'var(--ice-border-subtle, var(--ice-border))' }} />
           <div
             style={{
               padding: '10px 4px',
@@ -127,8 +124,7 @@ export const BlockSidebar: React.FC<BlockSidebarProps> = ({ icon, iceType, provi
               style={{
                 fontSize: 9,
                 fontWeight: 700,
-                fontFamily:
-                  'var(--font-mono, "JetBrains Mono Variable", ui-monospace, "SFMono-Regular", monospace)',
+                fontFamily: 'var(--font-mono, "JetBrains Mono Variable", ui-monospace, "SFMono-Regular", monospace)',
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
                 color: 'var(--ice-text-secondary)',
@@ -147,9 +143,7 @@ export const BlockSidebar: React.FC<BlockSidebarProps> = ({ icon, iceType, provi
       {/* ── Slot 3 — provider brand mark ── */}
       {providerBrand && (
         <>
-          <div
-            style={{ height: 1, background: 'var(--ice-border-subtle, var(--ice-border))' }}
-          />
+          <div style={{ height: 1, background: 'var(--ice-border-subtle, var(--ice-border))' }} />
           <div
             style={{
               padding: '11px 10px 12px',
@@ -180,10 +174,7 @@ export const BlockSidebar: React.FC<BlockSidebarProps> = ({ icon, iceType, provi
       <div
         style={{
           flex: 1,
-          borderTop:
-            shortName || providerBrand
-              ? '1px solid var(--ice-border-subtle, var(--ice-border))'
-              : undefined,
+          borderTop: shortName || providerBrand ? '1px solid var(--ice-border-subtle, var(--ice-border))' : undefined,
           background: `linear-gradient(180deg, transparent 0%, ${accent}0f 100%)`,
         }}
       />

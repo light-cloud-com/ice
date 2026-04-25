@@ -25,12 +25,8 @@ are expressive, and horizontal sharding is first-class.
       { name: 'DocumentDB Cluster', type: 'aws_docdb_cluster', role: 'MongoDB-compatible' },
       { name: 'DocumentDB Instance', type: 'aws_docdb_cluster_instance' },
     ],
-    gcp: [
-      { name: 'Firestore Database', type: 'google_firestore_database', role: 'native mode, MongoDB-like API' },
-    ],
-    azure: [
-      { name: 'Cosmos DB MongoDB API', type: 'azurerm_cosmosdb_account' },
-    ],
+    gcp: [{ name: 'Firestore Database', type: 'google_firestore_database', role: 'native mode, MongoDB-like API' }],
+    azure: [{ name: 'Cosmos DB MongoDB API', type: 'azurerm_cosmosdb_account' }],
   },
   relatedConcepts: ['Database.PostgreSQL', 'Database.Redis'],
 };

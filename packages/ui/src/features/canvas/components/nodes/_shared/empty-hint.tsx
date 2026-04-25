@@ -26,8 +26,7 @@ export const EmptyHint: React.FC<EmptyHintProps> = ({ message }) => (
       borderRadius: 6,
       fontSize: 9,
       fontWeight: 600,
-      fontFamily:
-        'var(--font-mono, "JetBrains Mono Variable", ui-monospace, "SFMono-Regular", monospace)',
+      fontFamily: 'var(--font-mono, "JetBrains Mono Variable", ui-monospace, "SFMono-Regular", monospace)',
       letterSpacing: '0.14em',
       textTransform: 'uppercase',
       color: 'var(--ice-text-tertiary)',

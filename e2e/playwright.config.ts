@@ -27,9 +27,9 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         screenshot: 'on',
-        headless: false,       // Visible browser — watch tests execute
+        headless: false, // Visible browser — watch tests execute
         launchOptions: {
-          slowMo: 300,         // Slow down so you can follow the actions
+          slowMo: 300, // Slow down so you can follow the actions
         },
       },
     },

@@ -7,12 +7,7 @@
 
 import type { Page } from '@playwright/test';
 import { test as base } from './base.fixture';
-import {
-  getActionLog,
-  getApiCalls,
-  clearActionLog,
-  type IceActionEvent,
-} from '../utils/action-log-reader';
+import { getActionLog, getApiCalls, clearActionLog, type IceActionEvent } from '../utils/action-log-reader';
 import { verifyGCPResource, type VerifyResult } from '../utils/gcp-verify';
 import type { ResourceVerification } from '../utils/deploy-log-collector';
 
@@ -47,7 +42,12 @@ export class TemplateDeployHelper {
     if (this.page.url().includes('onboarding') || this.page.url() === 'http://localhost:5174/') {
       console.log('[fixture] Detected onboarding/redirect, attempting skip...');
       const skipBtn = this.page.locator('button:has-text("Skip"), text="Skip Setup"');
-      if (await skipBtn.first().isVisible({ timeout: 3000 }).catch(() => false)) {
+      if (
+        await skipBtn
+          .first()
+          .isVisible({ timeout: 3000 })
+          .catch(() => false)
+      ) {
         await skipBtn.first().click();
         await this.page.waitForTimeout(1500);
       }
@@ -78,9 +78,7 @@ export class TemplateDeployHelper {
     await this.debugScreenshot('03-detail-open');
 
     // Click the "Create" button in the detail panel (bottom of the side panel)
-    const createBtn = this.page.locator(
-      'button:has-text("Create Project"), button:has-text("Create")',
-    );
+    const createBtn = this.page.locator('button:has-text("Create Project"), button:has-text("Create")');
     await createBtn.last().waitFor({ state: 'visible', timeout: 5000 });
     await createBtn.last().click();
 
@@ -149,7 +147,12 @@ export class TemplateDeployHelper {
 
     // Check if already connected — modal shows "Disconnect" button or green checkmark
     const disconnectBtn = this.page.locator('button:has-text("Disconnect"), text="Disconnect"');
-    if (await disconnectBtn.first().isVisible({ timeout: 2000 }).catch(() => false)) {
+    if (
+      await disconnectBtn
+        .first()
+        .isVisible({ timeout: 2000 })
+        .catch(() => false)
+    ) {
       console.log('[fixture] GCP already connected, closing modal');
       // Close the modal via X button or clicking outside
       const closeX = this.page.locator('[class*="close"], button:has(svg)').first();
@@ -170,9 +173,7 @@ export class TemplateDeployHelper {
     await this.debugScreenshot('gcp-key-filled');
 
     // Click connect button
-    const connectBtn = this.page.locator(
-      'button:has-text("Connect"), button:has-text("Test & Connect")',
-    );
+    const connectBtn = this.page.locator('button:has-text("Connect"), button:has-text("Test & Connect")');
     await connectBtn.last().click();
 
     // Wait for success — look for Disconnect button appearing (means connected)
@@ -241,9 +242,7 @@ export class TemplateDeployHelper {
     await this.debugScreenshot('06b-deploy-panel');
 
     // Wait for deploy panel overlay
-    const deployUI = this.page.locator(
-      '#ice-deploy-panel, #ice-deploy-select-provider, #ice-deploy-btn-plan',
-    );
+    const deployUI = this.page.locator('#ice-deploy-panel, #ice-deploy-select-provider, #ice-deploy-btn-plan');
     try {
       await deployUI.first().waitFor({ state: 'visible', timeout: 10000 });
     } catch {
@@ -379,8 +378,7 @@ export class TemplateDeployHelper {
           const log = (window as any).__ICE_ACTION_LOG__ || [];
           return log.some(
             (e: any) =>
-              e.target.includes('/canvas/deploy/destroy') &&
-              (e.action === 'api_response' || e.action === 'api_error'),
+              e.target.includes('/canvas/deploy/destroy') && (e.action === 'api_response' || e.action === 'api_error'),
           );
         },
         {},
@@ -461,10 +459,10 @@ export class TemplateDeployHelper {
         const token = localStorage.getItem('ice-token');
         if (token) headers.Authorization = `Bearer ${token}`;
 
-        const res = await fetch(
-          `/api/canvas/deploy/node-outputs/${cardId}?environment=${encodeURIComponent(env)}`,
-          { credentials: 'include', headers },
-        );
+        const res = await fetch(`/api/canvas/deploy/node-outputs/${cardId}?environment=${encodeURIComponent(env)}`, {
+          credentials: 'include',
+          headers,
+        });
         if (!res.ok) return null;
         const body = await res.json();
         return body?.overlay || null;

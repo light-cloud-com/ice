@@ -350,7 +350,6 @@ export function computeCostSummary(
 
   const scalableMinCost = scalableNodes.reduce((sum, n) => sum + n.perInstanceCost * n.minInstances, 0);
   const scalableMaxCost = scalableNodes.reduce((sum, n) => sum + n.perInstanceCost * n.maxInstances, 0);
-  const scalableCurrentCost = scalableNodes.reduce((sum, n) => sum + n.monthlyCost, 0);
 
   return {
     totalMonthlyCost,

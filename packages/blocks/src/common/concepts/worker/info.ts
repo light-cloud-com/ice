@@ -34,15 +34,9 @@ to **Postgres** / **Redis Cache** / **Object Storage** for state and results.
       { name: 'ECS Service', type: 'aws_ecs_service', role: 'long-running worker' },
       { name: 'Task Definition', type: 'aws_ecs_task_definition' },
     ],
-    gcp: [
-      { name: 'Cloud Run Worker', type: 'google_cloud_run_v2_service', role: 'no-cpu-throttling worker pool' },
-    ],
-    azure: [
-      { name: 'Container App', type: 'azurerm_container_app', role: 'worker replicas' },
-    ],
-    kubernetes: [
-      { name: 'Deployment', type: 'kubernetes_deployment_v1' },
-    ],
+    gcp: [{ name: 'Cloud Run Worker', type: 'google_cloud_run_v2_service', role: 'no-cpu-throttling worker pool' }],
+    azure: [{ name: 'Container App', type: 'azurerm_container_app', role: 'worker replicas' }],
+    kubernetes: [{ name: 'Deployment', type: 'kubernetes_deployment_v1' }],
   },
   snippets: defineSnippets({
     ts: `// BullMQ worker consuming a Redis-backed queue

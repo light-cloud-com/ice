@@ -12,7 +12,8 @@ export const emailServiceConceptBlueprint: ConceptBlueprint = {
   iceType: 'Messaging.Email',
   resourceId: 'email-service',
   name: 'Email Service',
-  description: 'Transactional email. Send invoices, confirmations, password resets. SES / Azure Communication / third-party.',
+  description:
+    'Transactional email. Send invoices, confirmations, password resets. SES / Azure Communication / third-party.',
   icon: 'Mail',
   category: 'messaging',
   providers: ['aws', 'gcp', 'azure'],

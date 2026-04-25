@@ -23,7 +23,10 @@ consumer to process each message exactly once, use a **Message Queue**.
   compilesTo: {
     aws: [{ name: 'Kinesis Data Stream', type: 'aws_kinesis_stream' }],
     gcp: [{ name: 'Pub/Sub Topic', type: 'google_pubsub_topic' }],
-    azure: [{ name: 'Event Hub', type: 'azurerm_eventhub' }, { name: 'Event Hub Namespace', type: 'azurerm_eventhub_namespace' }],
+    azure: [
+      { name: 'Event Hub', type: 'azurerm_eventhub' },
+      { name: 'Event Hub Namespace', type: 'azurerm_eventhub_namespace' },
+    ],
   },
   relatedConcepts: ['Messaging.Queue', 'Compute.ServerlessFunction', 'Compute.Worker'],
 };

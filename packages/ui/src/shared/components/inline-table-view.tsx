@@ -156,7 +156,8 @@ export const InlineTableView: React.FC = () => {
     const labelFor = (key: string): string => {
       if (groupBy === 'status') return t(`table.status.${key}`);
       if (groupBy === 'provider') return key === 'none' ? t('table.group.noProvider') : providerLabel(key);
-      if (groupBy === 'family') return key === 'other' ? t('table.group.other') : key.charAt(0).toUpperCase() + key.slice(1);
+      if (groupBy === 'family')
+        return key === 'other' ? t('table.group.other') : key.charAt(0).toUpperCase() + key.slice(1);
       if (groupBy === 'group') {
         if (key === '_root') return t('table.group.root');
         const parent = activeCard?.nodes?.find((n) => n.id === key);
@@ -348,12 +349,7 @@ export const InlineTableView: React.FC = () => {
     <div className="h-full flex flex-col bg-ice-base">
       {/* ── Toolbar ──────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-2 px-3 py-2 border-b border-ice-border bg-ice-raised shrink-0">
-        <SearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder={t('table.search.placeholder')}
-          className="w-64"
-        />
+        <SearchInput value={search} onChange={setSearch} placeholder={t('table.search.placeholder')} className="w-64" />
 
         <div className="flex items-center gap-1 ml-1">
           <FilterIcon className="w-3 h-3 text-ice-text-3" />

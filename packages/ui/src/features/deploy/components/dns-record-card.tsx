@@ -28,7 +28,10 @@ export interface DnsRecordCardProps {
   verifying?: boolean;
 }
 
-const STATUS_CHIPS: Record<NonNullable<DnsRecordCardProps['status']>, { label: string; className: string; icon: React.ReactNode }> = {
+const STATUS_CHIPS: Record<
+  NonNullable<DnsRecordCardProps['status']>,
+  { label: string; className: string; icon: React.ReactNode }
+> = {
   unknown: {
     label: 'Not checked',
     className: 'text-muted-foreground bg-muted/50',
@@ -90,7 +93,9 @@ export const DnsRecordCard: React.FC<DnsRecordCardProps> = ({
     <div className="rounded-md border border-border bg-muted/20 p-3 space-y-2 text-sm">
       {chip && (
         <div className="flex items-center justify-between">
-          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${chip.className}`}>
+          <span
+            className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${chip.className}`}
+          >
             {chip.icon}
             {chip.label}
           </span>

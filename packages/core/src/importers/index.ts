@@ -32,7 +32,7 @@ export {
   type ImportError as TerraformImportError,
   type ImportWarning as TerraformImportWarning,
   type ImportMetadata as TerraformImportMetadata,
-} from "./terraform/index.js";
+} from "./terraform";
 
 // Pulumi importer
 export {
@@ -74,7 +74,7 @@ export {
   type PulumiImportError,
   type PulumiImportWarning,
   type PulumiImportMetadata,
-} from "./pulumi/index.js";
+} from "./pulumi";
 
 // GCP importer
 export {
@@ -104,7 +104,7 @@ export {
   type GCPImportMetadata,
   type GCPImportOptions,
   type GCPAuthConfig,
-} from "./gcp/index.js";
+} from "./gcp";
 
 // AWS importer
 export {
@@ -126,7 +126,7 @@ export {
   type AWSImportError,
   type AWSImportWarning,
   type AWSImportMetadata,
-} from "./aws/index.js";
+} from "./aws";
 
 // Azure importer
 export {
@@ -147,4 +147,4 @@ export {
   type AzureImportError,
   type AzureImportWarning,
   type AzureImportMetadata,
-} from "./azure/index.js";
+} from "./azure";

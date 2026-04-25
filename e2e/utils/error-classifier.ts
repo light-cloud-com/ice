@@ -43,7 +43,9 @@ const PATTERNS: ErrorPattern[] = [
   // API not enabled — highest priority, very common on fresh projects
   {
     test: (msg) =>
-      /api.*not.*enabled|service.*not.*enabled|has not been used|is disabled|PERMISSION_DENIED.*serviceusage/i.test(msg),
+      /api.*not.*enabled|service.*not.*enabled|has not been used|is disabled|PERMISSION_DENIED.*serviceusage/i.test(
+        msg,
+      ),
     category: 'api_not_enabled',
     gcpCode: 'SERVICE_DISABLED',
     suggestion: (msg) => {

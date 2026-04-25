@@ -113,8 +113,7 @@ export const cloud_storage_handler: GCPResourceHandler = {
       } catch (createErr: any) {
         const createMsg = createErr instanceof Error ? createErr.message : String(createErr);
         const isUblaConstraint =
-          createMsg.includes('storage.uniformBucketLevelAccess') ||
-          createMsg.includes('uniformBucketLevelAccess');
+          createMsg.includes('storage.uniformBucketLevelAccess') || createMsg.includes('uniformBucketLevelAccess');
         const isAlreadyExists =
           createMsg.includes('you already own it') ||
           createMsg.includes('already own this bucket') ||
@@ -129,8 +128,7 @@ export const cloud_storage_handler: GCPResourceHandler = {
           try {
             const existingBucket = storage.bucket(name);
             const [meta] = await existingBucket.getMetadata().catch(() => [null]);
-            const ublaEnabled =
-              meta?.iamConfiguration?.uniformBucketLevelAccess?.enabled === true;
+            const ublaEnabled = meta?.iamConfiguration?.uniformBucketLevelAccess?.enabled === true;
             if (ublaEnabled) {
               // Try to flip UBLA off so the legacy ACL fallback can
               // run on this existing bucket. May fail if locked.
@@ -180,9 +178,7 @@ export const cloud_storage_handler: GCPResourceHandler = {
               retryMsg.includes('already own this bucket') ||
               (retryErr as any)?.code === 409
             ) {
-              ctx.on_log?.(
-                `[cloud-storage] Bucket ${name} already exists — adopting (UBLA-on).`,
-              );
+              ctx.on_log?.(`[cloud-storage] Bucket ${name} already exists — adopting (UBLA-on).`);
               bucketAlreadyExisted = true;
             } else {
               throw retryErr;
@@ -254,9 +250,7 @@ export const cloud_storage_handler: GCPResourceHandler = {
           // permission system that predates IAM and is NOT governed by
           // `iam.allowedPolicyMemberDomains` — they're our automatic
           // fallback path.
-          const isOrgPolicyBlock =
-            msg.includes('permitted customer') ||
-            msg.includes('allowedPolicyMemberDomains');
+          const isOrgPolicyBlock = msg.includes('permitted customer') || msg.includes('allowedPolicyMemberDomains');
           ctx.on_log?.(
             isOrgPolicyBlock
               ? `[cloud-storage] IAM allUsers grant blocked by org policy. Falling back to legacy ACLs...`
@@ -372,7 +366,10 @@ export const cloud_storage_handler: GCPResourceHandler = {
           // file is reachable even if defaults didn't apply.
           // SKIPPED when UBLA is forced on (the ACL endpoint errors).
           const placeholderAcl = publicAccess && !ublaForcedOn ? 'publicRead' : undefined;
-          const [indexExists] = await bucket.file('index.html').exists().catch(() => [false]);
+          const [indexExists] = await bucket
+            .file('index.html')
+            .exists()
+            .catch(() => [false]);
           if (!indexExists) {
             await bucket.file('index.html').save(indexPlaceholder, {
               contentType: 'text/html; charset=utf-8',
@@ -393,7 +390,10 @@ export const cloud_storage_handler: GCPResourceHandler = {
   </body>
 </html>
 `;
-          const [notFoundExists] = await bucket.file('404.html').exists().catch(() => [false]);
+          const [notFoundExists] = await bucket
+            .file('404.html')
+            .exists()
+            .catch(() => [false]);
           if (!notFoundExists) {
             await bucket.file('404.html').save(notFoundPage, {
               contentType: 'text/html; charset=utf-8',
@@ -409,9 +409,7 @@ export const cloud_storage_handler: GCPResourceHandler = {
             try {
               const [files] = await bucket.getFiles({ maxResults: 100 });
               for (const f of files) {
-                await f.acl
-                  .add({ entity: 'allUsers', role: 'READER' })
-                  .catch(() => undefined);
+                await f.acl.add({ entity: 'allUsers', role: 'READER' }).catch(() => undefined);
               }
               ctx.on_log?.(
                 `[cloud-storage] Backfilled allUsers:READER ACL on ${files.length} existing object(s) in adopted bucket ${name}.`,
@@ -458,9 +456,7 @@ export const cloud_storage_handler: GCPResourceHandler = {
         );
       }
 
-      const outputUrl = !publicAccess
-        ? `gs://${name}`
-        : `https://storage.googleapis.com/${name}/${indexPage}`;
+      const outputUrl = !publicAccess ? `gs://${name}` : `https://storage.googleapis.com/${name}/${indexPage}`;
       return result(name, 'create', start, {
         provider_id: `gs://${name}`,
         outputs: {
@@ -602,12 +598,9 @@ export const cloud_storage_handler: GCPResourceHandler = {
             });
             // Verify the grant actually landed (org policy may strip
             // it post-write).
-            const [verifyPolicy] = await bucket.iam
-              .getPolicy({ requestedPolicyVersion: 3 })
-              .catch(() => [null]);
+            const [verifyPolicy] = await bucket.iam.getPolicy({ requestedPolicyVersion: 3 }).catch(() => [null]);
             const verified = (verifyPolicy?.bindings || []).some(
-              (b: any) =>
-                b.role === 'roles/storage.objectViewer' && (b.members || []).includes('allUsers'),
+              (b: any) => b.role === 'roles/storage.objectViewer' && (b.members || []).includes('allUsers'),
             );
             if (verified) {
               updatePublicGrantStrategy = 'iam';
@@ -752,9 +745,7 @@ export const cloud_storage_handler: GCPResourceHandler = {
             try {
               const [files] = await bucket.getFiles({ maxResults: 100 });
               for (const f of files) {
-                await f.acl
-                  .add({ entity: 'allUsers', role: 'READER' })
-                  .catch(() => undefined);
+                await f.acl.add({ entity: 'allUsers', role: 'READER' }).catch(() => undefined);
               }
               ctx.on_log?.(
                 `[cloud-storage] Backfilled allUsers:READER ACL on ${files.length} existing object(s) in ${name}.`,

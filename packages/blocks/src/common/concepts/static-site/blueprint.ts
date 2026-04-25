@@ -18,7 +18,8 @@ export const staticSiteConceptBlueprint: ConceptBlueprint = {
     iceType: 'Compute.StaticSite',
     category: 'frontend',
     name: 'Static Site',
-    description: 'Frontend hosting with HTTPS, global CDN, and custom domain. React, Vue, Next.js, Astro — any static build.',
+    description:
+      'Frontend hosting with HTTPS, global CDN, and custom domain. React, Vue, Next.js, Astro — any static build.',
     icon: 'Globe',
     // Explicitly list providers so the concept is multi-cloud.
     providers: ['aws', 'gcp', 'azure'],

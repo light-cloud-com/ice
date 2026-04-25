@@ -147,7 +147,12 @@ export const saasMultiTenantTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 50, y: 86 }, data: { domain: 'app.saas.io', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true } },
+    {
+      iceType: 'Network.PublicEndpoint',
+      label: 'Public Traffic',
+      position: { x: 50, y: 86 },
+      data: { domain: 'app.saas.io', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true },
+    },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
     // 2: App Dashboard (SSR)
@@ -225,7 +230,8 @@ export const saasMultiTenantTemplate: ComposedTemplate = {
       data: { repository: '', branch: 'main' },
     },
     // 15: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },],
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 1256 }, data: {} },
+  ],
 
   connections: [
     // Internet → WAF → Gateway (Internet→WAF, WAF→Gateway rules)
@@ -345,7 +351,12 @@ export const saasAnalyticsDashboardTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 50, y: 86 }, data: { domain: 'analytics.acme.io', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true } },
+    {
+      iceType: 'Network.PublicEndpoint',
+      label: 'Public Traffic',
+      position: { x: 50, y: 86 },
+      data: { domain: 'analytics.acme.io', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true },
+    },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
     // 2: Dashboard UI (Static)
@@ -421,7 +432,8 @@ export const saasAnalyticsDashboardTemplate: ComposedTemplate = {
       data: { repository: '', branch: 'main' },
     },
     // 14: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 50, y: 1256 }, data: {} },],
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 50, y: 1256 }, data: {} },
+  ],
 
   connections: [
     // Internet → WAF → Gateway (Internet→WAF, WAF→Gateway rules)

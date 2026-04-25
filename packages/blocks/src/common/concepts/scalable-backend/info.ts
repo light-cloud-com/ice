@@ -43,9 +43,7 @@ Place inside a **Private Network** to restrict ingress to an internal LB.
       { name: 'Target Group', type: 'aws_lb_target_group' },
       { name: 'Task Definition', type: 'aws_ecs_task_definition' },
     ],
-    gcp: [
-      { name: 'Cloud Run Service', type: 'google_cloud_run_v2_service' },
-    ],
+    gcp: [{ name: 'Cloud Run Service', type: 'google_cloud_run_v2_service' }],
     azure: [
       { name: 'Container App', type: 'azurerm_container_app' },
       { name: 'Container App Environment', type: 'azurerm_container_app_environment' },

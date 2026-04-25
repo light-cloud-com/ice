@@ -1830,12 +1830,42 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
             description: 'GPU class — determines throughput and cost',
             default: 'nvidia-l4',
             optionDetails: [
-              { value: 'nvidia-t4', label: 'NVIDIA T4 (16GB)', description: 'Entry-level — 7B models', cost: '~$350/mo' },
-              { value: 'nvidia-l4', label: 'NVIDIA L4 (24GB)', description: 'Balanced — 7B-13B models', cost: '~$450/mo' },
-              { value: 'nvidia-a10', label: 'NVIDIA A10 (24GB)', description: 'Mid-range — 13B models', cost: '~$700/mo' },
-              { value: 'nvidia-a100-40', label: 'NVIDIA A100 40GB', description: 'High-end — 70B quantized', cost: '~$2200/mo' },
-              { value: 'nvidia-a100-80', label: 'NVIDIA A100 80GB', description: 'High-end — 70B full-precision', cost: '~$3000/mo' },
-              { value: 'nvidia-h100', label: 'NVIDIA H100 (80GB)', description: 'Top-tier — best throughput', cost: '~$5000/mo' },
+              {
+                value: 'nvidia-t4',
+                label: 'NVIDIA T4 (16GB)',
+                description: 'Entry-level — 7B models',
+                cost: '~$350/mo',
+              },
+              {
+                value: 'nvidia-l4',
+                label: 'NVIDIA L4 (24GB)',
+                description: 'Balanced — 7B-13B models',
+                cost: '~$450/mo',
+              },
+              {
+                value: 'nvidia-a10',
+                label: 'NVIDIA A10 (24GB)',
+                description: 'Mid-range — 13B models',
+                cost: '~$700/mo',
+              },
+              {
+                value: 'nvidia-a100-40',
+                label: 'NVIDIA A100 40GB',
+                description: 'High-end — 70B quantized',
+                cost: '~$2200/mo',
+              },
+              {
+                value: 'nvidia-a100-80',
+                label: 'NVIDIA A100 80GB',
+                description: 'High-end — 70B full-precision',
+                cost: '~$3000/mo',
+              },
+              {
+                value: 'nvidia-h100',
+                label: 'NVIDIA H100 (80GB)',
+                description: 'Top-tier — best throughput',
+                cost: '~$5000/mo',
+              },
             ],
           },
           {
@@ -5259,7 +5289,8 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
             type: 'queue_list',
             required: false,
             tier: 'essential',
-            description: 'Named queues to create on this message broker. Each entry is a queue name your code will publish to / consume from.',
+            description:
+              'Named queues to create on this message broker. Each entry is a queue name your code will publish to / consume from.',
             placeholder: 'e.g. orders, emails, thumbnails',
             addLabel: 'Add a queue',
           },
@@ -5642,8 +5673,16 @@ export const HIGH_LEVEL_CATEGORIES: HighLevelCategory[] = [
         providers: ['aws', 'gcp', 'azure'],
         implementations: [
           { provider: 'aws', resource_type: 'aws:ses:DomainIdentity', display_name: 'Amazon SES' },
-          { provider: 'gcp', resource_type: 'gcp:cloudfunctions:Function', display_name: 'SendGrid via Cloud Function' },
-          { provider: 'azure', resource_type: 'azure:communication:EmailService', display_name: 'Azure Communication Email' },
+          {
+            provider: 'gcp',
+            resource_type: 'gcp:cloudfunctions:Function',
+            display_name: 'SendGrid via Cloud Function',
+          },
+          {
+            provider: 'azure',
+            resource_type: 'azure:communication:EmailService',
+            display_name: 'Azure Communication Email',
+          },
         ],
         keywords: ['email', 'smtp', 'ses', 'sendgrid', 'postmark', 'transactional', 'mail'],
         properties: [

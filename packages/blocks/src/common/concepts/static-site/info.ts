@@ -48,9 +48,7 @@ handles HTTPS, caching, and global distribution.
       { name: 'Firebase Hosting Version', type: 'google_firebase_hosting_version', role: 'content version' },
       { name: 'Firebase Hosting Release', type: 'google_firebase_hosting_release', role: 'live release' },
     ],
-    azure: [
-      { name: 'Static Web App', type: 'azurerm_static_web_app', role: 'CDN + HTTPS + build pipeline' },
-    ],
+    azure: [{ name: 'Static Web App', type: 'azurerm_static_web_app', role: 'CDN + HTTPS + build pipeline' }],
   },
   snippets: defineSnippets({
     ts: `// Fetch data from a paired Scalable Backend
@@ -78,7 +76,10 @@ use std::process::Command;
 Command::new("trunk").arg("build").arg("--release").status().unwrap();`,
   }),
   links: [
-    { label: 'AWS — S3 static website hosting', url: 'https://docs.aws.amazon.com/AmazonS3/latest/userguide/WebsiteHosting.html' },
+    {
+      label: 'AWS — S3 static website hosting',
+      url: 'https://docs.aws.amazon.com/AmazonS3/latest/userguide/WebsiteHosting.html',
+    },
     { label: 'GCP — Firebase Hosting', url: 'https://firebase.google.com/docs/hosting' },
     { label: 'Azure — Static Web Apps', url: 'https://learn.microsoft.com/azure/static-web-apps/' },
   ],

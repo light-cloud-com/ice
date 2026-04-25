@@ -4,14 +4,7 @@
  * These repos provide source code for Cloud Run deployments during testing.
  */
 
-import {
-  createRepo,
-  pushFiles,
-  deleteRepo,
-  repoExists,
-  listTestRepos,
-  repoIsEmpty,
-} from './github-repo-client';
+import { createRepo, pushFiles, deleteRepo, repoExists, listTestRepos, repoIsEmpty } from './github-repo-client';
 import { helloApiFiles } from './templates/hello-api';
 import { helloPythonFiles } from './templates/hello-python';
 import { helloStaticFiles } from './templates/hello-static';

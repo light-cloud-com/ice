@@ -5,9 +5,6 @@
  * Uses user's own cloud credentials (not Light Cloud's).
  */
 
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
 import prisma from '@ice/db';
 import * as providerService from '@ice/service-credentials';
 import { emitDeployProgress as wireEmitDeployProgress } from '@ice/shared';
@@ -18,7 +15,6 @@ import {
   DeployLockError,
   finishDeploySnapshot,
   getDeploySnapshot,
-  registerTempDir,
   releaseTempDir,
   setSnapshotPersister,
   startDeploySnapshot,
@@ -100,7 +96,14 @@ async function flushSnapshotNow(cardId: string): Promise<void> {
  * event tape stays complete.
  */
 function emitDeployProgress(cardId: string, event: any): void {
-  console.log('[deploy] emit cardId=' + cardId + ' type=' + (event?.type || '?') + ' msg=' + (event?.message || event?.resource || '').toString().slice(0, 80));
+  console.log(
+    '[deploy] emit cardId=' +
+      cardId +
+      ' type=' +
+      (event?.type || '?') +
+      ' msg=' +
+      (event?.message || event?.resource || '').toString().slice(0, 80),
+  );
   wireEmitDeployProgress(cardId, event);
   try {
     recordDeployEvent(cardId, event?.type || 'log', event);
@@ -129,7 +132,10 @@ export function getCurrentDeploySnapshot(cardId: string) {
  */
 function computeDeploySummary(result: any): Record<string, number> {
   const resources = (result?.resources || []) as any[];
-  let created = 0, updated = 0, deleted = 0, failed = 0;
+  let created = 0,
+    updated = 0,
+    deleted = 0,
+    failed = 0;
   for (const r of resources) {
     if (!r.success) {
       failed += 1;
@@ -141,46 +147,6 @@ function computeDeploySummary(result: any): Record<string, number> {
     else if (action === 'delete') deleted += 1;
   }
   return { created, updated, deleted, failed, total: resources.length };
-}
-
-/**
- * Creates a per-deploy temp directory with mode 0700 and writes the SA key to
- * `sa.json` inside it with mode 0600. Returns the key file path AND the
- * directory path — callers must release the directory (not the file) when
- * done so the registry stays in sync.
- */
-function writeTempCredentials(keyJson: string): { keyPath: string; dir: string } {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ice-deploy-'));
-  try {
-    fs.chmodSync(dir, 0o700);
-  } catch {
-    // On some filesystems chmod is a no-op; the mkdtemp default is usually already 0700.
-  }
-  const keyPath = path.join(dir, 'sa.json');
-  fs.writeFileSync(keyPath, keyJson, { mode: 0o600 });
-  registerTempDir(dir);
-  return { keyPath, dir };
-}
-
-/**
- * Validate that a parsed service-account JSON has the minimum fields GCP
- * will actually accept. Catches the "user pasted an empty or truncated key"
- * case early with a clear error instead of a cryptic auth failure at deploy
- * time.
- */
-function validateSaKey(parsed: unknown): void {
-  if (!parsed || typeof parsed !== 'object') {
-    throw new Error('Service account key is not a valid JSON object');
-  }
-  const obj = parsed as Record<string, unknown>;
-  const required = ['type', 'project_id', 'private_key', 'client_email'];
-  const missing = required.filter((k) => !obj[k]);
-  if (missing.length) {
-    throw new Error(`Service account key is missing required fields: ${missing.join(', ')}`);
-  }
-  if (obj.type !== 'service_account') {
-    throw new Error(`Expected type='service_account' in SA key, got '${obj.type}'`);
-  }
 }
 
 // Dynamic imports for core engine (ESM) — resolved from workspace
@@ -467,9 +433,7 @@ export async function applyDeployment(
     // node has an empty `repository` field — this log makes that
     // immediately obvious without needing to inspect Redux state.
     try {
-      const repoNodes = (nodes as any[]).filter(
-        (n) => (n.data?.iceType as string) === 'Source.Repository',
-      );
+      const repoNodes = (nodes as any[]).filter((n) => (n.data?.iceType as string) === 'Source.Repository');
       if (repoNodes.length > 0) {
         emitDeployProgress(cardId, {
           type: 'log',
@@ -478,9 +442,7 @@ export async function applyDeployment(
         for (const r of repoNodes) {
           const repoVal = String(r.data?.repository || '').trim();
           const branchVal = String(r.data?.branch || 'main').trim();
-          const connectedEdges = (edges as any[]).filter(
-            (e) => e.source === r.id || e.target === r.id,
-          );
+          const connectedEdges = (edges as any[]).filter((e) => e.source === r.id || e.target === r.id);
           const connectedTargets = connectedEdges
             .map((e) => (e.source === r.id ? e.target : e.source))
             .map((tid) => (nodes as any[]).find((n) => n.id === tid))
@@ -770,9 +732,7 @@ export async function applyDeployment(
         // skip log emission when nothing useful is there.
         if (status === 'completed' && extra?.outputs) {
           const out = extra.outputs as Record<string, unknown>;
-          const url = (out.custom_domain_url || out.url || out.default_url || out.endpoint) as
-            | string
-            | undefined;
+          const url = (out.custom_domain_url || out.url || out.default_url || out.endpoint) as string | undefined;
           const domain = out.domain as string | undefined;
           const ip = (out.ip_address || out.IPAddress) as string | undefined;
           let endpoint: string | undefined;
@@ -901,7 +861,13 @@ export async function applyDeployment(
             auth_credentials: (authClient as any)?._ice_parsed_credentials,
             on_log: (message: string) => emitDeployProgress(cardId, { type: 'log', message }),
             on_progress: (resource: string, action: string, status: string) =>
-              emitDeployProgress(cardId, { type: 'progress', resource, action, status, source_node_id: findSourceNodeId({ name: resource }) }),
+              emitDeployProgress(cardId, {
+                type: 'progress',
+                resource,
+                action,
+                status,
+                source_node_id: findSourceNodeId({ name: resource }),
+              }),
           });
           // Merge retry results into the primary result: any resource
           // that succeeded on retry overrides its failed entry from the
@@ -951,9 +917,7 @@ export async function applyDeployment(
           res.source_node_id = source_node_id;
         }
         const label = source_node_id ? nameToLabel.get(res.name) || '-' : '-';
-        console.log(
-          `Resource result: ${res.name} → matched node: ${source_node_id || 'NONE'} (label: ${label})`,
-        );
+        console.log(`Resource result: ${res.name} → matched node: ${source_node_id || 'NONE'} (label: ${label})`);
         emitDeployProgress(cardId, {
           type: 'resource_result',
           result: res,
@@ -1237,9 +1201,7 @@ export async function destroyAllForCard(
         if (type.includes('managedSslCertificate') || type.includes('sslCertificate')) return 7;
         return 50;
       };
-      const ordered = [...targets.values()].sort(
-        (a, b) => orderPriority(a.type) - orderPriority(b.type),
-      );
+      const ordered = [...targets.values()].sort((a, b) => orderPriority(a.type) - orderPriority(b.type));
 
       const deleted: Array<{ type: string; name: string }> = [];
       const failed: Array<{ type: string; name: string; error: string }> = [];
@@ -1338,7 +1300,9 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
   if (!latestApply || !latestApply.results) {
     console.warn('[destroy] NO APPLY BASELINE cardId=' + cardId + ' — nothing to destroy.');
     releaseLock();
-    throw new Error('No deployment found to destroy. Use destroy-everything mode if you need to clean up orphaned resources.');
+    throw new Error(
+      'No deployment found to destroy. Use destroy-everything mode if you need to clean up orphaned resources.',
+    );
   }
 
   const newerDestroy = await prisma.canvasDeployment.findFirst({
@@ -1439,7 +1403,8 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
     const resources = ((results.resources as any[]) || []).slice().reverse();
     const deleteResults: any[] = [];
 
-    const destroyProject = scopedAuth.scope.project || (authClient as any)?.projectId || (authClient as any)?.project_id;
+    const destroyProject =
+      scopedAuth.scope.project || (authClient as any)?.projectId || (authClient as any)?.project_id;
     console.log(
       '[destroy] begin delete loop project=' +
         destroyProject +
@@ -2059,10 +2024,14 @@ export async function checkDrift(cardId: string, nodes: any[], options?: { envir
     }
   } finally {
     if (deployer) {
-      try { await deployer.cleanup(); } catch {}
+      try {
+        await deployer.cleanup();
+      } catch {}
     }
     if (driftScopedAuth) {
-      try { await cleanupProviderAuth('gcp', driftScopedAuth); } catch {}
+      try {
+        await cleanupProviderAuth('gcp', driftScopedAuth);
+      } catch {}
     }
   }
 
@@ -2182,17 +2151,14 @@ const BASE_APIS = ['serviceusage.googleapis.com', 'cloudresourcemanager.googleap
  */
 export async function enableGcpApi(project: string, apiName: string, accessToken: string): Promise<boolean> {
   try {
-    const res = await fetch(
-      `https://serviceusage.googleapis.com/v1/projects/${project}/services/${apiName}:enable`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: '{}',
+    const res = await fetch(`https://serviceusage.googleapis.com/v1/projects/${project}/services/${apiName}:enable`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
       },
-    );
+      body: '{}',
+    });
     return res.ok;
   } catch {
     return false;

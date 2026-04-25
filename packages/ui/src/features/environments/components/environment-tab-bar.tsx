@@ -31,7 +31,7 @@ interface EnvironmentTabBarProps {
   basePath?: string;
 }
 
-export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId, basePath }) => {
+export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId, basePath: _basePath }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const environments = useSelector((s: RootState) => s.environments.byProject[projectId] || []);
@@ -353,11 +353,7 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
 
       {/* Rename environment modal */}
       {renameTarget && (
-        <RenameEnvironmentModal
-          env={renameTarget}
-          projectId={projectId}
-          onClose={() => setRenameTarget(null)}
-        />
+        <RenameEnvironmentModal env={renameTarget} projectId={projectId} onClose={() => setRenameTarget(null)} />
       )}
     </>
   );

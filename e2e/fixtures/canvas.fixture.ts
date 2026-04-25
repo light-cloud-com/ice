@@ -15,10 +15,9 @@ export const test = base.extend<{
   authenticatedPage: async ({ authenticatedPage }, use) => {
     // Community edition auto-seeds user, lands on folder view or canvas
     // Wait for the app to load
-    await authenticatedPage.waitForSelector(
-      '[data-testid="svg-canvas"], #ice-folder-panel, #ice-canvas-svg',
-      { timeout: 15000 },
-    );
+    await authenticatedPage.waitForSelector('[data-testid="svg-canvas"], #ice-folder-panel, #ice-canvas-svg', {
+      timeout: 15000,
+    });
 
     // If we're on the folder view, create a new project via UI
     const onCanvas = await authenticatedPage.locator('[data-testid="svg-canvas"], #ice-canvas-svg').isVisible();
@@ -27,7 +26,12 @@ export const test = base.extend<{
       const newProjectBtn = authenticatedPage.locator(
         'button:has-text("New Project"), button:has-text("Create"), [data-testid="new-project"]',
       );
-      if (await newProjectBtn.first().isVisible({ timeout: 3000 }).catch(() => false)) {
+      if (
+        await newProjectBtn
+          .first()
+          .isVisible({ timeout: 3000 })
+          .catch(() => false)
+      ) {
         await newProjectBtn.first().click();
         await authenticatedPage.waitForTimeout(1000);
       }

@@ -109,7 +109,10 @@ function normalizeSubdomain(raw: string): string {
   s = s.replace(/^https?:\/\//, '');
   const dotIdx = s.indexOf('.');
   if (dotIdx !== -1) s = s.slice(0, dotIdx);
-  s = s.replace(/[^a-z0-9-]/g, '').replace(/^-+/, '').replace(/-+$/, '');
+  s = s
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/^-+/, '')
+    .replace(/-+$/, '');
   if (s.length > 63) s = s.slice(0, 63);
   return s;
 }
@@ -139,16 +142,15 @@ export const SvgCustomDomainNode: React.FC<SvgCompactNodeProps> = ({
   const isInvalidTarget = connectionDragState === 'invalid-target';
   const isSource = connectionDragState === 'source';
 
-  const border =
-    isDragOver
-      ? '#22d3ee'
-      : isValidTarget
-        ? '#22c55e'
-        : isInvalidTarget
-          ? '#ef4444'
-          : isSelected || isHovered
-            ? categoryGlow
-            : categoryGlow + '55';
+  const border = isDragOver
+    ? '#22d3ee'
+    : isValidTarget
+      ? '#22c55e'
+      : isInvalidTarget
+        ? '#ef4444'
+        : isSelected || isHovered
+          ? categoryGlow
+          : categoryGlow + '55';
 
   // ── Mutators ──
   const updateRoutes = useCallback(
@@ -324,11 +326,12 @@ export const SvgCustomDomainNode: React.FC<SvgCompactNodeProps> = ({
             }}
           >
             {routes.map((route) => {
-              const host = route.subdomain && rootDomain
-                ? `${route.subdomain}.${rootDomain}`
-                : rootDomain
-                  ? rootDomain
-                  : route.subdomain || '(set root domain above)';
+              const host =
+                route.subdomain && rootDomain
+                  ? `${route.subdomain}.${rootDomain}`
+                  : rootDomain
+                    ? rootDomain
+                    : route.subdomain || '(set root domain above)';
               return (
                 <div
                   key={route.id}

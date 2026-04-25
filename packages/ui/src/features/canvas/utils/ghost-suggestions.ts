@@ -83,9 +83,7 @@ export function generateGhostSuggestions(
   const rules = SUGGESTION_RULES[iceType];
   if (!rules || rules.length === 0) return [];
 
-  const existingTypes = new Set(
-    existingNodes.map((n) => (n.data?.iceType as string) || '').filter(Boolean),
-  );
+  const existingTypes = new Set(existingNodes.map((n) => (n.data?.iceType as string) || '').filter(Boolean));
 
   const now = Date.now();
   const ghosts: GhostNode[] = [];

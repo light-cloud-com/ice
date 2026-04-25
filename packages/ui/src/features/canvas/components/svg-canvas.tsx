@@ -24,10 +24,31 @@ import { SvgApiGatewayNode } from './nodes/api-gateway';
 import { SvgEmailServiceNode } from './nodes/email-service';
 import { SvgEnvConfigNode } from './nodes/env-config';
 import { SvgEventStreamNode } from './nodes/event-stream';
+import { SvgGithubRepoNode } from './nodes/github-repo';
+import { SvgLlmGatewayNode } from './nodes/llm-gateway';
+import { SvgLogNode } from './nodes/log-node';
+import { SvgLogTerminalNode } from './nodes/log-terminal';
+import { SvgMessageQueueNode } from './nodes/message-queue';
+import { SvgMongodbNode } from './nodes/mongodb';
+import { SvgMysqlNode } from './nodes/mysql';
+import { SvgObjectStorageNode } from './nodes/object-storage';
+import { SvgObservabilityNode } from './nodes/observability';
 import { SvgPostgresNode } from './nodes/postgres';
+import { SvgPrivateAiServiceNode } from './nodes/private-ai-service';
+import { SvgPublicTrafficNode } from './nodes/public-traffic';
+import { SvgRedisCacheNode } from './nodes/redis-cache';
 import { SvgScalableBackendNode } from './nodes/scalable-backend';
+import { SvgScheduledTaskNode } from './nodes/scheduled-task';
+import { SvgSecretStoreNode } from './nodes/secret-store';
+import { SvgServerlessFunctionNode } from './nodes/serverless-function';
 import { SvgSsrSiteNode } from './nodes/ssr-site';
+import { SelectionFrame } from './selection-frame';
+import { SvgConnectionPath, EDGE_COLORS, type ConnectionTooltipInfo } from './svg-connection-path';
 import { getBlueprint, expandBlueprint } from '../../../config/blocks';
+import { canContain, isContainer } from '../../../config/containment-rules';
+import { isTypeVisibleAtLevel, isEdgeVisibleAtLevel } from '../../../config/visualization-config';
+import { t } from '../../../i18n';
+import { useUndoRedo } from '../../../shared/hooks/use-undo-redo';
 import {
   selectActiveCard,
   addNodeToCard,
@@ -68,26 +89,9 @@ import {
 } from './nodes/private-network';
 // ─── Concept block canvas nodes (one folder per block, individually customizable) ───
 import { SvgStaticSiteNode } from './nodes/static-site';
-import { SvgServerlessFunctionNode } from './nodes/serverless-function';
 import { SvgVectorDbNode } from './nodes/vector-db';
 import { SvgWorkerNode } from './nodes/worker';
-import { SvgScheduledTaskNode } from './nodes/scheduled-task';
-import { SvgMysqlNode } from './nodes/mysql';
-import { SvgMongodbNode } from './nodes/mongodb';
-import { SvgRedisCacheNode } from './nodes/redis-cache';
-import { SvgObjectStorageNode } from './nodes/object-storage';
-import { SvgLlmGatewayNode } from './nodes/llm-gateway';
-import { SvgPrivateAiServiceNode } from './nodes/private-ai-service';
-import { SvgObservabilityNode } from './nodes/observability';
-import { SvgGithubRepoNode } from './nodes/github-repo';
-import { SvgLogNode } from './nodes/log-node';
-import { SvgLogTerminalNode } from './nodes/log-terminal';
 // Bespoke-from-day-one nodes with inline editing
-import { SvgMessageQueueNode } from './nodes/message-queue';
-import { SvgPublicTrafficNode } from './nodes/public-traffic';
-import { SvgSecretStoreNode } from './nodes/secret-store';
-import { SelectionFrame } from './selection-frame';
-import { SvgConnectionPath, EDGE_COLORS, type ConnectionTooltipInfo } from './svg-connection-path';
 import {
   CORNER_RADIUS,
   HEADER_HEIGHT,
@@ -99,15 +103,12 @@ import {
   ZOOM_STEP,
   GRID_SIZE,
 } from '../../../config/canvas-constants';
-import { canContain, isContainer } from '../../../config/containment-rules';
-import { isTypeVisibleAtLevel, isEdgeVisibleAtLevel } from '../../../config/visualization-config';
-import { t } from '../../../i18n';
 import { SvgUserNode, USER_NODE_WIDTH, USER_NODE_HEIGHT, USER_NODE_ID } from '../../../shared/components/svg-user-node';
 import { useClipboard } from '../../../shared/hooks/use-clipboard';
 import { useExposedServices } from '../../../shared/hooks/use-exposed-services';
-import { useUndoRedo } from '../../../shared/hooks/use-undo-redo';
 import { calculateZIndex } from '../../../shared/utils/auto-layout';
 import { logCanvasRender, logDrop, logBlueprint } from '../../../shared/utils/debug-logger';
+import { inspectLayout, updateInspectorState, installInspector } from '../../../shared/utils/layout-inspector';
 import { receiveCardPipelineUpdate } from '../../../store/slices/pipeline-slice';
 import {
   setSelectedNodes,
@@ -119,7 +120,7 @@ import { setPaneViewport, openContextMenu } from '../../../store/slices/ui-slice
 import { useCanvasInteractions, type CanvasItem } from '../hooks/use-canvas-interactions';
 import { useCanvasValidation } from '../hooks/use-canvas-validation';
 import { useComputingFlows } from '../hooks/use-computing-flows';
-import { inspectLayout, updateInspectorState, installInspector } from '../../../shared/utils/layout-inspector';
+import type { SvgCompactNodeProps } from './nodes/compact-node/types';
 import type { RootState, AppDispatch } from '../../../store';
 
 // =============================================================================
@@ -130,8 +131,6 @@ import type { RootState, AppDispatch } from '../../../store';
 // dispatcher loop checks this table first and falls back to SvgCompactNode
 // when no bespoke renderer is registered. Each entry lives in its own
 // folder under ./nodes/<name>/ so customizing one block = editing one file.
-
-import type { SvgCompactNodeProps } from './nodes/compact-node/types';
 
 const CONCEPT_NODE_RENDERERS: Record<string, React.FC<SvgCompactNodeProps>> = {
   // Frontend
@@ -301,7 +300,6 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   // Full re-layout only happens on manual organize button clicks.
   const autoOrganizeOnZoom = useSelector((state: RootState) => state.ui.autoOrganizeOnZoom);
   const snapToGrid = useSelector((state: RootState) => state.ui.snapToGrid);
-  const gridSize = useSelector((state: RootState) => state.ui.gridSize);
   const canvasLocked = useSelector((state: RootState) => state.ui.canvasLocked);
   const prevAutoZoomRef = useRef(viewport.zoom);
 
@@ -394,6 +392,9 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     }
 
     prevNodeCountRef.current = currentCount;
+    // viewport.zoom intentionally omitted — re-running on zoom changes would
+    // trigger spurious auto-organize calls; we only care about node-count jumps.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nodes.length, dispatch]);
 
   // Convert Redux nodes to canvas format with type-based sizing.
@@ -405,10 +406,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
       const isPrivateNetwork = iceType === 'Network.PrivateNetwork';
       const isGroup =
-        iceType.startsWith('Group.') ||
-        node.type === 'container' ||
-        node.type === ('group' as any) ||
-        isPrivateNetwork;
+        iceType.startsWith('Group.') || node.type === 'container' || node.type === ('group' as any) || isPrivateNetwork;
       const isBlock = node.type === 'block';
       const folded = !!node.data?.folded;
       const isCustomDomain = iceType === 'Network.CustomDomain';
@@ -434,8 +432,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       // the blocks).
       const expandedHeight =
         isCustomDomain || isPrivateNetwork ? defaultHeight : Math.max(node.height || 0, defaultHeight);
-      const visualHeight =
-        folded && !isCustomDomain && !isPrivateNetwork ? (isGroup ? 36 : 38) : expandedHeight;
+      const visualHeight = folded && !isCustomDomain && !isPrivateNetwork ? (isGroup ? 36 : 38) : expandedHeight;
 
       return {
         id: node.id,
@@ -1341,7 +1338,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   // Track connection tooltip (follows mouse)
   const [connTooltip, setConnTooltip] = useState<ConnectionTooltipInfo | null>(null);
   // Dismiss state for the empty canvas overlay
-  const [overlayDismissed, setOverlayDismissed] = useState(false);
+  const [, setOverlayDismissed] = useState(false);
   // Reset when card changes
   const prevCardIdRef = useRef(card?.id);
   useEffect(() => {
@@ -1911,11 +1908,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
           });
 
           dispatch(expandBlueprintToCard(expanded));
-          dispatch(
-            setGhosts(
-              generateGhostSuggestions(expanded.node as unknown as CardNode, nodes, edges),
-            ),
-          );
+          dispatch(setGhosts(generateGhostSuggestions(expanded.node as unknown as CardNode, nodes, edges)));
           return;
         }
         // fallback: no blueprint found — create empty resource node
@@ -1973,9 +1966,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       dispatch(expandBlueprintToCard(expanded));
 
       const [source, target] =
-        ghost.edgeDirection === 'to'
-          ? [ghost.sourceNodeId, expanded.node.id]
-          : [expanded.node.id, ghost.sourceNodeId];
+        ghost.edgeDirection === 'to' ? [ghost.sourceNodeId, expanded.node.id] : [expanded.node.id, ghost.sourceNodeId];
 
       dispatch(
         addEdgeToCard({

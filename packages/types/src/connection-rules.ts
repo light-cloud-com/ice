@@ -506,10 +506,7 @@ export interface NodeForConnectionCheck {
  * Used by parent-aware rules like "Public Traffic can only target
  * non-VPC services."
  */
-export function isInsideContainer(
-  nodeId: string,
-  allNodes: NodeForConnectionCheck[],
-): boolean {
+export function isInsideContainer(nodeId: string, allNodes: NodeForConnectionCheck[]): boolean {
   const byId = new Map(allNodes.map((n) => [n.id, n]));
   let cur = byId.get(nodeId);
   let depth = 0;

@@ -142,7 +142,12 @@ export const backendApiTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 50, y: 86 }, data: { domain: 'api.myapp.com', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true } },
+    {
+      iceType: 'Network.PublicEndpoint',
+      label: 'Public Traffic',
+      position: { x: 50, y: 86 },
+      data: { domain: 'api.myapp.com', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true },
+    },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
 
@@ -188,7 +193,8 @@ export const backendApiTemplate: ComposedTemplate = {
       data: { repository: '', branch: 'main' },
     },
     // 10: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 306, y: 1060 }, data: {} },],
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 306, y: 1060 }, data: {} },
+  ],
 
   connections: [
     // Internet → WAF → Gateway (Gateway→Gateway rule)
@@ -300,7 +306,12 @@ export const microservicesTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.PublicEndpoint', label: 'Public Traffic', position: { x: 50, y: 86 }, data: { domain: 'api.myapp.com', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true } },
+    {
+      iceType: 'Network.PublicEndpoint',
+      label: 'Public Traffic',
+      position: { x: 50, y: 86 },
+      data: { domain: 'api.myapp.com', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true },
+    },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
 
@@ -377,7 +388,8 @@ export const microservicesTemplate: ComposedTemplate = {
       data: { repository: '', branch: 'main' },
     },
     // 14: Env
-    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 306, y: 1432 }, data: {} },],
+    { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 306, y: 1432 }, data: {} },
+  ],
 
   connections: [
     // Internet → WAF → Gateway (Gateway→Gateway rule)

@@ -100,8 +100,7 @@ export interface StatusContext {
 export function deriveStatus(node: CardNode, ctx: StatusContext): RowStatus {
   const id = node.id;
   const drift = ctx.driftByNode[id];
-  const isDrifted =
-    !!drift && (drift.status === 'drifted' || drift.status === 'missing' || drift.status === 'extra');
+  const isDrifted = !!drift && (drift.status === 'drifted' || drift.status === 'missing' || drift.status === 'extra');
 
   // Primary source: `node.data.deploy_status` — what the canvas reads to draw
   // the LIVE/DEPLOY/ERR badge (compact-lod3.tsx). Same source ⇒ same answer.
@@ -166,7 +165,7 @@ const PROVIDER_CONSOLE_BASE: Record<string, string> = {
   cloudflare: 'https://dash.cloudflare.com/',
 };
 
-function buildConsoleUrl(provider: string, iceType: string, region?: string, providerId?: string): string | null {
+function buildConsoleUrl(provider: string, iceType: string, region?: string, _providerId?: string): string | null {
   const base = PROVIDER_CONSOLE_BASE[provider.toLowerCase()];
   if (!base) return null;
 

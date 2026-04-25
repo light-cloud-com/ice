@@ -51,7 +51,8 @@ const REMEDIATIONS: RemediationPattern[] = [
   },
   {
     id: 'permission-denied',
-    pattern: /PERMISSION_DENIED|Resource not accessible by personal access token|does not have permission|required 'serviceusage/i,
+    pattern:
+      /PERMISSION_DENIED|Resource not accessible by personal access token|does not have permission|required 'serviceusage/i,
     title: 'Permission denied',
     explanation:
       "The credentials you're using don't have permission for this operation. Grant the required IAM role or reconnect with a different service account.",
@@ -67,7 +68,8 @@ const REMEDIATIONS: RemediationPattern[] = [
     id: 'api-not-enabled',
     pattern: /SERVICE_DISABLED|API has not been used|has not been enabled/i,
     title: 'API not enabled',
-    explanation: 'A required Google Cloud API is not enabled for this project. ICE will try to enable it automatically on retry.',
+    explanation:
+      'A required Google Cloud API is not enabled for this project. ICE will try to enable it automatically on retry.',
     actions: [
       {
         label: 'Open API library',
@@ -115,21 +117,23 @@ const REMEDIATIONS: RemediationPattern[] = [
     pattern: /Certificate Map or at least 1 SSL certificate must be specified/i,
     title: 'SSL certificate required',
     explanation:
-      'Creating a TargetHttpsProxy needs at least one SSL certificate, or ICE must fall back to HTTP. If you didn\'t intend to use HTTPS, remove the protocol override.',
+      "Creating a TargetHttpsProxy needs at least one SSL certificate, or ICE must fall back to HTTP. If you didn't intend to use HTTPS, remove the protocol override.",
     actions: [],
   },
   {
     id: 'deadline-exceeded',
     pattern: /DEADLINE_EXCEEDED|deadline exceeded|operation timed out/i,
     title: 'Operation timed out',
-    explanation: 'The GCP operation took longer than expected. This is usually transient. Retry and it will likely succeed.',
+    explanation:
+      'The GCP operation took longer than expected. This is usually transient. Retry and it will likely succeed.',
     actions: [{ label: 'Retry deploy', onClick: 'retry' }],
   },
   {
     id: 'network-error',
     pattern: /ECONNRESET|ETIMEDOUT|ENOTFOUND|network error|unexpected end of json/i,
     title: 'Network error',
-    explanation: 'Transient network failure talking to GCP. Retry — the request will succeed once the connection recovers.',
+    explanation:
+      'Transient network failure talking to GCP. Retry — the request will succeed once the connection recovers.',
     actions: [{ label: 'Retry deploy', onClick: 'retry' }],
   },
 ];

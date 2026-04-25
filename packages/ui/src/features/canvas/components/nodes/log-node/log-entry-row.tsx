@@ -39,7 +39,16 @@ export const LogEntryRow: React.FC<LogEntryRowProps> = memo(({ log, isLast, isCo
       </span>
 
       {/* Level */}
-      <span style={{ color: levelConfig.text, fontSize: 9, fontWeight: 600, fontFamily: 'ui-monospace, monospace', flexShrink: 0, width: 42 }}>
+      <span
+        style={{
+          color: levelConfig.text,
+          fontSize: 9,
+          fontWeight: 600,
+          fontFamily: 'ui-monospace, monospace',
+          flexShrink: 0,
+          width: 42,
+        }}
+      >
         [{levelConfig.label}]
       </span>
 

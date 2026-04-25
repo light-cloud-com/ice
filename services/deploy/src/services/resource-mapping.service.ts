@@ -22,10 +22,7 @@ export interface ResourceMappingEntry {
  * Load the full mapping for a card+environment as a `node_id → entry` map.
  * Pass the result into `translate_card_to_graph` via `existing_names`.
  */
-export async function getResourceMap(
-  cardId: string,
-  environment: string,
-): Promise<Map<string, ResourceMappingEntry>> {
+export async function getResourceMap(cardId: string, environment: string): Promise<Map<string, ResourceMappingEntry>> {
   const rows = await prisma.deployedResourceMapping.findMany({
     where: { card_id: cardId, environment },
   });
@@ -43,10 +40,7 @@ export async function getResourceMap(
 /**
  * Convenience: a plain `node_id → name` map for passing to the translator.
  */
-export async function getExistingNameMap(
-  cardId: string,
-  environment: string,
-): Promise<Map<string, string>> {
+export async function getExistingNameMap(cardId: string, environment: string): Promise<Map<string, string>> {
   const full = await getResourceMap(cardId, environment);
   const names = new Map<string, string>();
   for (const [nodeId, entry] of full) names.set(nodeId, entry.name);

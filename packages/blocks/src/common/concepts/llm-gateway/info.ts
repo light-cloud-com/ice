@@ -25,7 +25,10 @@ centralization benefits.
   compilesTo: {
     aws: [{ name: 'Bedrock Invocation Role', type: 'aws_iam_role', role: 'access to Bedrock models' }],
     gcp: [{ name: 'Vertex AI Endpoint', type: 'google_vertex_ai_endpoint' }],
-    azure: [{ name: 'Azure OpenAI Deployment', type: 'azurerm_cognitive_deployment' }, { name: 'Cognitive Account', type: 'azurerm_cognitive_account' }],
+    azure: [
+      { name: 'Azure OpenAI Deployment', type: 'azurerm_cognitive_deployment' },
+      { name: 'Cognitive Account', type: 'azurerm_cognitive_account' },
+    ],
   },
   relatedConcepts: ['Database.Vector', 'Compute.Container', 'AI.PrivateAIService'],
 };

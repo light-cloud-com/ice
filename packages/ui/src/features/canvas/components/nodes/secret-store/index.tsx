@@ -36,14 +36,13 @@ export const SvgSecretStoreNode: React.FC<SvgCompactNodeProps> = ({
   onNodeHover,
   connectionDragState = null,
 }) => {
-  const keys = ((node.data?.secrets as unknown[] | undefined) || [])
-    .map(parseSecretKey)
-    .filter(Boolean);
+  const keys = ((node.data?.secrets as unknown[] | undefined) || []).map(parseSecretKey).filter(Boolean);
 
   const autoRotate = !!node.data?.auto_rotate;
-  const subtitle = keys.length === 0
-    ? 'No secrets yet'
-    : `${keys.length} ${keys.length === 1 ? 'secret' : 'secrets'}${autoRotate ? ' · auto-rotate' : ''}`;
+  const subtitle =
+    keys.length === 0
+      ? 'No secrets yet'
+      : `${keys.length} ${keys.length === 1 ? 'secret' : 'secrets'}${autoRotate ? ' · auto-rotate' : ''}`;
 
   return (
     <CardShell

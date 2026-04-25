@@ -6,7 +6,9 @@
  */
 
 import 'dotenv/config';
+import { execSync } from 'child_process';
 import { createServer } from 'http';
+import { cpus } from 'os';
 import { startLocalAiServer, stopLocalAiServer } from '@ice/ai';
 import { createAiRouter } from '@ice/service-ai';
 import { createCanvasRouter } from '@ice/service-canvas';
@@ -99,8 +101,6 @@ app.get('/api/health', (_req, res) => {
 
 // ─── System Stats (CPU / RAM for all ICE processes) ────────────────────────
 
-import { execSync } from 'child_process';
-
 /** Collect all descendant PIDs of our process */
 function getTreePids(): number[] {
   const rootPid = process.pid;
@@ -140,7 +140,6 @@ function getRssForPids(pids: number[]): number {
   }
 }
 
-import { cpus } from 'os';
 const NUM_CPUS = cpus().length || 1;
 
 /** Get CPU% for a list of PIDs — ps reports per-core %, so divide by core count */

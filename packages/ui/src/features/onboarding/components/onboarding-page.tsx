@@ -17,7 +17,6 @@ import { COMPOSED_TEMPLATES, QUICK_STARTS, expandComposedTemplate } from '../../
 import { useTranslation } from '../../../i18n';
 import axiosInstance from '../../../shared/api/axios-instance';
 import { StepIndicator } from '../../../shared/components/step-indicator';
-import { useTheme } from '../../../shared/hooks/use-theme';
 import { toSlug } from '../../../shared/utils/slug';
 import { fetchProfile } from '../../../store/slices/account-slice';
 import {
@@ -35,14 +34,9 @@ const TOTAL_STEPS = 3;
 export const OnboardingPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { isDark } = useTheme();
   const { t } = useTranslation();
 
-  const STEP_LABELS = [
-    t('onboarding.nav.stepCloud'),
-    t('onboarding.nav.stepGitHub'),
-    t('onboarding.nav.stepProject'),
-  ];
+  const STEP_LABELS = [t('onboarding.nav.stepCloud'), t('onboarding.nav.stepGitHub'), t('onboarding.nav.stepProject')];
 
   const currentStep = useSelector((s: RootState) => s.onboarding.currentStep);
   const completed = useSelector((s: RootState) => s.onboarding.completed);

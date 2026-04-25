@@ -21,12 +21,7 @@ export const MQ_PADDING = 12;
 export function computeMessageQueueHeight(data: Record<string, unknown>): number {
   const queues = (data?.queues as unknown[] | undefined) || [];
   const rowCount = Math.max(queues.length, 1);
-  return (
-    MQ_HEADER_HEIGHT +
-    MQ_PADDING +
-    rowCount * (MQ_ROW_HEIGHT + MQ_ROW_GAP) +
-    MQ_PADDING
-  );
+  return MQ_HEADER_HEIGHT + MQ_PADDING + rowCount * (MQ_ROW_HEIGHT + MQ_ROW_GAP) + MQ_PADDING;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -65,9 +60,7 @@ export const SvgMessageQueueNode: React.FC<SvgCompactNodeProps> = ({
   connectionDragState = null,
 }) => {
   const queues: QueueView[] = ((node.data?.queues as unknown[] | undefined) || []).map(parseQueue);
-  const subtitle = queues.length > 0
-    ? `${queues.length} ${queues.length === 1 ? 'queue' : 'queues'}`
-    : 'No queues yet';
+  const subtitle = queues.length > 0 ? `${queues.length} ${queues.length === 1 ? 'queue' : 'queues'}` : 'No queues yet';
 
   return (
     <CardShell

@@ -23,9 +23,18 @@ Wire any compute block (**Scalable Backend**, **Worker**, **Serverless Function*
     `.trim(),
   },
   compilesTo: {
-    aws: [{ name: 'CloudWatch Log Group', type: 'aws_cloudwatch_log_group' }, { name: 'CloudWatch Alarm', type: 'aws_cloudwatch_metric_alarm', optional: true }],
-    gcp: [{ name: 'Logging Sink', type: 'google_logging_project_sink' }, { name: 'Monitoring Alert Policy', type: 'google_monitoring_alert_policy', optional: true }],
-    azure: [{ name: 'Log Analytics Workspace', type: 'azurerm_log_analytics_workspace' }, { name: 'Application Insights', type: 'azurerm_application_insights' }],
+    aws: [
+      { name: 'CloudWatch Log Group', type: 'aws_cloudwatch_log_group' },
+      { name: 'CloudWatch Alarm', type: 'aws_cloudwatch_metric_alarm', optional: true },
+    ],
+    gcp: [
+      { name: 'Logging Sink', type: 'google_logging_project_sink' },
+      { name: 'Monitoring Alert Policy', type: 'google_monitoring_alert_policy', optional: true },
+    ],
+    azure: [
+      { name: 'Log Analytics Workspace', type: 'azurerm_log_analytics_workspace' },
+      { name: 'Application Insights', type: 'azurerm_application_insights' },
+    ],
   },
   relatedConcepts: ['Monitoring.Terminal', 'Compute.Container'],
 };

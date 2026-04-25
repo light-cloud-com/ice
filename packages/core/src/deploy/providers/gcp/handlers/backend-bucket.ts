@@ -189,9 +189,7 @@ export const backend_bucket_handler: GCPResourceHandler = {
 async function wait_for_compute_op(ctx: GCPHandlerContext, op_name: string): Promise<void> {
   const start = Date.now();
   while (Date.now() - start < 900_000) {
-    const op = (await ctx.rest_client.get(
-      `${BASE_URL}/projects/${ctx.project}/global/operations/${op_name}`,
-    )) as any;
+    const op = (await ctx.rest_client.get(`${BASE_URL}/projects/${ctx.project}/global/operations/${op_name}`)) as any;
     if (op?.status === 'DONE') {
       if (op.error) throw new Error(operation_failed(SERVICE_NAMES.COMPUTE, JSON.stringify(op.error)));
       return;

@@ -6,7 +6,8 @@ export const llmGatewayConceptBlueprint: ConceptBlueprint = {
     iceType: 'AI.LLMGateway',
     category: 'ai',
     name: 'LLM Gateway',
-    description: 'Managed LLM access. GPT-4, Claude, Gemini, Llama — route through a gateway with auth, quotas, logging.',
+    description:
+      'Managed LLM access. GPT-4, Claude, Gemini, Llama — route through a gateway with auth, quotas, logging.',
     icon: 'Brain',
     providers: ['aws', 'gcp', 'azure'],
     nodeDataDefaults: { label: 'LLM', model: 'gpt-4o-mini' },

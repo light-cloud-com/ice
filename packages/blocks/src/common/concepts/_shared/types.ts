@@ -19,14 +19,7 @@ import type { BlockBlueprint, Provider } from '../../../types';
  * 'canvas-only' is a seventh pseudo-family for viewer blocks (Log Terminal,
  * Public Traffic, Group) that have bespoke visuals and no infra output.
  */
-export type VisualFamily =
-  | 'frontend'
-  | 'compute'
-  | 'data'
-  | 'messaging'
-  | 'edge'
-  | 'ai'
-  | 'canvas-only';
+export type VisualFamily = 'frontend' | 'compute' | 'data' | 'messaging' | 'edge' | 'ai' | 'canvas-only';
 
 // =============================================================================
 // Zoom states

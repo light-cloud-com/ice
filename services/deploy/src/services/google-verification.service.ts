@@ -196,7 +196,10 @@ export async function checkSearchConsoleVerification(orgId: string, domain: stri
 
     // SERVICE_DISABLED detection + auto-enable + retry, same as the token path.
     if (res.status === 403) {
-      const body = await res.clone().text().catch(() => '');
+      const body = await res
+        .clone()
+        .text()
+        .catch(() => '');
       if (body.includes('SERVICE_DISABLED') || body.includes('has not been used in project')) {
         const enabled = await ensureSiteVerificationApiEnabled(orgId, ctx);
         if (enabled) {

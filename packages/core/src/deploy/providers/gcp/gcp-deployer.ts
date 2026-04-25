@@ -27,12 +27,7 @@ import { managed_ssl_certificate_handler } from './handlers/managed-ssl-certific
 import { memorystore_handler } from './handlers/memorystore.js';
 import { pubsub_handler } from './handlers/pubsub.js';
 import { secret_manager_handler } from './handlers/secret-manager.js';
-import {
-  isApiNotEnabledError,
-  isResourceNotFoundError,
-  extractApiName,
-  buildApiEnableUrl,
-} from './messages.js';
+import { isApiNotEnabledError, isResourceNotFoundError, extractApiName, buildApiEnableUrl } from './messages.js';
 import { GCP_DEPLOYER_MESSAGES } from '../../messages.js';
 import { vertex_ai_handler } from './handlers/vertex-ai.js';
 import { initialize_gcp_clients, create_rest_client } from './sdk-loader.js';

@@ -70,12 +70,7 @@ export const managed_ssl_certificate_handler: GCPResourceHandler = {
         // load balancer handler can reference it downstream.
         const existing = (properties.ssl_certificate_id as string) || '';
         if (!existing) {
-          return fail(
-            name,
-            'create',
-            start,
-            'autoProvisionCert is off but no sslCertificateId was provided.',
-          );
+          return fail(name, 'create', start, 'autoProvisionCert is off but no sslCertificateId was provided.');
         }
         return result(name, 'create', start, {
           provider_id: existing,
@@ -86,14 +81,11 @@ export const managed_ssl_certificate_handler: GCPResourceHandler = {
       // Create the managed cert resource. GCP will start the ACME flow
       // asynchronously — the operation returned here only signals that the
       // resource was registered, not that the cert has been issued.
-      const createOp = (await ctx.rest_client.post(
-        `${BASE_URL}/projects/${ctx.project}/global/sslCertificates`,
-        {
-          name,
-          type: 'MANAGED',
-          managed: { domains },
-        },
-      )) as any;
+      const createOp = (await ctx.rest_client.post(`${BASE_URL}/projects/${ctx.project}/global/sslCertificates`, {
+        name,
+        type: 'MANAGED',
+        managed: { domains },
+      })) as any;
       if (createOp?.name) {
         await wait_for_compute_op(ctx, createOp.name, 120_000);
       }
@@ -136,15 +128,10 @@ export const managed_ssl_certificate_handler: GCPResourceHandler = {
    */
   async update(name, provider_id, properties, current, _ctx) {
     const start = Date.now();
-    const desiredDomains = Array.isArray(properties.domains)
-      ? (properties.domains as string[]).slice().sort()
-      : [];
-    const currentDomains = Array.isArray(current.domains)
-      ? (current.domains as string[]).slice().sort()
-      : [];
+    const desiredDomains = Array.isArray(properties.domains) ? (properties.domains as string[]).slice().sort() : [];
+    const currentDomains = Array.isArray(current.domains) ? (current.domains as string[]).slice().sort() : [];
     const domainsChanged =
-      desiredDomains.length !== currentDomains.length ||
-      desiredDomains.some((d, i) => d !== currentDomains[i]);
+      desiredDomains.length !== currentDomains.length || desiredDomains.some((d, i) => d !== currentDomains[i]);
     if (domainsChanged) {
       return fail(
         name,
@@ -203,11 +190,7 @@ export const managed_ssl_certificate_handler: GCPResourceHandler = {
   },
 };
 
-async function wait_for_compute_op(
-  ctx: GCPHandlerContext,
-  op_name: string,
-  timeout_ms: number,
-): Promise<void> {
+async function wait_for_compute_op(ctx: GCPHandlerContext, op_name: string, timeout_ms: number): Promise<void> {
   const start = Date.now();
   while (Date.now() - start < timeout_ms) {
     const op = (await ctx.rest_client.get(

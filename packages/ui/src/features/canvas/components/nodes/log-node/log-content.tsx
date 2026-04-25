@@ -53,11 +53,7 @@ export const LogContent: React.FC<LogContentProps> = memo(
 
       {/* Scroll indicator */}
       {maxOffset > 0 && (
-        <ScrollIndicator
-          trackHeight={logAreaHeight - 4}
-          scrollProgress={scrollProgress}
-          isAutoScroll={isAutoScroll}
-        />
+        <ScrollIndicator trackHeight={logAreaHeight - 4} scrollProgress={scrollProgress} isAutoScroll={isAutoScroll} />
       )}
 
       {/* Cursor blink at bottom */}

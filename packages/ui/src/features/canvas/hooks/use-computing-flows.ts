@@ -56,9 +56,7 @@ export function useComputingFlows() {
     const patches = diffPatches(rawPatches, propNodes, propEdges);
 
     const hasWork =
-      patches.nodePatches.length > 0 ||
-      patches.edgePatches.length > 0 ||
-      patches.edgeDeletions.length > 0;
+      patches.nodePatches.length > 0 || patches.edgePatches.length > 0 || patches.edgeDeletions.length > 0;
 
     if (!hasWork) return;
 

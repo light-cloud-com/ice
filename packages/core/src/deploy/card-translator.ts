@@ -478,9 +478,8 @@ function extract_load_balancer_properties(data: Record<string, unknown>, _region
   const ssl_certificate = (data.sslCertificate as string | undefined) || (data.ssl_certificate as string | undefined);
   const explicit_protocol = (data.protocol as string | undefined)?.toUpperCase();
   const has_cert = Boolean(ssl_certificate);
-  const protocol = explicit_protocol === 'HTTPS' || explicit_protocol === 'HTTP'
-    ? explicit_protocol
-    : has_cert ? 'HTTPS' : 'HTTP';
+  const protocol =
+    explicit_protocol === 'HTTPS' || explicit_protocol === 'HTTP' ? explicit_protocol : has_cert ? 'HTTPS' : 'HTTP';
   return {
     scheme: 'EXTERNAL',
     port_range: data.port || (protocol === 'HTTPS' ? '443' : '80'),
@@ -736,10 +735,7 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
     // PrivateNetwork compiles to the global forwarding rule (same as
     // Network.PublicEndpoint) — the nested case isn't in the type map
     // because standalone CDs are UI-only, so we resolve it inline here.
-    const gcp_type =
-      ice_type === 'Network.CustomDomain'
-        ? 'gcp.compute.globalForwardingRule'
-        : type_map[ice_type];
+    const gcp_type = ice_type === 'Network.CustomDomain' ? 'gcp.compute.globalForwardingRule' : type_map[ice_type];
     if (!gcp_type) {
       warnings.push(`No ${provider} mapping for iceType "${ice_type}" (node: ${node.data.label || node.id}). Skipped.`);
       skipped.push({
@@ -780,10 +776,7 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
     // A nested Custom Domain (if present) remains the sole external
     // entry point via its own LB chain; see isCustomDomainStandalone +
     // the backend-wiring at ~line 1100.
-    if (
-      SERVICE_BACKEND_ICE_TYPES_FOR_INGRESS.has(ice_type) &&
-      hasPrivateNetworkAncestor(node, nodes)
-    ) {
+    if (SERVICE_BACKEND_ICE_TYPES_FOR_INGRESS.has(ice_type) && hasPrivateNetworkAncestor(node, nodes)) {
       const props = properties as Record<string, unknown>;
       if (gcp_type === 'gcp.run.service') {
         // Internal Cloud Run — only reachable via VPC or internal LB.
@@ -825,7 +818,7 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
 
     // Merge with any user-provided labels from the property extractor.
     const existingPropLabels =
-      (properties && typeof properties === 'object' && 'labels' in (properties as any))
+      properties && typeof properties === 'object' && 'labels' in (properties as any)
         ? ((properties as any).labels as Record<string, unknown>) || {}
         : {};
     (properties as any).labels = { ...baseLabels, ...existingPropLabels };
@@ -1094,8 +1087,7 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
     let subdomain: string;
     const routeId = (edge.data as any)?.routeId as string | undefined;
     if (routeId) {
-      const routes =
-        ((endpointNode.data?.routes as Array<{ id: string; subdomain: string }> | undefined) || []);
+      const routes = (endpointNode.data?.routes as Array<{ id: string; subdomain: string }> | undefined) || [];
       const route = routes.find((r) => r.id === routeId);
       subdomain = (route?.subdomain || '').trim();
     } else {
@@ -1122,10 +1114,8 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
 
     const rootDomain = ((endpointNode.data?.domain as string) || '').trim();
     const enableHttps = (endpointNode.data?.enableHttps as boolean | undefined) !== false;
-    const autoProvisionCert =
-      (endpointNode.data?.autoProvisionCert as boolean | undefined) !== false;
-    const redirectHttpToHttps =
-      (endpointNode.data?.redirectHttpToHttps as boolean | undefined) !== false;
+    const autoProvisionCert = (endpointNode.data?.autoProvisionCert as boolean | undefined) !== false;
+    const redirectHttpToHttps = (endpointNode.data?.redirectHttpToHttps as boolean | undefined) !== false;
 
     // Build hostRules for the URL map. Each backend gets a host like
     // `<subdomain>.<rootDomain>` (or just `<rootDomain>` for blank

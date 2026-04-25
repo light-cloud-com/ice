@@ -35,12 +35,8 @@ Often used with a **Worker** or **Serverless Function** as the actual job body.
       { name: 'EventBridge Rule', type: 'aws_cloudwatch_event_rule', role: 'cron trigger' },
       { name: 'Lambda Target', type: 'aws_cloudwatch_event_target' },
     ],
-    gcp: [
-      { name: 'Cloud Scheduler Job', type: 'google_cloud_scheduler_job' },
-    ],
-    azure: [
-      { name: 'Logic App / Function App timer', type: 'azurerm_linux_function_app', role: 'timer trigger' },
-    ],
+    gcp: [{ name: 'Cloud Scheduler Job', type: 'google_cloud_scheduler_job' }],
+    azure: [{ name: 'Logic App / Function App timer', type: 'azurerm_linux_function_app', role: 'timer trigger' }],
   },
   snippets: defineSnippets({
     ts: `// AWS Lambda triggered by EventBridge cron

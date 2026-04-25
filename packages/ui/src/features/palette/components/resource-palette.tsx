@@ -39,12 +39,6 @@ import { getBrandIcon } from '../../../assets/icons/brand-registry';
 import { GROUP_COLOR_PRESETS } from '../../../config/color-palette';
 import { ENABLED_PROVIDER_IDS, ENABLED_PROVIDERS as ENABLED_CLOUD_PROVIDERS } from '../../../config/providers';
 import { useTranslation, t as translate, t } from '../../../i18n';
-
-/** Convert "Compute.Container" → "computeContainer" for block translation keys */
-function blockKey(type: string): string {
-  const [cat, name] = type.split('.');
-  return cat.charAt(0).toLowerCase() + cat.slice(1) + name;
-}
 import axiosInstance from '../../../shared/api/axios-instance';
 import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../../../shared/components/ui/resizable';
@@ -67,20 +61,104 @@ interface CategoryDef {
 }
 
 const CATEGORY_DEFS: CategoryDef[] = [
-  { id: 'Compute', label: t('blocks.categories.compute.label'), icon: Server, color: '#22c55e', tooltip: t('blocks.categories.compute.tooltip') },
-  { id: 'Scheduler', label: t('blocks.categories.scheduler.label'), icon: Clock, color: '#eab308', tooltip: t('blocks.categories.scheduler.tooltip') },
-  { id: 'Frontend', label: t('blocks.categories.frontend.label'), icon: Globe, color: '#3b82f6', tooltip: t('blocks.categories.frontend.tooltip') },
-  { id: 'Network', label: t('blocks.categories.network.label'), icon: GitBranch, color: '#06b6d4', tooltip: t('blocks.categories.network.tooltip') },
-  { id: 'Database', label: t('blocks.categories.database.label'), icon: Database, color: '#f59e0b', tooltip: t('blocks.categories.database.tooltip') },
-  { id: 'Cache', label: t('blocks.categories.cache.label'), icon: Zap, color: '#ef4444', tooltip: t('blocks.categories.cache.tooltip') },
-  { id: 'Messaging', label: t('blocks.categories.messaging.label'), icon: List, color: '#8b5cf6', tooltip: t('blocks.categories.messaging.tooltip') },
-  { id: 'Storage', label: t('blocks.categories.storage.label'), icon: HardDrive, color: '#64748b', tooltip: t('blocks.categories.storage.tooltip') },
-  { id: 'Security', label: t('blocks.categories.security.label'), icon: Key, color: '#ec4899', tooltip: t('blocks.categories.security.tooltip') },
-  { id: 'AI', label: t('blocks.categories.ai.label'), icon: Brain, color: '#a855f7', tooltip: t('blocks.categories.ai.tooltip') },
-  { id: 'Analytics', label: t('blocks.categories.analytics.label'), icon: BarChart3, color: '#14b8a6', tooltip: t('blocks.categories.analytics.tooltip') },
-  { id: 'Monitoring', label: t('blocks.categories.monitoring.label'), icon: FileText, color: '#f97316', tooltip: t('blocks.categories.monitoring.tooltip') },
-  { id: 'Source', label: t('blocks.categories.source.label'), icon: GitBranch, color: '#6366f1', tooltip: t('blocks.categories.source.tooltip') },
-  { id: 'Config', label: t('blocks.categories.config.label'), icon: Cog, color: '#78716c', tooltip: t('blocks.categories.config.tooltip') },
+  {
+    id: 'Compute',
+    label: t('blocks.categories.compute.label'),
+    icon: Server,
+    color: '#22c55e',
+    tooltip: t('blocks.categories.compute.tooltip'),
+  },
+  {
+    id: 'Scheduler',
+    label: t('blocks.categories.scheduler.label'),
+    icon: Clock,
+    color: '#eab308',
+    tooltip: t('blocks.categories.scheduler.tooltip'),
+  },
+  {
+    id: 'Frontend',
+    label: t('blocks.categories.frontend.label'),
+    icon: Globe,
+    color: '#3b82f6',
+    tooltip: t('blocks.categories.frontend.tooltip'),
+  },
+  {
+    id: 'Network',
+    label: t('blocks.categories.network.label'),
+    icon: GitBranch,
+    color: '#06b6d4',
+    tooltip: t('blocks.categories.network.tooltip'),
+  },
+  {
+    id: 'Database',
+    label: t('blocks.categories.database.label'),
+    icon: Database,
+    color: '#f59e0b',
+    tooltip: t('blocks.categories.database.tooltip'),
+  },
+  {
+    id: 'Cache',
+    label: t('blocks.categories.cache.label'),
+    icon: Zap,
+    color: '#ef4444',
+    tooltip: t('blocks.categories.cache.tooltip'),
+  },
+  {
+    id: 'Messaging',
+    label: t('blocks.categories.messaging.label'),
+    icon: List,
+    color: '#8b5cf6',
+    tooltip: t('blocks.categories.messaging.tooltip'),
+  },
+  {
+    id: 'Storage',
+    label: t('blocks.categories.storage.label'),
+    icon: HardDrive,
+    color: '#64748b',
+    tooltip: t('blocks.categories.storage.tooltip'),
+  },
+  {
+    id: 'Security',
+    label: t('blocks.categories.security.label'),
+    icon: Key,
+    color: '#ec4899',
+    tooltip: t('blocks.categories.security.tooltip'),
+  },
+  {
+    id: 'AI',
+    label: t('blocks.categories.ai.label'),
+    icon: Brain,
+    color: '#a855f7',
+    tooltip: t('blocks.categories.ai.tooltip'),
+  },
+  {
+    id: 'Analytics',
+    label: t('blocks.categories.analytics.label'),
+    icon: BarChart3,
+    color: '#14b8a6',
+    tooltip: t('blocks.categories.analytics.tooltip'),
+  },
+  {
+    id: 'Monitoring',
+    label: t('blocks.categories.monitoring.label'),
+    icon: FileText,
+    color: '#f97316',
+    tooltip: t('blocks.categories.monitoring.tooltip'),
+  },
+  {
+    id: 'Source',
+    label: t('blocks.categories.source.label'),
+    icon: GitBranch,
+    color: '#6366f1',
+    tooltip: t('blocks.categories.source.tooltip'),
+  },
+  {
+    id: 'Config',
+    label: t('blocks.categories.config.label'),
+    icon: Cog,
+    color: '#78716c',
+    tooltip: t('blocks.categories.config.tooltip'),
+  },
 ];
 
 const CATEGORY_ORDER = CATEGORY_DEFS.map((c) => c.id);
@@ -105,6 +183,12 @@ interface ComponentDef {
   providers: ('aws' | 'gcp' | 'azure' | 'kubernetes' | 'alibaba' | 'oci' | 'digitalocean')[];
   category: string;
   runtimes?: RuntimeOption[];
+}
+
+/** Convert "Compute.Container" → "computeContainer" for block translation keys */
+function blockKey(type: string): string {
+  const [cat, name] = type.split('.');
+  return cat.charAt(0).toLowerCase() + cat.slice(1) + name;
 }
 
 /** Helper: builds a ComponentDef from i18n keys with inline fallbacks for newly-added concept iceTypes. */
@@ -495,7 +579,6 @@ export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
   showBlocksSection = true,
   showTemplatesSection = false,
 }) => {
-  const { t } = useTranslation();
   const { pathname } = useLocation();
   // Show blocks only on canvas/table views (not settings/deployments)
   const isCanvasView = !pathname.endsWith('/settings') && !pathname.endsWith('/deployments');
@@ -873,7 +956,9 @@ const DraggableGroupItem: React.FC = () => {
       )}
     >
       <Folder className="w-3.5 h-3.5 text-ice-text-3 group-hover:text-amber-400/70 transition-colors shrink-0" />
-      <span className="text-ice-base text-ice-text-2 group-hover:text-ice-text-1 transition-colors">{t('palette.group')}</span>
+      <span className="text-ice-base text-ice-text-2 group-hover:text-ice-text-1 transition-colors">
+        {t('palette.group')}
+      </span>
     </div>
   );
 };

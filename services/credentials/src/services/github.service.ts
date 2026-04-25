@@ -160,10 +160,9 @@ export async function listRepos(userId: string, page = 1, perPage = 100): Promis
   // up to a safe ceiling so accounts with more than 100 repos still get a
   // complete list. GitHub's per_page max is 100 for /user/repos.
   const fetchPage = async (p: number): Promise<GitHubRepo[]> => {
-    const response = await fetch(
-      `${GITHUB_API}/user/repos?sort=updated&per_page=${perPage}&page=${p}&type=all`,
-      { headers: { Authorization: `Bearer ${token}`, ...GITHUB_HEADERS } },
-    );
+    const response = await fetch(`${GITHUB_API}/user/repos?sort=updated&per_page=${perPage}&page=${p}&type=all`, {
+      headers: { Authorization: `Bearer ${token}`, ...GITHUB_HEADERS },
+    });
     if (response.status === 401 || response.status === 403) {
       throw new Error(
         `GitHub rejected the request (${response.status}). Your token may be expired or missing the 'repo' scope.`,

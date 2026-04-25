@@ -42,7 +42,6 @@ import {
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getBrandIcon } from '../../../assets/icons/brand-registry';
-import { SECURITY_LEVEL_COLORS } from '../../../config/color-palette';
 import {
   ALL_TEMPLATES,
   TEMPLATE_CATEGORIES,
@@ -199,7 +198,9 @@ const TemplateCard: React.FC<TemplateCardProps> = React.memo(({ template, onSele
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <span className="text-sm font-semibold text-ice-text-1 truncate">{t(`templates.items.${template.id}.name`)}</span>
+            <span className="text-sm font-semibold text-ice-text-1 truncate">
+              {t(`templates.items.${template.id}.name`)}
+            </span>
             <TrustBadge trust={template.trust} />
           </div>
           <span className="text-ice-xs text-ice-text-3">{template.estimatedCost}</span>
@@ -208,14 +209,20 @@ const TemplateCard: React.FC<TemplateCardProps> = React.memo(({ template, onSele
       </div>
 
       {/* Description */}
-      <p className="text-ice-xs text-ice-text-2 leading-snug line-clamp-2">{t(`templates.items.${template.id}.description`)}</p>
+      <p className="text-ice-xs text-ice-text-2 leading-snug line-clamp-2">
+        {t(`templates.items.${template.id}.description`)}
+      </p>
 
       {/* Meta row */}
       <div className="flex items-center gap-1.5 flex-wrap">
         <DifficultyDots level={template.difficulty} />
-        <span className="text-ice-2xs text-ice-text-3">{template.blocks.length} {t('templates.gallery.blocks')}</span>
+        <span className="text-ice-2xs text-ice-text-3">
+          {template.blocks.length} {t('templates.gallery.blocks')}
+        </span>
         {template.connections.length > 0 && (
-          <span className="text-ice-2xs text-ice-text-3">{template.connections.length} {t('templates.gallery.connections')}</span>
+          <span className="text-ice-2xs text-ice-text-3">
+            {template.connections.length} {t('templates.gallery.connections')}
+          </span>
         )}
         <ProviderBadges providers={template.providers} />
       </div>
@@ -243,7 +250,6 @@ const TemplateDetail: React.FC<TemplateDetailProps> = ({ template, onBack, onUse
   const { t } = useTranslation();
   const Icon = ICON_MAP[template.icon] || Rocket;
   const catMeta = TEMPLATE_CATEGORIES.find((c) => c.id === template.category);
-  const secColor = SECURITY_LEVEL_COLORS[template.securityLevel] || '#6b7280';
   const DIFFICULTY_LABELS = getDifficultyLabels(t);
   const diffInfo = DIFFICULTY_LABELS[template.difficulty || 'starter'] || DIFFICULTY_LABELS.starter;
 
@@ -303,7 +309,9 @@ const TemplateDetail: React.FC<TemplateDetailProps> = ({ template, onBack, onUse
               </div>
             </div>
           </div>
-          <p className="text-ice-sm text-ice-text-2 leading-relaxed">{t(`templates.items.${template.id}.description`)}</p>
+          <p className="text-ice-sm text-ice-text-2 leading-relaxed">
+            {t(`templates.items.${template.id}.description`)}
+          </p>
         </div>
 
         {/* Stats grid */}
@@ -378,7 +386,9 @@ const TemplateDetail: React.FC<TemplateDetailProps> = ({ template, onBack, onUse
         {/* Compliance */}
         {template.compliance && template.compliance.length > 0 && (
           <div className="px-5 mb-4">
-            <div className="text-ice-2xs font-medium text-ice-text-3 uppercase tracking-wider mb-1.5">{t('templates.gallery.compliance')}</div>
+            <div className="text-ice-2xs font-medium text-ice-text-3 uppercase tracking-wider mb-1.5">
+              {t('templates.gallery.compliance')}
+            </div>
             <div className="flex gap-1.5">
               {template.compliance.map((tag) => (
                 <span
@@ -402,7 +412,9 @@ const TemplateDetail: React.FC<TemplateDetailProps> = ({ template, onBack, onUse
               <div key={category} className="flex items-start gap-2 text-ice-xs">
                 <Box className="w-3 h-3 text-ice-text-3 mt-0.5 shrink-0" />
                 <div>
-                  <span className="font-medium text-ice-text-2">{t(`blocks.categories.${category.toLowerCase()}.label`)}</span>
+                  <span className="font-medium text-ice-text-2">
+                    {t(`blocks.categories.${category.toLowerCase()}.label`)}
+                  </span>
                   <span className="text-ice-text-3 ml-1">{labels.join(', ')}</span>
                 </div>
               </div>

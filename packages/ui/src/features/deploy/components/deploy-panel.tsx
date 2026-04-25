@@ -322,7 +322,16 @@ export const DeployPanel: React.FC = () => {
     } catch (err: any) {
       dispatch(deployError(err.message || 'Planning failed'));
     }
-  }, [activeCard, deploy.provider, deploy.gcpProject, deploy.region, deploy.environment, dispatch, handleAuthenticate]);
+  }, [
+    activeCard,
+    deploy.provider,
+    deploy.gcpProject,
+    deploy.region,
+    deploy.environment,
+    dispatch,
+    handleAuthenticate,
+    fetchRequirements,
+  ]);
 
   // ─── Deploy ─────────────────────────────────────────────────────────
 
@@ -391,7 +400,6 @@ export const DeployPanel: React.FC = () => {
     deploy.gcpProject,
     deploy.region,
     deploy.environment,
-    deploy.status,
     dispatch,
     handleAuthenticate,
   ]);
@@ -399,12 +407,7 @@ export const DeployPanel: React.FC = () => {
   // ─── Close ──────────────────────────────────────────────────────────
 
   const handleClose = useCallback(() => {
-    if (
-      deploy.status === 'deploying' ||
-      deploy.status === 'destroying' ||
-      deploy.status === 'authenticating'
-    )
-      return;
+    if (deploy.status === 'deploying' || deploy.status === 'destroying' || deploy.status === 'authenticating') return;
     dispatch(closeDeployPanel());
     dispatch(resetDeploy());
   }, [deploy.status, dispatch]);
@@ -428,491 +431,489 @@ export const DeployPanel: React.FC = () => {
 
   const content = (
     <>
-        {header}
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-          {/* Configuration */}
-          <ConfigSection
-            provider={deploy.provider}
-            gcpProject={deploy.gcpProject}
-            region={deploy.region}
-            environment={deploy.environment}
-            disabled={deploy.status === 'deploying'}
-            projectId={activeCard?.projectId}
-            onProviderChange={(v) => {
-              dispatch(setProvider(v));
-              const regions = PROVIDER_REGIONS[v];
-              if (regions && !regions.includes(deploy.region)) {
-                dispatch(setRegion(regions[0]));
-              }
-            }}
-            onProjectChange={(v) => dispatch(setGcpProject(v))}
-            onRegionChange={(v) => dispatch(setRegion(v))}
-            onEnvironmentChange={(v) => dispatch(setEnvironment(v as 'production' | 'staging' | 'development'))}
-          />
+      {header}
+      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+        {/* Configuration */}
+        <ConfigSection
+          provider={deploy.provider}
+          gcpProject={deploy.gcpProject}
+          region={deploy.region}
+          environment={deploy.environment}
+          disabled={deploy.status === 'deploying'}
+          projectId={activeCard?.projectId}
+          onProviderChange={(v) => {
+            dispatch(setProvider(v));
+            const regions = PROVIDER_REGIONS[v];
+            if (regions && !regions.includes(deploy.region)) {
+              dispatch(setRegion(regions[0]));
+            }
+          }}
+          onProjectChange={(v) => dispatch(setGcpProject(v))}
+          onRegionChange={(v) => dispatch(setRegion(v))}
+          onEnvironmentChange={(v) => dispatch(setEnvironment(v as 'production' | 'staging' | 'development'))}
+        />
 
-          {/* Canvas summary */}
-          <div className="rounded-md border border-border bg-muted/20 px-4 py-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">
-                {t('deploy.card.label')}{' '}
-                <span className="text-foreground font-medium">{activeCard?.name || t('deploy.card.untitled')}</span>
-              </span>
-              <span className="text-muted-foreground">
-                {providerNodes.length} deployable resource{providerNodes.length !== 1 ? 's' : ''} (
-                {PROVIDER_LABELS[deploy.provider] || deploy.provider})
-                {resourceNodes.length > providerNodes.length && (
-                  <span className="ml-1 text-yellow-600">
-                    ({resourceNodes.length - providerNodes.length} skipped — non-
-                    {PROVIDER_LABELS[deploy.provider] || deploy.provider})
-                  </span>
-                )}
-              </span>
+        {/* Canvas summary */}
+        <div className="rounded-md border border-border bg-muted/20 px-4 py-3">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">
+              {t('deploy.card.label')}{' '}
+              <span className="text-foreground font-medium">{activeCard?.name || t('deploy.card.untitled')}</span>
+            </span>
+            <span className="text-muted-foreground">
+              {providerNodes.length} deployable resource{providerNodes.length !== 1 ? 's' : ''} (
+              {PROVIDER_LABELS[deploy.provider] || deploy.provider})
+              {resourceNodes.length > providerNodes.length && (
+                <span className="ml-1 text-yellow-600">
+                  ({resourceNodes.length - providerNodes.length} skipped — non-
+                  {PROVIDER_LABELS[deploy.provider] || deploy.provider})
+                </span>
+              )}
+            </span>
+          </div>
+        </div>
+
+        {/* Previously deployed resources */}
+        {deploy.deployedResources.length > 0 && deploy.status === 'idle' && (
+          <div className="rounded-md border border-border overflow-hidden">
+            <div className="px-4 py-2 bg-muted/40 border-b border-border text-sm font-medium flex items-center gap-2">
+              <CheckCircle className="w-3.5 h-3.5 text-blue-500" />
+              {deploy.deployedResources.length} deployed resource
+              {deploy.deployedResources.length !== 1 ? 's' : ''} (from prior deploy)
+            </div>
+            <div className="divide-y divide-border max-h-32 overflow-y-auto">
+              {deploy.deployedResources.map((r, i) => (
+                <div key={i} className="px-4 py-1.5 text-xs flex items-center gap-2">
+                  <span className="font-medium text-sm">{r.name}</span>
+                  <span className="text-muted-foreground font-mono">{r.type}</span>
+                  {r.provider_id && (
+                    <span
+                      className="ml-auto text-muted-foreground font-mono truncate max-w-[250px]"
+                      title={r.provider_id}
+                    >
+                      {r.provider_id}
+                    </span>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
+        )}
 
-          {/* Previously deployed resources */}
-          {deploy.deployedResources.length > 0 && deploy.status === 'idle' && (
-            <div className="rounded-md border border-border overflow-hidden">
-              <div className="px-4 py-2 bg-muted/40 border-b border-border text-sm font-medium flex items-center gap-2">
-                <CheckCircle className="w-3.5 h-3.5 text-blue-500" />
-                {deploy.deployedResources.length} deployed resource
-                {deploy.deployedResources.length !== 1 ? 's' : ''} (from prior deploy)
-              </div>
-              <div className="divide-y divide-border max-h-32 overflow-y-auto">
-                {deploy.deployedResources.map((r, i) => (
-                  <div key={i} className="px-4 py-1.5 text-xs flex items-center gap-2">
-                    <span className="font-medium text-sm">{r.name}</span>
-                    <span className="text-muted-foreground font-mono">{r.type}</span>
-                    {r.provider_id && (
-                      <span
-                        className="ml-auto text-muted-foreground font-mono truncate max-w-[250px]"
-                        title={r.provider_id}
-                      >
-                        {r.provider_id}
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
+        {/* Authenticating */}
+        {deploy.status === 'authenticating' && (
+          <div className="rounded-md border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20 p-4 text-sm">
+            <div className="flex items-center gap-2.5 text-orange-700 dark:text-orange-300">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="font-medium">{t('deploy.auth.connecting')}</span>
             </div>
-          )}
+            <p className="mt-2 text-orange-600 dark:text-orange-400 text-xs">{t('deploy.auth.browserPrompt')}</p>
+          </div>
+        )}
 
-          {/* Authenticating */}
-          {deploy.status === 'authenticating' && (
-            <div className="rounded-md border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20 p-4 text-sm">
-              <div className="flex items-center gap-2.5 text-orange-700 dark:text-orange-300">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span className="font-medium">{t('deploy.auth.connecting')}</span>
-              </div>
-              <p className="mt-2 text-orange-600 dark:text-orange-400 text-xs">{t('deploy.auth.browserPrompt')}</p>
-            </div>
-          )}
+        {/* Phase 8 — block requirements (DNS, verification, cert, GitHub repo, etc.) */}
+        {(deploy.requirements.length > 0 || deploy.requirementsLoading) && (
+          <RequirementsSection
+            requirements={deploy.requirements}
+            loading={deploy.requirementsLoading}
+            onVerify={handleVerifyRequirement}
+          />
+        )}
 
-          {/* Phase 8 — block requirements (DNS, verification, cert, GitHub repo, etc.) */}
-          {(deploy.requirements.length > 0 || deploy.requirementsLoading) && (
-            <RequirementsSection
-              requirements={deploy.requirements}
-              loading={deploy.requirementsLoading}
-              onVerify={handleVerifyRequirement}
-            />
-          )}
+        {/* Plan preview */}
+        {deploy.plan && <PlanPreview plan={deploy.plan} />}
 
-          {/* Plan preview */}
-          {deploy.plan && <PlanPreview plan={deploy.plan} />}
+        {/* Pre-deploy security + cost analysis (AI-Native #3) */}
+        {preDeployAnalysis && <PreDeployWarnings analysis={preDeployAnalysis} />}
 
-          {/* Pre-deploy security + cost analysis (AI-Native #3) */}
-          {preDeployAnalysis && <PreDeployWarnings analysis={preDeployAnalysis} />}
+        {/* Error */}
+        {deploy.error && (
+          <>
+            <ApiErrorBanner error={deploy.error} results={deploy.results} onRetryDeploy={handleDeploy} />
+            <DeployDiagnosis error={deploy.error} results={deploy.results} />
+          </>
+        )}
 
-          {/* Error */}
-          {deploy.error && (
-            <>
-              <ApiErrorBanner error={deploy.error} results={deploy.results} onRetryDeploy={handleDeploy} />
-              <DeployDiagnosis error={deploy.error} results={deploy.results} />
-            </>
-          )}
-
-          {/* Custom domain DNS records — surfaced from any Firebase
+        {/* Custom domain DNS records — surfaced from any Firebase
               Hosting result that registered a custom domain. Each row
               is copyable so the user can paste straight into their
               registrar without digging through the Firebase Console. */}
-          {(() => {
-            type DnsRec = { type: string; domain: string; value: string; required_action?: string };
-            const dnsResults = deploy.results.filter(
-              (r) =>
-                r.success &&
-                Array.isArray((r.outputs as any)?.custom_domain_dns_records) &&
-                (r.outputs as any).custom_domain_dns_records.length > 0,
-            );
-            if (dnsResults.length === 0) return null;
+        {(() => {
+          type DnsRec = { type: string; domain: string; value: string; required_action?: string };
+          const dnsResults = deploy.results.filter(
+            (r) =>
+              r.success &&
+              Array.isArray((r.outputs as any)?.custom_domain_dns_records) &&
+              (r.outputs as any).custom_domain_dns_records.length > 0,
+          );
+          if (dnsResults.length === 0) return null;
 
-            const renderRecord = (
-              rec: DnsRec,
-              ridx: number,
-              palette: { bg: string; type: string; chip: string; chipHover: string },
-            ) => (
-              <div
-                key={ridx}
-                className={cn('flex items-center gap-2 text-xs font-mono px-2 py-1.5 rounded', palette.bg)}
+          const renderRecord = (
+            rec: DnsRec,
+            ridx: number,
+            palette: { bg: string; type: string; chip: string; chipHover: string },
+          ) => (
+            <div key={ridx} className={cn('flex items-center gap-2 text-xs font-mono px-2 py-1.5 rounded', palette.bg)}>
+              <span className={cn('font-semibold w-12 shrink-0', palette.type)}>{rec.type}</span>
+              <span className="text-muted-foreground truncate flex-shrink min-w-0" title={rec.domain}>
+                {rec.domain}
+              </span>
+              <span className="text-foreground truncate flex-1 min-w-0" title={rec.value}>
+                {rec.value}
+              </span>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(rec.value).catch(() => undefined);
+                }}
+                className={cn('shrink-0 px-2 py-0.5 text-[10px] rounded', palette.chip, palette.chipHover)}
+                title="Copy value to clipboard"
               >
-                <span className={cn('font-semibold w-12 shrink-0', palette.type)}>{rec.type}</span>
-                <span className="text-muted-foreground truncate flex-shrink min-w-0" title={rec.domain}>
-                  {rec.domain}
-                </span>
-                <span className="text-foreground truncate flex-1 min-w-0" title={rec.value}>
-                  {rec.value}
-                </span>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(rec.value).catch(() => undefined);
-                  }}
-                  className={cn('shrink-0 px-2 py-0.5 text-[10px] rounded', palette.chip, palette.chipHover)}
-                  title="Copy value to clipboard"
-                >
-                  Copy
-                </button>
-              </div>
-            );
+                Copy
+              </button>
+            </div>
+          );
 
-            const renderHeader = () => (
-              <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-wider text-muted-foreground px-2 pb-1">
-                <span className="w-12 shrink-0">Type</span>
-                <span className="flex-shrink min-w-0">Domain name</span>
-                <span className="flex-1 min-w-0">Value</span>
-                <span className="w-10 shrink-0" />
-              </div>
-            );
+          const renderHeader = () => (
+            <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-wider text-muted-foreground px-2 pb-1">
+              <span className="w-12 shrink-0">Type</span>
+              <span className="flex-shrink min-w-0">Domain name</span>
+              <span className="flex-1 min-w-0">Value</span>
+              <span className="w-10 shrink-0" />
+            </div>
+          );
 
-            return (
-              <div className="space-y-2">
-                {dnsResults.map((r, idx) => {
-                  const allRecords = ((r.outputs as any).custom_domain_dns_records || []) as DnsRec[];
-                  const addRecords = allRecords.filter((rec) => (rec.required_action || 'add') !== 'remove');
-                  const removeRecords = allRecords.filter((rec) => rec.required_action === 'remove');
-                  const customDomain = (r.outputs as any)?.custom_domain || r.name;
-                  return (
-                    <div
-                      key={`${r.name}-${idx}`}
-                      className="rounded-md border border-blue-500/30 bg-blue-50 dark:bg-blue-950/20 p-3 space-y-3"
-                    >
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-medium text-blue-700 dark:text-blue-300">
-                          DNS records for {customDomain}
-                        </span>
-                      </div>
-
-                      {addRecords.length > 0 && (
-                        <div className="space-y-1">
-                          <div className="text-[11px] font-medium text-blue-700 dark:text-blue-300">
-                            Add the records below at your DNS provider to verify that you own {customDomain}
-                          </div>
-                          {renderHeader()}
-                          {addRecords.map((rec, ridx) =>
-                            renderRecord(rec, ridx, {
-                              bg: 'bg-background/60',
-                              type: 'text-blue-700 dark:text-blue-300',
-                              chip: 'bg-blue-500/20 text-blue-700 dark:text-blue-300',
-                              chipHover: 'hover:bg-blue-500/30',
-                            }),
-                          )}
-                        </div>
-                      )}
-
-                      {removeRecords.length > 0 && (
-                        <div className="space-y-1">
-                          <div className="text-[11px] font-medium text-amber-700 dark:text-amber-300">
-                            Remove the records below from your DNS provider — they conflict with the new
-                            configuration and block verification
-                          </div>
-                          {renderHeader()}
-                          {removeRecords.map((rec, ridx) =>
-                            renderRecord(rec, ridx, {
-                              bg: 'bg-amber-50 dark:bg-amber-950/30',
-                              type: 'text-amber-700 dark:text-amber-300',
-                              chip: 'bg-amber-500/20 text-amber-700 dark:text-amber-300',
-                              chipHover: 'hover:bg-amber-500/30',
-                            }),
-                          )}
-                        </div>
-                      )}
+          return (
+            <div className="space-y-2">
+              {dnsResults.map((r, idx) => {
+                const allRecords = ((r.outputs as any).custom_domain_dns_records || []) as DnsRec[];
+                const addRecords = allRecords.filter((rec) => (rec.required_action || 'add') !== 'remove');
+                const removeRecords = allRecords.filter((rec) => rec.required_action === 'remove');
+                const customDomain = (r.outputs as any)?.custom_domain || r.name;
+                return (
+                  <div
+                    key={`${r.name}-${idx}`}
+                    className="rounded-md border border-blue-500/30 bg-blue-50 dark:bg-blue-950/20 p-3 space-y-3"
+                  >
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-medium text-blue-700 dark:text-blue-300">
+                        DNS records for {customDomain}
+                      </span>
                     </div>
-                  );
-                })}
+
+                    {addRecords.length > 0 && (
+                      <div className="space-y-1">
+                        <div className="text-[11px] font-medium text-blue-700 dark:text-blue-300">
+                          Add the records below at your DNS provider to verify that you own {customDomain}
+                        </div>
+                        {renderHeader()}
+                        {addRecords.map((rec, ridx) =>
+                          renderRecord(rec, ridx, {
+                            bg: 'bg-background/60',
+                            type: 'text-blue-700 dark:text-blue-300',
+                            chip: 'bg-blue-500/20 text-blue-700 dark:text-blue-300',
+                            chipHover: 'hover:bg-blue-500/30',
+                          }),
+                        )}
+                      </div>
+                    )}
+
+                    {removeRecords.length > 0 && (
+                      <div className="space-y-1">
+                        <div className="text-[11px] font-medium text-amber-700 dark:text-amber-300">
+                          Remove the records below from your DNS provider — they conflict with the new configuration and
+                          block verification
+                        </div>
+                        {renderHeader()}
+                        {removeRecords.map((rec, ridx) =>
+                          renderRecord(rec, ridx, {
+                            bg: 'bg-amber-50 dark:bg-amber-950/30',
+                            type: 'text-amber-700 dark:text-amber-300',
+                            chip: 'bg-amber-500/20 text-amber-700 dark:text-amber-300',
+                            chipHover: 'hover:bg-amber-500/30',
+                          }),
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
+
+        {/* Logs */}
+        {deploy.logs.length > 0 && (
+          <div
+            id="ice-deploy-log"
+            className="rounded-md border border-border bg-slate-950 text-slate-300 p-3 max-h-48 overflow-y-auto font-mono text-xs leading-relaxed"
+          >
+            {deploy.logs.map((log, i) => (
+              <div key={i} className="flex gap-2">
+                <span className="text-ice-text-3 select-none">{String(i + 1).padStart(3, ' ')}</span>
+                <span>{log}</span>
               </div>
+            ))}
+            <div ref={logEndRef} />
+          </div>
+        )}
+
+        {/* Deploy progress */}
+        {deploy.status === 'deploying' && (
+          <div id="ice-deploy-progress" className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground flex items-center gap-1.5">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                {deploy.currentResource || t('deploy.progress.deploying')}
+              </span>
+              <span className="font-mono text-xs">{deploy.progress}%</span>
+            </div>
+            {deploy.currentStep && (
+              <div className="text-xs text-muted-foreground pl-5">
+                └ {deploy.currentStep.label} ({deploy.currentStep.index}/{deploy.currentStep.total})
+              </div>
+            )}
+            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+              <div
+                className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+                style={{ width: `${deploy.progress}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Results */}
+        {(deploy.status === 'success' || deploy.status === 'error') && deploy.results.length > 0 && (
+          <div id="ice-deploy-results">
+            <ResultsSummary results={deploy.results} />
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center justify-between px-5 py-3 border-t border-border bg-muted/30">
+        <button
+          onClick={() => dispatch(resetDeploy())}
+          disabled={deploy.status === 'deploying' || deploy.status === 'destroying'}
+          id="ice-deploy-btn-cancel"
+          className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+          title={
+            deploy.status === 'deploying'
+              ? 'Cannot clear while a deploy is running'
+              : deploy.status === 'destroying'
+                ? 'Cannot clear while a destroy is running'
+                : 'Clear plan and results'
+          }
+        >
+          {t('deploy.buttons.reset')}
+        </button>
+        <div className="flex items-center gap-2">
+          {/* Phase 5: Stop button shown only while deploying. Calls the
+                cancel endpoint which flips the deploy's AbortSignal. */}
+          {deploy.status === 'deploying' && (
+            <button
+              onClick={async () => {
+                if (!activeCard) return;
+                try {
+                  await fetch('/api/canvas/deploy/cancel', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ cardId: activeCard.id }),
+                  });
+                  dispatch(appendLog('Stop requested — deploy will wind down after the current resource.'));
+                } catch (err: any) {
+                  dispatch(appendLog(`Cancel failed: ${err?.message || err}`));
+                }
+              }}
+              id="ice-deploy-btn-stop"
+              className={cn(
+                'flex items-center gap-1.5 px-4 py-1.5 text-sm rounded-md transition-colors font-medium',
+                'bg-amber-600 text-white hover:bg-amber-700',
+              )}
+              title="Request the in-flight deploy to stop"
+            >
+              <X className="w-3.5 h-3.5" />
+              Stop
+            </button>
+          )}
+          {/* Plan button */}
+          <button
+            onClick={handlePlan}
+            disabled={
+              !deploy.gcpProject ||
+              gcpNodes.length === 0 ||
+              deploy.status === 'planning' ||
+              deploy.status === 'deploying' ||
+              deploy.status === 'destroying' ||
+              deploy.status === 'authenticating'
+            }
+            id="ice-deploy-btn-plan"
+            title={
+              !deploy.gcpProject
+                ? 'Select a GCP project to continue'
+                : gcpNodes.length === 0
+                  ? 'Add at least one resource block to deploy'
+                  : deploy.status === 'deploying'
+                    ? 'Deploy in progress'
+                    : deploy.status === 'planning'
+                      ? 'Planning…'
+                      : 'Generate a deploy plan'
+            }
+            className={cn(
+              'flex items-center gap-1.5 px-4 py-1.5 text-sm rounded-md transition-colors',
+              'bg-muted hover:bg-muted/80 border border-border',
+              'disabled:opacity-50 disabled:cursor-not-allowed',
+            )}
+          >
+            {deploy.status === 'planning' ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Eye className="w-3.5 h-3.5" />
+            )}
+            {t('deploy.buttons.plan')}
+          </button>
+
+          {/* Deploy button */}
+          {(() => {
+            const blockingUnmetReqs = deploy.requirements.filter(
+              (r) => r.blocking && r.result.status !== 'met' && r.result.status !== 'verified',
+            );
+            const hasBlockingUnmet = blockingUnmetReqs.length > 0;
+            const blockedByCritical = preDeployAnalysis?.hasCritical === true && !deploy.criticalAcknowledged;
+            const deployDisabled =
+              !deploy.gcpProject ||
+              gcpNodes.length === 0 ||
+              deploy.status === 'deploying' ||
+              deploy.status === 'destroying' ||
+              deploy.status === 'planning' ||
+              deploy.status === 'authenticating' ||
+              hasBlockingUnmet ||
+              blockedByCritical;
+            const deployTitle = !deploy.gcpProject
+              ? 'Select a GCP project to continue'
+              : gcpNodes.length === 0
+                ? `Add at least one ${deploy.provider.toUpperCase()} resource block to deploy`
+                : deploy.status === 'deploying'
+                  ? 'Deploy in progress — click Stop to cancel'
+                  : deploy.status === 'planning'
+                    ? 'Waiting for plan to finish'
+                    : hasBlockingUnmet
+                      ? `Blocked by ${blockingUnmetReqs.length} requirement(s): ${blockingUnmetReqs.map((r) => r.title).join(', ')}`
+                      : deploy.deployedResources.length > 0
+                        ? 'Deploy updated infrastructure'
+                        : 'Deploy to cloud';
+            return (
+              <button
+                onClick={handleDeploy}
+                disabled={deployDisabled}
+                id="ice-deploy-btn-apply"
+                title={deployTitle}
+                className={cn(
+                  'flex items-center gap-1.5 px-4 py-1.5 text-sm rounded-md transition-colors font-medium',
+                  'bg-emerald-600 text-white hover:bg-emerald-700',
+                  'disabled:opacity-50 disabled:cursor-not-allowed',
+                )}
+              >
+                {deploy.status === 'deploying' ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Play className="w-3.5 h-3.5" />
+                )}
+                {deploy.deployedResources.length > 0
+                  ? t('deploy.buttons.updateInfrastructure')
+                  : t('deploy.buttons.deploy')}
+              </button>
             );
           })()}
 
-          {/* Logs */}
-          {deploy.logs.length > 0 && (
-            <div
-              id="ice-deploy-log"
-              className="rounded-md border border-border bg-slate-950 text-slate-300 p-3 max-h-48 overflow-y-auto font-mono text-xs leading-relaxed"
-            >
-              {deploy.logs.map((log, i) => (
-                <div key={i} className="flex gap-2">
-                  <span className="text-ice-text-3 select-none">{String(i + 1).padStart(3, ' ')}</span>
-                  <span>{log}</span>
-                </div>
-              ))}
-              <div ref={logEndRef} />
-            </div>
-          )}
-
-          {/* Deploy progress */}
-          {deploy.status === 'deploying' && (
-            <div id="ice-deploy-progress" className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground flex items-center gap-1.5">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  {deploy.currentResource || t('deploy.progress.deploying')}
-                </span>
-                <span className="font-mono text-xs">{deploy.progress}%</span>
-              </div>
-              {deploy.currentStep && (
-                <div className="text-xs text-muted-foreground pl-5">
-                  └ {deploy.currentStep.label} ({deploy.currentStep.index}/{deploy.currentStep.total})
-                </div>
-              )}
-              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-emerald-500 rounded-full transition-all duration-300"
-                  style={{ width: `${deploy.progress}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Results */}
-          {(deploy.status === 'success' || deploy.status === 'error') && deploy.results.length > 0 && (
-            <div id="ice-deploy-results">
-              <ResultsSummary results={deploy.results} />
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between px-5 py-3 border-t border-border bg-muted/30">
-          <button
-            onClick={() => dispatch(resetDeploy())}
-            disabled={deploy.status === 'deploying' || deploy.status === 'destroying'}
-            id="ice-deploy-btn-cancel"
-            className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
-            title={
-              deploy.status === 'deploying'
-                ? 'Cannot clear while a deploy is running'
-                : deploy.status === 'destroying'
-                  ? 'Cannot clear while a destroy is running'
-                  : 'Clear plan and results'
-            }
-          >
-            {t('deploy.buttons.reset')}
-          </button>
-          <div className="flex items-center gap-2">
-            {/* Phase 5: Stop button shown only while deploying. Calls the
-                cancel endpoint which flips the deploy's AbortSignal. */}
-            {deploy.status === 'deploying' && (
-              <button
-                onClick={async () => {
-                  if (!activeCard) return;
-                  try {
-                    await fetch('/api/canvas/deploy/cancel', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      credentials: 'include',
-                      body: JSON.stringify({ cardId: activeCard.id }),
-                    });
-                    dispatch(appendLog('Stop requested — deploy will wind down after the current resource.'));
-                  } catch (err: any) {
-                    dispatch(appendLog(`Cancel failed: ${err?.message || err}`));
-                  }
-                }}
-                id="ice-deploy-btn-stop"
-                className={cn(
-                  'flex items-center gap-1.5 px-4 py-1.5 text-sm rounded-md transition-colors font-medium',
-                  'bg-amber-600 text-white hover:bg-amber-700',
-                )}
-                title="Request the in-flight deploy to stop"
-              >
-                <X className="w-3.5 h-3.5" />
-                Stop
-              </button>
-            )}
-            {/* Plan button */}
-            <button
-              onClick={handlePlan}
-              disabled={
-                !deploy.gcpProject ||
-                gcpNodes.length === 0 ||
-                deploy.status === 'planning' ||
-                deploy.status === 'deploying' ||
-                deploy.status === 'destroying' ||
-                deploy.status === 'authenticating'
-              }
-              id="ice-deploy-btn-plan"
-              title={
-                !deploy.gcpProject
-                  ? 'Select a GCP project to continue'
-                  : gcpNodes.length === 0
-                    ? 'Add at least one resource block to deploy'
-                    : deploy.status === 'deploying'
-                      ? 'Deploy in progress'
-                      : deploy.status === 'planning'
-                        ? 'Planning…'
-                        : 'Generate a deploy plan'
-              }
-              className={cn(
-                'flex items-center gap-1.5 px-4 py-1.5 text-sm rounded-md transition-colors',
-                'bg-muted hover:bg-muted/80 border border-border',
-                'disabled:opacity-50 disabled:cursor-not-allowed',
-              )}
-            >
-              {deploy.status === 'planning' ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Eye className="w-3.5 h-3.5" />
-              )}
-              {t('deploy.buttons.plan')}
-            </button>
-
-            {/* Deploy button */}
-            {(() => {
-              const blockingUnmetReqs = deploy.requirements.filter(
-                (r) => r.blocking && r.result.status !== 'met' && r.result.status !== 'verified',
-              );
-              const hasBlockingUnmet = blockingUnmetReqs.length > 0;
-              const blockedByCritical =
-                preDeployAnalysis?.hasCritical === true && !deploy.criticalAcknowledged;
-              const deployDisabled =
-                !deploy.gcpProject ||
-                gcpNodes.length === 0 ||
-                deploy.status === 'deploying' ||
-                deploy.status === 'destroying' ||
-                deploy.status === 'planning' ||
-                deploy.status === 'authenticating' ||
-                hasBlockingUnmet ||
-                blockedByCritical;
-              const deployTitle = !deploy.gcpProject
-                ? 'Select a GCP project to continue'
-                : gcpNodes.length === 0
-                  ? `Add at least one ${deploy.provider.toUpperCase()} resource block to deploy`
-                  : deploy.status === 'deploying'
-                    ? 'Deploy in progress — click Stop to cancel'
-                    : deploy.status === 'planning'
-                      ? 'Waiting for plan to finish'
-                      : hasBlockingUnmet
-                        ? `Blocked by ${blockingUnmetReqs.length} requirement(s): ${blockingUnmetReqs.map((r) => r.title).join(', ')}`
-                        : deploy.deployedResources.length > 0
-                          ? 'Deploy updated infrastructure'
-                          : 'Deploy to cloud';
-              return (
-            <button
-              onClick={handleDeploy}
-              disabled={deployDisabled}
-              id="ice-deploy-btn-apply"
-              title={deployTitle}
-              className={cn(
-                'flex items-center gap-1.5 px-4 py-1.5 text-sm rounded-md transition-colors font-medium',
-                'bg-emerald-600 text-white hover:bg-emerald-700',
-                'disabled:opacity-50 disabled:cursor-not-allowed',
-              )}
-            >
-              {deploy.status === 'deploying' ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Play className="w-3.5 h-3.5" />
-              )}
-              {deploy.deployedResources.length > 0
-                ? t('deploy.buttons.updateInfrastructure')
-                : t('deploy.buttons.deploy')}
-            </button>
-              );
-            })()}
-
-            {/* Destroy button — only when resources are deployed */}
-            {/* Destroy button — shown whenever there are deployed resources
+          {/* Destroy button — only when resources are deployed */}
+          {/* Destroy button — shown whenever there are deployed resources
                 OR any historical deployment (even failed ones) might have
                 leftover infrastructure. The destroy modal itself handles the
                 "last deploy only" vs "everything ever" split via a toggle. */}
-            {deploy.status !== 'deploying' && (
-              <button
-                onClick={() => setDestroyModalOpen(true)}
-                id="ice-deploy-btn-destroy"
-                className={cn(
-                  'flex items-center gap-1.5 px-4 py-1.5 text-sm rounded-md transition-colors font-medium',
-                  'bg-red-600 text-white hover:bg-red-700',
-                )}
-                title="Destroy deployed resources — including orphaned leftovers from failed deploys"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                {t('deploy.buttons.destroy')}
-              </button>
-            )}
-          </div>
+          {deploy.status !== 'deploying' && (
+            <button
+              onClick={() => setDestroyModalOpen(true)}
+              id="ice-deploy-btn-destroy"
+              className={cn(
+                'flex items-center gap-1.5 px-4 py-1.5 text-sm rounded-md transition-colors font-medium',
+                'bg-red-600 text-white hover:bg-red-700',
+              )}
+              title="Destroy deployed resources — including orphaned leftovers from failed deploys"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              {t('deploy.buttons.destroy')}
+            </button>
+          )}
         </div>
-        {destroyModalOpen && activeCard && (
-          <DestroyConfirmModal
-            cardName={activeCard.name}
-            resources={deploy.deployedResources}
-            onCancel={() => setDestroyModalOpen(false)}
-            onConfirm={async (destroyEverything: boolean) => {
-              setDestroyModalOpen(false);
-              // Flip the slice into 'destroying' state BEFORE the API
-              // call so progress events arriving via the socket
-              // subscription don't auto-flip it back to 'deploying'.
-              // The subscription hook's `startDeploying` dispatch is a
-              // no-op while status === 'destroying'.
-              dispatch(startDestroying({ cardId: activeCard.id }));
-              try {
-                if (destroyEverything) {
-                  console.log('[destroy] destroyAll starting', { cardId: activeCard.id, gcpProject: deploy.gcpProject });
-                  const res = await getApi().deploy.destroyAll(activeCard.id, {
-                    gcpProject: deploy.gcpProject,
-                  });
-                  console.log('[destroy] destroyAll response', res);
-                  if (res.success === false && !res.deleted) {
-                    dispatch(deployError(res.error || 'Destroy failed with no details'));
-                    return;
-                  }
-                  if (res.success || res.deleted) {
-                    dispatch(appendLog(
+      </div>
+      {destroyModalOpen && activeCard && (
+        <DestroyConfirmModal
+          cardName={activeCard.name}
+          resources={deploy.deployedResources}
+          onCancel={() => setDestroyModalOpen(false)}
+          onConfirm={async (destroyEverything: boolean) => {
+            setDestroyModalOpen(false);
+            // Flip the slice into 'destroying' state BEFORE the API
+            // call so progress events arriving via the socket
+            // subscription don't auto-flip it back to 'deploying'.
+            // The subscription hook's `startDeploying` dispatch is a
+            // no-op while status === 'destroying'.
+            dispatch(startDestroying({ cardId: activeCard.id }));
+            try {
+              if (destroyEverything) {
+                console.log('[destroy] destroyAll starting', { cardId: activeCard.id, gcpProject: deploy.gcpProject });
+                const res = await getApi().deploy.destroyAll(activeCard.id, {
+                  gcpProject: deploy.gcpProject,
+                });
+                console.log('[destroy] destroyAll response', res);
+                if (res.success === false && !res.deleted) {
+                  dispatch(deployError(res.error || 'Destroy failed with no details'));
+                  return;
+                }
+                if (res.success || res.deleted) {
+                  dispatch(
+                    appendLog(
                       `Destroyed ${res.deleted?.length || 0} resource${(res.deleted?.length || 0) === 1 ? '' : 's'} across all historical deploys.`,
-                    ));
-                    for (const f of res.failed || []) {
-                      dispatch(appendLog(`Failed to delete ${f.type}/${f.name}: ${f.error}`));
-                    }
-                  }
-                } else {
-                  console.log('[destroy] destroy starting', {
-                    cardId: activeCard.id,
-                    provider: deploy.provider,
-                    environment: deploy.environment,
-                  });
-                  const res = await getApi().deploy.destroy(activeCard.id, {
-                    provider: deploy.provider,
-                    region: deploy.region,
-                    environment: deploy.environment,
-                  });
-                  console.log('[destroy] destroy response', res);
-                  if (res?.success === false) {
-                    dispatch(deployError(res.error || 'Destroy failed'));
-                    return;
+                    ),
+                  );
+                  for (const f of res.failed || []) {
+                    dispatch(appendLog(`Failed to delete ${f.type}/${f.name}: ${f.error}`));
                   }
                 }
-                // Wipe deploy overlay from the canvas (provider_id, url,
-                // deploy_status, custom domain fields, etc.) so blocks
-                // and the properties panel stop showing "Live" / URL
-                // pills for resources that no longer exist.
-                dispatch(clearCardDeployOverlay({ cardId: activeCard.id }));
-                // Drop the deploy panel's "previously deployed" list too
-                // so the next deploy starts from a clean slate.
-                dispatch(setDeployedResources([]));
-                dispatch(resetDeploy());
-              } catch (err: any) {
-                console.error('[destroy] caught error', err);
-                dispatch(deployError(err.message || 'Destroy failed'));
+              } else {
+                console.log('[destroy] destroy starting', {
+                  cardId: activeCard.id,
+                  provider: deploy.provider,
+                  environment: deploy.environment,
+                });
+                const res = await getApi().deploy.destroy(activeCard.id, {
+                  provider: deploy.provider,
+                  region: deploy.region,
+                  environment: deploy.environment,
+                });
+                console.log('[destroy] destroy response', res);
+                if (res?.success === false) {
+                  dispatch(deployError(res.error || 'Destroy failed'));
+                  return;
+                }
               }
-            }}
-          />
-        )}
+              // Wipe deploy overlay from the canvas (provider_id, url,
+              // deploy_status, custom domain fields, etc.) so blocks
+              // and the properties panel stop showing "Live" / URL
+              // pills for resources that no longer exist.
+              dispatch(clearCardDeployOverlay({ cardId: activeCard.id }));
+              // Drop the deploy panel's "previously deployed" list too
+              // so the next deploy starts from a clean slate.
+              dispatch(setDeployedResources([]));
+              dispatch(resetDeploy());
+            } catch (err: any) {
+              console.error('[destroy] caught error', err);
+              dispatch(deployError(err.message || 'Destroy failed'));
+            }
+          }}
+        />
+      )}
     </>
   );
 
@@ -993,16 +994,15 @@ const ConfigSection: React.FC<{
   provider,
   gcpProject,
   region,
-  environment,
+  environment: _environment,
   disabled,
-  projectId,
-  onProviderChange,
+  projectId: _projectId,
+  onProviderChange: _onProviderChange,
   onProjectChange,
   onRegionChange,
-  onEnvironmentChange,
+  onEnvironmentChange: _onEnvironmentChange,
 }) => {
   const { t } = useTranslation();
-  const environments = useSelector((s: RootState) => (projectId ? s.environments.byProject[projectId] || [] : []));
   const regions = PROVIDER_REGIONS[provider] || PROVIDER_REGIONS.gcp!;
   const projectMeta = PROVIDER_PROJECT_LABELS[provider] || PROVIDER_PROJECT_LABELS.gcp!;
   const [providerConnected, setProviderConnected] = React.useState(false);
@@ -1247,9 +1247,9 @@ const QuotaErrorBanner: React.FC<{
         <div>
           <p className="font-medium">GCP quota exceeded</p>
           <p className="mt-1 text-amber-700 dark:text-amber-300 text-xs">
-            Your project has reached a GCP quota limit (most commonly the default 3-backend-bucket
-            ceiling). ICE can scan for orphaned resources from previous deploys and delete them, or
-            you can request a quota increase in the GCP console.
+            Your project has reached a GCP quota limit (most commonly the default 3-backend-bucket ceiling). ICE can
+            scan for orphaned resources from previous deploys and delete them, or you can request a quota increase in
+            the GCP console.
           </p>
         </div>
       </div>
@@ -1369,9 +1369,9 @@ const ApiErrorBanner: React.FC<{
   // Quota exhaustion. Matches the family of GCP quota errors: backend
   // buckets, in-use IP addresses, forwarding rules, URL maps, etc. —
   // all of which leak together when template deploys partially fail.
-  const QUOTA_PATTERN = /QUOTA_EXCEEDED|quota.*exceeded|BACKEND_BUCKETS|IN_USE_ADDRESSES|IN-USE-ADDRESSES|FORWARDING_RULES|URL_MAPS|TARGET_(HTTPS?)_PROXIES|BACKEND_SERVICES|SSL_CERTIFICATES/i;
-  const isQuotaError =
-    QUOTA_PATTERN.test(error) || results.some((r) => r.error && QUOTA_PATTERN.test(r.error));
+  const QUOTA_PATTERN =
+    /QUOTA_EXCEEDED|quota.*exceeded|BACKEND_BUCKETS|IN_USE_ADDRESSES|IN-USE-ADDRESSES|FORWARDING_RULES|URL_MAPS|TARGET_(HTTPS?)_PROXIES|BACKEND_SERVICES|SSL_CERTIFICATES/i;
+  const isQuotaError = QUOTA_PATTERN.test(error) || results.some((r) => r.error && QUOTA_PATTERN.test(r.error));
 
   if (isQuotaError) {
     return <QuotaErrorBanner error={error} results={results} onRetryDeploy={onRetryDeploy} />;
@@ -1608,22 +1608,22 @@ const DestroyConfirmModal: React.FC<{
             <>
               <p className="text-sm text-muted-foreground">
                 This will scan every historical deployment for this card — including{' '}
-                <span className="font-medium">failed and partial deploys</span> — and delete every ICE-managed
-                resource it finds in GCP. Use this when a normal destroy can't find orphaned leftovers or
-                you've hit a GCP quota from accumulated resources.
+                <span className="font-medium">failed and partial deploys</span> — and delete every ICE-managed resource
+                it finds in GCP. Use this when a normal destroy can't find orphaned leftovers or you've hit a GCP quota
+                from accumulated resources.
               </p>
               <div className="rounded-md border border-amber-500/30 bg-amber-50 dark:bg-amber-950/20 p-3 text-xs text-amber-700 dark:text-amber-300">
-                Deletes in dependency order: forwarding rules → target proxies → URL maps → backend buckets →
-                backend services → storage buckets → SSL certificates. Resources are destroyed in reverse
-                creation order to avoid "still in use" errors.
+                Deletes in dependency order: forwarding rules → target proxies → URL maps → backend buckets → backend
+                services → storage buckets → SSL certificates. Resources are destroyed in reverse creation order to
+                avoid "still in use" errors.
               </div>
             </>
           )}
 
           {!destroyEverything && resources.length === 0 && (
             <div className="rounded-md border border-border p-3 text-sm text-muted-foreground">
-              No resources tracked for this card. If you previously ran a deploy that failed,
-              enable "Destroy everything" to scan for orphaned leftovers.
+              No resources tracked for this card. If you previously ran a deploy that failed, enable "Destroy
+              everything" to scan for orphaned leftovers.
             </div>
           )}
 
@@ -1638,8 +1638,8 @@ const DestroyConfirmModal: React.FC<{
             <div className="text-xs">
               <div className="font-medium text-foreground">Destroy everything for this project</div>
               <div className="text-muted-foreground mt-0.5">
-                Walks every historical deployment (success, partial, failed) and the resource mapping table.
-                Useful when the normal destroy misses orphans from failed deploys.
+                Walks every historical deployment (success, partial, failed) and the resource mapping table. Useful when
+                the normal destroy misses orphans from failed deploys.
               </div>
             </div>
           </label>
@@ -1856,10 +1856,7 @@ const ResultsSummary: React.FC<{
                   );
                 }
                 return (
-                  <div
-                    className="pl-6 text-xs text-red-500 break-words"
-                    title={r.error}
-                  >
+                  <div className="pl-6 text-xs text-red-500 break-words" title={r.error}>
                     <span>{r.error}</span>
                     <button
                       onClick={() => navigator.clipboard.writeText(r.error!)}

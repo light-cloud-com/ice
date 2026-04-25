@@ -12,7 +12,8 @@ interface ServiceLineProps {
 export const ServiceLine: React.FC<ServiceLineProps> = memo(
   ({ brandIcon, providerUrl, serviceLineText, maxChars = 28 }) => {
     if (!brandIcon && !providerUrl && !serviceLineText) return null;
-    const truncated = serviceLineText.length > maxChars ? serviceLineText.slice(0, maxChars) + '\u2026' : serviceLineText;
+    const truncated =
+      serviceLineText.length > maxChars ? serviceLineText.slice(0, maxChars) + '\u2026' : serviceLineText;
 
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>

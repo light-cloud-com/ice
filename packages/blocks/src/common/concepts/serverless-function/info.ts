@@ -34,9 +34,7 @@ Set via the \`trigger\` prop.
       { name: 'IAM Role', type: 'aws_iam_role' },
       { name: 'API Gateway (if HTTP)', type: 'aws_apigatewayv2_api', optional: true },
     ],
-    gcp: [
-      { name: 'Cloud Function', type: 'google_cloudfunctions2_function' },
-    ],
+    gcp: [{ name: 'Cloud Function', type: 'google_cloudfunctions2_function' }],
     azure: [
       { name: 'Function App', type: 'azurerm_linux_function_app' },
       { name: 'App Service Plan', type: 'azurerm_service_plan' },

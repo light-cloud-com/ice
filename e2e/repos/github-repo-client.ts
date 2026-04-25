@@ -51,10 +51,7 @@ export async function repoIsEmpty(org: string, repo: string): Promise<boolean> {
   if (!repoRes.ok) return false;
   const data = (await repoRes.json()) as { default_branch?: string; size?: number };
   const branch = data.default_branch || 'main';
-  const commitsRes = await fetch(
-    `${GITHUB_API}/repos/${org}/${repo}/commits?sha=${branch}&per_page=1`,
-    { headers: h },
-  );
+  const commitsRes = await fetch(`${GITHUB_API}/repos/${org}/${repo}/commits?sha=${branch}&per_page=1`, { headers: h });
   // GitHub returns 409 "Git Repository is empty" for repos with no commits.
   if (commitsRes.status === 409) return true;
   if (!commitsRes.ok) return false;
@@ -247,10 +244,7 @@ export async function listTestRepos(org: string, prefix = 'ice-test-'): Promise<
   let page = 1;
   // Cap pagination — the org shouldn't ever have hundreds of test repos.
   while (page <= 10) {
-    const res = await fetch(
-      `${GITHUB_API}/orgs/${org}/repos?per_page=100&page=${page}&type=all`,
-      { headers: h },
-    );
+    const res = await fetch(`${GITHUB_API}/orgs/${org}/repos?per_page=100&page=${page}&type=all`, { headers: h });
     if (!res.ok) {
       const body = await res.text();
       throw new Error(`listTestRepos ${org} page ${page}: ${res.status} ${body}`);

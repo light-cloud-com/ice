@@ -5,13 +5,13 @@
  */
 
 // Re-export all types
-export * from "./types/index.js";
+export * from "./types";
 
 // Re-export schema module (has ValidationIssue, ValidationOptions, ValidationSeverity)
-export * from "./schema/index.js";
+export * from "./schema";
 
 // Re-export state module
-export * from "./state/index.js";
+export * from "./state";
 
 // Re-export graph module (rename conflicting exports)
 export {
@@ -100,28 +100,28 @@ export {
   infer_relationships,
   type InferredRelationship,
   type InferenceOptions,
-} from "./graph/index.js";
+} from "./graph";
 
 // Re-export providers module
-export * from "./providers/index.js";
+export * from "./providers";
 
 // Re-export importers module
-export * from "./importers/index.js";
+export * from "./importers";
 
 // Re-export plan module
-export * from "./plan/index.js";
+export * from "./plan";
 
 // Re-export apply module
-export * from "./apply/index.js";
+export * from "./apply";
 
 // Re-export diff module
-export * from "./diff/index.js";
+export * from "./diff";
 
 // Re-export deploy module
-export * from "./deploy/index.js";
+export * from "./deploy";
 
 // Re-export computing flows engine
-export { computeDerived, diffPatches, PROPAGATION_RULES, AGGREGATE_RULES } from "./compute/index.js";
+export { computeDerived, diffPatches, PROPAGATION_RULES, AGGREGATE_RULES } from "./compute";
 
 // Re-export export module (Terraform/Pulumi exporters)
 // Use explicit exports to avoid conflicts with importer module
@@ -145,10 +145,10 @@ export {
   type PulumiResourceOptions,
   type PulumiProgram,
   type PulumiExportResult,
-} from "./export/index.js";
+} from "./export";
 
 // Re-export errors module
-export * from "./errors/index.js";
+export * from "./errors";
 
 // Re-export mock provider
 export {
@@ -237,4 +237,4 @@ export {
   type IssueSeverity,
   type IssueCategory,
   type IssueCode,
-} from "./validation/index.js";
+} from "./validation";

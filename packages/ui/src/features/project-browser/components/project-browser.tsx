@@ -417,7 +417,7 @@ export function ProjectBrowser() {
       if (parentId) setExpanded((p) => new Set(p).add(parentId));
       fetchProjects();
     },
-    [selectedOrg, fetchProjects],
+    [selectedOrg, fetchProjects, t],
   );
 
   const handleRename = useCallback(
@@ -434,7 +434,7 @@ export function ProjectBrowser() {
       await axiosInstance.post('/canvas/projects/delete', { projectId: id, organisationId: selectedOrg?.id });
       fetchProjects();
     },
-    [selectedOrg, fetchProjects],
+    [selectedOrg, fetchProjects, t],
   );
 
   const handleMove = useCallback(

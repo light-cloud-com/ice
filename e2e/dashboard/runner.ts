@@ -32,7 +32,13 @@ export class TestRunner {
   /**
    * Check if the ICE backend + frontend are running (required for Playwright tests).
    */
-  async preflight(): Promise<{ ok: boolean; backend: boolean; frontend: boolean; frontendPort?: number; error?: string }> {
+  async preflight(): Promise<{
+    ok: boolean;
+    backend: boolean;
+    frontend: boolean;
+    frontendPort?: number;
+    error?: string;
+  }> {
     let backend = false;
     let frontend = false;
     let frontendPort: number | undefined;
@@ -41,7 +47,10 @@ export class TestRunner {
     for (const port of [5001, 5002]) {
       try {
         const res = await fetch(`http://localhost:${port}/api/health`, { signal: AbortSignal.timeout(3000) });
-        if (res.ok) { backend = true; break; }
+        if (res.ok) {
+          backend = true;
+          break;
+        }
       } catch {}
     }
 
@@ -58,16 +67,38 @@ export class TestRunner {
     }
 
     if (!backend && !frontend) {
-      return { ok: false, backend, frontend, error: 'ICE backend and frontend are not running. Start them first:\n  pnpm dev:all' };
+      return {
+        ok: false,
+        backend,
+        frontend,
+        error: 'ICE backend and frontend are not running. Start them first:\n  pnpm dev:all',
+      };
     }
     if (!backend) {
-      return { ok: false, backend, frontend, frontendPort, error: 'ICE backend not running on port 5001/5002. Start it:\n  pnpm dev:gateway' };
+      return {
+        ok: false,
+        backend,
+        frontend,
+        frontendPort,
+        error: 'ICE backend not running on port 5001/5002. Start it:\n  pnpm dev:gateway',
+      };
     }
     if (!frontend) {
-      return { ok: false, backend, frontend, error: 'ICE frontend not running on port 5174. Start it:\n  pnpm dev:web' };
+      return {
+        ok: false,
+        backend,
+        frontend,
+        error: 'ICE frontend not running on port 5174. Start it:\n  pnpm dev:web',
+      };
     }
     if (frontendPort !== 5174) {
-      return { ok: false, backend, frontend, frontendPort, error: `Frontend is on port ${frontendPort} but Playwright expects 5174. Restart with:\n  pnpm dev:web -- --port 5174\nOr kill whatever is using port 5174.` };
+      return {
+        ok: false,
+        backend,
+        frontend,
+        frontendPort,
+        error: `Frontend is on port ${frontendPort} but Playwright expects 5174. Restart with:\n  pnpm dev:web -- --port 5174\nOr kill whatever is using port 5174.`,
+      };
     }
     return { ok: true, backend, frontend, frontendPort };
   }
@@ -142,7 +173,8 @@ export class TestRunner {
       const lines = data.toString().split('\n').filter(Boolean);
       for (const line of lines) {
         // Skip the live-progress terminal table (noisy in dashboard)
-        if (line.includes('────') || line.includes('GCP Template Tests —') || line.match(/^\s*(OK|XX|>>|--|  )\s/)) continue;
+        if (line.includes('────') || line.includes('GCP Template Tests —') || line.match(/^\s*(OK|XX|>>|--|  )\s/))
+          continue;
         this.log(line);
       }
     });

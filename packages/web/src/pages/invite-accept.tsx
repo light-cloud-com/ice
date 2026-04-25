@@ -38,7 +38,7 @@ export const InviteAcceptPage: React.FC = () => {
     };
 
     accept();
-  }, [token, navigate]);
+  }, [token, navigate, t]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-ice-base">

@@ -25,12 +25,8 @@ Otherwise **Postgres** is a more feature-rich default.
       { name: 'Cloud SQL MySQL Instance', type: 'google_sql_database_instance' },
       { name: 'Database', type: 'google_sql_database' },
     ],
-    azure: [
-      { name: 'MySQL Flexible Server', type: 'azurerm_mysql_flexible_server' },
-    ],
+    azure: [{ name: 'MySQL Flexible Server', type: 'azurerm_mysql_flexible_server' }],
   },
-  links: [
-    { label: 'MySQL docs', url: 'https://dev.mysql.com/doc/' },
-  ],
+  links: [{ label: 'MySQL docs', url: 'https://dev.mysql.com/doc/' }],
   relatedConcepts: ['Database.PostgreSQL', 'Database.Redis'],
 };

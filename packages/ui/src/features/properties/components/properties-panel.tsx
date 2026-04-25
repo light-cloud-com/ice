@@ -341,24 +341,6 @@ const SelectField: React.FC<{
   </div>
 );
 
-const BooleanField: React.FC<{
-  label: string;
-  value: boolean;
-  onChange: (v: boolean) => void;
-}> = ({ label, value, onChange }) => (
-  <div className="flex items-center justify-between gap-2 py-1">
-    <span className="text-ice-xs text-ice-text-3 shrink-0">{label}</span>
-    <button
-      onClick={() => onChange(!value)}
-      className={`w-7 h-3.5 rounded-full transition-colors relative ${value ? 'bg-blue-500' : 'bg-ice-border'}`}
-    >
-      <div
-        className={`w-2.5 h-2.5 rounded-full bg-white absolute top-0.5 transition-transform ${value ? 'translate-x-3.5' : 'translate-x-0.5'}`}
-      />
-    </button>
-  </div>
-);
-
 const ListField: React.FC<{
   label: string;
   value: string[];
@@ -528,56 +510,6 @@ const StepperField: React.FC<{
       >
         +
       </button>
-    </div>
-  </div>
-);
-
-// ─── Resource info panel (bottom half) ───────────────────────────────────────
-
-const InfoRow: React.FC<{
-  label: string;
-  value: string | number;
-  color?: string;
-}> = ({ label, value, color }) => (
-  <div className="flex items-center justify-between py-px">
-    <span className="text-ice-2xs text-ice-text-3/50">{label}</span>
-    <span className={`text-ice-2xs font-mono ${color || 'text-ice-text-2'}`}>{value}</span>
-  </div>
-);
-
-// ─── Rich select field (card picker for optionDetails) ────────────────────
-
-const RichSelectField: React.FC<{
-  label: string;
-  value: string;
-  options: OptionDetail[];
-  description?: string;
-  onChange: (v: string) => void;
-}> = ({ label, value, options, description, onChange }) => (
-  <div className="py-1 space-y-1.5">
-    <div>
-      <span className="text-ice-xs text-ice-text-3">{label}</span>
-      {description && <p className="text-ice-2xs text-ice-text-3/40 mt-0.5">{description}</p>}
-    </div>
-    <div className="space-y-0.5">
-      {options.map((opt) => (
-        <button
-          key={opt.value}
-          onClick={() => onChange(opt.value)}
-          className={cn(
-            'w-full text-left px-2 py-1 rounded transition-colors',
-            value === opt.value
-              ? 'bg-blue-500/[0.08] text-ice-text-1'
-              : 'text-ice-text-3 hover:text-ice-text-2 hover:bg-ice-hover',
-          )}
-        >
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-ice-xs font-mono">{opt.label}</span>
-            {opt.cost && <span className="text-ice-2xs text-emerald-400/60 shrink-0">{opt.cost}</span>}
-          </div>
-          {opt.description && <div className="text-ice-2xs text-ice-text-3/40 mt-0.5">{opt.description}</div>}
-        </button>
-      ))}
     </div>
   </div>
 );
@@ -1017,71 +949,70 @@ export const PropertiesPanel: React.FC = () => {
           {(srcIceType === 'Network.PublicEndpoint' ||
             tgtIceType === 'Network.PublicEndpoint' ||
             srcIceType === 'Network.CustomDomain' ||
-            tgtIceType === 'Network.CustomDomain') && (() => {
-            const endpointNode =
-              srcIceType === 'Network.PublicEndpoint' || srcIceType === 'Network.CustomDomain'
-                ? sourceNode
-                : targetNode;
-            const rootDomain = ((endpointNode?.data?.domain as string) || '').trim();
-            const currentSubdomain = (edgeData.subdomain as string) || '';
+            tgtIceType === 'Network.CustomDomain') &&
+            (() => {
+              const endpointNode =
+                srcIceType === 'Network.PublicEndpoint' || srcIceType === 'Network.CustomDomain'
+                  ? sourceNode
+                  : targetNode;
+              const rootDomain = ((endpointNode?.data?.domain as string) || '').trim();
+              const currentSubdomain = (edgeData.subdomain as string) || '';
 
-            // Normalize aggressive input: strip protocol, host, dots,
-            // trailing dash, and force lowercase. Users often paste a
-            // full URL or type `api.` and we want the block to not
-            // reject them on a typo.
-            const normalize = (raw: string): string => {
-              let s = raw.toLowerCase().trim();
-              s = s.replace(/^https?:\/\//, '');
-              // If they typed `api.example.com`, keep only the first label.
-              const dotIdx = s.indexOf('.');
-              if (dotIdx !== -1) s = s.slice(0, dotIdx);
-              // Only allow RFC 1035 DNS label characters (plus the empty
-              // string for "root" deploys).
-              s = s.replace(/[^a-z0-9-]/g, '');
-              // Trim leading/trailing hyphens — GCP rejects them.
-              s = s.replace(/^-+/, '').replace(/-+$/, '');
-              if (s.length > 63) s = s.slice(0, 63);
-              return s;
-            };
+              // Normalize aggressive input: strip protocol, host, dots,
+              // trailing dash, and force lowercase. Users often paste a
+              // full URL or type `api.` and we want the block to not
+              // reject them on a typo.
+              const normalize = (raw: string): string => {
+                let s = raw.toLowerCase().trim();
+                s = s.replace(/^https?:\/\//, '');
+                // If they typed `api.example.com`, keep only the first label.
+                const dotIdx = s.indexOf('.');
+                if (dotIdx !== -1) s = s.slice(0, dotIdx);
+                // Only allow RFC 1035 DNS label characters (plus the empty
+                // string for "root" deploys).
+                s = s.replace(/[^a-z0-9-]/g, '');
+                // Trim leading/trailing hyphens — GCP rejects them.
+                s = s.replace(/^-+/, '').replace(/-+$/, '');
+                if (s.length > 63) s = s.slice(0, 63);
+                return s;
+              };
 
-            const validationError = (() => {
-              if (!currentSubdomain) return null;
-              if (!/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/.test(currentSubdomain)) {
-                return 'Subdomain must be lowercase letters, digits, hyphens (not starting/ending). Max 63 chars.';
-              }
-              return null;
-            })();
+              const validationError = (() => {
+                if (!currentSubdomain) return null;
+                if (!/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/.test(currentSubdomain)) {
+                  return 'Subdomain must be lowercase letters, digits, hyphens (not starting/ending). Max 63 chars.';
+                }
+                return null;
+              })();
 
-            const previewHost =
-              currentSubdomain && rootDomain
-                ? `${currentSubdomain}.${rootDomain}`
-                : rootDomain || '(no domain set)';
-            return (
-              <div className="space-y-1 mb-2">
-                <label className="text-ice-2xs text-ice-text-3">Subdomain</label>
-                <input
-                  type="text"
-                  value={currentSubdomain}
-                  onChange={(e) => {
-                    const cleaned = normalize(e.target.value);
-                    updateEdgeField('subdomain', cleaned || null);
-                  }}
-                  placeholder="api (leave blank for root)"
-                  className={cn(
-                    'w-full px-1.5 py-1.5 text-ice-sm rounded border bg-ice-base text-ice-text-1 font-mono focus:outline-none focus:ring-1',
-                    validationError
-                      ? 'border-red-500/50 focus:ring-red-500'
-                      : 'border-ice-border focus:ring-blue-500',
+              const previewHost =
+                currentSubdomain && rootDomain ? `${currentSubdomain}.${rootDomain}` : rootDomain || '(no domain set)';
+              return (
+                <div className="space-y-1 mb-2">
+                  <label className="text-ice-2xs text-ice-text-3">Subdomain</label>
+                  <input
+                    type="text"
+                    value={currentSubdomain}
+                    onChange={(e) => {
+                      const cleaned = normalize(e.target.value);
+                      updateEdgeField('subdomain', cleaned || null);
+                    }}
+                    placeholder="api (leave blank for root)"
+                    className={cn(
+                      'w-full px-1.5 py-1.5 text-ice-sm rounded border bg-ice-base text-ice-text-1 font-mono focus:outline-none focus:ring-1',
+                      validationError
+                        ? 'border-red-500/50 focus:ring-red-500'
+                        : 'border-ice-border focus:ring-blue-500',
+                    )}
+                  />
+                  {validationError ? (
+                    <div className="text-ice-2xs text-red-400">{validationError}</div>
+                  ) : (
+                    <div className="text-ice-2xs text-ice-text-3 font-mono">→ {previewHost}</div>
                   )}
-                />
-                {validationError ? (
-                  <div className="text-ice-2xs text-red-400">{validationError}</div>
-                ) : (
-                  <div className="text-ice-2xs text-ice-text-3 font-mono">→ {previewHost}</div>
-                )}
-              </div>
-            );
-          })()}
+                </div>
+              );
+            })()}
 
           {/* Port — unified with env var when EnvVars block is connected */}
           {(() => {
@@ -1183,7 +1114,6 @@ export const PropertiesPanel: React.FC = () => {
     // Look up properties from core DB — try resourceId first, then iceType
     const resourceDef = resourceMap.get(resourceId) || resourceMap.get(iceType);
     const dbProperties = resourceDef?.properties || [];
-    const implementations = resourceDef?.implementations || [];
 
     // Scaling data
     const behavior = (selectedNode.data?.behavior as string) || '';
@@ -1296,8 +1226,7 @@ export const PropertiesPanel: React.FC = () => {
                 </div>
               )}
               <div className="mt-0.5 text-ice-2xs text-ice-text-3 leading-snug">
-                Edit the route on the Custom Domain block to change this. Disconnect the edge to set a domain
-                manually.
+                Edit the route on the Custom Domain block to change this. Disconnect the edge to set a domain manually.
               </div>
             </div>
           );
@@ -1672,10 +1601,7 @@ export const PropertiesPanel: React.FC = () => {
 
                   {/* Private Network — outbound internet (egress) policy */}
                   {iceType === 'Network.PrivateNetwork' && (
-                    <PrivateNetworkPanel
-                      selectedNode={selectedNode}
-                      updateNodeField={updateNodeField}
-                    />
+                    <PrivateNetworkPanel selectedNode={selectedNode} updateNodeField={updateNodeField} />
                   )}
 
                   {/* Cost */}
@@ -1792,7 +1718,7 @@ const CustomDomainPanel: React.FC<{
   activeCard: any;
   updateNodeField: (field: string, value: unknown) => void;
   dispatch: AppDispatch;
-}> = ({ selectedNode, outgoingEdges, activeCard, updateNodeField, dispatch }) => {
+}> = ({ selectedNode, outgoingEdges, activeCard, updateNodeField, dispatch: _dispatch }) => {
   const rootDomain = (selectedNode?.data?.domain as string) || '';
   const routes = ((selectedNode?.data?.routes as CustomDomainRoute[] | undefined) || []).slice();
 
@@ -1802,8 +1728,7 @@ const CustomDomainPanel: React.FC<{
     const matchingEdge = outgoingEdges.find((e) => (e.data as any)?.routeId === route.id);
     let targetNode: any = null;
     if (matchingEdge) {
-      const targetId =
-        matchingEdge.source === selectedNode.id ? matchingEdge.target : matchingEdge.source;
+      const targetId = matchingEdge.source === selectedNode.id ? matchingEdge.target : matchingEdge.source;
       targetNode = (activeCard.nodes || []).find((n: any) => n.id === targetId) || null;
     }
     const targetIce = (targetNode?.data?.iceType as string) || '';
@@ -1824,7 +1749,10 @@ const CustomDomainPanel: React.FC<{
     s = s.replace(/^https?:\/\//, '');
     const dotIdx = s.indexOf('.');
     if (dotIdx !== -1) s = s.slice(0, dotIdx);
-    s = s.replace(/[^a-z0-9-]/g, '').replace(/^-+/, '').replace(/-+$/, '');
+    s = s
+      .replace(/[^a-z0-9-]/g, '')
+      .replace(/^-+/, '')
+      .replace(/-+$/, '');
     if (s.length > 63) s = s.slice(0, 63);
     return s;
   };
@@ -1858,8 +1786,8 @@ const CustomDomainPanel: React.FC<{
           className="w-full px-2 py-1.5 text-ice-sm rounded border border-ice-border bg-ice-base text-ice-text-1 font-mono focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
         <p className="mt-1 text-ice-2xs text-ice-text-3 leading-relaxed">
-          The root domain for this block. Leave blank to disable. Add a route below for each subdomain you want
-          to expose, then drag the matching dot on the canvas block to a publicly-facing service.
+          The root domain for this block. Leave blank to disable. Add a route below for each subdomain you want to
+          expose, then drag the matching dot on the canvas block to a publicly-facing service.
         </p>
       </Section>
 
@@ -1873,10 +1801,7 @@ const CustomDomainPanel: React.FC<{
         {routeViews.length > 0 && (
           <div className="space-y-2">
             {routeViews.map(({ route, edge, targetIce, targetLabel, targetId, subdomain, host }) => (
-              <div
-                key={route.id}
-                className="rounded border border-ice-border bg-ice-base/40 px-2 py-2 space-y-1.5"
-              >
+              <div key={route.id} className="rounded border border-ice-border bg-ice-base/40 px-2 py-2 space-y-1.5">
                 {/* Top row: target label + live host preview */}
                 <div className="flex items-center justify-between gap-2">
                   <span
@@ -1891,10 +1816,7 @@ const CustomDomainPanel: React.FC<{
                       <span className="italic">unconnected — drag the dot to wire up</span>
                     )}
                   </span>
-                  <span
-                    className="text-ice-2xs font-mono text-blue-400 truncate"
-                    title={host || '(no domain)'}
-                  >
+                  <span className="text-ice-2xs font-mono text-blue-400 truncate" title={host || '(no domain)'}>
                     {host || '(no domain)'}
                   </span>
                 </div>
@@ -1955,9 +1877,9 @@ const CustomDomainPanel: React.FC<{
           return (
             <Section title="DNS records">
               <p className="text-ice-2xs text-ice-text-3 leading-relaxed">
-                After deploy, the DNS records you need to add at your registrar will appear here. Verify the
-                domain at your DNS provider, and the connected service (e.g. Firebase Hosting) will automatically
-                provision a managed SSL certificate.
+                After deploy, the DNS records you need to add at your registrar will appear here. Verify the domain at
+                your DNS provider, and the connected service (e.g. Firebase Hosting) will automatically provision a
+                managed SSL certificate.
               </p>
             </Section>
           );
@@ -1972,11 +1894,7 @@ const CustomDomainPanel: React.FC<{
           </div>
         );
 
-        const renderRow = (
-          rec: DnsRow,
-          i: number,
-          palette: { bg: string; type: string; chip: string },
-        ) => (
+        const renderRow = (rec: DnsRow, i: number, palette: { bg: string; type: string; chip: string }) => (
           <div
             key={i}
             className={cn(
@@ -2024,8 +1942,8 @@ const CustomDomainPanel: React.FC<{
             {removeRows.length > 0 && (
               <div className="space-y-1 mt-3">
                 <div className="text-ice-2xs text-amber-400 leading-relaxed">
-                  Remove the records below from your DNS provider — they conflict with the new configuration and
-                  block verification.
+                  Remove the records below from your DNS provider — they conflict with the new configuration and block
+                  verification.
                 </div>
                 {renderHeader()}
                 {removeRows.map((rec, i) =>
@@ -2039,8 +1957,8 @@ const CustomDomainPanel: React.FC<{
             )}
 
             <p className="mt-2 text-ice-2xs text-ice-text-3 leading-relaxed">
-              After the records propagate (usually a few minutes), Firebase Hosting will issue a managed SSL
-              certificate automatically.
+              After the records propagate (usually a few minutes), Firebase Hosting will issue a managed SSL certificate
+              automatically.
             </p>
           </Section>
         );
@@ -2133,9 +2051,7 @@ const PrivateNetworkPolicySection: React.FC<PolicySectionProps> = ({
             {direction === 'inbound' ? 'Allowed sources' : 'Allowed destinations'}
           </div>
           {allowlist.length === 0 && (
-            <div className="text-ice-2xs text-ice-text-3/50 italic py-1">
-              No entries yet. Click + below to add one.
-            </div>
+            <div className="text-ice-2xs text-ice-text-3/50 italic py-1">No entries yet. Click + below to add one.</div>
           )}
           {allowlist.map((entry, i) => (
             <div key={i} className="flex items-center gap-1">
@@ -2196,7 +2112,11 @@ const PrivateNetworkPanel: React.FC<{
             label: 'Allowlist specific sources (Restricted)',
             hint: 'Only listed source ranges or IPs can reach in.',
           },
-          { value: 'none', label: 'Block all inbound (Sealed)', hint: 'Internal only. Services inside talk east-west.' },
+          {
+            value: 'none',
+            label: 'Block all inbound (Sealed)',
+            hint: 'Internal only. Services inside talk east-west.',
+          },
         ]}
         updateNodeField={updateNodeField}
       />
@@ -3028,9 +2948,7 @@ const DeployHistory: React.FC<{ cardId: string }> = ({ cardId }) => {
                 />
                 <span className={cn('text-ice-2xs px-1 py-0.5 rounded', actionColor)}>{actionLabel}</span>
                 <span className="text-ice-text-2 truncate">{time}</span>
-                {d.environment && (
-                  <span className="text-ice-2xs text-ice-text-3">{d.environment}</span>
-                )}
+                {d.environment && <span className="text-ice-2xs text-ice-text-3">{d.environment}</span>}
                 {duration && <span className="ml-auto text-ice-text-3 font-mono">{duration}</span>}
               </div>
               {summaryText && !isExpanded && (
@@ -3038,19 +2956,14 @@ const DeployHistory: React.FC<{ cardId: string }> = ({ cardId }) => {
               )}
               {isExpanded && (
                 <div className="pl-4 pb-2 space-y-1 text-ice-2xs">
-                  {d.error && (
-                    <div className="text-red-400 break-words">{d.error}</div>
-                  )}
+                  {d.error && <div className="text-red-400 break-words">{d.error}</div>}
                   {summaryText && <div className="text-ice-text-2">{summaryText}</div>}
                   {Array.isArray(d.results?.resources) && d.results.resources.length > 0 && (
                     <div className="space-y-0.5">
                       {d.results.resources.map((r: any, idx: number) => (
                         <div key={idx} className="flex items-center gap-2 font-mono">
                           <span
-                            className={cn(
-                              'w-1 h-1 rounded-full shrink-0',
-                              r.success ? 'bg-emerald-500' : 'bg-red-500',
-                            )}
+                            className={cn('w-1 h-1 rounded-full shrink-0', r.success ? 'bg-emerald-500' : 'bg-red-500')}
                           />
                           <span className="text-ice-text-3 truncate">{r.type}</span>
                           <span className="text-ice-text-2 truncate">{r.name}</span>
@@ -3067,10 +2980,7 @@ const DeployHistory: React.FC<{ cardId: string }> = ({ cardId }) => {
           );
         })}
         {!showAll && history.length > 15 && (
-          <button
-            className="text-ice-2xs text-ice-text-3 hover:text-ice-text-2 pt-1"
-            onClick={() => setShowAll(true)}
-          >
+          <button className="text-ice-2xs text-ice-text-3 hover:text-ice-text-2 pt-1" onClick={() => setShowAll(true)}>
             Show all {history.length} deploys
           </button>
         )}
@@ -3086,7 +2996,7 @@ const ConnectionCard: React.FC<{
   thisNodeId: string;
   nodes: CardNode[];
   dispatch: AppDispatch;
-}> = ({ edge, thisNodeId, nodes, dispatch }) => {
+}> = ({ edge, thisNodeId: _thisNodeId, nodes, dispatch }) => {
   const sourceNode = nodes.find((n) => n.id === edge.source);
   const targetNode = nodes.find((n) => n.id === edge.target);
   const sourceLabel = (sourceNode?.data?.label as string) || 'Unknown';
@@ -3099,7 +3009,6 @@ const ConnectionCard: React.FC<{
   const port = d.port != null ? String(d.port) : '';
   const relationship = (d.connectionCategory as string) || (d.relationship as string) || '';
 
-  const isOutgoing = edge.source === thisNodeId;
   const sourceIcon = getIcon(sourceType, sourceProvider as any);
   const targetIcon = getIcon(targetType, targetProvider as any);
 

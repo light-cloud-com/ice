@@ -50,9 +50,10 @@ export const SvgEnvConfigNode: React.FC<SvgCompactNodeProps> = ({
     .map(parseVariable)
     .filter((v) => v.key);
 
-  const subtitle = variables.length > 0
-    ? `${variables.length} ${variables.length === 1 ? 'variable' : 'variables'}`
-    : 'No variables yet';
+  const subtitle =
+    variables.length > 0
+      ? `${variables.length} ${variables.length === 1 ? 'variable' : 'variables'}`
+      : 'No variables yet';
 
   return (
     <CardShell

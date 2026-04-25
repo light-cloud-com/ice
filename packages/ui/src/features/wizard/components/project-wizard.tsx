@@ -104,12 +104,14 @@ export const ProjectWizard: React.FC = () => {
 
         // 4. Create additional environments
         for (const env of state.environments.filter((e) => e.enabled && e.type !== 'production')) {
-          await axiosInstance.post('/environments/create', {
-            projectId: project.id,
-            name: env.name.toLowerCase(),
-            type: env.type,
-            region: env.region || undefined,
-          }).catch(() => {});
+          await axiosInstance
+            .post('/environments/create', {
+              projectId: project.id,
+              name: env.name.toLowerCase(),
+              type: env.type,
+              region: env.region || undefined,
+            })
+            .catch(() => {});
         }
 
         // 5. Refresh project tree in sidebar

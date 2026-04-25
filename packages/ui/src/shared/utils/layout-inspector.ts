@@ -50,14 +50,6 @@ interface InspectOptions {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
-function isEnabled(): boolean {
-  try {
-    return localStorage.getItem('ice-debug') === 'true';
-  } catch {
-    return false;
-  }
-}
-
 function lodLabel(lod: number): string {
   return lod >= 3 ? 'L3 (full)' : lod >= 2 ? 'L2 (compact)' : 'L1 (iconic)';
 }
@@ -101,7 +93,6 @@ interface OverlapInfo {
 
 function detectOverlaps(nodes: InspectNode[], gap: number = 0): OverlapInfo[] {
   const overlaps: OverlapInfo[] = [];
-  const depths = computeDepths(nodes);
 
   // Build ancestry
   const isAncestor = (ancestorId: string, nodeId: string): boolean => {

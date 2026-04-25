@@ -283,12 +283,7 @@ const deploySlice = createSlice({
       // deploy state, so it dispatches blindly and we deduplicate here.
       // Also a no-op when destroying — destroy events use the same
       // progress channel and would otherwise stomp the destroying label.
-      if (
-        state.status === 'deploying' ||
-        state.status === 'planning' ||
-        state.status === 'destroying'
-      )
-        return;
+      if (state.status === 'deploying' || state.status === 'planning' || state.status === 'destroying') return;
       state.status = 'deploying';
       state.progress = 0;
       state.currentResource = '';

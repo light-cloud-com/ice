@@ -341,8 +341,7 @@ export const ProjectTree: React.FC = () => {
   const renderEnvironment = (env: Environment, project: Project, depth: number) => {
     const isActiveEnv = activeEnvId === env.id && activeProjectId === project.id;
     const dotColor = ENV_DOT_COLOR[env.type] || 'bg-gray-500';
-    const isDeploying =
-      deployingCardId === env.cardId && (deployStatus === 'deploying' || deployStatus === 'planning');
+    const isDeploying = deployingCardId === env.cardId && (deployStatus === 'deploying' || deployStatus === 'planning');
     const isDeployFailed = deployingCardId === env.cardId && deployStatus === 'error';
 
     return (
@@ -364,9 +363,7 @@ export const ProjectTree: React.FC = () => {
           <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', dotColor)} />
         )}
         <span className="text-ice-sm truncate">{env.name}</span>
-        <span className="text-ice-2xs text-ice-text-3 ml-auto shrink-0">
-          {isDeploying ? 'deploying' : env.region}
-        </span>
+        <span className="text-ice-2xs text-ice-text-3 ml-auto shrink-0">{isDeploying ? 'deploying' : env.region}</span>
       </div>
     );
   };

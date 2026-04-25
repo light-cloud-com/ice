@@ -265,18 +265,15 @@ export async function create_rest_client(_project: string, external_auth_client?
   const auth_client = await verify_gcp_auth(external_auth_client);
 
   async function make_request(method: string, url: string, body?: unknown): Promise<unknown> {
-    return withRetry(
-      async () => {
-        const response = await auth_client.request({
-          url,
-          method,
-          data: body,
-          headers: { 'Content-Type': 'application/json' },
-        });
-        return response.data;
-      },
-      `${method} ${url}`,
-    );
+    return withRetry(async () => {
+      const response = await auth_client.request({
+        url,
+        method,
+        data: body,
+        headers: { 'Content-Type': 'application/json' },
+      });
+      return response.data;
+    }, `${method} ${url}`);
   }
 
   // Raw request used by handlers that need to send a binary body
@@ -291,24 +288,21 @@ export async function create_rest_client(_project: string, external_auth_client?
     responseType?: 'json' | 'text' | 'arraybuffer';
     validateStatus?: (status: number) => boolean;
   }): Promise<{ status: number; data: any; headers: Record<string, string> }> {
-    return withRetry(
-      async () => {
-        const response = await auth_client.request({
-          url: opts.url,
-          method: opts.method,
-          data: opts.body,
-          headers: { 'Content-Type': opts.contentType || 'application/json' },
-          responseType: opts.responseType || 'json',
-          validateStatus: opts.validateStatus || ((s: number) => s < 500),
-        });
-        return {
-          status: response.status,
-          data: response.data,
-          headers: (response.headers as Record<string, string>) || {},
-        };
-      },
-      `${opts.method} ${opts.url}`,
-    );
+    return withRetry(async () => {
+      const response = await auth_client.request({
+        url: opts.url,
+        method: opts.method,
+        data: opts.body,
+        headers: { 'Content-Type': opts.contentType || 'application/json' },
+        responseType: opts.responseType || 'json',
+        validateStatus: opts.validateStatus || ((s: number) => s < 500),
+      });
+      return {
+        status: response.status,
+        data: response.data,
+        headers: (response.headers as Record<string, string>) || {},
+      };
+    }, `${opts.method} ${opts.url}`);
   }
 
   const rc: GCPRestClient = {

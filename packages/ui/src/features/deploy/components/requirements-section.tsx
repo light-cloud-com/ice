@@ -40,7 +40,9 @@ export const RequirementsSection: React.FC<RequirementsSectionProps> = ({
 
   const beforeDeploy = requirements.filter((r) => r.timing === 'before-deploy');
   const postDeploy = requirements.filter((r) => r.timing === 'post-deploy');
-  const blockingUnmet = requirements.filter((r) => r.blocking && r.result.status !== 'met' && r.result.status !== 'verified');
+  const blockingUnmet = requirements.filter(
+    (r) => r.blocking && r.result.status !== 'met' && r.result.status !== 'verified',
+  );
 
   return (
     <div className="rounded-md border border-border overflow-hidden">
@@ -52,9 +54,7 @@ export const RequirementsSection: React.FC<RequirementsSectionProps> = ({
         )}
         Requirements
         <span className="text-xs font-normal text-muted-foreground ml-1">
-          {blockingUnmet.length > 0
-            ? `${blockingUnmet.length} blocking`
-            : `${requirements.length} total`}
+          {blockingUnmet.length > 0 ? `${blockingUnmet.length} blocking` : `${requirements.length} total`}
         </span>
       </div>
       <div className="divide-y divide-border">
@@ -163,12 +163,8 @@ const RequirementRow: React.FC<{
               satisfied
             </span>
           )}
-          {isUnknown && (
-            <span className="text-xs text-muted-foreground font-medium">unknown</span>
-          )}
-          {isExpired && (
-            <span className="text-xs text-sky-600 dark:text-sky-400 font-medium">timed out</span>
-          )}
+          {isUnknown && <span className="text-xs text-muted-foreground font-medium">unknown</span>}
+          {isExpired && <span className="text-xs text-sky-600 dark:text-sky-400 font-medium">timed out</span>}
         </div>
         {description && <p className="text-xs text-muted-foreground">{description}</p>}
         {result.message && (
@@ -185,9 +181,7 @@ const RequirementRow: React.FC<{
           </p>
         )}
         {result.lastCheckedAt && (
-          <p className="text-xs text-muted-foreground/70">
-            Last checked {formatLastChecked(result.lastCheckedAt)}
-          </p>
+          <p className="text-xs text-muted-foreground/70">Last checked {formatLastChecked(result.lastCheckedAt)}</p>
         )}
         {action?.type === 'copy-dns-record' && action.payload && (
           <DnsRecordCard

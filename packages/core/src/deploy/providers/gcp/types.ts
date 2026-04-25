@@ -91,9 +91,5 @@ export interface GCPResourceHandler {
    * normalized property bag for drift comparison. Handlers that don't
    * implement this opt out of drift detection for their resource type.
    */
-  describe?(
-    name: string,
-    provider_id: string,
-    ctx: GCPHandlerContext,
-  ): Promise<ResourceDescribeResult>;
+  describe?(name: string, provider_id: string, ctx: GCPHandlerContext): Promise<ResourceDescribeResult>;
 }

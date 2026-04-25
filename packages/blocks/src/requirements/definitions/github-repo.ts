@@ -41,9 +41,7 @@ export const githubRepoAttachedRequirement: RequirementDefinition = {
   check: async (ctx) => {
     const now = new Date().toISOString();
     // Accept either a structured `source` object or legacy top-level `repository`/`repo`/`github` fields.
-    const source = ctx.block.data?.source as
-      | { repo?: string; branch?: string }
-      | undefined;
+    const source = ctx.block.data?.source as { repo?: string; branch?: string } | undefined;
     const legacyRepo =
       (ctx.block.data?.repository as string | undefined) ||
       (ctx.block.data?.repo as string | undefined) ||

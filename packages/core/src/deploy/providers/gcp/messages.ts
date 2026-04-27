@@ -255,8 +255,15 @@ export const BUILD_MESSAGES = {
   BUILD_STARTED: (buildId: string) => `Cloud Build started: ${buildId}`,
   BUILD_IN_PROGRESS: (status: string, seconds: number) => `Build ${status.toLowerCase()}... (${seconds}s)`,
   BUILD_SUCCEEDED: (imageUri: string) => `Build succeeded → ${imageUri}`,
-  BUILD_FAILED: (status: string, logUrl: string) =>
-    `Cloud Build failed with status ${status}${logUrl ? `. Logs: ${logUrl}` : ''}`,
+  BUILD_FAILED: (status: string, logUrl: string, logLines?: readonly string[]) => {
+    const header = `Cloud Build failed with status ${status}${logUrl ? `. Logs: ${logUrl}` : ''}`;
+    if (!logLines || logLines.length === 0) return header;
+    // Inline the log tail so the deploy panel's per-resource error row
+    // shows the actual failure reason (npm error, missing file, etc.)
+    // without forcing the user to leave the app for the Cloud Build
+    // console. The console URL stays in the header for the full view.
+    return `${header}\n--- Log tail (${logLines.length} line${logLines.length === 1 ? '' : 's'}) ---\n${logLines.join('\n')}`;
+  },
   BUILD_TIMED_OUT: 'Cloud Build timed out after 15 minutes',
   BUILDING_FROM_SOURCE: (repo: string) => `Building container image from source: ${repo}`,
 } as const;

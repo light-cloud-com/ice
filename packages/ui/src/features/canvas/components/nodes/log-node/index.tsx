@@ -141,6 +141,7 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, o
     <g
       className="svg-log-node"
       data-node-id={node.id}
+      data-ice-type={(node.data?.iceType as string) || ''}
       style={{ cursor: 'move' }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}

@@ -46,6 +46,7 @@ export const BlockNode: React.FC<BlockNodeProps> = memo(
       <g
         className="svg-block-node"
         data-node-id={node.id}
+        data-ice-type={(node.data?.iceType as string) || ''}
         style={{ cursor: 'move', opacity: isDragging ? 0.85 : 1 }}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}

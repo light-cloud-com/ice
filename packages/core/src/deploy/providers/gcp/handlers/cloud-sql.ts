@@ -45,19 +45,72 @@ function fail(
   };
 }
 
+/**
+ * Resolve the (edition, tier) pair to send to the Cloud SQL Admin API.
+ *
+ * The two are coupled: ENTERPRISE accepts shared-core tiers
+ * (`db-f1-micro`, `db-g1-small`) and `db-custom-CPU-MEM`; ENTERPRISE_PLUS
+ * only accepts `db-perf-optimized-N-*`. Picking one without the other
+ * yields HTTP 400 "Invalid Tier (X) for (Y) Edition" — which is the bug
+ * we hit on projects whose default edition is ENTERPRISE_PLUS.
+ *
+ * Strategy:
+ *   1. If the user supplied an explicit edition, trust it and validate
+ *      that the tier matches; auto-fix mismatches with a sensible default.
+ *   2. If only a tier was supplied, infer edition from the tier prefix.
+ *   3. If neither was supplied, default to ENTERPRISE + db-f1-micro
+ *      (the cheapest dev-friendly combination).
+ *
+ * This makes the handler self-correcting on projects whose default
+ * edition is ENTERPRISE_PLUS — the user no longer has to know that
+ * `db-f1-micro` doesn't exist on that edition.
+ */
+function resolve_edition_and_tier(properties: Record<string, unknown>): { edition: string; tier: string } {
+  const requested_edition = ((properties.edition as string) || '').toUpperCase();
+  const requested_tier = (properties.tier as string) || '';
+
+  const tier_is_perf_optimized = /^db-perf-optimized/i.test(requested_tier);
+  const tier_is_shared_or_custom = /^(db-f1-micro|db-g1-small|db-custom-)/i.test(requested_tier);
+
+  if (requested_edition === 'ENTERPRISE_PLUS') {
+    return {
+      edition: 'ENTERPRISE_PLUS',
+      tier: tier_is_perf_optimized ? requested_tier : 'db-perf-optimized-N-2',
+    };
+  }
+  if (requested_edition === 'ENTERPRISE') {
+    return {
+      edition: 'ENTERPRISE',
+      tier: tier_is_perf_optimized || !requested_tier ? 'db-f1-micro' : requested_tier,
+    };
+  }
+  // No edition specified — infer from tier shape.
+  if (tier_is_perf_optimized) {
+    return { edition: 'ENTERPRISE_PLUS', tier: requested_tier };
+  }
+  return {
+    edition: 'ENTERPRISE',
+    tier: tier_is_shared_or_custom ? requested_tier : 'db-f1-micro',
+  };
+}
+
 export const cloud_sql_handler: GCPResourceHandler = {
   async create(name, properties, ctx) {
     const start = Date.now();
     const region = (properties.region as string) || ctx.region;
 
     try {
+      const { edition, tier } = resolve_edition_and_tier(properties);
+      ctx.on_log?.(`[cloud-sql] Creating ${name} (edition=${edition}, tier=${tier})`);
+
       const instance_body = {
         name,
         project: ctx.project,
         region,
         databaseVersion: properties.database_version || 'POSTGRES_16',
         settings: {
-          tier: properties.tier || 'db-f1-micro',
+          tier,
+          edition,
           dataDiskSizeGb: String(properties.storage_size_gb || 20),
           dataDiskType: 'PD_SSD',
           backupConfiguration: {

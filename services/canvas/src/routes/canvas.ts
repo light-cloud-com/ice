@@ -71,8 +71,12 @@ router.post('/projects/delete', requireProjectAccess('owner'), async (req: AuthR
   try {
     await canvasService.deleteProject(req.body.projectId, getOrgId(req));
     res.json({ success: true });
-  } catch {
-    res.status(500).json({ message: 'Failed to delete' });
+  } catch (err: any) {
+    // Surface the underlying error — the previous bare 500 made FK
+    // violations and similar real bugs (DeployEvent NoAction, missing
+    // cascades) invisible to clients and log scrapers.
+    const message = err?.message || String(err);
+    res.status(500).json({ success: false, message: `Failed to delete: ${message}` });
   }
 });
 

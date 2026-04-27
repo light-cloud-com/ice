@@ -129,14 +129,18 @@ const GCP_TYPE_MAP: Record<string, string> = {
   // are set, and the URL map host rules are populated from each
   // outgoing edge's `subdomain` field.
   'Network.PublicEndpoint': 'gcp.compute.globalForwardingRule',
-  // `Network.PrivateNetwork` is a UI-level grouping container — it's a
-  // walled visual boundary on the canvas but does not compile to a
-  // deployable resource in v1. Children inside deploy as normal; a
-  // nested `Network.CustomDomain` (when Open) compiles to the LB chain
-  // that routes traffic to sibling services. See UI_ONLY_TYPES below.
-  // Future: egress firewall rules from node.data.egress will compile
-  // to gcp.compute.firewall entries once the handler exists.
+  // `Network.PrivateNetwork` is the user-facing "private network" block:
+  // one group on the canvas that wraps the services we want isolated.
+  // Compiles to an auto-mode VPC (`autoCreateSubnetworks: true`) so the
+  // user doesn't have to drag explicit Subnet blocks — GCP auto-creates
+  // a /20 subnet per region. Templates should use this block, not the
+  // lower-level `Network.VPC` + `Network.Subnet` pair (which still exists
+  // for power users who need custom CIDR layouts).
+  'Network.PrivateNetwork': 'gcp.compute.network',
   'Network.LoadBalancer': 'gcp.compute.globalForwardingRule',
+  'Network.VPC': 'gcp.compute.network',
+  'Network.Subnet': 'gcp.compute.subnetwork',
+  'Security.WAF': 'gcp.compute.securityPolicy',
   'Messaging.CloudPubSub': 'gcp.pubsub.topic',
   'Messaging.Queue': 'gcp.pubsub.topic',
   'Messaging.Topic': 'gcp.pubsub.topic',
@@ -225,18 +229,18 @@ const AZURE_TYPE_MAP: Record<string, string> = {
 // `packages/core/src/validation/deploy-rules.ts:173` and
 // `packages/core/src/validation/schema-bridge.ts:71` so all three layers
 // agree on what counts as a deployable node.
+// Genuinely non-deployable canvas annotations. Everything else (VPC,
+// Subnet, PrivateNetwork, WAF, etc.) is expected to compile to a real
+// provider resource — if a deployer mapping is missing for those, fix
+// the type map / handler registry rather than adding the type here.
+//
+// Network.PublicTraffic is the only "Network." type that lives here:
+// it represents the public internet on the diagram, not a provisioned
+// resource. Everything else under Network.* should map to something.
 const UI_ONLY_TYPES = new Set([
   'Monitoring.Terminal',
   'Source.Repository',
   'Config.Environment',
-  // Network.PrivateNetwork is a UI-level grouping container. It
-  // visually walls off its children and hosts a nested Custom Domain
-  // for ingress, but it doesn't compile to a dedicated resource in v1
-  // — the children deploy as normal and the nested CD handles routing.
-  'Network.PrivateNetwork',
-  // Network.PublicTraffic is a symbolic source node representing
-  // "the internet / outside users" on the diagram. Canvas-only
-  // documentation — no infrastructure emitted.
   'Network.PublicTraffic',
 ]);
 
@@ -356,15 +360,20 @@ function extract_cloud_sql_properties(data: Record<string, unknown>, region: str
   const version_match = runtime.match(/(\d+(\.\d+)?)/);
   const version_num = version_match?.[1] ?? (is_postgres ? '16' : '8.0');
 
-  return {
+  // Edition + tier flow through to the handler, which resolves the pair
+  // (e.g. forces ENTERPRISE for db-f1-micro). Pass through whatever the
+  // user set; the handler defaults and validates.
+  const props: Record<string, unknown> = {
     region,
-    tier: data.size || 'db-f1-micro',
     database_version: is_postgres ? `POSTGRES_${version_num}` : `MYSQL_${version_num.replace('.', '_')}`,
     storage_size_gb: parse_storage_gb(data.storage as string) || 20,
     backup_enabled: true,
     port: data.port || (is_postgres ? 5432 : 3306),
     labels: {},
   };
+  if (data.size) props.tier = data.size;
+  if (data.edition) props.edition = data.edition;
+  return props;
 }
 
 function extract_cloud_functions_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
@@ -434,11 +443,41 @@ function extract_firestore_properties(data: Record<string, unknown>, region: str
   };
 }
 
+// Memorystore for Redis exposes BASIC and STANDARD_HA as the only valid
+// `tier` values on the API. The canvas instead exposes the M-series size
+// enum from high-level-resources (M1=1GB BASIC, M2=4GB BASIC, etc.). The
+// common blueprint's nodeDataDefaults also leaks an internal `tier: 'small'`
+// label that's not a real API enum and would 400 the request. Translate
+// here so the handler always sees a (tier, memorySizeGb) pair the API
+// will accept.
+const REDIS_SIZE_MAP: Record<string, { tier: string; memorySizeGb: number }> = {
+  M1: { tier: 'BASIC', memorySizeGb: 1 },
+  M2: { tier: 'BASIC', memorySizeGb: 4 },
+  M3: { tier: 'BASIC', memorySizeGb: 10 },
+  M4: { tier: 'BASIC', memorySizeGb: 35 },
+  M5: { tier: 'STANDARD_HA', memorySizeGb: 100 },
+};
+const REDIS_VALID_TIERS = new Set(['BASIC', 'STANDARD_HA']);
+
 function extract_memorystore_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
+  // 1. Prefer the size enum (canvas property) and look up its tier+memory pair.
+  const size = typeof data.size === 'string' ? data.size : null;
+  const mapped = size && REDIS_SIZE_MAP[size] ? REDIS_SIZE_MAP[size] : null;
+
+  // 2. Otherwise accept a literal tier value if it matches the API enum;
+  //    drop sentinel labels like 'small' from the common blueprint.
+  const literalTier = typeof data.tier === 'string' && REDIS_VALID_TIERS.has(data.tier) ? data.tier : null;
+
+  // 3. memoryMb (common blueprint) → memorySizeGb (API). Floor at 1 because
+  //    the API rejects sub-1 GB instances.
+  const fromMemoryMb =
+    typeof data.memoryMb === 'number' && data.memoryMb > 0 ? Math.max(1, Math.round(data.memoryMb / 1024)) : null;
+  const literalGb = typeof data.memorySizeGb === 'number' && data.memorySizeGb > 0 ? data.memorySizeGb : null;
+
   return {
     region,
-    tier: data.tier || 'BASIC',
-    memory_size_gb: data.memorySizeGb || 1,
+    tier: mapped?.tier ?? literalTier ?? 'BASIC',
+    memory_size_gb: mapped?.memorySizeGb ?? literalGb ?? fromMemoryMb ?? 1,
     redis_version: data.redisVersion || 'REDIS_7_0',
     port: data.port || 6379,
     labels: {},
@@ -493,6 +532,74 @@ function extract_logging_properties(data: Record<string, unknown>, _region: stri
   return {
     filter: data.filter || '',
     destination_type: data.destinationType || 'logging.googleapis.com',
+    labels: {},
+  };
+}
+
+function extract_vpc_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
+  // PrivateNetwork → auto-mode (GCP creates per-region /20 subnets so the
+  // user doesn't need explicit Subnet blocks). VPC → custom-mode (each
+  // Network.Subnet block deploys its own subnetwork). Both default can be
+  // overridden via data.auto_create_subnets.
+  const is_private_network = data.iceType === 'Network.PrivateNetwork';
+  const auto_create_subnets =
+    typeof data.auto_create_subnets === 'boolean' ? data.auto_create_subnets : is_private_network;
+  return {
+    routing_mode: typeof data.routing_mode === 'string' ? data.routing_mode : 'GLOBAL',
+    description: typeof data.description === 'string' ? data.description : undefined,
+    auto_create_subnets,
+    labels: {},
+  };
+}
+
+function extract_subnet_properties(
+  data: Record<string, unknown>,
+  region: string,
+  node_id?: string,
+): Record<string, unknown> {
+  // Auto-allocate a unique /24 from the node id when the user hasn't set
+  // one explicitly. Two subnets in the same VPC must have different
+  // CIDRs; defaulting both to 10.0.0.0/24 (as we did initially) makes
+  // the second subnet's create call fail with INVALID_USAGE.
+  //
+  // Hash bytes give us a deterministic, conflict-tolerant allocation
+  // across the 10.X.Y.0/24 space (256 × 256 = 65 536 distinct ranges).
+  // Skip 10.0.0.0/24 specifically because GCP's "default" network often
+  // reserves it.
+  let cidr = typeof data.ip_cidr_range === 'string' ? data.ip_cidr_range : '';
+  if (!cidr) {
+    if (node_id) {
+      // GCP auto-mode networks reserve 10.128.0.0/9 for their own
+      // auto-allocated subnets. To stay safe regardless of whether the
+      // subnet ends up in a custom VPC or the default auto-mode network,
+      // clamp the first octet to 1..127 (10.0.0.0/9, non-reserved).
+      // Skip 10.0.x as the literal `default` network often uses it.
+      const hash = createHash('sha256').update(node_id).digest();
+      const x = ((hash[0] ?? 0) % 127) + 1; // 1..127
+      const y = hash[1] ?? 0; // 0..255
+      cidr = `10.${x}.${y}.0/24`;
+    } else {
+      cidr = '10.10.0.0/24';
+    }
+  }
+  // The translator wires `network` from the parent VPC's resource name when
+  // the canvas links Subnet → VPC; falls back to 'default' if unwired.
+  return {
+    region,
+    network: typeof data.network === 'string' ? data.network : 'default',
+    ip_cidr_range: cidr,
+    private_ip_google_access: data.private_ip_google_access === true,
+    description: typeof data.description === 'string' ? data.description : undefined,
+    labels: {},
+  };
+}
+
+function extract_cloud_armor_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
+  // Pass user-defined rules through verbatim; the handler injects the
+  // mandatory default (priority 2147483647) when the user hasn't supplied one.
+  return {
+    rules: Array.isArray(data.rules) ? data.rules : [],
+    description: typeof data.description === 'string' ? data.description : undefined,
     labels: {},
   };
 }
@@ -594,7 +701,10 @@ function extract_firebase_hosting_properties(data: Record<string, unknown>, _reg
 // Property extraction dispatcher
 // =============================================================================
 
-const PROPERTY_EXTRACTORS: Record<string, (data: Record<string, unknown>, region: string) => Record<string, unknown>> =
+const PROPERTY_EXTRACTORS: Record<
+  string,
+  (data: Record<string, unknown>, region: string, node_id?: string) => Record<string, unknown>
+> =
   {
     'gcp.run.service': extract_cloud_run_properties,
     'gcp.run.job': extract_cloud_run_job_properties,
@@ -619,6 +729,9 @@ const PROPERTY_EXTRACTORS: Record<string, (data: Record<string, unknown>, region
     'gcp.run.domainMapping': extract_domain_mapping_properties,
     'gcp.compute.managedSslCertificate': extract_custom_domain_properties,
     'gcp.compute.backendBucket': extract_backend_bucket_properties,
+    'gcp.compute.network': extract_vpc_properties,
+    'gcp.compute.subnetwork': extract_subnet_properties,
+    'gcp.compute.securityPolicy': extract_cloud_armor_properties,
     'gcp.firebase.hosting': extract_firebase_hosting_properties,
   };
 
@@ -634,18 +747,56 @@ const PROPERTY_EXTRACTORS: Record<string, (data: Record<string, unknown>, region
  * for dependency ordering.
  */
 /**
- * Generate a stable resource name from the canvas node id and its concrete
- * resource type. Deterministic, short, collision-resistant. Crucially, it
- * does NOT depend on `label` or any user-editable field — renaming a block
- * on the canvas keeps the same resource name.
+ * Generate a stable resource name from the canvas node id, the concrete
+ * resource type, and the owning project + environment. Deterministic,
+ * short, collision-resistant. Renaming a block doesn't change the name;
+ * a node moved to a different project / env DOES change because the
+ * project+env are part of the seed and the human-readable slug.
  *
- * The `ice-` prefix makes ICE-deployed resources easy to spot in the GCP
- * console before Phase 1's standard labels propagate.
+ * Resulting form: `ice-<projectSlug>-<envSlug>-<typeSlug>-<hash>` capped
+ * at 40 chars — Memorystore Redis is the strictest GCP resource at 40,
+ * and the Compute load balancer chain appends suffixes like `-backend`
+ * to the forwarding rule's base name (eating ~8 chars of the 63-char
+ * Compute budget). 40 fits everywhere; resource budgets above can absorb
+ * the 8-char suffix.
+ *
+ * Slug budgets (sums to 38 incl. 3-char `ice` and 4 dashes):
+ *   ice (3) + project (8) + env (4) + type (10) + hash (8) + 4 dashes
+ *
+ * Project+env in the slug make ownership obvious in the GCP console
+ * without them every resource looks like `ice-instance-abc123` and you
+ * can't tell which project deployed it.
  */
-function generate_stable_name(resource_type: string, node_id: string): string {
-  const type_slug = resource_type.split('.').pop() || 'resource';
-  const hash = createHash('sha256').update(node_id).digest('hex').slice(0, 10);
-  return sanitize_name(`ice-${type_slug}-${hash}`);
+const ENV_SHORT: Record<string, string> = {
+  production: 'prod',
+  staging: 'stage',
+  development: 'dev',
+};
+
+function generate_stable_name(
+  resource_type: string,
+  node_id: string,
+  project_name: string,
+  environment: string,
+): string {
+  const type_slug_full = resource_type.split('.').pop() || 'resource';
+  // Hash incorporates project+env so the same node_id in different
+  // projects produces different names (avoids accidental collisions
+  // when projects are duplicated or templates are re-instantiated).
+  const seed = `${project_name}::${environment}::${node_id}`;
+  const hash = createHash('sha256').update(seed).digest('hex').slice(0, 8);
+
+  // Tight per-segment caps so the assembled name fits Memorystore's
+  // 40-char limit even for the longest plausible project name. Slugs
+  // sanitized to GCP-safe form (lowercase, dash-separated, no leading
+  // digit). Trailing dashes from truncation get stripped so we don't
+  // end up with `ice-myproject--prod-…`.
+  const project_slug = sanitize_name(project_name).slice(0, 8).replace(/-+$/, '') || 'p';
+  const env_short = ENV_SHORT[environment] || sanitize_name(environment).slice(0, 4) || 'env';
+  const env_slug = env_short.replace(/-+$/, '') || 'env';
+  const t_slug = sanitize_name(type_slug_full).slice(0, 10).replace(/-+$/, '') || 'res';
+
+  return sanitize_name(`ice-${project_slug}-${env_slug}-${t_slug}-${hash}`);
 }
 
 export function translate_card_to_graph(input: CardTranslationInput): CardTranslationResult {
@@ -695,6 +846,18 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
         nodeId: node.id,
         label: (node.data.label as string) || node.id,
         reason: 'No iceType defined on node',
+      });
+      continue;
+    }
+
+    // Skip groups — purely visual canvas grouping, never a real resource.
+    // The group's `subtype` produces iceTypes like Group.Frontend / Group.
+    // Monitoring; both are diagram-only and have no provider mapping.
+    if (ice_type.startsWith('Group.')) {
+      skipped.push({
+        nodeId: node.id,
+        label: (node.data.label as string) || node.id,
+        reason: `Visual group: ${ice_type}`,
       });
       continue;
     }
@@ -766,7 +929,7 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
       });
       continue;
     }
-    const properties = extractor(node.data, region);
+    const properties = extractor(node.data, region, node.id);
 
     // Private Network ingress override.
     //
@@ -803,7 +966,7 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
     // destroy-recreate cycle.
     const label = (node.data.label as string) || ice_type.split('.').pop() || 'resource';
     const existing = existing_names?.get(node.id);
-    const name = existing ?? generate_stable_name(gcp_type, node.id);
+    const name = existing ?? generate_stable_name(gcp_type, node.id, projectName, input.environment || 'dev');
 
     // Standard labels for every resource so deployed state is discoverable
     // in the GCP console via `gcloud ... --filter="labels.ice-managed=true"`.

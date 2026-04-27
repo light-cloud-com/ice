@@ -22,6 +22,7 @@ import axiosInstance from '../../../shared/api/axios-instance';
 import { IceSelect } from '../../../shared/components/ui/ice-select';
 import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { cn } from '../../../shared/utils/cn';
+import { DesignRequirements } from './design-requirements';
 import {
   selectActiveCard,
   updateCardNodeData,
@@ -300,14 +301,16 @@ const TextField: React.FC<{
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
-}> = ({ label, value, onChange, placeholder }) => (
-  <div className="flex items-center justify-between gap-2 py-1">
+  propKey?: string;
+}> = ({ label, value, onChange, placeholder, propKey }) => (
+  <div className="flex items-center justify-between gap-2 py-1" data-prop-key={propKey}>
     <span className="text-ice-xs text-ice-text-3 shrink-0">{label}</span>
     <input
       type="text"
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
+      data-prop-key={propKey}
       className="w-[140px] bg-transparent border-b border-ice-border/50 px-1 py-0.5 text-ice-xs text-ice-text-1 outline-none focus:border-ice-accent transition-colors placeholder:text-ice-text-3/40"
     />
   </div>
@@ -317,13 +320,15 @@ const NumberField: React.FC<{
   label: string;
   value: number | string;
   onChange: (v: number) => void;
-}> = ({ label, value, onChange }) => (
-  <div className="flex items-center justify-between gap-2 py-1">
+  propKey?: string;
+}> = ({ label, value, onChange, propKey }) => (
+  <div className="flex items-center justify-between gap-2 py-1" data-prop-key={propKey}>
     <span className="text-ice-xs text-ice-text-3 shrink-0">{label}</span>
     <input
       type="number"
       value={value}
       onChange={(e) => onChange(Number(e.target.value))}
+      data-prop-key={propKey}
       className="w-[140px] bg-transparent border-b border-ice-border/50 px-1 py-0.5 text-ice-xs text-ice-text-1 outline-none focus:border-ice-accent transition-colors"
     />
   </div>
@@ -334,8 +339,9 @@ const SelectField: React.FC<{
   value: string;
   options: string[];
   onChange: (v: string) => void;
-}> = ({ label, value, options, onChange }) => (
-  <div className="flex items-center justify-between gap-2 py-1">
+  propKey?: string;
+}> = ({ label, value, options, onChange, propKey }) => (
+  <div className="flex items-center justify-between gap-2 py-1" data-prop-key={propKey}>
     <span className="text-ice-xs text-ice-text-3 shrink-0">{label}</span>
     <IceSelect value={value} onChange={onChange} options={options} width="140px" />
   </div>
@@ -728,7 +734,7 @@ const PropertyFields: React.FC<{
       {visible.length > 0 && (
         <Section title={t('properties.config.title')}>
           {visible.map((prop) => (
-            <div key={prop.name}>
+            <div key={prop.name} data-prop-key={prop.name}>
               {renderPropertyField(filterByProvider(prop), nodeData[prop.name], onFieldChange, nodeData)}
               {propertyIssues?.has(prop.name) && (
                 <div
@@ -1182,6 +1188,12 @@ export const PropertiesPanel: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* ── Design requirements (prototype: Postgres + PrivateNetwork) ──
+            Surfaces missing connections, missing required props, and
+            implicit handler choices BEFORE the user clicks deploy. Pure
+            client-side; no network calls. */}
+        <DesignRequirements node={selectedNode} allNodes={activeCard.nodes} edges={activeCard.edges} />
 
         {/* ── Group color picker (only for container/group nodes) ── */}
         {selectedNode.type === 'container' && (
@@ -1783,6 +1795,7 @@ const CustomDomainPanel: React.FC<{
           value={rootDomain}
           placeholder="example.com"
           onChange={(e) => updateNodeField('domain', e.target.value.toLowerCase().trim())}
+          data-prop-key="domain"
           className="w-full px-2 py-1.5 text-ice-sm rounded border border-ice-border bg-ice-base text-ice-text-1 font-mono focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
         <p className="mt-1 text-ice-2xs text-ice-text-3 leading-relaxed">
@@ -1829,6 +1842,8 @@ const CustomDomainPanel: React.FC<{
                     value={subdomain}
                     placeholder="api (blank = root)"
                     onChange={(e) => updateRouteSubdomain(route.id, e.target.value)}
+                    data-prop-key="routes.subdomain"
+                    data-route-id={route.id}
                     className="flex-1 min-w-0 px-1.5 py-1 text-ice-xs rounded border border-ice-border bg-ice-base text-ice-text-1 font-mono focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                   {routes.length > 1 && (
@@ -2678,6 +2693,7 @@ const SourceRepositorySection: React.FC<{
           <select
             value={nodeBranch}
             onChange={(e) => onUpdateField('branch', e.target.value)}
+            data-prop-key="branch"
             className="w-full px-2 py-1.5 text-ice-sm rounded border border-ice-border bg-ice-base text-ice-text-1 font-mono focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             {branches.length > 0 ? (
@@ -2707,12 +2723,14 @@ const SourceRepositorySection: React.FC<{
               value={buildCommand}
               placeholder={t('properties.source.buildCommandPlaceholder')}
               onChange={(v) => onUpdateField('buildCommand', v)}
+              propKey="buildCommand"
             />
             <TextField
               label={t('properties.source.outputDirectory')}
               value={outputDirectory}
               placeholder={t('properties.source.outputDirPlaceholder')}
               onChange={(v) => onUpdateField('outputDirectory', v)}
+              propKey="outputDirectory"
             />
           </div>
         </Section>

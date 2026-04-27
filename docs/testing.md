@@ -9,6 +9,7 @@ pnpm test:unit          # Vitest unit tests — no DB, no network
 pnpm test:int           # Integration tests — hits a local SQLite DB
 pnpm test:e2e           # Playwright E2E against a running web app
 pnpm test:gcp           # GCP integration tests — requires real GCP creds
+pnpm test:scenarios     # Declarative-YAML deployment scenarios — requires real GCP creds
 pnpm test:dashboard     # Interactive GCP test dashboard (http://localhost:15200)
 pnpm typecheck          # TypeScript across all packages
 pnpm lint:check         # ESLint, errors only
@@ -83,6 +84,25 @@ The dashboard (`e2e/dashboard/server.ts`) provides: template checkboxes, GCP/Git
 - A project budget ceiling — the tests spin up real infra.
 
 **What it protects:** the entire template library. If "SaaS Starter" stops deploying on GCP, this is the suite that catches it. Running it per-commit would be expensive; it's run on demand and before tagged releases.
+
+## Deployment-test scenarios
+
+Complementary to the template suite above. Where `test:gcp` exercises pre-built templates end-to-end, `test:scenarios` builds projects from scratch — described in YAML, placed block-by-block via the UI, with per-step JSONL logging and recipe-based recovery for known errors.
+
+```bash
+pnpm test:scenarios                                    # all scenarios
+ICE_SCENARIO_ID=static-site pnpm test:scenarios        # filter by id substring
+```
+
+Credentials (`ICE_TEST_GCP_PROJECT`, `ICE_TEST_SA_KEY_PATH`, optional `ICE_TEST_GITHUB_TOKEN`, `ICE_TEST_DOMAIN`) are read from the repo-root `.env` automatically — see [`.env.example`](../.env.example) for the canonical list. Same vars work for `test:gcp`.
+
+Scenarios live in [`e2e/deployment-tests/scenarios/`](../e2e/deployment-tests/scenarios) as YAML files. Each run writes to `test-results/runs/<ts>-<scenarioId>/` with `events.jsonl`, `summary.json`, `description.md`, screenshots, and a self-contained `index.html` timeline.
+
+**Write a scenario when:** you want to lock in a specific multi-block configuration end-to-end (e.g. "static site + custom domain on GCP must produce a forwarding rule"), or you want to reproduce a deployment-level bug as a regression test.
+
+**Don't use this for:** template smoke tests (use `test:gcp`), unit-level logic (use `test:unit`).
+
+Full reference — env vars, YAML schema, recipe model, log schema, troubleshooting — is in [`e2e/deployment-tests/README.md`](../e2e/deployment-tests/README.md).
 
 ## Typecheck
 

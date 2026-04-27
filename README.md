@@ -124,6 +124,7 @@ pnpm dist:desktop       # Package Electron for distribution
 pnpm test:unit          # Vitest unit tests
 pnpm test:e2e           # Playwright E2E tests
 pnpm test:gcp           # GCP integration tests (requires env vars)
+pnpm test:scenarios     # Declarative-YAML deployment scenarios (requires env vars)
 pnpm test:dashboard     # Interactive GCP test dashboard (port 15200)
 
 # Quality

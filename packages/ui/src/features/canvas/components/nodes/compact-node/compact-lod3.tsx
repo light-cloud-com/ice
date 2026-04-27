@@ -245,6 +245,7 @@ export const CompactLod3: React.FC<CompactLod3Props> = memo(
       <g
         className="svg-compact-node"
         data-node-id={node.id}
+        data-ice-type={(node.data?.iceType as string) || ''}
         style={{ cursor: isValidTarget ? 'crosshair' : 'move' }}
         opacity={connectionDragState === 'invalid-target' ? 0.3 : 1}
         onMouseEnter={onMouseEnter}

@@ -47,6 +47,7 @@ import {
   startDestroying,
   deploySuccess,
   deployError,
+  hydrateDeployFromHistory,
   resetDeploy,
   appendLog,
   setDeployedResources,
@@ -54,6 +55,7 @@ import {
   setRequirements,
   type DeployPlan,
   type DeployStatus,
+  type DeployResourceResult,
 } from '../../../store/slices/deploy-slice';
 import { primaryOutput } from '../output-extractors';
 import { analyzePreDeploy } from '../utils/predeploy-analysis';
@@ -281,6 +283,94 @@ export const DeployPanel: React.FC = () => {
     [fetchRequirements],
   );
 
+  // ─── Persist deploy results across reloads ──────────────────────────
+  //
+  // Deploy results live in canvas_deployment server-side. Without this
+  // effect, opening the app after a deploy showed an empty deploy panel
+  // because state.results is in-memory only. On every active-card change
+  // we fetch the most-recent terminal apply for that card and hydrate
+  // the slice — so the summary header (Copy summary / Copy errors) is
+  // visible immediately, not just for the session that ran the deploy.
+  //
+  // Skip when a deploy is mid-flight (the slice's hydrate reducer also
+  // guards this) and when the card hasn't actually changed (avoid a
+  // network round-trip on every layout re-render).
+  React.useEffect(() => {
+    if (!activeCard) return;
+    // Don't gate on slice status here. The app-level
+    // useDeploySubscription's Phase 2 effect can flip the slice to
+    // 'deploying' from a stale gateway snapshot (a deploy that crashed
+    // without finalizing the in-memory snapshot looks live forever),
+    // which would otherwise prevent hydrate from running and leave the
+    // panel forever showing 99% with no results. The DB row is the
+    // source of truth — the slice's hydrate reducer ignores non-terminal
+    // statuses anyway, so it's safe to dispatch unconditionally and let
+    // the reducer decide.
+    let cancelled = false;
+    (async () => {
+      try {
+        const history = (await getApi().deploy.getDeployments(activeCard.id)) as Array<{
+          id: string;
+          status: string;
+          action_type: string;
+          environment?: string;
+          duration_ms?: number | null;
+          error?: string | null;
+          results?: { resources?: DeployResourceResult[] } | null;
+        }>;
+        if (cancelled) return;
+        // eslint-disable-next-line no-console -- diagnostic: helps the user verify hydrate fired
+        console.log('[deploy-panel] hydrate fetch', {
+          cardId: activeCard.id,
+          historyLen: Array.isArray(history) ? history.length : 0,
+        });
+        if (!Array.isArray(history) || history.length === 0) return;
+        // Most-recent terminal apply (skip plan-only entries and any
+        // mid-flight ones the gateway might report).
+        const latest = history.find(
+          (d) =>
+            (d.action_type === 'apply' || d.action_type === 'rollback') &&
+            ['success', 'partial', 'failed', 'cancelled'].includes(d.status),
+        );
+        if (!latest) {
+          // eslint-disable-next-line no-console
+          console.log('[deploy-panel] hydrate: no terminal apply in history', {
+            statuses: history.map((d) => `${d.action_type}:${d.status}`),
+          });
+          return;
+        }
+        const resources = Array.isArray(latest.results?.resources) ? latest.results!.resources : [];
+        // eslint-disable-next-line no-console
+        console.log('[deploy-panel] hydrate dispatch', {
+          status: latest.status,
+          resourcesLen: resources.length,
+          environment: latest.environment,
+          duration_ms: latest.duration_ms,
+          hasError: !!latest.error,
+        });
+        dispatch(
+          hydrateDeployFromHistory({
+            cardId: activeCard.id,
+            status: latest.status,
+            results: resources,
+            error: latest.error,
+            duration_ms: latest.duration_ms ?? undefined,
+            environment: latest.environment ?? undefined,
+          }),
+        );
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn('[deploy-panel] hydrate failed', err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only refetch
+    //   when the active card actually changes; deploy.status flipping to
+    //   'deploying' inside this effect would re-fetch unnecessarily.
+  }, [activeCard?.id, dispatch]);
+
   const handlePlan = useCallback(async () => {
     if (!activeCard) return;
 
@@ -348,13 +438,30 @@ export const DeployPanel: React.FC = () => {
         environment: deploy.environment,
       });
 
-      // Success/results are handled via socket events (resource_result + complete).
-      // We ALSO fire the success path unconditionally here — the 'deploy.status'
-      // closure is stale by the time this await resolves, so relying on it as a
-      // guard meant the UI got stuck on "Deploying... 0%". Redux reducers are
-      // idempotent enough that an extra deploySuccess dispatch is harmless.
+      // Async path: the gateway now returns immediately with `async: true`
+      // and `deploymentId`. Terminal state arrives via the socket
+      // subscription's `complete` handler (which dispatches deploySuccess
+      // or deployError based on the event payload). Don't touch the slice
+      // here — doing so would race the socket events.
+      if ((result as { async?: boolean }).async) {
+        return;
+      }
+
+      // Sync fallback (queue worker, tests): the response carries the
+      // full per-resource list at result.result.resources. Pass it
+      // through to deploySuccess so the summary always renders even if
+      // socket events come in late.
+      const apiResources = (result as { result?: { resources?: DeployResourceResult[] } })?.result?.resources;
+      const partialFailures = Array.isArray(apiResources) && apiResources.some((r) => !r.success);
       if (result.success) {
-        dispatch(deploySuccess({ duration_ms: result.duration_ms || 0 }));
+        if (partialFailures) {
+          // Server returned 200 but some resources failed — surface as
+          // an error so the red banner + Copy errors button appear.
+          const failedSummary = apiResources!.filter((r) => !r.success).map((r) => `${r.type}/${r.name}`).join(', ');
+          dispatch(deployError({ error: `${apiResources!.filter((r) => !r.success).length} resource(s) failed: ${failedSummary}`, results: apiResources }));
+        } else {
+          dispatch(deploySuccess({ duration_ms: result.duration_ms || 0, results: apiResources }));
+        }
         try {
           const res = await getApi().deploy.getResources(activeCard.id);
           if (res.success && res.resources) {
@@ -373,8 +480,19 @@ export const DeployPanel: React.FC = () => {
             region: deploy.region,
             environment: deploy.environment,
           });
+          // Same async-path skip as the main handler — socket drives state.
+          if ((retry as { async?: boolean }).async) {
+            return;
+          }
           if (retry.success) {
-            dispatch(deploySuccess({ duration_ms: retry.duration_ms || 0 }));
+            const retryResources = (retry as { result?: { resources?: DeployResourceResult[] } })?.result?.resources;
+            const retryPartial = Array.isArray(retryResources) && retryResources.some((r) => !r.success);
+            if (retryPartial) {
+              const failedSummary = retryResources!.filter((r) => !r.success).map((r) => `${r.type}/${r.name}`).join(', ');
+              dispatch(deployError({ error: `${retryResources!.filter((r) => !r.success).length} resource(s) failed: ${failedSummary}`, results: retryResources }));
+            } else {
+              dispatch(deploySuccess({ duration_ms: retry.duration_ms || 0, results: retryResources }));
+            }
             try {
               const res = await getApi().deploy.getResources(activeCard.id);
               if (res.success && res.resources) {
@@ -681,8 +799,13 @@ export const DeployPanel: React.FC = () => {
           </div>
         )}
 
-        {/* Results */}
-        {(deploy.status === 'success' || deploy.status === 'error') && deploy.results.length > 0 && (
+        {/* Results — show whenever we have any (from current session or
+              hydrated from DB), except while a deploy is actively running
+              (the progress bar above takes that slot). Status can be
+              'planning'/'planned'/'idle' when the user re-opens the panel
+              or starts a new plan after a prior deploy; in those cases
+              the prior summary should still be visible. */}
+        {deploy.results.length > 0 && deploy.status !== 'deploying' && deploy.status !== 'destroying' && (
           <div id="ice-deploy-results">
             <ResultsSummary results={deploy.results} />
           </div>
@@ -1705,13 +1828,76 @@ const ResultsSummary: React.FC<{
   const { t } = useTranslation();
   const succeeded = results.filter((r) => r.success).length;
   const failed = results.filter((r) => !r.success).length;
+  const totalMs = results.reduce((acc, r) => acc + (r.duration_ms || 0), 0);
+  const allOk = failed === 0;
+
+  // Plain-text dump for the "Copy summary" / "Copy errors" buttons.
+  // Includes per-resource status, durations, and full error text — much
+  // easier to paste into a bug report than scraping individual rows.
+  const buildSummaryText = (errorsOnly: boolean) => {
+    const header = errorsOnly
+      ? `Deploy errors (${failed} of ${results.length} resource(s) failed)`
+      : `Deploy summary: ${succeeded}/${results.length} succeeded, ${failed} failed, ${(totalMs / 1000).toFixed(1)}s`;
+    const lines: string[] = [header, ''];
+    for (const r of results) {
+      if (errorsOnly && r.success) continue;
+      const flag = r.success ? '✓' : '✗';
+      const dur = r.duration_ms ? ` (${(r.duration_ms / 1000).toFixed(1)}s)` : '';
+      lines.push(`${flag} ${r.type} ${r.name} [${r.action}]${dur}`);
+      if (r.error) lines.push(`  error: ${r.error}`);
+      if (r.provider_id) lines.push(`  resource: ${r.provider_id}`);
+    }
+    return lines.join('\n');
+  };
+
+  const copy = (errorsOnly: boolean) => {
+    navigator.clipboard.writeText(buildSummaryText(errorsOnly)).catch(() => undefined);
+  };
 
   return (
     <div className="rounded-md border border-border overflow-hidden">
-      <div className="px-4 py-2 bg-muted/40 border-b border-border text-sm font-medium flex items-center gap-2">
-        <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
-        Results: {t('deploy.progress.succeeded', { count: succeeded })}
-        {failed > 0 && `, ${t('deploy.progress.failed', { count: failed })}`}
+      <div className="px-4 py-3 bg-muted/40 border-b border-border space-y-2">
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          {allOk ? (
+            <CheckCircle className="w-4 h-4 text-emerald-500" />
+          ) : (
+            <AlertCircle className="w-4 h-4 text-red-500" />
+          )}
+          <span className={allOk ? 'text-emerald-700 dark:text-emerald-300' : 'text-red-700 dark:text-red-300'}>
+            {allOk ? 'Deploy succeeded' : 'Deploy finished with errors'}
+          </span>
+          <span className="ml-auto text-xs text-muted-foreground font-normal">
+            {(totalMs / 1000).toFixed(1)}s
+          </span>
+        </div>
+        <div className="flex items-center gap-3 text-xs">
+          <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+            <CheckCircle className="w-3 h-3" />
+            {t('deploy.progress.succeeded', { count: succeeded })}
+          </span>
+          {failed > 0 && (
+            <span className="flex items-center gap-1 text-red-600 dark:text-red-400">
+              <AlertCircle className="w-3 h-3" />
+              {t('deploy.progress.failed', { count: failed })}
+            </span>
+          )}
+          <button
+            onClick={() => copy(false)}
+            className="ml-auto px-2 py-0.5 rounded border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            title="Copy the full per-resource summary as plain text"
+          >
+            Copy summary
+          </button>
+          {failed > 0 && (
+            <button
+              onClick={() => copy(true)}
+              className="px-2 py-0.5 rounded border border-red-300 dark:border-red-800 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+              title="Copy only the failed resources and their error messages"
+            >
+              Copy errors
+            </button>
+          )}
+        </div>
       </div>
       <div className="divide-y divide-border max-h-48 overflow-y-auto">
         {results.map((r, i) => (

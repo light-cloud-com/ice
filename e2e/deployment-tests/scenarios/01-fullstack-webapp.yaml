@@ -1,0 +1,34 @@
+id: fullstack-webapp
+name: Full-Stack Web App (fullstack-webapp)
+description: |
+  Loads the "Full-Stack Web App" template (id: fullstack-webapp) and
+  deploys it as-is to GCP. The template provides a frontend + backend +
+  database. We verify a Cloud Run service and a Cloud SQL instance both
+  came up, and that a Storage bucket exists for static assets.
+
+baseTemplate: Full-Stack Web App                # name as it appears on /templates
+
+project:
+  gcp:
+    project: ${ICE_TEST_GCP_PROJECT}
+    region: us-central1
+
+blocks: []
+connections: []
+
+expect:
+  # Soft-verify by default (apply.success). Once the deploy runs once and
+  # the per-resource list is logged in events.jsonl, you can pin specific
+  # kinds here — e.g. add { kind: gcp.run.service } once you know it lands.
+  resources: []
+
+recipes:
+  allow:
+    - api_not_enabled
+    - network
+  forbid:
+    - "*"
+
+cleanup:
+  destroyOnSuccess: true
+  destroyOnFailure: false

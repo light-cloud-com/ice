@@ -9,6 +9,7 @@
  */
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { setActiveCard } from './cards-slice';
 import { t } from '../../i18n';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -28,7 +29,7 @@ export interface DeployPlan {
   warnings: string[];
 }
 
-interface DeployResourceResult {
+export interface DeployResourceResult {
   name: string;
   type: string;
   action: 'create' | 'update' | 'delete';
@@ -107,6 +108,12 @@ export interface DeployState {
    * independent of which card the deploy panel is currently displaying.
    */
   currentDeployCardId?: string;
+  // Tracks which card the deploy slice was last reset for. Updated only
+  // by the setActiveCard extraReducer so deploy state survives router
+  // re-renders, sidebar refreshes, and other re-dispatches of
+  // setActiveCard with the same id. Distinct from currentDeployCardId,
+  // which represents a *running* deploy and gets cleared on completion.
+  lastResetCardId?: string;
 
   // Plan
   plan: DeployPlan | null;
@@ -315,21 +322,41 @@ const deploySlice = createSlice({
         step?: { label: string; index: number; total: number };
       }>,
     ) {
+      // Ignore late socket events that arrive after the API response has
+      // already flipped the status. Without this guard, a stale
+      // `progress: 99` event landing after deploySuccess would reset the
+      // bar to 99% even though the deploy is finished — exactly the
+      // "stopped at 99% after it's completed" symptom.
+      if (state.status === 'success' || state.status === 'error' || state.status === 'cancelled') return;
       state.progress = action.payload.progress;
       state.currentResource = action.payload.resource;
       state.currentStep = action.payload.step;
       if (action.payload.message) state.logs.push(action.payload.message);
     },
     addResourceResult(state, action: PayloadAction<DeployResourceResult>) {
+      // Same race protection — don't append late results that arrive
+      // after the API response has already populated state.results.
+      if (state.status === 'success' || state.status === 'error') return;
       state.results.push(action.payload);
     },
 
     // Completion
-    deploySuccess(state, action: PayloadAction<{ duration_ms: number }>) {
+    deploySuccess(
+      state,
+      action: PayloadAction<{ duration_ms: number; results?: DeployResourceResult[] }>,
+    ) {
       state.status = 'success';
       state.progress = 100;
       state.currentResource = '';
       state.currentDeployCardId = undefined;
+      // Authoritative results from the API response — replaces whatever
+      // the socket events accumulated. Without this, network races could
+      // leave state.results empty (socket events arriving AFTER the HTTP
+      // response would be dropped by addResourceResult's status guard
+      // and the summary stayed blank).
+      if (Array.isArray(action.payload.results) && action.payload.results.length > 0) {
+        state.results = action.payload.results;
+      }
       state.logs.push(t('deploy.slice.completed', { seconds: (action.payload.duration_ms / 1000).toFixed(1) }));
 
       // Add to history (capped at 50 entries)
@@ -341,18 +368,49 @@ const deploySlice = createSlice({
         project: state.gcpProject,
         region: state.region,
         results: state.results,
-        success: true,
+        success: state.results.every((r) => r.success),
         duration_ms: action.payload.duration_ms,
       });
       if (state.history.length > 50) {
         state.history = state.history.slice(0, 50);
       }
     },
-    deployError(state, action: PayloadAction<string>) {
+    deployError(state, action: PayloadAction<string | { error: string; results?: DeployResourceResult[] }>) {
+      const payload = typeof action.payload === 'string' ? { error: action.payload } : action.payload;
       state.status = 'error';
-      state.error = action.payload;
+      state.error = payload.error;
+      // Deploy is finished — partial-success is still "done", so push
+      // progress to 100 so the bar doesn't sit at 99% after the API
+      // returns. Without this, every failed deploy looks like it's
+      // still running.
+      state.progress = 100;
+      state.currentResource = '';
       state.currentDeployCardId = undefined;
-      state.logs.push(t('deploy.slice.error', { error: action.payload }));
+      // Authoritative per-resource results from the API response, when
+      // provided — the summary needs these to show the partial-success
+      // breakdown ("11 of 13 deployed; 2 failed").
+      if (Array.isArray(payload.results) && payload.results.length > 0) {
+        state.results = payload.results;
+      }
+      state.logs.push(t('deploy.slice.error', { error: payload.error }));
+      // Add the (failed) deploy to history alongside successes so users
+      // can review what failed without scrolling the live log.
+      state.history.unshift({
+        id: `deploy-${Date.now()}`,
+        timestamp: Date.now(),
+        environment: state.environment,
+        provider: state.provider,
+        project: state.gcpProject,
+        region: state.region,
+        results: state.results,
+        success: false,
+        duration_ms: payload.results
+          ? payload.results.reduce((acc, r) => acc + (r.duration_ms || 0), 0)
+          : 0,
+      });
+      if (state.history.length > 50) {
+        state.history = state.history.slice(0, 50);
+      }
     },
 
     // Reset
@@ -443,6 +501,98 @@ const deploySlice = createSlice({
       state.dismissedWarnings = [];
       state.criticalAcknowledged = false;
     },
+    /**
+     * Seed the slice from a persisted CanvasDeployment row so the
+     * deploy panel's results section survives page reloads. Maps the
+     * DB-side `status` enum (success | partial | failed | cancelled)
+     * onto the slice's runtime status; partial → 'error' so the red
+     * "Deploy finished with errors" header + Copy errors button
+     * render as expected.
+     *
+     * Trusted aggressively: even when the live state says 'deploying',
+     * a terminal DB row wins. The gateway's deploy-snapshot can outlive
+     * the actual deploy (process exits/restarts during deploy don't
+     * always finalize the snapshot), so a "deploying@99% forever" UI
+     * state regularly out-survives the DB row that says the deploy
+     * finished. Trusting the DB is correct: the row is only ever
+     * written on terminal completion.
+     */
+    hydrateDeployFromHistory(
+      state,
+      action: PayloadAction<{
+        cardId: string;
+        status: string;
+        results?: DeployResourceResult[];
+        error?: string | null;
+        duration_ms?: number | null;
+        environment?: string | null;
+      }>,
+    ) {
+      const { status, results, error, duration_ms, environment, cardId } = action.payload;
+      const completed = ['success', 'partial', 'failed', 'cancelled'];
+      if (!completed.includes(status)) return;
+
+      // Map DB status → slice status. 'cancelled' folds into 'error'
+      // so the red header + Copy errors button render (a cancelled
+      // deploy is just an error from the UX perspective).
+      state.status = status === 'success' ? 'success' : 'error';
+      state.progress = 100;
+      state.currentResource = '';
+      state.error = error || null;
+      state.results = Array.isArray(results) ? results : [];
+      // Update lastResetCardId so the setActiveCard extraReducer doesn't
+      // fire and wipe what we just hydrated.
+      state.lastResetCardId = cardId;
+      if (environment && (environment === 'development' || environment === 'staging' || environment === 'production')) {
+        state.environment = environment as 'development' | 'staging' | 'production';
+      }
+      if (typeof duration_ms === 'number') {
+        // Don't push to history (it's already in the DB) — just leave it
+        // here for the summary header's duration display via results.
+        state.logs.push(t('deploy.slice.completed', { seconds: (duration_ms / 1000).toFixed(1) }));
+      }
+    },
+  },
+  extraReducers: (builder) => {
+    // Reset per-project deploy state when the active card actually
+    // changes. setActiveCard can fire repeatedly with the same id (route
+    // re-renders, environment refreshes, etc.); resetting unconditionally
+    // would wipe a freshly-completed deploy's results section the moment
+    // the sidebar refreshed. Track the last seen card id in
+    // currentDeployCardId so we only reset on a true switch.
+    //
+    // We deliberately preserve user prefs that are not project-scoped
+    // (provider, gcpProject, region, environment, dismissedWarnings)
+    // so the user doesn't have to re-pick them every project switch.
+    builder.addCase(setActiveCard, (state, action) => {
+      const newCardId = action.payload;
+      // No-op when re-selecting the same card. setActiveCard fires
+      // repeatedly with the same id during route re-renders / sidebar
+      // refreshes; resetting unconditionally would wipe a freshly-
+      // completed deploy's results section the moment the layout
+      // re-rendered.
+      if (state.lastResetCardId === newCardId) return;
+      // Also no-op while a deploy is mid-flight on this card — flipping
+      // status to 'idle' under it would hide the running progress UI.
+      if (state.status === 'deploying' || state.status === 'destroying' || state.status === 'planning') return;
+      state.status = 'idle';
+      state.error = null;
+      state.plan = null;
+      state.progress = 0;
+      state.currentResource = '';
+      state.logs = [];
+      state.results = [];
+      state.deployedResources = [];
+      state.driftByNode = {};
+      state.driftCheckLoading = false;
+      state.requirements = [];
+      state.requirementsLoading = false;
+      state.requirementsFetchedAt = undefined;
+      state.diagnosis = { status: 'idle', result: null, error: null };
+      state.criticalAcknowledged = false;
+      state.currentDeployCardId = undefined;
+      state.lastResetCardId = newCardId;
+    });
   },
 });
 
@@ -464,6 +614,7 @@ export const {
   addResourceResult,
   deploySuccess,
   deployError,
+  hydrateDeployFromHistory,
   resetDeploy,
   appendLog,
   setDeployedResources,

@@ -109,7 +109,16 @@ const DEPLOY_MAPS: Record<string, Set<string>> = {
 };
 
 const DESIGN_ONLY_PROVIDERS = new Set(['alibaba', 'digitalocean', 'kubernetes', 'oci']);
-const UI_ONLY_TYPES = new Set(['Monitoring.Terminal']);
+// Mirrors the list in packages/core/src/deploy/card-translator.ts.
+// Keep these two in sync. Real deployables (Network.VPC, Network.Subnet,
+// Network.PrivateNetwork, Security.WAF) MUST NOT live here — they're
+// missing handlers, not "UI-only".
+const UI_ONLY_TYPES = new Set([
+  'Monitoring.Terminal',
+  'Source.Repository',
+  'Config.Environment',
+  'Network.PublicTraffic',
+]);
 
 /**
  * Validate deployability of the canvas.

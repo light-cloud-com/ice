@@ -123,8 +123,11 @@ export function startDeployWorker() {
         data: { status: 'deploying' },
       });
 
-      // Run the actual deployment
-      await applyDeployment(cardId, nodes, edges, options, orgId, userId);
+      // Run the actual deployment. Queue jobs run sequentially per worker;
+      // we pass `executeAsync: false` so the job promise resolves only when
+      // the deploy actually finishes (preserving serial processing — the
+      // HTTP path defaults to async).
+      await applyDeployment(cardId, nodes, edges, { ...options, executeAsync: false }, orgId, userId);
     };
 
     let worker: any;
@@ -341,6 +344,7 @@ async function processPipelineJob(data: any) {
         environment,
         envVars: Object.keys(envVars).length > 0 ? envVars : undefined,
         customDomain,
+        executeAsync: false,
       },
       project.organisation_id,
       project.created_by,

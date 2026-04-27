@@ -9,6 +9,7 @@
 import { api_gateway_handler } from './handlers/api-gateway.js';
 import { backend_bucket_handler } from './handlers/backend-bucket.js';
 import { bigquery_handler } from './handlers/bigquery.js';
+import { cloud_armor_handler } from './handlers/cloud-armor.js';
 import { cloud_functions_handler } from './handlers/cloud-functions.js';
 import { cloud_run_handler } from './handlers/cloud-run.js';
 import { cloud_scheduler_handler } from './handlers/cloud-scheduler.js';
@@ -27,6 +28,8 @@ import { managed_ssl_certificate_handler } from './handlers/managed-ssl-certific
 import { memorystore_handler } from './handlers/memorystore.js';
 import { pubsub_handler } from './handlers/pubsub.js';
 import { secret_manager_handler } from './handlers/secret-manager.js';
+import { subnet_handler } from './handlers/subnet.js';
+import { vpc_handler } from './handlers/vpc.js';
 import { isApiNotEnabledError, isResourceNotFoundError, extractApiName, buildApiEnableUrl } from './messages.js';
 import { GCP_DEPLOYER_MESSAGES } from '../../messages.js';
 import { vertex_ai_handler } from './handlers/vertex-ai.js';
@@ -103,6 +106,10 @@ const HANDLER_REGISTRY: Array<{ prefix: string; handler: GCPResourceHandler }> =
   { prefix: 'gcp.compute.managedSslCertificate', handler: managed_ssl_certificate_handler },
   // Backend bucket (static site wiring)
   { prefix: 'gcp.compute.backendBucket', handler: backend_bucket_handler },
+  // VPC, Subnet, Cloud Armor — specific routes must precede the catch-all
+  { prefix: 'gcp.compute.network', handler: vpc_handler },
+  { prefix: 'gcp.compute.subnetwork', handler: subnet_handler },
+  { prefix: 'gcp.compute.securityPolicy', handler: cloud_armor_handler },
   // Compute (load balancer, forwarding rules, fallthrough for everything else)
   { prefix: 'gcp.compute.', handler: load_balancer_handler },
   // Cloud Logging

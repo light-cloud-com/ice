@@ -12,6 +12,7 @@ This folder is the long-form documentation for ICE. For the 30-second pitch and 
 | Contribute code or file a bug | [contributing.md](contributing.md) → [../CONTRIBUTING.md](../CONTRIBUTING.md) |
 | Run the test suites | [testing.md](testing.md) |
 | Understand what "Community Edition" means | [community-edition.md](community-edition.md) |
+| Use the multi-agent workflow with Claude Code | [agents.md](agents.md) |
 
 ## Reference
 

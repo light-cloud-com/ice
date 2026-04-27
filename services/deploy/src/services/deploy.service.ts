@@ -155,12 +155,54 @@ async function getCoreEngine(): Promise<any> {
   return import('@ice/core');
 }
 
+/**
+ * Resolve the owning project's id, name, and environment type from a
+ * cardId. Generated resource names use these to make ownership obvious
+ * in the GCP console (e.g. `ice-fullstack-webapp-production-instance-…`
+ * instead of `ice-untitled-development-…`).
+ *
+ * Each card is 1:1 with an Environment row, so the env type is fully
+ * determined by cardId. Trusting `options.environment` from the frontend
+ * meant the deploy panel's default ('development') overrode the card's
+ * actual environment ('production'/'staging') and produced wrongly-named
+ * resources. The DB is the source of truth.
+ *
+ * Falls back to a cardId-derived stub when the lookup fails so a deploy
+ * can still proceed against a stale or detached card.
+ */
+async function resolveProjectContext(
+  cardId: string,
+): Promise<{ projectId: string; projectName: string; environmentType: string }> {
+  try {
+    const card = await prisma.canvasCard.findUnique({
+      where: { id: cardId },
+      include: {
+        project: { select: { id: true, name: true } },
+        environment: { select: { type: true, name: true } },
+      },
+    });
+    if (card?.project) {
+      return {
+        projectId: card.project.id,
+        projectName: card.project.name,
+        environmentType: card.environment?.type || 'development',
+      };
+    }
+  } catch {
+    /* fall through to stub */
+  }
+  return { projectId: cardId, projectName: cardId.slice(0, 12), environmentType: 'development' };
+}
+
 export async function planDeployment(cardId: string, nodes: any[], edges: any[], options: any, userId?: string) {
   try {
     const core = await getCoreEngine();
     const { translate_card_to_graph } = core;
 
-    const environment = options.environment || 'development';
+    const { projectId, projectName, environmentType } = await resolveProjectContext(cardId);
+    // Card's environment type from the DB is authoritative — the frontend
+    // can override only when the lookup falls back to a stub.
+    const environment = environmentType;
 
     // Seed the mapping table from history on first use after the Phase 1
     // upgrade, then load the name map so the translator reuses stable names.
@@ -180,7 +222,10 @@ export async function planDeployment(cardId: string, nodes: any[], edges: any[],
         data: e.data,
       })),
       provider: options.provider || 'gcp',
-      projectName: options.projectName || 'untitled',
+      // Prefer the project name (visible in the project tree), fall back
+      // to whatever the caller explicitly passed, then to a project-id
+      // stub so resource names are never just "untitled".
+      projectName: projectName || options.projectName || projectId,
       environment,
       gcpProject: options.gcpProject,
       region: options.region || 'us-central1',
@@ -363,12 +408,20 @@ export async function applyDeployment(
     message: `Starting deployment for card ${cardId}...`,
   });
 
+  // Long-running body. Wrapped so the HTTP path can fire-and-forget it
+  // (returns immediately with `async: true`) while the queue worker still
+  // awaits to preserve serial job processing. The body is unchanged from
+  // the previous synchronous version — it writes its own terminal state
+  // to the DB row and emits a `complete` socket event on every exit path,
+  // so async callers don't lose anything by not awaiting.
+  const runBody = async () => {
   try {
     const core = await getCoreEngine();
     const { translate_card_to_graph, deploy_graph, GCPDeployer } = core;
 
     // 3. Translate card nodes to deployable graph
-    const environment = options.environment || 'development';
+    const { projectId, projectName, environmentType } = await resolveProjectContext(cardId);
+    const environment = environmentType;
 
     // Phase 1: seed + load the stable name map before translation so updates
     // hit existing resources instead of creating duplicates.
@@ -388,7 +441,7 @@ export async function applyDeployment(
         data: e.data,
       })),
       provider: options.provider || 'gcp',
-      projectName: options.projectName || 'untitled',
+      projectName: projectName || options.projectName || projectId,
       environment,
       gcpProject: options.gcpProject || credentials.project_id,
       region: options.region || 'us-central1',
@@ -1030,6 +1083,28 @@ export async function applyDeployment(
     await flushSnapshotNow(cardId);
     releaseLock();
   }
+  };
+
+  // HTTP path defaults to async: return immediately so the request doesn't
+  // sit open for 20+ minutes (which is what was triggering the 500-on-30-
+  // min request-timeout the user hit). The client subscribes to socket
+  // progress + the deploy_event tape via useDeploySubscription; when the
+  // body finishes (or fails), it writes terminal status to the DB row and
+  // emits a `complete` event that the client picks up.
+  //
+  // Queue worker passes `executeAsync: false` so its job loop stays serial
+  // — running multiple deploys for the same card in parallel would race
+  // on the deploy lock anyway.
+  const executeAsync = options?.executeAsync !== false;
+  if (executeAsync) {
+    runBody().catch((err) => console.error('[applyDeployment] background uncaught:', err));
+    return {
+      success: true,
+      async: true,
+      deploymentId: deployment.id,
+    };
+  }
+  return await runBody();
 }
 
 /**

@@ -165,26 +165,89 @@ export function startCronJobs() {
     }
   });
 
-  // Every 5 min: detect stuck CanvasDeployment rows in 'deploying' state.
-  // If a deploy has been running for > 30 minutes, either the gateway
-  // crashed mid-deploy or the deploy genuinely exceeded its budget. Either
-  // way the record needs to be marked failed so the UI can move on and the
-  // baseline-lookup logic in Phase 1 doesn't pick a zombie row.
+  // Every 5 min: detect *genuinely stalled* CanvasDeployment rows.
+  //
+  // The old watchdog killed everything in 'deploying' state once it
+  // crossed 30 min from `created_at` — but Cloud SQL alone can take
+  // 20+ min, so a sequential plan with two SQL instances would routinely
+  // get nuked mid-flight even though the gateway was actively making
+  // progress. The replacement uses the deploy_event tape as a heartbeat:
+  //
+  //   1. Candidate rows: status='deploying' AND created_at > 30 min ago.
+  //   2. For each, look up the most recent deploy_event row.
+  //   3. If the last event is < idle_threshold (5 min) old → still
+  //      progressing — leave it alone.
+  //   4. Otherwise → gateway actually died mid-deploy. Mark failed and
+  //      include the last log line(s) so the user has a starting point
+  //      instead of "may have crashed".
   cron.schedule('*/5 * * * *', async () => {
     try {
-      const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000);
-      const result = await prisma.canvasDeployment.updateMany({
+      const STALE_RUNTIME_MS = 30 * 60 * 1000;
+      const IDLE_THRESHOLD_MS = 5 * 60 * 1000;
+      const candidates = await prisma.canvasDeployment.findMany({
         where: {
           status: 'deploying',
-          created_at: { lt: thirtyMinAgo },
+          created_at: { lt: new Date(Date.now() - STALE_RUNTIME_MS) },
         },
-        data: {
-          status: 'failed',
-          error: 'Deploy exceeded 30 minute watchdog timeout — gateway may have crashed mid-deploy',
-        },
+        select: { id: true, created_at: true, card_id: true, environment: true },
       });
-      if (result.count > 0) {
-        console.warn(`[watchdog] marked ${result.count} stuck canvas deployments as failed`);
+
+      let killed = 0;
+      for (const dep of candidates) {
+        // Most recent event for this deployment; if there's a brand-new
+        // log line within IDLE_THRESHOLD_MS the deploy is still alive.
+        const lastEvent = await prisma.deployEvent.findFirst({
+          where: { deployment_id: dep.id },
+          orderBy: { created_at: 'desc' },
+          select: { created_at: true, type: true, payload: true },
+        });
+        const lastTs = lastEvent?.created_at ?? dep.created_at;
+        const idleMs = Date.now() - lastTs.getTime();
+        if (idleMs < IDLE_THRESHOLD_MS) {
+          // Still emitting events — don't touch.
+          continue;
+        }
+
+        // Pull the tail (last ~10 log/progress events) so the failure
+        // message tells the user what was last happening before the
+        // gateway went silent. Without this the user sees only the
+        // generic watchdog text and has nowhere to look.
+        const tailEvents = await prisma.deployEvent.findMany({
+          where: { deployment_id: dep.id, type: { in: ['log', 'progress', 'resource_result'] } },
+          orderBy: { created_at: 'desc' },
+          take: 10,
+          select: { type: true, payload: true, created_at: true },
+        });
+        const tailLines = tailEvents
+          .reverse()
+          .map((e) => {
+            const p = (e.payload || {}) as Record<string, unknown>;
+            const msg =
+              (p.message as string) ||
+              (typeof p.resource === 'string' && typeof p.status === 'string' ? `${p.status}: ${p.resource}` : '') ||
+              ((p.result as { error?: string } | undefined)?.error ?? '') ||
+              '';
+            return msg ? `[${e.type}] ${msg}` : '';
+          })
+          .filter(Boolean);
+
+        const ageMin = Math.round((Date.now() - dep.created_at.getTime()) / 60_000);
+        const idleMin = Math.round(idleMs / 60_000);
+        const header =
+          `Deploy stopped emitting events ${idleMin}m ago (started ${ageMin}m ago). ` +
+          `The gateway likely crashed or the active operation is wedged. ` +
+          `Cancel + redeploy, or inspect the gateway logs for the failure.`;
+        const body = tailLines.length > 0 ? `\n--- Last activity (${tailLines.length} events) ---\n${tailLines.join('\n')}` : '';
+
+        await prisma.canvasDeployment.update({
+          where: { id: dep.id },
+          data: { status: 'failed', error: `${header}${body}` },
+        });
+        killed++;
+      }
+
+      if (killed > 0) {
+        console.warn(`[watchdog] marked ${killed}/${candidates.length} stalled deployments as failed`);
       }
     } catch (err: any) {
       console.error('Cron: stuck canvas deployment detection error:', err.message);

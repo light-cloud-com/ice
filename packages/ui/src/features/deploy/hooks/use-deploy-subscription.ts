@@ -34,6 +34,7 @@ import { updateCardNodeData } from '../../../store/slices/cards-slice';
 import {
   addResourceResult,
   appendLog,
+  deployError,
   deploySuccess,
   setDeployedResources,
   setDeployProgress,
@@ -142,8 +143,29 @@ function applyDeployEvent(dispatch: AppDispatch, event: any, cardId?: string): v
       );
     }
   } else if (event.type === 'complete') {
+    // Async deploys (HTTP path defaults to async; the gateway no longer
+    // awaits the long body) emit terminal state ONLY via this event. We
+    // dispatch on both success and failure here, otherwise a failed
+    // async deploy would stay stuck at 'deploying' until the watchdog
+    // marks the DB row failed minutes later.
     if (event.success) {
-      dispatch(deploySuccess({ duration_ms: event.duration_ms || 0 }));
+      const results = (event.results as { resources?: any[] } | undefined)?.resources;
+      dispatch(
+        deploySuccess({
+          duration_ms: event.duration_ms || 0,
+          results: Array.isArray(results) ? results : undefined,
+        }),
+      );
+    } else {
+      const errResult = event.results as { error?: string; resources?: any[] } | undefined;
+      const resources = errResult?.resources;
+      const errorMessage = errResult?.error || 'Deployment failed';
+      dispatch(
+        deployError({
+          error: errorMessage,
+          results: Array.isArray(resources) ? resources : undefined,
+        }),
+      );
     }
   }
 }
@@ -196,16 +218,45 @@ export function useDeploySubscription(cardId: string | undefined): void {
 
   // Phase 2 — pull any in-flight deploy snapshot so a new tab / new window
   // sees the running deploy immediately without waiting for a socket event.
+  //
+  // Cross-checks against the DB history before applying. The gateway's
+  // in-memory snapshot can outlive the actual deploy: if the worker
+  // process exits or restarts mid-deploy without flipping the snapshot
+  // to a terminal state, it stays stuck at 'deploying'@99% forever.
+  // Meanwhile the DB row IS finalized on every terminal completion path.
+  // So when both a "deploying" snapshot AND a terminal DB row for the
+  // same card exist, the DB row wins and the snapshot is dropped.
   useEffect(() => {
     if (!cardId) return;
     let cancelled = false;
     (async () => {
       try {
-        const res = await getApi().deploy.getCurrentDeploy(cardId);
+        const [snapRes, history] = await Promise.all([
+          getApi().deploy.getCurrentDeploy(cardId),
+          getApi()
+            .deploy.getDeployments(cardId)
+            .catch(() => [] as any[]),
+        ]);
         if (cancelled) return;
-        const snapshot = res?.snapshot;
+        const snapshot = snapRes?.snapshot;
         if (!snapshot) return;
         if (snapshot.status === 'deploying' || snapshot.status === 'planning') {
+          // If the DB already has a terminal apply for this card, treat
+          // the snapshot as stale and skip applying it. Without this guard
+          // a crashed deploy keeps the UI pegged at 'deploying'@99%
+          // indefinitely, hiding the actual results that were persisted.
+          const hasTerminal =
+            Array.isArray(history) &&
+            history.some(
+              (d: any) =>
+                (d?.action_type === 'apply' || d?.action_type === 'rollback') &&
+                ['success', 'partial', 'failed', 'cancelled'].includes(d?.status),
+            );
+          if (hasTerminal) {
+            // eslint-disable-next-line no-console
+            console.log('[deploy-subscription] dropping stale snapshot — DB has terminal row', { cardId });
+            return;
+          }
           dispatch(startDeploying({ cardId }));
           dispatch(
             setDeployProgress({

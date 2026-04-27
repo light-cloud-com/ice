@@ -111,16 +111,76 @@ export async function updateProject(
 }
 
 export async function deleteProject(projectId: string, orgId: string) {
-  async function deleteRecursive(id: string) {
-    const children = await prisma.canvasProject.findMany({
-      where: { parent_id: id, organisation_id: orgId },
-    });
-    for (const child of children) await deleteRecursive(child.id);
-    await prisma.canvasCard.deleteMany({ where: { project_id: id } });
-    await prisma.canvasProject.delete({ where: { id } });
+  // Order matters: orphan tables first, then cards, then project.
+  //
+  // Even though most relations have onDelete: Cascade in the schema, two
+  // categories of tables need manual pruning:
+  //   1. DeployEvent.deployment_id is NoAction (intentional — we keep the
+  //      replay tape past deployment retention). Cascading the delete from
+  //      CanvasDeployment would throw FK_CONSTRAINT, so wipe deploy events
+  //      by card_id first.
+  //   2. DeploymentRule.card_id and AiConversation.{project_id,card_id}
+  //      are plain string columns with no @relation declared, so they
+  //      don't cascade automatically. Without manual cleanup these orphan
+  //      rows would either block delete (if the schema enforces FK) or
+  //      pile up forever as zombie data (if it doesn't).
+  //
+  // Wrap everything in a transaction so a partial failure rolls back
+  // instead of leaving the project in a half-deleted state.
+  async function collectCardIds(rootProjectId: string): Promise<string[]> {
+    const cardIds: string[] = [];
+    async function walk(id: string) {
+      const children = await prisma.canvasProject.findMany({
+        where: { parent_id: id, organisation_id: orgId },
+        select: { id: true },
+      });
+      for (const child of children) await walk(child.id);
+      const cards = await prisma.canvasCard.findMany({
+        where: { project_id: id },
+        select: { id: true },
+      });
+      for (const c of cards) cardIds.push(c.id);
+    }
+    await walk(rootProjectId);
+    return cardIds;
+  }
+  async function collectProjectIds(rootProjectId: string): Promise<string[]> {
+    const ids: string[] = [];
+    async function walk(id: string) {
+      ids.push(id);
+      const children = await prisma.canvasProject.findMany({
+        where: { parent_id: id, organisation_id: orgId },
+        select: { id: true },
+      });
+      for (const child of children) await walk(child.id);
+    }
+    await walk(rootProjectId);
+    return ids;
   }
 
-  await deleteRecursive(projectId);
+  const cardIds = await collectCardIds(projectId);
+  const projectIds = await collectProjectIds(projectId);
+
+  await prisma.$transaction(async (tx) => {
+    if (cardIds.length > 0) {
+      await tx.deployEvent.deleteMany({ where: { card_id: { in: cardIds } } });
+      await tx.deploymentRule.deleteMany({ where: { card_id: { in: cardIds } } });
+    }
+    await tx.aiConversation.deleteMany({ where: { project_id: { in: projectIds } } });
+
+    // Recursive cascade for the project tree itself. Children first so
+    // each parent.delete sees no dependents.
+    async function deleteSubtree(id: string) {
+      const children = await tx.canvasProject.findMany({
+        where: { parent_id: id, organisation_id: orgId },
+        select: { id: true },
+      });
+      for (const c of children) await deleteSubtree(c.id);
+      await tx.canvasCard.deleteMany({ where: { project_id: id } });
+      await tx.canvasProject.delete({ where: { id } });
+    }
+    await deleteSubtree(projectId);
+  });
 }
 
 export async function moveProject(projectId: string, parentId: string | null, orgId?: string) {

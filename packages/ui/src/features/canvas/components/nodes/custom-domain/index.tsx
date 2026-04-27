@@ -203,7 +203,7 @@ export const SvgCustomDomainNode: React.FC<SvgCompactNodeProps> = ({
   }, [onNodeHover]);
 
   return (
-    <g>
+    <g data-node-id={node.id} data-ice-type={(node.data?.iceType as string) || 'Network.CustomDomain'}>
       {/* ── Card body via foreignObject so we can use HTML inputs ── */}
       <foreignObject x={x} y={y} width={W} height={H}>
         <div

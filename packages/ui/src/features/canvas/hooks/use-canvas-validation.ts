@@ -68,15 +68,24 @@ export function useCanvasValidation() {
         provider,
       });
 
-      dispatch(
-        setValidationResult({
-          issues: [...result.issues],
-          valid: result.valid,
-          deployable: result.deployable,
-          summary: result.summary,
-          validatedAt: result.validatedAt,
-        }),
-      );
+      const payload = {
+        issues: [...result.issues],
+        valid: result.valid,
+        deployable: result.deployable,
+        summary: result.summary,
+        validatedAt: result.validatedAt,
+      };
+      dispatch(setValidationResult(payload));
+
+      // Mirror to window for tests (gated by the same localStorage flag the
+      // action log uses). Off in production browser sessions.
+      try {
+        if (typeof window !== 'undefined' && window.localStorage?.getItem('ice-action-log') === 'true') {
+          (window as unknown as { __ICE_VALIDATION__?: typeof payload }).__ICE_VALIDATION__ = payload;
+        }
+      } catch {
+        /* no-op */
+      }
     }, VALIDATION_DEBOUNCE_MS);
 
     return () => {

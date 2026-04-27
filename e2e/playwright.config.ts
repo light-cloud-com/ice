@@ -1,4 +1,30 @@
 import { defineConfig, devices } from '@playwright/test';
+import { readFileSync } from 'fs';
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
+
+// Load .env so suites that need credentials (test:gcp, test:scenarios)
+// pick them up automatically without callers having to export them.
+// Existing process.env values win over .env.
+(function loadDotEnv() {
+  try {
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+    const envPath = resolve(__dirname, '..', '.env');
+    const file = readFileSync(envPath, 'utf-8');
+    for (const line of file.split('\n')) {
+      const m = line.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/);
+      if (m && process.env[m[1]] === undefined) {
+        let v = m[2].trim();
+        if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+          v = v.slice(1, -1);
+        }
+        process.env[m[1]] = v;
+      }
+    }
+  } catch {
+    /* .env is optional */
+  }
+})();
 
 export default defineConfig({
   testDir: './tests',
@@ -33,10 +59,26 @@ export default defineConfig({
         },
       },
     },
+    {
+      name: 'scenarios',
+      testDir: './deployment-tests',
+      testMatch: /.*\.spec\.ts/,
+      timeout: 1_800_000, // up to 30 min — covers scenarios + bulk destroy-all
+      retries: 0,
+      use: {
+        ...devices['Desktop Chrome'],
+        screenshot: 'on',
+        headless: false,
+        launchOptions: {
+          slowMo: 300,
+        },
+      },
+    },
   ],
   webServer: {
-    command: 'cd ../packages/web && npx vite --port 5173',
+    command: 'pnpm --dir .. dev:all',
     url: 'http://localhost:5174',
     reuseExistingServer: true,
+    timeout: 180_000,
   },
 });

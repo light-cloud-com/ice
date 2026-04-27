@@ -47,8 +47,15 @@ const isMonitoring = (n: CardNode): boolean => {
   const iceType = (n.data?.iceType as string) || '';
   return iceType.startsWith('Monitoring.') || iceType === 'Monitoring.Log';
 };
+// Three iceTypes count as "inside a private network" for security rules:
+// the high-level Network.PrivateNetwork (auto-mode VPC), the explicit
+// Network.VPC, and Network.Subnet (which is itself always inside a VPC).
+// Stock templates use PrivateNetwork; power users compose VPC + Subnet
+// directly. Both isolation models satisfy the public-reachability check.
 const isVpc = (n: CardNode): boolean => (n.data?.iceType as string) === 'Network.VPC';
 const isSubnet = (n: CardNode): boolean => (n.data?.iceType as string) === 'Network.Subnet';
+const isPrivateNetwork = (n: CardNode): boolean => (n.data?.iceType as string) === 'Network.PrivateNetwork';
+const isVpcLike = (n: CardNode): boolean => isVpc(n) || isSubnet(n) || isPrivateNetwork(n);
 
 function isInsideVpc(node: CardNode, allNodes: CardNode[]): boolean {
   let cur: CardNode | undefined = node;
@@ -56,7 +63,7 @@ function isInsideVpc(node: CardNode, allNodes: CardNode[]): boolean {
   while (cur?.parentId && depth < 10) {
     const parent = allNodes.find((n) => n.id === cur!.parentId);
     if (!parent) return false;
-    if (isVpc(parent) || isSubnet(parent)) return true;
+    if (isVpcLike(parent)) return true;
     cur = parent;
     depth++;
   }
@@ -164,16 +171,18 @@ export function analyzeSecurityWarnings(nodes: CardNode[], edges: CardEdge[]): P
     });
   }
 
-  // Rule 6: No VPC — info
+  // Rule 6: No private network — info. Counts both PrivateNetwork (the
+  // user-facing default) and VPC (the lower-level primitive) so this
+  // doesn't fire when the canvas is already wrapped in either.
   const serviceCount = nodes.filter(isService).length;
-  const hasVpc = nodes.some(isVpc);
-  if (serviceCount >= 2 && !hasVpc) {
+  const hasNetworkBoundary = nodes.some((n) => isVpc(n) || isPrivateNetwork(n));
+  if (serviceCount >= 2 && !hasNetworkBoundary) {
     warnings.push({
       id: 'bp-no-vpc',
       severity: 'info',
       category: 'best-practice',
-      title: 'Multiple services without a VPC',
-      description: 'Consider wrapping your services and databases in a Network.VPC for network isolation.',
+      title: 'Multiple services without a private network',
+      description: 'Consider wrapping your services and databases in a Network.PrivateNetwork for network isolation.',
       dismissible: true,
     });
   }

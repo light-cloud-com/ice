@@ -7,7 +7,9 @@
 
 import { type FullConfig } from '@playwright/test';
 
-const BACKEND_URL = 'http://localhost:5002/api';
+// dev:saas / dev:desktop start the gateway on PORT=15173. Allow override
+// via ICE_TEST_BACKEND_URL for non-default setups.
+const BACKEND_URL = process.env.ICE_TEST_BACKEND_URL || 'http://localhost:15173/api';
 
 async function globalSetup(_config: FullConfig) {
   // Wait for backend to be ready

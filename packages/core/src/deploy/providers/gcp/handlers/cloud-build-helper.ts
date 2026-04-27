@@ -15,6 +15,15 @@ import type { GCPHandlerContext } from '../types.js';
 
 const ARTIFACT_REGISTRY_BASE = 'https://artifactregistry.googleapis.com/v1';
 const CLOUD_BUILD_BASE = 'https://cloudbuild.googleapis.com/v1';
+const CLOUD_LOGGING_BASE = 'https://logging.googleapis.com/v2';
+
+/** Max log lines we surface in error messages. Beyond this the user is
+ *  better off opening the Cloud Build console URL anyway. */
+const MAX_LOG_LINES_IN_ERROR = 80;
+/** Max characters per log line we surface — Cloud Build sometimes emits
+ *  giant single-line stack traces; we trim each so the error message stays
+ *  readable in the deploy panel. */
+const MAX_LOG_LINE_CHARS = 500;
 
 /** Default poll interval for build status (10s) */
 const BUILD_POLL_INTERVAL_MS = 10_000;
@@ -178,7 +187,12 @@ export async function build_from_source(
       status === 'EXPIRED'
     ) {
       const logUrl = build?.logUrl || '';
-      throw new Error(BUILD_MESSAGES.BUILD_FAILED(status, logUrl));
+      // Pull the log tail from Cloud Logging so the user gets the actual
+      // failure reason (npm error, Dockerfile error, etc.) without having
+      // to open the Cloud Build console. We also stream each line via
+      // onLog so it shows up live in the deploy panel's log section.
+      const logLines = await fetch_build_logs(ctx, buildId, onLog).catch(() => [] as string[]);
+      throw new Error(BUILD_MESSAGES.BUILD_FAILED(status, logUrl, logLines));
     }
 
     // Still in progress (QUEUED, WORKING, etc.)
@@ -186,6 +200,60 @@ export async function build_from_source(
   }
 
   throw new Error(BUILD_MESSAGES.BUILD_TIMED_OUT);
+}
+
+/**
+ * Fetch the Cloud Build log tail from Cloud Logging.
+ *
+ * The build helper sets `logging: 'CLOUD_LOGGING_ONLY'` so each build's
+ * stdout/stderr lands in Cloud Logging under
+ * `resource.type="build" resource.labels.build_id=<id>`. We pull the last
+ * MAX_LOG_LINES_IN_ERROR entries so the deploy panel's error message
+ * shows the actual failure (npm error, Dockerfile error, etc.) instead
+ * of just a "go open the console" URL.
+ *
+ * Best-effort: any failure here (missing API enable, IAM, network) is
+ * swallowed by the caller — the build is already failed; missing logs
+ * just means the user falls back to the console URL like before.
+ */
+async function fetch_build_logs(
+  ctx: GCPHandlerContext,
+  buildId: string,
+  onLog?: (msg: string) => void,
+): Promise<string[]> {
+  const filter = `resource.type="build" AND resource.labels.build_id="${buildId}"`;
+  const body = {
+    resourceNames: [`projects/${ctx.project}`],
+    filter,
+    orderBy: 'timestamp asc',
+    pageSize: MAX_LOG_LINES_IN_ERROR,
+  };
+
+  const res = (await ctx.rest_client.post(`${CLOUD_LOGGING_BASE}/entries:list`, body)) as any;
+  const entries: any[] = Array.isArray(res?.entries) ? res.entries : [];
+  if (entries.length === 0) return [];
+
+  const lines: string[] = [];
+  for (const entry of entries) {
+    const text =
+      typeof entry?.textPayload === 'string'
+        ? entry.textPayload
+        : entry?.jsonPayload?.message
+          ? String(entry.jsonPayload.message)
+          : '';
+    if (!text) continue;
+    // Cloud Logging entries can have embedded newlines in textPayload —
+    // split so each visual line is its own log entry, then trim each.
+    for (const raw of text.split('\n')) {
+      const trimmed = raw.replace(/\s+$/, '');
+      if (!trimmed) continue;
+      const clipped = trimmed.length > MAX_LOG_LINE_CHARS ? `${trimmed.slice(0, MAX_LOG_LINE_CHARS)}…` : trimmed;
+      lines.push(clipped);
+      onLog?.(`[cloud-build] ${clipped}`);
+    }
+  }
+
+  return lines.slice(-MAX_LOG_LINES_IN_ERROR);
 }
 
 function sleep(ms: number, signal?: AbortSignal): Promise<void> {

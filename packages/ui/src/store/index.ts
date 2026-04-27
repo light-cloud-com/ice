@@ -79,11 +79,23 @@ let _lastSavedHash = '';
 let _backendSaveInFlight = false;
 
 function cardHash(card: any): string {
-  // Quick hash: node count + edge count + first/last node ID
+  // Quick hash: node count + edge count + first/last node ID + a stable
+  // serialization of every node's `data` blob. The data fingerprint is
+  // critical: per-node settings (streamingMode, sourceNodeIdOverride, and
+  // anything else that lives entirely under `node.data`) only mutate
+  // `node.data` — none of the structural fields above change, so without
+  // hashing data we'd skip the persistence write and lose the value on
+  // reload. JSON.stringify is good enough; immer keeps key insertion
+  // order stable for unchanged subtrees.
   if (!card) return '';
   const n = card.nodes || [];
   const e = card.edges || [];
-  return `${card.id}:${n.length}:${e.length}:${n[0]?.id || ''}:${n[n.length - 1]?.id || ''}:${n[n.length - 1]?.position?.x || 0}`;
+  let dataFp = '';
+  for (let i = 0; i < n.length; i++) {
+    dataFp += JSON.stringify(n[i]?.data ?? {});
+    dataFp += '|';
+  }
+  return `${card.id}:${n.length}:${e.length}:${n[0]?.id || ''}:${n[n.length - 1]?.id || ''}:${n[n.length - 1]?.position?.x || 0}:${dataFp}`;
 }
 
 store.subscribe(() => {

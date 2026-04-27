@@ -491,6 +491,124 @@ describe('subscribe — source resolution edge cases', () => {
   });
 });
 
+// ── 7b. Client-supplied candidates skip the Prisma edges read ─────────
+//
+// Repro for the "I just drew an edge but the panel says 'no source connected'"
+// bug. The canvas's persistence subscriber debounces saves by 2s, so the
+// Prisma row reflects the canvas state *as of two ticks ago* — when the
+// user immediately selects the Log block, the resolver reads stale edges
+// and returns `none`. The fix: client passes its live Redux view of
+// inbound supported edges as `candidateSources`; the resolver uses those
+// directly and never reads `nodes`/`edges` JSON columns.
+
+describe('subscribe — candidateSources skips Prisma edges read', () => {
+  it('resolves to pre-deploy from candidates even when Prisma card has empty edges', async () => {
+    vi.useFakeTimers();
+    // Simulate the stale-Prisma case: card row exists with the Log node
+    // but NO inbound edge (the canvas hasn't persisted the just-drawn
+    // edge yet). Mapping lookup also returns null — pre-deploy.
+    prismaMock.canvasCard.findUnique.mockResolvedValue({
+      nodes: [{ id: 'log-1', type: 'resource', data: { iceType: 'Monitoring.Log' } }],
+      edges: [],
+      project_id: 'proj-1',
+    });
+    prismaMock.environment.findUnique.mockResolvedValue({ type: 'production', region: 'us-central1' });
+    prismaMock.deployedResourceMapping.findFirst.mockResolvedValue(null);
+    credentialsMock.getDecryptedCredentials.mockResolvedValue({
+      project_id: 'proj-1',
+      client_email: 'sa@proj.iam.gserviceaccount.com',
+      private_key: '-----BEGIN PRIVATE KEY-----\nfake\n-----END PRIVATE KEY-----\n',
+    });
+
+    const mod = await import('../log-stream.service.js');
+    const result = await mod.subscribe(
+      commonArgs({
+        candidateSources: [{ nodeId: 'src-1', iceType: 'Compute.Container', label: 'API Server' }],
+      }),
+    );
+
+    // Resolver took the candidates path: pre-deploy because the mapping
+    // row doesn't exist yet (the user hasn't deployed). The crucial bit
+    // is that we got a NON-`none` state despite the empty-edges Prisma row.
+    expect(result.resolution.state).toBe('pre-deploy');
+    if (result.resolution.state === 'pre-deploy') {
+      expect(result.resolution.sourceNodeId).toBe('src-1');
+      expect(result.resolution.iceType).toBe('Compute.Container');
+    }
+    // The Prisma edges-read should have been skipped — the canvasCard
+    // findUnique with the wide select shape (nodes + edges) is the one
+    // that walks the JSON columns. Either nothing called it, or only
+    // the openStreamForResolved helper (which reads `project_id`-only)
+    // did, and since this is a pre-deploy state that helper isn't even
+    // invoked.
+    const calls = prismaMock.canvasCard.findUnique.mock.calls;
+    for (const [arg] of calls) {
+      if (arg?.select?.nodes === true || arg?.select?.edges === true) {
+        throw new Error('Prisma nodes/edges read was not skipped — candidates path was bypassed');
+      }
+    }
+
+    vi.useRealTimers();
+  });
+
+  it('resolves to resolved from candidates + mapping even with empty Prisma edges', async () => {
+    vi.useFakeTimers();
+    prismaMock.canvasCard.findUnique.mockResolvedValue({
+      nodes: [],
+      edges: [],
+      project_id: 'proj-1',
+    });
+    prismaMock.environment.findUnique.mockResolvedValue({ type: 'production', region: 'us-central1' });
+    prismaMock.deployedResourceMapping.findFirst.mockResolvedValue({
+      resource_name: 'api-server',
+      resource_type: 'gcp.run.service',
+      provider_id: 'projects/proj/locations/us-central1/services/api-server',
+    });
+    credentialsMock.getDecryptedCredentials.mockResolvedValue({
+      project_id: 'proj-1',
+      client_email: 'sa@proj.iam.gserviceaccount.com',
+      private_key: '-----BEGIN PRIVATE KEY-----\nfake\n-----END PRIVATE KEY-----\n',
+    });
+    getEntriesImpl = vi.fn(async () => [[]]); // IAM probe ok.
+
+    const mod = await import('../log-stream.service.js');
+    const result = await mod.subscribe(
+      commonArgs({
+        candidateSources: [{ nodeId: 'src-1', iceType: 'Compute.Container' }],
+      }),
+    );
+
+    expect(result.resolution.state).toBe('resolved');
+    if (result.resolution.state === 'resolved') {
+      expect(result.resolution.sourceNodeId).toBe('src-1');
+      expect(result.resolution.iceType).toBe('Compute.Container');
+    }
+
+    vi.useRealTimers();
+  });
+
+  it('falls back to Prisma read when candidateSources is empty (older clients)', async () => {
+    vi.useFakeTimers();
+    setSupportedSourceCanvas({}); // populates a valid card with edges + mapping
+    getEntriesImpl = vi.fn(async () => [[]]);
+
+    const mod = await import('../log-stream.service.js');
+    const result = await mod.subscribe(commonArgs({ candidateSources: [] }));
+
+    // The fallback Prisma read produced the resolution.
+    expect(result.resolution.state).toBe('resolved');
+    if (result.resolution.state === 'resolved') {
+      expect(result.resolution.sourceNodeId).toBe('src-1');
+    }
+    // And we DID call findUnique with the nodes/edges select (the fallback path).
+    const calls = prismaMock.canvasCard.findUnique.mock.calls;
+    const edgesRead = calls.some(([arg]) => arg?.select?.nodes === true && arg?.select?.edges === true);
+    expect(edgesRead).toBe(true);
+
+    vi.useRealTimers();
+  });
+});
+
 // ── 8. Multi-subscriber reuse ─────────────────────────────────────────
 
 describe('subscribe — multi-subscriber reuse', () => {

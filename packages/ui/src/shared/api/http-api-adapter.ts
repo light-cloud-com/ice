@@ -478,8 +478,8 @@ export function createHttpApiAdapter(): IceAPI {
         const res = await axiosInstance.post('/canvas/logs/subscribe', args);
         return res.data;
       },
-      unsubscribe: async (subscriptionId: string) => {
-        await axiosInstance.post('/canvas/logs/unsubscribe', { subscriptionId });
+      unsubscribe: async (subscriptionId: string, cardId: string) => {
+        await axiosInstance.post('/canvas/logs/unsubscribe', { subscriptionId, cardId });
       },
       joinRoom: (terminalNodeId: string) => {
         const s = getSocket();

@@ -38,6 +38,15 @@ export interface SubscribeArgs {
   sourceNodeIdOverride?: string;
   /** Routes credential lookup to the correct GCP project. */
   organisationId: string;
+  /**
+   * Client-computed candidate sources from live Redux state. When provided
+   * the resolver SKIPS the Prisma `nodes`/`edges` JSON read — the canvas's
+   * persistence subscriber debounces saves by 2s, so the backend would
+   * otherwise read stale rows when the user wires an edge and immediately
+   * subscribes. An empty array OR `undefined` falls back to the Prisma
+   * read for older clients.
+   */
+  candidateSources?: Array<{ nodeId: string; iceType: string; label?: string }>;
 }
 
 export interface LogEntry {
@@ -292,40 +301,82 @@ export const __testing = {
 // ── Source resolution ─────────────────────────────────────────────────
 
 async function resolveSource(args: SubscribeArgs): Promise<SourceResolution> {
-  const { cardId, environmentId, terminalNodeId, sourceNodeIdOverride, organisationId } = args;
+  const { cardId, environmentId, terminalNodeId, sourceNodeIdOverride, organisationId, candidateSources } = args;
 
-  // 1. Fetch card (nodes + edges live as JSON columns).
-  const card = await prisma.canvasCard.findUnique({
-    where: { id: cardId },
-    select: { nodes: true, edges: true, project_id: true },
-  });
-  if (!card) return { state: 'none' };
+  // Two paths into the candidate list:
+  //
+  //   (a) `candidateSources` from the client — derived from live Redux
+  //       state, so it reflects edges/nodes the user just drew without
+  //       waiting for the canvas's 2s save debounce. Skip the Prisma
+  //       JSON-column read entirely.
+  //
+  //   (b) Fallback Prisma read — for older clients that don't ship
+  //       candidates, OR for the post-deploy re-resolve where the
+  //       resolution-only path is still the simplest source of truth.
+  //
+  // Both paths produce the same `supportedCandidates` shape and feed
+  // into the same tiebreaker + mapping lookup downstream. The only
+  // semantic divergence is on a bad override: the Prisma path can
+  // surface `unsupported-source` by finding the override in raw nodes;
+  // the client-candidates path doesn't have raw nodes, so a missing
+  // override falls through to `none`.
+  let supportedCandidates: Array<{ nodeId: string; iceType: string; label?: string }> = [];
+  let rawNodesForOverrideLookup: any[] | null = null;
 
-  const nodes = (card.nodes as any[]) ?? [];
-  const edges = (card.edges as any[]) ?? [];
-
-  // 2. Inbound edges to terminalNodeId whose source has a supported iceType.
-  const supportedCandidates: Array<{ nodeId: string; iceType: string; label?: string }> = [];
-  for (const edge of edges) {
-    if (!edge || edge.target !== terminalNodeId) continue;
-    const sourceNode = nodes.find((n) => n?.id === edge.source);
-    if (!sourceNode) continue;
-    const iceType = String(sourceNode.data?.iceType ?? '');
-    if (!iceType) continue;
-    // Probe the resolver — it returns null for unsupported iceTypes.
-    // We use a stub resource here because we just want the supported-or-not
-    // signal; the real filter is built later with the deployed resource.
-    const probe = resolveLogFilter({
-      iceType,
-      resource: { name: '__probe__', type: 'gcp.unspecified' },
-      projectId: '__probe__',
-    });
-    if (probe !== null) {
-      supportedCandidates.push({
-        nodeId: sourceNode.id,
-        iceType,
-        label: sourceNode.data?.label as string | undefined,
+  if (Array.isArray(candidateSources) && candidateSources.length > 0) {
+    // Client-side candidates — probe each through the same resolver
+    // gate the Prisma path uses. A candidate whose iceType isn't
+    // supported is silently dropped (same behavior as the Prisma walk).
+    for (const candidate of candidateSources) {
+      if (!candidate || typeof candidate.nodeId !== 'string' || typeof candidate.iceType !== 'string') continue;
+      if (!candidate.nodeId || !candidate.iceType) continue;
+      const probe = resolveLogFilter({
+        iceType: candidate.iceType,
+        resource: { name: '__probe__', type: 'gcp.unspecified' },
+        projectId: '__probe__',
       });
+      if (probe !== null) {
+        supportedCandidates.push({
+          nodeId: candidate.nodeId,
+          iceType: candidate.iceType,
+          ...(typeof candidate.label === 'string' ? { label: candidate.label } : {}),
+        });
+      }
+    }
+  } else {
+    // 1. Fetch card (nodes + edges live as JSON columns).
+    const card = await prisma.canvasCard.findUnique({
+      where: { id: cardId },
+      select: { nodes: true, edges: true, project_id: true },
+    });
+    if (!card) return { state: 'none' };
+
+    const nodes = (card.nodes as any[]) ?? [];
+    const edges = (card.edges as any[]) ?? [];
+    rawNodesForOverrideLookup = nodes;
+
+    // 2. Inbound edges to terminalNodeId whose source has a supported iceType.
+    for (const edge of edges) {
+      if (!edge || edge.target !== terminalNodeId) continue;
+      const sourceNode = nodes.find((n) => n?.id === edge.source);
+      if (!sourceNode) continue;
+      const iceType = String(sourceNode.data?.iceType ?? '');
+      if (!iceType) continue;
+      // Probe the resolver — it returns null for unsupported iceTypes.
+      // We use a stub resource here because we just want the supported-or-not
+      // signal; the real filter is built later with the deployed resource.
+      const probe = resolveLogFilter({
+        iceType,
+        resource: { name: '__probe__', type: 'gcp.unspecified' },
+        projectId: '__probe__',
+      });
+      if (probe !== null) {
+        supportedCandidates.push({
+          nodeId: sourceNode.id,
+          iceType,
+          label: sourceNode.data?.label as string | undefined,
+        });
+      }
     }
   }
 
@@ -335,10 +386,10 @@ async function resolveSource(args: SubscribeArgs): Promise<SourceResolution> {
     const overrideMatch = supportedCandidates.find((c) => c.nodeId === sourceNodeIdOverride);
     if (overrideMatch) {
       chosen = { nodeId: overrideMatch.nodeId, iceType: overrideMatch.iceType };
-    } else {
-      // Override doesn't point at a supported node — find it in the
-      // raw nodes list to surface a proper unsupported-source result.
-      const raw = nodes.find((n) => n?.id === sourceNodeIdOverride);
+    } else if (rawNodesForOverrideLookup) {
+      // Prisma path: override doesn't point at a supported node — find
+      // it in the raw nodes list to surface a proper unsupported-source result.
+      const raw = rawNodesForOverrideLookup.find((n) => n?.id === sourceNodeIdOverride);
       if (raw) {
         return {
           state: 'unsupported-source',
@@ -346,6 +397,11 @@ async function resolveSource(args: SubscribeArgs): Promise<SourceResolution> {
           iceType: String(raw.data?.iceType ?? ''),
         };
       }
+      return { state: 'none' };
+    } else {
+      // Client-candidates path: we don't have a raw nodes view to look
+      // up the unsupported override against. Drop to `none` rather than
+      // pretend we know the iceType.
       return { state: 'none' };
     }
   } else if (supportedCandidates.length === 0) {

@@ -31,12 +31,19 @@ function nonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.length > 0;
 }
 
+interface CandidateSource {
+  nodeId: string;
+  iceType: string;
+  label?: string;
+}
+
 interface SubscribeBody {
   cardId: string;
   environmentId: string;
   terminalNodeId: string;
   mode: 'polling' | 'tail';
   sourceNodeIdOverride?: string;
+  candidateSources?: CandidateSource[];
 }
 
 function validateSubscribeBody(body: any): { ok: true; body: SubscribeBody } | { ok: false; details: string[] } {
@@ -52,6 +59,47 @@ function validateSubscribeBody(body: any): { ok: true; body: SubscribeBody } | {
   if (body?.sourceNodeIdOverride !== undefined && !nonEmptyString(body.sourceNodeIdOverride)) {
     details.push('sourceNodeIdOverride must be a non-empty string when provided');
   }
+
+  // `candidateSources` is optional. When provided it's the client's
+  // live-Redux view of inbound supported sources, which lets the resolver
+  // skip the Prisma `nodes`/`edges` read (the canvas debounces saves by 2s,
+  // so the DB row is stale when the user wires an edge then immediately
+  // selects the Log block). Validate shape only — let the resolver decide
+  // what's "supported".
+  let validatedCandidates: CandidateSource[] | undefined;
+  if (body?.candidateSources !== undefined) {
+    if (!Array.isArray(body.candidateSources)) {
+      details.push('candidateSources must be an array when provided');
+    } else {
+      const out: CandidateSource[] = [];
+      for (let i = 0; i < body.candidateSources.length; i++) {
+        const candidate = body.candidateSources[i];
+        if (!candidate || typeof candidate !== 'object') {
+          details.push(`candidateSources[${i}] must be an object`);
+          continue;
+        }
+        if (!nonEmptyString(candidate.nodeId)) {
+          details.push(`candidateSources[${i}].nodeId must be a non-empty string`);
+          continue;
+        }
+        if (!nonEmptyString(candidate.iceType)) {
+          details.push(`candidateSources[${i}].iceType must be a non-empty string`);
+          continue;
+        }
+        if (candidate.label !== undefined && typeof candidate.label !== 'string') {
+          details.push(`candidateSources[${i}].label must be a string when provided`);
+          continue;
+        }
+        out.push({
+          nodeId: candidate.nodeId,
+          iceType: candidate.iceType,
+          ...(typeof candidate.label === 'string' ? { label: candidate.label } : {}),
+        });
+      }
+      validatedCandidates = out;
+    }
+  }
+
   if (details.length > 0) return { ok: false, details };
   return {
     ok: true,
@@ -61,15 +109,22 @@ function validateSubscribeBody(body: any): { ok: true; body: SubscribeBody } | {
       terminalNodeId: body.terminalNodeId,
       mode: body.mode,
       ...(body.sourceNodeIdOverride ? { sourceNodeIdOverride: body.sourceNodeIdOverride } : {}),
+      ...(validatedCandidates !== undefined ? { candidateSources: validatedCandidates } : {}),
     },
   };
 }
 
-function validateUnsubscribeBody(body: any): { ok: true; subscriptionId: string } | { ok: false; details: string[] } {
+function validateUnsubscribeBody(
+  body: any,
+): { ok: true; subscriptionId: string; cardId: string } | { ok: false; details: string[] } {
   const details: string[] = [];
   if (!nonEmptyString(body?.subscriptionId)) details.push('subscriptionId must be a non-empty string');
+  // `cardId` is required so that `requireProjectAccess('viewer')` can resolve
+  // the project (and authorize the call). Without it, the middleware 400s on
+  // every cleanup call and the server-side polling loop is never released.
+  if (!nonEmptyString(body?.cardId)) details.push('cardId must be a non-empty string');
   if (details.length > 0) return { ok: false, details };
-  return { ok: true, subscriptionId: body.subscriptionId };
+  return { ok: true, subscriptionId: body.subscriptionId, cardId: body.cardId };
 }
 
 // ── Routes ────────────────────────────────────────────────────────────

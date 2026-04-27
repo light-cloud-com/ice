@@ -9,6 +9,7 @@
 import { describe, it, expect } from 'vitest';
 import logsReducer, {
   appendEntry,
+  resumed,
   setError,
   setSource,
   setStatus,
@@ -38,8 +39,12 @@ function init(): LogsState {
 
 describe('logs-slice', () => {
   describe('source → status mapping', () => {
+    // `resolved` maps to `connecting`, NOT `streaming`. The promotion to
+    // `streaming` happens on the first `appendEntry` (see the "appendEntry
+    // promotes connecting → streaming" suite below). This avoids a brief
+    // green-then-red flicker when the IAM probe / first poll fails.
     const cases: Array<[SourceResolution['state'], SourceResolution, string]> = [
-      ['resolved', { state: 'resolved', sourceNodeId: 'n1', iceType: 'Compute.Container' }, 'streaming'],
+      ['resolved', { state: 'resolved', sourceNodeId: 'n1', iceType: 'Compute.Container' }, 'connecting'],
       ['pre-deploy', { state: 'pre-deploy', sourceNodeId: 'n1', iceType: 'Compute.Container' }, 'pre-deploy'],
       ['ambiguous', { state: 'ambiguous', candidates: [] }, 'ambiguous'],
       [
@@ -80,6 +85,28 @@ describe('logs-slice', () => {
         }),
       );
       expect(state.byTerminalNodeId[TID]?.lastError).toBeNull();
+      // Resolved sets status to `connecting`; the first entry promotes to
+      // `streaming` (covered in the next describe block).
+      expect(state.byTerminalNodeId[TID]?.status).toBe('connecting');
+    });
+  });
+
+  describe('appendEntry — connecting → streaming promotion', () => {
+    it('promotes status from connecting to streaming on the first entry, and stays streaming on subsequent entries', () => {
+      let state = init();
+      state = logsReducer(
+        state,
+        setSource({
+          terminalNodeId: TID,
+          source: { state: 'resolved', sourceNodeId: 'n1', iceType: 'Compute.Container' },
+        }),
+      );
+      expect(state.byTerminalNodeId[TID]?.status).toBe('connecting');
+
+      state = logsReducer(state, appendEntry({ terminalNodeId: TID, entry: entry('e-1') }));
+      expect(state.byTerminalNodeId[TID]?.status).toBe('streaming');
+
+      state = logsReducer(state, appendEntry({ terminalNodeId: TID, entry: entry('e-2') }));
       expect(state.byTerminalNodeId[TID]?.status).toBe('streaming');
     });
   });
@@ -108,6 +135,82 @@ describe('logs-slice', () => {
       const entries = state.byTerminalNodeId[TID]!.entries;
       expect(entries.length).toBe(1);
       expect(entries[0].message).toBe('hello');
+    });
+  });
+
+  describe('resumed — gated promotion to streaming', () => {
+    // The `resumed` reducer mirrors `appendEntry`'s precondition: only
+    // promote the slot to `'streaming'` when there's evidence the stream
+    // was previously live. The backend `logs:resumed` event also fires
+    // after a tail-reconnect retry — without the gate it would force a
+    // pre-deploy block to "Live" via a side channel.
+    // See learning `ux-log-resumed-event-overrides-pre-deploy`.
+
+    it('does not promote a connecting slot with no entries', () => {
+      let state = init();
+      state = logsReducer(state, setStatus({ terminalNodeId: TID, status: 'connecting' }));
+      // No setSource → slot.source is null. resumed must NOT flip status.
+      state = logsReducer(state, resumed({ terminalNodeId: TID }));
+      expect(state.byTerminalNodeId[TID]?.status).toBe('connecting');
+    });
+
+    it('does not promote a pre-deploy slot even after a transient error', () => {
+      let state = init();
+      state = logsReducer(
+        state,
+        setSource({
+          terminalNodeId: TID,
+          source: { state: 'pre-deploy', sourceNodeId: 'n1', iceType: 'Compute.Container' },
+        }),
+      );
+      state = logsReducer(state, setError({ terminalNodeId: TID, message: 'tail error' }));
+      // No entries ever flowed; resumed must keep status as `'error'`.
+      state = logsReducer(state, resumed({ terminalNodeId: TID }));
+      expect(state.byTerminalNodeId[TID]?.status).toBe('error');
+      expect(state.byTerminalNodeId[TID]?.entries.length).toBe(0);
+    });
+
+    it('keeps a streaming slot streaming on a no-op resumed', () => {
+      let state = init();
+      state = logsReducer(
+        state,
+        setSource({
+          terminalNodeId: TID,
+          source: { state: 'resolved', sourceNodeId: 'n1', iceType: 'Compute.Container' },
+        }),
+      );
+      state = logsReducer(state, appendEntry({ terminalNodeId: TID, entry: entry('e-1') }));
+      expect(state.byTerminalNodeId[TID]?.status).toBe('streaming');
+      state = logsReducer(state, resumed({ terminalNodeId: TID }));
+      expect(state.byTerminalNodeId[TID]?.status).toBe('streaming');
+    });
+
+    it('flips an error slot back to streaming when entries already flowed and source resolved', () => {
+      let state = init();
+      state = logsReducer(
+        state,
+        setSource({
+          terminalNodeId: TID,
+          source: { state: 'resolved', sourceNodeId: 'n1', iceType: 'Compute.Container' },
+        }),
+      );
+      // Entry flowed → promotion to streaming.
+      state = logsReducer(state, appendEntry({ terminalNodeId: TID, entry: entry('e-1') }));
+      expect(state.byTerminalNodeId[TID]?.status).toBe('streaming');
+      // Transient error mid-stream.
+      state = logsReducer(state, setError({ terminalNodeId: TID, message: 'transient drop' }));
+      expect(state.byTerminalNodeId[TID]?.status).toBe('error');
+      expect(state.byTerminalNodeId[TID]?.lastError).toBe('transient drop');
+      // resumed → recovery is legitimate; flip back to streaming and clear the error.
+      state = logsReducer(state, resumed({ terminalNodeId: TID }));
+      expect(state.byTerminalNodeId[TID]?.status).toBe('streaming');
+      expect(state.byTerminalNodeId[TID]?.lastError).toBeNull();
+    });
+
+    it('no-ops on a missing slot', () => {
+      const state = init();
+      const next = logsReducer(state, resumed({ terminalNodeId: 'never-existed' }));
+      expect(next.byTerminalNodeId['never-existed']).toBeUndefined();
     });
   });
 

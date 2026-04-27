@@ -27,6 +27,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { getApi } from '../api/api-adapter';
 import {
   appendEntry,
+  resumed,
   setError,
   setSource,
   setStatus,
@@ -38,7 +39,7 @@ import {
   type LogsState,
   type SourceResolution,
 } from '../../store/slices/logs-slice';
-import type { AppDispatch, RootState } from '../../store';
+import { store, type AppDispatch, type RootState } from '../../store';
 
 interface UseLogStreamReturn {
   status: LogStreamStatus;
@@ -48,6 +49,46 @@ interface UseLogStreamReturn {
 }
 
 const EMPTY_ENTRIES: LogEntry[] = [];
+
+/**
+ * Pure fingerprint over inbound source candidates — exported so it's
+ * unit-testable. Walks edges-into-`terminalNodeId`, projects each source
+ * node to `<nodeId>><iceType>><deployStatus>`, sorts, and joins with `|`.
+ *
+ * Including `deploy_status` is what makes the hook re-subscribe when a
+ * candidate source node transitions from undeployed (`'idle'` /
+ * `undefined`) to deployed (`'active'`). Without it, a Log block opened
+ * BEFORE the source's first deploy stays stuck in `pre-deploy` forever:
+ * the backend resolved once at subscribe time and there's no signal to
+ * re-resolve. With this projection in the dep, the cards-slice publish
+ * that writes `deploy_status: 'active'` (see `deploy.service.ts:1880`)
+ * changes the fingerprint string → the effect re-runs → the cleanup
+ * tears the old subscription down → a fresh subscribe POST resolves the
+ * source against the now-existing `deployedResourceMapping` row →
+ * `{ state: 'resolved' }` → `connecting` → first entry → `streaming`.
+ *
+ * Deliberately NOT included: label, position, status, anything else
+ * that mutates on unrelated edits — those would over-subscribe and
+ * cause the same thrash documented in
+ * `ux-log-stream-subscribe-thrash-on-mount`.
+ */
+export function computeCandidateFingerprint(
+  edges: ReadonlyArray<{ source: string; target: string } | null | undefined>,
+  nodes: ReadonlyArray<{ id: string; data?: Record<string, unknown> | undefined }>,
+  terminalNodeId: string,
+): string {
+  const parts: string[] = [];
+  for (const edge of edges) {
+    if (!edge || edge.target !== terminalNodeId) continue;
+    const sourceNode = nodes.find((n) => n.id === edge.source);
+    if (!sourceNode) continue;
+    const iceType = (sourceNode.data?.iceType as string) ?? '';
+    const deployStatus = (sourceNode.data?.deploy_status as string) ?? '';
+    parts.push(`${edge.source}>${iceType}>${deployStatus}`);
+  }
+  parts.sort();
+  return parts.join('|');
+}
 
 export function useLogStream(terminalNodeId: string): UseLogStreamReturn {
   const dispatch = useDispatch<AppDispatch>();
@@ -62,16 +103,45 @@ export function useLogStream(terminalNodeId: string): UseLogStreamReturn {
   );
 
   // The Monitoring.Log node carries `streamingMode` and (LT-6)
-  // `sourceNodeIdOverride` in its `data` blob. Read defensively — the
-  // properties panel for these fields ships in LT-6, so undefined is
-  // expected today and handled by the default ('polling') and absent
-  // override.
-  const node = useSelector((s: RootState) => {
+  // `sourceNodeIdOverride` in its `data` blob. Read each as a primitive
+  // through its OWN useSelector so the effect's deps array can never
+  // pick up a fresh object reference from the surrounding `node.data`
+  // blob — the cards-slice publishes new node objects on every mutation
+  // (via Immer), and lifting these values via an intermediate `node`
+  // object would force the surrounding component to re-render on every
+  // unrelated cards update. Reading the primitive directly means
+  // `useSelector`'s default `Object.is` comparison stays true while the
+  // value is unchanged. See learning `ux-log-stream-subscribe-thrash-on-mount`.
+  const mode: LogStreamMode = useSelector((s: RootState) => {
     const card = s.cards.cards.find((c) => c.id === s.cards.activeCardId);
-    return card?.nodes.find((n) => n.id === terminalNodeId);
+    const node = card?.nodes.find((n) => n.id === terminalNodeId);
+    return ((node?.data?.streamingMode as LogStreamMode) ?? 'polling') as LogStreamMode;
   });
-  const mode: LogStreamMode = ((node?.data?.streamingMode as LogStreamMode) ?? 'polling') as LogStreamMode;
-  const sourceNodeIdOverride = node?.data?.sourceNodeIdOverride as string | undefined;
+  const sourceNodeIdOverride: string | undefined = useSelector((s: RootState) => {
+    const card = s.cards.cards.find((c) => c.id === s.cards.activeCardId);
+    const node = card?.nodes.find((n) => n.id === terminalNodeId);
+    const value = node?.data?.sourceNodeIdOverride;
+    return typeof value === 'string' ? value : undefined;
+  });
+
+  // Edges-fingerprint of inbound supported sources. The full candidate
+  // list is computed inside the effect from live Redux state — the
+  // fingerprint is just the dep that triggers re-subscribe when the
+  // user adds/removes an edge, changes a source iceType, OR a candidate
+  // source's `deploy_status` flips (e.g. `undefined`/`'idle'` →
+  // `'active'` after the user clicks Deploy). The deploy-status leg is
+  // what unblocks the post-deploy re-resolution: subscribe time captured
+  // `pre-deploy`, the cards-slice publish from `deploy.service.ts:1880`
+  // mutates `data.deploy_status` to `'active'`, the fingerprint string
+  // changes → effect re-runs → fresh subscribe sees the resource mapping
+  // and returns `{ state: 'resolved' }`. Stringifying a small subset of
+  // edge/node shape keeps the dep value-stable across unrelated cards
+  // mutations. See learning `use-selector-primitive-projection-vs-derived`.
+  const candidateFingerprint: string = useSelector((s: RootState) => {
+    const card = s.cards.cards.find((c) => c.id === s.cards.activeCardId);
+    if (!card) return '';
+    return computeCandidateFingerprint(card.edges, card.nodes, terminalNodeId);
+  });
 
   // Slice state — driven entirely by the effect below. Selectors return
   // sane defaults when the slot doesn't exist yet (idle / empty / null).
@@ -98,6 +168,30 @@ export function useLogStream(terminalNodeId: string): UseLogStreamReturn {
 
     dispatch(setStatus({ terminalNodeId, status: 'connecting' }));
 
+    // Compute candidate sources from live Redux state. We do this INSIDE
+    // the effect (not via useSelector) so the value reflects the store
+    // at subscribe time — the effect re-runs when `candidateFingerprint`
+    // changes, which is the right granularity. Walking edges/nodes here
+    // touches the same data the fingerprint hashed, so it's cheap.
+    const stateAtSubscribe = store.getState();
+    const card = stateAtSubscribe.cards.cards.find((c) => c.id === cardId);
+    const candidateSources: Array<{ nodeId: string; iceType: string; label?: string }> = [];
+    if (card) {
+      for (const edge of card.edges) {
+        if (!edge || edge.target !== terminalNodeId) continue;
+        const sourceNode = card.nodes.find((n) => n.id === edge.source);
+        if (!sourceNode) continue;
+        const iceType = (sourceNode.data?.iceType as string) ?? '';
+        if (!iceType) continue;
+        const label = sourceNode.data?.label;
+        candidateSources.push({
+          nodeId: sourceNode.id,
+          iceType,
+          ...(typeof label === 'string' ? { label } : {}),
+        });
+      }
+    }
+
     (async () => {
       try {
         const result = await api.logs.subscribe({
@@ -106,13 +200,14 @@ export function useLogStream(terminalNodeId: string): UseLogStreamReturn {
           terminalNodeId,
           mode,
           ...(sourceNodeIdOverride ? { sourceNodeIdOverride } : {}),
+          ...(candidateSources.length > 0 ? { candidateSources } : {}),
         });
         if (cancelled) {
           // The effect cleanup ran while this request was in flight.
           // Tear down the server-side stream we just opened so we don't
           // leak a polling loop or quota.
           try {
-            await api.logs.unsubscribe(result.subscriptionId);
+            await api.logs.unsubscribe(result.subscriptionId, cardId);
           } catch {
             // Best-effort — already cancelled.
           }
@@ -163,7 +258,14 @@ export function useLogStream(terminalNodeId: string): UseLogStreamReturn {
 
       listenerCleanups.push(
         api.logs.onResumed(() => {
-          dispatch(setStatus({ terminalNodeId, status: 'streaming' }));
+          // Gated promotion: the slice's `resumed` reducer no-ops unless
+          // we previously promoted via `appendEntry` (entries.length > 0
+          // AND source.state === 'resolved'). Without the gate, a
+          // backend tail-reconnect retry would force the slot to
+          // `'streaming'` even on a pre-deploy block whose subscribe
+          // failed mid-flight — see learning
+          // `ux-log-resumed-event-overrides-pre-deploy`.
+          dispatch(resumed({ terminalNodeId }));
         }),
       );
 
@@ -193,16 +295,22 @@ export function useLogStream(terminalNodeId: string): UseLogStreamReturn {
       }
       if (subscriptionId) {
         // Fire-and-forget — the unsubscribe is idempotent server-side
-        // (LT-3 contract), so a dropped request is harmless.
-        api.logs.unsubscribe(subscriptionId).catch(() => {
+        // (LT-3 contract), so a dropped request is harmless. cardId is
+        // required by the route's `requireProjectAccess` middleware.
+        api.logs.unsubscribe(subscriptionId, cardId).catch(() => {
           /* idempotent, errors are non-fatal */
         });
       }
       dispatch(teardown({ terminalNodeId }));
     };
     // Re-run when any subscribe input changes. `dispatch` is stable per
-    // store but included for exhaustive-deps lint.
-  }, [cardId, environmentId, terminalNodeId, mode, sourceNodeIdOverride, dispatch]);
+    // store but included for exhaustive-deps lint. `candidateFingerprint`
+    // is a string projection of inbound edges + source iceTypes for the
+    // terminal — when the user wires/unwires an edge or changes a source
+    // type, the fingerprint changes and the effect re-subscribes with
+    // the fresh candidate list (instead of the backend reading a stale
+    // Prisma row from before the canvas's 2s save debounce fired).
+  }, [cardId, environmentId, terminalNodeId, mode, sourceNodeIdOverride, candidateFingerprint, dispatch]);
 
   return { status, entries, source, lastError };
 }

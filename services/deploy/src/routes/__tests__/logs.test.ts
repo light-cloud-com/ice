@@ -242,17 +242,106 @@ describe('POST /api/canvas/logs/subscribe — organisationId is auth-derived', (
   });
 });
 
+// ── 5b. Subscribe — candidateSources payload ──────────────────────────
+
+describe('POST /api/canvas/logs/subscribe — candidateSources payload', () => {
+  it('forwards a well-formed candidateSources array to the service', async () => {
+    subscribeMock.mockResolvedValue({
+      subscriptionId: 'sub-c1',
+      resolution: { state: 'pre-deploy', sourceNodeId: 'src-1', iceType: 'Compute.Container' },
+    });
+
+    const res = await post('/api/canvas/logs/subscribe', {
+      ...validSubscribeBody,
+      candidateSources: [
+        { nodeId: 'src-1', iceType: 'Compute.Container', label: 'API Server' },
+        { nodeId: 'src-2', iceType: 'Compute.Worker' },
+      ],
+    });
+
+    expect(res.status).toBe(200);
+    expect(subscribeMock).toHaveBeenCalledTimes(1);
+    const callArg = subscribeMock.mock.calls[0][0];
+    expect(callArg.candidateSources).toEqual([
+      { nodeId: 'src-1', iceType: 'Compute.Container', label: 'API Server' },
+      { nodeId: 'src-2', iceType: 'Compute.Worker' },
+    ]);
+  });
+
+  it('does NOT include candidateSources in the service call when omitted from the body', async () => {
+    subscribeMock.mockResolvedValue({
+      subscriptionId: 'sub-c2',
+      resolution: { state: 'none' },
+    });
+
+    const res = await post('/api/canvas/logs/subscribe', validSubscribeBody);
+
+    expect(res.status).toBe(200);
+    const callArg = subscribeMock.mock.calls[0][0];
+    expect('candidateSources' in callArg).toBe(false);
+  });
+
+  it('returns 400 with details mentioning iceType when a candidate is missing iceType', async () => {
+    const res = await post('/api/canvas/logs/subscribe', {
+      ...validSubscribeBody,
+      candidateSources: [{ nodeId: 'src-1' }],
+    });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('invalid request');
+    expect(res.body.details.some((d: string) => d.includes('iceType'))).toBe(true);
+    expect(subscribeMock).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when candidateSources is not an array', async () => {
+    const res = await post('/api/canvas/logs/subscribe', {
+      ...validSubscribeBody,
+      candidateSources: { nodeId: 'src-1', iceType: 'Compute.Container' },
+    });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('invalid request');
+    expect(res.body.details.some((d: string) => d.includes('candidateSources'))).toBe(true);
+  });
+
+  it('returns 400 when a candidate has empty nodeId', async () => {
+    const res = await post('/api/canvas/logs/subscribe', {
+      ...validSubscribeBody,
+      candidateSources: [{ nodeId: '', iceType: 'Compute.Container' }],
+    });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('invalid request');
+    expect(res.body.details.some((d: string) => d.includes('nodeId'))).toBe(true);
+  });
+
+  it('accepts an empty array (older client signaling no candidates)', async () => {
+    subscribeMock.mockResolvedValue({
+      subscriptionId: 'sub-c3',
+      resolution: { state: 'none' },
+    });
+
+    const res = await post('/api/canvas/logs/subscribe', {
+      ...validSubscribeBody,
+      candidateSources: [],
+    });
+
+    expect(res.status).toBe(200);
+    const callArg = subscribeMock.mock.calls[0][0];
+    expect(callArg.candidateSources).toEqual([]);
+  });
+});
+
 // ── 6. Unsubscribe — happy path ───────────────────────────────────────
 
 describe('POST /api/canvas/logs/unsubscribe — happy path', () => {
   it('returns 204 with empty body and forwards subscriptionId to the service', async () => {
     unsubscribeMock.mockResolvedValue(undefined);
 
-    const res = await post('/api/canvas/logs/unsubscribe', { subscriptionId: 'sub-abc' });
+    const res = await post('/api/canvas/logs/unsubscribe', { subscriptionId: 'sub-abc', cardId: 'card-1' });
 
     expect(res.status).toBe(204);
     expect(res.raw).toBe('');
     expect(unsubscribeMock).toHaveBeenCalledTimes(1);
+    // The service signature only takes subscriptionId; cardId is consumed
+    // by the auth middleware and is not forwarded to the service layer.
     expect(unsubscribeMock).toHaveBeenCalledWith('sub-abc');
   });
 });
@@ -261,7 +350,7 @@ describe('POST /api/canvas/logs/unsubscribe — happy path', () => {
 
 describe('POST /api/canvas/logs/unsubscribe — body validation', () => {
   it('returns 400 when subscriptionId is missing', async () => {
-    const res = await post('/api/canvas/logs/unsubscribe', {});
+    const res = await post('/api/canvas/logs/unsubscribe', { cardId: 'card-1' });
     expect(res.status).toBe(400);
     expect(res.body.error).toBe('invalid request');
     expect(res.body.details.some((d: string) => d.includes('subscriptionId'))).toBe(true);
@@ -269,9 +358,20 @@ describe('POST /api/canvas/logs/unsubscribe — body validation', () => {
   });
 
   it('returns 400 when subscriptionId is empty', async () => {
-    const res = await post('/api/canvas/logs/unsubscribe', { subscriptionId: '' });
+    const res = await post('/api/canvas/logs/unsubscribe', { subscriptionId: '', cardId: 'card-1' });
     expect(res.status).toBe(400);
     expect(res.body.error).toBe('invalid request');
+  });
+
+  it('returns 400 with details mentioning `cardId` when cardId is missing', async () => {
+    // Without `cardId` (or `projectId`), the `requireProjectAccess` middleware
+    // 400s on every unsubscribe. We catch the missing field at the validator
+    // so the error is actionable rather than a generic projectId message.
+    const res = await post('/api/canvas/logs/unsubscribe', { subscriptionId: 'sub-abc' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('invalid request');
+    expect(res.body.details.some((d: string) => d.includes('cardId'))).toBe(true);
+    expect(unsubscribeMock).not.toHaveBeenCalled();
   });
 });
 
@@ -285,7 +385,7 @@ describe('POST /api/canvas/logs/unsubscribe — service error semantics', () => 
     // services/log-stream.service.ts unsubscribe() docstring.
     unsubscribeMock.mockResolvedValue(undefined);
 
-    const res = await post('/api/canvas/logs/unsubscribe', { subscriptionId: 'never-existed' });
+    const res = await post('/api/canvas/logs/unsubscribe', { subscriptionId: 'never-existed', cardId: 'card-1' });
 
     expect(res.status).toBe(204);
     expect(unsubscribeMock).toHaveBeenCalledWith('never-existed');
@@ -294,7 +394,7 @@ describe('POST /api/canvas/logs/unsubscribe — service error semantics', () => 
   it('returns 500 only when the service throws an unexpected error', async () => {
     unsubscribeMock.mockRejectedValue(new Error('timer cleanup blew up'));
 
-    const res = await post('/api/canvas/logs/unsubscribe', { subscriptionId: 'sub-abc' });
+    const res = await post('/api/canvas/logs/unsubscribe', { subscriptionId: 'sub-abc', cardId: 'card-1' });
 
     expect(res.status).toBe(500);
     expect(res.body.error).toBe('internal');

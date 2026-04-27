@@ -131,8 +131,17 @@ export interface IceAPI {
       terminalNodeId: string;
       mode: 'polling' | 'tail';
       sourceNodeIdOverride?: string;
+      /**
+       * Client-derived inbound supported sources from live Redux state.
+       * The backend uses these instead of re-reading nodes/edges from
+       * Prisma — the canvas's persistence subscriber debounces saves by
+       * 2s, so the DB row is stale when the user wires an edge then
+       * immediately subscribes. Omit (or pass `[]`) to fall back to the
+       * server's Prisma read for older clients.
+       */
+      candidateSources?: Array<{ nodeId: string; iceType: string; label?: string }>;
     }) => Promise<{ subscriptionId: string; resolution: any }>;
-    unsubscribe: (subscriptionId: string) => Promise<void>;
+    unsubscribe: (subscriptionId: string, cardId: string) => Promise<void>;
     joinRoom: (terminalNodeId: string) => () => void;
     onEntry: (callback: (entry: any) => void) => () => void;
     onError: (callback: (event: { message: string; recoverable: boolean }) => void) => () => void;

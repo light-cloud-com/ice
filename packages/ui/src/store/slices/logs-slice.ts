@@ -81,11 +81,18 @@ function defaultStreamState(mode: LogStreamMode = 'polling'): LogStreamState {
   };
 }
 
-/** Maps `SourceResolution.state` → the user-facing `LogStreamStatus`. */
+/** Maps `SourceResolution.state` → the user-facing `LogStreamStatus`.
+ *
+ * `resolved` → `connecting` (NOT `streaming`): "resolved" only means the
+ * server figured out which source to tail — it doesn't mean any entry has
+ * arrived yet. Optimistically flipping to `streaming` here causes a brief
+ * green-then-red flicker if the very first poll/IAM probe fails. The
+ * `appendEntry` reducer below promotes `connecting` → `streaming` on the
+ * first entry, which is the real signal that the stream is live. */
 function statusForSource(source: SourceResolution): LogStreamStatus {
   switch (source.state) {
     case 'resolved':
-      return 'streaming';
+      return 'connecting';
     case 'pre-deploy':
       return 'pre-deploy';
     case 'ambiguous':
@@ -165,6 +172,14 @@ const logsSlice = createSlice({
       if (slot.entries.length > MAX_ENTRIES) {
         slot.entries.splice(0, slot.entries.length - MAX_ENTRIES);
       }
+
+      // First entry promotes the status from `connecting` (set by
+      // `setSource` on resolved) to `streaming`. Anything else (already
+      // streaming, an error, etc.) stays put — the entry just lands in
+      // the buffer.
+      if (slot.status === 'connecting') {
+        slot.status = 'streaming';
+      }
     },
 
     clearEntries(state, action: PayloadAction<{ terminalNodeId: string }>) {
@@ -183,13 +198,34 @@ const logsSlice = createSlice({
       slot.lastError = action.payload.message;
     },
 
+    /**
+     * `resumed` — frontend handler for the backend `logs:resumed` socket
+     * event, which fires after a transient stream error is recovered
+     * (e.g. tail-reconnect retry). Co-located with `appendEntry`'s
+     * promotion gate: only flip status back to `'streaming'` when we
+     * have evidence the stream was previously live (≥1 entry received
+     * AND source actually resolved). Otherwise leave the status alone —
+     * the V4 fix means a pre-deploy block must NEVER be promoted to
+     * "Live" via a side-channel event, even if the backend retried a
+     * failing tail call. See learning `ux-log-resumed-event-overrides-pre-deploy`.
+     */
+    resumed(state, action: PayloadAction<{ terminalNodeId: string }>) {
+      const slot = state.byTerminalNodeId[action.payload.terminalNodeId];
+      if (!slot) return;
+      if (slot.entries.length === 0) return;
+      if (slot.source?.state !== 'resolved') return;
+      slot.status = 'streaming';
+      // Resuming means the previous error is no longer visible.
+      slot.lastError = null;
+    },
+
     teardown(state, action: PayloadAction<{ terminalNodeId: string }>) {
       delete state.byTerminalNodeId[action.payload.terminalNodeId];
     },
   },
 });
 
-export const { setStatus, setSubscription, setSource, appendEntry, clearEntries, setMode, setError, teardown } =
+export const { setStatus, setSubscription, setSource, appendEntry, clearEntries, setMode, setError, resumed, teardown } =
   logsSlice.actions;
 
 export default logsSlice.reducer;

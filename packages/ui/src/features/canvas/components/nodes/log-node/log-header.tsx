@@ -2,18 +2,19 @@ import React, { memo } from 'react';
 import { CopyButton } from './copy-button';
 import { LiveIndicator } from './live-indicator';
 import { FoldButton } from '../_shared/fold-button';
+import type { LogStreamStatus } from '../../../../../store/slices/logs-slice';
 
 interface LogHeaderProps {
   label: string;
   folded: boolean;
   isHovered: boolean;
-  isAutoScroll: boolean;
+  status: LogStreamStatus;
   onToggleFold: (e: React.MouseEvent) => void;
   onCopyAll: (e: React.MouseEvent) => void;
 }
 
 export const LogHeader: React.FC<LogHeaderProps> = memo(
-  ({ label, folded, isHovered, isAutoScroll, onToggleFold, onCopyAll }) => (
+  ({ label, folded, isHovered, status, onToggleFold, onCopyAll }) => (
     <div
       style={{
         display: 'flex',
@@ -47,8 +48,9 @@ export const LogHeader: React.FC<LogHeaderProps> = memo(
         {label || 'Logs'}
       </span>
 
-      {/* Live / Paused indicator */}
-      {!folded && <LiveIndicator isAutoScroll={isAutoScroll} />}
+      {/* Stream status indicator — mirrors the properties-panel pill so the
+          canvas header and the properties pill never disagree. */}
+      {!folded && <LiveIndicator status={status} />}
 
       {/* Copy all button */}
       {!folded && isHovered && <CopyButton onClick={onCopyAll} />}

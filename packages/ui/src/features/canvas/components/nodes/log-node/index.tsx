@@ -216,7 +216,7 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, o
             label={label || ''}
             folded={folded}
             isHovered={isHovered}
-            isAutoScroll={isAutoScroll}
+            status={status}
             onToggleFold={handleToggleFold}
             onCopyAll={handleCopyAll}
           />

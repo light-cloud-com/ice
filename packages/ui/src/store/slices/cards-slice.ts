@@ -86,10 +86,19 @@ export interface CardsState {
 const CARDS_STORAGE_KEY = 'ice-cards';
 
 /**
- * Data version — bump this to force-clear persisted cards on next load.
+ * Data version — bumped whenever the persisted node shape changes. The
+ * loader runs `migrateCardNodes` over the stored payload before bumping
+ * the version key, so a version-mismatch is a *migrate* event, never a
+ * wipe (see learning `data-version-bump-migrates-not-wipes`). Every
+ * ingestion reducer that accepts external nodes (addNodeToCard,
+ * importToActiveCard, addToActiveCard, expandBlueprintToCard) also runs
+ * the migrator so backend-saved canvases / clipboard imports / AI
+ * tool-use writes pick up the same fixes the localStorage loader does.
+ *
  * v5: Removed hardcoded demo card — cards now come from backend.
+ * v6: Monitoring.Terminal → Monitoring.Log consolidation.
  */
-const CARDS_DATA_VERSION = 5;
+const CARDS_DATA_VERSION = 6;
 const CARDS_VERSION_KEY = 'ice-cards-version';
 
 /**
@@ -98,52 +107,90 @@ const CARDS_VERSION_KEY = 'ice-cards-version';
 const BLOCK_TO_GROUP_TYPES = new Set(['Frontend', 'Services', 'Data', 'Messaging', 'Monitoring', 'External']);
 
 /**
- * Migrate persisted node data:
+ * Migrate a single persisted node:
  * - Legacy Cluster.* / Block.* organizational types → Group.* with type: 'container'
+ * - Legacy `Monitoring.Terminal` → `Monitoring.Log` (v5 → v6 consolidation).
+ *
+ * Idempotent — running it on already-migrated payloads is a no-op and
+ * returns the same reference for nodes that didn't need a change.
  */
-function migrateCardNodes(nodes: CardNode[]): CardNode[] {
-  return nodes.map((node) => {
-    const iceType = (node.data?.iceType as string) || '';
+function migrateCardNode(node: CardNode): CardNode {
+  const iceType = (node.data?.iceType as string) || '';
 
-    // Legacy: Cluster.* / Block.* organizational types → Group.*
-    if (iceType.startsWith('Cluster.') || iceType.startsWith('Block.')) {
-      const prefix = iceType.startsWith('Cluster.') ? 'Cluster.' : 'Block.';
-      const suffix = iceType.slice(prefix.length);
-      if (BLOCK_TO_GROUP_TYPES.has(suffix)) {
-        return {
-          ...node,
-          type: 'container' as const,
-          data: { ...node.data, iceType: `Group.${suffix}` },
-        };
-      }
+  // v5 → v6: Monitoring.Terminal collapsed into Monitoring.Log.
+  if (iceType === 'Monitoring.Terminal') {
+    return { ...node, data: { ...node.data, iceType: 'Monitoring.Log' } };
+  }
+
+  // Legacy: Cluster.* / Block.* organizational types → Group.*
+  if (iceType.startsWith('Cluster.') || iceType.startsWith('Block.')) {
+    const prefix = iceType.startsWith('Cluster.') ? 'Cluster.' : 'Block.';
+    const suffix = iceType.slice(prefix.length);
+    if (BLOCK_TO_GROUP_TYPES.has(suffix)) {
+      return {
+        ...node,
+        type: 'container' as const,
+        data: { ...node.data, iceType: `Group.${suffix}` },
+      };
     }
+  }
 
-    return node;
-  });
+  return node;
+}
+
+/**
+ * Migrate every node in a payload. Exported so external ingestion paths
+ * (backend canvas restore, AI tool-use writes, tests) can reuse the same
+ * migration pipeline as the localStorage loader.
+ */
+export function migrateCardNodes(nodes: CardNode[]): CardNode[] {
+  return nodes.map(migrateCardNode);
 }
 
 function loadPersistedCards(): CardsState {
   try {
-    // Version check — clear stale data when data format changes
     const storedVersion = parseInt(localStorage.getItem(CARDS_VERSION_KEY) || '0', 10);
-    if (storedVersion < CARDS_DATA_VERSION) {
-      localStorage.removeItem(CARDS_STORAGE_KEY);
-      localStorage.setItem(CARDS_VERSION_KEY, String(CARDS_DATA_VERSION));
-      return { cards: [], activeCardId: null, history: {} };
-    }
-
     const raw = localStorage.getItem(CARDS_STORAGE_KEY);
+
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed.cards && parsed.cards.length > 0) {
         const cards = parsed.cards
           .filter((c: any) => c.id !== 'demo') // drop legacy demo card
           .map((c: any) => ({ ...c, nodes: migrateCardNodes(c.nodes || []) }));
+
+        // Persist the migrated payload back so we don't re-migrate on
+        // every load, and bump the version key. We MIGRATE, never wipe —
+        // a version mismatch is the trigger for migration, not for
+        // discarding the user's canvas.
+        if (storedVersion < CARDS_DATA_VERSION) {
+          try {
+            localStorage.setItem(
+              CARDS_STORAGE_KEY,
+              JSON.stringify({ ...parsed, cards }),
+            );
+            localStorage.setItem(CARDS_VERSION_KEY, String(CARDS_DATA_VERSION));
+          } catch {
+            /* localStorage write failed (quota, private mode); leave the
+             * in-memory migrated payload — next session will re-migrate. */
+          }
+        }
+
         return {
           cards,
           activeCardId: parsed.activeCardId === 'demo' ? cards[0]?.id || null : parsed.activeCardId || null,
           history: {},
         };
+      }
+    }
+
+    // No prior payload — just record the current data version for
+    // future migrations.
+    if (storedVersion < CARDS_DATA_VERSION) {
+      try {
+        localStorage.setItem(CARDS_VERSION_KEY, String(CARDS_DATA_VERSION));
+      } catch {
+        /* ignore */
       }
     }
   } catch {
@@ -369,7 +416,10 @@ const cardsSlice = createSlice({
       pushSnapshot(state);
       const card = state.cards.find((c) => c.id === state.activeCardId);
       if (card) {
-        card.nodes.push(action.payload);
+        // Run external payloads through the migrator so any legacy iceType
+        // (e.g. Monitoring.Terminal carried by an AI tool-use write) is
+        // upgraded before it lands on the canvas.
+        card.nodes.push(migrateCardNode(action.payload));
       }
     },
 
@@ -619,7 +669,9 @@ const cardsSlice = createSlice({
       pushSnapshot(state);
       const card = state.cards.find((c) => c.id === state.activeCardId);
       if (card) {
-        card.nodes = action.payload.nodes;
+        // Migrate incoming nodes (cloud restore / clipboard / AI write) so
+        // any legacy iceType is upgraded before landing on the canvas.
+        card.nodes = migrateCardNodes(action.payload.nodes);
         card.edges = action.payload.edges;
 
         // Auto-organize unless explicitly skipped
@@ -696,7 +748,9 @@ const cardsSlice = createSlice({
         const offsetX = card.nodes.length > 0 ? maxX + 120 : 0;
         const offsetY = 0;
 
-        const offsetNodes = action.payload.nodes.map((node) => ({
+        // Migrate incoming nodes (template merge / clipboard) before
+        // offsetting so any legacy iceType is upgraded in place.
+        const offsetNodes = migrateCardNodes(action.payload.nodes).map((node) => ({
           ...node,
           position: {
             x: node.position.x + offsetX,
@@ -987,7 +1041,10 @@ const cardsSlice = createSlice({
       const card = state.cards.find((c) => c.id === state.activeCardId);
       if (!card) return;
 
-      card.nodes.push(action.payload.node as CardNode);
+      // Run blueprint-emitted nodes through the migrator for parity with
+      // the other ingestion paths — defends against any blueprint that
+      // still references a legacy iceType.
+      card.nodes.push(migrateCardNode(action.payload.node as CardNode));
     },
 
     // Undo last change on active card

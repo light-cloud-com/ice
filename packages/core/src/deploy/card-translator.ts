@@ -237,12 +237,7 @@ const AZURE_TYPE_MAP: Record<string, string> = {
 // Network.PublicTraffic is the only "Network." type that lives here:
 // it represents the public internet on the diagram, not a provisioned
 // resource. Everything else under Network.* should map to something.
-const UI_ONLY_TYPES = new Set([
-  'Monitoring.Terminal',
-  'Source.Repository',
-  'Config.Environment',
-  'Network.PublicTraffic',
-]);
+const UI_ONLY_TYPES = new Set(['Source.Repository', 'Config.Environment', 'Network.PublicTraffic']);
 
 /**
  * iceTypes whose compute is treated as a service backend. Shared between

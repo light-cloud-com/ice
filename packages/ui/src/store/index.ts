@@ -15,6 +15,7 @@ import environmentsReducer from './slices/environments-slice';
 import ghostsReducer from './slices/ghost-slice';
 import graphReducer from './slices/graph-slice';
 import integrationsReducer from './slices/integrations-slice';
+import logsReducer from './slices/logs-slice';
 import onboardingReducer from './slices/onboarding-slice';
 import pipelineReducer from './slices/pipeline-slice';
 import projectListReducer from './slices/project-list-slice';
@@ -61,6 +62,7 @@ export const store = configureStore({
     pipeline: pipelineReducer,
     environments: environmentsReducer,
     ghosts: ghostsReducer,
+    logs: logsReducer,
     onboarding: onboardingReducer,
     validation: validationReducer,
   },

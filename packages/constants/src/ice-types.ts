@@ -135,7 +135,6 @@ export const TREE = {
     category: Cat.Observability,
     resources: {
       Log: { id: 'log-group', required: ['keep_logs'] },
-      Terminal: { id: 'log-terminal' },
     },
   },
   AI: {
@@ -231,7 +230,6 @@ export const ICE = {
   },
   Monitoring: {
     Log: 'Monitoring.Log',
-    Terminal: 'Monitoring.Terminal',
   },
   AI: {
     VectorDB: 'AI.VectorDB',

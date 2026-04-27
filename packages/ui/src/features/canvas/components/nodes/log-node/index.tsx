@@ -1,32 +1,84 @@
 /**
  * SVG Log Node Component
  *
- * Terminal-style node with streaming logs.
- * Orchestrates header, log content, and folded badge sub-components.
+ * Terminal-style node tailing Cloud Logging output for the Compute /
+ * Database block it's connected to. Subscribes via `useLogStream` (LT-5),
+ * which manages the HTTP subscribe + Socket.IO room lifecycle. Renders
+ * either the live entries or a status-driven placeholder row.
+ *
+ * Pure UI state (scroll, autoscroll, copy feedback, fold) stays local;
+ * data state (entries, status, source, lastError) comes from the hook.
  */
 
-import React, { memo, useState, useCallback, useEffect, useRef } from 'react';
+import React, { memo, useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { FoldedBadge } from './folded-badge';
 import { LogContent } from './log-content';
-import { SAMPLE_MESSAGES, generateTimestamp } from './log-data';
 import { LogHeader } from './log-header';
+import { useLogStream } from '../../../../../shared/hooks/use-log-stream';
+import type { LogStreamStatus, LogEntry as StreamLogEntry } from '../../../../../store/slices/logs-slice';
 import { CORNER_RADIUS } from '../../../../../config/canvas-constants';
 import type { SvgLogNodeProps, LogEntry } from './types';
+
+// Map a Cloud Logging level onto the row component's level. Cloud Logging
+// has 'notice' between info and warn; the row only knows info/warn/error/
+// debug, so notice collapses into info for v1.
+function mapLevel(level: StreamLogEntry['level']): LogEntry['level'] {
+  if (level === 'notice') return 'info';
+  return level;
+}
+
+// HH:MM:SS only — the LogEntryRow's timestamp column is sized for that.
+function formatTs(ts: string): string {
+  // Defensive: if `ts` isn't a well-formed ISO string, fall back to it
+  // verbatim so the row still renders.
+  if (!ts || typeof ts !== 'string') return '';
+  const tIdx = ts.indexOf('T');
+  if (tIdx < 0) return ts.slice(0, 8);
+  const after = ts.slice(tIdx + 1);
+  const dotIdx = after.indexOf('.');
+  return dotIdx > 0 ? after.slice(0, dotIdx) : after.slice(0, 8);
+}
+
+function placeholderText(status: LogStreamStatus, lastError: string | null): string {
+  switch (status) {
+    case 'pre-deploy':
+      return 'Deploy this environment to start streaming logs.';
+    case 'no-source':
+      return 'Connect a compute or database block to start streaming logs.';
+    case 'ambiguous':
+      return 'Multiple inbound connections — choose a source in the properties panel.';
+    case 'unsupported':
+      return "This source type doesn't emit Cloud Logging output.";
+    case 'permission-denied':
+      return (
+        lastError || 'Cloud Logging access denied. Grant roles/logging.viewer to the deploy service account.'
+      );
+    case 'error':
+      return lastError || 'Connection error. Retrying.';
+    case 'connecting':
+      return 'Connecting…';
+    case 'idle':
+      return 'Waiting for environment.';
+    default:
+      return '';
+  }
+}
 
 export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, onToggleFold }) => {
   const { x, y, width, height, data, label } = node;
   const [isHovered, setIsHovered] = useState(false);
   const [folded, setFolded] = useState(false);
-  const [logs, setLogs] = useState<LogEntry[]>([]);
   const [scrollOffset, setScrollOffset] = useState(0);
   const [isAutoScroll, setIsAutoScroll] = useState(true);
   const [copiedLine, setCopiedLine] = useState<string | null>(null);
-  const logIdRef = useRef(0);
+  const lastEntryCountRef = useRef(0);
 
-  const serviceName = (data.serviceName as string) || (label || '').toLowerCase().replace(/\s+/g, '-') || 'default';
-  const serviceMessages = SAMPLE_MESSAGES[serviceName as keyof typeof SAMPLE_MESSAGES] || SAMPLE_MESSAGES.default;
+  // ── Live data via the LT-5 hook ─────────────────────────────────────
+  // The hook manages subscribe → room-join → unsubscribe and dispatches
+  // appendEntry on every `logs:entry`. We only consume the slice state.
+  const { entries, status, lastError } = useLogStream(node.id);
 
-  // Dimensions
+  // ── Dimensions ──────────────────────────────────────────────────────
   const headerHeight = 32;
   const nodeWidth = Math.max(width || 400, 320);
   const nodeHeight = folded ? headerHeight : Math.max(height || 240, 160);
@@ -34,59 +86,51 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, o
   const lineHeight = 18;
   const maxVisibleLogs = Math.floor(logAreaHeight / lineHeight);
 
-  // Generate streaming logs
+  // ── Map stream entries → LogEntryRow shape ──────────────────────────
+  // The row component takes { id, timestamp, level, service, message }.
+  // service is truncated to 12 chars to fit the existing column width.
+  const serviceName = ((data?.label as string) || (label as string) || 'logs').slice(0, 12);
+
+  const logs = useMemo<LogEntry[]>(
+    () =>
+      entries.map((e) => ({
+        id: e.insertId,
+        timestamp: formatTs(e.ts),
+        level: mapLevel(e.level),
+        service: serviceName,
+        message: e.message,
+      })),
+    [entries, serviceName],
+  );
+
+  // ── Auto-scroll on new entries ──────────────────────────────────────
+  // Only snap to bottom when entries actually grew (not on a re-render
+  // that didn't add anything), so the user's manual scroll position is
+  // preserved across unrelated re-renders.
   useEffect(() => {
-    if (folded) return;
-
-    const historicalLogs: LogEntry[] = [];
-    const totalHistoricalLogs = maxVisibleLogs + 20;
-    let secondsAgo = 180 + Math.floor(Math.random() * 120);
-
-    for (let i = 0; i < totalHistoricalLogs; i++) {
-      const msgIndex = Math.floor(Math.random() * serviceMessages.length);
-      const msg = serviceMessages[msgIndex];
-      historicalLogs.push({
-        id: `log-${logIdRef.current++}`,
-        timestamp: generateTimestamp(secondsAgo),
-        level: msg.level as LogEntry['level'],
-        service: serviceName.substring(0, 12),
-        message: msg.message,
-      });
-      secondsAgo -= Math.floor(Math.random() * 13) + 2;
-      if (secondsAgo < 0) secondsAgo = 0;
+    if (entries.length !== lastEntryCountRef.current) {
+      lastEntryCountRef.current = entries.length;
+      if (isAutoScroll) setScrollOffset(0);
     }
+  }, [entries.length, isAutoScroll]);
 
-    historicalLogs.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
-    setLogs(historicalLogs);
-    setScrollOffset(0);
-    setIsAutoScroll(true);
-
-    const interval = setInterval(
-      () => {
-        const msgIndex = Math.floor(Math.random() * serviceMessages.length);
-        const msg = serviceMessages[msgIndex];
-        setLogs((prev) => {
-          const newLog: LogEntry = {
-            id: `log-${logIdRef.current++}`,
-            timestamp: generateTimestamp(0),
-            level: msg.level as LogEntry['level'],
-            service: serviceName.substring(0, 12),
-            message: msg.message,
-          };
-          const newLogs = [...prev, newLog];
-          return newLogs.length > 200 ? newLogs.slice(-200) : newLogs;
-        });
-      },
-      1500 + Math.random() * 2000,
-    );
-
-    return () => clearInterval(interval);
-  }, [folded, serviceName, serviceMessages, maxVisibleLogs]);
-
-  // Auto-scroll
-  useEffect(() => {
-    if (isAutoScroll) setScrollOffset(0);
-  }, [logs.length, isAutoScroll]);
+  // ── Status placeholder row ─────────────────────────────────────────
+  // For any non-streaming status (or streaming but empty), surface a
+  // single muted row inside the LogContent container. This is the only
+  // UX affordance for permission/source/connectivity errors — the user's
+  // standing rule (`feedback_no_canvas_inputs`) keeps it non-interactive.
+  const showPlaceholder = entries.length === 0 && status !== 'streaming';
+  const placeholder = showPlaceholder
+    ? ([
+        {
+          id: `placeholder-${status}`,
+          timestamp: '',
+          level: 'debug',
+          service: serviceName,
+          message: placeholderText(status, lastError),
+        },
+      ] as LogEntry[])
+    : null;
 
   const handleToggleFold = useCallback(
     (e: React.MouseEvent) => {
@@ -128,12 +172,13 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, o
     setTimeout(() => setCopiedLine(null), 1000);
   }, []);
 
-  // Visible logs
-  const startIndex = Math.max(0, logs.length - maxVisibleLogs + scrollOffset);
-  const visibleLogs = logs.slice(startIndex, startIndex + maxVisibleLogs);
+  // Visible logs (or single placeholder row when there's nothing live yet)
+  const renderRows = placeholder ?? logs;
+  const startIndex = Math.max(0, renderRows.length - maxVisibleLogs + scrollOffset);
+  const visibleLogs = renderRows.slice(startIndex, startIndex + maxVisibleLogs);
 
-  // Scroll progress
-  const totalLogs = logs.length;
+  // Scroll progress (placeholder is single-row, so always pinned)
+  const totalLogs = renderRows.length;
   const maxOffset = Math.max(0, totalLogs - maxVisibleLogs);
   const scrollProgress = maxOffset > 0 ? (maxOffset + scrollOffset) / maxOffset : 1;
 

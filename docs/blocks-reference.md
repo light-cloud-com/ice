@@ -16,7 +16,6 @@ packages/blocks/src/
 │   ├── event-stream/
 │   ├── github-repo/
 │   ├── llm-gateway/
-│   ├── log-terminal/
 │   ├── message-queue/
 │   ├── mongodb/
 │   ├── mysql/
@@ -59,7 +58,7 @@ The palette (left sidebar in the UI) groups concepts by category:
 | Messaging | Message Queue, Event Stream |
 | AI | LLM Gateway, Private AI Service, Vector DB |
 | Networking | Public Traffic, Private Network, API Gateway, Custom Domain |
-| Observability | Observability, Log Terminal |
+| Observability | Observability |
 | Security | Secret Store, Env Config |
 | Integration | GitHub Repo, Email Service, Scheduled Task |
 

@@ -57,6 +57,11 @@ export { apply_environment_overrides, get_environment_label, get_cost_multiplier
 
 export type { EnvironmentType } from './environment-config.js';
 
+// GCP SDK lazy loader — exposed so consumers outside the deploy engine
+// (e.g. the log-stream service) can load `@google-cloud/logging` without
+// re-implementing the dynamic-import dance.
+export { load_sdk } from './providers/gcp/sdk-loader.js';
+
 // GCP Authentication
 export { get_gcp_credentials, validate_gcp_credentials, list_gcp_projects } from './providers/gcp/auth.js';
 

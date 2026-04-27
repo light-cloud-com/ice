@@ -23,6 +23,19 @@ import { isDesktopMode } from '../auth/middleware.js';
 
 let _io: SocketServer;
 
+/**
+ * Accessor for services that need to emit to ad-hoc rooms (e.g. the
+ * log-streaming service emitting `logs:<terminalNodeId>` events).
+ *
+ * Returns the SocketServer set up by {@link setupSocketService}, or `null`
+ * if the gateway hasn't booted yet (e.g. unit tests). Callers should
+ * tolerate `null` and skip the emit rather than throwing — the same
+ * defensive pattern as {@link emitDeployProgress}'s `_io` guard.
+ */
+export function getSocketServer(): SocketServer | null {
+  return _io ?? null;
+}
+
 interface SocketAuth {
   userId: string;
   organisationId: string;
@@ -116,6 +129,24 @@ export function setupSocketService(io: SocketServer) {
 
     socket.on('unsubscribe:card-pipeline', (cardId: string) => {
       socket.leave(`card-pipeline:${cardId}`);
+    });
+
+    // Log Terminal: per-block live Cloud Logging stream. Room name MUST
+    // match the `logs:<terminalNodeId>` prefix that
+    // `services/deploy/src/services/log-stream.service.ts` emits to —
+    // the HTTP `/api/canvas/logs/subscribe` route opens the upstream SDK
+    // stream and fans entries into this room, so a mismatch silently
+    // drops every log line.
+    socket.on('subscribe:logs', (terminalNodeId: string) => {
+      if (typeof terminalNodeId === 'string' && terminalNodeId.length > 0) {
+        socket.join(`logs:${terminalNodeId}`);
+      }
+    });
+
+    socket.on('unsubscribe:logs', (terminalNodeId: string) => {
+      if (typeof terminalNodeId === 'string' && terminalNodeId.length > 0) {
+        socket.leave(`logs:${terminalNodeId}`);
+      }
     });
 
     socket.on('disconnect', () => {

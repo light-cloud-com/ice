@@ -27,12 +27,10 @@ import { SvgEventStreamNode } from './nodes/event-stream';
 import { SvgGithubRepoNode } from './nodes/github-repo';
 import { SvgLlmGatewayNode } from './nodes/llm-gateway';
 import { SvgLogNode } from './nodes/log-node';
-import { SvgLogTerminalNode } from './nodes/log-terminal';
 import { SvgMessageQueueNode } from './nodes/message-queue';
 import { SvgMongodbNode } from './nodes/mongodb';
 import { SvgMysqlNode } from './nodes/mysql';
 import { SvgObjectStorageNode } from './nodes/object-storage';
-import { SvgObservabilityNode } from './nodes/observability';
 import { SvgPostgresNode } from './nodes/postgres';
 import { SvgPrivateAiServiceNode } from './nodes/private-ai-service';
 import { SvgPublicTrafficNode } from './nodes/public-traffic';
@@ -160,8 +158,6 @@ const CONCEPT_NODE_RENDERERS: Record<string, React.FC<SvgCompactNodeProps>> = {
   'Network.Gateway': SvgApiGatewayNode,
   'Network.PublicTraffic': SvgPublicTrafficNode,
   // Ops
-  'Monitoring.Log': SvgObservabilityNode,
-  'Monitoring.Terminal': SvgLogTerminalNode,
   'Security.Secret': SvgSecretStoreNode,
   'Config.Environment': SvgEnvConfigNode,
   'Source.Repository': SvgGithubRepoNode,
@@ -2633,7 +2629,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
               const iceType = (node.data?.iceType as string) || '';
 
               const isLogNode =
-                iceType === 'Monitoring.Terminal' || iceType === 'Observability.Logs' || iceType.startsWith('Log.');
+                iceType === 'Monitoring.Log' || iceType === 'Observability.Logs' || iceType.startsWith('Log.');
               const isVpcOrSubnet = iceType === 'Network.VPC' || iceType === 'Network.Subnet';
               const isPrivateNetworkContainer = iceType === 'Network.PrivateNetwork';
               const isGroup =

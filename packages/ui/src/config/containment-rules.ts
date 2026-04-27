@@ -122,13 +122,7 @@ export const CONTAINMENT_RULES: ContainmentRule[] = [
   },
   {
     parent: 'Group.Monitoring',
-    allowedChildren: [
-      'Monitoring.Log',
-      'Monitoring.Alert',
-      'Monitoring.Dashboard',
-      'Monitoring.Terminal',
-      'Monitoring.LogGroup',
-    ],
+    allowedChildren: ['Monitoring.Log', 'Monitoring.Alert', 'Monitoring.Dashboard', 'Monitoring.LogGroup'],
     description: 'Monitoring group contains observability resources',
   },
   {

@@ -4,9 +4,9 @@ import type { BlockBlueprint } from '../../types';
 export const kubernetesLogsBlueprint: BlockBlueprint = createBlueprintFromResource('log-group', {
   iceType: 'Monitoring.Log',
   category: 'observability',
-  name: 'Kubernetes Logs',
-  description: 'Kubernetes Fluentd/Loki. Errors, performance, alerts.',
+  name: 'Logs',
+  description: 'Kubernetes Fluentd/Loki. Live tail logs on the canvas; errors, performance, alerts.',
   icon: 'FileText',
   providers: ['kubernetes'],
-  nodeDataDefaults: {},
+  nodeDataDefaults: { streamingMode: 'polling' },
 });

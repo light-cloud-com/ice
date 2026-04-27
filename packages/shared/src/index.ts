@@ -11,6 +11,7 @@ export type { AuthRequest } from './auth/middleware.js';
 export { encryptCredentials, decryptCredentials, encryptString, decryptString } from './crypto';
 export {
   setupSocketService,
+  getSocketServer,
   emitDeployProgress,
   emitCanvasUpdate,
   emitPipelineUpdate,

@@ -27,7 +27,6 @@ import {
   BrainCircuit,
   Waypoints,
   BarChart3,
-  Terminal,
   Blocks,
   Check,
   ChevronDown,
@@ -289,7 +288,6 @@ const COMPONENTS: ComponentDef[] = [
   }),
   // ── Monitoring ──
   def('Monitoring.Log', FileText, ['aws', 'gcp', 'azure'], 'Monitoring'),
-  def('Monitoring.Terminal', Terminal, ['aws', 'gcp', 'azure', 'kubernetes'], 'Monitoring'),
   // ── Source ──
   def('Source.Repository', GitBranch, ['aws', 'gcp', 'azure'], 'Source'),
   // ── Config ──

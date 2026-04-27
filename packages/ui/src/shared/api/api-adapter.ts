@@ -117,6 +117,29 @@ export interface IceAPI {
     togglePrPreviews: (projectId: string, enabled: boolean) => Promise<any>;
   };
 
+  /**
+   * Canvas Log Terminal block — see services/deploy/src/routes/logs.ts.
+   * `subscribe` opens an HTTP-side stream and returns the room id;
+   * `joinRoom` joins the Socket.IO room (must be called for events to arrive)
+   * and returns the unjoin cleanup. Per-event `on...` registrars register
+   * a listener and return its `off` cleanup.
+   */
+  logs: {
+    subscribe: (args: {
+      cardId: string;
+      environmentId: string;
+      terminalNodeId: string;
+      mode: 'polling' | 'tail';
+      sourceNodeIdOverride?: string;
+    }) => Promise<{ subscriptionId: string; resolution: any }>;
+    unsubscribe: (subscriptionId: string) => Promise<void>;
+    joinRoom: (terminalNodeId: string) => () => void;
+    onEntry: (callback: (entry: any) => void) => () => void;
+    onError: (callback: (event: { message: string; recoverable: boolean }) => void) => () => void;
+    onResumed: (callback: (event: { at: string }) => void) => () => void;
+    onSourceResolved: (callback: (resolution: any) => void) => () => void;
+  };
+
   onMenuAction: (callback: (action: string) => void) => () => void;
   onDeployProgress: (callback: (event: any) => void) => () => void;
   onPipelineUpdate: (callback: (event: any) => void) => () => void;

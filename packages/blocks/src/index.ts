@@ -72,7 +72,6 @@ import { sqsBlueprint } from './aws/messaging/sqs';
 import { awsGatewayBlueprint } from './aws/networking/gateway';
 import { awsSubnetBlueprint } from './aws/networking/subnet';
 import { awsVpcBlueprint } from './aws/networking/vpc';
-import { awsLogTerminalBlueprint } from './aws/observability/log-terminal';
 import { awsLogsBlueprint } from './aws/observability/logs';
 import { awsAuthBlueprint } from './aws/security/auth';
 import { awsSecretsBlueprint } from './aws/security/secrets';
@@ -101,7 +100,6 @@ import { serviceBusBlueprint } from './azure/messaging/service-bus';
 import { azureGatewayBlueprint } from './azure/networking/gateway';
 import { azureSubnetBlueprint } from './azure/networking/subnet';
 import { azureVpcBlueprint } from './azure/networking/vpc';
-import { azureLogTerminalBlueprint } from './azure/observability/log-terminal';
 import { azureLogsBlueprint } from './azure/observability/logs';
 import { azureAuthBlueprint } from './azure/security/auth';
 import { azureSecretsBlueprint } from './azure/security/secrets';
@@ -142,7 +140,6 @@ import { gcpRabbitmqBlueprint } from './gcp/messaging/rabbitmq';
 import { gcpGatewayBlueprint } from './gcp/networking/gateway';
 import { gcpSubnetBlueprint } from './gcp/networking/subnet';
 import { gcpVpcBlueprint } from './gcp/networking/vpc';
-import { gcpLogTerminalBlueprint } from './gcp/observability/log-terminal';
 import { gcpLogsBlueprint } from './gcp/observability/logs';
 import { gcpAuthBlueprint } from './gcp/security/auth';
 import { gcpSecretsBlueprint } from './gcp/security/secrets';
@@ -160,7 +157,6 @@ import { kubernetesStaticSiteBlueprint } from './kubernetes/frontend/static-site
 import { kubernetesEventStreamBlueprint } from './kubernetes/messaging/event-stream';
 import { kubernetesRabbitmqBlueprint } from './kubernetes/messaging/rabbitmq';
 import { kubernetesGatewayBlueprint } from './kubernetes/networking/gateway';
-import { kubernetesLogTerminalBlueprint } from './kubernetes/observability/log-terminal';
 import { kubernetesLogsBlueprint } from './kubernetes/observability/logs';
 import { kubernetesStorageBlueprint } from './kubernetes/storage/storage';
 import { ociScheduledTaskBlueprint } from './oci/backend/scheduled-task';
@@ -213,7 +209,6 @@ const RAW_BLUEPRINTS: BlockBlueprint[] = [
   awsWafBlueprint,
   awsSslCertificateBlueprint,
   awsLogsBlueprint,
-  awsLogTerminalBlueprint,
   awsVectorDbBlueprint,
   awsLlmGatewayBlueprint,
   awsMlModelBlueprint,
@@ -243,7 +238,6 @@ const RAW_BLUEPRINTS: BlockBlueprint[] = [
   gcpWafBlueprint,
   gcpSslCertificateBlueprint,
   gcpLogsBlueprint,
-  gcpLogTerminalBlueprint,
   gcpVectorDbBlueprint,
   gcpLlmGatewayBlueprint,
   gcpMlModelBlueprint,
@@ -273,7 +267,6 @@ const RAW_BLUEPRINTS: BlockBlueprint[] = [
   azureWafBlueprint,
   azureSslCertificateBlueprint,
   azureLogsBlueprint,
-  azureLogTerminalBlueprint,
   azureVectorDbBlueprint,
   azureLlmGatewayBlueprint,
   azureMlModelBlueprint,
@@ -291,7 +284,6 @@ const RAW_BLUEPRINTS: BlockBlueprint[] = [
   kubernetesRabbitmqBlueprint,
   kubernetesEventStreamBlueprint,
   kubernetesLogsBlueprint,
-  kubernetesLogTerminalBlueprint,
   kubernetesLlmGatewayBlueprint,
   kubernetesSearchBlueprint,
   // Alibaba (11)

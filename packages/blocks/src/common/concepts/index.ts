@@ -18,7 +18,6 @@ import { envConfigConceptBlueprint } from './env-config';
 import { eventStreamConceptBlueprint } from './event-stream';
 import { githubRepoConceptBlueprint } from './github-repo';
 import { llmGatewayConceptBlueprint } from './llm-gateway';
-import { logTerminalConceptBlueprint } from './log-terminal';
 import { messageQueueConceptBlueprint } from './message-queue';
 import { mongodbConceptBlueprint } from './mongodb';
 import { mysqlConceptBlueprint } from './mysql';
@@ -76,6 +75,5 @@ export const CONCEPT_BLUEPRINTS: ConceptBlueprint[] = [
   githubRepoConceptBlueprint,
   envConfigConceptBlueprint,
   // Canvas-only
-  logTerminalConceptBlueprint,
   publicTrafficConceptBlueprint,
 ];

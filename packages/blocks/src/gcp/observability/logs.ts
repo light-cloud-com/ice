@@ -4,9 +4,9 @@ import type { BlockBlueprint } from '../../types';
 export const gcpLogsBlueprint: BlockBlueprint = createBlueprintFromResource('log-group', {
   iceType: 'Monitoring.Log',
   category: 'observability',
-  name: 'GCP Logs',
-  description: 'Google Cloud Logging. Errors, performance, alerts.',
+  name: 'Logs',
+  description: 'Google Cloud Logging. Live tail logs on the canvas; errors, performance, alerts.',
   icon: 'FileText',
   providers: ['gcp'],
-  nodeDataDefaults: {},
+  nodeDataDefaults: { streamingMode: 'polling' },
 });

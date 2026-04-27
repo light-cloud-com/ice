@@ -23,6 +23,7 @@ import { IceSelect } from '../../../shared/components/ui/ice-select';
 import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { cn } from '../../../shared/utils/cn';
 import { DesignRequirements } from './design-requirements';
+import { MonitoringLogSection } from './sections/monitoring-log-section';
 import {
   selectActiveCard,
   updateCardNodeData,
@@ -1615,6 +1616,9 @@ export const PropertiesPanel: React.FC = () => {
                   {iceType === 'Network.PrivateNetwork' && (
                     <PrivateNetworkPanel selectedNode={selectedNode} updateNodeField={updateNodeField} />
                   )}
+
+                  {/* Monitoring.Log — streaming mode + source override + status pill */}
+                  {iceType === 'Monitoring.Log' && <MonitoringLogSection nodeId={selectedNode!.id} />}
 
                   {/* Cost */}
                   {estimatedCost && (

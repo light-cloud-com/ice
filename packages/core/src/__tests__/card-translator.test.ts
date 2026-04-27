@@ -140,5 +140,29 @@ describe('Card Translator Type Maps', () => {
       });
       expect(result.deployable_count).toBe(0);
     });
+
+    it('translates Monitoring.Log to a Cloud Logging sink graph node (LT-1 consolidation)', async () => {
+      // Regression for LT-1: Monitoring.Log MUST compile to a real cloud
+      // resource (gcp.logging.sink), not be silently skipped as UI-only.
+      // If a future agent re-adds Monitoring.Log to UI_ONLY_TYPES thinking
+      // "the canvas block is just a viewer now", this test fails loudly.
+      // The sink resource identifier here must stay aligned with the
+      // handler at packages/core/src/deploy/providers/gcp/handlers/logging.ts
+      // and with the LT-3 filter resolver's resource-type expectations.
+      const mod = await import('../deploy/card-translator.js');
+      const result = mod.translate_card_to_graph({
+        nodes: [{ id: 'log-1', type: 'resource', data: { iceType: 'Monitoring.Log', label: 'app-logs' } }],
+        edges: [],
+        provider: 'gcp',
+        projectName: 'test',
+      });
+      expect(result.deployable_count).toBe(1);
+      expect(result.deployables).toHaveLength(1);
+      expect(result.deployables[0]).toMatchObject({
+        ice_type: 'Monitoring.Log',
+        resource_type: 'gcp.logging.sink',
+      });
+      expect(result.skipped.find((s) => s.nodeId === 'log-1')).toBeUndefined();
+    });
   });
 });

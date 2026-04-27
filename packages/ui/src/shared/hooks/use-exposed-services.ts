@@ -79,7 +79,6 @@ const NEVER_EXPOSED_TYPES = new Set([
   'Security.Policy',
   'Monitoring.Log',
   'Monitoring.Alert',
-  'Monitoring.Terminal',
   'Config.Environment',
   'Source.Repository',
   'Compute.Worker',

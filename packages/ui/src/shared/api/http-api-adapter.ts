@@ -467,6 +467,63 @@ export function createHttpApiAdapter(): IceAPI {
       },
     },
 
+    // ── Canvas Log Terminal block (Cloud Logging tail) ─────────────────
+    //
+    // Two channels: HTTP (subscribe/unsubscribe — manages the server-side
+    // stream lifecycle) and Socket.IO (joinRoom + per-event listeners —
+    // delivers `logs:entry` etc.). The hook in `use-log-stream.ts` owns
+    // the lifecycle; the adapter just exposes the primitives.
+    logs: {
+      subscribe: async (args) => {
+        const res = await axiosInstance.post('/canvas/logs/subscribe', args);
+        return res.data;
+      },
+      unsubscribe: async (subscriptionId: string) => {
+        await axiosInstance.post('/canvas/logs/unsubscribe', { subscriptionId });
+      },
+      joinRoom: (terminalNodeId: string) => {
+        const s = getSocket();
+        const emitJoin = () => s.emit('subscribe:logs', terminalNodeId);
+        // Same pattern as `subscribeDeployProgress`: emit immediately
+        // (socket.io buffers when disconnected) AND on every reconnect
+        // so a dropped socket regains room membership transparently.
+        emitJoin();
+        s.on('connect', emitJoin);
+        return () => {
+          s.off('connect', emitJoin);
+          s.emit('unsubscribe:logs', terminalNodeId);
+        };
+      },
+      onEntry: (callback) => {
+        const s = getSocket();
+        s.on('logs:entry', callback);
+        return () => {
+          s.off('logs:entry', callback);
+        };
+      },
+      onError: (callback) => {
+        const s = getSocket();
+        s.on('logs:error', callback);
+        return () => {
+          s.off('logs:error', callback);
+        };
+      },
+      onResumed: (callback) => {
+        const s = getSocket();
+        s.on('logs:resumed', callback);
+        return () => {
+          s.off('logs:resumed', callback);
+        };
+      },
+      onSourceResolved: (callback) => {
+        const s = getSocket();
+        s.on('logs:source-resolved', callback);
+        return () => {
+          s.off('logs:source-resolved', callback);
+        };
+      },
+    },
+
     // ── Menu actions (web toolbar emits events) ────────────────────────
     onMenuAction: (callback: (action: string) => void) => {
       menuCallbacks.add(callback);

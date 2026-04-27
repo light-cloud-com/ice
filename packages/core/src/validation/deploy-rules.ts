@@ -113,12 +113,7 @@ const DESIGN_ONLY_PROVIDERS = new Set(['alibaba', 'digitalocean', 'kubernetes', 
 // Keep these two in sync. Real deployables (Network.VPC, Network.Subnet,
 // Network.PrivateNetwork, Security.WAF) MUST NOT live here — they're
 // missing handlers, not "UI-only".
-const UI_ONLY_TYPES = new Set([
-  'Monitoring.Terminal',
-  'Source.Repository',
-  'Config.Environment',
-  'Network.PublicTraffic',
-]);
+const UI_ONLY_TYPES = new Set(['Source.Repository', 'Config.Environment', 'Network.PublicTraffic']);
 
 /**
  * Validate deployability of the canvas.

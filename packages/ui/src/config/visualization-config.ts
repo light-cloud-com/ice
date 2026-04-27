@@ -79,7 +79,7 @@ export const RESOURCE_CATEGORIES = {
   auth: ['Security.Identity', 'Security.Secret'],
 
   // Observability (architecture-level — logs, monitoring)
-  observability: ['Monitoring.Log', 'Monitoring.Alert', 'Monitoring.Dashboard', 'Monitoring.Terminal'],
+  observability: ['Monitoring.Log', 'Monitoring.Alert', 'Monitoring.Dashboard'],
 
   // AI/ML
   ai: ['AI.LLMGateway', 'AI.VectorDB', 'AI.ModelServing'],

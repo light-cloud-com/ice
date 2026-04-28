@@ -19,7 +19,7 @@ import {
   ArrowRight,
   ExternalLink,
 } from 'lucide-react';
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { DeployDiagnosis } from './deploy-diagnosis';
@@ -31,6 +31,8 @@ import { IceSelect } from '../../../shared/components/ui/ice-select';
 import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { cn } from '../../../shared/utils/cn';
 import { isApiNotEnabledError, extractApiName, extractApiEnableUrl } from '../../../shared/utils/gcp-errors';
+import { getDeployBadge } from '../../canvas/components/nodes/compact-node/helpers';
+import { mapWireStatusToOverlay } from '../hooks/use-deploy-subscription';
 import { selectActiveCard, clearCardDeployOverlay } from '../../../store/slices/cards-slice';
 import {
   closeDeployPanel,
@@ -53,9 +55,12 @@ import {
   setDeployedResources,
   startRequirementsFetch,
   setRequirements,
+  deriveRollup,
+  orderNodesForPanel,
   type DeployPlan,
   type DeployStatus,
   type DeployResourceResult,
+  type NodeDeployState,
 } from '../../../store/slices/deploy-slice';
 import { primaryOutput } from '../output-extractors';
 import { analyzePreDeploy } from '../utils/predeploy-analysis';
@@ -775,28 +780,12 @@ export const DeployPanel: React.FC = () => {
           </div>
         )}
 
-        {/* Deploy progress */}
-        {deploy.status === 'deploying' && (
-          <div id="ice-deploy-progress" className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground flex items-center gap-1.5">
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                {deploy.currentResource || t('deploy.progress.deploying')}
-              </span>
-              <span className="font-mono text-xs">{deploy.progress}%</span>
-            </div>
-            {deploy.currentStep && (
-              <div className="text-xs text-muted-foreground pl-5">
-                └ {deploy.currentStep.label} ({deploy.currentStep.index}/{deploy.currentStep.total})
-              </div>
-            )}
-            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-              <div
-                className="h-full bg-emerald-500 rounded-full transition-all duration-300"
-                style={{ width: `${deploy.progress}%` }}
-              />
-            </div>
-          </div>
+        {/* In-flight progress (pdl-5) — rendered for both deploying and
+              destroying. The legacy single-resource percentage and the
+              bouncing-bar 59% → 0% bug are gone: every signal here derives
+              from `nodesById` so no single number is "the active resource". */}
+        {(deploy.status === 'deploying' || deploy.status === 'destroying') && (
+          <DeployInFlightPanel nodesById={deploy.nodesById} status={deploy.status} />
         )}
 
         {/* Results — show whenever we have any (from current session or
@@ -1052,6 +1041,184 @@ export const DeployPanel: React.FC = () => {
 };
 
 // ─── Sub-components ─────────────────────────────────────────────────────────
+
+/**
+ * pdl-5 — in-flight per-node panel. Replaces the legacy single-resource
+ * progress bar (the one that bounced 59% → 0% → 0% on every step
+ * transition because each percent was per-resource, not overall). Shows
+ * an honest rollup ("3 in flight · 5 done · 1 failed · 9 of 13 terminal")
+ * plus a list of every node from `nodesById` ordered by lifecycle phase.
+ *
+ * Rendering rules:
+ *   - Empty `nodesById` (very first event hasn't landed yet) → tiny
+ *     "Preparing…" sentinel rather than an empty list.
+ *   - Progress bar caps at 99% while any node is non-terminal — the
+ *     `terminal === total` invariant is the only path to 100%.
+ *   - Wrapped in React.memo so a parent re-render with unchanged
+ *     `nodesById` reference (e.g. on `state.environment` change) skips
+ *     the inner work.
+ */
+const DeployInFlightPanel: React.FC<{
+  nodesById: Record<string, NodeDeployState>;
+  status: DeployStatus;
+}> = React.memo(({ nodesById, status }) => {
+  const { t } = useTranslation();
+  // Memoize derived data so children of this component don't re-derive
+  // every parent render. `nodesById` is the only input — when it doesn't
+  // change reference, neither does the rollup or the ordered list.
+  const rollup = useMemo(() => deriveRollup(nodesById), [nodesById]);
+  const ordered = useMemo(() => orderNodesForPanel(nodesById), [nodesById]);
+
+  const empty = rollup.total === 0;
+  // Cap at 99% while any node is non-terminal. The legacy bug was a
+  // per-resource percentage that bounced; this one is monotonic over the
+  // whole deploy, but we still hold short of 100% until the last
+  // terminal lands so the user doesn't see "100% with 1 still applying".
+  const pct = empty
+    ? 0
+    : rollup.terminal === rollup.total
+      ? 100
+      : Math.min(99, Math.round((rollup.terminal / Math.max(rollup.total, 1)) * 100));
+
+  return (
+    <div id="ice-deploy-progress" className="space-y-3">
+      <div className="flex items-center justify-between text-sm">
+        <span className="flex items-center gap-1.5 text-muted-foreground">
+          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          <span>
+            {empty
+              ? status === 'destroying'
+                ? 'Preparing destroy…'
+                : t('deploy.progress.deploying')
+              : (
+                <>
+                  <span className="text-blue-600 dark:text-blue-400">{rollup.applying}</span> in flight
+                  {' · '}
+                  <span className="text-emerald-600 dark:text-emerald-400">{rollup.succeeded}</span> done
+                  {rollup.failed > 0 && (
+                    <>
+                      {' · '}
+                      <span className="text-red-600 dark:text-red-400">{rollup.failed}</span> failed
+                    </>
+                  )}
+                </>
+              )}
+          </span>
+        </span>
+        <span className="font-mono text-xs tabular-nums">
+          {empty ? '' : `${rollup.terminal} of ${rollup.total}`}
+        </span>
+      </div>
+      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+        <div
+          className={cn(
+            'h-full rounded-full transition-all duration-300',
+            rollup.failed > 0 ? 'bg-amber-500' : 'bg-emerald-500',
+          )}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      {!empty && (
+        <ul className="divide-y divide-border rounded-md border border-border bg-muted/20 max-h-72 overflow-y-auto">
+          {ordered.map((node) => (
+            <DeployNodeRow key={node.node_id} node={node} />
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+});
+DeployInFlightPanel.displayName = 'DeployInFlightPanel';
+
+/**
+ * pdl-5 — single row in the in-flight per-node list. Displays a status
+ * pill (colors aligned with the canvas badge from pdl-6 via
+ * `getDeployBadge`), the resource name, a sub-step label if a recent
+ * `node_progress` event landed, and an inline error message if failed.
+ */
+const DeployNodeRow: React.FC<{ node: NodeDeployState }> = React.memo(({ node }) => {
+  // Translate wire status to the same overlay key the canvas uses, so the
+  // pill picks up the same color from `getDeployBadge`. Single source of
+  // truth: `mapWireStatusToOverlay` from `use-deploy-subscription.ts`.
+  // Earlier drafts inlined a third copy of this mapping here — that
+  // violated the cited learning `deploy-overlay-mapping-must-match-status-colors-keyset`,
+  // since divergence between parallel mappings is the exact footgun the
+  // shared helper exists to prevent.
+  const overlayKey = mapWireStatusToOverlay(node.status);
+  const baseBadge = getDeployBadge(overlayKey);
+  // Action-aware label override for destroy paths. The wire emits the
+  // same `node_status` shape for create and delete; the badge palette
+  // is identical (DEPLOY blue, LIVE green) and reads as a contradiction
+  // when the engine is destroying ("LIVE" on a resource that's gone).
+  // Substitute destroy-flavored labels while keeping the colors so the
+  // canvas + panel stay visually coherent. See critic finding pdl-5#1.
+  const badge = (() => {
+    if (!baseBadge) return null;
+    if (node.action !== 'delete') return baseBadge;
+    const destroyLabel =
+      node.status === 'applying'
+        ? 'DESTROY'
+        : node.status === 'succeeded'
+          ? 'GONE'
+          : null;
+    return destroyLabel ? { ...baseBadge, label: destroyLabel } : baseBadge;
+  })();
+  const isTerminal =
+    node.status === 'succeeded' ||
+    node.status === 'failed' ||
+    node.status === 'skipped' ||
+    node.status === 'cancelled-due-to-dep';
+  const muted = node.status === 'skipped' || node.status === 'cancelled-due-to-dep';
+
+  return (
+    <li
+      className={cn(
+        'px-3 py-2 text-xs flex items-start gap-2',
+        muted && 'opacity-60',
+      )}
+      data-testid="ice-deploy-node-row"
+      data-node-id={node.node_id}
+      data-node-status={node.status}
+    >
+      {badge && (
+        <span
+          className="shrink-0 mt-0.5 px-1.5 py-0.5 text-[10px] font-semibold rounded uppercase tracking-wider"
+          style={{ backgroundColor: badge.color + '20', color: badge.color }}
+        >
+          {badge.label}
+        </span>
+      )}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="font-medium truncate" title={node.resource_name}>
+            {node.resource_name || node.node_id}
+          </span>
+          {node.resource_type && (
+            <span className="text-muted-foreground font-mono text-[10px] truncate">
+              {node.resource_type}
+            </span>
+          )}
+          {isTerminal && typeof node.duration_ms === 'number' && (
+            <span className="ml-auto text-muted-foreground tabular-nums">
+              {(node.duration_ms / 1000).toFixed(1)}s
+            </span>
+          )}
+        </div>
+        {node.status === 'applying' && node.step && (
+          <div className="text-muted-foreground mt-0.5">
+            └ {node.step.label} ({node.step.index}/{node.step.total})
+          </div>
+        )}
+        {node.status === 'failed' && node.error?.message && (
+          <div className="text-red-600 dark:text-red-400 mt-0.5 break-words">
+            {node.error.message}
+          </div>
+        )}
+      </div>
+    </li>
+  );
+});
+DeployNodeRow.displayName = 'DeployNodeRow';
 
 const StatusBadge: React.FC<{ status: DeployStatus; id?: string }> = ({ status, id }) => {
   const { t } = useTranslation();

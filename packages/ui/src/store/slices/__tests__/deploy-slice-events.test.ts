@@ -176,15 +176,17 @@ describe('applyNodeStatusEvent', () => {
     expect(state.results).toHaveLength(0);
   });
 
-  it('updates currentResource on an applying event when not in terminal status', () => {
+  it('records the applying node in nodesById with the correct resource_name', () => {
     let state = deployReducer(undefined, { type: '@@INIT' });
-    // Simulate a deploy in flight.
     state = { ...state, status: 'deploying' };
     state = deployReducer(
       state,
       applyNodeStatusEvent(statusEvent({ resource_name: 'redis-instance-xyz' })),
     );
-    expect(state.currentResource).toBe('redis-instance-xyz');
+    // pdl-5 — the panel reads applying state via deriveRollup(nodesById)
+    // rather than a single state.currentResource string.
+    expect(state.nodesById[N1].resource_name).toBe('redis-instance-xyz');
+    expect(state.nodesById[N1].status).toBe('applying');
   });
 
   it('keeps state.results stable on a duplicate terminal event', () => {
@@ -242,10 +244,9 @@ describe('applyNodeProgressEvent', () => {
 describe('applyDeployCompleteEvent', () => {
   it("maps outcome 'success' → status 'success'", () => {
     let state = deployReducer(undefined, { type: '@@INIT' });
-    state = { ...state, status: 'deploying', progress: 80 };
+    state = { ...state, status: 'deploying' };
     state = deployReducer(state, applyDeployCompleteEvent(completeEvent({ outcome: 'success' })));
     expect(state.status).toBe('success');
-    expect(state.progress).toBe(100);
   });
 
   it("maps outcome 'partial' → status 'error' (red header + Copy errors button)", () => {
@@ -253,7 +254,6 @@ describe('applyDeployCompleteEvent', () => {
     state = { ...state, status: 'deploying' };
     state = deployReducer(state, applyDeployCompleteEvent(completeEvent({ outcome: 'partial' })));
     expect(state.status).toBe('error');
-    expect(state.progress).toBe(100);
   });
 
   it("maps outcome 'failure' → status 'error'", () => {
@@ -270,17 +270,13 @@ describe('applyDeployCompleteEvent', () => {
     expect(state.status).toBe('cancelled');
   });
 
-  it('clears currentResource and currentStep on completion', () => {
+  it('clears currentDeployCardId on completion', () => {
+    // pdl-5 — `currentResource` / `currentStep` are no longer slice
+    // state; the panel derives them from `nodesById` instead.
     let state = deployReducer(undefined, { type: '@@INIT' });
-    state = {
-      ...state,
-      status: 'deploying',
-      currentResource: 'redis-instance-xyz',
-      currentStep: { label: 'Provisioning', index: 1, total: 2 },
-    };
+    state = { ...state, status: 'deploying', currentDeployCardId: 'card-1' };
     state = deployReducer(state, applyDeployCompleteEvent(completeEvent()));
-    expect(state.currentResource).toBe('');
-    expect(state.currentStep).toBeUndefined();
+    expect(state.currentDeployCardId).toBeUndefined();
   });
 });
 

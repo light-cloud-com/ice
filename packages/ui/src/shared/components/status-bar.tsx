@@ -23,10 +23,11 @@ import {
   XCircle,
 } from 'lucide-react';
 import React, { useMemo } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 import { IntegrationStatusDots } from '../../features/integrations';
 import { useTranslation } from '../../i18n';
 import { selectActiveCard } from '../../store/slices/cards-slice';
+import { deriveRollup } from '../../store/slices/deploy-slice';
 import { openValidation } from '../../store/slices/ui-slice';
 import { useSystemStats } from '../hooks/use-system-stats';
 import type { RootState } from '../../store';
@@ -205,7 +206,21 @@ export const StatusBar: React.FC = () => {
 const DeployStatusIndicator: React.FC = () => {
   const { t } = useTranslation();
   const deployStatus = useSelector((state: RootState) => state.deploy.status);
-  const deployProgress = useSelector((state: RootState) => state.deploy.progress);
+  // pdl-5 — derive the deploying-pill percentage from the same `nodesById`
+  // rollup the deploy panel uses, so the status bar and the panel agree
+  // on what "X%" means. `shallowEqual` keeps re-renders cheap during the
+  // event-stream burst.
+  const deployNodesById = useSelector(
+    (state: RootState) => state.deploy.nodesById,
+    shallowEqual,
+  );
+  const rollup = useMemo(() => deriveRollup(deployNodesById), [deployNodesById]);
+  const deployProgress =
+    rollup.total === 0
+      ? 0
+      : rollup.terminal === rollup.total
+        ? 100
+        : Math.min(99, Math.round((rollup.terminal / Math.max(rollup.total, 1)) * 100));
 
   if (deployStatus === 'idle') return null;
 

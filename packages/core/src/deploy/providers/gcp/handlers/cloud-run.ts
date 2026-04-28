@@ -316,6 +316,7 @@ async function resolve_image(
   region: string,
   ctx: GCPHandlerContext,
   onLog?: (msg: string) => void,
+  reportStep?: (index: number, label: string) => void,
 ): Promise<string> {
   const image = properties.image as string;
   const repository = properties.repository as string;
@@ -329,9 +330,22 @@ async function resolve_image(
 
     onLog?.(BUILD_MESSAGES.BUILDING_FROM_SOURCE(repository));
     onLog?.(BUILD_MESSAGES.CREATING_ARTIFACT_REGISTRY(region));
+
+    // Step 1 of the cloud-run create — ensure the AR repo is in place.
+    reportStep?.(1, 'Ensuring artifact registry');
     await ensure_artifact_registry(ctx, region, arRepo);
 
-    return await build_from_source(ctx, region, repository, branch, imageUri, onLog);
+    // Step 2 of the cloud-run create — kick off the Cloud Build. The
+    // build helper emits sub-state labels at its OWN index (1 within its
+    // caller-supplied space); we forward those at our outer index 2 so
+    // the bar shows refreshing labels under the same step. See the
+    // BUILD_STEP_INDEX note in cloud-build-helper.ts.
+    reportStep?.(2, 'Building from source');
+    const forwardBuildStep = reportStep
+      ? (_inner_index: number, label: string) => reportStep(2, label)
+      : undefined;
+
+    return await build_from_source(ctx, region, repository, branch, imageUri, onLog, forwardBuildStep);
   }
 
   // Fallback: use explicit image (no repo set)
@@ -371,9 +385,19 @@ async function create_service(
   if (!services_client)
     return fail(name, 'gcp.run.service', 'create', start, sdk_not_available(SERVICE_NAMES.CLOUD_RUN, 'run.services'));
 
+  // Outer milestones for the cloud-run create. When a repository is wired,
+  // the slow path is steps 1-2 (artifact registry + build). When an explicit
+  // image is provided, those steps no-op and the user goes straight to step
+  // 3 (deploying the revision). Total stays at 4 in both cases — the build
+  // helper's sub-states refresh the label at index 2.
+  const TOTAL_STEPS = 4;
+  const reportStep = (index: number, label: string) => {
+    ctx.on_step?.(name, { label, index, total: TOTAL_STEPS });
+  };
+
   let image: string;
   try {
-    image = await resolve_image(name, properties, region, ctx, ctx.on_log);
+    image = await resolve_image(name, properties, region, ctx, ctx.on_log, reportStep);
   } catch (err) {
     return fail(name, 'gcp.run.service', 'create', start, err instanceof Error ? err.message : String(err));
   }
@@ -383,6 +407,7 @@ async function create_service(
   // without a separate setIamPolicy call.
   const invokerIamDisabled = properties.allow_unauthenticated !== false;
 
+  reportStep(3, 'Deploying revision');
   const [operation] = await services_client.createService({
     parent: `projects/${ctx.project}/locations/${region}`,
     serviceId: name,
@@ -407,6 +432,7 @@ async function create_service(
       labels: properties.labels as Record<string, string>,
     },
   });
+  reportStep(4, 'Waiting for revision to serve traffic');
   await operation.promise();
 
   const provider_id = `projects/${ctx.project}/locations/${region}/services/${name}`;
@@ -443,13 +469,21 @@ async function create_job(
   if (!jobs_client)
     return fail(name, 'gcp.run.job', 'create', start, sdk_not_available(SERVICE_NAMES.CLOUD_RUN_JOBS, 'run.jobs'));
 
+  // Same milestone shape as create_service: AR + build = steps 1-2, deploy
+  // = step 3, wait = step 4.
+  const TOTAL_STEPS = 4;
+  const reportStep = (index: number, label: string) => {
+    ctx.on_step?.(name, { label, index, total: TOTAL_STEPS });
+  };
+
   let image: string;
   try {
-    image = await resolve_image(name, properties, region, ctx, ctx.on_log);
+    image = await resolve_image(name, properties, region, ctx, ctx.on_log, reportStep);
   } catch (err) {
     return fail(name, 'gcp.run.job', 'create', start, err instanceof Error ? err.message : String(err));
   }
 
+  reportStep(3, 'Deploying job');
   const [operation] = await jobs_client.createJob({
     parent: `projects/${ctx.project}/locations/${region}`,
     jobId: name,
@@ -472,6 +506,7 @@ async function create_job(
       labels: properties.labels as Record<string, string>,
     },
   });
+  reportStep(4, 'Waiting for job to be ready');
   await operation.promise();
 
   const provider_id = `projects/${ctx.project}/locations/${region}/jobs/${name}`;

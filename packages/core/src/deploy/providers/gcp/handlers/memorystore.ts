@@ -51,7 +51,15 @@ export const memorystore_handler: GCPResourceHandler = {
     const start = Date.now();
     const region = (properties.region as string) || ctx.region;
 
+    // Memorystore Redis takes 3-5 minutes per instance. The submit returns
+    // a long-running operation immediately; the rest is the wait.
+    const TOTAL_STEPS = 2;
+    const reportStep = (index: number, label: string) => {
+      ctx.on_step?.(name, { label, index, total: TOTAL_STEPS });
+    };
+
     try {
+      reportStep(1, 'Creating Redis instance');
       const op = (await ctx.rest_client.post(
         `${BASE_URL}/projects/${ctx.project}/locations/${region}/instances?instanceId=${name}`,
         {
@@ -63,7 +71,10 @@ export const memorystore_handler: GCPResourceHandler = {
         },
       )) as any;
 
-      if (op?.name) await wait_for_operation(ctx, op.name);
+      if (op?.name) {
+        reportStep(2, 'Waiting for instance to become ready');
+        await wait_for_operation(ctx, op.name);
+      }
 
       return result(name, 'create', start, {
         provider_id: `projects/${ctx.project}/locations/${region}/instances/${name}`,

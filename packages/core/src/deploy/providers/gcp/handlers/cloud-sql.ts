@@ -99,6 +99,15 @@ export const cloud_sql_handler: GCPResourceHandler = {
     const start = Date.now();
     const region = (properties.region as string) || ctx.region;
 
+    // Two coarse milestones: the submit and the long async wait. Cloud SQL's
+    // instance create returns a long-running operation immediately and then
+    // takes 5-10+ minutes to actually become RUNNABLE — the wait is the
+    // user-visible slow part, so it gets its own step.
+    const TOTAL_STEPS = 2;
+    const reportStep = (index: number, label: string) => {
+      ctx.on_step?.(name, { label, index, total: TOTAL_STEPS });
+    };
+
     try {
       const { edition, tier } = resolve_edition_and_tier(properties);
       ctx.on_log?.(`[cloud-sql] Creating ${name} (edition=${edition}, tier=${tier})`);
@@ -127,10 +136,12 @@ export const cloud_sql_handler: GCPResourceHandler = {
       };
 
       // Create the instance
+      reportStep(1, 'Creating Cloud SQL instance');
       const op = (await ctx.rest_client.post(`${BASE_URL}/projects/${ctx.project}/instances`, instance_body)) as any;
 
       // Wait for the operation to complete
       if (op?.name) {
+        reportStep(2, 'Waiting for instance to become ready');
         await wait_for_operation(ctx, op.name);
       }
 

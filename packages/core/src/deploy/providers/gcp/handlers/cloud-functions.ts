@@ -50,22 +50,37 @@ export const cloud_functions_handler: GCPResourceHandler = {
     const start = Date.now();
     const region = (properties.region as string) || ctx.region;
 
+    // Cloud Functions v2 wraps Cloud Run + Cloud Build under the hood. From
+    // the handler's view, submitting the create kicks off a single LRO that
+    // chains build + deploy + wait — we milestone the submit and the wait
+    // because everything between is internal to the LRO.
+    const TOTAL_STEPS = 2;
+    const reportStep = (index: number, label: string) => {
+      ctx.on_step?.(name, { label, index, total: TOTAL_STEPS });
+    };
+
     try {
       // Try the SDK first, fall back to REST
       const client = ctx.clients.get('functions') as any;
       if (client) {
+        reportStep(1, 'Submitting function build');
         const [operation] = await client.createFunction({
           parent: `projects/${ctx.project}/locations/${region}`,
           functionId: name,
           function: build_function_spec(name, properties, ctx),
         });
+        reportStep(2, 'Waiting for function to be ready');
         await operation.promise();
       } else {
+        reportStep(1, 'Submitting function build');
         const op = (await ctx.rest_client.post(
           `${BASE_URL}/projects/${ctx.project}/locations/${region}/functions?functionId=${name}`,
           build_function_spec(name, properties, ctx),
         )) as any;
-        if (op?.name) await wait_for_operation(ctx, op.name);
+        if (op?.name) {
+          reportStep(2, 'Waiting for function to be ready');
+          await wait_for_operation(ctx, op.name);
+        }
       }
 
       return result(name, 'create', start, {

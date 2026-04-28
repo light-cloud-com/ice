@@ -88,6 +88,16 @@ export async function ensure_artifact_registry(
  * Works with any public GitHub repo — no Cloud Source Repositories mirroring needed.
  *
  * Returns the fully-qualified image URI on success.
+ *
+ * Milestone reporting model: this helper is called only by the cloud-run
+ * handler. The caller passes
+ * `reportStep(index, label)`; the helper invokes it at fixed indices using
+ * the caller's index space. Pre-bound at the call site (see load-balancer.ts
+ * for the same pattern) so the helper never needs to know `total` or the
+ * resource name. Callers typically reserve ONE outer step for "Building
+ * from source" and forward each inner sub-state at THAT same index — the
+ * monotonic-up-to-total contract for ctx.on_step is preserved because the
+ * label refreshes in place rather than the index advancing.
  */
 export async function build_from_source(
   ctx: GCPHandlerContext,
@@ -96,6 +106,7 @@ export async function build_from_source(
   branch: string,
   imageUri: string,
   onLog?: (message: string) => void,
+  reportStep?: (index: number, label: string) => void,
 ): Promise<string> {
   const buildsUrl = `${CLOUD_BUILD_BASE}/projects/${ctx.project}/builds`;
 
@@ -107,6 +118,13 @@ export async function build_from_source(
   const repoUrl = `https://github.com/${parsed.owner}/${parsed.repo}.git`;
 
   onLog?.(BUILD_MESSAGES.SUBMITTING_BUILD(parsed.owner, parsed.repo, branch));
+
+  // Caller passes a single index (the build-step slot in their schedule);
+  // we keep all sub-states at that same index so the consumer's progress
+  // bar doesn't lurch backward. The label refreshes as the build moves
+  // through QUEUED → WORKING → SUCCESS.
+  const BUILD_STEP_INDEX = 1;
+  reportStep?.(BUILD_STEP_INDEX, 'Submitting Cloud Build');
 
   // Build config: clone repo via git, then build Docker image
   // This avoids needing Cloud Source Repositories mirroring or GitHub connections.
@@ -162,6 +180,7 @@ export async function build_from_source(
     else signal.addEventListener('abort', onAbort, { once: true });
   }
 
+  let last_reported_status: string | undefined;
   while (Date.now() - startTime < BUILD_TIMEOUT_MS) {
     if (signal?.aborted) {
       throw new Error('Cloud Build cancelled by user');
@@ -173,6 +192,18 @@ export async function build_from_source(
 
     const build = (await ctx.rest_client.get(statusUrl)) as any;
     const status = build?.status;
+
+    // Forward a sub-state milestone the first time we see each terminal-ish
+    // build status (QUEUED, WORKING). The consumer holds index in place;
+    // only the label refreshes — see the BUILD_STEP_INDEX comment above.
+    if (status && status !== last_reported_status) {
+      if (status === 'QUEUED') {
+        reportStep?.(BUILD_STEP_INDEX, 'Cloud Build queued');
+      } else if (status === 'WORKING') {
+        reportStep?.(BUILD_STEP_INDEX, 'Cloud Build running');
+      }
+      last_reported_status = status;
+    }
 
     if (status === 'SUCCESS') {
       onLog?.(BUILD_MESSAGES.BUILD_SUCCEEDED(imageUri));

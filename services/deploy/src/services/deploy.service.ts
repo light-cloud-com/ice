@@ -216,6 +216,63 @@ function emitLog(cardId: string, message: string, level: DeployLogEvent['level']
   });
 }
 
+/**
+ * pdl-10 — emit a `node_status` event for a destroy operation. Mirrors the
+ * apply-path's `on_node_status` translation but builds the payload directly
+ * from the persisted resource shape (no `translation.deployables[]` map
+ * exists for destroy — each resource carries its own `source_node_id` from
+ * the post-deploy resource-mapping step at line ~1170, or its `node_id`
+ * from the `DeployedResourceMapping` table).
+ *
+ * `canvasNodeId` is required — destroy events without a canvas correlation
+ * are silently skipped at the call site (legacy resources persisted before
+ * pdl-4's resource-mapping step have no `source_node_id` and fall through
+ * to the `emitLog` log-line path instead, which still gives the deploy
+ * panel's log scroll a record of the deletion).
+ *
+ * Updates the in-memory snapshot's nodeStatuses too so a tab joining
+ * mid-destroy hydrates the same overlay color as the live event would
+ * have produced — same medicine as the apply-path's `on_node_status`
+ * snapshot mirror.
+ *
+ * Per learning anchor `ux-destroy-action-bypasses-node-status-wire`: this
+ * helper closes the gap pdl-4's implementer noted in their deviation —
+ * destroy paths DO have per-resource canvas-node-id information (it just
+ * lives in different places than the apply path's translation map).
+ */
+function emitDestroyNodeStatus(
+  cardId: string,
+  payload: {
+    canvasNodeId: string;
+    resourceName: string;
+    resourceType: string;
+    status: 'queued' | 'applying' | 'succeeded' | 'failed';
+    error?: { code: string; message: string; recoverable?: boolean };
+    duration_ms?: number;
+  },
+): void {
+  emitDeployEvent(cardId, {
+    type: 'node_status',
+    card_id: cardId,
+    node_id: payload.canvasNodeId,
+    resource_name: payload.resourceName,
+    resource_type: payload.resourceType,
+    action: 'delete',
+    status: payload.status,
+    error: payload.error,
+    duration_ms: payload.duration_ms,
+    at: new Date().toISOString(),
+    seq: 0, // emitDeployEvent fills this in via nextDeploySeq
+  });
+  // Mirror to the in-memory snapshot so a reconnecting tab during a
+  // destroy hydrates the same per-node overlay state the live wire would
+  // have produced. Without this, the destroy snapshot persists with an
+  // empty `nodeStatuses` map and a refresh mid-destroy regresses to the
+  // pre-pdl-10 "panel goes dark during destroy" behavior.
+  const overlayStatus = mapStatusToOverlay(payload.status);
+  updateDeploySnapshotNode(cardId, payload.canvasNodeId, overlayStatus);
+}
+
 /** Compute the totals rollup for a `DeployCompleteEvent` from the resource
  *  results. Reads only `success` + `action` so it works on partial / failed
  *  / cancelled exit paths too. The reducer that consumes the wire event
@@ -1353,10 +1410,22 @@ export async function destroyAllForCard(
       orderBy: { created_at: 'desc' },
     });
 
-    // Collect unique (type, name, provider_id, region, environment) tuples.
+    // Collect unique (type, name, provider_id, region, environment, nodeId) tuples.
+    // pdl-10 — `nodeId` carries the canvas correlation forward from either
+    // the stable mapping table (`m.node_id`) or the historical deploy row's
+    // post-pdl-4 `r.source_node_id`. Pre-pdl-4 historical rows lack
+    // `source_node_id`; those targets stay correlation-less and skip the
+    // per-resource wire emit, falling back to the log-line surface.
     const targets = new Map<
       string,
-      { type: string; name: string; providerId?: string; region?: string; environment?: string }
+      {
+        type: string;
+        name: string;
+        providerId?: string;
+        region?: string;
+        environment?: string;
+        nodeId?: string;
+      }
     >();
     for (const m of mappings) {
       targets.set(`${m.resource_type}::${m.resource_name}`, {
@@ -1364,6 +1433,7 @@ export async function destroyAllForCard(
         name: m.resource_name,
         providerId: m.provider_id ?? undefined,
         environment: m.environment,
+        nodeId: m.node_id, // canvas node id directly from the mapping table
       });
     }
     for (const d of historicalDeploys) {
@@ -1379,6 +1449,7 @@ export async function destroyAllForCard(
           providerId: r.provider_id,
           region: d.region,
           environment: d.environment,
+          nodeId: r.source_node_id, // pdl-10 — pdl-4 stamped this on every result
         });
       }
     }
@@ -1433,6 +1504,13 @@ export async function destroyAllForCard(
       },
     });
 
+    // pdl-10 — open a snapshot so `nextDeploySeq` returns contiguous seqs
+    // for every per-resource node_status emit + the final complete. Same
+    // motivation as `destroyDeployment`: destroy is no longer a single
+    // idempotent point-in-time update once we emit per-resource
+    // queued/applying/succeeded.
+    startDeploySnapshot(cardId, destroyRecord.id);
+
     emitLog(cardId, `Destroying ${targets.size} ICE-managed resources across all historical deploys for this card...`);
 
     const core = await getCoreEngine();
@@ -1461,14 +1539,12 @@ export async function destroyAllForCard(
         auth_key_file: scopedAuth.keyFilePath,
         auth_credentials: scopedAuth.parsedCredentials,
         on_log: (message: string) => emitLog(cardId, message),
-        // The destroy-all path doesn't have a card-translator translation
-        // (it's walking persisted historical resources), so there's no
-        // graphIdToCanvasId map to translate `on_node_status`. We skip
-        // the per-resource wire emit here and rely on the destroy-all's
-        // own log lines + the final `complete` event for the panel UX.
-        // The destroy-all flow is a "nuke" button, not a per-block live
-        // status surface — the user is staring at "Destroying 12
-        // resources..." and waiting for the totals.
+        // pdl-10 — per-resource wire emit is now driven by the destroy
+        // loop below, using each target's `nodeId` (sourced from either
+        // the `DeployedResourceMapping` row's `node_id` or the historical
+        // result's `source_node_id`). Targets without a `nodeId`
+        // (legacy pre-pdl-4 historical rows) skip the wire emit and rely
+        // on the per-resource log line surface.
       });
 
       // Destroy in a dependency-aware order: dependent resources first, origins last.
@@ -1485,9 +1561,36 @@ export async function destroyAllForCard(
       };
       const ordered = [...targets.values()].sort((a, b) => orderPriority(a.type) - orderPriority(b.type));
 
+      // pdl-10 — emit `queued` for every target with a canvas correlation
+      // BEFORE the loop starts. Mirrors the apply scheduler's behavior.
+      // Targets without a nodeId (legacy historical rows) are silently
+      // skipped — the destroy still runs for them, just without a per-row
+      // UI surface.
+      for (const t of ordered) {
+        if (t.nodeId) {
+          emitDestroyNodeStatus(cardId, {
+            canvasNodeId: t.nodeId,
+            resourceName: t.name,
+            resourceType: t.type,
+            status: 'queued',
+          });
+        }
+      }
+
       const deleted: Array<{ type: string; name: string }> = [];
       const failed: Array<{ type: string; name: string; error: string }> = [];
       for (const t of ordered) {
+        // pdl-10 — emit `applying` for canvas-correlated targets and
+        // capture the start time for duration_ms on the terminal event.
+        const applyingAt = Date.now();
+        if (t.nodeId) {
+          emitDestroyNodeStatus(cardId, {
+            canvasNodeId: t.nodeId,
+            resourceName: t.name,
+            resourceType: t.type,
+            status: 'applying',
+          });
+        }
         try {
           const res = await deployer.delete(t.type, t.name, t.providerId || t.name, {
             provider,
@@ -1495,22 +1598,64 @@ export async function destroyAllForCard(
           });
           if (res.success || res.error?.includes('NOT_FOUND') || res.error?.includes('404')) {
             deleted.push({ type: t.type, name: t.name });
+            if (t.nodeId) {
+              emitDestroyNodeStatus(cardId, {
+                canvasNodeId: t.nodeId,
+                resourceName: t.name,
+                resourceType: t.type,
+                status: 'succeeded',
+                duration_ms: Date.now() - applyingAt,
+              });
+            }
             // Clean up the mapping row for this resource.
             await prisma.deployedResourceMapping
               .deleteMany({ where: { card_id: cardId, resource_name: t.name, resource_type: t.type } })
               .catch(() => undefined);
           } else {
-            failed.push({ type: t.type, name: t.name, error: res.error || 'delete returned non-success' });
+            const errMsg = res.error || 'delete returned non-success';
+            failed.push({ type: t.type, name: t.name, error: errMsg });
+            if (t.nodeId) {
+              emitDestroyNodeStatus(cardId, {
+                canvasNodeId: t.nodeId,
+                resourceName: t.name,
+                resourceType: t.type,
+                status: 'failed',
+                duration_ms: Date.now() - applyingAt,
+                error: { code: 'DESTROY_FAILED', message: errMsg },
+              });
+            }
           }
         } catch (err: any) {
           const msg = err?.message || String(err);
           if (msg.includes('NOT_FOUND') || msg.includes('404')) {
             deleted.push({ type: t.type, name: t.name });
+            // Treat NOT_FOUND/404 as a successful destroy (the resource is
+            // gone, which is what we wanted) — same shape as the inline
+            // success branch above.
+            if (t.nodeId) {
+              emitDestroyNodeStatus(cardId, {
+                canvasNodeId: t.nodeId,
+                resourceName: t.name,
+                resourceType: t.type,
+                status: 'succeeded',
+                duration_ms: Date.now() - applyingAt,
+              });
+            }
             await prisma.deployedResourceMapping
               .deleteMany({ where: { card_id: cardId, resource_name: t.name, resource_type: t.type } })
               .catch(() => undefined);
           } else {
             failed.push({ type: t.type, name: t.name, error: msg });
+            if (t.nodeId) {
+              emitDestroyNodeStatus(cardId, {
+                canvasNodeId: t.nodeId,
+                resourceName: t.name,
+                resourceType: t.type,
+                status: 'failed',
+                duration_ms: Date.now() - applyingAt,
+                error: { code: 'DESTROY_FAILED', message: msg },
+              });
+            }
           }
         }
       }
@@ -1549,7 +1694,40 @@ export async function destroyAllForCard(
         seq: 0,
       });
 
+      // pdl-10 — close the snapshot so a late-joining tab still sees the
+      // terminal per-node state for a 60s grace window.
+      finishDeploySnapshot(cardId, allSuccess ? 'success' : 'partial');
+
       return { success: allSuccess, deleted, failed, total: targets.size, deploymentId: destroyRecord.id };
+    } catch (err: any) {
+      // pdl-10 critic finding B2 — any throw between `startDeploySnapshot`
+      // (line above) and the success-path `finishDeploySnapshot` would
+      // leak the snapshot, leaving `nextDeploySeq` allocating against a
+      // dead `deploymentId` and the next destroy's emits getting the
+      // wrong correlation. The apply path's `applyDeployment` catches
+      // engine throws and closes the snapshot at line ~1322; mirror that
+      // shape here. Engine throws can come from `deployer.initialize`,
+      // `deployer.cleanup`, the prisma update, or the `complete` emit
+      // itself — any of those leaves the per-card snapshot stranded
+      // unless we close it on the catch path.
+      finishDeploySnapshot(cardId, 'failed');
+      // Mark the destroy record failed so downstream readers (the deploy
+      // panel's hydrate-from-history path) see a coherent terminal row
+      // rather than the still-'deploying' status from the create above.
+      await prisma.canvasDeployment
+        .update({
+          where: { id: destroyRecord.id },
+          data: {
+            status: 'failed',
+            duration_ms: Date.now() - Date.parse(destroyRecord.created_at.toISOString()),
+            error: err?.message || String(err),
+          },
+        })
+        .catch(() => {
+          // Non-fatal — even if the DB update fails, we still want to
+          // release the snapshot and re-throw the original error.
+        });
+      throw err;
     } finally {
       releaseTempDir(tempCredentialsDir);
     }
@@ -1641,6 +1819,16 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
     },
   });
 
+  // pdl-10 — open a snapshot so `nextDeploySeq` returns contiguous seqs
+  // for the destroy events (per-resource node_status + log lines + final
+  // complete). Without this, all destroy events would fall through to
+  // the `Date.now()` seq-fallback path, breaking the dedup-on-reconnect
+  // contract for the multi-step destroy narrative — destroy is no longer
+  // a "rare, idempotent point-in-time update" once we emit
+  // queued/applying/succeeded per resource. Mirrors the apply-path's
+  // `startDeploySnapshot(cardId, deployment.id)` at line ~575.
+  startDeploySnapshot(cardId, destroyRecord.id);
+
   const startTime = Date.now();
   let tempCredentialsDir: string | undefined;
 
@@ -1673,10 +1861,11 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
       project: scopedAuth.scope.project || authClient?.projectId || authClient?.project_id,
       regions: [deployment.region],
       continue_on_error: true,
-      // The destroy path doesn't have a card-translator translation
-      // (it walks the persisted deployment row's resources). Per-resource
-      // wire status emit is dropped; the destroy panel renders the final
-      // `complete` event for the totals. See comment in destroyAllForCard.
+      // pdl-10 — per-resource wire emit is now driven by the destroy loop
+      // below (using each resource's `source_node_id` written by pdl-4's
+      // post-deploy resource-mapping step). The deployer's own `on_log`
+      // is still wired for free-text handler logs that don't belong to a
+      // specific resource (e.g. authentication / region setup chatter).
       on_log: (message: string) => emitLog(cardId, message),
       auth_client: authClient,
       auth_key_file: scopedAuth.keyFilePath,
@@ -1700,9 +1889,42 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
         resources.length +
         ' (will delete in reverse deployment order)',
     );
+
+    // pdl-10 — emit `queued` for every resource that has a canvas
+    // correlation, BEFORE the loop starts. This matches the apply-path
+    // scheduler's behavior (every node enters `queued` first, then
+    // transitions to `applying` when the worker picks it up). Resources
+    // without `source_node_id` (legacy pre-pdl-4 rows) are silently
+    // skipped — the per-resource emitLog line below still gives them a
+    // log-scroll record, and the final `complete` event still tallies
+    // them in the totals.
+    for (const res of resources) {
+      if (res.success && res.provider_id && res.source_node_id) {
+        emitDestroyNodeStatus(cardId, {
+          canvasNodeId: res.source_node_id,
+          resourceName: res.name,
+          resourceType: res.type,
+          status: 'queued',
+        });
+      }
+    }
+
     for (const res of resources) {
       if (res.success && res.provider_id) {
         console.log('[destroy] deleting ' + res.type + '/' + res.name + ' provider_id=' + res.provider_id);
+        // pdl-10 — capture the applying-at marker so duration_ms can be
+        // computed for the terminal event below. Only resources with a
+        // canvas correlation get the wire emit.
+        const hasCanvasId = Boolean(res.source_node_id);
+        const applyingAt = Date.now();
+        if (hasCanvasId) {
+          emitDestroyNodeStatus(cardId, {
+            canvasNodeId: res.source_node_id,
+            resourceName: res.name,
+            resourceType: res.type,
+            status: 'applying',
+          });
+        }
         try {
           const deleteResult = await deployer.delete(res.type, res.name, res.provider_id, {
             provider,
@@ -1718,11 +1940,33 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
               (deleteResult.error ? ' error=' + deleteResult.error : ''),
           );
           deleteResults.push(deleteResult);
-          // Surface a per-resource log line (the new wire contract has no
-          // dedicated `progress` discriminator and the destroy path
-          // doesn't have a graph→canvas id map — see scope comment on
-          // deployer.initialize above). A log line is the closest the
-          // contract allows for a destroy panel update.
+          if (hasCanvasId) {
+            const durationMs = Date.now() - applyingAt;
+            if (deleteResult.success) {
+              emitDestroyNodeStatus(cardId, {
+                canvasNodeId: res.source_node_id,
+                resourceName: res.name,
+                resourceType: res.type,
+                status: 'succeeded',
+                duration_ms: durationMs,
+              });
+            } else {
+              emitDestroyNodeStatus(cardId, {
+                canvasNodeId: res.source_node_id,
+                resourceName: res.name,
+                resourceType: res.type,
+                status: 'failed',
+                duration_ms: durationMs,
+                error: {
+                  code: 'DESTROY_FAILED',
+                  message: deleteResult.error || 'delete returned non-success',
+                },
+              });
+            }
+          }
+          // Surface a per-resource log line — the deploy panel's log
+          // scroll consumes this surface alongside the new node_status
+          // events the per-node row UI watches. Both surfaces stay.
           emitLog(
             cardId,
             `${res.name}: delete ${deleteResult.success ? 'completed' : 'failed' + (deleteResult.error ? ` (${deleteResult.error})` : '')}`,
@@ -1739,6 +1983,23 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
           }
         } catch (err: any) {
           deleteResults.push({ resource_id: res.resource_id, success: false, error: err.message });
+          // pdl-10 — emit `failed` for the canvas-correlated row before
+          // the log line so the per-node UI updates immediately. The
+          // throw-path needs the same treatment as the deleteResult.error
+          // branch above; otherwise a thrown delete (auth fail, network
+          // hang) leaves the row stuck on `applying` forever.
+          if (res.source_node_id) {
+            emitDestroyNodeStatus(cardId, {
+              canvasNodeId: res.source_node_id,
+              resourceName: res.name,
+              resourceType: res.type,
+              status: 'failed',
+              error: {
+                code: 'DESTROY_FAILED',
+                message: err.message || String(err),
+              },
+            });
+          }
           emitLog(cardId, `Failed to delete ${res.name}: ${err.message}`);
         }
       }
@@ -1783,6 +2044,11 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
       seq: 0,
     });
 
+    // pdl-10 — close the snapshot so a late-joining tab still sees the
+    // terminal per-node state for a 60s grace window. Mirrors the apply
+    // path's `finishDeploySnapshot(cardId, finalStatus)` at line ~1209.
+    finishDeploySnapshot(cardId, allSuccess ? 'success' : 'partial');
+
     return { success: allSuccess, deploymentId: destroyRecord.id, duration_ms: durationMs };
   } catch (err: any) {
     const durationMs = Date.now() - startTime;
@@ -1804,6 +2070,9 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
       at: new Date().toISOString(),
       seq: 0,
     });
+
+    // pdl-10 — also close the snapshot on the engine-level catch path.
+    finishDeploySnapshot(cardId, 'failed');
 
     return { success: false, deploymentId: destroyRecord.id, error: err.message };
   } finally {

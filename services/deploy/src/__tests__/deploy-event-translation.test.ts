@@ -50,6 +50,8 @@ const mockCanvasDeployment = {
     project: { id: 'p1', name: 'p1-name' },
     environment: { type: 'development', name: 'dev' },
   }),
+  // pdl-10 — destroyAllForCard reads historical deploys via findMany.
+  findMany: vi.fn().mockResolvedValue([]),
 };
 
 const mockCanvasCard = {
@@ -63,6 +65,9 @@ const mockCanvasCard = {
 const mockDeployedResourceMapping = {
   findMany: vi.fn().mockResolvedValue([]),
   upsert: vi.fn().mockResolvedValue(undefined),
+  // pdl-10 — destroyAllForCard cleans up mapping rows after each
+  // successful resource deletion.
+  deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
 };
 
 const mockDeployEvent = {
@@ -120,13 +125,30 @@ const fakeTranslation = {
   skipped: [],
 };
 
+// pdl-10 — destroy tests need to drive `deployer.delete(...)` per-call.
+// Each test sets `nextDeleteHandler` (or leaves the default) to control
+// the response shape; `recordedDeleteCalls` captures the arguments so
+// tests can assert call counts and args.
+let nextDeleteHandler: (
+  type: string,
+  name: string,
+  providerId: string,
+  ctx: any,
+) => Promise<{ success: boolean; error?: string }> | { success: boolean; error?: string } = () => ({
+  success: true,
+});
+const recordedDeleteCalls: Array<{ type: string; name: string; providerId: string }> = [];
+
 vi.mock('@ice/core', () => {
   const fakeDeployer = {
     initialize: async () => undefined,
     cleanup: async () => undefined,
     create: () => undefined,
     update: () => undefined,
-    delete: () => undefined,
+    delete: async (type: string, name: string, providerId: string, ctx: any) => {
+      recordedDeleteCalls.push({ type, name, providerId });
+      return await nextDeleteHandler(type, name, providerId, ctx);
+    },
   };
   // Plain functions (not vi.fn()) so vi.clearAllMocks() doesn't wipe
   // the implementation. The closure reads/writes the module-scoped
@@ -183,6 +205,19 @@ async function getApplyDeployment() {
   return mod.applyDeployment;
 }
 
+// pdl-10 — destroy paths need access to `destroyDeployment` and
+// `destroyAllForCard`. Both walk persisted deployment data and emit
+// per-resource node_status events with `action: 'delete'`.
+async function getDestroyDeployment() {
+  const mod = await import('../services/deploy.service.js');
+  return mod.destroyDeployment;
+}
+
+async function getDestroyAllForCard() {
+  const mod = await import('../services/deploy.service.js');
+  return mod.destroyAllForCard;
+}
+
 async function getOutcomeHelpers() {
   const mod = await import('../services/deploy.service.js');
   return {
@@ -215,9 +250,15 @@ beforeEach(() => {
     completed_at: new Date().toISOString(),
     duration_ms: 1,
   };
+  // pdl-10 — reset destroy-side mock state so each test starts clean.
+  // `nextDeleteHandler` defaults to "always succeed"; the `failed` /
+  // `throw` tests below override it before driving destroy.
+  nextDeleteHandler = () => ({ success: true });
+  recordedDeleteCalls.length = 0;
   mockCanvasDeployment.create.mockResolvedValue({ id: 'deploy-1', card_id: 'card-1' });
   mockCanvasDeployment.update.mockResolvedValue(undefined);
   mockCanvasDeployment.findFirst.mockResolvedValue(null);
+  mockCanvasDeployment.findMany.mockResolvedValue([]);
   mockCanvasDeployment.findUnique.mockResolvedValue({
     id: 'card-1',
     project: { id: 'p1', name: 'p1-name' },
@@ -675,5 +716,388 @@ describe('pdl-4 complete-event emission', () => {
     expect(event.totals.succeeded).toBe(1);
     expect(typeof event.seq).toBe('number');
     expect(typeof event.at).toBe('string');
+  });
+});
+
+describe('pdl-10 destroy emits per-resource node_status events', () => {
+  // Build a `latestApply` row with persisted resources that have
+  // `source_node_id` populated (the post-pdl-4 shape). The destroy path
+  // uses these directly as the canvas correlation — no card-translator
+  // translation needed.
+  function buildAppliedDeployment(resources: any[]) {
+    return {
+      id: 'apply-baseline-1',
+      card_id: 'card-destroy-1',
+      provider: 'gcp',
+      region: 'us-central1',
+      environment: 'development',
+      status: 'success',
+      action_type: 'apply',
+      results: { resources },
+      created_at: new Date('2026-04-28T00:00:00Z'),
+    };
+  }
+
+  it('emits queued → applying → succeeded for each resource with source_node_id', async () => {
+    // Two buckets, both with source_node_id set (the pdl-4 stamp).
+    const applied = buildAppliedDeployment([
+      {
+        name: 'ice-foo-prod-bucket-aaa',
+        type: 'gcp.storage.bucket',
+        success: true,
+        provider_id: 'gs://ice-foo-prod-bucket-aaa',
+        source_node_id: 'canvas-id-A',
+      },
+      {
+        name: 'ice-foo-prod-bucket-bbb',
+        type: 'gcp.storage.bucket',
+        success: true,
+        provider_id: 'gs://ice-foo-prod-bucket-bbb',
+        source_node_id: 'canvas-id-B',
+      },
+    ]);
+    // First findFirst → latestApply; second → newerDestroy (none).
+    mockCanvasDeployment.findFirst.mockResolvedValueOnce(applied as any).mockResolvedValueOnce(null);
+    mockCanvasDeployment.create.mockResolvedValueOnce({
+      id: 'destroy-record-1',
+      card_id: 'card-destroy-1',
+      created_at: new Date(),
+    });
+
+    const destroyDeployment = await getDestroyDeployment();
+    await destroyDeployment('card-destroy-1', 'org-1', 'user-1');
+
+    // Pull all action='delete' node_status emits.
+    const destroyEmits = emitDeployNodeStatus.mock.calls.filter((c) => c[1]?.action === 'delete');
+
+    // 2 resources × 3 events each (queued, applying, succeeded) = 6 emits.
+    expect(destroyEmits.length).toBe(6);
+
+    // Group by canvas node id and verify the lifecycle order per node.
+    const byNode = new Map<string, string[]>();
+    for (const call of destroyEmits) {
+      const ev = call[1];
+      const list = byNode.get(ev.node_id) || [];
+      list.push(ev.status);
+      byNode.set(ev.node_id, list);
+    }
+    expect(byNode.get('canvas-id-A')).toEqual(['queued', 'applying', 'succeeded']);
+    expect(byNode.get('canvas-id-B')).toEqual(['queued', 'applying', 'succeeded']);
+
+    // The terminal `succeeded` event must carry duration_ms (wall-clock
+    // elapsed since the `applying` emit) so the row UI can render the
+    // "X.Ys" suffix for completed destroys.
+    const terminalA = destroyEmits.find(
+      (c) => c[1].node_id === 'canvas-id-A' && c[1].status === 'succeeded',
+    )?.[1];
+    expect(typeof terminalA.duration_ms).toBe('number');
+    expect(terminalA.duration_ms).toBeGreaterThanOrEqual(0);
+
+    // Every emit must carry action='delete' (NOT 'create') so the
+    // frontend's action-aware row labels render DESTROY/GONE correctly.
+    for (const call of destroyEmits) {
+      expect(call[1].action).toBe('delete');
+    }
+
+    // Wire emits should also share contiguous seqs with the rest of the
+    // destroy events (log lines, complete) — `startDeploySnapshot` opens
+    // the seq counter for the destroy operation.
+    const allDestroySeqs = destroyEmits.map((c) => c[1].seq);
+    for (const seq of allDestroySeqs) {
+      expect(typeof seq).toBe('number');
+      expect(seq).toBeGreaterThan(0);
+      // Must be a small integer from nextDeploySeq, not Date.now().
+      expect(seq).toBeLessThan(1_000_000);
+    }
+    // No duplicate seqs.
+    expect(new Set(allDestroySeqs).size).toBe(allDestroySeqs.length);
+  });
+
+  it('skips resources without source_node_id (legacy pre-pdl-4 rows) but still logs them', async () => {
+    // One legacy resource (no source_node_id) + one modern (with).
+    const applied = buildAppliedDeployment([
+      {
+        name: 'legacy-bucket',
+        type: 'gcp.storage.bucket',
+        success: true,
+        provider_id: 'gs://legacy-bucket',
+        // No source_node_id — this is the pre-pdl-4 shape.
+      },
+      {
+        name: 'modern-bucket',
+        type: 'gcp.storage.bucket',
+        success: true,
+        provider_id: 'gs://modern-bucket',
+        source_node_id: 'canvas-id-modern',
+      },
+    ]);
+    mockCanvasDeployment.findFirst.mockResolvedValueOnce(applied as any).mockResolvedValueOnce(null);
+    mockCanvasDeployment.create.mockResolvedValueOnce({
+      id: 'destroy-record-2',
+      card_id: 'card-destroy-2',
+      created_at: new Date(),
+    });
+
+    const destroyDeployment = await getDestroyDeployment();
+    await destroyDeployment('card-destroy-2', 'org-1', 'user-1');
+
+    const destroyEmits = emitDeployNodeStatus.mock.calls.filter((c) => c[1]?.action === 'delete');
+    // Only the modern-bucket row should produce wire emits (3 events:
+    // queued, applying, succeeded). The legacy row stays log-only.
+    expect(destroyEmits.length).toBe(3);
+    for (const call of destroyEmits) {
+      expect(call[1].node_id).toBe('canvas-id-modern');
+    }
+
+    // Legacy row should still be visible on the log surface — both
+    // resources should appear in the per-resource log line emit ("X:
+    // delete completed/failed").
+    const logMessages = emitDeployLog.mock.calls.map((c) => c[1]?.message || '');
+    const legacyLogged = logMessages.some(
+      (m) => typeof m === 'string' && m.includes('legacy-bucket') && m.includes('delete'),
+    );
+    expect(legacyLogged).toBe(true);
+
+    // And both resources should have actually been deleted on the cloud
+    // side — wire-emit gating must NOT affect the destroy mechanics.
+    expect(recordedDeleteCalls.length).toBe(2);
+    expect(recordedDeleteCalls.map((c) => c.name).sort()).toEqual(
+      ['legacy-bucket', 'modern-bucket'].sort(),
+    );
+  });
+
+  it('emits status=failed with error.message when deployer.delete throws', async () => {
+    const applied = buildAppliedDeployment([
+      {
+        name: 'bucket-that-fails',
+        type: 'gcp.storage.bucket',
+        success: true,
+        provider_id: 'gs://bucket-that-fails',
+        source_node_id: 'canvas-id-fail',
+      },
+    ]);
+    mockCanvasDeployment.findFirst.mockResolvedValueOnce(applied as any).mockResolvedValueOnce(null);
+    mockCanvasDeployment.create.mockResolvedValueOnce({
+      id: 'destroy-record-3',
+      card_id: 'card-destroy-3',
+      created_at: new Date(),
+    });
+
+    // Throw on delete to drive the catch path.
+    nextDeleteHandler = () => {
+      throw new Error('PERMISSION_DENIED: caller does not have storage.buckets.delete');
+    };
+
+    const destroyDeployment = await getDestroyDeployment();
+    await destroyDeployment('card-destroy-3', 'org-1', 'user-1');
+
+    const destroyEmits = emitDeployNodeStatus.mock.calls.filter((c) => c[1]?.action === 'delete');
+    // queued + applying + failed = 3 emits.
+    expect(destroyEmits.length).toBe(3);
+
+    const failedEvent = destroyEmits.find((c) => c[1].status === 'failed')?.[1];
+    expect(failedEvent).toBeTruthy();
+    expect(failedEvent.node_id).toBe('canvas-id-fail');
+    expect(failedEvent.action).toBe('delete');
+    expect(failedEvent.error).toBeTruthy();
+    expect(failedEvent.error.code).toBe('DESTROY_FAILED');
+    expect(failedEvent.error.message).toContain('PERMISSION_DENIED');
+  });
+
+  it('emits status=failed with error.message when deployer.delete returns success: false', async () => {
+    // Distinct from the throw path — the deployer can also return a
+    // structured failure (deleteResult.success === false). Both must
+    // wire through to a failed node_status with the error message.
+    const applied = buildAppliedDeployment([
+      {
+        name: 'bucket-soft-fail',
+        type: 'gcp.storage.bucket',
+        success: true,
+        provider_id: 'gs://bucket-soft-fail',
+        source_node_id: 'canvas-id-soft-fail',
+      },
+    ]);
+    mockCanvasDeployment.findFirst.mockResolvedValueOnce(applied as any).mockResolvedValueOnce(null);
+    mockCanvasDeployment.create.mockResolvedValueOnce({
+      id: 'destroy-record-4',
+      card_id: 'card-destroy-4',
+      created_at: new Date(),
+    });
+
+    nextDeleteHandler = () => ({ success: false, error: 'BUCKET_NOT_EMPTY' });
+
+    const destroyDeployment = await getDestroyDeployment();
+    await destroyDeployment('card-destroy-4', 'org-1', 'user-1');
+
+    const destroyEmits = emitDeployNodeStatus.mock.calls.filter((c) => c[1]?.action === 'delete');
+    expect(destroyEmits.length).toBe(3);
+    const failedEvent = destroyEmits.find((c) => c[1].status === 'failed')?.[1];
+    expect(failedEvent.error.code).toBe('DESTROY_FAILED');
+    expect(failedEvent.error.message).toContain('BUCKET_NOT_EMPTY');
+  });
+});
+
+describe('pdl-10 destroyAllForCard emits per-resource node_status events from mappings', () => {
+  it('threads node_id from DeployedResourceMapping rows into the wire emit', async () => {
+    // Two mapping rows — the destroy-all path doesn't need historical
+    // deploys when mappings are populated.
+    mockDeployedResourceMapping.findMany.mockResolvedValueOnce([
+      {
+        card_id: 'card-destroy-all-1',
+        node_id: 'canvas-id-mapped-A',
+        resource_type: 'gcp.storage.bucket',
+        resource_name: 'bucket-mapped-a',
+        provider_id: 'gs://bucket-mapped-a',
+        environment: 'development',
+      },
+      {
+        card_id: 'card-destroy-all-1',
+        node_id: 'canvas-id-mapped-B',
+        resource_type: 'gcp.storage.bucket',
+        resource_name: 'bucket-mapped-b',
+        provider_id: 'gs://bucket-mapped-b',
+        environment: 'development',
+      },
+    ] as any);
+    // No historical deploys needed for correlation — mappings cover both
+    // resources. But destroyAllForCard reads `historicalDeploys[0]?.region`
+    // etc. for the destroy record's row; seed one entry so the metadata
+    // resolves cleanly.
+    mockCanvasDeployment.findMany.mockResolvedValueOnce([
+      {
+        provider: 'gcp',
+        region: 'us-central1',
+        environment: 'development',
+        results: { resources: [] },
+      },
+    ] as any);
+    mockCanvasDeployment.create.mockResolvedValueOnce({
+      id: 'destroy-all-record-1',
+      card_id: 'card-destroy-all-1',
+      created_at: new Date(),
+    });
+
+    const destroyAllForCard = await getDestroyAllForCard();
+    await destroyAllForCard('card-destroy-all-1', 'org-1', 'user-1', { gcpProject: 'gcp-test-project' });
+
+    const destroyEmits = emitDeployNodeStatus.mock.calls.filter((c) => c[1]?.action === 'delete');
+    // 2 resources × 3 events (queued + applying + succeeded) = 6 emits.
+    expect(destroyEmits.length).toBe(6);
+
+    // Verify both canvas ids landed on the wire — the mapping table is
+    // the correlation source for destroy-all.
+    const ids = new Set(destroyEmits.map((c) => c[1].node_id));
+    expect(ids.has('canvas-id-mapped-A')).toBe(true);
+    expect(ids.has('canvas-id-mapped-B')).toBe(true);
+
+    // resource_type + resource_name should match the mapping row.
+    const eventA = destroyEmits.find(
+      (c) => c[1].node_id === 'canvas-id-mapped-A' && c[1].status === 'succeeded',
+    )?.[1];
+    expect(eventA.resource_name).toBe('bucket-mapped-a');
+    expect(eventA.resource_type).toBe('gcp.storage.bucket');
+    expect(eventA.action).toBe('delete');
+  });
+
+  it('falls back to historical results.source_node_id when mapping row is missing', async () => {
+    // No mapping rows — fall back to historical deploys' source_node_id.
+    mockDeployedResourceMapping.findMany.mockResolvedValueOnce([] as any);
+    mockCanvasDeployment.findMany.mockResolvedValueOnce([
+      {
+        provider: 'gcp',
+        region: 'us-central1',
+        environment: 'development',
+        results: {
+          resources: [
+            {
+              name: 'bucket-from-history',
+              type: 'gcp.storage.bucket',
+              provider_id: 'gs://bucket-from-history',
+              source_node_id: 'canvas-id-from-history',
+            },
+          ],
+        },
+      },
+    ] as any);
+    mockCanvasDeployment.create.mockResolvedValueOnce({
+      id: 'destroy-all-record-2',
+      card_id: 'card-destroy-all-2',
+      created_at: new Date(),
+    });
+
+    const destroyAllForCard = await getDestroyAllForCard();
+    await destroyAllForCard('card-destroy-all-2', 'org-1', 'user-1', { gcpProject: 'gcp-test-project' });
+
+    const destroyEmits = emitDeployNodeStatus.mock.calls.filter((c) => c[1]?.action === 'delete');
+    // 1 resource × 3 events = 3 emits.
+    expect(destroyEmits.length).toBe(3);
+    expect(destroyEmits[0][1].node_id).toBe('canvas-id-from-history');
+  });
+
+  // pdl-10 critic finding B2 — destroyAllForCard's snapshot lifecycle on
+  // engine throw. Per-resource `deployer.delete` errors are caught
+  // INSIDE the loop (treated as `failed.push(...)`), so they don't leak
+  // the snapshot. The leak happens when something OUTSIDE the loop
+  // throws: `deployer.cleanup`, the prisma update, or the `complete`
+  // emit. Simulate by making the post-loop prisma update throw — without
+  // the catch path closing the snapshot, the next destroy attempt would
+  // see a stranded `nextSeqByDeployment` entry and the emits get the
+  // wrong correlation.
+  it('closes the snapshot and re-throws when a post-loop step throws', async () => {
+    mockDeployedResourceMapping.findMany.mockResolvedValueOnce([
+      {
+        card_id: 'card-destroy-all-throw',
+        node_id: 'canvas-id-mapped-X',
+        resource_type: 'gcp.storage.bucket',
+        resource_name: 'bucket-x',
+        provider_id: 'gs://bucket-x',
+        environment: 'development',
+      },
+    ] as any);
+    mockCanvasDeployment.findMany.mockResolvedValueOnce([
+      {
+        provider: 'gcp',
+        region: 'us-central1',
+        environment: 'development',
+        results: { resources: [] },
+      },
+    ] as any);
+    mockCanvasDeployment.create.mockResolvedValueOnce({
+      id: 'destroy-all-record-throw',
+      card_id: 'card-destroy-all-throw',
+      created_at: new Date(),
+    });
+
+    // Pre-arrange the per-resource delete to succeed so the loop runs
+    // cleanly through to the post-loop prisma update — that's where we
+    // want the throw to land.
+    nextDeleteHandler = async () => ({ success: true });
+
+    // The post-loop prisma update is the FIRST canvasDeployment.update
+    // call that happens after `deployer.cleanup` returns. Make it throw.
+    mockCanvasDeployment.update.mockRejectedValueOnce(new Error('prisma boom'));
+
+    const destroyAllForCard = await getDestroyAllForCard();
+    let caught: Error | null = null;
+    try {
+      await destroyAllForCard('card-destroy-all-throw', 'org-1', 'user-1', {
+        gcpProject: 'gcp-test-project',
+      });
+    } catch (err: any) {
+      caught = err;
+    }
+    // The error must have re-thrown out so the route handler can return
+    // a 500 — silently swallowing it would leave the user staring at a
+    // success-shaped UI for a destroy that didn't finalize.
+    expect(caught).toBeTruthy();
+    expect(caught?.message).toContain('prisma boom');
+
+    // The snapshot must be flipped to 'failed' (the catch path's call to
+    // `finishDeploySnapshot(cardId, 'failed')`). The snapshot itself
+    // sticks around for a 60s grace window so late-joining tabs can read
+    // the terminal state — that's intentional. What matters here is that
+    // the STATUS field reflects the failure, not 'deploying'.
+    const { getDeploySnapshot } = await import('../services/deploy-locks');
+    expect(getDeploySnapshot('card-destroy-all-throw')?.status).toBe('failed');
   });
 });

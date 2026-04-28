@@ -50,10 +50,18 @@ export const gke_handler: GCPResourceHandler = {
     const start = Date.now();
     const location = (properties.location as string) || ctx.region;
 
+    // GKE cluster creation takes 5-10 minutes; the submit returns an LRO
+    // immediately and the polling loop is the slow part.
+    const TOTAL_STEPS = 2;
+    const reportStep = (index: number, label: string) => {
+      ctx.on_step?.(name, { label, index, total: TOTAL_STEPS });
+    };
+
     try {
       const client = ctx.clients.get('container') as any;
       if (!client) return fail(name, 'create', start, sdk_not_available(SERVICE_NAMES.GKE, 'container'));
 
+      reportStep(1, 'Creating cluster');
       const [operation] = await client.createCluster({
         parent: `projects/${ctx.project}/locations/${location}`,
         cluster: {
@@ -69,6 +77,7 @@ export const gke_handler: GCPResourceHandler = {
 
       // Wait for cluster creation (can take 5-10 minutes)
       if (operation?.name) {
+        reportStep(2, 'Waiting for cluster to become ready');
         const op_start = Date.now();
         while (Date.now() - op_start < 900_000) {
           try {

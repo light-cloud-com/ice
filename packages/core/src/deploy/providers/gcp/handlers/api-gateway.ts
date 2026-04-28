@@ -50,8 +50,18 @@ export const api_gateway_handler: GCPResourceHandler = {
   async create(name, properties, ctx) {
     const start = Date.now();
 
+    // API Gateway create chains 3 LROs (api, api config, gateway). Without
+    // an openapi_spec only the API itself is created — total is 1 in that
+    // case. With a spec, we step through all three and the gateway create
+    // is the slowest (multi-minute frontend provisioning).
+    const TOTAL_STEPS = properties.openapi_spec ? 3 : 1;
+    const reportStep = (index: number, label: string) => {
+      ctx.on_step?.(name, { label, index, total: TOTAL_STEPS });
+    };
+
     try {
       // Step 1: Create the API
+      reportStep(1, 'Creating API');
       const apiOp = (await ctx.rest_client.post(
         `${BASE_URL}/projects/${ctx.project}/locations/global/apis?apiId=${name}`,
         {
@@ -65,6 +75,7 @@ export const api_gateway_handler: GCPResourceHandler = {
       // Step 2: Create API Config (requires an OpenAPI spec)
       const configName = `${name}-config`;
       if (properties.openapi_spec) {
+        reportStep(2, 'Creating API config');
         const configOp = (await ctx.rest_client.post(
           `${BASE_URL}/projects/${ctx.project}/locations/global/apis/${name}/configs?apiConfigId=${configName}`,
           {
@@ -88,6 +99,7 @@ export const api_gateway_handler: GCPResourceHandler = {
         if (configOp?.name) await wait_for_operation(ctx, configOp.name);
 
         // Step 3: Create the Gateway
+        reportStep(3, 'Creating gateway');
         const gatewayName = `${name}-gw`;
         const region = (properties.region as string) || ctx.region;
         const gwOp = (await ctx.rest_client.post(

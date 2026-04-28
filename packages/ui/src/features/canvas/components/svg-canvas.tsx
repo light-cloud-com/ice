@@ -12,7 +12,7 @@
  */
 
 import React, { useRef, useEffect, useMemo, useCallback, useState, type CSSProperties } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 // Note: Graph actions no longer used - all node operations go through cardsSlice
 // Viewport is now stored per-pane in uiSlice (for split view support)
 import { CanvasGrid } from './canvas-grid';
@@ -114,6 +114,7 @@ import {
   toggleNodeSelection,
   setSelectionRect,
 } from '../../../store/slices/selection-slice';
+import { deriveRollup, type NodeDeployState } from '../../../store/slices/deploy-slice';
 import { setPaneViewport, openContextMenu } from '../../../store/slices/ui-slice';
 import { useCanvasInteractions, type CanvasItem } from '../hooks/use-canvas-interactions';
 import { useCanvasValidation } from '../hooks/use-canvas-validation';
@@ -229,11 +230,39 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   // Phase 2/5 — canvas-level deploy banner. Fires whenever a deploy for
   // this canvas's active card is in flight, even with the deploy panel
   // closed. Gives the user one-glance confirmation that work is happening.
+  // pdl-5 — replaced the legacy `progress / currentResource / currentStep`
+  // selectors with a `nodesById`-driven rollup. Same UX surface (badge +
+  // top-line text + thin bar) but no more bouncing 59% → 0% per-resource
+  // percentage. `shallowEqual` keeps the canvas re-render cost flat as
+  // the wire stream produces a new `nodesById` reference per event —
+  // structural equality only triggers on actual map mutations.
   const deployStatus = useSelector((state: RootState) => state.deploy.status);
   const deployingCardId = useSelector((state: RootState) => state.deploy.currentDeployCardId);
-  const deployProgress = useSelector((state: RootState) => state.deploy.progress);
-  const deployCurrentResource = useSelector((state: RootState) => state.deploy.currentResource);
-  const deployCurrentStep = useSelector((state: RootState) => state.deploy.currentStep);
+  const deployNodesById = useSelector(
+    (state: RootState) => state.deploy.nodesById,
+    shallowEqual,
+  );
+  const deployRollup = useMemo<ReturnType<typeof deriveRollup>>(
+    () => deriveRollup(deployNodesById),
+    [deployNodesById],
+  );
+  // Pick the most recently-updated applying node to display as the
+  // "what's happening right now" line. `last_at` is ISO-8601 so lex sort
+  // is fine; ties resolve to insertion order which is stable enough.
+  const bannerActiveNode = useMemo<NodeDeployState | undefined>(() => {
+    let active: NodeDeployState | undefined;
+    for (const node of Object.values(deployNodesById)) {
+      if (node.status !== 'applying') continue;
+      if (!active || node.last_at > active.last_at) active = node;
+    }
+    return active;
+  }, [deployNodesById]);
+  const bannerPct =
+    deployRollup.total === 0
+      ? 0
+      : deployRollup.terminal === deployRollup.total
+        ? 100
+        : Math.min(99, Math.round((deployRollup.terminal / Math.max(deployRollup.total, 1)) * 100));
   const showDeployBanner =
     activeCard?.id &&
     deployingCardId === activeCard.id &&
@@ -2425,14 +2454,18 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
           />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontWeight: 600, color: '#dbeafe' }}>
-              {deployStatus === 'planning' ? 'Planning deployment…' : 'Deploying…'}
-              {deployStatus === 'deploying' && (
+              {deployStatus === 'planning'
+                ? 'Planning deployment…'
+                : deployStatus === 'destroying'
+                  ? 'Destroying…'
+                  : 'Deploying…'}
+              {deployStatus !== 'planning' && deployRollup.total > 0 && (
                 <span style={{ marginLeft: 8, color: '#93c5fd', fontVariantNumeric: 'tabular-nums' }}>
-                  {deployProgress}%
+                  {deployRollup.terminal} of {deployRollup.total}
                 </span>
               )}
             </div>
-            {deployCurrentResource && (
+            {bannerActiveNode && (
               <div
                 style={{
                   fontSize: 11,
@@ -2443,13 +2476,13 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                   fontFamily: 'SF Mono, Fira Code, monospace',
                 }}
               >
-                {deployCurrentResource}
-                {deployCurrentStep &&
-                  ` · ${deployCurrentStep.label} (${deployCurrentStep.index}/${deployCurrentStep.total})`}
+                {bannerActiveNode.resource_name || bannerActiveNode.node_id}
+                {bannerActiveNode.step &&
+                  ` · ${bannerActiveNode.step.label} (${bannerActiveNode.step.index}/${bannerActiveNode.step.total})`}
               </div>
             )}
           </div>
-          {deployStatus === 'deploying' && (
+          {(deployStatus === 'deploying' || deployStatus === 'destroying') && (
             <div
               style={{
                 position: 'absolute',
@@ -2466,7 +2499,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
               <div
                 style={{
                   height: '100%',
-                  width: `${deployProgress}%`,
+                  width: `${bannerPct}%`,
                   background: '#3b82f6',
                   transition: 'width 300ms ease',
                 }}

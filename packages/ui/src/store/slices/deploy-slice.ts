@@ -121,6 +121,121 @@ export interface NodeDeployState {
   last_seq: number;
 }
 
+/**
+ * pdl-5 — counts derived from the per-node live state. Used by the deploy
+ * panel's in-flight rollup ("X in flight · Y done · Z failed") and the
+ * canvas-level deploy banner. Cap at 99% while any node is non-terminal:
+ * the legacy bouncing-bar bug (59% → 0% → 0% on every step transition)
+ * is impossible by construction here because nothing tracks "the active
+ * resource" as a single number.
+ *
+ * `terminal = succeeded + failed + skipped + cancelled`. Progress is
+ * `terminal / total`, capped at 99% if any nodes are still queued/applying.
+ */
+export interface DeployRollup {
+  queued: number;
+  applying: number;
+  succeeded: number;
+  failed: number;
+  skipped: number;
+  cancelled: number;
+  total: number;
+  terminal: number;
+}
+
+export function deriveRollup(nodesById: Record<string, NodeDeployState>): DeployRollup {
+  const rollup: DeployRollup = {
+    queued: 0,
+    applying: 0,
+    succeeded: 0,
+    failed: 0,
+    skipped: 0,
+    cancelled: 0,
+    total: 0,
+    terminal: 0,
+  };
+  for (const node of Object.values(nodesById)) {
+    rollup.total += 1;
+    switch (node.status) {
+      case 'queued':
+        rollup.queued += 1;
+        break;
+      case 'applying':
+        rollup.applying += 1;
+        break;
+      case 'succeeded':
+        rollup.succeeded += 1;
+        rollup.terminal += 1;
+        break;
+      case 'failed':
+        rollup.failed += 1;
+        rollup.terminal += 1;
+        break;
+      case 'skipped':
+        rollup.skipped += 1;
+        rollup.terminal += 1;
+        break;
+      case 'cancelled-due-to-dep':
+        rollup.cancelled += 1;
+        rollup.terminal += 1;
+        break;
+      default:
+        // pdl-5 critic — defensive guard against wire-contract drift.
+        // TypeScript narrows `node.status` to the 6 known values, so this
+        // arm is unreachable through normal code paths; it catches the
+        // runtime case where a backend sends a status the frontend hasn't
+        // shipped support for yet (per the contract-evolution caveat in
+        // learning `requirement-verified-needs-full-tenancy-key-on-the-wire`).
+        // We undo the `total += 1` so the bucket sum still equals the
+        // total, then warn so an operator sees the drift in the console.
+        rollup.total -= 1;
+        if (typeof console !== 'undefined') {
+          // eslint-disable-next-line no-console
+          console.warn(
+            '[deploy-rollup] unknown node status:',
+            (node as { status?: unknown }).status,
+            '— not counted in rollup',
+          );
+        }
+        break;
+    }
+  }
+  return rollup;
+}
+
+/**
+ * pdl-5 — order nodes for the deploy panel's per-row list. Applying nodes
+ * first (most actionable — the user wants to see what's running NOW),
+ * then queued (next up), then terminal sorted by `last_at` descending so
+ * the most-recently-finished sits on top of the terminal section.
+ *
+ * Stable on equal-rank ties — preserves insertion order from
+ * `Object.values(nodesById)`.
+ */
+const STATUS_RANK: Record<DeployNodeStatus, number> = {
+  applying: 0,
+  queued: 1,
+  succeeded: 2,
+  failed: 2,
+  skipped: 2,
+  'cancelled-due-to-dep': 2,
+};
+
+export function orderNodesForPanel(nodesById: Record<string, NodeDeployState>): NodeDeployState[] {
+  const all = Object.values(nodesById);
+  return [...all].sort((a, b) => {
+    const rankDiff = STATUS_RANK[a.status] - STATUS_RANK[b.status];
+    if (rankDiff !== 0) return rankDiff;
+    // Within the same rank-2 (terminal) bucket, newest first.
+    if (STATUS_RANK[a.status] === 2) {
+      // last_at is ISO-8601, lex-sort descending.
+      if (a.last_at < b.last_at) return 1;
+      if (a.last_at > b.last_at) return -1;
+    }
+    return 0;
+  });
+}
+
 export interface DeployState {
   // Panel
   isOpen: boolean;
@@ -150,11 +265,12 @@ export interface DeployState {
   // Plan
   plan: DeployPlan | null;
 
-  // Progress
-  progress: number; // 0-100
-  currentResource: string;
-  /** Phase 2: current resource's sub-step (e.g., LB "creating backend service 2/4"). */
-  currentStep?: { label: string; index: number; total: number };
+  // pdl-5 — `currentResource` / `progress` / `currentStep` were removed.
+  // The deploy panel and canvas banner now derive every in-flight signal
+  // (rollup totals, per-node rows, current step labels) from
+  // `nodesById` via `deriveRollup`. The legacy single-resource percentage
+  // bouncing 59% → 0% → 0% on every step transition is impossible by
+  // construction because no single number tracks "the active resource".
   logs: string[];
 
   // Results
@@ -235,8 +351,6 @@ const initialState: DeployState = {
   status: 'idle',
   error: null,
   plan: null,
-  progress: 0,
-  currentResource: '',
   logs: [],
   results: [],
   nodesById: {},
@@ -338,9 +452,6 @@ const deploySlice = createSlice({
       // progress channel and would otherwise stomp the destroying label.
       if (state.status === 'deploying' || state.status === 'planning' || state.status === 'destroying') return;
       state.status = 'deploying';
-      state.progress = 0;
-      state.currentResource = '';
-      state.currentStep = undefined;
       state.results = [];
       state.nodesById = {};
       state.error = null;
@@ -354,9 +465,6 @@ const deploySlice = createSlice({
       // before flipping back to 'deploying' on incoming progress events.
       if (state.status === 'destroying') return;
       state.status = 'destroying';
-      state.progress = 0;
-      state.currentResource = '';
-      state.currentStep = undefined;
       state.results = [];
       state.nodesById = {};
       state.error = null;
@@ -364,49 +472,16 @@ const deploySlice = createSlice({
       state.logs.push('Destroying deployment...');
     },
     /**
-     * Narrow seed for the snapshot-pull path (Phase 2 of
-     * `useDeploySubscription`). The server-side snapshot carries
-     * pre-aggregated `progress` / `currentResource` / `currentStep`
-     * values that the typed `deploy:event` wire stream doesn't have a
-     * direct equivalent for — so a tab opened mid-deploy can paint the
-     * panel header without waiting for the next live event.
-     *
-     * Not dispatched from the live socket listener (pdl-7 flipped that
-     * to `applyNodeStatusEvent` / `applyNodeProgressEvent`). Kept narrow
-     * and load-bearing solely for the snapshot bootstrap; pdl-5's deploy
-     * panel rewrite will retire it when the panel renders off
-     * `nodesById` directly and no longer needs aggregate seeds.
-     */
-    setDeployProgress(
-      state,
-      action: PayloadAction<{
-        progress: number;
-        resource: string;
-        message: string;
-        step?: { label: string; index: number; total: number };
-      }>,
-    ) {
-      // Ignore late seed calls that arrive after the API response has
-      // already flipped the status. Without this guard, a stale
-      // `progress: 99` seed landing after deploySuccess would reset the
-      // bar to 99% even though the deploy is finished.
-      if (state.status === 'success' || state.status === 'error' || state.status === 'cancelled') return;
-      state.progress = action.payload.progress;
-      state.currentResource = action.payload.resource;
-      state.currentStep = action.payload.step;
-      if (action.payload.message) state.logs.push(action.payload.message);
-    },
-    /**
      * pdl-7 — apply a per-node lifecycle event from the typed `deploy:event`
      * channel. Upserts the node record in `nodesById`, dedups by `seq`
      * (lower-or-equal seq is dropped — replay arrived after live, or
      * out-of-order delivery). Also mirrors terminal events into
      * `state.results` so the deploy-panel's existing consumers (DNS
-     * records filter, ResultsSummary, ApiErrorBanner, ResourceList) keep
-     * working unchanged. The HTTP response's `deploySuccess` /
-     * `deployError` payload still wins on completion — those carry the
-     * authoritative `outputs` / `provider_id` / `api_enable_url` that
-     * `node_status` events don't have.
+     * records filter, ResultsSummary, ApiErrorBanner) keep working
+     * unchanged. The HTTP response's `deploySuccess` / `deployError`
+     * payload still wins on completion — those carry the authoritative
+     * `outputs` / `provider_id` / `api_enable_url` that `node_status`
+     * events don't have.
      */
     applyNodeStatusEvent(state, action: PayloadAction<DeployNodeStatusEvent>) {
       const e = action.payload;
@@ -428,21 +503,18 @@ const deploySlice = createSlice({
         last_seq: e.seq,
       };
 
-      // Update aggregate progress fields the deploy-panel header reads.
-      // Skip if the status has flipped to a terminal — `deploySuccess` /
-      // `deployError` (or `applyDeployCompleteEvent`) own that surface.
+      // Skip the post-complete results mirror if the status has flipped
+      // to a terminal — `deploySuccess` / `deployError` (or
+      // `applyDeployCompleteEvent`) own that surface.
       if (state.status === 'success' || state.status === 'error' || state.status === 'cancelled') return;
-      if (e.status === 'applying') {
-        state.currentResource = e.resource_name;
-      }
 
       // Mirror terminal node_status events into state.results so the
       // existing deploy-panel consumers (DNS records, ResultsSummary,
-      // ApiErrorBanner, ResourceList) keep working without churn. The
-      // node_status wire shape is a strict subset of DeployResourceResult
-      // — outputs / provider_id / api_enable_url are missing because the
-      // wire stream doesn't carry them. The HTTP response's deploySuccess
-      // / deployError replaces this list with the authoritative version
+      // ApiErrorBanner) keep working without churn. The node_status
+      // wire shape is a strict subset of DeployResourceResult — outputs
+      // / provider_id / api_enable_url are missing because the wire
+      // stream doesn't carry them. The HTTP response's deploySuccess /
+      // deployError replaces this list with the authoritative version
       // on completion (see existing comments at deploySuccess line 357).
       const isTerminal =
         e.status === 'succeeded' ||
@@ -497,12 +569,6 @@ const deploySlice = createSlice({
       existing.step = e.step;
       existing.last_at = e.at;
       existing.last_seq = e.seq;
-
-      // Mirror to the panel-header current-step display.
-      if (state.status === 'deploying' || state.status === 'destroying') {
-        state.currentStep = e.step;
-        state.currentResource = e.resource_name;
-      }
     },
     /**
      * pdl-7 — apply the terminal `complete` wire event. Maps `outcome`
@@ -523,9 +589,6 @@ const deploySlice = createSlice({
       } else {
         state.status = 'error';
       }
-      state.progress = 100;
-      state.currentResource = '';
-      state.currentStep = undefined;
       state.currentDeployCardId = undefined;
       state.logs.push(t('deploy.slice.completed', { seconds: '0.0' }));
     },
@@ -536,8 +599,6 @@ const deploySlice = createSlice({
       action: PayloadAction<{ duration_ms: number; results?: DeployResourceResult[] }>,
     ) {
       state.status = 'success';
-      state.progress = 100;
-      state.currentResource = '';
       state.currentDeployCardId = undefined;
       // Authoritative results from the API response — replaces whatever
       // the socket events accumulated via `applyNodeStatusEvent`'s
@@ -570,12 +631,6 @@ const deploySlice = createSlice({
       const payload = typeof action.payload === 'string' ? { error: action.payload } : action.payload;
       state.status = 'error';
       state.error = payload.error;
-      // Deploy is finished — partial-success is still "done", so push
-      // progress to 100 so the bar doesn't sit at 99% after the API
-      // returns. Without this, every failed deploy looks like it's
-      // still running.
-      state.progress = 100;
-      state.currentResource = '';
       state.currentDeployCardId = undefined;
       // Authoritative per-resource results from the API response, when
       // provided — the summary needs these to show the partial-success
@@ -609,9 +664,6 @@ const deploySlice = createSlice({
       state.status = 'idle';
       state.error = null;
       state.plan = null;
-      state.progress = 0;
-      state.currentResource = '';
-      state.currentStep = undefined;
       state.currentDeployCardId = undefined;
       state.logs = [];
       state.results = [];
@@ -729,8 +781,6 @@ const deploySlice = createSlice({
       // so the red header + Copy errors button render (a cancelled
       // deploy is just an error from the UX perspective).
       state.status = status === 'success' ? 'success' : 'error';
-      state.progress = 100;
-      state.currentResource = '';
       state.error = error || null;
       state.results = Array.isArray(results) ? results : [];
       // Update lastResetCardId so the setActiveCard extraReducer doesn't
@@ -771,9 +821,6 @@ const deploySlice = createSlice({
       state.status = 'idle';
       state.error = null;
       state.plan = null;
-      state.progress = 0;
-      state.currentResource = '';
-      state.currentStep = undefined;
       state.logs = [];
       state.results = [];
       state.nodesById = {};
@@ -807,16 +854,12 @@ export const {
   startDestroying,
   // pdl-7 — typed deploy:event reducers (replace legacy setDeployProgress /
   // addResourceResult / type:'progress' / type:'resource_result' branches).
+  // pdl-5 retired `setDeployProgress` — the snapshot-pull path now drives
+  // `nodesById` directly via `applyNodeStatusEvent` calls reconstructed
+  // from `snapshot.nodeStatuses`.
   applyNodeStatusEvent,
   applyNodeProgressEvent,
   applyDeployCompleteEvent,
-  // setDeployProgress remains as a NARROW seed for the snapshot-pull path
-  // (Phase 2 of useDeploySubscription) where the server-side snapshot
-  // carries pre-aggregated `progress` / `currentResource` / `currentStep`
-  // values we don't have a wire event for. Not dispatched from the live
-  // socket listener; pdl-5 will retire this when the deploy panel is
-  // rewritten to render off `nodesById` directly.
-  setDeployProgress,
   deploySuccess,
   deployError,
   hydrateDeployFromHistory,

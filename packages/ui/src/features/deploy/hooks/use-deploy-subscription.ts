@@ -42,7 +42,6 @@ import {
   appendLog,
   hydrateDeployFromHistory,
   setDeployedResources,
-  setDeployProgress,
   startDeploying,
 } from '../../../store/slices/deploy-slice';
 import type { AppDispatch, RootState } from '../../../store';
@@ -296,15 +295,16 @@ export function useDeploySubscription(cardId: string | undefined): void {
             return;
           }
           dispatch(startDeploying({ cardId }));
-          dispatch(
-            setDeployProgress({
-              progress: Number(snapshot.progress || 0),
-              resource: snapshot.currentResource || '',
-              message: '',
-              step: snapshot.currentStep,
-            }),
-          );
-          // Mirror per-node status from the snapshot to the canvas blocks.
+          // pdl-5 — removed the legacy `setDeployProgress` seed. The
+          // panel + canvas banner now derive every in-flight signal from
+          // `nodesById`, populated immediately afterwards by the Phase
+          // 2.5 replay loop (which dispatches the real `node_status` /
+          // `node_progress` events from the deploy event tape). Until
+          // replay lands, the panel shows a "Preparing…" sentinel — same
+          // user-visible behavior as the old "0% Deploying…" header.
+          //
+          // Mirror per-node status from the snapshot to the canvas blocks
+          // so the per-block overlay shows up before the replay arrives.
           const nodeStatuses = snapshot.nodeStatuses || {};
           for (const [nodeId, status] of Object.entries(nodeStatuses) as [string, any][]) {
             dispatch(

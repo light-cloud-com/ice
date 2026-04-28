@@ -38,7 +38,7 @@ Seventeen slices under `packages/ui/src/store/slices/`:
 | `ai-slice` | Chat history, streaming state |
 | `cards-slice` | The UI-shaped block model — what the canvas renders |
 | `debug-slice` | Feature flags, dev-only toggles |
-| `deploy-slice` | Deploy progress, last plan, environment status |
+| `deploy-slice` | Deploy progress (per-node `nodesById` keyed by canvas node id, populated from the typed `deploy:event` socket channel), last plan, environment status |
 | `environments-slice` | Production / staging / preview selection |
 | `ghost-slice` | AI's proposed additions before commit |
 | `graph-slice` | Derived, provider-neutral graph (sync with cards) |

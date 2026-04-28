@@ -429,6 +429,96 @@ describe('pdl-4 seq allocation', () => {
   });
 });
 
+describe('pdl-8 seq roundtrip — wire emit + persistent log share one seq', () => {
+  it('every wire-emitted event lands on the persistent log row with the same seq', async () => {
+    // Critic-flagged gap from pdl-7 review: the seq monotonicity test
+    // above only inspects wire mocks. The whole point of the
+    // nextDeploySeq() split (per learning anchor
+    // `seq-allocation-must-be-shared-between-wire-and-log`) is that the
+    // wire emit and the persistent event log carry the SAME seq for
+    // each logical event — so a frontend reconnecting and replaying
+    // the persistent tape sees the same seq it would have via the live
+    // socket. This test drives a few events, flushes the persistent
+    // log, and asserts the seqs match.
+    const applyDeployment = await getApplyDeployment();
+    const { flushDeployEvents } = await import('../services/deploy-event-log');
+    mockDeployEvent.createMany.mockClear();
+
+    await applyDeployment(
+      'card-1',
+      TWO_NODES,
+      [],
+      { provider: 'gcp', region: 'us-central1', executeAsync: false },
+      'org-1',
+      'user-1',
+    );
+
+    capturedDeployOptions.on_node_status({
+      node_id: 'gcp.sql.databaseInstance:ice-foo-prod-instance-aaa',
+      resource_name: 'ice-foo-prod-instance-aaa',
+      resource_type: 'gcp.sql.databaseInstance',
+      action: 'create',
+      status: 'applying',
+      at: '2026-04-28T00:00:00Z',
+    });
+    capturedDeployOptions.on_node_progress({
+      node_id: 'gcp.sql.databaseInstance:ice-foo-prod-instance-aaa',
+      resource_name: 'ice-foo-prod-instance-aaa',
+      step: { label: 'Creating instance', index: 1, total: 2 },
+      at: '2026-04-28T00:00:01Z',
+    });
+    capturedDeployOptions.on_node_status({
+      node_id: 'gcp.sql.databaseInstance:ice-foo-prod-instance-aaa',
+      resource_name: 'ice-foo-prod-instance-aaa',
+      resource_type: 'gcp.sql.databaseInstance',
+      action: 'create',
+      status: 'succeeded',
+      duration_ms: 12_345,
+      at: '2026-04-28T00:00:02Z',
+    });
+
+    // Flush the persistent log so createMany fires synchronously.
+    await flushDeployEvents();
+
+    // Pull the wire-emitted seqs (only the per-type mocks for the events
+    // we drove — node_status fires through emitDeployNodeStatus, etc.).
+    const wireSeqs: number[] = [];
+    for (const fn of [emitDeployNodeStatus, emitDeployNodeProgress]) {
+      for (const call of fn.mock.calls) {
+        const ev = call[1];
+        if (typeof ev?.seq === 'number') wireSeqs.push(ev.seq);
+      }
+    }
+
+    // Pull the persistent-log rows from the createMany mock. Each call
+    // batches `data: Array<{ seq, type, payload }>` rows.
+    const persistedSeqs: number[] = [];
+    for (const call of mockDeployEvent.createMany.mock.calls) {
+      const arg = call[0];
+      const rows = (arg?.data ?? []) as Array<{ seq: number }>;
+      for (const row of rows) {
+        if (typeof row.seq === 'number') persistedSeqs.push(row.seq);
+      }
+    }
+
+    // Both sides must have at least the 3 events we drove. (The
+    // applyDeployment call also fires a `complete` and one or more
+    // `log` events — those go through different per-type emit mocks
+    // than the wireSeqs we collected, but DO go through recordDeployEvent
+    // and so will appear in persistedSeqs. So persistedSeqs.length >=
+    // wireSeqs.length is the invariant; the converse isn't strict.)
+    expect(wireSeqs.length).toBeGreaterThanOrEqual(3);
+    expect(persistedSeqs.length).toBeGreaterThanOrEqual(wireSeqs.length);
+
+    // Every wire-emit seq must appear in the persistent log — that's
+    // the load-bearing claim of the nextDeploySeq() split.
+    const persistedSet = new Set(persistedSeqs);
+    for (const seq of wireSeqs) {
+      expect(persistedSet.has(seq)).toBe(true);
+    }
+  });
+});
+
 describe('pdl-4 deriveCompleteOutcome', () => {
   it('all-succeed → success', async () => {
     const { deriveCompleteOutcome } = await getOutcomeHelpers();

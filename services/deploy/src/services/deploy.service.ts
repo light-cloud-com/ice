@@ -186,12 +186,21 @@ function describeEventForLog(event: DeployEvent): string {
 }
 
 /** Map a scheduler `DeployNodeStatus` to the canvas overlay status used by
- *  `updateDeploySnapshotNode` (and the canvas block badge). Mirror of the
- *  pre-pdl-4 mapping inside the legacy `on_progress` callback. */
+ *  `updateDeploySnapshotNode` (and the canvas block badge). Must agree
+ *  with the frontend's `mapWireStatusToOverlay` in
+ *  `packages/ui/src/features/deploy/hooks/use-deploy-subscription.ts` —
+ *  divergence means a tab opened mid-deploy hydrates a `queued` node
+ *  via the snapshot path with one color and gets the same node
+ *  overwritten to a different color microseconds later by the live
+ *  event. Both sides must pick the same overlay string for the same
+ *  wire status. The matching `STATUS_COLORS` entries live in
+ *  `packages/ui/src/config/canvas-constants.ts`. */
 export function mapStatusToOverlay(status: DeployNodeStatus): string {
-  if (status === 'applying' || status === 'queued') return 'deploying';
+  if (status === 'queued') return 'queued';
+  if (status === 'applying') return 'deploying';
   if (status === 'succeeded') return 'active';
   if (status === 'failed') return 'error';
+  if (status === 'cancelled-due-to-dep') return 'cancelled';
   return 'skipped';
 }
 

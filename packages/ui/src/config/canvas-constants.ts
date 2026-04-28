@@ -65,6 +65,12 @@ export const STATUS_COLORS: Record<string, string> = {
   stopped: '#64748b',
   inactive: '#64748b',
   idle: '#64748b',
+  // pdl-7: per-node wire statuses surfaced via `mapWireStatusToOverlay`.
+  // `queued` shares the pending/warning amber palette; `skipped` and
+  // `cancelled` use the slate "this didn't run / didn't matter" tone.
+  queued: '#f59e0b',
+  skipped: '#94a3b8',
+  cancelled: '#94a3b8',
 };
 
 // ─── Category Style ────────────────────────────────────────────────────────

@@ -150,7 +150,13 @@ export interface IceAPI {
   };
 
   onMenuAction: (callback: (action: string) => void) => () => void;
-  onDeployProgress: (callback: (event: any) => void) => () => void;
+  /**
+   * Subscribe to typed deploy lifecycle events on the `deploy:event` socket
+   * channel (pdl-2 contract). Returns an unsubscribe function. Replaces
+   * the legacy `onDeployProgress` listener that watched `deploy:progress`
+   * with ad-hoc event shapes.
+   */
+  onDeployEvent: (callback: (event: import('@ice/types').DeployEvent) => void) => () => void;
   onPipelineUpdate: (callback: (event: any) => void) => () => void;
   onCardPipelineUpdate: (callback: (event: any) => void) => () => void;
   subscribeDeployProgress?: (cardId: string) => () => void;

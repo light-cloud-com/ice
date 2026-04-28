@@ -6,6 +6,7 @@
  */
 
 import { io, type Socket } from 'socket.io-client';
+import { DEPLOY_EVENT_CHANNEL, type DeployEvent } from '@ice/types';
 import axiosInstance from './axios-instance';
 import type { IceAPI } from './api-adapter';
 
@@ -532,16 +533,25 @@ export function createHttpApiAdapter(): IceAPI {
       };
     },
 
-    // ── Deploy progress (Socket.IO) ────────────────────────────────────
-    onDeployProgress: (callback: (event: any) => void) => {
+    // ── Deploy events (Socket.IO) ──────────────────────────────────────
+    // pdl-7 — flipped from legacy `deploy:progress` channel + ad-hoc event
+    // shapes to the typed pdl-2 contract (`deploy:event` channel,
+    // discriminated union `DeployEvent`). The channel name is sourced from
+    // the imported constant so a typo on either side surfaces at typecheck
+    // time, not as silently-dropped events at runtime.
+    onDeployEvent: (callback: (event: DeployEvent) => void) => {
       const s = getSocket();
-      const wrapped = (event: any) => {
-        console.log('[ice-socket] deploy:progress', event?.type, event?.resource || '', event?.status || '');
+      const wrapped = (event: DeployEvent) => {
+        console.log(
+          '[ice-socket] ' + DEPLOY_EVENT_CHANNEL,
+          event?.type ?? '?',
+          (event as any)?.node_id ?? (event as any)?.resource_name ?? '',
+        );
         callback(event);
       };
-      s.on('deploy:progress', wrapped);
+      s.on(DEPLOY_EVENT_CHANNEL, wrapped);
       return () => {
-        s.off('deploy:progress', wrapped);
+        s.off(DEPLOY_EVENT_CHANNEL, wrapped);
       };
     },
 

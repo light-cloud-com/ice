@@ -1,6 +1,7 @@
 export * from './auth';
 export * from './canvas';
 export * from './deploy';
+export * from './deploy-events';
 export * from './provider';
 export * from './github';
 export * from './events';

@@ -96,7 +96,30 @@ flowchart LR
 
 **Plan** (`packages/core/src/plan/`) diffs the desired graph against the current state; each diff entry is `{ op: 'create' | 'update' | 'delete' | 'noop', node_id, changed_properties }`.
 
-**Apply** (`packages/core/src/apply/`, `packages/core/src/deploy/deploy-engine.ts`) walks the plan in topological order. For each non-noop entry, it resolves the right handler for the node's provider + type, calls it, and streams progress events back to the caller.
+**Apply** (`packages/core/src/deploy/deploy-engine.ts` driving `packages/core/src/deploy/scheduler.ts`) is a bounded worker-pool scheduler over the per-node DAG. Pool size defaults to 6; per-handler caps reserve `gcp.sql.* = 1` and `gcp.redis.* = 1` so multi-instance fan-outs don't trip GCP's create-rate quotas. Failure isolates to descendants only — siblings and unrelated branches keep running, which means a 12-resource card that loses one Cloud SQL instance still surfaces the partial-success rollup of the rest. Each node moves through `queued → applying → (succeeded | failed | skipped | cancelled-due-to-dep)`, and the engine streams those transitions to the caller via `on_node_status` plus mid-apply milestones via `on_node_progress`.
+
+Handlers report sub-step progress via `GCPHandlerContext.on_step(name, { label, index, total })` — a Cloud SQL instance create surfaces "Creating instance" → "Waiting for instance to become ready" rather than going dark for ten minutes. The build-helper extension lets cloud-run pin every Cloud Build sub-state (Submitting / queued / running) to its outer step index, so the bar holds steady while labels refresh.
+
+The legacy `apply-engine.ts` and the per-resource percentage that reset between nodes are gone — see decisions entry "2026-04-28 — Parallel deploy scheduler with per-node live status" for the alternatives considered (layer-batched `Promise.all` rejected because it waits for the slowest node in each layer; new socket room rejected because the existing `deploy:<cardId>` is what the canvas hydration is shaped around).
+
+## Live event wire contract
+
+The deploy service publishes one Socket.IO event name (`DEPLOY_EVENT_CHANNEL = 'deploy:event'`) carrying a discriminated `DeployEvent` union — types in `packages/types/src/deploy-events.ts`, emitter helpers in `packages/shared/src/socket/service.ts`. Five variants:
+
+| `event.type` | Fired when |
+|---|---|
+| `node_status` | Per-node lifecycle transition (`queued` / `applying` / `succeeded` / `failed` / `skipped` / `cancelled-due-to-dep`). Carries `card_id`, `node_id` (canvas id), `resource_name`, `resource_type`, `action: 'create' \| 'update' \| 'delete'`, optional `error: { code, message, recoverable? }`, optional `duration_ms` on terminal states. |
+| `node_progress` | Mid-apply milestone from a handler's `ctx.on_step`. Carries `step: { label, index, total }`. |
+| `log` | Free-text deploy log line, optionally `node_id`-scoped. |
+| `complete` | One-shot terminal for the whole deploy. Carries `outcome: 'success' \| 'partial' \| 'failure' \| 'cancelled'` and `totals: { queued, applying, succeeded, failed, skipped, cancelled }`. The frontend computes its rollup from `nodesById` rather than relying on `totals` for live progress; `totals` is just the post-deploy summary. |
+| `requirement_verified` | Post-deploy poller fires when a `BlockRequirementStatus` row flips. Carries the full unique key `(card_id, node_id, environment, requirement)` plus an optional `details` blob. |
+
+Three identifier spaces travel through the deploy stack and are NOT interchangeable:
+- **Canvas node id** — user-facing block id from `cards-slice.nodes[i].id`. The wire's `node_id` is always this.
+- **Graph node id** — engine-internal `${type}:${name}`, e.g. `gcp.sql.databaseInstance:ice-foo-prod-instance-abc123`. Lives only inside the scheduler and `MutableGraph`.
+- **Resource name** — sanitized hash-suffixed cloud resource name (e.g. `ice-foo-prod-instance-abc123`). Carried in `resource_name` for log readability.
+
+The service layer translates graph node id → canvas node id via `translation.deployables[]` before emitting on the wire (`services/deploy/src/services/deploy.service.ts`'s `graphIdToCanvasId` map). Frontend reducers key everything by canvas node id.
 
 ## Schemas
 
@@ -141,7 +164,9 @@ Some block properties are derived from others (`derived`), aggregated across con
 
 - [`packages/core/src/index.ts`](../packages/core/src/index.ts) — the export surface.
 - [`packages/core/src/deploy/card-translator.ts`](../packages/core/src/deploy/card-translator.ts) — UI → graph.
-- [`packages/core/src/deploy/deploy-engine.ts`](../packages/core/src/deploy/deploy-engine.ts) — apply loop.
+- [`packages/core/src/deploy/deploy-engine.ts`](../packages/core/src/deploy/deploy-engine.ts) — apply driver.
+- [`packages/core/src/deploy/scheduler.ts`](../packages/core/src/deploy/scheduler.ts) — bounded worker-pool DAG scheduler with per-handler caps.
+- [`packages/types/src/deploy-events.ts`](../packages/types/src/deploy-events.ts) — wire-event discriminated union (locked contract).
 - [`packages/core/src/graph/mutable-graph.ts`](../packages/core/src/graph/mutable-graph.ts) — the data structure.
 - [`packages/core/src/graph/algorithms.ts`](../packages/core/src/graph/algorithms.ts) — topological sort, cycles, paths.
 

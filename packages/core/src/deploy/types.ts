@@ -101,7 +101,15 @@ export type NodeTerminalStatus = 'succeeded' | 'failed' | 'skipped' | 'cancelled
  * Fired exactly once per `(node_id, status)` pair.
  */
 export interface NodeStatusEvent {
-  /** Canvas node id (stable, sourced from change.id which traces to deployables.node_id). */
+  /**
+   * Graph node id (`${type}:${name}`) — the engine-internal id built by
+   * `MutableGraph.add_node`. The scheduler emits `change.id` directly,
+   * which is the graph id, NOT the canvas node id. The service layer
+   * (pdl-4 `deploy.service.ts`) translates this to the canvas node id
+   * via `translation.deployables[]` before emitting on the wire — see
+   * the learning anchor `scheduler-resource-name-vs-graph-node-id-vs-canvas-node-id`
+   * for why these three identifier spaces don't share an id.
+   */
   node_id: string;
   /** Generated resource name (e.g. ice-foo-…). May not equal node_id. */
   resource_name: string;
@@ -120,6 +128,10 @@ export interface NodeStatusEvent {
 /**
  * Sub-step milestone fired by handlers during long-running operations.
  * Carried through from the existing `GCPHandlerContext.on_step` channel.
+ *
+ * `node_id` is the graph node id (`${type}:${name}`) — same caveat as
+ * {@link NodeStatusEvent}; the service layer translates it to the canvas
+ * node id before emitting on the wire.
  */
 export interface NodeProgressEvent {
   node_id: string;

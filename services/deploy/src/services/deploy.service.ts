@@ -7,8 +7,21 @@
 
 import prisma from '@ice/db';
 import * as providerService from '@ice/service-credentials';
-import { emitDeployProgress as wireEmitDeployProgress } from '@ice/shared';
-import { recordDeployEvent } from './deploy-event-log.js';
+import {
+  emitDeployComplete,
+  emitDeployLog,
+  emitDeployNodeProgress,
+  emitDeployNodeStatus,
+  emitDeployRequirementVerified,
+} from '@ice/shared';
+import type {
+  DeployCompleteEvent,
+  DeployEvent,
+  DeployLogEvent,
+  DeployNodeStatus,
+} from '@ice/types';
+import type { NodeStatusEvent, NodeProgressEvent } from '@ice/core';
+import { nextDeploySeq, recordDeployEvent } from './deploy-event-log.js';
 import {
   acquireDeployLock,
   cancelDeploy as cancelLockDeploy,
@@ -89,28 +102,180 @@ async function flushSnapshotNow(cardId: string): Promise<void> {
 }
 
 /**
- * Emit a deploy event: sends it live over socket.io AND appends it to the
- * persistent event log so a client can replay the full narrative on
- * reload/reconnect. Always prefer this over the raw `emitDeployProgress`
- * from `@ice/shared` — going through the wrapper is the only way the
- * event tape stays complete.
+ * Emit a typed {@link DeployEvent} over the socket and persist a row to
+ * the event log so reconnecting clients can replay the narrative. The
+ * caller passes a `DeployEvent` with `seq: 0` as a placeholder; this
+ * helper allocates the next monotonic seq from `nextDeploySeq` and
+ * mutates `event.seq` in place so both the wire emit and the persistent
+ * log row carry the SAME number — see `deploy-event-log.ts:nextDeploySeq`
+ * for why that matters (reconnect dedup correctness).
+ *
+ * For events fired OUTSIDE an active deploy (e.g. the requirement-poller
+ * after a deploy has finished), `nextDeploySeq` returns null and we fall
+ * back to `Date.now()`. Those events are rare, idempotent, and the
+ * frontend treats them as point-in-time updates rather than replayable
+ * tape — the dedup-on-reconnect contract isn't load-bearing for them.
+ *
+ * Replaces the legacy untyped `emitDeployProgress(cardId, { type, ... })`
+ * shadow that fronted the @ice/shared wire emitter — pdl-2 split the wire
+ * into five typed helpers, this dispatcher routes by `event.type`.
  */
-function emitDeployProgress(cardId: string, event: any): void {
+function emitDeployEvent(cardId: string, event: DeployEvent): void {
+  // Allocate seq before either side-effect so they share the value.
+  // Falls back to Date.now() for events fired outside an active deploy.
+  const allocated = nextDeploySeq(cardId);
+  event.seq = allocated ?? Date.now();
+
   console.log(
     '[deploy] emit cardId=' +
       cardId +
       ' type=' +
-      (event?.type || '?') +
-      ' msg=' +
-      (event?.message || event?.resource || '').toString().slice(0, 80),
+      event.type +
+      ' seq=' +
+      event.seq +
+      ' detail=' +
+      describeEventForLog(event),
   );
-  wireEmitDeployProgress(cardId, event);
+
   try {
-    recordDeployEvent(cardId, event?.type || 'log', event);
+    switch (event.type) {
+      case 'node_status':
+        emitDeployNodeStatus(cardId, event);
+        break;
+      case 'node_progress':
+        emitDeployNodeProgress(cardId, event);
+        break;
+      case 'log':
+        emitDeployLog(cardId, event);
+        break;
+      case 'complete':
+        emitDeployComplete(cardId, event);
+        break;
+      case 'requirement_verified':
+        emitDeployRequirementVerified(cardId, event);
+        break;
+    }
+  } catch (err: any) {
+    console.warn('[deploy] wire emit failed: ' + err.message);
+  }
+
+  try {
+    recordDeployEvent(cardId, event.seq, event.type, event);
   } catch (err: any) {
     // Event-log failures must never break the live emit.
     console.warn('[deploy] recordDeployEvent failed: ' + err.message);
   }
+}
+
+/** Short tail string for the per-emit log line. Pure formatter — never throws. */
+function describeEventForLog(event: DeployEvent): string {
+  switch (event.type) {
+    case 'log':
+      return (event.message || '').slice(0, 80);
+    case 'node_status':
+      return event.resource_name + ' → ' + event.status;
+    case 'node_progress':
+      return event.resource_name + ' step=' + event.step.label;
+    case 'complete':
+      return 'outcome=' + event.outcome;
+    case 'requirement_verified':
+      return event.requirement + '=' + event.status;
+    default:
+      return '';
+  }
+}
+
+/** Map a scheduler `DeployNodeStatus` to the canvas overlay status used by
+ *  `updateDeploySnapshotNode` (and the canvas block badge). Mirror of the
+ *  pre-pdl-4 mapping inside the legacy `on_progress` callback. */
+export function mapStatusToOverlay(status: DeployNodeStatus): string {
+  if (status === 'applying' || status === 'queued') return 'deploying';
+  if (status === 'succeeded') return 'active';
+  if (status === 'failed') return 'error';
+  return 'skipped';
+}
+
+/** Convenience wrapper for the most-common case: emit a free-text log line. */
+function emitLog(cardId: string, message: string, level: DeployLogEvent['level'] = 'info'): void {
+  emitDeployEvent(cardId, {
+    type: 'log',
+    card_id: cardId,
+    level,
+    message,
+    at: new Date().toISOString(),
+    seq: 0,
+  });
+}
+
+/** Compute the totals rollup for a `DeployCompleteEvent` from the resource
+ *  results. Reads only `success` + `action` so it works on partial / failed
+ *  / cancelled exit paths too. The reducer that consumes the wire event
+ *  treats absent counts as zero, but always emit all six for clarity. */
+export function computeCompleteTotals(resources: any[] | undefined): DeployCompleteEvent['totals'] {
+  const totals = { queued: 0, applying: 0, succeeded: 0, failed: 0, skipped: 0, cancelled: 0 };
+  for (const r of resources || []) {
+    if (r?.success === true) {
+      // 'no_change' is the post-process success-after-ALREADY_EXISTS marker
+      // (see the post-processing block below) — counts as a success.
+      totals.succeeded += 1;
+    } else if (r?.success === false) {
+      // The scheduler emits cancelled-due-to-dep with success: false +
+      // a sentinel error. Cancellation is a lifecycle, not a quality
+      // outcome, so split it from regular failures.
+      const err = (r?.error as string | undefined) || '';
+      if (/cancelled-due-to-dep|cancelled/i.test(err)) totals.cancelled += 1;
+      else if (r?.action === 'skip') totals.skipped += 1;
+      else totals.failed += 1;
+    }
+  }
+  return totals;
+}
+
+/* @__INTERNAL__ exported for tests in __tests__/deploy-event-translation.test.ts */
+/**
+ * Derive the {@link DeployCompleteEvent} `outcome` from the resource
+ * results and a cancellation flag.
+ *
+ *   - `cancelled` — every non-success resource looks cancelled (or no
+ *     resources at all but the cancel signal fired). Surfaced first
+ *     because a cancelled deploy isn't a quality judgement.
+ *   - `success`   — every resource succeeded.
+ *   - `failure`   — at least one resource ran AND none succeeded. The
+ *     "none ran" zero-resource case lands here as well so the outcome
+ *     is non-nil for the consumer.
+ *   - `partial`   — at least one succeeded AND at least one didn't.
+ *
+ * The brief asked: "all-succeed → success, mixed → partial, all-fail →
+ * failure, cancelled mid-deploy → cancelled" — this is the implementation.
+ */
+export function deriveCompleteOutcome(
+  resources: any[] | undefined,
+  opts: { cancelled?: boolean; engineSuccess?: boolean } = {},
+): DeployCompleteEvent['outcome'] {
+  const list = resources || [];
+  const successes = list.filter((r) => r?.success === true);
+  const nonSuccess = list.filter((r) => r?.success !== true);
+  const cancelledLike = nonSuccess.filter((r) => /cancelled-due-to-dep|cancelled/i.test((r?.error as string) || ''));
+
+  // Cancel takes precedence: if the cancel signal fired AND there's no
+  // successful resource (or every non-success looks cancelled), surface
+  // 'cancelled'. A cancelled deploy with one already-completed resource
+  // before the abort is still 'partial' — the user has a real artifact
+  // they need to clean up.
+  if (opts.cancelled && successes.length === 0) return 'cancelled';
+  if (list.length > 0 && nonSuccess.length === cancelledLike.length && cancelledLike.length > 0 && successes.length === 0) {
+    return 'cancelled';
+  }
+
+  if (list.length === 0) {
+    // No resources ran. If the engine reported success (clean no-op
+    // pass), call it success; otherwise treat as failure so the UI
+    // surfaces the error path. Cancelled is handled above.
+    return opts.engineSuccess ? 'success' : 'failure';
+  }
+  if (successes.length === list.length) return 'success';
+  if (successes.length === 0) return 'failure';
+  return 'partial';
 }
 
 export type { DeployProgressSnapshot } from './deploy-locks.js';
@@ -403,10 +568,7 @@ export async function applyDeployment(
   const startTime = Date.now();
   let tempCredentialsDir: string | undefined;
 
-  emitDeployProgress(cardId, {
-    type: 'log',
-    message: `Starting deployment for card ${cardId}...`,
-  });
+  emitLog(cardId, `Starting deployment for card ${cardId}...`);
 
   // Long-running body. Wrapped so the HTTP path can fire-and-forget it
   // (returns immediately with `async: true`) while the queue worker still
@@ -449,20 +611,14 @@ export async function applyDeployment(
       cardId,
     });
 
-    emitDeployProgress(cardId, {
-      type: 'log',
-      message: `Translated ${translation.deployable_count} resources for deployment`,
-    });
+    emitLog(cardId, `Translated ${translation.deployable_count} resources for deployment`);
 
     // Surface translator warnings (anti-patterns, dropped backends, etc.)
     // so the user sees them in the deploy log instead of having to dig
     // through the canvas validation panel.
     if (translation.warnings && translation.warnings.length > 0) {
       for (const w of translation.warnings) {
-        emitDeployProgress(cardId, {
-          type: 'log',
-          message: `[translator] ${w}`,
-        });
+        emitLog(cardId, `[translator] ${w}`);
       }
     }
 
@@ -488,10 +644,7 @@ export async function applyDeployment(
     try {
       const repoNodes = (nodes as any[]).filter((n) => (n.data?.iceType as string) === 'Source.Repository');
       if (repoNodes.length > 0) {
-        emitDeployProgress(cardId, {
-          type: 'log',
-          message: `[diagnostic] Found ${repoNodes.length} Source.Repository node(s) in canvas`,
-        });
+        emitLog(cardId, `[diagnostic] Found ${repoNodes.length} Source.Repository node(s) in canvas`);
         for (const r of repoNodes) {
           const repoVal = String(r.data?.repository || '').trim();
           const branchVal = String(r.data?.branch || 'main').trim();
@@ -501,32 +654,29 @@ export async function applyDeployment(
             .map((tid) => (nodes as any[]).find((n) => n.id === tid))
             .filter(Boolean);
           if (!repoVal) {
-            emitDeployProgress(cardId, {
-              type: 'log',
-              message: `[diagnostic] Source.Repository ${r.id.slice(0, 8)} has EMPTY repository field — open its properties panel and pick a repo, then redeploy.`,
-            });
+            emitLog(
+              cardId,
+              `[diagnostic] Source.Repository ${r.id.slice(0, 8)} has EMPTY repository field — open its properties panel and pick a repo, then redeploy.`,
+            );
           } else if (connectedTargets.length === 0) {
-            emitDeployProgress(cardId, {
-              type: 'log',
-              message: `[diagnostic] Source.Repository ${r.id.slice(0, 8)} (${repoVal}) has NO connected targets — drag an edge to a compute block.`,
-            });
+            emitLog(
+              cardId,
+              `[diagnostic] Source.Repository ${r.id.slice(0, 8)} (${repoVal}) has NO connected targets — drag an edge to a compute block.`,
+            );
           } else {
             const targetSummary = connectedTargets
               .map((tn: any) => `${(tn.data?.label as string) || tn.id.slice(0, 8)} (${tn.data?.iceType})`)
               .join(', ');
-            emitDeployProgress(cardId, {
-              type: 'log',
-              message: `[diagnostic] Source.Repository ${r.id.slice(0, 8)} → ${repoVal}#${branchVal} → ${targetSummary}`,
-            });
+            emitLog(
+              cardId,
+              `[diagnostic] Source.Repository ${r.id.slice(0, 8)} → ${repoVal}#${branchVal} → ${targetSummary}`,
+            );
           }
         }
       }
     } catch (e: any) {
       // Diagnostic must never fail the deploy
-      emitDeployProgress(cardId, {
-        type: 'log',
-        message: `[diagnostic] Source.Repository scan failed: ${e?.message || e}`,
-      });
+      emitLog(cardId, `[diagnostic] Source.Repository scan failed: ${e?.message || e}`);
     }
 
     // 3.5. Auto-register deployment rules for any Source.Repository →
@@ -552,23 +702,17 @@ export async function applyDeployment(
               : rule.webhookStatus === 'failed'
                 ? 'webhook NOT registered (PAT missing repo:admin scope) — manual deploys only'
                 : 'webhook pending';
-          emitDeployProgress(cardId, {
-            type: 'log',
-            message: `[pipeline] Source.Repository → ${rule.repository} wired to node ${rule.nodeId.slice(0, 8)} (${webhookNote})`,
-          });
+          emitLog(
+            cardId,
+            `[pipeline] Source.Repository → ${rule.repository} wired to node ${rule.nodeId.slice(0, 8)} (${webhookNote})`,
+          );
         }
         for (const err of ruleResult.errors) {
-          emitDeployProgress(cardId, {
-            type: 'log',
-            message: `[pipeline] Could not register auto-deploy rule for ${err.repository}: ${err.error}`,
-          });
+          emitLog(cardId, `[pipeline] Could not register auto-deploy rule for ${err.repository}: ${err.error}`);
         }
       } catch (err: any) {
         // Non-fatal — auto-rule registration is best-effort.
-        emitDeployProgress(cardId, {
-          type: 'log',
-          message: `[pipeline] Auto-rule registration failed (non-fatal): ${err?.message || err}`,
-        });
+        emitLog(cardId, `[pipeline] Auto-rule registration failed (non-fatal): ${err?.message || err}`);
       }
     }
 
@@ -594,7 +738,7 @@ export async function applyDeployment(
         project: options.gcpProject || credentials.project_id,
         region: options.region,
       },
-      onLog: (msg) => emitDeployProgress(cardId, { type: 'log', message: msg }),
+      onLog: (msg) => emitLog(cardId, msg),
     });
     const authClient: any = scopedAuth.authClient;
     tempCredentialsDir = scopedAuth.tempDir;
@@ -606,7 +750,7 @@ export async function applyDeployment(
       console.log('Auto-enable: project=', gcpProject, 'hasToken=', !!accessToken);
       if (accessToken) {
         await autoEnableGCPApis(gcpProject, accessToken, nodes, (msg: string) => {
-          emitDeployProgress(cardId, { type: 'log', message: msg });
+          emitLog(cardId, msg);
         });
       }
     }
@@ -657,10 +801,10 @@ export async function applyDeployment(
           }
         }
       }
-      emitDeployProgress(cardId, {
-        type: 'log',
-        message: `Found ${prevResources.filter((r: any) => r.success).length} existing resource(s) from previous deployment`,
-      });
+      emitLog(
+        cardId,
+        `Found ${prevResources.filter((r: any) => r.success).length} existing resource(s) from previous deployment`,
+      );
     }
 
     // Log diff for debugging
@@ -681,9 +825,18 @@ export async function applyDeployment(
     // "staticsite-7358-1" vs a long node uuid.
     const nameToNodeId = new Map<string, string>();
     const nameToLabel = new Map<string, string>();
+    // Graph node id (`${type}:${name}`) → canvas node id. Built ONCE per
+    // deploy at this scope so every `on_node_status` / `on_node_progress`
+    // emit can translate the scheduler's graph id to the canvas id the
+    // wire contract requires (`DeployNodeStatusEvent.node_id` is the
+    // canvas id by definition; the scheduler emits `change.id` which is
+    // the graph id — see learning anchor
+    // `scheduler-resource-name-vs-graph-node-id-vs-canvas-node-id`).
+    const graphIdToCanvasId = new Map<string, string>();
     for (const d of translation.deployables || []) {
       nameToNodeId.set(d.resource_name, d.node_id);
       nameToLabel.set(d.resource_name, d.label);
+      graphIdToCanvasId.set(`${d.resource_type}:${d.resource_name}`, d.node_id);
     }
 
     // Rename-resilient fallback: load the persisted mapping for this
@@ -733,17 +886,14 @@ export async function applyDeployment(
       return undefined;
     };
 
-    // Track progress across resources. Phase 2: emit 'started' events when a
-    // resource begins so the progress bar moves in real time, not just on
-    // completion. Progress is fractional — in-flight resources count for 0.5.
+    // Per-deploy total. Used only for the "X of N" rollup we still mirror
+    // into the in-memory snapshot for late-joining clients to hydrate
+    // (the wire complete event carries the canonical totals). The
+    // misleading per-resource progress percentage is gone — replaced by
+    // the per-node `node_status` stream, see decisions entry
+    // "2026-04-28 — Parallel deploy scheduler with per-node live status".
     const totalResources = translation.deployable_count || 1;
     let completedResources = 0;
-    let inFlightResources = 0;
-
-    const computeOverallProgress = () => {
-      const effective = completedResources + inFlightResources * 0.5;
-      return Math.min(Math.round((effective / totalResources) * 100), 99);
-    };
 
     const result = await deploy_graph(translation.graph, currentGraph, deployer, {
       provider: options.provider || 'gcp',
@@ -754,37 +904,93 @@ export async function applyDeployment(
       auth_client: authClient,
       auth_key_file: (authClient as any)?._ice_key_file_path,
       auth_credentials: (authClient as any)?._ice_parsed_credentials,
-      on_progress: (resource: string, action: string, status: string, extra?: any) => {
-        // 'running' = started this resource; 'completed'/'failed' = finished.
-        // 'step' is a new Phase 2 sub-step event that carries `{ label, index, total }`.
-        if (status === 'running') {
-          inFlightResources++;
-        } else if (status === 'completed' || status === 'failed') {
-          inFlightResources = Math.max(0, inFlightResources - 1);
-          completedResources++;
+      on_node_status: (event: NodeStatusEvent) => {
+        // Translate the scheduler's graph node id (`${type}:${name}`) to
+        // the canvas node id the wire contract requires. On miss, drop
+        // the wire emit and warn — a missing-row UI cell is more visible
+        // than a miscorrelated one (a status row attached to the wrong
+        // block silently lies).
+        const canvasId = graphIdToCanvasId.get(event.node_id);
+        if (!canvasId) {
+          console.warn(
+            '[deploy] on_node_status: no canvas id for graph_node_id=' + event.node_id +
+              ' (resource_name=' + event.resource_name + '). Dropping wire emit.',
+          );
+          return;
         }
-        const source_node_id = findSourceNodeId({ name: resource, provider_id: extra?.provider_id });
-        const progress = computeOverallProgress();
-        emitDeployProgress(cardId, {
-          type: 'progress',
-          progress,
-          resource,
-          action,
-          status,
-          step: extra?.step,
-          source_node_id,
-          message: extra?.step
-            ? `${resource}: ${extra.step.label} (${extra.step.index}/${extra.step.total})`
-            : `${action} ${resource}: ${status}`,
-        } as any);
+        emitDeployEvent(cardId, {
+          type: 'node_status',
+          card_id: cardId,
+          node_id: canvasId,
+          resource_name: event.resource_name,
+          resource_type: event.resource_type,
+          action: event.action,
+          status: event.status,
+          error: event.error,
+          duration_ms: event.duration_ms,
+          at: event.at,
+          seq: 0,
+        });
 
-        // Surface the deployed URL the moment a compute resource lands —
-        // user no longer stares at a progress bar for 10 min wondering
-        // whether their Cloud Run is already live at minute 3. We pull
-        // the first recognisable endpoint from the handler's outputs;
-        // skip log emission when nothing useful is there.
-        if (status === 'completed' && extra?.outputs) {
-          const out = extra.outputs as Record<string, unknown>;
+        // Mirror to the in-memory snapshot so reconnecting tabs hydrate
+        // without waiting for the next live event.
+        const overlayStatus = mapStatusToOverlay(event.status);
+        updateDeploySnapshotNode(cardId, canvasId, overlayStatus);
+        if (
+          event.status === 'succeeded' ||
+          event.status === 'failed' ||
+          event.status === 'skipped' ||
+          event.status === 'cancelled-due-to-dep'
+        ) {
+          completedResources += 1;
+          const overallProgress = Math.min(Math.round((completedResources / totalResources) * 100), 99);
+          updateDeploySnapshot(cardId, {
+            progress: overallProgress,
+            currentResource: event.resource_name,
+          });
+        } else if (event.status === 'applying') {
+          updateDeploySnapshot(cardId, { currentResource: event.resource_name });
+        }
+      },
+      on_node_progress: (event: NodeProgressEvent) => {
+        const canvasId = graphIdToCanvasId.get(event.node_id);
+        if (!canvasId) {
+          // `on_node_progress` fires high-frequency during slow handler
+          // operations (Cloud Build polls etc.). A missing translation is
+          // a real bug at the bridge boundary, but spamming a warn per
+          // tick would drown the deploy log — emit one debug-tier line
+          // and drop. The matching `on_node_status` warn above is the
+          // primary signal; this is just a quiet sibling.
+          return;
+        }
+        emitDeployEvent(cardId, {
+          type: 'node_progress',
+          card_id: cardId,
+          node_id: canvasId,
+          resource_name: event.resource_name,
+          step: event.step,
+          at: event.at,
+          seq: 0,
+        });
+        // Mirror step to the snapshot so the canvas overlay's small
+        // sub-step indicator picks it up on hydrate.
+        updateDeploySnapshotNode(cardId, canvasId, 'deploying', event.step);
+      },
+      on_log: (message: string) => {
+        emitLog(cardId, message);
+      },
+      on_resource_result: (resourceResult: any) => {
+        // Kept for the post-deploy resource-mapping table mutation
+        // (further below this scope, lines ~1130). The wire emit for
+        // per-resource lifecycle is covered by `on_node_status`'s
+        // terminal events; we don't add a parallel `resource_result`
+        // wire event because the contract doesn't have one. We DO emit
+        // a friendly log line when a compute resource lands with a URL —
+        // that was previously inside the legacy `on_progress` callback,
+        // and `on_node_status` doesn't carry handler outputs, so this
+        // callback is the only place to surface the URL live.
+        if (resourceResult?.success && resourceResult?.outputs) {
+          const out = resourceResult.outputs as Record<string, unknown>;
           const url = (out.custom_domain_url || out.url || out.default_url || out.endpoint) as string | undefined;
           const domain = out.domain as string | undefined;
           const ip = (out.ip_address || out.IPAddress) as string | undefined;
@@ -793,44 +999,9 @@ export async function applyDeployment(
           else if (domain && String(domain).trim()) endpoint = `https://${String(domain).trim()}`;
           else if (ip && String(ip).trim()) endpoint = `http://${String(ip).trim()}`;
           if (endpoint) {
-            emitDeployProgress(cardId, {
-              type: 'log',
-              message: `Deployed ${resource} → ${endpoint}`,
-            });
+            emitLog(cardId, `Deployed ${resourceResult.name} → ${endpoint}`);
           }
         }
-
-        // Mirror the update into the in-memory snapshot so new tabs can
-        // hydrate their state without waiting for a socket round-trip.
-        updateDeploySnapshot(cardId, {
-          progress,
-          currentResource: resource,
-          currentStep: extra?.step,
-        });
-        if (source_node_id) {
-          const nodeStatus =
-            status === 'running'
-              ? 'deploying'
-              : status === 'completed'
-                ? 'active'
-                : status === 'failed'
-                  ? 'error'
-                  : 'deploying';
-          updateDeploySnapshotNode(cardId, source_node_id, nodeStatus, extra?.step);
-        }
-      },
-      on_log: (message: string) => {
-        emitDeployProgress(cardId, { type: 'log', message });
-      },
-      on_resource_result: (resourceResult: any) => {
-        const source_node_id = findSourceNodeId(resourceResult);
-        emitDeployProgress(cardId, {
-          type: 'resource_result',
-          result: {
-            ...resourceResult,
-            source_node_id,
-          },
-        });
       },
     });
 
@@ -843,18 +1014,12 @@ export async function applyDeployment(
           if (res.action === 'delete' && res.error.includes('NOT_FOUND')) {
             res.success = true;
             res.error = undefined;
-            emitDeployProgress(cardId, {
-              type: 'log',
-              message: `${res.name}: already deleted (NOT_FOUND) — marking as removed`,
-            });
+            emitLog(cardId, `${res.name}: already deleted (NOT_FOUND) — marking as removed`);
           } else if (res.action === 'create' && res.error.includes('ALREADY_EXISTS')) {
             res.success = true;
             res.error = undefined;
             res.action = 'no_change';
-            emitDeployProgress(cardId, {
-              type: 'log',
-              message: `${res.name}: already exists — skipping`,
-            });
+            emitLog(cardId, `${res.name}: already exists — skipping`);
           }
         }
       }
@@ -876,22 +1041,20 @@ export async function applyDeployment(
       (r: any) => !r.success && r.error && QUOTA_PATTERNS.some((p) => String(r.error).includes(p)),
     );
     if (hasQuotaFailure) {
-      emitDeployProgress(cardId, {
-        type: 'log',
-        message:
-          '[auto-cleanup] Backend bucket quota exceeded — scanning for orphaned ICE resources to free up the slot...',
-      });
+      emitLog(
+        cardId,
+        '[auto-cleanup] Backend bucket quota exceeded — scanning for orphaned ICE resources to free up the slot...',
+      );
       try {
         const { cleanupOrphanedIceResources } = await import('./orphan-cleanup.service.js');
         const cleanup = await cleanupOrphanedIceResources(orgId, gcpProject, { dryRun: false });
         const deletedCount = cleanup.deleted.length;
-        emitDeployProgress(cardId, {
-          type: 'log',
-          message:
-            deletedCount > 0
-              ? `[auto-cleanup] Freed ${deletedCount} orphaned resource${deletedCount === 1 ? '' : 's'} — retrying failed resources.`
-              : '[auto-cleanup] No orphans found. Quota is exhausted by active deployments — destroy an old project or request a quota increase.',
-        });
+        emitLog(
+          cardId,
+          deletedCount > 0
+            ? `[auto-cleanup] Freed ${deletedCount} orphaned resource${deletedCount === 1 ? '' : 's'} — retrying failed resources.`
+            : '[auto-cleanup] No orphans found. Quota is exhausted by active deployments — destroy an old project or request a quota increase.',
+        );
 
         if (deletedCount > 0) {
           // Re-run only the resources that failed with a quota error.
@@ -900,10 +1063,7 @@ export async function applyDeployment(
           // forwarding rule + URL map + target proxy chain depends on
           // the backend bucket, so freeing one slot fixes the whole
           // downstream chain on retry.
-          emitDeployProgress(cardId, {
-            type: 'log',
-            message: '[auto-cleanup] Retrying deploy after orphan cleanup...',
-          });
+          emitLog(cardId, '[auto-cleanup] Retrying deploy after orphan cleanup...');
           const retryResult = await deploy_graph(translation.graph, currentGraph, deployer, {
             provider: options.provider || 'gcp',
             project: gcpProject,
@@ -912,15 +1072,43 @@ export async function applyDeployment(
             auth_client: authClient,
             auth_key_file: (authClient as any)?._ice_key_file_path,
             auth_credentials: (authClient as any)?._ice_parsed_credentials,
-            on_log: (message: string) => emitDeployProgress(cardId, { type: 'log', message }),
-            on_progress: (resource: string, action: string, status: string) =>
-              emitDeployProgress(cardId, {
-                type: 'progress',
-                resource,
-                action,
-                status,
-                source_node_id: findSourceNodeId({ name: resource }),
-              }),
+            on_log: (message: string) => emitLog(cardId, message),
+            on_node_status: (event: NodeStatusEvent) => {
+              const canvasId = graphIdToCanvasId.get(event.node_id);
+              if (!canvasId) return;
+              emitDeployEvent(cardId, {
+                type: 'node_status',
+                card_id: cardId,
+                node_id: canvasId,
+                resource_name: event.resource_name,
+                resource_type: event.resource_type,
+                action: event.action,
+                status: event.status,
+                error: event.error,
+                duration_ms: event.duration_ms,
+                at: event.at,
+                seq: 0,
+              });
+              // Mirror to the snapshot so a tab joining mid-retry sees
+              // the live state. Without this, the retry's per-block
+              // status flips don't survive a refresh until the retry
+              // completes.
+              updateDeploySnapshotNode(cardId, canvasId, mapStatusToOverlay(event.status));
+            },
+            on_node_progress: (event: NodeProgressEvent) => {
+              const canvasId = graphIdToCanvasId.get(event.node_id);
+              if (!canvasId) return;
+              emitDeployEvent(cardId, {
+                type: 'node_progress',
+                card_id: cardId,
+                node_id: canvasId,
+                resource_name: event.resource_name,
+                step: event.step,
+                at: event.at,
+                seq: 0,
+              });
+              updateDeploySnapshotNode(cardId, canvasId, 'deploying', event.step);
+            },
           });
           // Merge retry results into the primary result: any resource
           // that succeeded on retry overrides its failed entry from the
@@ -940,29 +1128,26 @@ export async function applyDeployment(
           }
         }
       } catch (cleanupErr: any) {
-        emitDeployProgress(cardId, {
-          type: 'log',
-          message: `[auto-cleanup] Cleanup attempt failed: ${cleanupErr?.message || cleanupErr}`,
-        });
+        emitLog(cardId, `[auto-cleanup] Cleanup attempt failed: ${cleanupErr?.message || cleanupErr}`);
       }
     }
 
     const durationMs = Date.now() - startTime;
 
-    // 6. Emit individual resource results + upsert the stable name mapping.
-    // Phase 1: every successful resource's (node_id → name + provider_id)
-    // becomes the source of truth for future plans, surviving label changes.
+    // 6. Persist the stable name mapping. Phase 1: every successful
+    // resource's (node_id → name + provider_id) becomes the source of
+    // truth for future plans, surviving label changes.
     //
-    // Critical: mutate `res.source_node_id` IN PLACE on the result.resources
-    // array so the persisted DB row has it. The live socket emit at
-    // `emitDeployProgress({type: 'resource_result', ...})` augments a
-    // copy of the result, but the persisted `result.resources` array
-    // (written below in `prisma.canvasDeployment.update`) was missing
-    // the source_node_id field — which made `getNodeDeploymentOverlay`
-    // return an empty overlay because every entry was filtered by
-    // `if (!res.source_node_id) continue`. Without source_node_id on
-    // the persisted row, the canvas block never showed any URL or
-    // status after a refresh.
+    // Critical: mutate `res.source_node_id` IN PLACE on the
+    // result.resources array so the persisted DB row has it. The live
+    // wire emit for per-resource lifecycle is covered by
+    // `on_node_status`'s terminal event — there's no `resource_result`
+    // wire event in the new contract, just persistence + the canvas
+    // overlay write driven by `getNodeDeploymentOverlay` on next page
+    // load. Without source_node_id on the persisted row,
+    // `getNodeDeploymentOverlay` would filter the entry out (every
+    // overlay row requires source_node_id) and the canvas block would
+    // never show any URL or status after a refresh.
     if (result.resources?.length > 0) {
       for (const res of result.resources) {
         const source_node_id = findSourceNodeId(res);
@@ -971,10 +1156,6 @@ export async function applyDeployment(
         }
         const label = source_node_id ? nameToLabel.get(res.name) || '-' : '-';
         console.log(`Resource result: ${res.name} → matched node: ${source_node_id || 'NONE'} (label: ${label})`);
-        emitDeployProgress(cardId, {
-          type: 'resource_result',
-          result: res,
-        });
 
         if (source_node_id && res.success && res.name && res.type) {
           await upsertResourceMapping({
@@ -1035,12 +1216,20 @@ export async function applyDeployment(
       console.error('Deploy result (not success):', JSON.stringify(result, null, 2));
     }
 
-    // Emit completion with full results
-    emitDeployProgress(cardId, {
+    // Emit completion. The wire complete event carries an `outcome`
+    // (success/partial/failure/cancelled) + `totals` rollup; the legacy
+    // `success: bool` + `results: <full DeployResult>` shape is gone.
+    // The full DeployResult lives on the `canvasDeployment` row already
+    // (written above) and is fetched separately by the deploy panel —
+    // including it on the wire is duplication.
+    const cancelled = cancelSignal?.aborted === true;
+    emitDeployEvent(cardId, {
       type: 'complete',
-      success: result.success,
-      results: result,
-      duration_ms: durationMs,
+      card_id: cardId,
+      outcome: deriveCompleteOutcome(result.resources, { cancelled, engineSuccess: result.success }),
+      totals: computeCompleteTotals(result.resources),
+      at: new Date().toISOString(),
+      seq: 0,
     });
 
     return {
@@ -1066,10 +1255,17 @@ export async function applyDeployment(
 
     finishDeploySnapshot(cardId, 'failed');
 
-    emitDeployProgress(cardId, {
+    // Catch-path complete: this is a hard engine throw, not a partial
+    // outcome — surface as 'failure' (or 'cancelled' if the abort
+    // signal was the trigger). The error text lives in the DB row.
+    const cancelled = cancelSignal?.aborted === true;
+    emitDeployEvent(cardId, {
       type: 'complete',
-      success: false,
-      results: { error: err.message },
+      card_id: cardId,
+      outcome: cancelled ? 'cancelled' : 'failure',
+      totals: { queued: 0, applying: 0, succeeded: 0, failed: 0, skipped: 0, cancelled: 0 },
+      at: new Date().toISOString(),
+      seq: 0,
     });
 
     return { success: false, deploymentId: deployment.id, duration_ms: durationMs, error: err.message };
@@ -1228,10 +1424,7 @@ export async function destroyAllForCard(
       },
     });
 
-    emitDeployProgress(cardId, {
-      type: 'log',
-      message: `Destroying ${targets.size} ICE-managed resources across all historical deploys for this card...`,
-    });
+    emitLog(cardId, `Destroying ${targets.size} ICE-managed resources across all historical deploys for this card...`);
 
     const core = await getCoreEngine();
     const { GCPDeployer, AWSDeployer, AzureDeployer } = core;
@@ -1244,7 +1437,7 @@ export async function destroyAllForCard(
       orgId,
       credentials,
       requestedScope: { project: gcpProject },
-      onLog: (msg) => emitDeployProgress(cardId, { type: 'log', message: msg }),
+      onLog: (msg) => emitLog(cardId, msg),
     });
     const authClient: any = scopedAuth.authClient;
     const tempCredentialsDir: string | undefined = scopedAuth.tempDir;
@@ -1258,10 +1451,15 @@ export async function destroyAllForCard(
         auth_client: authClient,
         auth_key_file: scopedAuth.keyFilePath,
         auth_credentials: scopedAuth.parsedCredentials,
-        on_log: (message: string) => emitDeployProgress(cardId, { type: 'log', message }),
-        on_progress: (resource: string, action: string, status: string) => {
-          emitDeployProgress(cardId, { type: 'progress', resource, action, status });
-        },
+        on_log: (message: string) => emitLog(cardId, message),
+        // The destroy-all path doesn't have a card-translator translation
+        // (it's walking persisted historical resources), so there's no
+        // graphIdToCanvasId map to translate `on_node_status`. We skip
+        // the per-resource wire emit here and rely on the destroy-all's
+        // own log lines + the final `complete` event for the panel UX.
+        // The destroy-all flow is a "nuke" button, not a per-block live
+        // status surface — the user is staring at "Destroying 12
+        // resources..." and waiting for the totals.
       });
 
       // Destroy in a dependency-aware order: dependent resources first, origins last.
@@ -1326,10 +1524,20 @@ export async function destroyAllForCard(
         },
       });
 
-      emitDeployProgress(cardId, {
+      emitDeployEvent(cardId, {
         type: 'complete',
-        success: allSuccess,
-        results: { deleted, failed, total: targets.size },
+        card_id: cardId,
+        outcome: allSuccess ? 'success' : 'partial',
+        totals: {
+          queued: 0,
+          applying: 0,
+          succeeded: deleted.length,
+          failed: failed.length,
+          skipped: 0,
+          cancelled: 0,
+        },
+        at: new Date().toISOString(),
+        seq: 0,
       });
 
       return { success: allSuccess, deleted, failed, total: targets.size, deploymentId: destroyRecord.id };
@@ -1427,10 +1635,7 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
   const startTime = Date.now();
   let tempCredentialsDir: string | undefined;
 
-  emitDeployProgress(cardId, {
-    type: 'log',
-    message: `Starting destroy for card ${cardId}...`,
-  });
+  emitLog(cardId, `Starting destroy for card ${cardId}...`);
 
   try {
     const core = await getCoreEngine();
@@ -1449,7 +1654,7 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
       orgId,
       credentials,
       requestedScope: { project: credentials.project_id, region: deployment.region },
-      onLog: (msg) => emitDeployProgress(cardId, { type: 'log', message: msg }),
+      onLog: (msg) => emitLog(cardId, msg),
     });
     const authClient: any = scopedAuth.authClient;
     tempCredentialsDir = scopedAuth.tempDir;
@@ -1459,12 +1664,11 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
       project: scopedAuth.scope.project || authClient?.projectId || authClient?.project_id,
       regions: [deployment.region],
       continue_on_error: true,
-      on_progress: (resource: string, action: string, status: string) => {
-        emitDeployProgress(cardId, { type: 'progress', resource, action, status });
-      },
-      on_log: (message: string) => {
-        emitDeployProgress(cardId, { type: 'log', message });
-      },
+      // The destroy path doesn't have a card-translator translation
+      // (it walks the persisted deployment row's resources). Per-resource
+      // wire status emit is dropped; the destroy panel renders the final
+      // `complete` event for the totals. See comment in destroyAllForCard.
+      on_log: (message: string) => emitLog(cardId, message),
       auth_client: authClient,
       auth_key_file: scopedAuth.keyFilePath,
       auth_credentials: scopedAuth.parsedCredentials,
@@ -1505,12 +1709,15 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
               (deleteResult.error ? ' error=' + deleteResult.error : ''),
           );
           deleteResults.push(deleteResult);
-          emitDeployProgress(cardId, {
-            type: 'progress',
-            resource: res.name,
-            action: 'delete',
-            status: deleteResult.success ? 'completed' : 'failed',
-          });
+          // Surface a per-resource log line (the new wire contract has no
+          // dedicated `progress` discriminator and the destroy path
+          // doesn't have a graph→canvas id map — see scope comment on
+          // deployer.initialize above). A log line is the closest the
+          // contract allows for a destroy panel update.
+          emitLog(
+            cardId,
+            `${res.name}: delete ${deleteResult.success ? 'completed' : 'failed' + (deleteResult.error ? ` (${deleteResult.error})` : '')}`,
+          );
           // Phase 1: remove the stable name mapping once the resource is gone.
           if (deleteResult.success && res.source_node_id) {
             await removeResourceMapping({
@@ -1523,10 +1730,7 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
           }
         } catch (err: any) {
           deleteResults.push({ resource_id: res.resource_id, success: false, error: err.message });
-          emitDeployProgress(cardId, {
-            type: 'log',
-            message: `Failed to delete ${res.name}: ${err.message}`,
-          });
+          emitLog(cardId, `Failed to delete ${res.name}: ${err.message}`);
         }
       }
     }
@@ -1554,9 +1758,20 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
       },
     });
 
-    emitDeployProgress(cardId, {
+    emitDeployEvent(cardId, {
       type: 'complete',
-      success: allSuccess,
+      card_id: cardId,
+      outcome: allSuccess ? 'success' : 'partial',
+      totals: {
+        queued: 0,
+        applying: 0,
+        succeeded: deletedCount,
+        failed: failedCount,
+        skipped: 0,
+        cancelled: 0,
+      },
+      at: new Date().toISOString(),
+      seq: 0,
     });
 
     return { success: allSuccess, deploymentId: destroyRecord.id, duration_ms: durationMs };
@@ -1572,10 +1787,13 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
       },
     });
 
-    emitDeployProgress(cardId, {
+    emitDeployEvent(cardId, {
       type: 'complete',
-      success: false,
-      results: { error: err.message },
+      card_id: cardId,
+      outcome: 'failure',
+      totals: { queued: 0, applying: 0, succeeded: 0, failed: 0, skipped: 0, cancelled: 0 },
+      at: new Date().toISOString(),
+      seq: 0,
     });
 
     return { success: false, deploymentId: destroyRecord.id, error: err.message };
@@ -1646,10 +1864,7 @@ export async function rollbackDeployment(deploymentId: string, cardId: string, o
   const startTime = Date.now();
   let tempCredentialsDir: string | undefined;
 
-  emitDeployProgress(cardId, {
-    type: 'log',
-    message: `Rolling back to deployment ${deploymentId.slice(0, 8)}...`,
-  });
+  emitLog(cardId, `Rolling back to deployment ${deploymentId.slice(0, 8)}...`);
 
   try {
     const core = await getCoreEngine();
@@ -1668,7 +1883,7 @@ export async function rollbackDeployment(deploymentId: string, cardId: string, o
       orgId,
       credentials,
       requestedScope: { project: credentials.project_id, region: targetDeployment.region },
-      onLog: (msg) => emitDeployProgress(cardId, { type: 'log', message: msg }),
+      onLog: (msg) => emitLog(cardId, msg),
     });
     const authClient: any = scopedAuth.authClient;
     const gcpProject = scopedAuth.scope.project || authClient?.projectId || authClient?.project_id;
@@ -1731,12 +1946,15 @@ export async function rollbackDeployment(deploymentId: string, cardId: string, o
       }
     }
 
-    emitDeployProgress(cardId, {
-      type: 'log',
-      message: `Rolling back: target has ${targetResources.filter((r: any) => r.success).length} resources`,
-    });
+    emitLog(cardId, `Rolling back: target has ${targetResources.filter((r: any) => r.success).length} resources`);
 
-    // 5. Deploy using diff: desired (target) vs current (latest)
+    // 5. Deploy using diff: desired (target) vs current (latest).
+    // Per-resource wire status is dropped on the rollback path for the
+    // same reason as destroy — there's no card-translator translation
+    // here (the desired graph is built from the target deployment's
+    // historical resources, not the current canvas), so we don't have a
+    // graphIdToCanvasId map. Future work: build the same map from the
+    // target deployment's persisted `source_node_id` fields.
     const { deploy_graph } = core;
     const result = await deploy_graph(desiredGraph, currentGraph, deployer, {
       provider,
@@ -1762,11 +1980,13 @@ export async function rollbackDeployment(deploymentId: string, cardId: string, o
 
     await deployer.cleanup();
 
-    emitDeployProgress(cardId, {
+    emitDeployEvent(cardId, {
       type: 'complete',
-      success: result.success,
-      results: result,
-      duration_ms: durationMs,
+      card_id: cardId,
+      outcome: deriveCompleteOutcome(result.resources, { engineSuccess: result.success }),
+      totals: computeCompleteTotals(result.resources),
+      at: new Date().toISOString(),
+      seq: 0,
     });
 
     return {
@@ -1790,10 +2010,13 @@ export async function rollbackDeployment(deploymentId: string, cardId: string, o
       },
     });
 
-    emitDeployProgress(cardId, {
+    emitDeployEvent(cardId, {
       type: 'complete',
-      success: false,
-      results: { error: err.message },
+      card_id: cardId,
+      outcome: 'failure',
+      totals: { queued: 0, applying: 0, succeeded: 0, failed: 0, skipped: 0, cancelled: 0 },
+      at: new Date().toISOString(),
+      seq: 0,
     });
 
     return { success: false, deploymentId: rollbackRecord.id, duration_ms: durationMs, error: err.message };

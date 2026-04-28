@@ -39,24 +39,47 @@ function scheduleFlush(): void {
 }
 
 /**
- * Append an event to the deploy log. Picks up `deploymentId` from the
- * in-memory snapshot so callers don't need to thread it through every
- * `emitDeployProgress` site. Silently no-ops when no active snapshot
- * exists (e.g. a stray emit outside of a deploy) so this never breaks
- * the emitter on the hot path.
+ * Allocate the next monotonic seq for the active deploy on this card.
+ *
+ * Returns null if there's no active deployment (e.g. a stray emit fired
+ * by the requirement-poller after the deploy ended). Callers fall back
+ * to `Date.now()` in that path — those events are rare, idempotent, and
+ * the contract's "dedup on reconnect" semantic isn't load-bearing for
+ * post-deploy point-in-time updates.
+ *
+ * Pulled out of `recordDeployEvent` so the wire emit and the persistent
+ * log row share the SAME seq value. Without this, the wire `seq` and
+ * the DB `seq` could drift if the wire emit and the log record were
+ * computed independently — reconnecting clients use seq for dedup, so
+ * a drift here would surface as duplicated rows on the consumer side.
  */
-export function recordDeployEvent(cardId: string, type: string, payload: any): void {
+export function nextDeploySeq(cardId: string): number | null {
+  const snapshot = getDeploySnapshot(cardId);
+  const deploymentId = snapshot?.deploymentId;
+  if (!deploymentId) return null;
+  const nextSeq = (nextSeqByDeployment.get(deploymentId) || 0) + 1;
+  nextSeqByDeployment.set(deploymentId, nextSeq);
+  return nextSeq;
+}
+
+/**
+ * Append an event to the deploy log with a pre-allocated seq.
+ *
+ * The seq is allocated by the caller via {@link nextDeploySeq} so the
+ * live wire emit and this persistent record carry the same number — see
+ * the doc on `nextDeploySeq` for why that matters. Silently no-ops when
+ * no active snapshot exists (e.g. a stray emit outside of a deploy) so
+ * this never breaks the emitter on the hot path.
+ */
+export function recordDeployEvent(cardId: string, seq: number, type: string, payload: any): void {
   const snapshot = getDeploySnapshot(cardId);
   const deploymentId = snapshot?.deploymentId;
   if (!deploymentId) return;
 
-  const nextSeq = (nextSeqByDeployment.get(deploymentId) || 0) + 1;
-  nextSeqByDeployment.set(deploymentId, nextSeq);
-
   queue.push({
     deploymentId,
     cardId,
-    seq: nextSeq,
+    seq,
     type,
     payload,
   });

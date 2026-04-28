@@ -16,9 +16,12 @@
  * Responsibilities:
  *   1. Subscribe to the socket room for the active card (via
  *      `api.subscribeDeployProgress`) so live events arrive.
- *   2. Install a global `deploy:progress` listener that dispatches status
- *      updates into Redux — the same dispatches the old panel handler did,
- *      just unconditional.
+ *   2. Install a global `deploy:event` listener (pdl-7 — flipped from the
+ *      legacy `deploy:progress` channel) that routes the typed
+ *      `DeployEvent` discriminated union into the slice's per-event
+ *      reducers (`applyNodeStatusEvent` / `applyNodeProgressEvent` /
+ *      `applyDeployCompleteEvent`) and mirrors per-block overlay onto
+ *      the canvas via `updateCardNodeData`.
  *   3. On card change, call `/canvas/deploy/current/:cardId` to pull any
  *      in-flight deploy snapshot and hydrate the slice.
  *   4. On card change, call `/canvas/deploy/node-outputs/:cardId` to pull
@@ -29,13 +32,15 @@
 
 import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import type { DeployEvent, DeployNodeStatus } from '@ice/types';
 import { getApi } from '../../../shared/api/api-adapter';
 import { updateCardNodeData } from '../../../store/slices/cards-slice';
 import {
-  addResourceResult,
+  applyDeployCompleteEvent,
+  applyNodeProgressEvent,
+  applyNodeStatusEvent,
   appendLog,
-  deployError,
-  deploySuccess,
+  hydrateDeployFromHistory,
   setDeployedResources,
   setDeployProgress,
   startDeploying,
@@ -43,129 +48,162 @@ import {
 import type { AppDispatch, RootState } from '../../../store';
 
 /**
- * Handle a single deploy event — used by both the live socket listener
- * and the replay loop. Centralizing this means the replay reproduces the
- * same Redux state a user would have seen live, byte for byte.
+ * Map a wire `DeployNodeStatus` to the canvas overlay status string the
+ * compact-node renderer reads from `data.deploy_status`. Mirrors the
+ * service-layer mapping in `deploy.service.ts:mapStatusToOverlay`.
+ *
+ *   queued                  → 'queued'
+ *   applying                → 'deploying'
+ *   succeeded               → 'active'
+ *   failed                  → 'error'
+ *   skipped                 → 'skipped'
+ *   cancelled-due-to-dep    → 'cancelled'  // upstream-failure cascade,
+ *                                          // distinct from operator skip
+ *
+ * Must agree with the service-side `mapStatusToOverlay` in
+ * `services/deploy/src/services/deploy.service.ts:191` — the snapshot
+ * path goes through the service mapping; the live-event path goes
+ * through this one. Divergence means a tab opened mid-deploy snapshots
+ * with one color and live-event-overwrites with a different one for
+ * the same wire status. The corresponding `STATUS_COLORS` entries for
+ * `'queued'` / `'skipped'` / `'cancelled'` live in
+ * `packages/ui/src/config/canvas-constants.ts`.
  */
-function applyDeployEvent(dispatch: AppDispatch, event: any, cardId?: string): void {
+export function mapWireStatusToOverlay(
+  status: DeployNodeStatus,
+): 'queued' | 'deploying' | 'active' | 'error' | 'skipped' | 'cancelled' {
+  switch (status) {
+    case 'queued':
+      return 'queued';
+    case 'applying':
+      return 'deploying';
+    case 'succeeded':
+      return 'active';
+    case 'failed':
+      return 'error';
+    case 'skipped':
+      return 'skipped';
+    case 'cancelled-due-to-dep':
+      return 'cancelled';
+  }
+}
+
+/**
+ * Handle a single typed deploy event — used by both the live socket
+ * listener and the replay loop. Centralising this means the replay
+ * reproduces the same Redux state a user would have seen live, byte for
+ * byte. Routes by `event.type` discriminator into the slice's per-event
+ * reducers (pdl-7) and mirrors per-block overlay onto the canvas.
+ *
+ * `event.node_id` on `node_status` / `node_progress` is the CANVAS node
+ * id (the service layer translates from the engine's graph node id via
+ * `translation.deployables[]` before emitting — see learning anchor
+ * `graph-id-vs-canvas-id-translation-is-service-layer-job`), so it goes
+ * straight into `updateCardNodeData` without further translation.
+ */
+export function applyDeployEvent(
+  dispatch: AppDispatch,
+  event: DeployEvent | null | undefined,
+  cardId?: string,
+): void {
   if (!event) return;
-  if (event.type === 'progress') {
-    // Auto-flip the slice into 'deploying' on the first incoming event
-    // when no manual deploy is in flight. This is what makes a
-    // GitHub-push-triggered redeploy show up in the UI immediately —
-    // the user didn't click "Deploy" so the slice is idle, but events
-    // are streaming in. We start the deploy session here so the deploy
-    // panel and canvas pulse rings light up.
-    if (cardId) {
-      dispatch(startDeploying({ cardId }));
-    }
-    dispatch(
-      setDeployProgress({
-        progress: event.progress ?? 0,
-        resource: event.resource ?? '',
-        message: event.message ?? '',
-        step: event.step,
-      }),
-    );
-    if (event.source_node_id && event.status === 'running') {
-      dispatch(
-        updateCardNodeData({
-          nodeId: event.source_node_id,
-          data: {
-            deploy_status: 'deploying',
-            deploy_progress: event.step
-              ? {
-                  step_label: event.step.label,
-                  step_index: event.step.index,
-                  step_total: event.step.total,
-                }
-              : undefined,
-          },
-        }),
-      );
-    } else if (event.source_node_id && event.status === 'failed') {
-      // Set a placeholder error immediately so the node tooltip isn't empty
-      // during the gap between this event and the subsequent resource_result
-      // that carries the full error text.
-      const placeholder =
-        event.error ||
-        (event.message && !event.message.endsWith(': failed') ? event.message : null) ||
-        'Deployment failed — see deploy panel logs';
-      dispatch(
-        updateCardNodeData({
-          nodeId: event.source_node_id,
-          data: { deploy_status: 'error', deploy_error: placeholder, deploy_progress: undefined },
-        }),
-      );
-    }
-  } else if (event.type === 'resource_result') {
-    dispatch(addResourceResult(event.result));
-    if (event.result?.source_node_id) {
-      // Mirror the success path for failures: always populate `deploy_error`
-      // with at least a non-empty string so the red dot has tooltip text.
-      // `event.result.error` can be undefined when a handler throws without
-      // returning a shaped error — the fallback keeps the UX usable.
-      const errorText = event.result.success
-        ? undefined
-        : event.result.error || 'Deployment failed — see deploy panel logs';
-      const nodeData: Record<string, unknown> = {
-        provider_id: event.result.provider_id,
-        deploy_status: event.result.success ? 'active' : 'error',
-        deploy_progress: undefined,
-        deploy_error: errorText,
-        last_deployed_at: new Date().toISOString(),
+  switch (event.type) {
+    case 'node_status': {
+      // Auto-flip the slice into 'deploying' on the first incoming event
+      // when no manual deploy is in flight. This is what makes a
+      // GitHub-push-triggered redeploy show up in the UI immediately —
+      // the user didn't click "Deploy" so the slice is idle, but events
+      // are streaming in. `startDeploying` is idempotent (no-op when
+      // already deploying / destroying / planning) so the blind dispatch
+      // is safe.
+      if (cardId) dispatch(startDeploying({ cardId }));
+      dispatch(applyNodeStatusEvent(event));
+      // Mirror the per-block overlay onto the canvas. event.node_id is
+      // the canvas node id (post-pdl-4 service-layer translation).
+      const overlay = mapWireStatusToOverlay(event.status);
+      const data: Record<string, unknown> = {
+        deploy_status: overlay,
       };
-      if (event.result.outputs) {
-        nodeData.deploy_outputs = event.result.outputs;
-        Object.assign(nodeData, event.result.outputs);
+      if (event.error?.message) {
+        data.deploy_error = event.error.message;
+      } else if (event.status === 'succeeded') {
+        // Clear any stale error that might have been left over from a
+        // previous failed attempt.
+        data.deploy_error = undefined;
       }
-      dispatch(updateCardNodeData({ nodeId: event.result.source_node_id, data: nodeData }));
+      // Don't clobber `deploy_progress` on a status-only flip; the next
+      // node_progress event can update it. On terminal statuses, clear
+      // the lingering progress so the spinner ring stops.
+      if (
+        event.status === 'succeeded' ||
+        event.status === 'failed' ||
+        event.status === 'skipped' ||
+        event.status === 'cancelled-due-to-dep'
+      ) {
+        data.deploy_progress = undefined;
+      }
+      if (event.status === 'succeeded') {
+        data.last_deployed_at = event.at || new Date().toISOString();
+      }
+      dispatch(updateCardNodeData({ nodeId: event.node_id, data }));
+      break;
     }
-  } else if (event.type === 'log') {
-    dispatch(appendLog(event.message));
-  } else if (event.type === 'requirement_verified') {
-    // The requirement-poller emits this on every check (not only on
-    // first verification). When the requirement is the managed cert
-    // issuance one, mirror its status onto the source node so the
-    // PublicEndpoint / Custom Domain block header shows live cert state
-    // without waiting for a redeploy.
-    if (event.requirement_id === 'managed-cert-issuance' && event.node_id) {
-      const detailStatus = event.details?.managed_status as string | undefined;
-      const finalStatus = event.verified ? 'ACTIVE' : detailStatus || 'PROVISIONING';
+    case 'node_progress': {
+      dispatch(applyNodeProgressEvent(event));
       dispatch(
         updateCardNodeData({
           nodeId: event.node_id,
           data: {
-            cert_status: finalStatus,
-            cert_domain_statuses: event.details?.domain_statuses,
+            deploy_progress: {
+              step_label: event.step.label,
+              step_index: event.step.index,
+              step_total: event.step.total,
+            },
           },
         }),
       );
+      break;
     }
-  } else if (event.type === 'complete') {
-    // Async deploys (HTTP path defaults to async; the gateway no longer
-    // awaits the long body) emit terminal state ONLY via this event. We
-    // dispatch on both success and failure here, otherwise a failed
-    // async deploy would stay stuck at 'deploying' until the watchdog
-    // marks the DB row failed minutes later.
-    if (event.success) {
-      const results = (event.results as { resources?: any[] } | undefined)?.resources;
-      dispatch(
-        deploySuccess({
-          duration_ms: event.duration_ms || 0,
-          results: Array.isArray(results) ? results : undefined,
-        }),
-      );
-    } else {
-      const errResult = event.results as { error?: string; resources?: any[] } | undefined;
-      const resources = errResult?.resources;
-      const errorMessage = errResult?.error || 'Deployment failed';
-      dispatch(
-        deployError({
-          error: errorMessage,
-          results: Array.isArray(resources) ? resources : undefined,
-        }),
-      );
+    case 'log':
+      dispatch(appendLog(event.message));
+      break;
+    case 'complete':
+      // pdl-7 — the typed `complete` event is the deploy-tape terminal.
+      // The slice maps `outcome → status` and updates the panel header.
+      // Authoritative per-resource results still arrive via the HTTP
+      // response's `deploySuccess` / `deployError` payloads (kept) — the
+      // wire's `complete` doesn't carry full `outputs` / `provider_id`,
+      // only the rollup totals.
+      dispatch(applyDeployCompleteEvent(event));
+      break;
+    case 'requirement_verified': {
+      // The requirement-poller emits this on every check (not only on
+      // first verification). When the requirement is the managed cert
+      // issuance one, mirror its status onto the source node so the
+      // PublicEndpoint / Custom Domain block header shows live cert state
+      // without waiting for a redeploy.
+      //
+      // pdl-2's contract was widened in pdl-4's critic pass to carry
+      // `node_id` + `environment` + an optional `details: unknown` blob,
+      // so the disambiguation between two custom-domain blocks on the
+      // same canvas (and one block across environments) lives on the
+      // wire — the consumer no longer has to look it up.
+      if (event.requirement === 'managed-cert-issuance') {
+        const details = (event.details ?? {}) as Record<string, unknown>;
+        const detailStatus = typeof details.managed_status === 'string' ? details.managed_status : undefined;
+        const finalStatus =
+          event.status === 'satisfied' ? 'ACTIVE' : detailStatus || 'PROVISIONING';
+        dispatch(
+          updateCardNodeData({
+            nodeId: event.node_id,
+            data: {
+              cert_status: finalStatus,
+              cert_domain_statuses: details.domain_statuses,
+            },
+          }),
+        );
+      }
+      break;
     }
   }
 }
@@ -182,14 +220,14 @@ export function useDeploySubscription(cardId: string | undefined): void {
   // Without this, the socket is only opened when `subscribeDeployProgress`
   // is first called — which is fine for the subscription itself (emits
   // are buffered) but it means the very first live events of a deploy
-  // can race the connection handshake. Calling `onDeployProgress` with a
+  // can race the connection handshake. Calling `onDeployEvent` with a
   // no-op callback forces the module-level `getSocket()` to run and
   // start the handshake immediately.
   useEffect(() => {
     const api = getApi();
-    if (!api.onDeployProgress) return;
+    if (!api.onDeployEvent) return;
     console.log('[ice-socket] eager-init');
-    const cleanup = api.onDeployProgress(() => {
+    const cleanup = api.onDeployEvent(() => {
       // Swallowed — the real handler is installed in Phase 3 below.
     });
     return () => cleanup?.();
@@ -332,20 +370,75 @@ export function useDeploySubscription(cardId: string | undefined): void {
     };
   }, [cardId, dispatch]);
 
-  // Phase 3 — subscribe to the socket room and install the progress listener.
-  // Runs for the lifetime of the active card, independent of deploy panel
-  // visibility, so new tabs / closed panels still receive live updates.
+  // Phase 3 — subscribe to the socket room and install the deploy:event
+  // listener. Runs for the lifetime of the active card, independent of
+  // deploy panel visibility, so new tabs / closed panels still receive
+  // live updates.
+  //
+  // The post-complete fetch (deployed resources + overlay refresh) only
+  // fires here, NOT inside `applyDeployEvent`. The replay path also runs
+  // through `applyDeployEvent`, and we don't want to refire the resource
+  // fetch on every historical complete event during replay — only the
+  // live one matters.
   useEffect(() => {
     if (!cardId) return;
     const api = getApi();
     const unsubRoom = api.subscribeDeployProgress?.(cardId);
 
-    const cleanup = api.onDeployProgress((event: any) => {
+    const cleanup = api.onDeployEvent((event: DeployEvent) => {
       applyDeployEvent(dispatch, event, cardId);
-      // On complete, also re-pull deployed resources + overlay so the
-      // canvas reflects the final outputs (propagated custom domain URL
-      // on compute blocks etc.).
-      if (event?.type === 'complete' && event.success) {
+      if (event?.type !== 'complete') return;
+
+      // Async deploys (the production default) emit terminal state ONLY via
+      // this `complete` event — the HTTP response that fired off the deploy
+      // returned `{ async: true }` minutes ago and never carried results.
+      // The wire's complete event itself doesn't carry per-resource
+      // outputs / provider_id / api_enable_url either (the contract is just
+      // outcome + totals). So on EVERY complete (success, partial,
+      // failure, cancelled), pull the just-finalized DB row and hydrate
+      // the slice — that's where outputs / provider_id / error text /
+      // duration_ms live. The DB row is written by the deploy service
+      // BEFORE the complete event is emitted (see
+      // `services/deploy/src/services/deploy.service.ts:emitDeployEvent`
+      // ordering), so the read is safe.
+      (async () => {
+        try {
+          const history = (await api.deploy.getDeployments(cardId)) as Array<{
+            id: string;
+            status: string;
+            action_type: string;
+            environment?: string;
+            duration_ms?: number | null;
+            error?: string | null;
+            results?: { resources?: any[] } | null;
+          }>;
+          if (!Array.isArray(history) || history.length === 0) return;
+          const latest = history.find(
+            (d) =>
+              (d.action_type === 'apply' || d.action_type === 'rollback') &&
+              ['success', 'partial', 'failed', 'cancelled'].includes(d.status),
+          );
+          if (!latest) return;
+          const resources = Array.isArray(latest.results?.resources) ? latest.results!.resources : [];
+          dispatch(
+            hydrateDeployFromHistory({
+              cardId,
+              status: latest.status,
+              results: resources,
+              error: latest.error,
+              duration_ms: latest.duration_ms ?? undefined,
+              environment: latest.environment ?? undefined,
+            }),
+          );
+        } catch {}
+      })();
+
+      // On success, also re-pull deployed resources + per-node overlay so
+      // the canvas reflects the final outputs (propagated custom domain
+      // URL on compute blocks, etc.). Skipped on non-success outcomes
+      // because partial / failure / cancelled rows have inconsistent
+      // resource shapes — the hydrate call above is sufficient there.
+      if (event.outcome === 'success') {
         (async () => {
           try {
             const res = await api.deploy.getResources(cardId);

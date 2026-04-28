@@ -533,18 +533,23 @@ describe('pdl-4 computeCompleteTotals', () => {
 });
 
 describe('pdl-4 mapStatusToOverlay', () => {
-  it('maps applying / queued → deploying', async () => {
+  // Mapping aligned with the frontend's `mapWireStatusToOverlay` in
+  // `packages/ui/src/features/deploy/hooks/use-deploy-subscription.ts`.
+  // Both sides must produce the same overlay string for the same wire
+  // status — divergence means the snapshot path and live-event path
+  // disagree on color for the same node.
+  it('maps queued → queued and applying → deploying', async () => {
     const { mapStatusToOverlay } = await getOutcomeHelpers();
+    expect(mapStatusToOverlay('queued')).toBe('queued');
     expect(mapStatusToOverlay('applying')).toBe('deploying');
-    expect(mapStatusToOverlay('queued')).toBe('deploying');
   });
 
-  it('maps succeeded → active, failed → error, skipped/cancel → skipped', async () => {
+  it('maps succeeded → active, failed → error, skipped → skipped, cancelled-due-to-dep → cancelled', async () => {
     const { mapStatusToOverlay } = await getOutcomeHelpers();
     expect(mapStatusToOverlay('succeeded')).toBe('active');
     expect(mapStatusToOverlay('failed')).toBe('error');
     expect(mapStatusToOverlay('skipped')).toBe('skipped');
-    expect(mapStatusToOverlay('cancelled-due-to-dep')).toBe('skipped');
+    expect(mapStatusToOverlay('cancelled-due-to-dep')).toBe('cancelled');
   });
 });
 

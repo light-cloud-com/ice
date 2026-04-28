@@ -214,7 +214,7 @@ export const DeployPanel: React.FC = () => {
   // requirements section when the background poller flips one.
   useEffect(() => {
     if (!isOpen || !activeCard) return;
-    const cleanup = getApi().onDeployProgress((event: any) => {
+    const cleanup = getApi().onDeployEvent((event) => {
       if (event.type === 'requirement_verified') {
         fetchRequirements().catch(() => undefined);
       }

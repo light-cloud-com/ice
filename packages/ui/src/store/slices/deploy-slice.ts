@@ -9,6 +9,12 @@
  */
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import type {
+  DeployCompleteEvent,
+  DeployNodeProgressEvent,
+  DeployNodeStatus,
+  DeployNodeStatusEvent,
+} from '@ice/types';
 import { setActiveCard } from './cards-slice';
 import { t } from '../../i18n';
 
@@ -89,6 +95,32 @@ export type DeployStatus =
   | 'error'
   | 'cancelled';
 
+/**
+ * Per-node live deploy state. Built from `deploy:event` wire events
+ * (pdl-7) keyed by canvas node id. The map lives in `state.nodesById`
+ * and is the single source of truth for the deploy panel's per-row
+ * status, the canvas overlay's per-block badge, and the deploy-rollup
+ * counts ("X of N succeeded"). Derived rollups go through memoized
+ * selectors, never recomputed inside the slice.
+ */
+export interface NodeDeployState {
+  /** Canvas node id (key in nodesById, also stored here for selector convenience). */
+  node_id: string;
+  status: DeployNodeStatus;
+  resource_name: string;
+  resource_type: string;
+  action: 'create' | 'update' | 'delete';
+  /** Sub-step from the most recent node_progress event, if any. */
+  step?: { label: string; index: number; total: number };
+  error?: { code: string; message: string; recoverable?: boolean };
+  /** Wall-clock duration on terminal status, ms. */
+  duration_ms?: number;
+  /** Most-recent ISO timestamp for this node — used to display "Started 12s ago". */
+  last_at: string;
+  /** Highest seq applied to this node's record. Used to dedup the live + replay streams. */
+  last_seq: number;
+}
+
 export interface DeployState {
   // Panel
   isOpen: boolean;
@@ -127,6 +159,19 @@ export interface DeployState {
 
   // Results
   results: DeployResourceResult[];
+
+  /**
+   * Per-node live state (pdl-7). Keyed by canvas node id. Populated by
+   * `applyNodeStatusEvent` / `applyNodeProgressEvent` from `deploy:event`
+   * socket events. The deploy panel's per-row UI and the canvas overlay
+   * both project off this map. Cleared on `setActiveCard` (extraReducer).
+   *
+   * Not persisted — transient deploy state. On a page reload, the
+   * snapshot/replay paths in `useDeploySubscription` rehydrate from the
+   * server-side event tape, so persisting this would only duplicate that
+   * work and add a stale-cache failure mode.
+   */
+  nodesById: Record<string, NodeDeployState>;
 
   // History
   history: DeployRecord[];
@@ -194,6 +239,7 @@ const initialState: DeployState = {
   currentResource: '',
   logs: [],
   results: [],
+  nodesById: {},
   history: [],
   deployedResources: [],
   driftByNode: {},
@@ -294,7 +340,9 @@ const deploySlice = createSlice({
       state.status = 'deploying';
       state.progress = 0;
       state.currentResource = '';
+      state.currentStep = undefined;
       state.results = [];
+      state.nodesById = {};
       state.error = null;
       state.currentDeployCardId = action?.payload?.cardId ?? state.currentDeployCardId;
       state.logs.push(t('deploy.slice.deploying'));
@@ -308,11 +356,27 @@ const deploySlice = createSlice({
       state.status = 'destroying';
       state.progress = 0;
       state.currentResource = '';
+      state.currentStep = undefined;
       state.results = [];
+      state.nodesById = {};
       state.error = null;
       state.currentDeployCardId = action?.payload?.cardId ?? state.currentDeployCardId;
       state.logs.push('Destroying deployment...');
     },
+    /**
+     * Narrow seed for the snapshot-pull path (Phase 2 of
+     * `useDeploySubscription`). The server-side snapshot carries
+     * pre-aggregated `progress` / `currentResource` / `currentStep`
+     * values that the typed `deploy:event` wire stream doesn't have a
+     * direct equivalent for — so a tab opened mid-deploy can paint the
+     * panel header without waiting for the next live event.
+     *
+     * Not dispatched from the live socket listener (pdl-7 flipped that
+     * to `applyNodeStatusEvent` / `applyNodeProgressEvent`). Kept narrow
+     * and load-bearing solely for the snapshot bootstrap; pdl-5's deploy
+     * panel rewrite will retire it when the panel renders off
+     * `nodesById` directly and no longer needs aggregate seeds.
+     */
     setDeployProgress(
       state,
       action: PayloadAction<{
@@ -322,22 +386,148 @@ const deploySlice = createSlice({
         step?: { label: string; index: number; total: number };
       }>,
     ) {
-      // Ignore late socket events that arrive after the API response has
+      // Ignore late seed calls that arrive after the API response has
       // already flipped the status. Without this guard, a stale
-      // `progress: 99` event landing after deploySuccess would reset the
-      // bar to 99% even though the deploy is finished — exactly the
-      // "stopped at 99% after it's completed" symptom.
+      // `progress: 99` seed landing after deploySuccess would reset the
+      // bar to 99% even though the deploy is finished.
       if (state.status === 'success' || state.status === 'error' || state.status === 'cancelled') return;
       state.progress = action.payload.progress;
       state.currentResource = action.payload.resource;
       state.currentStep = action.payload.step;
       if (action.payload.message) state.logs.push(action.payload.message);
     },
-    addResourceResult(state, action: PayloadAction<DeployResourceResult>) {
-      // Same race protection — don't append late results that arrive
-      // after the API response has already populated state.results.
-      if (state.status === 'success' || state.status === 'error') return;
-      state.results.push(action.payload);
+    /**
+     * pdl-7 — apply a per-node lifecycle event from the typed `deploy:event`
+     * channel. Upserts the node record in `nodesById`, dedups by `seq`
+     * (lower-or-equal seq is dropped — replay arrived after live, or
+     * out-of-order delivery). Also mirrors terminal events into
+     * `state.results` so the deploy-panel's existing consumers (DNS
+     * records filter, ResultsSummary, ApiErrorBanner, ResourceList) keep
+     * working unchanged. The HTTP response's `deploySuccess` /
+     * `deployError` payload still wins on completion — those carry the
+     * authoritative `outputs` / `provider_id` / `api_enable_url` that
+     * `node_status` events don't have.
+     */
+    applyNodeStatusEvent(state, action: PayloadAction<DeployNodeStatusEvent>) {
+      const e = action.payload;
+      const existing = state.nodesById[e.node_id];
+      // Dedup: if the existing record's last_seq is higher, skip.
+      if (existing && existing.last_seq >= e.seq) return;
+      state.nodesById[e.node_id] = {
+        node_id: e.node_id,
+        status: e.status,
+        resource_name: e.resource_name,
+        resource_type: e.resource_type,
+        action: e.action,
+        error: e.error,
+        duration_ms: e.duration_ms,
+        // Preserve the previous step on a status-only flip — the next
+        // progress event can update it. Don't clobber to undefined.
+        step: existing?.step,
+        last_at: e.at,
+        last_seq: e.seq,
+      };
+
+      // Update aggregate progress fields the deploy-panel header reads.
+      // Skip if the status has flipped to a terminal — `deploySuccess` /
+      // `deployError` (or `applyDeployCompleteEvent`) own that surface.
+      if (state.status === 'success' || state.status === 'error' || state.status === 'cancelled') return;
+      if (e.status === 'applying') {
+        state.currentResource = e.resource_name;
+      }
+
+      // Mirror terminal node_status events into state.results so the
+      // existing deploy-panel consumers (DNS records, ResultsSummary,
+      // ApiErrorBanner, ResourceList) keep working without churn. The
+      // node_status wire shape is a strict subset of DeployResourceResult
+      // — outputs / provider_id / api_enable_url are missing because the
+      // wire stream doesn't carry them. The HTTP response's deploySuccess
+      // / deployError replaces this list with the authoritative version
+      // on completion (see existing comments at deploySuccess line 357).
+      const isTerminal =
+        e.status === 'succeeded' ||
+        e.status === 'failed' ||
+        e.status === 'skipped' ||
+        e.status === 'cancelled-due-to-dep';
+      if (!isTerminal) return;
+      const resultIndex = state.results.findIndex((r) => r.source_node_id === e.node_id);
+      const result: DeployResourceResult = {
+        name: e.resource_name,
+        type: e.resource_type,
+        action: e.action,
+        success: e.status === 'succeeded',
+        error: e.error?.message,
+        duration_ms: e.duration_ms,
+        source_node_id: e.node_id,
+      };
+      if (resultIndex >= 0) {
+        // Preserve any outputs / provider_id that may have been written
+        // earlier (e.g. from a snapshot hydrate).
+        const prior = state.results[resultIndex];
+        state.results[resultIndex] = { ...prior, ...result, outputs: prior.outputs, provider_id: prior.provider_id };
+      } else {
+        state.results.push(result);
+      }
+    },
+    /**
+     * pdl-7 — apply a per-node mid-apply progress milestone. Updates the
+     * `step` field on the existing record. Defensively seeds a minimal
+     * `applying` record when no prior status has arrived yet (handler
+     * fires `on_step` before the scheduler's first `applying` event).
+     */
+    applyNodeProgressEvent(state, action: PayloadAction<DeployNodeProgressEvent>) {
+      const e = action.payload;
+      const existing = state.nodesById[e.node_id];
+      if (!existing) {
+        state.nodesById[e.node_id] = {
+          node_id: e.node_id,
+          status: 'applying',
+          resource_name: e.resource_name,
+          // Wire `node_progress` doesn't carry resource_type/action — leave
+          // empty for now; the next node_status event will fill them in.
+          resource_type: '',
+          action: 'create',
+          step: e.step,
+          last_at: e.at,
+          last_seq: e.seq,
+        };
+        return;
+      }
+      if (existing.last_seq >= e.seq) return;
+      existing.step = e.step;
+      existing.last_at = e.at;
+      existing.last_seq = e.seq;
+
+      // Mirror to the panel-header current-step display.
+      if (state.status === 'deploying' || state.status === 'destroying') {
+        state.currentStep = e.step;
+        state.currentResource = e.resource_name;
+      }
+    },
+    /**
+     * pdl-7 — apply the terminal `complete` wire event. Maps `outcome`
+     * onto the slice's `DeployStatus`:
+     *   success                 → 'success'
+     *   partial | failure       → 'error' (red header + Copy errors button)
+     *   cancelled               → 'cancelled' (zero successes, per pdl-2 contract)
+     * Doesn't push to `state.history` — `hydrateDeployFromHistory` reads
+     * from the DB row that the backend already wrote, so pushing here
+     * would double-add on a refresh.
+     */
+    applyDeployCompleteEvent(state, action: PayloadAction<DeployCompleteEvent>) {
+      const e = action.payload;
+      if (e.outcome === 'success') {
+        state.status = 'success';
+      } else if (e.outcome === 'cancelled') {
+        state.status = 'cancelled';
+      } else {
+        state.status = 'error';
+      }
+      state.progress = 100;
+      state.currentResource = '';
+      state.currentStep = undefined;
+      state.currentDeployCardId = undefined;
+      state.logs.push(t('deploy.slice.completed', { seconds: '0.0' }));
     },
 
     // Completion
@@ -350,10 +540,11 @@ const deploySlice = createSlice({
       state.currentResource = '';
       state.currentDeployCardId = undefined;
       // Authoritative results from the API response — replaces whatever
-      // the socket events accumulated. Without this, network races could
-      // leave state.results empty (socket events arriving AFTER the HTTP
-      // response would be dropped by addResourceResult's status guard
-      // and the summary stayed blank).
+      // the socket events accumulated via `applyNodeStatusEvent`'s
+      // mirror path. The wire's `node_status` events don't carry
+      // `outputs` / `provider_id` / `api_enable_url`; the HTTP response
+      // does, and those fields are what the deploy-panel ResultsSummary
+      // and DNS-records filter need to render.
       if (Array.isArray(action.payload.results) && action.payload.results.length > 0) {
         state.results = action.payload.results;
       }
@@ -420,9 +611,11 @@ const deploySlice = createSlice({
       state.plan = null;
       state.progress = 0;
       state.currentResource = '';
+      state.currentStep = undefined;
       state.currentDeployCardId = undefined;
       state.logs = [];
       state.results = [];
+      state.nodesById = {};
     },
 
     appendLog(state, action: PayloadAction<string>) {
@@ -580,8 +773,10 @@ const deploySlice = createSlice({
       state.plan = null;
       state.progress = 0;
       state.currentResource = '';
+      state.currentStep = undefined;
       state.logs = [];
       state.results = [];
+      state.nodesById = {};
       state.deployedResources = [];
       state.driftByNode = {};
       state.driftCheckLoading = false;
@@ -610,8 +805,18 @@ export const {
   setPlan,
   startDeploying,
   startDestroying,
+  // pdl-7 — typed deploy:event reducers (replace legacy setDeployProgress /
+  // addResourceResult / type:'progress' / type:'resource_result' branches).
+  applyNodeStatusEvent,
+  applyNodeProgressEvent,
+  applyDeployCompleteEvent,
+  // setDeployProgress remains as a NARROW seed for the snapshot-pull path
+  // (Phase 2 of useDeploySubscription) where the server-side snapshot
+  // carries pre-aggregated `progress` / `currentResource` / `currentStep`
+  // values we don't have a wire event for. Not dispatched from the live
+  // socket listener; pdl-5 will retire this when the deploy panel is
+  // rewritten to render off `nodesById` directly.
   setDeployProgress,
-  addResourceResult,
   deploySuccess,
   deployError,
   hydrateDeployFromHistory,

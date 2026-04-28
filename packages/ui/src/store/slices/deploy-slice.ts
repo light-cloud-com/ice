@@ -487,7 +487,30 @@ const deploySlice = createSlice({
       const e = action.payload;
       const existing = state.nodesById[e.node_id];
       // Dedup: if the existing record's last_seq is higher, skip.
-      if (existing && existing.last_seq >= e.seq) return;
+      //
+      // pdl-10 critic finding B1 — the deploy-tape `seq` counter resets per
+      // `deploymentId` (see `deploy-event-log.ts:nextSeqByDeployment`), so
+      // a destroy after a successful apply starts back at seq=1 while the
+      // existing record's `last_seq` is at the apply's terminal seq (e.g.
+      // 9). Without action-awareness here, every destroy event would be
+      // silently dropped, leaving the smoke-test regression in
+      // `ux-destroy-action-bypasses-node-status-wire` unfixed even after
+      // pdl-10's backend wiring. Different actions (create / update /
+      // delete) are different operations by definition; their seq
+      // counters are independent so the dedup must be too. Same medicine
+      // applies to a future re-deploy: a `queued` status arriving on a
+      // node whose existing record is terminal means a new operation is
+      // starting, regardless of whether the action label changed.
+      if (existing) {
+        const sameAction = existing.action === e.action;
+        const isFreshOperationStart =
+          e.status === 'queued' &&
+          (existing.status === 'succeeded' ||
+            existing.status === 'failed' ||
+            existing.status === 'skipped' ||
+            existing.status === 'cancelled-due-to-dep');
+        if (sameAction && !isFreshOperationStart && existing.last_seq >= e.seq) return;
+      }
       state.nodesById[e.node_id] = {
         node_id: e.node_id,
         status: e.status,
@@ -565,7 +588,17 @@ const deploySlice = createSlice({
         };
         return;
       }
-      if (existing.last_seq >= e.seq) return;
+      // Don't dedup against a TERMINAL existing record — that's a stale
+      // post-completion snapshot from a prior op (see B1 fix in
+      // applyNodeStatusEvent). A progress event arriving means the new op
+      // is mid-flight; the next node_status event will refresh the
+      // record properly.
+      const isExistingTerminal =
+        existing.status === 'succeeded' ||
+        existing.status === 'failed' ||
+        existing.status === 'skipped' ||
+        existing.status === 'cancelled-due-to-dep';
+      if (!isExistingTerminal && existing.last_seq >= e.seq) return;
       existing.step = e.step;
       existing.last_at = e.at;
       existing.last_seq = e.seq;

@@ -6,12 +6,34 @@
  */
 
 import prisma from '@ice/db';
+import { emitDeployLog, emitPipelineUpdate } from '@ice/shared';
+import type { DeployLogEvent } from '@ice/types';
 import { Queue, Worker, type Job } from 'bullmq';
 import IORedis from 'ioredis';
 import { buildFromSource, cleanupBuild } from './build.service';
 import { applyDeployment } from './deploy.service';
 import { InMemoryQueue, InMemoryWorker } from './memory-queue';
 import { updateEventProgress, failEvent, type DeployStep } from './pipeline.service';
+
+/**
+ * Emit a one-off log line on the deploy wire from outside an active deploy
+ * (the build/pipeline phase fires before `applyDeployment` runs, so there's
+ * no `deploymentId` snapshot for `nextDeploySeq` to allocate against). Use
+ * `Date.now()` as a monotonic-ish fallback seq — these events are rare,
+ * idempotent, and the contract's reconnect-dedup semantic isn't load-bearing
+ * for build-phase log lines.
+ */
+function emitBuildPhaseLog(cardId: string, message: string): void {
+  const event: DeployLogEvent = {
+    type: 'log',
+    card_id: cardId,
+    level: 'info',
+    message,
+    at: new Date().toISOString(),
+    seq: Date.now(),
+  };
+  emitDeployLog(cardId, event);
+}
 
 const REDIS_URL = process.env.REDIS_URL;
 const USE_MEMORY_QUEUE = !REDIS_URL || process.env.ICE_DESKTOP === 'true';
@@ -246,18 +268,16 @@ async function processPipelineJob(data: any) {
         // deploy events, not only for manual apply. Without this the deploy
         // panel sits silent until `applyDeployment` starts minutes later.
         try {
-          const { emitDeployProgress } = await import('@ice/shared');
-          emitDeployProgress(cardId, {
-            type: 'log',
-            message: `[build:${step}:${status}] ${stageLabel}${message ? ` — ${message}` : ''}`,
-          });
+          emitBuildPhaseLog(
+            cardId,
+            `[build:${step}:${status}] ${stageLabel}${message ? ` — ${message}` : ''}`,
+          );
         } catch {
           // Non-fatal — unified feed is a UX nicety.
         }
       },
       // Stream individual build lines via Socket.IO + persist to DB
       async (line: string) => {
-        const { emitPipelineUpdate, emitDeployProgress } = await import('@ice/shared');
         emitPipelineUpdate(nodeId, {
           nodeId,
           cardId,
@@ -269,7 +289,7 @@ async function processPipelineJob(data: any) {
         // Prefixing with [build] makes it visually distinct from infra
         // logs (which the apply phase emits unprefixed) so the user can
         // tell at a glance which phase a line came from.
-        emitDeployProgress(cardId, { type: 'log', message: `[build] ${line}` });
+        emitBuildPhaseLog(cardId, `[build] ${line}`);
         // Persist build line as a log step (throttled — batch every 10 lines)
         buildLogBuffer.push(line);
         if (buildLogBuffer.length >= 10) {

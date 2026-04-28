@@ -134,9 +134,15 @@ export interface DeployCompleteEvent {
    * Overall outcome:
    *   - `success`  — all deployable nodes terminated as `succeeded`.
    *   - `partial`  — at least one `succeeded` AND at least one `failed`
-   *                   (or `cancelled-due-to-dep`).
+   *                   (or `cancelled-due-to-dep`). A user-initiated
+   *                   cancel that arrives after at least one resource
+   *                   has already succeeded surfaces as `partial`, NOT
+   *                   `cancelled`, so the user sees they have a
+   *                   cleanup-worthy artifact rather than thinking the
+   *                   deploy was a no-op.
    *   - `failure`  — every terminal node is non-success (no `succeeded`).
-   *   - `cancelled` — user-initiated cancel; nothing is in-flight.
+   *   - `cancelled` — user-initiated cancel AND zero `succeeded`
+   *                    resources. Strictly: nothing landed.
    */
   outcome: 'success' | 'partial' | 'failure' | 'cancelled';
   /**
@@ -163,15 +169,42 @@ export interface DeployCompleteEvent {
  * a row flips, NOT by the apply engine. The frontend uses this to
  * update Custom Domain / Public Endpoint block headers without waiting
  * for a redeploy.
+ *
+ * The unique identity of a `BlockRequirementStatus` row is
+ * `(card_id, node_id, environment, requirement)` — all four fields
+ * are required on the wire so the frontend can disambiguate between
+ * the same requirement applied to two blocks, or to one block across
+ * environments. Earlier drafts dropped `node_id` / `environment` and
+ * forced the consumer to look them up by row id; that's a regression.
  */
 export interface DeployRequirementVerifiedEvent {
   type: 'requirement_verified';
   card_id: string;
+  /** Canvas node id of the block whose requirement flipped. */
+  node_id: string;
+  /** Environment the requirement is scoped to (e.g. `'staging'`). */
+  environment: string;
   /** Free-text identifier matching the existing `requirement_id` usage
-   *  in `requirement-poller.service.ts`. */
+   *  in `requirement-poller.service.ts` (e.g. `'managed-cert-issuance'`). */
   requirement: string;
   status: 'satisfied' | 'unsatisfied';
+  /** Optional handler-specific detail blob (e.g. cert managed-status,
+   *  per-domain status map). Free-form because the shape varies per
+   *  requirement type — frontend consumers narrow at use site. Mirrors
+   *  the `RequirementCheckResult.details` type from
+   *  `@ice/blocks/requirements`. */
+  details?: unknown;
   at: string;
+  /**
+   * Sequence number. **Different scheme from the deploy-tape `seq`** on
+   * `DeployNodeStatusEvent` / `DeployNodeProgressEvent` /
+   * `DeployLogEvent` / `DeployCompleteEvent` (those are small monotonic
+   * ints from the active-deploy event log). Requirement events fire
+   * post-deploy, often outside an active deploy, so the poller emits
+   * `Date.now()` here. Reducers that sort the unified `deploy:event`
+   * stream by `seq` must NOT assume the two schemes are commensurable —
+   * route by `event.type` first, then sort within each scheme.
+   */
   seq: number;
 }
 

@@ -4,13 +4,13 @@
   "description": "ICE Engine core - Graph processing, validation, deployment, schema registry, and CLI",
   "type": "module",
   "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "types": "./src/index.ts",
   "bin": {
     "ice": "./dist/cli/bin/ice.js"
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "types": "./src/index.ts",
       "default": "./src/index.ts"
     },
     "./graph": {

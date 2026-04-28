@@ -175,8 +175,11 @@ describe('deploy event emitters — wire contract', () => {
     const payload: DeployRequirementVerifiedEvent = {
       type: 'requirement_verified',
       card_id: 'abc',
+      node_id: 'canvas-node-1',
+      environment: 'staging',
       requirement: 'ssl-cert-ready',
       status: 'satisfied',
+      details: { managed_status: 'ACTIVE' },
       at: '2026-04-28T22:10:00.000Z',
       seq: 100,
     };
@@ -258,6 +261,8 @@ describe('deploy event emitters — _io null guard', () => {
       emitDeployRequirementVerified('abc', {
         type: 'requirement_verified',
         card_id: 'abc',
+        node_id: 'n',
+        environment: 'staging',
         requirement: 'x',
         status: 'satisfied',
         at: 'now',

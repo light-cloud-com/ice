@@ -19,7 +19,8 @@
 
 import { BUILT_IN_REQUIREMENTS, type RequirementContext } from '@ice/blocks/requirements';
 import prisma from '@ice/db';
-import { emitDeployProgress } from '@ice/shared';
+import { emitDeployRequirementVerified } from '@ice/shared';
+import type { DeployRequirementVerifiedEvent } from '@ice/types';
 import { checkSearchConsoleVerification, fetchSslCertificateStatus } from './google-verification.service.js';
 import { getResourceMap } from './resource-mapping.service.js';
 
@@ -157,22 +158,27 @@ async function checkOne(row: PollerRow): Promise<void> {
 
     // Notify the UI on every status check so the PublicEndpoint /
     // Custom Domain block headers can show live "Provisioning…" /
-    // "Active" status without waiting for the user to redeploy. The
-    // payload now includes the actual status + details so the UI can
-    // mirror it onto node.data.cert_status (and similar) for in-block
-    // display. We still send `requirement_verified` (not a new event
-    // type) for back-compat with the existing subscription handler.
+    // "Active" status without waiting for the user to redeploy.
+    //
+    // Carries the full unique key `(card_id, node_id, environment,
+    // requirement)` plus an optional `details` blob — without `node_id`
+    // + `environment`, a frontend reducer can't disambiguate between
+    // the same requirement applied to two blocks (or one block across
+    // environments). Fires OUTSIDE an active deploy, so `seq` uses the
+    // `Date.now()` scheme documented on `DeployRequirementVerifiedEvent.seq`.
     try {
-      emitDeployProgress(row.card_id, {
+      const event: DeployRequirementVerifiedEvent = {
         type: 'requirement_verified',
-        requirement_id: row.requirement_id,
+        card_id: row.card_id,
         node_id: row.node_id,
         environment: row.environment,
-        message: result.message,
-        status: nextStatus,
-        verified: nowVerified,
+        requirement: row.requirement_id,
+        status: nowVerified ? 'satisfied' : 'unsatisfied',
         details: result.details,
-      } as any);
+        at: new Date().toISOString(),
+        seq: Date.now(),
+      };
+      emitDeployRequirementVerified(row.card_id, event);
     } catch {
       // Non-fatal.
     }

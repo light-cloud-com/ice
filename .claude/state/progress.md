@@ -20,6 +20,24 @@ The deploy engine is being refactored from sequential apply to a parallel work-s
 - ✅ **pdl-8 tests** — gap-fill from critic findings: seq-roundtrip integration test in `deploy-event-translation.test.ts` asserting every wire-emit seq lands on the persistent log row with the same value (the load-bearing claim of the `nextDeploySeq()` split per learning `seq-allocation-must-be-shared-between-wire-and-log`). Each pdl-* unit shipped its own surface-level tests; pdl-8 closes the cross-unit seam between wire emit and persistent log.
 - ✅ **pdl-9 docs** — `/docs/core-engine.md` Apply paragraph rewritten to describe the parallel scheduler + per-handler caps + failure isolation; new "Live event wire contract" section documents the `DeployEvent` discriminated union and the three id namespaces (canvas / graph / resource). `/docs/frontend.md` deploy-slice description updated to mention `nodesById`. Entry-points list extended with `scheduler.ts` and `deploy-events.ts`.
 
+### UX smoke test (2026-04-28)
+
+ux-tester drove the parallel-deploy work end-to-end against `lc-ice` (pre-flight clean after orchestrator deleted leaked `ice-full-sta-prod-bucket-3bf3f9d3`). Canvas: 3× `Storage.Bucket` blocks. Result:
+
+- ✅ **The headline bouncing-bar bug is GONE.** Progress bar moved 0% → 67% → 100% monotonically over an 8.2s deploy. Per-node list rendered with QUEUED → DEPLOY → LIVE pills. Captured 1-in-flight + 2-done at one tick; the two completed buckets clocked 2.4s and 2.6s — proof of pdl-1's parallel pool actually running concurrent applies.
+- ✅ **Wire contract behaves correctly on the apply path.** `state.deploy.nodesById` populates from the `'deploy:event'` channel; canvas badge agrees with deploy panel row for the same node; post-success summary shows `outputs` / `provider_id` / URLs (the pdl-7 hydrate path lands).
+- ✅ **Static UI checks pass.** No legacy `'deploy:progress'` listener anywhere; `state.deploy.nodesById` exists; idle panel renders correctly.
+- ❌ **Destroy bypasses the node_status wire** — 🚧 follow-up unit needed (see below).
+
+### Follow-up units (deferred)
+
+- ⏸️ **pdl-10 destroy parity** — UX tester confirmed: 3 buckets DID get destroyed cloud-side (gcloud verified 0 ICE-labeled buckets after), but `state.deploy.nodesById` stayed empty during destroy and `'destroying'` only lasted one tick. The `action: 'delete'` `node_status` events are not flowing through the wire — the destroy path doesn't go through the same scheduler-based emit loop as apply (per pdl-4 implementer's deviation note: "destroy/rollback paths emit log lines per resource because they don't have a `translation.deployables[]` map"). Net effect: the action-aware DESTROY/GONE badge labels added in pdl-5#1 are unreachable code; the canvas badges stay stale-LIVE after destroy. Fix path: build a `graphIdToCanvasId`-equivalent map for destroy from `prisma.deployedResourceMapping.findMany()` rows (which carry `(node_id, name, provider_id)` per resource), then route the destroy path through the new typed emitters with `action: 'delete'`. Smoke-test learning anchor: `ux-destroy-action-bypasses-node-status-wire`.
+- ⏸️ **pdl-11 canvas-block-default-provider** — UX tester found that newly-dropped palette blocks have no `node.data.provider`, and the deploy panel filters them as "skipped — non-GCP" even when the toolbar says GCP. Fix: cards-slice drop handler should default `provider` to the active deploy provider. Learning: `ux-canvas-blocks-default-no-provider-on-drag-drop`.
+- ⏸️ **rollupPercentage extraction** — the cap-at-99 formula is duplicated across `deploy-panel.tsx`, `svg-canvas.tsx`, `status-bar.tsx`. Extract once next to `deriveRollup`. (pdl-5 critic finding #2 + #4.)
+- ⏸️ **Phase 2 nodesById warm-seed** — close the brief sentinel-rendering window when a tab joins mid-deploy. Reconstruct minimal `node_status` events from the snapshot's `nodeStatuses` and dispatch `applyNodeStatusEvent` directly. (pdl-5 critic finding #7.)
+- ⏸️ **DeployProgressSnapshot server-side dead fields** — `progress` / `currentResource` / `currentStep` are now unread by the frontend; remove them from the snapshot type and the server-side write paths. ~30 lines.
+- ⏸️ **Drop `data.status` legacy fallback** — per learning `one-status-source-deploy-status`, the fallback in `compact-node/index.tsx:81` is supposed to be removed. Requires sweeping ~6 node-creation sites that still seed `status: 'active'` (templates, blueprints, blocks/{aws,azure,gcp}/security/waf, svg-canvas drop handlers, properties-panel post-create dispatch). Multi-package refactor.
+
 **To resume:**
 
 1. Read `.claude/state/decisions.md` 2026-04-28 entry for the architectural envelope (pool size, per-handler caps, failure isolation, Socket.IO room reuse, no backwards-compat).

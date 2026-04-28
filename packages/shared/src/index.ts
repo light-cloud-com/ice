@@ -12,7 +12,11 @@ export { encryptCredentials, decryptCredentials, encryptString, decryptString } 
 export {
   setupSocketService,
   getSocketServer,
-  emitDeployProgress,
+  emitDeployNodeStatus,
+  emitDeployNodeProgress,
+  emitDeployComplete,
+  emitDeployLog,
+  emitDeployRequirementVerified,
   emitCanvasUpdate,
   emitPipelineUpdate,
   emitCardPipelineUpdate,

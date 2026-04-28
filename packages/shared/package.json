@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@ice/db": "workspace:*",
+    "@ice/types": "workspace:*",
     "@prisma/client": "^6.19.2",
     "express": "^4.22.1",
     "jsonwebtoken": "^9.0.3",

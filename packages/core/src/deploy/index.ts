@@ -25,7 +25,15 @@ export type {
   ProviderDeployer,
   DeployState,
   ResourceDeployState,
+  NodeStatusEvent,
+  NodeProgressEvent,
+  NodeTerminalStatus,
 } from './types.js';
+
+// Parallel scheduler (pdl-1) — exposed for service-layer wiring (pdl-4).
+export { run_parallel_apply, ParallelChangeScheduler, DEFAULT_POOL_SIZE, DEFAULT_PER_HANDLER_CAPS } from './scheduler.js';
+
+export type { SchedulerPhase, SchedulerRunInput } from './scheduler.js';
 
 // Card-to-Graph translation layer
 export { translate_card_to_graph } from './card-translator.js';

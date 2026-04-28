@@ -86,6 +86,49 @@ export interface DeployWarning {
 }
 
 /**
+ * Terminal status for a node in the parallel scheduler.
+ *
+ * `cancelled-due-to-dep` covers two cases:
+ *   1. A dependency failed (and `continue_on_error` was false, OR the
+ *      cancelled node is a transitive descendant of the failure).
+ *   2. The deploy was aborted via `abort_signal` before this node was
+ *      dispatched.
+ */
+export type NodeTerminalStatus = 'succeeded' | 'failed' | 'skipped' | 'cancelled-due-to-dep';
+
+/**
+ * Lifecycle event for a single node in the parallel scheduler.
+ * Fired exactly once per `(node_id, status)` pair.
+ */
+export interface NodeStatusEvent {
+  /** Canvas node id (stable, sourced from change.id which traces to deployables.node_id). */
+  node_id: string;
+  /** Generated resource name (e.g. ice-foo-…). May not equal node_id. */
+  resource_name: string;
+  /** ICE resource type (e.g. gcp.run.service). */
+  resource_type: string;
+  action: 'create' | 'update' | 'delete';
+  status: 'queued' | 'applying' | NodeTerminalStatus;
+  /** Set on terminal status when status === 'failed'. */
+  error?: { code: string; message: string; recoverable?: boolean };
+  /** ISO timestamp. */
+  at: string;
+  /** Set on terminal status. Wall-clock duration since 'applying'. */
+  duration_ms?: number;
+}
+
+/**
+ * Sub-step milestone fired by handlers during long-running operations.
+ * Carried through from the existing `GCPHandlerContext.on_step` channel.
+ */
+export interface NodeProgressEvent {
+  node_id: string;
+  resource_name: string;
+  step: { label: string; index: number; total: number };
+  at: string;
+}
+
+/**
  * Options for deployment.
  */
 export interface DeployOptions {
@@ -103,8 +146,30 @@ export interface DeployOptions {
   target?: string[];
   /** Exclude resources by name/type pattern */
   exclude?: string[];
-  /** Maximum parallel operations */
+  /**
+   * Maximum parallel operations.
+   * @deprecated Use `pool_size` instead. When `pool_size` is omitted, the
+   *   scheduler falls back to `parallelism` for one revision. Will be
+   *   removed in a future cleanup.
+   */
   parallelism?: number;
+  /**
+   * Bounded worker pool size for the parallel scheduler. Default 6.
+   * Replaces (deprecates) `parallelism`. The scheduler dispatches up to
+   * `pool_size` nodes concurrently across one phase (creates, updates,
+   * or deletes) of the deploy plan.
+   */
+  pool_size?: number;
+  /**
+   * Per-handler-prefix concurrency cap. Map keys are resource_type
+   * prefixes (e.g. `gcp.sql.`, `gcp.redis.`) — longest match wins —
+   * values are the maximum number of in-flight nodes for that prefix.
+   * Defaults: `gcp.sql.* = 1`, `gcp.redis.* = 1` (Cloud SQL has a
+   * 1-create-per-project-per-minute soft quota and Memorystore Redis
+   * IP-range allocation fails when two creates race). Other prefixes
+   * default to `pool_size`.
+   */
+  per_handler_caps?: Record<string, number>;
   /** Continue on errors */
   continue_on_error?: boolean;
   /** Dry run - show what would be deployed */
@@ -126,6 +191,26 @@ export interface DeployOptions {
       provider_id?: string;
     },
   ) => void;
+  /**
+   * Per-node lifecycle hook. Fired exactly once per node on each
+   * lifecycle transition: queued → applying → (succeeded | failed |
+   * skipped | cancelled-due-to-dep).
+   */
+  on_node_status?: (event: NodeStatusEvent) => void;
+  /**
+   * Per-node milestone hook. Fired 0..N times per node by handlers
+   * reporting sub-step progress (e.g. Cloud Build phases, SQL operation
+   * polls). Bridged through the existing `GCPHandlerContext.on_step`
+   * channel — handler signatures are unchanged.
+   */
+  on_node_progress?: (event: NodeProgressEvent) => void;
+  /**
+   * Fired exactly once per node, after `on_node_status` reaches a
+   * terminal state, with the full `ResourceDeployResult`. The current
+   * service-layer callsite (`deploy.service.ts:825`) passes this in but
+   * the previous engine dropped it — now formalized.
+   */
+  on_resource_result?: (result: ResourceDeployResult) => void;
   /** Log callback for informational messages during deployment */
   on_log?: (message: string) => void;
   /** Pre-authenticated client (passed from host environment, e.g. Electron main process) */

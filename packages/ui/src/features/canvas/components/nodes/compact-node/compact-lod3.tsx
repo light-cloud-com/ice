@@ -1,5 +1,6 @@
 import React, { memo } from 'react';
 import { ConnectedPipelineDots } from './connected-pipeline-dots';
+import { getDeployBadge } from './helpers';
 import { MetadataLines } from './metadata-lines';
 import { PipelineRow } from './pipeline-row';
 import { ScalingRow } from './scaling-row';
@@ -123,14 +124,19 @@ export const CompactLod3: React.FC<CompactLod3Props> = memo(
     const isDeploying = deployStatus === 'deploying';
     const isActive = deployStatus === 'active';
     const isError = deployStatus === 'error';
+    // pdl-6 — additional terminal states from the parallel deploy wire
+    // stream. `queued` is a pre-applying transient (work hasn't started —
+    // intentionally static, no opacity drop), while `skipped` and
+    // `cancelled` are post-deploy terminal states meaning "this block
+    // didn't actually run". The latter two get a low-touch opacity drop
+    // so the user can see at a glance which blocks didn't take.
+    const isDeEmphasised = deployStatus === 'skipped' || deployStatus === 'cancelled';
 
-    // Deploy badge config — shown inline in the header instead of border overrides
-    const deployBadge = (() => {
-      if (isActive) return { color: '#22c55e', label: 'LIVE' };
-      if (isDeploying) return { color: '#3b82f6', label: 'DEPLOY' };
-      if (isError) return { color: '#ef4444', label: 'ERR' };
-      return null;
-    })();
+    // Deploy badge config — shown inline in the header instead of border
+    // overrides. The pulse animation on the inner dot (line ~218) gates on
+    // `isDeploying` only, so queued blocks render a static QUEUED pill and
+    // skipped/cancelled stay flat — pulse implies "work happening".
+    const deployBadge = getDeployBadge(deployStatus);
 
     // Pick the single most important output to show as a pill under the
     // block label when active. This is a compact version of the logic in
@@ -272,7 +278,11 @@ export const CompactLod3: React.FC<CompactLod3Props> = memo(
                 : isHovered
                   ? '0 2px 8px -2px rgba(0,0,0,0.15)'
                   : '0 1px 3px rgba(0,0,0,0.06)',
-              transition: 'box-shadow 150ms ease, border-color 150ms ease',
+              transition: 'box-shadow 150ms ease, border-color 150ms ease, opacity 150ms ease',
+              // pdl-6 — skipped/cancelled blocks fade to communicate "this
+              // didn't run" without going garish. The block must still be
+              // readable and clickable, so we stay above the 0.5 floor.
+              opacity: isDeEmphasised ? 0.6 : 1,
             }}
           >
             {/* Content */}

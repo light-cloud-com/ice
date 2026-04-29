@@ -26,17 +26,11 @@ import { t } from '../../../../i18n';
 import { IceSelect } from '../../../../shared/components/ui/ice-select';
 import { cn } from '../../../../shared/utils/cn';
 import { type QueueSpec, parseQueue, stringifyQueue } from '../../utils/queue-spec';
+import type { CustomInputConfig } from './render-property-field';
 
-// TODO(rf-props-9): remove once render-property-field.tsx lands the canonical
-// home for the resource-def types and re-exports CustomInputConfig from there.
-export interface CustomInputConfig {
-  type: 'number' | 'string';
-  unit: string;
-  min?: number;
-  max?: number;
-  step?: number;
-  placeholder?: string;
-}
+// Re-export so existing consumers (`from './fields'` / `from '../index'`) keep
+// resolving the type — canonical home stays in `./render-property-field`.
+export type { CustomInputConfig };
 
 export const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
   <div className="pt-3 pb-2 px-3">

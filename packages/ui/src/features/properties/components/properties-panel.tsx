@@ -14,7 +14,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { getIcon, DEFAULT_ICON, type Provider } from '../../../assets/icons';
 import { getBrandIcon } from '../../../assets/icons/brand-registry';
-import { GROUP_COLOR_PRESETS } from '../../../config/color-palette';
 import { useTranslation, t } from '../../../i18n';
 import { getApi } from '../../../shared/api/api-adapter';
 import { IceSelect } from '../../../shared/components/ui/ice-select';
@@ -34,6 +33,7 @@ import {
 } from './fields';
 import { PropertyFields } from './fields/render-property-field';
 import { DriftIndicator, DriftCheckButton } from './sections/drift';
+import { GroupColorPicker } from './sections/group-color-picker';
 import { MonitoringLogSection } from './sections/monitoring-log-section';
 import {
   selectActiveCard,
@@ -78,62 +78,6 @@ function formatCost(value: number): string {
   if (value === 0) return '';
   return `~$${Math.round(value)}/mo`;
 }
-
-// ─── UI components ─────────────────────────────────────────────────────────
-
-// ─── Group Color Picker ─────────────────────────────────────────────────────
-
-const GROUP_COLORS = GROUP_COLOR_PRESETS;
-
-const GroupColorPicker: React.FC<{
-  color: string;
-  opacity: number;
-  onChange: (color: string) => void;
-  onOpacityChange: (opacity: number) => void;
-}> = ({ color, opacity, onChange, onOpacityChange }) => (
-  <div className="px-3 py-2 border-b border-ice-border space-y-2.5">
-    <div>
-      <div className="text-ice-2xs text-ice-text-3 mb-1.5">{t('properties.groupColor')}</div>
-      <div className="flex items-center gap-1.5 flex-wrap">
-        {GROUP_COLORS.map((c) => (
-          <button
-            key={c}
-            onClick={() => onChange(c)}
-            className="w-5 h-5 rounded-full border-2 transition-all hover:scale-110"
-            style={{
-              backgroundColor: c,
-              borderColor: c === color ? 'white' : 'transparent',
-              boxShadow: c === color ? `0 0 0 2px ${c}` : undefined,
-            }}
-            title={c}
-          />
-        ))}
-      </div>
-    </div>
-    <div>
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-ice-2xs text-ice-text-3">{t('properties.groupOpacity')}</span>
-        <span className="text-ice-2xs text-ice-text-3 font-mono tabular-nums">{Math.round(opacity * 100)}%</span>
-      </div>
-      <input
-        type="range"
-        min={0}
-        max={100}
-        step={5}
-        value={Math.round(opacity * 100)}
-        onChange={(e) => onOpacityChange(Number(e.target.value) / 100)}
-        className="w-full h-1 appearance-none rounded-full bg-ice-border accent-current cursor-pointer"
-        style={{ accentColor: color }}
-      />
-      <button
-        onClick={() => onOpacityChange(0.1)}
-        className="mt-1.5 px-2 py-0.5 text-ice-2xs font-medium rounded bg-ice-hover text-ice-text-3 hover:text-ice-text-1 hover:bg-ice-active transition-colors"
-      >
-        {t('common.buttons.reset')}
-      </button>
-    </div>
-  </div>
-);
 
 // ResourceInfoPanel removed — IaC mapping, network ports, and about section
 // were technical details that confused non-technical users

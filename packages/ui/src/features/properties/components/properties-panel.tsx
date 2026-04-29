@@ -47,6 +47,7 @@ import {
 import { toggleProperties } from '../../../store/slices/ui-slice';
 import { analyzeCanvasPatterns } from '../../canvas/utils/connection-rules';
 import { RepoSelector } from '../../integrations/components/repo-selector';
+import { computeEdgeWarnings, type EdgeWarning } from '../utils/edge-warnings';
 import { normalizeSubdomain, validateSubdomain } from '../utils/normalize-subdomain';
 import { type QueueSpec, parseQueue, stringifyQueue } from '../utils/queue-spec';
 import type { RootState, AppDispatch } from '../../../store';
@@ -848,22 +849,7 @@ export const PropertiesPanel: React.FC = () => {
     const tgtIceType = (targetNode?.data?.iceType as string) || '';
 
     // Compute validation warnings for this connection
-    const edgeWarnings: Array<{ level: string; message: string; suggestion?: string }> = [];
-    // Inline lightweight checks (avoiding importing from canvas utils in properties)
-    if (/StaticSite|SSRSite|Frontend/i.test(srcIceType) && /Database|PostgreSQL|MySQL|MongoDB/i.test(tgtIceType)) {
-      edgeWarnings.push({
-        level: 'warning',
-        message: t('properties.edge.warningDbFromFrontend'),
-        suggestion: t('properties.edge.warningDbSuggestion'),
-      });
-    }
-    if (/StaticSite|SSRSite|Frontend/i.test(srcIceType) && /Queue|SQS|SNS|PubSub|RabbitMQ/i.test(tgtIceType)) {
-      edgeWarnings.push({
-        level: 'warning',
-        message: t('properties.edge.warningQueueFromClient'),
-        suggestion: t('properties.edge.warningQueueSuggestion'),
-      });
-    }
+    const edgeWarnings = computeEdgeWarnings(srcIceType, tgtIceType, t);
 
     return (
       <div id="ice-properties-panel" className="h-full flex flex-col bg-inherit overflow-y-auto">

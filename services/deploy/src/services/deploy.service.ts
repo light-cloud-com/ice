@@ -45,6 +45,7 @@ import { describeEventForLog, mapStatusToOverlay } from '../utils/deploy-event-f
 import { computeCompleteTotals, deriveCompleteOutcome, computeDeploySummary } from '../utils/deploy-outcome.js';
 import { buildResourceNameMaps, makeFindSourceNodeId } from '../utils/find-source-node-id.js';
 import { resolveProjectContext } from '../utils/project-context.js';
+import { createDeployer, getCoreEngine } from './deployer-factory.js';
 
 // Re-export `mapStatusToOverlay` so the public API of this module is
 // preserved after rf-deploy-1 moved the implementation into
@@ -261,12 +262,6 @@ export function requestDeployCancel(cardId: string): boolean {
 /** Read the in-memory snapshot of an in-flight deploy for a card. */
 export function getCurrentDeploySnapshot(cardId: string) {
   return getDeploySnapshot(cardId);
-}
-
-// Dynamic imports for core engine (ESM) — resolved from workspace
-async function getCoreEngine(): Promise<any> {
-  // @ts-ignore — resolved at runtime via pnpm workspace
-  return import('@ice/core');
 }
 
 export async function planDeployment(cardId: string, nodes: any[], edges: any[], options: any, userId?: string) {
@@ -489,7 +484,7 @@ export async function applyDeployment(
   const runBody = async () => {
   try {
     const core = await getCoreEngine();
-    const { translate_card_to_graph, deploy_graph, GCPDeployer } = core;
+    const { translate_card_to_graph, deploy_graph } = core;
 
     // 3. Translate card nodes to deployable graph
     const { projectId, projectName, environmentType } = await resolveProjectContext(cardId);
@@ -627,16 +622,7 @@ export async function applyDeployment(
     }
 
     // 4. Create deployer with user's credentials
-    let deployer: any;
-    if (options.provider === 'aws') {
-      const { AWSDeployer } = core;
-      deployer = new AWSDeployer();
-    } else if (options.provider === 'azure') {
-      const { AzureDeployer } = core;
-      deployer = new AzureDeployer();
-    } else {
-      deployer = new GCPDeployer();
-    }
+    const deployer = await createDeployer(options.provider);
 
     // Resolve provider auth via the credential resolver registry. Replaces
     // the copy-pasted OAuth2Client / GoogleAuth / SA-key block that used to
@@ -1314,12 +1300,7 @@ export async function destroyAllForCard(
 
     emitLog(cardId, `Destroying ${targets.size} ICE-managed resources across all historical deploys for this card...`);
 
-    const core = await getCoreEngine();
-    const { GCPDeployer, AWSDeployer, AzureDeployer } = core;
-    let deployer: any;
-    if (provider === 'aws') deployer = new AWSDeployer();
-    else if (provider === 'azure') deployer = new AzureDeployer();
-    else deployer = new GCPDeployer();
+    const deployer = await createDeployer(provider);
 
     const scopedAuth = await resolveProviderAuth(provider, {
       orgId,
@@ -1636,17 +1617,7 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
   emitLog(cardId, `Starting destroy for card ${cardId}...`);
 
   try {
-    const core = await getCoreEngine();
-    const { GCPDeployer, AWSDeployer, AzureDeployer } = core;
-
-    let deployer: any;
-    if (provider === 'aws') {
-      deployer = new AWSDeployer();
-    } else if (provider === 'azure') {
-      deployer = new AzureDeployer();
-    } else {
-      deployer = new GCPDeployer();
-    }
+    const deployer = await createDeployer(provider);
 
     const scopedAuth = await resolveProviderAuth(provider, {
       orgId,
@@ -1947,16 +1918,9 @@ export async function rollbackDeployment(deploymentId: string, cardId: string, o
 
   try {
     const core = await getCoreEngine();
-    const { GCPDeployer, AWSDeployer, AzureDeployer, MutableGraph } = core;
+    const { MutableGraph } = core;
 
-    let deployer: any;
-    if (provider === 'aws') {
-      deployer = new AWSDeployer();
-    } else if (provider === 'azure') {
-      deployer = new AzureDeployer();
-    } else {
-      deployer = new GCPDeployer();
-    }
+    const deployer = await createDeployer(provider);
 
     const scopedAuth = await resolveProviderAuth(provider, {
       orgId,
@@ -2313,9 +2277,7 @@ export async function checkDrift(cardId: string, nodes: any[], options?: { envir
     try {
       const credentials = await providerService.getDecryptedCredentials(options!.orgId!, 'gcp');
       if (credentials) {
-        const core = await getCoreEngine();
-        const { GCPDeployer } = core;
-        deployer = new GCPDeployer();
+        deployer = await createDeployer('gcp');
         driftScopedAuth = await resolveProviderAuth('gcp', {
           orgId: options!.orgId!,
           credentials,

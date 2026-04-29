@@ -33,7 +33,7 @@ import { createDeployer, getCoreEngine } from './deployer-factory.js';
 import { autoEnableGCPApis, enableGcpApi } from './gcp-api-enabler.js';
 import { installSnapshotPersister, flushSnapshotNow } from './snapshot-persister.js';
 import { acquireWriteLock } from './deploy-lock-wrapper.js';
-import { emitDeployEvent, emitLog, emitDestroyNodeStatus } from './deploy-event-dispatcher.js';
+import { emitDeployEvent, emitLog } from './deploy-event-dispatcher.js';
 import { makeSchedulerCallbacks } from './scheduler-callbacks.js';
 import { buildBaselineGraph } from './baseline-graph.js';
 import {
@@ -41,6 +41,7 @@ import {
   orderTargetsForDelete,
   resolveDestroyAllProject,
 } from './destroy-targets.js';
+import { attemptDestroy, emitDestroyLifecycle } from './destroy-runner.js';
 
 installSnapshotPersister();
 
@@ -942,14 +943,13 @@ export async function destroyAllForCard(
       // skipped — the destroy still runs for them, just without a per-row
       // UI surface.
       for (const t of ordered) {
-        if (t.nodeId) {
-          emitDestroyNodeStatus(cardId, {
-            canvasNodeId: t.nodeId,
-            resourceName: t.name,
-            resourceType: t.type,
-            status: 'queued',
-          });
-        }
+        emitDestroyLifecycle({
+          cardId,
+          canvasNodeId: t.nodeId,
+          resourceName: t.name,
+          resourceType: t.type,
+          status: 'queued',
+        });
       }
 
       const deleted: Array<{ type: string; name: string }> = [];
@@ -958,80 +958,57 @@ export async function destroyAllForCard(
         // pdl-10 — emit `applying` for canvas-correlated targets and
         // capture the start time for duration_ms on the terminal event.
         const applyingAt = Date.now();
-        if (t.nodeId) {
-          emitDestroyNodeStatus(cardId, {
+        emitDestroyLifecycle({
+          cardId,
+          canvasNodeId: t.nodeId,
+          resourceName: t.name,
+          resourceType: t.type,
+          status: 'applying',
+        });
+        // rf-deploy-13 — per-item delete attempt + result classification +
+        // NOT_FOUND/404-as-success treatment moved to `./destroy-runner.ts`.
+        // The bookkeeping (`deleted` / `failed` arrays) and mapping cleanup
+        // (direct prisma.deployedResourceMapping.deleteMany) stay here
+        // because they're specific to this loop's "destroy everything"
+        // shape. `treatNotFoundAsSuccess: true` because this loop walks
+        // every historical resource regardless of whether its last apply
+        // succeeded — a NOT_FOUND just means the cloud already matches
+        // the desired state.
+        const result = await attemptDestroy({
+          deployer,
+          type: t.type,
+          name: t.name,
+          providerId: t.providerId || t.name,
+          provider,
+          project: gcpProject,
+          treatNotFoundAsSuccess: true,
+        });
+        if (result.success) {
+          deleted.push({ type: t.type, name: t.name });
+          emitDestroyLifecycle({
+            cardId,
             canvasNodeId: t.nodeId,
             resourceName: t.name,
             resourceType: t.type,
-            status: 'applying',
+            status: 'succeeded',
+            durationMs: Date.now() - applyingAt,
           });
-        }
-        try {
-          const res = await deployer.delete(t.type, t.name, t.providerId || t.name, {
-            provider,
-            project: gcpProject,
+          // Clean up the mapping row for this resource.
+          await prisma.deployedResourceMapping
+            .deleteMany({ where: { card_id: cardId, resource_name: t.name, resource_type: t.type } })
+            .catch(() => undefined);
+        } else {
+          const errMsg = result.error || 'delete returned non-success';
+          failed.push({ type: t.type, name: t.name, error: errMsg });
+          emitDestroyLifecycle({
+            cardId,
+            canvasNodeId: t.nodeId,
+            resourceName: t.name,
+            resourceType: t.type,
+            status: 'failed',
+            durationMs: Date.now() - applyingAt,
+            error: { code: 'DESTROY_FAILED', message: errMsg },
           });
-          if (res.success || res.error?.includes('NOT_FOUND') || res.error?.includes('404')) {
-            deleted.push({ type: t.type, name: t.name });
-            if (t.nodeId) {
-              emitDestroyNodeStatus(cardId, {
-                canvasNodeId: t.nodeId,
-                resourceName: t.name,
-                resourceType: t.type,
-                status: 'succeeded',
-                duration_ms: Date.now() - applyingAt,
-              });
-            }
-            // Clean up the mapping row for this resource.
-            await prisma.deployedResourceMapping
-              .deleteMany({ where: { card_id: cardId, resource_name: t.name, resource_type: t.type } })
-              .catch(() => undefined);
-          } else {
-            const errMsg = res.error || 'delete returned non-success';
-            failed.push({ type: t.type, name: t.name, error: errMsg });
-            if (t.nodeId) {
-              emitDestroyNodeStatus(cardId, {
-                canvasNodeId: t.nodeId,
-                resourceName: t.name,
-                resourceType: t.type,
-                status: 'failed',
-                duration_ms: Date.now() - applyingAt,
-                error: { code: 'DESTROY_FAILED', message: errMsg },
-              });
-            }
-          }
-        } catch (err: any) {
-          const msg = err?.message || String(err);
-          if (msg.includes('NOT_FOUND') || msg.includes('404')) {
-            deleted.push({ type: t.type, name: t.name });
-            // Treat NOT_FOUND/404 as a successful destroy (the resource is
-            // gone, which is what we wanted) — same shape as the inline
-            // success branch above.
-            if (t.nodeId) {
-              emitDestroyNodeStatus(cardId, {
-                canvasNodeId: t.nodeId,
-                resourceName: t.name,
-                resourceType: t.type,
-                status: 'succeeded',
-                duration_ms: Date.now() - applyingAt,
-              });
-            }
-            await prisma.deployedResourceMapping
-              .deleteMany({ where: { card_id: cardId, resource_name: t.name, resource_type: t.type } })
-              .catch(() => undefined);
-          } else {
-            failed.push({ type: t.type, name: t.name, error: msg });
-            if (t.nodeId) {
-              emitDestroyNodeStatus(cardId, {
-                canvasNodeId: t.nodeId,
-                resourceName: t.name,
-                resourceType: t.type,
-                status: 'failed',
-                duration_ms: Date.now() - applyingAt,
-                error: { code: 'DESTROY_FAILED', message: msg },
-              });
-            }
-          }
         }
       }
 
@@ -1262,7 +1239,8 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
     // them in the totals.
     for (const res of resources) {
       if (res.success && res.provider_id && res.source_node_id) {
-        emitDestroyNodeStatus(cardId, {
+        emitDestroyLifecycle({
+          cardId,
           canvasNodeId: res.source_node_id,
           resourceName: res.name,
           resourceType: res.type,
@@ -1277,21 +1255,36 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
         // pdl-10 — capture the applying-at marker so duration_ms can be
         // computed for the terminal event below. Only resources with a
         // canvas correlation get the wire emit.
-        const hasCanvasId = Boolean(res.source_node_id);
         const applyingAt = Date.now();
-        if (hasCanvasId) {
-          emitDestroyNodeStatus(cardId, {
-            canvasNodeId: res.source_node_id,
-            resourceName: res.name,
-            resourceType: res.type,
-            status: 'applying',
-          });
-        }
-        try {
-          const deleteResult = await deployer.delete(res.type, res.name, res.provider_id, {
-            provider,
-            project: destroyProject,
-          });
+        emitDestroyLifecycle({
+          cardId,
+          canvasNodeId: res.source_node_id,
+          resourceName: res.name,
+          resourceType: res.type,
+          status: 'applying',
+        });
+        // rf-deploy-13 — per-item delete attempt + result classification
+        // moved to `./destroy-runner.ts`. The console.log lines, the
+        // per-resource emitLog, and the `removeResourceMapping` helper
+        // call all stay here because they're specific to this loop's
+        // bookkeeping shape. `treatNotFoundAsSuccess: false` because the
+        // selector above (`res.success && res.provider_id`) already
+        // filtered to resources we previously DID create — a NOT_FOUND
+        // here is a real signal worth surfacing as a failure.
+        const result = await attemptDestroy({
+          deployer,
+          type: res.type,
+          name: res.name,
+          providerId: res.provider_id,
+          provider,
+          project: destroyProject,
+          treatNotFoundAsSuccess: false,
+        });
+        if (result.raw) {
+          // Result branch: the deployer returned a response (success or
+          // !success). Mirror the original raw-response push to
+          // `deleteResults` so downstream readers see the original shape.
+          const deleteResult = result.raw;
           console.log(
             '[destroy]   → ' +
               res.type +
@@ -1302,30 +1295,18 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
               (deleteResult.error ? ' error=' + deleteResult.error : ''),
           );
           deleteResults.push(deleteResult);
-          if (hasCanvasId) {
-            const durationMs = Date.now() - applyingAt;
-            if (deleteResult.success) {
-              emitDestroyNodeStatus(cardId, {
-                canvasNodeId: res.source_node_id,
-                resourceName: res.name,
-                resourceType: res.type,
-                status: 'succeeded',
-                duration_ms: durationMs,
-              });
-            } else {
-              emitDestroyNodeStatus(cardId, {
-                canvasNodeId: res.source_node_id,
-                resourceName: res.name,
-                resourceType: res.type,
-                status: 'failed',
-                duration_ms: durationMs,
-                error: {
-                  code: 'DESTROY_FAILED',
-                  message: deleteResult.error || 'delete returned non-success',
-                },
-              });
-            }
-          }
+          const durationMs = Date.now() - applyingAt;
+          emitDestroyLifecycle({
+            cardId,
+            canvasNodeId: res.source_node_id,
+            resourceName: res.name,
+            resourceType: res.type,
+            status: result.success ? 'succeeded' : 'failed',
+            durationMs,
+            error: result.success
+              ? undefined
+              : { code: 'DESTROY_FAILED', message: result.error || 'delete returned non-success' },
+          });
           // Surface a per-resource log line — the deploy panel's log
           // scroll consumes this surface alongside the new node_status
           // events the per-node row UI watches. Both surfaces stay.
@@ -1343,26 +1324,28 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
               // Non-fatal — the mapping may not exist yet for older rows.
             });
           }
-        } catch (err: any) {
-          deleteResults.push({ resource_id: res.resource_id, success: false, error: err.message });
+        } else {
+          // Catch branch: deployer.delete threw. Mirror the original
+          // inline catch's `{ resource_id, success: false, error }` shape
+          // and surface a `Failed to delete ${name}: ${err.message}` log.
+          const errMsg = result.error || 'delete threw';
+          deleteResults.push({ resource_id: res.resource_id, success: false, error: errMsg });
           // pdl-10 — emit `failed` for the canvas-correlated row before
           // the log line so the per-node UI updates immediately. The
           // throw-path needs the same treatment as the deleteResult.error
           // branch above; otherwise a thrown delete (auth fail, network
           // hang) leaves the row stuck on `applying` forever.
-          if (res.source_node_id) {
-            emitDestroyNodeStatus(cardId, {
-              canvasNodeId: res.source_node_id,
-              resourceName: res.name,
-              resourceType: res.type,
-              status: 'failed',
-              error: {
-                code: 'DESTROY_FAILED',
-                message: err.message || String(err),
-              },
-            });
-          }
-          emitLog(cardId, `Failed to delete ${res.name}: ${err.message}`);
+          // NOTE: the original inline catch did NOT include duration_ms
+          // on the throw path; preserve that omission verbatim.
+          emitDestroyLifecycle({
+            cardId,
+            canvasNodeId: res.source_node_id,
+            resourceName: res.name,
+            resourceType: res.type,
+            status: 'failed',
+            error: { code: 'DESTROY_FAILED', message: errMsg },
+          });
+          emitLog(cardId, `Failed to delete ${res.name}: ${errMsg}`);
         }
       }
     }

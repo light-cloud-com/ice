@@ -43,6 +43,7 @@ import {
 import { resolveProviderAuth, cleanupProviderAuth } from '../providers/registry.js';
 import { describeEventForLog, mapStatusToOverlay } from '../utils/deploy-event-formatter.js';
 import { computeCompleteTotals, deriveCompleteOutcome, computeDeploySummary } from '../utils/deploy-outcome.js';
+import { buildResourceNameMaps, makeFindSourceNodeId } from '../utils/find-source-node-id.js';
 
 // Re-export `mapStatusToOverlay` so the public API of this module is
 // preserved after rf-deploy-1 moved the implementation into
@@ -767,71 +768,28 @@ export async function applyDeployment(
       currentNodes.map((n: any) => `${n.type}::${n.name}`),
     );
 
-    // Exact resource_name → canvas node_id lookup built at translation time.
-    // Avoids fuzzy string matching that was returning NONE for names like
-    // "staticsite-7358-1" vs a long node uuid.
-    const nameToNodeId = new Map<string, string>();
-    const nameToLabel = new Map<string, string>();
-    // Graph node id (`${type}:${name}`) → canvas node id. Built ONCE per
-    // deploy at this scope so every `on_node_status` / `on_node_progress`
-    // emit can translate the scheduler's graph id to the canvas id the
-    // wire contract requires (`DeployNodeStatusEvent.node_id` is the
-    // canvas id by definition; the scheduler emits `change.id` which is
-    // the graph id — see learning anchor
-    // `scheduler-resource-name-vs-graph-node-id-vs-canvas-node-id`).
-    const graphIdToCanvasId = new Map<string, string>();
-    for (const d of translation.deployables || []) {
-      nameToNodeId.set(d.resource_name, d.node_id);
-      nameToLabel.set(d.resource_name, d.label);
-      graphIdToCanvasId.set(`${d.resource_type}:${d.resource_name}`, d.node_id);
-    }
-
-    // Rename-resilient fallback: load the persisted mapping for this
-    // card+env so we can still match a result to its canvas node when
-    // the resource was renamed (or otherwise drifted from the current
-    // translation's expected name). Keyed by both name and provider_id
-    // since some handlers report one but not the other.
+    // Build the resource-name lookup tables (current translation +
+    // persisted-mapping fallback) and the 4-tier source-node resolver.
+    // Extracted in rf-deploy-3 to `../utils/find-source-node-id.ts`.
+    // The persisted-map loader stays in this file so the helper can stay
+    // pure (no DB).
     const persistedMap = await getResourceMap(cardId, environment).catch(() => new Map());
-    const persistedNameToNodeId = new Map<string, string>();
-    const persistedProviderIdToNodeId = new Map<string, string>();
-    for (const [nodeId, entry] of persistedMap as Map<string, { name: string; providerId?: string }>) {
-      if (entry.name) persistedNameToNodeId.set(entry.name, nodeId);
-      if (entry.providerId) persistedProviderIdToNodeId.set(entry.providerId, nodeId);
+    const { nameToNodeId, graphIdToCanvasId, persistedNameToNodeId, persistedProviderIdToNodeId } =
+      buildResourceNameMaps(translation.deployables || [], persistedMap);
+    // `nameToLabel` is only used by the post-deploy resource-mapping log
+    // line (see ~line 1104) and is built inline because the helper's
+    // signature deliberately omits it (no other callsite reads it).
+    const nameToLabel = new Map<string, string>();
+    for (const d of translation.deployables || []) {
+      nameToLabel.set(d.resource_name, d.label);
     }
 
-    const findSourceNodeId = (res: any): string | undefined => {
-      const candidates = [res?.name, res?.resource_id].filter(Boolean) as string[];
-      for (const c of candidates) {
-        if (nameToNodeId.has(c)) return nameToNodeId.get(c);
-      }
-      // Handler may append a suffix like "-0", "-1", "-proxy", "-url-map".
-      // Strip trailing segments until we hit a known base name.
-      for (const c of candidates) {
-        const parts = c.split('-');
-        while (parts.length > 1) {
-          parts.pop();
-          const base = parts.join('-');
-          if (nameToNodeId.has(base)) return nameToNodeId.get(base);
-        }
-      }
-      // Fallback: the current translation didn't produce a matching name
-      // (likely a rename / refactor / drifted resource). Try the persisted
-      // mapping table — provider_id first (most stable), then name.
-      const providerId = res?.provider_id || res?.providerId;
-      if (providerId && persistedProviderIdToNodeId.has(providerId)) {
-        return persistedProviderIdToNodeId.get(providerId);
-      }
-      for (const c of candidates) {
-        if (persistedNameToNodeId.has(c)) return persistedNameToNodeId.get(c);
-      }
-      // Nothing matched anywhere — log so an ops engineer can correlate
-      // the stranded resource in the deploy log later.
-      console.warn(
-        `[deploy] findSourceNodeId: no match for name=${res?.name} provider_id=${providerId || '?'} ` +
-          `(card=${cardId.slice(0, 8)}). Canvas block will not receive a deploy_status overlay.`,
-      );
-      return undefined;
-    };
+    const findSourceNodeId = makeFindSourceNodeId({
+      nameToNodeId,
+      persistedNameToNodeId,
+      persistedProviderIdToNodeId,
+      cardId,
+    });
 
     // Per-deploy total. Used only for the "X of N" rollup we still mirror
     // into the in-memory snapshot for late-joining clients to hydrate

@@ -34,6 +34,7 @@ import {
 import { PropertyFields } from './fields/render-property-field';
 import { ConnectionCard } from './sections/connection-card';
 import { DriftIndicator, DriftCheckButton } from './sections/drift';
+import { EnvVarsEditor } from './sections/env-vars-editor';
 import { GroupColorPicker } from './sections/group-color-picker';
 import { MonitoringLogSection } from './sections/monitoring-log-section';
 import {
@@ -2308,67 +2309,6 @@ const RepoDeployList: React.FC<{
             </div>
           );
         })}
-      </div>
-    </Section>
-  );
-};
-
-// ─── Env Vars Editor ────────────────────────────────────────────────────────
-
-const EnvVarsEditor: React.FC<{
-  variables: Array<{ name: string; value: string; isSecret?: boolean }>;
-  onChange: (vars: Array<{ name: string; value: string; isSecret?: boolean }>) => void;
-}> = ({ variables, onChange }) => {
-  const handleAdd = () => {
-    onChange([...variables, { name: '', value: '', isSecret: false }]);
-  };
-
-  const handleRemove = (index: number) => {
-    onChange(variables.filter((_, i) => i !== index));
-  };
-
-  const handleUpdate = (index: number, field: 'name' | 'value' | 'isSecret', val: unknown) => {
-    const updated = variables.map((v, i) => (i === index ? { ...v, [field]: val } : v));
-    onChange(updated);
-  };
-
-  return (
-    <Section title={t('properties.envVars.title')}>
-      <div className="space-y-1.5">
-        {variables.map((v, i) => (
-          <div key={i} className="flex items-center gap-1">
-            <input
-              value={v.name}
-              onChange={(e) => handleUpdate(i, 'name', e.target.value)}
-              placeholder={t('properties.envVars.keyPlaceholder')}
-              className="flex-1 min-w-0 px-1.5 py-1 text-ice-xs font-mono rounded border border-ice-border bg-ice-base text-ice-text-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-            <span className="text-ice-text-3 text-ice-xs">=</span>
-            <input
-              value={v.isSecret ? '••••••' : v.value}
-              onChange={(e) => handleUpdate(i, 'value', e.target.value)}
-              placeholder={t('properties.envVars.valuePlaceholder')}
-              type={v.isSecret ? 'password' : 'text'}
-              className="flex-1 min-w-0 px-1.5 py-1 text-ice-xs font-mono rounded border border-ice-border bg-ice-base text-ice-text-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-            <button
-              onClick={() => handleUpdate(i, 'isSecret', !v.isSecret)}
-              className={`p-0.5 rounded text-ice-xs transition-colors ${v.isSecret ? 'text-amber-500' : 'text-ice-text-3 hover:text-ice-text-2'}`}
-              title={v.isSecret ? t('properties.envVars.secretTitle') : t('properties.envVars.makeSecretTitle')}
-            >
-              {v.isSecret ? '🔒' : '🔓'}
-            </button>
-            <button
-              onClick={() => handleRemove(i)}
-              className="p-0.5 text-ice-text-3 hover:text-red-400 transition-colors"
-            >
-              &times;
-            </button>
-          </div>
-        ))}
-        <button onClick={handleAdd} className="text-ice-xs text-ice-text-3 hover:text-blue-400 transition-colors">
-          {t('properties.envVars.addVariable')}
-        </button>
       </div>
     </Section>
   );

@@ -57,6 +57,7 @@ import {
 import { toggleProperties } from '../../../store/slices/ui-slice';
 import { analyzeCanvasPatterns } from '../../canvas/utils/connection-rules';
 import { RepoSelector } from '../../integrations/components/repo-selector';
+import { useResourceMap, usePropertyIssues } from '../hooks/use-resource-map';
 import { formatDeployRow } from '../utils/deploy-history-format';
 import { computeEdgeWarnings, type EdgeWarning } from '../utils/edge-warnings';
 import { formatAge } from '../utils/format-age';
@@ -494,30 +495,7 @@ export const PropertiesPanel: React.FC = () => {
   const [propsTab, setPropsTab] = useState<string>('config');
 
   // ─── Load resource schemas from core DB via IPC ───────────────────────────
-  const [resourceMap, setResourceMap] = useState<Map<string, ResourceDef>>(new Map());
-
-  useEffect(() => {
-    getApi()
-      .resources.getAll()
-      .then((data: ResourceDef[] | ResourceCategory[]) => {
-        const map = new Map<string, ResourceDef>();
-        // Handle both flat array (from /resources/all) and nested categories
-        const resources =
-          Array.isArray(data) && data.length > 0 && 'resources' in data[0]
-            ? (data as ResourceCategory[]).flatMap((cat) => cat.resources)
-            : (data as ResourceDef[]);
-        for (const r of resources) {
-          // Key by multiple fields for reliable lookup
-          const id = (r as any).id || r.ice_type;
-          if (id) map.set(id, r);
-          if (r.ice_type && r.ice_type !== id) map.set(r.ice_type, r);
-        }
-        setResourceMap(map);
-      })
-      .catch(() => {
-        // API not available — resourceMap stays empty
-      });
-  }, []);
+  const resourceMap = useResourceMap();
 
   // Resolve selected node
   const selectedNodeId = selectedNodes[selectedNodes.length - 1] || null;
@@ -527,16 +505,7 @@ export const PropertiesPanel: React.FC = () => {
   );
 
   // Build per-property validation issues map for the selected node
-  const propertyIssuesMap = useMemo(() => {
-    if (!selectedNodeId) return undefined;
-    const map = new Map<string, { severity: string; message: string }>();
-    for (const issue of validationIssues) {
-      if (issue.nodeId === selectedNodeId && issue.propertyPath && !map.has(issue.propertyPath)) {
-        map.set(issue.propertyPath, { severity: issue.severity, message: issue.message });
-      }
-    }
-    return map.size > 0 ? map : undefined;
-  }, [validationIssues, selectedNodeId]);
+  const propertyIssuesMap = usePropertyIssues(selectedNodeId);
 
   // Resolve active environment name
   const projectId = activeCard?.projectId || (selectedNode?.data?.projectId as string) || '';

@@ -219,11 +219,17 @@ async function getDestroyAllForCard() {
 }
 
 async function getOutcomeHelpers() {
-  const mod = await import('../services/deploy.service.js');
+  // rf-deploy-2 — `computeCompleteTotals` and `deriveCompleteOutcome` now
+  // live in `../utils/deploy-outcome.js` (still re-exported from
+  // deploy.service.ts for the public API). Tests bind to the canonical
+  // home so they exercise the new module directly. `mapStatusToOverlay`
+  // is in `../utils/deploy-event-formatter.js` (rf-deploy-1).
+  const outcome = await import('../utils/deploy-outcome.js');
+  const formatter = await import('../utils/deploy-event-formatter.js');
   return {
-    deriveCompleteOutcome: mod.deriveCompleteOutcome,
-    computeCompleteTotals: mod.computeCompleteTotals,
-    mapStatusToOverlay: mod.mapStatusToOverlay,
+    deriveCompleteOutcome: outcome.deriveCompleteOutcome,
+    computeCompleteTotals: outcome.computeCompleteTotals,
+    mapStatusToOverlay: formatter.mapStatusToOverlay,
   };
 }
 

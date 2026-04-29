@@ -30,7 +30,12 @@ describe.skip('Drift Detection — checkDrift', () => {
   });
 
   async function getCheckDrift() {
-    const mod = await import('../services/deploy.service.js');
+    // rf-deploy-17 — bind to canonical home `../services/drift.service.js`
+    // (rf-deploy-16 extraction). The orchestrator still re-exports
+    // `checkDrift` for the namespace-import path used by
+    // `routes/canvas-deploy.ts`, but tests should hit the new module
+    // directly so any future un-skip resolves cleanly.
+    const mod = await import('../services/drift.service.js');
     return mod.checkDrift;
   }
 

@@ -72,3 +72,36 @@ The apply-engine in `packages/core/src/apply/` (which has plan-execution-layer b
 - Two engines coexist; reconciliation is a separate refactor.
 
 **Related.** Plan units pdl-1 through pdl-9. [`packages/core/src/deploy/deploy-engine.ts`](../../packages/core/src/deploy/deploy-engine.ts) (current sequential apply, primary refactor target). [`packages/core/src/apply/apply-engine.ts`](../../packages/core/src/apply/apply-engine.ts) (reference, not adopted). [`packages/core/src/deploy/providers/gcp/types.ts`](../../packages/core/src/deploy/providers/gcp/types.ts) (`GCPHandlerContext.on_step` — existing milestone hook to be used by all slow handlers in pdl-3). Adopt-resource (issue #4) — out of scope, hooks reserved.
+
+---
+
+## 2026-04-29 — Refactor initiative: monster-file decomposition with three new agents
+
+**Context.** The ICE codebase has ~30 source files over 500 LOC and four over 2000 LOC (`properties-panel.tsx` 3268, `svg-canvas.tsx` 3234, `deploy.service.ts` 2843, `deploy-panel.tsx` 2229), with another six in the 1000–1600 LOC band. Coverage tooling is installed only in `packages/core` and there is no threshold enforcement at the workspace level. Refactoring at this scale via the existing four-agent loop alone risks duplicate utilities and uneven test coverage as code is moved across packages.
+
+**Decision.** Extend the existing `planner / implementer / critic / ux-tester` loop with three additive agents and two new state files:
+
+- **decomposer** — analyzes one large file, produces a semantic split blueprint (utils / hooks / components / subcomponents). Does not edit code.
+- **util-broker** — owns `.claude/state/shared-modules.md`, validates each blueprint against existing exports across the workspace, flags duplicates before they land.
+- **test-author** — brings each extracted module to ≥90% statement + ≥90% branch coverage; documents structural exceptions in `learnings.md`.
+- New state file **`.claude/state/refactor-targets.md`** (orchestrator-owned, living document) — per-file queue with current LOC, current coverage, units open/done, shim-drop status.
+- New state file **`.claude/state/shared-modules.md`** (util-broker-owned, append-only) — exported-module registry.
+
+Workflow per file: orchestrator picks target → decomposer drafts blueprint → util-broker validates against registry → planner orders units leaves-first → for each unit (implementer extracts behind a re-export shim → test-author hits coverage → critic verifies public-API equivalence + coverage delta ≥ 0). The **ux-tester step is intentionally skipped from the per-unit refactor cadence** — behavior preservation is enforced by the tests + critic API-equivalence check, and headed-browser cycles are too slow for the cadence. The orchestrator may dispatch a one-off ux-tester smoke if the critic flags behavior risk on a particular unit. Each file ends with an explicit shim-drop unit.
+
+**Alternatives considered.**
+
+- *Replace the existing four agents with refactor-specialised ones.* Rejected. The current loop already works for the parallel-deploy initiative; replacing it would lose the planner / critic / ux-tester convention. Additive is strictly safer.
+- *Single "refactorer" agent that does decomposition, extraction, and tests in one pass.* Rejected. Too much surface area per agent; the tight feedback loop between decomposer and util-broker is what kills duplicate utils, and merging them would lose that.
+- *Coverage threshold ratchet to 90/80 across the whole repo on day one.* Rejected. Disruptive; some packages don't even have a coverage tool installed yet. Per-package baseline-on-touch with a global gate that forbids regression is the staged version.
+- *ux-tester runs per refactor unit.* Rejected per orchestrator direction (2026-04-29). Headed-browser cycles are too slow for per-unit cadence and refactor units do not change behavior. The general UI-testing rule still applies for behavior changes.
+
+**Consequences.**
+
+- Phase 0 (coverage tooling at root + initial registry seed) is a hard prerequisite before any refactor unit dispatches.
+- Re-export shims live at the original path until a file's final shim-drop unit; this keeps each commit's blast radius small but adds a discipline cost (shims must be tracked).
+- `progress.md` In flight list grows by one initiative; per-file progress goes into `refactor-targets.md` so `progress.md` stays scannable.
+- `learnings.md` will accumulate coverage-exception entries for modules that legitimately can't hit 90%.
+- ux-tester smoke runs become exception-driven for refactor work — the critic must explicitly call for one when behavior risk is suspected.
+
+**Related.** [`/CLAUDE.md`](../../CLAUDE.md), [`.claude/state/refactor-targets.md`](refactor-targets.md), [`.claude/state/shared-modules.md`](shared-modules.md), [`.claude/agents/decomposer.md`](../agents/decomposer.md), [`.claude/agents/util-broker.md`](../agents/util-broker.md), [`.claude/agents/test-author.md`](../agents/test-author.md).

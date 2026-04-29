@@ -12,72 +12,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { getApi } from '../../../shared/api/api-adapter';
 import type { RootState } from '../../../store';
+import type { ResourceDef, ResourceCategory } from '../components/fields/render-property-field';
 
-// ─── Types ──────────────────────────────────────────────────────────────────
-// TODO(rf-props-9): remove these duplicated definitions once the canonical home
-// lands in `components/fields/render-property-field.tsx`. Until then, mirror
-// the exact shapes from `properties-panel.tsx` so an `import { ResourceDef }`
-// from this hook is interchangeable with the local orchestrator interface
-// (TypeScript treats two structurally identical declarations as compatible
-// only when their property types match member-by-member).
-
-interface OptionDetail {
-  value: string;
-  label: string;
-  description?: string;
-  cost?: string;
-  provider?: string;
-  tooltip?: string;
-}
-
-interface CustomInputConfig {
-  type: 'number' | 'string';
-  unit: string;
-  min?: number;
-  max?: number;
-  step?: number;
-  placeholder?: string;
-}
-
-interface HighLevelProperty {
-  name: string;
-  label: string;
-  type: 'string' | 'number' | 'boolean' | 'select' | 'list' | 'queue_list';
-  required: boolean;
-  description: string;
-  options?: string[];
-  default?: unknown;
-  tier?: 'essential' | 'detailed' | 'advanced';
-  placeholder?: string;
-  addLabel?: string;
-  optionDetails?: OptionDetail[];
-  tooltip?: string;
-  customInput?: CustomInputConfig;
-}
-
-interface ProviderImpl {
-  provider: string;
-  resource_type: string;
-  display_name: string;
-}
-
-export interface ResourceDef {
-  ice_type: string;
-  display_name: string;
-  description: string;
-  category: string;
-  icon: string;
-  behavior: string;
-  providers: string[];
-  implementations: ProviderImpl[];
-  properties: HighLevelProperty[];
-}
-
-export interface ResourceCategory {
-  category: string;
-  categoryId: string;
-  resources: ResourceDef[];
-}
+// Re-export so existing consumers continue to import these types from
+// `use-resource-map`. Canonical home is `components/fields/render-property-field`.
+export type { ResourceDef, ResourceCategory };
 
 // ─── Pure builders ──────────────────────────────────────────────────────────
 

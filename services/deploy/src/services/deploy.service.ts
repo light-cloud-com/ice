@@ -42,6 +42,7 @@ import {
   resolveDestroyAllProject,
 } from './destroy-targets.js';
 import { attemptDestroy, emitDestroyLifecycle } from './destroy-runner.js';
+import { retryAfterQuotaCleanup } from './quota-retry.js';
 
 installSnapshotPersister();
 
@@ -585,82 +586,24 @@ export async function applyDeployment(
       }
     }
 
-    // Auto-cleanup on backend bucket quota error + retry once. The
-    // user's pain point: hitting the GCP default 3-backend-bucket
-    // limit during iteration leaves the user staring at a "Cleanup
-    // Orphans" button that they didn't know they had to click. Instead
-    // we detect the quota error in the deploy result, run orphan
-    // cleanup automatically, and re-run the failed resources.
-    const QUOTA_PATTERNS = ['QUOTA_EXCEEDED', "Quota 'BACKEND_BUCKETS'", 'Backend bucket quota exceeded'];
-    const hasQuotaFailure = (result.resources || []).some(
-      (r: any) => !r.success && r.error && QUOTA_PATTERNS.some((p) => String(r.error).includes(p)),
-    );
-    if (hasQuotaFailure) {
-      emitLog(
-        cardId,
-        '[auto-cleanup] Backend bucket quota exceeded — scanning for orphaned ICE resources to free up the slot...',
-      );
-      try {
-        const { cleanupOrphanedIceResources } = await import('./orphan-cleanup.service.js');
-        const cleanup = await cleanupOrphanedIceResources(orgId, gcpProject, { dryRun: false });
-        const deletedCount = cleanup.deleted.length;
-        emitLog(
-          cardId,
-          deletedCount > 0
-            ? `[auto-cleanup] Freed ${deletedCount} orphaned resource${deletedCount === 1 ? '' : 's'} — retrying failed resources.`
-            : '[auto-cleanup] No orphans found. Quota is exhausted by active deployments — destroy an old project or request a quota increase.',
-        );
-
-        if (deletedCount > 0) {
-          // Re-run only the resources that failed with a quota error.
-          // We rebuild a sub-graph by filtering the original translation
-          // to only the failed names + their dependencies. The
-          // forwarding rule + URL map + target proxy chain depends on
-          // the backend bucket, so freeing one slot fixes the whole
-          // downstream chain on retry.
-          emitLog(cardId, '[auto-cleanup] Retrying deploy after orphan cleanup...');
-          const retryCallbacks = makeSchedulerCallbacks({
-            cardId,
-            graphIdToCanvasId,
-            warnOnMiss: false,
-            // No `totals` — retry skips overall-progress writes per the
-            // original behavior.
-          });
-          const retryResult = await deploy_graph(translation.graph, currentGraph, deployer, {
-            provider: options.provider || 'gcp',
-            project: gcpProject,
-            regions: [options.region || 'us-central1'],
-            continue_on_error: true,
-            auth_client: authClient,
-            auth_key_file: (authClient as any)?._ice_key_file_path,
-            auth_credentials: (authClient as any)?._ice_parsed_credentials,
-            on_log: retryCallbacks.on_log,
-            on_node_status: retryCallbacks.on_node_status,
-            on_node_progress: retryCallbacks.on_node_progress,
-            // on_resource_result intentionally omitted to match the
-            // original retry shape.
-          });
-          // Merge retry results into the primary result: any resource
-          // that succeeded on retry overrides its failed entry from the
-          // first attempt. The deploy engine internally skips already-
-          // existing resources via ALREADY_EXISTS handling.
-          if (retryResult.resources?.length > 0) {
-            const byName = new Map<string, any>();
-            for (const r of result.resources) byName.set(r.name, r);
-            for (const r of retryResult.resources) {
-              if (r.success) byName.set(r.name, r);
-            }
-            result.resources = Array.from(byName.values());
-            result.success = result.resources.every((r: any) => r.success);
-            if (result.summary) {
-              result.summary.failed = result.resources.filter((r: any) => !r.success).length;
-            }
-          }
-        }
-      } catch (cleanupErr: any) {
-        emitLog(cardId, `[auto-cleanup] Cleanup attempt failed: ${cleanupErr?.message || cleanupErr}`);
-      }
-    }
+    // Auto-cleanup on backend bucket quota error + retry once. Extracted
+    // to `./quota-retry.ts` (rf-deploy-14) — the gate, the orphan
+    // cleanup, and the retry-merge are all encapsulated there. This
+    // call is a no-op short-circuit when the result has no quota
+    // failure; mutates `result` in place when it does.
+    await retryAfterQuotaCleanup({
+      cardId,
+      orgId,
+      gcpProject,
+      result,
+      deployer,
+      deployGraph: deploy_graph,
+      translation,
+      currentGraph,
+      graphIdToCanvasId,
+      authClient,
+      options,
+    });
 
     const durationMs = Date.now() - startTime;
 

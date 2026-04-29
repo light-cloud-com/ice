@@ -23,20 +23,20 @@ import { DesignRequirements } from './design-requirements';
 import {
   Section,
   TextField,
-  NumberField,
   SelectField,
   ListField,
   QueueListField,
-  StepperField,
   PropertyLabel,
   CustomValueInput,
 } from './fields';
 import { PropertyFields } from './fields/render-property-field';
 import { ConnectionCard } from './sections/connection-card';
+import { PublicEndpointDomainSection } from './sections/domain-section';
 import { DriftIndicator, DriftCheckButton } from './sections/drift';
 import { EnvVarsEditor } from './sections/env-vars-editor';
 import { GroupColorPicker } from './sections/group-color-picker';
 import { MonitoringLogSection } from './sections/monitoring-log-section';
+import { ScalingSection } from './sections/scaling-section';
 import {
   selectActiveCard,
   updateCardNodeData,
@@ -377,16 +377,10 @@ export const PropertiesPanel: React.FC = () => {
     const resourceDef = resourceMap.get(resourceId) || resourceMap.get(iceType);
     const dbProperties = resourceDef?.properties || [];
 
-    // Scaling data
+    // Scaling data — only `isScalable` is needed at the orchestrator level (drives the tab list);
+    // the rest of the scaling-derived values live inside `ScalingSection`.
     const behavior = (selectedNode.data?.behavior as string) || '';
     const isScalable = behavior === 'scalable';
-    const minInstances = selectedNode.data?.minInstances != null ? Number(selectedNode.data.minInstances) : null;
-    const maxInstances = selectedNode.data?.maxInstances != null ? Number(selectedNode.data.maxInstances) : null;
-    const activeInstances =
-      selectedNode.data?.activeInstances != null ? Number(selectedNode.data.activeInstances) : null;
-    const scalingMetric = (selectedNode.data?.scalingMetric as string) || '';
-    const scalingThreshold =
-      selectedNode.data?.scalingThreshold != null ? Number(selectedNode.data.scalingThreshold) : 70;
 
     // Get icon
     const brandIcon =
@@ -663,78 +657,12 @@ export const PropertiesPanel: React.FC = () => {
 
               {/* ════ SCALING TAB ════ */}
               {activeTab === 'scaling' && isScalable && (
-                <Section title="">
-                  {activeInstances != null && (
-                    <div className="flex items-center justify-between gap-2 py-1">
-                      <span className="text-ice-sm text-ice-text-2 shrink-0">{t('properties.scaling.active')}</span>
-                      <div className="flex items-center gap-1.5">
-                        <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                        <span className="text-ice-base text-emerald-400 font-mono font-semibold">
-                          {activeInstances} {t('properties.scaling.running')}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                  <StepperField
-                    label={t('properties.scaling.minInstances')}
-                    value={minInstances ?? 1}
-                    min={0}
-                    max={maxInstances ?? 99}
-                    onChange={(v) => updateNodeField('minInstances', v)}
-                  />
-                  <StepperField
-                    label={t('properties.scaling.maxInstances')}
-                    value={maxInstances ?? 3}
-                    min={minInstances ?? 0}
-                    max={99}
-                    onChange={(v) => updateNodeField('maxInstances', v)}
-                  />
-                  <SelectField
-                    label={t('properties.scaling.scaleOn')}
-                    value={scalingMetric}
-                    options={['cpu', 'memory', 'requests', 'queue_depth', 'custom']}
-                    onChange={(v) => updateNodeField('scalingMetric', v)}
-                  />
-                  {scalingMetric && scalingMetric !== 'custom' && (
-                    <NumberField
-                      label={t('properties.scaling.threshold')}
-                      value={scalingThreshold}
-                      onChange={(v) => updateNodeField('scalingThreshold', v)}
-                    />
-                  )}
-                </Section>
+                <ScalingSection selectedNode={selectedNode} updateNodeField={updateNodeField} />
               )}
 
               {/* ════ DOMAIN TAB ════ */}
               {activeTab === 'domain' && iceType === 'Network.PublicEndpoint' && (
-                <Section title="">
-                  <div className="space-y-2">
-                    <TextField
-                      label={t('properties.domain.hostname')}
-                      value={(selectedNode?.data?.hostname as string) || ''}
-                      placeholder={t('properties.domain.hostnamePlaceholder')}
-                      onChange={(v) => updateNodeField('hostname', v)}
-                    />
-                    <TextField
-                      label={t('properties.domain.subdomain')}
-                      value={(selectedNode?.data?.subdomain as string) || ''}
-                      placeholder={t('properties.domain.subdomainPlaceholder')}
-                      onChange={(v) => updateNodeField('subdomain', v)}
-                    />
-                    <SelectField
-                      label={t('properties.domain.sslMode')}
-                      value={(selectedNode?.data?.sslMode as string) || 'auto'}
-                      options={['auto', 'manual', 'none']}
-                      onChange={(v) => updateNodeField('sslMode', v)}
-                    />
-                    <TextField
-                      label={t('properties.domain.dnsProvider')}
-                      value={(selectedNode?.data?.dnsProvider as string) || ''}
-                      placeholder={t('properties.domain.dnsProviderPlaceholder')}
-                      onChange={(v) => updateNodeField('dnsProvider', v)}
-                    />
-                  </div>
-                </Section>
+                <PublicEndpointDomainSection selectedNode={selectedNode} updateNodeField={updateNodeField} />
               )}
 
               {/* ════ CUSTOM DOMAIN — DOMAIN TAB ════ */}

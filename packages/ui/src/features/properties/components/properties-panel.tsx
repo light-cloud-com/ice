@@ -33,6 +33,7 @@ import {
   CustomValueInput,
 } from './fields';
 import { PropertyFields } from './fields/render-property-field';
+import { DriftIndicator, DriftCheckButton } from './sections/drift';
 import { MonitoringLogSection } from './sections/monitoring-log-section';
 import {
   selectActiveCard,
@@ -56,7 +57,6 @@ import {
 import { toggleProperties } from '../../../store/slices/ui-slice';
 import { analyzeCanvasPatterns } from '../../canvas/utils/connection-rules';
 import { RepoSelector } from '../../integrations/components/repo-selector';
-import { useDriftCheck } from '../hooks/use-drift-check';
 import { useResourceMap, usePropertyIssues } from '../hooks/use-resource-map';
 import { formatDeployRow } from '../utils/deploy-history-format';
 import { computeEdgeWarnings, type EdgeWarning } from '../utils/edge-warnings';
@@ -134,93 +134,6 @@ const GroupColorPicker: React.FC<{
     </div>
   </div>
 );
-
-// ─── Drift Indicator ────────────────────────────────────────────────────────
-
-const DriftIndicator: React.FC<{ nodeId: string }> = ({ nodeId }) => {
-  const driftInfo = useSelector((s: RootState) => s.deploy.driftByNode[nodeId]);
-  const isLoading = useSelector((s: RootState) => s.deploy.driftCheckLoading);
-
-  if (isLoading) {
-    return (
-      <div className="px-3 py-2 text-ice-xs text-ice-text-3 flex items-center gap-1.5">
-        <div className="w-3 h-3 border border-ice-text-3 border-t-transparent rounded-full animate-spin" />
-        {t('properties.drift.checking')}
-      </div>
-    );
-  }
-
-  if (!driftInfo) return null;
-
-  if (driftInfo.status === 'in_sync') {
-    return (
-      <div className="px-3 py-2 flex items-center gap-1.5">
-        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-        <span className="text-ice-xs text-emerald-500 font-medium">{t('properties.drift.inSync')}</span>
-      </div>
-    );
-  }
-
-  if (driftInfo.status === 'missing') {
-    return (
-      <div className="px-3 py-2 flex items-center gap-1.5">
-        <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-        <span className="text-ice-xs text-amber-500 font-medium">{t('properties.drift.notInDeployment')}</span>
-      </div>
-    );
-  }
-
-  if (driftInfo.status === 'drifted' && driftInfo.changes.length > 0) {
-    return (
-      <div className="px-3 py-2">
-        <div className="flex items-center gap-1.5 mb-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-          <span className="text-ice-xs text-orange-500 font-medium">
-            {t('properties.drift.drifted')} ({driftInfo.changes.length}{' '}
-            {driftInfo.changes.length === 1 ? t('properties.drift.change') : t('properties.drift.changes')})
-          </span>
-        </div>
-        <div className="space-y-1.5 ml-3">
-          {driftInfo.changes.map((change, i) => (
-            <div key={i} className="text-ice-2xs">
-              <span className="text-ice-text-3">{change.path}</span>
-              <div className="flex items-center gap-1 mt-0.5">
-                <span className="text-red-400 line-through">{String(change.actual)}</span>
-                <span className="text-ice-text-3">&rarr;</span>
-                <span className="text-emerald-400">{String(change.desired)}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  return null;
-};
-
-const DriftCheckButton: React.FC<{ cardId: string; nodes: any[] }> = ({ cardId, nodes }) => {
-  const { isLoading, checkDrift } = useDriftCheck(cardId, nodes);
-
-  return (
-    <div className="px-3 py-2">
-      <button
-        onClick={() => checkDrift()}
-        disabled={isLoading}
-        className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-ice-xs font-medium rounded border border-ice-border text-ice-text-2 hover:bg-ice-hover transition-colors disabled:opacity-50"
-      >
-        {isLoading ? (
-          <>
-            <div className="w-3 h-3 border border-ice-text-3 border-t-transparent rounded-full animate-spin" />
-            {t('properties.drift.checkingButton')}
-          </>
-        ) : (
-          t('properties.drift.checkButton')
-        )}
-      </button>
-    </div>
-  );
-};
 
 // ResourceInfoPanel removed — IaC mapping, network ports, and about section
 // were technical details that confused non-technical users

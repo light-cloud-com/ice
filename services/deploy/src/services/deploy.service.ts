@@ -7,7 +7,6 @@
 
 import prisma from '@ice/db';
 import * as providerService from '@ice/service-credentials';
-import type { NodeStatusEvent, NodeProgressEvent } from '@ice/core';
 import {
   acquireDeployLock,
   cancelDeploy as cancelLockDeploy,
@@ -16,8 +15,6 @@ import {
   getDeploySnapshot,
   releaseTempDir,
   startDeploySnapshot,
-  updateDeploySnapshot,
-  updateDeploySnapshotNode,
   type DeployProgressSnapshot,
 } from './deploy-locks.js';
 import {
@@ -37,6 +34,7 @@ import { autoEnableGCPApis, enableGcpApi } from './gcp-api-enabler.js';
 import { installSnapshotPersister, flushSnapshotNow } from './snapshot-persister.js';
 import { acquireWriteLock } from './deploy-lock-wrapper.js';
 import { emitDeployEvent, emitLog, emitDestroyNodeStatus } from './deploy-event-dispatcher.js';
+import { makeSchedulerCallbacks } from './scheduler-callbacks.js';
 import { buildBaselineGraph } from './baseline-graph.js';
 import {
   collectDestroyAllTargets,
@@ -537,7 +535,14 @@ export async function applyDeployment(
     // the per-node `node_status` stream, see decisions entry
     // "2026-04-28 — Parallel deploy scheduler with per-node live status".
     const totalResources = translation.deployable_count || 1;
-    let completedResources = 0;
+    const completedBox = { count: 0 };
+
+    const callbacks = makeSchedulerCallbacks({
+      cardId,
+      graphIdToCanvasId,
+      totals: { total: totalResources, completed: completedBox },
+      warnOnMiss: true,
+    });
 
     const result = await deploy_graph(translation.graph, currentGraph, deployer, {
       provider: options.provider || 'gcp',
@@ -548,105 +553,10 @@ export async function applyDeployment(
       auth_client: authClient,
       auth_key_file: (authClient as any)?._ice_key_file_path,
       auth_credentials: (authClient as any)?._ice_parsed_credentials,
-      on_node_status: (event: NodeStatusEvent) => {
-        // Translate the scheduler's graph node id (`${type}:${name}`) to
-        // the canvas node id the wire contract requires. On miss, drop
-        // the wire emit and warn — a missing-row UI cell is more visible
-        // than a miscorrelated one (a status row attached to the wrong
-        // block silently lies).
-        const canvasId = graphIdToCanvasId.get(event.node_id);
-        if (!canvasId) {
-          console.warn(
-            '[deploy] on_node_status: no canvas id for graph_node_id=' + event.node_id +
-              ' (resource_name=' + event.resource_name + '). Dropping wire emit.',
-          );
-          return;
-        }
-        emitDeployEvent(cardId, {
-          type: 'node_status',
-          card_id: cardId,
-          node_id: canvasId,
-          resource_name: event.resource_name,
-          resource_type: event.resource_type,
-          action: event.action,
-          status: event.status,
-          error: event.error,
-          duration_ms: event.duration_ms,
-          at: event.at,
-          seq: 0,
-        });
-
-        // Mirror to the in-memory snapshot so reconnecting tabs hydrate
-        // without waiting for the next live event.
-        const overlayStatus = mapStatusToOverlay(event.status);
-        updateDeploySnapshotNode(cardId, canvasId, overlayStatus);
-        if (
-          event.status === 'succeeded' ||
-          event.status === 'failed' ||
-          event.status === 'skipped' ||
-          event.status === 'cancelled-due-to-dep'
-        ) {
-          completedResources += 1;
-          const overallProgress = Math.min(Math.round((completedResources / totalResources) * 100), 99);
-          updateDeploySnapshot(cardId, {
-            progress: overallProgress,
-            currentResource: event.resource_name,
-          });
-        } else if (event.status === 'applying') {
-          updateDeploySnapshot(cardId, { currentResource: event.resource_name });
-        }
-      },
-      on_node_progress: (event: NodeProgressEvent) => {
-        const canvasId = graphIdToCanvasId.get(event.node_id);
-        if (!canvasId) {
-          // `on_node_progress` fires high-frequency during slow handler
-          // operations (Cloud Build polls etc.). A missing translation is
-          // a real bug at the bridge boundary, but spamming a warn per
-          // tick would drown the deploy log — emit one debug-tier line
-          // and drop. The matching `on_node_status` warn above is the
-          // primary signal; this is just a quiet sibling.
-          return;
-        }
-        emitDeployEvent(cardId, {
-          type: 'node_progress',
-          card_id: cardId,
-          node_id: canvasId,
-          resource_name: event.resource_name,
-          step: event.step,
-          at: event.at,
-          seq: 0,
-        });
-        // Mirror step to the snapshot so the canvas overlay's small
-        // sub-step indicator picks it up on hydrate.
-        updateDeploySnapshotNode(cardId, canvasId, 'deploying', event.step);
-      },
-      on_log: (message: string) => {
-        emitLog(cardId, message);
-      },
-      on_resource_result: (resourceResult: any) => {
-        // Kept for the post-deploy resource-mapping table mutation
-        // (further below this scope, lines ~1130). The wire emit for
-        // per-resource lifecycle is covered by `on_node_status`'s
-        // terminal events; we don't add a parallel `resource_result`
-        // wire event because the contract doesn't have one. We DO emit
-        // a friendly log line when a compute resource lands with a URL —
-        // that was previously inside the legacy `on_progress` callback,
-        // and `on_node_status` doesn't carry handler outputs, so this
-        // callback is the only place to surface the URL live.
-        if (resourceResult?.success && resourceResult?.outputs) {
-          const out = resourceResult.outputs as Record<string, unknown>;
-          const url = (out.custom_domain_url || out.url || out.default_url || out.endpoint) as string | undefined;
-          const domain = out.domain as string | undefined;
-          const ip = (out.ip_address || out.IPAddress) as string | undefined;
-          let endpoint: string | undefined;
-          if (url && String(url).trim()) endpoint = String(url).trim();
-          else if (domain && String(domain).trim()) endpoint = `https://${String(domain).trim()}`;
-          else if (ip && String(ip).trim()) endpoint = `http://${String(ip).trim()}`;
-          if (endpoint) {
-            emitLog(cardId, `Deployed ${resourceResult.name} → ${endpoint}`);
-          }
-        }
-      },
+      on_node_status: callbacks.on_node_status,
+      on_node_progress: callbacks.on_node_progress,
+      on_log: callbacks.on_log,
+      on_resource_result: callbacks.on_resource_result,
     });
 
     // Post-process results:
@@ -708,6 +618,13 @@ export async function applyDeployment(
           // the backend bucket, so freeing one slot fixes the whole
           // downstream chain on retry.
           emitLog(cardId, '[auto-cleanup] Retrying deploy after orphan cleanup...');
+          const retryCallbacks = makeSchedulerCallbacks({
+            cardId,
+            graphIdToCanvasId,
+            warnOnMiss: false,
+            // No `totals` — retry skips overall-progress writes per the
+            // original behavior.
+          });
           const retryResult = await deploy_graph(translation.graph, currentGraph, deployer, {
             provider: options.provider || 'gcp',
             project: gcpProject,
@@ -716,43 +633,11 @@ export async function applyDeployment(
             auth_client: authClient,
             auth_key_file: (authClient as any)?._ice_key_file_path,
             auth_credentials: (authClient as any)?._ice_parsed_credentials,
-            on_log: (message: string) => emitLog(cardId, message),
-            on_node_status: (event: NodeStatusEvent) => {
-              const canvasId = graphIdToCanvasId.get(event.node_id);
-              if (!canvasId) return;
-              emitDeployEvent(cardId, {
-                type: 'node_status',
-                card_id: cardId,
-                node_id: canvasId,
-                resource_name: event.resource_name,
-                resource_type: event.resource_type,
-                action: event.action,
-                status: event.status,
-                error: event.error,
-                duration_ms: event.duration_ms,
-                at: event.at,
-                seq: 0,
-              });
-              // Mirror to the snapshot so a tab joining mid-retry sees
-              // the live state. Without this, the retry's per-block
-              // status flips don't survive a refresh until the retry
-              // completes.
-              updateDeploySnapshotNode(cardId, canvasId, mapStatusToOverlay(event.status));
-            },
-            on_node_progress: (event: NodeProgressEvent) => {
-              const canvasId = graphIdToCanvasId.get(event.node_id);
-              if (!canvasId) return;
-              emitDeployEvent(cardId, {
-                type: 'node_progress',
-                card_id: cardId,
-                node_id: canvasId,
-                resource_name: event.resource_name,
-                step: event.step,
-                at: event.at,
-                seq: 0,
-              });
-              updateDeploySnapshotNode(cardId, canvasId, 'deploying', event.step);
-            },
+            on_log: retryCallbacks.on_log,
+            on_node_status: retryCallbacks.on_node_status,
+            on_node_progress: retryCallbacks.on_node_progress,
+            // on_resource_result intentionally omitted to match the
+            // original retry shape.
           });
           // Merge retry results into the primary result: any resource
           // that succeeded on retry overrides its failed entry from the

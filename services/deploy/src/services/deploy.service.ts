@@ -47,6 +47,7 @@ import { resolveProjectContext } from '../utils/project-context.js';
 import { createDeployer, getCoreEngine } from './deployer-factory.js';
 import { autoEnableGCPApis, enableGcpApi } from './gcp-api-enabler.js';
 import { installSnapshotPersister, flushSnapshotNow } from './snapshot-persister.js';
+import { acquireWriteLock } from './deploy-lock-wrapper.js';
 
 installSnapshotPersister();
 
@@ -1128,13 +1129,7 @@ export async function destroyAllForCard(
   userId?: string,
   options: { gcpProject?: string } = {},
 ) {
-  let releaseLock: () => void;
-  try {
-    releaseLock = acquireDeployLock(cardId, 'destroy').release;
-  } catch (err) {
-    if (err instanceof DeployLockError) throw new Error(err.message, { cause: err });
-    throw err;
-  }
+  const releaseLock = acquireWriteLock(cardId, 'destroy');
 
   try {
     // Load every resource ICE has ever deployed for this card, from both
@@ -1476,13 +1471,10 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
   // Per-card lock — no concurrent destroys on the same card.
   let releaseLock: () => void;
   try {
-    releaseLock = acquireDeployLock(cardId, 'destroy').release;
+    releaseLock = acquireWriteLock(cardId, 'destroy');
     console.log('[destroy] lock acquired cardId=' + cardId);
   } catch (err) {
     console.warn('[destroy] LOCK FAILED cardId=' + cardId + ' err=' + (err as any)?.message);
-    if (err instanceof DeployLockError) {
-      throw new Error(err.message, { cause: err });
-    }
     throw err;
   }
   // Find the latest APPLY baseline — filtering by action_type='apply' is
@@ -1808,15 +1800,7 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
 
 export async function rollbackDeployment(deploymentId: string, cardId: string, orgId: string, userId?: string) {
   // Per-card lock — rollback is a deploy variant; blocks concurrent applies.
-  let releaseLock: () => void;
-  try {
-    releaseLock = acquireDeployLock(cardId, 'rollback').release;
-  } catch (err) {
-    if (err instanceof DeployLockError) {
-      throw new Error(err.message, { cause: err });
-    }
-    throw err;
-  }
+  const releaseLock = acquireWriteLock(cardId, 'rollback');
   // 1. Find the target deployment to roll back to
   const targetDeployment = await prisma.canvasDeployment.findUnique({
     where: { id: deploymentId },

@@ -47,6 +47,7 @@ import {
 import { toggleProperties } from '../../../store/slices/ui-slice';
 import { analyzeCanvasPatterns } from '../../canvas/utils/connection-rules';
 import { RepoSelector } from '../../integrations/components/repo-selector';
+import { formatDeployRow } from '../utils/deploy-history-format';
 import { computeEdgeWarnings, type EdgeWarning } from '../utils/edge-warnings';
 import { formatAge } from '../utils/format-age';
 import { normalizeSubdomain, validateSubdomain } from '../utils/normalize-subdomain';
@@ -2784,20 +2785,6 @@ const SourceRepositorySection: React.FC<{
 
 // ─── Deploy History ──────────────────────────────────────────────────────────
 
-const ACTION_LABELS: Record<string, string> = {
-  plan: 'Plan',
-  apply: 'Deploy',
-  destroy: 'Destroy',
-  rollback: 'Rollback',
-};
-
-const ACTION_COLORS: Record<string, string> = {
-  plan: 'text-slate-400 bg-slate-950/30',
-  apply: 'text-blue-400 bg-blue-950/30',
-  destroy: 'text-orange-400 bg-orange-950/30',
-  rollback: 'text-purple-400 bg-purple-950/30',
-};
-
 const DeployHistory: React.FC<{ cardId: string }> = ({ cardId }) => {
   const [history, setHistory] = useState<any[]>([]);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -2831,32 +2818,7 @@ const DeployHistory: React.FC<{ cardId: string }> = ({ cardId }) => {
     <Section title={t('properties.deploy.history')}>
       <div className="space-y-0.5">
         {visible.map((d, i) => {
-          const date = new Date(d.created_at);
-          const time = date.toLocaleString(undefined, {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-          });
-          const duration = d.duration_ms ? `${(d.duration_ms / 1000).toFixed(1)}s` : '';
-          const isSuccess = d.status === 'success';
-          const isFailed = d.status === 'failed' || d.status === 'cancelled';
-          const isPartial = d.status === 'partial';
-          const isPending = d.status === 'deploying' || d.status === 'planning' || d.status === 'planned';
-          const actionType = (d.action_type as string) || 'apply';
-          const actionLabel = ACTION_LABELS[actionType] || actionType;
-          const actionColor = ACTION_COLORS[actionType] || 'text-slate-400 bg-slate-950/30';
-          const summary = (d.summary as Record<string, number> | null) || null;
-          const summaryText = summary
-            ? [
-                summary.created > 0 ? `${summary.created} created` : null,
-                summary.updated > 0 ? `${summary.updated} updated` : null,
-                summary.deleted > 0 ? `${summary.deleted} deleted` : null,
-                summary.failed > 0 ? `${summary.failed} failed` : null,
-              ]
-                .filter(Boolean)
-                .join(' · ')
-            : '';
+          const { time, duration, isSuccess, isFailed, isPartial, isPending, actionLabel, actionColor, summaryText } = formatDeployRow(d);
           const isExpanded = expanded.has(d.id);
           return (
             <div key={d.id || i} className="text-ice-xs">

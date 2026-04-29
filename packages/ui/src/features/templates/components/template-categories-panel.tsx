@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { ALL_TEMPLATES, TEMPLATE_CATEGORIES, getFeaturedTemplates, searchTemplates } from '../../../config/templates';
 import { useTranslation } from '../../../i18n';
 import { PanelHeader } from '../../../shared/components/ui/panel-header';
@@ -55,6 +56,7 @@ interface TemplateCategoriesPanelProps {
 export const TemplateCategoriesPanel: React.FC<TemplateCategoriesPanelProps> = ({ embedded = false }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
 
   const categoryCounts = useMemo(() => {
@@ -84,8 +86,16 @@ export const TemplateCategoriesPanel: React.FC<TemplateCategoriesPanelProps> = (
   }, [isSearching, searchResults, featuredTemplates]);
 
   const goToGallery = (category?: string) => {
+    // SPA navigation via react-router. The previous implementation used
+    // `window.location.href` which triggers a full page reload — that
+    // reload was the bug some users hit: the dev server's history-API
+    // fallback didn't always serve the SPA bundle on a hard navigation,
+    // so `/templates` returned the canvas (or 404) instead of opening
+    // the gallery. `navigate(...)` stays inside the SPA's BrowserRouter
+    // and the `<Route path="/templates">` registered at
+    // `packages/web/src/app/app.tsx:264` picks it up cleanly.
     const params = category ? `?category=${category}` : '';
-    window.location.href = `/templates${params}`;
+    navigate(`/templates${params}`);
   };
 
   return (

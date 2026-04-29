@@ -1,7 +1,7 @@
 {
   "name": "ice",
   "license": "Apache-2.0",
-  "version": "0.1.74",
+  "version": "0.1.75",
   "description": "ICE - Integrated Cloud Environment (Web + Backend)",
   "private": true,
   "type": "module",
@@ -23,6 +23,7 @@
     "dist:desktop:win": "pnpm --filter @ice/desktop dist:win",
     "dist:desktop:linux": "pnpm --filter @ice/desktop dist:linux",
     "test:unit": "vitest run --root .",
+    "test:coverage": "vitest run --root . --coverage",
     "test:int": "vitest run --root . --include '**/*.int.test.{ts,tsx}'",
     "test:e2e": "playwright test --config e2e/playwright.config.ts",
     "test:gcp": "playwright test --config e2e/playwright.config.ts --project=gcp-integration",
@@ -50,6 +51,7 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.57.1",
     "vitest": "^4.1.0",
+    "@vitest/coverage-v8": "^4.1.0",
     "zod": "^3.25.76"
   },
   "engines": {

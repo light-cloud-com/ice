@@ -18,7 +18,6 @@ import type {
   DeployCompleteEvent,
   DeployEvent,
   DeployLogEvent,
-  DeployNodeStatus,
 } from '@ice/types';
 import type { NodeStatusEvent, NodeProgressEvent } from '@ice/core';
 import { nextDeploySeq, recordDeployEvent } from './deploy-event-log.js';
@@ -43,6 +42,14 @@ import {
   removeResourceMapping,
 } from './resource-mapping.service.js';
 import { resolveProviderAuth, cleanupProviderAuth } from '../providers/registry.js';
+import { describeEventForLog, mapStatusToOverlay } from '../utils/deploy-event-formatter.js';
+
+// Re-export `mapStatusToOverlay` so the public API of this module is
+// preserved after rf-deploy-1 moved the implementation into
+// `../utils/deploy-event-formatter.ts`. Downstream consumers (notably
+// `services/deploy/src/index.ts`'s `export *` and tests that import via
+// `services/deploy.service.js`) keep working unchanged.
+export { mapStatusToOverlay };
 
 // ── Snapshot persistence ─────────────────────────────────────────────────────
 //
@@ -165,43 +172,6 @@ function emitDeployEvent(cardId: string, event: DeployEvent): void {
     // Event-log failures must never break the live emit.
     console.warn('[deploy] recordDeployEvent failed: ' + err.message);
   }
-}
-
-/** Short tail string for the per-emit log line. Pure formatter — never throws. */
-function describeEventForLog(event: DeployEvent): string {
-  switch (event.type) {
-    case 'log':
-      return (event.message || '').slice(0, 80);
-    case 'node_status':
-      return event.resource_name + ' → ' + event.status;
-    case 'node_progress':
-      return event.resource_name + ' step=' + event.step.label;
-    case 'complete':
-      return 'outcome=' + event.outcome;
-    case 'requirement_verified':
-      return event.requirement + '=' + event.status;
-    default:
-      return '';
-  }
-}
-
-/** Map a scheduler `DeployNodeStatus` to the canvas overlay status used by
- *  `updateDeploySnapshotNode` (and the canvas block badge). Must agree
- *  with the frontend's `mapWireStatusToOverlay` in
- *  `packages/ui/src/features/deploy/hooks/use-deploy-subscription.ts` —
- *  divergence means a tab opened mid-deploy hydrates a `queued` node
- *  via the snapshot path with one color and gets the same node
- *  overwritten to a different color microseconds later by the live
- *  event. Both sides must pick the same overlay string for the same
- *  wire status. The matching `STATUS_COLORS` entries live in
- *  `packages/ui/src/config/canvas-constants.ts`. */
-export function mapStatusToOverlay(status: DeployNodeStatus): string {
-  if (status === 'queued') return 'queued';
-  if (status === 'applying') return 'deploying';
-  if (status === 'succeeded') return 'active';
-  if (status === 'failed') return 'error';
-  if (status === 'cancelled-due-to-dep') return 'cancelled';
-  return 'skipped';
 }
 
 /** Convenience wrapper for the most-common case: emit a free-text log line. */

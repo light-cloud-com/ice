@@ -17,7 +17,6 @@ import { getBrandIcon } from '../../../assets/icons/brand-registry';
 import { GROUP_COLOR_PRESETS } from '../../../config/color-palette';
 import { useTranslation, t } from '../../../i18n';
 import { getApi } from '../../../shared/api/api-adapter';
-import axiosInstance from '../../../shared/api/axios-instance';
 import { IceSelect } from '../../../shared/components/ui/ice-select';
 import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { cn } from '../../../shared/utils/cn';
@@ -42,7 +41,6 @@ import {
   type CardNode,
   type CardEdge,
 } from '../../../store/slices/cards-slice';
-import { setDriftCheckLoading, setDriftResults } from '../../../store/slices/deploy-slice';
 import { fetchGitHubBranches } from '../../../store/slices/integrations-slice';
 import {
   fetchRulesForNode,
@@ -57,6 +55,7 @@ import {
 import { toggleProperties } from '../../../store/slices/ui-slice';
 import { analyzeCanvasPatterns } from '../../canvas/utils/connection-rules';
 import { RepoSelector } from '../../integrations/components/repo-selector';
+import { useDriftCheck } from '../hooks/use-drift-check';
 import { useResourceMap, usePropertyIssues } from '../hooks/use-resource-map';
 import { formatDeployRow } from '../utils/deploy-history-format';
 import { computeEdgeWarnings, type EdgeWarning } from '../utils/edge-warnings';
@@ -260,33 +259,12 @@ const DriftIndicator: React.FC<{ nodeId: string }> = ({ nodeId }) => {
 };
 
 const DriftCheckButton: React.FC<{ cardId: string; nodes: any[] }> = ({ cardId, nodes }) => {
-  const dispatch = useDispatch<AppDispatch>();
-  const isLoading = useSelector((s: RootState) => s.deploy.driftCheckLoading);
-
-  const handleCheckDrift = async () => {
-    dispatch(setDriftCheckLoading(true));
-    try {
-      const res = await axiosInstance.post('/canvas/deploy/drift-check', { cardId, nodes });
-      if (res.data?.driftResults) {
-        dispatch(setDriftResults(res.data.driftResults));
-        // Update canvas node statuses to reflect drift
-        for (const result of res.data.driftResults) {
-          if (result.status === 'drifted' || result.status === 'missing') {
-            dispatch(updateCardNodeData({ nodeId: result.nodeId, data: { status: 'drifted' } }));
-          } else if (result.status === 'in_sync') {
-            dispatch(updateCardNodeData({ nodeId: result.nodeId, data: { status: 'active' } }));
-          }
-        }
-      }
-    } catch {
-      dispatch(setDriftCheckLoading(false));
-    }
-  };
+  const { isLoading, checkDrift } = useDriftCheck(cardId, nodes);
 
   return (
     <div className="px-3 py-2">
       <button
-        onClick={handleCheckDrift}
+        onClick={() => checkDrift()}
         disabled={isLoading}
         className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 text-ice-xs font-medium rounded border border-ice-border text-ice-text-2 hover:bg-ice-hover transition-colors disabled:opacity-50"
       >

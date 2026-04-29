@@ -25,12 +25,11 @@ import {
   removeResourceMapping,
 } from './resource-mapping.service.js';
 import { resolveProviderAuth, cleanupProviderAuth } from '../providers/registry.js';
-import { mapStatusToOverlay } from '../utils/deploy-event-formatter.js';
 import { computeCompleteTotals, deriveCompleteOutcome, computeDeploySummary } from '../utils/deploy-outcome.js';
 import { buildResourceNameMaps, makeFindSourceNodeId } from '../utils/find-source-node-id.js';
 import { resolveProjectContext } from '../utils/project-context.js';
 import { createDeployer, getCoreEngine } from './deployer-factory.js';
-import { autoEnableGCPApis, enableGcpApi } from './gcp-api-enabler.js';
+import { autoEnableGCPApis } from './gcp-api-enabler.js';
 import { installSnapshotPersister, flushSnapshotNow } from './snapshot-persister.js';
 import { acquireWriteLock } from './deploy-lock-wrapper.js';
 import { emitDeployEvent, emitLog } from './deploy-event-dispatcher.js';
@@ -45,34 +44,6 @@ import { attemptDestroy, emitDestroyLifecycle } from './destroy-runner.js';
 import { retryAfterQuotaCleanup } from './quota-retry.js';
 
 installSnapshotPersister();
-
-// Re-export `mapStatusToOverlay` so the public API of this module is
-// preserved after rf-deploy-1 moved the implementation into
-// `../utils/deploy-event-formatter.ts`. Downstream consumers (notably
-// `services/deploy/src/index.ts`'s `export *` and tests that import via
-// `services/deploy.service.js`) keep working unchanged.
-export { mapStatusToOverlay };
-
-// Re-export the outcome helpers extracted in rf-deploy-2 so the public
-// API of this module is preserved. `computeCompleteTotals` and
-// `deriveCompleteOutcome` are imported by `__tests__/deploy-event-translation.test.ts`
-// via this file; `computeDeploySummary` was already module-private.
-export { computeCompleteTotals, deriveCompleteOutcome };
-
-// Re-export `enableGcpApi` so the public API of this module is preserved
-// after rf-deploy-6 moved the implementation into `./gcp-api-enabler.ts`.
-// `google-verification.service.ts` imports it from the canonical home now,
-// but any other consumer that still goes through this orchestrator keeps
-// resolving.
-export { enableGcpApi };
-
-// Re-export the event-dispatcher trio extracted in rf-deploy-9 so any
-// legacy importer that still resolves them through this orchestrator
-// (e.g. `queue.service.ts` / `requirement-poller.service.ts` / future
-// downstream units rf-deploy-12 / rf-deploy-13 / rf-deploy-14) keeps
-// working without a sweeping multi-file edit. The canonical home is
-// `./deploy-event-dispatcher.ts`.
-export { emitDeployEvent, emitLog, emitDestroyNodeStatus } from './deploy-event-dispatcher.js';
 
 export type { DeployProgressSnapshot } from './deploy-locks.js';
 

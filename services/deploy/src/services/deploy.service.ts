@@ -37,6 +37,7 @@ import { autoEnableGCPApis, enableGcpApi } from './gcp-api-enabler.js';
 import { installSnapshotPersister, flushSnapshotNow } from './snapshot-persister.js';
 import { acquireWriteLock } from './deploy-lock-wrapper.js';
 import { emitDeployEvent, emitLog, emitDestroyNodeStatus } from './deploy-event-dispatcher.js';
+import { buildBaselineGraph } from './baseline-graph.js';
 
 installSnapshotPersister();
 
@@ -467,55 +468,24 @@ export async function applyDeployment(
       }
     }
 
-    // 5. Build current state from the last successful deployment (if any).
+    // 5. Build current state from the last qualifying deployment (if any).
     // This enables update/skip semantics — without it, every deploy is "create all".
-    // @ts-ignore — resolved at runtime via pnpm workspace
-    const { MutableGraph } = await import('@ice/core/graph');
-    const currentGraph = new MutableGraph('current');
-
-    // Phase 1 baseline fix: include partial-success deployments and filter by
-    // environment. Previously this only looked at status='success', so a single
-    // resource failure poisoned the entire update path until the next fully
-    // successful deploy. Also missed cross-environment isolation — a dev
-    // deploy could influence a prod diff.
-    // Extra guard: exclude the current in-flight deployment. The row we just
-    // inserted has status='deploying' now, but if a retry or concurrent read
-    // sees it flipped to 'partial' before this findFirst runs, it would
-    // pick itself up as the baseline — its currentGraph only contains the
-    // resources that landed so far, so the next plan would re-create the
-    // missing ones and risk duplicates.
-    const lastDeploy = await prisma.canvasDeployment.findFirst({
-      where: {
-        card_id: cardId,
-        environment,
-        status: { in: ['success', 'partial'] },
-        id: { not: deployment.id },
-      },
-      orderBy: { created_at: 'desc' },
+    // Apply uses status in ['success', 'partial'] (partial deploys land real
+    // resources the next plan must respect) and excludes the in-flight row
+    // (which has status='deploying' now but could be observed as 'partial'
+    // by a concurrent read mid-flight). Extracted in rf-deploy-10 to
+    // `./baseline-graph.ts` (also reused on the rollback path with a
+    // tighter status filter).
+    const { currentGraph, foundCount, hasResults } = await buildBaselineGraph({
+      cardId,
+      environment,
+      excludeDeploymentId: deployment.id,
+      statusFilter: ['success', 'partial'],
     });
-
-    if (lastDeploy?.results) {
-      const prevResults = lastDeploy.results as any;
-      const prevResources = prevResults.resources || [];
-      for (const res of prevResources) {
-        if (res.success && res.resource_id) {
-          try {
-            currentGraph.add_node({
-              name: res.name,
-              type: res.type,
-              properties: {
-                ...res.outputs,
-                provider_id: res.provider_id,
-              },
-            });
-          } catch {
-            // Ignore duplicate or invalid nodes
-          }
-        }
-      }
+    if (hasResults) {
       emitLog(
         cardId,
-        `Found ${prevResources.filter((r: any) => r.success).length} existing resource(s) from previous deployment`,
+        `Found ${foundCount} existing resource(s) from previous deployment`,
       );
     }
 
@@ -1753,40 +1723,19 @@ export async function rollbackDeployment(deploymentId: string, cardId: string, o
       }
     }
 
-    // 4. Build current state from the latest successful deployment
-    // Must be scoped to the same environment — otherwise rolling back prod
-    // loads dev's latest success as the baseline and applies dev config to prod.
-    const currentGraph = new MutableGraph('current');
-    const latestDeploy = await prisma.canvasDeployment.findFirst({
-      where: {
-        card_id: cardId,
-        status: 'success',
-        environment: rollbackRecord.environment,
-        id: { not: rollbackRecord.id },
-      },
-      orderBy: { created_at: 'desc' },
+    // 4. Build current state from the latest fully-successful deployment.
+    // Rollback uses status='success' only (rolling forward to a partial
+    // state would compound the failure) and is scoped to the rollback
+    // record's environment so rolling back prod doesn't load dev's latest
+    // success as the baseline. Extracted in rf-deploy-10 to
+    // `./baseline-graph.ts` (shared with the apply path which uses a
+    // wider status filter).
+    const { currentGraph } = await buildBaselineGraph({
+      cardId,
+      environment: rollbackRecord.environment,
+      excludeDeploymentId: rollbackRecord.id,
+      statusFilter: ['success'],
     });
-
-    if (latestDeploy?.results) {
-      const latestResults = latestDeploy.results as any;
-      const latestResources = latestResults.resources || [];
-      for (const res of latestResources) {
-        if (res.success && res.resource_id) {
-          try {
-            currentGraph.add_node({
-              name: res.name,
-              type: res.type,
-              properties: {
-                ...res.outputs,
-                provider_id: res.provider_id,
-              },
-            });
-          } catch {
-            // Ignore duplicates
-          }
-        }
-      }
-    }
 
     emitLog(cardId, `Rolling back: target has ${targetResources.filter((r: any) => r.success).length} resources`);
 

@@ -47,6 +47,7 @@ import {
 import { toggleProperties } from '../../../store/slices/ui-slice';
 import { analyzeCanvasPatterns } from '../../canvas/utils/connection-rules';
 import { RepoSelector } from '../../integrations/components/repo-selector';
+import { normalizeSubdomain, validateSubdomain } from '../utils/normalize-subdomain';
 import { type QueueSpec, parseQueue, stringifyQueue } from '../utils/queue-spec';
 import type { RootState, AppDispatch } from '../../../store';
 
@@ -935,32 +936,7 @@ export const PropertiesPanel: React.FC = () => {
               const rootDomain = ((endpointNode?.data?.domain as string) || '').trim();
               const currentSubdomain = (edgeData.subdomain as string) || '';
 
-              // Normalize aggressive input: strip protocol, host, dots,
-              // trailing dash, and force lowercase. Users often paste a
-              // full URL or type `api.` and we want the block to not
-              // reject them on a typo.
-              const normalize = (raw: string): string => {
-                let s = raw.toLowerCase().trim();
-                s = s.replace(/^https?:\/\//, '');
-                // If they typed `api.example.com`, keep only the first label.
-                const dotIdx = s.indexOf('.');
-                if (dotIdx !== -1) s = s.slice(0, dotIdx);
-                // Only allow RFC 1035 DNS label characters (plus the empty
-                // string for "root" deploys).
-                s = s.replace(/[^a-z0-9-]/g, '');
-                // Trim leading/trailing hyphens — GCP rejects them.
-                s = s.replace(/^-+/, '').replace(/-+$/, '');
-                if (s.length > 63) s = s.slice(0, 63);
-                return s;
-              };
-
-              const validationError = (() => {
-                if (!currentSubdomain) return null;
-                if (!/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/.test(currentSubdomain)) {
-                  return 'Subdomain must be lowercase letters, digits, hyphens (not starting/ending). Max 63 chars.';
-                }
-                return null;
-              })();
+              const validationError = currentSubdomain ? validateSubdomain(currentSubdomain) : null;
 
               const previewHost =
                 currentSubdomain && rootDomain ? `${currentSubdomain}.${rootDomain}` : rootDomain || '(no domain set)';
@@ -971,7 +947,7 @@ export const PropertiesPanel: React.FC = () => {
                     type="text"
                     value={currentSubdomain}
                     onChange={(e) => {
-                      const cleaned = normalize(e.target.value);
+                      const cleaned = normalizeSubdomain(e.target.value);
                       updateEdgeField('subdomain', cleaned || null);
                     }}
                     placeholder="api (leave blank for root)"
@@ -1729,19 +1705,6 @@ const CustomDomainPanel: React.FC<{
       : [];
     return { route, edge: matchingEdge, targetNode, targetIce, targetLabel, targetId, subdomain, host, dnsRecords };
   });
-
-  const normalizeSubdomain = (raw: string): string => {
-    let s = raw.toLowerCase().trim();
-    s = s.replace(/^https?:\/\//, '');
-    const dotIdx = s.indexOf('.');
-    if (dotIdx !== -1) s = s.slice(0, dotIdx);
-    s = s
-      .replace(/[^a-z0-9-]/g, '')
-      .replace(/^-+/, '')
-      .replace(/-+$/, '');
-    if (s.length > 63) s = s.slice(0, 63);
-    return s;
-  };
 
   const updateRouteSubdomain = (routeId: string, value: string) => {
     const next = routes.map((r) => (r.id === routeId ? { ...r, subdomain: normalizeSubdomain(value) } : r));

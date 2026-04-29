@@ -48,7 +48,7 @@ import {
 } from 'lucide-react';
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { ComposedTemplate, TemplateCategoryMeta } from '@ui/config/templates';
 import type { AppDispatch, RootState } from '@ui/store';
 
@@ -490,6 +490,7 @@ const TemplateDetail: React.FC<{
 export const TemplateGalleryPage: React.FC = () => {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // URL-synced state
@@ -610,12 +611,20 @@ export const TemplateGalleryPage: React.FC = () => {
         return;
       }
 
-      // Always navigate if project was created
+      // Always navigate if project was created. Use react-router's
+      // navigate() — `window.location.href` (the previous shape) forces a
+      // full-page reload, which in the dev server + Electron desktop
+      // combination has been observed to drop the navigation entirely
+      // (the page reloads to the SAME URL because the dev server's
+      // history-API fallback serves index.html before the route's
+      // intended target is read). Staying inside the SPA's BrowserRouter
+      // means the new project URL is resolved by `<Route path="/*">` →
+      // `DynamicContent` → `useResolvePath` → renders the canvas.
       const slug = project.slug || toSlug(template.name);
       const basePath = orgName ? `/${toSlug(orgName)}/${slug}` : `/${slug}`;
-      window.location.href = basePath;
+      navigate(basePath);
     },
-    [dispatch],
+    [dispatch, navigate],
   );
 
   return (

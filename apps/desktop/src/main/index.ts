@@ -224,9 +224,13 @@ function createMainWindow(): void {
   mainWindow.on('leave-full-screen', () => {
     mainWindow?.webContents.send('fullscreen-change', false);
   });
-  // Renderer can ask for the current state on mount (covers HMR or any event
-  // it may have missed before subscribing).
-  ipcMain.handle('get-fullscreen-state', () => mainWindow?.isFullScreen() ?? false);
+  // The renderer-facing `get-fullscreen-state` IPC handler is registered
+  // ONCE at app boot (see `app.whenReady` block below) — registering it
+  // here would crash on the macOS `activate` re-create path because
+  // `ipcMain.handle` refuses to register the same channel twice. The
+  // window-scoped event listeners above (enter-full-screen /
+  // leave-full-screen) are fine because each call to `mainWindow.on(...)`
+  // attaches a new listener to a fresh BrowserWindow instance.
 
   // External links open in browser
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -273,6 +277,13 @@ app.whenReady().then(async () => {
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window);
   });
+
+  // One-time IPC handler — the renderer asks for current fullscreen state
+  // on mount (covers HMR or events it may have missed before subscribing).
+  // Lives at boot scope, NOT inside `createMainWindow`, because that
+  // function runs again on macOS `activate` after the user closes the
+  // window, and `ipcMain.handle` throws on a duplicate channel.
+  ipcMain.handle('get-fullscreen-state', () => mainWindow?.isFullScreen() ?? false);
 
   // Show splash
   createSplashWindow();

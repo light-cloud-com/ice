@@ -38,6 +38,11 @@ import { installSnapshotPersister, flushSnapshotNow } from './snapshot-persister
 import { acquireWriteLock } from './deploy-lock-wrapper.js';
 import { emitDeployEvent, emitLog, emitDestroyNodeStatus } from './deploy-event-dispatcher.js';
 import { buildBaselineGraph } from './baseline-graph.js';
+import {
+  collectDestroyAllTargets,
+  orderTargetsForDelete,
+  resolveDestroyAllProject,
+} from './destroy-targets.js';
 
 installSnapshotPersister();
 
@@ -964,93 +969,26 @@ export async function destroyAllForCard(
   const releaseLock = acquireWriteLock(cardId, 'destroy');
 
   try {
-    // Load every resource ICE has ever deployed for this card, from both
-    // the stable mapping table (Phase 1) and from historical deployment
-    // results (legacy pre-Phase-1 data, or rows that were never mapped).
-    const mappings = await prisma.deployedResourceMapping.findMany({ where: { card_id: cardId } });
-    const historicalDeploys = await prisma.canvasDeployment.findMany({
-      where: {
-        card_id: cardId,
-        status: { in: ['success', 'partial', 'failed'] },
-        results: { not: null as any },
-      },
-      orderBy: { created_at: 'desc' },
-    });
-
-    // Collect unique (type, name, provider_id, region, environment, nodeId) tuples.
-    // pdl-10 — `nodeId` carries the canvas correlation forward from either
-    // the stable mapping table (`m.node_id`) or the historical deploy row's
-    // post-pdl-4 `r.source_node_id`. Pre-pdl-4 historical rows lack
-    // `source_node_id`; those targets stay correlation-less and skip the
-    // per-resource wire emit, falling back to the log-line surface.
-    const targets = new Map<
-      string,
-      {
-        type: string;
-        name: string;
-        providerId?: string;
-        region?: string;
-        environment?: string;
-        nodeId?: string;
-      }
-    >();
-    for (const m of mappings) {
-      targets.set(`${m.resource_type}::${m.resource_name}`, {
-        type: m.resource_type,
-        name: m.resource_name,
-        providerId: m.provider_id ?? undefined,
-        environment: m.environment,
-        nodeId: m.node_id, // canvas node id directly from the mapping table
-      });
-    }
-    for (const d of historicalDeploys) {
-      const results = d.results as any;
-      const resources = (results?.resources || []) as any[];
-      for (const r of resources) {
-        if (!r?.name || !r?.type) continue;
-        const key = `${r.type}::${r.name}`;
-        if (targets.has(key)) continue;
-        targets.set(key, {
-          type: r.type,
-          name: r.name,
-          providerId: r.provider_id,
-          region: d.region,
-          environment: d.environment,
-          nodeId: r.source_node_id, // pdl-10 — pdl-4 stamped this on every result
-        });
-      }
-    }
+    // rf-deploy-11 — collection + de-dupe + most-recent-historical-row pull
+    // moved to `./destroy-targets.ts`. Mapping-table precedence preserved.
+    const { targets, latestRow } = await collectDestroyAllTargets(cardId);
 
     if (targets.size === 0) {
       releaseLock();
       return { success: true, deleted: [], failed: [], total: 0 };
     }
 
-    const provider = historicalDeploys[0]?.provider || 'gcp';
+    const provider = latestRow?.provider || 'gcp';
     const credentials = await providerService.getDecryptedCredentials(orgId, provider);
     if (!credentials) {
       releaseLock();
       throw new Error('Provider not connected');
     }
 
-    // Resolve the GCP project ID — the deployer's SDK clients need an
-    // explicit project at initialize time. Priority order:
-    //   1. Explicit `gcpProject` passed in the request body (frontend
-    //      forwards `deploy.gcpProject` from Redux).
-    //   2. `credentials.project_id` from the stored ProviderCredential row.
-    //   3. Extracted from any historical resource's `provider_id` (e.g.
-    //      `projects/lc-ice/global/sslCertificates/...`) — this is the
-    //      fallback when neither of the above is populated.
-    let gcpProject = options.gcpProject || (credentials as any).project_id || '';
-    if (!gcpProject) {
-      for (const t of targets.values()) {
-        const match = (t.providerId || '').match(/^projects\/([^/]+)\//);
-        if (match?.[1]) {
-          gcpProject = match[1];
-          break;
-        }
-      }
-    }
+    // rf-deploy-11 — 3-tier project priority moved to `./destroy-targets.ts`.
+    // The throw stays here because it has to release the deploy lock first.
+    const gcpProject =
+      resolveDestroyAllProject({ options, credentials, targets: targets.values() }) ?? '';
     if (!gcpProject) {
       releaseLock();
       throw new Error(
@@ -1066,8 +1004,8 @@ export async function destroyAllForCard(
         status: 'deploying',
         action_type: 'destroy',
         provider,
-        region: historicalDeploys[0]?.region || 'us-central1',
-        environment: historicalDeploys[0]?.environment || 'development',
+        region: latestRow?.region || 'us-central1',
+        environment: latestRow?.environment || 'development',
       },
     });
 
@@ -1095,7 +1033,7 @@ export async function destroyAllForCard(
       await deployer.initialize({
         provider,
         project: gcpProject,
-        regions: [historicalDeploys[0]?.region || 'us-central1'],
+        regions: [latestRow?.region || 'us-central1'],
         continue_on_error: true,
         auth_client: authClient,
         auth_key_file: scopedAuth.keyFilePath,
@@ -1109,19 +1047,9 @@ export async function destroyAllForCard(
         // on the per-resource log line surface.
       });
 
-      // Destroy in a dependency-aware order: dependent resources first, origins last.
-      const orderPriority = (type: string): number => {
-        // Lower numbers delete first.
-        if (type.includes('globalForwardingRule')) return 1;
-        if (type.includes('targetHttpsProxy') || type.includes('targetHttpProxy')) return 2;
-        if (type.includes('urlMap')) return 3;
-        if (type.includes('backendBucket')) return 4;
-        if (type.includes('backendService')) return 5;
-        if (type.includes('storage.bucket')) return 6;
-        if (type.includes('managedSslCertificate') || type.includes('sslCertificate')) return 7;
-        return 50;
-      };
-      const ordered = [...targets.values()].sort((a, b) => orderPriority(a.type) - orderPriority(b.type));
+      // rf-deploy-11 — dependency-aware sort moved to `./destroy-targets.ts`.
+      // Dependent resources tear down first, origins last.
+      const ordered = orderTargetsForDelete([...targets.values()]);
 
       // pdl-10 — emit `queued` for every target with a canvas correlation
       // BEFORE the loop starts. Mirrors the apply scheduler's behavior.

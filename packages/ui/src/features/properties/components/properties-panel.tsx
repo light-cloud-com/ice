@@ -48,6 +48,7 @@ import { toggleProperties } from '../../../store/slices/ui-slice';
 import { analyzeCanvasPatterns } from '../../canvas/utils/connection-rules';
 import { RepoSelector } from '../../integrations/components/repo-selector';
 import { computeEdgeWarnings, type EdgeWarning } from '../utils/edge-warnings';
+import { formatAge } from '../utils/format-age';
 import { normalizeSubdomain, validateSubdomain } from '../utils/normalize-subdomain';
 import { type QueueSpec, parseQueue, stringifyQueue } from '../utils/queue-spec';
 import type { RootState, AppDispatch } from '../../../store';
@@ -2188,16 +2189,6 @@ const PipelineSection: React.FC<{
     });
   };
 
-  const formatAge = (date: string) => {
-    const diff = Date.now() - new Date(date).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return 'now';
-    if (mins < 60) return `${mins}m`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h`;
-    return `${Math.floor(hours / 24)}d`;
-  };
-
   return (
     <Section title={t('pipeline.serviceDeploys')}>
       {/* Loading */}
@@ -3014,16 +3005,6 @@ const RepoDeployList: React.FC<{
 }> = ({ events, connectedServices, cardId }) => {
   const dispatch = useDispatch<AppDispatch>();
   const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  const formatAge = (date: string) => {
-    const diff = Date.now() - new Date(date).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return 'now';
-    if (mins < 60) return `${mins}m`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h`;
-    return `${Math.floor(hours / 24)}d`;
-  };
 
   return (
     <Section title={t('pipeline.serviceDeploys')}>

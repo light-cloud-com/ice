@@ -21,8 +21,12 @@
 #   scripts/destroy-all-lc-ice.sh                    # interactive — confirm before each phase
 #   scripts/destroy-all-lc-ice.sh --yes              # non-interactive — skip confirmations
 #   scripts/destroy-all-lc-ice.sh --dry-run          # list what WOULD be deleted, no actual deletion
-#   scripts/destroy-all-lc-ice.sh --delete-projects  # also wipe canvas_project rows from .desktop-dev.db
+#   scripts/destroy-all-lc-ice.sh --keep-projects    # skip canvas_project DB wipe (default: also wipe)
 #   scripts/destroy-all-lc-ice.sh --project=other    # override target GCP project (default: lc-ice)
+#
+# By default, this also wipes every canvas_project row from .desktop-dev.db
+# (the ICE app's project tree) so the desktop DB matches the post-destroy
+# cloud state. Pass --keep-projects to leave the DB untouched.
 #
 # Exit codes
 # ──────────
@@ -63,13 +67,18 @@ fi
 PROJECT="lc-ice"
 DRY_RUN=0
 YES=0
-DELETE_PROJECTS=0
+# Wipe canvas_project rows by default — the script's purpose is to clear
+# every ICE-managed thing, and orphan canvas projects in the desktop DB
+# are exactly the kind of leftover state that triggers re-running this
+# script in the first place. Pass --keep-projects to opt out.
+DELETE_PROJECTS=1
 
 for arg in "$@"; do
   case "$arg" in
     --yes|-y)            YES=1 ;;
     --dry-run|-n)        DRY_RUN=1 ;;
-    --delete-projects)   DELETE_PROJECTS=1 ;;
+    --delete-projects)   DELETE_PROJECTS=1 ;;  # kept for back-compat; now the default
+    --keep-projects)     DELETE_PROJECTS=0 ;;
     --project=*)         PROJECT="${arg#--project=}" ;;
     -h|--help)
       # macOS BSD sed doesn't accept `\?`; use `\{0,1\}` for the optional space.
@@ -505,29 +514,74 @@ delete_each "VPC networks" \
   "list_with_prefix 'compute networks list'" \
   "compute networks delete {}"
 
-# ── Phase 7: Local DB cleanup (optional, gated) ────────────────────────────
+# ── Phase 7: Local DB cleanup ──────────────────────────────────────────────
+# The desktop DB cascade chain rooted at canvas_project is:
+#
+#   canvas_project ← canvas_card ← block_requirement_status
+#                                 ← deployed_resource_mapping
+#                                 ← canvas_deployment ← deploy_event (NO ACTION!)
+#                                                      ← deploy_job
+#                                 ← environment
+#                  ← environment            (direct FK)
+#                  ← project_member
+#
+# Two reasons we can't rely on schema-level cascade:
+#   1. SQLite has `PRAGMA foreign_keys = OFF` per-connection by default,
+#      so a bare `DELETE FROM canvas_project` deletes ONLY the project rows
+#      and silently orphans every card / env / deployment. (We learned this
+#      the hard way — re-running the old version of this script left 14
+#      orphan canvas_card rows + 25 orphan project_member rows + 14 orphan
+#      environment rows behind.)
+#   2. Even with FKs ON, deploy_event → canvas_deployment is `ON DELETE
+#      NO ACTION`, so a cascade through canvas_deployment fails with a
+#      constraint violation if any deploy_event rows reference it.
+#
+# Solution: explicit DELETEs in dependency order, all in a single
+# transaction so a partial failure rolls back. We delete from the leaves
+# upward. This also cleans up any orphans left by previous broken runs
+# of this script.
 if (( DELETE_PROJECTS )); then
-  phase "Local DB — canvas_project rows"
+  phase "Local DB — canvas_project + cascade"
   DB_PATH="$(pwd)/.desktop-dev.db"
   if [[ ! -f "$DB_PATH" ]]; then
     warn "  $DB_PATH not found — skipping (only run from repo root)"
   elif ! command -v sqlite3 >/dev/null 2>&1; then
     warn "  sqlite3 not found in PATH — skipping DB cleanup"
   else
-    BEFORE="$(sqlite3 "$DB_PATH" 'SELECT COUNT(*) FROM canvas_project' 2>/dev/null || echo '?')"
-    info "  canvas_project rows before: $BEFORE"
+    # Tables to wipe, leaves first so each delete leaves no dangling FKs.
+    DB_TABLES=(
+      deploy_event
+      deploy_job
+      deployed_resource_mapping
+      block_requirement_status
+      canvas_deployment
+      environment
+      canvas_card
+      project_member
+      canvas_project
+    )
+    info "  rows before:"
+    for t in "${DB_TABLES[@]}"; do
+      c="$(sqlite3 "$DB_PATH" "SELECT COUNT(*) FROM $t" 2>/dev/null || echo '?')"
+      printf '%s    %-30s %s%s\n' "$DIM" "$t" "$c" "$RESET"
+    done
     if (( DRY_RUN )); then
-      info "  would: DELETE FROM canvas_project (cascades to cards, deployments, mappings)"
+      info "  would: DELETE FROM each of the above (transaction)"
     else
-      # Cascade is configured at the schema level, so a single DELETE FROM
-      # canvas_project drops cards, deployments, mappings, environments,
-      # block requirement statuses. Wrap in a transaction so a constraint
-      # failure rolls back instead of leaving the DB half-wiped.
-      if sqlite3 "$DB_PATH" 'BEGIN; DELETE FROM canvas_project; COMMIT;' 2>/dev/null; then
-        AFTER="$(sqlite3 "$DB_PATH" 'SELECT COUNT(*) FROM canvas_project')"
-        ok "  canvas_project rows after: $AFTER"
+      sql='BEGIN;'
+      for t in "${DB_TABLES[@]}"; do
+        sql+=" DELETE FROM $t;"
+      done
+      sql+=' COMMIT;'
+      if err=$(sqlite3 "$DB_PATH" "$sql" 2>&1); then
+        ok "  DB cascade wipe committed"
+        info "  rows after:"
+        for t in "${DB_TABLES[@]}"; do
+          c="$(sqlite3 "$DB_PATH" "SELECT COUNT(*) FROM $t" 2>/dev/null || echo '?')"
+          printf '%s    %-30s %s%s\n' "$DIM" "$t" "$c" "$RESET"
+        done
       else
-        fail "  failed to delete canvas_project rows"
+        fail "  DB cascade wipe failed: $err"
       fi
     fi
   fi

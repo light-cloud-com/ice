@@ -23,7 +23,7 @@ import type { ExpandedBlueprint } from '../../config/blocks';
 // stay in the local `import type` list.
 
 export type { CardNode, CardEdge, CardViewport, Card, CardsState } from './cards/types';
-import type { CardNode, CardEdge, CardsState } from './cards/types';
+import type { CardNode, CardsState } from './cards/types';
 
 // =============================================================================
 // Migration
@@ -31,13 +31,16 @@ import type { CardNode, CardEdge, CardsState } from './cards/types';
 //
 // Migration lives in `./cards/migration` (rf-cards-2). The re-export
 // preserves the public import path for external consumers; the runtime
-// import brings the names into THIS module's lexical scope so the four
-// internal ingestion sites (addNodeToCard, importToActiveCard,
-// addToActiveCard, expandBlueprintToCard) and the localStorage loader
-// can call them directly.
+// import brings the names into THIS module's lexical scope so the
+// remaining ingestion site that still lives in this file
+// (`expandBlueprintToCard`) can call `migrateCardNode` directly. After
+// rf-cards-7/10/11 moved `addNodeToCard`, `addToActiveCard`, and
+// `importToActiveCard` into their own files, the plural `migrateCardNodes`
+// is no longer named at the syntactic level here — only the re-export
+// shim keeps it on the public API path.
 
 export { migrateCardNodes } from './cards/migration';
-import { migrateCardNode, migrateCardNodes } from './cards/migration';
+import { migrateCardNode } from './cards/migration';
 
 // =============================================================================
 // Persistence
@@ -77,6 +80,7 @@ import { nodeEdgeAddReducers } from './cards/reducers/node-edge-add';
 import { nodePositionReducers } from './cards/reducers/node-position';
 import { nodeDataReducers } from './cards/reducers/node-data';
 import { nodeDeleteMergeReducers } from './cards/reducers/node-delete-merge';
+import { importReducers } from './cards/reducers/import';
 
 // =============================================================================
 // Initial State
@@ -115,74 +119,7 @@ const cardsSlice = createSlice({
     ...nodePositionReducers,
     ...nodeDataReducers,
     ...nodeDeleteMergeReducers,
-
-    // Import nodes/edges to active card (for cloud import) - auto-organizes by default
-    importToActiveCard: (
-      state,
-      action: PayloadAction<{ nodes: CardNode[]; edges: CardEdge[]; skipAutoOrganize?: boolean }>,
-    ) => {
-      pushSnapshot(state);
-      const card = state.cards.find((c) => c.id === state.activeCardId);
-      if (card) {
-        // Migrate incoming nodes (cloud restore / clipboard / AI write) so
-        // any legacy iceType is upgraded before landing on the canvas.
-        card.nodes = migrateCardNodes(action.payload.nodes);
-        card.edges = action.payload.edges;
-
-        // Auto-organize unless explicitly skipped
-        if (!action.payload.skipAutoOrganize && card.nodes.length > 0) {
-          // Convert CardNodes to LayoutNodes
-          const layoutNodes: LayoutNode[] = card.nodes.map((node) => ({
-            id: node.id,
-            type: node.type,
-            iceType: (node.data?.iceType as string) || '',
-            label: (node.data?.label as string) || node.id,
-            parentId: node.parentId || null,
-            width: node.width || 280,
-            height: node.height || 160,
-            x: node.position.x,
-            y: node.position.y,
-            data: node.data,
-            folded: (node.data?.folded as boolean) || false,
-          }));
-
-          // Convert edges for layout
-          const layoutEdges = card.edges.map((e) => ({
-            source: e.source,
-            target: e.target,
-            relationship: e.data?.relationship as string | undefined,
-          }));
-
-          // Apply auto-layout
-          const { nodes: organizedNodes, edgeRoutes } = autoLayout(layoutNodes, layoutEdges, {
-            startX: 50,
-            startY: 50,
-            nodeGap: 80,
-            nodesPerRow: 3,
-            containerPadding: 30,
-          });
-
-          // Create a map of organized positions
-          const organizedMap = new Map(organizedNodes.map((n) => [n.id, n]));
-
-          // Update card nodes with new positions and sizes
-          card.nodes = card.nodes.map((node) => {
-            const organized = organizedMap.get(node.id);
-            if (organized) {
-              return {
-                ...node,
-                position: { x: organized.x, y: organized.y },
-                width: organized.width,
-                height: organized.height,
-              };
-            }
-            return node;
-          });
-
-          applyEdgeRoutes(card.edges, edgeRoutes);
-        }
-      }
-    },
+    ...importReducers,
 
     // Auto-organize nodes in active card.
     // When containerId is provided, only reorganize inside that container (per-group organize).

@@ -93,6 +93,7 @@ import {
   findSmallestContainerHit,
 } from '../utils/drop-target';
 import { findExistingSpecialConnection } from '../utils/connection-special-rules';
+import { computeConnectionPreviewPath, pickPreviewColor } from '../utils/connection-preview';
 import { SvgGhostNode } from './ghost/svg-ghost-node';
 import {
   inferConnectionMeta,
@@ -2650,53 +2651,17 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             })}
           </g>
 
-          {/* Connection drawing preview — temporary bezier from source to cursor */}
+          {/* Connection drawing preview — temporary bezier from source to cursor (rf-canv-8) */}
           {drawingConnection &&
             (() => {
               const { sourcePoint, currentPoint } = drawingConnection;
-              const dx = currentPoint.x - sourcePoint.x;
-              const dy = currentPoint.y - sourcePoint.y;
-              const dist = Math.sqrt(dx * dx + dy * dy);
-              const offset = Math.min(Math.max(dist * 0.35, 40), 200);
-              // Choose control point direction based on dominant axis
-              let cp1, cp2;
-              if (Math.abs(dx) >= Math.abs(dy)) {
-                const sign = dx >= 0 ? 1 : -1;
-                cp1 = { x: sourcePoint.x + offset * sign, y: sourcePoint.y };
-                cp2 = { x: currentPoint.x - offset * sign, y: currentPoint.y };
-              } else {
-                const sign = dy >= 0 ? 1 : -1;
-                cp1 = { x: sourcePoint.x, y: sourcePoint.y + offset * sign };
-                cp2 = { x: currentPoint.x, y: currentPoint.y - offset * sign };
-              }
-              const pathD = `M ${sourcePoint.x} ${sourcePoint.y} C ${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${currentPoint.x} ${currentPoint.y}`;
-
-              // Determine preview color based on what's under the cursor.
-              //
-              // NOTE (rf-canv-6): kept inline because the iteration runs in
-              // REVERSE (topmost-first, breaks on first hit) and has a side
-              // effect inside the loop (sets previewColor). Neither
-              // findContainerAtPosition (z-index sort) nor
-              // findSmallestContainerHit (smallest-area) match. Flagged for
-              // follow-up consolidation.
-              let previewColor = '#22d3ee'; // cyan default (empty space)
-              if (connectionDragTargets) {
-                for (let i = effectiveNodes.length - 1; i >= 0; i--) {
-                  const node = effectiveNodes[i];
-                  if (node.id === drawingConnection.sourceId) continue;
-                  if (
-                    currentPoint.x >= node.x &&
-                    currentPoint.x <= node.x + node.width &&
-                    currentPoint.y >= node.y &&
-                    currentPoint.y <= node.y + node.height
-                  ) {
-                    const state = connectionDragTargets.get(node.id);
-                    previewColor = state === 'valid-target' ? '#22c55e' : '#ef4444'; // green or red
-                    break;
-                  }
-                }
-              }
-
+              const pathD = computeConnectionPreviewPath(sourcePoint, currentPoint);
+              const previewColor = pickPreviewColor(
+                currentPoint,
+                effectiveNodes,
+                drawingConnection.sourceId,
+                connectionDragTargets,
+              );
               return (
                 <g className="connection-preview" style={{ pointerEvents: 'none' }}>
                   <path

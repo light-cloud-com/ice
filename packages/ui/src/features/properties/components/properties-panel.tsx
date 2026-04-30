@@ -38,6 +38,7 @@ import { EnvVarsEditor } from './sections/env-vars-editor';
 import { GroupColorPicker } from './sections/group-color-picker';
 import { MonitoringLogSection } from './sections/monitoring-log-section';
 import { PrivateNetworkPanel } from './sections/private-network-panel';
+import { RepoDeployList } from './sections/repo-deploy-list';
 import { ScalingSection } from './sections/scaling-section';
 import {
   selectActiveCard,
@@ -1685,116 +1686,6 @@ const DeployHistory: React.FC<{ cardId: string }> = ({ cardId }) => {
             Show all {history.length} deploys
           </button>
         )}
-      </div>
-    </Section>
-  );
-};
-
-// ─── Repo Deploy List (grouped by service, expandable logs) ─────────────────
-
-const RepoDeployList: React.FC<{
-  events: DeploymentEvent[];
-  connectedServices: Array<{ id: string; label: string }>;
-  cardId: string;
-}> = ({ events, connectedServices, cardId }) => {
-  const dispatch = useDispatch<AppDispatch>();
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  return (
-    <Section title={t('pipeline.serviceDeploys')}>
-      <div className="space-y-1">
-        {events.slice(0, 8).map((ev) => {
-          const isExpanded = expandedId === ev.id;
-          const logs = (ev.deployment_logs || []) as DeployStep[];
-          return (
-            <div key={ev.id} className="rounded border border-ice-border overflow-hidden">
-              <div
-                className="flex items-center gap-1.5 text-ice-xs px-2 py-1.5 cursor-pointer hover:bg-ice-hover transition-colors"
-                onClick={() => setExpandedId(isExpanded ? null : ev.id)}
-              >
-                <span
-                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                    ev.status === 'success'
-                      ? 'bg-emerald-500'
-                      : ev.status === 'failed'
-                        ? 'bg-red-500'
-                        : ev.status === 'building' || ev.status === 'deploying'
-                          ? 'bg-blue-500 animate-pulse'
-                          : 'bg-ice-text-3'
-                  }`}
-                />
-                <span className="font-mono text-ice-text-2">{ev.commit_sha?.slice(0, 7)}</span>
-                <span className="text-ice-text-3 truncate flex-1">{ev.commit_message}</span>
-                <span className="text-ice-text-3 shrink-0">{ev.rule?.environment || ev.branch}</span>
-                <span className="text-ice-text-3 shrink-0">{formatAge(ev.started_at)}</span>
-                <span className={`shrink-0 text-ice-text-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
-                  &#9662;
-                </span>
-              </div>
-
-              {/* Expanded logs */}
-              {isExpanded && (
-                <div className="border-t border-ice-border bg-slate-950 px-2 py-1.5 space-y-0.5 max-h-28 overflow-y-auto">
-                  {logs.length > 0 ? (
-                    logs.map((log, i) => (
-                      <div key={i} className="flex items-center gap-1 text-ice-2xs font-mono">
-                        <span
-                          className={`shrink-0 ${
-                            log.status === 'completed'
-                              ? 'text-emerald-500'
-                              : log.status === 'failed'
-                                ? 'text-red-400'
-                                : 'text-blue-400'
-                          }`}
-                        >
-                          {log.status === 'completed' ? '\u2713' : log.status === 'failed' ? '\u2717' : '\u25CF'}
-                        </span>
-                        <span className={log.status === 'failed' ? 'text-red-400' : 'text-slate-300'}>
-                          {log.message}
-                        </span>
-                        {log.duration_ms != null && (
-                          <span className="ml-auto text-slate-500">{(log.duration_ms / 1000).toFixed(1)}s</span>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-ice-2xs font-mono text-slate-500">{t('properties.noLogsRecorded')}</div>
-                  )}
-                  {ev.error && (
-                    <div className="text-ice-2xs font-mono text-red-400 pt-1 border-t border-slate-800">{ev.error}</div>
-                  )}
-                  {ev.duration_seconds != null && (
-                    <div className="text-ice-2xs font-mono text-slate-500 pt-0.5">
-                      {ev.duration_seconds < 60
-                        ? `${ev.duration_seconds}s`
-                        : `${Math.floor(ev.duration_seconds / 60)}m ${ev.duration_seconds % 60}s`}
-                    </div>
-                  )}
-                  {ev.status === 'failed' && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        import('../../../shared/api/api-adapter').then(({ getApi }) => {
-                          getApi()
-                            .pipeline.retryDeploy(ev.id)
-                            .then(() => {
-                              // Refresh events for the relevant service nodes
-                              for (const svc of connectedServices) {
-                                dispatch(fetchEventsForNode({ cardId, nodeId: svc.id }));
-                              }
-                            });
-                        });
-                      }}
-                      className="mt-1 px-2 py-0.5 text-ice-2xs font-medium rounded bg-amber-600 text-white hover:bg-amber-700 transition-colors"
-                    >
-                      {t('common.buttons.retry')}
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
       </div>
     </Section>
   );

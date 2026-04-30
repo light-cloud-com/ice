@@ -4,7 +4,7 @@
  * Manages multiple canvas cards/tabs, each with separate nodes and edges.
  */
 
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
 
 // =============================================================================
 // Types
@@ -13,13 +13,13 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 // Types live in `./cards/types` (rf-cards-1). The re-export preserves the
 // public import path for external consumers; the `import type` line brings
 // the names into THIS module's lexical scope for internal references. After
-// rf-cards-6 moved the lifecycle reducers (the only `Card` / `CardViewport` /
-// `DEFAULT_VIEWPORT` consumers in this file) into `./cards/reducers/card-
-// lifecycle`, only the three names actually referenced syntactically below
-// stay in the local `import type` list.
+// rf-cards-14 moved `groupSelectedNodes` (the last in-file `CardNode`
+// constructor) into `./cards/reducers/undo-redo-group`, only `CardsState`
+// is referenced syntactically here (initial-state typing + selectors), so
+// `CardNode` is dropped from the local `import type` list.
 
 export type { CardNode, CardEdge, CardViewport, Card, CardsState } from './cards/types';
-import type { CardNode, CardsState } from './cards/types';
+import type { CardsState } from './cards/types';
 
 // =============================================================================
 // Migration
@@ -50,13 +50,13 @@ import { loadPersistedCards } from './cards/persistence';
 // =============================================================================
 //
 // `pushSnapshot` (and its coalescing state, history cap, etc.) lives in
-// `./cards/snapshot` (rf-cards-5). The runtime import brings the function
-// into THIS module's lexical scope for the remaining inline reducer that
-// still needs it (`groupSelectedNodes`). `_lastSnapshotAction` is a
-// module-private `let` in that file — keeping it module-scoped is what
-// makes drag/resize coalescing work (RISK #5).
-
-import { pushSnapshot } from './cards/snapshot';
+// `./cards/snapshot` (rf-cards-5). After rf-cards-14 moved
+// `groupSelectedNodes` — the last in-file caller — into
+// `./cards/reducers/undo-redo-group`, the orchestrator no longer needs to
+// import `pushSnapshot` directly; each reducer module imports it itself.
+// `_lastSnapshotAction` stays a module-private `let` inside that file —
+// keeping it module-scoped is what makes drag/resize coalescing work
+// (RISK #5).
 
 // =============================================================================
 // Reducer groups
@@ -76,6 +76,7 @@ import { nodeDeleteMergeReducers } from './cards/reducers/node-delete-merge';
 import { importReducers } from './cards/reducers/import';
 import { autoOrganizeReducers } from './cards/reducers/auto-organize';
 import { scaleBlueprintReducers } from './cards/reducers/scale-blueprint';
+import { undoRedoGroupReducers } from './cards/reducers/undo-redo-group';
 
 // =============================================================================
 // Initial State
@@ -103,98 +104,7 @@ const cardsSlice = createSlice({
     ...importReducers,
     ...autoOrganizeReducers,
     ...scaleBlueprintReducers,
-
-    // Undo last change on active card
-    undoCardChange: (state) => {
-      const card = state.cards.find((c) => c.id === state.activeCardId);
-      if (!card) return;
-
-      const history = state.history[card.id];
-      if (!history || history.past.length === 0) return;
-
-      // Save current state to future (redo)
-      history.future.push({
-        nodes: JSON.parse(JSON.stringify(card.nodes)),
-        edges: JSON.parse(JSON.stringify(card.edges)),
-      });
-
-      // Restore from past
-      const snapshot = history.past.pop()!;
-      card.nodes = snapshot.nodes;
-      card.edges = snapshot.edges;
-    },
-
-    // Redo last undone change on active card
-    redoCardChange: (state) => {
-      const card = state.cards.find((c) => c.id === state.activeCardId);
-      if (!card) return;
-
-      const history = state.history[card.id];
-      if (!history || history.future.length === 0) return;
-
-      // Save current state to past (undo)
-      history.past.push({
-        nodes: JSON.parse(JSON.stringify(card.nodes)),
-        edges: JSON.parse(JSON.stringify(card.edges)),
-      });
-
-      // Restore from future
-      const snapshot = history.future.pop()!;
-      card.nodes = snapshot.nodes;
-      card.edges = snapshot.edges;
-    },
-
-    // Group selected nodes into a new Group.Custom container
-    groupSelectedNodes: (state, action: PayloadAction<string[]>) => {
-      const nodeIds = action.payload;
-      if (nodeIds.length < 2) return;
-
-      const card = state.cards.find((c) => c.id === state.activeCardId);
-      if (!card) return;
-
-      pushSnapshot(state);
-
-      const selectedNodes = card.nodes.filter((n) => nodeIds.includes(n.id));
-      if (selectedNodes.length < 2) return;
-
-      // Compute bounding box of selected nodes
-      const PADDING = 40;
-      let minX = Infinity,
-        minY = Infinity,
-        maxX = -Infinity,
-        maxY = -Infinity;
-      for (const node of selectedNodes) {
-        minX = Math.min(minX, node.position.x);
-        minY = Math.min(minY, node.position.y);
-        maxX = Math.max(maxX, node.position.x + node.width);
-        maxY = Math.max(maxY, node.position.y + node.height);
-      }
-
-      const groupNode: CardNode = {
-        id: `group-${Date.now()}`,
-        type: 'container',
-        position: { x: minX - PADDING, y: minY - PADDING },
-        width: maxX - minX + PADDING * 2,
-        height: maxY - minY + PADDING * 2 + 30, // extra 30 for group header
-        data: {
-          label: 'New Group',
-          iceType: 'Group.Custom',
-          groupColor: '#3b82f6',
-          behavior: 'container',
-          status: 'active',
-          folded: false,
-        },
-      };
-
-      card.nodes.push(groupNode);
-
-      // Reparent selected nodes (only top-level ones, not already children of each other)
-      for (const node of selectedNodes) {
-        if (!nodeIds.includes(node.parentId || '')) {
-          node.parentId = groupNode.id;
-        }
-      }
-    },
+    ...undoRedoGroupReducers,
   },
 });
 

@@ -23,7 +23,8 @@ import { SvgGhostEdge } from './ghost/svg-ghost-edge';
 import { SelectionFrame } from './selection-frame';
 import { ConnectionLayer } from './connection-layer';
 import { ConnectionPreviewOverlay } from './connection-preview-overlay';
-import { SvgConnectionPath, EDGE_COLORS, type ConnectionTooltipInfo } from './svg-connection-path';
+import { UserTrafficOverlay } from './user-traffic-overlay';
+import { EDGE_COLORS, type ConnectionTooltipInfo } from './svg-connection-path';
 import { getBlueprint, expandBlueprint } from '../../../config/blocks';
 import { canContain, isContainer } from '../../../config/containment-rules';
 import { isTypeVisibleAtLevel } from '../../../config/visualization-config';
@@ -95,7 +96,7 @@ import {
   ZOOM_STEP,
   GRID_SIZE,
 } from '../../../config/canvas-constants';
-import { SvgUserNode, USER_NODE_WIDTH, USER_NODE_HEIGHT, USER_NODE_ID } from '../../../shared/components/svg-user-node';
+import { USER_NODE_WIDTH, USER_NODE_HEIGHT, USER_NODE_ID } from '../../../shared/components/svg-user-node';
 import { useClipboard } from '../../../shared/hooks/use-clipboard';
 import { useExposedServices } from '../../../shared/hooks/use-exposed-services';
 import { calculateZIndex } from '../../../shared/utils/auto-layout';
@@ -2241,32 +2242,18 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             />
           )}
 
-          {/* User traffic connections (same styling as regular connections) — only when no explicit Network.PublicEndpoint block */}
-          {showVirtualUserNode && userConnections.length > 0 && (
-            <g className="user-traffic-connections-layer">
-              {userConnections.map((conn) => (
-                <SvgConnectionPath
-                  key={conn.id}
-                  connection={conn}
-                  nodes={nodesWithUserNode}
-                  allNodes={nodesWithUserNode}
-                  isSelected={false}
-                  isHighlighted={false}
-                  direction="outgoing"
-                  sourcePortIndex={0}
-                  sourcePortCount={1}
-                  targetPortIndex={0}
-                  targetPortCount={1}
-                  edgeStyle={edgeStyle}
-                />
-              ))}
-            </g>
-          )}
-
-          {/* User traffic icon for exposed services — only when no explicit Network.PublicEndpoint block */}
-          {showVirtualUserNode && pinnedUserPos && (
-            <SvgUserNode position={pinnedUserPos} scale={viewport.zoom} onPositionChange={setUserNodePos} />
-          )}
+          {/* User traffic icon + outbound connections to exposed services —
+              extracted to UserTrafficOverlay (rf-canv-15). Both render only
+              when no explicit Network.PublicEndpoint block is on the canvas. */}
+          <UserTrafficOverlay
+            show={showVirtualUserNode}
+            userConnections={userConnections}
+            nodesWithUserNode={nodesWithUserNode}
+            pinnedUserPos={pinnedUserPos}
+            zoom={viewport.zoom}
+            setUserNodePos={setUserNodePos}
+            edgeStyle={edgeStyle}
+          />
 
           {/* Highlighted connections layer — ON TOP of nodes.
               rf-canv-13: extracted to ConnectionLayer in mode='highlighted'.

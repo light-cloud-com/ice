@@ -52,7 +52,7 @@ function makeState(overrides: Partial<DeployState> = {}): DeployState {
 function statusEvent(overrides: Partial<DeployNodeStatusEvent> = {}): DeployNodeStatusEvent {
   return {
     type: 'node_status',
-    deployment_id: 'd1',
+    card_id: 'c1',
     seq: 1,
     at: '2026-04-30T00:00:00.000Z',
     node_id: 'n1',
@@ -61,7 +61,7 @@ function statusEvent(overrides: Partial<DeployNodeStatusEvent> = {}): DeployNode
     resource_type: 'gcp.run.service',
     action: 'create',
     ...overrides,
-  } as DeployNodeStatusEvent;
+  };
 }
 
 // -----------------------------------------------------------------------------
@@ -230,14 +230,14 @@ describe('applyNodeStatusEvent', () => {
 function progressEvent(overrides: Partial<DeployNodeProgressEvent> = {}): DeployNodeProgressEvent {
   return {
     type: 'node_progress',
-    deployment_id: 'd1',
+    card_id: 'c1',
     seq: 2,
     at: '2026-04-30T00:00:01.000Z',
     node_id: 'n1',
     resource_name: 'svc',
     step: { label: 'creating', index: 1, total: 3 },
     ...overrides,
-  } as DeployNodeProgressEvent;
+  };
 }
 
 describe('applyNodeProgressEvent', () => {
@@ -338,17 +338,19 @@ describe('applyDeployCompleteEvent', () => {
   function completeEvent(outcome: DeployCompleteEvent['outcome']): DeployCompleteEvent {
     return {
       type: 'complete',
-      deployment_id: 'd1',
-      seq: 99,
-      at: '2026-04-30T00:00:10.000Z',
+      card_id: 'c1',
       outcome,
-      counts: {
+      totals: {
+        queued: 0,
+        applying: 0,
         succeeded: 0,
         failed: 0,
         skipped: 0,
         cancelled: 0,
       },
-    } as DeployCompleteEvent;
+      at: '2026-04-30T00:00:10.000Z',
+      seq: 99,
+    };
   }
 
   it("flips status to 'success' on outcome=success", () => {

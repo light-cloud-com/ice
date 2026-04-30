@@ -20,9 +20,9 @@
  * @see rf-dslice-8
  */
 
-import type { PayloadAction } from '@reduxjs/toolkit';
-import type { DeployResourceResult, DeployState } from '../types';
 import { t } from '../../../../i18n';
+import type { DeployResourceResult, DeployState } from '../types';
+import type { PayloadAction } from '@reduxjs/toolkit';
 
 export const outcomeReducers = {
   deploySuccess: (

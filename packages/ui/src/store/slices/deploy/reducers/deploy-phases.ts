@@ -18,9 +18,9 @@
  * @see rf-dslice-6
  */
 
-import type { PayloadAction } from '@reduxjs/toolkit';
-import type { DeployState } from '../types';
 import { t } from '../../../../i18n';
+import type { DeployState } from '../types';
+import type { PayloadAction } from '@reduxjs/toolkit';
 
 export const deployPhasesReducers = {
   startDeploying: (state: DeployState, action: PayloadAction<{ cardId?: string } | undefined>) => {

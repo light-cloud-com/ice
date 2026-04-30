@@ -8,20 +8,31 @@
  * - Deploy history
  */
 
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type {
-  DeployCompleteEvent,
-  DeployNodeProgressEvent,
-  DeployNodeStatusEvent,
-} from '@ice/types';
+import { createSlice } from '@reduxjs/toolkit';
 import { setActiveCard } from './cards-slice';
-import { t } from '../../i18n';
+// Reducer groups (rf-dslice-3 through rf-dslice-13) live under
+// `./deploy/reducers/`. The runtime imports bring each group's case-reducer
+// object into THIS module's lexical scope so the `createSlice` `reducers:`
+// block can spread them. RTK still owns the action type strings
+// (`'deploy/openDeployPanel'` etc.) because action types are derived from
+// the keys of the spread object inside `createSlice`.
+import { authReducers } from './deploy/reducers/auth';
+import { deployPhasesReducers } from './deploy/reducers/deploy-phases';
+import { diagnosisReducers } from './deploy/reducers/diagnosis';
+import { hydrateReducers } from './deploy/reducers/hydrate';
+import { logsResourcesDriftReducers } from './deploy/reducers/logs-resources-drift';
+import { outcomeReducers } from './deploy/reducers/outcome';
+import { panelConfigReducers } from './deploy/reducers/panel-config';
+import { planningReducers } from './deploy/reducers/planning';
+import { preDeployReducers } from './deploy/reducers/pre-deploy';
+import { requirementsReducers } from './deploy/reducers/requirements';
+import { wireEventsReducers } from './deploy/reducers/wire-events';
+import type { DeployState } from './deploy/types';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 //
-// Types live in `./deploy/types` (rf-dslice-1). The re-export preserves the
-// public import path for external consumers; the `import type` line brings
-// the names into THIS module's lexical scope for internal references.
+// Public types live in `./deploy/types` (rf-dslice-1). The re-export
+// preserves the public import path for external consumers.
 
 export type {
   DeployPlan,
@@ -35,15 +46,6 @@ export type {
   DiagnosisState,
   ResolvedRequirementState,
 } from './deploy/types';
-import type {
-  DeployPlan,
-  DeployResourceResult,
-  DeployedResource,
-  NodeDriftInfo,
-  DeployState,
-  NodeDeployState,
-  ResolvedRequirementState,
-} from './deploy/types';
 
 // ─── Derived view helpers ──────────────────────────────────────────────────
 //
@@ -52,27 +54,6 @@ import type {
 // consumers (deploy-banner, deploy-in-flight-panel, etc.).
 
 export { deriveRollup, orderNodesForPanel } from './deploy/derive';
-
-// ─── Reducer groups ────────────────────────────────────────────────────────
-//
-// Panel + configuration reducers (rf-dslice-3) live in
-// `./deploy/reducers/panel-config`. The runtime import brings the
-// case-reducer object into THIS module's lexical scope so the `createSlice`
-// `reducers:` block can spread it. RTK still owns the action type strings
-// (`'deploy/openDeployPanel'` etc.) because action types are derived from
-// the keys of the spread object inside `createSlice`.
-
-import { panelConfigReducers } from './deploy/reducers/panel-config';
-import { authReducers } from './deploy/reducers/auth';
-import { planningReducers } from './deploy/reducers/planning';
-import { deployPhasesReducers } from './deploy/reducers/deploy-phases';
-import { wireEventsReducers } from './deploy/reducers/wire-events';
-import { outcomeReducers } from './deploy/reducers/outcome';
-import { logsResourcesDriftReducers } from './deploy/reducers/logs-resources-drift';
-import { requirementsReducers } from './deploy/reducers/requirements';
-import { diagnosisReducers } from './deploy/reducers/diagnosis';
-import { preDeployReducers } from './deploy/reducers/pre-deploy';
-import { hydrateReducers } from './deploy/reducers/hydrate';
 
 const initialState: DeployState = {
   isOpen: false,
@@ -157,6 +138,12 @@ const deploySlice = createSlice({
   },
 });
 
+// pdl-7 — typed deploy:event reducers (`applyNodeStatusEvent`,
+// `applyNodeProgressEvent`, `applyDeployCompleteEvent`) replace the legacy
+// `setDeployProgress` / `addResourceResult` / `type:'progress'` /
+// `type:'resource_result'` branches. pdl-5 retired `setDeployProgress` —
+// the snapshot-pull path now drives `nodesById` directly via
+// `applyNodeStatusEvent` calls reconstructed from `snapshot.nodeStatuses`.
 export const {
   openDeployPanel,
   closeDeployPanel,
@@ -171,11 +158,6 @@ export const {
   setPlan,
   startDeploying,
   startDestroying,
-  // pdl-7 — typed deploy:event reducers (replace legacy setDeployProgress /
-  // addResourceResult / type:'progress' / type:'resource_result' branches).
-  // pdl-5 retired `setDeployProgress` — the snapshot-pull path now drives
-  // `nodesById` directly via `applyNodeStatusEvent` calls reconstructed
-  // from `snapshot.nodeStatuses`.
   applyNodeStatusEvent,
   applyNodeProgressEvent,
   applyDeployCompleteEvent,

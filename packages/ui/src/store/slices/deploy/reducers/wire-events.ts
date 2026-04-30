@@ -29,14 +29,14 @@
  * @see rf-dslice-7
  */
 
-import type { PayloadAction } from '@reduxjs/toolkit';
+import { t } from '../../../../i18n';
+import type { DeployResourceResult, DeployState } from '../types';
 import type {
   DeployCompleteEvent,
   DeployNodeProgressEvent,
   DeployNodeStatusEvent,
 } from '@ice/types';
-import type { DeployResourceResult, DeployState } from '../types';
-import { t } from '../../../../i18n';
+import type { PayloadAction } from '@reduxjs/toolkit';
 
 export const wireEventsReducers = {
   applyNodeStatusEvent: (state: DeployState, action: PayloadAction<DeployNodeStatusEvent>) => {

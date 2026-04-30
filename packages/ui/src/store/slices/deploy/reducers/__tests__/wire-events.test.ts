@@ -14,13 +14,13 @@
 
 import { produce } from 'immer';
 import { describe, expect, it } from 'vitest';
+import { wireEventsReducers } from '../wire-events';
+import type { DeployState } from '../../types';
 import type {
   DeployCompleteEvent,
   DeployNodeProgressEvent,
   DeployNodeStatusEvent,
 } from '@ice/types';
-import { wireEventsReducers } from '../wire-events';
-import type { DeployState } from '../../types';
 import type { PayloadAction } from '@reduxjs/toolkit';
 
 function makeState(overrides: Partial<DeployState> = {}): DeployState {

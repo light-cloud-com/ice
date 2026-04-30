@@ -13,8 +13,8 @@
  * @see rf-dslice-3
  */
 
-import type { PayloadAction } from '@reduxjs/toolkit';
 import type { DeployState } from '../types';
+import type { PayloadAction } from '@reduxjs/toolkit';
 
 export const panelConfigReducers = {
   openDeployPanel: (state: DeployState) => {

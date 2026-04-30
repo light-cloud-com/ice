@@ -74,7 +74,7 @@ export function deriveRollup(nodesById: Record<string, NodeDeployState>): Deploy
         // total, then warn so an operator sees the drift in the console.
         rollup.total -= 1;
         if (typeof console !== 'undefined') {
-          // eslint-disable-next-line no-console
+           
           console.warn(
             '[deploy-rollup] unknown node status:',
             (node as { status?: unknown }).status,

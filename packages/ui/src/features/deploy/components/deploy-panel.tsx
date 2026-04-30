@@ -64,6 +64,7 @@ import {
 } from '../../../store/slices/deploy-slice';
 import { primaryOutput } from '../output-extractors';
 import { extractDnsResults, splitDnsByAction, type DnsRec } from '../utils/dns-records';
+import { classifyDeployError, collectApiEnableUrls, extractProjectIdFromError } from '../utils/error-classification';
 import { openExternalUrl } from '../utils/open-external-url';
 import { analyzePreDeploy } from '../utils/predeploy-analysis';
 import { buildResultsSummaryText, summaryCounts } from '../utils/results-summary-text';
@@ -1564,43 +1565,22 @@ const ApiErrorBanner: React.FC<{
   onRetryDeploy: () => void;
 }> = ({ error, results, onRetryDeploy }) => {
   const { t } = useTranslation();
-  // Collect all unique enable URLs from results and error message
-  const enableUrls = new Set<string>();
-  for (const r of results) {
-    if (r.api_enable_url) enableUrls.add(r.api_enable_url);
-    if (r.error && isApiNotEnabledError(r.error)) {
-      const url = extractApiEnableUrl(r.error);
-      if (url) enableUrls.add(url);
-    }
-  }
-  if (isApiNotEnabledError(error)) {
-    const url = extractApiEnableUrl(error);
-    if (url) enableUrls.add(url);
-  }
-
+  // Collect all unique enable URLs from results and error message, then
+  // classify the error into one of five priority-cascade kinds. Both the
+  // collection loop and the cascade live in `utils/error-classification`
+  // (rf-pdpl-5); the regex, the OR-joined `includes()` checks, and the
+  // priority order are preserved verbatim.
+  const enableUrls = collectApiEnableUrls(error, results);
   const hasApiErrors = enableUrls.size > 0;
+  const kind = classifyDeployError(error, results);
 
-  // Quota exhaustion. Matches the family of GCP quota errors: backend
-  // buckets, in-use IP addresses, forwarding rules, URL maps, etc. —
-  // all of which leak together when template deploys partially fail.
-  const QUOTA_PATTERN =
-    /QUOTA_EXCEEDED|quota.*exceeded|BACKEND_BUCKETS|IN_USE_ADDRESSES|IN-USE-ADDRESSES|FORWARDING_RULES|URL_MAPS|TARGET_(HTTPS?)_PROXIES|BACKEND_SERVICES|SSL_CERTIFICATES/i;
-  const isQuotaError = QUOTA_PATTERN.test(error) || results.some((r) => r.error && QUOTA_PATTERN.test(r.error));
-
-  if (isQuotaError) {
+  if (kind === 'quota') {
     return <QuotaErrorBanner error={error} results={results} onRetryDeploy={onRetryDeploy} />;
   }
 
-  // Check for billing errors
-  const isBillingError =
-    error.includes('Billing') ||
-    error.includes('billing') ||
-    results.some((r) => r.error?.includes('Billing') || r.error?.includes('billing'));
-
-  if (isBillingError) {
+  if (kind === 'billing') {
     // Extract project ID from error or URL
-    const projectMatch = error.match(/project[=/]([a-z0-9-]+)/i);
-    const projectId = projectMatch?.[1] || '';
+    const projectId = extractProjectIdFromError(error);
     return (
       <div className="rounded-md border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 p-4 space-y-2">
         <div className="flex items-start gap-2 text-sm text-amber-800 dark:text-amber-200">
@@ -1634,13 +1614,7 @@ const ApiErrorBanner: React.FC<{
     );
   }
 
-  // Check for RAPT / re-authentication errors
-  const isRaptError =
-    error.includes('invalid_rapt') ||
-    error.includes('reauth') ||
-    results.some((r) => r.error?.includes('invalid_rapt') || r.error?.includes('reauth'));
-
-  if (isRaptError) {
+  if (kind === 'rapt') {
     return (
       <div className="rounded-md border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 p-4 space-y-2">
         <div className="flex items-start gap-2 text-sm text-amber-800 dark:text-amber-200">

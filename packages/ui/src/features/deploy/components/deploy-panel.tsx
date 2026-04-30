@@ -63,6 +63,7 @@ import {
   type NodeDeployState,
 } from '../../../store/slices/deploy-slice';
 import { primaryOutput } from '../output-extractors';
+import { openExternalUrl } from '../utils/open-external-url';
 import { analyzePreDeploy } from '../utils/predeploy-analysis';
 import {
   PROVIDER_REGIONS,
@@ -1409,14 +1410,6 @@ const ChangeRow: React.FC<{
     </div>
   );
 };
-
-/**
- * Handle opening a URL in the user's default browser.
- * Tries IPC bridge first, falls back to window.open().
- */
-function openExternalUrl(url: string) {
-  window.open(url, '_blank', 'noopener,noreferrer');
-}
 
 /**
  * Error banner that detects API-not-enabled errors and shows

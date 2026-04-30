@@ -51,64 +51,26 @@ import { migrateCardNode, migrateCardNodes } from './cards/migration';
 import { loadPersistedCards } from './cards/persistence';
 
 // =============================================================================
+// Snapshot
+// =============================================================================
+//
+// `pushSnapshot` (and its coalescing state, history cap, etc.) lives in
+// `./cards/snapshot` (rf-cards-5). The runtime import brings the function
+// into THIS module's lexical scope so every undoable reducer can call it.
+// `_lastSnapshotAction` is a module-private `let` in that file — keeping
+// it module-scoped is what makes drag/resize coalescing work (RISK #5).
+
+import { pushSnapshot } from './cards/snapshot';
+
+// =============================================================================
 // Initial State
 // =============================================================================
-
-const MAX_HISTORY = 50;
 
 const loadedCards = loadPersistedCards();
 const initialState: CardsState = {
   ...loadedCards,
   history: {},
 };
-
-/**
- * Coalescing: track the last action type that created a snapshot.
- * Sequential calls to the same high-frequency action (position, resize)
- * only snapshot on the FIRST call, so dragging creates one undo step.
- */
-let _lastSnapshotAction = '';
-
-/** High-frequency actions that should be coalesced into one undo step */
-const COALESCE_ACTIONS = new Set(['updateCardNodePosition', 'updateCardNodePositions', 'resizeCardNode']);
-
-/**
- * Push a snapshot of the active card's current state onto its undo stack.
- * Called before any mutation that should be undoable.
- * Clears the redo stack (new action invalidates future).
- *
- * For high-frequency actions (drag/resize), only the first call in a
- * sequence creates a snapshot — subsequent calls are coalesced.
- */
-function pushSnapshot(state: CardsState, actionType?: string): void {
-  // Coalesce rapid-fire position/resize updates
-  if (actionType && COALESCE_ACTIONS.has(actionType)) {
-    if (_lastSnapshotAction === actionType) return; // already snapshotted
-  }
-  _lastSnapshotAction = actionType || '';
-
-  const card = state.cards.find((c) => c.id === state.activeCardId);
-  if (!card) return;
-
-  const cardId = card.id;
-  if (!state.history[cardId]) {
-    state.history[cardId] = { past: [], future: [] };
-  }
-
-  const history = state.history[cardId];
-  history.past.push({
-    nodes: JSON.parse(JSON.stringify(card.nodes)),
-    edges: JSON.parse(JSON.stringify(card.edges)),
-  });
-
-  // Cap history size
-  if (history.past.length > MAX_HISTORY) {
-    history.past.shift();
-  }
-
-  // New action clears redo
-  history.future = [];
-}
 
 // =============================================================================
 // Edge routes

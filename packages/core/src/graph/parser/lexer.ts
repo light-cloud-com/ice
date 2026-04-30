@@ -22,13 +22,14 @@ import {
   ls_add_error,
 } from './lexer-state.js';
 import {
-  is_alpha,
   is_digit,
+  is_alpha,
   scan_block_comment,
   scan_identifier,
   scan_line_comment,
   scan_number,
 } from './lexer-scanners.js';
+import { scan_heredoc } from './lexer-heredoc.js';
 
 // =============================================================================
 // Lexer Error
@@ -197,7 +198,7 @@ export class Lexer {
         if (ls_match(this.state, '=')) {
           ls_add_token(this.state, 'LESS_THAN_EQUALS', '<=', start_pos, start_line, start_column);
         } else if (ls_match(this.state, '<')) {
-          this.scan_heredoc(start_pos, start_line, start_column);
+          scan_heredoc(this.state, start_pos, start_line, start_column);
         } else {
           ls_add_token(this.state, 'LESS_THAN', '<', start_pos, start_line, start_column);
         }
@@ -360,102 +361,6 @@ export class Lexer {
     const raw = this.state.source.slice(start_pos, this.state.pos);
 
     ls_add_token_with_literal(this.state, 'STRING', raw, start_pos, start_line, start_column, value);
-  }
-
-  /**
-   * Scan a heredoc string.
-   */
-  private scan_heredoc(start_pos: number, start_line: number, start_column: number): void {
-    // Skip optional '-' for indented heredoc
-    const indented = ls_match(this.state, '-');
-
-    // Read delimiter identifier
-    const delimiter_start = this.state.pos;
-    while (
-      is_alpha(ls_peek(this.state)) ||
-      is_digit(ls_peek(this.state)) ||
-      ls_peek(this.state) === '_'
-    ) {
-      ls_advance(this.state);
-    }
-    const delimiter = this.state.source.slice(delimiter_start, this.state.pos);
-
-    if (delimiter.length === 0) {
-      ls_add_error(this.state, 'Expected heredoc delimiter', true);
-      return;
-    }
-
-    // Skip to end of line
-    while (!ls_is_at_end(this.state) && ls_peek(this.state) !== '\n') {
-      ls_advance(this.state);
-    }
-    if (!ls_is_at_end(this.state)) {
-      ls_advance(this.state); // consume newline
-      this.state.line++;
-      this.state.column = 1;
-    }
-
-    // Read content until we find the closing delimiter
-    const content_start = this.state.pos;
-    let content_end = this.state.pos;
-
-    while (!ls_is_at_end(this.state)) {
-      // Check for delimiter at start of line
-      const line_start = this.state.pos;
-
-      // Skip leading whitespace for indented heredocs
-      if (indented) {
-        while (ls_peek(this.state) === ' ' || ls_peek(this.state) === '\t') {
-          ls_advance(this.state);
-        }
-      }
-
-      // Check if this line is the delimiter
-      let is_delimiter = true;
-      const check_start = this.state.pos;
-      for (let i = 0; i < delimiter.length; i++) {
-        if (ls_peek(this.state) !== delimiter[i]) {
-          is_delimiter = false;
-          break;
-        }
-        ls_advance(this.state);
-      }
-
-      // Check for end of line or file after delimiter
-      if (
-        is_delimiter &&
-        (ls_is_at_end(this.state) || ls_peek(this.state) === '\n' || ls_peek(this.state) === '\r')
-      ) {
-        content_end = line_start;
-        break;
-      }
-
-      // Not the delimiter, reset and continue
-      this.state.pos = check_start;
-
-      // Read until end of line
-      while (!ls_is_at_end(this.state) && ls_peek(this.state) !== '\n') {
-        ls_advance(this.state);
-      }
-      if (!ls_is_at_end(this.state)) {
-        ls_advance(this.state); // consume newline
-        this.state.line++;
-        this.state.column = 1;
-      }
-    }
-
-    const content = this.state.source.slice(content_start, content_end);
-    const raw = this.state.source.slice(start_pos, this.state.pos);
-
-    ls_add_token_with_literal(
-      this.state,
-      'STRING',
-      raw,
-      start_pos,
-      start_line,
-      start_column,
-      content.trimEnd(),
-    );
   }
 
 }

@@ -5,8 +5,8 @@
  * Handles string interpolation, heredocs, and error recovery.
  */
 
-import { create_token, get_keyword_type } from './tokens.js';
-import type { Token, TokenType, SourcePosition } from './tokens.js';
+import { create_token } from './tokens.js';
+import type { Token, SourcePosition } from './tokens.js';
 import {
   type LexerState,
   make_lexer_state,
@@ -21,6 +21,14 @@ import {
   ls_add_token_with_literal,
   ls_add_error,
 } from './lexer-state.js';
+import {
+  is_alpha,
+  is_digit,
+  scan_block_comment,
+  scan_identifier,
+  scan_line_comment,
+  scan_number,
+} from './lexer-scanners.js';
 
 // =============================================================================
 // Lexer Error
@@ -222,8 +230,8 @@ export class Lexer {
       case '-':
         if (ls_match(this.state, '>')) {
           ls_add_token(this.state, 'ARROW', '->', start_pos, start_line, start_column);
-        } else if (this.is_digit(ls_peek(this.state))) {
-          this.scan_number(start_pos, start_line, start_column, true);
+        } else if (is_digit(ls_peek(this.state))) {
+          scan_number(this.state, start_pos, start_line, start_column, true);
         } else {
           ls_add_token(this.state, 'MINUS', '-', start_pos, start_line, start_column);
         }
@@ -244,9 +252,9 @@ export class Lexer {
       // Comments and division
       case '/':
         if (ls_match(this.state, '/')) {
-          this.scan_line_comment(start_pos, start_line, start_column);
+          scan_line_comment(this.state, start_pos, start_line, start_column);
         } else if (ls_match(this.state, '*')) {
-          this.scan_block_comment(start_pos, start_line, start_column);
+          scan_block_comment(this.state, start_pos, start_line, start_column);
         } else {
           ls_add_token(this.state, 'SLASH', '/', start_pos, start_line, start_column);
         }
@@ -254,7 +262,7 @@ export class Lexer {
 
       // Hash comments (like HCL)
       case '#':
-        this.scan_line_comment(start_pos, start_line, start_column);
+        scan_line_comment(this.state, start_pos, start_line, start_column);
         break;
 
       // Strings
@@ -282,10 +290,10 @@ export class Lexer {
         break;
 
       default:
-        if (this.is_digit(char)) {
-          this.scan_number(start_pos, start_line, start_column, false);
-        } else if (this.is_alpha(char)) {
-          this.scan_identifier(start_pos, start_line, start_column);
+        if (is_digit(char)) {
+          scan_number(this.state, start_pos, start_line, start_column, false);
+        } else if (is_alpha(char)) {
+          scan_identifier(this.state, start_pos, start_line, start_column);
         } else {
           ls_add_error(this.state, `Unexpected character '${char}'`, true);
         }
@@ -355,132 +363,6 @@ export class Lexer {
   }
 
   /**
-   * Scan a number literal.
-   */
-  private scan_number(
-    start_pos: number,
-    start_line: number,
-    start_column: number,
-    _negative: boolean,
-  ): void {
-    // Integer part
-    while (this.is_digit(ls_peek(this.state))) {
-      ls_advance(this.state);
-    }
-
-    // Decimal part
-    if (ls_peek(this.state) === '.' && this.is_digit(ls_peek_next(this.state))) {
-      ls_advance(this.state); // consume '.'
-      while (this.is_digit(ls_peek(this.state))) {
-        ls_advance(this.state);
-      }
-    }
-
-    // Exponent part
-    if (ls_peek(this.state) === 'e' || ls_peek(this.state) === 'E') {
-      ls_advance(this.state);
-      if (ls_peek(this.state) === '+' || ls_peek(this.state) === '-') {
-        ls_advance(this.state);
-      }
-      if (!this.is_digit(ls_peek(this.state))) {
-        ls_add_error(this.state, 'Invalid number: expected exponent', true);
-        return;
-      }
-      while (this.is_digit(ls_peek(this.state))) {
-        ls_advance(this.state);
-      }
-    }
-
-    const value = this.state.source.slice(start_pos, this.state.pos);
-    const num = parseFloat(value);
-
-    ls_add_token_with_literal(this.state, 'NUMBER', value, start_pos, start_line, start_column, num);
-  }
-
-  /**
-   * Scan an identifier or keyword.
-   */
-  private scan_identifier(start_pos: number, start_line: number, start_column: number): void {
-    while (this.is_alphanumeric(ls_peek(this.state))) {
-      ls_advance(this.state);
-    }
-
-    const value = this.state.source.slice(start_pos, this.state.pos);
-    const keyword_type = get_keyword_type(value);
-
-    if (keyword_type) {
-      if (keyword_type === 'TRUE') {
-        ls_add_token_with_literal(this.state, 'BOOLEAN', value, start_pos, start_line, start_column, true);
-      } else if (keyword_type === 'FALSE') {
-        ls_add_token_with_literal(this.state, 'BOOLEAN', value, start_pos, start_line, start_column, false);
-      } else if (keyword_type === 'NULL_KEYWORD') {
-        ls_add_token_with_literal(this.state, 'NULL', value, start_pos, start_line, start_column, null);
-      } else {
-        ls_add_token(this.state, keyword_type, value, start_pos, start_line, start_column);
-      }
-    } else {
-      // Check if it looks like a type identifier (contains a dot or starts with uppercase)
-      const is_type = value.includes('.') || /^[A-Z]/.test(value);
-      ls_add_token(
-        this.state,
-        is_type ? 'TYPE_IDENTIFIER' : 'IDENTIFIER',
-        value,
-        start_pos,
-        start_line,
-        start_column,
-      );
-    }
-  }
-
-  /**
-   * Scan a line comment.
-   */
-  private scan_line_comment(start_pos: number, start_line: number, start_column: number): void {
-    while (!ls_is_at_end(this.state) && ls_peek(this.state) !== '\n') {
-      ls_advance(this.state);
-    }
-
-    if (this.state.options.include_comments) {
-      const value = this.state.source.slice(start_pos, this.state.pos);
-      ls_add_token(this.state, 'COMMENT', value, start_pos, start_line, start_column);
-    }
-  }
-
-  /**
-   * Scan a block comment.
-   */
-  private scan_block_comment(start_pos: number, start_line: number, start_column: number): void {
-    let depth = 1;
-
-    while (!ls_is_at_end(this.state) && depth > 0) {
-      if (ls_peek(this.state) === '/' && ls_peek_next(this.state) === '*') {
-        ls_advance(this.state);
-        ls_advance(this.state);
-        depth++;
-      } else if (ls_peek(this.state) === '*' && ls_peek_next(this.state) === '/') {
-        ls_advance(this.state);
-        ls_advance(this.state);
-        depth--;
-      } else {
-        if (ls_peek(this.state) === '\n') {
-          this.state.line++;
-          this.state.column = 0;
-        }
-        ls_advance(this.state);
-      }
-    }
-
-    if (depth > 0) {
-      ls_add_error(this.state, 'Unterminated block comment', true);
-    }
-
-    if (this.state.options.include_comments) {
-      const value = this.state.source.slice(start_pos, this.state.pos);
-      ls_add_token(this.state, 'COMMENT', value, start_pos, start_line, start_column);
-    }
-  }
-
-  /**
    * Scan a heredoc string.
    */
   private scan_heredoc(start_pos: number, start_line: number, start_column: number): void {
@@ -490,8 +372,8 @@ export class Lexer {
     // Read delimiter identifier
     const delimiter_start = this.state.pos;
     while (
-      this.is_alpha(ls_peek(this.state)) ||
-      this.is_digit(ls_peek(this.state)) ||
+      is_alpha(ls_peek(this.state)) ||
+      is_digit(ls_peek(this.state)) ||
       ls_peek(this.state) === '_'
     ) {
       ls_advance(this.state);
@@ -576,21 +458,6 @@ export class Lexer {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Char Predicates
-  // ---------------------------------------------------------------------------
-
-  private is_digit(char: string): boolean {
-    return char >= '0' && char <= '9';
-  }
-
-  private is_alpha(char: string): boolean {
-    return (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || char === '_';
-  }
-
-  private is_alphanumeric(char: string): boolean {
-    return this.is_alpha(char) || this.is_digit(char);
-  }
 }
 
 // =============================================================================

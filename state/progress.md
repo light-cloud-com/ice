@@ -192,6 +192,32 @@ This was a **non-React core module** — pure TypeScript, simpler tests than the
 
 **Latent production bug surfaced** by rf-ctrans-10: `graph.nodes.get(plainName)` always misses because MutableGraph keys nodes by `${type}:${name}`, not bare name. Pass 1.4/1.45/1.5 backend lookups are silent no-ops in production. Verbatim refactor preserves the bug; tests construct properly so mutation paths are exercised. Candidate for a follow-up bug-fix unit (would need to switch `card_id_to_name` to map id → branded NodeId, or use `graph.get_node_by_name(name)` if available).
 
+### Refactor initiative — `cards-slice.ts` (rf-cards-* units) — 14-unit blueprint landed
+
+Decomposer returned a 16-unit blueprint at [`blueprints/rf-cards.md`](blueprints/rf-cards.md); rf-cards-15+16 absorbed into rf-cards-14 housekeeping pass. 5 utils → 9 reducer groups → orchestrator. 11 behavior-risk flags captured up-front including: Immer two-field mutation atomicity, two-pass position update, applyEdgeRoutes ordering, _lastSnapshotAction module-level coalescing, cascadeContainerReflow eslint-disable, clearCardDeployOverlay 24-field completeness, ingestion-path migration parity, groupSelectedNodes Z-order, scaleLayoutForZoom intentional `scaleX/Y = 1`, deep-clone via JSON serialization, non-memoized inline selectors.
+
+**Status:**
+
+- ✅ **rf-cards-1** `cards/types.ts` — 5 public interfaces + DEFAULT_VIEWPORT + private interfaces. 21 tests, 100% / 100%. Commit `4659ec2`. New learning anchor `brief-import-list-may-include-transitively-referenced-types`.
+- ✅ **rf-cards-2** `cards/migration.ts` — `migrateCardNodes` + `migrateCardNode` + private BLOCK_TO_GROUP_TYPES. 38 tests, 100% / 100%. Commit `47c0953`. New learning anchor `jsdoc-comment-block-closes-on-asterisk-slash`.
+- ✅ **rf-cards-3** `cards/edge-routes.ts` — `invalidateEdgeRoutesTouching` + `applyEdgeRoutes` + `cascadeContainerReflow` (dead code with eslint-disable preserved). 25 tests, 100% / 100%. Commit `7f9173b`. New learning anchor `stacked-jsdocs-precede-only-the-immediate-next-decl`.
+- ✅ **Layer 0 utils complete (3/3).**
+- ✅ **rf-cards-4** `cards/persistence.ts` — `loadPersistedCards` + 3 private constants + 2 try/catch wrappers. Demo-card filter pinned. 17 tests, 100% / 100%. Commit `bec0639`.
+- ✅ **rf-cards-5** `cards/snapshot.ts` — `pushSnapshot` + module-level `_lastSnapshotAction` + COALESCE_ACTIONS. RISK #5 (module-level coalescing) preserved. 19 tests, 100% / 100%. Commit `fe79306`. New learning anchor `reset-module-let-via-synthetic-call-not-vi-resetModules`.
+- ✅ **Layer 1 helpers complete (2/2).**
+- ✅ **rf-cards-6** `cards/reducers/card-lifecycle.ts` — 6 reducers (setActiveCard, createCard, deleteCard, renameCard, setCardViewport, setCardViewportById). 24 tests, 100% / 100%. Commit `68bd112`.
+- ✅ **rf-cards-7** `cards/reducers/node-edge-add.ts` — 5 reducers (addNodeToCard, addEdgeToCard, clearCardDeployOverlay, updateCardEdgeData, reverseCardEdge). RISK #7 honored: 24-field clear list pinned (brief said 20, source has 24 — caught). 26 tests, 100% / 100%. Commit `e948336`. New learning anchor `brief-numerics-are-approximate-source-is-canonical`.
+- ✅ **rf-cards-8** `cards/reducers/node-position.ts` — 3 reducers. RISK #2 (two-pass design in updateCardNodePositions) honored. 20 tests, 100% / 100%. Commit `3c7d72d`. New learning anchor `relative-import-depth-must-be-recounted-when-moving-deeper`.
+- ✅ **rf-cards-9** `cards/reducers/node-data.ts` — toggleCardNodeFold (no pushSnapshot — fold not undoable) + updateCardNodeParent (delete vs `= undefined`) + updateCardNodeData. 18 tests, 100% / 100%. Commit `d4d7224`. New learning anchor `delete-vs-undefined-test-must-use-in-operator-not-strict-equality`.
+- ✅ **rf-cards-10** `cards/reducers/node-delete-merge.ts` — deleteCardNode (single-tick atomic edge cleanup) + deleteCardEdge + addToActiveCard (migrate-before-offset order pinned). 17 tests, 100% / 100%. Commit `4863356`.
+- ✅ **rf-cards-11** `cards/reducers/import.ts` — importToActiveCard (autoLayout integration + applyEdgeRoutes ordering). 13 tests, 100% / 100%. Commit `dcd57a8`. New learning anchor `vi-mock-with-mutable-result-needs-let-not-mockReturnValue`.
+- ✅ **rf-cards-12** `cards/reducers/auto-organize.ts` — autoOrganizeCard (largest reducer, ~284 LOC). RISK (centroid-stabilize before applyEdgeRoutes) honored. 26 tests, 100% / 100%. Commit `4ff90d5`. New learning anchor `immer-revoked-proxy-from-spy-args-needs-deep-clone`.
+- ✅ **rf-cards-13** `cards/reducers/scale-blueprint.ts` — scaleLayoutForZoom (RISK #10 `scaleX/Y = 1` pinned with width-unchanged assertion) + expandBlueprintToCard (migration parity). 13 tests, 100% / 100%. Commit `dc9295b`. New learning anchor `hard-coded-constant-risk-pin-needs-call-with-meaningful-input`.
+- ✅ **rf-cards-14** `cards/reducers/undo-redo-group.ts` — undoCardChange + redoCardChange (JSON-serialize deep clone preserved) + groupSelectedNodes (Z-order push-last preserved). 18 tests, 100% / 100%. Commits `ff39d4b` + `6a9a95a`. New learning anchor `reducer-bails-after-prologue-side-effect-is-still-observable`. rf-cards-15+16 absorbed: dead-import cleanup happened naturally as the last consumer dropped, orchestrator already at 162 LOC.
+- ✅ **Layer 2 reducer groups complete (9/9).**
+
+**cards-slice.ts decomposition complete.** 1195 → **162 LOC** across 14 units (rf-cards-15+16 absorbed into rf-cards-14). Final orchestrator wires `createSlice` from 9 reducer-group spreads + 5 helper imports + 3 inline selectors + re-export shims for the public type/migrateCardNodes API. 399 tests passing in store directory, 0 typecheck regressions.
+
 ## Done this week
 
 - **2026-04-27 LT-1 through LT-9** — Consolidated `Monitoring.Terminal` into `Monitoring.Log`; built the live Cloud Logging stream backend (filter resolver + log-stream service + routes + Socket.IO room) and frontend (`logs-slice` + `useLogStream` hook + properties section + canvas placeholder). 365+ tests added. Real-deploy verification deferred behind the parallel-deploy work because the deploy engine was too fragile for clean iteration. See `decisions.md` 2026-04-27 entry.

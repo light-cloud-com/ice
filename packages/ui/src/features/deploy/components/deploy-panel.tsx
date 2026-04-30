@@ -25,6 +25,7 @@ import { DeployDiagnosis } from './deploy-diagnosis';
 import { PlanPreview } from './plan-preview';
 import { PreDeployWarnings } from './predeploy-warnings';
 import { RequirementsSection } from './requirements-section';
+import { AuthBanner } from './sections/auth-banner';
 import { StatusBadge } from './status-badge';
 import { useTranslation } from '../../../i18n';
 import { getApi } from '../../../shared/api/api-adapter';
@@ -564,15 +565,7 @@ export const DeployPanel: React.FC = () => {
         )}
 
         {/* Authenticating */}
-        {deploy.status === 'authenticating' && (
-          <div className="rounded-md border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20 p-4 text-sm">
-            <div className="flex items-center gap-2.5 text-orange-700 dark:text-orange-300">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="font-medium">{t('deploy.auth.connecting')}</span>
-            </div>
-            <p className="mt-2 text-orange-600 dark:text-orange-400 text-xs">{t('deploy.auth.browserPrompt')}</p>
-          </div>
-        )}
+        {deploy.status === 'authenticating' && <AuthBanner />}
 
         {/* Phase 8 — block requirements (DNS, verification, cert, GitHub repo, etc.) */}
         {(deploy.requirements.length > 0 || deploy.requirementsLoading) && (

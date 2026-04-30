@@ -15,8 +15,8 @@
  * @see rf-dslice-9
  */
 
-import type { PayloadAction } from '@reduxjs/toolkit';
 import type { DeployedResource, DeployState, NodeDriftInfo } from '../types';
+import type { PayloadAction } from '@reduxjs/toolkit';
 
 export const logsResourcesDriftReducers = {
   appendLog: (state: DeployState, action: PayloadAction<string>) => {

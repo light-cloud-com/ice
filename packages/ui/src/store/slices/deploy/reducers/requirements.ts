@@ -15,8 +15,8 @@
  * @see rf-dslice-10
  */
 
-import type { PayloadAction } from '@reduxjs/toolkit';
 import type { DeployState, ResolvedRequirementState } from '../types';
+import type { PayloadAction } from '@reduxjs/toolkit';
 
 export const requirementsReducers = {
   startRequirementsFetch: (state: DeployState) => {

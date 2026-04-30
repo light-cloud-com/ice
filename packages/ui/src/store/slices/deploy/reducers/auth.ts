@@ -14,9 +14,9 @@
  * @see rf-dslice-4
  */
 
-import type { PayloadAction } from '@reduxjs/toolkit';
-import type { DeployState } from '../types';
 import { t } from '../../../../i18n';
+import type { DeployState } from '../types';
+import type { PayloadAction } from '@reduxjs/toolkit';
 
 export const authReducers = {
   startAuthenticating: (state: DeployState) => {

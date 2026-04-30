@@ -17,9 +17,9 @@
  * @see rf-dslice-5
  */
 
-import type { PayloadAction } from '@reduxjs/toolkit';
-import type { DeployPlan, DeployState } from '../types';
 import { t } from '../../../../i18n';
+import type { DeployPlan, DeployState } from '../types';
+import type { PayloadAction } from '@reduxjs/toolkit';
 
 export const planningReducers = {
   startPlanning: (state: DeployState) => {

@@ -9,9 +9,9 @@
  */
 
 import { describe, expect, it, vi, afterEach } from 'vitest';
-import type { DeployNodeStatus } from '@ice/types';
 import { deriveRollup, orderNodesForPanel } from '../derive';
 import type { NodeDeployState } from '../types';
+import type { DeployNodeStatus } from '@ice/types';
 
 function makeNode(id: string, status: DeployNodeStatus, last_at = '2026-01-01T00:00:00.000Z'): NodeDeployState {
   return {

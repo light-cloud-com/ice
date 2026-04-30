@@ -15,8 +15,8 @@
  * @see rf-dslice-12
  */
 
-import type { PayloadAction } from '@reduxjs/toolkit';
 import type { DeployState } from '../types';
+import type { PayloadAction } from '@reduxjs/toolkit';
 
 export const preDeployReducers = {
   dismissPreDeployWarning: (state: DeployState, action: PayloadAction<string>) => {

@@ -34,46 +34,11 @@
 
 import * as crypto from 'crypto';
 import { gunzipSync, gzipSync } from 'zlib';
-import type { ResourceDeployResult } from '../../../types.js';
 import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
+import { TYPE, result, fail } from './firebase-hosting/result-helpers.js';
 
-const TYPE = 'gcp.firebase.hosting';
 const FIREBASE_HOSTING_API = 'https://firebasehosting.googleapis.com/v1beta1';
 const FIREBASE_MGMT_API = 'https://firebase.googleapis.com/v1beta1';
-
-function result(
-  name: string,
-  action: 'create' | 'update' | 'delete',
-  start: number,
-  overrides: Partial<ResourceDeployResult> = {},
-): ResourceDeployResult {
-  return {
-    resource_id: name,
-    name,
-    type: TYPE,
-    action,
-    success: true,
-    duration_ms: Date.now() - start,
-    ...overrides,
-  };
-}
-
-function fail(
-  name: string,
-  action: 'create' | 'update' | 'delete',
-  start: number,
-  error: string,
-): ResourceDeployResult {
-  return {
-    resource_id: name,
-    name,
-    type: TYPE,
-    action,
-    success: false,
-    error,
-    duration_ms: Date.now() - start,
-  };
-}
 
 /** Firebase Hosting site IDs must match `[a-z0-9-]{6,30}`. */
 function sanitizeSiteId(name: string): string {

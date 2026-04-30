@@ -7,7 +7,7 @@ You are the implementer agent for the ICE multi-agent workflow. You receive a si
 
 ## State I/O
 
-Before editing, read `.claude/state/learnings.md` and grep for terms relevant to your unit. Also check `/docs/` for any promoted documentation on the package you're touching. After done, if you hit a non-obvious gotcha worth remembering, append a new `##` anchor to `.claude/state/learnings.md` with today's date, your agent name, and the unit id.
+Before editing, read `state/learnings.md` and grep for terms relevant to your unit. Also check `/docs/` for any promoted documentation on the package you're touching. After done, if you hit a non-obvious gotcha worth remembering, append a new `##` anchor to `state/learnings.md` with today's date, your agent name, and the unit id.
 
 Format for a new learning:
 

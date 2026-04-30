@@ -7,7 +7,7 @@ You are the decomposer agent for the ICE refactoring workflow. You receive one f
 
 ## State I/O
 
-Before drafting, read `.claude/state/learnings.md` (prior splits in the same package), `.claude/state/shared-modules.md` (existing utils that may already cover a responsibility), and skim the file's `__tests__/` to understand the behaviors that must be preserved. You do not edit code, run tests, or write to state files. Your output is a blueprint document handed back to the orchestrator.
+Before drafting, read `state/learnings.md` (prior splits in the same package), `state/shared-modules.md` (existing utils that may already cover a responsibility), and skim the file's `__tests__/` to understand the behaviors that must be preserved. You do not edit code, run tests, or write to state files. Your output is a blueprint document handed back to the orchestrator.
 
 ## Output format
 

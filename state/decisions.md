@@ -6,7 +6,9 @@ Append-only log of architectural and process decisions for the multi-agent ICE w
 
 - New decisions: append a dated entry. Never edit past entries.
 - Supersede an old decision by adding a new entry that references it under "Related".
-- The only allowed edit to a past entry elsewhere in `.claude/state/` is appending a `_Promoted to: /docs/<path>_` line on a learning that's been promoted. That rule does not apply to entries in this file — `decisions.md` entries are never edited.
+- The only allowed edit to a past entry elsewhere in `state/` is appending a `_Promoted to: /docs/<path>_` line on a learning that's been promoted. That rule does not apply to entries in this file — `decisions.md` entries are never edited.
+
+(Note: state directory moved from `.claude/state/` to `state/` on 2026-04-29 — see the dated entry below for context. Past entries' prose mentions of `.claude/state/` are historical and stay verbatim per append-only.)
 
 ---
 
@@ -104,4 +106,27 @@ Workflow per file: orchestrator picks target → decomposer drafts blueprint →
 - `learnings.md` will accumulate coverage-exception entries for modules that legitimately can't hit 90%.
 - ux-tester smoke runs become exception-driven for refactor work — the critic must explicitly call for one when behavior risk is suspected.
 
-**Related.** [`/CLAUDE.md`](../../CLAUDE.md), [`.claude/state/refactor-targets.md`](refactor-targets.md), [`.claude/state/shared-modules.md`](shared-modules.md), [`.claude/agents/decomposer.md`](../agents/decomposer.md), [`.claude/agents/util-broker.md`](../agents/util-broker.md), [`.claude/agents/test-author.md`](../agents/test-author.md).
+**Related.** [`/CLAUDE.md`](../../CLAUDE.md), [`state/refactor-targets.md`](refactor-targets.md), [`state/shared-modules.md`](shared-modules.md), [`.claude/agents/decomposer.md`](../.claude/agents/decomposer.md), [`.claude/agents/util-broker.md`](../.claude/agents/util-broker.md), [`.claude/agents/test-author.md`](../.claude/agents/test-author.md).
+
+---
+
+## 2026-04-29 — Move state directory from `.claude/state/` to `state/`
+
+**Context.** Operating Claude Code on this repo with default permission settings, every write under `.claude/` triggers an interactive permission prompt. The state files (`decisions.md`, `learnings.md`, `progress.md`, `refactor-targets.md`, `shared-modules.md`, `blueprints/*`, `archive/*`) are touched on every refactor unit — append a learning, update progress, etc. — so the prompts compound into significant friction during long refactor runs.
+
+**Decision.** Move the operational state directory from `.claude/state/` to `state/` at the project root. The agent definitions stay in `.claude/agents/` because that path is how Claude Code's harness discovers subagents — moving them would break agent dispatch. CLAUDE.md, `docs/agents.md`, and every agent definition file get bulk-updated to reference the new path.
+
+**Alternatives considered.**
+
+- *Keep state under `.claude/state/` and add a permission allowlist for it.* Rejected. Allowlists work per-tool but require ongoing maintenance (every new state file under the tree needs the entry refreshed); moving the directory once is structurally cleaner.
+- *Move state to `docs/state/`.* Rejected. `docs/` is human-authored documentation that ships with the repo; mixing agent-managed operational state into it muddies that contract (same reasoning as the original 2026-04-27 decision).
+- *Move state to `.claude-state/` (sibling of `.claude/`).* Rejected. The leading dot would still imply hidden / tooling-managed; explicit `state/` at the root makes the directory's purpose obvious in `ls`.
+
+**Consequences.**
+
+- All references in CLAUDE.md, `docs/agents.md`, and `.claude/agents/*.md` updated to `state/`.
+- Past entries in `decisions.md` and `learnings.md` (append-only) keep their historical `.claude/state/` prose mentions verbatim — those describe the path at the time of writing. The meta-rules section at the top of `decisions.md` is updated since it's normative meta-text, not an entry.
+- `git mv` preserves blame on the moved files.
+- The agent .md files themselves stay in `.claude/agents/` for harness discovery; only `state/` was moved.
+
+**Related.** Supersedes the path choice in the [`2026-04-27 — Adopt persistent state system`](#2026-04-27--adopt-persistent-state-system) decision.

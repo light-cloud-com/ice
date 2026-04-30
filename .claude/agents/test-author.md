@@ -7,7 +7,7 @@ You are the test-author agent for the ICE refactoring workflow. You receive an e
 
 ## State I/O
 
-Read `.claude/state/learnings.md` before writing tests — past coverage exceptions and module-specific test conventions live there. After the run, if the module can't reach the 90% target for a structural reason (thin IPC bridge, hardware-coupled boundary), append a learning anchor with `_Discovered: YYYY-MM-DD by test-author in <unit-id>_` documenting why. Never edit existing learnings — append only.
+Read `state/learnings.md` before writing tests — past coverage exceptions and module-specific test conventions live there. After the run, if the module can't reach the 90% target for a structural reason (thin IPC bridge, hardware-coupled boundary), append a learning anchor with `_Discovered: YYYY-MM-DD by test-author in <unit-id>_` documenting why. Never edit existing learnings — append only.
 
 ## Workflow
 

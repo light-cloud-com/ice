@@ -9,7 +9,7 @@ export default defineConfig({
     include: ['packages/*/src/**/*.test.{ts,tsx}', 'services/*/src/**/*.test.{ts,tsx}'],
     // `.int.test.ts` files are integration tests that require a live SQLite DB
     // (via `pnpm dev:setup`). Run them with `pnpm test:int` instead.
-    exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**', '**/*.int.test.ts', '**/*.int.test.tsx'],
+    exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**', '**/*.int.test.ts', '**/*.int.test.tsx', '**/*.svg'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json-summary', 'html'],
@@ -23,6 +23,7 @@ export default defineConfig({
         '**/generated/**',
         '**/*.d.ts',
         'packages/db/prisma/**',
+        '**/*.svg',
       ],
     },
   },

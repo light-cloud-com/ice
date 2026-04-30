@@ -18,27 +18,10 @@ import type {
   ImportStatement,
   Expression,
   Identifier,
-  TypeIdentifier,
   StringLiteral,
-  NumberLiteral,
-  BooleanLiteral,
-  NullLiteral,
-  ArrayExpression,
-  ObjectExpression,
-  ObjectProperty,
-  PropertyAccess,
-  IndexAccess,
-  FunctionCall,
-  BinaryExpression,
-  UnaryExpression,
-  ConditionalExpression,
-  ForExpression,
-  Reference,
   Block,
   Attribute,
   NestedBlock,
-  BinaryOperator,
-  UnaryOperator,
 } from './ast.js';
 import type { Token, SourcePosition } from './tokens.js';
 import {
@@ -62,6 +45,7 @@ import {
   create_null_literal,
   create_span,
 } from './parser-literals.js';
+import { parse_expression } from './parser-binary-exprs.js';
 
 // =============================================================================
 // Parser Error
@@ -260,13 +244,13 @@ export class Parser {
           description = parse_string_literal(this.state);
           break;
         case 'default':
-          default_value = this.parse_expression();
+          default_value = parse_expression(this.state);
           break;
         case 'sensitive':
           sensitive = parse_boolean_literal(this.state)?.value;
           break;
         default:
-          this.parse_expression(); // Skip unknown attributes
+          parse_expression(this.state); // Skip unknown attributes
       }
     }
 
@@ -300,7 +284,7 @@ export class Parser {
 
       switch (attr_name.name) {
         case 'value':
-          value = this.parse_expression();
+          value = parse_expression(this.state);
           break;
         case 'description':
           description = parse_string_literal(this.state);
@@ -309,7 +293,7 @@ export class Parser {
           sensitive = parse_boolean_literal(this.state)?.value;
           break;
         default:
-          this.parse_expression();
+          parse_expression(this.state);
       }
     }
 
@@ -368,7 +352,7 @@ export class Parser {
       } else if (attr_name.name === 'version') {
         version = parse_string_literal(this.state);
       } else {
-        const value = this.parse_expression();
+        const value = parse_expression(this.state);
         attributes.push({
           kind: 'Attribute',
           name: attr_name,
@@ -415,7 +399,7 @@ export class Parser {
     while (!ps_check(this.state, 'RIGHT_BRACE') && !ps_is_at_end(this.state)) {
       const name = parse_identifier(this.state);
       ps_consume(this.state, 'EQUALS', "Expected '='");
-      const value = this.parse_expression();
+      const value = parse_expression(this.state);
       values[name.name] = value;
     }
 
@@ -466,7 +450,7 @@ export class Parser {
       if (ps_check(this.state, 'EQUALS')) {
         // Attribute
         ps_advance(this.state);
-        const value = this.parse_expression();
+        const value = parse_expression(this.state);
         attributes.push({
           kind: 'Attribute',
           name,
@@ -502,423 +486,6 @@ export class Parser {
       kind: 'Block',
       attributes,
       blocks,
-      span: create_span(start, end),
-    };
-  }
-
-  // ---------------------------------------------------------------------------
-  // Expression Parsing
-  // ---------------------------------------------------------------------------
-
-  private parse_expression(): Expression {
-    return this.parse_conditional();
-  }
-
-  private parse_conditional(): Expression {
-    const expr = this.parse_or();
-
-    if (ps_match(this.state, 'QUESTION')) {
-      const start = expr.span.start;
-      const then_branch = this.parse_expression();
-      ps_consume(this.state, 'COLON', "Expected ':' in conditional");
-      const else_branch = this.parse_conditional();
-
-      return {
-        kind: 'ConditionalExpression',
-        condition: expr,
-        then_branch,
-        else_branch,
-        span: create_span(start, else_branch.span.end),
-      } as ConditionalExpression;
-    }
-
-    return expr;
-  }
-
-  private parse_or(): Expression {
-    let left = this.parse_and();
-
-    while (ps_match(this.state, 'OR')) {
-      const operator = '||' as BinaryOperator;
-      const right = this.parse_and();
-      left = {
-        kind: 'BinaryExpression',
-        operator,
-        left,
-        right,
-        span: create_span(left.span.start, right.span.end),
-      } as BinaryExpression;
-    }
-
-    return left;
-  }
-
-  private parse_and(): Expression {
-    let left = this.parse_equality();
-
-    while (ps_match(this.state, 'AND')) {
-      const operator = '&&' as BinaryOperator;
-      const right = this.parse_equality();
-      left = {
-        kind: 'BinaryExpression',
-        operator,
-        left,
-        right,
-        span: create_span(left.span.start, right.span.end),
-      } as BinaryExpression;
-    }
-
-    return left;
-  }
-
-  private parse_equality(): Expression {
-    let left = this.parse_comparison();
-
-    while (ps_match(this.state, 'EQUALS_EQUALS', 'NOT_EQUALS')) {
-      const operator = (ps_previous(this.state).value === '==' ? '==' : '!=') as BinaryOperator;
-      const right = this.parse_comparison();
-      left = {
-        kind: 'BinaryExpression',
-        operator,
-        left,
-        right,
-        span: create_span(left.span.start, right.span.end),
-      } as BinaryExpression;
-    }
-
-    return left;
-  }
-
-  private parse_comparison(): Expression {
-    let left = this.parse_term();
-
-    while (ps_match(this.state, 'LESS_THAN', 'LESS_THAN_EQUALS', 'GREATER_THAN', 'GREATER_THAN_EQUALS')) {
-      const token = ps_previous(this.state);
-      const operator = token.value as BinaryOperator;
-      const right = this.parse_term();
-      left = {
-        kind: 'BinaryExpression',
-        operator,
-        left,
-        right,
-        span: create_span(left.span.start, right.span.end),
-      } as BinaryExpression;
-    }
-
-    return left;
-  }
-
-  private parse_term(): Expression {
-    let left = this.parse_factor();
-
-    while (ps_match(this.state, 'PLUS', 'MINUS')) {
-      const operator = ps_previous(this.state).value as BinaryOperator;
-      const right = this.parse_factor();
-      left = {
-        kind: 'BinaryExpression',
-        operator,
-        left,
-        right,
-        span: create_span(left.span.start, right.span.end),
-      } as BinaryExpression;
-    }
-
-    return left;
-  }
-
-  private parse_factor(): Expression {
-    let left = this.parse_unary();
-
-    while (ps_match(this.state, 'STAR', 'SLASH', 'PERCENT')) {
-      const operator = ps_previous(this.state).value as BinaryOperator;
-      const right = this.parse_unary();
-      left = {
-        kind: 'BinaryExpression',
-        operator,
-        left,
-        right,
-        span: create_span(left.span.start, right.span.end),
-      } as BinaryExpression;
-    }
-
-    return left;
-  }
-
-  private parse_unary(): Expression {
-    if (ps_match(this.state, 'NOT', 'MINUS')) {
-      const start = ps_previous(this.state).position;
-      const operator = ps_previous(this.state).value as UnaryOperator;
-      const operand = this.parse_unary();
-      return {
-        kind: 'UnaryExpression',
-        operator,
-        operand,
-        span: create_span(start, operand.span.end),
-      } as UnaryExpression;
-    }
-
-    return this.parse_postfix();
-  }
-
-  private parse_postfix(): Expression {
-    let expr = this.parse_primary();
-
-    while (true) {
-      if (ps_match(this.state, 'DOT')) {
-        const property = parse_identifier(this.state);
-        expr = {
-          kind: 'PropertyAccess',
-          object: expr,
-          property,
-          span: create_span(expr.span.start, property.span.end),
-        } as PropertyAccess;
-      } else if (ps_match(this.state, 'LEFT_BRACKET')) {
-        const index = this.parse_expression();
-        ps_consume(this.state, 'RIGHT_BRACKET', "Expected ']'");
-        const end = ps_previous(this.state).position;
-        expr = {
-          kind: 'IndexAccess',
-          object: expr,
-          index,
-          span: create_span(expr.span.start, end),
-        } as IndexAccess;
-      } else if (ps_match(this.state, 'LEFT_PAREN')) {
-        // Function call
-        const args: Expression[] = [];
-        if (!ps_check(this.state, 'RIGHT_PAREN')) {
-          do {
-            args.push(this.parse_expression());
-          } while (ps_match(this.state, 'COMMA'));
-        }
-        ps_consume(this.state, 'RIGHT_PAREN', "Expected ')'");
-        const end = ps_previous(this.state).position;
-
-        if (expr.kind !== 'Identifier') {
-          ps_add_error(this.state, 'Expected function name');
-        }
-
-        expr = {
-          kind: 'FunctionCall',
-          callee: expr as Identifier,
-          arguments: args,
-          span: create_span(expr.span.start, end),
-        } as FunctionCall;
-      } else {
-        break;
-      }
-    }
-
-    return expr;
-  }
-
-  private parse_primary(): Expression {
-    const token = ps_current(this.state);
-
-    if (ps_match(this.state, 'STRING')) {
-      return {
-        kind: 'StringLiteral',
-        value: token.literal as string,
-        span: create_span(token.position, token.position),
-      } as StringLiteral;
-    }
-
-    if (ps_match(this.state, 'NUMBER')) {
-      return {
-        kind: 'NumberLiteral',
-        value: token.literal as number,
-        span: create_span(token.position, token.position),
-      } as NumberLiteral;
-    }
-
-    if (ps_match(this.state, 'BOOLEAN')) {
-      return {
-        kind: 'BooleanLiteral',
-        value: token.literal as boolean,
-        span: create_span(token.position, token.position),
-      } as BooleanLiteral;
-    }
-
-    if (ps_match(this.state, 'NULL')) {
-      return {
-        kind: 'NullLiteral',
-        span: create_span(token.position, token.position),
-      } as NullLiteral;
-    }
-
-    if (ps_match(this.state, 'LEFT_BRACKET')) {
-      return this.parse_array_expression(token.position);
-    }
-
-    if (ps_match(this.state, 'LEFT_BRACE')) {
-      return this.parse_object_expression(token.position);
-    }
-
-    if (ps_match(this.state, 'LEFT_PAREN')) {
-      const expr = this.parse_expression();
-      ps_consume(this.state, 'RIGHT_PAREN', "Expected ')'");
-      return expr;
-    }
-
-    if (ps_match(this.state, 'FOR')) {
-      return this.parse_for_expression(token.position);
-    }
-
-    if (ps_match(this.state, 'TYPE_IDENTIFIER')) {
-      return {
-        kind: 'TypeIdentifier',
-        name: token.value,
-        span: create_span(token.position, token.position),
-      } as TypeIdentifier;
-    }
-
-    if (ps_match(this.state, 'IDENTIFIER')) {
-      // Check if this is a reference
-      const name = token.value;
-
-      if (['var', 'local', 'module', 'path', 'data'].includes(name)) {
-        return this.parse_reference(token.position, name);
-      }
-
-      return {
-        kind: 'Identifier',
-        name,
-        span: create_span(token.position, token.position),
-      } as Identifier;
-    }
-
-    ps_add_error(this.state, `Unexpected token ${describe_token(token.type)}`);
-    ps_advance(this.state);
-    return create_null_literal(this.state, token.position);
-  }
-
-  private parse_array_expression(start: SourcePosition): ArrayExpression {
-    const elements: Expression[] = [];
-
-    if (!ps_check(this.state, 'RIGHT_BRACKET')) {
-      do {
-        if (ps_check(this.state, 'RIGHT_BRACKET')) break;
-        elements.push(this.parse_expression());
-      } while (ps_match(this.state, 'COMMA'));
-    }
-
-    ps_consume(this.state, 'RIGHT_BRACKET', "Expected ']'");
-    const end = ps_previous(this.state).position;
-
-    return {
-      kind: 'ArrayExpression',
-      elements,
-      span: create_span(start, end),
-    };
-  }
-
-  private parse_object_expression(start: SourcePosition): ObjectExpression {
-    const properties: ObjectProperty[] = [];
-
-    if (!ps_check(this.state, 'RIGHT_BRACE')) {
-      do {
-        if (ps_check(this.state, 'RIGHT_BRACE')) break;
-
-        let key: Expression;
-        let computed = false;
-
-        if (ps_match(this.state, 'LEFT_PAREN')) {
-          key = this.parse_expression();
-          ps_consume(this.state, 'RIGHT_PAREN', "Expected ')'");
-          computed = true;
-        } else if (ps_check(this.state, 'STRING')) {
-          key = parse_string_literal(this.state);
-        } else {
-          key = parse_identifier(this.state);
-        }
-
-        ps_consume(this.state, 'EQUALS', "Expected '=' or ':'");
-        const value = this.parse_expression();
-
-        properties.push({ key, value, computed });
-      } while (ps_match(this.state, 'COMMA'));
-    }
-
-    ps_consume(this.state, 'RIGHT_BRACE', "Expected '}'");
-    const end = ps_previous(this.state).position;
-
-    return {
-      kind: 'ObjectExpression',
-      properties,
-      span: create_span(start, end),
-    };
-  }
-
-  private parse_for_expression(start: SourcePosition): ForExpression {
-    let key_var: Identifier | undefined;
-    let value_var: Identifier;
-
-    const first_var = parse_identifier(this.state);
-
-    if (ps_match(this.state, 'COMMA')) {
-      key_var = first_var;
-      value_var = parse_identifier(this.state);
-    } else {
-      value_var = first_var;
-    }
-
-    ps_consume(this.state, 'IN', "Expected 'in'");
-    const collection = this.parse_expression();
-    ps_consume(this.state, 'COLON', "Expected ':'");
-
-    let key_expr: Expression | undefined;
-    const value_expr = this.parse_expression();
-
-    if (ps_match(this.state, 'FAT_ARROW')) {
-      key_expr = value_expr;
-    }
-
-    let condition: Expression | undefined;
-    if (ps_match(this.state, 'IF')) {
-      condition = this.parse_expression();
-    }
-
-    ps_consume(this.state, 'RIGHT_BRACKET', "Expected ']' or '}'");
-    const end = ps_previous(this.state).position;
-
-    return {
-      kind: 'ForExpression',
-      key_var,
-      value_var,
-      collection,
-      key_expr,
-      value_expr,
-      condition,
-      span: create_span(start, end),
-    };
-  }
-
-  private parse_reference(start: SourcePosition, ref_type: string): Reference {
-    ps_consume(this.state, 'DOT', "Expected '.' after reference type");
-
-    let type_name: string | undefined;
-    let name: string;
-    const path: string[] = [];
-
-    if (ref_type === 'data') {
-      type_name = parse_identifier(this.state).name;
-      ps_consume(this.state, 'DOT', "Expected '.' after data type");
-      name = parse_identifier(this.state).name;
-    } else {
-      name = parse_identifier(this.state).name;
-    }
-
-    while (ps_match(this.state, 'DOT')) {
-      path.push(parse_identifier(this.state).name);
-    }
-
-    const end = ps_previous(this.state).position;
-
-    return {
-      kind: 'Reference',
-      ref_type: ref_type as Reference['ref_type'],
-      type_name,
-      name,
-      path: path.length > 0 ? path : undefined,
       span: create_span(start, end),
     };
   }

@@ -6,7 +6,6 @@
 
 import { LAYOUT_NODE_SEP } from '@ice/constants';
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import { CONTAINER_PADDING, HEADER_HEIGHT } from '../../config/canvas-constants';
 import { isContainer as isContainerIceType } from '../../config/containment-rules';
 import { autoLayout, type LayoutNode } from '../../shared/utils/auto-layout';
 import type { ExpandedBlueprint } from '../../config/blocks';
@@ -75,6 +74,7 @@ import { pushSnapshot } from './cards/snapshot';
 
 import { cardLifecycleReducers } from './cards/reducers/card-lifecycle';
 import { nodeEdgeAddReducers } from './cards/reducers/node-edge-add';
+import { nodePositionReducers } from './cards/reducers/node-position';
 
 // =============================================================================
 // Initial State
@@ -92,10 +92,13 @@ const initialState: CardsState = {
 //
 // Edge-route helpers (and the legacy `cascadeContainerReflow` dead-code
 // helper) live in `./cards/edge-routes` (rf-cards-3). The runtime import
-// brings the names into THIS module's lexical scope so the position-update
-// reducers and the import / auto-organize reducers can call them.
+// brings the names into THIS module's lexical scope so the import /
+// auto-organize reducers can call them. After rf-cards-8 extracted the
+// position reducers, `invalidateEdgeRoutesTouching` is no longer needed
+// in this file — only `applyEdgeRoutes` (used by importToActiveCard and
+// autoOrganizeCard) stays.
 
-import { invalidateEdgeRoutesTouching, applyEdgeRoutes } from './cards/edge-routes';
+import { applyEdgeRoutes } from './cards/edge-routes';
 
 // =============================================================================
 // Slice
@@ -107,99 +110,7 @@ const cardsSlice = createSlice({
   reducers: {
     ...cardLifecycleReducers,
     ...nodeEdgeAddReducers,
-
-    // Update node position in active card (L2 / canonical position)
-    // BND-2: Clamps child nodes to parent bounds as a safety net.
-    updateCardNodePosition: (state, action: PayloadAction<{ nodeId: string; x: number; y: number }>) => {
-      pushSnapshot(state, 'updateCardNodePosition');
-      const card = state.cards.find((c) => c.id === state.activeCardId);
-      if (card) {
-        const node = card.nodes.find((n) => n.id === action.payload.nodeId);
-        if (node) {
-          let { x, y } = action.payload;
-          if (node.parentId) {
-            const parent = card.nodes.find((n) => n.id === node.parentId);
-            if (parent) {
-              const minX = parent.position.x + CONTAINER_PADDING;
-              const minY = parent.position.y + CONTAINER_PADDING + HEADER_HEIGHT;
-              const maxX = parent.position.x + parent.width - CONTAINER_PADDING - node.width;
-              const maxY = parent.position.y + parent.height - CONTAINER_PADDING - node.height;
-              x = Math.max(minX, Math.min(maxX, x));
-              y = Math.max(minY, Math.min(maxY, y));
-            }
-          }
-          node.position.x = x;
-          node.position.y = y;
-          invalidateEdgeRoutesTouching(card.edges, action.payload.nodeId);
-        }
-      }
-    },
-
-    // Batch update node positions in active card (L2 / canonical position)
-    // BND-2: Clamps child nodes to parent bounds as a safety net.
-    // Parent positions are applied first (they appear earlier in the update array)
-    // so that expanded parent dimensions are available for child clamping.
-    // Pass skipClamp: true during Shift+drag to allow nodes to escape containers.
-    updateCardNodePositions: (
-      state,
-      action: PayloadAction<
-        | {
-            updates: Array<{ id: string; position: { x: number; y: number } }>;
-            skipClamp?: boolean;
-          }
-        | Array<{ id: string; position: { x: number; y: number } }>
-      >,
-    ) => {
-      pushSnapshot(state, 'updateCardNodePositions');
-      const card = state.cards.find((c) => c.id === state.activeCardId);
-      if (card) {
-        // Support both old array format and new { updates, skipClamp } format
-        const updates = Array.isArray(action.payload) ? action.payload : action.payload.updates;
-        const skipClamp = Array.isArray(action.payload) ? false : !!action.payload.skipClamp;
-
-        // First pass: apply all position updates
-        const movedIds = new Set<string>();
-        for (const update of updates) {
-          const node = card.nodes.find((n) => n.id === update.id);
-          if (node) {
-            node.position.x = update.position.x;
-            node.position.y = update.position.y;
-            movedIds.add(update.id);
-          }
-        }
-        for (const id of movedIds) invalidateEdgeRoutesTouching(card.edges, id);
-        // Second pass: clamp children to their parent bounds (skip during Shift+drag)
-        if (!skipClamp) {
-          for (const update of updates) {
-            const node = card.nodes.find((n) => n.id === update.id);
-            if (node?.parentId) {
-              const parent = card.nodes.find((n) => n.id === node.parentId);
-              if (parent) {
-                const minX = parent.position.x + CONTAINER_PADDING;
-                const minY = parent.position.y + CONTAINER_PADDING + HEADER_HEIGHT;
-                const maxX = parent.position.x + parent.width - CONTAINER_PADDING - node.width;
-                const maxY = parent.position.y + parent.height - CONTAINER_PADDING - node.height;
-                node.position.x = Math.max(minX, Math.min(maxX, node.position.x));
-                node.position.y = Math.max(minY, Math.min(maxY, node.position.y));
-              }
-            }
-          }
-        }
-      }
-    },
-
-    // Resize node in active card
-    resizeCardNode: (state, action: PayloadAction<{ id: string; width: number; height: number }>) => {
-      pushSnapshot(state, 'resizeCardNode');
-      const card = state.cards.find((c) => c.id === state.activeCardId);
-      if (card) {
-        const node = card.nodes.find((n) => n.id === action.payload.id);
-        if (node) {
-          node.width = action.payload.width;
-          node.height = action.payload.height;
-        }
-      }
-    },
+    ...nodePositionReducers,
 
     // Toggle node fold state in active card
     toggleCardNodeFold: (state, action: PayloadAction<string>) => {

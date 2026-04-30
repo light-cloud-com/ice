@@ -77,6 +77,12 @@ import {
   isContainerNode as isContainerNodeUtil,
   isGroupOrBlock,
 } from '../utils/node-classification';
+import {
+  isNodeFolded as isNodeFoldedUtil,
+  hasCollapsedAncestor as hasCollapsedAncestorUtil,
+  buildFoldedRemap,
+  descendants,
+} from '../utils/folded-remap';
 import { SvgGhostNode } from './ghost/svg-ghost-node';
 import {
   inferConnectionMeta,
@@ -481,44 +487,27 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     });
   }, [canvasNodes, viewLevel]);
 
-  // Check if a node is collapsed/folded
+  // Check if a node is collapsed/folded.
+  // rf-canv-3: thin wrapper binding to the pure util in ../utils/folded-remap.
   const isNodeFolded = useCallback(
-    (nodeId: string): boolean => {
-      const node = visibleNodes.find((n) => n.id === nodeId);
-      return node?.data?.folded === true;
-    },
+    (nodeId: string): boolean => isNodeFoldedUtil(visibleNodes, nodeId),
     [visibleNodes],
   );
 
-  // Check if any ancestor is folded (node should be hidden)
+  // Check if any ancestor is folded (node should be hidden).
+  // rf-canv-3: thin wrapper binding to the pure util in ../utils/folded-remap.
   const hasCollapsedAncestor = useCallback(
-    (nodeId: string): boolean => {
-      const node = visibleNodes.find((n) => n.id === nodeId);
-      if (!node?.parentId) return false;
-      if (isNodeFolded(node.parentId)) return true;
-      return hasCollapsedAncestor(node.parentId);
-    },
-    [visibleNodes, isNodeFolded],
+    (nodeId: string): boolean => hasCollapsedAncestorUtil(visibleNodes, nodeId),
+    [visibleNodes],
   );
 
-  // Build remap for folded children: hidden node ID → first visible ancestor ID
-  const foldedRemap = useMemo(() => {
-    const remap = new Map<string, string>();
-    for (const node of canvasNodes) {
-      if (hasCollapsedAncestor(node.id)) {
-        // Walk up to find the first ancestor that is NOT hidden
-        let ancestorId = node.parentId;
-        while (ancestorId && hasCollapsedAncestor(ancestorId)) {
-          const ancestor = canvasNodes.find((n) => n.id === ancestorId);
-          ancestorId = ancestor?.parentId || null;
-        }
-        if (ancestorId) {
-          remap.set(node.id, ancestorId);
-        }
-      }
-    }
-    return remap;
-  }, [canvasNodes, hasCollapsedAncestor]);
+  // Build remap for folded children: hidden node ID → first visible ancestor ID.
+  // rf-canv-3: pure walk lives in ../utils/folded-remap; the orchestrator just
+  // memoizes the result for downstream effective-node / edge-routing memos.
+  const foldedRemap = useMemo(
+    () => buildFoldedRemap(canvasNodes, visibleNodes),
+    [canvasNodes, visibleNodes],
+  );
 
   // Nodes as they appear visually — hidden children removed, folded groups at compact height.
   // Used for connection routing so paths match what's actually rendered.
@@ -708,32 +697,18 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     return items.map(({ _z, ...item }) => item);
   }, [visibleNodes, hasCollapsedAncestor]);
 
-  // Get descendant IDs from VISIBLE nodes only (for box selection, reparenting)
+  // Get descendant IDs from VISIBLE nodes only (for box selection, reparenting).
+  // rf-canv-3: thin wrapper binding to the pure descendants() walk.
   const getDescendantIds = useCallback(
-    (nodeId: string): string[] => {
-      const descendants: string[] = [];
-      const children = visibleNodes.filter((n) => n.parentId === nodeId);
-      for (const child of children) {
-        descendants.push(child.id);
-        descendants.push(...getDescendantIds(child.id));
-      }
-      return descendants;
-    },
+    (nodeId: string): string[] => descendants(visibleNodes, nodeId),
     [visibleNodes],
   );
 
   // Get ALL descendant IDs including hidden children (searches canvasNodes, not visibleNodes).
   // Used by handleNodeMove so hidden block children at L1 move with their parent.
+  // rf-canv-3: thin wrapper binding to the same pure descendants() walk, fed canvasNodes.
   const getAllDescendantIds = useCallback(
-    (nodeId: string): string[] => {
-      const descendants: string[] = [];
-      const children = canvasNodes.filter((n) => n.parentId === nodeId);
-      for (const child of children) {
-        descendants.push(child.id);
-        descendants.push(...getAllDescendantIds(child.id));
-      }
-      return descendants;
-    },
+    (nodeId: string): string[] => descendants(canvasNodes, nodeId),
     [canvasNodes],
   );
 

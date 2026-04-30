@@ -44,7 +44,7 @@ import { SelectionFrame } from './selection-frame';
 import { SvgConnectionPath, EDGE_COLORS, type ConnectionTooltipInfo } from './svg-connection-path';
 import { getBlueprint, expandBlueprint } from '../../../config/blocks';
 import { canContain, isContainer } from '../../../config/containment-rules';
-import { isTypeVisibleAtLevel, isEdgeVisibleAtLevel } from '../../../config/visualization-config';
+import { isTypeVisibleAtLevel } from '../../../config/visualization-config';
 import { t } from '../../../i18n';
 import { useUndoRedo } from '../../../shared/hooks/use-undo-redo';
 import {
@@ -70,7 +70,6 @@ import {
 import { setGhosts, dismissGhost, clearGhosts, type GhostNode } from '../../../store/slices/ghost-slice';
 import { generateGhostSuggestions } from '../utils/ghost-suggestions';
 import {
-  isContainerIceType,
   isLogIceType,
   isContainerNode as isContainerNodeUtil,
   isGroupOrBlock,
@@ -94,6 +93,7 @@ import {
 } from '../utils/drop-target';
 import { findExistingSpecialConnection } from '../utils/connection-special-rules';
 import { computeConnectionPreviewPath, pickPreviewColor } from '../utils/connection-preview';
+import { buildVisibleConnections, computePortMap } from '../utils/canvas-connections';
 import { SvgGhostNode } from './ghost/svg-ghost-node';
 import {
   inferConnectionMeta,
@@ -496,66 +496,10 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   // - Remaps connections to folded children → their visible parent group
   // - Deduplicates and bundles remapped connections (shows count badge)
   // - At Level 1: aggregates child resource edges into block-to-block inferred edges
-  const canvasConnections: CanvasConnection[] = useMemo(() => {
-    const visibleNodeIds = new Set(effectiveNodes.map((n) => n.id));
-
-    // Build a set of container node IDs — edges to/from containers are never rendered
-    const containerIds = new Set(
-      effectiveNodes
-        .filter(
-          (n) =>
-            n.type === 'container' ||
-            n.type === ('group' as any) ||
-            ((n.data?.iceType as string) || '').startsWith('Group.') ||
-            isContainerIceType((n.data?.iceType as string) || ''),
-        )
-        .map((n) => n.id),
-    );
-
-    // First pass: remap and filter
-    const remapped = edges
-      .filter((edge) => {
-        if (edge.data?.relationship === 'contains') return false;
-        // Never render edges to/from containers (VPC, Subnet, Group)
-        if (containerIds.has(edge.source) || containerIds.has(edge.target)) return false;
-        const relationship = edge.data?.relationship || 'connects_to';
-        if (!isEdgeVisibleAtLevel(relationship, false, viewLevel)) return false;
-        return true;
-      })
-      .map((edge) => {
-        // Apply folded remap
-        const from = foldedRemap.get(edge.source) || edge.source;
-        const to = foldedRemap.get(edge.target) || edge.target;
-        return { ...edge, source: from, target: to };
-      })
-      .filter((edge) => {
-        if (!visibleNodeIds.has(edge.source) || !visibleNodeIds.has(edge.target)) return false;
-        if (edge.source === edge.target) return false;
-        return true;
-      });
-
-    // Second pass: bundle connections with same from→to pair
-    const bundleMap = new Map<string, { edge: (typeof remapped)[0]; count: number }>();
-    for (const edge of remapped) {
-      const key = `${edge.source}->${edge.target}`;
-      const existing = bundleMap.get(key);
-      if (existing) {
-        existing.count++;
-      } else {
-        bundleMap.set(key, { edge, count: 1 });
-      }
-    }
-
-    return Array.from(bundleMap.values()).map(({ edge, count }) => ({
-      id: edge.id,
-      from: edge.source,
-      to: edge.target,
-      data: {
-        ...(edge.data as CanvasConnection['data']),
-        bundleCount: count,
-      },
-    }));
-  }, [edges, effectiveNodes, foldedRemap, viewLevel]);
+  const canvasConnections: CanvasConnection[] = useMemo(
+    () => buildVisibleConnections({ edges, effectiveNodes, foldedRemap, viewLevel }),
+    [edges, effectiveNodes, foldedRemap, viewLevel],
+  );
 
   // Debug: log canvas state on render
   useEffect(() => {
@@ -1821,68 +1765,10 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   // Compute port map for connection distribution
   // For each node+side, sort connections by the OTHER endpoint's position
   // so that ports fan out in natural order without crossings.
-  const portMap = useMemo(() => {
-    const map = new Map<string, { index: number; count: number }>();
-    const nodeById = new Map<string, LocalCanvasNode>();
-    for (const n of effectiveNodes) nodeById.set(n.id, n);
-
-    const getSide = (fromNode: LocalCanvasNode, toNode: LocalCanvasNode): { exitSide: string; entrySide: string } => {
-      const dx = toNode.x + toNode.width / 2 - (fromNode.x + fromNode.width / 2);
-      const dy = toNode.y + toNode.height / 2 - (fromNode.y + fromNode.height / 2);
-      if (Math.abs(dx) > Math.abs(dy)) {
-        return dx > 0 ? { exitSide: 'right', entrySide: 'left' } : { exitSide: 'left', entrySide: 'right' };
-      }
-      return dy > 0 ? { exitSide: 'bottom', entrySide: 'top' } : { exitSide: 'top', entrySide: 'bottom' };
-    };
-
-    // Collect all connections per side-key, with the "other" node for sorting
-    interface SideEntry {
-      connId: string;
-      role: 'source' | 'target';
-      otherCx: number;
-      otherCy: number;
-    }
-    const sideGroups = new Map<string, SideEntry[]>();
-
-    for (const conn of canvasConnections) {
-      const fromNode = nodeById.get(conn.from);
-      const toNode = nodeById.get(conn.to);
-      if (!fromNode || !toNode) continue;
-
-      const { exitSide, entrySide } = getSide(fromNode, toNode);
-      const sourceKey = `${conn.from}:${exitSide}`;
-      const targetKey = `${conn.to}:${entrySide}`;
-
-      const toCx = toNode.x + toNode.width / 2;
-      const toCy = toNode.y + toNode.height / 2;
-      const fromCx = fromNode.x + fromNode.width / 2;
-      const fromCy = fromNode.y + fromNode.height / 2;
-
-      if (!sideGroups.has(sourceKey)) sideGroups.set(sourceKey, []);
-      sideGroups.get(sourceKey)!.push({ connId: conn.id, role: 'source', otherCx: toCx, otherCy: toCy });
-
-      if (!sideGroups.has(targetKey)) sideGroups.set(targetKey, []);
-      sideGroups.get(targetKey)!.push({ connId: conn.id, role: 'target', otherCx: fromCx, otherCy: fromCy });
-    }
-
-    // Sort each group by the other endpoint's position to minimize crossings:
-    // left/right sides → sort by other node's Y (top-to-bottom)
-    // top/bottom sides → sort by other node's X (left-to-right)
-    for (const [key, entries] of sideGroups) {
-      const side = key.split(':').pop()!;
-      if (side === 'left' || side === 'right') {
-        entries.sort((a, b) => a.otherCy - b.otherCy);
-      } else {
-        entries.sort((a, b) => a.otherCx - b.otherCx);
-      }
-      const count = entries.length;
-      for (let i = 0; i < count; i++) {
-        map.set(`${entries[i].connId}:${entries[i].role}`, { index: i, count });
-      }
-    }
-
-    return map;
-  }, [canvasConnections, effectiveNodes]);
+  const portMap = useMemo(
+    () => computePortMap(canvasConnections, effectiveNodes),
+    [canvasConnections, effectiveNodes],
+  );
 
   // ═══════════════════════════════════════════════════════════════════════════
   // Connection Drawing — port-to-port drag to create edges

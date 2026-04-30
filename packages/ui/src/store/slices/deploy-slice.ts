@@ -69,6 +69,7 @@ import { deployPhasesReducers } from './deploy/reducers/deploy-phases';
 import { wireEventsReducers } from './deploy/reducers/wire-events';
 import { outcomeReducers } from './deploy/reducers/outcome';
 import { logsResourcesDriftReducers } from './deploy/reducers/logs-resources-drift';
+import { requirementsReducers } from './deploy/reducers/requirements';
 
 const initialState: DeployState = {
   isOpen: false,
@@ -106,31 +107,7 @@ const deploySlice = createSlice({
     ...wireEventsReducers,
     ...outcomeReducers,
     ...logsResourcesDriftReducers,
-
-    // Phase 8 — block requirements
-    startRequirementsFetch(state) {
-      state.requirementsLoading = true;
-    },
-    setRequirements(state, action: PayloadAction<ResolvedRequirementState[]>) {
-      state.requirements = action.payload;
-      state.requirementsLoading = false;
-      state.requirementsFetchedAt = new Date().toISOString();
-    },
-    updateRequirement(state, action: PayloadAction<ResolvedRequirementState>) {
-      const idx = state.requirements.findIndex(
-        (r) => r.definitionId === action.payload.definitionId && r.nodeId === action.payload.nodeId,
-      );
-      if (idx >= 0) {
-        state.requirements[idx] = action.payload;
-      } else {
-        state.requirements.push(action.payload);
-      }
-    },
-    clearRequirements(state) {
-      state.requirements = [];
-      state.requirementsLoading = false;
-      state.requirementsFetchedAt = undefined;
-    },
+    ...requirementsReducers,
 
     // AI-Native #2 — diagnosis actions
     startDiagnosis(state) {

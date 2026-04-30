@@ -12,13 +12,11 @@ import {
   make_lexer_state,
   ls_is_at_end,
   ls_peek,
-  ls_peek_next,
   ls_advance,
   ls_match,
   ls_skip_whitespace,
   ls_current_position,
   ls_add_token,
-  ls_add_token_with_literal,
   ls_add_error,
 } from './lexer-state.js';
 import {
@@ -28,6 +26,7 @@ import {
   scan_identifier,
   scan_line_comment,
   scan_number,
+  scan_string,
 } from './lexer-scanners.js';
 import { scan_heredoc } from './lexer-heredoc.js';
 
@@ -268,7 +267,7 @@ export class Lexer {
 
       // Strings
       case '"':
-        this.scan_string(start_pos, start_line, start_column);
+        scan_string(this.state, start_pos, start_line, start_column);
         break;
 
       // Newlines
@@ -300,67 +299,6 @@ export class Lexer {
         }
         break;
     }
-  }
-
-  /**
-   * Scan a string literal.
-   */
-  private scan_string(start_pos: number, start_line: number, start_column: number): void {
-    const parts: string[] = [];
-
-    while (!ls_is_at_end(this.state) && ls_peek(this.state) !== '"') {
-      if (ls_peek(this.state) === '\\') {
-        // Escape sequence
-        ls_advance(this.state);
-        if (!ls_is_at_end(this.state)) {
-          const escaped = ls_advance(this.state);
-          switch (escaped) {
-            case 'n':
-              parts.push('\n');
-              break;
-            case 't':
-              parts.push('\t');
-              break;
-            case 'r':
-              parts.push('\r');
-              break;
-            case '\\':
-              parts.push('\\');
-              break;
-            case '"':
-              parts.push('"');
-              break;
-            case '$':
-              parts.push('$');
-              break;
-            default:
-              ls_add_error(this.state, `Invalid escape sequence '\\${escaped}'`, true);
-              parts.push(escaped);
-          }
-        }
-      } else if (ls_peek(this.state) === '$' && ls_peek_next(this.state) === '{') {
-        // String interpolation - for now, just include as literal
-        parts.push(ls_advance(this.state));
-      } else if (ls_peek(this.state) === '\n') {
-        ls_add_error(this.state, 'Unterminated string literal', true);
-        break;
-      } else {
-        parts.push(ls_advance(this.state));
-      }
-    }
-
-    if (ls_is_at_end(this.state)) {
-      ls_add_error(this.state, 'Unterminated string literal', true);
-      return;
-    }
-
-    // Consume closing quote
-    ls_advance(this.state);
-
-    const value = parts.join('');
-    const raw = this.state.source.slice(start_pos, this.state.pos);
-
-    ls_add_token_with_literal(this.state, 'STRING', raw, start_pos, start_line, start_column, value);
   }
 
 }

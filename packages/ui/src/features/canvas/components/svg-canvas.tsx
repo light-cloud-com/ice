@@ -47,7 +47,7 @@ import {
   type CardNode,
   type CardEdge,
 } from '../../../store/slices/cards-slice';
-import { setGhosts, dismissGhost, clearGhosts, type GhostNode } from '../../../store/slices/ghost-slice';
+import { setGhosts } from '../../../store/slices/ghost-slice';
 import { generateGhostSuggestions } from '../utils/ghost-suggestions';
 import {
   isContainerNode as isContainerNodeUtil,
@@ -110,6 +110,7 @@ import { useCanvasViewport } from '../hooks/use-canvas-viewport';
 import { usePinnedUserNode } from '../hooks/use-pinned-user-node';
 import { useRenameState } from '../hooks/use-rename-state';
 import { useCanvasSideEffects } from '../hooks/use-canvas-side-effects';
+import { useGhostMode } from '../hooks/use-ghost-mode';
 import type { RootState, AppDispatch } from '../../../store';
 
 // rf-canv-1: re-export shim — the canonical home for these three types is
@@ -196,8 +197,11 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   const nodes = useMemo(() => card?.nodes || [], [card?.nodes]);
   const edges = useMemo(() => card?.edges || [], [card?.edges]);
 
-  // Ghost-mode suggestions (AI-Native Feature #1)
-  const ghosts = useSelector((state: RootState) => state.ghosts.ghosts);
+  // Ghost-mode suggestions (AI-Native Feature #1) — rf-canv-23: selector,
+  // accept/dismiss callbacks, and the 10s auto-dismiss timer are owned by
+  // `useGhostMode`. The orchestrator still threads `setGhosts` directly on
+  // blueprint-drop / new-block paths to publish fresh suggestions.
+  const { ghosts, handleAcceptGhost, handleDismissGhost } = useGhostMode();
 
   // ── Reactive propagation (domain sync, routeId backfill, orphan cleanup,
   // network policy, secret injection, etc.) is now handled by useComputingFlows()
@@ -1391,51 +1395,8 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     [screenToCanvas, findContainerAtPosition, dispatch, nodes, edges],
   );
 
-  // ── Ghost-mode handlers ────────────────────────────────────────────────────
-  // Accept: expand blueprint at ghost position, wire edge to source node,
-  // remove ghost. Dismiss: just remove ghost.
-  const handleAcceptGhost = useCallback(
-    (ghost: GhostNode) => {
-      const blueprint = getBlueprint(ghost.iceType);
-      if (!blueprint) {
-        dispatch(dismissGhost(ghost.id));
-        return;
-      }
-      const expanded = expandBlueprint(blueprint, { position: ghost.position });
-      dispatch(expandBlueprintToCard(expanded));
-
-      const [source, target] =
-        ghost.edgeDirection === 'to' ? [ghost.sourceNodeId, expanded.node.id] : [expanded.node.id, ghost.sourceNodeId];
-
-      dispatch(
-        addEdgeToCard({
-          id: `edge-${Date.now()}`,
-          source,
-          target,
-          data: { relationship: ghost.edgeRelationship },
-        }),
-      );
-      dispatch(dismissGhost(ghost.id));
-    },
-    [dispatch],
-  );
-
-  const handleDismissGhost = useCallback(
-    (ghostId: string) => {
-      dispatch(dismissGhost(ghostId));
-    },
-    [dispatch],
-  );
-
-  // Auto-dismiss all ghosts after 10 seconds.
-  useEffect(() => {
-    if (ghosts.length === 0) return;
-    const newest = Math.max(...ghosts.map((g) => g.createdAt));
-    const elapsed = Date.now() - newest;
-    const remaining = Math.max(0, 10_000 - elapsed);
-    const timer = setTimeout(() => dispatch(clearGhosts()), remaining);
-    return () => clearTimeout(timer);
-  }, [ghosts, dispatch]);
+  // rf-canv-23: ghost accept/dismiss callbacks and the 10s auto-dismiss
+  // timer now live in `useGhostMode` (called above).
 
   const handleDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();

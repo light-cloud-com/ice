@@ -73,7 +73,46 @@ The codebase has ~30 source files over 500 LOC and four over 2000 LOC. Refactori
   - ✅ **rf-deploy-16** `services/drift.service.ts` — `checkDrift` extracted; legacy `drift-detection.test.ts` was `describe.skip`'d so the implementer wrote a real coverage harness in `drift-service.test.ts` instead of a placeholder. 23 new tests, 100% / 94.11% on the new module. 392 tests passing. Commit `982d3b2`.
   - ✅ **rf-deploy-17** `cleanup pass` — re-export audit found 7 of 9 re-exports were not load-bearing (only `getNodeDeploymentOverlay` + `checkDrift` survive — both consumed by `routes/canvas-deploy.ts` via `import * as deployService` namespace import). Dropped 7 re-exports + 2 unused imports; migrated `drift-detection.test.ts` to canonical home. **Final orchestrator: 1572 LOC** (was 2843 → −1271 LOC, −45%). 392 tests passing. Commit `1e43f7e`. New learning `reexport-audit-distinguish-namespace-imports-from-named-imports`.
 
-**deploy.service.ts decomposition complete.** Next target: `packages/ui/src/features/properties/components/properties-panel.tsx` (3268 LOC, UI file — decomposer needs to plan section subcomponents + hooks + validators).
+**deploy.service.ts decomposition complete.**
+
+### Refactor initiative — `properties-panel.tsx` (rf-props-* units) — 26-unit blueprint landed
+
+Decomposer returned a 26-unit blueprint at [`blueprints/rf-props.md`](blueprints/rf-props.md). 5 leaf utils → fields bundle + 4 hooks → 14 section subcomponents → 1 orchestrator + 1 final cross-file dedup unit. Util-broker prework caught a real cross-file duplicate: `parseCostRange` / `formatCost` already canonical at `packages/ui/src/features/cost/utils/cost-calculator.ts`; local copies strictly less capable. Sequenced as a **behavior-change** unit at the end of the series, separated from the pure extractions.
+
+Behavior-risk flags noted: custom-domain-panel rendered twice (rf-props-15), dynamic imports with shifting relative paths (rf-props-20), setState-during-render fallback in NodePropertiesSection (rf-props-24a/b — split into shell + body), E2E selectors `data-prop-key` and `data-testid="pn-..."` to preserve verbatim.
+
+**Status:**
+
+- ✅ **rf-props-1** `utils/queue-spec.ts` — `QueueSpec` interface + `parseQueue` + `stringifyQueue`. 13 tests, 100% / 100%. Commit `5629b1b`.
+- ✅ **rf-props-2** `utils/normalize-subdomain.ts` — `normalizeSubdomain` + `validateSubdomain`. The blueprint's #8 divergence flag did NOT materialize (both inline copies were bit-identical). 24 tests, 100% / 100%. Commit `88d383f`.
+- ✅ **rf-props-3** `utils/edge-warnings.ts` — `computeEdgeWarnings` (frontend → DB / queue regex checks; takes `t` as a parameter to keep i18n out of the util). 32 tests via `it.each` matrices. 100% / 100%. Commit `d356718`.
+- ✅ **rf-props-4** `utils/format-age.ts` — `formatAge` consolidates two bit-identical inline copies (PipelineSection + RepoDeployList). Tests use `vi.useFakeTimers()` for determinism. 13 tests, 100% / 100%. Commit `47a91f8`.
+- ✅ **rf-props-5** `utils/deploy-history-format.ts` — `ACTION_LABELS` + `ACTION_COLORS` + `formatDeployRow` (per-row derivation: time/duration/status flags/action label+color/summary text). DeployHistory's render loop now destructures the result. 39 tests, 100% / 100%. Commit `093bda5`. **All 5 leaf utils complete.**
+- ✅ **rf-props-6** `components/fields/index.tsx` — field-primitives bundle (Section + 8 input components) extracted as named exports. 34 tests, 95.65% / 96.66% on the new module. New learning `tree-walker-for-react-fc-tests-must-flatten-nested-children-arrays` (the monorepo lacks `@testing-library/react` + jsdom; UI tests use `react-dom/server` + tree-walking). Commit `112b8d9`.
+- ✅ **rf-props-7** `hooks/use-resource-map.ts` — `useResourceMap` + `usePropertyIssues` (folded in) + pure builders `buildResourceMap` / `buildPropertyIssuesMap` for testability. 17 tests, 92.3% / 95.83% on the hook (renderToString can't reach `.then`/`.catch` callbacks; pure builders hit 100%). Commit `28bacc2`. New learning `extract-pure-builders-when-testing-redux-or-effect-hooks-in-node-env`.
+- ✅ **rf-props-8** `hooks/use-drift-check.ts` — `useDriftCheck` + pure helper `applyDriftStatus`. 11 tests, 100% / 100%. Commit `206ca4d`. New learning `capture-ref-after-render-unlocks-100pct-on-callback-returning-hooks`.
+- ✅ **rf-props-9** `components/fields/render-property-field.tsx` — `renderPropertyField` factory + `PropertyFields` orchestrator + canonical home for the resource-def types (`HighLevelProperty` / `OptionDetail` / `CustomInputConfig` / `ResourceDef` / `ResourceCategory` / `ProviderImpl`). Cross-file dedup of inline TODO duplicates from rf-props-6 + rf-props-7. 31 tests, 100% / 91.89%. **312 LOC removed from orchestrator.** Commit `12507f5`. New learning `mocked-component-data-attrs-invisible-to-direct-fc-walker`.
+- ✅ **rf-props-10** `sections/drift.tsx` — `DriftIndicator` + `DriftCheckButton`. 11 tests, 100% / 100%. Commit `ca54041`. New learning `react-ssr-comment-markers-split-adjacent-text-substrings`.
+- ✅ **rf-props-11** `sections/group-color-picker.tsx` — `GroupColorPicker`. 11 tests, 100% / 100%. Commit `b11e275`. New learning `collect-text-helper-joins-adjacent-jsx-children-with-a-separator`.
+- ✅ **rf-props-12** `sections/connection-card.tsx` — `ConnectionCard`. 14 tests, 100% / 96.87%. Commit `dbd6dc7`.
+- ✅ **rf-props-13** `sections/env-vars-editor.tsx` — `EnvVarsEditor`. 14 tests, 100% / 100%. Commit `efa8340`.
+- ✅ **rf-props-14** `sections/scaling-section.tsx` + `sections/domain-section.tsx` — both lifted from inline JSX into prop-based React.FCs; conditional render gates stay at the orchestrator. 29 new tests, 100% / 100% on each. Commit `7748b32`. New learning `vi-hoisted-for-stable-mock-identity-in-direct-fc-tree-walker-tests`.
+- ✅ **rf-props-15** `sections/custom-domain-panel.tsx` — **BEHAVIOR-RISK** unit; both callsites preserved byte-identical, `dispatch: _dispatch` shape verbatim. 28 tests, 98.03% / 96.55%. Commit `b1fd1e0`. New learning `test-prop-shape-when-extraction-preserves-an-unused-prop`.
+- ✅ **rf-props-16** `sections/private-network-panel.tsx` — `PrivateNetworkPanel` + file-private `PrivateNetworkPolicySection` helper. 42 tests, 100% / 100%. `data-testid="pn-..."` E2E selectors preserved. Commit `4648712`. New learning `tree-walker-must-invoke-file-private-fcs-when-extracted-component-keeps-an-inner-helper`.
+- ✅ **rf-props-17** `sections/repo-deploy-list.tsx` — `RepoDeployList` (deploy-event list grouped by service, expandable logs). 25 tests, 100% / 100%. Commit `29c4731`. Two new learnings: `use-state-mock-with-mutable-ref-unlocks-direct-fc-toggle-state-tests`, `dynamic-import-of-api-adapter-needs-a-direct-vi-mock-on-the-target-module`.
+- ✅ **rf-props-18** `sections/service-source-section.tsx` — read-only display of connected Source.Repository block. 14 tests, 100% / 100%. Commit `6645227`. New learning `jsx-html-entities-render-as-the-actual-unicode-character-not-the-escape-sequence`.
+- ✅ **rf-props-19** `sections/deploy-history.tsx` — auto-fetched deploy-history rows with expand/collapse. 29 tests, 100% / 100%. Commit `9efc48b`. New learning `queued-ref-dispatch-extends-the-mutable-ref-usestate-mock-to-multi-state-fcs`.
+- ✅ **rf-props-20** `sections/pipeline-section.tsx` — **BEHAVIOR-RISK** dynamic-import paths bumped (4 `..` segments instead of 3); explicit dynamic-import-resolution tests. 43 tests, 100% / 85.84%. Commit `3d781f5`. New learning `dynamic-import-with-default-destructure-needs-the-mock-to-expose-default`.
+- ✅ **rf-props-21** `sections/source-repository-section.tsx` — `SourceRepositorySection` (~349 LOC). 61 tests, 99% / 98.44%. Commit `6cc2dae`. Two new learnings: `use-memo-must-be-mocked-too-when-the-extracted-component-uses-it`, `nullish-coalesce-default-in-test-helper-silently-clobbers-explicit-null-overrides`.
+- ✅ **rf-props-22** `sections/edge-properties-section.tsx` — entire edge-selected branch lifted into `EdgePropertiesSection({ selectedEdge, activeCard })`; orchestrator's branch collapsed to a single conditional return. 40 tests, 100% / 98.8%. **Orchestrator dropped to ~671 LOC** from ~876. Commit `ed2193c`. New learning `render-helper-must-not-call-mockreturnvalue-after-test-overrides`.
+- ✅ **rf-props-23** `sections/project-overview.tsx` — no-selection branch lifted into `ProjectOverview({ activeCard })`. Local `parseCostRange` / `formatCost` move with the section (canonical-home dedup deferred to rf-props-26). 19 tests pass. Awaits commit alongside the state-move chore.
+- ⏭️ **rf-props-24a / 24b** `sections/node-properties-section.tsx` — next; ~530 LOC node-selected branch must split into shell + per-tab body to keep `setPropsTab` setState-during-render at the same JSX position.
+
+**File-size adjustment 2026-04-29**: 200–500 LOC range (per `feedback_200_loc_ceiling.md`). Most blueprint modules already fit.
+
+**State directory move 2026-04-29**: agent-managed state moved from `.claude/state/` to `state/` to avoid harness permission prompts on every write. See `decisions.md` 2026-04-29 entry.
+
+**To resume:** dispatch implementer at rf-props-24a (node-properties-section shell + tab-router with setState-during-render fallback intact).
 
 ## Done this week
 

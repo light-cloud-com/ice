@@ -39,6 +39,7 @@ import { GroupColorPicker } from './sections/group-color-picker';
 import { MonitoringLogSection } from './sections/monitoring-log-section';
 import { PipelineSection } from './sections/pipeline-section';
 import { PrivateNetworkPanel } from './sections/private-network-panel';
+import { ProjectOverview } from './sections/project-overview';
 import { ScalingSection } from './sections/scaling-section';
 import { ServiceSourceSection } from './sections/service-source-section';
 import { SourceRepositorySection } from './sections/source-repository-section';
@@ -49,24 +50,8 @@ import {
   type CardEdge,
 } from '../../../store/slices/cards-slice';
 import { toggleProperties } from '../../../store/slices/ui-slice';
-import { analyzeCanvasPatterns } from '../../canvas/utils/connection-rules';
 import { useResourceMap, usePropertyIssues } from '../hooks/use-resource-map';
 import type { RootState, AppDispatch } from '../../../store';
-
-// ─── Cost parsing utility ──────────────────────────────────────────────────
-
-function parseCostRange(cost: string): number {
-  const matches = cost.match(/\$(\d+)(?:[–-](\d+))?/);
-  if (!matches) return 0;
-  const low = parseInt(matches[1]);
-  const high = matches[2] ? parseInt(matches[2]) : low;
-  return (low + high) / 2;
-}
-
-function formatCost(value: number): string {
-  if (value === 0) return '';
-  return `~$${Math.round(value)}/mo`;
-}
 
 // ResourceInfoPanel removed — IaC mapping, network ports, and about section
 // were technical details that confused non-technical users
@@ -127,17 +112,6 @@ export const PropertiesPanel: React.FC = () => {
   useEffect(() => {
     setSourceTab(nodeImage && !nodeRepo ? 'image' : 'repo');
   }, [selectedNodeId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Project-level stats (must be before any early returns to satisfy Rules of Hooks)
-  const totalNodes = activeCard?.nodes.length || 0;
-  const totalEdges = activeCard?.edges.length || 0;
-  const totalCost = useMemo(() => {
-    if (!activeCard) return 0;
-    return activeCard.nodes.reduce((sum, n) => {
-      const cost = (n.data?.estimatedCost as string) || '';
-      return sum + parseCostRange(cost);
-    }, 0);
-  }, [activeCard]);
 
   // ═══ EDGE SELECTED ═══
   if (selectedEdge && activeCard) {
@@ -603,69 +577,6 @@ export const PropertiesPanel: React.FC = () => {
   }
 
   // ═══ NOTHING SELECTED — Project Overview ═══
-  return (
-    <div id="ice-properties-panel" className="h-full flex flex-col bg-inherit border-l">
-      <PanelHeader
-        title={t('properties.title')}
-        onClose={() => dispatch(toggleProperties())}
-        closeLabel={t('properties.closeTitle')}
-      />
-
-      <Section title={t('properties.overview.title')}>
-        <div className="flex items-center justify-between py-1">
-          <span className="text-ice-sm text-ice-text-2">{t('properties.overview.nodes')}</span>
-          <span className="text-ice-sm text-ice-text-1 font-mono">{totalNodes}</span>
-        </div>
-        <div className="flex items-center justify-between py-1">
-          <span className="text-ice-sm text-ice-text-2">{t('properties.overview.connections')}</span>
-          <span className="text-ice-sm text-ice-text-1 font-mono">{totalEdges}</span>
-        </div>
-        {totalCost > 0 && (
-          <div className="flex items-center justify-between py-1">
-            <span className="text-ice-sm text-ice-text-2">{t('properties.overview.estMonthlyCost')}</span>
-            <span className="text-ice-sm text-emerald-400 font-mono">{formatCost(totalCost)}</span>
-          </div>
-        )}
-      </Section>
-
-      {/* Canvas pattern suggestions */}
-      {activeCard &&
-        activeCard.nodes.length > 0 &&
-        (() => {
-          const hints = analyzeCanvasPatterns(
-            activeCard.nodes as Array<{ id: string; data?: Record<string, unknown> }>,
-            activeCard.edges.map((e) => ({ source: e.source, target: e.target })),
-          );
-          if (hints.length === 0) return null;
-          return (
-            <Section title={t('properties.overview.suggestions')}>
-              <div className="space-y-1.5">
-                {hints.map((h, i) => (
-                  <div key={i} className="rounded border border-blue-500/20 bg-blue-500/5 px-2.5 py-2">
-                    <div className="text-ice-xs text-blue-400">{h.message}</div>
-                  </div>
-                ))}
-              </div>
-            </Section>
-          );
-        })()}
-
-      {activeCard && activeCard.nodes.length === 0 && (
-        <div className="flex-1 flex items-center justify-center px-6">
-          <p className="text-ice-sm text-ice-text-3 text-center leading-relaxed">
-            {t('properties.overview.emptyHint')}
-          </p>
-        </div>
-      )}
-
-      {activeCard && activeCard.nodes.length > 0 && (
-        <div className="flex-1 flex items-center justify-center px-6">
-          <p className="text-ice-sm text-ice-text-3 text-center leading-relaxed">
-            {t('properties.overview.selectHint')}
-          </p>
-        </div>
-      )}
-    </div>
-  );
+  return <ProjectOverview activeCard={activeCard} />;
 };
 

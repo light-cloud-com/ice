@@ -75,6 +75,7 @@ import { pushSnapshot } from './cards/snapshot';
 import { cardLifecycleReducers } from './cards/reducers/card-lifecycle';
 import { nodeEdgeAddReducers } from './cards/reducers/node-edge-add';
 import { nodePositionReducers } from './cards/reducers/node-position';
+import { nodeDataReducers } from './cards/reducers/node-data';
 
 // =============================================================================
 // Initial State
@@ -111,45 +112,7 @@ const cardsSlice = createSlice({
     ...cardLifecycleReducers,
     ...nodeEdgeAddReducers,
     ...nodePositionReducers,
-
-    // Toggle node fold state in active card
-    toggleCardNodeFold: (state, action: PayloadAction<string>) => {
-      const card = state.cards.find((c) => c.id === state.activeCardId);
-      if (card) {
-        const node = card.nodes.find((n) => n.id === action.payload);
-        if (node && node.data) {
-          node.data.folded = !node.data.folded;
-        }
-      }
-    },
-
-    // Update a node's parent (for drag in/out of groups)
-    updateCardNodeParent: (state, action: PayloadAction<{ nodeId: string; parentId: string | null }>) => {
-      pushSnapshot(state);
-      const card = state.cards.find((c) => c.id === state.activeCardId);
-      if (card) {
-        const node = card.nodes.find((n) => n.id === action.payload.nodeId);
-        if (node) {
-          if (action.payload.parentId) {
-            node.parentId = action.payload.parentId;
-          } else {
-            delete node.parentId;
-          }
-        }
-      }
-    },
-
-    // Update a node's data fields (label, groupColor, etc.)
-    updateCardNodeData: (state, action: PayloadAction<{ nodeId: string; data: Record<string, unknown> }>) => {
-      pushSnapshot(state);
-      const card = state.cards.find((c) => c.id === state.activeCardId);
-      if (card) {
-        const node = card.nodes.find((n) => n.id === action.payload.nodeId);
-        if (node) {
-          node.data = { ...node.data, ...action.payload.data };
-        }
-      }
-    },
+    ...nodeDataReducers,
 
     // Delete node from active card
     deleteCardNode: (state, action: PayloadAction<string>) => {

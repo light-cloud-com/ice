@@ -6,7 +6,7 @@
  */
 
 import { Rocket } from 'lucide-react';
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { ApiErrorBanner } from './banners/api-error-banner';
 import { DeployControls } from './deploy-controls';
@@ -24,6 +24,7 @@ import { DnsRecordsSection } from './sections/dns-records-section';
 import { LogPanel } from './sections/log-panel';
 import { StatusBadge } from './status-badge';
 import { useDeployActions } from '../hooks/use-deploy-actions';
+import { useDeployEffects } from '../hooks/use-deploy-effects';
 import { useTranslation } from '../../../i18n';
 import { getApi } from '../../../shared/api/api-adapter';
 import { PanelHeader } from '../../../shared/components/ui/panel-header';
@@ -35,18 +36,12 @@ import {
   setEnvironment,
   startDestroying,
   deployError,
-  hydrateDeployFromHistory,
   resetDeploy,
   appendLog,
   setDeployedResources,
-  type DeployResourceResult,
 } from '../../../store/slices/deploy-slice';
 import { analyzePreDeploy } from '../utils/predeploy-analysis';
-import {
-  PROVIDER_REGIONS,
-  PROVIDER_LABELS,
-  detectDominantProvider,
-} from '../utils/provider-regions';
+import { PROVIDER_REGIONS, PROVIDER_LABELS } from '../utils/provider-regions';
 import type { RootState, AppDispatch } from '../../../store';
 
 // ─── Component ──────────────────────────────────────────────────────────────
@@ -62,7 +57,6 @@ export const DeployPanel: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const activeCard = useSelector(selectActiveCard);
   const deploy = useSelector((state: RootState) => state.deploy);
-  const logEndRef = useRef<HTMLDivElement>(null);
 
   // AI-Native #3 — security warnings + cost estimate, recomputed only when
   // the plan lands. Before plan there's nothing useful to show.
@@ -73,72 +67,6 @@ export const DeployPanel: React.FC = () => {
   const pendingRetryRef = useRef<'plan' | 'deploy' | null>(null);
   // Phase 5: in-panel destroy confirmation modal state.
   const [destroyModalOpen, setDestroyModalOpen] = React.useState(false);
-
-  // Auto-scroll logs
-  useEffect(() => {
-    logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [deploy.logs.length]);
-
-  // Auto-detect provider + load deployed resources + auto-fill project from connected provider
-  useEffect(() => {
-    if (!isOpen || !activeCard) return;
-
-    // Detect dominant provider from canvas nodes
-    const detected = detectDominantProvider(activeCard.nodes);
-    dispatch(setProvider(detected));
-
-    // Set a sensible default region for the detected provider
-    const regions = PROVIDER_REGIONS[detected];
-    if (regions && !regions.includes(deploy.region)) {
-      dispatch(setRegion(regions[0]));
-    }
-
-    (async () => {
-      try {
-        // Load deployed resources
-        const res = await getApi().deploy.getResources(activeCard.id);
-        if (res.success && res.resources) {
-          dispatch(setDeployedResources(res.resources));
-        }
-      } catch {
-        // silently ignore — non-critical
-      }
-
-      // Auto-fill GCP project from connected provider if not already set
-      if (!deploy.gcpProject) {
-        try {
-          const isConnected = await getApi().provider.isConnected(detected);
-          if (isConnected) {
-            const projects = await getApi().provider.getProjects(detected);
-            if (projects?.length > 0) {
-              dispatch(setGcpProject(projects[0].id));
-            }
-          }
-        } catch {
-          // non-critical
-        }
-      }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- use activeCard?.id to avoid re-firing on card object reference changes
-  }, [isOpen, activeCard?.id, deploy.gcpProject, deploy.region, dispatch]);
-
-  // The deploy socket subscription and global progress listener now live
-  // in `useDeploySubscription` at the app level (`packages/web/src/app/app.tsx`).
-  // That hook runs whenever a card is active, regardless of whether this
-  // panel is open — which is the whole point, because a new tab / closed
-  // panel used to silently drop all progress events. The panel still
-  // listens for `requirement_verified` events locally to refresh the
-  // requirements section when the background poller flips one.
-  useEffect(() => {
-    if (!isOpen || !activeCard) return;
-    const cleanup = getApi().onDeployEvent((event) => {
-      if (event.type === 'requirement_verified') {
-        fetchRequirements().catch(() => undefined);
-      }
-    });
-    return cleanup;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, activeCard?.id]);
 
   // ─── Orchestrator-level deploy callbacks ────────────────────────────
   //
@@ -154,93 +82,19 @@ export const DeployPanel: React.FC = () => {
     handleClose,
   } = useDeployActions({ activeCard: activeCard ?? null, deploy, pendingRetryRef });
 
-  // ─── Persist deploy results across reloads ──────────────────────────
+  // ─── Side-effects ─────────────────────────────────────────────────────
   //
-  // Deploy results live in canvas_deployment server-side. Without this
-  // effect, opening the app after a deploy showed an empty deploy panel
-  // because state.results is in-memory only. On every active-card change
-  // we fetch the most-recent terminal apply for that card and hydrate
-  // the slice — so the summary header (Copy summary / Copy errors) is
-  // visible immediately, not just for the session that ran the deploy.
-  //
-  // Skip when a deploy is mid-flight (the slice's hydrate reducer also
-  // guards this) and when the card hasn't actually changed (avoid a
-  // network round-trip on every layout re-render).
-  React.useEffect(() => {
-    if (!activeCard) return;
-    // Don't gate on slice status here. The app-level
-    // useDeploySubscription's Phase 2 effect can flip the slice to
-    // 'deploying' from a stale gateway snapshot (a deploy that crashed
-    // without finalizing the in-memory snapshot looks live forever),
-    // which would otherwise prevent hydrate from running and leave the
-    // panel forever showing 99% with no results. The DB row is the
-    // source of truth — the slice's hydrate reducer ignores non-terminal
-    // statuses anyway, so it's safe to dispatch unconditionally and let
-    // the reducer decide.
-    let cancelled = false;
-    (async () => {
-      try {
-        const history = (await getApi().deploy.getDeployments(activeCard.id)) as Array<{
-          id: string;
-          status: string;
-          action_type: string;
-          environment?: string;
-          duration_ms?: number | null;
-          error?: string | null;
-          results?: { resources?: DeployResourceResult[] } | null;
-        }>;
-        if (cancelled) return;
-        // eslint-disable-next-line no-console -- diagnostic: helps the user verify hydrate fired
-        console.log('[deploy-panel] hydrate fetch', {
-          cardId: activeCard.id,
-          historyLen: Array.isArray(history) ? history.length : 0,
-        });
-        if (!Array.isArray(history) || history.length === 0) return;
-        // Most-recent terminal apply (skip plan-only entries and any
-        // mid-flight ones the gateway might report).
-        const latest = history.find(
-          (d) =>
-            (d.action_type === 'apply' || d.action_type === 'rollback') &&
-            ['success', 'partial', 'failed', 'cancelled'].includes(d.status),
-        );
-        if (!latest) {
-          // eslint-disable-next-line no-console
-          console.log('[deploy-panel] hydrate: no terminal apply in history', {
-            statuses: history.map((d) => `${d.action_type}:${d.status}`),
-          });
-          return;
-        }
-        const resources = Array.isArray(latest.results?.resources) ? latest.results!.resources : [];
-        // eslint-disable-next-line no-console
-        console.log('[deploy-panel] hydrate dispatch', {
-          status: latest.status,
-          resourcesLen: resources.length,
-          environment: latest.environment,
-          duration_ms: latest.duration_ms,
-          hasError: !!latest.error,
-        });
-        dispatch(
-          hydrateDeployFromHistory({
-            cardId: activeCard.id,
-            status: latest.status,
-            results: resources,
-            error: latest.error,
-            duration_ms: latest.duration_ms ?? undefined,
-            environment: latest.environment ?? undefined,
-          }),
-        );
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.warn('[deploy-panel] hydrate failed', err);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only refetch
-    //   when the active card actually changes; deploy.status flipping to
-    //   'deploying' inside this effect would re-fetch unnecessarily.
-  }, [activeCard?.id, dispatch]);
+  // The four effects (auto-scroll, provider-detect + auto-fill, deploy-event
+  // listener, and history-hydrate) live in `useDeployEffects`. The hook
+  // returns `logEndRef` so the LogPanel below can attach to the scroll
+  // anchor. Effect order, deps, and the load-bearing "Don't gate on slice
+  // status here" docstring are preserved verbatim — see the hook source.
+  const { logEndRef } = useDeployEffects({
+    isOpen,
+    activeCard: activeCard ?? null,
+    deploy,
+    fetchRequirements,
+  });
 
   if (!isOpen) return null;
 

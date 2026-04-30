@@ -19,17 +19,16 @@
  * `../../../store/...` → `../../../../store/...`,
  * `../../../i18n` → `../../../../i18n`,
  * `../canvas/utils/connection-rules` → `../../../canvas/utils/connection-rules`,
- * `./fields` → `../fields`. The orchestrator's local-copy `parseCostRange`
- * and `formatCost` move with the section verbatim — the canonical-home
- * dedup against `packages/ui/src/features/cost/utils/cost-calculator.ts`
- * is rf-props-26's territory.
+ * `./fields` → `../fields`.
  *
- * TODO(rf-props-26): replace these inline `parseCostRange` / `formatCost`
- * with the canonical exports from `../../../cost/utils/cost-calculator`.
- * That dedup is a behavior change (canonical handles "Free" / commas /
- * decimals; canonical `formatCost(0)` returns `'Free'`, the local copy
- * returns `''`), so the planner sequenced it as a separate unit at the
- * end of the rf-props series.
+ * rf-props-26 dedup: `parseCostRange` and `formatCost` are imported from the
+ * canonical home at `../../../cost/utils/cost-calculator` instead of inlined.
+ * The canonical versions are strictly more capable — they handle `'Free'`,
+ * comma-separated thousands (`$1,000-2,000` → 1500, vs. the local copy's
+ * 1.5), and decimals (`$0.50` → 0.5, vs. 0). `formatCost(0)` returns
+ * `'Free'` rather than the local copy's empty string, but the callsite below
+ * gates the row on `totalCost > 0`, so the empty-string → 'Free' transition
+ * is never observable from this component.
  */
 
 import React, { useMemo } from 'react';
@@ -41,21 +40,7 @@ import { toggleProperties } from '../../../../store/slices/ui-slice';
 import type { Card } from '../../../../store/slices/cards-slice';
 import type { AppDispatch } from '../../../../store';
 import { Section } from '../fields';
-
-// ─── Cost parsing utility (local copy — TODO(rf-props-26): dedupe to canonical) ──
-
-function parseCostRange(cost: string): number {
-  const matches = cost.match(/\$(\d+)(?:[–-](\d+))?/);
-  if (!matches) return 0;
-  const low = parseInt(matches[1]);
-  const high = matches[2] ? parseInt(matches[2]) : low;
-  return (low + high) / 2;
-}
-
-function formatCost(value: number): string {
-  if (value === 0) return '';
-  return `~$${Math.round(value)}/mo`;
-}
+import { parseCostRange, formatCost } from '../../../cost/utils/cost-calculator';
 
 // ─── Project Overview ───────────────────────────────────────────────────────
 

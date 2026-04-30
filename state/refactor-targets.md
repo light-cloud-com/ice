@@ -16,7 +16,7 @@ Living document, **owned exclusively by the orchestrator**. Tracks which large f
 | File | LOC | Coverage (line/branch) | Status | Units done | Shim dropped |
 |---|---|---|---|---|---|
 | ~~`services/deploy/src/services/deploy.service.ts`~~ | 2843 → **1572** | new modules at 100% / 94–100% | **DONE** (17 units, see [blueprint](blueprints/rf-deploy.md)) | 17 | n/a (re-exports kept for namespace-import surface) |
-| `packages/ui/src/features/properties/components/properties-panel.tsx` | 3268 → ~671 | varied (95–100%) | **in flight** ([blueprint](blueprints/rf-props.md), 26 units) | 23 (rf-props-1..23; 3 left: 24a/24b shell+body split, 25 slim-down, 26 cost-utils dedup) | — |
+| ~~`packages/ui/src/features/properties/components/properties-panel.tsx`~~ | 3268 → **94** | new modules at 95–100% | **DONE** (25 units, see [blueprint](blueprints/rf-props.md)) | 25 (rf-props-1..24, rf-props-26; rf-props-25 absorbed into 24) | — |
 | `packages/ui/src/features/canvas/components/svg-canvas.tsx` | 3234 | TBD (rf-0b) | queued | 0 | — |
 | `packages/ui/src/features/deploy/components/deploy-panel.tsx` | 2229 | TBD (rf-0b) | queued | 0 | — |
 | `packages/core/src/deploy/card-translator.ts` | 1585 | TBD (rf-0b) | queued | 0 | — |
@@ -32,21 +32,7 @@ Files in the 600–1000 LOC band (`resource-palette.tsx`, `sqlite-state-store.ts
 
 ## In flight
 
-### `properties-panel.tsx` — rf-props-* (26+ units)
-
-Blueprint at [`blueprints/rf-props.md`](blueprints/rf-props.md). 5 leaf utils → fields bundle + 4 hooks → 14 section subcomponents → 1 orchestrator + final dedup unit.
-
-**500 LOC adjustment to the blueprint**: One proposed module exceeds the ceiling and needs splitting during its extraction unit:
-- `sections/node-properties-section.tsx` (est. 530) → already split (rf-props-24a/b); the split must keep each half ≤500.
-
-The other large modules (`fields/index.tsx` 280, `custom-domain-panel.tsx` 260, `pipeline-section.tsx` 300, `source-repository-section.tsx` 350, `edge-properties-section.tsx` 245) are within the 200–500 range and stay as proposed in the blueprint.
-
-Behavior-risk flags:
-- **rf-props-15 custom-domain-panel** — rendered twice; identical props critical to avoid remount mid-typing.
-- **rf-props-20 pipeline-section** — dynamic imports with relative paths that change after extraction.
-- **rf-props-24a/b node-properties-section** — setState-during-render fallback at L1280–1284; split into shell + body to keep call ordering intact.
-- **rf-props-26 parseCostRange/formatCost dedup** — local copies are strictly less capable than canonical (`packages/ui/src/features/cost/utils/cost-calculator.ts`); behavior-change unit, separate from extractions.
-- E2E selectors to preserve verbatim: `data-prop-key`, `data-testid="pn-..."`.
+_(none — `properties-panel.tsx` finished 2026-04-29; next file from the queue is `svg-canvas.tsx`.)_
 
 ## Follow-up splits (over 500 LOC, must be split per the ceiling rule)
 
@@ -66,6 +52,38 @@ Files in the 200–500 range (`queue.service.ts` 387, `build.service.ts` 343, `c
 A workspace-wide audit for files >500 LOC is pending — the queue table above only lists the largest ones surfaced during the initial scan.
 
 ## Done
+
+### `properties-panel.tsx` — 25 units, 2026-04-29
+
+3268 → **94 LOC** (−3174, −97%). The orchestrator is now a thin compose-and-route shell that dispatches to one of three section subcomponents (`ProjectOverview` / `EdgePropertiesSection` / `NodePropertiesSection`) plus the panel header. Five leaf utils, one fields bundle, four hooks, and 13 section subcomponents extracted; one final cross-file dedup unit pointed `parseCostRange` / `formatCost` consumers at the canonical home.
+
+New modules:
+
+- `utils/queue-spec.ts` (rf-props-1)
+- `utils/normalize-subdomain.ts` (rf-props-2)
+- `utils/edge-warnings.ts` (rf-props-3)
+- `utils/format-age.ts` (rf-props-4)
+- `utils/deploy-history-format.ts` (rf-props-5)
+- `components/fields/index.tsx` + `components/fields/render-property-field.tsx` (rf-props-6, rf-props-9)
+- `hooks/use-resource-map.ts` + `hooks/use-drift-check.ts` (rf-props-7, rf-props-8)
+- `sections/drift.tsx` (rf-props-10)
+- `sections/group-color-picker.tsx` (rf-props-11)
+- `sections/connection-card.tsx` (rf-props-12)
+- `sections/env-vars-editor.tsx` (rf-props-13)
+- `sections/scaling-section.tsx` + `sections/domain-section.tsx` (rf-props-14)
+- `sections/custom-domain-panel.tsx` (rf-props-15; behavior-risk dual-render)
+- `sections/private-network-panel.tsx` (rf-props-16)
+- `sections/repo-deploy-list.tsx` (rf-props-17)
+- `sections/service-source-section.tsx` (rf-props-18)
+- `sections/deploy-history.tsx` (rf-props-19)
+- `sections/pipeline-section.tsx` (rf-props-20; behavior-risk dynamic-import paths)
+- `sections/source-repository-section.tsx` (rf-props-21)
+- `sections/edge-properties-section.tsx` (rf-props-22)
+- `sections/project-overview.tsx` (rf-props-23)
+- `sections/node-properties-section.tsx` (rf-props-24; tab-router shell + body, keeps setState-during-render fallback intact)
+- rf-props-26: `parseCostRange` / `formatCost` cross-file dedup to canonical `features/cost/utils/cost-calculator.ts` (behavior-change — `'Free'` / commas / decimals now parsed correctly; `formatCost(0) → 'Free'` insulated by `totalCost > 0` gate at every callsite). 19 new tests at the canonical home + 3 behavior-delta tests at the consumer; 1464 unit tests passing across the monorepo.
+
+Commits: `5629b1b`, `88d383f`, `d356718`, `47a91f8`, `093bda5`, `112b8d9`, `28bacc2`, `206ca4d`, `12507f5`, `ca54041`, `b11e275`, `dbc7313`, `efa8340`, `7748b32`, `b1fd1e0`, `4648712`, `29c4731`, `6645227`, `9efc48b`, `3d781f5`, `6cc2dae`, `ed2193c`, `00caaa2`, `6dfd890`, plus the rf-props-26 commit. rf-props-25 (orchestrator slim-down) was absorbed into rf-props-24 because the orchestrator was already minimal after the section extractions landed. Coverage on new modules: 95–100% statement / 85–100% branch.
 
 ### `deploy.service.ts` — 17 units, 2026-04-29
 

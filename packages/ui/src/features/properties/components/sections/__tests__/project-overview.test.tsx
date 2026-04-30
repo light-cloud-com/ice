@@ -300,7 +300,9 @@ describe('ProjectOverview', () => {
   it('skips nodes with non-matching cost strings (parseCostRange returns 0)', () => {
     const card = makeCard({
       nodes: [
-        makeNode('svc-1', { estimatedCost: 'Free' }), // local copy returns 0 — no $/digit match
+        // rf-props-26: canonical parseCostRange short-circuits 'Free' to 0
+        // explicitly (the local copy got the same answer via regex no-match).
+        makeNode('svc-1', { estimatedCost: 'Free' }),
         makeNode('svc-2', { estimatedCost: '' }),
         makeNode('svc-3', { estimatedCost: '$40' }), // 40
       ],
@@ -308,6 +310,62 @@ describe('ProjectOverview', () => {
     const tree = renderSection({ activeCard: card });
     const text = collectText(tree);
     expect(text).toContain('~$40/mo');
+  });
+
+  // ── rf-props-26 behavior-delta lock-in ───────────────────────────────────
+  // Before rf-props-26 the section had local-copy `parseCostRange` /
+  // `formatCost` whose regex (`\d+`) silently mishandled commas and
+  // decimals, and whose `formatCost` returned `''` for zero. The dedup
+  // points the section at the canonical home, which:
+  //   - parses commas  → `$1,000-2,000` averages to 1500 (was 1.5)
+  //   - parses decimals → `$0.50` returns 0.5 (was 0)
+  //   - formats < $1   → "~$0.50/mo" (was "~$1/mo" due to Math.round)
+  //   - formats ≥ $1k  → "~$1.5k/mo" (was "~$1500/mo")
+  //   - formats 0      → "Free" (was ""), but the row's `totalCost > 0`
+  //     gate hides this transition from users — verified below.
+
+  it('rf-props-26: parses comma-separated thousands as the average of the two large values (canonical, not local)', () => {
+    const card = makeCard({
+      nodes: [makeNode('svc', { estimatedCost: '$1,000-2,000' })],
+    });
+    const tree = renderSection({ activeCard: card });
+    const text = collectText(tree);
+    // Canonical: (1000 + 2000) / 2 = 1500 → formatCost(1500) === '~$1.5k/mo'.
+    // Local copy would have produced (1 + 2) / 2 = 1.5 → '~$2/mo' after Math.round.
+    expect(text).toContain('~$1.5k/mo');
+    expect(text).not.toContain('~$2/mo');
+  });
+
+  it('rf-props-26: parses a single sub-dollar decimal (was 0 with local copy → row was hidden)', () => {
+    const card = makeCard({
+      // With the local copy this combined to 0 (`$0.50` regex no-match → 0,
+      // `$5` → 5). Canonical sums 0.5 + 5 = 5.5 → '~$6/mo' (rounded).
+      nodes: [
+        makeNode('svc-1', { estimatedCost: '$0.50' }),
+        makeNode('svc-2', { estimatedCost: '$5' }),
+      ],
+    });
+    const tree = renderSection({ activeCard: card });
+    const text = collectText(tree);
+    expect(text).toContain('t:properties.overview.estMonthlyCost');
+    // 5.5 → Math.round → 6 → '~$6/mo' (canonical regular-range branch).
+    expect(text).toContain('~$6/mo');
+  });
+
+  it('rf-props-26: a totalCost of 0 still hides the cost row (the formatCost(0) → "Free" delta is gated)', () => {
+    // 'Free' → 0; '' → 0; total = 0. The `totalCost > 0` gate at the
+    // callsite means `formatCost(0)` is never invoked, so the canonical
+    // `'Free'` return value is not observable in the rendered output.
+    const card = makeCard({
+      nodes: [
+        makeNode('svc-1', { estimatedCost: 'Free' }),
+        makeNode('svc-2', { estimatedCost: '' }),
+      ],
+    });
+    const tree = renderSection({ activeCard: card });
+    const text = collectText(tree);
+    expect(text).not.toContain('t:properties.overview.estMonthlyCost');
+    expect(text).not.toContain('Free');
   });
 
   // ── Empty-state hint ─────────────────────────────────────────────────────

@@ -44,7 +44,6 @@ import {
   updateCardNodeData,
   deleteCardNode,
   deleteCardEdge,
-  autoOrganizeCard,
   type CardNode,
   type CardEdge,
 } from '../../../store/slices/cards-slice';
@@ -94,8 +93,7 @@ import {
 import { useClipboard } from '../../../shared/hooks/use-clipboard';
 import { useExposedServices } from '../../../shared/hooks/use-exposed-services';
 import { calculateZIndex } from '../../../shared/utils/auto-layout';
-import { logCanvasRender, logDrop, logBlueprint } from '../../../shared/utils/debug-logger';
-import { inspectLayout, updateInspectorState, installInspector } from '../../../shared/utils/layout-inspector';
+import { logDrop, logBlueprint } from '../../../shared/utils/debug-logger';
 import { receiveCardPipelineUpdate } from '../../../store/slices/pipeline-slice';
 import {
   setSelectedNodes,
@@ -111,6 +109,7 @@ import { useCanvasDimensions } from '../hooks/use-canvas-resize';
 import { useCanvasViewport } from '../hooks/use-canvas-viewport';
 import { usePinnedUserNode } from '../hooks/use-pinned-user-node';
 import { useRenameState } from '../hooks/use-rename-state';
+import { useCanvasSideEffects } from '../hooks/use-canvas-side-effects';
 import type { RootState, AppDispatch } from '../../../store';
 
 // rf-canv-1: re-export shim — the canonical home for these three types is
@@ -213,69 +212,9 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   const snapToGrid = useSelector((state: RootState) => state.ui.snapToGrid);
   const canvasLocked = useSelector((state: RootState) => state.ui.canvasLocked);
 
-  // ── Layout Inspector: feed state on every zoom/layout change ──────────
-  useEffect(() => {
-    installInspector();
-  }, []);
-
-  useEffect(() => {
-    const inspectNodes = nodes.map((n) => ({
-      id: n.id,
-      type: n.type,
-      label: (n.data?.label as string) || n.id,
-      iceType: (n.data?.iceType as string) || '',
-      x: n.position.x,
-      y: n.position.y,
-      width: n.width,
-      height: n.height,
-      parentId: n.parentId,
-      folded: !!n.data?.folded,
-    }));
-    const inspectEdges = edges.map((e) => ({
-      id: e.id,
-      source: e.source,
-      target: e.target,
-      relationship: e.data?.relationship as string | undefined,
-    }));
-    const state = { zoom: viewport.zoom, lod, nodes: inspectNodes, edges: inspectEdges };
-    updateInspectorState(state);
-
-    // Auto-log when ice-debug is enabled
-    try {
-      if (localStorage.getItem('ice-debug') === 'true') {
-        inspectLayout(state);
-      }
-    } catch {
-      /* ignore */
-    }
-  }, [viewport.zoom, lod, nodes, edges]);
-
   // Canvas dimensions — ResizeObserver-tracked, default 800x600 until first
   // measurement. rf-canv-18: extracted to `../hooks/use-canvas-resize`.
   const dimensions = useCanvasDimensions(containerRef);
-
-  // Track previous node count for auto-organize on import
-  const prevNodeCountRef = useRef(0);
-
-  useEffect(() => {
-    const currentCount = nodes.length;
-    const prevCount = prevNodeCountRef.current;
-
-    // Auto-organize when nodes are imported (0 → many, or large bulk add)
-    // Threshold >10 avoids triggering on blueprint drops (container + 1-3 children = 2-4 nodes)
-    if (currentCount > 0 && (prevCount === 0 || currentCount - prevCount > 10)) {
-      const timer = setTimeout(() => {
-        dispatch(autoOrganizeCard({ zoom: viewport.zoom }));
-      }, 100);
-      prevNodeCountRef.current = currentCount;
-      return () => clearTimeout(timer);
-    }
-
-    prevNodeCountRef.current = currentCount;
-    // viewport.zoom intentionally omitted — re-running on zoom changes would
-    // trigger spurious auto-organize calls; we only care about node-count jumps.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodes.length, dispatch]);
 
   // Convert Redux nodes to canvas format with type-based sizing.
   // Uses VISUAL dimensions: folded nodes get their collapsed height (36-38px)
@@ -355,15 +294,25 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     [edges, effectiveNodes, foldedRemap, viewLevel],
   );
 
-  // Debug: log canvas state on render
-  useEffect(() => {
-    logCanvasRender({
-      nodeCount: canvasNodes.length,
-      edgeCount: edges.length,
-      visibleCount: effectiveNodes.length,
-      viewLevel,
-    });
-  }, [canvasNodes.length, edges.length, effectiveNodes.length, viewLevel]);
+  // rf-canv-22: bundled side-effects — install inspector once,
+  // updateInspectorState + inspectLayout on viewport/lod/nodes/edges,
+  // auto-organize on bulk node-count delta (threshold > 10 — blueprint
+  // risk #7), logCanvasRender on render-shape changes, overlay-dismiss
+  // reset on card change + AI intent. Per blueprint risk #8 the
+  // setOverlayDismissed setter is preserved verbatim despite no
+  // current reader — a future unit will surface the boolean.
+  useCanvasSideEffects({
+    card,
+    nodes,
+    edges,
+    canvasNodes,
+    effectiveNodes,
+    viewport,
+    lod,
+    viewLevel,
+    aiCurrentIntent,
+    dispatch,
+  });
 
   // Detect publicly-exposed entry-point services for user traffic icon
   // Uses edge topology to find true graph sources (no incoming connects_to)
@@ -939,22 +888,10 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     useRenameState();
   // Track connection tooltip (follows mouse)
   const [connTooltip, setConnTooltip] = useState<ConnectionTooltipInfo | null>(null);
-  // Dismiss state for the empty canvas overlay
-  const [, setOverlayDismissed] = useState(false);
-  // Reset when card changes
-  const prevCardIdRef = useRef(card?.id);
-  useEffect(() => {
-    if (card?.id !== prevCardIdRef.current) {
-      prevCardIdRef.current = card?.id;
-      setOverlayDismissed(false);
-    }
-  }, [card?.id]);
-  // Dismiss when user sends an AI command (they expect to see the canvas)
-  useEffect(() => {
-    if (aiCurrentIntent) {
-      setOverlayDismissed(true);
-    }
-  }, [aiCurrentIntent]);
+  // rf-canv-22: empty-canvas overlay dismiss state + the two effects that
+  // toggle it (per-card-id reset + per-AI-intent dismiss) are owned by
+  // useCanvasSideEffects. Per blueprint risk #8 the getter is destructured-
+  // discarded; a future unit will surface the boolean to the overlay child.
 
   const handleNodeHover = useCallback((nodeId: string | null) => {
     setHoveredNodeId(nodeId);

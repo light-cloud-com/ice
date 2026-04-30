@@ -25,20 +25,17 @@ import { LogPanel } from './sections/log-panel';
 import { StatusBadge } from './status-badge';
 import { useDeployActions } from '../hooks/use-deploy-actions';
 import { useDeployEffects } from '../hooks/use-deploy-effects';
+import { useDestroyAction } from '../hooks/use-destroy-action';
 import { useTranslation } from '../../../i18n';
-import { getApi } from '../../../shared/api/api-adapter';
 import { PanelHeader } from '../../../shared/components/ui/panel-header';
-import { selectActiveCard, clearCardDeployOverlay } from '../../../store/slices/cards-slice';
+import { selectActiveCard } from '../../../store/slices/cards-slice';
 import {
   setProvider,
   setGcpProject,
   setRegion,
   setEnvironment,
-  startDestroying,
-  deployError,
   resetDeploy,
   appendLog,
-  setDeployedResources,
 } from '../../../store/slices/deploy-slice';
 import { analyzePreDeploy } from '../utils/predeploy-analysis';
 import { PROVIDER_REGIONS, PROVIDER_LABELS } from '../utils/provider-regions';
@@ -94,6 +91,16 @@ export const DeployPanel: React.FC = () => {
     activeCard: activeCard ?? null,
     deploy,
     fetchRequirements,
+  });
+
+  // ─── Destroy callback ─────────────────────────────────────────────────
+  //
+  // The destroy `onConfirm` lives in `useDestroyAction`. RISK #4: dispatch
+  // ordering is observable to the canvas overlay — see hook source.
+  const { handleDestroyConfirm } = useDestroyAction({
+    activeCard: activeCard ?? null,
+    deploy,
+    setDestroyModalOpen,
   });
 
   if (!isOpen) return null;
@@ -236,66 +243,7 @@ export const DeployPanel: React.FC = () => {
           cardName={activeCard.name}
           resources={deploy.deployedResources}
           onCancel={() => setDestroyModalOpen(false)}
-          onConfirm={async (destroyEverything: boolean) => {
-            setDestroyModalOpen(false);
-            // Flip the slice into 'destroying' state BEFORE the API
-            // call so progress events arriving via the socket
-            // subscription don't auto-flip it back to 'deploying'.
-            // The subscription hook's `startDeploying` dispatch is a
-            // no-op while status === 'destroying'.
-            dispatch(startDestroying({ cardId: activeCard.id }));
-            try {
-              if (destroyEverything) {
-                console.log('[destroy] destroyAll starting', { cardId: activeCard.id, gcpProject: deploy.gcpProject });
-                const res = await getApi().deploy.destroyAll(activeCard.id, {
-                  gcpProject: deploy.gcpProject,
-                });
-                console.log('[destroy] destroyAll response', res);
-                if (res.success === false && !res.deleted) {
-                  dispatch(deployError(res.error || 'Destroy failed with no details'));
-                  return;
-                }
-                if (res.success || res.deleted) {
-                  dispatch(
-                    appendLog(
-                      `Destroyed ${res.deleted?.length || 0} resource${(res.deleted?.length || 0) === 1 ? '' : 's'} across all historical deploys.`,
-                    ),
-                  );
-                  for (const f of res.failed || []) {
-                    dispatch(appendLog(`Failed to delete ${f.type}/${f.name}: ${f.error}`));
-                  }
-                }
-              } else {
-                console.log('[destroy] destroy starting', {
-                  cardId: activeCard.id,
-                  provider: deploy.provider,
-                  environment: deploy.environment,
-                });
-                const res = await getApi().deploy.destroy(activeCard.id, {
-                  provider: deploy.provider,
-                  region: deploy.region,
-                  environment: deploy.environment,
-                });
-                console.log('[destroy] destroy response', res);
-                if (res?.success === false) {
-                  dispatch(deployError(res.error || 'Destroy failed'));
-                  return;
-                }
-              }
-              // Wipe deploy overlay from the canvas (provider_id, url,
-              // deploy_status, custom domain fields, etc.) so blocks
-              // and the properties panel stop showing "Live" / URL
-              // pills for resources that no longer exist.
-              dispatch(clearCardDeployOverlay({ cardId: activeCard.id }));
-              // Drop the deploy panel's "previously deployed" list too
-              // so the next deploy starts from a clean slate.
-              dispatch(setDeployedResources([]));
-              dispatch(resetDeploy());
-            } catch (err: any) {
-              console.error('[destroy] caught error', err);
-              dispatch(deployError(err.message || 'Destroy failed'));
-            }
-          }}
+          onConfirm={handleDestroyConfirm}
         />
       )}
     </>

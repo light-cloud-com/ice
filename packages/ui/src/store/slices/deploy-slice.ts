@@ -53,6 +53,17 @@ import type {
 
 export { deriveRollup, orderNodesForPanel } from './deploy/derive';
 
+// ─── Reducer groups ────────────────────────────────────────────────────────
+//
+// Panel + configuration reducers (rf-dslice-3) live in
+// `./deploy/reducers/panel-config`. The runtime import brings the
+// case-reducer object into THIS module's lexical scope so the `createSlice`
+// `reducers:` block can spread it. RTK still owns the action type strings
+// (`'deploy/openDeployPanel'` etc.) because action types are derived from
+// the keys of the spread object inside `createSlice`.
+
+import { panelConfigReducers } from './deploy/reducers/panel-config';
+
 const initialState: DeployState = {
   isOpen: false,
   provider: 'gcp',
@@ -82,26 +93,7 @@ const deploySlice = createSlice({
   name: 'deploy',
   initialState,
   reducers: {
-    openDeployPanel(state) {
-      state.isOpen = true;
-    },
-    closeDeployPanel(state) {
-      state.isOpen = false;
-    },
-
-    // Configuration
-    setProvider(state, action: PayloadAction<string>) {
-      state.provider = action.payload;
-    },
-    setGcpProject(state, action: PayloadAction<string>) {
-      state.gcpProject = action.payload;
-    },
-    setRegion(state, action: PayloadAction<string>) {
-      state.region = action.payload;
-    },
-    setEnvironment(state, action: PayloadAction<'development' | 'staging' | 'production'>) {
-      state.environment = action.payload;
-    },
+    ...panelConfigReducers,
 
     // Authentication
     startAuthenticating(state) {

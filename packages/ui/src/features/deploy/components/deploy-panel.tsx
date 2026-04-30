@@ -27,6 +27,7 @@ import { PreDeployWarnings } from './predeploy-warnings';
 import { RequirementsSection } from './requirements-section';
 import { AuthBanner } from './sections/auth-banner';
 import { DeployedResourcesList } from './sections/deployed-resources-list';
+import { LogPanel } from './sections/log-panel';
 import { StatusBadge } from './status-badge';
 import { useTranslation } from '../../../i18n';
 import { getApi } from '../../../shared/api/api-adapter';
@@ -671,20 +672,7 @@ export const DeployPanel: React.FC = () => {
         })()}
 
         {/* Logs */}
-        {deploy.logs.length > 0 && (
-          <div
-            id="ice-deploy-log"
-            className="rounded-md border border-border bg-slate-950 text-slate-300 p-3 max-h-48 overflow-y-auto font-mono text-xs leading-relaxed"
-          >
-            {deploy.logs.map((log, i) => (
-              <div key={i} className="flex gap-2">
-                <span className="text-ice-text-3 select-none">{String(i + 1).padStart(3, ' ')}</span>
-                <span>{log}</span>
-              </div>
-            ))}
-            <div ref={logEndRef} />
-          </div>
-        )}
+        {deploy.logs.length > 0 && <LogPanel logs={deploy.logs} logEndRef={logEndRef} />}
 
         {/* In-flight progress (pdl-5) — rendered for both deploying and
               destroying. The legacy single-resource percentage and the

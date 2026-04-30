@@ -106,6 +106,7 @@ import { SvgCompactNode, computeCompactNodeHeight, computeCompactNodeWidth } fro
 import { SvgCustomDomainNode } from './nodes/custom-domain';
 import { SvgGroupNode } from './nodes/group-node';
 import { SvgPrivateNetworkNode } from './nodes/private-network';
+import { NodeLiftWrapper } from './canvas-renderer/lift-wrapper';
 // ─── Concept block canvas nodes (one folder per block, individually customizable) ───
 import { SvgStaticSiteNode } from './nodes/static-site';
 import { SvgVectorDbNode } from './nodes/vector-db';
@@ -2290,71 +2291,37 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
               // Shift-drag highlight: colored border + shadow for all dragged nodes
               const isLifted = shiftDraggingNodeIds.has(node.id);
 
-              const wrapLift = (content: React.ReactNode) => {
-                // Wrap with entrance animation if needed
-                const animated = isAnimating ? (
-                  <g key={`anim-${node.id}`} style={animStyle}>
-                    {content}
-                  </g>
-                ) : (
-                  content
-                );
-
-                // Shift-dragged nodes: show lift shadow, skip clip (user is reparenting)
-                if (isLifted) {
-                  // Determine highlight color: green if dragging INTO a group, orange if leaving
-                  const isEntering = !!dragOverGroupId;
-                  const highlightColor = isEntering ? '#22c55e' : '#f97316';
-
-                  return (
-                    <g key={node.id} filter="url(#shift-drag-shadow)" opacity={0.9}>
-                      {animated}
-                      {/* Highlight border around the dragged node */}
-                      <rect
-                        x={node.x - 2}
-                        y={node.y - 2}
-                        width={node.width + 4}
-                        height={node.height + 4}
-                        rx={8}
-                        fill="none"
-                        stroke={highlightColor}
-                        strokeWidth={2}
-                        strokeDasharray="6 3"
-                        opacity={0.8}
-                      >
-                        <animate
-                          attributeName="stroke-dashoffset"
-                          from="0"
-                          to="-18"
-                          dur="0.8s"
-                          repeatCount="indefinite"
-                        />
-                      </rect>
-                    </g>
-                  );
-                }
-
-                // BND-5/BND-6: Clip children to parent bounds so they never
-                // visually overflow the parent group/block rectangle.
-                if (node.parentId) {
-                  return (
-                    <g key={`clipped-${node.id}`} clipPath={`url(#parent-clip-${node.parentId})`}>
-                      {animated}
-                    </g>
-                  );
-                }
-
-                return animated;
-              };
+              // Wrapper key derivation — mirrors the original `wrapLift` outer-key
+              // priority chain so React reconciliation behavior is preserved when
+              // the (isLifted, parentId, isAnimating) tuple changes between renders.
+              // Falls back to the per-call-site inner key (e.g. `${id}-lod${lod}`)
+              // when no wrapper-level branch applies (rf-canv-10).
+              const wrapperKey = (innerKey: string): string =>
+                isLifted
+                  ? node.id
+                  : node.parentId
+                    ? `clipped-${node.id}`
+                    : isAnimating
+                      ? `anim-${node.id}`
+                      : innerKey;
 
               if (isLogNode) {
-                return wrapLift(
-                  <SvgLogNode
-                    key={isLifted ? undefined : `${node.id}-lod${lod}`}
+                return (
+                  <NodeLiftWrapper
+                    key={wrapperKey(`${node.id}-lod${lod}`)}
                     node={node}
-                    isSelected={selectedNodes.includes(node.id)}
-                    onToggleFold={handleToggleFold}
-                  />,
+                    isAnimating={isAnimating}
+                    animStyle={animStyle}
+                    isLifted={isLifted}
+                    dragOverGroupId={dragOverGroupId}
+                  >
+                    <SvgLogNode
+                      key={isLifted ? undefined : `${node.id}-lod${lod}`}
+                      node={node}
+                      isSelected={selectedNodes.includes(node.id)}
+                      onToggleFold={handleToggleFold}
+                    />
+                  </NodeLiftWrapper>
                 );
               }
 
@@ -2363,16 +2330,25 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
               // compact-node tree so it can have variable height and
               // multiple right-side ports.
               if (iceType === 'Network.CustomDomain') {
-                return wrapLift(
-                  <SvgCustomDomainNode
-                    key={isLifted ? undefined : `${node.id}-routes${((node.data?.routes as unknown[]) || []).length}`}
+                return (
+                  <NodeLiftWrapper
+                    key={wrapperKey(`${node.id}-routes${((node.data?.routes as unknown[]) || []).length}`)}
                     node={node}
-                    isSelected={selectedNodes.includes(node.id)}
-                    isDragOver={dragOverGroupId === node.id}
-                    onNodeHover={handleNodeHover}
-                    onUpdateData={handleUpdateNodeData}
-                    connectionDragState={connectionDragTargets?.get(node.id) ?? null}
-                  />,
+                    isAnimating={isAnimating}
+                    animStyle={animStyle}
+                    isLifted={isLifted}
+                    dragOverGroupId={dragOverGroupId}
+                  >
+                    <SvgCustomDomainNode
+                      key={isLifted ? undefined : `${node.id}-routes${((node.data?.routes as unknown[]) || []).length}`}
+                      node={node}
+                      isSelected={selectedNodes.includes(node.id)}
+                      isDragOver={dragOverGroupId === node.id}
+                      onNodeHover={handleNodeHover}
+                      onUpdateData={handleUpdateNodeData}
+                      connectionDragState={connectionDragTargets?.get(node.id) ?? null}
+                    />
+                  </NodeLiftWrapper>
                 );
               }
 
@@ -2384,40 +2360,58 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
               // the generic group dispatch below or it would render as a
               // plain SvgGroupNode.
               if (iceType === 'Network.PrivateNetwork') {
-                return wrapLift(
-                  <SvgPrivateNetworkNode
-                    key={isLifted ? undefined : `${node.id}-pn${(node.data?.ingress as string) || 'open'}`}
+                return (
+                  <NodeLiftWrapper
+                    key={wrapperKey(`${node.id}-pn${(node.data?.ingress as string) || 'open'}`)}
                     node={node}
-                    isSelected={selectedNodes.includes(node.id)}
-                    isDragOver={dragOverGroupId === node.id}
-                    onNodeHover={handleNodeHover}
-                    onUpdateData={handleUpdateNodeData}
-                    connectionDragState={connectionDragTargets?.get(node.id) ?? null}
-                  />,
+                    isAnimating={isAnimating}
+                    animStyle={animStyle}
+                    isLifted={isLifted}
+                    dragOverGroupId={dragOverGroupId}
+                  >
+                    <SvgPrivateNetworkNode
+                      key={isLifted ? undefined : `${node.id}-pn${(node.data?.ingress as string) || 'open'}`}
+                      node={node}
+                      isSelected={selectedNodes.includes(node.id)}
+                      isDragOver={dragOverGroupId === node.id}
+                      onNodeHover={handleNodeHover}
+                      onUpdateData={handleUpdateNodeData}
+                      connectionDragState={connectionDragTargets?.get(node.id) ?? null}
+                    />
+                  </NodeLiftWrapper>
                 );
               }
 
               // Groups always render as containers
               if (isGroup) {
-                return wrapLift(
-                  <SvgGroupNode
-                    key={isLifted ? undefined : `${node.id}-lod${lod}`}
+                return (
+                  <NodeLiftWrapper
+                    key={wrapperKey(`${node.id}-lod${lod}`)}
                     node={node}
-                    isSelected={selectedNodes.includes(node.id)}
-                    childNodes={sortedNodes.filter((n) => n.parentId === node.id)}
-                    onToggleFold={handleToggleFold}
-                    isDragOver={dragOverGroupId === node.id}
-                    isChildExiting={exitingGroupId === node.id}
-                    isRenaming={renamingNodeId === node.id}
-                    onDoubleClickLabel={() => handleNodeDoubleClick(node.id)}
-                    onRenameCommit={(newLabel) => handleRenameCommit(node.id, newLabel)}
-                    onRenameCancel={handleRenameCancel}
-                    lod={lod}
-                    zoom={viewport.zoom}
-                    connectionDragState={connectionDragTargets?.get(node.id) ?? null}
-                    validationSeverity={nodeValidationMap.get(node.id)?.severity ?? null}
-                    validationCount={nodeValidationMap.get(node.id)?.count ?? 0}
-                  />,
+                    isAnimating={isAnimating}
+                    animStyle={animStyle}
+                    isLifted={isLifted}
+                    dragOverGroupId={dragOverGroupId}
+                  >
+                    <SvgGroupNode
+                      key={isLifted ? undefined : `${node.id}-lod${lod}`}
+                      node={node}
+                      isSelected={selectedNodes.includes(node.id)}
+                      childNodes={sortedNodes.filter((n) => n.parentId === node.id)}
+                      onToggleFold={handleToggleFold}
+                      isDragOver={dragOverGroupId === node.id}
+                      isChildExiting={exitingGroupId === node.id}
+                      isRenaming={renamingNodeId === node.id}
+                      onDoubleClickLabel={() => handleNodeDoubleClick(node.id)}
+                      onRenameCommit={(newLabel) => handleRenameCommit(node.id, newLabel)}
+                      onRenameCancel={handleRenameCancel}
+                      lod={lod}
+                      zoom={viewport.zoom}
+                      connectionDragState={connectionDragTargets?.get(node.id) ?? null}
+                      validationSeverity={nodeValidationMap.get(node.id)?.severity ?? null}
+                      validationCount={nodeValidationMap.get(node.id)?.count ?? 0}
+                    />
+                  </NodeLiftWrapper>
                 );
               }
 
@@ -2428,8 +2422,50 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
               if (isBlock) {
                 const ConceptRenderer = CONCEPT_NODE_RENDERERS[iceType];
                 if (ConceptRenderer) {
-                  return wrapLift(
-                    <ConceptRenderer
+                  return (
+                    <NodeLiftWrapper
+                      key={wrapperKey(`${node.id}-lod${lod}`)}
+                      node={node}
+                      isAnimating={isAnimating}
+                      animStyle={animStyle}
+                      isLifted={isLifted}
+                      dragOverGroupId={dragOverGroupId}
+                    >
+                      <ConceptRenderer
+                        key={isLifted ? undefined : `${node.id}-lod${lod}`}
+                        node={node}
+                        isSelected={selectedNodes.includes(node.id)}
+                        childNodes={sortedNodes.filter((n) => n.parentId === node.id)}
+                        onToggleFold={handleToggleFold}
+                        isDragOver={dragOverGroupId === node.id}
+                        onNodeHover={handleNodeHover}
+                        isRenaming={renamingNodeId === node.id}
+                        onDoubleClickLabel={() => handleNodeDoubleClick(node.id)}
+                        onRenameCommit={(newLabel) => handleRenameCommit(node.id, newLabel)}
+                        onRenameCancel={handleRenameCancel}
+                        onUpdateData={handleUpdateNodeData}
+                        pipelineStatus={pipelineNodeStatus[node.id]}
+                        onPipelineClick={handlePipelineClick}
+                        connectedPipelineStatuses={getConnectedPipelineStatuses(node)}
+                        lod={lod}
+                        zoom={viewport.zoom}
+                        connectionDragState={connectionDragTargets?.get(node.id) ?? null}
+                        validationSeverity={nodeValidationMap.get(node.id)?.severity ?? null}
+                        validationCount={nodeValidationMap.get(node.id)?.count ?? 0}
+                      />
+                    </NodeLiftWrapper>
+                  );
+                }
+                return (
+                  <NodeLiftWrapper
+                    key={wrapperKey(`${node.id}-lod${lod}`)}
+                    node={node}
+                    isAnimating={isAnimating}
+                    animStyle={animStyle}
+                    isLifted={isLifted}
+                    dragOverGroupId={dragOverGroupId}
+                  >
+                    <SvgCompactNode
                       key={isLifted ? undefined : `${node.id}-lod${lod}`}
                       node={node}
                       isSelected={selectedNodes.includes(node.id)}
@@ -2450,10 +2486,60 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                       connectionDragState={connectionDragTargets?.get(node.id) ?? null}
                       validationSeverity={nodeValidationMap.get(node.id)?.severity ?? null}
                       validationCount={nodeValidationMap.get(node.id)?.count ?? 0}
-                    />,
-                  );
-                }
-                return wrapLift(
+                    />
+                  </NodeLiftWrapper>
+                );
+              }
+
+              // Fallthrough (resource nodes and anything else): same
+              // concept-renderer check as the isBlock branch, because
+              // palette drops create nodes with type='resource' not 'block'.
+              const ConceptFallbackRenderer = CONCEPT_NODE_RENDERERS[iceType];
+              if (ConceptFallbackRenderer) {
+                return (
+                  <NodeLiftWrapper
+                    key={wrapperKey(`${node.id}-lod${lod}`)}
+                    node={node}
+                    isAnimating={isAnimating}
+                    animStyle={animStyle}
+                    isLifted={isLifted}
+                    dragOverGroupId={dragOverGroupId}
+                  >
+                    <ConceptFallbackRenderer
+                      key={isLifted ? undefined : `${node.id}-lod${lod}`}
+                      node={node}
+                      isSelected={selectedNodes.includes(node.id)}
+                      childNodes={sortedNodes.filter((n) => n.parentId === node.id)}
+                      onToggleFold={handleToggleFold}
+                      isDragOver={dragOverGroupId === node.id}
+                      onNodeHover={handleNodeHover}
+                      isRenaming={renamingNodeId === node.id}
+                      onDoubleClickLabel={() => handleNodeDoubleClick(node.id)}
+                      onRenameCommit={(newLabel) => handleRenameCommit(node.id, newLabel)}
+                      onRenameCancel={handleRenameCancel}
+                      onUpdateData={handleUpdateNodeData}
+                      pipelineStatus={pipelineNodeStatus[node.id]}
+                      onPipelineClick={handlePipelineClick}
+                      connectedPipelineStatuses={getConnectedPipelineStatuses(node)}
+                      lod={lod}
+                      zoom={viewport.zoom}
+                      connectionDragState={connectionDragTargets?.get(node.id) ?? null}
+                      validationSeverity={nodeValidationMap.get(node.id)?.severity ?? null}
+                      validationCount={nodeValidationMap.get(node.id)?.count ?? 0}
+                    />
+                  </NodeLiftWrapper>
+                );
+              }
+
+              return (
+                <NodeLiftWrapper
+                  key={wrapperKey(`${node.id}-lod${lod}`)}
+                  node={node}
+                  isAnimating={isAnimating}
+                  animStyle={animStyle}
+                  isLifted={isLifted}
+                  dragOverGroupId={dragOverGroupId}
+                >
                   <SvgCompactNode
                     key={isLifted ? undefined : `${node.id}-lod${lod}`}
                     node={node}
@@ -2475,64 +2561,8 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
                     connectionDragState={connectionDragTargets?.get(node.id) ?? null}
                     validationSeverity={nodeValidationMap.get(node.id)?.severity ?? null}
                     validationCount={nodeValidationMap.get(node.id)?.count ?? 0}
-                  />,
-                );
-              }
-
-              // Fallthrough (resource nodes and anything else): same
-              // concept-renderer check as the isBlock branch, because
-              // palette drops create nodes with type='resource' not 'block'.
-              const ConceptFallbackRenderer = CONCEPT_NODE_RENDERERS[iceType];
-              if (ConceptFallbackRenderer) {
-                return wrapLift(
-                  <ConceptFallbackRenderer
-                    key={isLifted ? undefined : `${node.id}-lod${lod}`}
-                    node={node}
-                    isSelected={selectedNodes.includes(node.id)}
-                    childNodes={sortedNodes.filter((n) => n.parentId === node.id)}
-                    onToggleFold={handleToggleFold}
-                    isDragOver={dragOverGroupId === node.id}
-                    onNodeHover={handleNodeHover}
-                    isRenaming={renamingNodeId === node.id}
-                    onDoubleClickLabel={() => handleNodeDoubleClick(node.id)}
-                    onRenameCommit={(newLabel) => handleRenameCommit(node.id, newLabel)}
-                    onRenameCancel={handleRenameCancel}
-                    onUpdateData={handleUpdateNodeData}
-                    pipelineStatus={pipelineNodeStatus[node.id]}
-                    onPipelineClick={handlePipelineClick}
-                    connectedPipelineStatuses={getConnectedPipelineStatuses(node)}
-                    lod={lod}
-                    zoom={viewport.zoom}
-                    connectionDragState={connectionDragTargets?.get(node.id) ?? null}
-                    validationSeverity={nodeValidationMap.get(node.id)?.severity ?? null}
-                    validationCount={nodeValidationMap.get(node.id)?.count ?? 0}
-                  />,
-                );
-              }
-
-              return wrapLift(
-                <SvgCompactNode
-                  key={isLifted ? undefined : `${node.id}-lod${lod}`}
-                  node={node}
-                  isSelected={selectedNodes.includes(node.id)}
-                  childNodes={sortedNodes.filter((n) => n.parentId === node.id)}
-                  onToggleFold={handleToggleFold}
-                  isDragOver={dragOverGroupId === node.id}
-                  onNodeHover={handleNodeHover}
-                  isRenaming={renamingNodeId === node.id}
-                  onDoubleClickLabel={() => handleNodeDoubleClick(node.id)}
-                  onRenameCommit={(newLabel) => handleRenameCommit(node.id, newLabel)}
-                  onRenameCancel={handleRenameCancel}
-                  onUpdateData={handleUpdateNodeData}
-                  pipelineStatus={pipelineNodeStatus[node.id]}
-                  onPipelineClick={handlePipelineClick}
-                  connectedPipelineStatuses={getConnectedPipelineStatuses(node)}
-                  lod={lod}
-                  zoom={viewport.zoom}
-                  connectionDragState={connectionDragTargets?.get(node.id) ?? null}
-                  validationSeverity={nodeValidationMap.get(node.id)?.severity ?? null}
-                  validationCount={nodeValidationMap.get(node.id)?.count ?? 0}
-                />,
+                  />
+                </NodeLiftWrapper>
               );
             })}
           </g>

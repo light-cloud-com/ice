@@ -6,6 +6,7 @@
 
 import { SERVICE_NAMES, sdk_not_available, sdk_not_available_short } from '../messages.js';
 import { createOrAdoptBucket } from './cloud-storage/bucket-creator.js';
+import { applySimpleProperties } from './cloud-storage/bucket-updater.js';
 import { resolveOutputUrl } from './cloud-storage/bucket-utils.js';
 import { uploadPlaceholders } from './cloud-storage/placeholder-uploader.js';
 import { grantPublicAccess } from './cloud-storage/public-access-granter.js';
@@ -174,15 +175,7 @@ export const cloud_storage_handler: GCPResourceHandler = {
 
       const bucket = storage.bucket(name);
 
-      if (properties.labels) {
-        await bucket.setLabels(properties.labels);
-      }
-      if (properties.lifecycle) {
-        await bucket.setMetadata({ lifecycle: properties.lifecycle });
-      }
-      if (properties.versioning !== undefined) {
-        await bucket.setMetadata({ versioning: { enabled: !!properties.versioning } });
-      }
+      await applySimpleProperties(bucket, properties);
 
       // Re-publish the same outputs as `create()` so the persisted
       // result row keeps the URL / name / index_page fields populated.

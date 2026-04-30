@@ -38,15 +38,11 @@ import {
   type CardEdge,
 } from '../../../store/slices/cards-slice';
 import {
-  isNodeFolded as isNodeFoldedUtil,
   hasCollapsedAncestor as hasCollapsedAncestorUtil,
   buildFoldedRemap,
   descendants,
 } from '../utils/folded-remap';
 import { computeNodeSizes, toLocalCanvasNode } from '../utils/canvas-node-sizing';
-import {
-  calculateContainerBounds as calculateContainerBoundsUtil,
-} from '../utils/container-bounds';
 import {
   findContainerAtPosition as findContainerAtPositionUtil,
 } from '../utils/drop-target';
@@ -226,13 +222,6 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     });
   }, [canvasNodes, viewLevel]);
 
-  // Check if a node is collapsed/folded.
-  // rf-canv-3: thin wrapper binding to the pure util in ../utils/folded-remap.
-  const isNodeFolded = useCallback(
-    (nodeId: string): boolean => isNodeFoldedUtil(visibleNodes, nodeId),
-    [visibleNodes],
-  );
-
   // Check if any ancestor is folded (node should be hidden).
   // rf-canv-3: thin wrapper binding to the pure util in ../utils/folded-remap.
   const hasCollapsedAncestor = useCallback(
@@ -359,24 +348,13 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     [canvasNodes],
   );
 
-  // rf-canv-4: thin wrapper binding `visibleNodes` to the pure
-  // calculateContainerBounds util. Hook identity preserved so downstream
-  // useCallback / useMemo consumers see no change.
-  const calculateContainerBounds = useCallback(
-    (containerId: string, nodeStates: Map<string, { x: number; y: number; width: number; height: number }>) =>
-      calculateContainerBoundsUtil(visibleNodes, containerId, nodeStates),
-    [visibleNodes],
-  );
-
-  // rf-canv-25a: container-resize half — `recalculateAncestorBounds` thin
-  // wrapper, `calculateMinimumContainerSize`, and `handleNodeResize` are
-  // owned by `useContainerResize`. The two helpers are kept in this
-  // destructure even though the orchestrator currently has no callsite for
-  // them — they're held for a future reparent-machinery extraction (rf-
-  // canv-26 + beyond). See learnings.md `brief-vs-rf-canv-21-trim-rule-when-
-  // the-planner-knows-the-future-callsite`.
-  const { recalculateAncestorBounds, calculateMinimumContainerSize, handleNodeResize } =
-    useContainerResize({ visibleNodes });
+  // rf-canv-25a: container-resize machinery — `recalculateAncestorBounds`,
+  // `calculateMinimumContainerSize`, and `handleNodeResize` are owned by
+  // `useContainerResize`. Only `handleNodeResize` is consumed by the
+  // orchestrator (threaded into `useCanvasInteractions` as `onItemResize`);
+  // the other two are kept on the hook's return surface for future consumers
+  // but trimmed from this destructure. See rf-canv-28+29 cleanup pass.
+  const { handleNodeResize } = useContainerResize({ visibleNodes });
 
   // rf-canv-26: shift-drag highlight + reparent-on-Ctrl-drop machinery —
   // `exitingGroupId` / `dragOverGroupId` / `shiftDraggingNodeIds` state +
@@ -423,10 +401,6 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     useRenameState();
   // Track connection tooltip (follows mouse)
   const [connTooltip, setConnTooltip] = useState<ConnectionTooltipInfo | null>(null);
-  // rf-canv-22: empty-canvas overlay dismiss state + the two effects that
-  // toggle it (per-card-id reset + per-AI-intent dismiss) are owned by
-  // useCanvasSideEffects. Per blueprint risk #8 the getter is destructured-
-  // discarded; a future unit will surface the boolean to the overlay child.
 
   const handleNodeHover = useCallback((nodeId: string | null) => {
     setHoveredNodeId(nodeId);
@@ -532,13 +506,6 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     // eslint-disable-next-line react-hooks/exhaustive-deps -- use card?.id only to avoid re-subscribing on every card mutation
   }, [card?.id, dispatch]);
 
-  // rf-canv-26: `handleDragOverGroup` (shift-drag highlight + exit-indicator)
-  // and `handleDragEnd` (Ctrl/Cmd reparent with canContain validation +
-  // post-reparent ancestor expansion) live in `useDragTargetHighlight` —
-  // destructured above near `useContainerMove`. The `isContainerNode`
-  // memoized predicate that wrapped `isContainerNodeUtil` for the inline
-  // hit-test moved into the hook with them.
-
   // Handle context menu
   const handleContextMenu = useCallback(
     (position: { x: number; y: number }, type: 'canvas' | 'node' | 'edge', targetId?: string) => {
@@ -621,9 +588,6 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     nodes,
     edges,
   });
-
-  // rf-canv-23: ghost accept/dismiss callbacks and the 10s auto-dismiss
-  // timer now live in `useGhostMode` (called above).
 
   // Sort nodes by z-index for proper rendering (containers behind resources)
   // Exclude nodes whose parent is collapsed

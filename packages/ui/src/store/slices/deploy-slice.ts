@@ -67,6 +67,7 @@ import { authReducers } from './deploy/reducers/auth';
 import { planningReducers } from './deploy/reducers/planning';
 import { deployPhasesReducers } from './deploy/reducers/deploy-phases';
 import { wireEventsReducers } from './deploy/reducers/wire-events';
+import { outcomeReducers } from './deploy/reducers/outcome';
 
 const initialState: DeployState = {
   isOpen: false,
@@ -102,83 +103,7 @@ const deploySlice = createSlice({
     ...planningReducers,
     ...deployPhasesReducers,
     ...wireEventsReducers,
-
-    // Completion
-    deploySuccess(
-      state,
-      action: PayloadAction<{ duration_ms: number; results?: DeployResourceResult[] }>,
-    ) {
-      state.status = 'success';
-      state.currentDeployCardId = undefined;
-      // Authoritative results from the API response — replaces whatever
-      // the socket events accumulated via `applyNodeStatusEvent`'s
-      // mirror path. The wire's `node_status` events don't carry
-      // `outputs` / `provider_id` / `api_enable_url`; the HTTP response
-      // does, and those fields are what the deploy-panel ResultsSummary
-      // and DNS-records filter need to render.
-      if (Array.isArray(action.payload.results) && action.payload.results.length > 0) {
-        state.results = action.payload.results;
-      }
-      state.logs.push(t('deploy.slice.completed', { seconds: (action.payload.duration_ms / 1000).toFixed(1) }));
-
-      // Add to history (capped at 50 entries)
-      state.history.unshift({
-        id: `deploy-${Date.now()}`,
-        timestamp: Date.now(),
-        environment: state.environment,
-        provider: state.provider,
-        project: state.gcpProject,
-        region: state.region,
-        results: state.results,
-        success: state.results.every((r) => r.success),
-        duration_ms: action.payload.duration_ms,
-      });
-      if (state.history.length > 50) {
-        state.history = state.history.slice(0, 50);
-      }
-    },
-    deployError(state, action: PayloadAction<string | { error: string; results?: DeployResourceResult[] }>) {
-      const payload = typeof action.payload === 'string' ? { error: action.payload } : action.payload;
-      state.status = 'error';
-      state.error = payload.error;
-      state.currentDeployCardId = undefined;
-      // Authoritative per-resource results from the API response, when
-      // provided — the summary needs these to show the partial-success
-      // breakdown ("11 of 13 deployed; 2 failed").
-      if (Array.isArray(payload.results) && payload.results.length > 0) {
-        state.results = payload.results;
-      }
-      state.logs.push(t('deploy.slice.error', { error: payload.error }));
-      // Add the (failed) deploy to history alongside successes so users
-      // can review what failed without scrolling the live log.
-      state.history.unshift({
-        id: `deploy-${Date.now()}`,
-        timestamp: Date.now(),
-        environment: state.environment,
-        provider: state.provider,
-        project: state.gcpProject,
-        region: state.region,
-        results: state.results,
-        success: false,
-        duration_ms: payload.results
-          ? payload.results.reduce((acc, r) => acc + (r.duration_ms || 0), 0)
-          : 0,
-      });
-      if (state.history.length > 50) {
-        state.history = state.history.slice(0, 50);
-      }
-    },
-
-    // Reset
-    resetDeploy(state) {
-      state.status = 'idle';
-      state.error = null;
-      state.plan = null;
-      state.currentDeployCardId = undefined;
-      state.logs = [];
-      state.results = [];
-      state.nodesById = {};
-    },
+    ...outcomeReducers,
 
     appendLog(state, action: PayloadAction<string>) {
       state.logs.push(action.payload);

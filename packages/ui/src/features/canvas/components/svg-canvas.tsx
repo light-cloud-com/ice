@@ -92,6 +92,7 @@ import {
   findContainerAtPosition as findContainerAtPositionUtil,
   findSmallestContainerHit,
 } from '../utils/drop-target';
+import { findExistingSpecialConnection } from '../utils/connection-special-rules';
 import { SvgGhostNode } from './ghost/svg-ghost-node';
 import {
   inferConnectionMeta,
@@ -2017,47 +2018,17 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
         // ── Connection constraints: one Source and one EnvVars per service ──
         if (sourceNode && card) {
-          const srcType = (sourceNode.data?.iceType as string) || '';
-          const tgtType = (targetNode.data?.iceType as string) || '';
-
-          // Check both directions: which node is the "special" block, which is the service
-          const specialType =
-            srcType === 'Source.Repository' || sourceNode.data?.behavior === 'source'
-              ? 'Source.Repository'
-              : srcType === 'Config.Environment'
-                ? 'Config.Environment'
-                : tgtType === 'Source.Repository' || targetNode.data?.behavior === 'source'
-                  ? 'Source.Repository'
-                  : tgtType === 'Config.Environment'
-                    ? 'Config.Environment'
-                    : null;
-
-          if (specialType) {
-            const serviceNodeId =
-              specialType === srcType || (specialType === 'Source.Repository' && sourceNode.data?.behavior === 'source')
-                ? targetNode.id
-                : sourceNode.id;
-            const cardEdges = card.edges as CardEdge[];
-
-            // Find existing connections of the same special type to this service
-            const existingSpecial = cardEdges.filter((e) => {
-              const otherId = e.source === serviceNodeId ? e.target : e.source === serviceNodeId ? e.source : null;
-              if (!otherId || (e.source !== serviceNodeId && e.target !== serviceNodeId)) return false;
-              const otherNode = effectiveNodes.find((n) => n.id === (e.source === serviceNodeId ? e.target : e.source));
-              if (!otherNode) return false;
-              const otherType = (otherNode.data?.iceType as string) || '';
-              if (specialType === 'Source.Repository') {
-                return otherType === 'Source.Repository' || otherNode.data?.behavior === 'source';
-              }
-              return otherType === specialType;
-            });
-
-            if (existingSpecial.length > 0) {
-              const label = specialType === 'Source.Repository' ? 'GitHub Repo' : 'Env Variables';
-              console.warn(`[Canvas] Only one ${label} block can be connected to a service`);
-              setDrawingConnection(null);
-              return;
-            }
+          const { specialType, conflict } = findExistingSpecialConnection(
+            sourceNode,
+            targetNode,
+            card.edges as CardEdge[],
+            effectiveNodes,
+          );
+          if (specialType && conflict) {
+            const label = specialType === 'source' ? 'GitHub Repo' : 'Env Variables';
+            console.warn(`[Canvas] Only one ${label} block can be connected to a service`);
+            setDrawingConnection(null);
+            return;
           }
         }
 

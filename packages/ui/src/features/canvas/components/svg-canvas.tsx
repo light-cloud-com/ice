@@ -70,10 +70,8 @@ import {
 import { setGhosts, dismissGhost, clearGhosts, type GhostNode } from '../../../store/slices/ghost-slice';
 import { generateGhostSuggestions } from '../utils/ghost-suggestions';
 import {
-  isPrivateNetwork as isPrivateNetworkIce,
   isContainerIceType,
   isLogIceType,
-  isGroupContainer,
   isContainerNode as isContainerNodeUtil,
   isGroupOrBlock,
 } from '../utils/node-classification';
@@ -83,6 +81,7 @@ import {
   buildFoldedRemap,
   descendants,
 } from '../utils/folded-remap';
+import { computeNodeSizes, toLocalCanvasNode } from '../utils/canvas-node-sizing';
 import {
   calculateContainerBounds as calculateContainerBoundsUtil,
   recalculateAncestorBounds as recalculateAncestorBoundsUtil,
@@ -98,13 +97,9 @@ import {
   CATEGORY_TO_RELATIONSHIP,
 } from '../utils/connection-rules';
 import { SvgCompactNode, computeCompactNodeHeight, computeCompactNodeWidth } from './nodes/compact-node';
-import { SvgCustomDomainNode, computeCustomDomainHeight, computeCustomDomainWidth } from './nodes/custom-domain';
+import { SvgCustomDomainNode } from './nodes/custom-domain';
 import { SvgGroupNode } from './nodes/group-node';
-import {
-  SvgPrivateNetworkNode,
-  computePrivateNetworkHeight,
-  computePrivateNetworkWidth,
-} from './nodes/private-network';
+import { SvgPrivateNetworkNode } from './nodes/private-network';
 // ─── Concept block canvas nodes (one folder per block, individually customizable) ───
 import { SvgStaticSiteNode } from './nodes/static-site';
 import { SvgVectorDbNode } from './nodes/vector-db';
@@ -425,50 +420,13 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   // Convert Redux nodes to canvas format with type-based sizing.
   // Uses VISUAL dimensions: folded nodes get their collapsed height (36-38px)
   // so hit-testing, container expansion, and rendering all use consistent bounds.
+  // rf-canv-5: per-node sizing dispatch + projection live in
+  // `../utils/canvas-node-sizing` (`computeNodeSizes` + `toLocalCanvasNode`).
   const canvasNodes: LocalCanvasNode[] = useMemo(() => {
     return nodes.map((node) => {
-      const iceType = (node.data?.iceType as string) || 'Resource.Unknown';
-
-      const isPrivateNetwork = isPrivateNetworkIce(iceType);
-      const isGroup = isGroupContainer(node);
-      const isBlock = node.type === 'block';
-      const folded = !!node.data?.folded;
-      const isCustomDomain = iceType === 'Network.CustomDomain';
-      const nodeData = (node.data as Record<string, unknown>) || {};
       const hasPipelineStatus = !!(pipelineNodeStatus[node.id] && pipelineNodeStatus[node.id].status !== 'idle');
-      // Custom Domain + Secure Group have dynamic-height renderers that
-      // grow with the routes count. Other nodes use the fixed compact-node
-      // sizing.
-      const defaultWidth = isCustomDomain
-        ? computeCustomDomainWidth()
-        : isPrivateNetwork
-          ? computePrivateNetworkWidth(node.width || 0)
-          : computeCompactNodeWidth(isBlock || isGroup);
-      const defaultHeight = isCustomDomain
-        ? computeCustomDomainHeight(nodeData)
-        : isPrivateNetwork
-          ? computePrivateNetworkHeight(node.height || 0)
-          : computeCompactNodeHeight(nodeData, isBlock || isGroup, hasPipelineStatus);
-
-      // Visual height: folded groups = 36px, folded blocks/resources = 38px.
-      // Custom Domain + Secure Group ALWAYS use their dynamic height
-      // (folding them would hide the route slots — the whole point of
-      // the blocks).
-      const expandedHeight =
-        isCustomDomain || isPrivateNetwork ? defaultHeight : Math.max(node.height || 0, defaultHeight);
-      const visualHeight = folded && !isCustomDomain && !isPrivateNetwork ? (isGroup ? 36 : 38) : expandedHeight;
-
-      return {
-        id: node.id,
-        type: (node.type as 'block' | 'resource' | 'container') || 'resource',
-        x: node.position?.x || 0,
-        y: node.position?.y || 0,
-        width: Math.max(node.width || 0, defaultWidth),
-        height: visualHeight,
-        label: (node.data?.name as string) || (node.data?.label as string) || node.id,
-        data: { ...(node.data as Record<string, unknown>), iceType },
-        parentId: node.parentId || null,
-      };
+      const sizes = computeNodeSizes(node, hasPipelineStatus);
+      return toLocalCanvasNode(node, hasPipelineStatus, sizes);
     });
   }, [nodes, pipelineNodeStatus]);
 

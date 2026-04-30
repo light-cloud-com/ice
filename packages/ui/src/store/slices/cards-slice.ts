@@ -17,13 +17,14 @@ import type { ExpandedBlueprint } from '../../config/blocks';
 //
 // Types live in `./cards/types` (rf-cards-1). The re-export preserves the
 // public import path for external consumers; the `import type` line brings
-// the names into THIS module's lexical scope for internal references; the
-// runtime `import { DEFAULT_VIEWPORT }` is a value import (the type-only
-// imports are TS-erased and would not give us the runtime constant).
+// the names into THIS module's lexical scope for internal references. After
+// rf-cards-6 moved the lifecycle reducers (the only `Card` / `CardViewport` /
+// `DEFAULT_VIEWPORT` consumers in this file) into `./cards/reducers/card-
+// lifecycle`, only the three names actually referenced syntactically below
+// stay in the local `import type` list.
 
 export type { CardNode, CardEdge, CardViewport, Card, CardsState } from './cards/types';
-import type { CardNode, CardEdge, CardViewport, Card, CardsState } from './cards/types';
-import { DEFAULT_VIEWPORT } from './cards/types';
+import type { CardNode, CardEdge, CardsState } from './cards/types';
 
 // =============================================================================
 // Migration
@@ -63,6 +64,18 @@ import { loadPersistedCards } from './cards/persistence';
 import { pushSnapshot } from './cards/snapshot';
 
 // =============================================================================
+// Reducer groups
+// =============================================================================
+//
+// Card-lifecycle reducers (rf-cards-6) live in `./cards/reducers/card-lifecycle`.
+// The runtime import brings the case-reducer object into THIS module's lexical
+// scope so the `createSlice` `reducers:` block can spread it. RTK still owns
+// the action type strings (`'cards/setActiveCard'` etc.) because action types
+// are derived from the keys of the spread object inside `createSlice`.
+
+import { cardLifecycleReducers } from './cards/reducers/card-lifecycle';
+
+// =============================================================================
 // Initial State
 // =============================================================================
 
@@ -91,66 +104,7 @@ const cardsSlice = createSlice({
   name: 'cards',
   initialState,
   reducers: {
-    // Set active card
-    setActiveCard: (state, action: PayloadAction<string>) => {
-      if (state.cards.some((c) => c.id === action.payload)) {
-        state.activeCardId = action.payload;
-      }
-    },
-
-    // Create new card
-    createCard: (
-      state,
-      action: PayloadAction<{ name?: string; id?: string; projectId?: string; environmentId?: string } | undefined>,
-    ) => {
-      const id = action.payload?.id || `card-${Date.now()}`;
-      const existingNames = state.cards.map((c) => c.name);
-      const name = action.payload?.name || 'New Card';
-
-      // Ensure unique name
-      let counter = 1;
-      let uniqueName = name;
-      while (existingNames.includes(uniqueName)) {
-        uniqueName = `${name} ${counter++}`;
-      }
-
-      const newCard: Card = {
-        id,
-        name: uniqueName,
-        nodes: [],
-        edges: [],
-        viewport: { ...DEFAULT_VIEWPORT },
-        createdAt: Date.now(),
-        projectId: action.payload?.projectId,
-        environmentId: action.payload?.environmentId,
-      };
-
-      state.cards.push(newCard);
-      state.activeCardId = id;
-    },
-
-    // Delete card
-    deleteCard: (state, action: PayloadAction<string>) => {
-      const cardId = action.payload;
-      const cardIndex = state.cards.findIndex((c) => c.id === cardId);
-
-      if (cardIndex === -1) return;
-
-      state.cards.splice(cardIndex, 1);
-
-      // If we deleted the active card, switch to another or clear
-      if (state.activeCardId === cardId) {
-        state.activeCardId = state.cards.length > 0 ? state.cards[Math.max(0, cardIndex - 1)].id : '';
-      }
-    },
-
-    // Rename card
-    renameCard: (state, action: PayloadAction<{ cardId: string; name: string }>) => {
-      const card = state.cards.find((c) => c.id === action.payload.cardId);
-      if (card) {
-        card.name = action.payload.name;
-      }
-    },
+    ...cardLifecycleReducers,
 
     // Add node to active card
     addNodeToCard: (state, action: PayloadAction<CardNode>) => {
@@ -501,22 +455,6 @@ const cardsSlice = createSlice({
 
         card.nodes = [...card.nodes, ...offsetNodes];
         card.edges = [...card.edges, ...action.payload.edges];
-      }
-    },
-
-    // Update viewport for active card
-    setCardViewport: (state, action: PayloadAction<CardViewport>) => {
-      const card = state.cards.find((c) => c.id === state.activeCardId);
-      if (card) {
-        card.viewport = action.payload;
-      }
-    },
-
-    // Update viewport for a specific card (used by split view)
-    setCardViewportById: (state, action: PayloadAction<{ cardId: string; viewport: CardViewport }>) => {
-      const card = state.cards.find((c) => c.id === action.payload.cardId);
-      if (card) {
-        card.viewport = action.payload.viewport;
       }
     },
 

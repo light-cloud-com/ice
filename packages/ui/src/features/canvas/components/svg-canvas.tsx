@@ -20,26 +20,6 @@ import { CanvasContextMenu } from './context/canvas-context-menu';
 import { ControlsHelpModal } from './controls-help-modal';
 // ConnectionTypePopover removed — connections are fully auto-configured
 import { SvgGhostEdge } from './ghost/svg-ghost-edge';
-import { SvgApiGatewayNode } from './nodes/api-gateway';
-import { SvgEmailServiceNode } from './nodes/email-service';
-import { SvgEnvConfigNode } from './nodes/env-config';
-import { SvgEventStreamNode } from './nodes/event-stream';
-import { SvgGithubRepoNode } from './nodes/github-repo';
-import { SvgLlmGatewayNode } from './nodes/llm-gateway';
-import { SvgLogNode } from './nodes/log-node';
-import { SvgMessageQueueNode } from './nodes/message-queue';
-import { SvgMongodbNode } from './nodes/mongodb';
-import { SvgMysqlNode } from './nodes/mysql';
-import { SvgObjectStorageNode } from './nodes/object-storage';
-import { SvgPostgresNode } from './nodes/postgres';
-import { SvgPrivateAiServiceNode } from './nodes/private-ai-service';
-import { SvgPublicTrafficNode } from './nodes/public-traffic';
-import { SvgRedisCacheNode } from './nodes/redis-cache';
-import { SvgScalableBackendNode } from './nodes/scalable-backend';
-import { SvgScheduledTaskNode } from './nodes/scheduled-task';
-import { SvgSecretStoreNode } from './nodes/secret-store';
-import { SvgServerlessFunctionNode } from './nodes/serverless-function';
-import { SvgSsrSiteNode } from './nodes/ssr-site';
 import { SelectionFrame } from './selection-frame';
 import { SvgConnectionPath, EDGE_COLORS, type ConnectionTooltipInfo } from './svg-connection-path';
 import { getBlueprint, expandBlueprint } from '../../../config/blocks';
@@ -70,7 +50,6 @@ import {
 import { setGhosts, dismissGhost, clearGhosts, type GhostNode } from '../../../store/slices/ghost-slice';
 import { generateGhostSuggestions } from '../utils/ghost-suggestions';
 import {
-  isLogIceType,
   isContainerNode as isContainerNodeUtil,
   isGroupOrBlock,
 } from '../utils/node-classification';
@@ -102,16 +81,10 @@ import {
   canConnect,
   CATEGORY_TO_RELATIONSHIP,
 } from '../utils/connection-rules';
-import { SvgCompactNode, computeCompactNodeHeight, computeCompactNodeWidth } from './nodes/compact-node';
-import { SvgCustomDomainNode } from './nodes/custom-domain';
-import { SvgGroupNode } from './nodes/group-node';
-import { SvgPrivateNetworkNode } from './nodes/private-network';
+import { computeCompactNodeHeight, computeCompactNodeWidth } from './nodes/compact-node';
 import { NodeLiftWrapper } from './canvas-renderer/lift-wrapper';
 import { ParentClipDefs } from './canvas-renderer/parent-clip-defs';
-// ─── Concept block canvas nodes (one folder per block, individually customizable) ───
-import { SvgStaticSiteNode } from './nodes/static-site';
-import { SvgVectorDbNode } from './nodes/vector-db';
-import { SvgWorkerNode } from './nodes/worker';
+import { renderCanvasNode, type RenderCtx } from './canvas-renderer/node-renderer-registry';
 // Bespoke-from-day-one nodes with inline editing
 import {
   MIN_CONTAINER_WIDTH,
@@ -139,7 +112,6 @@ import { setPaneViewport, openContextMenu } from '../../../store/slices/ui-slice
 import { useCanvasInteractions, type CanvasItem } from '../hooks/use-canvas-interactions';
 import { useCanvasValidation } from '../hooks/use-canvas-validation';
 import { useComputingFlows } from '../hooks/use-computing-flows';
-import type { SvgCompactNodeProps } from './nodes/compact-node/types';
 import type { RootState, AppDispatch } from '../../../store';
 
 // rf-canv-1: re-export shim — the canonical home for these three types is
@@ -155,43 +127,12 @@ import type { CanvasNode, CanvasConnection } from './types';
 // Per-concept block renderer table
 // =============================================================================
 //
-// Maps iceType → per-block canvas node component. The block branch of the
-// dispatcher loop checks this table first and falls back to SvgCompactNode
-// when no bespoke renderer is registered. Each entry lives in its own
-// folder under ./nodes/<name>/ so customizing one block = editing one file.
-
-const CONCEPT_NODE_RENDERERS: Record<string, React.FC<SvgCompactNodeProps>> = {
-  // Frontend
-  'Compute.StaticSite': SvgStaticSiteNode,
-  'Compute.SSRSite': SvgSsrSiteNode,
-  // Compute
-  'Compute.Container': SvgScalableBackendNode,
-  'Compute.BackendAPI': SvgScalableBackendNode,
-  'Compute.ServerlessFunction': SvgServerlessFunctionNode,
-  'Compute.Worker': SvgWorkerNode,
-  'Compute.CronJob': SvgScheduledTaskNode,
-  // Data
-  'Database.PostgreSQL': SvgPostgresNode,
-  'Database.MySQL': SvgMysqlNode,
-  'Database.MongoDB': SvgMongodbNode,
-  'Database.Redis': SvgRedisCacheNode,
-  'Storage.Bucket': SvgObjectStorageNode,
-  // AI
-  'AI.VectorDB': SvgVectorDbNode,
-  'AI.LLMGateway': SvgLlmGatewayNode,
-  'AI.PrivateAIService': SvgPrivateAiServiceNode,
-  // Messaging
-  'Messaging.Queue': SvgMessageQueueNode,
-  'Messaging.EventStream': SvgEventStreamNode,
-  'Messaging.Email': SvgEmailServiceNode,
-  // Network / Edge
-  'Network.Gateway': SvgApiGatewayNode,
-  'Network.PublicTraffic': SvgPublicTrafficNode,
-  // Ops
-  'Security.Secret': SvgSecretStoreNode,
-  'Config.Environment': SvgEnvConfigNode,
-  'Source.Repository': SvgGithubRepoNode,
-};
+// rf-canv-12: `CONCEPT_NODE_RENDERERS` (the iceType → bespoke per-block
+// renderer dispatch table) and the per-node `renderCanvasNode(node, ctx)`
+// factory now live in `./canvas-renderer/node-renderer-registry`. The
+// orchestrator wraps the factory's element in `<NodeLiftWrapper>` and
+// derives the wrapper's outer `key` from the per-call-site `innerKey` the
+// factory returns — see the rf-canv-10 learning on outer-key chains.
 
 // =============================================================================
 // Types
@@ -2019,6 +1960,31 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     onFocus?.();
   }, [onFocus]);
 
+  // rf-canv-12: bundle every dependency the per-node renderer dispatch
+  // consumes into a single object so the `sortedNodes.map(...)` body stays
+  // a one-liner. Field shapes mirror the local declarations verbatim — see
+  // `RenderCtx` in `./canvas-renderer/node-renderer-registry.tsx`.
+  const renderCtx: RenderCtx = {
+    sortedNodes,
+    selectedNodes,
+    lod,
+    zoom: viewport.zoom,
+    pipelineNodeStatus,
+    dragOverGroupId,
+    exitingGroupId,
+    renamingNodeId,
+    connectionDragTargets,
+    nodeValidationMap,
+    handleToggleFold,
+    handleNodeHover,
+    handleNodeDoubleClick,
+    handleRenameCommit,
+    handleRenameCancel,
+    handleUpdateNodeData,
+    handlePipelineClick,
+    getConnectedPipelineStatuses,
+  };
+
   return (
     <div
       ref={containerRef}
@@ -2248,15 +2214,17 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
               per-container clipPaths) extracted to ParentClipDefs. */}
           <ParentClipDefs nodes={sortedNodes} />
 
-          {/* Nodes layer — Groups, Blocks, Resources, or Log terminals */}
+          {/* Nodes layer — Groups, Blocks, Resources, or Log terminals.
+              rf-canv-12: per-node dispatch (iceType + node.type → component
+              choice) lives in `./canvas-renderer/node-renderer-registry`.
+              The orchestrator wraps the factory's element in
+              `<NodeLiftWrapper>` (rf-canv-10) and derives the wrapper's
+              outer `key` from a priority chain that mirrors the original
+              `wrapLift` closure: lifted → bare id, parentId → clipped-id,
+              animating → anim-id, else the per-call-site `innerKey` the
+              factory hands back. */}
           <g className="nodes-layer">
             {sortedNodes.map((node) => {
-              const iceType = (node.data?.iceType as string) || '';
-
-              const isLogNode = isLogIceType(iceType);
-              const isGroup = isContainerNodeUtil(node);
-              const isBlock = node.type === 'block';
-
               // Entrance animation for AI-generated nodes
               const animDelay = animatingNodes[node.id];
               const isAnimating = animDelay !== undefined;
@@ -2270,277 +2238,31 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
               // Shift-drag highlight: colored border + shadow for all dragged nodes
               const isLifted = shiftDraggingNodeIds.has(node.id);
 
+              const { element, innerKey } = renderCanvasNode(node, renderCtx);
+
               // Wrapper key derivation — mirrors the original `wrapLift` outer-key
               // priority chain so React reconciliation behavior is preserved when
               // the (isLifted, parentId, isAnimating) tuple changes between renders.
               // Falls back to the per-call-site inner key (e.g. `${id}-lod${lod}`)
               // when no wrapper-level branch applies (rf-canv-10).
-              const wrapperKey = (innerKey: string): string =>
-                isLifted
-                  ? node.id
-                  : node.parentId
-                    ? `clipped-${node.id}`
-                    : isAnimating
-                      ? `anim-${node.id}`
-                      : innerKey;
-
-              if (isLogNode) {
-                return (
-                  <NodeLiftWrapper
-                    key={wrapperKey(`${node.id}-lod${lod}`)}
-                    node={node}
-                    isAnimating={isAnimating}
-                    animStyle={animStyle}
-                    isLifted={isLifted}
-                    dragOverGroupId={dragOverGroupId}
-                  >
-                    <SvgLogNode
-                      key={isLifted ? undefined : `${node.id}-lod${lod}`}
-                      node={node}
-                      isSelected={selectedNodes.includes(node.id)}
-                      onToggleFold={handleToggleFold}
-                    />
-                  </NodeLiftWrapper>
-                );
-              }
-
-              // Custom Domain — owns its own renderer with dynamic per-route
-              // rows + per-row connection ports. Lives outside the
-              // compact-node tree so it can have variable height and
-              // multiple right-side ports.
-              if (iceType === 'Network.CustomDomain') {
-                return (
-                  <NodeLiftWrapper
-                    key={wrapperKey(`${node.id}-routes${((node.data?.routes as unknown[]) || []).length}`)}
-                    node={node}
-                    isAnimating={isAnimating}
-                    animStyle={animStyle}
-                    isLifted={isLifted}
-                    dragOverGroupId={dragOverGroupId}
-                  >
-                    <SvgCustomDomainNode
-                      key={isLifted ? undefined : `${node.id}-routes${((node.data?.routes as unknown[]) || []).length}`}
-                      node={node}
-                      isSelected={selectedNodes.includes(node.id)}
-                      isDragOver={dragOverGroupId === node.id}
-                      onNodeHover={handleNodeHover}
-                      onUpdateData={handleUpdateNodeData}
-                      connectionDragState={connectionDragTargets?.get(node.id) ?? null}
-                    />
-                  </NodeLiftWrapper>
-                );
-              }
-
-              // Private Network — pure container with a header that
-              // shows identity (shield icon + title + subtitle) and the
-              // Open/Sealed ingress toggle. Children nest inside via
-              // parentId and render through the standard dispatcher loop
-              // on top of the Private Network frame. Must come BEFORE
-              // the generic group dispatch below or it would render as a
-              // plain SvgGroupNode.
-              if (iceType === 'Network.PrivateNetwork') {
-                return (
-                  <NodeLiftWrapper
-                    key={wrapperKey(`${node.id}-pn${(node.data?.ingress as string) || 'open'}`)}
-                    node={node}
-                    isAnimating={isAnimating}
-                    animStyle={animStyle}
-                    isLifted={isLifted}
-                    dragOverGroupId={dragOverGroupId}
-                  >
-                    <SvgPrivateNetworkNode
-                      key={isLifted ? undefined : `${node.id}-pn${(node.data?.ingress as string) || 'open'}`}
-                      node={node}
-                      isSelected={selectedNodes.includes(node.id)}
-                      isDragOver={dragOverGroupId === node.id}
-                      onNodeHover={handleNodeHover}
-                      onUpdateData={handleUpdateNodeData}
-                      connectionDragState={connectionDragTargets?.get(node.id) ?? null}
-                    />
-                  </NodeLiftWrapper>
-                );
-              }
-
-              // Groups always render as containers
-              if (isGroup) {
-                return (
-                  <NodeLiftWrapper
-                    key={wrapperKey(`${node.id}-lod${lod}`)}
-                    node={node}
-                    isAnimating={isAnimating}
-                    animStyle={animStyle}
-                    isLifted={isLifted}
-                    dragOverGroupId={dragOverGroupId}
-                  >
-                    <SvgGroupNode
-                      key={isLifted ? undefined : `${node.id}-lod${lod}`}
-                      node={node}
-                      isSelected={selectedNodes.includes(node.id)}
-                      childNodes={sortedNodes.filter((n) => n.parentId === node.id)}
-                      onToggleFold={handleToggleFold}
-                      isDragOver={dragOverGroupId === node.id}
-                      isChildExiting={exitingGroupId === node.id}
-                      isRenaming={renamingNodeId === node.id}
-                      onDoubleClickLabel={() => handleNodeDoubleClick(node.id)}
-                      onRenameCommit={(newLabel) => handleRenameCommit(node.id, newLabel)}
-                      onRenameCancel={handleRenameCancel}
-                      lod={lod}
-                      zoom={viewport.zoom}
-                      connectionDragState={connectionDragTargets?.get(node.id) ?? null}
-                      validationSeverity={nodeValidationMap.get(node.id)?.severity ?? null}
-                      validationCount={nodeValidationMap.get(node.id)?.count ?? 0}
-                    />
-                  </NodeLiftWrapper>
-                );
-              }
-
-              // Blocks: check for a per-concept renderer first, fall back
-              // to the generic SvgCompactNode. Each block in the Concepts
-              // Palette has its own folder under nodes/, so editing one
-              // block's look only touches one file.
-              if (isBlock) {
-                const ConceptRenderer = CONCEPT_NODE_RENDERERS[iceType];
-                if (ConceptRenderer) {
-                  return (
-                    <NodeLiftWrapper
-                      key={wrapperKey(`${node.id}-lod${lod}`)}
-                      node={node}
-                      isAnimating={isAnimating}
-                      animStyle={animStyle}
-                      isLifted={isLifted}
-                      dragOverGroupId={dragOverGroupId}
-                    >
-                      <ConceptRenderer
-                        key={isLifted ? undefined : `${node.id}-lod${lod}`}
-                        node={node}
-                        isSelected={selectedNodes.includes(node.id)}
-                        childNodes={sortedNodes.filter((n) => n.parentId === node.id)}
-                        onToggleFold={handleToggleFold}
-                        isDragOver={dragOverGroupId === node.id}
-                        onNodeHover={handleNodeHover}
-                        isRenaming={renamingNodeId === node.id}
-                        onDoubleClickLabel={() => handleNodeDoubleClick(node.id)}
-                        onRenameCommit={(newLabel) => handleRenameCommit(node.id, newLabel)}
-                        onRenameCancel={handleRenameCancel}
-                        onUpdateData={handleUpdateNodeData}
-                        pipelineStatus={pipelineNodeStatus[node.id]}
-                        onPipelineClick={handlePipelineClick}
-                        connectedPipelineStatuses={getConnectedPipelineStatuses(node)}
-                        lod={lod}
-                        zoom={viewport.zoom}
-                        connectionDragState={connectionDragTargets?.get(node.id) ?? null}
-                        validationSeverity={nodeValidationMap.get(node.id)?.severity ?? null}
-                        validationCount={nodeValidationMap.get(node.id)?.count ?? 0}
-                      />
-                    </NodeLiftWrapper>
-                  );
-                }
-                return (
-                  <NodeLiftWrapper
-                    key={wrapperKey(`${node.id}-lod${lod}`)}
-                    node={node}
-                    isAnimating={isAnimating}
-                    animStyle={animStyle}
-                    isLifted={isLifted}
-                    dragOverGroupId={dragOverGroupId}
-                  >
-                    <SvgCompactNode
-                      key={isLifted ? undefined : `${node.id}-lod${lod}`}
-                      node={node}
-                      isSelected={selectedNodes.includes(node.id)}
-                      childNodes={sortedNodes.filter((n) => n.parentId === node.id)}
-                      onToggleFold={handleToggleFold}
-                      isDragOver={dragOverGroupId === node.id}
-                      onNodeHover={handleNodeHover}
-                      isRenaming={renamingNodeId === node.id}
-                      onDoubleClickLabel={() => handleNodeDoubleClick(node.id)}
-                      onRenameCommit={(newLabel) => handleRenameCommit(node.id, newLabel)}
-                      onRenameCancel={handleRenameCancel}
-                      onUpdateData={handleUpdateNodeData}
-                      pipelineStatus={pipelineNodeStatus[node.id]}
-                      onPipelineClick={handlePipelineClick}
-                      connectedPipelineStatuses={getConnectedPipelineStatuses(node)}
-                      lod={lod}
-                      zoom={viewport.zoom}
-                      connectionDragState={connectionDragTargets?.get(node.id) ?? null}
-                      validationSeverity={nodeValidationMap.get(node.id)?.severity ?? null}
-                      validationCount={nodeValidationMap.get(node.id)?.count ?? 0}
-                    />
-                  </NodeLiftWrapper>
-                );
-              }
-
-              // Fallthrough (resource nodes and anything else): same
-              // concept-renderer check as the isBlock branch, because
-              // palette drops create nodes with type='resource' not 'block'.
-              const ConceptFallbackRenderer = CONCEPT_NODE_RENDERERS[iceType];
-              if (ConceptFallbackRenderer) {
-                return (
-                  <NodeLiftWrapper
-                    key={wrapperKey(`${node.id}-lod${lod}`)}
-                    node={node}
-                    isAnimating={isAnimating}
-                    animStyle={animStyle}
-                    isLifted={isLifted}
-                    dragOverGroupId={dragOverGroupId}
-                  >
-                    <ConceptFallbackRenderer
-                      key={isLifted ? undefined : `${node.id}-lod${lod}`}
-                      node={node}
-                      isSelected={selectedNodes.includes(node.id)}
-                      childNodes={sortedNodes.filter((n) => n.parentId === node.id)}
-                      onToggleFold={handleToggleFold}
-                      isDragOver={dragOverGroupId === node.id}
-                      onNodeHover={handleNodeHover}
-                      isRenaming={renamingNodeId === node.id}
-                      onDoubleClickLabel={() => handleNodeDoubleClick(node.id)}
-                      onRenameCommit={(newLabel) => handleRenameCommit(node.id, newLabel)}
-                      onRenameCancel={handleRenameCancel}
-                      onUpdateData={handleUpdateNodeData}
-                      pipelineStatus={pipelineNodeStatus[node.id]}
-                      onPipelineClick={handlePipelineClick}
-                      connectedPipelineStatuses={getConnectedPipelineStatuses(node)}
-                      lod={lod}
-                      zoom={viewport.zoom}
-                      connectionDragState={connectionDragTargets?.get(node.id) ?? null}
-                      validationSeverity={nodeValidationMap.get(node.id)?.severity ?? null}
-                      validationCount={nodeValidationMap.get(node.id)?.count ?? 0}
-                    />
-                  </NodeLiftWrapper>
-                );
-              }
+              const wrapperKey = isLifted
+                ? node.id
+                : node.parentId
+                  ? `clipped-${node.id}`
+                  : isAnimating
+                    ? `anim-${node.id}`
+                    : innerKey;
 
               return (
                 <NodeLiftWrapper
-                  key={wrapperKey(`${node.id}-lod${lod}`)}
+                  key={wrapperKey}
                   node={node}
                   isAnimating={isAnimating}
                   animStyle={animStyle}
                   isLifted={isLifted}
                   dragOverGroupId={dragOverGroupId}
                 >
-                  <SvgCompactNode
-                    key={isLifted ? undefined : `${node.id}-lod${lod}`}
-                    node={node}
-                    isSelected={selectedNodes.includes(node.id)}
-                    childNodes={sortedNodes.filter((n) => n.parentId === node.id)}
-                    onToggleFold={handleToggleFold}
-                    isDragOver={dragOverGroupId === node.id}
-                    onNodeHover={handleNodeHover}
-                    isRenaming={renamingNodeId === node.id}
-                    onDoubleClickLabel={() => handleNodeDoubleClick(node.id)}
-                    onRenameCommit={(newLabel) => handleRenameCommit(node.id, newLabel)}
-                    onRenameCancel={handleRenameCancel}
-                    onUpdateData={handleUpdateNodeData}
-                    pipelineStatus={pipelineNodeStatus[node.id]}
-                    onPipelineClick={handlePipelineClick}
-                    connectedPipelineStatuses={getConnectedPipelineStatuses(node)}
-                    lod={lod}
-                    zoom={viewport.zoom}
-                    connectionDragState={connectionDragTargets?.get(node.id) ?? null}
-                    validationSeverity={nodeValidationMap.get(node.id)?.severity ?? null}
-                    validationCount={nodeValidationMap.get(node.id)?.count ?? 0}
-                  />
+                  {element}
                 </NodeLiftWrapper>
               );
             })}

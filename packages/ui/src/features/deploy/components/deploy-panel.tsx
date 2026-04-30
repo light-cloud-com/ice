@@ -5,17 +5,11 @@
  * Flow: Configure → Plan → Review → Deploy → Results
  */
 
-import {
-  X,
-  Rocket,
-  Play,
-  Eye,
-  Loader2,
-  Trash2,
-} from 'lucide-react';
+import { Rocket } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { ApiErrorBanner } from './banners/api-error-banner';
+import { DeployControls } from './deploy-controls';
 import { DeployDiagnosis } from './deploy-diagnosis';
 import { DeployInFlightPanel } from './deploy-in-flight-panel';
 import { DestroyConfirmModal } from './destroy-confirm-modal';
@@ -32,7 +26,6 @@ import { StatusBadge } from './status-badge';
 import { useTranslation } from '../../../i18n';
 import { getApi } from '../../../shared/api/api-adapter';
 import { PanelHeader } from '../../../shared/components/ui/panel-header';
-import { cn } from '../../../shared/utils/cn';
 import { selectActiveCard, clearCardDeployOverlay } from '../../../store/slices/cards-slice';
 import {
   closeDeployPanel,
@@ -583,163 +576,22 @@ export const DeployPanel: React.FC = () => {
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between px-5 py-3 border-t border-border bg-muted/30">
-        <button
-          onClick={() => dispatch(resetDeploy())}
-          disabled={deploy.status === 'deploying' || deploy.status === 'destroying'}
-          id="ice-deploy-btn-cancel"
-          className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
-          title={
-            deploy.status === 'deploying'
-              ? 'Cannot clear while a deploy is running'
-              : deploy.status === 'destroying'
-                ? 'Cannot clear while a destroy is running'
-                : 'Clear plan and results'
-          }
-        >
-          {t('deploy.buttons.reset')}
-        </button>
-        <div className="flex items-center gap-2">
-          {/* Phase 5: Stop button shown only while deploying. Calls the
-                cancel endpoint which flips the deploy's AbortSignal. */}
-          {deploy.status === 'deploying' && (
-            <button
-              onClick={async () => {
-                if (!activeCard) return;
-                try {
-                  await fetch('/api/canvas/deploy/cancel', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ cardId: activeCard.id }),
-                  });
-                  dispatch(appendLog('Stop requested — deploy will wind down after the current resource.'));
-                } catch (err: any) {
-                  dispatch(appendLog(`Cancel failed: ${err?.message || err}`));
-                }
-              }}
-              id="ice-deploy-btn-stop"
-              className={cn(
-                'flex items-center gap-1.5 px-4 py-1.5 text-sm rounded-md transition-colors font-medium',
-                'bg-amber-600 text-white hover:bg-amber-700',
-              )}
-              title="Request the in-flight deploy to stop"
-            >
-              <X className="w-3.5 h-3.5" />
-              Stop
-            </button>
-          )}
-          {/* Plan button */}
-          <button
-            onClick={handlePlan}
-            disabled={
-              !deploy.gcpProject ||
-              gcpNodes.length === 0 ||
-              deploy.status === 'planning' ||
-              deploy.status === 'deploying' ||
-              deploy.status === 'destroying' ||
-              deploy.status === 'authenticating'
-            }
-            id="ice-deploy-btn-plan"
-            title={
-              !deploy.gcpProject
-                ? 'Select a GCP project to continue'
-                : gcpNodes.length === 0
-                  ? 'Add at least one resource block to deploy'
-                  : deploy.status === 'deploying'
-                    ? 'Deploy in progress'
-                    : deploy.status === 'planning'
-                      ? 'Planning…'
-                      : 'Generate a deploy plan'
-            }
-            className={cn(
-              'flex items-center gap-1.5 px-4 py-1.5 text-sm rounded-md transition-colors',
-              'bg-muted hover:bg-muted/80 border border-border',
-              'disabled:opacity-50 disabled:cursor-not-allowed',
-            )}
-          >
-            {deploy.status === 'planning' ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Eye className="w-3.5 h-3.5" />
-            )}
-            {t('deploy.buttons.plan')}
-          </button>
-
-          {/* Deploy button */}
-          {(() => {
-            const blockingUnmetReqs = deploy.requirements.filter(
-              (r) => r.blocking && r.result.status !== 'met' && r.result.status !== 'verified',
-            );
-            const hasBlockingUnmet = blockingUnmetReqs.length > 0;
-            const blockedByCritical = preDeployAnalysis?.hasCritical === true && !deploy.criticalAcknowledged;
-            const deployDisabled =
-              !deploy.gcpProject ||
-              gcpNodes.length === 0 ||
-              deploy.status === 'deploying' ||
-              deploy.status === 'destroying' ||
-              deploy.status === 'planning' ||
-              deploy.status === 'authenticating' ||
-              hasBlockingUnmet ||
-              blockedByCritical;
-            const deployTitle = !deploy.gcpProject
-              ? 'Select a GCP project to continue'
-              : gcpNodes.length === 0
-                ? `Add at least one ${deploy.provider.toUpperCase()} resource block to deploy`
-                : deploy.status === 'deploying'
-                  ? 'Deploy in progress — click Stop to cancel'
-                  : deploy.status === 'planning'
-                    ? 'Waiting for plan to finish'
-                    : hasBlockingUnmet
-                      ? `Blocked by ${blockingUnmetReqs.length} requirement(s): ${blockingUnmetReqs.map((r) => r.title).join(', ')}`
-                      : deploy.deployedResources.length > 0
-                        ? 'Deploy updated infrastructure'
-                        : 'Deploy to cloud';
-            return (
-              <button
-                onClick={handleDeploy}
-                disabled={deployDisabled}
-                id="ice-deploy-btn-apply"
-                title={deployTitle}
-                className={cn(
-                  'flex items-center gap-1.5 px-4 py-1.5 text-sm rounded-md transition-colors font-medium',
-                  'bg-emerald-600 text-white hover:bg-emerald-700',
-                  'disabled:opacity-50 disabled:cursor-not-allowed',
-                )}
-              >
-                {deploy.status === 'deploying' ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Play className="w-3.5 h-3.5" />
-                )}
-                {deploy.deployedResources.length > 0
-                  ? t('deploy.buttons.updateInfrastructure')
-                  : t('deploy.buttons.deploy')}
-              </button>
-            );
-          })()}
-
-          {/* Destroy button — only when resources are deployed */}
-          {/* Destroy button — shown whenever there are deployed resources
-                OR any historical deployment (even failed ones) might have
-                leftover infrastructure. The destroy modal itself handles the
-                "last deploy only" vs "everything ever" split via a toggle. */}
-          {deploy.status !== 'deploying' && (
-            <button
-              onClick={() => setDestroyModalOpen(true)}
-              id="ice-deploy-btn-destroy"
-              className={cn(
-                'flex items-center gap-1.5 px-4 py-1.5 text-sm rounded-md transition-colors font-medium',
-                'bg-red-600 text-white hover:bg-red-700',
-              )}
-              title="Destroy deployed resources — including orphaned leftovers from failed deploys"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              {t('deploy.buttons.destroy')}
-            </button>
-          )}
-        </div>
-      </div>
+      <DeployControls
+        status={deploy.status}
+        provider={deploy.provider}
+        gcpProject={deploy.gcpProject}
+        gcpNodesCount={gcpNodes.length}
+        deployedResourcesCount={deploy.deployedResources.length}
+        requirements={deploy.requirements}
+        preDeployHasCritical={preDeployAnalysis?.hasCritical === true}
+        criticalAcknowledged={deploy.criticalAcknowledged}
+        activeCardId={activeCard?.id ?? null}
+        onPlan={handlePlan}
+        onDeploy={handleDeploy}
+        onReset={() => dispatch(resetDeploy())}
+        onOpenDestroyModal={() => setDestroyModalOpen(true)}
+        onAppendLog={(msg) => dispatch(appendLog(msg))}
+      />
       {destroyModalOpen && activeCard && (
         <DestroyConfirmModal
           cardName={activeCard.name}

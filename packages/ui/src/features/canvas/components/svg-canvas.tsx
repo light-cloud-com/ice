@@ -22,6 +22,7 @@ import { ControlsHelpModal } from './controls-help-modal';
 import { SvgGhostEdge } from './ghost/svg-ghost-edge';
 import { SelectionFrame } from './selection-frame';
 import { ConnectionLayer } from './connection-layer';
+import { ConnectionPreviewOverlay } from './connection-preview-overlay';
 import { SvgConnectionPath, EDGE_COLORS, type ConnectionTooltipInfo } from './svg-connection-path';
 import { getBlueprint, expandBlueprint } from '../../../config/blocks';
 import { canContain, isContainer } from '../../../config/containment-rules';
@@ -72,7 +73,6 @@ import {
   findSmallestContainerHit,
 } from '../utils/drop-target';
 import { findExistingSpecialConnection } from '../utils/connection-special-rules';
-import { computeConnectionPreviewPath, pickPreviewColor } from '../utils/connection-preview';
 import { buildVisibleConnections, computePortMap } from '../utils/canvas-connections';
 import { SvgGhostNode } from './ghost/svg-ghost-node';
 import {
@@ -2231,32 +2231,15 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             })}
           </g>
 
-          {/* Connection drawing preview — temporary bezier from source to cursor (rf-canv-8) */}
-          {drawingConnection &&
-            (() => {
-              const { sourcePoint, currentPoint } = drawingConnection;
-              const pathD = computeConnectionPreviewPath(sourcePoint, currentPoint);
-              const previewColor = pickPreviewColor(
-                currentPoint,
-                effectiveNodes,
-                drawingConnection.sourceId,
-                connectionDragTargets,
-              );
-              return (
-                <g className="connection-preview" style={{ pointerEvents: 'none' }}>
-                  <path
-                    d={pathD}
-                    stroke={previewColor}
-                    strokeWidth={2}
-                    fill="none"
-                    strokeDasharray="8 4"
-                    opacity={0.7}
-                  />
-                  <circle cx={sourcePoint.x} cy={sourcePoint.y} r={4} fill={previewColor} opacity={0.9} />
-                  <circle cx={currentPoint.x} cy={currentPoint.y} r={4} fill={previewColor} opacity={0.6} />
-                </g>
-              );
-            })()}
+          {/* Connection drawing preview — extracted to ConnectionPreviewOverlay (rf-canv-14).
+              Bezier math + color picker live in `../utils/connection-preview` (rf-canv-8). */}
+          {drawingConnection && (
+            <ConnectionPreviewOverlay
+              drawingConnection={drawingConnection}
+              effectiveNodes={effectiveNodes}
+              connectionDragTargets={connectionDragTargets}
+            />
+          )}
 
           {/* User traffic connections (same styling as regular connections) — only when no explicit Network.PublicEndpoint block */}
           {showVirtualUserNode && userConnections.length > 0 && (

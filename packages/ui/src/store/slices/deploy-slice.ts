@@ -70,6 +70,7 @@ import { wireEventsReducers } from './deploy/reducers/wire-events';
 import { outcomeReducers } from './deploy/reducers/outcome';
 import { logsResourcesDriftReducers } from './deploy/reducers/logs-resources-drift';
 import { requirementsReducers } from './deploy/reducers/requirements';
+import { diagnosisReducers } from './deploy/reducers/diagnosis';
 
 const initialState: DeployState = {
   isOpen: false,
@@ -108,20 +109,7 @@ const deploySlice = createSlice({
     ...outcomeReducers,
     ...logsResourcesDriftReducers,
     ...requirementsReducers,
-
-    // AI-Native #2 — diagnosis actions
-    startDiagnosis(state) {
-      state.diagnosis = { status: 'loading', result: null, error: null };
-    },
-    setDiagnosis(state, action: PayloadAction<{ diagnosis: string; suggestedFixes: string[] }>) {
-      state.diagnosis = { status: 'loaded', result: action.payload, error: null };
-    },
-    diagnosisError(state, action: PayloadAction<string>) {
-      state.diagnosis = { status: 'error', result: null, error: action.payload };
-    },
-    clearDiagnosis(state) {
-      state.diagnosis = { status: 'idle', result: null, error: null };
-    },
+    ...diagnosisReducers,
 
     // AI-Native #3 — pre-deploy warning actions
     dismissPreDeployWarning(state, action: PayloadAction<string>) {

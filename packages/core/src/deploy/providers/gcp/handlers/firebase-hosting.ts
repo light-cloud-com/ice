@@ -37,63 +37,12 @@ import { gunzipSync, gzipSync } from 'zlib';
 import { result, fail } from './firebase-hosting/result-helpers.js';
 import { sanitizeSiteId, placeholderIndexHtml } from './firebase-hosting/site-utils.js';
 import { parseTar, type FileEntry } from './firebase-hosting/tar-parser.js';
+import {
+  FIREBASE_HOSTING_API,
+  FIREBASE_MGMT_API,
+  restRequest,
+} from './firebase-hosting/rest-client.js';
 import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
-
-const FIREBASE_HOSTING_API = 'https://firebasehosting.googleapis.com/v1beta1';
-const FIREBASE_MGMT_API = 'https://firebase.googleapis.com/v1beta1';
-
-interface RestResponse {
-  ok: boolean;
-  status: number;
-  data: any;
-}
-
-/**
- * Lightweight REST helper that delegates to the rest_client's `requestRaw`
- * (attached by sdk-loader) so we have full control over status codes and
- * binary bodies. Firebase Hosting frequently returns 409 ALREADY_EXISTS,
- * which is "adopt the existing site" — we don't want the auth client's
- * default behaviour of throwing on 4xx, we want to inspect and decide.
- */
-async function restRequest(
-  ctx: GCPHandlerContext,
-  method: string,
-  url: string,
-  body?: any,
-  options: { contentType?: string; binary?: boolean; acceptStatuses?: number[] } = {},
-): Promise<RestResponse> {
-  const requestRaw = (ctx.rest_client as any).requestRaw as
-    | ((opts: {
-        method: string;
-        url: string;
-        body?: unknown;
-        contentType?: string;
-        responseType?: 'json' | 'text' | 'arraybuffer';
-        validateStatus?: (status: number) => boolean;
-      }) => Promise<{ status: number; data: any; headers: Record<string, string> }>)
-    | undefined;
-  if (!requestRaw) {
-    throw new Error('Firebase Hosting handler requires the extended rest_client (requestRaw missing).');
-  }
-  try {
-    const res = await requestRaw({
-      method,
-      url,
-      body,
-      contentType: options.contentType,
-      responseType: 'json',
-      validateStatus: () => true,
-    });
-    const accepted = res.status < 300 || (options.acceptStatuses?.includes(res.status) ?? false);
-    return { ok: accepted, status: res.status, data: res.data };
-  } catch (err: any) {
-    return {
-      ok: false,
-      status: err?.response?.status || 0,
-      data: err?.response?.data || { error: { message: err?.message || String(err) } },
-    };
-  }
-}
 
 /**
  * Make sure the GCP project has Firebase enabled. AddFirebase is

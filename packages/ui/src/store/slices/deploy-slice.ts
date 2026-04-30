@@ -68,6 +68,7 @@ import { planningReducers } from './deploy/reducers/planning';
 import { deployPhasesReducers } from './deploy/reducers/deploy-phases';
 import { wireEventsReducers } from './deploy/reducers/wire-events';
 import { outcomeReducers } from './deploy/reducers/outcome';
+import { logsResourcesDriftReducers } from './deploy/reducers/logs-resources-drift';
 
 const initialState: DeployState = {
   isOpen: false,
@@ -104,31 +105,8 @@ const deploySlice = createSlice({
     ...deployPhasesReducers,
     ...wireEventsReducers,
     ...outcomeReducers,
+    ...logsResourcesDriftReducers,
 
-    appendLog(state, action: PayloadAction<string>) {
-      state.logs.push(action.payload);
-    },
-
-    // Deployed resources (for monitoring)
-    setDeployedResources(state, action: PayloadAction<DeployedResource[]>) {
-      state.deployedResources = action.payload;
-    },
-
-    // Drift detection
-    setDriftCheckLoading(state, action: PayloadAction<boolean>) {
-      state.driftCheckLoading = action.payload;
-    },
-    setDriftResults(state, action: PayloadAction<NodeDriftInfo[]>) {
-      state.driftByNode = {};
-      for (const info of action.payload) {
-        state.driftByNode[info.nodeId] = info;
-      }
-      state.driftCheckLoading = false;
-    },
-    clearDrift(state) {
-      state.driftByNode = {};
-      state.driftCheckLoading = false;
-    },
     // Phase 8 — block requirements
     startRequirementsFetch(state) {
       state.requirementsLoading = true;

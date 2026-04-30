@@ -32,7 +32,6 @@ import { isTypeVisibleAtLevel } from '../../../config/visualization-config';
 import { useUndoRedo } from '../../../shared/hooks/use-undo-redo';
 import {
   selectActiveCard,
-  addEdgeToCard,
   updateCardNodeData,
   deleteCardNode,
   deleteCardEdge,
@@ -51,16 +50,8 @@ import {
 import {
   findContainerAtPosition as findContainerAtPositionUtil,
 } from '../utils/drop-target';
-import { findExistingSpecialConnection } from '../utils/connection-special-rules';
 import { buildVisibleConnections, computePortMap } from '../utils/canvas-connections';
 import { SvgGhostNode } from './ghost/svg-ghost-node';
-import {
-  inferConnectionMeta,
-  validateConnection,
-  wouldCreateCycle,
-  canConnect,
-  CATEGORY_TO_RELATIONSHIP,
-} from '../utils/connection-rules';
 import { NodeLiftWrapper } from './canvas-renderer/lift-wrapper';
 import { ParentClipDefs } from './canvas-renderer/parent-clip-defs';
 import { renderCanvasNode, type RenderCtx } from './canvas-renderer/node-renderer-registry';
@@ -92,6 +83,7 @@ import { useCanvasDrop } from '../hooks/use-canvas-drop';
 import { useContainerResize } from '../hooks/use-container-resize';
 import { useContainerMove } from '../hooks/use-container-move';
 import { useDragTargetHighlight } from '../hooks/use-drag-target-highlight';
+import { useConnectionDrawing } from '../hooks/use-connection-drawing';
 import type { RootState, AppDispatch } from '../../../store';
 
 // rf-canv-1: re-export shim — the canonical home for these three types is
@@ -683,243 +675,19 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   // ═══════════════════════════════════════════════════════════════════════════
   // Connection Drawing — port-to-port drag to create edges
   // ═══════════════════════════════════════════════════════════════════════════
-
-  const [drawingConnection, setDrawingConnection] = useState<{
-    sourceId: string;
-    /** Route id when the drag started from a Network.CustomDomain row port. */
-    sourceRouteId?: string;
-    sourcePoint: { x: number; y: number };
-    currentPoint: { x: number; y: number };
-  } | null>(null);
-
-  /** Compute valid/invalid target states for all nodes during connection drag */
-  const connectionDragTargets = useMemo(() => {
-    if (!drawingConnection) return null;
-    const sourceNode = effectiveNodes.find((n) => n.id === drawingConnection.sourceId);
-    if (!sourceNode) return null;
-    const srcIceType = (sourceNode.data?.iceType as string) || '';
-    const srcNodeType = sourceNode.type;
-
-    const targets = new Map<string, 'valid-target' | 'invalid-target' | 'source'>();
-    targets.set(drawingConnection.sourceId, 'source');
-
-    for (const node of effectiveNodes) {
-      if (node.id === drawingConnection.sourceId) continue;
-      const tgtIceType = (node.data?.iceType as string) || '';
-      const isValid = canConnect(srcIceType, tgtIceType, srcNodeType, node.type, {
-        srcNode: sourceNode,
-        tgtNode: node,
-        allNodes: effectiveNodes,
-      });
-      targets.set(node.id, isValid ? 'valid-target' : 'invalid-target');
-    }
-    return targets;
-  }, [drawingConnection, effectiveNodes]);
-
-  /** Start drawing a connection from a port */
-  const handleConnectionPortDown = useCallback(
-    (e: React.MouseEvent) => {
-      const target = e.target as SVGElement;
-      if (!target.classList.contains('connection-port')) return;
-
-      e.stopPropagation();
-      e.preventDefault();
-
-      const nodeId = target.getAttribute('data-node-id');
-      if (!nodeId) return;
-
-      // Network.CustomDomain ports carry `data-route-id` so we know
-      // which route slot this drag started from. Other nodes don't set
-      // this attribute, in which case sourceRouteId stays undefined and
-      // the resulting edge gets no routeId.
-      const routeId = target.getAttribute('data-route-id') || undefined;
-
-      const canvasPos = screenToCanvas(e.clientX, e.clientY);
-
-      setDrawingConnection({
-        sourceId: nodeId,
-        sourceRouteId: routeId,
-        sourcePoint: canvasPos,
-        currentPoint: canvasPos,
-      });
-    },
-    [screenToCanvas],
-  );
-
-  /** Track mouse during connection drawing */
-  const handleConnectionMove = useCallback(
-    (e: React.MouseEvent) => {
-      if (!drawingConnection) return;
-      const canvasPos = screenToCanvas(e.clientX, e.clientY);
-      setDrawingConnection((prev) => (prev ? { ...prev, currentPoint: canvasPos } : null));
-    },
-    [drawingConnection, screenToCanvas],
-  );
-
-  /** Complete connection drawing — find target node, create edge, show popover */
-  const handleConnectionEnd = useCallback(
-    (e: React.MouseEvent) => {
-      if (!drawingConnection) return;
-
-      const canvasPos = screenToCanvas(e.clientX, e.clientY);
-
-      // Find node at drop position (excluding source).
-      //
-      // Pick the SMALLEST containing node, not the first hit. The
-      // canvas allows nesting (Container inside Subnet inside VPC), and
-      // the drop position can be inside multiple stacked rectangles.
-      // First-hit-wins fails when the parent group happens to be later
-      // in the node array than its children — which is order-dependent
-      // on how the user dragged things around. The smallest area is
-      // always the most-specific (deepest) target, which is what the
-      // user means by "drop on this block."
-      //
-      // NOTE (rf-canv-6): kept inline because no predicate filters anything
-      // here — connection drops target ANY node, not just containers. Folding
-      // through `findSmallestContainerHit(... , () => true, ...)` would bury
-      // the no-predicate semantics. Flagged for follow-up consolidation.
-      let targetNode: LocalCanvasNode | null = null;
-      let targetArea = Number.POSITIVE_INFINITY;
-      for (const node of effectiveNodes) {
-        if (node.id === drawingConnection.sourceId) continue;
-        if (
-          canvasPos.x >= node.x &&
-          canvasPos.x <= node.x + node.width &&
-          canvasPos.y >= node.y &&
-          canvasPos.y <= node.y + node.height
-        ) {
-          const area = node.width * node.height;
-          if (area < targetArea) {
-            targetNode = node;
-            targetArea = area;
-          }
-        }
-      }
-
-      if (targetNode) {
-        const sourceNode = effectiveNodes.find((n) => n.id === drawingConnection.sourceId);
-        const srcIceTypeCheck = (sourceNode?.data?.iceType as string) || '';
-        const tgtIceTypeCheck = (targetNode.data?.iceType as string) || '';
-
-        // ── Block invalid connections based on CONNECTION_RULES ──
-        if (
-          !canConnect(srcIceTypeCheck, tgtIceTypeCheck, sourceNode?.type, targetNode.type, {
-            srcNode: sourceNode,
-            tgtNode: targetNode,
-            allNodes: effectiveNodes,
-          })
-        ) {
-          setDrawingConnection(null);
-          return;
-        }
-
-        // ── Connection constraints: one Source and one EnvVars per service ──
-        if (sourceNode && card) {
-          const { specialType, conflict } = findExistingSpecialConnection(
-            sourceNode,
-            targetNode,
-            card.edges as CardEdge[],
-            effectiveNodes,
-          );
-          if (specialType && conflict) {
-            const label = specialType === 'source' ? 'GitHub Repo' : 'Env Variables';
-            console.warn(`[Canvas] Only one ${label} block can be connected to a service`);
-            setDrawingConnection(null);
-            return;
-          }
-        }
-
-        // ── Smart connection: auto-detect type, validate, and create ──
-        const srcIceType = (sourceNode?.data?.iceType as string) || '';
-        const tgtIceType = (targetNode.data?.iceType as string) || '';
-        const cardEdgesArr = (card?.edges || []) as CardEdge[];
-
-        // Validate — check for anti-patterns and duplicates
-        const warnings = validateConnection(
-          srcIceType,
-          tgtIceType,
-          cardEdgesArr.map((e) => ({ source: e.source, target: e.target })),
-          drawingConnection.sourceId,
-          targetNode.id,
-          sourceNode?.type,
-          targetNode.type,
-        );
-
-        // Block hard errors (self-connection)
-        if (warnings.some((w) => w.level === 'error')) {
-          console.warn(
-            '[Canvas] Connection blocked:',
-            warnings
-              .filter((w) => w.level === 'error')
-              .map((w) => w.message)
-              .join('; '),
-          );
-          setDrawingConnection(null);
-          return;
-        }
-
-        // Circular dependency check
-        if (
-          wouldCreateCycle(
-            drawingConnection.sourceId,
-            targetNode.id,
-            cardEdgesArr.map((e) => ({ source: e.source, target: e.target })),
-          )
-        ) {
-          console.warn('[Canvas] Connection would create a circular dependency');
-          // Still allow it — just log the warning (cycles aren't always wrong)
-        }
-
-        // Log soft warnings (user sees them as console hints for now)
-        for (const w of warnings.filter((w) => w.level === 'warning')) {
-          console.warn(`[Canvas] ${w.message}${w.suggestion ? ` — ${w.suggestion}` : ''}`);
-        }
-
-        // Infer connection metadata from block types
-        const meta = inferConnectionMeta(srcIceType, tgtIceType);
-
-        // Normalize direction — flip source/target when semantically wrong
-        // e.g. EnvVars → Service becomes Service → EnvVars (service depends_on envvars)
-        const edgeSource = meta.flip ? targetNode.id : drawingConnection.sourceId;
-        const edgeTarget = meta.flip ? drawingConnection.sourceId : targetNode.id;
-
-        // When the drag started from a Network.CustomDomain row port,
-        // the edge carries the source route id so the translator + the
-        // target's properties panel can resolve the subdomain. The
-        // direction never flips here (CustomDomain → service is the
-        // canonical orientation per the connection rules).
-        const sourceRouteId = drawingConnection.sourceRouteId;
-
-        const edgeId = `edge-${Date.now()}`;
-        const newEdge: CardEdge = {
-          id: edgeId,
-          source: edgeSource,
-          target: edgeTarget,
-          data: {
-            relationship: CATEGORY_TO_RELATIONSHIP[meta.category],
-            connectionCategory: meta.category,
-            ...(meta.trafficType && { trafficType: meta.trafficType }),
-            ...(meta.port && { port: meta.port }),
-            ...(meta.envVarName && { envVarName: meta.envVarName }),
-            ...(meta.lineStyle !== 'solid' && { lineStyle: meta.lineStyle }),
-            ...(meta.color && { color: meta.color }),
-            ...(sourceRouteId && { routeId: sourceRouteId }),
-          },
-        };
-        dispatch(addEdgeToCard(newEdge));
-
-        // All property propagation (repo sync, domain sync, secrets, env vars,
-        // network policy) is handled reactively by useComputingFlows() — no
-        // one-shot logic needed here. The hook picks up the new edge on the
-        // next render and applies all matching PROPAGATION_RULES.
-
-        // Connection is fully auto-configured — no popover needed
-      }
-
-      setDrawingConnection(null);
-    },
-    [drawingConnection, screenToCanvas, effectiveNodes, card, dispatch],
-  );
+  // rf-canv-27: state + memo + the three event callbacks live in
+  // `useConnectionDrawing`. Per blueprint risk #3 the hook keeps `card` in
+  // its `handleConnectionEnd` dep array verbatim (no ref). Per risk #5 the
+  // orchestrator's onMouseDown gate (the `target.classList.contains('connection-port')`
+  // sniff a few hundred lines down) routes the mousedown event between
+  // port-drag and pan-canvas — the hook owns only the post-classList work.
+  const {
+    drawingConnection,
+    connectionDragTargets,
+    handleConnectionPortDown,
+    handleConnectionMove,
+    handleConnectionEnd,
+  } = useConnectionDrawing({ effectiveNodes, card, screenToCanvas });
 
   // Connection popover handlers removed — connections are auto-configured
 

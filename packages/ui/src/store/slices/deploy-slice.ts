@@ -63,6 +63,7 @@ export { deriveRollup, orderNodesForPanel } from './deploy/derive';
 // the keys of the spread object inside `createSlice`.
 
 import { panelConfigReducers } from './deploy/reducers/panel-config';
+import { authReducers } from './deploy/reducers/auth';
 
 const initialState: DeployState = {
   isOpen: false,
@@ -94,22 +95,7 @@ const deploySlice = createSlice({
   initialState,
   reducers: {
     ...panelConfigReducers,
-
-    // Authentication
-    startAuthenticating(state) {
-      state.status = 'authenticating';
-      state.error = null;
-      state.logs = [t('deploy.slice.connecting')];
-    },
-    authSuccess(state) {
-      state.status = 'idle';
-      state.logs.push(t('deploy.slice.authSuccess'));
-    },
-    authFailed(state, action: PayloadAction<string>) {
-      state.status = 'error';
-      state.error = action.payload;
-      state.logs.push(t('deploy.slice.authFailed', { error: action.payload }));
-    },
+    ...authReducers,
 
     // Planning
     startPlanning(state) {

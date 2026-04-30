@@ -41,6 +41,20 @@ import {
   extract_subnet_properties,
   extract_cloud_armor_properties,
 } from './extractors/network.js';
+import {
+  extract_secret_manager_properties,
+  extract_identity_platform_properties,
+  extract_bigquery_properties,
+  extract_logging_properties,
+  extract_vertex_ai_properties,
+  extract_dataflow_properties,
+  extract_discovery_engine_properties,
+  extract_gke_properties,
+  extract_domain_mapping_properties,
+  extract_custom_domain_properties,
+  extract_backend_bucket_properties,
+  extract_firebase_hosting_properties,
+} from './extractors/ancillary.js';
 
 // =============================================================================
 // Types
@@ -126,133 +140,6 @@ export interface SkippedNode {
   nodeId: string;
   label: string;
   reason: string;
-}
-
-// =============================================================================
-// Property extractors per GCP service type
-// =============================================================================
-
-function extract_secret_manager_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
-  return {
-    replication_type: data.replicationType || 'automatic',
-    labels: {},
-  };
-}
-
-function extract_identity_platform_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
-  return {
-    sign_in_providers: data.signInProviders || ['email', 'google'],
-    mfa_enabled: data.mfaEnabled ?? false,
-  };
-}
-
-function extract_bigquery_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
-  return {
-    location: region,
-    default_table_expiration_ms: data.tableExpirationMs,
-    labels: {},
-  };
-}
-
-function extract_logging_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
-  return {
-    filter: data.filter || '',
-    destination_type: data.destinationType || 'logging.googleapis.com',
-    labels: {},
-  };
-}
-
-function extract_vertex_ai_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
-  return {
-    region,
-    display_name: data.label || 'vertex-endpoint',
-    labels: {},
-  };
-}
-
-function extract_dataflow_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
-  return {
-    region,
-    template_type: data.templateType || 'streaming',
-    labels: {},
-  };
-}
-
-function extract_discovery_engine_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
-  return {
-    location: region,
-    solution_type: 'SOLUTION_TYPE_SEARCH',
-    labels: {},
-  };
-}
-
-function extract_gke_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
-  return {
-    location: region,
-    initial_node_count: data.nodeCount || 3,
-    machine_type: data.machineType || 'e2-standard-2',
-    labels: {},
-  };
-}
-
-function extract_domain_mapping_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
-  return {
-    domain: [data.subdomain, data.hostname].filter(Boolean).join('.') || (data.hostname as string) || '',
-    hostname: (data.hostname as string) || '',
-    subdomain: (data.subdomain as string) || '',
-    ssl_mode: (data.sslMode as string) || 'auto',
-    region,
-    labels: {},
-  };
-}
-
-function extract_custom_domain_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
-  const domain = String(data.domain || '').trim();
-  const auto_provision = data.autoProvisionCert !== false;
-  return {
-    // Phase 8 — managed SSL certificate properties. The handler reads
-    // `managed: true` + `domains: [...]` to decide between GCP-managed
-    // and bring-your-own cert paths.
-    managed: auto_provision,
-    domains: domain ? [domain] : [],
-    ssl_certificate_id: (data.sslCertificateId as string) || '',
-    enable_https: data.enableHttps !== false,
-    redirect_http: data.redirectHttpToHttps !== false,
-    labels: {},
-  };
-}
-
-function extract_backend_bucket_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
-  return {
-    bucket_name: (data.bucket_name as string) || (data.name as string) || '',
-    enable_cdn: data.enable_cdn !== false,
-    labels: {},
-  };
-}
-
-function extract_firebase_hosting_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
-  // Firebase Hosting only needs a few fields:
-  //   - domain (optional): user's custom domain. Registered with
-  //     Firebase Hosting which provisions a managed SSL cert.
-  //   - repository / branch / output_directory / build_command:
-  //     populated by Pass 1.4 from the connected Source.Repository.
-  //     The handler uses these to download the GitHub repo and upload
-  //     its files to Hosting (skipping the placeholder).
-  //   - source.repo / source.branch: legacy structured form, kept as
-  //     a fallback.
-  const domain = String(data.domain || '').trim();
-  const sourceObj = (data.source as { repo?: string; branch?: string } | undefined) || {};
-  const repository = String(data.repository || sourceObj.repo || '').trim();
-  const branch = String(data.branch || sourceObj.branch || '').trim();
-  return {
-    domain: domain && domain !== 'example.com' ? domain : undefined,
-    repository: repository || undefined,
-    branch: branch || 'main',
-    output_directory: String(data.output_directory || data.outputDirectory || '').trim() || undefined,
-    build_command: String(data.build_command || data.buildCommand || '').trim() || undefined,
-    source_path: String(data.source_path || data.path || '').trim() || undefined,
-    labels: {},
-  };
 }
 
 // =============================================================================

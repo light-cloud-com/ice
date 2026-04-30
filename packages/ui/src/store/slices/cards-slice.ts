@@ -19,65 +19,16 @@ import type { ExpandedBlueprint } from '../../config/blocks';
 // =============================================================================
 // Types
 // =============================================================================
+//
+// Types live in `./cards/types` (rf-cards-1). The re-export preserves the
+// public import path for external consumers; the `import type` line brings
+// the names into THIS module's lexical scope for internal references; the
+// runtime `import { DEFAULT_VIEWPORT }` is a value import (the type-only
+// imports are TS-erased and would not give us the runtime constant).
 
-export interface CardNode {
-  id: string;
-  type: 'block' | 'resource' | 'container';
-  position: { x: number; y: number };
-  width: number;
-  height: number;
-  parentId?: string;
-  data: Record<string, unknown>;
-}
-
-export interface CardEdge {
-  id: string;
-  source: string;
-  target: string;
-  data?: { relationship?: string; [key: string]: unknown };
-}
-
-export interface CardViewport {
-  panX: number;
-  panY: number;
-  scale: number;
-}
-
-export interface Card {
-  id: string;
-  name: string;
-  nodes: CardNode[];
-  edges: CardEdge[];
-  viewport: CardViewport;
-  createdAt: number;
-  projectId?: string;
-  environmentId?: string;
-}
-
-const DEFAULT_VIEWPORT: CardViewport = {
-  panX: 0,
-  panY: 0,
-  scale: 1,
-};
-
-/** Snapshot of a card's nodes + edges for undo/redo */
-interface CardSnapshot {
-  nodes: CardNode[];
-  edges: CardEdge[];
-}
-
-/** Per-card undo/redo history */
-interface CardHistory {
-  past: CardSnapshot[];
-  future: CardSnapshot[];
-}
-
-export interface CardsState {
-  cards: Card[];
-  activeCardId: string | null;
-  /** Per-card undo/redo stacks keyed by card ID */
-  history: Record<string, CardHistory>;
-}
+export type { CardNode, CardEdge, CardViewport, Card, CardsState } from './cards/types';
+import type { CardNode, CardEdge, CardViewport, Card, CardsState } from './cards/types';
+import { DEFAULT_VIEWPORT } from './cards/types';
 
 // =============================================================================
 // Persistence

@@ -122,6 +122,15 @@ import { useComputingFlows } from '../hooks/use-computing-flows';
 import type { SvgCompactNodeProps } from './nodes/compact-node/types';
 import type { RootState, AppDispatch } from '../../../store';
 
+// rf-canv-1: re-export shim — the canonical home for these three types is
+// `./types`. 11+ consumers still import them from this file; keep the shim
+// so they continue to resolve. `export type` makes this a type-only forward
+// (no runtime cost). Internal usages of `CanvasNode` / `CanvasConnection`
+// rely on the import below; the re-export alone would not bring them into
+// scope.
+export type { CanvasNode, ViewState, CanvasConnection } from './types';
+import type { CanvasNode, CanvasConnection } from './types';
+
 // =============================================================================
 // Per-concept block renderer table
 // =============================================================================
@@ -167,39 +176,12 @@ const CONCEPT_NODE_RENDERERS: Record<string, React.FC<SvgCompactNodeProps>> = {
 // =============================================================================
 // Types
 // =============================================================================
-
-// Canvas node type - exported for use by other components
-export interface CanvasNode {
-  id: string;
-  type: 'block' | 'resource' | 'container';
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  label: string;
-  data: Record<string, unknown>;
-  parentId?: string | null;
-}
+// `CanvasNode`, `ViewState`, and `CanvasConnection` live in `./types` (rf-canv-1).
+// The re-export at the top of this file keeps the public path stable for
+// consumers that still import them from `'./svg-canvas'`.
 
 // Alias for internal use
 type LocalCanvasNode = CanvasNode;
-
-export interface ViewState {
-  scale: number;
-  panX: number;
-  panY: number;
-}
-
-export interface CanvasConnection {
-  id: string;
-  from: string;
-  to: string;
-  type?: 'default' | 'contains';
-  data?: {
-    relationship?: string;
-    [key: string]: unknown;
-  };
-}
 
 // =============================================================================
 // Constants - Unified sizes

@@ -28,7 +28,58 @@ Living document, **owned exclusively by the orchestrator**. Tracks which large f
 
 `packages/core/src/resources/high-level-resources.ts` (6434 LOC) is intentionally not in the active queue — it is data-heavy and decomposing it before its consumers are split would be wasted work. Revisit after the consuming files land.
 
-Files in the 600–1000 LOC band (`resource-palette.tsx`, `sqlite-state-store.ts`, `auto-layout.ts`, `deploy-slice.ts`, `ai.service.ts`, `pipeline.service.ts`, `log-stream.service.ts`, `pulumi-extractor.ts`, etc.) get appended to the queue as the top of the list clears, so each Phase-2 cohort stays small and reviewable.
+## Phase 2 queue — 600-1000 LOC band (audited 2026-05-01)
+
+After Phase 1 cleared 5 monster files (deploy-panel + card-translator + cards-slice + firebase-hosting + parser), this audit catalogues the next cohort. Workspace-wide search excluded `node_modules`, `dist`, `release`, `__tests__`, `.d.ts`, `.test.{ts,tsx}`, and the schema-cache.
+
+### Code-heavy (priority candidates)
+
+| File | LOC | Notes |
+|---|---|---|
+| `services/ai/src/services/ai.service.ts` | 994 | AI service — likely many handler methods, good decomposition target |
+| `packages/core/src/state/sqlite-state-store.ts` | 946 | SQLite persistence layer — likely query/migration/CRUD seams |
+| `packages/ui/src/shared/utils/auto-layout.ts` | 941 | Dagre wrapper + container resolution — multiple algorithm passes |
+| `packages/ui/src/store/slices/deploy-slice.ts` | 918 | RTK slice — apply rf-cards reducer-group pattern |
+| `services/deploy/src/services/pipeline.service.ts` | 880 | Pre-existing follow-up split (already noted) |
+| `services/deploy/src/services/log-stream.service.ts` | 869 | Pre-existing follow-up split (already noted) |
+| `packages/core/src/deploy/providers/gcp/handlers/cloud-storage.ts` | 856 | GCP handler — apply rf-fbh pattern |
+| `packages/core/src/deploy/scheduler.ts` | 694 | pdl-1 scheduler — likely self-contained, may not need splitting if cohesive |
+| `packages/core/src/export/pulumi-exporter.ts` | 660 | Pulumi export logic |
+| `packages/ui/src/features/ai/services/operation-executor.ts` | 659 | AI operation dispatcher |
+| `packages/core/src/graph/mutable-graph.ts` | 657 | Graph mutation API — methods may group naturally |
+| `packages/core/src/graph/parser/lexer.ts` | 647 | Sibling of parser.ts; rf-parse-style approach applies |
+
+### UI components
+
+| File | LOC | Notes |
+|---|---|---|
+| `packages/ui/src/features/palette/components/resource-palette.tsx` | 962 | Resource browser tabs; section-based decomposition |
+| `packages/ui/src/features/canvas/components/svg-canvas.tsx` | 909 | Already refactored 3234→909; can push further toward target range |
+| `packages/ui/src/shared/components/dev-accent-picker.tsx` | 826 | Dev tool — lower priority |
+| `packages/web/src/pages/template-gallery.tsx` | 800 | Page route |
+| `packages/ui/src/shared/components/provider-settings.tsx` | 784 | Settings dialog — multiple sections |
+| `packages/ui/src/features/templates/components/template-gallery.tsx` | 753 | Templates UI |
+| `packages/ui/src/features/pipeline/components/pipeline-panel.tsx` | 724 | Pipeline panel |
+| `packages/ui/src/features/canvas/components/svg-connection-path.tsx` | 710 | Edge rendering |
+| `packages/ui/src/features/palette/components/project-tree.tsx` | 707 | Tree view |
+| `packages/ui/src/features/ai/components/ai-chat-panel.tsx` | 688 | Chat UI |
+| `packages/ui/src/features/cost/components/cost-panel.tsx` | 678 | Cost analysis panel |
+| `packages/ui/src/features/canvas/hooks/use-canvas-interactions.ts` | 666 | Big interaction hook — apply rf-canv hook-group pattern |
+
+### Data-shape / schema (likely deferred)
+
+| File | LOC | Notes |
+|---|---|---|
+| `packages/types/src/connection-rules.ts` | 763 | Connection-rule data — may be data-heavy like scale-presets |
+| `packages/core/src/graph/parser/ast.ts` | 701 | AST type definitions — types-only files don't need splitting |
+
+### Other
+
+| File | LOC | Notes |
+|---|---|---|
+| `packages/ui/src/shared/api/http-api-adapter.ts` | 612 | API client — many endpoint methods, likely natural seams |
+
+**Recommended next cohort** (in priority order, smallest decomposition risk first): `lexer.ts` (rf-parse pattern proven), `deploy-slice.ts` (rf-cards pattern proven), `cloud-storage.ts` (rf-fbh pattern proven), then `ai.service.ts` / `sqlite-state-store.ts` / `auto-layout.ts` for novel-pattern work.
 
 ## In flight
 

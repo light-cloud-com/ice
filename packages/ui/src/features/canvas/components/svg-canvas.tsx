@@ -110,6 +110,7 @@ import { useCanvasValidation } from '../hooks/use-canvas-validation';
 import { useComputingFlows } from '../hooks/use-computing-flows';
 import { useCanvasDimensions } from '../hooks/use-canvas-resize';
 import { useCanvasViewport } from '../hooks/use-canvas-viewport';
+import { useRenameState } from '../hooks/use-rename-state';
 import type { RootState, AppDispatch } from '../../../store';
 
 // rf-canv-1: re-export shim — the canonical home for these three types is
@@ -979,8 +980,9 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   const [exitingGroupId, setExitingGroupId] = useState<string | null>(null);
   // Track which node is hovered (for highlighting connected edges)
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
-  // Inline rename state
-  const [renamingNodeId, setRenamingNodeId] = useState<string | null>(null);
+  // Inline rename state — extracted to useRenameState (rf-canv-20).
+  const { renamingNodeId, handleNodeDoubleClick, handleRenameCommit, handleRenameCancel } =
+    useRenameState();
   // Track connection tooltip (follows mouse)
   const [connTooltip, setConnTooltip] = useState<ConnectionTooltipInfo | null>(null);
   // Dismiss state for the empty canvas overlay
@@ -1022,25 +1024,6 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     },
     [dispatch],
   );
-
-  // Inline rename: double-click on any node label starts editing
-  const handleNodeDoubleClick = useCallback((nodeId: string) => {
-    setRenamingNodeId(nodeId);
-  }, []);
-
-  const handleRenameCommit = useCallback(
-    (nodeId: string, newLabel: string) => {
-      if (newLabel.trim()) {
-        dispatch(updateCardNodeData({ nodeId, data: { name: newLabel.trim() } }));
-      }
-      setRenamingNodeId(null);
-    },
-    [dispatch],
-  );
-
-  const handleRenameCancel = useCallback(() => {
-    setRenamingNodeId(null);
-  }, []);
 
   // Update node data fields (for inline controls like +/- scaling).
   // Property propagation (repo sync, domain sync, etc.) is handled

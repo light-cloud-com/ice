@@ -8,20 +8,6 @@ import { describe_token } from './tokens.js';
 import type {
   Program,
   Statement,
-  ResourceBlock,
-  DataBlock,
-  VariableBlock,
-  OutputBlock,
-  ProviderBlock,
-  ModuleBlock,
-  LocalsBlock,
-  ImportStatement,
-  Expression,
-  Identifier,
-  StringLiteral,
-  Block,
-  Attribute,
-  NestedBlock,
 } from './ast.js';
 import type { Token, SourcePosition } from './tokens.js';
 import {
@@ -30,22 +16,23 @@ import {
   ps_current,
   ps_previous,
   ps_advance,
-  ps_check,
-  ps_match,
-  ps_consume,
   ps_is_at_end,
   ps_add_error,
   ps_synchronize,
 } from './parser-state.js';
+import { create_span } from './parser-literals.js';
 import {
-  parse_identifier,
-  parse_type_identifier,
-  parse_string_literal,
-  parse_boolean_literal,
-  create_null_literal,
-  create_span,
-} from './parser-literals.js';
-import { parse_expression } from './parser-binary-exprs.js';
+  parse_resource_block,
+  parse_data_block,
+  parse_provider_block,
+} from './parser-block-body.js';
+import {
+  parse_variable_block,
+  parse_output_block,
+  parse_module_block,
+  parse_locals_block,
+  parse_import_statement,
+} from './parser-statements.js';
 
 // =============================================================================
 // Parser Error
@@ -160,334 +147,26 @@ export class Parser {
 
     switch (token.type) {
       case 'RESOURCE':
-        return this.parse_resource_block();
+        return parse_resource_block(this.state);
       case 'DATA':
-        return this.parse_data_block();
+        return parse_data_block(this.state);
       case 'VARIABLE':
-        return this.parse_variable_block();
+        return parse_variable_block(this.state);
       case 'OUTPUT':
-        return this.parse_output_block();
+        return parse_output_block(this.state);
       case 'PROVIDER':
-        return this.parse_provider_block();
+        return parse_provider_block(this.state);
       case 'MODULE':
-        return this.parse_module_block();
+        return parse_module_block(this.state);
       case 'LOCALS':
-        return this.parse_locals_block();
+        return parse_locals_block(this.state);
       case 'IMPORT':
-        return this.parse_import_statement();
+        return parse_import_statement(this.state);
       default:
         ps_add_error(this.state, `Unexpected token ${describe_token(token.type)}`);
         ps_advance(this.state);
         return null;
     }
-  }
-
-  // ---------------------------------------------------------------------------
-  // Block Parsing
-  // ---------------------------------------------------------------------------
-
-  private parse_resource_block(): ResourceBlock {
-    const start = ps_current(this.state).position;
-    ps_consume(this.state, 'RESOURCE', "Expected 'resource'");
-
-    const resource_type = parse_type_identifier(this.state);
-    const name = parse_identifier(this.state);
-    const body = this.parse_block();
-
-    const end = ps_previous(this.state).position;
-
-    return {
-      kind: 'ResourceBlock',
-      resource_type,
-      name,
-      body,
-      span: create_span(start, end),
-    };
-  }
-
-  private parse_data_block(): DataBlock {
-    const start = ps_current(this.state).position;
-    ps_consume(this.state, 'DATA', "Expected 'data'");
-
-    const data_type = parse_type_identifier(this.state);
-    const name = parse_identifier(this.state);
-    const body = this.parse_block();
-
-    const end = ps_previous(this.state).position;
-
-    return {
-      kind: 'DataBlock',
-      data_type,
-      name,
-      body,
-      span: create_span(start, end),
-    };
-  }
-
-  private parse_variable_block(): VariableBlock {
-    const start = ps_current(this.state).position;
-    ps_consume(this.state, 'VARIABLE', "Expected 'variable'");
-
-    const name = parse_identifier(this.state);
-    ps_consume(this.state, 'LEFT_BRACE', "Expected '{'");
-
-    let description: StringLiteral | undefined;
-    let default_value: Expression | undefined;
-    let sensitive: boolean | undefined;
-
-    while (!ps_check(this.state, 'RIGHT_BRACE') && !ps_is_at_end(this.state)) {
-      const attr_name = parse_identifier(this.state);
-      ps_consume(this.state, 'EQUALS', "Expected '='");
-
-      switch (attr_name.name) {
-        case 'description':
-          description = parse_string_literal(this.state);
-          break;
-        case 'default':
-          default_value = parse_expression(this.state);
-          break;
-        case 'sensitive':
-          sensitive = parse_boolean_literal(this.state)?.value;
-          break;
-        default:
-          parse_expression(this.state); // Skip unknown attributes
-      }
-    }
-
-    ps_consume(this.state, 'RIGHT_BRACE', "Expected '}'");
-    const end = ps_previous(this.state).position;
-
-    return {
-      kind: 'VariableBlock',
-      name,
-      description,
-      default_value,
-      sensitive,
-      span: create_span(start, end),
-    };
-  }
-
-  private parse_output_block(): OutputBlock {
-    const start = ps_current(this.state).position;
-    ps_consume(this.state, 'OUTPUT', "Expected 'output'");
-
-    const name = parse_identifier(this.state);
-    ps_consume(this.state, 'LEFT_BRACE', "Expected '{'");
-
-    let value: Expression | undefined;
-    let description: StringLiteral | undefined;
-    let sensitive: boolean | undefined;
-
-    while (!ps_check(this.state, 'RIGHT_BRACE') && !ps_is_at_end(this.state)) {
-      const attr_name = parse_identifier(this.state);
-      ps_consume(this.state, 'EQUALS', "Expected '='");
-
-      switch (attr_name.name) {
-        case 'value':
-          value = parse_expression(this.state);
-          break;
-        case 'description':
-          description = parse_string_literal(this.state);
-          break;
-        case 'sensitive':
-          sensitive = parse_boolean_literal(this.state)?.value;
-          break;
-        default:
-          parse_expression(this.state);
-      }
-    }
-
-    ps_consume(this.state, 'RIGHT_BRACE', "Expected '}'");
-    const end = ps_previous(this.state).position;
-
-    if (!value) {
-      ps_add_error(this.state, "Output block requires 'value' attribute");
-      value = create_null_literal(this.state, start);
-    }
-
-    return {
-      kind: 'OutputBlock',
-      name,
-      value,
-      description,
-      sensitive,
-      span: create_span(start, end),
-    };
-  }
-
-  private parse_provider_block(): ProviderBlock {
-    const start = ps_current(this.state).position;
-    ps_consume(this.state, 'PROVIDER', "Expected 'provider'");
-
-    const provider_name = parse_identifier(this.state);
-    const body = this.parse_block();
-
-    const end = ps_previous(this.state).position;
-
-    return {
-      kind: 'ProviderBlock',
-      provider_name,
-      body,
-      span: create_span(start, end),
-    };
-  }
-
-  private parse_module_block(): ModuleBlock {
-    const start = ps_current(this.state).position;
-    ps_consume(this.state, 'MODULE', "Expected 'module'");
-
-    const name = parse_identifier(this.state);
-    ps_consume(this.state, 'LEFT_BRACE', "Expected '{'");
-
-    let source: StringLiteral | undefined;
-    let version: StringLiteral | undefined;
-    const attributes: Attribute[] = [];
-
-    while (!ps_check(this.state, 'RIGHT_BRACE') && !ps_is_at_end(this.state)) {
-      const attr_name = parse_identifier(this.state);
-      ps_consume(this.state, 'EQUALS', "Expected '='");
-
-      if (attr_name.name === 'source') {
-        source = parse_string_literal(this.state);
-      } else if (attr_name.name === 'version') {
-        version = parse_string_literal(this.state);
-      } else {
-        const value = parse_expression(this.state);
-        attributes.push({
-          kind: 'Attribute',
-          name: attr_name,
-          value,
-          span: create_span(attr_name.span.start, ps_previous(this.state).position),
-        });
-      }
-    }
-
-    ps_consume(this.state, 'RIGHT_BRACE', "Expected '}'");
-    const end = ps_previous(this.state).position;
-
-    if (!source) {
-      ps_add_error(this.state, "Module block requires 'source' attribute");
-      source = {
-        kind: 'StringLiteral',
-        value: '',
-        span: create_span(start, start),
-      };
-    }
-
-    return {
-      kind: 'ModuleBlock',
-      name,
-      source,
-      version,
-      body: {
-        kind: 'Block',
-        attributes,
-        blocks: [],
-        span: create_span(start, end),
-      },
-      span: create_span(start, end),
-    };
-  }
-
-  private parse_locals_block(): LocalsBlock {
-    const start = ps_current(this.state).position;
-    ps_consume(this.state, 'LOCALS', "Expected 'locals'");
-    ps_consume(this.state, 'LEFT_BRACE', "Expected '{'");
-
-    const values: Record<string, Expression> = {};
-
-    while (!ps_check(this.state, 'RIGHT_BRACE') && !ps_is_at_end(this.state)) {
-      const name = parse_identifier(this.state);
-      ps_consume(this.state, 'EQUALS', "Expected '='");
-      const value = parse_expression(this.state);
-      values[name.name] = value;
-    }
-
-    ps_consume(this.state, 'RIGHT_BRACE', "Expected '}'");
-    const end = ps_previous(this.state).position;
-
-    return {
-      kind: 'LocalsBlock',
-      values,
-      span: create_span(start, end),
-    };
-  }
-
-  private parse_import_statement(): ImportStatement {
-    const start = ps_current(this.state).position;
-    ps_consume(this.state, 'IMPORT', "Expected 'import'");
-
-    const path = parse_string_literal(this.state);
-
-    let alias: Identifier | undefined;
-    if (ps_match(this.state, 'IDENTIFIER')) {
-      // Check for "as" keyword
-      if (ps_previous(this.state).value === 'as') {
-        alias = parse_identifier(this.state);
-      }
-    }
-
-    const end = ps_previous(this.state).position;
-
-    return {
-      kind: 'ImportStatement',
-      path,
-      alias,
-      span: create_span(start, end),
-    };
-  }
-
-  private parse_block(): Block {
-    const start = ps_current(this.state).position;
-    ps_consume(this.state, 'LEFT_BRACE', "Expected '{'");
-
-    const attributes: Attribute[] = [];
-    const blocks: NestedBlock[] = [];
-
-    while (!ps_check(this.state, 'RIGHT_BRACE') && !ps_is_at_end(this.state)) {
-      const name = parse_identifier(this.state);
-
-      if (ps_check(this.state, 'EQUALS')) {
-        // Attribute
-        ps_advance(this.state);
-        const value = parse_expression(this.state);
-        attributes.push({
-          kind: 'Attribute',
-          name,
-          value,
-          span: create_span(name.span.start, ps_previous(this.state).position),
-        });
-      } else if (ps_check(this.state, 'LEFT_BRACE') || ps_check(this.state, 'STRING') || ps_check(this.state, 'IDENTIFIER')) {
-        // Nested block
-        const labels: string[] = [];
-        while (ps_check(this.state, 'STRING') || ps_check(this.state, 'IDENTIFIER')) {
-          if (ps_check(this.state, 'STRING')) {
-            labels.push(ps_advance(this.state).literal as string);
-          } else {
-            labels.push(ps_advance(this.state).value);
-          }
-        }
-        const nested_body = this.parse_block();
-        blocks.push({
-          type: name.name,
-          labels,
-          body: nested_body,
-        });
-      } else {
-        ps_add_error(this.state, `Unexpected token after identifier '${name.name}'`);
-        ps_synchronize(this.state);
-      }
-    }
-
-    ps_consume(this.state, 'RIGHT_BRACE', "Expected '}'");
-    const end = ps_previous(this.state).position;
-
-    return {
-      kind: 'Block',
-      attributes,
-      blocks,
-      span: create_span(start, end),
-    };
   }
 
 }

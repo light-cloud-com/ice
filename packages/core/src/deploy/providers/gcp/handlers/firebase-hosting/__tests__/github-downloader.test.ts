@@ -25,11 +25,13 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { downloadGitHubRepo } from '../github-downloader.js';
 import type { GCPHandlerContext } from '../../../types.js';
 
 // Hoisted mocks: vitest hoists both `vi.hoisted` and the `vi.mock` calls
-// below above any `import` statements, so the module under test sees the
-// mocks when it does its own static `import` of zlib + tar-parser.
+// below above ALL import statements (per the rf-fbh-5 learning on
+// import-x/order), so the module under test sees the mocks when its own
+// static `import` of zlib + tar-parser runs at module load.
 const mocks = vi.hoisted(() => ({
   gunzipSync: vi.fn(),
   parseTar: vi.fn(),
@@ -42,9 +44,6 @@ vi.mock('zlib', () => ({
 vi.mock('../tar-parser.js', () => ({
   parseTar: mocks.parseTar,
 }));
-
-// Import AFTER vi.mock so the module under test pulls in the mocks.
-const { downloadGitHubRepo } = await import('../github-downloader.js');
 
 /**
  * Build a minimal `GCPHandlerContext`. The downloader reads `on_log`

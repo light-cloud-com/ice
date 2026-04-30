@@ -83,6 +83,12 @@ import {
   buildFoldedRemap,
   descendants,
 } from '../utils/folded-remap';
+import {
+  calculateContainerBounds as calculateContainerBoundsUtil,
+  recalculateAncestorBounds as recalculateAncestorBoundsUtil,
+  CONTAINER_HEADER_H,
+  CONTAINER_PAD,
+} from '../utils/container-bounds';
 import { SvgGhostNode } from './ghost/svg-ghost-node';
 import {
   inferConnectionMeta,
@@ -106,8 +112,6 @@ import { SvgWorkerNode } from './nodes/worker';
 // Bespoke-from-day-one nodes with inline editing
 import {
   CORNER_RADIUS,
-  HEADER_HEIGHT,
-  CONTAINER_PADDING,
   MIN_CONTAINER_WIDTH,
   MIN_CONTAINER_HEIGHT,
   LOD_THRESHOLD_L3,
@@ -200,10 +204,10 @@ type LocalCanvasNode = CanvasNode;
 // =============================================================================
 // Constants - Unified sizes
 // =============================================================================
-
-// Aliases for readability in canvas layout logic
-const CONTAINER_HEADER_H = HEADER_HEIGHT;
-const CONTAINER_PAD = CONTAINER_PADDING;
+// rf-canv-4: `CONTAINER_HEADER_H` and `CONTAINER_PAD` (the readability
+// aliases for HEADER_HEIGHT / CONTAINER_PADDING) now live in
+// `../utils/container-bounds` alongside the calculate/recalculate utils
+// that consume them. They're imported above.
 
 // =============================================================================
 // Canvas Component
@@ -712,131 +716,23 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     [canvasNodes],
   );
 
-  // Calculate bounds for a container based on its children's absolute positions.
-  // Uses a nodeStates map to get pending changes that haven't been committed yet.
-  // Expands the container when children extend beyond its current bounds.
+  // rf-canv-4: thin wrapper binding `visibleNodes` to the pure
+  // calculateContainerBounds util. Hook identity preserved so downstream
+  // useCallback / useMemo consumers see no change.
   const calculateContainerBounds = useCallback(
-    (containerId: string, nodeStates: Map<string, { x: number; y: number; width: number; height: number }>) => {
-      const container = visibleNodes.find((n) => n.id === containerId);
-      if (!container) return null;
-
-      // If container is folded, don't resize based on children
-      if (container.data?.folded) return null;
-
-      const children = visibleNodes.filter((n) => n.parentId === containerId);
-      if (children.length === 0) return null;
-
-      // Compute the bounding box of all children (absolute coords)
-      let childMinX = Infinity;
-      let childMinY = Infinity;
-      let childMaxRight = -Infinity;
-      let childMaxBottom = -Infinity;
-
-      for (const child of children) {
-        // Use pending state if available, otherwise current state
-        const state = nodeStates.get(child.id) || {
-          x: child.x,
-          y: child.y,
-          width: child.width,
-          height: child.height,
-        };
-
-        childMinX = Math.min(childMinX, state.x);
-        childMinY = Math.min(childMinY, state.y);
-        childMaxRight = Math.max(childMaxRight, state.x + state.width);
-        childMaxBottom = Math.max(childMaxBottom, state.y + state.height);
-      }
-
-      // Required container bounds to encompass all children + padding
-      const requiredLeft = childMinX - CONTAINER_PAD;
-      const requiredTop = childMinY - CONTAINER_PAD - CONTAINER_HEADER_H;
-      const requiredRight = childMaxRight + CONTAINER_PAD;
-      const requiredBottom = childMaxBottom + CONTAINER_PAD;
-
-      // Current container bounds
-      const currentState = nodeStates.get(containerId) || {
-        x: container.x,
-        y: container.y,
-        width: container.width,
-        height: container.height,
-      };
-      const curLeft = currentState.x;
-      const curTop = currentState.y;
-      const curRight = currentState.x + currentState.width;
-      const curBottom = currentState.y + currentState.height;
-
-      // Expand container to encompass children (union of current + required bounds)
-      const newLeft = Math.min(curLeft, requiredLeft);
-      const newTop = Math.min(curTop, requiredTop);
-      const newRight = Math.max(curRight, requiredRight);
-      const newBottom = Math.max(curBottom, requiredBottom);
-
-      const newX = newLeft;
-      const newY = newTop;
-      const newWidth = Math.max(MIN_CONTAINER_WIDTH, newRight - newLeft);
-      const newHeight = Math.max(MIN_CONTAINER_HEIGHT, newBottom - newTop);
-
-      return {
-        width: newWidth,
-        height: newHeight,
-        x: newX,
-        y: newY,
-        changed:
-          newWidth !== currentState.width ||
-          newHeight !== currentState.height ||
-          newX !== currentState.x ||
-          newY !== currentState.y,
-      };
-    },
+    (containerId: string, nodeStates: Map<string, { x: number; y: number; width: number; height: number }>) =>
+      calculateContainerBoundsUtil(visibleNodes, containerId, nodeStates),
     [visibleNodes],
   );
 
-  // Recursively recalculate all ancestor containers
+  // rf-canv-4: thin wrapper binding `visibleNodes` to the pure
+  // recalculateAncestorBounds util.
   const recalculateAncestorBounds = useCallback(
     (
       startNodeId: string,
       nodeStates: Map<string, { x: number; y: number; width: number; height: number }>,
-    ): Array<{
-      id: string;
-      position?: { x: number; y: number };
-      size?: { width: number; height: number };
-    }> => {
-      const updates: Array<{
-        id: string;
-        position?: { x: number; y: number };
-        size?: { width: number; height: number };
-      }> = [];
-
-      // Find the node and its parent
-      const node = visibleNodes.find((n) => n.id === startNodeId);
-      if (!node || !node.parentId) return updates;
-
-      // Calculate new bounds for the parent
-      const parentBounds = calculateContainerBounds(node.parentId, nodeStates);
-      if (!parentBounds || !parentBounds.changed) return updates;
-
-      // Update the parent's state in our map
-      nodeStates.set(node.parentId, {
-        x: parentBounds.x,
-        y: parentBounds.y,
-        width: parentBounds.width,
-        height: parentBounds.height,
-      });
-
-      // Add parent update
-      updates.push({
-        id: node.parentId,
-        position: { x: parentBounds.x, y: parentBounds.y },
-        size: { width: parentBounds.width, height: parentBounds.height },
-      });
-
-      // Recursively update grandparent, great-grandparent, etc.
-      const ancestorUpdates = recalculateAncestorBounds(node.parentId, nodeStates);
-      updates.push(...ancestorUpdates);
-
-      return updates;
-    },
-    [visibleNodes, calculateContainerBounds],
+    ) => recalculateAncestorBoundsUtil(visibleNodes, startNodeId, nodeStates),
+    [visibleNodes],
   );
 
   // Handle moving a node and all its children, then expand ancestor containers.

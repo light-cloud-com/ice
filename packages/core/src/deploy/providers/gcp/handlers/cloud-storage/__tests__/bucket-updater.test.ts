@@ -6,13 +6,23 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { applySimpleProperties } from '../bucket-updater.js';
+import { applySimpleProperties, prepareForAclFallback } from '../bucket-updater.js';
+import type { GCPHandlerContext } from '../../../types.js';
 
 function makeBucket() {
   return {
     setLabels: vi.fn().mockResolvedValue(undefined),
     setMetadata: vi.fn().mockResolvedValue(undefined),
   };
+}
+
+function makeCtx(): { ctx: GCPHandlerContext; logs: string[] } {
+  const logs: string[] = [];
+  const ctx = {
+    clients: { get: () => null } as any,
+    on_log: (m: string) => logs.push(m),
+  } as unknown as GCPHandlerContext;
+  return { ctx, logs };
 }
 
 describe('cloud-storage/bucket-updater', () => {
@@ -150,5 +160,104 @@ describe('cloud-storage/bucket-updater', () => {
       bucket.setMetadata = vi.fn().mockRejectedValue(new Error('invalid lifecycle'));
       await expect(applySimpleProperties(bucket, { lifecycle: {} })).rejects.toThrow('invalid lifecycle');
     });
+  });
+});
+
+describe('cloud-storage/bucket-updater · prepareForAclFallback', () => {
+  it('returns ublaForcedOn=false when UBLA is already disabled (no setMetadata)', async () => {
+    const bucket = {
+      getMetadata: vi.fn().mockResolvedValue([
+        { iamConfiguration: { uniformBucketLevelAccess: { enabled: false } } },
+      ]),
+      setMetadata: vi.fn(),
+    };
+    const { ctx } = makeCtx();
+    const out = await prepareForAclFallback(bucket, 'b', ctx);
+    expect(out).toEqual({ ublaForcedOn: false });
+    expect(bucket.setMetadata).not.toHaveBeenCalled();
+  });
+
+  it('returns ublaForcedOn=false when getMetadata returns no iamConfiguration', async () => {
+    const bucket = {
+      getMetadata: vi.fn().mockResolvedValue([{}]),
+      setMetadata: vi.fn(),
+    };
+    const { ctx } = makeCtx();
+    const out = await prepareForAclFallback(bucket, 'b', ctx);
+    expect(out).toEqual({ ublaForcedOn: false });
+    expect(bucket.setMetadata).not.toHaveBeenCalled();
+  });
+
+  it('returns ublaForcedOn=false on a clean UBLA-disable when previously enabled', async () => {
+    const bucket = {
+      getMetadata: vi.fn().mockResolvedValue([
+        { iamConfiguration: { uniformBucketLevelAccess: { enabled: true } } },
+      ]),
+      setMetadata: vi.fn().mockResolvedValue(undefined),
+    };
+    const { ctx, logs } = makeCtx();
+    const out = await prepareForAclFallback(bucket, 'b', ctx);
+    expect(out).toEqual({ ublaForcedOn: false });
+    expect(bucket.setMetadata).toHaveBeenCalledWith({
+      iamConfiguration: {
+        uniformBucketLevelAccess: { enabled: false },
+        publicAccessPrevention: 'inherited',
+      },
+    });
+    expect(logs.some((l) => l.includes('Disabling Uniform Bucket Level Access'))).toBe(true);
+  });
+
+  it('returns ublaForcedOn=true when disable hits UBLA constraint (full-string variant)', async () => {
+    const bucket = {
+      getMetadata: vi.fn().mockResolvedValue([
+        { iamConfiguration: { uniformBucketLevelAccess: { enabled: true } } },
+      ]),
+      setMetadata: vi.fn().mockRejectedValue(new Error('storage.uniformBucketLevelAccess constraint')),
+    };
+    const { ctx, logs } = makeCtx();
+    const out = await prepareForAclFallback(bucket, 'b', ctx);
+    expect(out).toEqual({ ublaForcedOn: true });
+    expect(logs.some((l) => l.includes("Cannot disable UBLA on b: 'storage.uniformBucketLevelAccess'"))).toBe(true);
+  });
+
+  it('returns ublaForcedOn=true when disable hits UBLA constraint (bare-string variant)', async () => {
+    const bucket = {
+      getMetadata: vi.fn().mockResolvedValue([
+        { iamConfiguration: { uniformBucketLevelAccess: { enabled: true } } },
+      ]),
+      setMetadata: vi.fn().mockRejectedValue(new Error('uniformBucketLevelAccess locked')),
+    };
+    const { ctx } = makeCtx();
+    const out = await prepareForAclFallback(bucket, 'b', ctx);
+    expect(out).toEqual({ ublaForcedOn: true });
+  });
+
+  it('rethrows non-UBLA disable errors into the outer catch and returns ublaForcedOn=true', async () => {
+    // The inner catch re-throws non-UBLA errors; the outer catch
+    // logs them and still flips ublaForcedOn to true (degraded path).
+    const bucket = {
+      getMetadata: vi.fn().mockResolvedValue([
+        { iamConfiguration: { uniformBucketLevelAccess: { enabled: true } } },
+      ]),
+      setMetadata: vi.fn().mockRejectedValue(new Error('quota exceeded')),
+    };
+    const { ctx, logs } = makeCtx();
+    const out = await prepareForAclFallback(bucket, 'b', ctx);
+    expect(out).toEqual({ ublaForcedOn: true });
+    expect(logs.some((l) => l.includes('Could not disable UBLA on b: quota exceeded'))).toBe(true);
+  });
+
+  it('handles getMetadata reject (best-effort outer catch)', async () => {
+    // .catch(() => [null]) on getMetadata yields [null], so the UBLA
+    // check sees null?.iamConfig... === true as false → no setMetadata
+    // call, ublaForcedOn stays false.
+    const bucket = {
+      getMetadata: vi.fn().mockRejectedValue(new Error('permissions denied')),
+      setMetadata: vi.fn(),
+    };
+    const { ctx } = makeCtx();
+    const out = await prepareForAclFallback(bucket, 'b', ctx);
+    expect(out).toEqual({ ublaForcedOn: false });
+    expect(bucket.setMetadata).not.toHaveBeenCalled();
   });
 });

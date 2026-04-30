@@ -162,6 +162,36 @@ Decomposer returned a 24-unit blueprint at [`blueprints/rf-pdpl.md`](blueprints/
 
 **deploy-panel.tsx decomposition complete.** 2229 → **262 LOC** across 22 units (rf-pdpl-23 absorbed into rf-pdpl-24 since orchestrator was already minimal after Layer 4). Final orchestrator is a thin compose-and-route shell that wires 3 custom hooks to ~15 child components.
 
+### Refactor initiative — `card-translator.ts` (rf-ctrans-* units) — 12-unit blueprint landed
+
+Decomposer returned a 12-unit blueprint at [`blueprints/rf-ctrans.md`](blueprints/rf-ctrans.md). 2 utils → 5 type-maps/extractors/dispatch → 3 passes → orchestrator. 9 behavior-risk flags captured up-front including: generate_stable_name hash seed (RISK #1 — destroy-recreate trigger), map_edge_relationship default branch, REDIS_SIZE_MAP tier strings, extract_subnet_properties hash-CIDR allocation, Pass 1.4 unconditional overwrite, Pass 1.45 subdomain priority, Pass 1.5 triple-mutation forwarding-rule removal + BackendEntry post-push mutation, sanitize_label_value `'unknown'` fallback.
+
+This was a **non-React core module** — pure TypeScript, simpler tests than the React panels (no JSX, hooks, or tree-walker harness needed).
+
+**Status:**
+
+- ✅ **rf-ctrans-1** `utils/name-utils.ts` — `sanitize_name` + `sanitize_label_value` + `parse_storage_gb` + `normalize_runtime` (4 named exports). RISK #9 (`'unknown'` fallback) preserved verbatim. 40 tests, 100% / 100%. Commit `bc4a55b`. New learning anchor `pnpm-filter-core-test-with-path-arg-needs-root-relative-not-package-relative`.
+- ✅ **rf-ctrans-2** `utils/stable-name.ts` — `ENV_SHORT` + `generate_stable_name`. RISK #1 honored: seed `${project_name}::${environment}::${node_id}` pinned with hash-formula tests. 28 tests, 100% / 90.9% (1 unreachable defensive branch). Commit `28dd0e5`.
+- ✅ **Layer 0 utils complete (2/2).**
+- ✅ **rf-ctrans-3** `type-maps.ts` — GCP_TYPE_MAP + AWS_TYPE_MAP + AZURE_TYPE_MAP + DESIGN_ONLY_PROVIDERS + get_type_map. Brief had a discrepancy (default branch returns `{}` not GCP_TYPE_MAP); implementer caught and pinned actual behavior. 31 tests, 100% / 100%. Commit `dd33334`. New learning anchor `brief-vs-source-default-branch-discrepancy-on-get-type-map`.
+- ✅ **rf-ctrans-4** `edge-classifier.ts` — UI_ONLY_TYPES + SERVICE_BACKEND_ICE_TYPES_FOR_INGRESS + EXTERNAL_TYPES + hasPrivateNetworkAncestor + isCustomDomainStandalone + map_edge_relationship. RISK #2 (default-branch `'connects_to'`) pinned with 5 dedicated tests. 42 tests, 100% / 100%. Commit `1872670`.
+- ✅ **Layer 1 type-maps + edge complete (2/2).**
+- ✅ **rf-ctrans-5** `extractors/compute.ts` — 4 functions (cloud_run, cloud_run_job, cloud_functions, cloud_scheduler). 29 tests, 100% / 100%. Commit `56302cc`.
+- ✅ **rf-ctrans-6** `extractors/database.ts` — 3 functions + REDIS_SIZE_MAP + REDIS_VALID_TIERS. RISK #3 (Redis tier strings) pinned. 59 tests, 100% / 100%. Commit `62c5d93`.
+- ✅ **rf-ctrans-7** `extractors/network.ts` — 7 functions including extract_subnet_properties. RISK #4 (hash-CIDR formula) pinned with 256-id boundary sweep. 47 tests, 100% / 100%. Commit `80f90d1`.
+- ✅ **rf-ctrans-8** `extractors/ancillary.ts` — 12 functions. 66 tests, 100% / 100%. Commit `a5d9f58`.
+- ✅ **rf-ctrans-9** `extractors/dispatch.ts` — PROPERTY_EXTRACTORS 27-entry table. Two-keys-one-fn case (vertex-ai endpoint+index) pinned. 38 tests, 100% / 100%. Commit `3b4e35e`.
+- ✅ **Layer 1 extractors + dispatch complete (5/5).**
+- ✅ **rf-ctrans-10** `passes/pass-1-4-repo-wiring.ts` — `wire_source_repositories`. RISK #5 (unconditional overwrite) pinned. 12 tests, 100% / 100%. Commit `2f2c252`. New learning anchor `graph-nodes-keyed-by-type-colon-name-not-bare-name` (latent production bug discovered: graph nodes keyed by `${type}:${name}` not bare name; Pass 1.4/1.45/1.5 backend lookups are silent no-ops in production — preserved verbatim, candidate for follow-up bug fix).
+- ✅ **rf-ctrans-11** `passes/pass-1-45-domain-propagation.ts` — `propagate_custom_domain_hosts`. RISK #6 (3-tier subdomain priority) pinned with 8 tests including no-fallthrough invariant. 27 tests, 100% / 100%. Commit `a5f9228`. Two new learning anchors: `if-routeid-branch-no-fallthrough` and `stash-discards-untracked-files`.
+- ✅ **rf-ctrans-12** `passes/pass-1-5-endpoint-wiring.ts` — `wire_public_endpoints` (highest-risk unit, ~367 LOC slightly over 350-flag but within ceiling). RISK #7 (atomic forwarding-rule triple-mutation) and RISK #8 (BackendEntry post-push mutation) pinned. `deployable_count_delta` pattern threaded through. 32 tests, 100% / 100%. Commit `3a6b088`. New learning anchor `test-fixture-nodeid-mapping-cascades-into-synthetic-names`.
+- ✅ **Layer 2 passes complete (3/3).**
+- ✅ **rf-ctrans-13** orchestrator + housekeeping — orchestrator already at 401 LOC after Layer 2 landed (well within 200-500 ceiling, slightly above 250-300 target but acceptable). No additional slim-down needed; rf-ctrans-13 absorbed into the housekeeping pass.
+
+**card-translator.ts decomposition complete.** 1585 → **401 LOC** across 12 units (rf-ctrans-13 absorbed since orchestrator already in target). Final orchestrator retains: 8 exported types, the `translate_card_to_graph` Pass 1 node loop (skip checks → type lookup → extractor dispatch → private-network ingress override → stable-name + label merge → graph.add_node + collision retry), calls to `wire_source_repositories` / `propagate_custom_domain_hosts` / `wire_public_endpoints`, Pass 2 edge loop. 480 tests passing in deploy directory, 0 typecheck regressions (29 pre-existing TS2834 errors unchanged).
+
+**Latent production bug surfaced** by rf-ctrans-10: `graph.nodes.get(plainName)` always misses because MutableGraph keys nodes by `${type}:${name}`, not bare name. Pass 1.4/1.45/1.5 backend lookups are silent no-ops in production. Verbatim refactor preserves the bug; tests construct properly so mutation paths are exercised. Candidate for a follow-up bug-fix unit (would need to switch `card_id_to_name` to map id → branded NodeId, or use `graph.get_node_by_name(name)` if available).
+
 ## Done this week
 
 - **2026-04-27 LT-1 through LT-9** — Consolidated `Monitoring.Terminal` into `Monitoring.Log`; built the live Cloud Logging stream backend (filter resolver + log-stream service + routes + Socket.IO room) and frontend (`logs-slice` + `useLogStream` hook + properties section + canvas placeholder). 365+ tests added. Real-deploy verification deferred behind the parallel-deploy work because the deploy engine was too fragile for clean iteration. See `decisions.md` 2026-04-27 entry.

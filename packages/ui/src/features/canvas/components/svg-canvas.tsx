@@ -21,6 +21,7 @@ import { ControlsHelpModal } from './controls-help-modal';
 // ConnectionTypePopover removed — connections are fully auto-configured
 import { SvgGhostEdge } from './ghost/svg-ghost-edge';
 import { SelectionFrame } from './selection-frame';
+import { ConnectionLayer } from './connection-layer';
 import { SvgConnectionPath, EDGE_COLORS, type ConnectionTooltipInfo } from './svg-connection-path';
 import { getBlueprint, expandBlueprint } from '../../../config/blocks';
 import { canContain, isContainer } from '../../../config/containment-rules';
@@ -2147,68 +2148,30 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
           {/* VPC/Subnet now render as SvgGroupNode in the nodes layer */}
 
-          {/* Connections layer — non-highlighted (behind nodes) */}
-          <g className="connections-layer">
-            {canvasConnections.map((conn) => {
-              const isHighlighted =
-                (hoveredNodeId !== null && (conn.from === hoveredNodeId || conn.to === hoveredNodeId)) ||
-                (selectedNodes.length > 0 && (selectedNodes.includes(conn.from) || selectedNodes.includes(conn.to)));
-              if (isHighlighted) return null; // rendered in top layer
-              const srcPort = portMap.get(`${conn.id}:source`);
-              const tgtPort = portMap.get(`${conn.id}:target`);
-              const edgeAnimDelay = animatingEdges[conn.id];
-              const edgeAnimStyle: CSSProperties | undefined =
-                edgeAnimDelay !== undefined
-                  ? { animation: `ice-edge-entrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) ${edgeAnimDelay}ms both` }
-                  : undefined;
-              // Check if this edge connects a Source.Repository to a node with active pipeline
-              const srcNode = effectiveNodes.find((n) => n.id === conn.from);
-              const tgtNode = effectiveNodes.find((n) => n.id === conn.to);
-              const srcIsSource =
-                (srcNode?.data?.iceType as string) === 'Source.Repository' || srcNode?.data?.behavior === 'source';
-              const tgtIsSource =
-                (tgtNode?.data?.iceType as string) === 'Source.Repository' || tgtNode?.data?.behavior === 'source';
-              const serviceNodeId = srcIsSource ? conn.to : tgtIsSource ? conn.from : null;
-              const isPipelineEdge = !!(srcIsSource || tgtIsSource) && !!serviceNodeId;
-              const pipelineStatus = serviceNodeId ? pipelineNodeStatus[serviceNodeId] : null;
-              const edgePipelineActive =
-                isPipelineEdge &&
-                pipelineStatus != null &&
-                (pipelineStatus.status === 'queued' ||
-                  pipelineStatus.status === 'building' ||
-                  pipelineStatus.status === 'deploying');
-
-              const connectionEl = (
-                <SvgConnectionPath
-                  key={conn.id}
-                  connection={conn}
-                  nodes={effectiveNodes}
-                  allNodes={effectiveNodes}
-                  isSelected={selectedEdges.includes(conn.id)}
-                  isHighlighted={false}
-                  sourcePortIndex={srcPort?.index || 0}
-                  sourcePortCount={srcPort?.count || 1}
-                  targetPortIndex={tgtPort?.index || 0}
-                  targetPortCount={tgtPort?.count || 1}
-                  onConnectionHover={handleConnectionHover}
-                  onDelete={handleEdgeDelete}
-                  onSelect={handleEdgeSelect}
-                  onContextMenu={(edgeId, pos) => handleContextMenu(pos, 'edge', edgeId)}
-                  lod={lod}
-                  zoom={viewport.zoom}
-                  pipelineActive={edgePipelineActive}
-                  edgeStyle={edgeStyle}
-                />
-              );
-              return edgeAnimStyle ? (
-                <g key={`anim-edge-${conn.id}`} style={edgeAnimStyle}>
-                  {connectionEl}
-                </g>
-              ) : (
-                connectionEl
-              );
-            })}
-          </g>
+          {/* Connections layer — non-highlighted (behind nodes).
+              rf-canv-13: extracted to ConnectionLayer in mode='background'.
+              Inner-vs-outer key shape (`anim-edge-${id}` outer wrap,
+              `${id}` SvgConnectionPath inner) preserved verbatim per
+              blueprint risk #4 — SvgConnectionPath's internal hover state
+              survives reconciliation when the wrap toggles. */}
+          <ConnectionLayer
+            mode="background"
+            canvasConnections={canvasConnections}
+            effectiveNodes={effectiveNodes}
+            portMap={portMap}
+            animatingEdges={animatingEdges}
+            pipelineNodeStatus={pipelineNodeStatus}
+            selectedNodes={selectedNodes}
+            selectedEdges={selectedEdges}
+            hoveredNodeId={hoveredNodeId}
+            lod={lod}
+            viewport={viewport}
+            edgeStyle={edgeStyle}
+            handleConnectionHover={handleConnectionHover}
+            handleEdgeDelete={handleEdgeDelete}
+            handleEdgeSelect={handleEdgeSelect}
+            handleContextMenu={handleContextMenu}
+          />
 
           {/* rf-canv-11: <defs> block (shift-drag-shadow filter +
               per-container clipPaths) extracted to ParentClipDefs. */}
@@ -2322,49 +2285,28 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             <SvgUserNode position={pinnedUserPos} scale={viewport.zoom} onPositionChange={setUserNodePos} />
           )}
 
-          {/* Highlighted connections layer — ON TOP of nodes */}
-          <g className="connections-highlighted-layer">
-            {canvasConnections.map((conn) => {
-              // The "active" node is the hovered node, or first selected node
-              const activeNodeId = hoveredNodeId || (selectedNodes.length > 0 ? selectedNodes[0] : null);
-              const isHighlighted =
-                (hoveredNodeId !== null && (conn.from === hoveredNodeId || conn.to === hoveredNodeId)) ||
-                (selectedNodes.length > 0 && (selectedNodes.includes(conn.from) || selectedNodes.includes(conn.to)));
-              if (!isHighlighted) return null; // already rendered behind nodes
-
-              // Determine direction relative to the active node
-              let direction: 'incoming' | 'outgoing' | null = null;
-              if (activeNodeId) {
-                if (conn.from === activeNodeId) direction = 'outgoing';
-                else if (conn.to === activeNodeId) direction = 'incoming';
-              }
-
-              const srcPort = portMap.get(`${conn.id}:source`);
-              const tgtPort = portMap.get(`${conn.id}:target`);
-              return (
-                <SvgConnectionPath
-                  key={conn.id}
-                  connection={conn}
-                  nodes={effectiveNodes}
-                  allNodes={effectiveNodes}
-                  isSelected={selectedEdges.includes(conn.id)}
-                  isHighlighted={true}
-                  direction={direction}
-                  sourcePortIndex={srcPort?.index || 0}
-                  sourcePortCount={srcPort?.count || 1}
-                  targetPortIndex={tgtPort?.index || 0}
-                  targetPortCount={tgtPort?.count || 1}
-                  onConnectionHover={handleConnectionHover}
-                  onDelete={handleEdgeDelete}
-                  onSelect={handleEdgeSelect}
-                  onContextMenu={(edgeId, pos) => handleContextMenu(pos, 'edge', edgeId)}
-                  lod={lod}
-                  zoom={viewport.zoom}
-                  edgeStyle={edgeStyle}
-                />
-              );
-            })}
-          </g>
+          {/* Highlighted connections layer — ON TOP of nodes.
+              rf-canv-13: extracted to ConnectionLayer in mode='highlighted'.
+              No animation wrap; computes the direction prop relative to the
+              active node (hovered, falling back to first selected). */}
+          <ConnectionLayer
+            mode="highlighted"
+            canvasConnections={canvasConnections}
+            effectiveNodes={effectiveNodes}
+            portMap={portMap}
+            animatingEdges={animatingEdges}
+            pipelineNodeStatus={pipelineNodeStatus}
+            selectedNodes={selectedNodes}
+            selectedEdges={selectedEdges}
+            hoveredNodeId={hoveredNodeId}
+            lod={lod}
+            viewport={viewport}
+            edgeStyle={edgeStyle}
+            handleConnectionHover={handleConnectionHover}
+            handleEdgeDelete={handleEdgeDelete}
+            handleEdgeSelect={handleEdgeSelect}
+            handleContextMenu={handleContextMenu}
+          />
 
           {/* Ghost-mode suggestions (AI-Native #1) */}
           {ghosts.length > 0 && (

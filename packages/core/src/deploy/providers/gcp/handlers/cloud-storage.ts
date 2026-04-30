@@ -5,6 +5,7 @@
  */
 
 import { SERVICE_NAMES, sdk_not_available, sdk_not_available_short } from '../messages.js';
+import { placeholderIndexHtml, placeholderNotFoundHtml, resolveOutputUrl } from './cloud-storage/bucket-utils.js';
 import { result, fail } from './cloud-storage/result-helpers.js';
 import type { GCPResourceHandler } from '../types.js';
 
@@ -304,27 +305,7 @@ export const cloud_storage_handler: GCPResourceHandler = {
       if (websiteHosting) {
         try {
           const bucket = storage.bucket(name);
-          const indexPlaceholder = `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>${name} · Deployed by ICE</title>
-    <style>
-      body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 640px; margin: 80px auto; padding: 0 24px; color: #1a1a1a; }
-      h1 { font-size: 24px; margin-bottom: 12px; }
-      p { line-height: 1.6; color: #666; }
-      code { background: #f5f5f5; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
-      .ok { color: #22c55e; font-weight: 600; }
-    </style>
-  </head>
-  <body>
-    <h1>✓ Static site bucket is live</h1>
-    <p>This is a placeholder served from <code>${name}</code>. Your load balancer is healthy and the bucket is reachable.</p>
-    <p><span class="ok">Next step:</span> wire up the build pipeline (GitHub repo → CI → bucket upload) to replace this file with your actual site. Or upload your built static output manually with <code>gsutil rsync -r ./dist gs://${name}</code>.</p>
-    <p style="font-size: 12px; color: #999; margin-top: 48px;">Deployed by <a href="https://github.com/light-cloud-com/ice" style="color: #999;">ICE</a> · ${new Date().toISOString()}</p>
-  </body>
-</html>
-`;
+          const indexPlaceholder = placeholderIndexHtml(name);
           // `predefinedAcl: 'publicRead'` ensures the uploaded file
           // is publicly readable via the legacy ACL system regardless
           // of whether the IAM grant succeeded. Belt-and-suspenders
@@ -343,19 +324,7 @@ export const cloud_storage_handler: GCPResourceHandler = {
               predefinedAcl: placeholderAcl,
             });
           }
-          const notFoundPage = `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>404 · Not Found</title>
-    <style>body{font-family:-apple-system,sans-serif;max-width:640px;margin:80px auto;padding:0 24px;text-align:center;color:#666}h1{font-size:48px;color:#1a1a1a;margin:0}p{margin-top:12px}</style>
-  </head>
-  <body>
-    <h1>404</h1>
-    <p>Not Found · ${name}</p>
-  </body>
-</html>
-`;
+          const notFoundPage = placeholderNotFoundHtml(name);
           const [notFoundExists] = await bucket
             .file('404.html')
             .exists()
@@ -422,7 +391,7 @@ export const cloud_storage_handler: GCPResourceHandler = {
         );
       }
 
-      const outputUrl = !publicAccess ? `gs://${name}` : `https://storage.googleapis.com/${name}/${indexPage}`;
+      const outputUrl = resolveOutputUrl(publicAccess, publicGrantFailed, name, indexPage);
       return result(name, 'create', start, {
         provider_id: `gs://${name}`,
         outputs: {
@@ -652,27 +621,7 @@ export const cloud_storage_handler: GCPResourceHandler = {
         try {
           const [indexExists] = await bucket.file('index.html').exists();
           if (!indexExists) {
-            const indexPlaceholder = `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>${name} · Deployed by ICE</title>
-    <style>
-      body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 640px; margin: 80px auto; padding: 0 24px; color: #1a1a1a; }
-      h1 { font-size: 24px; margin-bottom: 12px; }
-      p { line-height: 1.6; color: #666; }
-      code { background: #f5f5f5; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
-      .ok { color: #22c55e; font-weight: 600; }
-    </style>
-  </head>
-  <body>
-    <h1>✓ Static site bucket is live</h1>
-    <p>This is a placeholder served from <code>${name}</code>. Your load balancer is healthy and the bucket is reachable.</p>
-    <p><span class="ok">Next step:</span> wire up the build pipeline (GitHub repo → CI → bucket upload) to replace this file with your actual site. Or upload your built static output manually with <code>gsutil rsync -r ./dist gs://${name}</code>.</p>
-    <p style="font-size: 12px; color: #999; margin-top: 48px;">Deployed by <a href="https://github.com/light-cloud-com/ice" style="color: #999;">ICE</a> · ${new Date().toISOString()}</p>
-  </body>
-</html>
-`;
+            const indexPlaceholder = placeholderIndexHtml(name);
             await bucket.file('index.html').save(indexPlaceholder, {
               contentType: 'text/html; charset=utf-8',
               resumable: false,
@@ -681,19 +630,7 @@ export const cloud_storage_handler: GCPResourceHandler = {
           }
           const [notFoundExists] = await bucket.file('404.html').exists();
           if (!notFoundExists) {
-            const notFoundPage = `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>404 · Not Found</title>
-    <style>body{font-family:-apple-system,sans-serif;max-width:640px;margin:80px auto;padding:0 24px;text-align:center;color:#666}h1{font-size:48px;color:#1a1a1a;margin:0}p{margin-top:12px}</style>
-  </head>
-  <body>
-    <h1>404</h1>
-    <p>Not Found · ${name}</p>
-  </body>
-</html>
-`;
+            const notFoundPage = placeholderNotFoundHtml(name);
             await bucket.file('404.html').save(notFoundPage, {
               contentType: 'text/html; charset=utf-8',
               resumable: false,
@@ -734,10 +671,7 @@ export const cloud_storage_handler: GCPResourceHandler = {
       //   - public + BOTH strategies failed → gs:// (don't lie with a URL
       //     that 403s; the LB also won't work for the same reason)
       //   - private → gs://
-      const publicUrl =
-        publicAccess && !updatePublicGrantFailed
-          ? `https://storage.googleapis.com/${name}/${indexPage}`
-          : `gs://${name}`;
+      const publicUrl = resolveOutputUrl(publicAccess, updatePublicGrantFailed, name, indexPage);
 
       // Only mark the result as FAILED when BOTH IAM and ACL paths
       // were blocked. Otherwise (legacy ACL succeeded → strategy is

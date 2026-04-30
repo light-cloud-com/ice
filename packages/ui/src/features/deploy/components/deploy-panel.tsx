@@ -66,6 +66,7 @@ import { primaryOutput } from '../output-extractors';
 import { extractDnsResults, splitDnsByAction, type DnsRec } from '../utils/dns-records';
 import { openExternalUrl } from '../utils/open-external-url';
 import { analyzePreDeploy } from '../utils/predeploy-analysis';
+import { buildResultsSummaryText, summaryCounts } from '../utils/results-summary-text';
 import {
   PROVIDER_REGIONS,
   PROVIDER_LABELS,
@@ -1916,29 +1917,15 @@ const ResultsSummary: React.FC<{
   }>;
 }> = ({ results }) => {
   const { t } = useTranslation();
-  const succeeded = results.filter((r) => r.success).length;
-  const failed = results.filter((r) => !r.success).length;
-  const totalMs = results.reduce((acc, r) => acc + (r.duration_ms || 0), 0);
-  const allOk = failed === 0;
+  const { succeeded, failed, totalMs, allOk } = summaryCounts(results);
 
   // Plain-text dump for the "Copy summary" / "Copy errors" buttons.
   // Includes per-resource status, durations, and full error text — much
   // easier to paste into a bug report than scraping individual rows.
-  const buildSummaryText = (errorsOnly: boolean) => {
-    const header = errorsOnly
-      ? `Deploy errors (${failed} of ${results.length} resource(s) failed)`
-      : `Deploy summary: ${succeeded}/${results.length} succeeded, ${failed} failed, ${(totalMs / 1000).toFixed(1)}s`;
-    const lines: string[] = [header, ''];
-    for (const r of results) {
-      if (errorsOnly && r.success) continue;
-      const flag = r.success ? '✓' : '✗';
-      const dur = r.duration_ms ? ` (${(r.duration_ms / 1000).toFixed(1)}s)` : '';
-      lines.push(`${flag} ${r.type} ${r.name} [${r.action}]${dur}`);
-      if (r.error) lines.push(`  error: ${r.error}`);
-      if (r.provider_id) lines.push(`  resource: ${r.provider_id}`);
-    }
-    return lines.join('\n');
-  };
+  // rf-pdpl-4: extracted to utils/results-summary-text.ts. Closure shim kept
+  // so the `copy` call site below stays unchanged.
+  const buildSummaryText = (errorsOnly: boolean) =>
+    buildResultsSummaryText(results, { errorsOnly });
 
   const copy = (errorsOnly: boolean) => {
     navigator.clipboard.writeText(buildSummaryText(errorsOnly)).catch(() => undefined);

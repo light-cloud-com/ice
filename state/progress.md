@@ -240,6 +240,23 @@ Decomposer returned an 11-unit blueprint at [`blueprints/rf-fbh.md`](blueprints/
 
 **firebase-hosting.ts decomposition complete.** 1140 → **422 LOC** across 9 units (rf-fbh-10+11 absorbed). Final orchestrator wires 9 sub-modules: imports + `firebase_hosting_handler` const with `create` / `update` / `delete` / `describe` methods, each a thin coordinator. 207 tests passing across firebase-hosting/, 0 typecheck regressions.
 
+### Refactor initiative — `parser.ts` (rf-parse-* units) — 6-unit blueprint landed (combined extractions)
+
+Decomposer returned an 8-unit blueprint at [`blueprints/rf-parse.md`](blueprints/rf-parse.md); rf-parse-7+8 absorbed into housekeeping. Approach B chosen: standalone functions taking `ParserState` interface; `Parser` class becomes constructor + delegation shell. 14 behavior-risk flags pinned including: ps_consume no-advance, synchronize two exits, type-identifier silent dot-skip, create_span name collision (parser-internal vs ast.ts), parse_equality operator ternary, parse_postfix error-but-continue, 10-level precedence chain order, parse_primary pre-advance snapshot, **parse_for_expression key/value identity** (highest-risk), parse_reference path undefined, parse_block zero-label nested, unknown-attribute discard advances cursor, output_block emits both error AND null literal, import_statement non-`"as"` silent discard.
+
+**Status:**
+
+- ✅ **rf-parse-1** `parser-state.ts` — `ParserState` interface + 9 navigation helpers (ps_*-prefixed). RISK #1 (consume no-advance) + RISK #2 (synchronize two exits) pinned. 31 tests, 100% / 100%. 147 callsites replaced. Commit `92778f7`. New learning anchor `sed-greedy-dot-star-eats-chained-calls-on-one-line`.
+- ✅ **rf-parse-2** `parser-literals.ts` — 6 helpers (parse_identifier/type_identifier/string_literal/boolean_literal/null_literal/span). RISK #3 (silent dot-skip) + RISK #4 (create_span name collision) pinned. 23 tests, 100% / 100%. 67 callsites replaced. Commit `2f7a3f7`. New learning anchor `sed-empty-arg-substitution-glues-state-to-next-token`.
+- ✅ **Layer 0 complete (2/2).**
+- ✅ **rf-parse-3+4 (combined atomically)** `parser-binary-exprs.ts` + `parser-primary.ts` — 10-level binary chain + 5 primary-expression helpers. Combined into single commit because the cross-module circular import (binary-exprs ↔ primary) resolves at function-call time under ESM. RISKs #5/6/7/8/9/10 all pinned. 94 tests across both files, 100% / 100%. Commit `667df94`. New learning anchor `bootstrap-fnarg-vs-direct-import-for-circular-grammar-pair`.
+- ✅ **Layer 1 complete (2/2).**
+- ✅ **rf-parse-5+6 (combined atomically)** `parser-block-body.ts` + `parser-statements.ts` — 4 block parsers + 5 statement parsers. RISKs #11/12/13/14 pinned. 31 tests, 100% / 100%. Commit `2ee35e5`. New learning anchor `co-locate-mutually-recursive-helpers-to-skip-cycle-bootstrap`.
+- ✅ **Layer 2 complete (2/2).**
+- ✅ **rf-parse-7+8** orchestrator + housekeeping — orchestrator at 184 LOC after Layer 2 (well within 200-500 ceiling, far below 250-300 target). Class is now pure dispatch shell: constructor + `parse()` + `parse_program()` + `parse_statement()`. rf-parse-7+8 absorbed into housekeeping.
+
+**parser.ts decomposition complete.** 1061 → **184 LOC** across 6 implementation commits (3+4 combined, 5+6 combined; 7+8 absorbed). Final orchestrator wires 6 sub-modules into a thin Parser class shell. 179 tests passing in parser directory, 0 typecheck regressions.
+
 ## Done this week
 
 - **2026-04-27 LT-1 through LT-9** — Consolidated `Monitoring.Terminal` into `Monitoring.Log`; built the live Cloud Logging stream backend (filter resolver + log-stream service + routes + Socket.IO room) and frontend (`logs-slice` + `useLogStream` hook + properties section + canvas placeholder). 365+ tests added. Real-deploy verification deferred behind the parallel-deploy work because the deploy engine was too fragile for clean iteration. See `decisions.md` 2026-04-27 entry.

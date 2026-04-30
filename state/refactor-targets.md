@@ -23,7 +23,7 @@ Living document, **owned exclusively by the orchestrator**. Tracks which large f
 | `packages/core/src/resources/scale-presets.ts` | 1562 | TBD (rf-0b) | queued | 0 | — |
 | `packages/core/src/resources/cloud-blocks.ts` | 1315 | TBD (rf-0b) | queued | 0 | — |
 | ~~`packages/ui/src/store/slices/cards-slice.ts`~~ | 1195 → **162** | new modules at 100% | **DONE** (14 units, see [blueprint](blueprints/rf-cards.md)) | 14 (rf-cards-1..14; rf-cards-15+16 absorbed into rf-cards-14 housekeeping) | — |
-| `packages/core/src/deploy/providers/gcp/handlers/firebase-hosting.ts` | 1140 | TBD (rf-0b) | queued | 0 | — |
+| ~~`packages/core/src/deploy/providers/gcp/handlers/firebase-hosting.ts`~~ | 1140 → **422** | new modules at 92–100% | **DONE** (9 units, see [blueprint](blueprints/rf-fbh.md)) | 9 (rf-fbh-1..9; rf-fbh-10+11 absorbed into housekeeping) | — |
 | `packages/core/src/graph/parser/parser.ts` | 1061 | TBD (rf-0b) | queued | 0 | — |
 
 `packages/core/src/resources/high-level-resources.ts` (6434 LOC) is intentionally not in the active queue — it is data-heavy and decomposing it before its consumers are split would be wasted work. Revisit after the consuming files land.
@@ -32,7 +32,7 @@ Files in the 600–1000 LOC band (`resource-palette.tsx`, `sqlite-state-store.ts
 
 ## In flight
 
-_(none — `cards-slice.ts` finished 2026-04-30; next files from the queue are `firebase-hosting.ts` (1140) and `parser.ts` (1061). Data-heavy `scale-presets.ts` and `cloud-blocks.ts` deferred — splitting fragments without code-quality gain.)_
+_(none — `firebase-hosting.ts` finished 2026-04-30; next file from the queue is `parser.ts` (1061). Data-heavy `scale-presets.ts` and `cloud-blocks.ts` deferred.)_
 
 ## Follow-up splits (over 500 LOC, must be split per the ceiling rule)
 

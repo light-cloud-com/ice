@@ -218,6 +218,28 @@ Decomposer returned a 16-unit blueprint at [`blueprints/rf-cards.md`](blueprints
 
 **cards-slice.ts decomposition complete.** 1195 → **162 LOC** across 14 units (rf-cards-15+16 absorbed into rf-cards-14). Final orchestrator wires `createSlice` from 9 reducer-group spreads + 5 helper imports + 3 inline selectors + re-export shims for the public type/migrateCardNodes API. 399 tests passing in store directory, 0 typecheck regressions.
 
+### Refactor initiative — `firebase-hosting.ts` (rf-fbh-* units) — 9-unit blueprint landed
+
+Decomposer returned an 11-unit blueprint at [`blueprints/rf-fbh.md`](blueprints/rf-fbh.md); rf-fbh-10+11 absorbed into housekeeping. 3 utils + 2 transport/site + 4 workflow modules + orchestrator. 14 behavior-risk flags captured up-front including: placeholder HTML verbatim with U+2713 glyph, tar parser block alignment + octal sizes, REST client validateStatus always-true, Firebase project 409/400 dual-meaning, GitHub fetch auth bypass, SHA256 over GZIPPED payload, 5-step version publish sequence, four DNS response shapes, project-scoped custom-domain path, three-tier domain registration fallback.
+
+**Status:**
+
+- ✅ **rf-fbh-1** `firebase-hosting/result-helpers.ts` — `TYPE` + `result` + `fail`. 19 tests, 100% / 100%. Commit `bd050e7`.
+- ✅ **rf-fbh-2** `firebase-hosting/site-utils.ts` — `sanitizeSiteId` + `placeholderIndexHtml`. RISK #1 (timestamp call-time) + RISK #2 (HTML verbatim incl. ✓ U+2713) pinned. 19 tests, 100% / 100%. Commit `55d9a5f`. New learning anchor `prior-unit-may-leave-future-proofing-import-that-fails-lint-now`.
+- ✅ **rf-fbh-3** `firebase-hosting/tar-parser.ts` — `parseTar` + `FileEntry`. RISK #3 (4 sub-flags: EOF, octal, block alignment, Buffer copy) pinned. 17 tests, 100% / 100%. Commit `ddeee52`. New learning anchor `git-stash-pop-conflicts-with-tsconfig-tsbuildinfo`.
+- ✅ **Layer 0 utils complete (3/3).**
+- ✅ **rf-fbh-4** `firebase-hosting/rest-client.ts` — `RestResponse` + `restRequest` + 2 API URLs. RISK #4 (`validateStatus: () => true`) pinned across 9 status codes. 21 tests, 100% / 100%. Commit `5fb42a9`.
+- ✅ **rf-fbh-5** `firebase-hosting/site-provisioner.ts` — `ensureFirebaseProject` + `ensureHostingSite`. RISK #5 (409/400 message-content probe) + RISK #6 (3-condition adoption + 409 re-fetch) pinned. 21 tests, 100% / 100%. Commit `4687242`. New learning anchor `vi-hoisted-and-vi-mock-blocks-must-not-split-import-groups`.
+- ✅ **Layer 1 transport + provisioning complete (2/2).**
+- ✅ **rf-fbh-6** `firebase-hosting/github-downloader.ts` — `downloadGitHubRepo`. RISK #7 (silent fallback) + RISK #8 (auth bypass for codeload) pinned. 22 tests, 100% / 100%. Commits `2a39fe8` + `1998b83` + `12387f4`. New learning anchor `absence-of-headers-must-be-asserted-via-init-equality-not-property-check`.
+- ✅ **rf-fbh-7** `firebase-hosting/version-publisher.ts` — `publishVersion` + `publishPlaceholderVersion` + `parseRepository`. RISK #9 (SHA256 over GZIPPED) + RISK #10 (5-step sequence) pinned with byte-level test. 34 tests, 100% / 100%. Commit `05854b9`. New learning anchor `fixture-hashes-must-be-derived-from-mock-transform-output-not-guessed`.
+- ✅ **rf-fbh-8** `firebase-hosting/dns-extractor.ts` — `extractDnsRecords` + `FirebaseHostingDnsRecord`. RISK #11 (4 DNS shapes) + RISK #12 (per-record action override) pinned. 22 tests, 100% / 100%. Commits `56f9d0d` + `69deb91`. New learning anchor `or-chain-default-fallback-needs-its-own-test-for-100pct-branch-coverage`.
+- ✅ **rf-fbh-9** `firebase-hosting/domain-registrar.ts` — `registerHostingDomain`. **HIGHEST-RISK UNIT.** RISK #13 (project-scoped path) + RISK #14 (3-tier fallback with legacy body shape) pinned. 20 tests, 100% / 92.68% (3 unreachable defensive `|| {}` defaults). Commit `38e3d22`.
+- ✅ **Layer 2 workflow complete (4/4).**
+- ✅ **rf-fbh-10+11** orchestrator + housekeeping — orchestrator at 422 LOC after Layer 2 (within 200-500 ceiling, slightly above 220 target — handler exposes 4 public methods that need full bodies). rf-fbh-10+11 absorbed into housekeeping. No barrel needed: orchestrator stays at original path, all sub-modules import directly.
+
+**firebase-hosting.ts decomposition complete.** 1140 → **422 LOC** across 9 units (rf-fbh-10+11 absorbed). Final orchestrator wires 9 sub-modules: imports + `firebase_hosting_handler` const with `create` / `update` / `delete` / `describe` methods, each a thin coordinator. 207 tests passing across firebase-hosting/, 0 typecheck regressions.
+
 ## Done this week
 
 - **2026-04-27 LT-1 through LT-9** — Consolidated `Monitoring.Terminal` into `Monitoring.Log`; built the live Cloud Logging stream backend (filter resolver + log-stream service + routes + Socket.IO room) and frontend (`logs-slice` + `useLogStream` hook + properties section + canvas placeholder). 365+ tests added. Real-deploy verification deferred behind the parallel-deploy work because the deploy engine was too fragile for clean iteration. See `decisions.md` 2026-04-27 entry.

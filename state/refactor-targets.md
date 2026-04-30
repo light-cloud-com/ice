@@ -20,8 +20,8 @@ Living document, **owned exclusively by the orchestrator**. Tracks which large f
 | ~~`packages/ui/src/features/canvas/components/svg-canvas.tsx`~~ | 3234 → **909** | new modules at 92–100% | **DONE** (28+1 units, see [blueprint](blueprints/rf-canv.md)) | 29 | — |
 | ~~`packages/ui/src/features/deploy/components/deploy-panel.tsx`~~ | 2229 → **262** | new modules at 90–100% | **DONE** (22 units, see [blueprint](blueprints/rf-pdpl.md)) | 22 (rf-pdpl-1..22; rf-pdpl-23 absorbed into rf-pdpl-24 housekeeping) | — |
 | ~~`packages/core/src/deploy/card-translator.ts`~~ | 1585 → **401** | new modules at 100% | **DONE** (12 units, see [blueprint](blueprints/rf-ctrans.md)) | 12 (rf-ctrans-1..12; rf-ctrans-13 absorbed since orchestrator already in target range) | — |
-| `packages/core/src/resources/scale-presets.ts` | 1562 | TBD (rf-0b) | queued | 0 | — |
-| `packages/core/src/resources/cloud-blocks.ts` | 1315 | TBD (rf-0b) | queued | 0 | — |
+| ~~`packages/core/src/resources/scale-presets.ts`~~ | 1562 → **58 (shim) + 64 (types) + 1482 (data)** | new modules at 100% on shim/types | **DONE** (rf-data-1, data-heavy split) | 1 | data file is documented size exception |
+| ~~`packages/core/src/resources/cloud-blocks.ts`~~ | 1315 → **141 (shim) + 222 (types) + 1009 (data)** | new modules at 100% on shim/types | **DONE** (rf-data-2, data-heavy split) | 1 | data file is documented size exception |
 | ~~`packages/ui/src/store/slices/cards-slice.ts`~~ | 1195 → **162** | new modules at 100% | **DONE** (14 units, see [blueprint](blueprints/rf-cards.md)) | 14 (rf-cards-1..14; rf-cards-15+16 absorbed into rf-cards-14 housekeeping) | — |
 | ~~`packages/core/src/deploy/providers/gcp/handlers/firebase-hosting.ts`~~ | 1140 → **422** | new modules at 92–100% | **DONE** (9 units, see [blueprint](blueprints/rf-fbh.md)) | 9 (rf-fbh-1..9; rf-fbh-10+11 absorbed into housekeeping) | — |
 | ~~`packages/core/src/graph/parser/parser.ts`~~ | 1061 → **184** | new modules at 100% | **DONE** (6 units, see [blueprint](blueprints/rf-parse.md)) | 6 (rf-parse-1..2 + 3+4 combined + 5+6 combined; rf-parse-7+8 absorbed into housekeeping) | — |

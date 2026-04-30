@@ -88,6 +88,10 @@ import {
   CONTAINER_HEADER_H,
   CONTAINER_PAD,
 } from '../utils/container-bounds';
+import {
+  findContainerAtPosition as findContainerAtPositionUtil,
+  findSmallestContainerHit,
+} from '../utils/drop-target';
 import { SvgGhostNode } from './ghost/svg-ghost-node';
 import {
   inferConnectionMeta,
@@ -1358,37 +1362,18 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       let resolvedTargetId: string | null = null;
 
       if (centerX !== undefined && centerY !== undefined) {
-        // Build full exclusion set: dragged nodes + all their descendants
+        // Build full exclusion set: dragged nodes + all their descendants +
+        // the current parent (Shift-drag means "move to a NEW parent").
         const excludeIds = new Set(draggedIds);
         for (const id of draggedIds) {
           for (const desc of getDescendantIds(id)) {
             excludeIds.add(desc);
           }
         }
+        if (exitingParent) excludeIds.add(exitingParent);
 
-        let smallestArea = Infinity;
-
-        for (const node of visibleNodes) {
-          if (excludeIds.has(node.id)) continue;
-          // Skip current parent — Shift-drag means "move to a NEW parent"
-          if (node.id === exitingParent) continue;
-
-          if (!isContainerNode(node)) continue;
-
-          // Check if drag center is inside this container
-          if (
-            centerX >= node.x &&
-            centerX <= node.x + node.width &&
-            centerY >= node.y &&
-            centerY <= node.y + node.height
-          ) {
-            const area = node.width * node.height;
-            if (area < smallestArea) {
-              smallestArea = area;
-              resolvedTargetId = node.id;
-            }
-          }
-        }
+        const hit = findSmallestContainerHit(visibleNodes, centerX, centerY, isContainerNode, excludeIds);
+        resolvedTargetId = hit?.id ?? null;
       }
 
       setDragOverGroupId(resolvedTargetId);
@@ -1415,42 +1400,20 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
         const centerX = x + draggedNode.width / 2;
         const centerY = y + draggedNode.height / 2;
 
-        // Find the best container at the drop position (excluding the dragged node and its descendants)
+        // Find the best container at the drop position. Exclude the dragged
+        // node, its descendants, all other selected nodes (multi-drag), and
+        // the dragged node's current parent (Shift-drag means "move to a NEW
+        // parent" — without this, dropping a child within the parent's bounds
+        // would re-select the same parent and no reparent happens).
         const descendantIds = new Set(getDescendantIds(itemId));
         descendantIds.add(itemId);
-        // Also exclude all other selected nodes (multi-drag)
         for (const id of selectedNodes) {
           descendantIds.add(id);
         }
-
-        // Exclude the dragged node's current parent so it can escape.
-        // Without this, dropping a child within the parent's bounds re-selects
-        // the same parent and no reparent happens.
         const currentParent = draggedNode.parentId || null;
+        if (currentParent) descendantIds.add(currentParent);
 
-        let smallestArea = Infinity;
-
-        for (const node of visibleNodes) {
-          if (descendantIds.has(node.id)) continue;
-          // Skip the current parent — Shift-drag means "move to a NEW parent"
-          if (node.id === currentParent) continue;
-          if (!isContainerNodeUtil(node)) continue;
-
-          // Check if the center of the dragged node is inside this container
-          if (
-            centerX >= node.x &&
-            centerX <= node.x + node.width &&
-            centerY >= node.y &&
-            centerY <= node.y + node.height
-          ) {
-            const area = node.width * node.height;
-            // Pick the smallest matching container (most specific/nested)
-            if (area < smallestArea) {
-              smallestArea = area;
-              bestContainer = node;
-            }
-          }
-        }
+        bestContainer = findSmallestContainerHit(visibleNodes, centerX, centerY, isContainerNodeUtil, descendantIds);
       }
 
       // Without Ctrl/Cmd, keep the node's current parent — no reparenting on normal drag
@@ -1626,32 +1589,16 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     return () => svg.removeEventListener('wheel', handler);
   }, [bindCanvas]);
 
-  // Find container at position for drop handling
+  // Find container at position for drop handling. Predicate matches the
+  // verbatim L1635 inline rule: containment-rules `isContainer`, plus any
+  // iceType beginning with `Group.` or `Network.` (broader than the
+  // node-classification `isContainerNode` predicate other sites use).
   const findContainerAtPosition = useCallback(
-    (x: number, y: number): LocalCanvasNode | null => {
-      const containers = visibleNodes
-        .filter((n) => {
-          const iceType = (n.data.iceType as string) || '';
-          return isContainer(iceType) || iceType.startsWith('Group.') || iceType.startsWith('Network.');
-        })
-        .sort((a, b) => {
-          const aIceType = (a.data.iceType as string) || '';
-          const bIceType = (b.data.iceType as string) || '';
-          return calculateZIndex(bIceType, 0) - calculateZIndex(aIceType, 0);
-        });
-
-      for (const container of containers) {
-        if (
-          x >= container.x &&
-          x <= container.x + container.width &&
-          y >= container.y &&
-          y <= container.y + container.height
-        ) {
-          return container;
-        }
-      }
-      return null;
-    },
+    (x: number, y: number): LocalCanvasNode | null =>
+      findContainerAtPositionUtil(visibleNodes, x, y, (n) => {
+        const iceType = (n.data.iceType as string) || '';
+        return isContainer(iceType) || iceType.startsWith('Group.') || iceType.startsWith('Network.');
+      }),
     [visibleNodes],
   );
 
@@ -2028,6 +1975,11 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       // on how the user dragged things around. The smallest area is
       // always the most-specific (deepest) target, which is what the
       // user means by "drop on this block."
+      //
+      // NOTE (rf-canv-6): kept inline because no predicate filters anything
+      // here — connection drops target ANY node, not just containers. Folding
+      // through `findSmallestContainerHit(... , () => true, ...)` would bury
+      // the no-predicate semantics. Flagged for follow-up consolidation.
       let targetNode: LocalCanvasNode | null = null;
       let targetArea = Number.POSITIVE_INFINITY;
       for (const node of effectiveNodes) {
@@ -2748,7 +2700,14 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
               }
               const pathD = `M ${sourcePoint.x} ${sourcePoint.y} C ${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${currentPoint.x} ${currentPoint.y}`;
 
-              // Determine preview color based on what's under the cursor
+              // Determine preview color based on what's under the cursor.
+              //
+              // NOTE (rf-canv-6): kept inline because the iteration runs in
+              // REVERSE (topmost-first, breaks on first hit) and has a side
+              // effect inside the loop (sets previewColor). Neither
+              // findContainerAtPosition (z-index sort) nor
+              // findSmallestContainerHit (smallest-area) match. Flagged for
+              // follow-up consolidation.
               let previewColor = '#22d3ee'; // cyan default (empty space)
               if (connectionDragTargets) {
                 for (let i = effectiveNodes.length - 1; i >= 0; i--) {

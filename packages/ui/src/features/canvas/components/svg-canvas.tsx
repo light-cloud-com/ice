@@ -107,13 +107,13 @@ import { SvgCustomDomainNode } from './nodes/custom-domain';
 import { SvgGroupNode } from './nodes/group-node';
 import { SvgPrivateNetworkNode } from './nodes/private-network';
 import { NodeLiftWrapper } from './canvas-renderer/lift-wrapper';
+import { ParentClipDefs } from './canvas-renderer/parent-clip-defs';
 // ─── Concept block canvas nodes (one folder per block, individually customizable) ───
 import { SvgStaticSiteNode } from './nodes/static-site';
 import { SvgVectorDbNode } from './nodes/vector-db';
 import { SvgWorkerNode } from './nodes/worker';
 // Bespoke-from-day-one nodes with inline editing
 import {
-  CORNER_RADIUS,
   MIN_CONTAINER_WIDTH,
   MIN_CONTAINER_HEIGHT,
   LOD_THRESHOLD_L3,
@@ -2244,30 +2244,9 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             })}
           </g>
 
-          {/* SVG filter for Shift-drag lift shadow */}
-          <defs>
-            <filter id="shift-drag-shadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="4" stdDeviation="8" floodColor="#000" floodOpacity="0.35" />
-            </filter>
-            {/* BND-5: ClipPaths for parent containment — prevents children from
-                visually overflowing their parent group/block boundaries */}
-            {sortedNodes
-              .filter((n) => {
-                const t = (n.data?.iceType as string) || '';
-                return (
-                  n.type === 'container' ||
-                  n.type === 'block' ||
-                  t === 'Network.VPC' ||
-                  t === 'Network.Subnet' ||
-                  t === 'Network.PrivateNetwork'
-                );
-              })
-              .map((n) => (
-                <clipPath key={`parent-clip-${n.id}`} id={`parent-clip-${n.id}`}>
-                  <rect x={n.x} y={n.y} width={n.width} height={n.height} rx={CORNER_RADIUS} />
-                </clipPath>
-              ))}
-          </defs>
+          {/* rf-canv-11: <defs> block (shift-drag-shadow filter +
+              per-container clipPaths) extracted to ParentClipDefs. */}
+          <ParentClipDefs nodes={sortedNodes} />
 
           {/* Nodes layer — Groups, Blocks, Resources, or Log terminals */}
           <g className="nodes-layer">

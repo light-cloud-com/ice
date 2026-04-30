@@ -26,6 +26,7 @@ Living document, **owned exclusively by the orchestrator**. Tracks which large f
 | ~~`packages/core/src/deploy/providers/gcp/handlers/firebase-hosting.ts`~~ | 1140 → **422** | new modules at 92–100% | **DONE** (9 units, see [blueprint](blueprints/rf-fbh.md)) | 9 (rf-fbh-1..9; rf-fbh-10+11 absorbed into housekeeping) | — |
 | ~~`packages/core/src/graph/parser/parser.ts`~~ | 1061 → **184** | new modules at 100% | **DONE** (6 units, see [blueprint](blueprints/rf-parse.md)) | 6 (rf-parse-1..2 + 3+4 combined + 5+6 combined; rf-parse-7+8 absorbed into housekeeping) | — |
 | ~~`packages/core/src/graph/parser/lexer.ts`~~ | 647 → **316** | new modules at 100% | **DONE** (5 units, see [blueprint](blueprints/rf-lex.md)) | 5 (rf-lex-1..5) | — |
+| ~~`packages/core/src/deploy/providers/gcp/handlers/cloud-storage.ts`~~ | 856 → **267** | new modules at 100% | **DONE** (8 units, see [blueprint](blueprints/rf-cstor.md)) | 8 (rf-cstor-1..8; orchestrator file kept as sibling — no barrel needed, matching firebase-hosting precedent) | — |
 
 `packages/core/src/resources/high-level-resources.ts` (6434 LOC) is intentionally not in the active queue — it is data-heavy and decomposing it before its consumers are split would be wasted work. Revisit after the consuming files land.
 
@@ -43,7 +44,7 @@ After Phase 1 cleared 5 monster files (deploy-panel + card-translator + cards-sl
 | `packages/ui/src/store/slices/deploy-slice.ts` | 918 | RTK slice — apply rf-cards reducer-group pattern |
 | `services/deploy/src/services/pipeline.service.ts` | 880 | Pre-existing follow-up split (already noted) |
 | `services/deploy/src/services/log-stream.service.ts` | 869 | Pre-existing follow-up split (already noted) |
-| `packages/core/src/deploy/providers/gcp/handlers/cloud-storage.ts` | 856 | GCP handler — apply rf-fbh pattern |
+| ~~`packages/core/src/deploy/providers/gcp/handlers/cloud-storage.ts`~~ | 856 → 267 | **DONE** (rf-cstor, 8 units) |
 | `packages/core/src/deploy/scheduler.ts` | 694 | pdl-1 scheduler — likely self-contained, may not need splitting if cohesive |
 | `packages/core/src/export/pulumi-exporter.ts` | 660 | Pulumi export logic |
 | `packages/ui/src/features/ai/services/operation-executor.ts` | 659 | AI operation dispatcher |

@@ -69,6 +69,14 @@ import {
 } from '../../../store/slices/cards-slice';
 import { setGhosts, dismissGhost, clearGhosts, type GhostNode } from '../../../store/slices/ghost-slice';
 import { generateGhostSuggestions } from '../utils/ghost-suggestions';
+import {
+  isPrivateNetwork as isPrivateNetworkIce,
+  isContainerIceType,
+  isLogIceType,
+  isGroupContainer,
+  isContainerNode as isContainerNodeUtil,
+  isGroupOrBlock,
+} from '../utils/node-classification';
 import { SvgGhostNode } from './ghost/svg-ghost-node';
 import {
   inferConnectionMeta,
@@ -411,9 +419,8 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     return nodes.map((node) => {
       const iceType = (node.data?.iceType as string) || 'Resource.Unknown';
 
-      const isPrivateNetwork = iceType === 'Network.PrivateNetwork';
-      const isGroup =
-        iceType.startsWith('Group.') || node.type === 'container' || node.type === ('group' as any) || isPrivateNetwork;
+      const isPrivateNetwork = isPrivateNetworkIce(iceType);
+      const isGroup = isGroupContainer(node);
       const isBlock = node.type === 'block';
       const folded = !!node.data?.folded;
       const isCustomDomain = iceType === 'Network.CustomDomain';
@@ -543,9 +550,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             n.type === 'container' ||
             n.type === ('group' as any) ||
             ((n.data?.iceType as string) || '').startsWith('Group.') ||
-            (n.data?.iceType as string) === 'Network.VPC' ||
-            (n.data?.iceType as string) === 'Network.Subnet' ||
-            (n.data?.iceType as string) === 'Network.PrivateNetwork',
+            isContainerIceType((n.data?.iceType as string) || ''),
         )
         .map((n) => n.id),
     );
@@ -1135,9 +1140,11 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       } else {
         // No children — use the stored expanded height from Redux
         const reduxNode = nodes.find((n: any) => n.id === nodeId);
-        const iceType = (node.data?.iceType as string) || '';
-        const isGroupOrBlock = node.type === 'container' || node.type === 'block' || iceType.startsWith('Group.');
-        const defaultH = computeCompactNodeHeight(node.data as Record<string, unknown>, isGroupOrBlock, false);
+        const defaultH = computeCompactNodeHeight(
+          node.data as Record<string, unknown>,
+          isGroupOrBlock(node),
+          false,
+        );
         selfH = Math.max(reduxNode?.height || 0, defaultH, MIN_CONTAINER_HEIGHT);
       }
 
@@ -1485,16 +1492,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   }, [card?.id, dispatch]);
 
   // Check if a node is a container type
-  const isContainerNode = useCallback((node: LocalCanvasNode) => {
-    const iceType = (node.data.iceType as string) || '';
-    return (
-      node.type === 'container' ||
-      node.type === ('group' as any) ||
-      iceType === 'Network.VPC' ||
-      iceType === 'Network.Subnet' ||
-      iceType === 'Network.PrivateNetwork'
-    );
-  }, []);
+  const isContainerNode = useCallback((node: LocalCanvasNode) => isContainerNodeUtil(node), []);
 
   // Handle drag-over group detection + shift-drag visual state.
   // Uses the same smallest-container search as handleDragEnd so highlighting
@@ -1607,14 +1605,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
           if (descendantIds.has(node.id)) continue;
           // Skip the current parent — Shift-drag means "move to a NEW parent"
           if (node.id === currentParent) continue;
-          const nodeIceType = (node.data.iceType as string) || '';
-          const isNodeContainer =
-            node.type === 'container' ||
-            node.type === ('group' as any) ||
-            nodeIceType === 'Network.VPC' ||
-            nodeIceType === 'Network.Subnet' ||
-            nodeIceType === 'Network.PrivateNetwork';
-          if (!isNodeContainer) continue;
+          if (!isContainerNodeUtil(node)) continue;
 
           // Check if the center of the dragged node is inside this container
           if (
@@ -2643,15 +2634,8 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             {sortedNodes.map((node) => {
               const iceType = (node.data?.iceType as string) || '';
 
-              const isLogNode =
-                iceType === 'Monitoring.Log' || iceType === 'Observability.Logs' || iceType.startsWith('Log.');
-              const isVpcOrSubnet = iceType === 'Network.VPC' || iceType === 'Network.Subnet';
-              const isPrivateNetworkContainer = iceType === 'Network.PrivateNetwork';
-              const isGroup =
-                node.type === 'container' ||
-                node.type === ('group' as any) ||
-                isVpcOrSubnet ||
-                isPrivateNetworkContainer;
+              const isLogNode = isLogIceType(iceType);
+              const isGroup = isContainerNodeUtil(node);
               const isBlock = node.type === 'block';
 
               // Entrance animation for AI-generated nodes

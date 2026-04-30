@@ -17,8 +17,8 @@ Living document, **owned exclusively by the orchestrator**. Tracks which large f
 |---|---|---|---|---|---|
 | ~~`services/deploy/src/services/deploy.service.ts`~~ | 2843 → **1572** | new modules at 100% / 94–100% | **DONE** (17 units, see [blueprint](blueprints/rf-deploy.md)) | 17 | n/a (re-exports kept for namespace-import surface) |
 | ~~`packages/ui/src/features/properties/components/properties-panel.tsx`~~ | 3268 → **94** | new modules at 95–100% | **DONE** (25 units, see [blueprint](blueprints/rf-props.md)) | 25 (rf-props-1..24, rf-props-26; rf-props-25 absorbed into 24) | — |
-| `packages/ui/src/features/canvas/components/svg-canvas.tsx` | 3234 | TBD (rf-0b) | queued | 0 | — |
-| `packages/ui/src/features/deploy/components/deploy-panel.tsx` | 2229 | TBD (rf-0b) | queued | 0 | — |
+| ~~`packages/ui/src/features/canvas/components/svg-canvas.tsx`~~ | 3234 → **909** | new modules at 92–100% | **DONE** (28+1 units, see [blueprint](blueprints/rf-canv.md)) | 29 | — |
+| ~~`packages/ui/src/features/deploy/components/deploy-panel.tsx`~~ | 2229 → **262** | new modules at 90–100% | **DONE** (22 units, see [blueprint](blueprints/rf-pdpl.md)) | 22 (rf-pdpl-1..22; rf-pdpl-23 absorbed into rf-pdpl-24 housekeeping) | — |
 | `packages/core/src/deploy/card-translator.ts` | 1585 | TBD (rf-0b) | queued | 0 | — |
 | `packages/core/src/resources/scale-presets.ts` | 1562 | TBD (rf-0b) | queued | 0 | — |
 | `packages/core/src/resources/cloud-blocks.ts` | 1315 | TBD (rf-0b) | queued | 0 | — |
@@ -32,7 +32,7 @@ Files in the 600–1000 LOC band (`resource-palette.tsx`, `sqlite-state-store.ts
 
 ## In flight
 
-_(none — `properties-panel.tsx` finished 2026-04-29; next file from the queue is `svg-canvas.tsx`.)_
+_(none — `deploy-panel.tsx` finished 2026-04-30; next file from the queue is `card-translator.ts`.)_
 
 ## Follow-up splits (over 500 LOC, must be split per the ceiling rule)
 

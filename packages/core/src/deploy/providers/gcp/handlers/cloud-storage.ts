@@ -6,7 +6,8 @@
 
 import { SERVICE_NAMES, sdk_not_available, sdk_not_available_short } from '../messages.js';
 import { createOrAdoptBucket } from './cloud-storage/bucket-creator.js';
-import { placeholderIndexHtml, placeholderNotFoundHtml, resolveOutputUrl } from './cloud-storage/bucket-utils.js';
+import { resolveOutputUrl } from './cloud-storage/bucket-utils.js';
+import { uploadPlaceholders } from './cloud-storage/placeholder-uploader.js';
 import { grantPublicAccess } from './cloud-storage/public-access-granter.js';
 import { result, fail } from './cloud-storage/result-helpers.js';
 import type { GCPResourceHandler } from '../types.js';
@@ -95,77 +96,23 @@ export const cloud_storage_handler: GCPResourceHandler = {
         warnings.push(...grant.warnings);
       }
 
-      // Upload a placeholder index.html (and 404.html) for static-site
-      // buckets. Without this, the user's first deploy creates an
-      // empty bucket → the LB returns "Server Error" and direct object
-      // URLs return NoSuchKey. The placeholder gives every fresh
-      // deploy a working URL out of the box, even before the user has
-      // wired up the build pipeline. CI uploads will overwrite this
-      // file the first time they run.
-      //
-      // Skip-if-exists: when adopting a bucket from a prior partial
-      // deploy, we must NOT overwrite real user content. Only upload
-      // the placeholder when the file is missing.
+      // Upload index.html + 404.html placeholders for static-site
+      // buckets. Without these, a fresh deploy creates an empty bucket
+      // → LB returns "Server Error" and direct object URLs return
+      // NoSuchKey. Skip-if-exists guards (RISK #8) preserve user
+      // content on adopted buckets. See `placeholder-uploader.ts`.
       if (websiteHosting) {
-        try {
-          const bucket = storage.bucket(name);
-          const indexPlaceholder = placeholderIndexHtml(name);
-          // `predefinedAcl: 'publicRead'` ensures the uploaded file
-          // is publicly readable via the legacy ACL system regardless
-          // of whether the IAM grant succeeded. Belt-and-suspenders
-          // with the bucket's `predefinedDefaultObjectAcl` so the
-          // file is reachable even if defaults didn't apply.
-          // SKIPPED when UBLA is forced on (the ACL endpoint errors).
-          const placeholderAcl = publicAccess && !ublaForcedOn ? 'publicRead' : undefined;
-          const [indexExists] = await bucket
-            .file('index.html')
-            .exists()
-            .catch(() => [false]);
-          if (!indexExists) {
-            await bucket.file('index.html').save(indexPlaceholder, {
-              contentType: 'text/html; charset=utf-8',
-              resumable: false,
-              predefinedAcl: placeholderAcl,
-            });
-          }
-          const notFoundPage = placeholderNotFoundHtml(name);
-          const [notFoundExists] = await bucket
-            .file('404.html')
-            .exists()
-            .catch(() => [false]);
-          if (!notFoundExists) {
-            await bucket.file('404.html').save(notFoundPage, {
-              contentType: 'text/html; charset=utf-8',
-              resumable: false,
-              predefinedAcl: placeholderAcl,
-            });
-          }
-
-          // When adopting an existing bucket via the legacy ACL path,
-          // backfill allUsers:READER on existing files so the prior
-          // private uploads become reachable too.
-          if (bucketAlreadyExisted && publicAccess && publicGrantStrategy === 'legacy-acl') {
-            try {
-              const [files] = await bucket.getFiles({ maxResults: 100 });
-              for (const f of files) {
-                await f.acl.add({ entity: 'allUsers', role: 'READER' }).catch(() => undefined);
-              }
-              ctx.on_log?.(
-                `[cloud-storage] Backfilled allUsers:READER ACL on ${files.length} existing object(s) in adopted bucket ${name}.`,
-              );
-            } catch {
-              // Best-effort.
-            }
-          }
-        } catch (uploadErr: any) {
-          // Best-effort — don't fail the deploy if the placeholder
-          // upload fails (the user's CI will populate the bucket
-          // anyway). Surface as a warning.
-          warnings.push(
-            `Could not upload placeholder index.html: ${uploadErr instanceof Error ? uploadErr.message : String(uploadErr)}. ` +
-              'Visiting the load balancer URL before your build pipeline runs will return "Server Error".',
-          );
-        }
+        const bucket = storage.bucket(name);
+        const uploadWarnings = await uploadPlaceholders({
+          bucket,
+          name,
+          publicAccess,
+          ublaForcedOn,
+          publicGrantStrategy,
+          bucketAlreadyExisted,
+          ctx,
+        });
+        warnings.push(...uploadWarnings);
       }
 
       // URL priority for the output pill:
@@ -320,58 +267,23 @@ export const cloud_storage_handler: GCPResourceHandler = {
         updateWarnings.push(...grant.warnings);
       }
 
-      // Self-heal: if this is a static-site bucket and there's no
-      // `index.html` (because a previous deploy ran before the
-      // placeholder upload landed), upload the placeholder now so the
-      // load balancer has something to serve. Skip if the bucket
-      // already has an index — we never overwrite user content.
+      // Self-heal: re-upload placeholders if missing + ACL-backfill
+      // existing private uploads on adopted-and-public-via-ACL
+      // buckets. The shared helper handles both. The update path
+      // always passes bucketAlreadyExisted=true: by definition we are
+      // updating an existing bucket, so any ACL-strategy success
+      // gates the backfill identically to the create-adoption case.
       if (websiteHosting) {
-        try {
-          const [indexExists] = await bucket.file('index.html').exists();
-          if (!indexExists) {
-            const indexPlaceholder = placeholderIndexHtml(name);
-            await bucket.file('index.html').save(indexPlaceholder, {
-              contentType: 'text/html; charset=utf-8',
-              resumable: false,
-              predefinedAcl: publicAccess && !updateUblaForcedOn ? 'publicRead' : undefined,
-            });
-          }
-          const [notFoundExists] = await bucket.file('404.html').exists();
-          if (!notFoundExists) {
-            const notFoundPage = placeholderNotFoundHtml(name);
-            await bucket.file('404.html').save(notFoundPage, {
-              contentType: 'text/html; charset=utf-8',
-              resumable: false,
-              predefinedAcl: publicAccess && !updateUblaForcedOn ? 'publicRead' : undefined,
-            });
-          }
-
-          // Self-heal existing files: if there are objects in the bucket
-          // (e.g. from a previous deploy that ran when the bucket was
-          // private), retroactively grant allUsers:READER on them so
-          // they're reachable too. This handles the user's existing
-          // ice-bucket-3f0f0b7313 case where the file was uploaded
-          // before the ACL strategy was wired in.
-          if (publicAccess && updatePublicGrantStrategy === 'legacy-acl') {
-            try {
-              const [files] = await bucket.getFiles({ maxResults: 100 });
-              for (const f of files) {
-                await f.acl.add({ entity: 'allUsers', role: 'READER' }).catch(() => undefined);
-              }
-              ctx.on_log?.(
-                `[cloud-storage] Backfilled allUsers:READER ACL on ${files.length} existing object(s) in ${name}.`,
-              );
-            } catch (backfillErr: any) {
-              ctx.on_log?.(
-                `[cloud-storage] Could not backfill ACLs on existing files in ${name}: ${backfillErr instanceof Error ? backfillErr.message : backfillErr}`,
-              );
-            }
-          }
-        } catch {
-          // Best-effort — don't fail an update deploy on a placeholder
-          // upload error. The bucket is already there, the LB is wired,
-          // it just won't have the placeholder until the next deploy.
-        }
+        const uploadWarnings = await uploadPlaceholders({
+          bucket,
+          name,
+          publicAccess,
+          ublaForcedOn: updateUblaForcedOn,
+          publicGrantStrategy: updatePublicGrantStrategy,
+          bucketAlreadyExisted: true,
+          ctx,
+        });
+        updateWarnings.push(...uploadWarnings);
       }
 
       // URL priority on update mirrors create():

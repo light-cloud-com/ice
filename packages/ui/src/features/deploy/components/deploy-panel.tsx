@@ -63,6 +63,7 @@ import {
   type NodeDeployState,
 } from '../../../store/slices/deploy-slice';
 import { primaryOutput } from '../output-extractors';
+import { extractDnsResults, splitDnsByAction, type DnsRec } from '../utils/dns-records';
 import { openExternalUrl } from '../utils/open-external-url';
 import { analyzePreDeploy } from '../utils/predeploy-analysis';
 import {
@@ -598,13 +599,7 @@ export const DeployPanel: React.FC = () => {
               is copyable so the user can paste straight into their
               registrar without digging through the Firebase Console. */}
         {(() => {
-          type DnsRec = { type: string; domain: string; value: string; required_action?: string };
-          const dnsResults = deploy.results.filter(
-            (r) =>
-              r.success &&
-              Array.isArray((r.outputs as any)?.custom_domain_dns_records) &&
-              (r.outputs as any).custom_domain_dns_records.length > 0,
-          );
+          const dnsResults = extractDnsResults(deploy.results);
           if (dnsResults.length === 0) return null;
 
           const renderRecord = (
@@ -644,9 +639,9 @@ export const DeployPanel: React.FC = () => {
           return (
             <div className="space-y-2">
               {dnsResults.map((r, idx) => {
-                const allRecords = ((r.outputs as any).custom_domain_dns_records || []) as DnsRec[];
-                const addRecords = allRecords.filter((rec) => (rec.required_action || 'add') !== 'remove');
-                const removeRecords = allRecords.filter((rec) => rec.required_action === 'remove');
+                const { addRecords, removeRecords } = splitDnsByAction(
+                  ((r.outputs as any).custom_domain_dns_records || []) as DnsRec[],
+                );
                 const customDomain = (r.outputs as any)?.custom_domain || r.name;
                 return (
                   <div

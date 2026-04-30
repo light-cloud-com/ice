@@ -30,14 +30,17 @@ import { wire_source_repositories } from '../pass-1-4-repo-wiring.js';
 
 /**
  * Build a fresh graph with one compute node already added. Returns the
- * graph and the NodeId string so the caller can wire `card_id_to_name`
- * to the actual stored key (Pass 1.4 looks up via `graph.nodes.get`,
- * which is keyed by `${type}:${name}`).
+ * graph plus the bare resource name — the production shape of
+ * `card_id_to_name`. Pass 1.4 now looks up via `graph.get_node_by_name`,
+ * so callers map `cardId → bareName`. (Pre-bugfix-1, the fixtures here
+ * mapped `cardId → ${type}:${name} NodeId` to bypass the latent
+ * `graph.nodes.get(name as any)` lookup miss; see the
+ * `graph-nodes-keyed-by-type-colon-name-not-bare-name` learning.)
  */
 function setup_graph(
   computeName: string,
   initialProps: Record<string, unknown> = {},
-): { graph: ReturnType<typeof create_mutable_graph>; nodeKey: string } {
+): { graph: ReturnType<typeof create_mutable_graph>; nodeKey: string; nodeName: string } {
   const graph = create_mutable_graph('test-project');
   const result = graph.add_node({
     type: 'gcp.run.service',
@@ -47,12 +50,19 @@ function setup_graph(
   if (!result.success || !result.node) {
     throw new Error(`fixture setup failed: ${result.errors?.join(', ')}`);
   }
-  return { graph, nodeKey: result.node.id as unknown as string };
+  // `nodeKey` (the branded NodeId) is still returned for direct
+  // `graph.nodes.get(nodeKey)` reads in assertions; production code
+  // now reads via `get_node_by_name(bareName)`.
+  return {
+    graph,
+    nodeKey: result.node.id as unknown as string,
+    nodeName: result.node.name,
+  };
 }
 
 describe('wire_source_repositories — basic propagation', () => {
   it('copies all 5 fields from Source.Repository on edge.source onto compute target', () => {
-    const { graph, nodeKey } = setup_graph('compute-1');
+    const { graph, nodeKey, nodeName } = setup_graph('compute-1');
     const nodes: CardNodeInput[] = [
       {
         id: 'repo-card',
@@ -73,7 +83,7 @@ describe('wire_source_repositories — basic propagation', () => {
       },
     ];
     const edges: CardEdgeInput[] = [{ id: 'e1', source: 'repo-card', target: 'compute-card' }];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     wire_source_repositories(edges, nodes, card_id_to_name, graph);
 
@@ -88,7 +98,7 @@ describe('wire_source_repositories — basic propagation', () => {
   });
 
   it('handles reverse direction: Source.Repository on edge.target', () => {
-    const { graph, nodeKey } = setup_graph('compute-2');
+    const { graph, nodeKey, nodeName } = setup_graph('compute-2');
     const nodes: CardNodeInput[] = [
       {
         id: 'compute-card',
@@ -106,7 +116,7 @@ describe('wire_source_repositories — basic propagation', () => {
       },
     ];
     const edges: CardEdgeInput[] = [{ id: 'e2', source: 'compute-card', target: 'repo-card' }];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     wire_source_repositories(edges, nodes, card_id_to_name, graph);
 
@@ -118,13 +128,13 @@ describe('wire_source_repositories — basic propagation', () => {
 
 describe('wire_source_repositories — skip conditions', () => {
   it('skips edges where neither end is a Source.Repository', () => {
-    const { graph, nodeKey } = setup_graph('compute-3', { repository: 'untouched' });
+    const { graph, nodeKey, nodeName } = setup_graph('compute-3', { repository: 'untouched' });
     const nodes: CardNodeInput[] = [
       { id: 'a', type: 'block', data: { iceType: 'Compute.CloudRun' } },
       { id: 'compute-card', type: 'block', data: { iceType: 'Database.CloudSQL' } },
     ];
     const edges: CardEdgeInput[] = [{ id: 'e3', source: 'a', target: 'compute-card' }];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     wire_source_repositories(edges, nodes, card_id_to_name, graph);
 
@@ -133,13 +143,13 @@ describe('wire_source_repositories — skip conditions', () => {
   });
 
   it('skips edges where the source card is missing from the nodes array', () => {
-    const { graph, nodeKey } = setup_graph('compute-4', { repository: 'untouched' });
+    const { graph, nodeKey, nodeName } = setup_graph('compute-4', { repository: 'untouched' });
     const nodes: CardNodeInput[] = [
       { id: 'compute-card', type: 'block', data: { iceType: 'Compute.CloudRun' } },
       // no 'missing-source' entry
     ];
     const edges: CardEdgeInput[] = [{ id: 'e4', source: 'missing-source', target: 'compute-card' }];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     wire_source_repositories(edges, nodes, card_id_to_name, graph);
 
@@ -148,7 +158,7 @@ describe('wire_source_repositories — skip conditions', () => {
   });
 
   it('skips edges where the target card is missing from the nodes array', () => {
-    const { graph, nodeKey } = setup_graph('compute-5', { repository: 'untouched' });
+    const { graph, nodeKey, nodeName } = setup_graph('compute-5', { repository: 'untouched' });
     const nodes: CardNodeInput[] = [
       {
         id: 'repo-card',
@@ -158,7 +168,7 @@ describe('wire_source_repositories — skip conditions', () => {
       // no 'missing-target' entry
     ];
     const edges: CardEdgeInput[] = [{ id: 'e5', source: 'repo-card', target: 'missing-target' }];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     wire_source_repositories(edges, nodes, card_id_to_name, graph);
 
@@ -167,7 +177,7 @@ describe('wire_source_repositories — skip conditions', () => {
   });
 
   it('skips when the compute card is absent from card_id_to_name', () => {
-    const { graph, nodeKey } = setup_graph('compute-6', { repository: 'untouched' });
+    const { graph, nodeKey, nodeName } = setup_graph('compute-6', { repository: 'untouched' });
     const nodes: CardNodeInput[] = [
       {
         id: 'repo-card',
@@ -188,7 +198,7 @@ describe('wire_source_repositories — skip conditions', () => {
   });
 
   it('skips when the mapped name does not resolve to a graph node', () => {
-    const { graph, nodeKey } = setup_graph('compute-7', { repository: 'untouched' });
+    const { graph, nodeKey, nodeName } = setup_graph('compute-7', { repository: 'untouched' });
     const nodes: CardNodeInput[] = [
       {
         id: 'repo-card',
@@ -213,7 +223,7 @@ describe('wire_source_repositories — skip conditions', () => {
 
 describe('wire_source_repositories — RISK #5: unconditional overwrite semantics', () => {
   it('overwrites an existing non-empty target value with the source value (the load-bearing fix)', () => {
-    const { graph, nodeKey } = setup_graph('compute-8', { repository: 'old-repo' });
+    const { graph, nodeKey, nodeName } = setup_graph('compute-8', { repository: 'old-repo' });
     const nodes: CardNodeInput[] = [
       {
         id: 'repo-card',
@@ -223,7 +233,7 @@ describe('wire_source_repositories — RISK #5: unconditional overwrite semantic
       { id: 'compute-card', type: 'block', data: { iceType: 'Compute.CloudRun' } },
     ];
     const edges: CardEdgeInput[] = [{ id: 'e8', source: 'repo-card', target: 'compute-card' }];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     wire_source_repositories(edges, nodes, card_id_to_name, graph);
 
@@ -236,7 +246,7 @@ describe('wire_source_repositories — RISK #5: unconditional overwrite semantic
   });
 
   it('skips empty-string source field — target retains its prior value', () => {
-    const { graph, nodeKey } = setup_graph('compute-9', { repository: 'kept-value' });
+    const { graph, nodeKey, nodeName } = setup_graph('compute-9', { repository: 'kept-value' });
     const nodes: CardNodeInput[] = [
       {
         id: 'repo-card',
@@ -246,7 +256,7 @@ describe('wire_source_repositories — RISK #5: unconditional overwrite semantic
       { id: 'compute-card', type: 'block', data: { iceType: 'Compute.CloudRun' } },
     ];
     const edges: CardEdgeInput[] = [{ id: 'e9', source: 'repo-card', target: 'compute-card' }];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     wire_source_repositories(edges, nodes, card_id_to_name, graph);
 
@@ -257,7 +267,7 @@ describe('wire_source_repositories — RISK #5: unconditional overwrite semantic
   });
 
   it('skips undefined source field — target retains its prior value', () => {
-    const { graph, nodeKey } = setup_graph('compute-10', { branch: 'kept-branch' });
+    const { graph, nodeKey, nodeName } = setup_graph('compute-10', { branch: 'kept-branch' });
     const nodes: CardNodeInput[] = [
       {
         id: 'repo-card',
@@ -267,7 +277,7 @@ describe('wire_source_repositories — RISK #5: unconditional overwrite semantic
       { id: 'compute-card', type: 'block', data: { iceType: 'Compute.CloudRun' } },
     ];
     const edges: CardEdgeInput[] = [{ id: 'e10', source: 'repo-card', target: 'compute-card' }];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     wire_source_repositories(edges, nodes, card_id_to_name, graph);
 
@@ -281,28 +291,82 @@ describe('wire_source_repositories — RISK #5: unconditional overwrite semantic
 
 describe('wire_source_repositories — defensive null handling', () => {
   it('treats node.data as empty when missing entirely (does not throw)', () => {
-    const { graph, nodeKey } = setup_graph('compute-11');
+    const { graph, nodeKey, nodeName } = setup_graph('compute-11');
     const nodes: CardNodeInput[] = [
       // Source.Repository with no data → treated as missing iceType (skip)
       { id: 'repo-card', type: 'block', data: undefined as unknown as Record<string, unknown> },
       { id: 'compute-card', type: 'block', data: { iceType: 'Compute.CloudRun' } },
     ];
     const edges: CardEdgeInput[] = [{ id: 'e11', source: 'repo-card', target: 'compute-card' }];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     expect(() => wire_source_repositories(edges, nodes, card_id_to_name, graph)).not.toThrow();
   });
 
   it('returns void and is a no-op on empty edges array', () => {
-    const { graph, nodeKey } = setup_graph('compute-12', { repository: 'unchanged' });
+    const { graph, nodeKey, nodeName } = setup_graph('compute-12', { repository: 'unchanged' });
     const ret = wire_source_repositories(
       [],
       [{ id: 'compute-card', type: 'block', data: { iceType: 'Compute.CloudRun' } }],
-      new Map([['compute-card', nodeKey]]),
+      new Map([['compute-card', nodeName]]),
       graph,
     );
     expect(ret).toBeUndefined();
     const props = graph.nodes.get(nodeKey as any)!.properties as Record<string, unknown>;
     expect(props.repository).toBe('unchanged');
+  });
+});
+
+describe('wire_source_repositories — bugfix-1 regression: production-shape lookup', () => {
+  // Pre-bugfix-1, Pass 1.4 used `graph.nodes.get(name as any)` against a
+  // Map keyed by branded `${type}:${name}` NodeIds, so production
+  // (which stores bare names in `card_id_to_name`) silently no-op'd
+  // every iteration at the lookup miss. Tests bypassed the bug by
+  // mapping cardId → branded NodeId. This regression test pins the
+  // production-shape contract: bare-name input → mutation actually
+  // fires. See `graph-nodes-keyed-by-type-colon-name-not-bare-name`
+  // learning for context.
+  it('uses bare resource name (production shape) for the lookup and mutates target props', () => {
+    const graph = create_mutable_graph('test-project');
+    const result = graph.add_node({
+      type: 'gcp.run.service',
+      name: 'svc-prod-shape',
+      properties: { region: 'us-central1' },
+    });
+    if (!result.success || !result.node) {
+      throw new Error('fixture setup failed');
+    }
+    const nodes: CardNodeInput[] = [
+      {
+        id: 'repo-card',
+        type: 'block',
+        data: {
+          iceType: 'Source.Repository',
+          repository: 'org/regression',
+          branch: 'main',
+          buildCommand: 'pnpm build',
+          outputDirectory: 'dist',
+          path: 'apps/api',
+        },
+      },
+      { id: 'compute-card', type: 'block', data: { iceType: 'Compute.CloudRun' } },
+    ];
+    const edges: CardEdgeInput[] = [
+      { id: 'e-prod', source: 'repo-card', target: 'compute-card' },
+    ];
+    // CRITICAL: bare resource name, not the branded NodeId.
+    const card_id_to_name = new Map<string, string>([['compute-card', 'svc-prod-shape']]);
+
+    wire_source_repositories(edges, nodes, card_id_to_name, graph);
+
+    // The mutation path actually fires under production-shape mapping.
+    const node = graph.get_node_by_name('svc-prod-shape');
+    expect(node).toBeDefined();
+    const props = node!.properties as Record<string, unknown>;
+    expect(props.repository).toBe('org/regression');
+    expect(props.branch).toBe('main');
+    expect(props.build_command).toBe('pnpm build');
+    expect(props.output_directory).toBe('dist');
+    expect(props.source_path).toBe('apps/api');
   });
 });

@@ -66,7 +66,7 @@ export function propagate_custom_domain_hosts(
 
     const targetName = card_id_to_name.get(targetNode.id);
     if (!targetName) continue;
-    const targetGraphNode = graph.nodes.get(targetName as any);
+    const targetGraphNode = graph.get_node_by_name(targetName);
     if (!targetGraphNode) continue;
 
     const rootDomain = String(domainNode.data?.domain || '').trim();

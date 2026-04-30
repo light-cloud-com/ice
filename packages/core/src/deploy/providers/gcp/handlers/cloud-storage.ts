@@ -5,42 +5,8 @@
  */
 
 import { SERVICE_NAMES, sdk_not_available, sdk_not_available_short } from '../messages.js';
-import type { ResourceDeployResult } from '../../../types.js';
+import { result, fail } from './cloud-storage/result-helpers.js';
 import type { GCPResourceHandler } from '../types.js';
-
-function result(
-  name: string,
-  action: 'create' | 'update' | 'delete',
-  start: number,
-  overrides: Partial<ResourceDeployResult> = {},
-): ResourceDeployResult {
-  return {
-    resource_id: name,
-    name,
-    type: 'gcp.storage.bucket',
-    action,
-    success: true,
-    duration_ms: Date.now() - start,
-    ...overrides,
-  };
-}
-
-function fail(
-  name: string,
-  action: 'create' | 'update' | 'delete',
-  start: number,
-  error: string,
-): ResourceDeployResult {
-  return {
-    resource_id: name,
-    name,
-    type: 'gcp.storage.bucket',
-    action,
-    success: false,
-    error,
-    duration_ms: Date.now() - start,
-  };
-}
 
 export const cloud_storage_handler: GCPResourceHandler = {
   async create(name, properties, ctx) {

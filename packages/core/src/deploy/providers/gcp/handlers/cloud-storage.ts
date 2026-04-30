@@ -5,6 +5,7 @@
  */
 
 import { SERVICE_NAMES, sdk_not_available, sdk_not_available_short } from '../messages.js';
+import { createOrAdoptBucket } from './cloud-storage/bucket-creator.js';
 import { placeholderIndexHtml, placeholderNotFoundHtml, resolveOutputUrl } from './cloud-storage/bucket-utils.js';
 import { result, fail } from './cloud-storage/result-helpers.js';
 import type { GCPResourceHandler } from '../types.js';
@@ -59,102 +60,17 @@ export const cloud_storage_handler: GCPResourceHandler = {
         createOptions.predefinedDefaultObjectAcl = 'publicRead';
       }
 
-      // Try creating with the optimistic (UBLA-off) options. Two
-      // recovery scenarios are handled inline:
-      //
-      //   1. `storage.uniformBucketLevelAccess` org policy → retry
-      //      with UBLA on and drop the ACL bits (IAM is the only
-      //      public-access path then).
-      //
-      //   2. Bucket already exists ("you already own it") → adopt it.
-      //      A previous partial deploy probably created the bucket but
-      //      crashed before granting public access; we fall through and
-      //      run the IAM/ACL grant + placeholder upload on the existing
-      //      bucket as if we'd just created it. This is what the deploy
-      //      engine's idempotency contract expects: re-running create
-      //      should converge, not error.
-      let ublaForcedOn = false;
-      let bucketAlreadyExisted = false;
-      try {
-        await storage.createBucket(name, createOptions);
-      } catch (createErr: any) {
-        const createMsg = createErr instanceof Error ? createErr.message : String(createErr);
-        const isUblaConstraint =
-          createMsg.includes('storage.uniformBucketLevelAccess') || createMsg.includes('uniformBucketLevelAccess');
-        const isAlreadyExists =
-          createMsg.includes('you already own it') ||
-          createMsg.includes('already own this bucket') ||
-          (createErr as any)?.code === 409;
-        if (isAlreadyExists) {
-          ctx.on_log?.(
-            `[cloud-storage] Bucket ${name} already exists from a prior deploy — adopting and converging public access.`,
-          );
-          bucketAlreadyExisted = true;
-          // Inspect the existing bucket's UBLA setting so the
-          // public-access logic below picks the right strategy.
-          try {
-            const existingBucket = storage.bucket(name);
-            const [meta] = await existingBucket.getMetadata().catch(() => [null]);
-            const ublaEnabled = meta?.iamConfiguration?.uniformBucketLevelAccess?.enabled === true;
-            if (ublaEnabled) {
-              // Try to flip UBLA off so the legacy ACL fallback can
-              // run on this existing bucket. May fail if locked.
-              try {
-                await existingBucket.setMetadata({
-                  iamConfiguration: {
-                    uniformBucketLevelAccess: { enabled: false },
-                    publicAccessPrevention: 'inherited',
-                  },
-                });
-              } catch (disableErr: any) {
-                const disableMsg = disableErr instanceof Error ? disableErr.message : String(disableErr);
-                if (
-                  disableMsg.includes('storage.uniformBucketLevelAccess') ||
-                  disableMsg.includes('uniformBucketLevelAccess')
-                ) {
-                  ublaForcedOn = true;
-                  ctx.on_log?.(
-                    `[cloud-storage] Adopted bucket ${name} has UBLA locked on by org policy — IAM-only path.`,
-                  );
-                }
-              }
-            }
-          } catch {
-            // Best-effort — fall through to public-access logic.
-          }
-        } else if (publicAccess && isUblaConstraint) {
-          ctx.on_log?.(
-            `[cloud-storage] Project enforces 'storage.uniformBucketLevelAccess' org policy. ` +
-              `Retrying ${name} with UBLA on. Public access will rely solely on IAM ` +
-              `(legacy ACL fallback is unavailable when UBLA is locked on).`,
-          );
-          ublaForcedOn = true;
-          createOptions.iamConfiguration = {
-            publicAccessPrevention: 'inherited',
-            uniformBucketLevelAccess: { enabled: true },
-          };
-          delete createOptions.predefinedDefaultObjectAcl;
-          try {
-            await storage.createBucket(name, createOptions);
-          } catch (retryErr: any) {
-            // Even the retry can hit "already exists" if a prior
-            // partial deploy left the bucket. Adopt it.
-            const retryMsg = retryErr instanceof Error ? retryErr.message : String(retryErr);
-            if (
-              retryMsg.includes('you already own it') ||
-              retryMsg.includes('already own this bucket') ||
-              (retryErr as any)?.code === 409
-            ) {
-              ctx.on_log?.(`[cloud-storage] Bucket ${name} already exists — adopting (UBLA-on).`);
-              bucketAlreadyExisted = true;
-            } else {
-              throw retryErr;
-            }
-          }
-        } else {
-          throw createErr;
-        }
-      }
+      // Two-tier creation: optimistic (UBLA off) + retry on UBLA org
+      // policy + adopt-existing on 409. See `bucket-creator.ts` for
+      // the full flow + risk pins. Idempotency contract: re-running
+      // create on a previously-failed deploy must converge, not error.
+      const { ublaForcedOn, bucketAlreadyExisted } = await createOrAdoptBucket(
+        storage,
+        name,
+        createOptions,
+        publicAccess,
+        ctx,
+      );
 
       // For public static site buckets, grant allUsers:objectViewer so the
       // HTTPS load balancer (backend bucket origin) and any direct visitors

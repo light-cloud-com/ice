@@ -12,7 +12,6 @@ import {
   sanitize_name,
   sanitize_label_value,
   parse_storage_gb,
-  normalize_runtime,
 } from './utils/name-utils.js';
 import { generate_stable_name } from './utils/stable-name.js';
 import { DESIGN_ONLY_PROVIDERS, get_type_map } from './type-maps.js';
@@ -24,6 +23,12 @@ import {
   isCustomDomainStandalone,
   map_edge_relationship,
 } from './edge-classifier.js';
+import {
+  extract_cloud_run_properties,
+  extract_cloud_run_job_properties,
+  extract_cloud_functions_properties,
+  extract_cloud_scheduler_properties,
+} from './extractors/compute.js';
 
 // =============================================================================
 // Types
@@ -115,38 +120,6 @@ export interface SkippedNode {
 // Property extractors per GCP service type
 // =============================================================================
 
-function extract_cloud_run_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
-  return {
-    region,
-    image: (data.image as string) || '',
-    repository: (data.repository as string) || '',
-    branch: (data.branch as string) || 'main',
-    port: data.port || 8080,
-    min_instances: data.minInstances ?? 0,
-    max_instances: data.maxInstances ?? 3,
-    cpu: data.cpu || '1',
-    memory: data.memory || '512Mi',
-    allow_unauthenticated: data.allowUnauthenticated ?? true,
-    env_vars: data.envVars || {},
-    labels: {},
-  };
-}
-
-function extract_cloud_run_job_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
-  return {
-    region,
-    image: (data.image as string) || '',
-    repository: (data.repository as string) || '',
-    branch: (data.branch as string) || 'main',
-    cpu: data.cpu || '1',
-    memory: data.memory || '512Mi',
-    max_retries: data.maxRetries ?? 3,
-    timeout: data.timeout || '600s',
-    env_vars: data.envVars || {},
-    labels: {},
-  };
-}
-
 function extract_cloud_sql_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
   const ice_type = data.iceType as string;
   const is_postgres = ice_type === 'Database.PostgreSQL';
@@ -168,38 +141,6 @@ function extract_cloud_sql_properties(data: Record<string, unknown>, region: str
   if (data.size) props.tier = data.size;
   if (data.edition) props.edition = data.edition;
   return props;
-}
-
-function extract_cloud_functions_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
-  return {
-    region,
-    runtime: normalize_runtime(data.runtime as string) || 'nodejs20',
-    memory_mb: data.memory || 256,
-    timeout_seconds: data.timeout || 30,
-    entry_point: data.entryPoint || 'handler',
-    trigger_type: data.triggerType || 'http',
-    env_vars: data.envVars || {},
-    labels: {},
-  };
-}
-
-function extract_cloud_scheduler_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
-  const schedule_map: Record<string, string> = {
-    daily: '0 0 * * *',
-    hourly: '0 * * * *',
-    weekly: '0 0 * * 0',
-    monthly: '0 0 1 * *',
-  };
-  const schedule = (data.schedule as string) || 'daily';
-
-  return {
-    region,
-    schedule: schedule_map[schedule] || schedule,
-    timezone: data.timezone || 'UTC',
-    target_type: data.targetType || 'http',
-    target_uri: data.targetUri || '',
-    labels: {},
-  };
 }
 
 function extract_storage_bucket_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {

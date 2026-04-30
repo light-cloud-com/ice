@@ -71,6 +71,7 @@ import { outcomeReducers } from './deploy/reducers/outcome';
 import { logsResourcesDriftReducers } from './deploy/reducers/logs-resources-drift';
 import { requirementsReducers } from './deploy/reducers/requirements';
 import { diagnosisReducers } from './deploy/reducers/diagnosis';
+import { preDeployReducers } from './deploy/reducers/pre-deploy';
 
 const initialState: DeployState = {
   isOpen: false,
@@ -110,20 +111,8 @@ const deploySlice = createSlice({
     ...logsResourcesDriftReducers,
     ...requirementsReducers,
     ...diagnosisReducers,
+    ...preDeployReducers,
 
-    // AI-Native #3 — pre-deploy warning actions
-    dismissPreDeployWarning(state, action: PayloadAction<string>) {
-      if (!state.dismissedWarnings.includes(action.payload)) {
-        state.dismissedWarnings.push(action.payload);
-      }
-    },
-    acknowledgeCritical(state, action: PayloadAction<boolean>) {
-      state.criticalAcknowledged = action.payload;
-    },
-    resetPreDeployWarnings(state) {
-      state.dismissedWarnings = [];
-      state.criticalAcknowledged = false;
-    },
     /**
      * Seed the slice from a persisted CanvasDeployment row so the
      * deploy panel's results section survives page reloads. Maps the

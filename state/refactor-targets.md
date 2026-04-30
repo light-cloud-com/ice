@@ -25,6 +25,7 @@ Living document, **owned exclusively by the orchestrator**. Tracks which large f
 | ~~`packages/ui/src/store/slices/cards-slice.ts`~~ | 1195 → **162** | new modules at 100% | **DONE** (14 units, see [blueprint](blueprints/rf-cards.md)) | 14 (rf-cards-1..14; rf-cards-15+16 absorbed into rf-cards-14 housekeeping) | — |
 | ~~`packages/core/src/deploy/providers/gcp/handlers/firebase-hosting.ts`~~ | 1140 → **422** | new modules at 92–100% | **DONE** (9 units, see [blueprint](blueprints/rf-fbh.md)) | 9 (rf-fbh-1..9; rf-fbh-10+11 absorbed into housekeeping) | — |
 | ~~`packages/core/src/graph/parser/parser.ts`~~ | 1061 → **184** | new modules at 100% | **DONE** (6 units, see [blueprint](blueprints/rf-parse.md)) | 6 (rf-parse-1..2 + 3+4 combined + 5+6 combined; rf-parse-7+8 absorbed into housekeeping) | — |
+| ~~`packages/core/src/graph/parser/lexer.ts`~~ | 647 → **316** | new modules at 100% | **DONE** (5 units, see [blueprint](blueprints/rf-lex.md)) | 5 (rf-lex-1..5) | — |
 
 `packages/core/src/resources/high-level-resources.ts` (6434 LOC) is intentionally not in the active queue — it is data-heavy and decomposing it before its consumers are split would be wasted work. Revisit after the consuming files land.
 
@@ -47,7 +48,6 @@ After Phase 1 cleared 5 monster files (deploy-panel + card-translator + cards-sl
 | `packages/core/src/export/pulumi-exporter.ts` | 660 | Pulumi export logic |
 | `packages/ui/src/features/ai/services/operation-executor.ts` | 659 | AI operation dispatcher |
 | `packages/core/src/graph/mutable-graph.ts` | 657 | Graph mutation API — methods may group naturally |
-| `packages/core/src/graph/parser/lexer.ts` | 647 | Sibling of parser.ts; rf-parse-style approach applies |
 
 ### UI components
 

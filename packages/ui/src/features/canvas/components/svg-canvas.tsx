@@ -35,17 +35,14 @@ import {
   addEdgeToCard,
   updateCardNodePositions,
   resizeCardNode,
-  toggleCardNodeFold,
   updateCardNodeParent,
   updateCardNodeData,
   deleteCardNode,
   deleteCardEdge,
-  type CardNode,
   type CardEdge,
 } from '../../../store/slices/cards-slice';
 import {
   isContainerNode as isContainerNodeUtil,
-  isGroupOrBlock,
 } from '../utils/node-classification';
 import {
   isNodeFolded as isNodeFoldedUtil,
@@ -105,6 +102,7 @@ import { useCanvasSideEffects } from '../hooks/use-canvas-side-effects';
 import { useGhostMode } from '../hooks/use-ghost-mode';
 import { useCanvasDrop } from '../hooks/use-canvas-drop';
 import { useContainerResize } from '../hooks/use-container-resize';
+import { useContainerMove } from '../hooks/use-container-move';
 import type { RootState, AppDispatch } from '../../../store';
 
 // rf-canv-1: re-export shim — the canonical home for these three types is
@@ -390,408 +388,33 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   );
 
   // rf-canv-25a: container-resize half — `recalculateAncestorBounds` thin
-  // wrapper, `calculateMinimumContainerSize`, and `handleNodeResize` move
-  // into `useContainerResize`. The setState-during-drag half
-  // (`handleNodeMove` + `handleToggleFold`'s `setExitingGroupId` coupling)
-  // remains inline here until rf-canv-25b lands `useContainerMove`. Both of
-  // those handlers still consume `recalculateAncestorBounds` and
-  // `calculateMinimumContainerSize` from this destructure.
+  // wrapper, `calculateMinimumContainerSize`, and `handleNodeResize` are
+  // owned by `useContainerResize`. The two helpers are kept in this
+  // destructure even though the orchestrator currently has no callsite for
+  // them — they're held for a future reparent-machinery extraction (rf-
+  // canv-26 + beyond). See learnings.md `brief-vs-rf-canv-21-trim-rule-when-
+  // the-planner-knows-the-future-callsite`.
   const { recalculateAncestorBounds, calculateMinimumContainerSize, handleNodeResize } =
     useContainerResize({ visibleNodes });
 
-  // Handle moving a node and all its children, then expand ancestor containers.
-  // skipAncestorResize: when Shift is held (reparent mode), don't resize the parent container.
-  // Uses getAllDescendantIds so hidden block children at L1 also move with their parent.
-  const handleNodeMove = useCallback(
-    (id: string, newX: number, newY: number, skipAncestorResize?: boolean) => {
-      const node = visibleNodes.find((n) => n.id === id);
-      if (!node) return;
+  // Track which group has a child being dragged near its edge (exit indicator).
+  // Per blueprint risk #2 the state stays in the orchestrator until rf-canv-26
+  // lifts it into `useDragTargetHighlight`; `useContainerMove` (rf-canv-25b)
+  // takes the setter as a callback prop to stay agnostic to who owns it.
+  const [exitingGroupId, setExitingGroupId] = useState<string | null>(null);
 
-      const deltaX = newX - node.x;
-      const deltaY = newY - node.y;
-
-      // Collect all position updates
-      const positionUpdates: Array<{ id: string; position: { x: number; y: number } }> = [];
-      const sizeUpdates: Array<{ id: string; width: number; height: number }> = [];
-
-      // 1. Move the dragged node
-      positionUpdates.push({ id, position: { x: newX, y: newY } });
-
-      // 2. Move ALL descendants (including hidden children at L1)
-      const descendantIds = getAllDescendantIds(id);
-      for (const descId of descendantIds) {
-        const desc = canvasNodes.find((n) => n.id === descId);
-        if (desc) {
-          positionUpdates.push({ id: descId, position: { x: desc.x + deltaX, y: desc.y + deltaY } });
-        }
-      }
-
-      // 3. Expand ancestor containers if child overflows their bounds.
-      //    Walk up the parent chain: for each ancestor, check if the moved node
-      //    (or its siblings) extend beyond the container. If so, shift position
-      //    and increase size directly.
-      if (!skipAncestorResize && node.parentId) {
-        let currentNode = node;
-
-        while (currentNode.parentId) {
-          const parent = visibleNodes.find((n) => n.id === currentNode.parentId);
-          if (!parent || parent.data?.folded) break;
-
-          // Get parent's latest state (may have been updated in a previous iteration)
-          const existingPosUpdate = positionUpdates.find((u) => u.id === parent.id);
-          const existingSizeUpdate = sizeUpdates.find((u) => u.id === parent.id);
-          let px = existingPosUpdate?.position.x ?? parent.x;
-          let py = existingPosUpdate?.position.y ?? parent.y;
-          let pw = existingSizeUpdate?.width ?? parent.width;
-          let ph = existingSizeUpdate?.height ?? parent.height;
-
-          // Compute bounding box of ALL children of this parent
-          const siblings = visibleNodes.filter((n) => n.parentId === parent.id);
-          let childMinX = Infinity,
-            childMinY = Infinity;
-          let childMaxR = -Infinity,
-            childMaxB = -Infinity;
-
-          for (const sib of siblings) {
-            // Use updated position if this sibling was moved
-            const sibUpdate = positionUpdates.find((u) => u.id === sib.id);
-            const sx = sibUpdate?.position.x ?? sib.x;
-            const sy = sibUpdate?.position.y ?? sib.y;
-            childMinX = Math.min(childMinX, sx);
-            childMinY = Math.min(childMinY, sy);
-            childMaxR = Math.max(childMaxR, sx + sib.width);
-            childMaxB = Math.max(childMaxB, sy + sib.height);
-          }
-
-          if (!isFinite(childMinX)) break;
-
-          // Check each edge and expand toward the child
-          const padL = CONTAINER_PAD;
-          const padT = CONTAINER_PAD + CONTAINER_HEADER_H;
-          const padR = CONTAINER_PAD;
-          const padB = CONTAINER_PAD;
-
-          let changed = false;
-
-          // Left overflow: child extends past left edge
-          const overflowL = px + padL - childMinX;
-          if (overflowL > 0) {
-            px -= overflowL;
-            pw += overflowL;
-            changed = true;
-          }
-
-          // Top overflow: child extends past top edge
-          const overflowT = py + padT - childMinY;
-          if (overflowT > 0) {
-            py -= overflowT;
-            ph += overflowT;
-            changed = true;
-          }
-
-          // Right overflow: child extends past right edge
-          const overflowR = childMaxR - (px + pw - padR);
-          if (overflowR > 0) {
-            pw += overflowR;
-            changed = true;
-          }
-
-          // Bottom overflow: child extends past bottom edge
-          const overflowB = childMaxB - (py + ph - padB);
-          if (overflowB > 0) {
-            ph += overflowB;
-            changed = true;
-          }
-
-          if (changed) {
-            pw = Math.max(MIN_CONTAINER_WIDTH, pw);
-            ph = Math.max(MIN_CONTAINER_HEIGHT, ph);
-
-            // Update or add position entry
-            if (existingPosUpdate) {
-              existingPosUpdate.position.x = px;
-              existingPosUpdate.position.y = py;
-            } else {
-              positionUpdates.push({ id: parent.id, position: { x: px, y: py } });
-            }
-
-            // Update or add size entry
-            if (existingSizeUpdate) {
-              existingSizeUpdate.width = pw;
-              existingSizeUpdate.height = ph;
-            } else {
-              sizeUpdates.push({ id: parent.id, width: pw, height: ph });
-            }
-          }
-
-          // Walk up to grandparent
-          currentNode = parent as any;
-        }
-      }
-
-      // BND-1/BND-3: After expansion, clamp the dragged node to its parent's
-      // (now expanded) bounds so it never ends up outside the container.
-      // This also catches snap-to-grid rounding that might push a node past the edge.
-      if (node.parentId && !skipAncestorResize) {
-        const parent = visibleNodes.find((n) => n.id === node.parentId);
-        if (parent && !parent.data?.folded) {
-          const parentPosUpdate = positionUpdates.find((u) => u.id === parent.id);
-          const parentSizeUpdate = sizeUpdates.find((u) => u.id === parent.id);
-          const px = parentPosUpdate?.position.x ?? parent.x;
-          const py = parentPosUpdate?.position.y ?? parent.y;
-          const pw = parentSizeUpdate?.width ?? parent.width;
-          const ph = parentSizeUpdate?.height ?? parent.height;
-
-          const minX = px + CONTAINER_PAD;
-          const minY = py + CONTAINER_PAD + CONTAINER_HEADER_H;
-          const maxX = px + pw - CONTAINER_PAD - node.width;
-          const maxY = py + ph - CONTAINER_PAD - node.height;
-
-          const nodeUpdate = positionUpdates.find((u) => u.id === id);
-          if (nodeUpdate) {
-            const clampedX = Math.max(minX, Math.min(maxX, nodeUpdate.position.x));
-            const clampedY = Math.max(minY, Math.min(maxY, nodeUpdate.position.y));
-
-            if (clampedX !== nodeUpdate.position.x || clampedY !== nodeUpdate.position.y) {
-              const adjustX = clampedX - nodeUpdate.position.x;
-              const adjustY = clampedY - nodeUpdate.position.y;
-              nodeUpdate.position.x = clampedX;
-              nodeUpdate.position.y = clampedY;
-
-              // Also adjust all descendants by the same delta
-              for (const descId of descendantIds) {
-                const descUpdate = positionUpdates.find((u) => u.id === descId);
-                if (descUpdate) {
-                  descUpdate.position.x += adjustX;
-                  descUpdate.position.y += adjustY;
-                }
-              }
-            }
-          }
-        }
-      }
-
-      // Skip clamping when:
-      // 1. Shift+drag (reparent mode) — node needs to escape its container
-      // 2. Dragging a container with descendants — children are rigidly translated
-      //    with the parent, so clamping would disturb their relative positions
-      //    (auto-layout uses different padding than the clamp bounds)
-      const hasDescendants = descendantIds.length > 0;
-      const shouldSkipClamp = skipAncestorResize || hasDescendants;
-      dispatch(
-        updateCardNodePositions(shouldSkipClamp ? { updates: positionUpdates, skipClamp: true } : positionUpdates),
-      );
-      for (const su of sizeUpdates) {
-        dispatch(resizeCardNode(su));
-      }
-
-      // Detect if dragged node is near its parent's edge (exit indicator)
-      if (node.parentId) {
-        const parent = visibleNodes.find((n) => n.id === node.parentId);
-        if (parent) {
-          const margin = 30;
-          const isNearEdge =
-            newX < parent.x + margin ||
-            newY < parent.y + margin ||
-            newX + node.width > parent.x + parent.width - margin ||
-            newY + node.height > parent.y + parent.height - margin;
-          setExitingGroupId(isNearEdge ? parent.id : null);
-        }
-      } else {
-        setExitingGroupId(null);
-      }
-    },
-    [visibleNodes, canvasNodes, getAllDescendantIds, dispatch],
-  );
-
-  // Handle fold/unfold with ancestor container expansion.
-  // When unfolding a node near a parent's edge, the expanded height may overflow —
-  // so we expand ancestor containers to keep the unfolded node fully contained.
-  const handleToggleFold = useCallback(
-    (nodeId: string) => {
-      const node = visibleNodes.find((n) => n.id === nodeId);
-      if (!node) {
-        dispatch(toggleCardNodeFold(nodeId));
-        return;
-      }
-
-      const wasFolded = !!node.data?.folded;
-      dispatch(toggleCardNodeFold(nodeId));
-
-      // Only need to resize when UNFOLDING (node gets taller, must fit children)
-      if (!wasFolded) return;
-
-      const positionUpdates: Array<{ id: string; position: { x: number; y: number } }> = [];
-      const sizeUpdates: Array<{ id: string; width: number; height: number }> = [];
-
-      // Step 1: Resize the unfolded node itself to encompass its children.
-      // Children may have been moved while hidden, or this is the first unfold
-      // after auto-organize. Use the FULL canvas nodes (not visibleNodes which
-      // has folded height) to find children positions.
-      const childrenOfNode = canvasNodes.filter((n) => n.parentId === nodeId);
-      let selfW = node.width;
-      let selfH = node.height; // This is the folded visual height (36px)
-      let selfX = node.x;
-      let selfY = node.y;
-
-      if (childrenOfNode.length > 0) {
-        let cMinX = Infinity,
-          cMinY = Infinity;
-        let cMaxR = -Infinity,
-          cMaxB = -Infinity;
-
-        for (const child of childrenOfNode) {
-          cMinX = Math.min(cMinX, child.x);
-          cMinY = Math.min(cMinY, child.y);
-          cMaxR = Math.max(cMaxR, child.x + child.width);
-          cMaxB = Math.max(cMaxB, child.y + child.height);
-        }
-
-        // Expand self to fit children
-        const overL = selfX + CONTAINER_PAD - cMinX;
-        if (overL > 0) {
-          selfX -= overL;
-          selfW += overL;
-        }
-
-        const overT = selfY + CONTAINER_PAD + CONTAINER_HEADER_H - cMinY;
-        if (overT > 0) {
-          selfY -= overT;
-          selfH += overT;
-        }
-
-        const overR = cMaxR - (selfX + selfW - CONTAINER_PAD);
-        if (overR > 0) {
-          selfW += overR;
-        }
-
-        const overB = cMaxB - (selfY + selfH - CONTAINER_PAD);
-        if (overB > 0) {
-          selfH += overB;
-        }
-
-        selfW = Math.max(MIN_CONTAINER_WIDTH, selfW);
-        selfH = Math.max(MIN_CONTAINER_HEIGHT, selfH);
-      } else {
-        // No children — use the stored expanded height from Redux
-        const reduxNode = nodes.find((n: any) => n.id === nodeId);
-        const defaultH = computeCompactNodeHeight(
-          node.data as Record<string, unknown>,
-          isGroupOrBlock(node),
-          false,
-        );
-        selfH = Math.max(reduxNode?.height || 0, defaultH, MIN_CONTAINER_HEIGHT);
-      }
-
-      // Apply self resize
-      if (selfX !== node.x || selfY !== node.y) {
-        positionUpdates.push({ id: nodeId, position: { x: selfX, y: selfY } });
-      }
-      if (selfW !== node.width || selfH !== node.height) {
-        sizeUpdates.push({ id: nodeId, width: selfW, height: selfH });
-      }
-
-      // Step 2: Walk up ancestors and expand them to fit the resized node
-      if (node.parentId) {
-        let current = node;
-        while (current.parentId) {
-          const parent = visibleNodes.find((n) => n.id === current.parentId);
-          if (!parent || parent.data?.folded) break;
-
-          const existingPosUpdate = positionUpdates.find((u) => u.id === parent.id);
-          const existingSizeUpdate = sizeUpdates.find((u) => u.id === parent.id);
-          let px = existingPosUpdate?.position.x ?? parent.x;
-          let py = existingPosUpdate?.position.y ?? parent.y;
-          let pw = existingSizeUpdate?.width ?? parent.width;
-          let ph = existingSizeUpdate?.height ?? parent.height;
-
-          // Compute children bounds, using the expanded size for the unfolded node
-          const siblings = visibleNodes.filter((n) => n.parentId === parent.id);
-          let childMinX = Infinity,
-            childMinY = Infinity;
-          let childMaxR = -Infinity,
-            childMaxB = -Infinity;
-
-          for (const sib of siblings) {
-            // Use the computed expanded bounds for the just-unfolded node
-            const sx = sib.id === nodeId ? selfX : sib.x;
-            const sy = sib.id === nodeId ? selfY : sib.y;
-            const sw = sib.id === nodeId ? selfW : sib.width;
-            const sh = sib.id === nodeId ? selfH : sib.height;
-            childMinX = Math.min(childMinX, sx);
-            childMinY = Math.min(childMinY, sy);
-            childMaxR = Math.max(childMaxR, sx + sw);
-            childMaxB = Math.max(childMaxB, sy + sh);
-          }
-
-          if (!isFinite(childMinX)) break;
-
-          let changed = false;
-
-          const overflowL = px + CONTAINER_PAD - childMinX;
-          if (overflowL > 0) {
-            px -= overflowL;
-            pw += overflowL;
-            changed = true;
-          }
-
-          const overflowT = py + CONTAINER_PAD + CONTAINER_HEADER_H - childMinY;
-          if (overflowT > 0) {
-            py -= overflowT;
-            ph += overflowT;
-            changed = true;
-          }
-
-          const overflowR = childMaxR - (px + pw - CONTAINER_PAD);
-          if (overflowR > 0) {
-            pw += overflowR;
-            changed = true;
-          }
-
-          const overflowB = childMaxB - (py + ph - CONTAINER_PAD);
-          if (overflowB > 0) {
-            ph += overflowB;
-            changed = true;
-          }
-
-          if (changed) {
-            pw = Math.max(MIN_CONTAINER_WIDTH, pw);
-            ph = Math.max(MIN_CONTAINER_HEIGHT, ph);
-            if (existingPosUpdate) {
-              existingPosUpdate.position.x = px;
-              existingPosUpdate.position.y = py;
-            } else {
-              positionUpdates.push({ id: parent.id, position: { x: px, y: py } });
-            }
-            if (existingSizeUpdate) {
-              existingSizeUpdate.width = pw;
-              existingSizeUpdate.height = ph;
-            } else {
-              sizeUpdates.push({ id: parent.id, width: pw, height: ph });
-            }
-          }
-
-          current = parent as any;
-        }
-      }
-
-      // Dispatch all expansions
-      if (positionUpdates.length > 0) {
-        dispatch(updateCardNodePositions(positionUpdates));
-      }
-      for (const su of sizeUpdates) {
-        dispatch(resizeCardNode(su));
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- canvasNodes derived from visibleNodes
-    [visibleNodes, dispatch],
-  );
-
-  // rf-canv-25a: `calculateMinimumContainerSize` and `handleNodeResize`
-  // are owned by `useContainerResize` (called above with the
-  // `recalculateAncestorBounds` thin-wrapper). The orchestrator destructures
-  // both back from that hook so handleNodeMove + handleToggleFold (which
-  // remain inline until rf-canv-25b) can keep consuming them.
+  // rf-canv-25b: `handleNodeMove` (drag with ancestor-expansion + clamp +
+  // descendant translation + edge-detection) and `handleToggleFold` (fold-
+  // time self+ancestor expansion) are owned by `useContainerMove`. The
+  // setter for `exitingGroupId` is threaded in as a callback prop so the
+  // hook stays loosely coupled to rf-canv-26's drag-highlight ownership.
+  const { handleNodeMove, handleToggleFold } = useContainerMove({
+    visibleNodes,
+    canvasNodes,
+    nodes,
+    getAllDescendantIds,
+    setExitingGroupId,
+  });
 
   // Handle delete selected nodes
   const handleDeleteSelected = useCallback(() => {
@@ -805,8 +428,6 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   const [dragOverGroupId, setDragOverGroupId] = useState<string | null>(null);
   // Track all nodes being Shift-dragged (reparent mode) — for visual highlight
   const [shiftDraggingNodeIds, setShiftDraggingNodeIds] = useState<Set<string>>(new Set());
-  // Track which group has a child being dragged near its edge (exit indicator)
-  const [exitingGroupId, setExitingGroupId] = useState<string | null>(null);
   // Track which node is hovered (for highlighting connected edges)
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   // Inline rename state — extracted to useRenameState (rf-canv-20).

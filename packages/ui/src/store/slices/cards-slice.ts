@@ -74,6 +74,7 @@ import { pushSnapshot } from './cards/snapshot';
 // are derived from the keys of the spread object inside `createSlice`.
 
 import { cardLifecycleReducers } from './cards/reducers/card-lifecycle';
+import { nodeEdgeAddReducers } from './cards/reducers/node-edge-add';
 
 // =============================================================================
 // Initial State
@@ -105,104 +106,7 @@ const cardsSlice = createSlice({
   initialState,
   reducers: {
     ...cardLifecycleReducers,
-
-    // Add node to active card
-    addNodeToCard: (state, action: PayloadAction<CardNode>) => {
-      pushSnapshot(state);
-      const card = state.cards.find((c) => c.id === state.activeCardId);
-      if (card) {
-        // Run external payloads through the migrator so any legacy iceType
-        // (e.g. Monitoring.Terminal carried by an AI tool-use write) is
-        // upgraded before it lands on the canvas.
-        card.nodes.push(migrateCardNode(action.payload));
-      }
-    },
-
-    // Add edge to active card
-    addEdgeToCard: (state, action: PayloadAction<CardEdge>) => {
-      pushSnapshot(state);
-      const card = state.cards.find((c) => c.id === state.activeCardId);
-      if (card) {
-        card.edges.push(action.payload);
-      }
-    },
-
-    // Clear all deploy-related overlay fields from every node in the
-    // active card. Used after a successful destroy so the canvas blocks
-    // and properties panel stop showing "Live" / URL pills for resources
-    // that no longer exist. The fields wiped here mirror the ones the
-    // deploy subscription hook + node-outputs hydrator set when a deploy
-    // succeeds; missing one would leave a ghost field on the block.
-    clearCardDeployOverlay: (state, action: PayloadAction<{ cardId?: string }>) => {
-      pushSnapshot(state);
-      const cardId = action.payload?.cardId || state.activeCardId;
-      const card = state.cards.find((c) => c.id === cardId);
-      if (!card) return;
-      const fieldsToClear = [
-        'provider_id',
-        'deploy_status',
-        'deploy_progress',
-        'deploy_error',
-        'deploy_outputs',
-        'last_deployed_at',
-        'deployed_image',
-        'url',
-        'default_url',
-        'firebaseapp_url',
-        'console_url',
-        'site_id',
-        'source_repo',
-        'source_branch',
-        'republished_from_repo',
-        'custom_domain',
-        'custom_domain_url',
-        'custom_domain_status',
-        'custom_domain_dns_records',
-        'public_grant_failed',
-        'public_grant_error',
-        'public_grant_strategy',
-        'ip_address',
-        'IPAddress',
-      ];
-      for (const node of card.nodes) {
-        if (!node.data) continue;
-        const next = { ...node.data };
-        let changed = false;
-        for (const key of fieldsToClear) {
-          if (next[key] !== undefined) {
-            delete next[key];
-            changed = true;
-          }
-        }
-        if (changed) node.data = next;
-      }
-    },
-
-    // Update edge data in active card
-    updateCardEdgeData: (state, action: PayloadAction<{ edgeId: string; data: Record<string, unknown> }>) => {
-      pushSnapshot(state);
-      const card = state.cards.find((c) => c.id === state.activeCardId);
-      if (card) {
-        const edge = card.edges.find((e) => e.id === action.payload.edgeId);
-        if (edge) {
-          edge.data = { ...edge.data, ...action.payload.data };
-        }
-      }
-    },
-
-    // Reverse edge direction (swap source ↔ target)
-    reverseCardEdge: (state, action: PayloadAction<string>) => {
-      pushSnapshot(state);
-      const card = state.cards.find((c) => c.id === state.activeCardId);
-      if (card) {
-        const edge = card.edges.find((e) => e.id === action.payload);
-        if (edge) {
-          const tmp = edge.source;
-          edge.source = edge.target;
-          edge.target = tmp;
-        }
-      }
-    },
+    ...nodeEdgeAddReducers,
 
     // Update node position in active card (L2 / canonical position)
     // BND-2: Clamps child nodes to parent bounds as a safety net.

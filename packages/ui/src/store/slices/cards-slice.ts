@@ -76,6 +76,7 @@ import { cardLifecycleReducers } from './cards/reducers/card-lifecycle';
 import { nodeEdgeAddReducers } from './cards/reducers/node-edge-add';
 import { nodePositionReducers } from './cards/reducers/node-position';
 import { nodeDataReducers } from './cards/reducers/node-data';
+import { nodeDeleteMergeReducers } from './cards/reducers/node-delete-merge';
 
 // =============================================================================
 // Initial State
@@ -113,26 +114,7 @@ const cardsSlice = createSlice({
     ...nodeEdgeAddReducers,
     ...nodePositionReducers,
     ...nodeDataReducers,
-
-    // Delete node from active card
-    deleteCardNode: (state, action: PayloadAction<string>) => {
-      pushSnapshot(state);
-      const card = state.cards.find((c) => c.id === state.activeCardId);
-      if (card) {
-        card.nodes = card.nodes.filter((n) => n.id !== action.payload);
-        // Also remove edges connected to this node
-        card.edges = card.edges.filter((e) => e.source !== action.payload && e.target !== action.payload);
-      }
-    },
-
-    // Delete edge from active card
-    deleteCardEdge: (state, action: PayloadAction<string>) => {
-      pushSnapshot(state);
-      const card = state.cards.find((c) => c.id === state.activeCardId);
-      if (card) {
-        card.edges = card.edges.filter((e) => e.id !== action.payload);
-      }
-    },
+    ...nodeDeleteMergeReducers,
 
     // Import nodes/edges to active card (for cloud import) - auto-organizes by default
     importToActiveCard: (
@@ -199,40 +181,6 @@ const cardsSlice = createSlice({
 
           applyEdgeRoutes(card.edges, edgeRoutes);
         }
-      }
-    },
-
-    // Add nodes/edges to active card (merge, not replace) — for combining templates
-    addToActiveCard: (state, action: PayloadAction<{ nodes: CardNode[]; edges: CardEdge[] }>) => {
-      pushSnapshot(state);
-      const card = state.cards.find((c) => c.id === state.activeCardId);
-      if (card) {
-        // Find the bounding box of existing nodes to offset new ones
-        let maxX = 0;
-        let maxY = 0;
-        for (const node of card.nodes) {
-          const right = node.position.x + (node.width || 220);
-          const bottom = node.position.y + (node.height || 56);
-          if (right > maxX) maxX = right;
-          if (bottom > maxY) maxY = bottom;
-        }
-
-        // Offset new nodes to the right of existing content (with gap)
-        const offsetX = card.nodes.length > 0 ? maxX + 120 : 0;
-        const offsetY = 0;
-
-        // Migrate incoming nodes (template merge / clipboard) before
-        // offsetting so any legacy iceType is upgraded in place.
-        const offsetNodes = migrateCardNodes(action.payload.nodes).map((node) => ({
-          ...node,
-          position: {
-            x: node.position.x + offsetX,
-            y: node.position.y + offsetY,
-          },
-        }));
-
-        card.nodes = [...card.nodes, ...offsetNodes];
-        card.edges = [...card.edges, ...action.payload.edges];
       }
     },
 

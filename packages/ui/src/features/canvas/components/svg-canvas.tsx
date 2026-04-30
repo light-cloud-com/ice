@@ -27,23 +27,17 @@ import { ConnectionTooltip } from './connection-tooltip';
 import { UserTrafficOverlay } from './user-traffic-overlay';
 import { CanvasDeployBanner } from './deploy-banner';
 import { type ConnectionTooltipInfo } from './svg-connection-path';
-import { canContain, isContainer } from '../../../config/containment-rules';
+import { isContainer } from '../../../config/containment-rules';
 import { isTypeVisibleAtLevel } from '../../../config/visualization-config';
 import { useUndoRedo } from '../../../shared/hooks/use-undo-redo';
 import {
   selectActiveCard,
   addEdgeToCard,
-  updateCardNodePositions,
-  resizeCardNode,
-  updateCardNodeParent,
   updateCardNodeData,
   deleteCardNode,
   deleteCardEdge,
   type CardEdge,
 } from '../../../store/slices/cards-slice';
-import {
-  isContainerNode as isContainerNodeUtil,
-} from '../utils/node-classification';
 import {
   isNodeFolded as isNodeFoldedUtil,
   hasCollapsedAncestor as hasCollapsedAncestorUtil,
@@ -53,12 +47,9 @@ import {
 import { computeNodeSizes, toLocalCanvasNode } from '../utils/canvas-node-sizing';
 import {
   calculateContainerBounds as calculateContainerBoundsUtil,
-  CONTAINER_HEADER_H,
-  CONTAINER_PAD,
 } from '../utils/container-bounds';
 import {
   findContainerAtPosition as findContainerAtPositionUtil,
-  findSmallestContainerHit,
 } from '../utils/drop-target';
 import { findExistingSpecialConnection } from '../utils/connection-special-rules';
 import { buildVisibleConnections, computePortMap } from '../utils/canvas-connections';
@@ -70,14 +61,11 @@ import {
   canConnect,
   CATEGORY_TO_RELATIONSHIP,
 } from '../utils/connection-rules';
-import { computeCompactNodeHeight } from './nodes/compact-node';
 import { NodeLiftWrapper } from './canvas-renderer/lift-wrapper';
 import { ParentClipDefs } from './canvas-renderer/parent-clip-defs';
 import { renderCanvasNode, type RenderCtx } from './canvas-renderer/node-renderer-registry';
 // Bespoke-from-day-one nodes with inline editing
 import {
-  MIN_CONTAINER_WIDTH,
-  MIN_CONTAINER_HEIGHT,
   GRID_SIZE,
 } from '../../../config/canvas-constants';
 import { useClipboard } from '../../../shared/hooks/use-clipboard';
@@ -103,6 +91,7 @@ import { useGhostMode } from '../hooks/use-ghost-mode';
 import { useCanvasDrop } from '../hooks/use-canvas-drop';
 import { useContainerResize } from '../hooks/use-container-resize';
 import { useContainerMove } from '../hooks/use-container-move';
+import { useDragTargetHighlight } from '../hooks/use-drag-target-highlight';
 import type { RootState, AppDispatch } from '../../../store';
 
 // rf-canv-1: re-export shim — the canonical home for these three types is
@@ -397,11 +386,22 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   const { recalculateAncestorBounds, calculateMinimumContainerSize, handleNodeResize } =
     useContainerResize({ visibleNodes });
 
-  // Track which group has a child being dragged near its edge (exit indicator).
-  // Per blueprint risk #2 the state stays in the orchestrator until rf-canv-26
-  // lifts it into `useDragTargetHighlight`; `useContainerMove` (rf-canv-25b)
-  // takes the setter as a callback prop to stay agnostic to who owns it.
-  const [exitingGroupId, setExitingGroupId] = useState<string | null>(null);
+  // rf-canv-26: shift-drag highlight + reparent-on-Ctrl-drop machinery —
+  // `exitingGroupId` / `dragOverGroupId` / `shiftDraggingNodeIds` state +
+  // `handleDragOverGroup` + `handleDragEnd` callbacks live in
+  // `useDragTargetHighlight`. Per blueprint risk #2 the `setExitingGroupId`
+  // setter is threaded DOWN into `useContainerMove` (rf-canv-25b) so its
+  // drag-time edge detection writes into the same React state slot the
+  // shift-drag rubber-band reads — the two stay synchronized without
+  // either hook owning the other.
+  const {
+    exitingGroupId,
+    dragOverGroupId,
+    shiftDraggingNodeIds,
+    setExitingGroupId,
+    handleDragOverGroup,
+    handleDragEnd,
+  } = useDragTargetHighlight({ visibleNodes, nodes, selectedNodes, getDescendantIds });
 
   // rf-canv-25b: `handleNodeMove` (drag with ancestor-expansion + clamp +
   // descendant translation + edge-detection) and `handleToggleFold` (fold-
@@ -424,10 +424,6 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     dispatch(setSelectedNodes([]));
   }, [selectedNodes, dispatch]);
 
-  // Track which group is being hovered during drag (for visual feedback)
-  const [dragOverGroupId, setDragOverGroupId] = useState<string | null>(null);
-  // Track all nodes being Shift-dragged (reparent mode) — for visual highlight
-  const [shiftDraggingNodeIds, setShiftDraggingNodeIds] = useState<Set<string>>(new Set());
   // Track which node is hovered (for highlighting connected edges)
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   // Inline rename state — extracted to useRenameState (rf-canv-20).
@@ -544,205 +540,12 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     // eslint-disable-next-line react-hooks/exhaustive-deps -- use card?.id only to avoid re-subscribing on every card mutation
   }, [card?.id, dispatch]);
 
-  // Check if a node is a container type
-  const isContainerNode = useCallback((node: LocalCanvasNode) => isContainerNodeUtil(node), []);
-
-  // Handle drag-over group detection + shift-drag visual state.
-  // Uses the same smallest-container search as handleDragEnd so highlighting
-  // matches the actual drop target at every nesting level.
-  const handleDragOverGroup = useCallback(
-    (_groupId: string | null, draggedNodeId?: string | null, centerX?: number, centerY?: number) => {
-      // When Shift-drag ends (draggedNodeId becomes null), clear everything
-      if (!draggedNodeId) {
-        setShiftDraggingNodeIds(new Set());
-        setExitingGroupId(null);
-        setDragOverGroupId(null);
-        return;
-      }
-
-      // Track all selected nodes being Shift-dragged (for highlight effect)
-      const draggedIds = new Set(selectedNodes);
-      draggedIds.add(draggedNodeId);
-      setShiftDraggingNodeIds(draggedIds);
-
-      // Find the parent group that dragged nodes are leaving
-      let exitingParent: string | null = null;
-      for (const nodeId of draggedIds) {
-        const node = visibleNodes.find((n) => n.id === nodeId);
-        if (node?.parentId && !draggedIds.has(node.parentId)) {
-          exitingParent = node.parentId;
-          break;
-        }
-      }
-
-      // Find the best (smallest) container at the drag center position,
-      // excluding dragged nodes, their descendants, and the current parent.
-      // This mirrors the exact logic in handleDragEnd so the highlight always
-      // matches what will actually happen on drop.
-      let resolvedTargetId: string | null = null;
-
-      if (centerX !== undefined && centerY !== undefined) {
-        // Build full exclusion set: dragged nodes + all their descendants +
-        // the current parent (Shift-drag means "move to a NEW parent").
-        const excludeIds = new Set(draggedIds);
-        for (const id of draggedIds) {
-          for (const desc of getDescendantIds(id)) {
-            excludeIds.add(desc);
-          }
-        }
-        if (exitingParent) excludeIds.add(exitingParent);
-
-        const hit = findSmallestContainerHit(visibleNodes, centerX, centerY, isContainerNode, excludeIds);
-        resolvedTargetId = hit?.id ?? null;
-      }
-
-      setDragOverGroupId(resolvedTargetId);
-
-      // Show orange exit indicator on parent group when dragging out,
-      // but not when hovering over a different valid target (green takes priority)
-      setExitingGroupId(resolvedTargetId ? null : exitingParent);
-    },
-    [visibleNodes, selectedNodes, isContainerNode, getDescendantIds],
-  );
-
-  // Handle drag end — re-parent node only when Ctrl/Cmd is held.
-  // Normal drag: node stays at current parent (or becomes top-level if dragged out).
-  // Ctrl/Cmd + drag: explicitly reparent into the container at drop position.
-  const handleDragEnd = useCallback(
-    (itemId: string, x: number, y: number, forceReparent?: boolean) => {
-      const draggedNode = visibleNodes.find((n) => n.id === itemId);
-      if (!draggedNode) return;
-
-      let bestContainer: LocalCanvasNode | null = null;
-
-      // Only search for a container when Shift is held (explicit reparent)
-      if (forceReparent) {
-        const centerX = x + draggedNode.width / 2;
-        const centerY = y + draggedNode.height / 2;
-
-        // Find the best container at the drop position. Exclude the dragged
-        // node, its descendants, all other selected nodes (multi-drag), and
-        // the dragged node's current parent (Shift-drag means "move to a NEW
-        // parent" — without this, dropping a child within the parent's bounds
-        // would re-select the same parent and no reparent happens).
-        const descendantIds = new Set(getDescendantIds(itemId));
-        descendantIds.add(itemId);
-        for (const id of selectedNodes) {
-          descendantIds.add(id);
-        }
-        const currentParent = draggedNode.parentId || null;
-        if (currentParent) descendantIds.add(currentParent);
-
-        bestContainer = findSmallestContainerHit(visibleNodes, centerX, centerY, isContainerNodeUtil, descendantIds);
-      }
-
-      // Without Ctrl/Cmd, keep the node's current parent — no reparenting on normal drag
-      if (!forceReparent) {
-        setDragOverGroupId(null);
-        setExitingGroupId(null);
-        setShiftDraggingNodeIds(new Set());
-        return;
-      }
-
-      const currentParentId = draggedNode.parentId || null;
-      const newParentId = bestContainer?.id || null;
-
-      // Only re-parent if the parent actually changed
-      if (currentParentId !== newParentId) {
-        // Validate containment if there's a new parent
-        if (newParentId && bestContainer) {
-          const parentIceType = (bestContainer.data.iceType as string) || '';
-          const childIceType = (draggedNode.data.iceType as string) || '';
-          // For groups, allow anything. For blocks/VPCs, validate via canContain.
-          if (bestContainer.type !== 'container') {
-            if (!canContain(parentIceType, childIceType)) {
-              return; // Invalid containment, don't re-parent
-            }
-          }
-        }
-
-        dispatch(updateCardNodeParent({ nodeId: itemId, parentId: newParentId }));
-
-        // After reparenting, expand the new parent to encompass the child.
-        // Uses the stored (expanded) height for the dropped node — not the visual
-        // (folded) height — so the container is large enough when the node is unfolded.
-        if (newParentId && bestContainer) {
-          // Get the full expanded height from Redux (not the visual folded height)
-          const reduxNode = nodes.find((n: any) => n.id === itemId);
-          const droppedIceType = (draggedNode.data?.iceType as string) || '';
-          const droppedIsGroup = draggedNode.type === 'container' || droppedIceType.startsWith('Group.');
-          const droppedIsBlock = draggedNode.type === 'block';
-          const droppedDefaultH = computeCompactNodeHeight(
-            draggedNode.data as Record<string, unknown>,
-            droppedIsGroup || droppedIsBlock,
-            false,
-          );
-          const droppedExpandedH = Math.max(reduxNode?.height || 0, droppedDefaultH);
-
-          const existingChildren = visibleNodes.filter((n) => n.parentId === newParentId);
-
-          // Compute bounding box including the dropped node at its expanded size
-          let childMinX = x;
-          let childMinY = y;
-          let childMaxR = x + draggedNode.width;
-          let childMaxB = y + droppedExpandedH;
-
-          for (const child of existingChildren) {
-            childMinX = Math.min(childMinX, child.x);
-            childMinY = Math.min(childMinY, child.y);
-            childMaxR = Math.max(childMaxR, child.x + child.width);
-            childMaxB = Math.max(childMaxB, child.y + child.height);
-          }
-
-          // Per-edge overflow expansion (same logic as handleNodeMove)
-          let px = bestContainer.x;
-          let py = bestContainer.y;
-          let pw = bestContainer.width;
-          let ph = bestContainer.height;
-          let changed = false;
-
-          const overflowL = px + CONTAINER_PAD - childMinX;
-          if (overflowL > 0) {
-            px -= overflowL;
-            pw += overflowL;
-            changed = true;
-          }
-
-          const overflowT = py + CONTAINER_PAD + CONTAINER_HEADER_H - childMinY;
-          if (overflowT > 0) {
-            py -= overflowT;
-            ph += overflowT;
-            changed = true;
-          }
-
-          const overflowR = childMaxR - (px + pw - CONTAINER_PAD);
-          if (overflowR > 0) {
-            pw += overflowR;
-            changed = true;
-          }
-
-          const overflowB = childMaxB - (py + ph - CONTAINER_PAD);
-          if (overflowB > 0) {
-            ph += overflowB;
-            changed = true;
-          }
-
-          if (changed) {
-            pw = Math.max(MIN_CONTAINER_WIDTH, pw);
-            ph = Math.max(MIN_CONTAINER_HEIGHT, ph);
-            dispatch(updateCardNodePositions([{ id: newParentId, position: { x: px, y: py } }]));
-            dispatch(resizeCardNode({ id: newParentId, width: pw, height: ph }));
-          }
-        }
-      }
-
-      setDragOverGroupId(null);
-      setExitingGroupId(null);
-      setShiftDraggingNodeIds(new Set());
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- nodes/selectedNodes accessed via visibleNodes
-    [visibleNodes, getDescendantIds, dispatch],
-  );
+  // rf-canv-26: `handleDragOverGroup` (shift-drag highlight + exit-indicator)
+  // and `handleDragEnd` (Ctrl/Cmd reparent with canContain validation +
+  // post-reparent ancestor expansion) live in `useDragTargetHighlight` —
+  // destructured above near `useContainerMove`. The `isContainerNode`
+  // memoized predicate that wrapped `isContainerNodeUtil` for the inline
+  // hit-test moved into the hook with them.
 
   // Handle context menu
   const handleContextMenu = useCallback(

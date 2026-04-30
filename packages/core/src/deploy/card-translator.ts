@@ -5,7 +5,6 @@
  * with GCP-typed nodes that the deploy pipeline understands.
  */
 
-import { createHash } from 'crypto';
 import { create_mutable_graph } from '../graph/mutable-graph.js';
 import type { Graph } from '../types/graph.js';
 import {
@@ -33,6 +32,15 @@ import {
   extract_firestore_properties,
   extract_memorystore_properties,
 } from './extractors/database.js';
+import {
+  extract_storage_bucket_properties,
+  extract_pubsub_properties,
+  extract_api_gateway_properties,
+  extract_load_balancer_properties,
+  extract_vpc_properties,
+  extract_subnet_properties,
+  extract_cloud_armor_properties,
+} from './extractors/network.js';
 
 // =============================================================================
 // Types
@@ -124,33 +132,6 @@ export interface SkippedNode {
 // Property extractors per GCP service type
 // =============================================================================
 
-function extract_storage_bucket_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
-  // Phase 8 — when the bucket backs a Compute.StaticSite block we need the
-  // handler to make it publicly readable and enable static website hosting
-  // (index.html / 404.html) so the load balancer's backend bucket can serve
-  // it to the internet. Users who drag a plain Storage.Bucket block don't
-  // get this treatment — private bucket, no website config.
-  const iceType = String(data.iceType || '');
-  const isStaticSite = iceType === 'Compute.StaticSite';
-  return {
-    location: region.toUpperCase().split('-').slice(0, 1).join('') || 'US',
-    storage_class: data.storageClass || 'STANDARD',
-    versioning: data.versioning ?? false,
-    public_access: isStaticSite || data.public_access === true,
-    website_hosting: isStaticSite || data.website_hosting === true,
-    index_page: (data.index_page as string) || 'index.html',
-    not_found_page: (data.not_found_page as string) || '404.html',
-    labels: {},
-  };
-}
-
-function extract_pubsub_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
-  return {
-    message_retention_duration: data.retentionDuration || '604800s',
-    labels: {},
-  };
-}
-
 function extract_secret_manager_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
   return {
     replication_type: data.replicationType || 'automatic',
@@ -173,100 +154,10 @@ function extract_bigquery_properties(data: Record<string, unknown>, region: stri
   };
 }
 
-function extract_api_gateway_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
-  return {
-    region,
-    labels: {},
-  };
-}
-
-function extract_load_balancer_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
-  const ssl_certificate = (data.sslCertificate as string | undefined) || (data.ssl_certificate as string | undefined);
-  const explicit_protocol = (data.protocol as string | undefined)?.toUpperCase();
-  const has_cert = Boolean(ssl_certificate);
-  const protocol =
-    explicit_protocol === 'HTTPS' || explicit_protocol === 'HTTP' ? explicit_protocol : has_cert ? 'HTTPS' : 'HTTP';
-  return {
-    scheme: 'EXTERNAL',
-    port_range: data.port || (protocol === 'HTTPS' ? '443' : '80'),
-    protocol,
-    ssl_certificate,
-    labels: {},
-  };
-}
-
 function extract_logging_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
   return {
     filter: data.filter || '',
     destination_type: data.destinationType || 'logging.googleapis.com',
-    labels: {},
-  };
-}
-
-function extract_vpc_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
-  // PrivateNetwork → auto-mode (GCP creates per-region /20 subnets so the
-  // user doesn't need explicit Subnet blocks). VPC → custom-mode (each
-  // Network.Subnet block deploys its own subnetwork). Both default can be
-  // overridden via data.auto_create_subnets.
-  const is_private_network = data.iceType === 'Network.PrivateNetwork';
-  const auto_create_subnets =
-    typeof data.auto_create_subnets === 'boolean' ? data.auto_create_subnets : is_private_network;
-  return {
-    routing_mode: typeof data.routing_mode === 'string' ? data.routing_mode : 'GLOBAL',
-    description: typeof data.description === 'string' ? data.description : undefined,
-    auto_create_subnets,
-    labels: {},
-  };
-}
-
-function extract_subnet_properties(
-  data: Record<string, unknown>,
-  region: string,
-  node_id?: string,
-): Record<string, unknown> {
-  // Auto-allocate a unique /24 from the node id when the user hasn't set
-  // one explicitly. Two subnets in the same VPC must have different
-  // CIDRs; defaulting both to 10.0.0.0/24 (as we did initially) makes
-  // the second subnet's create call fail with INVALID_USAGE.
-  //
-  // Hash bytes give us a deterministic, conflict-tolerant allocation
-  // across the 10.X.Y.0/24 space (256 × 256 = 65 536 distinct ranges).
-  // Skip 10.0.0.0/24 specifically because GCP's "default" network often
-  // reserves it.
-  let cidr = typeof data.ip_cidr_range === 'string' ? data.ip_cidr_range : '';
-  if (!cidr) {
-    if (node_id) {
-      // GCP auto-mode networks reserve 10.128.0.0/9 for their own
-      // auto-allocated subnets. To stay safe regardless of whether the
-      // subnet ends up in a custom VPC or the default auto-mode network,
-      // clamp the first octet to 1..127 (10.0.0.0/9, non-reserved).
-      // Skip 10.0.x as the literal `default` network often uses it.
-      const hash = createHash('sha256').update(node_id).digest();
-      const x = ((hash[0] ?? 0) % 127) + 1; // 1..127
-      const y = hash[1] ?? 0; // 0..255
-      cidr = `10.${x}.${y}.0/24`;
-    } else {
-      cidr = '10.10.0.0/24';
-    }
-  }
-  // The translator wires `network` from the parent VPC's resource name when
-  // the canvas links Subnet → VPC; falls back to 'default' if unwired.
-  return {
-    region,
-    network: typeof data.network === 'string' ? data.network : 'default',
-    ip_cidr_range: cidr,
-    private_ip_google_access: data.private_ip_google_access === true,
-    description: typeof data.description === 'string' ? data.description : undefined,
-    labels: {},
-  };
-}
-
-function extract_cloud_armor_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
-  // Pass user-defined rules through verbatim; the handler injects the
-  // mandatory default (priority 2147483647) when the user hasn't supplied one.
-  return {
-    rules: Array.isArray(data.rules) ? data.rules : [],
-    description: typeof data.description === 'string' ? data.description : undefined,
     labels: {},
   };
 }

@@ -27,15 +27,12 @@ import { ConnectionTooltip } from './connection-tooltip';
 import { UserTrafficOverlay } from './user-traffic-overlay';
 import { CanvasDeployBanner } from './deploy-banner';
 import { type ConnectionTooltipInfo } from './svg-connection-path';
-import { getBlueprint, expandBlueprint } from '../../../config/blocks';
 import { canContain, isContainer } from '../../../config/containment-rules';
 import { isTypeVisibleAtLevel } from '../../../config/visualization-config';
 import { useUndoRedo } from '../../../shared/hooks/use-undo-redo';
 import {
   selectActiveCard,
-  addNodeToCard,
   addEdgeToCard,
-  expandBlueprintToCard,
   updateCardNodePosition,
   updateCardNodePositions,
   resizeCardNode,
@@ -47,8 +44,6 @@ import {
   type CardNode,
   type CardEdge,
 } from '../../../store/slices/cards-slice';
-import { setGhosts } from '../../../store/slices/ghost-slice';
-import { generateGhostSuggestions } from '../utils/ghost-suggestions';
 import {
   isContainerNode as isContainerNodeUtil,
   isGroupOrBlock,
@@ -80,7 +75,7 @@ import {
   canConnect,
   CATEGORY_TO_RELATIONSHIP,
 } from '../utils/connection-rules';
-import { computeCompactNodeHeight, computeCompactNodeWidth } from './nodes/compact-node';
+import { computeCompactNodeHeight } from './nodes/compact-node';
 import { NodeLiftWrapper } from './canvas-renderer/lift-wrapper';
 import { ParentClipDefs } from './canvas-renderer/parent-clip-defs';
 import { renderCanvasNode, type RenderCtx } from './canvas-renderer/node-renderer-registry';
@@ -93,7 +88,6 @@ import {
 import { useClipboard } from '../../../shared/hooks/use-clipboard';
 import { useExposedServices } from '../../../shared/hooks/use-exposed-services';
 import { calculateZIndex } from '../../../shared/utils/auto-layout';
-import { logDrop, logBlueprint } from '../../../shared/utils/debug-logger';
 import { receiveCardPipelineUpdate } from '../../../store/slices/pipeline-slice';
 import {
   setSelectedNodes,
@@ -111,6 +105,7 @@ import { usePinnedUserNode } from '../hooks/use-pinned-user-node';
 import { useRenameState } from '../hooks/use-rename-state';
 import { useCanvasSideEffects } from '../hooks/use-canvas-side-effects';
 import { useGhostMode } from '../hooks/use-ghost-mode';
+import { useCanvasDrop } from '../hooks/use-canvas-drop';
 import type { RootState, AppDispatch } from '../../../store';
 
 // rf-canv-1: re-export shim — the canonical home for these three types is
@@ -199,8 +194,9 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
   // Ghost-mode suggestions (AI-Native Feature #1) — rf-canv-23: selector,
   // accept/dismiss callbacks, and the 10s auto-dismiss timer are owned by
-  // `useGhostMode`. The orchestrator still threads `setGhosts` directly on
-  // blueprint-drop / new-block paths to publish fresh suggestions.
+  // `useGhostMode`. rf-canv-24: the blueprint-drop / new-block paths that
+  // dispatch `setGhosts(generateGhostSuggestions(...))` now live inside
+  // `useCanvasDrop` (called below).
   const { ghosts, handleAcceptGhost, handleDismissGhost } = useGhostMode();
 
   // ── Reactive propagation (domain sync, routeId backfill, orphan cleanup,
@@ -1271,137 +1267,21 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     [visibleNodes],
   );
 
-  // Handle drop from palette
-  const handleDrop = useCallback(
-    (event: React.DragEvent) => {
-      event.preventDefault();
-
-      const groupType = event.dataTransfer.getData('application/ice-group');
-      const blockType = event.dataTransfer.getData('application/ice-block');
-      const resourceType = event.dataTransfer.getData('application/ice-resource');
-
-      if (!groupType && !blockType && !resourceType) return;
-
-      const canvasPos = screenToCanvas(event.clientX, event.clientY);
-      const targetContainer = findContainerAtPosition(canvasPos.x, canvasPos.y);
-
-      logDrop({
-        position: canvasPos,
-        targetContainer: targetContainer?.id,
-        nodeType: groupType ? `Group.${groupType}` : blockType || resourceType,
-      });
-
-      // --- Group drop: create empty organizational container ---
-      if (groupType) {
-        const iceType = `Group.${groupType}`;
-        const label = event.dataTransfer.getData('application/ice-group-name') || 'New Group';
-        const groupColor = event.dataTransfer.getData('application/ice-group-color') || '#3b82f6';
-        const newNode: CardNode = {
-          id: `group-${Date.now()}`,
-          type: 'container',
-          position: { x: canvasPos.x, y: canvasPos.y },
-          width: 400,
-          height: 300,
-          data: {
-            label,
-            iceType,
-            groupColor,
-            behavior: 'container',
-            status: 'active',
-            folded: false,
-          },
-        };
-        dispatch(addNodeToCard(newNode));
-        return;
-      }
-
-      // --- Blueprint expansion for blocks (flat cards) ---
-      if (blockType) {
-        const provider = event.dataTransfer.getData('application/ice-block-provider') || 'all';
-        const blueprint = getBlueprint(blockType, provider !== 'all' ? provider : undefined);
-        if (blueprint) {
-          // Validate containment for the node's iceType
-          const nodeIceType = (blueprint.nodeData.iceType as string) || '';
-          const targetIceType = targetContainer ? (targetContainer.data.iceType as string) : '';
-          const canContainNode = targetContainer ? canContain(targetIceType, nodeIceType) : true;
-
-          const expanded = expandBlueprint(blueprint, {
-            position: canvasPos,
-            provider: provider as any,
-            parentContainerId: canContainNode && targetContainer ? targetContainer.id : undefined,
-          });
-
-          // Merge any palette-level data overrides (e.g. runtime selection)
-          const blockDataRaw = event.dataTransfer.getData('application/ice-block-data');
-          if (blockDataRaw) {
-            try {
-              const overrides = JSON.parse(blockDataRaw);
-              Object.assign(expanded.node.data, overrides);
-            } catch {
-              /* ignore bad JSON */
-            }
-          }
-
-          logBlueprint({
-            type: blueprint.iceType,
-            provider: provider !== 'all' ? provider : undefined,
-            childCount: 0,
-            containerWidth: expanded.node.width,
-            containerHeight: expanded.node.height,
-          });
-
-          dispatch(expandBlueprintToCard(expanded));
-          dispatch(setGhosts(generateGhostSuggestions(expanded.node as unknown as CardNode, nodes, edges)));
-          return;
-        }
-        // fallback: no blueprint found — create empty resource node
-      }
-
-      const iceType = resourceType || 'Resource.Unknown';
-
-      const label =
-        event.dataTransfer.getData('application/ice-block-name') ||
-        event.dataTransfer.getData('application/ice-resource-name') ||
-        iceType;
-
-      // Validate containment
-      const targetIceType = targetContainer ? (targetContainer.data.iceType as string) : '';
-      const canContainNode = targetContainer ? canContain(targetIceType, iceType) : true;
-
-      const newNodeData = {
-        label,
-        iceType,
-        behavior: 'singleton',
-        status: 'active',
-        folded: false,
-      };
-      const newNode: CardNode = {
-        id: `node-${Date.now()}`,
-        type: 'resource',
-        position: { x: canvasPos.x, y: canvasPos.y },
-        width: computeCompactNodeWidth(false),
-        height: computeCompactNodeHeight(newNodeData as Record<string, unknown>, false),
-        data: newNodeData,
-        ...(canContainNode &&
-          targetContainer && {
-            parentId: targetContainer.id,
-          }),
-      };
-
-      // Add node to active card
-      dispatch(addNodeToCard(newNode));
-      dispatch(setGhosts(generateGhostSuggestions(newNode, nodes, edges)));
-    },
-    [screenToCanvas, findContainerAtPosition, dispatch, nodes, edges],
-  );
+  // rf-canv-24: palette drop dispatcher (group/block/resource branches,
+  // canContain validation, blueprint expansion, ghost suggestions) and the
+  // surface-level dragOver preventDefault + dropEffect setter live in
+  // `../hooks/use-canvas-drop`. The orchestrator threads in `screenToCanvas`,
+  // the bound `findContainerAtPosition` callback, and the active card's
+  // `nodes` / `edges` for ghost-suggestion generation.
+  const { handleDrop, handleDragOver } = useCanvasDrop({
+    screenToCanvas,
+    findContainerAtPosition,
+    nodes,
+    edges,
+  });
 
   // rf-canv-23: ghost accept/dismiss callbacks and the 10s auto-dismiss
   // timer now live in `useGhostMode` (called above).
-
-  const handleDragOver = useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
-  }, []);
 
   // Sort nodes by z-index for proper rendering (containers behind resources)
   // Exclude nodes whose parent is collapsed

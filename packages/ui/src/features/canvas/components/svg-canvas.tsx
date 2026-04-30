@@ -33,7 +33,6 @@ import { useUndoRedo } from '../../../shared/hooks/use-undo-redo';
 import {
   selectActiveCard,
   addEdgeToCard,
-  updateCardNodePosition,
   updateCardNodePositions,
   resizeCardNode,
   toggleCardNodeFold,
@@ -57,7 +56,6 @@ import {
 import { computeNodeSizes, toLocalCanvasNode } from '../utils/canvas-node-sizing';
 import {
   calculateContainerBounds as calculateContainerBoundsUtil,
-  recalculateAncestorBounds as recalculateAncestorBoundsUtil,
   CONTAINER_HEADER_H,
   CONTAINER_PAD,
 } from '../utils/container-bounds';
@@ -106,6 +104,7 @@ import { useRenameState } from '../hooks/use-rename-state';
 import { useCanvasSideEffects } from '../hooks/use-canvas-side-effects';
 import { useGhostMode } from '../hooks/use-ghost-mode';
 import { useCanvasDrop } from '../hooks/use-canvas-drop';
+import { useContainerResize } from '../hooks/use-container-resize';
 import type { RootState, AppDispatch } from '../../../store';
 
 // rf-canv-1: re-export shim — the canonical home for these three types is
@@ -390,15 +389,15 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     [visibleNodes],
   );
 
-  // rf-canv-4: thin wrapper binding `visibleNodes` to the pure
-  // recalculateAncestorBounds util.
-  const recalculateAncestorBounds = useCallback(
-    (
-      startNodeId: string,
-      nodeStates: Map<string, { x: number; y: number; width: number; height: number }>,
-    ) => recalculateAncestorBoundsUtil(visibleNodes, startNodeId, nodeStates),
-    [visibleNodes],
-  );
+  // rf-canv-25a: container-resize half — `recalculateAncestorBounds` thin
+  // wrapper, `calculateMinimumContainerSize`, and `handleNodeResize` move
+  // into `useContainerResize`. The setState-during-drag half
+  // (`handleNodeMove` + `handleToggleFold`'s `setExitingGroupId` coupling)
+  // remains inline here until rf-canv-25b lands `useContainerMove`. Both of
+  // those handlers still consume `recalculateAncestorBounds` and
+  // `calculateMinimumContainerSize` from this destructure.
+  const { recalculateAncestorBounds, calculateMinimumContainerSize, handleNodeResize } =
+    useContainerResize({ visibleNodes });
 
   // Handle moving a node and all its children, then expand ancestor containers.
   // skipAncestorResize: when Shift is held (reparent mode), don't resize the parent container.
@@ -788,84 +787,11 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     [visibleNodes, dispatch],
   );
 
-  // Calculate minimum size required for a container to fit its children
-  const calculateMinimumContainerSize = useCallback(
-    (nodeId: string): { minWidth: number; minHeight: number } => {
-      const node = visibleNodes.find((n) => n.id === nodeId);
-      const children = visibleNodes.filter((n) => n.parentId === nodeId);
-
-      // If no children, use unified minimum
-      if (!node || children.length === 0) {
-        return { minWidth: MIN_CONTAINER_WIDTH, minHeight: MIN_CONTAINER_HEIGHT };
-      }
-
-      // Child positions are absolute, so convert to relative by subtracting parent position
-      let maxRelativeRight = 0;
-      let maxRelativeBottom = 0;
-
-      for (const child of children) {
-        const relativeX = child.x - node.x;
-        const relativeY = child.y - node.y;
-        maxRelativeRight = Math.max(maxRelativeRight, relativeX + child.width);
-        maxRelativeBottom = Math.max(maxRelativeBottom, relativeY + child.height);
-      }
-
-      // Minimum size = children bounding box + padding
-      const minWidth = Math.max(MIN_CONTAINER_WIDTH, maxRelativeRight + CONTAINER_PAD);
-      const minHeight = Math.max(MIN_CONTAINER_HEIGHT, maxRelativeBottom + CONTAINER_PAD);
-
-      return { minWidth, minHeight };
-    },
-    [visibleNodes],
-  );
-
-  // Handle resizing a node, then recursively update ancestors
-  // Prevents resizing containers below the bounds of their children
-  const handleNodeResize = useCallback(
-    (id: string, newWidth: number, newHeight: number) => {
-      const node = visibleNodes.find((n) => n.id === id);
-      if (!node) return;
-
-      // Check if this node has children (is a container)
-      const { minWidth, minHeight } = calculateMinimumContainerSize(id);
-
-      // Constrain resize to minimum bounds required by children
-      const constrainedWidth = Math.max(minWidth, newWidth);
-      const constrainedHeight = Math.max(minHeight, newHeight);
-
-      // Resize the node with constrained dimensions
-      dispatch(resizeCardNode({ id, width: constrainedWidth, height: constrainedHeight }));
-
-      // Build a map of pending node states
-      const nodeStates = new Map<string, { x: number; y: number; width: number; height: number }>();
-      nodeStates.set(id, {
-        x: node.x,
-        y: node.y,
-        width: constrainedWidth,
-        height: constrainedHeight,
-      });
-
-      // Recursively calculate ancestor bounds
-      const ancestorUpdates = recalculateAncestorBounds(id, nodeStates);
-
-      // Apply ancestor updates
-      for (const update of ancestorUpdates) {
-        if (update.position) {
-          dispatch(
-            updateCardNodePosition({
-              nodeId: update.id,
-              x: update.position.x,
-              y: update.position.y,
-            }),
-          );
-        }
-        if (update.size) {
-          dispatch(resizeCardNode({ id: update.id, width: update.size.width, height: update.size.height }));
-        }
-      }
-    },
-    [visibleNodes, calculateMinimumContainerSize, recalculateAncestorBounds, dispatch],
-  );
+  // rf-canv-25a: `calculateMinimumContainerSize` and `handleNodeResize`
+  // are owned by `useContainerResize` (called above with the
+  // `recalculateAncestorBounds` thin-wrapper). The orchestrator destructures
+  // both back from that hook so handleNodeMove + handleToggleFold (which
+  // remain inline until rf-canv-25b) can keep consuming them.
 
   // Handle delete selected nodes
   const handleDeleteSelected = useCallback(() => {

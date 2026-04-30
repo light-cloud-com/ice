@@ -5,8 +5,22 @@
  * Handles string interpolation, heredocs, and error recovery.
  */
 
-import { create_token, create_position, get_keyword_type } from './tokens.js';
+import { create_token, get_keyword_type } from './tokens.js';
 import type { Token, TokenType, SourcePosition } from './tokens.js';
+import {
+  type LexerState,
+  make_lexer_state,
+  ls_is_at_end,
+  ls_peek,
+  ls_peek_next,
+  ls_advance,
+  ls_match,
+  ls_skip_whitespace,
+  ls_current_position,
+  ls_add_token,
+  ls_add_token_with_literal,
+  ls_add_error,
+} from './lexer-state.js';
 
 // =============================================================================
 // Lexer Error
@@ -50,12 +64,8 @@ export interface LexerOptions {
   readonly max_errors?: number;
 }
 
-const DEFAULT_OPTIONS: Required<LexerOptions> = {
-  file: '<input>',
-  include_comments: false,
-  include_newlines: false,
-  max_errors: 100,
-};
+// `DEFAULT_OPTIONS` lives on `lexer-state.ts` as `DEFAULT_LEXER_OPTIONS`;
+// `make_lexer_state` applies it. The class no longer needs a local copy.
 
 // =============================================================================
 // Lexer Implementation
@@ -63,29 +73,28 @@ const DEFAULT_OPTIONS: Required<LexerOptions> = {
 
 /**
  * ICE language lexer.
+ *
+ * The class is a thin lifecycle shell: the constructor builds a
+ * `LexerState` from `(source, options)` and stashes it on `this.state`,
+ * and every other method passes `this.state` through to the standalone
+ * `ls_*` navigation helpers. Field-level mutable state (`pos`, `line`,
+ * `column`, `tokens`, `errors`) lives on `state`, not on the class —
+ * see `lexer-state.ts` for the full state shape.
  */
 export class Lexer {
-  private readonly source: string;
-  private readonly options: Required<LexerOptions>;
-
-  private pos = 0;
-  private line = 1;
-  private column = 1;
-  private tokens: Token[] = [];
-  private errors: LexerError[] = [];
+  private readonly state: LexerState;
 
   constructor(source: string, options: Partial<LexerOptions> = {}) {
-    this.source = source;
-    this.options = { ...DEFAULT_OPTIONS, ...options };
+    this.state = make_lexer_state(source, options);
   }
 
   /**
    * Tokenize the source code.
    */
   tokenize(): LexerResult {
-    while (!this.is_at_end()) {
-      if (this.errors.length >= this.options.max_errors) {
-        this.add_error('Too many errors, stopping lexer', false);
+    while (!ls_is_at_end(this.state)) {
+      if (this.state.errors.length >= this.state.options.max_errors) {
+        ls_add_error(this.state, 'Too many errors, stopping lexer', false);
         break;
       }
 
@@ -93,11 +102,11 @@ export class Lexer {
     }
 
     // Add EOF token
-    this.tokens.push(create_token('EOF', '', this.current_position(0)));
+    this.state.tokens.push(create_token('EOF', '', ls_current_position(this.state, 0)));
 
     return {
-      tokens: this.tokens,
-      errors: this.errors,
+      tokens: this.state.tokens,
+      errors: this.state.errors,
     };
   }
 
@@ -105,141 +114,141 @@ export class Lexer {
    * Scan the next token.
    */
   private scan_token(): void {
-    this.skip_whitespace();
+    ls_skip_whitespace(this.state);
 
-    if (this.is_at_end()) return;
+    if (ls_is_at_end(this.state)) return;
 
-    const start_pos = this.pos;
-    const start_line = this.line;
-    const start_column = this.column;
+    const start_pos = this.state.pos;
+    const start_line = this.state.line;
+    const start_column = this.state.column;
 
-    const char = this.advance();
+    const char = ls_advance(this.state);
 
     switch (char) {
       // Single character tokens
       case '(':
-        this.add_token('LEFT_PAREN', '(', start_pos, start_line, start_column);
+        ls_add_token(this.state, 'LEFT_PAREN', '(', start_pos, start_line, start_column);
         break;
       case ')':
-        this.add_token('RIGHT_PAREN', ')', start_pos, start_line, start_column);
+        ls_add_token(this.state, 'RIGHT_PAREN', ')', start_pos, start_line, start_column);
         break;
       case '{':
-        this.add_token('LEFT_BRACE', '{', start_pos, start_line, start_column);
+        ls_add_token(this.state, 'LEFT_BRACE', '{', start_pos, start_line, start_column);
         break;
       case '}':
-        this.add_token('RIGHT_BRACE', '}', start_pos, start_line, start_column);
+        ls_add_token(this.state, 'RIGHT_BRACE', '}', start_pos, start_line, start_column);
         break;
       case '[':
-        this.add_token('LEFT_BRACKET', '[', start_pos, start_line, start_column);
+        ls_add_token(this.state, 'LEFT_BRACKET', '[', start_pos, start_line, start_column);
         break;
       case ']':
-        this.add_token('RIGHT_BRACKET', ']', start_pos, start_line, start_column);
+        ls_add_token(this.state, 'RIGHT_BRACKET', ']', start_pos, start_line, start_column);
         break;
       case ',':
-        this.add_token('COMMA', ',', start_pos, start_line, start_column);
+        ls_add_token(this.state, 'COMMA', ',', start_pos, start_line, start_column);
         break;
       case ';':
-        this.add_token('SEMICOLON', ';', start_pos, start_line, start_column);
+        ls_add_token(this.state, 'SEMICOLON', ';', start_pos, start_line, start_column);
         break;
       case ':':
-        this.add_token('COLON', ':', start_pos, start_line, start_column);
+        ls_add_token(this.state, 'COLON', ':', start_pos, start_line, start_column);
         break;
       case '?':
-        this.add_token('QUESTION', '?', start_pos, start_line, start_column);
+        ls_add_token(this.state, 'QUESTION', '?', start_pos, start_line, start_column);
         break;
       case '+':
-        this.add_token('PLUS', '+', start_pos, start_line, start_column);
+        ls_add_token(this.state, 'PLUS', '+', start_pos, start_line, start_column);
         break;
       case '*':
-        this.add_token('STAR', '*', start_pos, start_line, start_column);
+        ls_add_token(this.state, 'STAR', '*', start_pos, start_line, start_column);
         break;
       case '%':
-        this.add_token('PERCENT', '%', start_pos, start_line, start_column);
+        ls_add_token(this.state, 'PERCENT', '%', start_pos, start_line, start_column);
         break;
 
       // Two character tokens
       case '=':
-        if (this.match('=')) {
-          this.add_token('EQUALS_EQUALS', '==', start_pos, start_line, start_column);
-        } else if (this.match('>')) {
-          this.add_token('FAT_ARROW', '=>', start_pos, start_line, start_column);
+        if (ls_match(this.state, '=')) {
+          ls_add_token(this.state, 'EQUALS_EQUALS', '==', start_pos, start_line, start_column);
+        } else if (ls_match(this.state, '>')) {
+          ls_add_token(this.state, 'FAT_ARROW', '=>', start_pos, start_line, start_column);
         } else {
-          this.add_token('EQUALS', '=', start_pos, start_line, start_column);
+          ls_add_token(this.state, 'EQUALS', '=', start_pos, start_line, start_column);
         }
         break;
 
       case '!':
-        if (this.match('=')) {
-          this.add_token('NOT_EQUALS', '!=', start_pos, start_line, start_column);
+        if (ls_match(this.state, '=')) {
+          ls_add_token(this.state, 'NOT_EQUALS', '!=', start_pos, start_line, start_column);
         } else {
-          this.add_token('NOT', '!', start_pos, start_line, start_column);
+          ls_add_token(this.state, 'NOT', '!', start_pos, start_line, start_column);
         }
         break;
 
       case '<':
-        if (this.match('=')) {
-          this.add_token('LESS_THAN_EQUALS', '<=', start_pos, start_line, start_column);
-        } else if (this.match('<')) {
+        if (ls_match(this.state, '=')) {
+          ls_add_token(this.state, 'LESS_THAN_EQUALS', '<=', start_pos, start_line, start_column);
+        } else if (ls_match(this.state, '<')) {
           this.scan_heredoc(start_pos, start_line, start_column);
         } else {
-          this.add_token('LESS_THAN', '<', start_pos, start_line, start_column);
+          ls_add_token(this.state, 'LESS_THAN', '<', start_pos, start_line, start_column);
         }
         break;
 
       case '>':
-        if (this.match('=')) {
-          this.add_token('GREATER_THAN_EQUALS', '>=', start_pos, start_line, start_column);
+        if (ls_match(this.state, '=')) {
+          ls_add_token(this.state, 'GREATER_THAN_EQUALS', '>=', start_pos, start_line, start_column);
         } else {
-          this.add_token('GREATER_THAN', '>', start_pos, start_line, start_column);
+          ls_add_token(this.state, 'GREATER_THAN', '>', start_pos, start_line, start_column);
         }
         break;
 
       case '&':
-        if (this.match('&')) {
-          this.add_token('AND', '&&', start_pos, start_line, start_column);
+        if (ls_match(this.state, '&')) {
+          ls_add_token(this.state, 'AND', '&&', start_pos, start_line, start_column);
         } else {
-          this.add_error(`Unexpected character '&'`, true);
+          ls_add_error(this.state, `Unexpected character '&'`, true);
         }
         break;
 
       case '|':
-        if (this.match('|')) {
-          this.add_token('OR', '||', start_pos, start_line, start_column);
+        if (ls_match(this.state, '|')) {
+          ls_add_token(this.state, 'OR', '||', start_pos, start_line, start_column);
         } else {
-          this.add_error(`Unexpected character '|'`, true);
+          ls_add_error(this.state, `Unexpected character '|'`, true);
         }
         break;
 
       case '-':
-        if (this.match('>')) {
-          this.add_token('ARROW', '->', start_pos, start_line, start_column);
-        } else if (this.is_digit(this.peek())) {
+        if (ls_match(this.state, '>')) {
+          ls_add_token(this.state, 'ARROW', '->', start_pos, start_line, start_column);
+        } else if (this.is_digit(ls_peek(this.state))) {
           this.scan_number(start_pos, start_line, start_column, true);
         } else {
-          this.add_token('MINUS', '-', start_pos, start_line, start_column);
+          ls_add_token(this.state, 'MINUS', '-', start_pos, start_line, start_column);
         }
         break;
 
       case '.':
-        if (this.match('.')) {
-          if (this.match('.')) {
-            this.add_token('SPREAD', '...', start_pos, start_line, start_column);
+        if (ls_match(this.state, '.')) {
+          if (ls_match(this.state, '.')) {
+            ls_add_token(this.state, 'SPREAD', '...', start_pos, start_line, start_column);
           } else {
-            this.add_token('DOTDOT', '..', start_pos, start_line, start_column);
+            ls_add_token(this.state, 'DOTDOT', '..', start_pos, start_line, start_column);
           }
         } else {
-          this.add_token('DOT', '.', start_pos, start_line, start_column);
+          ls_add_token(this.state, 'DOT', '.', start_pos, start_line, start_column);
         }
         break;
 
       // Comments and division
       case '/':
-        if (this.match('/')) {
+        if (ls_match(this.state, '/')) {
           this.scan_line_comment(start_pos, start_line, start_column);
-        } else if (this.match('*')) {
+        } else if (ls_match(this.state, '*')) {
           this.scan_block_comment(start_pos, start_line, start_column);
         } else {
-          this.add_token('SLASH', '/', start_pos, start_line, start_column);
+          ls_add_token(this.state, 'SLASH', '/', start_pos, start_line, start_column);
         }
         break;
 
@@ -255,21 +264,21 @@ export class Lexer {
 
       // Newlines
       case '\n':
-        if (this.options.include_newlines) {
-          this.add_token('NEWLINE', '\n', start_pos, start_line, start_column);
+        if (this.state.options.include_newlines) {
+          ls_add_token(this.state, 'NEWLINE', '\n', start_pos, start_line, start_column);
         }
-        this.line++;
-        this.column = 1;
+        this.state.line++;
+        this.state.column = 1;
         break;
 
       case '\r':
-        if (this.match('\n')) {
-          if (this.options.include_newlines) {
-            this.add_token('NEWLINE', '\r\n', start_pos, start_line, start_column);
+        if (ls_match(this.state, '\n')) {
+          if (this.state.options.include_newlines) {
+            ls_add_token(this.state, 'NEWLINE', '\r\n', start_pos, start_line, start_column);
           }
         }
-        this.line++;
-        this.column = 1;
+        this.state.line++;
+        this.state.column = 1;
         break;
 
       default:
@@ -278,7 +287,7 @@ export class Lexer {
         } else if (this.is_alpha(char)) {
           this.scan_identifier(start_pos, start_line, start_column);
         } else {
-          this.add_error(`Unexpected character '${char}'`, true);
+          ls_add_error(this.state, `Unexpected character '${char}'`, true);
         }
         break;
     }
@@ -290,12 +299,12 @@ export class Lexer {
   private scan_string(start_pos: number, start_line: number, start_column: number): void {
     const parts: string[] = [];
 
-    while (!this.is_at_end() && this.peek() !== '"') {
-      if (this.peek() === '\\') {
+    while (!ls_is_at_end(this.state) && ls_peek(this.state) !== '"') {
+      if (ls_peek(this.state) === '\\') {
         // Escape sequence
-        this.advance();
-        if (!this.is_at_end()) {
-          const escaped = this.advance();
+        ls_advance(this.state);
+        if (!ls_is_at_end(this.state)) {
+          const escaped = ls_advance(this.state);
           switch (escaped) {
             case 'n':
               parts.push('\n');
@@ -316,98 +325,110 @@ export class Lexer {
               parts.push('$');
               break;
             default:
-              this.add_error(`Invalid escape sequence '\\${escaped}'`, true);
+              ls_add_error(this.state, `Invalid escape sequence '\\${escaped}'`, true);
               parts.push(escaped);
           }
         }
-      } else if (this.peek() === '$' && this.peek_next() === '{') {
+      } else if (ls_peek(this.state) === '$' && ls_peek_next(this.state) === '{') {
         // String interpolation - for now, just include as literal
-        parts.push(this.advance());
-      } else if (this.peek() === '\n') {
-        this.add_error('Unterminated string literal', true);
+        parts.push(ls_advance(this.state));
+      } else if (ls_peek(this.state) === '\n') {
+        ls_add_error(this.state, 'Unterminated string literal', true);
         break;
       } else {
-        parts.push(this.advance());
+        parts.push(ls_advance(this.state));
       }
     }
 
-    if (this.is_at_end()) {
-      this.add_error('Unterminated string literal', true);
+    if (ls_is_at_end(this.state)) {
+      ls_add_error(this.state, 'Unterminated string literal', true);
       return;
     }
 
     // Consume closing quote
-    this.advance();
+    ls_advance(this.state);
 
     const value = parts.join('');
-    const raw = this.source.slice(start_pos, this.pos);
+    const raw = this.state.source.slice(start_pos, this.state.pos);
 
-    this.add_token_with_literal('STRING', raw, start_pos, start_line, start_column, value);
+    ls_add_token_with_literal(this.state, 'STRING', raw, start_pos, start_line, start_column, value);
   }
 
   /**
    * Scan a number literal.
    */
-  private scan_number(start_pos: number, start_line: number, start_column: number, _negative: boolean): void {
+  private scan_number(
+    start_pos: number,
+    start_line: number,
+    start_column: number,
+    _negative: boolean,
+  ): void {
     // Integer part
-    while (this.is_digit(this.peek())) {
-      this.advance();
+    while (this.is_digit(ls_peek(this.state))) {
+      ls_advance(this.state);
     }
 
     // Decimal part
-    if (this.peek() === '.' && this.is_digit(this.peek_next())) {
-      this.advance(); // consume '.'
-      while (this.is_digit(this.peek())) {
-        this.advance();
+    if (ls_peek(this.state) === '.' && this.is_digit(ls_peek_next(this.state))) {
+      ls_advance(this.state); // consume '.'
+      while (this.is_digit(ls_peek(this.state))) {
+        ls_advance(this.state);
       }
     }
 
     // Exponent part
-    if (this.peek() === 'e' || this.peek() === 'E') {
-      this.advance();
-      if (this.peek() === '+' || this.peek() === '-') {
-        this.advance();
+    if (ls_peek(this.state) === 'e' || ls_peek(this.state) === 'E') {
+      ls_advance(this.state);
+      if (ls_peek(this.state) === '+' || ls_peek(this.state) === '-') {
+        ls_advance(this.state);
       }
-      if (!this.is_digit(this.peek())) {
-        this.add_error('Invalid number: expected exponent', true);
+      if (!this.is_digit(ls_peek(this.state))) {
+        ls_add_error(this.state, 'Invalid number: expected exponent', true);
         return;
       }
-      while (this.is_digit(this.peek())) {
-        this.advance();
+      while (this.is_digit(ls_peek(this.state))) {
+        ls_advance(this.state);
       }
     }
 
-    const value = this.source.slice(start_pos, this.pos);
+    const value = this.state.source.slice(start_pos, this.state.pos);
     const num = parseFloat(value);
 
-    this.add_token_with_literal('NUMBER', value, start_pos, start_line, start_column, num);
+    ls_add_token_with_literal(this.state, 'NUMBER', value, start_pos, start_line, start_column, num);
   }
 
   /**
    * Scan an identifier or keyword.
    */
   private scan_identifier(start_pos: number, start_line: number, start_column: number): void {
-    while (this.is_alphanumeric(this.peek())) {
-      this.advance();
+    while (this.is_alphanumeric(ls_peek(this.state))) {
+      ls_advance(this.state);
     }
 
-    const value = this.source.slice(start_pos, this.pos);
+    const value = this.state.source.slice(start_pos, this.state.pos);
     const keyword_type = get_keyword_type(value);
 
     if (keyword_type) {
       if (keyword_type === 'TRUE') {
-        this.add_token_with_literal('BOOLEAN', value, start_pos, start_line, start_column, true);
+        ls_add_token_with_literal(this.state, 'BOOLEAN', value, start_pos, start_line, start_column, true);
       } else if (keyword_type === 'FALSE') {
-        this.add_token_with_literal('BOOLEAN', value, start_pos, start_line, start_column, false);
+        ls_add_token_with_literal(this.state, 'BOOLEAN', value, start_pos, start_line, start_column, false);
       } else if (keyword_type === 'NULL_KEYWORD') {
-        this.add_token_with_literal('NULL', value, start_pos, start_line, start_column, null);
+        ls_add_token_with_literal(this.state, 'NULL', value, start_pos, start_line, start_column, null);
       } else {
-        this.add_token(keyword_type, value, start_pos, start_line, start_column);
+        ls_add_token(this.state, keyword_type, value, start_pos, start_line, start_column);
       }
     } else {
       // Check if it looks like a type identifier (contains a dot or starts with uppercase)
       const is_type = value.includes('.') || /^[A-Z]/.test(value);
-      this.add_token(is_type ? 'TYPE_IDENTIFIER' : 'IDENTIFIER', value, start_pos, start_line, start_column);
+      ls_add_token(
+        this.state,
+        is_type ? 'TYPE_IDENTIFIER' : 'IDENTIFIER',
+        value,
+        start_pos,
+        start_line,
+        start_column,
+      );
     }
   }
 
@@ -415,13 +436,13 @@ export class Lexer {
    * Scan a line comment.
    */
   private scan_line_comment(start_pos: number, start_line: number, start_column: number): void {
-    while (!this.is_at_end() && this.peek() !== '\n') {
-      this.advance();
+    while (!ls_is_at_end(this.state) && ls_peek(this.state) !== '\n') {
+      ls_advance(this.state);
     }
 
-    if (this.options.include_comments) {
-      const value = this.source.slice(start_pos, this.pos);
-      this.add_token('COMMENT', value, start_pos, start_line, start_column);
+    if (this.state.options.include_comments) {
+      const value = this.state.source.slice(start_pos, this.state.pos);
+      ls_add_token(this.state, 'COMMENT', value, start_pos, start_line, start_column);
     }
   }
 
@@ -431,31 +452,31 @@ export class Lexer {
   private scan_block_comment(start_pos: number, start_line: number, start_column: number): void {
     let depth = 1;
 
-    while (!this.is_at_end() && depth > 0) {
-      if (this.peek() === '/' && this.peek_next() === '*') {
-        this.advance();
-        this.advance();
+    while (!ls_is_at_end(this.state) && depth > 0) {
+      if (ls_peek(this.state) === '/' && ls_peek_next(this.state) === '*') {
+        ls_advance(this.state);
+        ls_advance(this.state);
         depth++;
-      } else if (this.peek() === '*' && this.peek_next() === '/') {
-        this.advance();
-        this.advance();
+      } else if (ls_peek(this.state) === '*' && ls_peek_next(this.state) === '/') {
+        ls_advance(this.state);
+        ls_advance(this.state);
         depth--;
       } else {
-        if (this.peek() === '\n') {
-          this.line++;
-          this.column = 0;
+        if (ls_peek(this.state) === '\n') {
+          this.state.line++;
+          this.state.column = 0;
         }
-        this.advance();
+        ls_advance(this.state);
       }
     }
 
     if (depth > 0) {
-      this.add_error('Unterminated block comment', true);
+      ls_add_error(this.state, 'Unterminated block comment', true);
     }
 
-    if (this.options.include_comments) {
-      const value = this.source.slice(start_pos, this.pos);
-      this.add_token('COMMENT', value, start_pos, start_line, start_column);
+    if (this.state.options.include_comments) {
+      const value = this.state.source.slice(start_pos, this.state.pos);
+      ls_add_token(this.state, 'COMMENT', value, start_pos, start_line, start_column);
     }
   }
 
@@ -464,128 +485,100 @@ export class Lexer {
    */
   private scan_heredoc(start_pos: number, start_line: number, start_column: number): void {
     // Skip optional '-' for indented heredoc
-    const indented = this.match('-');
+    const indented = ls_match(this.state, '-');
 
     // Read delimiter identifier
-    const delimiter_start = this.pos;
-    while (this.is_alpha(this.peek()) || this.is_digit(this.peek()) || this.peek() === '_') {
-      this.advance();
+    const delimiter_start = this.state.pos;
+    while (
+      this.is_alpha(ls_peek(this.state)) ||
+      this.is_digit(ls_peek(this.state)) ||
+      ls_peek(this.state) === '_'
+    ) {
+      ls_advance(this.state);
     }
-    const delimiter = this.source.slice(delimiter_start, this.pos);
+    const delimiter = this.state.source.slice(delimiter_start, this.state.pos);
 
     if (delimiter.length === 0) {
-      this.add_error('Expected heredoc delimiter', true);
+      ls_add_error(this.state, 'Expected heredoc delimiter', true);
       return;
     }
 
     // Skip to end of line
-    while (!this.is_at_end() && this.peek() !== '\n') {
-      this.advance();
+    while (!ls_is_at_end(this.state) && ls_peek(this.state) !== '\n') {
+      ls_advance(this.state);
     }
-    if (!this.is_at_end()) {
-      this.advance(); // consume newline
-      this.line++;
-      this.column = 1;
+    if (!ls_is_at_end(this.state)) {
+      ls_advance(this.state); // consume newline
+      this.state.line++;
+      this.state.column = 1;
     }
 
     // Read content until we find the closing delimiter
-    const content_start = this.pos;
-    let content_end = this.pos;
+    const content_start = this.state.pos;
+    let content_end = this.state.pos;
 
-    while (!this.is_at_end()) {
+    while (!ls_is_at_end(this.state)) {
       // Check for delimiter at start of line
-      const line_start = this.pos;
+      const line_start = this.state.pos;
 
       // Skip leading whitespace for indented heredocs
       if (indented) {
-        while (this.peek() === ' ' || this.peek() === '\t') {
-          this.advance();
+        while (ls_peek(this.state) === ' ' || ls_peek(this.state) === '\t') {
+          ls_advance(this.state);
         }
       }
 
       // Check if this line is the delimiter
       let is_delimiter = true;
-      const check_start = this.pos;
+      const check_start = this.state.pos;
       for (let i = 0; i < delimiter.length; i++) {
-        if (this.peek() !== delimiter[i]) {
+        if (ls_peek(this.state) !== delimiter[i]) {
           is_delimiter = false;
           break;
         }
-        this.advance();
+        ls_advance(this.state);
       }
 
       // Check for end of line or file after delimiter
-      if (is_delimiter && (this.is_at_end() || this.peek() === '\n' || this.peek() === '\r')) {
+      if (
+        is_delimiter &&
+        (ls_is_at_end(this.state) || ls_peek(this.state) === '\n' || ls_peek(this.state) === '\r')
+      ) {
         content_end = line_start;
         break;
       }
 
       // Not the delimiter, reset and continue
-      this.pos = check_start;
+      this.state.pos = check_start;
 
       // Read until end of line
-      while (!this.is_at_end() && this.peek() !== '\n') {
-        this.advance();
+      while (!ls_is_at_end(this.state) && ls_peek(this.state) !== '\n') {
+        ls_advance(this.state);
       }
-      if (!this.is_at_end()) {
-        this.advance(); // consume newline
-        this.line++;
-        this.column = 1;
+      if (!ls_is_at_end(this.state)) {
+        ls_advance(this.state); // consume newline
+        this.state.line++;
+        this.state.column = 1;
       }
     }
 
-    const content = this.source.slice(content_start, content_end);
-    const raw = this.source.slice(start_pos, this.pos);
+    const content = this.state.source.slice(content_start, content_end);
+    const raw = this.state.source.slice(start_pos, this.state.pos);
 
-    this.add_token_with_literal('STRING', raw, start_pos, start_line, start_column, content.trimEnd());
+    ls_add_token_with_literal(
+      this.state,
+      'STRING',
+      raw,
+      start_pos,
+      start_line,
+      start_column,
+      content.trimEnd(),
+    );
   }
 
   // ---------------------------------------------------------------------------
-  // Helper Methods
+  // Char Predicates
   // ---------------------------------------------------------------------------
-
-  private is_at_end(): boolean {
-    return this.pos >= this.source.length;
-  }
-
-  private peek(): string {
-    if (this.is_at_end()) return '\0';
-    return this.source[this.pos] ?? '\0';
-  }
-
-  private peek_next(): string {
-    if (this.pos + 1 >= this.source.length) return '\0';
-    return this.source[this.pos + 1] ?? '\0';
-  }
-
-  private advance(): string {
-    const char = this.source[this.pos] ?? '\0';
-    this.pos++;
-    this.column++;
-    return char;
-  }
-
-  private match(expected: string): boolean {
-    if (this.is_at_end()) return false;
-    if (this.source[this.pos] !== expected) return false;
-    this.pos++;
-    this.column++;
-    return true;
-  }
-
-  private skip_whitespace(): void {
-    while (!this.is_at_end()) {
-      const char = this.peek();
-      switch (char) {
-        case ' ':
-        case '\t':
-          this.advance();
-          break;
-        default:
-          return;
-      }
-    }
-  }
 
   private is_digit(char: string): boolean {
     return char >= '0' && char <= '9';
@@ -597,40 +590,6 @@ export class Lexer {
 
   private is_alphanumeric(char: string): boolean {
     return this.is_alpha(char) || this.is_digit(char);
-  }
-
-  private current_position(length: number): SourcePosition {
-    return create_position(this.line, this.column, this.pos, length, this.options.file);
-  }
-
-  private add_token(type: TokenType, value: string, start_pos: number, start_line: number, start_column: number): void {
-    const position = create_position(start_line, start_column, start_pos, this.pos - start_pos, this.options.file);
-    this.tokens.push(create_token(type, value, position));
-  }
-
-  private add_token_with_literal(
-    type: TokenType,
-    value: string,
-    start_pos: number,
-    start_line: number,
-    start_column: number,
-    literal: unknown,
-  ): void {
-    const position = create_position(start_line, start_column, start_pos, this.pos - start_pos, this.options.file);
-    this.tokens.push(create_token(type, value, position, literal));
-  }
-
-  private add_error(message: string, recoverable: boolean): void {
-    this.errors.push({
-      message,
-      position: this.current_position(1),
-      recoverable,
-    });
-
-    if (recoverable) {
-      // Add error token and continue
-      this.tokens.push(create_token('ERROR', this.source[this.pos - 1] ?? '', this.current_position(1)));
-    }
   }
 }
 

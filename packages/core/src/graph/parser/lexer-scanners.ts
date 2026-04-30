@@ -254,3 +254,85 @@ export function scan_block_comment(
     ls_add_token(s, 'COMMENT', value, start_pos, start_line, start_column);
   }
 }
+
+/**
+ * Scan a double-quoted string literal. Handles 6 escape sequences
+ * (`\n`, `\t`, `\r`, `\\`, `\"`, `\$`); unknown escapes record an
+ * error AND push the raw escaped char into the literal value (so
+ * `"\q"` produces an error + literal value `'q'`). String
+ * interpolation (`${...}`) is NOT yet implemented at the lexer
+ * level — the `$` is included as a literal char and the `{` is
+ * left for the next scan to handle as LEFT_BRACE.
+ *
+ * Errors:
+ *   - Unterminated literal (newline before closing quote, or EOF).
+ *   - Invalid escape sequence — does NOT abort scanning; the bad
+ *     char joins the literal and scanning continues.
+ *
+ * The pre-extraction shape kept this method on the Lexer class
+ * (lexer.ts L290-L346 pre-extraction). Move to lexer-scanners.ts
+ * during the rf-lex-4 orchestrator slim-down so the class holds
+ * only the routing dispatch + lifecycle.
+ */
+export function scan_string(
+  s: LexerState,
+  start_pos: number,
+  start_line: number,
+  start_column: number,
+): void {
+  const parts: string[] = [];
+
+  while (!ls_is_at_end(s) && ls_peek(s) !== '"') {
+    if (ls_peek(s) === '\\') {
+      // Escape sequence
+      ls_advance(s);
+      if (!ls_is_at_end(s)) {
+        const escaped = ls_advance(s);
+        switch (escaped) {
+          case 'n':
+            parts.push('\n');
+            break;
+          case 't':
+            parts.push('\t');
+            break;
+          case 'r':
+            parts.push('\r');
+            break;
+          case '\\':
+            parts.push('\\');
+            break;
+          case '"':
+            parts.push('"');
+            break;
+          case '$':
+            parts.push('$');
+            break;
+          default:
+            ls_add_error(s, `Invalid escape sequence '\\${escaped}'`, true);
+            parts.push(escaped);
+        }
+      }
+    } else if (ls_peek(s) === '$' && ls_peek_next(s) === '{') {
+      // String interpolation - for now, just include as literal
+      parts.push(ls_advance(s));
+    } else if (ls_peek(s) === '\n') {
+      ls_add_error(s, 'Unterminated string literal', true);
+      break;
+    } else {
+      parts.push(ls_advance(s));
+    }
+  }
+
+  if (ls_is_at_end(s)) {
+    ls_add_error(s, 'Unterminated string literal', true);
+    return;
+  }
+
+  // Consume closing quote
+  ls_advance(s);
+
+  const value = parts.join('');
+  const raw = s.source.slice(start_pos, s.pos);
+
+  ls_add_token_with_literal(s, 'STRING', raw, start_pos, start_line, start_column, value);
+}

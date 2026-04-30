@@ -23,12 +23,12 @@ import { SvgGhostEdge } from './ghost/svg-ghost-edge';
 import { SelectionFrame } from './selection-frame';
 import { ConnectionLayer } from './connection-layer';
 import { ConnectionPreviewOverlay } from './connection-preview-overlay';
+import { ConnectionTooltip } from './connection-tooltip';
 import { UserTrafficOverlay } from './user-traffic-overlay';
-import { EDGE_COLORS, type ConnectionTooltipInfo } from './svg-connection-path';
+import { type ConnectionTooltipInfo } from './svg-connection-path';
 import { getBlueprint, expandBlueprint } from '../../../config/blocks';
 import { canContain, isContainer } from '../../../config/containment-rules';
 import { isTypeVisibleAtLevel } from '../../../config/visualization-config';
-import { t } from '../../../i18n';
 import { useUndoRedo } from '../../../shared/hooks/use-undo-redo';
 import {
   selectActiveCard,
@@ -2296,152 +2296,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       </svg>
 
       {/* Connection tooltip — follows mouse, rendered as HTML overlay */}
-      {connTooltip && (
-        <div
-          style={{
-            position: 'fixed',
-            left: connTooltip.mouseX + 14,
-            top: connTooltip.mouseY + 14,
-            pointerEvents: 'none',
-            zIndex: 9999,
-            background: 'var(--ice-bg-base)',
-            border: '1px solid var(--ice-border-strong)',
-            borderRadius: 8,
-            padding: '10px 14px',
-            minWidth: 180,
-            maxWidth: 320,
-            boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-            fontFamily: "'JetBrains Mono Variable', monospace",
-            fontSize: 11,
-            color: 'var(--ice-text-primary)',
-            lineHeight: 1.5,
-          }}
-        >
-          {/* Origin → Destination */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-            <span style={{ fontWeight: 600, color: 'var(--ice-text-primary)' }}>{connTooltip.fromLabel}</span>
-            <span style={{ color: 'var(--ice-border-strong)' }}>→</span>
-            <span style={{ fontWeight: 600, color: 'var(--ice-text-primary)' }}>{connTooltip.toLabel}</span>
-          </div>
-
-          {/* Relationship badge */}
-          <div style={{ marginBottom: 6 }}>
-            <span
-              style={{
-                display: 'inline-block',
-                padding: '1px 8px',
-                borderRadius: 4,
-                fontSize: 10,
-                fontWeight: 600,
-                background: (EDGE_COLORS[connTooltip.relationship] || EDGE_COLORS.default) + '1a',
-                color: EDGE_COLORS[connTooltip.relationship] || EDGE_COLORS.default,
-                border: `1px solid ${EDGE_COLORS[connTooltip.relationship] || EDGE_COLORS.default}33`,
-              }}
-            >
-              {connTooltip.relationship.replace(/_/g, ' ')}
-            </span>
-            {connTooltip.bundleCount > 1 && (
-              <span
-                style={{
-                  display: 'inline-block',
-                  marginLeft: 6,
-                  padding: '1px 8px',
-                  borderRadius: 4,
-                  fontSize: 10,
-                  fontWeight: 600,
-                  background: '#3b82f61a',
-                  color: '#60a5fa',
-                  border: '1px solid #3b82f633',
-                }}
-              >
-                {connTooltip.bundleCount} {t('canvas.tooltip.connections')}
-              </span>
-            )}
-          </div>
-
-          {/* Metadata rows */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {connTooltip.protocol && (
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--ice-text-secondary)' }}>{t('canvas.tooltip.protocol')}</span>
-                <span
-                  style={{
-                    fontFamily: "ui-monospace, 'SFMono-Regular', monospace",
-                    color: 'var(--ice-text-tertiary)',
-                  }}
-                >
-                  {connTooltip.protocol.toUpperCase()}
-                </span>
-              </div>
-            )}
-            {connTooltip.port && (
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--ice-text-secondary)' }}>{t('canvas.tooltip.port')}</span>
-                <span
-                  style={{
-                    fontFamily: "ui-monospace, 'SFMono-Regular', monospace",
-                    color: 'var(--ice-text-tertiary)',
-                  }}
-                >
-                  {connTooltip.port}
-                </span>
-              </div>
-            )}
-            {connTooltip.latency && (
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--ice-text-secondary)' }}>{t('canvas.tooltip.latency')}</span>
-                <span
-                  style={{
-                    fontFamily: "ui-monospace, 'SFMono-Regular', monospace",
-                    color: 'var(--ice-text-tertiary)',
-                  }}
-                >
-                  {connTooltip.latency}
-                </span>
-              </div>
-            )}
-            {connTooltip.throughput && (
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--ice-text-secondary)' }}>{t('canvas.tooltip.throughput')}</span>
-                <span
-                  style={{
-                    fontFamily: "ui-monospace, 'SFMono-Regular', monospace",
-                    color: 'var(--ice-text-tertiary)',
-                  }}
-                >
-                  {connTooltip.throughput}
-                </span>
-              </div>
-            )}
-            {connTooltip.bandwidth && (
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--ice-text-secondary)' }}>{t('canvas.tooltip.bandwidth')}</span>
-                <span
-                  style={{
-                    fontFamily: "ui-monospace, 'SFMono-Regular', monospace",
-                    color: 'var(--ice-text-tertiary)',
-                  }}
-                >
-                  {connTooltip.bandwidth}
-                </span>
-              </div>
-            )}
-            {connTooltip.securityRule && (
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#f59e0b' }}>{t('canvas.tooltip.security')}</span>
-                <span
-                  style={{
-                    fontFamily: "ui-monospace, 'SFMono-Regular', monospace",
-                    color: '#f59e0b',
-                  }}
-                >
-                  {connTooltip.securityRule}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <ConnectionTooltip info={connTooltip} />
 
       {/* Controls help button — bottom-right */}
       <ControlsHelpModal />

@@ -114,6 +114,7 @@ import { setPaneViewport, openContextMenu } from '../../../store/slices/ui-slice
 import { useCanvasInteractions, type CanvasItem } from '../hooks/use-canvas-interactions';
 import { useCanvasValidation } from '../hooks/use-canvas-validation';
 import { useComputingFlows } from '../hooks/use-computing-flows';
+import { useCanvasDimensions } from '../hooks/use-canvas-resize';
 import type { RootState, AppDispatch } from '../../../store';
 
 // rf-canv-1: re-export shim — the canonical home for these three types is
@@ -290,25 +291,9 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     }
   }, [viewport.zoom, lod, nodes, edges]);
 
-  // Canvas dimensions
-  const [dimensions, setDimensions] = React.useState({ width: 800, height: 600 });
-
-  // Update dimensions on resize
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const { width, height } = entry.contentRect;
-        if (width > 0 && height > 0) {
-          setDimensions({ width, height });
-        }
-      }
-    });
-
-    resizeObserver.observe(containerRef.current);
-    return () => resizeObserver.disconnect();
-  }, []);
+  // Canvas dimensions — ResizeObserver-tracked, default 800x600 until first
+  // measurement. rf-canv-18: extracted to `../hooks/use-canvas-resize`.
+  const dimensions = useCanvasDimensions(containerRef);
 
   // Track previous node count for auto-organize on import
   const prevNodeCountRef = useRef(0);

@@ -65,6 +65,7 @@ export { deriveRollup, orderNodesForPanel } from './deploy/derive';
 import { panelConfigReducers } from './deploy/reducers/panel-config';
 import { authReducers } from './deploy/reducers/auth';
 import { planningReducers } from './deploy/reducers/planning';
+import { deployPhasesReducers } from './deploy/reducers/deploy-phases';
 
 const initialState: DeployState = {
   isOpen: false,
@@ -98,38 +99,8 @@ const deploySlice = createSlice({
     ...panelConfigReducers,
     ...authReducers,
     ...planningReducers,
+    ...deployPhasesReducers,
 
-    // Deploy execution
-    startDeploying(state, action: PayloadAction<{ cardId?: string } | undefined>) {
-      // Idempotent: a no-op if a deploy/destroy is already in flight.
-      // Used both by the user-initiated path (Plan → Deploy click) and
-      // by the socket subscription hook when an externally-triggered
-      // deploy (e.g. GitHub push webhook) starts streaming events. The
-      // subscription hook can't tell whether the slice is already in a
-      // deploy state, so it dispatches blindly and we deduplicate here.
-      // Also a no-op when destroying — destroy events use the same
-      // progress channel and would otherwise stomp the destroying label.
-      if (state.status === 'deploying' || state.status === 'planning' || state.status === 'destroying') return;
-      state.status = 'deploying';
-      state.results = [];
-      state.nodesById = {};
-      state.error = null;
-      state.currentDeployCardId = action?.payload?.cardId ?? state.currentDeployCardId;
-      state.logs.push(t('deploy.slice.deploying'));
-    },
-    startDestroying(state, action: PayloadAction<{ cardId?: string } | undefined>) {
-      // Tear-down counterpart to startDeploying. Sets the slice into
-      // a 'destroying' state so the StatusBadge + UI labels reflect
-      // the operation. The subscription hook checks for this state
-      // before flipping back to 'deploying' on incoming progress events.
-      if (state.status === 'destroying') return;
-      state.status = 'destroying';
-      state.results = [];
-      state.nodesById = {};
-      state.error = null;
-      state.currentDeployCardId = action?.payload?.cardId ?? state.currentDeployCardId;
-      state.logs.push('Destroying deployment...');
-    },
     /**
      * pdl-7 — apply a per-node lifecycle event from the typed `deploy:event`
      * channel. Upserts the node record in `nodesById`, dedups by `seq`

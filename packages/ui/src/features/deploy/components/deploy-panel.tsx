@@ -26,6 +26,7 @@ import { PlanPreview } from './plan-preview';
 import { PreDeployWarnings } from './predeploy-warnings';
 import { RequirementsSection } from './requirements-section';
 import { AuthBanner } from './sections/auth-banner';
+import { DeployedResourcesList } from './sections/deployed-resources-list';
 import { StatusBadge } from './status-badge';
 import { useTranslation } from '../../../i18n';
 import { getApi } from '../../../shared/api/api-adapter';
@@ -539,29 +540,7 @@ export const DeployPanel: React.FC = () => {
 
         {/* Previously deployed resources */}
         {deploy.deployedResources.length > 0 && deploy.status === 'idle' && (
-          <div className="rounded-md border border-border overflow-hidden">
-            <div className="px-4 py-2 bg-muted/40 border-b border-border text-sm font-medium flex items-center gap-2">
-              <CheckCircle className="w-3.5 h-3.5 text-blue-500" />
-              {deploy.deployedResources.length} deployed resource
-              {deploy.deployedResources.length !== 1 ? 's' : ''} (from prior deploy)
-            </div>
-            <div className="divide-y divide-border max-h-32 overflow-y-auto">
-              {deploy.deployedResources.map((r, i) => (
-                <div key={i} className="px-4 py-1.5 text-xs flex items-center gap-2">
-                  <span className="font-medium text-sm">{r.name}</span>
-                  <span className="text-muted-foreground font-mono">{r.type}</span>
-                  {r.provider_id && (
-                    <span
-                      className="ml-auto text-muted-foreground font-mono truncate max-w-[250px]"
-                      title={r.provider_id}
-                    >
-                      {r.provider_id}
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+          <DeployedResourcesList resources={deploy.deployedResources} />
         )}
 
         {/* Authenticating */}

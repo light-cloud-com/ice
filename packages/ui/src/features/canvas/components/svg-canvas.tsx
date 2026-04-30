@@ -12,7 +12,7 @@
  */
 
 import React, { useRef, useEffect, useMemo, useCallback, useState, type CSSProperties } from 'react';
-import { useSelector, useDispatch, shallowEqual } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 // Note: Graph actions no longer used - all node operations go through cardsSlice
 // Viewport is now stored per-pane in uiSlice (for split view support)
 import { CanvasGrid } from './canvas-grid';
@@ -25,6 +25,7 @@ import { ConnectionLayer } from './connection-layer';
 import { ConnectionPreviewOverlay } from './connection-preview-overlay';
 import { ConnectionTooltip } from './connection-tooltip';
 import { UserTrafficOverlay } from './user-traffic-overlay';
+import { CanvasDeployBanner } from './deploy-banner';
 import { type ConnectionTooltipInfo } from './svg-connection-path';
 import { getBlueprint, expandBlueprint } from '../../../config/blocks';
 import { canContain, isContainer } from '../../../config/containment-rules';
@@ -109,7 +110,6 @@ import {
   toggleNodeSelection,
   setSelectionRect,
 } from '../../../store/slices/selection-slice';
-import { deriveRollup, type NodeDeployState } from '../../../store/slices/deploy-slice';
 import { setPaneViewport, openContextMenu } from '../../../store/slices/ui-slice';
 import { useCanvasInteractions, type CanvasItem } from '../hooks/use-canvas-interactions';
 import { useCanvasValidation } from '../hooks/use-canvas-validation';
@@ -172,46 +172,12 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   // Redux state - use specified card or active card for nodes/edges
   const activeCard = useSelector(selectActiveCard);
   const allCards = useSelector((state: RootState) => state.cards.cards);
-  // Phase 2/5 — canvas-level deploy banner. Fires whenever a deploy for
-  // this canvas's active card is in flight, even with the deploy panel
-  // closed. Gives the user one-glance confirmation that work is happening.
-  // pdl-5 — replaced the legacy `progress / currentResource / currentStep`
-  // selectors with a `nodesById`-driven rollup. Same UX surface (badge +
-  // top-line text + thin bar) but no more bouncing 59% → 0% per-resource
-  // percentage. `shallowEqual` keeps the canvas re-render cost flat as
-  // the wire stream produces a new `nodesById` reference per event —
-  // structural equality only triggers on actual map mutations.
-  const deployStatus = useSelector((state: RootState) => state.deploy.status);
-  const deployingCardId = useSelector((state: RootState) => state.deploy.currentDeployCardId);
-  const deployNodesById = useSelector(
-    (state: RootState) => state.deploy.nodesById,
-    shallowEqual,
-  );
-  const deployRollup = useMemo<ReturnType<typeof deriveRollup>>(
-    () => deriveRollup(deployNodesById),
-    [deployNodesById],
-  );
-  // Pick the most recently-updated applying node to display as the
-  // "what's happening right now" line. `last_at` is ISO-8601 so lex sort
-  // is fine; ties resolve to insertion order which is stable enough.
-  const bannerActiveNode = useMemo<NodeDeployState | undefined>(() => {
-    let active: NodeDeployState | undefined;
-    for (const node of Object.values(deployNodesById)) {
-      if (node.status !== 'applying') continue;
-      if (!active || node.last_at > active.last_at) active = node;
-    }
-    return active;
-  }, [deployNodesById]);
-  const bannerPct =
-    deployRollup.total === 0
-      ? 0
-      : deployRollup.terminal === deployRollup.total
-        ? 100
-        : Math.min(99, Math.round((deployRollup.terminal / Math.max(deployRollup.total, 1)) * 100));
-  const showDeployBanner =
-    activeCard?.id &&
-    deployingCardId === activeCard.id &&
-    (deployStatus === 'deploying' || deployStatus === 'planning' || deployStatus === 'destroying');
+  // rf-canv-17: the canvas-level deploy banner (status text +
+  // terminal-of-total count + active-node line + progress bar) lives in
+  // `./deploy-banner` as `<CanvasDeployBanner cardId={...} />`. It owns
+  // its own `state.deploy.{status, currentDeployCardId, nodesById}`
+  // selectors + `deriveRollup` / `bannerActiveNode` / `bannerPct` memos
+  // — the orchestrator only threads the active-card id.
   const card = cardId ? allCards.find((c) => c.id === cardId) : activeCard;
   const selectedNodes = useSelector((state: RootState) => state.selection.selectedNodes);
   const selectedEdges = useSelector((state: RootState) => state.selection.selectedEdges);
@@ -1997,104 +1963,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       onDragOver={handleDragOver}
       onMouseDown={handleCanvasClick}
     >
-      {/* Phase 2/5 — canvas-level deploy banner */}
-      {showDeployBanner && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 12,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 100,
-            background: 'rgba(59, 130, 246, 0.15)',
-            border: '1px solid rgba(59, 130, 246, 0.55)',
-            color: '#93c5fd',
-            padding: '8px 14px',
-            borderRadius: 10,
-            fontSize: 12,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            boxShadow: '0 4px 20px rgba(59, 130, 246, 0.25)',
-            pointerEvents: 'none',
-            minWidth: 320,
-            maxWidth: 520,
-          }}
-        >
-          <span
-            style={{
-              display: 'inline-block',
-              width: 10,
-              height: 10,
-              borderRadius: '50%',
-              background: '#3b82f6',
-              boxShadow: '0 0 8px #3b82f6',
-              flexShrink: 0,
-              animation: 'iceDeployPulse 1.2s ease-in-out infinite',
-            }}
-          />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontWeight: 600, color: '#dbeafe' }}>
-              {deployStatus === 'planning'
-                ? 'Planning deployment…'
-                : deployStatus === 'destroying'
-                  ? 'Destroying…'
-                  : 'Deploying…'}
-              {deployStatus !== 'planning' && deployRollup.total > 0 && (
-                <span style={{ marginLeft: 8, color: '#93c5fd', fontVariantNumeric: 'tabular-nums' }}>
-                  {deployRollup.terminal} of {deployRollup.total}
-                </span>
-              )}
-            </div>
-            {bannerActiveNode && (
-              <div
-                style={{
-                  fontSize: 11,
-                  color: '#93c5fd',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  fontFamily: 'SF Mono, Fira Code, monospace',
-                }}
-              >
-                {bannerActiveNode.resource_name || bannerActiveNode.node_id}
-                {bannerActiveNode.step &&
-                  ` · ${bannerActiveNode.step.label} (${bannerActiveNode.step.index}/${bannerActiveNode.step.total})`}
-              </div>
-            )}
-          </div>
-          {(deployStatus === 'deploying' || deployStatus === 'destroying') && (
-            <div
-              style={{
-                position: 'absolute',
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: 2,
-                background: 'rgba(59, 130, 246, 0.15)',
-                borderBottomLeftRadius: 10,
-                borderBottomRightRadius: 10,
-                overflow: 'hidden',
-              }}
-            >
-              <div
-                style={{
-                  height: '100%',
-                  width: `${bannerPct}%`,
-                  background: '#3b82f6',
-                  transition: 'width 300ms ease',
-                }}
-              />
-            </div>
-          )}
-        </div>
-      )}
-      <style>{`
-        @keyframes iceDeployPulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.5; transform: scale(0.85); }
-        }
-      `}</style>
+      <CanvasDeployBanner cardId={activeCard?.id} />
       <svg
         ref={svgRef}
         width={dimensions.width}

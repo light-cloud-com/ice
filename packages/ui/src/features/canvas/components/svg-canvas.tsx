@@ -45,9 +45,6 @@ import {
   deleteCardNode,
   deleteCardEdge,
   autoOrganizeCard,
-  scaleLayoutForZoom,
-  setCardViewport,
-  setCardViewportById,
   type CardNode,
   type CardEdge,
 } from '../../../store/slices/cards-slice';
@@ -92,9 +89,6 @@ import { renderCanvasNode, type RenderCtx } from './canvas-renderer/node-rendere
 import {
   MIN_CONTAINER_WIDTH,
   MIN_CONTAINER_HEIGHT,
-  LOD_THRESHOLD_L3,
-  LOD_THRESHOLD_L2,
-  ZOOM_STEP,
   GRID_SIZE,
 } from '../../../config/canvas-constants';
 import { USER_NODE_WIDTH, USER_NODE_HEIGHT, USER_NODE_ID } from '../../../shared/components/svg-user-node';
@@ -110,11 +104,12 @@ import {
   toggleNodeSelection,
   setSelectionRect,
 } from '../../../store/slices/selection-slice';
-import { setPaneViewport, openContextMenu } from '../../../store/slices/ui-slice';
+import { openContextMenu } from '../../../store/slices/ui-slice';
 import { useCanvasInteractions, type CanvasItem } from '../hooks/use-canvas-interactions';
 import { useCanvasValidation } from '../hooks/use-canvas-validation';
 import { useComputingFlows } from '../hooks/use-computing-flows';
 import { useCanvasDimensions } from '../hooks/use-canvas-resize';
+import { useCanvasViewport } from '../hooks/use-canvas-viewport';
 import type { RootState, AppDispatch } from '../../../store';
 
 // rf-canv-1: re-export shim — the canonical home for these three types is
@@ -197,10 +192,6 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   // Computing flows — reactive property propagation across connected blocks
   useComputingFlows();
 
-  // Get pane viewport if paneId provided
-  const splitView = useSelector((state: RootState) => state.ui.splitView);
-  const pane = paneId ? splitView.panes.find((p) => p.id === paneId) : null;
-
   // Get nodes and edges from the card
   const nodes = useMemo(() => card?.nodes || [], [card?.nodes]);
   const edges = useMemo(() => card?.edges || [], [card?.edges]);
@@ -212,47 +203,14 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   // network policy, secret injection, etc.) is now handled by useComputingFlows()
   // called above. See packages/core/src/compute/ for the rule definitions.
 
-  // Use pane viewport if available, otherwise fall back to card viewport
-  const paneViewport = pane?.viewport;
-  const cardViewport = card?.viewport || { panX: 0, panY: 0, scale: 1 };
-  const sourceViewport = paneViewport || cardViewport;
+  // Viewport hook (rf-canv-19): pane-or-card viewport selection, LOD
+  // threshold dispatch, autoOrganizeOnZoom debounce + scaleLayoutForZoom
+  // effect, and the persistViewport callback that picks the right
+  // setPaneViewport / setCardViewportById / setCardViewport action creator.
+  const { viewport, lod, persistViewport } = useCanvasViewport({ cardId, paneId });
 
-  // Convert to format expected by canvas interactions
-  const viewport = {
-    x: sourceViewport.panX,
-    y: sourceViewport.panY,
-    zoom: sourceViewport.scale,
-  };
-
-  // Semantic zoom: Level of Detail based on zoom level
-  // L3 (full): > 95% — default experience, all details visible
-  // L2 (compact): 50-95% — bigger icon + label + status only, no metadata
-  // L1 (iconic): < 50% — large centered icon + bold label + status dot
-  const lod = viewport.zoom > LOD_THRESHOLD_L3 ? 3 : viewport.zoom > LOD_THRESHOLD_L2 ? 2 : 1;
-
-  // Proportional zoom scaling: when autoOrganizeOnZoom is enabled, scale
-  // positions and sizes proportionally instead of re-running the full layout.
-  // This keeps the relative arrangement identical — blocks just grow/shrink
-  // in place around the diagram centroid.  No topology rearrangement = no jumps.
-  // Full re-layout only happens on manual organize button clicks.
-  const autoOrganizeOnZoom = useSelector((state: RootState) => state.ui.autoOrganizeOnZoom);
   const snapToGrid = useSelector((state: RootState) => state.ui.snapToGrid);
   const canvasLocked = useSelector((state: RootState) => state.ui.canvasLocked);
-  const prevAutoZoomRef = useRef(viewport.zoom);
-
-  useEffect(() => {
-    if (!autoOrganizeOnZoom) {
-      prevAutoZoomRef.current = viewport.zoom;
-      return;
-    }
-
-    const prevZoom = prevAutoZoomRef.current;
-    const delta = Math.abs(viewport.zoom - prevZoom);
-    if (delta < ZOOM_STEP * 0.5) return;
-
-    prevAutoZoomRef.current = viewport.zoom;
-    dispatch(scaleLayoutForZoom({ zoom: viewport.zoom, prevZoom }));
-  }, [viewport.zoom, autoOrganizeOnZoom, dispatch]);
 
   // ── Layout Inspector: feed state on every zoom/layout change ──────────
   useEffect(() => {
@@ -1387,15 +1345,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     viewport: { x: viewport.x, y: viewport.y, zoom: viewport.zoom },
     items: canvasItems,
     selectedIds: selectedNodes,
-    onViewportChange: (vp) => {
-      if (paneId) {
-        dispatch(setPaneViewport({ paneId, viewport: { panX: vp.x, panY: vp.y, scale: vp.zoom } }));
-      } else if (cardId) {
-        dispatch(setCardViewportById({ cardId, viewport: { panX: vp.x, panY: vp.y, scale: vp.zoom } }));
-      } else {
-        dispatch(setCardViewport({ panX: vp.x, panY: vp.y, scale: vp.zoom }));
-      }
-    },
+    onViewportChange: persistViewport,
     onItemMove: handleNodeMove,
     onItemResize: handleNodeResize,
     onSelect: (ids) => {

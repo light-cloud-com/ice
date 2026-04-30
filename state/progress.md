@@ -105,14 +105,17 @@ Behavior-risk flags noted: custom-domain-panel rendered twice (rf-props-15), dyn
 - ✅ **rf-props-20** `sections/pipeline-section.tsx` — **BEHAVIOR-RISK** dynamic-import paths bumped (4 `..` segments instead of 3); explicit dynamic-import-resolution tests. 43 tests, 100% / 85.84%. Commit `3d781f5`. New learning `dynamic-import-with-default-destructure-needs-the-mock-to-expose-default`.
 - ✅ **rf-props-21** `sections/source-repository-section.tsx` — `SourceRepositorySection` (~349 LOC). 61 tests, 99% / 98.44%. Commit `6cc2dae`. Two new learnings: `use-memo-must-be-mocked-too-when-the-extracted-component-uses-it`, `nullish-coalesce-default-in-test-helper-silently-clobbers-explicit-null-overrides`.
 - ✅ **rf-props-22** `sections/edge-properties-section.tsx` — entire edge-selected branch lifted into `EdgePropertiesSection({ selectedEdge, activeCard })`; orchestrator's branch collapsed to a single conditional return. 40 tests, 100% / 98.8%. **Orchestrator dropped to ~671 LOC** from ~876. Commit `ed2193c`. New learning `render-helper-must-not-call-mockreturnvalue-after-test-overrides`.
-- ✅ **rf-props-23** `sections/project-overview.tsx` — no-selection branch lifted into `ProjectOverview({ activeCard })`. Local `parseCostRange` / `formatCost` move with the section (canonical-home dedup deferred to rf-props-26). 19 tests pass. Awaits commit alongside the state-move chore.
-- ⏭️ **rf-props-24a / 24b** `sections/node-properties-section.tsx` — next; ~530 LOC node-selected branch must split into shell + per-tab body to keep `setPropsTab` setState-during-render at the same JSX position.
+- ✅ **rf-props-23** `sections/project-overview.tsx` — no-selection branch lifted into `ProjectOverview({ activeCard })`. Local `parseCostRange` / `formatCost` move with the section (canonical-home dedup deferred to rf-props-26). 19 tests pass. Commit `00caaa2`.
+- ✅ **rf-props-24** `sections/node-properties-section.tsx` — node-selected branch split into shell + per-tab body, setState-during-render fallback preserved at the same JSX position. Commit `6dfd890`. The originally-planned rf-props-25 orchestrator slim-down was absorbed into rf-props-24 since the orchestrator was already minimal (94 LOC) after this extraction landed.
+- ✅ **rf-props-26** `cost-utils dedup` — **BEHAVIOR-CHANGE** unit. Local `parseCostRange` (in `project-overview.tsx`) and local `parseCostRange` + `formatCost` (in `status-bar.tsx` — formatCost N/A there, status-bar inlines its own format) replaced with imports from canonical `packages/ui/src/features/cost/utils/cost-calculator.ts`. Canonical is strictly more capable: handles `'Free'` literal, comma-separated thousands (`$1,000-2,000` → 1500 instead of the buggy 1.5), decimals (`$0.50` → 0.5 instead of 0). `formatCost(0)` returns `'Free'` instead of `''`, but `totalCost > 0` gate at every callsite insulates the change from observable rendering. 19 new tests at canonical home (first invariant suite for `parseCostRange` / `formatCost`) + 3 behavior-delta tests in the consumer. 1464 unit tests passing across the monorepo. New learning `canonical-home-dedup-of-local-copies-is-a-behavior-change-when-the-canonical-is-stricter`.
+
+**properties-panel.tsx decomposition complete.** 3268 → **94 LOC** across 25 units (rf-props-25 absorbed into rf-props-24). Final orchestrator is a thin compose-and-route shell.
 
 **File-size adjustment 2026-04-29**: 200–500 LOC range (per `feedback_200_loc_ceiling.md`). Most blueprint modules already fit.
 
 **State directory move 2026-04-29**: agent-managed state moved from `.claude/state/` to `state/` to avoid harness permission prompts on every write. See `decisions.md` 2026-04-29 entry.
 
-**To resume:** dispatch implementer at rf-props-24a (node-properties-section shell + tab-router with setState-during-render fallback intact).
+**To resume:** Properties-panel done. Next file from the queue (per `refactor-targets.md`) is `packages/ui/src/features/canvas/components/svg-canvas.tsx` (3234 LOC) — needs a fresh decomposer pass.
 
 ## Done this week
 

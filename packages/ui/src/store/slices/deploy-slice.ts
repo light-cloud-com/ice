@@ -35,92 +35,23 @@ export type {
   DiagnosisState,
   ResolvedRequirementState,
 } from './deploy/types';
-import { STATUS_RANK } from './deploy/types';
 import type {
   DeployPlan,
   DeployResourceResult,
   DeployedResource,
   NodeDriftInfo,
-  DeployRollup,
   DeployState,
   NodeDeployState,
   ResolvedRequirementState,
 } from './deploy/types';
 
-export function deriveRollup(nodesById: Record<string, NodeDeployState>): DeployRollup {
-  const rollup: DeployRollup = {
-    queued: 0,
-    applying: 0,
-    succeeded: 0,
-    failed: 0,
-    skipped: 0,
-    cancelled: 0,
-    total: 0,
-    terminal: 0,
-  };
-  for (const node of Object.values(nodesById)) {
-    rollup.total += 1;
-    switch (node.status) {
-      case 'queued':
-        rollup.queued += 1;
-        break;
-      case 'applying':
-        rollup.applying += 1;
-        break;
-      case 'succeeded':
-        rollup.succeeded += 1;
-        rollup.terminal += 1;
-        break;
-      case 'failed':
-        rollup.failed += 1;
-        rollup.terminal += 1;
-        break;
-      case 'skipped':
-        rollup.skipped += 1;
-        rollup.terminal += 1;
-        break;
-      case 'cancelled-due-to-dep':
-        rollup.cancelled += 1;
-        rollup.terminal += 1;
-        break;
-      default:
-        // pdl-5 critic — defensive guard against wire-contract drift.
-        // TypeScript narrows `node.status` to the 6 known values, so this
-        // arm is unreachable through normal code paths; it catches the
-        // runtime case where a backend sends a status the frontend hasn't
-        // shipped support for yet (per the contract-evolution caveat in
-        // learning `requirement-verified-needs-full-tenancy-key-on-the-wire`).
-        // We undo the `total += 1` so the bucket sum still equals the
-        // total, then warn so an operator sees the drift in the console.
-        rollup.total -= 1;
-        if (typeof console !== 'undefined') {
-          // eslint-disable-next-line no-console
-          console.warn(
-            '[deploy-rollup] unknown node status:',
-            (node as { status?: unknown }).status,
-            '— not counted in rollup',
-          );
-        }
-        break;
-    }
-  }
-  return rollup;
-}
+// ─── Derived view helpers ──────────────────────────────────────────────────
+//
+// `deriveRollup` and `orderNodesForPanel` live in `./deploy/derive`
+// (rf-dslice-2). The re-export preserves the public import path for external
+// consumers (deploy-banner, deploy-in-flight-panel, etc.).
 
-export function orderNodesForPanel(nodesById: Record<string, NodeDeployState>): NodeDeployState[] {
-  const all = Object.values(nodesById);
-  return [...all].sort((a, b) => {
-    const rankDiff = STATUS_RANK[a.status] - STATUS_RANK[b.status];
-    if (rankDiff !== 0) return rankDiff;
-    // Within the same rank-2 (terminal) bucket, newest first.
-    if (STATUS_RANK[a.status] === 2) {
-      // last_at is ISO-8601, lex-sort descending.
-      if (a.last_at < b.last_at) return 1;
-      if (a.last_at > b.last_at) return -1;
-    }
-    return 0;
-  });
-}
+export { deriveRollup, orderNodesForPanel } from './deploy/derive';
 
 const initialState: DeployState = {
   isOpen: false,

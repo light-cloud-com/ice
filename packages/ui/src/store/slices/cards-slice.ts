@@ -31,6 +31,20 @@ import type { CardNode, CardEdge, CardViewport, Card, CardsState } from './cards
 import { DEFAULT_VIEWPORT } from './cards/types';
 
 // =============================================================================
+// Migration
+// =============================================================================
+//
+// Migration lives in `./cards/migration` (rf-cards-2). The re-export
+// preserves the public import path for external consumers; the runtime
+// import brings the names into THIS module's lexical scope so the four
+// internal ingestion sites (addNodeToCard, importToActiveCard,
+// addToActiveCard, expandBlueprintToCard) and the localStorage loader
+// can call them directly.
+
+export { migrateCardNodes } from './cards/migration';
+import { migrateCardNode, migrateCardNodes } from './cards/migration';
+
+// =============================================================================
 // Persistence
 // =============================================================================
 
@@ -51,52 +65,6 @@ const CARDS_STORAGE_KEY = 'ice-cards';
  */
 const CARDS_DATA_VERSION = 6;
 const CARDS_VERSION_KEY = 'ice-cards-version';
-
-/**
- * Organizational iceTypes that migrated from Block.* to Group.*
- */
-const BLOCK_TO_GROUP_TYPES = new Set(['Frontend', 'Services', 'Data', 'Messaging', 'Monitoring', 'External']);
-
-/**
- * Migrate a single persisted node:
- * - Legacy Cluster.* / Block.* organizational types → Group.* with type: 'container'
- * - Legacy `Monitoring.Terminal` → `Monitoring.Log` (v5 → v6 consolidation).
- *
- * Idempotent — running it on already-migrated payloads is a no-op and
- * returns the same reference for nodes that didn't need a change.
- */
-function migrateCardNode(node: CardNode): CardNode {
-  const iceType = (node.data?.iceType as string) || '';
-
-  // v5 → v6: Monitoring.Terminal collapsed into Monitoring.Log.
-  if (iceType === 'Monitoring.Terminal') {
-    return { ...node, data: { ...node.data, iceType: 'Monitoring.Log' } };
-  }
-
-  // Legacy: Cluster.* / Block.* organizational types → Group.*
-  if (iceType.startsWith('Cluster.') || iceType.startsWith('Block.')) {
-    const prefix = iceType.startsWith('Cluster.') ? 'Cluster.' : 'Block.';
-    const suffix = iceType.slice(prefix.length);
-    if (BLOCK_TO_GROUP_TYPES.has(suffix)) {
-      return {
-        ...node,
-        type: 'container' as const,
-        data: { ...node.data, iceType: `Group.${suffix}` },
-      };
-    }
-  }
-
-  return node;
-}
-
-/**
- * Migrate every node in a payload. Exported so external ingestion paths
- * (backend canvas restore, AI tool-use writes, tests) can reuse the same
- * migration pipeline as the localStorage loader.
- */
-export function migrateCardNodes(nodes: CardNode[]): CardNode[] {
-  return nodes.map(migrateCardNode);
-}
 
 function loadPersistedCards(): CardsState {
   try {

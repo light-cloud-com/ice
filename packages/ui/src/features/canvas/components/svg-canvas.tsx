@@ -91,7 +91,6 @@ import {
   MIN_CONTAINER_HEIGHT,
   GRID_SIZE,
 } from '../../../config/canvas-constants';
-import { USER_NODE_WIDTH, USER_NODE_HEIGHT, USER_NODE_ID } from '../../../shared/components/svg-user-node';
 import { useClipboard } from '../../../shared/hooks/use-clipboard';
 import { useExposedServices } from '../../../shared/hooks/use-exposed-services';
 import { calculateZIndex } from '../../../shared/utils/auto-layout';
@@ -110,6 +109,7 @@ import { useCanvasValidation } from '../hooks/use-canvas-validation';
 import { useComputingFlows } from '../hooks/use-computing-flows';
 import { useCanvasDimensions } from '../hooks/use-canvas-resize';
 import { useCanvasViewport } from '../hooks/use-canvas-viewport';
+import { usePinnedUserNode } from '../hooks/use-pinned-user-node';
 import { useRenameState } from '../hooks/use-rename-state';
 import type { RootState, AppDispatch } from '../../../store';
 
@@ -373,60 +373,14 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   const hasExplicitTrafficBlock = canvasNodes.some((n) => (n.data?.iceType as string) === 'Network.PublicEndpoint');
   const showVirtualUserNode = !hasExplicitTrafficBlock;
 
-  // Pinned position for user traffic node — independent of connected node positions.
-  // `pinnedUserPos` is the stable center-point passed to SvgUserNode's position prop.
-  // Only recalculates when the set of exposed node IDs changes (structural graph change).
-  // `userNodePos` is the top-left reported by SvgUserNode drag — used only for connection routing.
-  const [userNodePos, setUserNodePos] = useState<{ x: number; y: number } | null>(null);
-  const pinnedUserPosRef = useRef<{ x: number; y: number } | null>(null);
-  const prevExposedIdsRef = useRef<string>('');
-
-  // Pin position: only update from auto-computed position when exposed node IDs change
-  const exposedIdsKey = exposedServices.nodeIds.slice().sort().join(',');
-  if (exposedIdsKey !== prevExposedIdsRef.current) {
-    prevExposedIdsRef.current = exposedIdsKey;
-    pinnedUserPosRef.current = exposedServices.userIconPosition;
-    // Structure changed — SvgUserNode will reset its internal drag offset
-  }
-  // Stable center point for SvgUserNode — does NOT change when user drags
-  const pinnedUserPos = pinnedUserPosRef.current;
-
-  // Virtual CanvasNode representing the user traffic icon (for connection routing).
-  // Uses userNodePos (top-left from SvgUserNode drag) for accurate connection endpoints,
-  // or falls back to pinnedUserPos (center) converted to top-left.
-  const userCanvasNode: LocalCanvasNode | null = useMemo(() => {
-    const pos =
-      userNodePos ||
-      (pinnedUserPos ? { x: pinnedUserPos.x - USER_NODE_WIDTH / 2, y: pinnedUserPos.y - USER_NODE_HEIGHT / 2 } : null);
-    if (!pos) return null;
-    return {
-      id: USER_NODE_ID,
-      type: 'resource' as const,
-      x: pos.x,
-      y: pos.y,
-      width: USER_NODE_WIDTH,
-      height: USER_NODE_HEIGHT,
-      label: 'Public Traffic',
-      data: { iceType: 'Virtual.UserTraffic' },
-    };
-  }, [userNodePos, pinnedUserPos]);
-
-  // Virtual connections from user node to each exposed service
-  const userConnections: CanvasConnection[] = useMemo(() => {
-    if (!userCanvasNode || exposedServices.nodeIds.length === 0) return [];
-    return exposedServices.nodeIds.map((nodeId, _i) => ({
-      id: `${USER_NODE_ID}->${nodeId}`,
-      from: USER_NODE_ID,
-      to: nodeId,
-      data: { relationship: 'connects_to' },
-    }));
-  }, [userCanvasNode, exposedServices.nodeIds]);
-
-  // Merged node list including the virtual user node (for connection path lookups)
-  const nodesWithUserNode: LocalCanvasNode[] = useMemo(() => {
-    if (!userCanvasNode) return effectiveNodes;
-    return [...effectiveNodes, userCanvasNode];
-  }, [effectiveNodes, userCanvasNode]);
+  // Virtual user-traffic node — pinned-center, drag setter, derived virtual
+  // node + connections + merged-node-list. rf-canv-21: extracted to
+  // `../hooks/use-pinned-user-node`. Per blueprint RISK #10 the setter
+  // (`setUserNodePos`) flows through to `<UserTrafficOverlay>` (rf-canv-15)
+  // so SvgUserNode's drag handler can write the user-dragged top-left back
+  // into local state without resetting the pinned center.
+  const { pinnedUserPos, setUserNodePos, userConnections, nodesWithUserNode } =
+    usePinnedUserNode(effectiveNodes, exposedServices);
 
   // Nodes are draggable unless they have a collapsed ancestor
   // Sorted by z-index so hit-testing (reverse iteration) finds children before parents

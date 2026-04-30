@@ -64,6 +64,7 @@ export { deriveRollup, orderNodesForPanel } from './deploy/derive';
 
 import { panelConfigReducers } from './deploy/reducers/panel-config';
 import { authReducers } from './deploy/reducers/auth';
+import { planningReducers } from './deploy/reducers/planning';
 
 const initialState: DeployState = {
   isOpen: false,
@@ -96,38 +97,7 @@ const deploySlice = createSlice({
   reducers: {
     ...panelConfigReducers,
     ...authReducers,
-
-    // Planning
-    startPlanning(state) {
-      state.status = 'planning';
-      state.error = null;
-      state.plan = null;
-      state.logs = [t('deploy.slice.planning')];
-      // Reset per-plan UI state (AI-Native #3)
-      state.dismissedWarnings = [];
-      state.criticalAcknowledged = false;
-    },
-    setPlan(state, action: PayloadAction<DeployPlan>) {
-      // Normalize plan shape — backend may omit updates/deletes or send numbers
-      // instead of arrays in older responses. Guarantee arrays downstream.
-      const raw = (action.payload || {}) as Partial<DeployPlan>;
-      const normalized: DeployPlan = {
-        creates: Array.isArray(raw.creates) ? raw.creates : [],
-        updates: Array.isArray(raw.updates) ? raw.updates : [],
-        deletes: Array.isArray(raw.deletes) ? raw.deletes : [],
-        skipped: Array.isArray(raw.skipped) ? raw.skipped : [],
-        warnings: Array.isArray(raw.warnings) ? raw.warnings : [],
-      };
-      state.status = 'planned';
-      state.plan = normalized;
-      state.logs.push(
-        t('deploy.slice.planReady', {
-          creates: normalized.creates.length,
-          updates: normalized.updates.length,
-          deletes: normalized.deletes.length,
-        }),
-      );
-    },
+    ...planningReducers,
 
     // Deploy execution
     startDeploying(state, action: PayloadAction<{ cardId?: string } | undefined>) {

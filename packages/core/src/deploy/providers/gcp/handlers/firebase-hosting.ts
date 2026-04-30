@@ -34,77 +34,18 @@
 
 import * as crypto from 'crypto';
 import { gunzipSync, gzipSync } from 'zlib';
-import { result, fail } from './firebase-hosting/result-helpers.js';
-import { sanitizeSiteId, placeholderIndexHtml } from './firebase-hosting/site-utils.js';
-import { parseTar, type FileEntry } from './firebase-hosting/tar-parser.js';
 import {
   FIREBASE_HOSTING_API,
-  FIREBASE_MGMT_API,
   restRequest,
 } from './firebase-hosting/rest-client.js';
+import { result, fail } from './firebase-hosting/result-helpers.js';
+import {
+  ensureFirebaseProject,
+  ensureHostingSite,
+} from './firebase-hosting/site-provisioner.js';
+import { sanitizeSiteId, placeholderIndexHtml } from './firebase-hosting/site-utils.js';
+import { parseTar, type FileEntry } from './firebase-hosting/tar-parser.js';
 import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
-
-/**
- * Make sure the GCP project has Firebase enabled. AddFirebase is
- * idempotent — returns 409 ALREADY_EXISTS if it's already a Firebase
- * project, which we treat as success.
- */
-async function ensureFirebaseProject(ctx: GCPHandlerContext): Promise<{ ok: boolean; error?: string }> {
-  const url = `${FIREBASE_MGMT_API}/projects/${ctx.project}:addFirebase`;
-  const res = await restRequest(ctx, 'POST', url, {}, { acceptStatuses: [409, 400] });
-  if (res.ok) return { ok: true };
-  // 409 / 400 both mean "already a Firebase project" in practice.
-  const msg = String(res.data?.error?.message || res.data?.message || JSON.stringify(res.data));
-  if (msg.includes('already') || msg.includes('ALREADY_EXISTS')) {
-    return { ok: true };
-  }
-  return { ok: false, error: msg };
-}
-
-/**
- * Create or adopt the Firebase Hosting site. The default site has the
- * same id as the project; if we want a separate one we POST to /sites
- * with `siteId`. Both paths can return ALREADY_EXISTS, which we treat
- * as adoption.
- */
-async function ensureHostingSite(
-  ctx: GCPHandlerContext,
-  siteId: string,
-): Promise<{ ok: boolean; data?: any; error?: string }> {
-  // Try GET first — if the site is already there we adopt it.
-  const getRes = await restRequest(
-    ctx,
-    'GET',
-    `${FIREBASE_HOSTING_API}/projects/${ctx.project}/sites/${siteId}`,
-    undefined,
-    { acceptStatuses: [404] },
-  );
-  if (getRes.ok && getRes.status !== 404 && getRes.data?.name) {
-    return { ok: true, data: getRes.data };
-  }
-  // Doesn't exist — create it.
-  const createRes = await restRequest(
-    ctx,
-    'POST',
-    `${FIREBASE_HOSTING_API}/projects/${ctx.project}/sites?siteId=${siteId}`,
-    {},
-    { acceptStatuses: [409] },
-  );
-  if (createRes.ok) {
-    if (createRes.status === 409) {
-      // Race / already exists — re-fetch.
-      const refetch = await restRequest(ctx, 'GET', `${FIREBASE_HOSTING_API}/projects/${ctx.project}/sites/${siteId}`);
-      return refetch.ok
-        ? { ok: true, data: refetch.data }
-        : { ok: false, error: 'Site exists but could not be fetched.' };
-    }
-    return { ok: true, data: createRes.data };
-  }
-  return {
-    ok: false,
-    error: String(createRes.data?.error?.message || JSON.stringify(createRes.data)),
-  };
-}
 
 /**
  * Download a GitHub repo as a tarball and extract it into an in-memory

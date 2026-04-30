@@ -53,7 +53,7 @@ export function wire_source_repositories(
     }
     const computeName = card_id_to_name.get(computeNode.id);
     if (!computeName) continue;
-    const computeGraphNode = graph.nodes.get(computeName as any);
+    const computeGraphNode = graph.get_node_by_name(computeName);
     if (!computeGraphNode) continue;
 
     const repoData = repoNode.data || {};

@@ -33,17 +33,17 @@ import { propagate_custom_domain_hosts } from '../pass-1-45-domain-propagation.j
 
 /**
  * Build a fresh graph with one compute node already added. Returns the
- * graph and the NodeId string so the caller can wire `card_id_to_name`
- * to the actual stored key (Pass 1.45 looks up via `graph.nodes.get`,
- * which is keyed by `${type}:${name}`). Per the `graph-nodes-keyed-by-
- * type-colon-name-not-bare-name` learning, mapping bare names trivially
- * short-circuits the test at the lookup miss — we map to the real
- * branded NodeId so the mutation path is exercised.
+ * graph plus the bare resource name — the production shape of
+ * `card_id_to_name`. Pass 1.45 now looks up via `graph.get_node_by_name`,
+ * so callers map `cardId → bareName`. (Pre-bugfix-1, the fixtures here
+ * mapped `cardId → ${type}:${name} NodeId` to bypass the latent
+ * `graph.nodes.get(name as any)` lookup miss; see the
+ * `graph-nodes-keyed-by-type-colon-name-not-bare-name` learning.)
  */
 function setup_graph(
   computeName: string,
   initialProps: Record<string, unknown> = {},
-): { graph: ReturnType<typeof create_mutable_graph>; nodeKey: string } {
+): { graph: ReturnType<typeof create_mutable_graph>; nodeKey: string; nodeName: string } {
   const graph = create_mutable_graph('test-project');
   const result = graph.add_node({
     type: 'gcp.run.service',
@@ -53,12 +53,19 @@ function setup_graph(
   if (!result.success || !result.node) {
     throw new Error(`fixture setup failed: ${result.errors?.join(', ')}`);
   }
-  return { graph, nodeKey: result.node.id as unknown as string };
+  // `nodeKey` (the branded NodeId) is still returned for direct
+  // `graph.nodes.get(nodeKey)` reads in assertions; production code
+  // now reads via `get_node_by_name(bareName)`.
+  return {
+    graph,
+    nodeKey: result.node.id as unknown as string,
+    nodeName: result.node.name,
+  };
 }
 
 describe('propagate_custom_domain_hosts — basic propagation', () => {
   it('writes `<subdomain>.<rootDomain>` onto compute target when CustomDomain on edge.source', () => {
-    const { graph, nodeKey } = setup_graph('compute-1');
+    const { graph, nodeKey, nodeName } = setup_graph('compute-1');
     const nodes: CardNodeInput[] = [
       {
         id: 'domain-card',
@@ -74,7 +81,7 @@ describe('propagate_custom_domain_hosts — basic propagation', () => {
     const edges: CardEdgeInput[] = [
       { id: 'e1', source: 'domain-card', target: 'compute-card', data: { subdomain: 'api' } },
     ];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
 
@@ -83,7 +90,7 @@ describe('propagate_custom_domain_hosts — basic propagation', () => {
   });
 
   it('handles reverse direction: CustomDomain on edge.target', () => {
-    const { graph, nodeKey } = setup_graph('compute-2');
+    const { graph, nodeKey, nodeName } = setup_graph('compute-2');
     const nodes: CardNodeInput[] = [
       {
         id: 'compute-card',
@@ -99,7 +106,7 @@ describe('propagate_custom_domain_hosts — basic propagation', () => {
     const edges: CardEdgeInput[] = [
       { id: 'e2', source: 'compute-card', target: 'domain-card', data: { subdomain: 'app' } },
     ];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
 
@@ -108,7 +115,7 @@ describe('propagate_custom_domain_hosts — basic propagation', () => {
   });
 
   it('writes bare rootDomain onto target when subdomain is blank (no routeId, no edge.subdomain)', () => {
-    const { graph, nodeKey } = setup_graph('compute-bare');
+    const { graph, nodeKey, nodeName } = setup_graph('compute-bare');
     const nodes: CardNodeInput[] = [
       {
         id: 'domain-card',
@@ -120,7 +127,7 @@ describe('propagate_custom_domain_hosts — basic propagation', () => {
     const edges: CardEdgeInput[] = [
       { id: 'e-bare', source: 'domain-card', target: 'compute-card' },
     ];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
 
@@ -129,7 +136,7 @@ describe('propagate_custom_domain_hosts — basic propagation', () => {
   });
 
   it('writes bare rootDomain onto target when edge.subdomain is empty string (no routeId)', () => {
-    const { graph, nodeKey } = setup_graph('compute-empty-sub');
+    const { graph, nodeKey, nodeName } = setup_graph('compute-empty-sub');
     const nodes: CardNodeInput[] = [
       {
         id: 'domain-card',
@@ -141,7 +148,7 @@ describe('propagate_custom_domain_hosts — basic propagation', () => {
     const edges: CardEdgeInput[] = [
       { id: 'e-empty', source: 'domain-card', target: 'compute-card', data: { subdomain: '' } },
     ];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
 
@@ -150,7 +157,7 @@ describe('propagate_custom_domain_hosts — basic propagation', () => {
   });
 
   it('trims whitespace from rootDomain and edge.subdomain', () => {
-    const { graph, nodeKey } = setup_graph('compute-trim');
+    const { graph, nodeKey, nodeName } = setup_graph('compute-trim');
     const nodes: CardNodeInput[] = [
       {
         id: 'domain-card',
@@ -162,7 +169,7 @@ describe('propagate_custom_domain_hosts — basic propagation', () => {
     const edges: CardEdgeInput[] = [
       { id: 'e-trim', source: 'domain-card', target: 'compute-card', data: { subdomain: '  www  ' } },
     ];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
 
@@ -173,13 +180,13 @@ describe('propagate_custom_domain_hosts — basic propagation', () => {
 
 describe('propagate_custom_domain_hosts — skip conditions', () => {
   it('skips edges where neither end is a Network.CustomDomain', () => {
-    const { graph, nodeKey } = setup_graph('compute-3', { domain: 'untouched.io' });
+    const { graph, nodeKey, nodeName } = setup_graph('compute-3', { domain: 'untouched.io' });
     const nodes: CardNodeInput[] = [
       { id: 'a', type: 'block', data: { iceType: 'Compute.CloudRun' } },
       { id: 'compute-card', type: 'block', data: { iceType: 'Database.CloudSQL' } },
     ];
     const edges: CardEdgeInput[] = [{ id: 'e3', source: 'a', target: 'compute-card' }];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
 
@@ -188,7 +195,7 @@ describe('propagate_custom_domain_hosts — skip conditions', () => {
   });
 
   it('skips edges where the source card is missing from the nodes array', () => {
-    const { graph, nodeKey } = setup_graph('compute-4', { domain: 'untouched.io' });
+    const { graph, nodeKey, nodeName } = setup_graph('compute-4', { domain: 'untouched.io' });
     const nodes: CardNodeInput[] = [
       { id: 'compute-card', type: 'block', data: { iceType: 'Compute.CloudRun' } },
       // no 'missing-source' entry
@@ -196,7 +203,7 @@ describe('propagate_custom_domain_hosts — skip conditions', () => {
     const edges: CardEdgeInput[] = [
       { id: 'e4', source: 'missing-source', target: 'compute-card', data: { subdomain: 'api' } },
     ];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
 
@@ -205,7 +212,7 @@ describe('propagate_custom_domain_hosts — skip conditions', () => {
   });
 
   it('skips edges where the target card is missing from the nodes array', () => {
-    const { graph, nodeKey } = setup_graph('compute-5', { domain: 'untouched.io' });
+    const { graph, nodeKey, nodeName } = setup_graph('compute-5', { domain: 'untouched.io' });
     const nodes: CardNodeInput[] = [
       {
         id: 'domain-card',
@@ -217,7 +224,7 @@ describe('propagate_custom_domain_hosts — skip conditions', () => {
     const edges: CardEdgeInput[] = [
       { id: 'e5', source: 'domain-card', target: 'missing-target' },
     ];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
 
@@ -226,7 +233,7 @@ describe('propagate_custom_domain_hosts — skip conditions', () => {
   });
 
   it('skips when target iceType is not Compute.* (e.g. Storage.Bucket)', () => {
-    const { graph, nodeKey } = setup_graph('compute-6', { domain: 'untouched.io' });
+    const { graph, nodeKey, nodeName } = setup_graph('compute-6', { domain: 'untouched.io' });
     const nodes: CardNodeInput[] = [
       {
         id: 'domain-card',
@@ -240,7 +247,7 @@ describe('propagate_custom_domain_hosts — skip conditions', () => {
     ];
     // Map points the storage card to the compute fixture so we can detect
     // any mutation that slipped past the iceType guard.
-    const card_id_to_name = new Map<string, string>([['storage-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['storage-card', nodeName]]);
 
     propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
 
@@ -249,7 +256,7 @@ describe('propagate_custom_domain_hosts — skip conditions', () => {
   });
 
   it('skips when the compute card is absent from card_id_to_name', () => {
-    const { graph, nodeKey } = setup_graph('compute-7', { domain: 'untouched.io' });
+    const { graph, nodeKey, nodeName } = setup_graph('compute-7', { domain: 'untouched.io' });
     const nodes: CardNodeInput[] = [
       {
         id: 'domain-card',
@@ -271,7 +278,7 @@ describe('propagate_custom_domain_hosts — skip conditions', () => {
   });
 
   it('skips when the mapped name does not resolve to a graph node', () => {
-    const { graph, nodeKey } = setup_graph('compute-8', { domain: 'untouched.io' });
+    const { graph, nodeKey, nodeName } = setup_graph('compute-8', { domain: 'untouched.io' });
     const nodes: CardNodeInput[] = [
       {
         id: 'domain-card',
@@ -295,7 +302,7 @@ describe('propagate_custom_domain_hosts — skip conditions', () => {
   });
 
   it('skips when rootDomain is blank', () => {
-    const { graph, nodeKey } = setup_graph('compute-9', { domain: 'untouched.io' });
+    const { graph, nodeKey, nodeName } = setup_graph('compute-9', { domain: 'untouched.io' });
     const nodes: CardNodeInput[] = [
       {
         id: 'domain-card',
@@ -307,7 +314,7 @@ describe('propagate_custom_domain_hosts — skip conditions', () => {
     const edges: CardEdgeInput[] = [
       { id: 'e9', source: 'domain-card', target: 'compute-card', data: { subdomain: 'api' } },
     ];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
 
@@ -316,7 +323,7 @@ describe('propagate_custom_domain_hosts — skip conditions', () => {
   });
 
   it('skips when rootDomain trims to blank (whitespace-only)', () => {
-    const { graph, nodeKey } = setup_graph('compute-9b', { domain: 'untouched.io' });
+    const { graph, nodeKey, nodeName } = setup_graph('compute-9b', { domain: 'untouched.io' });
     const nodes: CardNodeInput[] = [
       {
         id: 'domain-card',
@@ -328,7 +335,7 @@ describe('propagate_custom_domain_hosts — skip conditions', () => {
     const edges: CardEdgeInput[] = [
       { id: 'e9b', source: 'domain-card', target: 'compute-card', data: { subdomain: 'api' } },
     ];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
 
@@ -337,7 +344,7 @@ describe('propagate_custom_domain_hosts — skip conditions', () => {
   });
 
   it('skips when rootDomain is the placeholder "example.com"', () => {
-    const { graph, nodeKey } = setup_graph('compute-10', { domain: 'untouched.io' });
+    const { graph, nodeKey, nodeName } = setup_graph('compute-10', { domain: 'untouched.io' });
     const nodes: CardNodeInput[] = [
       {
         id: 'domain-card',
@@ -349,7 +356,7 @@ describe('propagate_custom_domain_hosts — skip conditions', () => {
     const edges: CardEdgeInput[] = [
       { id: 'e10', source: 'domain-card', target: 'compute-card', data: { subdomain: 'api' } },
     ];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
 
@@ -363,7 +370,7 @@ describe('propagate_custom_domain_hosts — skip conditions', () => {
 
 describe('propagate_custom_domain_hosts — RISK #6: subdomain priority order', () => {
   it('routeId WINS over edge.data.subdomain when both are set and route is found', () => {
-    const { graph, nodeKey } = setup_graph('compute-r1');
+    const { graph, nodeKey, nodeName } = setup_graph('compute-r1');
     const nodes: CardNodeInput[] = [
       {
         id: 'domain-card',
@@ -387,7 +394,7 @@ describe('propagate_custom_domain_hosts — RISK #6: subdomain priority order', 
         data: { routeId: 'route-A', subdomain: 'edge-sub' },
       },
     ];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
 
@@ -399,7 +406,7 @@ describe('propagate_custom_domain_hosts — RISK #6: subdomain priority order', 
   });
 
   it('routeId set + matching route, NO edge.subdomain → uses route subdomain', () => {
-    const { graph, nodeKey } = setup_graph('compute-r2');
+    const { graph, nodeKey, nodeName } = setup_graph('compute-r2');
     const nodes: CardNodeInput[] = [
       {
         id: 'domain-card',
@@ -420,7 +427,7 @@ describe('propagate_custom_domain_hosts — RISK #6: subdomain priority order', 
         data: { routeId: 'route-X' },
       },
     ];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
 
@@ -429,7 +436,7 @@ describe('propagate_custom_domain_hosts — RISK #6: subdomain priority order', 
   });
 
   it('routeId set but route NOT FOUND → uses empty subdomain (NO fallthrough to edge.subdomain)', () => {
-    const { graph, nodeKey } = setup_graph('compute-r3');
+    const { graph, nodeKey, nodeName } = setup_graph('compute-r3');
     const nodes: CardNodeInput[] = [
       {
         id: 'domain-card',
@@ -451,7 +458,7 @@ describe('propagate_custom_domain_hosts — RISK #6: subdomain priority order', 
         data: { routeId: 'route-MISSING', subdomain: 'edge-sub' },
       },
     ];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
 
@@ -465,7 +472,7 @@ describe('propagate_custom_domain_hosts — RISK #6: subdomain priority order', 
   });
 
   it('routeId set, routes array missing on domainNode → uses empty subdomain', () => {
-    const { graph, nodeKey } = setup_graph('compute-r3b');
+    const { graph, nodeKey, nodeName } = setup_graph('compute-r3b');
     const nodes: CardNodeInput[] = [
       {
         id: 'domain-card',
@@ -483,7 +490,7 @@ describe('propagate_custom_domain_hosts — RISK #6: subdomain priority order', 
         data: { routeId: 'route-anything', subdomain: 'edge-sub' },
       },
     ];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
 
@@ -494,7 +501,7 @@ describe('propagate_custom_domain_hosts — RISK #6: subdomain priority order', 
   });
 
   it('routeId set + matching route with empty subdomain → bare rootDomain', () => {
-    const { graph, nodeKey } = setup_graph('compute-r3c');
+    const { graph, nodeKey, nodeName } = setup_graph('compute-r3c');
     const nodes: CardNodeInput[] = [
       {
         id: 'domain-card',
@@ -515,7 +522,7 @@ describe('propagate_custom_domain_hosts — RISK #6: subdomain priority order', 
         data: { routeId: 'route-empty' },
       },
     ];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
 
@@ -524,7 +531,7 @@ describe('propagate_custom_domain_hosts — RISK #6: subdomain priority order', 
   });
 
   it('NO routeId, edge.data.subdomain SET → uses edge.subdomain (legacy back-compat path)', () => {
-    const { graph, nodeKey } = setup_graph('compute-r4');
+    const { graph, nodeKey, nodeName } = setup_graph('compute-r4');
     const nodes: CardNodeInput[] = [
       {
         id: 'domain-card',
@@ -546,7 +553,7 @@ describe('propagate_custom_domain_hosts — RISK #6: subdomain priority order', 
         data: { subdomain: 'legacy-sub' },
       },
     ];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
 
@@ -555,7 +562,7 @@ describe('propagate_custom_domain_hosts — RISK #6: subdomain priority order', 
   });
 
   it('NO routeId, NO edge.subdomain → bare rootDomain', () => {
-    const { graph, nodeKey } = setup_graph('compute-r5');
+    const { graph, nodeKey, nodeName } = setup_graph('compute-r5');
     const nodes: CardNodeInput[] = [
       {
         id: 'domain-card',
@@ -567,7 +574,7 @@ describe('propagate_custom_domain_hosts — RISK #6: subdomain priority order', 
     const edges: CardEdgeInput[] = [
       { id: 'er5', source: 'domain-card', target: 'compute-card', data: {} },
     ];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
 
@@ -576,7 +583,7 @@ describe('propagate_custom_domain_hosts — RISK #6: subdomain priority order', 
   });
 
   it('empty-string routeId is treated as falsy → falls through to edge.subdomain', () => {
-    const { graph, nodeKey } = setup_graph('compute-r6');
+    const { graph, nodeKey, nodeName } = setup_graph('compute-r6');
     const nodes: CardNodeInput[] = [
       {
         id: 'domain-card',
@@ -593,7 +600,7 @@ describe('propagate_custom_domain_hosts — RISK #6: subdomain priority order', 
         data: { routeId: '', subdomain: 'edge-wins' },
       },
     ];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
 
@@ -606,7 +613,7 @@ describe('propagate_custom_domain_hosts — RISK #6: subdomain priority order', 
 
 describe('propagate_custom_domain_hosts — defensive null handling', () => {
   it('treats node.data as empty when missing entirely (does not throw)', () => {
-    const { graph, nodeKey } = setup_graph('compute-d1');
+    const { graph, nodeKey, nodeName } = setup_graph('compute-d1');
     const nodes: CardNodeInput[] = [
       // domain card with no data → iceType resolves to '' → skip branch
       { id: 'domain-card', type: 'block', data: undefined as unknown as Record<string, unknown> },
@@ -615,17 +622,17 @@ describe('propagate_custom_domain_hosts — defensive null handling', () => {
     const edges: CardEdgeInput[] = [
       { id: 'ed1', source: 'domain-card', target: 'compute-card', data: { subdomain: 'api' } },
     ];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     expect(() => propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph)).not.toThrow();
   });
 
   it('returns void and is a no-op on empty edges array', () => {
-    const { graph, nodeKey } = setup_graph('compute-d2', { domain: 'unchanged.io' });
+    const { graph, nodeKey, nodeName } = setup_graph('compute-d2', { domain: 'unchanged.io' });
     const ret = propagate_custom_domain_hosts(
       [],
       [{ id: 'compute-card', type: 'block', data: { iceType: 'Compute.CloudRun' } }],
-      new Map([['compute-card', nodeKey]]),
+      new Map([['compute-card', nodeName]]),
       graph,
     );
     expect(ret).toBeUndefined();
@@ -638,7 +645,7 @@ describe('propagate_custom_domain_hosts — defensive null handling', () => {
     // `|| ''` fallback (line 52). Behavior: src is CustomDomain → enters
     // first branch normally; targetNode (dst) has no iceType, so the
     // Compute.* regex test fails and the edge is skipped.
-    const { graph, nodeKey } = setup_graph('compute-fallback-dst', { domain: 'untouched.io' });
+    const { graph, nodeKey, nodeName } = setup_graph('compute-fallback-dst', { domain: 'untouched.io' });
     const nodes: CardNodeInput[] = [
       {
         id: 'domain-card',
@@ -652,7 +659,7 @@ describe('propagate_custom_domain_hosts — defensive null handling', () => {
     const edges: CardEdgeInput[] = [
       { id: 'ed-fb1', source: 'domain-card', target: 'compute-card', data: { subdomain: 'api' } },
     ];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
 
@@ -664,7 +671,7 @@ describe('propagate_custom_domain_hosts — defensive null handling', () => {
     // CustomDomain is on dst, so targetNode = src. Source has no iceType,
     // exercising the line-64 `|| ''` fallback specifically on the reverse
     // direction code path.
-    const { graph, nodeKey } = setup_graph('compute-fallback-src', { domain: 'untouched.io' });
+    const { graph, nodeKey, nodeName } = setup_graph('compute-fallback-src', { domain: 'untouched.io' });
     const nodes: CardNodeInput[] = [
       // No iceType on the compute-card source.
       { id: 'compute-card', type: 'block', data: {} },
@@ -677,7 +684,7 @@ describe('propagate_custom_domain_hosts — defensive null handling', () => {
     const edges: CardEdgeInput[] = [
       { id: 'ed-fb2', source: 'compute-card', target: 'domain-card', data: { subdomain: 'api' } },
     ];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
 
@@ -686,7 +693,7 @@ describe('propagate_custom_domain_hosts — defensive null handling', () => {
   });
 
   it('overwrites a pre-existing `domain` value on the target (CustomDomain wins)', () => {
-    const { graph, nodeKey } = setup_graph('compute-d3', { domain: 'old.io' });
+    const { graph, nodeKey, nodeName } = setup_graph('compute-d3', { domain: 'old.io' });
     const nodes: CardNodeInput[] = [
       {
         id: 'domain-card',
@@ -698,12 +705,54 @@ describe('propagate_custom_domain_hosts — defensive null handling', () => {
     const edges: CardEdgeInput[] = [
       { id: 'ed3', source: 'domain-card', target: 'compute-card', data: { subdomain: 'api' } },
     ];
-    const card_id_to_name = new Map<string, string>([['compute-card', nodeKey]]);
+    const card_id_to_name = new Map<string, string>([['compute-card', nodeName]]);
 
     propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
 
     const props = graph.nodes.get(nodeKey as any)!.properties as Record<string, unknown>;
     // CustomDomain ALWAYS wins per the docstring contract.
     expect(props.domain).toBe('api.new.io');
+  });
+});
+
+describe('propagate_custom_domain_hosts — bugfix-1 regression: production-shape lookup', () => {
+  // Pre-bugfix-1, Pass 1.45 used `graph.nodes.get(name as any)` against a
+  // Map keyed by branded `${type}:${name}` NodeIds, so production
+  // (which stores bare names in `card_id_to_name`) silently no-op'd
+  // every iteration at the lookup miss. Tests bypassed the bug by
+  // mapping cardId → branded NodeId. This regression test pins the
+  // production-shape contract: bare-name input → mutation actually
+  // fires. See `graph-nodes-keyed-by-type-colon-name-not-bare-name`
+  // learning for context.
+  it('uses bare resource name (production shape) for the lookup and mutates target.domain', () => {
+    const graph = create_mutable_graph('test-project');
+    const result = graph.add_node({
+      type: 'gcp.run.service',
+      name: 'svc-prod-shape',
+      properties: { region: 'us-central1' },
+    });
+    if (!result.success || !result.node) {
+      throw new Error('fixture setup failed');
+    }
+    const nodes: CardNodeInput[] = [
+      {
+        id: 'domain-card',
+        type: 'block',
+        data: { iceType: 'Network.CustomDomain', domain: 'prod-shape.io' },
+      },
+      { id: 'compute-card', type: 'block', data: { iceType: 'Compute.CloudRun' } },
+    ];
+    const edges: CardEdgeInput[] = [
+      { id: 'e-prod', source: 'domain-card', target: 'compute-card', data: { subdomain: 'api' } },
+    ];
+    // CRITICAL: bare resource name, not the branded NodeId.
+    const card_id_to_name = new Map<string, string>([['compute-card', 'svc-prod-shape']]);
+
+    propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
+
+    // The mutation path actually fires under production-shape mapping.
+    const node = graph.get_node_by_name('svc-prod-shape');
+    expect(node).toBeDefined();
+    expect((node!.properties as Record<string, unknown>).domain).toBe('api.prod-shape.io');
   });
 });

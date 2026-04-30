@@ -53,11 +53,22 @@ import { wire_public_endpoints } from '../pass-1-5-endpoint-wiring.js';
 
 /**
  * Build a fixture: a graph populated with a forwarding-rule node for the
- * endpoint plus zero or more compute backend nodes. Returns the graph,
- * a `card_id_to_name` Map keyed to the actual NodeId branded keys (per
- * the `graph-nodes-keyed-by-type-colon-name-not-bare-name` learning),
- * and the deployables array seeded with the FR node so the RISK #7
- * `splice` path can fire.
+ * endpoint plus zero or more compute backend nodes. Returns the graph
+ * plus production-shape `card_id_to_name` (cardId → bare resource
+ * name). Pass 1.5 now reads via `graph.get_node_by_name`, so bare names
+ * resolve correctly. (Pre-bugfix-1, this fixture mapped `cardId →
+ * ${type}:${name} NodeId` to bypass the latent
+ * `graph.nodes.get(name as any)` lookup miss; see the
+ * `graph-nodes-keyed-by-type-colon-name-not-bare-name` learning. The
+ * cascading consequences in derived names — `sanitize_name(NodeId-cert)`
+ * vs `sanitize_name(bareName-cert)` — also resolve back to clean
+ * `fr-1-cert` form once the lookup is via bare names.)
+ *
+ * `endpointNodeKey` and `computeNodeKeys` (the branded NodeIds) are
+ * still returned for `graph.nodes.get(NodeId)` reads in assertions.
+ * `endpointNodeName` and `computeNodeNames` are the production-shape
+ * bare names used to derive expected synthetic names like
+ * `sanitize_name(\`${endpointNodeName}-cert\`)`.
  */
 function setup_fixture(opts: {
   endpoint: { cardId: string; resourceName: string };
@@ -67,7 +78,9 @@ function setup_fixture(opts: {
   card_id_to_name: Map<string, string>;
   deployables: DeployableNodeInfo[];
   endpointNodeKey: string;
+  endpointNodeName: string;
   computeNodeKeys: Record<string, string>;
+  computeNodeNames: Record<string, string>;
 } {
   const graph = create_mutable_graph('test-project');
   const card_id_to_name = new Map<string, string>();
@@ -81,22 +94,23 @@ function setup_fixture(opts: {
   if (!frResult.success || !frResult.node) {
     throw new Error(`fixture FR setup failed: ${frResult.errors?.join(', ')}`);
   }
-  // Map card-id → full NodeId (`type:name`). Per the
-  // `graph-nodes-keyed-by-type-colon-name-not-bare-name` learning,
-  // this is what makes the in-fn `graph.nodes.get(name as any)` lookups
-  // hit; mapping to bare resource names would short-circuit every
-  // mutation path under test.
   const frNodeKey = frResult.node.id as unknown as string;
-  card_id_to_name.set(opts.endpoint.cardId, frNodeKey);
+  const frNodeName = frResult.node.name;
+  // Production shape: card_id_to_name → bare resource name. The deploy
+  // engine pushes `resource_name: bareName` to the deployables array,
+  // mirrored here so the RISK #7 splice (`d.resource_name === forwardingResourceName`)
+  // matches under the bare-name flow.
+  card_id_to_name.set(opts.endpoint.cardId, frNodeName);
   deployables.push({
     node_id: opts.endpoint.cardId,
     label: 'Public Endpoint',
     ice_type: 'Network.PublicEndpoint',
     resource_type: 'gcp.compute.globalForwardingRule',
-    resource_name: frNodeKey,
+    resource_name: frNodeName,
   });
 
   const computeNodeKeys: Record<string, string> = {};
+  const computeNodeNames: Record<string, string> = {};
   for (const compute of opts.computes || []) {
     const computeResult = graph.add_node({
       type: compute.type || 'gcp.run.service',
@@ -107,8 +121,10 @@ function setup_fixture(opts: {
       throw new Error(`fixture compute setup failed: ${computeResult.errors?.join(', ')}`);
     }
     const cmpKey = computeResult.node.id as unknown as string;
-    card_id_to_name.set(compute.cardId, cmpKey);
+    const cmpName = computeResult.node.name;
+    card_id_to_name.set(compute.cardId, cmpName);
     computeNodeKeys[compute.cardId] = cmpKey;
+    computeNodeNames[compute.cardId] = cmpName;
   }
 
   return {
@@ -116,7 +132,9 @@ function setup_fixture(opts: {
     card_id_to_name,
     deployables,
     endpointNodeKey: frNodeKey,
+    endpointNodeName: frNodeName,
     computeNodeKeys,
+    computeNodeNames,
   };
 }
 
@@ -288,7 +306,7 @@ describe('wire_public_endpoints — empty / no-op cases', () => {
 
 describe('wire_public_endpoints — single-subdomain endpoint', () => {
   it('attaches host_rules + hosts + redirect_http onto the forwarding rule node', () => {
-    const { graph, card_id_to_name, deployables, endpointNodeKey, computeNodeKeys } = setup_fixture({
+    const { graph, card_id_to_name, deployables, endpointNodeKey, endpointNodeName, computeNodeKeys, computeNodeNames } = setup_fixture({
       endpoint: { cardId: 'ep-card', resourceName: 'fr-1' },
       computes: [{ cardId: 'svc-card', resourceName: 'svc-1' }],
     });
@@ -322,15 +340,22 @@ describe('wire_public_endpoints — single-subdomain endpoint', () => {
     expect(result.deployable_count_delta).toBe(0); // no cert (enableHttps=false), no removal
 
     const frProps = graph.nodes.get(endpointNodeKey as any)!.properties as any;
-    const svcKey = computeNodeKeys['svc-card'];
+    const svcName = computeNodeNames['svc-card'];
     expect(frProps.domain).toBe('acme.io');
     expect(frProps.hosts).toEqual(['acme.io', 'api.acme.io']);
+    // After bugfix-1, the host_rules entry's `backendName` /
+    // `sourceServiceName` derive from the bare resource name (the
+    // production shape of `card_id_to_name`). Pre-bugfix-1 these were
+    // the branded NodeId, which sanitize_name stripped colons/dots
+    // from — see the
+    // `test-fixture-nodeid-mapping-cascades-into-synthetic-names`
+    // learning. With the lookup fix, names round-trip cleanly.
     expect(frProps.host_rules).toEqual([
       {
         host: 'api.acme.io',
-        backendName: sanitize_name(`${svcKey}-backend`),
+        backendName: sanitize_name(`${svcName}-backend`),
         backendType: 'service',
-        sourceServiceName: svcKey,
+        sourceServiceName: svcName,
       },
     ]);
     expect(frProps.redirect_http).toBe(false);
@@ -339,7 +364,7 @@ describe('wire_public_endpoints — single-subdomain endpoint', () => {
   });
 
   it('uses bare rootDomain as host when subdomain is blank', () => {
-    const { graph, card_id_to_name, deployables, endpointNodeKey, computeNodeKeys } = setup_fixture({
+    const { graph, card_id_to_name, deployables, endpointNodeKey, endpointNodeName, computeNodeKeys, computeNodeNames } = setup_fixture({
       endpoint: { cardId: 'ep-card', resourceName: 'fr-1' },
       computes: [{ cardId: 'svc-card', resourceName: 'svc-1' }],
     });
@@ -363,21 +388,21 @@ describe('wire_public_endpoints — single-subdomain endpoint', () => {
       projectName: 'test-project',
     });
 
-    const svcKey = computeNodeKeys['svc-card'];
+    const svcName = computeNodeNames['svc-card'];
     const frProps = graph.nodes.get(endpointNodeKey as any)!.properties as any;
     expect(frProps.host_rules).toEqual([
       {
         host: 'root-only.io',
-        backendName: sanitize_name(`${svcKey}-backend`),
+        backendName: sanitize_name(`${svcName}-backend`),
         backendType: 'service',
-        sourceServiceName: svcKey,
+        sourceServiceName: svcName,
       },
     ]);
     expect(frProps.hosts).toEqual(['root-only.io']);
   });
 
   it('handles reverse direction: PublicEndpoint on edge.target', () => {
-    const { graph, card_id_to_name, deployables, endpointNodeKey } = setup_fixture({
+    const { graph, card_id_to_name, deployables, endpointNodeKey, endpointNodeName } = setup_fixture({
       endpoint: { cardId: 'ep-card', resourceName: 'fr-1' },
       computes: [{ cardId: 'svc-card', resourceName: 'svc-1' }],
     });
@@ -410,7 +435,7 @@ describe('wire_public_endpoints — single-subdomain endpoint', () => {
 
 describe('wire_public_endpoints — multi-subdomain endpoint', () => {
   it('collects multiple host rules and dedupes hosts in the cert list', () => {
-    const { graph, card_id_to_name, deployables, endpointNodeKey } = setup_fixture({
+    const { graph, card_id_to_name, deployables, endpointNodeKey, endpointNodeName } = setup_fixture({
       endpoint: { cardId: 'ep-card', resourceName: 'fr-1' },
       computes: [
         { cardId: 'svc-a', resourceName: 'svc-a' },
@@ -462,7 +487,7 @@ describe('wire_public_endpoints — RISK #8 BackendEntry sourceServiceName mutat
     // be.targetResourceName via the `sourceServiceName` field on the
     // pushed object. The host rule in turn carries the
     // sourceServiceName the LB handler will use for the NEG lookup.
-    const { graph, card_id_to_name, deployables, endpointNodeKey, computeNodeKeys } = setup_fixture({
+    const { graph, card_id_to_name, deployables, endpointNodeKey, endpointNodeName, computeNodeKeys, computeNodeNames } = setup_fixture({
       endpoint: { cardId: 'ep-card', resourceName: 'fr-1' },
       computes: [
         { cardId: 'svc-1', resourceName: 'cloud-run-svc-1' },
@@ -499,18 +524,20 @@ describe('wire_public_endpoints — RISK #8 BackendEntry sourceServiceName mutat
     // outer host_rules read site.
     const byHost: Record<string, any> = {};
     for (const rule of frProps.host_rules) byHost[rule.host] = rule;
-    const svc1Key = computeNodeKeys['svc-1'];
-    const svc2Key = computeNodeKeys['svc-2'];
-    expect(byHost['a.r8.io'].sourceServiceName).toBe(svc1Key);
-    expect(byHost['a.r8.io'].backendName).toBe(sanitize_name(`${svc1Key}-backend`));
-    expect(byHost['b.r8.io'].sourceServiceName).toBe(svc2Key);
-    expect(byHost['b.r8.io'].backendName).toBe(sanitize_name(`${svc2Key}-backend`));
+    const svc1Name = computeNodeNames['svc-1'];
+    const svc2Name = computeNodeNames['svc-2'];
+    // Post-bugfix-1: assertions against bare resource names — the
+    // production shape — instead of the branded NodeId form.
+    expect(byHost['a.r8.io'].sourceServiceName).toBe(svc1Name);
+    expect(byHost['a.r8.io'].backendName).toBe(sanitize_name(`${svc1Name}-backend`));
+    expect(byHost['b.r8.io'].sourceServiceName).toBe(svc2Name);
+    expect(byHost['b.r8.io'].backendName).toBe(sanitize_name(`${svc2Name}-backend`));
   });
 });
 
 describe('wire_public_endpoints — RISK #7 atomic forwarding-rule removal', () => {
   it('all-static-site backends → graph.remove_node + deployables.splice + delta-- atomic', () => {
-    const { graph, card_id_to_name, deployables, endpointNodeKey } = setup_fixture({
+    const { graph, card_id_to_name, deployables, endpointNodeKey, endpointNodeName } = setup_fixture({
       endpoint: { cardId: 'ep-card', resourceName: 'fr-1' },
       computes: [{ cardId: 'site-card', resourceName: 'firebase-site-1' }],
     });
@@ -541,7 +568,7 @@ describe('wire_public_endpoints — RISK #7 atomic forwarding-rule removal', () 
 
     // All three mutations: graph removal, deployables splice, delta--.
     expect(result.deployable_count_delta).toBe(-1);
-    expect(deployables.find((d) => d.resource_name === endpointNodeKey)).toBeUndefined();
+    expect(deployables.find((d) => d.resource_name === endpointNodeName)).toBeUndefined();
     expect(deployables.length).toBe(0);
     expect(graph.has_node(endpointNodeKey as any)).toBe(false);
     // Static site domain still propagated.
@@ -550,7 +577,7 @@ describe('wire_public_endpoints — RISK #7 atomic forwarding-rule removal', () 
   });
 
   it('does NOT remove FR if there is at least one service backend (mixed static + service)', () => {
-    const { graph, card_id_to_name, deployables, endpointNodeKey } = setup_fixture({
+    const { graph, card_id_to_name, deployables, endpointNodeKey, endpointNodeName } = setup_fixture({
       endpoint: { cardId: 'ep-card', resourceName: 'fr-1' },
       computes: [
         { cardId: 'site-card', resourceName: 'firebase-site-1' },
@@ -582,7 +609,7 @@ describe('wire_public_endpoints — RISK #7 atomic forwarding-rule removal', () 
     });
 
     expect(result.deployable_count_delta).toBe(0); // no removal, no cert
-    expect(deployables.find((d) => d.resource_name === endpointNodeKey)).toBeDefined();
+    expect(deployables.find((d) => d.resource_name === endpointNodeName)).toBeDefined();
     // FR still present; got host rules for the service.
     const frProps = graph.nodes.get(endpointNodeKey as any)!.properties as any;
     expect(frProps.host_rules.length).toBe(1);
@@ -627,7 +654,7 @@ describe('wire_public_endpoints — RISK #7 atomic forwarding-rule removal', () 
 
 describe('wire_public_endpoints — SSL cert synthetic node injection', () => {
   it('injects a managed SSL cert when enableHttps + autoProvisionCert + hosts.length > 0', () => {
-    const { graph, card_id_to_name, deployables, endpointNodeKey } = setup_fixture({
+    const { graph, card_id_to_name, deployables, endpointNodeKey, endpointNodeName } = setup_fixture({
       endpoint: { cardId: 'ep-card', resourceName: 'fr-1' },
       computes: [{ cardId: 'svc-card', resourceName: 'svc-1' }],
     });
@@ -663,7 +690,7 @@ describe('wire_public_endpoints — SSL cert synthetic node injection', () => {
     // Cert name is sanitize_name(`${forwardingResourceName}-cert`); since
     // we map card_id_to_name to the full NodeId, that derivation runs
     // through the colon/dot stripping in sanitize_name.
-    const expectedCertName = sanitize_name(`${endpointNodeKey}-cert`);
+    const expectedCertName = sanitize_name(`${endpointNodeName}-cert`);
     const certByName = graph.get_node_by_name(expectedCertName);
     expect(certByName).toBeDefined();
     expect((certByName!.properties as any).domains).toEqual(['cert.io', 'api.cert.io']);
@@ -685,7 +712,7 @@ describe('wire_public_endpoints — SSL cert synthetic node injection', () => {
   });
 
   it('does NOT inject cert when enableHttps is false (HTTP path)', () => {
-    const { graph, card_id_to_name, deployables, endpointNodeKey } = setup_fixture({
+    const { graph, card_id_to_name, deployables, endpointNodeKey, endpointNodeName } = setup_fixture({
       endpoint: { cardId: 'ep-card', resourceName: 'fr-1' },
       computes: [{ cardId: 'svc-card', resourceName: 'svc-1' }],
     });
@@ -703,7 +730,7 @@ describe('wire_public_endpoints — SSL cert synthetic node injection', () => {
       edges, nodes, card_id_to_name, graph, deployables, warnings: [], projectName: 'p',
     });
 
-    const expectedCertName = sanitize_name(`${endpointNodeKey}-cert`);
+    const expectedCertName = sanitize_name(`${endpointNodeName}-cert`);
     expect(result.deployable_count_delta).toBe(0);
     expect(graph.get_node_by_name(expectedCertName)).toBeUndefined();
     const frProps = graph.nodes.get(endpointNodeKey as any)!.properties as any;
@@ -713,7 +740,7 @@ describe('wire_public_endpoints — SSL cert synthetic node injection', () => {
   });
 
   it('does NOT inject cert when autoProvisionCert is false', () => {
-    const { graph, card_id_to_name, deployables, endpointNodeKey } = setup_fixture({
+    const { graph, card_id_to_name, deployables, endpointNodeKey, endpointNodeName } = setup_fixture({
       endpoint: { cardId: 'ep-card', resourceName: 'fr-1' },
       computes: [{ cardId: 'svc-card', resourceName: 'svc-1' }],
     });
@@ -731,14 +758,14 @@ describe('wire_public_endpoints — SSL cert synthetic node injection', () => {
       edges, nodes, card_id_to_name, graph, deployables, warnings: [], projectName: 'p',
     });
 
-    const expectedCertName = sanitize_name(`${endpointNodeKey}-cert`);
+    const expectedCertName = sanitize_name(`${endpointNodeName}-cert`);
     expect(graph.get_node_by_name(expectedCertName)).toBeUndefined();
     const frProps = graph.nodes.get(endpointNodeKey as any)!.properties as any;
     expect(frProps.protocol).toBe('HTTP');
   });
 
   it('does NOT re-inject cert when card_id_to_name already has the certKey (idempotent)', () => {
-    const { graph, card_id_to_name, deployables, endpointNodeKey } = setup_fixture({
+    const { graph, card_id_to_name, deployables, endpointNodeKey, endpointNodeName } = setup_fixture({
       endpoint: { cardId: 'ep-card', resourceName: 'fr-1' },
       computes: [{ cardId: 'svc-card', resourceName: 'svc-1' }],
     });
@@ -759,7 +786,7 @@ describe('wire_public_endpoints — SSL cert synthetic node injection', () => {
       edges, nodes, card_id_to_name, graph, deployables, warnings: [], projectName: 'p',
     });
 
-    const expectedCertName = sanitize_name(`${endpointNodeKey}-cert`);
+    const expectedCertName = sanitize_name(`${endpointNodeName}-cert`);
     expect(result.deployable_count_delta).toBe(0); // cert NOT added
     const certDeployable = deployables.find((d) => d.resource_name === expectedCertName);
     expect(certDeployable).toBeUndefined(); // not pushed
@@ -774,7 +801,7 @@ describe('wire_public_endpoints — SSL cert synthetic node injection', () => {
 
 describe('wire_public_endpoints — 3-tier subdomain priority (RISK #6 mirror)', () => {
   it('routeId set + matching route → uses ROUTE\'S subdomain, NOT edge.subdomain', () => {
-    const { graph, card_id_to_name, deployables, endpointNodeKey } = setup_fixture({
+    const { graph, card_id_to_name, deployables, endpointNodeKey, endpointNodeName } = setup_fixture({
       endpoint: { cardId: 'ep-card', resourceName: 'fr-1' },
       computes: [{ cardId: 'svc-card', resourceName: 'svc-1' }],
     });
@@ -814,7 +841,7 @@ describe('wire_public_endpoints — 3-tier subdomain priority (RISK #6 mirror)',
   it('routeId set but route NOT FOUND → empty subdomain (no fallthrough to edge.subdomain)', () => {
     // The load-bearing assertion from rf-ctrans-11's RISK #6 — strict
     // bifurcation, no fallthrough.
-    const { graph, card_id_to_name, deployables, endpointNodeKey } = setup_fixture({
+    const { graph, card_id_to_name, deployables, endpointNodeKey, endpointNodeName } = setup_fixture({
       endpoint: { cardId: 'ep-card', resourceName: 'fr-1' },
       computes: [{ cardId: 'svc-card', resourceName: 'svc-1' }],
     });
@@ -850,7 +877,7 @@ describe('wire_public_endpoints — 3-tier subdomain priority (RISK #6 mirror)',
   });
 
   it('routeId unset + edge.subdomain set → uses edge.subdomain (legacy path)', () => {
-    const { graph, card_id_to_name, deployables, endpointNodeKey } = setup_fixture({
+    const { graph, card_id_to_name, deployables, endpointNodeKey, endpointNodeName } = setup_fixture({
       endpoint: { cardId: 'ep-card', resourceName: 'fr-1' },
       computes: [{ cardId: 'svc-card', resourceName: 'svc-1' }],
     });
@@ -875,7 +902,7 @@ describe('wire_public_endpoints — 3-tier subdomain priority (RISK #6 mirror)',
   });
 
   it('neither routeId nor edge.subdomain → uses bare rootDomain', () => {
-    const { graph, card_id_to_name, deployables, endpointNodeKey } = setup_fixture({
+    const { graph, card_id_to_name, deployables, endpointNodeKey, endpointNodeName } = setup_fixture({
       endpoint: { cardId: 'ep-card', resourceName: 'fr-1' },
       computes: [{ cardId: 'svc-card', resourceName: 'svc-1' }],
     });
@@ -898,7 +925,7 @@ describe('wire_public_endpoints — 3-tier subdomain priority (RISK #6 mirror)',
   });
 
   it('subdomain whitespace trimmed in route lookup AND legacy path', () => {
-    const { graph, card_id_to_name, deployables, endpointNodeKey } = setup_fixture({
+    const { graph, card_id_to_name, deployables, endpointNodeKey, endpointNodeName } = setup_fixture({
       endpoint: { cardId: 'ep-card', resourceName: 'fr-1' },
       computes: [
         { cardId: 'svc-a', resourceName: 'svc-a' },
@@ -936,7 +963,7 @@ describe('wire_public_endpoints — 3-tier subdomain priority (RISK #6 mirror)',
 
 describe('wire_public_endpoints — CustomDomain nested in PrivateNetwork acts as endpoint', () => {
   it('treats CustomDomain with PrivateNetwork parent as endpoint type', () => {
-    const { graph, card_id_to_name, deployables, endpointNodeKey } = setup_fixture({
+    const { graph, card_id_to_name, deployables, endpointNodeKey, endpointNodeName } = setup_fixture({
       endpoint: { cardId: 'cd-card', resourceName: 'fr-1' },
       computes: [{ cardId: 'svc-card', resourceName: 'svc-1' }],
     });
@@ -1055,7 +1082,7 @@ describe('wire_public_endpoints — warnings + unsupported backend types', () =>
 
 describe('wire_public_endpoints — redirect_http flag', () => {
   it('passes redirectHttpToHttps onto FR.redirect_http (default true)', () => {
-    const { graph, card_id_to_name, deployables, endpointNodeKey } = setup_fixture({
+    const { graph, card_id_to_name, deployables, endpointNodeKey, endpointNodeName } = setup_fixture({
       endpoint: { cardId: 'ep-card', resourceName: 'fr-1' },
       computes: [{ cardId: 'svc-card', resourceName: 'svc-1' }],
     });
@@ -1078,7 +1105,7 @@ describe('wire_public_endpoints — redirect_http flag', () => {
   });
 
   it('honors redirectHttpToHttps: false on the endpoint', () => {
-    const { graph, card_id_to_name, deployables, endpointNodeKey } = setup_fixture({
+    const { graph, card_id_to_name, deployables, endpointNodeKey, endpointNodeName } = setup_fixture({
       endpoint: { cardId: 'ep-card', resourceName: 'fr-1' },
       computes: [{ cardId: 'svc-card', resourceName: 'svc-1' }],
     });
@@ -1108,7 +1135,7 @@ describe('wire_public_endpoints — redirect_http flag', () => {
 
 describe('wire_public_endpoints — domain trimming', () => {
   it('trims whitespace on rootDomain', () => {
-    const { graph, card_id_to_name, deployables, endpointNodeKey } = setup_fixture({
+    const { graph, card_id_to_name, deployables, endpointNodeKey, endpointNodeName } = setup_fixture({
       endpoint: { cardId: 'ep-card', resourceName: 'fr-1' },
       computes: [{ cardId: 'svc-card', resourceName: 'svc-1' }],
     });
@@ -1142,7 +1169,7 @@ describe('wire_public_endpoints — service-type backend with empty rootDomain',
     // backend_bucket_name is set because the default has no
     // backendBucketName (service-type backends never get one assigned
     // — only static-site ones did in older code paths).
-    const { graph, card_id_to_name, deployables, endpointNodeKey } = setup_fixture({
+    const { graph, card_id_to_name, deployables, endpointNodeKey, endpointNodeName } = setup_fixture({
       endpoint: { cardId: 'ep-card', resourceName: 'fr-1' },
       computes: [{ cardId: 'svc-card', resourceName: 'svc-1' }],
     });
@@ -1161,10 +1188,177 @@ describe('wire_public_endpoints — service-type backend with empty rootDomain',
     });
 
     expect(result.deployable_count_delta).toBe(0); // not removed, no cert
-    expect(deployables.find((d) => d.resource_name === endpointNodeKey)).toBeDefined();
+    expect(deployables.find((d) => d.resource_name === endpointNodeName)).toBeDefined();
     const frProps = graph.nodes.get(endpointNodeKey as any)!.properties as any;
     expect(frProps.host_rules).toEqual([]);
     expect(frProps.hosts).toEqual([]);
     expect(frProps.backend_bucket_name).toBeUndefined();
+  });
+});
+
+describe('wire_public_endpoints — bugfix-1 regression: production-shape lookup', () => {
+  // Pre-bugfix-1, Pass 1.5 used `graph.nodes.get(name as any)` for both
+  // the static-site `domain` propagation (line 228) and the forwarding
+  // rule property write (line 304) against a Map keyed by branded
+  // `${type}:${name}` NodeIds, so production (which stores bare names
+  // in `card_id_to_name`) silently no-op'd every iteration at the
+  // lookup miss. Tests bypassed the bug by mapping cardId → branded
+  // NodeId, which made `sanitize_name(\`${forwardingResourceName}-cert\`)`
+  // strip colons/dots from the NodeId rather than producing the clean
+  // `fr-1-cert` form. This regression test pins the production-shape
+  // contract: bare-name input → mutation fires AND derived names
+  // round-trip cleanly (no colon/dot stripping cascade). See the
+  // `graph-nodes-keyed-by-type-colon-name-not-bare-name` and
+  // `test-fixture-nodeid-mapping-cascades-into-synthetic-names`
+  // learnings for context.
+  it('uses bare resource names (production shape) — host_rules + cert use clean derived names', () => {
+    const graph = create_mutable_graph('test-project');
+    const frResult = graph.add_node({
+      type: 'gcp.compute.globalForwardingRule',
+      name: 'fr-prod',
+      properties: {},
+    });
+    if (!frResult.success || !frResult.node) throw new Error('FR setup failed');
+    const svcResult = graph.add_node({
+      type: 'gcp.run.service',
+      name: 'svc-prod',
+      properties: {},
+    });
+    if (!svcResult.success || !svcResult.node) throw new Error('svc setup failed');
+
+    const nodes: CardNodeInput[] = [
+      {
+        id: 'ep-card',
+        type: 'block',
+        data: { iceType: 'Network.PublicEndpoint', domain: 'prod.io', label: 'Prod EP' },
+      },
+      { id: 'svc-card', type: 'block', data: { iceType: 'Compute.Container' } },
+    ];
+    const edges: CardEdgeInput[] = [
+      { id: 'e1', source: 'ep-card', target: 'svc-card', data: { subdomain: 'api' } },
+    ];
+    // CRITICAL: bare resource names, not branded NodeIds.
+    const card_id_to_name = new Map<string, string>([
+      ['ep-card', 'fr-prod'],
+      ['svc-card', 'svc-prod'],
+    ]);
+    const deployables: DeployableNodeInfo[] = [
+      {
+        node_id: 'ep-card',
+        label: 'Prod EP',
+        ice_type: 'Network.PublicEndpoint',
+        resource_type: 'gcp.compute.globalForwardingRule',
+        resource_name: 'fr-prod',
+      },
+    ];
+
+    const result = wire_public_endpoints({
+      edges,
+      nodes,
+      card_id_to_name,
+      graph,
+      deployables,
+      warnings: [],
+      projectName: 'prod-test',
+    });
+
+    // Cert added (default enableHttps=true).
+    expect(result.deployable_count_delta).toBe(1);
+
+    // FR mutation path actually fired against the bare-name node.
+    const frNode = graph.get_node_by_name('fr-prod');
+    expect(frNode).toBeDefined();
+    const frProps = frNode!.properties as Record<string, unknown>;
+    expect(frProps.domain).toBe('prod.io');
+    expect(frProps.hosts).toEqual(['prod.io', 'api.prod.io']);
+
+    // host_rules entry uses bare service name (no NodeId leakage).
+    expect(frProps.host_rules).toEqual([
+      {
+        host: 'api.prod.io',
+        backendName: 'svc-prod-backend', // sanitize_name('svc-prod-backend') round-trips clean
+        backendType: 'service',
+        sourceServiceName: 'svc-prod',
+      },
+    ]);
+
+    // Cert name derived from bare FR name → 'fr-prod-cert' (clean).
+    // Pre-bugfix-1 this would have been the NodeId-derived
+    // 'gcp-compute-globalforwardingrule-fr-prod-cert' garbage form.
+    expect(frProps.ssl_certificate_name).toBe('fr-prod-cert');
+    expect(frProps.protocol).toBe('HTTPS');
+    expect(frProps.port_range).toBe('443');
+
+    // Cert node added with clean name + bare-name domains list.
+    const certNode = graph.get_node_by_name('fr-prod-cert');
+    expect(certNode).toBeDefined();
+    expect((certNode!.properties as any).domains).toEqual(['prod.io', 'api.prod.io']);
+  });
+
+  it('static-site domain propagation under production-shape lookup', () => {
+    // Mirrors the second `graph.nodes.get(be.targetResourceName as any)`
+    // callsite at pass-1-5-endpoint-wiring.ts:228. Static-site target
+    // gets its `domain` property set when the bare-name lookup hits.
+    const graph = create_mutable_graph('test-project');
+    const frResult = graph.add_node({
+      type: 'gcp.compute.globalForwardingRule',
+      name: 'fr-static',
+      properties: {},
+    });
+    if (!frResult.success || !frResult.node) throw new Error('FR setup failed');
+    const siteResult = graph.add_node({
+      type: 'gcp.firebase.hosting',
+      name: 'static-site-prod',
+      properties: {},
+    });
+    if (!siteResult.success || !siteResult.node) throw new Error('site setup failed');
+
+    const nodes: CardNodeInput[] = [
+      {
+        id: 'ep-card',
+        type: 'block',
+        data: { iceType: 'Network.PublicEndpoint', domain: 'sites.io' },
+      },
+      { id: 'site-card', type: 'block', data: { iceType: 'Compute.StaticSite' } },
+    ];
+    const edges: CardEdgeInput[] = [
+      { id: 'e1', source: 'ep-card', target: 'site-card', data: { subdomain: 'web' } },
+    ];
+    const card_id_to_name = new Map<string, string>([
+      ['ep-card', 'fr-static'],
+      ['site-card', 'static-site-prod'],
+    ]);
+    const deployables: DeployableNodeInfo[] = [
+      {
+        node_id: 'ep-card',
+        label: 'Static EP',
+        ice_type: 'Network.PublicEndpoint',
+        resource_type: 'gcp.compute.globalForwardingRule',
+        resource_name: 'fr-static',
+      },
+    ];
+
+    const result = wire_public_endpoints({
+      edges,
+      nodes,
+      card_id_to_name,
+      graph,
+      deployables,
+      warnings: [],
+      projectName: 'prod-test',
+    });
+
+    // All-static-site backends → atomic FR removal (RISK #7) under
+    // production-shape lookup. Pre-bugfix-1, the `remove_node(bare as any)`
+    // also silently no-op'd; bugfix-1 resolves the bare name to NodeId
+    // via `get_node_by_name(name)?.id` before calling remove_node.
+    expect(result.deployable_count_delta).toBe(-1);
+    expect(graph.get_node_by_name('fr-static')).toBeUndefined();
+    expect(deployables.find((d) => d.resource_name === 'fr-static')).toBeUndefined();
+
+    // Static-site node still in graph with `domain` propagated.
+    const siteNode = graph.get_node_by_name('static-site-prod');
+    expect(siteNode).toBeDefined();
+    expect((siteNode!.properties as any).domain).toBe('web.sites.io');
   });
 });

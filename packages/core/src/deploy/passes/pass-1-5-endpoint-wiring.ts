@@ -225,7 +225,7 @@ export function wire_public_endpoints(args: {
         // node so the Firebase Hosting handler can register it as a
         // custom domain. Subdomains become per-site subdomains; blank
         // becomes the root domain.
-        const targetGraphNode = graph.nodes.get(be.targetResourceName as any);
+        const targetGraphNode = graph.get_node_by_name(be.targetResourceName);
         if (targetGraphNode && rootDomain) {
           const fullHost = be.subdomain ? `${be.subdomain}.${rootDomain}` : rootDomain;
           (targetGraphNode.properties as any).domain = fullHost;
@@ -280,7 +280,14 @@ export function wire_public_endpoints(args: {
     // it points at. Otherwise the LB would deploy with an empty URL
     // map and 502 every request.
     if (hostRules.length === 0 && defaultBackends.length === 0) {
-      const removed = graph.remove_node(forwardingResourceName as any);
+      // `remove_node` requires the branded `${type}:${name}` NodeId, but
+      // `forwardingResourceName` is the bare resource name from
+      // `card_id_to_name`. Resolve via `get_node_by_name` first; otherwise
+      // we'd silently no-op the removal (same class of bug as the lookup
+      // callsites — see the `graph-nodes-keyed-by-type-colon-name-not-bare-name`
+      // learning).
+      const frForRemoval = graph.get_node_by_name(forwardingResourceName);
+      const removed = frForRemoval ? graph.remove_node(frForRemoval.id) : false;
       if (removed) {
         const idx = deployables.findIndex((d) => d.resource_name === forwardingResourceName);
         if (idx !== -1) {
@@ -301,7 +308,7 @@ export function wire_public_endpoints(args: {
 
     // Attach the host list and URL map rules to the forwarding rule
     // node so the load balancer handler can build the URL map.
-    const frNode = graph.nodes.get(forwardingResourceName as any);
+    const frNode = graph.get_node_by_name(forwardingResourceName);
     if (frNode) {
       (frNode.properties as any).domain = rootDomain;
       (frNode.properties as any).hosts = hosts;

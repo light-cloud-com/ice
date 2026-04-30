@@ -7,6 +7,7 @@
 import { SERVICE_NAMES, sdk_not_available, sdk_not_available_short } from '../messages.js';
 import { createOrAdoptBucket } from './cloud-storage/bucket-creator.js';
 import { placeholderIndexHtml, placeholderNotFoundHtml, resolveOutputUrl } from './cloud-storage/bucket-utils.js';
+import { grantPublicAccess } from './cloud-storage/public-access-granter.js';
 import { result, fail } from './cloud-storage/result-helpers.js';
 import type { GCPResourceHandler } from '../types.js';
 
@@ -72,139 +73,26 @@ export const cloud_storage_handler: GCPResourceHandler = {
         ctx,
       );
 
-      // For public static site buckets, grant allUsers:objectViewer so the
-      // HTTPS load balancer (backend bucket origin) and any direct visitors
-      // can fetch objects. Best-effort: if an org policy blocks public IAM
-      // grants we catch the error and surface it via a warning output so
-      // the user knows why visiting the URL returns 403.
+      // For public static site buckets, grant allUsers:objectViewer so
+      // the load balancer + direct visitors can fetch objects. The
+      // helper handles the IAM → legacy-ACL fallback and surfaces the
+      // strategy + warnings via its return value. See
+      // `public-access-granter.ts` for the full risk pins.
       //
-      // Merge semantics: `setPolicy` REPLACES the entire policy, which
-      // would strip default project-level bindings (owner/editor) and can
-      // leave the bucket inaccessible to the service account itself. We
-      // fetch the existing policy, append the allUsers binding, and write
-      // it back so existing roles survive.
-      //
-      // When the grant fails, we set `publicGrantFailed: true` on the
-      // outputs so the downstream code knows direct public access is
-      // blocked and the user's only reachable path is through the load
-      // balancer (backend bucket). The propagation layer uses this to
-      // swap the per-block URL away from the bucket URL to something
-      // that actually works.
+      // verifyAfterWrite=false (create-mode): trust the setPolicy
+      // write succeeded without a re-fetch, matching historical
+      // behavior (RISK #7).
       const warnings: string[] = [];
       let publicGrantFailed = false;
       let publicGrantError = '';
       let publicGrantStrategy: 'iam' | 'legacy-acl' | 'none' = 'none';
       if (publicAccess) {
         const bucket = storage.bucket(name);
-
-        // Strategy 1: IAM allUsers grant (preferred — works on
-        // projects without restrictive org policies).
-        try {
-          // Prefer v3 policy so the response includes conditions; v1 is
-          // the default on older libraries. Both work with setPolicy.
-          const [currentPolicy] = await bucket.iam.getPolicy({ requestedPolicyVersion: 3 }).catch(() => [null]);
-          const bindings: Array<{ role: string; members: string[] }> = Array.isArray(currentPolicy?.bindings)
-            ? currentPolicy!.bindings.map((b: any) => ({
-                role: b.role,
-                members: Array.isArray(b.members) ? [...b.members] : [],
-              }))
-            : [];
-
-          const existing = bindings.find((b) => b.role === 'roles/storage.objectViewer');
-          if (existing) {
-            if (!existing.members.includes('allUsers')) {
-              existing.members.push('allUsers');
-            }
-          } else {
-            bindings.push({ role: 'roles/storage.objectViewer', members: ['allUsers'] });
-          }
-
-          await bucket.iam.setPolicy({
-            etag: currentPolicy?.etag,
-            version: currentPolicy?.version ?? 3,
-            bindings,
-          });
-          publicGrantStrategy = 'iam';
-          ctx.on_log?.(`[cloud-storage] Granted allUsers:objectViewer via IAM on ${name}`);
-        } catch (iamErr: any) {
-          const msg = iamErr instanceof Error ? iamErr.message : String(iamErr);
-          // The "permitted customer" / "allowedPolicyMemberDomains" error
-          // means IAM blocks `allUsers`. Legacy ACLs are a SEPARATE
-          // permission system that predates IAM and is NOT governed by
-          // `iam.allowedPolicyMemberDomains` — they're our automatic
-          // fallback path.
-          const isOrgPolicyBlock = msg.includes('permitted customer') || msg.includes('allowedPolicyMemberDomains');
-          ctx.on_log?.(
-            isOrgPolicyBlock
-              ? `[cloud-storage] IAM allUsers grant blocked by org policy. Falling back to legacy ACLs...`
-              : `[cloud-storage] IAM grant failed: ${msg}. Trying legacy ACL fallback...`,
-          );
-
-          // Strategy 2: Legacy ACL fallback. Only viable when UBLA is
-          // off — if the project enforces `storage.uniformBucketLevelAccess`,
-          // we already had to fall back to UBLA-on bucket creation, which
-          // means ACLs are unavailable and IAM is the only path. In that
-          // scenario both strategies are dead and the bucket cannot host
-          // publicly in this project.
-          if (ublaForcedOn) {
-            publicGrantFailed = true;
-            publicGrantError = `IAM: ${msg} | ACL fallback unavailable: 'storage.uniformBucketLevelAccess' org policy is enforced (UBLA cannot be disabled).`;
-            warnings.push(
-              `BOTH public access strategies blocked. IAM allUsers grant rejected by ` +
-                `'iam.allowedPolicyMemberDomains' org policy. Legacy ACL fallback unavailable ` +
-                `because 'storage.uniformBucketLevelAccess' org policy forces UBLA on, which ` +
-                `disables the ACL system. This project's combined policies prevent ALL public ` +
-                `Cloud Storage hosting. Options: (1) ask org admin to relax one of these constraints ` +
-                `for this project, (2) use a different project, or (3) switch to a non-Storage ` +
-                `hosting backend (Cloud Run + container image of your static site).`,
-            );
-            ctx.on_log?.(`[cloud-storage] ${warnings[warnings.length - 1]}`);
-          } else {
-            // ACLs use the `defaultObjectAcl` REST endpoint, not the IAM
-            // policy endpoint, so `iam.allowedPolicyMemberDomains` does not
-            // gate it. The other policy that CAN block ACL grants is
-            // `storage.publicAccessPrevention` — if that's also enforced,
-            // public hosting is genuinely impossible in this project.
-            try {
-              await bucket.acl.default.add({
-                entity: 'allUsers',
-                role: 'READER',
-              });
-              await bucket.acl
-                .add({
-                  entity: 'allUsers',
-                  role: 'READER',
-                })
-                .catch(() => undefined);
-              publicGrantStrategy = 'legacy-acl';
-              ctx.on_log?.(
-                `[cloud-storage] ✓ Legacy ACL fallback worked — granted allUsers:READER on ${name}'s defaultObjectAcl. ` +
-                  `IAM was blocked by '${isOrgPolicyBlock ? 'iam.allowedPolicyMemberDomains' : 'unknown error'}' ` +
-                  `but the ACL system bypasses that restriction.`,
-              );
-            } catch (aclErr: any) {
-              const aclMsg = aclErr instanceof Error ? aclErr.message : String(aclErr);
-              publicGrantFailed = true;
-              publicGrantError = `IAM: ${msg} | ACL fallback: ${aclMsg}`;
-              const isAccessPreventionBlock =
-                aclMsg.includes('publicAccessPrevention') ||
-                aclMsg.includes('PUBLIC_ACCESS_PREVENTION') ||
-                aclMsg.includes('blocked');
-              warnings.push(
-                isAccessPreventionBlock
-                  ? `BOTH public access strategies blocked. IAM allUsers grant rejected by ` +
-                      `'iam.allowedPolicyMemberDomains' org policy AND legacy ACL grant rejected ` +
-                      `by 'storage.publicAccessPrevention' org policy. This project's policies ` +
-                      `prevent ALL public Cloud Storage hosting. Options: (1) ask org admin to relax ` +
-                      `one of these constraints for this project, (2) use a different project, or ` +
-                      `(3) switch to Cloud Run hosting.`
-                  : `IAM grant blocked by '${msg}'. Legacy ACL fallback also failed: '${aclMsg}'. ` +
-                      `Cloud Storage cannot serve this bucket publicly.`,
-              );
-              ctx.on_log?.(`[cloud-storage] ${warnings[warnings.length - 1]}`);
-            }
-          }
-        }
+        const grant = await grantPublicAccess(bucket, name, ublaForcedOn, ctx, { verifyAfterWrite: false });
+        publicGrantStrategy = grant.strategy;
+        publicGrantFailed = grant.failed;
+        publicGrantError = grant.error;
+        warnings.push(...grant.warnings);
       }
 
       // Upload a placeholder index.html (and 404.html) for static-site
@@ -421,111 +309,15 @@ export const cloud_storage_handler: GCPResourceHandler = {
           updateUblaForcedOn = true;
         }
 
-        // Step 2: Try IAM grant.
-        let iamGrantError = '';
-        try {
-          const [currentPolicy] = await bucket.iam.getPolicy({ requestedPolicyVersion: 3 }).catch(() => [null]);
-          const bindings: Array<{ role: string; members: string[] }> = Array.isArray(currentPolicy?.bindings)
-            ? currentPolicy!.bindings.map((b: any) => ({
-                role: b.role,
-                members: Array.isArray(b.members) ? [...b.members] : [],
-              }))
-            : [];
-          const existing = bindings.find((b) => b.role === 'roles/storage.objectViewer');
-          const alreadyHasAllUsers = !!existing?.members.includes('allUsers');
-
-          if (alreadyHasAllUsers) {
-            updatePublicGrantStrategy = 'iam';
-          } else {
-            if (existing) {
-              existing.members.push('allUsers');
-            } else {
-              bindings.push({ role: 'roles/storage.objectViewer', members: ['allUsers'] });
-            }
-            await bucket.iam.setPolicy({
-              etag: currentPolicy?.etag,
-              version: currentPolicy?.version ?? 3,
-              bindings,
-            });
-            // Verify the grant actually landed (org policy may strip
-            // it post-write).
-            const [verifyPolicy] = await bucket.iam.getPolicy({ requestedPolicyVersion: 3 }).catch(() => [null]);
-            const verified = (verifyPolicy?.bindings || []).some(
-              (b: any) => b.role === 'roles/storage.objectViewer' && (b.members || []).includes('allUsers'),
-            );
-            if (verified) {
-              updatePublicGrantStrategy = 'iam';
-              ctx.on_log?.(`[cloud-storage] ✓ Granted allUsers:objectViewer via IAM on ${name}`);
-            } else {
-              iamGrantError =
-                'IAM setPolicy returned success but allUsers is not in the bucket policy after re-fetch (org policy likely stripped it silently).';
-            }
-          }
-        } catch (iamErr: any) {
-          iamGrantError = iamErr instanceof Error ? iamErr.message : String(iamErr);
-        }
-
-        // Step 3: If IAM didn't land, fall back to legacy ACL — unless
-        // UBLA is locked on, in which case ACLs are unavailable and the
-        // bucket genuinely cannot be made public in this project.
-        if (updatePublicGrantStrategy !== 'iam') {
-          if (updateUblaForcedOn) {
-            updatePublicGrantFailed = true;
-            updatePublicGrantError = `IAM: ${iamGrantError} | ACL fallback unavailable: 'storage.uniformBucketLevelAccess' org policy is enforced.`;
-            updateWarnings.push(
-              `BOTH public access strategies blocked. IAM allUsers grant rejected by ` +
-                `'iam.allowedPolicyMemberDomains' org policy. Legacy ACL fallback unavailable ` +
-                `because 'storage.uniformBucketLevelAccess' org policy forces UBLA on, which ` +
-                `disables the ACL system. This project's combined policies prevent ALL public ` +
-                `Cloud Storage hosting. Options: (1) ask org admin to relax one of these constraints ` +
-                `for this project, (2) use a different project, or (3) switch to a non-Storage ` +
-                `hosting backend (Cloud Run + container of your static site).`,
-            );
-            ctx.on_log?.(`[cloud-storage] ${updateWarnings[updateWarnings.length - 1]}`);
-          } else {
-            const isOrgPolicyBlock =
-              iamGrantError.includes('permitted customer') ||
-              iamGrantError.includes('allowedPolicyMemberDomains') ||
-              iamGrantError.includes('stripped');
-            ctx.on_log?.(
-              isOrgPolicyBlock
-                ? `[cloud-storage] IAM allUsers grant blocked by org policy on ${name}. Falling back to legacy ACLs...`
-                : `[cloud-storage] IAM grant failed on ${name}: ${iamGrantError}. Trying legacy ACL fallback...`,
-            );
-            try {
-              await bucket.acl.default.add({ entity: 'allUsers', role: 'READER' });
-              await bucket.acl.add({ entity: 'allUsers', role: 'READER' }).catch(() => undefined);
-              updatePublicGrantStrategy = 'legacy-acl';
-              ctx.on_log?.(
-                `[cloud-storage] ✓ Legacy ACL fallback worked — granted allUsers:READER on ${name}'s defaultObjectAcl. ` +
-                  `IAM was blocked by '${isOrgPolicyBlock ? 'iam.allowedPolicyMemberDomains' : 'unknown error'}' ` +
-                  `but the ACL system bypasses that restriction.`,
-              );
-            } catch (aclErr: any) {
-              const aclMsg = aclErr instanceof Error ? aclErr.message : String(aclErr);
-              updatePublicGrantFailed = true;
-              updatePublicGrantError = `IAM: ${iamGrantError} | ACL fallback: ${aclMsg}`;
-              const isAccessPreventionBlock =
-                aclMsg.includes('publicAccessPrevention') ||
-                aclMsg.includes('PUBLIC_ACCESS_PREVENTION') ||
-                aclMsg.includes('uniform bucket-level access') ||
-                aclMsg.includes('UBLA');
-              updateWarnings.push(
-                isAccessPreventionBlock
-                  ? `BOTH public access strategies blocked. IAM allUsers grant rejected by ` +
-                      `'iam.allowedPolicyMemberDomains' org policy AND legacy ACL grant rejected ` +
-                      `(likely by 'storage.publicAccessPrevention' or locked-on UBLA). ` +
-                      `This project's policies prevent ALL public Cloud Storage hosting. ` +
-                      `Either: (1) ask org admin to relax one of these constraints for this project, ` +
-                      `(2) use a different project, or (3) deploy via Cloud Run which uses a different ` +
-                      `access model.`
-                  : `Could not make bucket publicly readable. IAM grant: '${iamGrantError}'. ` +
-                      `Legacy ACL fallback also failed: '${aclMsg}'.`,
-              );
-              ctx.on_log?.(`[cloud-storage] ${updateWarnings[updateWarnings.length - 1]}`);
-            }
-          }
-        }
+        // Step 2 + 3: IAM grant + legacy-ACL fallback. The helper
+        // unifies create() and update() — update passes
+        // verifyAfterWrite=true so silent stripping by org policy
+        // surfaces as a grant-failure (RISK #7).
+        const grant = await grantPublicAccess(bucket, name, updateUblaForcedOn, ctx, { verifyAfterWrite: true });
+        updatePublicGrantStrategy = grant.strategy;
+        updatePublicGrantFailed = grant.failed;
+        updatePublicGrantError = grant.error;
+        updateWarnings.push(...grant.warnings);
       }
 
       // Self-heal: if this is a static-site bucket and there's no

@@ -1218,3 +1218,39 @@ brief-cited paths are starting points anchored to the SOURCE file,
 not the destination, and need recounting when the destination's depth
 changes. Diagnostic: `Cannot find module '../<n>/...'` where the
 module exists at `../<n+1>/...` from the new file's directory.
+
+## to-camel-case-on-leading-underscore-rewrites-not-passes-through
+
+_Discovered: 2026-04-30 by implementer in rf-pulumi-4_
+
+The `to_camel_case` helper extracted in rf-pulumi-2 looks like the
+expected snake_case-to-camelCase converter, but the regex
+`/_([a-z])/g` is greedier than first reading suggests: it matches
+`_internal` (capturing `i`), consumes the leading underscore, and
+emits `Internal`. So `to_camel_case('_internal')` is `'Internal'`,
+NOT `'_internal'`. Pre-extraction `transformValue` re-keyed every
+nested object via this same helper — meaning a property bag
+`{ _internal: 1 }` passed at the top level would be SKIPPED by
+`map_properties` (its `key.startsWith('_')` filter), but the SAME
+shape inside a nested object value goes through `transform_value`
+which calls `to_camel_case` and produces `{ Internal: 1 }`. I wrote
+a test that asserted nested `_kept_inside` would survive verbatim
+and it failed with the rewritten `KeptInside`. The verbatim
+behaviour is: at the top level `map_properties` strips
+underscore-prefixed keys; in nested objects `transform_value`
+LETS THEM THROUGH the filter (no `startsWith('_')` check) but
+the to_camel_case rewrite still re-keys them, dropping the
+leading underscore. Generalizes: when porting any "snake-to-camel
+key rewrite" helper that uses `/_([a-z])/g`, every test fixture
+with a leading-underscore key must be inspected — the regex
+consumes the underscore even when the next char is a letter,
+producing TitleCased output. If the consumer wants leading
+underscores preserved (e.g. for "internal" markers like
+`_provider_alias`), it has to either filter the keys before
+running the rewrite (the `map_properties` top-level pattern) or
+switch to a regex that anchors the underscore as a non-leading
+match (`/(?<!^)_([a-z])/g`). Diagnostic: a fixture asserting
+`{ _x: 1 }` round-trip fails with `expected '_x' to deeply equal
+'X'`. Pair with `sed-greedy-dot-star-eats-chained-calls-on-one-line`
+— both are about regex behaviour that looks innocuous in isolation
+breaking on inputs the brief-time author didn't enumerate.

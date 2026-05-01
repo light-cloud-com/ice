@@ -7,6 +7,12 @@
 
 import { create_graph_id, create_node_id, create_edge_id } from '../types/graph.js';
 import { classify_resource } from './classifier/category-classifier.js';
+import {
+  create_mutable_graph_state,
+  type GraphStats,
+  type MutableGraphState,
+  type SerializedGraph,
+} from './mutable-graph/types.js';
 import type {
   Graph,
   GraphId,
@@ -22,6 +28,10 @@ import type {
   TraversalOptions,
 } from '../types/graph.js';
 
+// Re-export internal types so the public surface (`./graph/index.ts` and
+// `core/src/index.ts`) stays unchanged.
+export type { GraphStats, SerializedGraph } from './mutable-graph/types.js';
+
 // =============================================================================
 // Mutable Graph
 // =============================================================================
@@ -35,15 +45,12 @@ export class MutableGraph implements Graph {
   readonly version: string;
   readonly metadata: GraphMetadata;
 
-  private _nodes: Map<NodeId, Node> = new Map();
-  private _edges: Map<EdgeId, Edge> = new Map();
-
-  // Adjacency lists for efficient traversal
-  private outgoing: Map<NodeId, Set<EdgeId>> = new Map();
-  private incoming: Map<NodeId, Set<EdgeId>> = new Map();
-
-  // Name to ID mapping for lookups
-  private node_names: Map<string, NodeId> = new Map();
+  /**
+   * Mutable bag of state shared with the helper modules under
+   * `./mutable-graph/`. All node/edge/index data lives here; the
+   * class is a thin delegate.
+   */
+  private readonly state: MutableGraphState = create_mutable_graph_state();
 
   constructor(
     name: string,
@@ -78,11 +85,11 @@ export class MutableGraph implements Graph {
   // ---------------------------------------------------------------------------
 
   get nodes(): ReadonlyMap<NodeId, Node> {
-    return this._nodes;
+    return this.state.nodes;
   }
 
   get edges(): ReadonlyMap<EdgeId, Edge> {
-    return this._edges;
+    return this.state.edges;
   }
 
   // ---------------------------------------------------------------------------
@@ -97,14 +104,14 @@ export class MutableGraph implements Graph {
     const id = create_node_id(`${input.type}:${input.name}`);
 
     // Check for duplicates
-    if (this._nodes.has(id)) {
+    if (this.state.nodes.has(id)) {
       return {
         success: false,
         errors: [`Node already exists: ${id}`],
       };
     }
 
-    if (this.node_names.has(input.name)) {
+    if (this.state.node_names.has(input.name)) {
       return {
         success: false,
         errors: [`Node with name '${input.name}' already exists`],
@@ -129,10 +136,10 @@ export class MutableGraph implements Graph {
       },
     };
 
-    this._nodes.set(id, node);
-    this.node_names.set(input.name, id);
-    this.outgoing.set(id, new Set());
-    this.incoming.set(id, new Set());
+    this.state.nodes.set(id, node);
+    this.state.node_names.set(input.name, id);
+    this.state.outgoing.set(id, new Set());
+    this.state.incoming.set(id, new Set());
 
     return { success: true, node };
   }
@@ -141,15 +148,15 @@ export class MutableGraph implements Graph {
    * Get a node by ID.
    */
   get_node(id: NodeId): Node | undefined {
-    return this._nodes.get(id);
+    return this.state.nodes.get(id);
   }
 
   /**
    * Get a node by name.
    */
   get_node_by_name(name: string): Node | undefined {
-    const id = this.node_names.get(name);
-    return id ? this._nodes.get(id) : undefined;
+    const id = this.state.node_names.get(name);
+    return id ? this.state.nodes.get(id) : undefined;
   }
 
   /**
@@ -163,7 +170,7 @@ export class MutableGraph implements Graph {
       annotations?: Record<string, unknown>;
     },
   ): boolean {
-    const node = this._nodes.get(id);
+    const node = this.state.nodes.get(id);
     if (!node) return false;
 
     const updated: Node = {
@@ -179,7 +186,7 @@ export class MutableGraph implements Graph {
       },
     };
 
-    this._nodes.set(id, updated);
+    this.state.nodes.set(id, updated);
     return true;
   }
 
@@ -187,12 +194,12 @@ export class MutableGraph implements Graph {
    * Remove a node and its connected edges.
    */
   remove_node(id: NodeId): boolean {
-    const node = this._nodes.get(id);
+    const node = this.state.nodes.get(id);
     if (!node) return false;
 
     // Remove connected edges
-    const out_edges = this.outgoing.get(id) ?? new Set();
-    const in_edges = this.incoming.get(id) ?? new Set();
+    const out_edges = this.state.outgoing.get(id) ?? new Set();
+    const in_edges = this.state.incoming.get(id) ?? new Set();
 
     for (const edge_id of out_edges) {
       this.remove_edge(edge_id);
@@ -202,10 +209,10 @@ export class MutableGraph implements Graph {
     }
 
     // Remove node
-    this._nodes.delete(id);
-    this.node_names.delete(node.name);
-    this.outgoing.delete(id);
-    this.incoming.delete(id);
+    this.state.nodes.delete(id);
+    this.state.node_names.delete(node.name);
+    this.state.outgoing.delete(id);
+    this.state.incoming.delete(id);
 
     return true;
   }
@@ -214,14 +221,14 @@ export class MutableGraph implements Graph {
    * Check if a node exists.
    */
   has_node(id: NodeId): boolean {
-    return this._nodes.has(id);
+    return this.state.nodes.has(id);
   }
 
   /**
    * Get all nodes of a specific type.
    */
   get_nodes_by_type(type: string): Node[] {
-    return Array.from(this._nodes.values()).filter((n) => n.type === type);
+    return Array.from(this.state.nodes.values()).filter((n) => n.type === type);
   }
 
   // ---------------------------------------------------------------------------
@@ -254,7 +261,7 @@ export class MutableGraph implements Graph {
     const id = create_edge_id(`${source_id}->${target_id}:${input.relationship}`);
 
     // Check for duplicates
-    if (this._edges.has(id)) {
+    if (this.state.edges.has(id)) {
       return {
         success: false,
         errors: [`Edge already exists: ${id}`],
@@ -274,11 +281,11 @@ export class MutableGraph implements Graph {
       },
     };
 
-    this._edges.set(id, edge);
+    this.state.edges.set(id, edge);
 
     // Update adjacency lists
-    this.outgoing.get(source_id)?.add(id);
-    this.incoming.get(target_id)?.add(id);
+    this.state.outgoing.get(source_id)?.add(id);
+    this.state.incoming.get(target_id)?.add(id);
 
     return { success: true, edge };
   }
@@ -287,19 +294,19 @@ export class MutableGraph implements Graph {
    * Get an edge by ID.
    */
   get_edge(id: EdgeId): Edge | undefined {
-    return this._edges.get(id);
+    return this.state.edges.get(id);
   }
 
   /**
    * Remove an edge.
    */
   remove_edge(id: EdgeId): boolean {
-    const edge = this._edges.get(id);
+    const edge = this.state.edges.get(id);
     if (!edge) return false;
 
-    this._edges.delete(id);
-    this.outgoing.get(edge.source)?.delete(id);
-    this.incoming.get(edge.target)?.delete(id);
+    this.state.edges.delete(id);
+    this.state.outgoing.get(edge.source)?.delete(id);
+    this.state.incoming.get(edge.target)?.delete(id);
 
     return true;
   }
@@ -308,11 +315,11 @@ export class MutableGraph implements Graph {
    * Get edges between two nodes.
    */
   get_edges_between(source: NodeId, target: NodeId): Edge[] {
-    const out_edges = this.outgoing.get(source) ?? new Set();
+    const out_edges = this.state.outgoing.get(source) ?? new Set();
     const result: Edge[] = [];
 
     for (const edge_id of out_edges) {
-      const edge = this._edges.get(edge_id);
+      const edge = this.state.edges.get(edge_id);
       if (edge && edge.target === target) {
         result.push(edge);
       }
@@ -325,9 +332,9 @@ export class MutableGraph implements Graph {
    * Get outgoing edges from a node.
    */
   get_outgoing_edges(node_id: NodeId): Edge[] {
-    const edge_ids = this.outgoing.get(node_id) ?? new Set();
+    const edge_ids = this.state.outgoing.get(node_id) ?? new Set();
     return Array.from(edge_ids)
-      .map((id) => this._edges.get(id))
+      .map((id) => this.state.edges.get(id))
       .filter((e): e is Edge => e !== undefined);
   }
 
@@ -335,9 +342,9 @@ export class MutableGraph implements Graph {
    * Get incoming edges to a node.
    */
   get_incoming_edges(node_id: NodeId): Edge[] {
-    const edge_ids = this.incoming.get(node_id) ?? new Set();
+    const edge_ids = this.state.incoming.get(node_id) ?? new Set();
     return Array.from(edge_ids)
-      .map((id) => this._edges.get(id))
+      .map((id) => this.state.edges.get(id))
       .filter((e): e is Edge => e !== undefined);
   }
 
@@ -352,7 +359,7 @@ export class MutableGraph implements Graph {
     const edges = this.get_outgoing_edges(node_id);
     return edges
       .filter((e) => e.relationship === 'depends_on')
-      .map((e) => this._nodes.get(e.target))
+      .map((e) => this.state.nodes.get(e.target))
       .filter((n): n is Node => n !== undefined);
   }
 
@@ -363,7 +370,7 @@ export class MutableGraph implements Graph {
     const edges = this.get_incoming_edges(node_id);
     return edges
       .filter((e) => e.relationship === 'depends_on')
-      .map((e) => this._nodes.get(e.source))
+      .map((e) => this.state.nodes.get(e.source))
       .filter((n): n is Node => n !== undefined);
   }
 
@@ -437,7 +444,7 @@ export class MutableGraph implements Graph {
       // Filter by node type
       if (options.type_filter) {
         return targets.filter((id) => {
-          const node = this._nodes.get(id);
+          const node = this.state.nodes.get(id);
           return node && options.type_filter!.includes(node.type);
         });
       }
@@ -454,7 +461,7 @@ export class MutableGraph implements Graph {
       if (visited.has(id) || depth > max_depth) continue;
       visited.add(id);
 
-      const node = this._nodes.get(id);
+      const node = this.state.nodes.get(id);
       if (!node) continue;
 
       const should_continue = callback(node, depth);
@@ -476,14 +483,14 @@ export class MutableGraph implements Graph {
    * Get the number of nodes.
    */
   get node_count(): number {
-    return this._nodes.size;
+    return this.state.nodes.size;
   }
 
   /**
    * Get the number of edges.
    */
   get edge_count(): number {
-    return this._edges.size;
+    return this.state.edges.size;
   }
 
   /**
@@ -493,17 +500,17 @@ export class MutableGraph implements Graph {
     const node_types: Record<string, number> = {};
     const edge_types: Record<string, number> = {};
 
-    for (const node of this._nodes.values()) {
+    for (const node of this.state.nodes.values()) {
       node_types[node.type] = (node_types[node.type] ?? 0) + 1;
     }
 
-    for (const edge of this._edges.values()) {
+    for (const edge of this.state.edges.values()) {
       edge_types[edge.relationship] = (edge_types[edge.relationship] ?? 0) + 1;
     }
 
     return {
-      node_count: this._nodes.size,
-      edge_count: this._edges.size,
+      node_count: this.state.nodes.size,
+      edge_count: this.state.edges.size,
       node_types,
       edge_types,
     };
@@ -518,12 +525,12 @@ export class MutableGraph implements Graph {
    */
   private resolve_node_id(ref: NodeId | string): NodeId | undefined {
     // Check if it's already a valid ID
-    if (this._nodes.has(ref as NodeId)) {
+    if (this.state.nodes.has(ref as NodeId)) {
       return ref as NodeId;
     }
 
     // Try to resolve by name
-    return this.node_names.get(ref);
+    return this.state.node_names.get(ref);
   }
 
   /**
@@ -539,15 +546,15 @@ export class MutableGraph implements Graph {
       regions: this.metadata.regions ? [...this.metadata.regions] : undefined,
     });
 
-    for (const node of this._nodes.values()) {
-      copy._nodes.set(node.id, { ...node });
-      copy.node_names.set(node.name, node.id);
-      copy.outgoing.set(node.id, new Set(this.outgoing.get(node.id)));
-      copy.incoming.set(node.id, new Set(this.incoming.get(node.id)));
+    for (const node of this.state.nodes.values()) {
+      copy.state.nodes.set(node.id, { ...node });
+      copy.state.node_names.set(node.name, node.id);
+      copy.state.outgoing.set(node.id, new Set(this.state.outgoing.get(node.id)));
+      copy.state.incoming.set(node.id, new Set(this.state.incoming.get(node.id)));
     }
 
-    for (const edge of this._edges.values()) {
-      copy._edges.set(edge.id, { ...edge });
+    for (const edge of this.state.edges.values()) {
+      copy.state.edges.set(edge.id, { ...edge });
     }
 
     return copy;
@@ -557,11 +564,11 @@ export class MutableGraph implements Graph {
    * Clear all nodes and edges.
    */
   clear(): void {
-    this._nodes.clear();
-    this._edges.clear();
-    this.outgoing.clear();
-    this.incoming.clear();
-    this.node_names.clear();
+    this.state.nodes.clear();
+    this.state.edges.clear();
+    this.state.outgoing.clear();
+    this.state.incoming.clear();
+    this.state.node_names.clear();
   }
 
   /**
@@ -573,8 +580,8 @@ export class MutableGraph implements Graph {
       name: this.name,
       version: this.version,
       metadata: this.metadata,
-      nodes: Array.from(this._nodes.values()),
-      edges: Array.from(this._edges.values()),
+      nodes: Array.from(this.state.nodes.values()),
+      edges: Array.from(this.state.edges.values()),
     };
   }
 
@@ -593,46 +600,20 @@ export class MutableGraph implements Graph {
     });
 
     for (const node of data.nodes) {
-      graph._nodes.set(node.id, node);
-      graph.node_names.set(node.name, node.id);
-      graph.outgoing.set(node.id, new Set());
-      graph.incoming.set(node.id, new Set());
+      graph.state.nodes.set(node.id, node);
+      graph.state.node_names.set(node.name, node.id);
+      graph.state.outgoing.set(node.id, new Set());
+      graph.state.incoming.set(node.id, new Set());
     }
 
     for (const edge of data.edges) {
-      graph._edges.set(edge.id, edge);
-      graph.outgoing.get(edge.source)?.add(edge.id);
-      graph.incoming.get(edge.target)?.add(edge.id);
+      graph.state.edges.set(edge.id, edge);
+      graph.state.outgoing.get(edge.source)?.add(edge.id);
+      graph.state.incoming.get(edge.target)?.add(edge.id);
     }
 
     return graph;
   }
-}
-
-// =============================================================================
-// Types
-// =============================================================================
-
-/**
- * Graph statistics.
- */
-export interface GraphStats {
-  readonly node_count: number;
-  readonly edge_count: number;
-  readonly node_types: Record<string, number>;
-  readonly edge_types: Record<string, number>;
-}
-
-/**
- * Serialized graph format.
- */
-export interface SerializedGraph {
-  readonly id: GraphId;
-  readonly name: string;
-  readonly version: string;
-  readonly metadata: GraphMetadata;
-  readonly nodes: Node[];
-  readonly edges: Edge[];
 }
 
 // =============================================================================

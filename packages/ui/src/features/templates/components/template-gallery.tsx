@@ -42,83 +42,12 @@ import { cn } from '../../../shared/utils/cn';
 import { toSlug } from '../../../shared/utils/slug';
 import { store } from '../../../store';
 import { closeTemplateGallery } from '../../../store/slices/ui-slice';
-import { DifficultyDots, ProviderBadges, TrustBadge, TechStackLogos } from './badges';
+import { TrustBadge } from './badges';
+import { TemplateCard } from './template-card';
 import { ICON_MAP } from '../data/icon-map';
 import { getDifficultyLabels } from '../utils/difficulty-labels';
 import type { ComposedTemplate, TemplateCategory, TemplateCategoryMeta } from '../../../config/templates';
 import type { AppDispatch, RootState } from '../../../store';
-
-// =============================================================================
-// Template Card — for the grid
-// =============================================================================
-
-interface TemplateCardProps {
-  template: ComposedTemplate;
-  onSelect: (template: ComposedTemplate) => void;
-}
-
-const TemplateCard: React.FC<TemplateCardProps> = React.memo(({ template, onSelect }) => {
-  const { t } = useTranslation();
-  const Icon = ICON_MAP[template.icon] || Rocket;
-  const catMeta = TEMPLATE_CATEGORIES.find((c) => c.id === template.category);
-  const color = catMeta?.color || '#3b82f6';
-
-  return (
-    <button
-      onClick={() => onSelect(template)}
-      className={cn(
-        'flex flex-col items-start gap-2.5 rounded-xl border p-4 text-left transition-all w-full group',
-        'border-ice-border bg-ice-surface hover:border-ice-border-strong hover:shadow-md',
-        'focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none',
-      )}
-    >
-      {/* Header: icon + name + arrow */}
-      <div className="flex items-center gap-3 w-full">
-        <div
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
-          style={{ backgroundColor: color + '15' }}
-        >
-          <Icon className="h-4.5 w-4.5" style={{ color }} />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm font-semibold text-ice-text-1 truncate">
-              {t(`templates.items.${template.id}.name`)}
-            </span>
-            <TrustBadge trust={template.trust} />
-          </div>
-          <span className="text-ice-xs text-ice-text-3">{template.estimatedCost}</span>
-        </div>
-        <ChevronRight className="w-4 h-4 text-ice-text-3 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-      </div>
-
-      {/* Description */}
-      <p className="text-ice-xs text-ice-text-2 leading-snug line-clamp-2">
-        {t(`templates.items.${template.id}.description`)}
-      </p>
-
-      {/* Meta row */}
-      <div className="flex items-center gap-1.5 flex-wrap">
-        <DifficultyDots level={template.difficulty} />
-        <span className="text-ice-2xs text-ice-text-3">
-          {template.blocks.length} {t('templates.gallery.blocks')}
-        </span>
-        {template.connections.length > 0 && (
-          <span className="text-ice-2xs text-ice-text-3">
-            {template.connections.length} {t('templates.gallery.connections')}
-          </span>
-        )}
-        <ProviderBadges providers={template.providers} />
-      </div>
-
-      {/* Tech stack icons */}
-      <div className="flex items-center gap-1">
-        <TechStackLogos tags={template.tags} max={6} />
-      </div>
-    </button>
-  );
-});
-TemplateCard.displayName = 'TemplateCard';
 
 // =============================================================================
 // Template Detail — full detail panel inside the gallery

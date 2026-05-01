@@ -7,7 +7,7 @@
  * Editing lives in the properties panel — every cell here is read-only.
  */
 
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, Filter as FilterIcon, X } from 'lucide-react';
+import { ChevronDown, Filter as FilterIcon, X } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -20,6 +20,9 @@ import {
   type StatusContext,
 } from './inline-table-view-helpers';
 import { InlineTableRow, type TableRowData } from './inline-table-view-row';
+import { FilterChip } from './inline-table-view/filter-chip';
+import { SortHeader } from './inline-table-view/sort-header';
+import { ALL_STATUSES, STATUS_ORDER, type Density, type GroupBy, type SortCol, type SortDir } from './inline-table-view/types';
 import { SearchInput } from './ui/search-input';
 import { getServiceName } from '../../assets/icons/service-names';
 import { useTranslation } from '../../i18n';
@@ -28,25 +31,6 @@ import { setSelectedNodes } from '../../store/slices/selection-slice';
 import { toggleProperties } from '../../store/slices/ui-slice';
 import type { AppDispatch, RootState } from '../../store';
 import type { CardNode } from '../../store/slices/cards-slice';
-
-// ─── Types ──────────────────────────────────────────────────────────────────
-
-type SortCol = 'label' | 'typeLabel' | 'provider' | 'status' | 'providerId' | 'updatedAt';
-type SortDir = 'asc' | 'desc';
-type GroupBy = 'none' | 'status' | 'provider' | 'family' | 'group';
-type Density = 'compact' | 'comfortable';
-
-const ALL_STATUSES: RowStatus[] = ['live', 'drifted', 'deploying', 'building', 'queued', 'failed', 'idle'];
-
-const STATUS_ORDER: Record<RowStatus, number> = {
-  failed: 0,
-  drifted: 1,
-  deploying: 2,
-  building: 3,
-  queued: 4,
-  live: 5,
-  idle: 6,
-};
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
@@ -283,50 +267,10 @@ export const InlineTableView: React.FC = () => {
     [dispatch],
   );
 
-  // ─── Header sort button ─────────────────────────────────────────────────
-
-  const SortHeader: React.FC<{ col: SortCol; label: string; align?: 'left' | 'right' }> = ({
-    col,
-    label,
-    align = 'left',
-  }) => {
-    const isActive = sortCol === col;
-    return (
-      <button
-        onClick={() => toggleSort(col)}
-        className={`flex items-center gap-1 ${align === 'right' ? 'justify-end' : ''} text-ice-2xs font-medium uppercase tracking-wider transition-colors ${
-          isActive ? 'text-ice-text-1' : 'text-ice-text-3 hover:text-ice-text-2'
-        }`}
-      >
-        {label}
-        {isActive ? (
-          sortDir === 'asc' ? (
-            <ArrowUp className="w-3 h-3" />
-          ) : (
-            <ArrowDown className="w-3 h-3" />
-          )
-        ) : (
-          <ArrowUpDown className="w-3 h-3 opacity-40" />
-        )}
-      </button>
-    );
-  };
-
-  // ─── Filter chips header ────────────────────────────────────────────────
+  // ─── Filter chip helper (preserves the original key+component shape) ───
 
   const filterChip = (key: string, active: boolean, label: string, onClick: () => void, dot?: string) => (
-    <button
-      key={key}
-      onClick={onClick}
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-ice-2xs border transition-colors ${
-        active
-          ? 'bg-ice-accent-muted border-ice-accent text-ice-text-1'
-          : 'bg-ice-raised border-ice-border text-ice-text-3 hover:text-ice-text-1'
-      }`}
-    >
-      {dot && <span className="w-1.5 h-1.5 rounded-full" style={{ background: dot }} />}
-      {label}
-    </button>
+    <FilterChip key={key} active={active} label={label} onClick={onClick} dot={dot} />
   );
 
   const hasActiveFilter = search.length > 0 || statusFilter.size > 0 || providerFilter.size > 0;
@@ -424,15 +368,15 @@ export const InlineTableView: React.FC = () => {
       {/* ── Column header (above the scrolling body) ─────────────────────── */}
       <div className="grid grid-cols-[12px_1fr_140px_110px_120px_140px_180px_90px_36px] items-center gap-2 px-3 py-1.5 border-b border-ice-border bg-ice-raised shrink-0">
         <span />
-        <SortHeader col="label" label={t('table.columns.name')} />
-        <SortHeader col="typeLabel" label={t('table.columns.type')} />
-        <SortHeader col="provider" label={t('table.columns.provider')} />
-        <SortHeader col="status" label={t('table.columns.status')} />
+        <SortHeader col="label" label={t('table.columns.name')} sortCol={sortCol} sortDir={sortDir} onToggleSort={toggleSort} />
+        <SortHeader col="typeLabel" label={t('table.columns.type')} sortCol={sortCol} sortDir={sortDir} onToggleSort={toggleSort} />
+        <SortHeader col="provider" label={t('table.columns.provider')} sortCol={sortCol} sortDir={sortDir} onToggleSort={toggleSort} />
+        <SortHeader col="status" label={t('table.columns.status')} sortCol={sortCol} sortDir={sortDir} onToggleSort={toggleSort} />
         <span className="text-ice-2xs font-medium text-ice-text-3 uppercase tracking-wider">
           {t('table.columns.endpoints')}
         </span>
-        <SortHeader col="providerId" label={t('table.columns.id')} />
-        <SortHeader col="updatedAt" label={t('table.columns.updated')} />
+        <SortHeader col="providerId" label={t('table.columns.id')} sortCol={sortCol} sortDir={sortDir} onToggleSort={toggleSort} />
+        <SortHeader col="updatedAt" label={t('table.columns.updated')} sortCol={sortCol} sortDir={sortDir} onToggleSort={toggleSort} />
         <span />
       </div>
 

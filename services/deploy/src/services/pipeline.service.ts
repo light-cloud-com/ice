@@ -9,40 +9,16 @@ import crypto from 'crypto';
 import prisma from '@ice/db';
 import { emitPipelineUpdate, emitCardPipelineUpdate } from '@ice/shared';
 // github.service functionality available via @ice/service-credentials if needed
+import {
+  GITHUB_API,
+  GITHUB_HEADERS,
+  type CreateRuleInput,
+  type DeployStep,
+  type FrameworkDetection,
+  type WebhookRegistrationResult,
+} from './pipeline/types.js';
 
-// ─── Types ──────────────────────────────────────────────────────────────────
-
-interface CreateRuleInput {
-  cardId: string;
-  nodeId: string;
-  repository: string; // "owner/repo"
-  triggerType?: string; // "push" | "merge"
-  branchPattern?: string; // "main" | "develop" | "feature/*"
-  environment?: string; // "production" | "staging" | "development"
-  buildCommand?: string;
-  installCommand?: string;
-  outputDir?: string;
-  framework?: string;
-}
-
-export interface DeployStep {
-  step: string;
-  status: 'started' | 'completed' | 'failed';
-  message: string;
-  timestamp: string;
-  duration_ms?: number;
-}
-
-export interface FrameworkDetection {
-  framework: string | null;
-  runtime: string | null;
-  buildCommand: string | null;
-  installCommand: string | null;
-  outputDirectory: string | null;
-  packageManager: string | null;
-  confidence: 'high' | 'medium' | 'low';
-  detectedFiles: string[];
-}
+export type { DeployStep, FrameworkDetection } from './pipeline/types.js';
 
 // ─── Auto-create rules from canvas edges ────────────────────────────────────
 
@@ -140,14 +116,6 @@ export async function ensureRulesForCanvas(
 
   return { created, errors };
 }
-
-// ─── Constants ──────────────────────────────────────────────────────────────
-
-const GITHUB_API = 'https://api.github.com';
-const GITHUB_HEADERS = {
-  Accept: 'application/vnd.github+json',
-  'X-GitHub-Api-Version': '2022-11-28',
-};
 
 // ─── Rule CRUD ──────────────────────────────────────────────────────────────
 
@@ -461,12 +429,6 @@ export async function shouldSkipDuplicate(ruleId: string, commitSha: string): Pr
 }
 
 // ─── GitHub Webhook Registration ────────────────────────────────────────────
-
-interface WebhookRegistrationResult {
-  status: 'registered' | 'failed' | 'skipped';
-  webhookId?: number;
-  error?: string;
-}
 
 async function registerGitHubWebhook(
   userId: string,

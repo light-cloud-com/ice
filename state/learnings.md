@@ -1188,3 +1188,33 @@ the SQL; pin the actual behaviour. Pair with snapshot/restore behaviour
 in any other state store: if the store uses upserts with a version-bump
 clause AND restore involves a clearing pass, the `version` field after
 restore equals the snapshotted version, NOT snapshot+1.
+
+## algorithm-pass-grouping-needs-uniform-import-depth-tracking
+
+_Discovered: 2026-05-01 by implementer in rf-alay-7_
+
+When an `rf-*` series produces a nested directory structure where some
+modules sit at `<feature>/` and others at `<feature>/algorithms/`, the
+relative-import depth to a reused `config/canvas-constants` (or any
+non-package import outside the new directory) DIFFERS by one segment
+between the two levels. In rf-alay, `auto-layout/visual-size.ts` uses
+`'../../../config/canvas-constants'` (up to `shared/`, sideways to
+`config/`) but `auto-layout/algorithms/circular.ts` requires
+`'../../../../config/canvas-constants'` (one extra `..` to escape
+`algorithms/`). Symptom: typecheck passes for the file at the shallower
+depth, fails for the deeper one with `Cannot find module
+'../../../config/canvas-constants'`. The fix is mechanical (count
+segments from each module's directory upward) but easy to miss when
+copy-pasting an import block from a sibling that lives one level
+shallower. Generalizes: any algorithm-pass-grouping refactor that
+introduces a sub-directory (`algorithms/`, `passes/`, `phases/`) for
+the heavy passes while leaving the light helpers at the parent level
+must adjust import paths PER FILE, not per series. When in doubt, do
+the per-file `pnpm typecheck` immediately after each `Write` rather
+than batching the typecheck at the end of the unit — the error fingers
+the exact file and the fix is one segment. Pair with
+`relative-import-depth-cited-in-brief-is-anchored-to-citing-file`:
+brief-cited paths are starting points anchored to the SOURCE file,
+not the destination, and need recounting when the destination's depth
+changes. Diagnostic: `Cannot find module '../<n>/...'` where the
+module exists at `../<n+1>/...` from the new file's directory.

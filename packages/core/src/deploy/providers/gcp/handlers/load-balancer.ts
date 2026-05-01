@@ -4,8 +4,19 @@
  * Handles: gcp.compute.globalForwardingRule
  */
 
+import {
+  create_default_backend_service,
+  create_serverless_backend,
+  verify_backend_bucket_exists,
+} from './load-balancer/backend-creator.js';
 import { fetch_current_status, fetch_initial_status, fetch_ip_address } from './load-balancer/cert-fetcher.js';
 import { wait_for_compute_op } from './load-balancer/compute-ops.js';
+import {
+  create_forwarding_rule,
+  create_redirect_chain,
+  create_target_proxy,
+  create_url_map,
+} from './load-balancer/lb-builder.js';
 import { BASE_URL, fail, result } from './load-balancer/result-helpers.js';
 import { backend_ref, compute_primary_url } from './load-balancer/url-builder.js';
 import type { GCPResourceHandler } from '../types.js';
@@ -43,102 +54,12 @@ export const load_balancer_handler: GCPResourceHandler = {
       ctx.on_step?.(name, { label, index, total: TOTAL_STEPS });
     };
 
-    // Helper: build a GCP resource reference URL for a backend by name + type.
-    const backendRef = (backendName: string, backendType: 'bucket' | 'service') =>
-      backend_ref(ctx.project, backendName, backendType);
-
-    // Helper: fail-fast verify a backend bucket actually exists before
-    // we reference it in the URL map. GCP accepts URL-map references to
-    // non-existent backend buckets at create time and only 404s when
-    // real traffic arrives, which makes "deploy succeeded" a lie.
-    const verifyBackendBucketExists = async (bucketName: string): Promise<string | null> => {
-      try {
-        await ctx.rest_client.get(`${BASE_URL}/projects/${ctx.project}/global/backendBuckets/${bucketName}`);
-        return null;
-      } catch (err: any) {
-        const msg = err instanceof Error ? err.message : String(err);
-        if (msg.includes('404') || msg.includes('notFound') || msg.includes('NOT_FOUND')) {
-          return (
-            `Backend bucket '${bucketName}' does not exist. This usually means the backend bucket ` +
-            'failed to create earlier in this deploy — check the backend bucket resource in the results for the underlying reason ' +
-            '(commonly QUOTA_EXCEEDED on the default 3-backend-bucket limit).'
-          );
-        }
-        return `Failed to verify backend bucket exists: ${msg}`;
-      }
-    };
-
     try {
       const urlMapName = `${name}-url-map`;
       let backendServiceName: string | undefined;
       let defaultServiceRef: string;
 
       const defaultBackendFromRules = hostRules.length > 0 ? hostRules[0] : null;
-
-      // Helper that swallows 409/ALREADY_EXISTS so NEG + backend service
-      // creation is idempotent across partial-deploy retries.
-      const ignoreConflict = async (p: Promise<unknown>): Promise<void> => {
-        try {
-          await p;
-        } catch (err: any) {
-          const msg = err instanceof Error ? err.message : String(err);
-          if (msg.includes('409') || msg.includes('alreadyExists') || msg.includes('ALREADY_EXISTS')) {
-            return; // already existed, safe to continue
-          }
-          throw err;
-        }
-      };
-
-      // Helper that creates a Serverless NEG + global backend service
-      // for a Cloud Run / container target. Used by both the default
-      // backend resolution (when the default is service-type) and the
-      // multi-host NEG pre-creation loop below.
-      const createServerlessBackend = async (rule: {
-        host?: string;
-        backendName: string;
-        sourceServiceName?: string;
-      }): Promise<string | null> => {
-        if (!rule.sourceServiceName) {
-          return (
-            `Host rule for backend '${rule.backendName}' is missing sourceServiceName — the translator ` +
-            'should have set this when wiring a Cloud Run / container backend. This is a bug in card-translator.ts.'
-          );
-        }
-        const negName = `${rule.backendName}-neg`;
-        const negBase = `${BASE_URL}/projects/${ctx.project}/regions/${ctx.region}/networkEndpointGroups`;
-
-        reportStep(1, `Creating Serverless NEG for ${rule.sourceServiceName}`);
-        await ignoreConflict(
-          (async () => {
-            const negOp = (await ctx.rest_client.post(negBase, {
-              name: negName,
-              networkEndpointType: 'SERVERLESS',
-              cloudRun: { service: rule.sourceServiceName },
-            })) as any;
-            if (negOp?.name) await wait_for_compute_op(ctx, negOp.name);
-          })(),
-        );
-
-        reportStep(1, `Creating backend service ${rule.backendName}`);
-        await ignoreConflict(
-          (async () => {
-            const bsOp = (await ctx.rest_client.post(`${BASE_URL}/projects/${ctx.project}/global/backendServices`, {
-              name: rule.backendName,
-              loadBalancingScheme: 'EXTERNAL_MANAGED',
-              protocol: 'HTTPS',
-              timeoutSec: properties.timeout_sec || 30,
-              backends: [
-                {
-                  group: `projects/${ctx.project}/regions/${ctx.region}/networkEndpointGroups/${negName}`,
-                },
-              ],
-              labels: properties.labels || {},
-            })) as any;
-            if (bsOp?.name) await wait_for_compute_op(ctx, bsOp.name);
-          })(),
-        );
-        return null;
-      };
 
       // Pre-pass: create Serverless NEG + backend service for EVERY
       // service-type host rule (including the default if it's a
@@ -148,7 +69,7 @@ export const load_balancer_handler: GCPResourceHandler = {
       const createdServiceBackends = new Set<string>();
       for (const rule of serviceBackends) {
         if (createdServiceBackends.has(rule.backendName)) continue;
-        const err = await createServerlessBackend(rule);
+        const err = await create_serverless_backend(ctx, rule, properties, reportStep);
         if (err) return fail(name, 'create', start, err);
         createdServiceBackends.add(rule.backendName);
       }
@@ -164,29 +85,25 @@ export const load_balancer_handler: GCPResourceHandler = {
       // creating an empty backend service.
       if (backendBucketName) {
         reportStep(1, `Wiring URL map → backend bucket ${backendBucketName}`);
-        const err = await verifyBackendBucketExists(backendBucketName);
+        const err = await verify_backend_bucket_exists(ctx, backendBucketName);
         if (err) return fail(name, 'create', start, err);
-        defaultServiceRef = backendRef(backendBucketName, 'bucket');
+        defaultServiceRef = backend_ref(ctx.project, backendBucketName, 'bucket');
       } else if (defaultBackendFromRules) {
         reportStep(1, `Wiring URL map → ${defaultBackendFromRules.backendName}`);
         if (defaultBackendFromRules.backendType === 'bucket') {
-          const err = await verifyBackendBucketExists(defaultBackendFromRules.backendName);
+          const err = await verify_backend_bucket_exists(ctx, defaultBackendFromRules.backendName);
           if (err) return fail(name, 'create', start, err);
         }
         // If the default is service-type, the NEG + backend service
         // were already created in the pre-pass above.
-        defaultServiceRef = backendRef(defaultBackendFromRules.backendName, defaultBackendFromRules.backendType);
+        defaultServiceRef = backend_ref(
+          ctx.project,
+          defaultBackendFromRules.backendName,
+          defaultBackendFromRules.backendType,
+        );
       } else {
         reportStep(1, 'Creating backend service');
-        backendServiceName = `${name}-backend`;
-        const backendOp = (await ctx.rest_client.post(`${BASE_URL}/projects/${ctx.project}/global/backendServices`, {
-          name: backendServiceName,
-          loadBalancingScheme: properties.scheme || 'EXTERNAL',
-          protocol: properties.backend_protocol || 'HTTP',
-          timeoutSec: properties.timeout_sec || 30,
-          labels: properties.labels || {},
-        })) as any;
-        if (backendOp?.name) await wait_for_compute_op(ctx, backendOp.name);
+        backendServiceName = await create_default_backend_service(ctx, name, properties);
         defaultServiceRef = `projects/${ctx.project}/global/backendServices/${backendServiceName}`;
       }
 
@@ -199,7 +116,7 @@ export const load_balancer_handler: GCPResourceHandler = {
         if (rule.backendName === defaultHost) continue;
         if (rule.backendName === backendBucketName) continue;
         if (rule.backendType === 'bucket') {
-          const err = await verifyBackendBucketExists(rule.backendName);
+          const err = await verify_backend_bucket_exists(ctx, rule.backendName);
           if (err) return fail(name, 'create', start, err);
         }
       }
@@ -209,108 +126,28 @@ export const load_balancer_handler: GCPResourceHandler = {
       // Single-host → just a `defaultService` (backwards compatible
       // with the pre-PublicEndpoint flow).
       reportStep(2, 'Creating URL map');
-      const urlMapBody: Record<string, any> = {
-        name: urlMapName,
-        defaultService: defaultServiceRef,
-      };
-      // Build multi-host routing if the translator gave us >1 distinct
-      // host (the first one becomes the default matcher above, each
-      // additional one gets its own path matcher).
-      if (hostRules.length > 1) {
-        // Dedupe by host so we don't crash with "duplicate host in
-        // hostRule" from the GCP API if a subdomain was declared twice.
-        const seen = new Set<string>();
-        const uniqueRules = hostRules.filter((r) => {
-          if (!r.host || seen.has(r.host)) return false;
-          seen.add(r.host);
-          return true;
-        });
-
-        urlMapBody.hostRules = uniqueRules.map((rule, i) => ({
-          hosts: [rule.host],
-          pathMatcher: `matcher-${i}`,
-        }));
-        urlMapBody.pathMatchers = uniqueRules.map((rule, i) => ({
-          name: `matcher-${i}`,
-          defaultService: backendRef(rule.backendName, rule.backendType),
-        }));
-      }
-      const urlMapOp = (await ctx.rest_client.post(
-        `${BASE_URL}/projects/${ctx.project}/global/urlMaps`,
-        urlMapBody,
-      )) as any;
-      if (urlMapOp?.name) await wait_for_compute_op(ctx, urlMapOp.name);
+      await create_url_map(ctx, urlMapName, defaultServiceRef, hostRules);
 
       // Step 3: Create target proxy. Phase 8 — HTTPS path uses the SSL
       // certificate wired by the translator. HTTP path is the fallback for
       // deploys without a CustomDomain block.
       reportStep(3, 'Creating target proxy');
-      const proxyName = `${name}-proxy`;
-      const proxyEndpoint = wantsHttps ? 'targetHttpsProxies' : 'targetHttpProxies';
-      const proxyBody: Record<string, any> = {
-        name: proxyName,
-        urlMap: `projects/${ctx.project}/global/urlMaps/${urlMapName}`,
-      };
-      if (wantsHttps) {
-        proxyBody.sslCertificates = [`projects/${ctx.project}/global/sslCertificates/${sslCertificateName}`];
-      }
-      const proxyOp = (await ctx.rest_client.post(
-        `${BASE_URL}/projects/${ctx.project}/global/${proxyEndpoint}`,
-        proxyBody,
-      )) as any;
-      if (proxyOp?.name) await wait_for_compute_op(ctx, proxyOp.name);
+      const { proxyName, proxyEndpoint } = await create_target_proxy(
+        ctx,
+        name,
+        urlMapName,
+        wantsHttps,
+        sslCertificateName,
+      );
 
       // Step 4: Create forwarding rule (primary — HTTPS on 443, HTTP on 80).
       reportStep(4, 'Creating forwarding rule');
-      const portRange = wantsHttps ? '443' : '80';
-      const op = (await ctx.rest_client.post(`${BASE_URL}/projects/${ctx.project}/global/forwardingRules`, {
-        name,
-        loadBalancingScheme: properties.scheme || 'EXTERNAL',
-        portRange,
-        IPProtocol: 'TCP',
-        target: `projects/${ctx.project}/global/${proxyEndpoint}/${proxyName}`,
-        labels: properties.labels || {},
-      })) as any;
-      if (op?.name) await wait_for_compute_op(ctx, op.name);
+      await create_forwarding_rule(ctx, name, proxyName, proxyEndpoint, wantsHttps, properties);
 
-      // Steps 5–6 (optional): HTTP → HTTPS redirect. Creates a separate
-      // URL map that returns a permanent redirect, a target HTTP proxy,
-      // and a second forwarding rule listening on port 80.
+      // Steps 5–6 (optional): HTTP → HTTPS redirect.
       let redirectForwardingRuleName: string | undefined;
       if (redirectHttp) {
-        reportStep(5, 'Creating HTTP → HTTPS redirect');
-        const redirectUrlMapName = `${name}-redirect-urlmap`;
-        const redirectUrlMapOp = (await ctx.rest_client.post(`${BASE_URL}/projects/${ctx.project}/global/urlMaps`, {
-          name: redirectUrlMapName,
-          defaultUrlRedirect: {
-            httpsRedirect: true,
-            redirectResponseCode: 'MOVED_PERMANENTLY_DEFAULT',
-            stripQuery: false,
-          },
-        })) as any;
-        if (redirectUrlMapOp?.name) await wait_for_compute_op(ctx, redirectUrlMapOp.name);
-
-        const redirectProxyName = `${name}-redirect-proxy`;
-        const redirectProxyOp = (await ctx.rest_client.post(
-          `${BASE_URL}/projects/${ctx.project}/global/targetHttpProxies`,
-          {
-            name: redirectProxyName,
-            urlMap: `projects/${ctx.project}/global/urlMaps/${redirectUrlMapName}`,
-          },
-        )) as any;
-        if (redirectProxyOp?.name) await wait_for_compute_op(ctx, redirectProxyOp.name);
-
-        reportStep(6, 'Creating HTTP forwarding rule');
-        redirectForwardingRuleName = `${name}-http`;
-        const redirectFrOp = (await ctx.rest_client.post(`${BASE_URL}/projects/${ctx.project}/global/forwardingRules`, {
-          name: redirectForwardingRuleName,
-          loadBalancingScheme: properties.scheme || 'EXTERNAL',
-          portRange: '80',
-          IPProtocol: 'TCP',
-          target: `projects/${ctx.project}/global/targetHttpProxies/${redirectProxyName}`,
-          labels: properties.labels || {},
-        })) as any;
-        if (redirectFrOp?.name) await wait_for_compute_op(ctx, redirectFrOp.name);
+        redirectForwardingRuleName = await create_redirect_chain(ctx, name, properties, reportStep);
       }
 
       // After the forwarding rule exists, fetch its externally-reachable

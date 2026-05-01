@@ -16,6 +16,7 @@
 import { describe, expect, it } from 'vitest';
 import { compute } from '../high-level-resources/categories/compute.js';
 import { database } from '../high-level-resources/categories/database.js';
+import { messaging } from '../high-level-resources/categories/messaging.js';
 import { networking } from '../high-level-resources/categories/networking.js';
 import { storage } from '../high-level-resources/categories/storage.js';
 
@@ -136,5 +137,34 @@ describe('networking category (rf-hlres-5)', () => {
     const pe = networking.resources.find((r) => r.id === 'public-endpoint');
     expect(pe).toBeDefined();
     expect(pe!.properties.length).toBeGreaterThan(0);
+  });
+});
+
+describe('messaging category (rf-hlres-6)', () => {
+  it('has the expected metadata', () => {
+    expect(messaging.id).toBe('messaging');
+    expect(messaging.name).toBe('Messaging');
+  });
+
+  it('contains the canonical resource ids in order', () => {
+    const ids = messaging.resources.map((r) => r.id);
+    expect(ids).toEqual([
+      'message-queue',
+      'event-bus',
+      'rabbitmq',
+      'cloud-pubsub',
+      'service-bus',
+      'email-service',
+      'event-stream',
+    ]);
+  });
+
+  it('message-queue carries deep optionDetails arrays', () => {
+    const mq = messaging.resources.find((r) => r.id === 'message-queue');
+    expect(mq).toBeDefined();
+    const queueType = mq!.properties.find((p) => p.name === 'queue_type');
+    expect(queueType).toBeDefined();
+    expect(Array.isArray(queueType!.optionDetails)).toBe(true);
+    expect((queueType!.optionDetails ?? []).length).toBeGreaterThan(0);
   });
 });

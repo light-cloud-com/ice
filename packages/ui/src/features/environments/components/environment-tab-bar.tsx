@@ -25,6 +25,7 @@ import {
   type Environment,
 } from '../../../store/slices/environments-slice';
 import type { RootState, AppDispatch } from '../../../store';
+import { getDeployStatusDotColor } from '../utils/deploy-status-color';
 
 interface EnvironmentTabBarProps {
   projectId: string;
@@ -184,16 +185,7 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
             {environments.map((env) => {
               const isActive = env.id === activeEnvId;
               const deployStatus = envDeployStatus[env.id];
-              const dotColor =
-                deployStatus?.status === 'success'
-                  ? 'bg-emerald-500'
-                  : deployStatus?.status === 'deploying'
-                    ? 'bg-blue-500 animate-pulse'
-                    : deployStatus?.status === 'failed'
-                      ? 'bg-red-500'
-                      : deployStatus?.status === 'planning' || deployStatus?.status === 'queued'
-                        ? 'bg-amber-500 animate-pulse'
-                        : 'bg-ice-text-3/30';
+              const dotColor = getDeployStatusDotColor(deployStatus);
 
               return (
                 <button

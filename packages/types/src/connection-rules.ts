@@ -23,30 +23,27 @@ import {
   DEFAULT_PORTS,
   DEFAULT_ENV_VARS,
 } from '@ice/constants';
+import type {
+  TrafficType,
+  LineStyle,
+  ConnectionMeta,
+  ConnectionWarning,
+  ConnectionRule,
+  NodeForConnectionCheck,
+} from './connection-rules/types';
 
 export { type ConnectionCategory, CATEGORY_COLORS, CATEGORY_TO_RELATIONSHIP };
 
-// ─── Core Types ──────────────────────────────────────────────────────────────
+// ─── Core Types — re-exported from ./connection-rules/types ─────────────────
 
-export type TrafficType = 'request' | 'data' | 'publish' | 'subscribe' | 'stream';
-export type LineStyle = 'solid' | 'dashed' | 'dotted' | 'thin';
-
-export interface ConnectionMeta {
-  category: ConnectionCategory;
-  trafficType?: TrafficType;
-  lineStyle: LineStyle;
-  color: string;
-  port?: number;
-  envVarName?: string;
-  flip?: boolean;
-  label?: string;
-}
-
-export interface ConnectionWarning {
-  level: 'error' | 'warning' | 'info';
-  message: string;
-  suggestion?: string;
-}
+export type {
+  TrafficType,
+  LineStyle,
+  ConnectionMeta,
+  ConnectionWarning,
+  ConnectionRule,
+  NodeForConnectionCheck,
+} from './connection-rules/types';
 
 // ─── Block Type Classification ───────────────────────────────────────────────
 // These functions classify iceType strings into logical groups.
@@ -169,23 +166,6 @@ export function getEnvVarName(iceType: string): string | undefined {
 // Each rule defines: "blocks matching source() CAN connect to blocks matching
 // target()". First matching rule wins. This array is the single source of
 // truth for canConnect(), inferConnectionMeta(), and the AI prompt generator.
-
-export interface ConnectionRule {
-  /** Human-readable label for debugging / AI prompt generation */
-  label: string;
-  /** Source block classifier */
-  source: (iceType: string) => boolean;
-  /** Target block classifier */
-  target: (iceType: string) => boolean;
-  /** Connection category */
-  category: ConnectionCategory;
-  /** Traffic sub-type (only for traffic category) */
-  trafficType?: TrafficType;
-  /** Visual line style */
-  lineStyle: LineStyle;
-  /** If true, direction should be flipped (target becomes source) */
-  reverse?: boolean;
-}
 
 export const CONNECTION_RULES: ConnectionRule[] = [
   // ── TRAFFIC: request ────────────────────────────────────────────────────
@@ -487,18 +467,6 @@ export const CONNECTION_RULES: ConnectionRule[] = [
 ];
 
 // ─── Derived Functions ──────────────────────────────────────────────────────
-
-/**
- * Minimal node shape used for parent-aware connection rules. Only needs
- * the fields the rules actually inspect — full canvas nodes are a
- * superset and pass through unchanged.
- */
-export interface NodeForConnectionCheck {
-  id: string;
-  parentId?: string | null;
-  data?: Record<string, unknown>;
-  type?: string;
-}
 
 /**
  * Walk a node's parent chain looking for a container iceType (VPC,

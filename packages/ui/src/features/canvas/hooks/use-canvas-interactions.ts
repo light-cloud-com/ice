@@ -16,7 +16,7 @@
  * - Delete/Backspace: delete selected
  */
 
-import { useCallback, useRef, useEffect } from 'react';
+import { useCallback, useRef } from 'react';
 
 // rf-canvint-1: types live in `./interactions/types`. Re-export for outside
 // consumers (svg-canvas.tsx imports `CanvasItem` from this orchestrator),
@@ -35,7 +35,9 @@ import {
   findItemAtPosition as findItemAtPositionPure,
 } from './interactions/hit-test.js';
 // rf-canvint-1: constants/helpers in `./interactions/state`.
-import { KEYBOARD_PAN_SPEED, freshInitialState } from './interactions/state.js';
+import { freshInitialState } from './interactions/state.js';
+// rf-canvint-4: keyboard-handler sub-hook.
+import { useKeyboardHandlers } from './interactions/use-keyboard-handlers.js';
 // rf-canvint-3: mouse-handler sub-hook.
 import { useMouseHandlers } from './interactions/use-mouse-handlers.js';
 import type {
@@ -151,12 +153,13 @@ export function useCanvasInteractions({
     }
   };
 
-  // Keyboard panning + delete (rf-canvint-4 will lift this into a sub-hook).
-  // `spaceHeldRef` is declared above (read by the mouse-handler sub-hook
-  // for Space+left-click pan).
-  const pressedKeysRef = useRef<Set<string>>(new Set());
-  const animationFrameRef = useRef<number | null>(null);
-  const isAnimatingRef = useRef(false);
+  // Keyboard panning + delete — rf-canvint-4 lifts the implementation
+  // into `./interactions/use-keyboard-handlers.ts`. The orchestrator
+  // owns the latest-callback refs (so the sub-hook's `[]`-dep effect
+  // sees the freshest callback without re-installing window listeners),
+  // plus `spaceHeldRef`/`viewportRef`/`lockedRef` (cross-hook refs).
+  // `onSelectAllRef.current` is rebuilt every render with the current
+  // `items` snapshot — same shape as the verbatim original.
   const onViewportChangeRef = useRef(onViewportChange);
   onViewportChangeRef.current = onViewportChange;
   const onDeleteRef = useRef(onDelete);
@@ -169,120 +172,15 @@ export function useCanvasInteractions({
     onSelect?.(allIds);
   };
 
-  useEffect(() => {
-    const updateKeyboardPan = () => {
-      if (!isAnimatingRef.current) return;
-
-      const keys = pressedKeysRef.current;
-      if (keys.size === 0) {
-        isAnimatingRef.current = false;
-        animationFrameRef.current = null;
-        return;
-      }
-
-      const vp = viewportRef.current;
-      let panDx = 0;
-      let panDy = 0;
-
-      if (keys.has('w') || keys.has('arrowup')) panDy += KEYBOARD_PAN_SPEED;
-      if (keys.has('s') || keys.has('arrowdown')) panDy -= KEYBOARD_PAN_SPEED;
-      if (keys.has('a') || keys.has('arrowleft')) panDx += KEYBOARD_PAN_SPEED;
-      if (keys.has('d') || keys.has('arrowright')) panDx -= KEYBOARD_PAN_SPEED;
-
-      if (panDx !== 0 || panDy !== 0) {
-        onViewportChangeRef.current({ ...vp, x: vp.x + panDx, y: vp.y + panDy });
-      }
-
-      animationFrameRef.current = requestAnimationFrame(updateKeyboardPan);
-    };
-
-    const startKeyboardPan = () => {
-      if (!isAnimatingRef.current && pressedKeysRef.current.size > 0) {
-        isAnimatingRef.current = true;
-        animationFrameRef.current = requestAnimationFrame(updateKeyboardPan);
-      }
-    };
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement ||
-        e.target instanceof HTMLSelectElement
-      )
-        return;
-
-      const key = e.key.toLowerCase();
-
-      // Track space for space+drag pan
-      if (e.key === ' ' || e.code === 'Space') {
-        e.preventDefault();
-        spaceHeldRef.current = true;
-      }
-
-      const panKeys = ['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'];
-
-      if (panKeys.includes(key)) {
-        e.preventDefault();
-        pressedKeysRef.current.add(key);
-        startKeyboardPan();
-      }
-
-      // Delete/Backspace (blocked when canvas locked)
-      if ((key === 'delete' || key === 'backspace') && !lockedRef.current) {
-        e.preventDefault();
-        onDeleteRef.current?.();
-      }
-
-      // Escape — deselect all
-      if (key === 'escape') {
-        e.preventDefault();
-        onSelectRef.current?.([]);
-      }
-
-      // Ctrl+A — select all
-      if (key === 'a' && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault();
-        onSelectAllRef.current?.();
-      }
-    };
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-      const key = e.key.toLowerCase();
-      if (e.key === ' ' || e.code === 'Space') spaceHeldRef.current = false;
-      pressedKeysRef.current.delete(key);
-
-      if (pressedKeysRef.current.size === 0) {
-        isAnimatingRef.current = false;
-        if (animationFrameRef.current !== null) {
-          cancelAnimationFrame(animationFrameRef.current);
-          animationFrameRef.current = null;
-        }
-      }
-    };
-
-    const handleBlur = () => {
-      pressedKeysRef.current.clear();
-      isAnimatingRef.current = false;
-      if (animationFrameRef.current !== null) {
-        cancelAnimationFrame(animationFrameRef.current);
-        animationFrameRef.current = null;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-    window.addEventListener('blur', handleBlur);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-      window.removeEventListener('blur', handleBlur);
-      isAnimatingRef.current = false;
-      if (animationFrameRef.current !== null) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, []);
+  useKeyboardHandlers({
+    viewportRef,
+    lockedRef,
+    spaceHeldRef,
+    onViewportChangeRef,
+    onDeleteRef,
+    onSelectRef,
+    onSelectAllRef,
+  });
 
   return {
     bindCanvas: {

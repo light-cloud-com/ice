@@ -16,6 +16,7 @@ import {
   deployments_save,
   deployments_update_status,
 } from './sqlite/deployments.js';
+import { lifecycle_close, lifecycle_health_check, lifecycle_initialize } from './sqlite/lifecycle.js';
 import {
   locks_acquire,
   locks_refresh,
@@ -101,71 +102,15 @@ export class SqliteStateStore implements ObservableStateStore {
   // ---------------------------------------------------------------------------
 
   async initialize(): Promise<Result<void, IceError>> {
-    try {
-      // Dynamic import of better-sqlite3
-      const BetterSqlite3 = await import('better-sqlite3').then((m) => m.default || m).catch(() => null);
-
-      if (!BetterSqlite3) {
-        return failure(
-          new InternalError(
-            'better-sqlite3 is not installed. Install it with: npm install better-sqlite3',
-            'INTERNAL_ERROR',
-          ),
-        );
-      }
-
-      // Create database
-      this.db = new BetterSqlite3(this.options.path);
-
-      // Configure database
-      if (this.options.wal_mode) {
-        this.db.pragma('journal_mode = WAL');
-      }
-      this.db.pragma(`busy_timeout = ${this.options.busy_timeout_ms}`);
-      if (this.options.foreign_keys) {
-        this.db.pragma('foreign_keys = ON');
-      }
-
-      // Create tables
-      this.create_tables();
-
-      // Prepare statements
-      this.prepare_statements();
-
-      return success(undefined);
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      return failure(
-        new InternalError(`Failed to initialize SQLite state store: ${err.message}`, 'INTERNAL_ERROR', {}, err),
-      );
-    }
+    return lifecycle_initialize(this.ctx, this.options);
   }
 
   async close(): Promise<Result<void, IceError>> {
-    try {
-      if (this.db) {
-        this.db.close();
-        this.db = null;
-      }
-      this.statements.clear();
-      return success(undefined);
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      return failure(new InternalError(`Failed to close state store: ${err.message}`, 'INTERNAL_ERROR', {}, err));
-    }
+    return lifecycle_close(this.ctx);
   }
 
   async health_check(): Promise<Result<boolean, IceError>> {
-    try {
-      if (!this.db) {
-        return success(false);
-      }
-      // Simple query to verify database is accessible
-      this.db.prepare('SELECT 1').get();
-      return success(true);
-    } catch {
-      return success(false);
-    }
+    return lifecycle_health_check(this.ctx);
   }
 
   // ---------------------------------------------------------------------------

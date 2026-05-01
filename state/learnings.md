@@ -1439,3 +1439,74 @@ The AWS importer wraps every `@aws-sdk/client-*` import in `Function('m', 'retur
 _Discovered: 2026-04-30 by implementer in rf-aimp-4_
 
 When extracting a function from an orchestrator file but keeping a local consumer in that same file, `import { X } from './extracted.js'` (for the local consumer) plus `export { X } from './extracted.js'` (for the public surface) creates two separate name bindings — TypeScript doesn't error, but the second statement appears redundant if you skim it. Cleaner pattern: alias the local import (`import { X as X_impl } from './extracted.js'`) and use `X_impl` at the call site, then keep the unaliased re-export `export { X } from './extracted.js'` as the public surface. This makes the two roles explicit — `X_impl` is the local-call-site binding, `X` is the export. Applied here in aws-importer.ts where `import_aws_to_graph` calls `aws_result_to_graph_impl(result, name)` while the file re-exports the unaliased `aws_result_to_graph` for external consumers (the index.ts barrel). Generalizes: any post-extraction file that both consumes locally AND re-exports a name needs the alias-the-local-import discipline to keep the diff readable.
+
+## get-critical-path-bug-preserved-as-quirk-not-fix
+
+_Discovered: 2026-04-30 by implementer in rf-galg-4_
+
+When extracting `get_critical_path` from `graph/algorithms.ts`,
+a verbatim port of the function reveals it doesn't actually
+return the critical path — it returns just the start (no-deps)
+node for any DAG with `depends_on` edges. Trace: the function
+walks topological order to update distances, but
+`topological_sort` on a `depends_on` graph emits LEAVES first
+(nodes with no outgoing depends_on edges, which means no
+dependencies). For a chain `a depends_on b depends_on c`,
+topo order is `[c, b, a]`. When processing b, the loop
+iterates `get_incoming_edges(b)` = the edge (a,b), reads
+`distances.get(a) = -Infinity` (since a hasn't been processed
+yet in topo order), and the new_dist `-Infinity + 1` fails the
+`> current_dist` check. The chain never propagates; only c
+remains at distance 0; the "max distance" walk picks c with
+distance 0; reconstruction returns `[c]` because predecessors
+is empty. The fix would be to walk `get_outgoing_edges`
+(dependencies of current node) and read `distances.get(target)`
+which has been processed earlier in topo order. But changing
+this is a public-behaviour change — anything consuming
+`get_critical_path` (currently nothing in core, but possibly
+external) would see different output. Decision rule for
+refactor work: **document the bug, don't fix it**. If the
+function is genuinely useful and the fix is wanted, it
+becomes a separate ticket with its own behaviour-change PR
+(and possibly a feature flag during rollout). Generalizes:
+when verbatim-porting an algorithm during a refactor and a
+test that asserts "this should return X" fails, first run the
+PRE-extraction code with the same input — if it produces the
+same wrong output, you've found a pre-existing bug. The
+refactor's job is verbatim preservation, not fix; the tests
+must pin the actual behaviour, not the intuitive behaviour.
+Diagnostic: a critical-path test asserting `path.length === 3`
+fails with `expected 1 to be 3` for a 3-node chain. Pair with
+the general rule that refactors preserve behaviour byte for
+byte — pre-existing bugs ARE part of the contract for the
+duration of the refactor.
+
+## refactor-cohort-data-table-uses-376-loc-and-stays
+
+_Discovered: 2026-04-30 by implementer in rf-pmap-1_
+
+The `pulumi/type-mapper/data.ts` extracted in rf-pmap-1 ended
+up at 376 LOC — well above the 200-500 LOC ceiling documented
+in `/docs/refactoring-patterns.md`. The temptation is to split
+it further (per-provider sub-files, per-category sub-files).
+Don't. The data is dense (~280 lookup-table entries, one
+short line per entry) with NO logic; the pattern doc explicitly
+calls out "Data-heavy shim split" as the exception case where
+"the giant data dict (size exception, document in file
+header)" is acceptable. Splitting per-provider would add
+import-orchestration complexity (a `combined-type-map.ts`
+that re-merges sub-tables) without buying anything: the file
+is read top-to-bottom for new provider additions, and the
+section comments (`// AWS EC2`, `// AWS VPC`) already give
+the in-file navigation. The split would also break the simple
+"one TYPE_MAP, one PROVIDER_MAP" mental model that downstream
+consumers rely on. Decision rule for similar cohorts: when
+the LOC budget is dominated by data, document the size
+exception in the file header and stop. The 200-500 ceiling
+applies to LOGIC (functions, conditionals, loops) — pure data
+gets a pass when the alternative is artificial sub-division.
+Generalizes: any refactor cohort touching a "lookup table +
+helpers" file should treat the table as a single export and
+size-cap only the helpers. Pair with the parent pattern
+doc's "Data-heavy shim split" — both rules say the same thing:
+data sizes don't trigger the LOC ceiling, but logic sizes do.

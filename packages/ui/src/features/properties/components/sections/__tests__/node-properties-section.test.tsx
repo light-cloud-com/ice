@@ -82,6 +82,7 @@ const mocks = vi.hoisted(() => ({
   MockPropertyFields: vi.fn(),
   MockNodeIdentityCard: vi.fn(),
   MockCustomDomainBanner: vi.fn(),
+  MockPropertiesTabBar: vi.fn(),
 
   // Identity passthrough for cn — joins truthy strings with a space so
   // className walk comparisons stay legible.
@@ -191,6 +192,10 @@ vi.mock('../node-identity-card', () => ({
 
 vi.mock('../custom-domain-banner', () => ({
   CustomDomainBanner: mocks.MockCustomDomainBanner,
+}));
+
+vi.mock('../properties-tab-bar', () => ({
+  PropertiesTabBar: mocks.MockPropertiesTabBar,
 }));
 
 vi.mock('../../../../../shared/components/ui/panel-header', () => ({
@@ -511,7 +516,8 @@ describe('NodePropertiesSection', () => {
 
   it('shows the tab bar when there are >= 2 visible tabs', () => {
     // Compute.Service with provider_id (deploy tab) + an outgoing edge (connections tab) →
-    // tab bar has 2 buttons.
+    // PropertiesTabBar receives 4 visible tabs (source, connections, deploy + Compute.Service is also push for 'config'? no, dbProperties=0).
+    // Actually: source + connections + deploy = 3 tabs.
     const node = makeNode('svc-1', {
       iceType: 'Compute.Service',
       provider_id: 'gcp:proj/svc',
@@ -522,9 +528,10 @@ describe('NodePropertiesSection', () => {
     const card = makeCard({ nodes: [node, other], edges: [edge] });
     const setSpy = vi.fn();
     const tree = renderSection({ selectedNode: node, activeCard: card, propsTab: 'deploy', setPropsTab: setSpy });
-    // Two buttons rendered for visible tabs.
-    const buttons = findByType(tree, 'button');
-    expect(buttons.length).toBeGreaterThanOrEqual(2);
+    const tabBars = findByType(tree, mocks.MockPropertiesTabBar);
+    expect(tabBars).toHaveLength(1);
+    const visibleTabs = (tabBars[0].props as { visibleTabs: Array<{ id: string }> }).visibleTabs;
+    expect(visibleTabs.length).toBeGreaterThanOrEqual(2);
   });
 
   it('pushes the scaling tab when behavior === "scalable"', () => {
@@ -605,7 +612,7 @@ describe('NodePropertiesSection', () => {
     expect(setSpy).not.toHaveBeenCalled();
   });
 
-  it('clicking a tab button dispatches setPropsTab with that tab id', () => {
+  it('forwards the onSelect callback to PropertiesTabBar (which dispatches setPropsTab)', () => {
     const node = makeNode('svc-1', {
       iceType: 'Compute.Service',
       provider_id: 'gcp:proj/svc',
@@ -615,14 +622,10 @@ describe('NodePropertiesSection', () => {
     const card = makeCard({ nodes: [node, other], edges: [edge] });
     const setSpy = vi.fn();
     const tree = renderSection({ selectedNode: node, activeCard: card, propsTab: 'deploy', setPropsTab: setSpy });
-    const buttons = findByType(tree, 'button');
-    // Clicking the "connections" button should call setPropsTab('connections').
-    const connectionsBtn = buttons.find((b) => {
-      const text = collectText(b);
-      return text.includes('t:properties.tabs.connections');
-    });
-    expect(connectionsBtn).toBeDefined();
-    (connectionsBtn!.props as any).onClick();
+    const tabBars = findByType(tree, mocks.MockPropertiesTabBar);
+    expect(tabBars).toHaveLength(1);
+    const onSelect = (tabBars[0].props as { onSelect: (id: string) => void }).onSelect;
+    onSelect('connections');
     expect(setSpy).toHaveBeenCalledWith('connections');
   });
 

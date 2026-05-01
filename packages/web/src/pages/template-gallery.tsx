@@ -41,17 +41,9 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ICON_MAP } from './template-gallery/data/icon-map';
+import { getDifficultyMeta } from './template-gallery/utils/difficulty-meta';
 import type { ComposedTemplate, TemplateCategoryMeta } from '@ui/config/templates';
 import type { AppDispatch, RootState } from '@ui/store';
-
-function getDifficultyMeta(t: (key: string) => string): Record<string, { label: string; dots: number }> {
-  return {
-    starter: { label: t('templates.gallery.difficultyStarter'), dots: 1 },
-    intermediate: { label: t('templates.gallery.difficultyIntermediate'), dots: 2 },
-    advanced: { label: t('templates.gallery.difficultyAdvanced'), dots: 3 },
-    expert: { label: t('templates.gallery.difficultyExpert'), dots: 4 },
-  };
-}
 
 // =============================================================================
 // Small shared pieces

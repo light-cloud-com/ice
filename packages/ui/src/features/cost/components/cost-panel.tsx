@@ -22,12 +22,6 @@ import {
   Zap,
   ArrowRightLeft,
   Globe,
-  Server,
-  Database,
-  MessageSquare,
-  Shield,
-  Activity,
-  BrainCircuit,
   Package,
 } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -37,6 +31,7 @@ import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { cn } from '../../../shared/utils/cn';
 import { selectActiveCard, type CardNode } from '../../../store/slices/cards-slice';
 import { toggleCostPanel } from '../../../store/slices/ui-slice';
+import { CATEGORY_COLORS, CATEGORY_ICONS } from '../data/category-meta';
 import { useCostCalculation } from '../hooks/use-cost-calculation';
 import {
   formatCost,
@@ -73,40 +68,6 @@ const Section: React.FC<{
       {open && <div className="px-3 pb-3">{children}</div>}
     </div>
   );
-};
-
-// ─── Category icon lookup ───────────────────────────────────────────────────
-
-const CATEGORY_ICONS: Record<string, React.ReactNode> = {
-  Compute: <Server className="w-3.5 h-3.5" />,
-  Data: <Database className="w-3.5 h-3.5" />,
-  'Data Storage': <Database className="w-3.5 h-3.5" />,
-  Messaging: <MessageSquare className="w-3.5 h-3.5" />,
-  Networking: <Globe className="w-3.5 h-3.5" />,
-  Security: <Shield className="w-3.5 h-3.5" />,
-  Observability: <Activity className="w-3.5 h-3.5" />,
-  Analytics: <Activity className="w-3.5 h-3.5" />,
-  'AI / ML': <BrainCircuit className="w-3.5 h-3.5" />,
-  Config: <Package className="w-3.5 h-3.5" />,
-  Source: <Package className="w-3.5 h-3.5" />,
-  Other: <Package className="w-3.5 h-3.5" />,
-};
-
-// ─── Category bar colors ────────────────────────────────────────────────────
-
-const CATEGORY_COLORS: Record<string, string> = {
-  Compute: 'bg-blue-500',
-  Data: 'bg-emerald-500',
-  'Data Storage': 'bg-emerald-500',
-  Messaging: 'bg-purple-500',
-  Networking: 'bg-cyan-500',
-  Security: 'bg-amber-500',
-  Observability: 'bg-pink-500',
-  Analytics: 'bg-orange-500',
-  'AI / ML': 'bg-violet-500',
-  Config: 'bg-slate-500',
-  Source: 'bg-slate-400',
-  Other: 'bg-gray-500',
 };
 
 // Stable empty-array fallback (avoids creating new [] references in selectors)

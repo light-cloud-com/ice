@@ -19,16 +19,15 @@ import {
   Cpu,
   Cloud,
 } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from '../../../i18n';
-import axiosInstance from '../../../shared/api/axios-instance';
 import { PanelHeader, PanelHeaderAction } from '../../../shared/components/ui/panel-header';
 import { cn } from '../../../shared/utils/cn';
-import { clearAiState } from '../../../store/slices/ai-slice';
 import { selectActiveCard } from '../../../store/slices/cards-slice';
 import { toggleAiChat } from '../../../store/slices/ui-slice';
 import { useAiCommand } from '../hooks/use-ai-command';
+import { useChatEffects, type ProviderInfo } from '../hooks/use-chat-effects';
 import {
   useChatHandlers,
   type ChatMessage,
@@ -69,23 +68,9 @@ export const AiChatPanel: React.FC = () => {
   conversationIdRef.current = conversationId;
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [showHistory, setShowHistory] = useState(false);
-  const [providerInfo, setProviderInfo] = useState<{
-    ok: boolean;
-    provider: string;
-    model?: string;
-    isLocal?: boolean;
-  } | null>(null);
+  const [providerInfo, setProviderInfo] = useState<ProviderInfo | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-
-  // ── Fetch AI provider status ──────────────────────────────────────────────
-
-  useEffect(() => {
-    axiosInstance
-      .get('/ai/health')
-      .then((res) => setProviderInfo(res.data))
-      .catch(() => setProviderInfo(null));
-  }, []);
 
   // ── Handlers (extracted to useChatHandlers — rf-aichat-3) ─────────────────
 
@@ -115,116 +100,28 @@ export const AiChatPanel: React.FC = () => {
     setShowHistory,
   });
 
-  // ── Fetch conversations and auto-resume on project/card change ───────────
+  // ── Effects (extracted to useChatEffects — rf-aichat-4) ───────────────────
 
-  // When project or card changes, fetch conversations and resume the most recent one
-  useEffect(() => {
-    let cancelled = false;
-
-    const resumeConversation = async () => {
-      dispatch(clearAiState());
-      const convs = await fetchConversations();
-      if (cancelled || !convs || convs.length === 0) {
-        // No conversations — start fresh
-        setConversationId(null);
-        setMessages([]);
-        return;
-      }
-
-      // Find the most recent conversation for this card (or project if no card)
-      const cardId = activeCard?.id;
-      const match = cardId
-        ? convs.find((c) => c.card_id === cardId) // Match by card first
-        : convs[0]; // Fall back to most recent
-
-      if (match) {
-        await loadConversation(match.id);
-      } else {
-        // No conversation for this card — start fresh
-        setConversationId(null);
-        setMessages([]);
-      }
-    };
-
-    resumeConversation();
-    return () => {
-      cancelled = true;
-    };
-  }, [projectId, activeCard?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Auto-scroll ───────────────────────────────────────────────────────────
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages, isProcessing, streamingStatus]);
-
-  // ── When AI finishes, add assistant message and apply operations ───────────
-
-  useEffect(() => {
-    if (!isProcessing && lastResponse) {
-      const lastMsg = messages[messages.length - 1];
-      if (lastMsg?.role === 'assistant') return;
-
-      const hasOps = pendingOperations.length > 0;
-
-      // Clean explanation — local models sometimes leak raw JSON into the explanation field
-      let explanation = lastResponse.explanation || '';
-      if (explanation.startsWith('{') || explanation.startsWith('[')) {
-        try {
-          const parsed = JSON.parse(explanation);
-          explanation = parsed.explanation || parsed.message || '';
-        } catch {
-          const match = explanation.match(/"explanation"\s*:\s*"((?:[^"\\]|\\.)*)"/);
-          if (match) explanation = match[1].replace(/\\"/g, '"').replace(/\\n/g, ' ');
-        }
-      }
-
-      const assistantMsg: ChatMessage = {
-        id: `msg-${Date.now()}`,
-        role: 'assistant',
-        content: explanation || (hasOps ? t('ai.chat.doneMessage') : t('ai.chat.noChangesMessage')),
-        operations: hasOps ? [...pendingOperations] : undefined,
-        suggestions: suggestions.length > 0 ? [...suggestions] : undefined,
-        applied: !hasOps,
-        timestamp: Date.now(),
-      };
-
-      setMessages((prev) => [...prev, assistantMsg]);
-
-      if (hasOps) {
-        const result = applyOperations();
-        if (result) {
-          assistantMsg.applied = true;
-          assistantMsg.operationCount = result.executedOps;
-          setMessages((prev) =>
-            prev.map((m, i) =>
-              i === prev.length - 1 ? { ...m, applied: true, operationCount: result.executedOps } : m,
-            ),
-          );
-        }
-      }
-
-      // Persist assistant message to backend
-      persistMessages([assistantMsg]);
-    }
-  }, [isProcessing, lastResponse, pendingOperations.length]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── When AI returns with error only ───────────────────────────────────────
-
-  useEffect(() => {
-    if (!isProcessing && error) {
-      const errMsg: ChatMessage = {
-        id: `msg-${Date.now()}`,
-        role: 'assistant',
-        content: error,
-        timestamp: Date.now(),
-      };
-      setMessages((prev) => [...prev, errMsg]);
-      persistMessages([errMsg]);
-    }
-  }, [isProcessing, error]); // eslint-disable-line react-hooks/exhaustive-deps
+  useChatEffects({
+    projectId,
+    activeCard,
+    messages,
+    isProcessing,
+    streamingStatus,
+    lastResponse,
+    pendingOperations,
+    suggestions,
+    error,
+    setProviderInfo,
+    setMessages,
+    setConversationId,
+    scrollRef,
+    loadConversation,
+    fetchConversations,
+    persistMessages,
+    applyOperations,
+    t,
+  });
 
   // ── Render ────────────────────────────────────────────────────────────────
 

@@ -1,15 +1,19 @@
 /**
- * Cost Estimation Panel — Right Sidebar
+ * Cost Estimation Panel — Orchestrator
  *
- * Full cost analysis for the active card/environment:
- * - Category breakdown with bar chart
- * - Time projections (monthly/quarterly/annual)
- * - Scaling cost range (min → current → max)
- * - Environment comparison
- * - Data transfer estimates
- * - Provider comparison (AWS vs GCP vs Azure)
- * - AI-powered optimization suggestions
- * - Session cost delta tracking
+ * Full cost analysis for the active card/environment. The orchestrator
+ * pulls cost data from Redux + the cost-calculation hook, then composes
+ * the seven sections below.
+ *
+ * Sub-component splits (rf-cost series):
+ *   - `../utils/traffic-tier-storage.ts` — tier persistence (rf-cost-1)
+ *   - `../utils/generate-suggestions.ts` — optimization rules (rf-cost-2)
+ *   - `../data/category-meta.tsx`        — icon/color lookups (rf-cost-3)
+ *   - `./section.tsx`                    — collapsible wrapper (rf-cost-4)
+ *   - `./projection-row.tsx`             — monthly/quarterly/annual row (rf-cost-5)
+ *   - `./scaling-range-bar.tsx`          — three-stop range bar (rf-cost-6)
+ *   - `./category-row.tsx`               — single category breakdown row (rf-cost-7)
+ *   - `../sections/environment-comparison.tsx` — env-vs-prod table (rf-cost-8)
  */
 
 import {
@@ -28,17 +32,10 @@ import { useSelector, useDispatch } from 'react-redux';
 import { t } from '../../../i18n';
 import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { cn } from '../../../shared/utils/cn';
-import { selectActiveCard, type CardNode } from '../../../store/slices/cards-slice';
+import { selectActiveCard } from '../../../store/slices/cards-slice';
 import { toggleCostPanel } from '../../../store/slices/ui-slice';
-import { CATEGORY_COLORS, CATEGORY_ICONS } from '../data/category-meta';
 import { useCostCalculation } from '../hooks/use-cost-calculation';
-import {
-  formatCost,
-  formatCostRaw,
-  computeCostSummary,
-  type CategoryCost,
-  type ResourceMap,
-} from '../utils/cost-calculator';
+import { formatCostRaw } from '../utils/cost-calculator';
 import { generateSuggestions } from '../utils/generate-suggestions';
 import { TRAFFIC_TIERS, EGRESS_RATES } from '../utils/provider-pricing';
 import { loadTrafficTier, saveTrafficTier } from '../utils/traffic-tier-storage';
@@ -348,8 +345,4 @@ export const CostPanel: React.FC = () => {
     </div>
   );
 };
-
-// ═════════════════════════════════════════════════════════════════════════════
-// Sub-components
-// ═════════════════════════════════════════════════════════════════════════════
 

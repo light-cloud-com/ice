@@ -30,6 +30,13 @@
  * `on_progress` callback before the deployer is initialized.
  */
 
+import {
+  DEFAULT_PER_HANDLER_CAPS,
+  DEFAULT_POOL_SIZE,
+  type NodeRecord,
+  type SchedulerPhase,
+  type SchedulerRunInput,
+} from './scheduler/types.js';
 import type { ResourceChange } from '../diff/types.js';
 import type { Graph } from '../types/graph.js';
 import type {
@@ -41,57 +48,8 @@ import type {
   ResourceDeployResult,
 } from './types.js';
 
-/**
- * Default per-handler concurrency caps. Cloud SQL and Memorystore Redis
- * have GCP-side quotas that race-condition when two creates start
- * concurrently; cap them at 1 by default. Other handlers default to the
- * global `pool_size`.
- */
-export const DEFAULT_PER_HANDLER_CAPS: Readonly<Record<string, number>> = Object.freeze({
-  'gcp.sql.': 1,
-  'gcp.redis.': 1,
-});
-
-/**
- * Default pool size when neither `pool_size` nor `parallelism` is set.
- */
-export const DEFAULT_POOL_SIZE = 6;
-
-/**
- * Phase identifier — one DAG per phase, run end-to-end.
- */
-export type SchedulerPhase = 'create' | 'update' | 'delete';
-
-/**
- * Inputs for one scheduler run (one phase).
- */
-export interface SchedulerRunInput {
-  /** Changes to apply in this phase. Filtered + same `change_type` for all. */
-  changes: ResourceChange[];
-  /** Phase being run — used for handler dispatch and event payloads. */
-  phase: SchedulerPhase;
-  /** Engine graph — provides edges for DAG construction and node lookup. */
-  graph: Graph;
-  /** Provider deployer — `create`/`update`/`delete` are dispatched here. */
-  deployer: ProviderDeployer;
-  /** Caller-resolved deploy options (already merged with defaults). */
-  options: DeployOptions;
-}
-
-/** Internal per-node bookkeeping. */
-interface NodeRecord {
-  change: ResourceChange;
-  /** Direct dependencies (incoming edges in deploy order). */
-  deps: Set<string>;
-  /** Direct dependents (used to cancel descendants on failure). */
-  dependents: Set<string>;
-  /** Terminal state (undefined while not terminal). */
-  terminal?: NodeTerminalStatus;
-  /** Fired-at timestamp for `applying` so we can compute duration. */
-  applying_at?: number;
-  /** Has the `queued` event been fired? */
-  queued_emitted: boolean;
-}
+export { DEFAULT_PER_HANDLER_CAPS, DEFAULT_POOL_SIZE } from './scheduler/types.js';
+export type { SchedulerPhase, SchedulerRunInput } from './scheduler/types.js';
 
 /**
  * Run one phase of the parallel scheduler. Returns the per-node

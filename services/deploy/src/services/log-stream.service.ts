@@ -39,6 +39,7 @@ import {
   stopUnderlyingStream,
   teardownStream,
 } from './log-stream/stream-lifecycle.js';
+import { startTail } from './log-stream/tail.js';
 import type {
   ActiveStream,
   LogEntry,
@@ -354,97 +355,4 @@ async function restartStreamWithMode(stream: ActiveStream, newMode: StreamingMod
   }
 }
 
-// ── Tail mode ─────────────────────────────────────────────────────────
-
-function startTail(stream: ActiveStream): void {
-  if (stream.stopped) return;
-  let tailStream: any;
-  try {
-    tailStream = stream.loggingClient.tailEntries({
-      resourceNames: [`projects/${stream.projectId}`],
-      filter: stream.filter,
-    });
-  } catch (err: any) {
-    emitToRoom(stream.terminalNodeId, 'logs:error', {
-      message: probeErrorMessage(err),
-      recoverable: true,
-    });
-    scheduleTailReconnect(stream);
-    return;
-  }
-  stream.tailStream = tailStream;
-
-  tailStream.on('data', (resp: any) => {
-    if (stream.stopped) return;
-    const entries = Array.isArray(resp?.entries) ? resp.entries : [];
-    for (const raw of entries) {
-      const mapped = mapEntry(raw);
-      if (!mapped) continue;
-      if (stream.seenInsertIds.has(mapped.insertId)) continue;
-      rememberInsertId(stream, mapped.insertId);
-      emitToRoom(stream.terminalNodeId, 'logs:entry', mapped);
-      stream.lastTs = mapped.ts;
-      stream.lastInsertId = mapped.insertId;
-    }
-  });
-
-  tailStream.on('error', (err: any) => {
-    if (stream.stopped) return;
-    if (isPermissionDenied(err)) {
-      const denied: SourceResolution = {
-        state: 'permission-denied',
-        message: 'Cloud Logging access denied. Grant roles/logging.viewer to the deploy service account.',
-      };
-      emitToRoom(stream.terminalNodeId, 'logs:source-resolved', denied);
-      emitToRoom(stream.terminalNodeId, 'logs:error', {
-        message: denied.message,
-        recoverable: false,
-      });
-      stream.resolution = denied;
-      stopUnderlyingStream(stream);
-      return;
-    }
-    emitToRoom(stream.terminalNodeId, 'logs:error', {
-      message: probeErrorMessage(err),
-      recoverable: true,
-    });
-    scheduleTailReconnect(stream);
-  });
-
-  tailStream.on('end', () => {
-    if (stream.stopped) return;
-    // First clean end: try one more reconnect. A second clean end is
-    // treated as terminal.
-    if (stream.consecutiveErrors === -1) {
-      // Already retried after a clean end and saw another — give up.
-      emitToRoom(stream.terminalNodeId, 'logs:error', {
-        message: 'Cloud Logging tail stream ended.',
-        recoverable: false,
-      });
-      stopUnderlyingStream(stream);
-      return;
-    }
-    stream.consecutiveErrors = -1;
-    setTimeout(() => {
-      if (stream.stopped) return;
-      startTail(stream);
-    }, 1000);
-  });
-}
-
-function scheduleTailReconnect(stream: ActiveStream): void {
-  stream.consecutiveErrors = Math.max(0, stream.consecutiveErrors) + 1;
-  const delay = Math.min(
-    RECONNECT_BASE_MS * 2 ** (stream.consecutiveErrors - 1),
-    RECONNECT_MAX_MS,
-  );
-  stopUnderlyingStream(stream);
-  setTimeout(() => {
-    if (stream.stopped) return;
-    startTail(stream);
-    if (!stream.stopped) {
-      emitToRoom(stream.terminalNodeId, 'logs:resumed', { at: new Date().toISOString() });
-    }
-  }, delay);
-}
 

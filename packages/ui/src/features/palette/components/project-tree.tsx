@@ -20,7 +20,6 @@ import {
   FolderInput,
   Check,
   X,
-  Layers,
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
@@ -39,14 +38,13 @@ import {
   moveFolder,
   type Project,
   type ProjectFolder,
-  type Environment,
 } from '../../../store/slices/projects-slice';
 import { openDialog } from '../../../store/slices/ui-slice';
 import type { AppDispatch, RootState } from '../../../store';
 import { useTreeDrag } from '../hooks/use-tree-drag';
 import { useTreeEffects } from '../hooks/use-tree-effects';
 import { useTreeHandlers } from '../hooks/use-tree-handlers';
-import { EnvironmentRow } from './environment-row';
+import { ProjectRow } from './project-row';
 
 // =============================================================================
 // Context Menu
@@ -130,111 +128,28 @@ export const ProjectTree: React.FC = () => {
 
   // ── Renderers ─────────────────────────────────────────────────────────────
 
-  const renderEnvironment = (env: Environment, project: Project, depth: number) => (
-    <EnvironmentRow
-      key={env.id}
-      env={env}
+  const renderProject = (project: Project, depth: number) => (
+    <ProjectRow
+      key={project.id}
       project={project}
       depth={depth}
-      activeEnvId={activeEnvId}
       activeProjectId={activeProjectId}
+      activeEnvId={activeEnvId}
       deployingCardId={deployingCardId}
       deployStatus={deployStatus}
-      onClick={handleEnvClick}
+      editingId={editingId}
+      editingName={editingName}
+      editInputRef={editInputRef}
+      onDragStart={handleDragStart}
+      onProjectClick={handleProjectClick}
+      onEnvClick={handleEnvClick}
+      onContextMenu={handleContextMenu}
+      onFinishRename={handleFinishRename}
+      onToggleExpanded={(id) => dispatch(toggleProjectExpanded(id))}
+      setEditingId={setEditingId}
+      setEditingName={setEditingName}
     />
   );
-
-  const renderProject = (project: Project, depth: number) => {
-    const isActive = project.id === activeProjectId;
-    const isEditing = editingId === project.id;
-    const envCount = project.environments.length;
-    const isExpanded = project.expanded;
-    const hasEnvs = envCount > 0;
-
-    return (
-      <div key={project.id}>
-        {/* Project row */}
-        <div
-          draggable={!isEditing}
-          onDragStart={(e) => handleDragStart(e, 'project', project.id)}
-          onClick={() => !isEditing && handleProjectClick(project)}
-          onContextMenu={(e) => handleContextMenu(e, 'project', project.id)}
-          className={cn(
-            'group flex items-center gap-1.5 px-2 py-1.5 cursor-pointer rounded-md mx-1 transition-colors',
-            isActive ? 'bg-blue-500/15 text-white' : 'text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-1',
-          )}
-          style={{ paddingLeft: `calc(${depth * TREE_INDENT_PX + TREE_INDENT_BASE}px * var(--ice-space-scale, 1))` }}
-        >
-          {/* Expand chevron (only if has envs) */}
-          {hasEnvs ? (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                dispatch(toggleProjectExpanded(project.id));
-              }}
-              className="shrink-0 p-0"
-            >
-              {isExpanded ? (
-                <ChevronDown className="w-3 h-3 opacity-50" />
-              ) : (
-                <ChevronRight className="w-3 h-3 opacity-50" />
-              )}
-            </button>
-          ) : (
-            <div className="w-3 shrink-0" />
-          )}
-
-          {/* Project icon */}
-          <Layers className={cn('w-3.5 h-3.5 shrink-0', isActive ? 'text-blue-400' : 'text-ice-text-3')} />
-
-          {/* Name or edit input */}
-          {isEditing ? (
-            <input
-              ref={editInputRef}
-              type="text"
-              value={editingName}
-              onChange={(e) => setEditingName(e.target.value)}
-              onBlur={handleFinishRename}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleFinishRename();
-                if (e.key === 'Escape') {
-                  setEditingId(null);
-                  setEditingName('');
-                }
-              }}
-              className="flex-1 bg-ice-active text-white text-ice-base px-1.5 py-0.5 rounded border border-blue-500/50 outline-none"
-              onClick={(e) => e.stopPropagation()}
-            />
-          ) : (
-            <span className="flex-1 text-ice-base font-medium truncate">{project.name}</span>
-          )}
-
-          {/* Env count badge */}
-          {!isEditing && envCount > 0 && (
-            <span className="text-ice-xs text-ice-text-3 tabular-nums shrink-0">{envCount}</span>
-          )}
-
-          {/* More button */}
-          {!isEditing && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleContextMenu(e, 'project', project.id);
-              }}
-              className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-ice-active transition-opacity shrink-0"
-            >
-              <MoreHorizontal className="w-3 h-3" />
-            </button>
-          )}
-        </div>
-
-        {/* Environment children */}
-        {isExpanded && hasEnvs && (
-          <div>{project.environments.map((env) => renderEnvironment(env, project, depth + 1))}</div>
-        )}
-      </div>
-    );
-  };
 
   const renderFolder = (folder: ProjectFolder, depth: number) => {
     const isEditing = editingId === folder.id;

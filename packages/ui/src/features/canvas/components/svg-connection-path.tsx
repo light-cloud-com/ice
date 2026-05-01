@@ -13,9 +13,9 @@ import React, { memo, useMemo, useState, useCallback, useRef } from 'react';
 import { EDGE_COLORS } from '../../../config/color-palette';
 import { useReducedMotion } from '../../../shared/hooks/use-reduced-motion';
 import { inferConnectionMeta, type ConnectionCategory } from '../utils/connection-rules';
+import { computePath } from './path/compute-path';
 import type { CanvasNode, CanvasConnection } from './svg-canvas';
 import type { EdgeStyle } from '../../../store/slices/ui-slice';
-import { computePath } from './path/compute-path';
 
 // ─── Tooltip info passed up to canvas ───────────────────────────────────────
 

@@ -42,15 +42,15 @@
  * breaks-are-load-bearing-do-not-cross-port learning.
  */
 
-import type { CanvasConnection, CanvasNode } from '../svg-canvas';
-import type { EdgeStyle } from '../../../../store/slices/ui-slice';
-import { getCustomDomainRoutePortY } from '../nodes/custom-domain';
-import type { PathResult, Point, Side } from './types';
 import { chooseSides, getEdgePoint, getEffectiveBounds } from './bounds-and-sides';
+import { getCustomDomainRoutePortY } from '../nodes/custom-domain';
 import { buildBezierPath } from './builders/bezier';
-import { buildStraightPath } from './builders/straight';
 import { buildDagreRoutedPath } from './builders/dagre-routed';
 import { buildRectangularPath } from './builders/rectangular';
+import { buildStraightPath } from './builders/straight';
+import type { PathResult, Point, Side } from './types';
+import type { EdgeStyle } from '../../../../store/slices/ui-slice';
+import type { CanvasConnection, CanvasNode } from '../svg-canvas';
 
 export interface ComputePathArgs {
   connection: CanvasConnection;

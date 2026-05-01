@@ -24,6 +24,13 @@ import {
   nodes_update_node,
 } from './mutable-graph/nodes.js';
 import {
+  traversal_get_all_dependencies,
+  traversal_get_all_dependents,
+  traversal_get_dependencies,
+  traversal_get_dependents,
+  traversal_traverse,
+} from './mutable-graph/traversal.js';
+import {
   create_mutable_graph_state,
   type GraphStats,
   type MutableGraphState,
@@ -176,130 +183,27 @@ export class MutableGraph implements Graph {
   }
 
   // ---------------------------------------------------------------------------
-  // Graph Traversal
+  // Graph Traversal (delegated to ./mutable-graph/traversal.ts)
   // ---------------------------------------------------------------------------
 
-  /**
-   * Get direct dependencies (successors) of a node.
-   */
   get_dependencies(node_id: NodeId): Node[] {
-    const edges = this.get_outgoing_edges(node_id);
-    return edges
-      .filter((e) => e.relationship === 'depends_on')
-      .map((e) => this.state.nodes.get(e.target))
-      .filter((n): n is Node => n !== undefined);
+    return traversal_get_dependencies(this.state, node_id);
   }
 
-  /**
-   * Get direct dependents (predecessors) of a node.
-   */
   get_dependents(node_id: NodeId): Node[] {
-    const edges = this.get_incoming_edges(node_id);
-    return edges
-      .filter((e) => e.relationship === 'depends_on')
-      .map((e) => this.state.nodes.get(e.source))
-      .filter((n): n is Node => n !== undefined);
+    return traversal_get_dependents(this.state, node_id);
   }
 
-  /**
-   * Get all transitive dependencies.
-   */
   get_all_dependencies(node_id: NodeId): Node[] {
-    const visited = new Set<NodeId>();
-    const result: Node[] = [];
-
-    const visit = (id: NodeId) => {
-      if (visited.has(id)) return;
-      visited.add(id);
-
-      for (const dep of this.get_dependencies(id)) {
-        result.push(dep);
-        visit(dep.id);
-      }
-    };
-
-    visit(node_id);
-    return result;
+    return traversal_get_all_dependencies(this.state, node_id);
   }
 
-  /**
-   * Get all transitive dependents.
-   */
   get_all_dependents(node_id: NodeId): Node[] {
-    const visited = new Set<NodeId>();
-    const result: Node[] = [];
-
-    const visit = (id: NodeId) => {
-      if (visited.has(id)) return;
-      visited.add(id);
-
-      for (const dep of this.get_dependents(id)) {
-        result.push(dep);
-        visit(dep.id);
-      }
-    };
-
-    visit(node_id);
-    return result;
+    return traversal_get_all_dependents(this.state, node_id);
   }
 
-  /**
-   * Traverse the graph using BFS or DFS.
-   */
   traverse(start: NodeId, options: TraversalOptions, callback: (node: Node, depth: number) => boolean | void): void {
-    const visited = new Set<NodeId>();
-    const max_depth = options.max_depth ?? Infinity;
-
-    const get_neighbors = (node_id: NodeId): NodeId[] => {
-      let edges: Edge[] = [];
-
-      if (options.direction === 'forward' || options.direction === 'both') {
-        edges = edges.concat(this.get_outgoing_edges(node_id));
-      }
-      if (options.direction === 'backward' || options.direction === 'both') {
-        edges = edges.concat(this.get_incoming_edges(node_id));
-      }
-
-      // Filter by relationship type
-      if (options.relationship_filter) {
-        edges = edges.filter((e) => options.relationship_filter!.includes(e.relationship));
-      }
-
-      // Get target nodes
-      const targets = edges.map((e) => (e.source === node_id ? e.target : e.source));
-
-      // Filter by node type
-      if (options.type_filter) {
-        return targets.filter((id) => {
-          const node = this.state.nodes.get(id);
-          return node && options.type_filter!.includes(node.type);
-        });
-      }
-
-      return targets;
-    };
-
-    // BFS traversal
-    const queue: Array<{ id: NodeId; depth: number }> = [{ id: start, depth: 0 }];
-
-    while (queue.length > 0) {
-      const { id, depth } = queue.shift()!;
-
-      if (visited.has(id) || depth > max_depth) continue;
-      visited.add(id);
-
-      const node = this.state.nodes.get(id);
-      if (!node) continue;
-
-      const should_continue = callback(node, depth);
-      if (should_continue === false) return;
-
-      for (const neighbor_id of get_neighbors(id)) {
-        if (!visited.has(neighbor_id)) {
-          queue.push({ id: neighbor_id, depth: depth + 1 });
-        }
-      }
-    }
+    traversal_traverse(this.state, start, options, callback);
   }
 
   // ---------------------------------------------------------------------------

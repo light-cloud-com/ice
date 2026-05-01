@@ -15,6 +15,8 @@ import { createResourcesAdapter } from './http-api/resources';
 import { createDialogAdapter } from './http-api/dialog';
 import { createProjectsAdapter } from './http-api/projects';
 import { createTemplatesAdapter } from './http-api/templates';
+import { createProviderAdapter } from './http-api/provider';
+import { createGithubAdapter } from './http-api/github';
 
 // Re-export for the existing public surface; consumers calling
 // `emitMenuAction(...)` from the toolbar continue to work.
@@ -40,91 +42,13 @@ export function createHttpApiAdapter(): IceAPI {
     projects: createProjectsAdapter(),
 
     // ── Provider credentials ───────────────────────────────────────────
-    provider: {
-      getCredentials: async (providerId: string) => {
-        const res = await axiosInstance.get(`/providers/${providerId}/credentials`);
-        return res.data;
-      },
-      saveCredentials: async (providerId: string, credentials: Record<string, string>) => {
-        const res = await axiosInstance.post(`/providers/${providerId}/credentials`, { credentials });
-        return res.data;
-      },
-      isConnected: async (providerId: string) => {
-        const res = await axiosInstance.get(`/providers/${providerId}/status`);
-        return res.data.connected;
-      },
-      connect: async (providerId: string, credentials: Record<string, string>) => {
-        const res = await axiosInstance.post(`/providers/${providerId}/connect`, { credentials });
-        return res.data;
-      },
-      disconnect: async (providerId: string) => {
-        await axiosInstance.post(`/providers/${providerId}/disconnect`);
-      },
-      getProjects: async (providerId: string) => {
-        const res = await axiosInstance.get(`/providers/${providerId}/projects`);
-        return res.data;
-      },
-      import: async (providerId: string, projectId: string) => {
-        const res = await axiosInstance.post(`/providers/${providerId}/import`, { projectId });
-        return res.data;
-      },
-      exchangeGCPCode: async (code: string) => {
-        const res = await axiosInstance.post('/providers/gcp/oauth/exchange', { code });
-        return res.data;
-      },
-      connectGCPOAuth: async (accessToken: string, expiresIn: number) => {
-        const res = await axiosInstance.post('/providers/gcp/oauth/connect', {
-          access_token: accessToken,
-          expires_in: expiresIn,
-        });
-        return res.data;
-      },
-    },
+    provider: createProviderAdapter(),
 
     // ── Templates ──────────────────────────────────────────────────────
     templates: createTemplatesAdapter(),
 
     // ── GitHub ──────────────────────────────────────────────────────────
-    github: {
-      isConnected: async () => {
-        const res = await axiosInstance.get('/github/status');
-        return res.data.connected;
-      },
-      getUser: async () => {
-        const res = await axiosInstance.get('/github/user');
-        const data = res.data;
-        if (!data) return null;
-        // Normalize: backend returns {login, avatar_url}, slice expects {username, avatarUrl}
-        return {
-          ...data,
-          username: data.username || data.login,
-          avatarUrl: data.avatarUrl || data.avatar_url,
-        };
-      },
-      connectPAT: async (token: string) => {
-        const res = await axiosInstance.post('/github/connect-pat', { token });
-        return res.data;
-      },
-      startDeviceFlow: async () => {
-        const res = await axiosInstance.post('/github/device-flow/start');
-        return res.data;
-      },
-      pollDeviceFlow: async (deviceCode: string, interval: number) => {
-        const res = await axiosInstance.post('/github/device-flow/poll', { deviceCode, interval });
-        return res.data;
-      },
-      disconnect: async () => {
-        await axiosInstance.post('/github/disconnect');
-      },
-      listRepos: async (page?: number) => {
-        const res = await axiosInstance.get('/github/repos', { params: { page } });
-        return res.data;
-      },
-      listBranches: async (owner: string, repo: string) => {
-        const res = await axiosInstance.get(`/github/repos/${owner}/${repo}/branches`);
-        return res.data;
-      },
-    },
+    github: createGithubAdapter(),
 
     // ── Deploy ──────────────────────────────────────────────────────────
     deploy: {

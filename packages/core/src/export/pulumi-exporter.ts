@@ -6,6 +6,12 @@
  */
 
 import { EmbeddedSchemaProvider } from '../schema/embedded-schema-provider.js';
+import {
+  sanitize_name,
+  sanitize_var_name,
+  to_camel_case,
+  to_pascal_case,
+} from './pulumi/case-utils.js';
 import type { MutableGraph } from '../graph/mutable-graph.js';
 import type { IceType } from '../schema/schema-provider.js';
 import type { Node } from '../types/graph.js';
@@ -146,7 +152,7 @@ export class PulumiExporter {
           success: true,
           resource: {
             type: fallback,
-            name: this.sanitizeName(node.name),
+            name: sanitize_name(node.name),
             properties: this.mapProperties(node.properties || {}),
             options: this.buildOptions(dependency_map.get(node.id) || []),
           },
@@ -166,7 +172,7 @@ export class PulumiExporter {
       success: true,
       resource: {
         type: pulumi_type,
-        name: this.sanitizeName(node.name),
+        name: sanitize_name(node.name),
         properties: this.mapProperties(node.properties || {}),
         options: this.buildOptions(dependency_map.get(node.id) || []),
       },
@@ -196,7 +202,7 @@ export class PulumiExporter {
       if (parts.length >= 2) {
         const module = parts[0];
         const resource = parts.slice(1).join('/');
-        const className = this.toPascalCase(parts[parts.length - 1] || '');
+        const className = to_pascal_case(parts[parts.length - 1] || '');
         return `${pulumi_provider}:${module}/${resource}:${className}`;
       }
     }
@@ -206,7 +212,7 @@ export class PulumiExporter {
       if (parts.length >= 2) {
         const module = parts[0];
         const resource = parts.slice(1).join('/');
-        const className = this.toPascalCase(parts[parts.length - 1] || '');
+        const className = to_pascal_case(parts[parts.length - 1] || '');
         return `aws:${module}/${resource}:${className}`;
       }
     }
@@ -216,7 +222,7 @@ export class PulumiExporter {
       if (parts.length >= 2) {
         const module = parts[0];
         const resource = parts.slice(1).join('/');
-        const className = this.toPascalCase(parts[parts.length - 1] || '');
+        const className = to_pascal_case(parts[parts.length - 1] || '');
         return `azure-native:${module}/${resource}:${className}`;
       }
     }
@@ -226,21 +232,11 @@ export class PulumiExporter {
     if (parts.length >= 3) {
       const [prov, module, ...rest] = parts;
       const resource = rest.join('/');
-      const className = this.toPascalCase(rest[rest.length - 1] || '');
+      const className = to_pascal_case(rest[rest.length - 1] || '');
       return `${prov}:${module}/${resource}:${className}`;
     }
 
     return null;
-  }
-
-  /**
-   * Convert string to PascalCase.
-   */
-  private toPascalCase(str: string): string {
-    return str
-      .split(/[_-]/)
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join('');
   }
 
   /**
@@ -265,18 +261,11 @@ export class PulumiExporter {
       if (key.startsWith('_')) continue;
 
       // Convert property names to camelCase (Pulumi convention)
-      const pulumi_key = this.toCamelCase(key);
+      const pulumi_key = to_camel_case(key);
       result[pulumi_key] = this.transformValue(value);
     }
 
     return result;
-  }
-
-  /**
-   * Convert string to camelCase.
-   */
-  private toCamelCase(str: string): string {
-    return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
   }
 
   /**
@@ -294,19 +283,12 @@ export class PulumiExporter {
     if (typeof value === 'object') {
       const result: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(value)) {
-        result[this.toCamelCase(k)] = this.transformValue(v);
+        result[to_camel_case(k)] = this.transformValue(v);
       }
       return result;
     }
 
     return value;
-  }
-
-  /**
-   * Sanitize a name for use as Pulumi identifier.
-   */
-  private sanitizeName(name: string): string {
-    return name.replace(/[^a-zA-Z0-9_-]/g, '-').replace(/^([0-9])/, 'r-$1');
   }
 
   /**
@@ -450,9 +432,9 @@ export class PulumiExporter {
       lines.push('const config = new pulumi.Config();');
       for (const [key, value] of Object.entries(program.config)) {
         if (typeof value === 'string') {
-          lines.push(`const ${this.toCamelCase(key)} = config.require("${key}");`);
+          lines.push(`const ${to_camel_case(key)} = config.require("${key}");`);
         } else {
-          lines.push(`const ${this.toCamelCase(key)} = config.requireObject("${key}");`);
+          lines.push(`const ${to_camel_case(key)} = config.requireObject("${key}");`);
         }
       }
       lines.push('');
@@ -470,7 +452,7 @@ export class PulumiExporter {
         lines.push(`// ${resource.name}`);
       }
 
-      lines.push(`const ${this.sanitizeVarName(resource.name)} = new ${class_path}("${resource.name}", {`);
+      lines.push(`const ${sanitize_var_name(resource.name)} = new ${class_path}("${resource.name}", {`);
 
       for (const [key, value] of Object.entries(resource.properties)) {
         if (value !== null && value !== undefined) {
@@ -486,7 +468,7 @@ export class PulumiExporter {
     if (program.outputs && Object.keys(program.outputs).length > 0) {
       lines.push('// Outputs');
       for (const [key, value] of Object.entries(program.outputs)) {
-        lines.push(`export const ${this.toCamelCase(key)} = ${this.formatTSValue(value)};`);
+        lines.push(`export const ${to_camel_case(key)} = ${this.formatTSValue(value)};`);
       }
     }
 
@@ -527,13 +509,6 @@ export class PulumiExporter {
       provider_alias: 'unknown',
       class_path: type,
     };
-  }
-
-  /**
-   * Sanitize variable name for TypeScript.
-   */
-  private sanitizeVarName(name: string): string {
-    return name.replace(/[^a-zA-Z0-9_]/g, '_').replace(/^([0-9])/, '_$1');
   }
 
   /**

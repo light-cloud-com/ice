@@ -12,7 +12,6 @@ import {
   addEdgeToCard,
   updateCardNodeData,
   updateCardNodePosition,
-  updateCardNodePositions,
   resizeCardNode,
   updateCardNodeParent,
   deleteCardNode,
@@ -22,21 +21,14 @@ import {
   selectActiveCard,
 } from '../../../store/slices/cards-slice';
 import type { AppDispatch } from '../../../store';
-import type { Card, CardNode } from '../../../store/slices/cards-slice';
+import type { Card } from '../../../store/slices/cards-slice';
 import type { AiCanvasOp } from '@ice/types';
 import {
   MAX_OPS,
-  NODE_GAP_X,
-  NODE_GAP_Y,
   NODE_WIDTH,
   NODE_HEIGHT,
   HELPER_NODE_WIDTH,
   HELPER_NODE_HEIGHT,
-  COLS_PER_ROW,
-  CONTAINER_INNER_PAD,
-  CONTAINER_HEADER_PAD,
-  RESIZE_PAD,
-  RESIZE_HEADER,
 } from './ai-ops/types';
 import { generateNodeId, generateEdgeId, resolveId, nodeExists } from './ai-ops/id-utils';
 import {
@@ -45,6 +37,7 @@ import {
   findChildPosition,
 } from './ai-ops/position-finder';
 import { resolveBlueprint } from './ai-ops/blueprint-resolver';
+import { autoResizeContainers } from './ai-ops/auto-resize';
 
 // =============================================================================
 // Types — re-exported from ai-ops/types
@@ -52,72 +45,6 @@ import { resolveBlueprint } from './ai-ops/blueprint-resolver';
 
 import type { SkippedOp, ExecutionResult } from './ai-ops/types';
 export type { SkippedOp, ExecutionResult } from './ai-ops/types';
-
-// =============================================================================
-// Container Auto-Resize
-// =============================================================================
-
-/**
- * After AI operations, auto-resize all group/container nodes
- * to fit their children with padding. Processes deepest containers first
- * (bottom-up) so nested containers resize correctly.
- */
-function autoResizeContainers(dispatch: AppDispatch, card: Card): void {
-  // Find all container nodes (groups)
-  const containers = card.nodes.filter((n) => n.type === 'container');
-  if (containers.length === 0) return;
-
-  // Sort by depth (deepest first) — containers inside other containers resize first
-  const depthOf = (node: CardNode): number => {
-    let d = 0;
-    let current = node;
-    while (current.parentId) {
-      d++;
-      const parent = card.nodes.find((n) => n.id === current.parentId);
-      if (!parent) break;
-      current = parent;
-    }
-    return d;
-  };
-
-  const sorted = [...containers].sort((a, b) => depthOf(b) - depthOf(a));
-
-  for (const container of sorted) {
-    const children = card.nodes.filter((n) => n.parentId === container.id);
-    if (children.length === 0) continue;
-
-    // Find bounding box of children
-    let minX = Infinity,
-      minY = Infinity,
-      maxR = -Infinity,
-      maxB = -Infinity;
-    for (const child of children) {
-      minX = Math.min(minX, child.position.x);
-      minY = Math.min(minY, child.position.y);
-      maxR = Math.max(maxR, child.position.x + (child.width || 280));
-      maxB = Math.max(maxB, child.position.y + (child.height || 160));
-    }
-
-    // Required container bounds (children bbox + padding)
-    const reqX = minX - RESIZE_PAD;
-    const reqY = minY - RESIZE_PAD - RESIZE_HEADER;
-    const reqW = maxR + RESIZE_PAD - reqX;
-    const reqH = maxB + RESIZE_PAD - reqY;
-
-    // Expand container to fit (don't shrink below current size or required)
-    const newX = Math.min(container.position.x, reqX);
-    const newY = Math.min(container.position.y, reqY);
-    const newW = Math.max(container.width || 280, reqW, maxR + RESIZE_PAD - newX);
-    const newH = Math.max(container.height || 160, reqH, maxB + RESIZE_PAD - newY);
-
-    if (newX !== container.position.x || newY !== container.position.y) {
-      dispatch(updateCardNodePositions([{ id: container.id, position: { x: newX, y: newY } }]));
-    }
-    if (newW !== container.width || newH !== container.height) {
-      dispatch(resizeCardNode({ id: container.id, width: newW, height: newH }));
-    }
-  }
-}
 
 // =============================================================================
 // Execute

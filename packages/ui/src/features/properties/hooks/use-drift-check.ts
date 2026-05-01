@@ -39,9 +39,13 @@ export function applyDriftStatus(
 ): void {
   for (const result of driftResults) {
     if (result.status === 'drifted' || result.status === 'missing') {
-      dispatch(updateCardNodeData({ nodeId: result.nodeId, data: { status: 'drifted' } }));
+      // Per the `one-status-source-deploy-status` learning: drift state is
+      // a deploy-state outcome, not a separate field. Write to deploy_status
+      // so compact-node renders it through the same pipeline as live-deploy
+      // statuses.
+      dispatch(updateCardNodeData({ nodeId: result.nodeId, data: { deploy_status: 'drifted' } }));
     } else if (result.status === 'in_sync') {
-      dispatch(updateCardNodeData({ nodeId: result.nodeId, data: { status: 'active' } }));
+      dispatch(updateCardNodeData({ nodeId: result.nodeId, data: { deploy_status: 'active' } }));
     }
   }
 }

@@ -115,7 +115,6 @@ export function expandBlueprint(blueprint: BlockBlueprint, options: ExpandBluepr
     name: blueprint.name,
     blockTypeName: blueprint.name,
     resourceId: blueprint.resourceId,
-    status: 'active',
   };
 
   // Inject provider field if a specific provider was selected

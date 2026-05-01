@@ -63,21 +63,21 @@ describe('applyDriftStatus', () => {
     expect((dispatch as unknown as ReturnType<typeof vi.fn>)).toHaveBeenCalledTimes(1);
     const action = (dispatch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0];
     expect(action.type).toBe('cards/updateCardNodeData');
-    expect(action.payload).toEqual({ nodeId: 'n1', data: { status: 'drifted' } });
+    expect(action.payload).toEqual({ nodeId: 'n1', data: { deploy_status: 'drifted' } });
   });
 
   it('dispatches updateCardNodeData with status=drifted for "missing"', () => {
     const dispatch = vi.fn() as unknown as AppDispatch;
     applyDriftStatus([{ nodeId: 'n2', status: 'missing' }], dispatch);
     const action = (dispatch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0];
-    expect(action.payload).toEqual({ nodeId: 'n2', data: { status: 'drifted' } });
+    expect(action.payload).toEqual({ nodeId: 'n2', data: { deploy_status: 'drifted' } });
   });
 
-  it('dispatches updateCardNodeData with status=active for "in_sync"', () => {
+  it('dispatches updateCardNodeData with deploy_status=active for "in_sync"', () => {
     const dispatch = vi.fn() as unknown as AppDispatch;
     applyDriftStatus([{ nodeId: 'n3', status: 'in_sync' }], dispatch);
     const action = (dispatch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0];
-    expect(action.payload).toEqual({ nodeId: 'n3', data: { status: 'active' } });
+    expect(action.payload).toEqual({ nodeId: 'n3', data: { deploy_status: 'active' } });
   });
 
   it('skips entries whose status is none of drifted | missing | in_sync', () => {
@@ -106,9 +106,9 @@ describe('applyDriftStatus', () => {
     );
     const calls = (dispatch as unknown as ReturnType<typeof vi.fn>).mock.calls;
     expect(calls).toHaveLength(3);
-    expect(calls[0][0].payload).toEqual({ nodeId: 'a', data: { status: 'drifted' } });
-    expect(calls[1][0].payload).toEqual({ nodeId: 'c', data: { status: 'active' } });
-    expect(calls[2][0].payload).toEqual({ nodeId: 'd', data: { status: 'drifted' } });
+    expect(calls[0][0].payload).toEqual({ nodeId: 'a', data: { deploy_status: 'drifted' } });
+    expect(calls[1][0].payload).toEqual({ nodeId: 'c', data: { deploy_status: 'active' } });
+    expect(calls[2][0].payload).toEqual({ nodeId: 'd', data: { deploy_status: 'drifted' } });
   });
 });
 

@@ -62,7 +62,6 @@ export function expandComposedTemplate(
           label: group.label,
           iceType: containerIceType,
           behavior: 'container',
-          status: 'active',
           groupColor: group.color || '#3b82f6',
           folded: false,
         },
@@ -97,7 +96,6 @@ export function expandComposedTemplate(
           name: block.label,
           iceType: block.iceType,
           behavior: 'singleton',
-          status: 'active',
           ...block.data,
         },
       });

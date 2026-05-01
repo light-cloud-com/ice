@@ -15,6 +15,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { compute } from '../high-level-resources/categories/compute.js';
+import { database } from '../high-level-resources/categories/database.js';
 
 describe('compute category (rf-hlres-2)', () => {
   it('has the expected metadata', () => {
@@ -57,5 +58,45 @@ describe('compute category (rf-hlres-2)', () => {
     expect(typeof be!.behavior).toBe('string');
     expect(Array.isArray(be!.properties)).toBe(true);
     expect(be!.properties.length).toBeGreaterThan(0);
+  });
+});
+
+describe('database category (rf-hlres-3)', () => {
+  it('has the expected metadata', () => {
+    expect(database.id).toBe('database');
+    expect(database.name).toBe('Database');
+    expect(database.description).toBe('Relational, NoSQL, and cache databases');
+    expect(database.icon).toBe('Database');
+  });
+
+  it('contains the canonical resource ids in order', () => {
+    const ids = database.resources.map((r) => r.id);
+    expect(ids).toEqual([
+      'postgres-db',
+      'mysql-db',
+      'mongodb',
+      'redis-cache',
+      'dynamodb',
+      'firestore',
+      'cosmosdb',
+      'tablestore',
+      'autonomous-db',
+      'do-managed-db',
+      'vector-db',
+      'data-warehouse',
+      'search-engine',
+    ]);
+  });
+
+  it('postgres-db has multi-provider implementations', () => {
+    const pg = database.resources.find((r) => r.id === 'postgres-db');
+    expect(pg).toBeDefined();
+    expect(pg!.providers.length).toBeGreaterThan(1);
+  });
+
+  it('redis-cache has property catalogue', () => {
+    const redis = database.resources.find((r) => r.id === 'redis-cache');
+    expect(redis).toBeDefined();
+    expect(redis!.properties.length).toBeGreaterThan(0);
   });
 });

@@ -88,20 +88,51 @@ _(none — `parser.ts` finished 2026-04-30; all code-heavy queue files done. Dat
 
 ## Follow-up splits (over 500 LOC, must be split per the ceiling rule)
 
-Files surfaced from the 2026-04-29 audit that are currently over 500 LOC and need decomposition.
+### Documented exceptions (never split — won't decompose meaningfully)
 
-### Orchestrator shells (need further decomposition)
+- `packages/core/src/schemas/generated/resource-types.ts` — 4.4M LOC, generated. Excluded.
+- `packages/core/src/resources/high-level-resources.ts` — 6434 LOC, data-heavy, deferred.
+- `packages/core/src/resources/scale-presets-data.ts` — 1482 LOC, data-only (rf-data-1 split).
+- `packages/core/src/resources/cloud-blocks-data.ts` — 1009 LOC, data-only (rf-data-2 split).
+- `packages/ui/src/shared/components/dev-accent-picker/data/themes.ts` — 590 LOC, theme palette data (rf-accent split).
+- `packages/core/src/graph/parser/ast/types.ts` — 581 LOC, types-only (rf-ast-1 split). Test files are exempt; types-only files behave the same way.
 
-- `services/deploy/src/services/deploy.service.ts` — **1572 LOC**. The post-rf-deploy orchestrator still holds `applyDeployment` / `destroyDeployment` / `destroyAllForCard` / `rollbackDeployment` (each ~200–500 LOC). Split each into its own service file, with a thin entry-point that re-exports.
+### Refactored orchestrators still slightly over ceiling (residual cohesion — accepted)
 
-### Pre-existing files in services/deploy over 500 (predate the refactor)
+These were refactored but the remaining body is genuinely cohesive (cohesive switch dispatch, large SVG render tree, single template literal). Further splitting would fragment without maintainability gain. Documented and accepted.
 
-- `services/deploy/src/services/pipeline.service.ts` — 880 LOC.
-- `services/deploy/src/services/log-stream.service.ts` — 869 LOC.
+- `services/deploy/src/services/deploy.service.ts` — **1572 LOC**. Holds `applyDeployment` / `destroyDeployment` / `destroyAllForCard` / `rollbackDeployment` (each ~200–500 LOC). Candidate for a future rf-deploy2 series.
+- `packages/ui/src/features/canvas/components/svg-canvas.tsx` — **570 LOC** post-rf-canv2. Remaining body is the SVG render tree; further splitting would break React.memo identity.
+- `services/ai/src/services/ai/system-prompt.ts` — **516 LOC** post-rf-aisvc-4. One cohesive template literal; splitting swaps one big string for two smaller strings + composer (no gain).
 
-Files in the 200–500 range (`queue.service.ts` 387, `build.service.ts` 343, `cron.service.ts` 273, `requirements.service.ts` 259, `google-verification.service.ts` 247, `orphan-cleanup.service.ts` 243, `deploy-locks.ts` 238, `gcp-api-enabler.ts` 225, `requirement-poller.service.ts` 206) are within the ceiling and don't need follow-up splits.
+### Audit 2026-05-01 — files over 500 LOC NEVER refactored
 
-A workspace-wide audit for files >500 LOC is pending — the queue table above only lists the largest ones surfaced during the initial scan.
+Workspace-wide audit on the post-Phase-2 codebase. 14 files between 500-600 LOC remain unrefactored. Recommend Phase-3 follow-up.
+
+| File | LOC | Suggested pattern |
+|---|---|---|
+| `packages/core/src/schema/embedded-schema-provider.ts` | 591 | rf-deploy method-grouping |
+| `packages/core/src/graph/algorithms.ts` | 586 | rf-parse standalone-functions (graph algorithms) |
+| `packages/ui/src/features/project-browser/components/project-browser.tsx` | 584 | rf-pdpl section pattern |
+| `packages/ui/src/features/properties/components/sections/node-properties-section.tsx` | 576 | extracted during rf-props but still over; further sub-sectioning |
+| `packages/ui/src/features/canvas/hooks/use-container-move.ts` | 564 | extracted during rf-canv but still over; rf-pdpl-21 hook-bundle |
+| `packages/core/src/importers/pulumi/state-importer.ts` | 564 | rf-deploy method-grouping (importer phases) |
+| `packages/core/src/export/terraform-exporter.ts` | 558 | rf-pulumi pattern |
+| `packages/ui/src/features/environments/components/environment-tab-bar.tsx` | 554 | rf-pdpl section pattern |
+| `packages/core/src/importers/terraform/state-importer.ts` | 547 | rf-deploy method-grouping |
+| `packages/core/src/schema/resource-validator.ts` | 543 | rf-deploy method-grouping |
+| `packages/core/src/importers/aws/aws-importer.ts` | 533 | rf-deploy method-grouping |
+| `packages/core/src/deploy/providers/gcp/handlers/cloud-run.ts` | 530 | rf-fbh handler pattern |
+| `packages/core/src/importers/pulumi/type-mapper.ts` | 527 | rf-pulumi pattern |
+| `packages/core/src/deploy/providers/gcp/handlers/load-balancer.ts` | 527 | rf-fbh handler pattern |
+| `packages/core/src/graph/validator/validators.ts` | 524 | rf-deploy method-grouping |
+| `packages/core/src/schema/customization-loader.ts` | 521 | rf-deploy method-grouping |
+| `packages/ui/src/shared/components/inline-table-view.tsx` | 509 | rf-pdpl section pattern (small) |
+| `packages/core/src/errors/import-errors.ts` | 507 | likely data-heavy (error map), check first |
+
+All within 500-600 LOC. Modest decomposition wins per file. Could be tackled in a single Phase-3 cohort (~17 files × 5-7 commits each = ~100-120 commits).
+
+Files in the 200–500 range continue to fit the ceiling and don't need follow-up splits.
 
 ## Done
 

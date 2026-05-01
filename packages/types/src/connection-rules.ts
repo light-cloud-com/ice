@@ -11,9 +11,15 @@
  *
  * Containers (VPC, Subnet, Group) CANNOT have connections.
  *
- * Architecture: A declarative CONNECTION_RULES array defines every valid
- * source→target pair. All functions (canConnect, inferConnectionMeta,
- * validateConnection) derive from this single array.
+ * Architecture: a declarative `CONNECTION_RULES` array (in
+ * `./connection-rules/rules-data.ts`) defines every valid source→target
+ * pair. The classifier predicates live in `./connection-rules/predicates`,
+ * the type surface in `./connection-rules/types`. This file is the
+ * orchestrator: it re-exports the public API (`isX`, types,
+ * `CONNECTION_RULES`, `generateAiConnectionPrompt`) AND owns the
+ * derived helpers (`canConnect`, `validateConnection`, `wouldCreateCycle`,
+ * `inferConnectionMeta`, ...) — the small set of functions that compose
+ * the rules + predicates into the call surface every consumer touches.
  */
 
 import {
@@ -29,26 +35,6 @@ import type {
   ConnectionRule,
   NodeForConnectionCheck,
 } from './connection-rules/types';
-import { CONNECTION_RULES, generateAiConnectionPrompt } from './connection-rules/rules-data';
-
-export { type ConnectionCategory, CATEGORY_COLORS, CATEGORY_TO_RELATIONSHIP };
-
-// ─── Core Types — re-exported from ./connection-rules/types ─────────────────
-
-export type {
-  TrafficType,
-  LineStyle,
-  ConnectionMeta,
-  ConnectionWarning,
-  ConnectionRule,
-  NodeForConnectionCheck,
-} from './connection-rules/types';
-
-// ─── Block Type Classification ───────────────────────────────────────────────
-// Predicates re-exported from `./connection-rules/predicates` (rf-conn-2).
-// They classify iceType strings into logical groups; the CONNECTION_RULES
-// array below composes them into source/target classifiers.
-
 import {
   isDatabase,
   isCache,
@@ -70,9 +56,21 @@ import {
   isCustomDomain,
   isPrivateNetwork,
   isContainer,
-  isService,
-  isRoutable,
 } from './connection-rules/predicates';
+import { CONNECTION_RULES, generateAiConnectionPrompt } from './connection-rules/rules-data';
+
+// ─── Public re-exports ──────────────────────────────────────────────────────
+
+export { type ConnectionCategory, CATEGORY_COLORS, CATEGORY_TO_RELATIONSHIP };
+
+export type {
+  TrafficType,
+  LineStyle,
+  ConnectionMeta,
+  ConnectionWarning,
+  ConnectionRule,
+  NodeForConnectionCheck,
+} from './connection-rules/types';
 
 export {
   isDatabase,
@@ -97,6 +95,8 @@ export {
   isContainer,
 };
 
+export { CONNECTION_RULES, generateAiConnectionPrompt };
+
 // ─── Default Port / Env Var Lookup ──────────────────────────────────────────
 
 export function getDefaultPort(iceType: string): number | undefined {
@@ -106,15 +106,6 @@ export function getDefaultPort(iceType: string): number | undefined {
 export function getEnvVarName(iceType: string): string | undefined {
   return DEFAULT_ENV_VARS[iceType];
 }
-
-// ─── Declarative Connection Rules ───────────────────────────────────────────
-// Re-exported from `./connection-rules/rules-data` (rf-conn-3). The data
-// + AI-prompt generator live in their own module so this orchestrator
-// stays focused on the derived helpers (canConnect, validateConnection,
-// inferConnectionMeta, etc.).
-
-export { CONNECTION_RULES, generateAiConnectionPrompt };
-
 
 // ─── Derived Functions ──────────────────────────────────────────────────────
 
@@ -316,4 +307,3 @@ export function wouldCreateCycle(
   }
   return false;
 }
-

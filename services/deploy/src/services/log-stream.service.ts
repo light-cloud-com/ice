@@ -17,45 +17,25 @@
 
 import { randomUUID } from 'node:crypto';
 
-import prisma from '@ice/db';
-import * as providerService from '@ice/service-credentials';
-
-import {
-  isPermissionDenied,
-  mapEntry,
-  probeErrorMessage,
-} from './log-stream/entry-mapping.js';
-import { resolveLogFilter } from './log-stream/filter-resolver.js';
 import {
   emitToRoom,
-  rememberInsertId,
   resetRegistry,
   streams,
   subscriptionIndex,
 } from './log-stream/registry.js';
-import { startPolling } from './log-stream/polling.js';
 import { resolveSource } from './log-stream/source-resolution.js';
+import { teardownStream } from './log-stream/stream-lifecycle.js';
 import {
-  stopUnderlyingStream,
-  teardownStream,
-} from './log-stream/stream-lifecycle.js';
-import { startTail } from './log-stream/tail.js';
+  openStreamForResolved,
+  restartStreamWithMode,
+} from './log-stream/stream-open.js';
 import type {
   ActiveStream,
-  LogEntry,
   SourceResolution,
-  StreamingMode,
   SubscribeArgs,
   SubscribeResult,
 } from './log-stream/types.js';
-import {
-  IDLE_TEARDOWN_MS,
-  MAX_CONSECUTIVE_ERRORS_POLLING,
-  POLL_INTERVAL_MS,
-  POLL_PAGE_SIZE,
-  RECONNECT_BASE_MS,
-  RECONNECT_MAX_MS,
-} from './log-stream/types.js';
+import { IDLE_TEARDOWN_MS } from './log-stream/types.js';
 
 export type {
   StreamingMode,
@@ -234,125 +214,5 @@ export const __testing = {
     return streams.size;
   },
 };
-
-// ── Stream lifecycle ──────────────────────────────────────────────────
-
-async function openStreamForResolved(
-  args: SubscribeArgs,
-  resolution: SourceResolution & { state: 'resolved' },
-): Promise<ActiveStream | null> {
-  // Re-derive filter + projectId. resolveSource already validated all of
-  // this — calling it here keeps the filter colocated with the stream
-  // open. The cost is one extra DB roundtrip per fresh subscribe, which
-  // is fine.
-  const card = await prisma.canvasCard.findUnique({
-    where: { id: args.cardId },
-    select: { project_id: true },
-  });
-  if (!card) return null;
-
-  const env = await prisma.environment.findUnique({
-    where: { id: args.environmentId },
-    select: { type: true, region: true },
-  });
-  const envType = env?.type ?? 'development';
-  const region = env?.region ?? undefined;
-
-  const mapping = await prisma.deployedResourceMapping.findFirst({
-    where: { card_id: args.cardId, node_id: resolution.sourceNodeId, environment: envType },
-    select: { resource_name: true, resource_type: true },
-  });
-  if (!mapping) return null;
-
-  const credentials = await providerService.getDecryptedCredentials(args.organisationId, 'gcp');
-  if (!credentials) return null;
-  const projectId = credentials.project_id ?? '';
-
-  const resolved = resolveLogFilter({
-    iceType: resolution.iceType,
-    resource: { name: mapping.resource_name, type: mapping.resource_type },
-    projectId,
-    region,
-  });
-  if (!resolved) return null;
-  const filter = resolved.filter;
-
-  // Construct the @google-cloud/logging client via the shared lazy loader.
-  const core: any = await import('@ice/core');
-  const loggingModule = await core.load_sdk('@google-cloud/logging');
-  if (!loggingModule) {
-    emitToRoom(args.terminalNodeId, 'logs:error', {
-      message: '@google-cloud/logging SDK is not available in this build.',
-      recoverable: false,
-    });
-    return null;
-  }
-
-  // Universal credential paths (see sdk-loader.ts comments).
-  const loggingClient = new loggingModule.Logging({
-    projectId,
-    credentials: credentials as Record<string, unknown>,
-  });
-
-  // ─── IAM probe (R1). Cheap, runs once. ─────────────────────────────
-  try {
-    await loggingClient.getEntries({
-      filter,
-      pageSize: 1,
-      resourceNames: [`projects/${projectId}`],
-      orderBy: 'timestamp desc',
-      autoPaginate: false,
-    });
-  } catch (err: any) {
-    if (isPermissionDenied(err)) {
-      const denied: SourceResolution = {
-        state: 'permission-denied',
-        message: 'Cloud Logging access denied. Grant roles/logging.viewer to the deploy service account.',
-      };
-      emitToRoom(args.terminalNodeId, 'logs:source-resolved', denied);
-      emitToRoom(args.terminalNodeId, 'logs:error', { message: denied.message, recoverable: false });
-      return null;
-    }
-    // Non-PERMISSION_DENIED probe errors are surfaced as recoverable —
-    // the polling/tail loop has its own retry that may recover.
-    emitToRoom(args.terminalNodeId, 'logs:error', {
-      message: probeErrorMessage(err),
-      recoverable: true,
-    });
-  }
-
-  const stream: ActiveStream = {
-    terminalNodeId: args.terminalNodeId,
-    mode: args.mode,
-    filter,
-    projectId,
-    resolution,
-    subscribers: new Map(),
-    seenInsertIds: new Set(),
-    insertIdOrder: [],
-    consecutiveErrors: 0,
-    stopped: false,
-    loggingClient,
-  };
-  streams.set(args.terminalNodeId, stream);
-
-  if (args.mode === 'polling') {
-    startPolling(stream);
-  } else {
-    startTail(stream);
-  }
-
-  return stream;
-}
-
-async function restartStreamWithMode(stream: ActiveStream, newMode: StreamingMode): Promise<void> {
-  stopUnderlyingStream(stream);
-  stream.mode = newMode;
-  if (newMode === 'polling') {
-    startPolling(stream);
-  } else {
-    startTail(stream);
-  }
-}
 
 

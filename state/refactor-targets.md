@@ -86,24 +86,36 @@ After Phase 1 cleared 5 monster files (deploy-panel + card-translator + cards-sl
 
 _(none — `parser.ts` finished 2026-04-30; all code-heavy queue files done. Data-heavy `scale-presets.ts` (1562) and `cloud-blocks.ts` (1315) deferred — splitting fragments without code-quality gain.)_
 
-## Follow-up splits (over 500 LOC, must be split per the ceiling rule)
+## Final round (2026-05-01) — exceptions decomposed
 
-### Documented exceptions (never split — won't decompose meaningfully)
+After Phase 3 cleared all 18 actionable files, the user requested decomposing the remaining "exceptions" too (excluding only generated files).
 
-- `packages/core/src/schemas/generated/resource-types.ts` — 4.4M LOC, generated. Excluded.
-- `packages/core/src/resources/high-level-resources.ts` — 6434 LOC, data-heavy, deferred.
-- `packages/core/src/resources/scale-presets-data.ts` — 1482 LOC, data-only (rf-data-1 split).
-- `packages/core/src/resources/cloud-blocks-data.ts` — 1009 LOC, data-only (rf-data-2 split).
-- `packages/ui/src/shared/components/dev-accent-picker/data/themes.ts` — 590 LOC, theme palette data (rf-accent split).
-- `packages/core/src/graph/parser/ast/types.ts` — 581 LOC, types-only (rf-ast-1 split). Test files are exempt; types-only files behave the same way.
+### Final round results
 
-### Refactored orchestrators still slightly over ceiling (residual cohesion — accepted)
+| File | Before | After | Series | Commits |
+|---|---|---|---|---|
+| ~~`services/deploy/src/services/deploy.service.ts`~~ | 1572 | **107 (shim)** | rf-deploy2 (split apply/destroy/destroyAll/rollback) | 8 |
+| ~~`packages/core/src/resources/high-level-resources.ts`~~ | 6434 | **47 (shim)** | rf-hlres (split by 7 categories) | 10 |
+| ~~`packages/ui/src/features/canvas/components/svg-canvas.tsx`~~ | 570 | **453** | rf-svgcv2 (extract canvas-content + 3 hooks) | 5 |
+| ~~`services/ai/src/services/ai/system-prompt.ts`~~ | 516 | **203** | rf-spr2 (split prompt into 7 section builders) | 1 |
+| ~~`packages/core/src/graph/parser/ast/types.ts`~~ | 581 | **70 (shim)** | rf-asttyp (split by AST node category) | 1 |
+| ~~`packages/core/src/resources/scale-presets-data.ts`~~ | 1482 | **46 (shim)** | rf-spdat (split by 7 categories) | 1 |
+| ~~`packages/core/src/resources/cloud-blocks-data.ts`~~ | 1009 | **126 (shim)** | rf-cbdat (split by 9 categories) | 1 |
+| ~~`packages/ui/src/shared/components/dev-accent-picker/data/themes.ts`~~ | 590 | **30 (shim)** | rf-thmdat (split into 3 groups of 4 themes) | 1 |
 
-These were refactored but the remaining body is genuinely cohesive (cohesive switch dispatch, large SVG render tree, single template literal). Further splitting would fragment without maintainability gain. Documented and accepted.
+**Final round totals**: 12,754 → 1,082 LOC orchestrators (-91%), +180 tests, 28 commits.
 
-- `services/deploy/src/services/deploy.service.ts` — **1572 LOC**. Holds `applyDeployment` / `destroyDeployment` / `destroyAllForCard` / `rollbackDeployment` (each ~200–500 LOC). Candidate for a future rf-deploy2 series.
-- `packages/ui/src/features/canvas/components/svg-canvas.tsx` — **570 LOC** post-rf-canv2. Remaining body is the SVG render tree; further splitting would break React.memo identity.
-- `services/ai/src/services/ai/system-prompt.ts` — **516 LOC** post-rf-aisvc-4. One cohesive template literal; splitting swaps one big string for two smaller strings + composer (no gain).
+### Files over 500 LOC remaining
+
+| File | LOC | Status |
+|---|---|---|
+| `packages/core/src/schemas/generated/resource-types.ts` | 4.4M | Generated — excluded per user |
+| `packages/core/src/resources/high-level-resources/categories/database.ts` | 2187 | Data-heavy sub-module (rf-hlres exception) |
+| `packages/core/src/resources/high-level-resources/categories/compute.ts` | 1799 | Data-heavy sub-module |
+| `packages/core/src/resources/high-level-resources/categories/messaging.ts` | 862 | Data-heavy sub-module |
+| `packages/core/src/resources/high-level-resources/categories/networking.ts` | 579 | Data-heavy sub-module |
+
+The remaining 4 category files are pure resource-definition data (20+ resources × ~80 LOC of properties each). Further fragmentation would split related resources into one-resource-per-file, hurting discoverability without improving maintainability. Each carries a `SIZE EXCEPTION` docstring header.
 
 ### Phase 3 — DONE 2026-05-01 (18 files, 6 cohorts, 64 commits, +1356 tests)
 

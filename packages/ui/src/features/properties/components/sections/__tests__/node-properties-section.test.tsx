@@ -80,6 +80,8 @@ const mocks = vi.hoisted(() => ({
   MockPrivateNetworkPanel: vi.fn(),
   MockMonitoringLogSection: vi.fn(),
   MockPropertyFields: vi.fn(),
+  MockNodeIdentityCard: vi.fn(),
+  MockCustomDomainBanner: vi.fn(),
 
   // Identity passthrough for cn — joins truthy strings with a space so
   // className walk comparisons stay legible.
@@ -181,6 +183,14 @@ vi.mock('../service-source-section', () => ({
 
 vi.mock('../source-repository-section', () => ({
   SourceRepositorySection: mocks.MockSourceRepositorySection,
+}));
+
+vi.mock('../node-identity-card', () => ({
+  NodeIdentityCard: mocks.MockNodeIdentityCard,
+}));
+
+vi.mock('../custom-domain-banner', () => ({
+  CustomDomainBanner: mocks.MockCustomDomainBanner,
 }));
 
 vi.mock('../../../../../shared/components/ui/panel-header', () => ({
@@ -394,18 +404,18 @@ describe('NodePropertiesSection', () => {
     const node = makeNode('node-1', { iceType: 'Compute.Service', name: 'My Service' });
     const card = makeCard({ nodes: [node] });
     const tree = renderSection({ selectedNode: node, activeCard: card });
-    const inputs = findByPredicate(tree, (el) => el.type === 'input' && (el.props as any).id === 'ice-properties-node-name');
-    expect(inputs).toHaveLength(1);
-    expect((inputs[0].props as any).defaultValue).toBe('My Service');
+    const cards = findByType(tree, mocks.MockNodeIdentityCard);
+    expect(cards).toHaveLength(1);
+    expect((cards[0].props as any).label).toBe('My Service');
   });
 
-  it('updateNodeField via name input onBlur dispatches updateCardNodeData', () => {
+  it('updateNodeField via NodeIdentityCard onUpdateName dispatches updateCardNodeData', () => {
     const node = makeNode('node-1', { iceType: 'Compute.Service', label: 'old' });
     const card = makeCard({ nodes: [node] });
     const tree = renderSection({ selectedNode: node, activeCard: card });
-    const inputs = findByPredicate(tree, (el) => el.type === 'input' && (el.props as any).id === 'ice-properties-node-name');
-    const onBlur = (inputs[0].props as any).onBlur as (e: { target: { value: string } }) => void;
-    onBlur({ target: { value: 'new-name' } });
+    const cards = findByType(tree, mocks.MockNodeIdentityCard);
+    const onUpdateName = (cards[0].props as any).onUpdateName as (name: string) => void;
+    onUpdateName('new-name');
     expect(mocks.updateCardNodeDataSpy).toHaveBeenCalledWith({
       nodeId: 'node-1',
       data: { name: 'new-name' },
@@ -463,24 +473,26 @@ describe('NodePropertiesSection', () => {
 
   // ── Custom Domain inheritance banner ─────────────────────────────────────
 
-  it('does NOT render the Custom Domain banner when no Network.CustomDomain edge connects this node', () => {
+  it('always renders the CustomDomainBanner (it self-decides whether to display)', () => {
     const node = makeNode('node-1', { iceType: 'Compute.Service' });
     const card = makeCard({ nodes: [node] });
     const tree = renderSection({ selectedNode: node, activeCard: card });
-    const text = collectText(tree);
-    expect(text).not.toContain('Domain managed by');
+    const banners = findByType(tree, mocks.MockCustomDomainBanner);
+    expect(banners).toHaveLength(1);
+    expect((banners[0].props as any).selectedNode).toBe(node);
+    expect((banners[0].props as any).activeCard).toBe(card);
   });
 
-  it('renders the Custom Domain banner when this node is wired to a Network.CustomDomain block', () => {
+  it('passes the active card and selectedNode to the CustomDomainBanner unchanged', () => {
     const node = makeNode('svc-1', { iceType: 'Compute.Service', domain: 'app.example.com' });
     const cdNode = makeNode('cd-1', { iceType: 'Network.CustomDomain', label: 'My CD' });
     const edge = makeEdge({ id: 'e1', source: 'cd-1', target: 'svc-1' });
     const card = makeCard({ nodes: [node, cdNode], edges: [edge] });
     const tree = renderSection({ selectedNode: node, activeCard: card });
-    const text = collectText(tree);
-    expect(text).toContain('Domain managed by');
-    expect(text).toContain('My CD');
-    expect(text).toContain('app.example.com');
+    const banners = findByType(tree, mocks.MockCustomDomainBanner);
+    expect(banners).toHaveLength(1);
+    expect((banners[0].props as any).activeCard).toBe(card);
+    expect((banners[0].props as any).selectedNode).toBe(node);
   });
 
   // ── Tab list construction ────────────────────────────────────────────────
@@ -1052,7 +1064,7 @@ describe('NodePropertiesSection', () => {
 
   // ── Display chips (resourceDef vs raw iceType + provider) ────────────────
 
-  it('renders resourceDef.display_name chip when resourceDef is found', () => {
+  it('passes resourceDef.display_name to NodeIdentityCard when resourceDef is found', () => {
     const resourceMap = new Map<string, ResourceDef>([
       [
         'Compute.Service',
@@ -1066,25 +1078,26 @@ describe('NodePropertiesSection', () => {
     const node = makeNode('svc-1', { iceType: 'Compute.Service' });
     const card = makeCard({ nodes: [node] });
     const tree = renderSection({ selectedNode: node, activeCard: card, resourceMap });
-    const text = collectText(tree);
-    expect(text).toContain('Compute Service');
+    const cards = findByType(tree, mocks.MockNodeIdentityCard);
+    expect(cards).toHaveLength(1);
+    expect((cards[0].props as any).resourceDef?.display_name).toBe('Compute Service');
   });
 
-  it('renders raw iceType chip when no resourceDef is found', () => {
+  it('passes iceType to NodeIdentityCard when no resourceDef is found', () => {
     const node = makeNode('svc-1', { iceType: 'Compute.Unknown' });
     const card = makeCard({ nodes: [node] });
     const tree = renderSection({ selectedNode: node, activeCard: card });
-    const text = collectText(tree);
-    expect(text).toContain('Compute.Unknown');
+    const cards = findByType(tree, mocks.MockNodeIdentityCard);
+    expect((cards[0].props as any).iceType).toBe('Compute.Unknown');
+    expect((cards[0].props as any).resourceDef).toBeUndefined();
   });
 
-  it('renders provider chip uppercased when provider is set', () => {
+  it('passes provider to NodeIdentityCard when provider is set', () => {
     const node = makeNode('svc-1', { iceType: 'Compute.Service', provider: 'aws' });
     const card = makeCard({ nodes: [node] });
     const tree = renderSection({ selectedNode: node, activeCard: card });
-    const spans = findByPredicate(tree, (el) => el.type === 'span' && typeof (el.props as any).children === 'string');
-    const providerChip = spans.find((s) => (s.props as any).children === 'aws');
-    expect(providerChip).toBeDefined();
+    const cards = findByType(tree, mocks.MockNodeIdentityCard);
+    expect((cards[0].props as any).provider).toBe('aws');
   });
 
   // ── Source.Repository — visibleTabs <= 1 path under config tab ───────────

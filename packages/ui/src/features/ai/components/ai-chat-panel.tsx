@@ -30,6 +30,7 @@ import { selectActiveCard } from '../../../store/slices/cards-slice';
 import { toggleAiChat } from '../../../store/slices/ui-slice';
 import { useAiCommand } from '../hooks/use-ai-command';
 import { formatDateTime } from '../utils/format-date-time';
+import { opBadgeColor, opSummary } from '../utils/op-display';
 import { suggestPatterns } from '../utils/suggest-patterns';
 import type { AppDispatch, RootState } from '../../../store';
 import type { AiCanvasOp } from '@ice/types';
@@ -56,37 +57,6 @@ interface ConversationSummary {
   created_at: string;
   updated_at: string;
   _count: { messages: number };
-}
-
-// =============================================================================
-// Operation helpers
-// =============================================================================
-
-function opSummary(op: AiCanvasOp): string {
-  switch (op.op) {
-    case 'addBlueprint':
-      return `Add ${op.label || op.iceType}`;
-    case 'addNode':
-      return `Add ${(op.node.data?.label as string) || op.node.type}`;
-    case 'addEdge':
-      return `Connect ${op.edge.source} → ${op.edge.target}`;
-    case 'updateNodeData':
-      return `Update ${op.nodeId}`;
-    case 'deleteNode':
-      return `Remove ${op.nodeId}`;
-    case 'deleteEdge':
-      return `Remove connection`;
-    case 'autoOrganize':
-      return 'Reorganize layout';
-    default:
-      return `${op.op}`;
-  }
-}
-
-function opBadgeColor(op: AiCanvasOp): string {
-  if (op.op.startsWith('delete')) return 'bg-red-500/20 text-red-400';
-  if (op.op.startsWith('add')) return 'bg-emerald-500/20 text-emerald-400';
-  return 'bg-blue-500/20 text-blue-400';
 }
 
 // =============================================================================

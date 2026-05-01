@@ -40,6 +40,12 @@ import type {
 // rf-canvint-1: constants + helpers in `./interactions/state`.
 import { INITIAL_STATE, KEYBOARD_PAN_SPEED, freshInitialState, snapToGrid } from './interactions/state.js';
 
+// rf-canvint-2: pure hit-test helpers in `./interactions/hit-test`.
+import {
+  screenToCanvas as screenToCanvasPure,
+  findItemAtPosition as findItemAtPositionPure,
+} from './interactions/hit-test.js';
+
 // =============================================================================
 // Hook
 // =============================================================================
@@ -76,53 +82,23 @@ export function useCanvasInteractions({
   const lockedRef = useRef(locked);
   lockedRef.current = locked;
 
-  // Screen to canvas coords
+  // Screen to canvas coords. The pure helper takes the rect + viewport
+  // primitives so it's testable; the closure here snapshots the live
+  // refs at each call so the user always sees the current viewport.
   const screenToCanvas = useCallback(
     (screenX: number, screenY: number) => {
-      if (!svgRef.current) return { x: 0, y: 0 };
-      const rect = svgRef.current.getBoundingClientRect();
-      const vp = viewportRef.current;
-      return {
-        x: (screenX - rect.left - vp.x) / vp.zoom,
-        y: (screenY - rect.top - vp.y) / vp.zoom,
-      };
+      const rect = svgRef.current?.getBoundingClientRect() ?? null;
+      return screenToCanvasPure(screenX, screenY, rect, viewportRef.current);
     },
     [svgRef],
   );
 
-  // Hit testing
-  const isInResizeHandle = useCallback(
-    (item: CanvasItem, canvasX: number, canvasY: number): boolean => {
-      const handleSize = resizeHandleSize / viewportRef.current.zoom;
-      return (
-        canvasX >= item.x + item.width - handleSize &&
-        canvasX <= item.x + item.width &&
-        canvasY >= item.y + item.height - handleSize &&
-        canvasY <= item.y + item.height
-      );
-    },
-    [resizeHandleSize],
-  );
-
-  const isInItem = useCallback((item: CanvasItem, canvasX: number, canvasY: number): boolean => {
-    return canvasX >= item.x && canvasX <= item.x + item.width && canvasY >= item.y && canvasY <= item.y + item.height;
-  }, []);
-
+  // Hit testing — pure helper takes the items snapshot + zoom + handle
+  // size; the closure reads the live refs per call.
   const findItemAtPosition = useCallback(
-    (canvasX: number, canvasY: number): { item: CanvasItem | null; isResize: boolean } => {
-      const currentItems = itemsRef.current;
-      for (let i = currentItems.length - 1; i >= 0; i--) {
-        const item = currentItems[i];
-        if (isInResizeHandle(item, canvasX, canvasY)) {
-          return { item, isResize: true };
-        }
-        if (isInItem(item, canvasX, canvasY)) {
-          return { item, isResize: false };
-        }
-      }
-      return { item: null, isResize: false };
-    },
-    [isInResizeHandle, isInItem],
+    (canvasX: number, canvasY: number): { item: CanvasItem | null; isResize: boolean } =>
+      findItemAtPositionPure(itemsRef.current, canvasX, canvasY, resizeHandleSize, viewportRef.current.zoom),
+    [resizeHandleSize],
   );
 
   // Mouse down

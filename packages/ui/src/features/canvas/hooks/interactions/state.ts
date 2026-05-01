@@ -15,7 +15,7 @@
  * here too.
  */
 
-import type { InteractionState } from './types.js';
+import type { InteractionMode, InteractionState } from './types.js';
 
 export const INITIAL_STATE: InteractionState = {
   mode: 'none',
@@ -45,4 +45,23 @@ export const KEYBOARD_PAN_SPEED = 15;
 /** Snap a value to the nearest grid increment. */
 export function snapToGrid(value: number, grid: number): number {
   return Math.round(value / grid) * grid;
+}
+
+/**
+ * Map an interaction mode to the matching CSS cursor string.
+ * Lifted from the inline `getCursor` switch in the orchestrator.
+ */
+export function cursorForMode(mode: InteractionMode): string {
+  switch (mode) {
+    case 'pan':
+      return 'grabbing';
+    case 'drag':
+      return 'move';
+    case 'resize':
+      return 'se-resize';
+    case 'boxSelect':
+      return 'crosshair';
+    default:
+      return 'default';
+  }
 }

@@ -13,6 +13,7 @@ import { describe, it, expect } from 'vitest';
 import {
   INITIAL_STATE,
   KEYBOARD_PAN_SPEED,
+  cursorForMode,
   freshInitialState,
   snapToGrid,
 } from '../interactions/state';
@@ -104,6 +105,28 @@ describe('rf-canvint-1 — snapToGrid', () => {
     // half-away-from-zero; pin behaviour for integers.
     expect(snapToGrid(15, 10)).toBe(20);
     expect(snapToGrid(25, 10)).toBe(30); // half-away-from-zero
+  });
+});
+
+describe('rf-canvint-5 — cursorForMode', () => {
+  it('returns "grabbing" for pan', () => {
+    expect(cursorForMode('pan')).toBe('grabbing');
+  });
+
+  it('returns "move" for drag', () => {
+    expect(cursorForMode('drag')).toBe('move');
+  });
+
+  it('returns "se-resize" for resize', () => {
+    expect(cursorForMode('resize')).toBe('se-resize');
+  });
+
+  it('returns "crosshair" for boxSelect', () => {
+    expect(cursorForMode('boxSelect')).toBe('crosshair');
+  });
+
+  it('returns "default" for none', () => {
+    expect(cursorForMode('none')).toBe('default');
   });
 });
 

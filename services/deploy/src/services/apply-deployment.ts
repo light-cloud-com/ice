@@ -24,7 +24,6 @@ import {
   getExistingNameMap,
   getResourceMap,
   seedMappingsFromHistory,
-  upsertResourceMapping,
 } from './resource-mapping.service.js';
 import { resolveProviderAuth } from '../providers/registry.js';
 import { computeCompleteTotals, deriveCompleteOutcome, computeDeploySummary } from '../utils/deploy-outcome.js';
@@ -37,6 +36,13 @@ import { emitDeployEvent, emitLog } from './deploy-event-dispatcher.js';
 import { makeSchedulerCallbacks } from './scheduler-callbacks.js';
 import { buildBaselineGraph } from './baseline-graph.js';
 import { retryAfterQuotaCleanup } from './quota-retry.js';
+import {
+  ensureAutoDeployRules,
+  logDiffForDebugging,
+  logSourceRepoDiagnostics,
+  normalizeIdempotentResultErrors,
+  persistResourceMappings,
+} from './apply-pipeline-helpers.js';
 
 export async function applyDeployment(
   cardId: string,
@@ -187,84 +193,24 @@ export async function applyDeployment(
     }
 
     // Diagnostic: show every Source.Repository → Compute edge the
-    // deploy service found in the canvas input. The most common
-    // "github repo not deploying" cause is that the Source.Repository
-    // node has an empty `repository` field — this log makes that
-    // immediately obvious without needing to inspect Redux state.
-    try {
-      const repoNodes = (nodes as any[]).filter((n) => (n.data?.iceType as string) === 'Source.Repository');
-      if (repoNodes.length > 0) {
-        emitLog(cardId, `[diagnostic] Found ${repoNodes.length} Source.Repository node(s) in canvas`);
-        for (const r of repoNodes) {
-          const repoVal = String(r.data?.repository || '').trim();
-          const branchVal = String(r.data?.branch || 'main').trim();
-          const connectedEdges = (edges as any[]).filter((e) => e.source === r.id || e.target === r.id);
-          const connectedTargets = connectedEdges
-            .map((e) => (e.source === r.id ? e.target : e.source))
-            .map((tid) => (nodes as any[]).find((n) => n.id === tid))
-            .filter(Boolean);
-          if (!repoVal) {
-            emitLog(
-              cardId,
-              `[diagnostic] Source.Repository ${r.id.slice(0, 8)} has EMPTY repository field — open its properties panel and pick a repo, then redeploy.`,
-            );
-          } else if (connectedTargets.length === 0) {
-            emitLog(
-              cardId,
-              `[diagnostic] Source.Repository ${r.id.slice(0, 8)} (${repoVal}) has NO connected targets — drag an edge to a compute block.`,
-            );
-          } else {
-            const targetSummary = connectedTargets
-              .map((tn: any) => `${(tn.data?.label as string) || tn.id.slice(0, 8)} (${tn.data?.iceType})`)
-              .join(', ');
-            emitLog(
-              cardId,
-              `[diagnostic] Source.Repository ${r.id.slice(0, 8)} → ${repoVal}#${branchVal} → ${targetSummary}`,
-            );
-          }
-        }
-      }
-    } catch (e: any) {
-      // Diagnostic must never fail the deploy
-      emitLog(cardId, `[diagnostic] Source.Repository scan failed: ${e?.message || e}`);
-    }
+    // deploy service found in the canvas input. Extracted to
+    // `./apply-pipeline-helpers.ts` in rf-deploy2-2 housekeeping.
+    logSourceRepoDiagnostics(cardId, nodes, edges);
 
     // 3.5. Auto-register deployment rules for any Source.Repository →
     // Compute edges. This is what makes "push to GitHub auto-redeploys
     // my Firebase Hosting site" work without the user manually clicking
     // into the Source.Repository properties panel. Idempotent — re-uses
-    // existing rules and webhooks.
-    if (userId) {
-      try {
-        const { ensureRulesForCanvas } = await import('./pipeline.service.js');
-        const ruleResult = await ensureRulesForCanvas(
-          cardId,
-          nodes,
-          edges,
-          orgId,
-          userId,
-          options.environment || 'development',
-        );
-        for (const rule of ruleResult.created) {
-          const webhookNote =
-            rule.webhookStatus === 'active'
-              ? 'webhook active — pushes will auto-redeploy'
-              : rule.webhookStatus === 'failed'
-                ? 'webhook NOT registered (PAT missing repo:admin scope) — manual deploys only'
-                : 'webhook pending';
-          emitLog(
-            cardId,
-            `[pipeline] Source.Repository → ${rule.repository} wired to node ${rule.nodeId.slice(0, 8)} (${webhookNote})`,
-          );
-        }
-        for (const err of ruleResult.errors) {
-          emitLog(cardId, `[pipeline] Could not register auto-deploy rule for ${err.repository}: ${err.error}`);
-        }
-      } catch (err: any) {
-        // Non-fatal — auto-rule registration is best-effort.
-        emitLog(cardId, `[pipeline] Auto-rule registration failed (non-fatal): ${err?.message || err}`);
-      }
-    }
+    // existing rules and webhooks. Extracted to
+    // `./apply-pipeline-helpers.ts` in rf-deploy2-2 housekeeping.
+    await ensureAutoDeployRules({
+      cardId,
+      nodes,
+      edges,
+      orgId,
+      userId,
+      environment: options.environment,
+    });
 
     // 4. Create deployer with user's credentials
     const deployer = await createDeployer(options.provider);
@@ -317,18 +263,9 @@ export async function applyDeployment(
       );
     }
 
-    // Log diff for debugging
-    const desiredNodes = translation.graph?.nodes?.values ? [...translation.graph.nodes.values()] : [];
-    const currentNodes = currentGraph?.nodes?.values ? [...currentGraph.nodes.values()] : [];
-    console.log(`Diff: desired=${desiredNodes.length} nodes, current=${currentNodes.length} nodes`);
-    console.log(
-      'Desired:',
-      desiredNodes.map((n: any) => `${n.type}::${n.name}`),
-    );
-    console.log(
-      'Current:',
-      currentNodes.map((n: any) => `${n.type}::${n.name}`),
-    );
+    // Log diff for debugging — extracted to `./apply-pipeline-helpers.ts`
+    // in rf-deploy2-2 housekeeping. Pure console.log output.
+    logDiffForDebugging(translation.graph, currentGraph);
 
     // Build the resource-name lookup tables (current translation +
     // persisted-mapping fallback) and the 4-tier source-node resolver.
@@ -387,27 +324,8 @@ export async function applyDeployment(
     // Post-process results:
     // - NOT_FOUND on delete → treat as success (already gone)
     // - ALREADY_EXISTS on create → treat as success (already exists)
-    if (result.resources?.length > 0) {
-      for (const res of result.resources) {
-        if (!res.success && res.error) {
-          if (res.action === 'delete' && res.error.includes('NOT_FOUND')) {
-            res.success = true;
-            res.error = undefined;
-            emitLog(cardId, `${res.name}: already deleted (NOT_FOUND) — marking as removed`);
-          } else if (res.action === 'create' && res.error.includes('ALREADY_EXISTS')) {
-            res.success = true;
-            res.error = undefined;
-            res.action = 'no_change';
-            emitLog(cardId, `${res.name}: already exists — skipping`);
-          }
-        }
-      }
-      // Recalculate success
-      result.success = result.resources.every((r: any) => r.success);
-      if (result.summary) {
-        result.summary.failed = result.resources.filter((r: any) => !r.success).length;
-      }
-    }
+    // Extracted to `./apply-pipeline-helpers.ts` in rf-deploy2-2 housekeeping.
+    normalizeIdempotentResultErrors(cardId, result);
 
     // Auto-cleanup on backend bucket quota error + retry once. Extracted
     // to `./quota-retry.ts` (rf-deploy-14) — the gate, the orphan
@@ -430,43 +348,18 @@ export async function applyDeployment(
 
     const durationMs = Date.now() - startTime;
 
-    // 6. Persist the stable name mapping. Phase 1: every successful
-    // resource's (node_id → name + provider_id) becomes the source of
-    // truth for future plans, surviving label changes.
-    //
-    // Critical: mutate `res.source_node_id` IN PLACE on the
-    // result.resources array so the persisted DB row has it. The live
-    // wire emit for per-resource lifecycle is covered by
-    // `on_node_status`'s terminal event — there's no `resource_result`
-    // wire event in the new contract, just persistence + the canvas
-    // overlay write driven by `getNodeDeploymentOverlay` on next page
-    // load. Without source_node_id on the persisted row,
-    // `getNodeDeploymentOverlay` would filter the entry out (every
-    // overlay row requires source_node_id) and the canvas block would
-    // never show any URL or status after a refresh.
-    if (result.resources?.length > 0) {
-      for (const res of result.resources) {
-        const source_node_id = findSourceNodeId(res);
-        if (source_node_id) {
-          res.source_node_id = source_node_id;
-        }
-        const label = source_node_id ? nameToLabel.get(res.name) || '-' : '-';
-        console.log(`Resource result: ${res.name} → matched node: ${source_node_id || 'NONE'} (label: ${label})`);
-
-        if (source_node_id && res.success && res.name && res.type) {
-          await upsertResourceMapping({
-            cardId,
-            nodeId: source_node_id,
-            environment,
-            resourceType: res.type,
-            resourceName: res.name,
-            providerId: res.provider_id,
-          }).catch((err: any) => {
-            console.warn(`Failed to upsert resource mapping for ${res.name}:`, err.message);
-          });
-        }
-      }
-    }
+    // 6. Persist the stable name mapping. Extracted to
+    // `./apply-pipeline-helpers.ts` in rf-deploy2-2 housekeeping. The
+    // helper mutates `res.source_node_id` in place on the result.resources
+    // array so the persisted DB row carries the correlation — see the
+    // helper's docstring for why that matters for the canvas overlay.
+    await persistResourceMappings({
+      cardId,
+      result,
+      findSourceNodeId,
+      nameToLabel,
+      environment,
+    });
 
     // Phase 1: distinguish partial-success from full-failure so the baseline
     // query above can pick it up next time. `success` still means "every

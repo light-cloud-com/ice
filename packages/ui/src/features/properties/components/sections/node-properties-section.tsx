@@ -53,8 +53,6 @@
 
 import React, { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
-import { getIcon, DEFAULT_ICON, type Provider } from '../../../../assets/icons';
-import { getBrandIcon } from '../../../../assets/icons/brand-registry';
 import { useTranslation } from '../../../../i18n';
 import { PanelHeader } from '../../../../shared/components/ui/panel-header';
 import { cn } from '../../../../shared/utils/cn';
@@ -83,6 +81,11 @@ import { toggleProperties } from '../../../../store/slices/ui-slice';
 import type { AppDispatch } from '../../../../store';
 import type { ResourceDef } from '../../hooks/use-resource-map';
 import type { CanvasIssue } from '../../../../store/slices/validation-slice';
+import {
+  findCustomDomainEdge,
+  nodeHasSourceTab,
+  resolveNodeIconUrl,
+} from '../../utils/node-properties-derivations';
 
 // ─── Node Properties Section ────────────────────────────────────────────────
 
@@ -135,10 +138,7 @@ export const NodePropertiesSection: React.FC<{
   const isScalable = behavior === 'scalable';
 
   // Get icon
-  const brandIcon =
-    getBrandIcon((selectedNode.data?.runtime as string) || '') || getBrandIcon(iceType) || getBrandIcon(label);
-  const providerIcon = getIcon(iceType, (provider?.toLowerCase() || 'aws') as Provider);
-  const iconUrl = brandIcon?.url || providerIcon?.icon || DEFAULT_ICON;
+  const iconUrl = resolveNodeIconUrl(selectedNode, iceType, provider, label);
 
   // Connections for this node
   const incomingEdges = activeCard.edges.filter((e) => e.target === selectedNode.id);
@@ -215,17 +215,9 @@ export const NodePropertiesSection: React.FC<{
           the domain field gets immediately overwritten. */}
       {(() => {
         if (!activeCard || !selectedNode) return null;
-        const customDomainEdge = activeCard.edges.find((e: any) => {
-          if (e.source !== selectedNode.id && e.target !== selectedNode.id) return false;
-          const otherId = e.source === selectedNode.id ? e.target : e.source;
-          const otherNode = activeCard.nodes.find((n: any) => n.id === otherId);
-          return otherNode?.data?.iceType === 'Network.CustomDomain';
-        });
-        if (!customDomainEdge) return null;
-        const otherId =
-          customDomainEdge.source === selectedNode.id ? customDomainEdge.target : customDomainEdge.source;
-        const cdNode = activeCard.nodes.find((n: any) => n.id === otherId);
-        const cdLabel = (cdNode?.data?.label as string) || 'Custom Domain';
+        const cdResult = findCustomDomainEdge(activeCard, selectedNode);
+        if (!cdResult) return null;
+        const cdLabel = (cdResult.cdNode.data?.label as string) || 'Custom Domain';
         const inheritedDomain = (selectedNode.data?.domain as string) || '';
         return (
           <div className="px-3 py-2 border-b border-ice-border bg-blue-500/5">
@@ -249,8 +241,7 @@ export const NodePropertiesSection: React.FC<{
       {/* ── Navigation Tabs ── */}
       {(() => {
         const hasDeployment = !!selectedNode.data?.provider_id;
-        const hasSource =
-          (iceType.startsWith('Compute.') || iceType === 'Network.Gateway') && iceType !== 'Source.Repository';
+        const hasSource = nodeHasSourceTab(iceType);
         const activeTab = propsTab;
 
         // Tabs are derived from the node's actual content — not hardcoded

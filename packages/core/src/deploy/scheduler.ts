@@ -42,14 +42,10 @@ import { collect_ready, is_unfinished } from './scheduler/predicates.js';
 import {
   DEFAULT_PER_HANDLER_CAPS,
   DEFAULT_POOL_SIZE,
-  type NodeRecord,
   type SchedulerContext,
-  type SchedulerPhase,
   type SchedulerRunInput,
 } from './scheduler/types.js';
-import type { ResourceChange } from '../diff/types.js';
-import type { Graph } from '../types/graph.js';
-import type { DeployOptions, ProviderDeployer, ResourceDeployResult } from './types.js';
+import type { ResourceDeployResult } from './types.js';
 
 export { DEFAULT_PER_HANDLER_CAPS, DEFAULT_POOL_SIZE } from './scheduler/types.js';
 export type { SchedulerPhase, SchedulerRunInput } from './scheduler/types.js';
@@ -67,51 +63,44 @@ export async function run_parallel_apply(input: SchedulerRunInput): Promise<Reso
 /**
  * Encapsulates one phase's worth of scheduling state. Exported for
  * testability — production callers should prefer `run_parallel_apply`.
+ *
+ * Implementation: every method body delegates to a standalone helper
+ * in `./scheduler/<module>.ts`. The class is a thin shell that owns
+ * the `ctx: SchedulerContext` mutable handle. Mirrors the rf-sqlite
+ * decomposition (`SqliteStateStore` + `SqliteContext`).
  */
 export class ParallelChangeScheduler {
-  private readonly changes: ResourceChange[];
-  private readonly phase: SchedulerPhase;
-  private readonly graph: Graph;
-  private readonly deployer: ProviderDeployer;
-  private readonly options: DeployOptions;
-
-  private readonly pool_size: number;
-  private readonly per_handler_caps: Record<string, number>;
-  private readonly handler_cap_prefixes: string[];
-
-  private readonly records: Map<string, NodeRecord>;
-  private readonly results: ResourceDeployResult[] = [];
-  private readonly in_flight = new Set<string>();
-  private readonly handler_in_flight = new Map<string, number>();
-
-  /** Resolves when at least one in-flight node has settled. */
-  private settle_waker?: { promise: Promise<void>; resolve: () => void };
-
-  /** True after first failure when `continue_on_error: false`. */
-  private hard_failed = false;
-  /** True after `abort_signal` fires (we observe but don't abort handlers). */
-  private aborted = false;
+  private readonly ctx: SchedulerContext;
 
   constructor(input: SchedulerRunInput) {
-    this.changes = input.changes;
-    this.phase = input.phase;
-    this.graph = input.graph;
-    this.deployer = input.deployer;
-    this.options = input.options;
-
     // pool_size resolution: explicit pool_size wins; fall back to the
     // legacy `parallelism` for one revision; finally default to 6.
-    this.pool_size = input.options.pool_size ?? input.options.parallelism ?? DEFAULT_POOL_SIZE;
+    const pool_size = input.options.pool_size ?? input.options.parallelism ?? DEFAULT_POOL_SIZE;
 
-    this.per_handler_caps = {
+    const per_handler_caps: Record<string, number> = {
       ...DEFAULT_PER_HANDLER_CAPS,
       ...(input.options.per_handler_caps ?? {}),
     };
     // Longer prefixes first so `gcp.sql.instance` beats `gcp.sql.` when
     // the user has overridden a sub-tree.
-    this.handler_cap_prefixes = Object.keys(this.per_handler_caps).sort((a, b) => b.length - a.length);
+    const handler_cap_prefixes = Object.keys(per_handler_caps).sort((a, b) => b.length - a.length);
 
-    this.records = build_dag(this.changes, this.phase, this.graph);
+    this.ctx = {
+      changes: input.changes,
+      phase: input.phase,
+      graph: input.graph,
+      deployer: input.deployer,
+      options: input.options,
+      pool_size,
+      per_handler_caps,
+      handler_cap_prefixes,
+      records: build_dag(input.changes, input.phase, input.graph),
+      results: [],
+      in_flight: new Set(),
+      handler_in_flight: new Map(),
+      hard_failed: false,
+      aborted: false,
+    };
   }
 
   /**
@@ -119,19 +108,12 @@ export class ParallelChangeScheduler {
    * (insertion) order.
    */
   async run(): Promise<ResourceDeployResult[]> {
-    if (this.records.size === 0) return [];
-
-    // `this` is structurally a `SchedulerContext` — every field on the
-    // context interface is also a (non-private) field on the class via
-    // the constructor. The cast strips the `private` brand TypeScript
-    // adds to the class so the standalone helpers in `./scheduler/`
-    // can read the context. rf-sched-6 will collapse this by lifting
-    // the fields onto a real `ctx: SchedulerContext` field.
-    const ctx = this as unknown as SchedulerContext;
+    const { ctx } = this;
+    if (ctx.records.size === 0) return [];
 
     // Pre-emit `queued` for every node so the host (pdl-4) can bulk-init
     // `nodesById` before any `applying` arrives.
-    for (const rec of this.records.values()) {
+    for (const rec of ctx.records.values()) {
       emit_status(ctx, rec, 'queued');
     }
 
@@ -139,13 +121,13 @@ export class ParallelChangeScheduler {
     // new work; in-flight handlers see the same signal via their
     // existing `GCPHandlerContext.abort_signal` plumbing and may finish
     // naturally or short-circuit.
-    const signal = this.options.abort_signal;
+    const signal = ctx.options.abort_signal;
     const on_abort = () => {
-      this.aborted = true;
+      ctx.aborted = true;
       wake(ctx);
     };
     if (signal) {
-      if (signal.aborted) this.aborted = true;
+      if (signal.aborted) ctx.aborted = true;
       else signal.addEventListener('abort', on_abort, { once: true });
     }
 
@@ -155,14 +137,14 @@ export class ParallelChangeScheduler {
         // (continue_on_error: false). In-flight nodes are left alone —
         // handlers' existing abort_signal plumbing handles graceful
         // cancellation.
-        if (this.aborted || this.hard_failed) {
+        if (ctx.aborted || ctx.hard_failed) {
           cancel_remaining_not_in_flight(ctx);
         }
 
         const ready = collect_ready(ctx);
         for (const id of ready) dispatch(ctx, id);
 
-        if (this.in_flight.size === 0) {
+        if (ctx.in_flight.size === 0) {
           // No one in flight and nothing newly ready — done. The
           // is_unfinished check above will exit on next iteration.
           if (ready.length === 0) break;
@@ -176,7 +158,7 @@ export class ParallelChangeScheduler {
       if (signal) signal.removeEventListener('abort', on_abort);
     }
 
-    return this.results;
+    return ctx.results;
   }
 }
 

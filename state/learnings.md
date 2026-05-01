@@ -1558,3 +1558,43 @@ batch multiple awk deletes against pre-computed numbers. Generalizes:
 for any line-range surgery on big files, awk + targeted re-insert
 beats Edit + giant `old_string`. Edit's strength is small targeted
 swaps; large-body removal is a different shape.
+
+## helpers-must-own-the-assembled-array-when-data-is-split-into-multiple-files
+
+_Discovered: 2026-04-30 by implementer in rf-hlres-8_
+
+The canonical "data-heavy shim split" pattern (scale-presets, cloud-blocks)
+has ONE big data file and helpers in the public shim. But when the data
+splits across N files (here: 7 categories under `high-level-resources/categories/`),
+the question of "where does the assembled array live" becomes
+load-bearing. Naive answer: keep `HIGH_LEVEL_CATEGORIES = [compute, database, ...]`
+in the public shim, helpers in `helpers.ts` that imports the array from
+the shim. That creates a `helpers → shim → helpers` cycle as soon as the
+shim re-exports the helpers (which it must, for public API stability).
+Right answer: the helpers file owns BOTH the assembly and the helpers
+that read from it. The public shim becomes a pure re-export
+(`export { HIGH_LEVEL_CATEGORIES, getAll... } from './helpers.js'`).
+This works because the seven category modules have no inter-dependencies
+— helpers can pull them in directly. Generalizes to any future N-way
+data split where helpers iterate the union (resources, blocks, presets):
+prefer "helpers.ts assembles the union and exposes both" over
+"shim assembles, helpers read." The cycle isn't a TypeScript build error
+(it's a runtime hazard with type-only seams) but it WILL bite anything
+that does a `await import('./shim.js')` cycle-aware lookup. The shim
+ends up at ~40 LOC: header docstring + `export type { ... }` + `export
+{ ... }`. That's the right size for a public re-export shim.
+
+Tactical: when the orchestrator was 6434 LOC of inline data-array
+literal, splicing each category out went smoothly with awk-based
+line-range deletion (reusing the rf-deploy2-2 awk pattern):
+1. `grep -nE '^  \{$|^  \},$'` to find category-level brace pairs.
+2. `awk 'NR<START || NR>END'` to delete the inline literal,
+   replacing it on the same pass with `awk 'NR==START {print "  <name>,"}'`
+   so the array stays valid mid-series.
+3. After each splice, the inline `behavior: '...' as NodeBehavior`
+   casts in the extracted file need `import type { ..., NodeBehavior }`
+   in the new file's prelude — leaving a `NodeBehavior` import out is
+   the most likely typecheck failure (TS2304: Cannot find name).
+4. Re-grep brace boundaries before each next splice — the line numbers
+   shift after every awk pass. Never batch deletes against pre-computed
+   numbers (same caveat as the rf-deploy2-2 learning).

@@ -3,28 +3,28 @@
  *
  * Matches platform editor's sidebar style.
  * Scoped to selected organisation.
+ *
+ * Orchestrator shell: data state and CRUD handlers are delegated to
+ * `useProjectBrowserData` and `useProjectBrowserActions`. Tree rendering
+ * lives in the `TreeItem` leaf component.
  */
 
 import { Folder, FolderOpen, Loader2, FolderPlus, FilePlus } from 'lucide-react';
-import React, { useCallback, useEffect, useState } from 'react';
+import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useTranslation } from '../../../i18n';
-import axiosInstance from '../../../shared/api/axios-instance';
 import { PanelHeader, PanelHeaderAction } from '../../../shared/components/ui/panel-header';
 import { useResolvePath } from '../../../shared/hooks/use-resolve-path';
 import { openDialog } from '../../../store/slices/ui-slice';
 import type { RootState, AppDispatch } from '../../../store';
-import type { ProjectNode } from '../types/project-node';
-import { buildPath, flattenItems } from '../utils/build-path';
+import { useProjectBrowserActions } from '../hooks/use-project-browser-actions';
+import { useProjectBrowserData } from '../hooks/use-project-browser-data';
 import { TreeItem } from './tree-item';
-
-// ─── Main Component ─────────────────────────────────────────────────────────
 
 export function ProjectBrowser() {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
-  const navigate = useNavigate();
   const { pathname } = useLocation();
   const selectedOrg = useSelector((s: RootState) => s.account?.selectedOrg);
 
@@ -33,132 +33,32 @@ export function ProjectBrowser() {
   const activeNodeId = resolved.id;
   const activeSubpage = resolved.type === 'project' ? resolved.subpage || 'canvas' : null;
 
-  const [items, setItems] = useState<ProjectNode[]>([]);
-  const [flatFolders, setFlatFolders] = useState<ProjectNode[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [expanded, setExpanded] = useState<Set<string>>(() => {
-    try {
-      const saved = localStorage.getItem('ice-project-expanded');
-      return saved ? new Set(JSON.parse(saved)) : new Set<string>();
-    } catch {
-      return new Set<string>();
-    }
+  const {
+    items,
+    flatFolders,
+    loading,
+    expanded,
+    setExpanded,
+    search,
+    setSearch,
+    fetchProjects,
+    toggleExpand,
+  } = useProjectBrowserData(selectedOrg?.id);
+
+  const {
+    handleCreate,
+    handleRename,
+    handleDelete,
+    handleMove,
+    handleNavigateSubpage,
+    handleOpen,
+  } = useProjectBrowserActions({
+    items,
+    flatFolders,
+    fetchProjects,
+    setExpanded,
+    selectedOrg,
   });
-  const [search, setSearch] = useState('');
-
-  // Persist expanded state
-  useEffect(() => {
-    localStorage.setItem('ice-project-expanded', JSON.stringify([...expanded]));
-  }, [expanded]);
-
-  const orgId = selectedOrg?.id;
-
-  const fetchProjects = useCallback(async () => {
-    if (!orgId) return;
-    setLoading(true);
-    try {
-      const res = await axiosInstance.post('/canvas/projects', {
-        organisationId: orgId,
-        ...(search ? { search } : {}),
-      });
-      const flat: ProjectNode[] = (res.data || []).map((p: any) => ({ ...p, children: [] }));
-
-      // Save flat folders for move menu
-      setFlatFolders(flat.filter((p) => p.type === 'folder'));
-
-      // Build tree
-      const map = new Map<string, ProjectNode>();
-      const roots: ProjectNode[] = [];
-      for (const item of flat) map.set(item.id, item);
-      for (const item of flat) {
-        if (item.parent_id && map.has(item.parent_id)) {
-          map.get(item.parent_id)!.children.push(item);
-        } else {
-          roots.push(item);
-        }
-      }
-      setItems(roots);
-    } catch {
-      setItems([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [orgId, search]);
-
-  useEffect(() => {
-    fetchProjects();
-  }, [fetchProjects]);
-
-  const toggleExpand = useCallback((id: string) => {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  }, []);
-
-  const handleCreate = useCallback(
-    async (type: 'folder' | 'project', parentId?: string) => {
-      if (!selectedOrg) return;
-      await axiosInstance.post('/canvas/projects/create', {
-        name: type === 'folder' ? t('projectBrowser.newFolderName') : t('projectBrowser.newProjectName'),
-        type,
-        parentId: parentId || null,
-        organisationId: selectedOrg.id,
-      });
-      if (parentId) setExpanded((p) => new Set(p).add(parentId));
-      fetchProjects();
-    },
-    [selectedOrg, fetchProjects, t],
-  );
-
-  const handleRename = useCallback(
-    async (id: string, name: string) => {
-      await axiosInstance.post('/canvas/projects/update', { projectId: id, name });
-      fetchProjects();
-    },
-    [fetchProjects],
-  );
-
-  const handleDelete = useCallback(
-    async (id: string) => {
-      if (!window.confirm(t('projectBrowser.deleteConfirm'))) return;
-      await axiosInstance.post('/canvas/projects/delete', { projectId: id, organisationId: selectedOrg?.id });
-      fetchProjects();
-    },
-    [selectedOrg, fetchProjects, t],
-  );
-
-  const handleMove = useCallback(
-    async (id: string, parentId: string | null) => {
-      await axiosInstance.post('/canvas/projects/move', { projectId: id, parentId });
-      fetchProjects();
-    },
-    [fetchProjects],
-  );
-
-  const handleNavigateSubpage = useCallback(
-    (node: ProjectNode, subpage: string) => {
-      const allFlat = flattenItems(items, flatFolders);
-      const path = buildPath(node, allFlat, selectedOrg?.name);
-      // Canvas is the default view — no suffix needed
-      navigate(subpage === 'canvas' ? path : `${path}/${subpage}`);
-    },
-    [flatFolders, items, navigate, selectedOrg],
-  );
-
-  const handleOpen = useCallback(
-    (node: ProjectNode) => {
-      // Build the URL path and navigate
-      const path = buildPath(node, flattenItems(items, flatFolders), selectedOrg?.name);
-      navigate(path);
-    },
-    [flatFolders, items, navigate, selectedOrg],
-  );
 
   return (
     <div className="flex flex-col h-full">

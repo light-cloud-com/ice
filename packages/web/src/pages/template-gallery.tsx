@@ -40,86 +40,11 @@ import {
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ProviderLogos, TechStackLogos, DifficultyDots, TrustBadge } from './template-gallery/components/badges';
 import { ICON_MAP } from './template-gallery/data/icon-map';
 import { getDifficultyMeta } from './template-gallery/utils/difficulty-meta';
 import type { ComposedTemplate, TemplateCategoryMeta } from '@ui/config/templates';
 import type { AppDispatch, RootState } from '@ui/store';
-
-// =============================================================================
-// Small shared pieces
-// =============================================================================
-
-/** Renders SVG brand logos for cloud providers with fallback text */
-const ProviderLogos: React.FC<{ providers?: string[]; size?: number }> = ({ providers, size = 16 }) => {
-  if (!providers || providers.length === 0) return null;
-  return (
-    <span className="flex items-center gap-1">
-      {providers.map((p) => {
-        const brand = getProviderBrandIcon(p);
-        return brand ? (
-          <img key={p} src={brand.url} alt={brand.label} width={size} height={size} className="shrink-0 opacity-70" />
-        ) : (
-          <span
-            key={p}
-            className="text-ice-2xs font-medium px-1.5 py-0.5 rounded bg-ice-raised text-ice-text-3 uppercase"
-          >
-            {p}
-          </span>
-        );
-      })}
-    </span>
-  );
-};
-
-/** Renders SVG logos for tech stack tags (React, PostgreSQL, etc.) */
-const TechStackLogos: React.FC<{ tags: string[]; max?: number }> = ({ tags, max = 5 }) => {
-  const resolved = useMemo(() => {
-    const items: { key: string; url: string; label: string }[] = [];
-    for (const tag of tags) {
-      if (items.length >= max) break;
-      const brand = getBrandIcon(tag);
-      if (brand) items.push({ key: tag, url: brand.url, label: brand.label });
-    }
-    return items;
-  }, [tags, max]);
-
-  if (resolved.length === 0) return null;
-  return (
-    <span className="flex items-center gap-2">
-      {resolved.map((b) => (
-        <img key={b.key} src={b.url} alt={b.label} title={b.label} width={18} height={18} className="shrink-0" />
-      ))}
-    </span>
-  );
-};
-
-const DifficultyDots: React.FC<{ level?: string }> = ({ level }) => {
-  const { t } = useTranslation();
-  const diffMeta = getDifficultyMeta(t);
-  const info = diffMeta[level || 'starter'] || diffMeta.starter;
-  return (
-    <span className="flex items-center gap-0.5" title={info.label}>
-      {[1, 2, 3, 4].map((i) => (
-        <span key={i} className={cn('w-1.5 h-1.5 rounded-full', i <= info.dots ? 'bg-ice-accent' : 'bg-ice-border')} />
-      ))}
-    </span>
-  );
-};
-
-const TrustBadge: React.FC<{ trust?: string }> = ({ trust }) => {
-  const { t } = useTranslation();
-  if (!trust || trust === 'community') return null;
-  return (
-    <span
-      className={cn(
-        'text-ice-2xs font-semibold px-1.5 py-0.5 rounded',
-        trust === 'official' ? 'bg-ice-accent/15 text-ice-accent' : 'bg-emerald-500/15 text-emerald-400',
-      )}
-    >
-      {trust === 'official' ? t('templates.gallery.official') : t('templates.gallery.verified')}
-    </span>
-  );
-};
 
 // =============================================================================
 // FilterChip — toggle pill used in the header

@@ -34,6 +34,10 @@ import {
   subscriptionIndex,
 } from './log-stream/registry.js';
 import { resolveSource } from './log-stream/source-resolution.js';
+import {
+  stopUnderlyingStream,
+  teardownStream,
+} from './log-stream/stream-lifecycle.js';
 import type {
   ActiveStream,
   LogEntry,
@@ -347,36 +351,6 @@ async function restartStreamWithMode(stream: ActiveStream, newMode: StreamingMod
   } else {
     startTail(stream);
   }
-}
-
-function stopUnderlyingStream(stream: ActiveStream): void {
-  if (stream.pollTimer) {
-    clearInterval(stream.pollTimer);
-    stream.pollTimer = undefined;
-  }
-  if (stream.tailStream) {
-    try {
-      stream.tailStream.destroy?.();
-    } catch {
-      /* swallow */
-    }
-    try {
-      stream.tailStream.cancel?.();
-    } catch {
-      /* swallow */
-    }
-    stream.tailStream = null;
-  }
-}
-
-function teardownStream(stream: ActiveStream): void {
-  stream.stopped = true;
-  stopUnderlyingStream(stream);
-  if (stream.idleTeardownTimer) {
-    clearTimeout(stream.idleTeardownTimer);
-    stream.idleTeardownTimer = undefined;
-  }
-  streams.delete(stream.terminalNodeId);
 }
 
 // ── Polling mode ──────────────────────────────────────────────────────

@@ -34,8 +34,9 @@ import {
   screenToCanvas as screenToCanvasPure,
   findItemAtPosition as findItemAtPositionPure,
 } from './interactions/hit-test.js';
-// rf-canvint-1: constants/helpers in `./interactions/state`.
-import { freshInitialState } from './interactions/state.js';
+// rf-canvint-1: constants/helpers in `./interactions/state`. rf-canvint-5
+// adds `cursorForMode`, which replaces the inline `getCursor` switch.
+import { cursorForMode, freshInitialState } from './interactions/state.js';
 // rf-canvint-4: keyboard-handler sub-hook.
 import { useKeyboardHandlers } from './interactions/use-keyboard-handlers.js';
 // rf-canvint-3: mouse-handler sub-hook.
@@ -137,22 +138,6 @@ export function useCanvasInteractions({
       maxZoom,
     });
 
-  // Cursor
-  const getCursor = (): string => {
-    switch (stateRef.current.mode) {
-      case 'pan':
-        return 'grabbing';
-      case 'drag':
-        return 'move';
-      case 'resize':
-        return 'se-resize';
-      case 'boxSelect':
-        return 'crosshair';
-      default:
-        return 'default';
-    }
-  };
-
   // Keyboard panning + delete — rf-canvint-4 lifts the implementation
   // into `./interactions/use-keyboard-handlers.ts`. The orchestrator
   // owns the latest-callback refs (so the sub-hook's `[]`-dep effect
@@ -192,7 +177,7 @@ export function useCanvasInteractions({
       onAuxClick: handleAuxClick,
       onContextMenu: handleContextMenu,
     },
-    cursor: getCursor(),
+    cursor: cursorForMode(stateRef.current.mode),
     screenToCanvas,
     isInteracting: stateRef.current.mode !== 'none',
     mode: stateRef.current.mode,

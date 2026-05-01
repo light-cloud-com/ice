@@ -6,21 +6,10 @@
  */
 
 import { EmbeddedSchemaProvider } from '../schema/embedded-schema-provider.js';
-import {
-  sanitize_name,
-  sanitize_var_name,
-  to_camel_case,
-} from './pulumi/case-utils.js';
-import {
-  fallback_type_mapping,
-  get_package_name,
-  parse_resource_type,
-} from './pulumi/type-mapping.js';
-import {
-  build_options,
-  map_properties,
-  transform_value,
-} from './pulumi/value-transform.js';
+import { sanitize_name } from './pulumi/case-utils.js';
+import { fallback_type_mapping } from './pulumi/type-mapping.js';
+import { to_typescript } from './pulumi/typescript-formatter.js';
+import { build_options, map_properties } from './pulumi/value-transform.js';
 import { to_yaml } from './pulumi/yaml-formatter.js';
 import type { MutableGraph } from '../graph/mutable-graph.js';
 import type { IceType } from '../schema/schema-provider.js';
@@ -110,7 +99,7 @@ export class PulumiExporter {
     let typescript: string | undefined;
 
     if (options.format === 'typescript') {
-      typescript = this.toTypeScript(program, options);
+      typescript = to_typescript(program, options);
     } else {
       yaml = to_yaml(program, options);
     }
@@ -189,109 +178,6 @@ export class PulumiExporter {
     };
   }
 
-  /**
-   * Convert program to TypeScript format.
-   */
-  private toTypeScript(program: PulumiProgram, options: PulumiExportOptions): string {
-    const lines: string[] = [];
-
-    // Imports
-    const providers = new Set<string>();
-    for (const resource of program.resources) {
-      const match = resource.type.match(/^([^:]+):/);
-      if (match) {
-        providers.add(match[1]!);
-      }
-    }
-
-    lines.push('import * as pulumi from "@pulumi/pulumi";');
-    for (const provider of providers) {
-      const package_name = get_package_name(provider);
-      lines.push(`import * as ${provider.replace(/-/g, '_')} from "@pulumi/${package_name}";`);
-    }
-    lines.push('');
-
-    // Configuration
-    if (program.config && Object.keys(program.config).length > 0) {
-      lines.push('// Configuration');
-      lines.push('const config = new pulumi.Config();');
-      for (const [key, value] of Object.entries(program.config)) {
-        if (typeof value === 'string') {
-          lines.push(`const ${to_camel_case(key)} = config.require("${key}");`);
-        } else {
-          lines.push(`const ${to_camel_case(key)} = config.requireObject("${key}");`);
-        }
-      }
-      lines.push('');
-    }
-
-    // Resources
-    if (options.include_comments) {
-      lines.push('// Resources');
-    }
-
-    for (const resource of program.resources) {
-      const { provider_alias: _provider_alias, class_path } = parse_resource_type(resource.type);
-
-      if (options.include_comments) {
-        lines.push(`// ${resource.name}`);
-      }
-
-      lines.push(`const ${sanitize_var_name(resource.name)} = new ${class_path}("${resource.name}", {`);
-
-      for (const [key, value] of Object.entries(resource.properties)) {
-        if (value !== null && value !== undefined) {
-          lines.push(`    ${key}: ${this.formatTSValue(value)},`);
-        }
-      }
-
-      lines.push('});');
-      lines.push('');
-    }
-
-    // Outputs
-    if (program.outputs && Object.keys(program.outputs).length > 0) {
-      lines.push('// Outputs');
-      for (const [key, value] of Object.entries(program.outputs)) {
-        lines.push(`export const ${to_camel_case(key)} = ${this.formatTSValue(value)};`);
-      }
-    }
-
-    return lines.join('\n');
-  }
-
-  /**
-   * Format a value for TypeScript output.
-   */
-  private formatTSValue(value: unknown): string {
-    if (value === null || value === undefined) {
-      return 'undefined';
-    }
-
-    if (typeof value === 'string') {
-      return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
-    }
-
-    if (typeof value === 'number' || typeof value === 'boolean') {
-      return String(value);
-    }
-
-    if (Array.isArray(value)) {
-      if (value.length === 0) return '[]';
-      const items = value.map((v) => this.formatTSValue(v));
-      return `[${items.join(', ')}]`;
-    }
-
-    if (typeof value === 'object') {
-      const entries = Object.entries(value);
-      if (entries.length === 0) return '{}';
-
-      const formatted = entries.map(([k, v]) => `${k}: ${this.formatTSValue(v)}`);
-      return `{ ${formatted.join(', ')} }`;
-    }
-
-    return String(value);
-  }
 }
 
 // =============================================================================

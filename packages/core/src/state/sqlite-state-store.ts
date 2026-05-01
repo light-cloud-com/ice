@@ -9,6 +9,16 @@ import { create_deployment_id } from '../types/deployment.js';
 import { InternalError } from '../types/errors.js';
 import { create_node_id } from '../types/graph.js';
 import { success, failure } from '../types/result.js';
+import {
+  resources_get,
+  resources_get_all,
+  resources_query,
+  resources_save,
+  resources_save_many,
+  resources_delete,
+  resources_delete_all,
+} from './sqlite/resources.js';
+import { DEFAULT_OPTIONS, type SqliteContext } from './sqlite/types.js';
 import type {
   StoredResourceState,
   DeploymentRecord,
@@ -26,38 +36,10 @@ import type { IceError } from '../types/errors.js';
 import type { NodeId } from '../types/graph.js';
 import type { ResourceState } from '../types/providers.js';
 import type { Result } from '../types/result.js';
+import type { SqliteStateStoreOptions } from './sqlite/types.js';
 import type { Database, Statement } from 'better-sqlite3';
 
-// =============================================================================
-// SQLite State Store Configuration
-// =============================================================================
-
-/**
- * SQLite state store options.
- */
-export interface SqliteStateStoreOptions {
-  /** Path to the database file (use ':memory:' for in-memory) */
-  readonly path: string;
-
-  /** Whether to use WAL mode */
-  readonly wal_mode?: boolean;
-
-  /** Busy timeout in milliseconds */
-  readonly busy_timeout_ms?: number;
-
-  /** Whether to enable foreign keys */
-  readonly foreign_keys?: boolean;
-}
-
-/**
- * Default options.
- */
-const DEFAULT_OPTIONS: Required<SqliteStateStoreOptions> = {
-  path: '.ice/state.db',
-  wal_mode: true,
-  busy_timeout_ms: 5000,
-  foreign_keys: true,
-};
+export type { SqliteStateStoreOptions };
 
 // =============================================================================
 // SQLite State Store Implementation
@@ -67,13 +49,30 @@ const DEFAULT_OPTIONS: Required<SqliteStateStoreOptions> = {
  * SQLite-based state store.
  */
 export class SqliteStateStore implements ObservableStateStore {
-  private db: Database | null = null;
+  private readonly ctx: SqliteContext = {
+    db: null,
+    listeners: new Set(),
+    statements: new Map(),
+  };
   private readonly options: Required<SqliteStateStoreOptions>;
-  private readonly listeners: Set<StateChangeListener> = new Set();
-  private statements: Map<string, Statement> = new Map();
 
   constructor(options: Partial<SqliteStateStoreOptions> = {}) {
     this.options = { ...DEFAULT_OPTIONS, ...options };
+  }
+
+  // Backwards-compat private accessors — kept while rf-sqlite-3..6 still
+  // touch class-private state. Removed in rf-sqlite-7.
+  private get db(): Database | null {
+    return this.ctx.db;
+  }
+  private set db(value: Database | null) {
+    this.ctx.db = value;
+  }
+  private get listeners(): Set<StateChangeListener> {
+    return this.ctx.listeners;
+  }
+  private get statements(): Map<string, Statement> {
+    return this.ctx.statements;
   }
 
   // ---------------------------------------------------------------------------
@@ -153,163 +152,31 @@ export class SqliteStateStore implements ObservableStateStore {
   // ---------------------------------------------------------------------------
 
   async get_resource(graph_id: string, node_id: NodeId): Promise<Result<StoredResourceState | null, IceError>> {
-    try {
-      this.ensure_initialized();
-
-      const row = this.db!.prepare('SELECT * FROM resources WHERE graph_id = ? AND node_id = ?').get(
-        graph_id,
-        node_id,
-      ) as ResourceRow | undefined;
-
-      if (!row) {
-        return success(null);
-      }
-
-      return success(this.row_to_resource(row));
-    } catch (error) {
-      return this.wrap_error('get_resource', error);
-    }
+    return resources_get(this.ctx, graph_id, node_id);
   }
 
   async get_resources(graph_id: string): Promise<Result<StoredResourceState[], IceError>> {
-    try {
-      this.ensure_initialized();
-
-      const rows = this.db!.prepare('SELECT * FROM resources WHERE graph_id = ? ORDER BY name').all(
-        graph_id,
-      ) as ResourceRow[];
-
-      return success(rows.map((row) => this.row_to_resource(row)));
-    } catch (error) {
-      return this.wrap_error('get_resources', error);
-    }
+    return resources_get_all(this.ctx, graph_id);
   }
 
   async query_resources(query: ResourceQuery): Promise<Result<StoredResourceState[], IceError>> {
-    try {
-      this.ensure_initialized();
-
-      let sql = 'SELECT * FROM resources WHERE 1=1';
-      const params: unknown[] = [];
-
-      if (query.graph_id) {
-        sql += ' AND graph_id = ?';
-        params.push(query.graph_id);
-      }
-
-      if (query.ice_type) {
-        sql += ' AND ice_type = ?';
-        params.push(query.ice_type);
-      }
-
-      if (query.status) {
-        sql += ' AND status = ?';
-        params.push(query.status);
-      }
-
-      const order_by = query.order_by ?? 'created_at';
-      const order_dir = query.order_dir ?? 'desc';
-      sql += ` ORDER BY ${order_by} ${order_dir}`;
-
-      if (query.limit) {
-        sql += ' LIMIT ?';
-        params.push(query.limit);
-      }
-
-      if (query.offset) {
-        sql += ' OFFSET ?';
-        params.push(query.offset);
-      }
-
-      const rows = this.db!.prepare(sql).all(...params) as ResourceRow[];
-      return success(rows.map((row) => this.row_to_resource(row)));
-    } catch (error) {
-      return this.wrap_error('query_resources', error);
-    }
+    return resources_query(this.ctx, query);
   }
 
   async save_resource(resource: StoredResourceState): Promise<Result<void, IceError>> {
-    try {
-      this.ensure_initialized();
-
-      const stmt = this.statements.get('upsert_resource')!;
-      stmt.run(
-        resource.graph_id,
-        resource.node_id,
-        resource.ice_type,
-        resource.name,
-        JSON.stringify(resource.state),
-        resource.state.status,
-        resource.created_at,
-        new Date().toISOString(),
-        resource.version,
-      );
-
-      this.emit_event('resource_created', resource.graph_id, resource.node_id);
-      return success(undefined);
-    } catch (error) {
-      return this.wrap_error('save_resource', error);
-    }
+    return resources_save(this.ctx, resource);
   }
 
   async save_resources(resources: StoredResourceState[]): Promise<Result<void, IceError>> {
-    try {
-      this.ensure_initialized();
-
-      const stmt = this.statements.get('upsert_resource')!;
-      const now = new Date().toISOString();
-
-      const transaction = this.db!.transaction((items: StoredResourceState[]) => {
-        for (const resource of items) {
-          stmt.run(
-            resource.graph_id,
-            resource.node_id,
-            resource.ice_type,
-            resource.name,
-            JSON.stringify(resource.state),
-            resource.state.status,
-            resource.created_at,
-            now,
-            resource.version,
-          );
-        }
-      });
-
-      transaction(resources);
-
-      for (const resource of resources) {
-        this.emit_event('resource_created', resource.graph_id, resource.node_id);
-      }
-
-      return success(undefined);
-    } catch (error) {
-      return this.wrap_error('save_resources', error);
-    }
+    return resources_save_many(this.ctx, resources);
   }
 
   async delete_resource(graph_id: string, node_id: NodeId): Promise<Result<void, IceError>> {
-    try {
-      this.ensure_initialized();
-
-      this.db!.prepare('DELETE FROM resources WHERE graph_id = ? AND node_id = ?').run(graph_id, node_id);
-
-      this.emit_event('resource_deleted', graph_id, node_id);
-      return success(undefined);
-    } catch (error) {
-      return this.wrap_error('delete_resource', error);
-    }
+    return resources_delete(this.ctx, graph_id, node_id);
   }
 
   async delete_resources(graph_id: string): Promise<Result<number, IceError>> {
-    try {
-      this.ensure_initialized();
-
-      const result = this.db!.prepare('DELETE FROM resources WHERE graph_id = ?').run(graph_id);
-
-      return success(result.changes);
-    } catch (error) {
-      return this.wrap_error('delete_resources', error);
-    }
+    return resources_delete_all(this.ctx, graph_id);
   }
 
   // ---------------------------------------------------------------------------

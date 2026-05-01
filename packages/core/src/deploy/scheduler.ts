@@ -53,6 +53,7 @@ import type { DeployOptions, ProviderDeployer, ResourceDeployResult } from './ty
 
 export { DEFAULT_PER_HANDLER_CAPS, DEFAULT_POOL_SIZE } from './scheduler/types.js';
 export type { SchedulerPhase, SchedulerRunInput } from './scheduler/types.js';
+export { wrap_on_progress_for_node_progress } from './scheduler/progress-wrapper.js';
 
 /**
  * Run one phase of the parallel scheduler. Returns the per-node
@@ -179,47 +180,3 @@ export class ParallelChangeScheduler {
   }
 }
 
-/**
- * Wrap the host-supplied `on_progress` callback so that handler-level
- * `on_step` milestones (which arrive as `on_progress(resource, action,
- * 'step', { step })` from the GCPDeployer's step bridge) are forwarded
- * to the new `on_node_progress` channel. Pass-through for every other
- * status so existing service-layer behavior is preserved.
- *
- * The mapping `resource_name → node_id` is built from the changes
- * passed to the scheduler so the new channel carries the stable graph
- * id alongside the resource name.
- */
-export function wrap_on_progress_for_node_progress(
-  options: DeployOptions,
-  changes_by_resource_name: Map<string, ResourceChange>,
-): DeployOptions {
-  const original_progress = options.on_progress;
-  const node_progress = options.on_node_progress;
-  if (!node_progress && !original_progress) return options;
-
-  const wrapped: DeployOptions = {
-    ...options,
-    on_progress: (resource, action, status, extra) => {
-      // Forward step events to the new channel (in addition to
-      // delegating to the original callback for back-compat).
-      if (status === 'step' && extra?.step && node_progress) {
-        const change = changes_by_resource_name.get(resource);
-        if (change) {
-          try {
-            node_progress({
-              node_id: change.id,
-              resource_name: change.name,
-              step: extra.step,
-              at: new Date().toISOString(),
-            });
-          } catch {
-            // Host callback bugs must not break the deploy.
-          }
-        }
-      }
-      original_progress?.(resource, action, status, extra);
-    },
-  };
-  return wrapped;
-}

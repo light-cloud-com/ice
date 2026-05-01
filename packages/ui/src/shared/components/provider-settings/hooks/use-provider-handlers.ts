@@ -28,8 +28,11 @@ import { useGCPOAuth } from '../../../hooks/use-gcp-oauth';
 import { PROVIDER_CONFIGS } from '../data/provider-configs';
 import type { ProviderStatesMap } from '../types';
 
-/** Lightweight TFunction shim covering the i18n surface this hook uses. */
-export type TranslatorFn = (key: string, vars?: Record<string, unknown>) => string;
+/** Lightweight TFunction shim covering the i18n surface this hook uses.
+ *  Mirrors `useTranslation().t` from `../../i18n` (the concrete type is
+ *  `(key: string, variables?: Record<string, string | number>) => string`)
+ *  so the orchestrator can pass `t` straight through. */
+export type TranslatorFn = (key: string, vars?: Record<string, string | number>) => string;
 
 /** Public input contract for `useProviderHandlers`. */
 export interface UseProviderHandlersInput {

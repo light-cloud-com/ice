@@ -12,44 +12,9 @@ import {
   BUILD_MESSAGES,
 } from '../messages.js';
 import { ensure_artifact_registry, build_from_source } from './cloud-build-helper.js';
+import { result, fail, TYPE_SERVICE, TYPE_JOB } from './cloud-run/result-helpers.js';
 import type { ResourceDeployResult } from '../../../types.js';
 import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
-
-function result(
-  name: string,
-  type: string,
-  action: 'create' | 'update' | 'delete',
-  start: number,
-  overrides: Partial<ResourceDeployResult> = {},
-): ResourceDeployResult {
-  return {
-    resource_id: name,
-    name,
-    type,
-    action,
-    success: true,
-    duration_ms: Date.now() - start,
-    ...overrides,
-  };
-}
-
-function fail(
-  name: string,
-  type: string,
-  action: 'create' | 'update' | 'delete',
-  start: number,
-  error: string,
-): ResourceDeployResult {
-  return {
-    resource_id: name,
-    name,
-    type,
-    action,
-    success: false,
-    error,
-    duration_ms: Date.now() - start,
-  };
-}
 
 export const cloud_run_handler: GCPResourceHandler = {
   async create(name, properties, ctx) {

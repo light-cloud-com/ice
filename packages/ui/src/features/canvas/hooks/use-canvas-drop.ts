@@ -143,7 +143,6 @@ export function useCanvasDrop(args: UseCanvasDropArgs): UseCanvasDropResult {
             iceType,
             groupColor,
             behavior: 'container',
-            status: 'active',
             folded: false,
           },
         };
@@ -211,7 +210,6 @@ export function useCanvasDrop(args: UseCanvasDropArgs): UseCanvasDropResult {
         label,
         iceType,
         behavior: 'singleton',
-        status: 'active',
         folded: false,
         provider: deployProvider,
       };

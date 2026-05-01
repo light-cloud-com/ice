@@ -349,7 +349,6 @@ describe('groupSelectedNodes', () => {
     expect(group.data.label).toBe('New Group');
     expect(group.data.groupColor).toBe('#3b82f6');
     expect(group.data.behavior).toBe('container');
-    expect(group.data.status).toBe('active');
     expect(group.data.folded).toBe(false);
     expect(group.position.x).toBe(-30);
     expect(group.position.y).toBe(-20);

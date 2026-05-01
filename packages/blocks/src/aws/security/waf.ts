@@ -11,6 +11,5 @@ export const awsWafBlueprint: BlockBlueprint = {
   nodeData: {
     iceType: 'Security.WAF',
     behavior: 'singleton',
-    status: 'active',
   },
 };

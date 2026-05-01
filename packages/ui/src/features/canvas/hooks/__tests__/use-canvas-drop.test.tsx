@@ -255,7 +255,6 @@ describe('useCanvasDrop — group drop branch', () => {
         iceType: 'Group.AppGroup',
         groupColor: '#3b82f6',
         behavior: 'container',
-        status: 'active',
         folded: false,
       },
     });
@@ -511,7 +510,6 @@ describe('useCanvasDrop — resource drop branch', () => {
       data: {
         iceType: 'Compute.Vm',
         behavior: 'singleton',
-        status: 'active',
         folded: false,
         // pdl-11: resource drops default provider to the active deploy
         // provider (default 'gcp') so the deploy panel doesn't filter the

@@ -120,7 +120,6 @@ export const undoRedoGroupReducers = {
         iceType: 'Group.Custom',
         groupColor: '#3b82f6',
         behavior: 'container',
-        status: 'active',
         folded: false,
       },
     };

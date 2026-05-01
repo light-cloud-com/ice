@@ -1,8 +1,22 @@
 /**
- * Resource Palette Component
+ * Resource Palette orchestrator.
  *
- * Categorized infrastructure components with collapsible sections,
- * tooltips, and prominent category headers.
+ * Composes the project browser, the blocks section (`BlocksSection`), and
+ * the embedded template gallery into a vertically-resizable panel group.
+ * The orchestrator owns the cross-section state — search query, provider
+ * filter, project-provider lock, collapsed-category set, and mount flag —
+ * and forwards filter results to BlocksSection via props.
+ *
+ * Section / leaf splits (rf-rpal series):
+ *   - `../types.ts` — CategoryDef, ComponentDef, Provider, props (rf-rpal-1)
+ *   - `../data/categories.ts` — CATEGORY_DEFS / ORDER / MAP (rf-rpal-2)
+ *   - `../data/components.ts` — COMPONENTS, blockKey, def (rf-rpal-3)
+ *   - `../data/providers.ts` — PROVIDERS, STORAGE_KEY, load/saveCollapsed,
+ *     PALETTE_STYLES (rf-rpal-4)
+ *   - `./component-item.tsx` — ComponentItem (rf-rpal-5)
+ *   - `./draggable-group-item.tsx` — DraggableGroupItem + nextGroupColor
+ *     (rf-rpal-6)
+ *   - `../sections/blocks-section.tsx` — BlocksSection (rf-rpal-7)
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -20,23 +34,6 @@ import { COMPONENTS } from '../data/components';
 import { PALETTE_STYLES, loadCollapsed, saveCollapsed } from '../data/providers';
 import { BlocksSection } from '../sections/blocks-section';
 import type { CategoryDef, ComponentDef, Provider, ResourcePaletteProps } from '../types';
-
-// Category definitions live in `../data/categories.ts` (rf-rpal-2). They are
-// re-exported as `CATEGORY_DEFS`, `CATEGORY_ORDER`, and `CATEGORY_MAP` and
-// imported here below.
-
-// Component definitions live in `../data/components.ts` (rf-rpal-3).
-// nextGroupColor + DraggableGroupItem live in `./draggable-group-item.tsx`
-// (rf-rpal-6).
-
-// PROVIDERS, STORAGE_KEY, loadCollapsed, saveCollapsed and PALETTE_STYLES
-// live in `../data/providers.ts` (rf-rpal-4).
-
-// BlocksSection extracted to `../sections/blocks-section.tsx` (rf-rpal-7).
-
-// =============================================================================
-// Main Component
-// =============================================================================
 
 export type { ResourcePaletteProps } from '../types';
 
@@ -221,6 +218,3 @@ export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
   );
 };
 
-// ComponentItem extracted to `./component-item.tsx` (rf-rpal-5).
-
-// DraggableGroupItem extracted to `./draggable-group-item.tsx` (rf-rpal-6).

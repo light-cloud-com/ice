@@ -55,12 +55,12 @@ import React, { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { useTranslation } from '../../../../i18n';
 import { PanelHeader } from '../../../../shared/components/ui/panel-header';
-import { cn } from '../../../../shared/utils/cn';
 import { DesignRequirements } from '../design-requirements';
 import { Section } from '../fields';
 import { PropertyFields } from '../fields/render-property-field';
 import { ConnectionCard } from './connection-card';
 import { CustomDomainBanner } from './custom-domain-banner';
+import { PropertiesTabBar } from './properties-tab-bar';
 import { CustomDomainPanel } from './custom-domain-panel';
 import { DeployHistory } from './deploy-history';
 import { PublicEndpointDomainSection } from './domain-section';
@@ -87,6 +87,7 @@ import {
   nodeHasSourceTab,
   resolveNodeIconUrl,
 } from '../../utils/node-properties-derivations';
+import { buildVisibleTabs } from '../../utils/build-visible-tabs';
 
 // ─── Node Properties Section ────────────────────────────────────────────────
 
@@ -190,61 +191,25 @@ export const NodePropertiesSection: React.FC<{
         const hasSource = nodeHasSourceTab(iceType);
         const activeTab = propsTab;
 
-        // Tabs are derived from the node's actual content — not hardcoded
-        const tabs: Array<{ id: string; label: string; show: boolean; dot?: boolean }> = [];
-        if (
-          dbProperties.length > 0 ||
-          iceType === 'Config.Environment' ||
-          iceType === 'Network.PublicEndpoint' ||
-          iceType === 'Network.CustomDomain'
-        ) {
-          tabs.push({ id: 'config', label: t('properties.tabs.config'), show: true });
-        }
-        if (isScalable) {
-          tabs.push({ id: 'scaling', label: t('properties.tabs.scaling'), show: true });
-        }
-        if (iceType === 'Network.PublicEndpoint' || iceType === 'Network.CustomDomain') {
-          tabs.push({ id: 'domain', label: t('properties.tabs.domain'), show: true });
-        }
-        if (hasSource || iceType === 'Source.Repository') {
-          tabs.push({ id: 'source', label: t('properties.tabs.source'), show: true });
-        }
-        if (incomingEdges.length > 0 || outgoingEdges.length > 0) {
-          tabs.push({ id: 'connections', label: t('properties.tabs.connections'), show: true });
-        }
-        if (hasDeployment) {
-          tabs.push({ id: 'deploy', label: t('properties.tabs.deploy'), show: true, dot: true });
-        }
-        const visibleTabs = tabs.filter((t) => t.show);
-        // Fall back to first tab if current tab doesn't exist
-        if (visibleTabs.length > 0 && !visibleTabs.some((t) => t.id === activeTab)) {
+        const visibleTabs = buildVisibleTabs({
+          iceType,
+          dbPropertiesCount: dbProperties.length,
+          isScalable,
+          hasSource,
+          hasDeployment,
+          incomingEdgesCount: incomingEdges.length,
+          outgoingEdgesCount: outgoingEdges.length,
+          t,
+        });
+        // BEHAVIOR-RISK FLAG #2 — fall back to first tab if current tab doesn't
+        // exist. Stays at the EXACT JSX position the original orchestrator had it.
+        if (visibleTabs.length > 0 && !visibleTabs.some((tt) => tt.id === activeTab)) {
           setPropsTab(visibleTabs[0].id);
         }
 
         return (
           <>
-            {/* Tab bar — always shown when >1 tab */}
-            {visibleTabs.length > 1 && (
-              <div className="flex border-b border-ice-border shrink-0">
-                {visibleTabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setPropsTab(tab.id)}
-                    className={cn(
-                      'flex-1 px-3 py-2 text-ice-xs font-medium transition-colors flex items-center justify-center gap-1.5',
-                      activeTab === tab.id
-                        ? tab.id === 'deploy'
-                          ? 'text-ice-text-1 border-b-2 border-emerald-500'
-                          : 'text-ice-text-1 border-b-2 border-ice-accent'
-                        : 'text-ice-text-3 hover:text-ice-text-2',
-                    )}
-                  >
-                    {tab.dot && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-            )}
+            <PropertiesTabBar visibleTabs={visibleTabs} activeTab={activeTab} onSelect={setPropsTab} />
 
             {/* ════ DEPLOY TAB ════ */}
             {activeTab === 'deploy' && hasDeployment && (

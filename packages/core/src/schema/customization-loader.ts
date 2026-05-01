@@ -8,6 +8,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { get_base_db_path as resolve_base_db_path } from './customization/base-db.js';
 import { create_example_files } from './customization/example-files.js';
 import {
   validate_custom_resource_file,
@@ -22,6 +23,7 @@ import {
   PROVIDERS_SUBDIR,
   RELATIONSHIPS_SUBDIR,
 } from './customization/paths.js';
+import { scan_directory } from './customization/scanner.js';
 
 // ============================================================================
 // Types (re-exported from customization/* so external consumers continue
@@ -35,6 +37,8 @@ import type {
   CustomizationError,
   ValidationWarning,
 } from './customization/file-validators.js';
+export type { CustomizationFile } from './customization/scanner.js';
+import type { CustomizationFile } from './customization/scanner.js';
 
 export interface CustomizationSummary {
   base_path: string;
@@ -43,13 +47,6 @@ export interface CustomizationSummary {
   overrides: CustomizationFile[];
   custom_resources: CustomizationFile[];
   relationships: CustomizationFile[];
-}
-
-export interface CustomizationFile {
-  name: string;
-  path: string;
-  size: number;
-  modified: Date;
 }
 
 export interface CustomizationValidation {
@@ -101,10 +98,10 @@ export class CustomizationLoader {
     return {
       base_path: this.base_path,
       has_customizations: this.has_customizations(),
-      providers: this.scan_directory(paths.providers_dir, ['.json']),
-      overrides: this.scan_directory(paths.overrides_dir, ['.yaml', '.yml']),
-      custom_resources: this.scan_directory(paths.custom_dir, ['.yaml', '.yml']),
-      relationships: this.scan_directory(paths.relationships_dir, ['.yaml', '.yml']),
+      providers: scan_directory(paths.providers_dir, ['.json']),
+      overrides: scan_directory(paths.overrides_dir, ['.yaml', '.yml']),
+      custom_resources: scan_directory(paths.custom_dir, ['.yaml', '.yml']),
+      relationships: scan_directory(paths.relationships_dir, ['.yaml', '.yml']),
     };
   }
 
@@ -182,45 +179,6 @@ export class CustomizationLoader {
     return fs.existsSync(this.get_project_db_path());
   }
 
-  // ========================================================================
-  // Private Methods
-  // ========================================================================
-
-  private scan_directory(dir: string, extensions: string[]): CustomizationFile[] {
-    if (!fs.existsSync(dir)) {
-      return [];
-    }
-
-    const files: CustomizationFile[] = [];
-
-    try {
-      const entries = fs.readdirSync(dir);
-
-      for (const entry of entries) {
-        const ext = path.extname(entry).toLowerCase();
-        if (!extensions.includes(ext)) {
-          continue;
-        }
-
-        const file_path = path.join(dir, entry);
-        const stats = fs.statSync(file_path);
-
-        if (stats.isFile()) {
-          files.push({
-            name: entry,
-            path: file_path,
-            size: stats.size,
-            modified: stats.mtime,
-          });
-        }
-      }
-    } catch {
-      // Directory doesn't exist or can't be read
-    }
-
-    return files;
-  }
-
 }
 
 // ============================================================================
@@ -236,26 +194,11 @@ export function create_customization_loader(project_root?: string): Customizatio
 
 /**
  * Get the bundled base database path.
+ *
+ * Re-exports the implementation from `customization/base-db.js`. Kept on
+ * the orchestrator file so external `import { get_base_db_path } from
+ * '@ice/core/schema/customization-loader'` callers are unaffected.
  */
 export function get_base_db_path(): string {
-  // Try to find the base database from the schemas package
-  const possible_paths = [
-    // In development (relative to packages/core)
-    path.join(__dirname, '..', '..', '..', '..', 'schemas', 'data', 'ice-schemas.db'),
-    // When installed as a package
-    require.resolve('@ice-engine/schemas/data/ice-schemas.db').replace('/index.js', '/data/ice-schemas.db'),
-  ];
-
-  for (const p of possible_paths) {
-    try {
-      if (fs.existsSync(p)) {
-        return p;
-      }
-    } catch {
-      // Continue to next path
-    }
-  }
-
-  // Default path (may not exist)
-  return path.join(__dirname, '..', '..', '..', '..', 'schemas', 'data', 'ice-schemas.db');
+  return resolve_base_db_path();
 }

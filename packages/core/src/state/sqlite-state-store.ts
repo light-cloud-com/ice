@@ -24,6 +24,13 @@ import {
   locks_get,
 } from './sqlite/locks.js';
 import {
+  snapshots_create,
+  snapshots_get,
+  snapshots_list,
+  snapshots_restore,
+  snapshots_delete,
+} from './sqlite/snapshots.js';
+import {
   resources_get,
   resources_get_all,
   resources_query,
@@ -256,123 +263,23 @@ export class SqliteStateStore implements ObservableStateStore {
   // ---------------------------------------------------------------------------
 
   async create_snapshot(graph_id: string, description?: string): Promise<Result<StateSnapshot, IceError>> {
-    try {
-      this.ensure_initialized();
-
-      const snapshot_id = `snap_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-      const created_at = new Date().toISOString();
-
-      const transaction = this.db!.transaction(() => {
-        // Get all resources
-        const resources = this.db!.prepare('SELECT * FROM resources WHERE graph_id = ?').all(graph_id) as ResourceRow[];
-
-        // Insert snapshot
-        this.db!.prepare(
-          `
-            INSERT INTO snapshots (id, graph_id, created_at, description, resource_data)
-            VALUES (?, ?, ?, ?, ?)
-          `,
-        ).run(snapshot_id, graph_id, created_at, description ?? null, JSON.stringify(resources));
-
-        return {
-          id: snapshot_id,
-          graph_id,
-          created_at,
-          description,
-          resources: resources.map((r) => this.row_to_resource(r)),
-        } as StateSnapshot;
-      });
-
-      const snapshot = transaction();
-      this.emit_event('snapshot_created', graph_id);
-      return success(snapshot);
-    } catch (error) {
-      return this.wrap_error('create_snapshot', error);
-    }
+    return snapshots_create(this.ctx, graph_id, description);
   }
 
   async get_snapshot(id: string): Promise<Result<StateSnapshot | null, IceError>> {
-    try {
-      this.ensure_initialized();
-
-      const row = this.db!.prepare('SELECT * FROM snapshots WHERE id = ?').get(id) as SnapshotRow | undefined;
-
-      if (!row) {
-        return success(null);
-      }
-
-      return success(this.row_to_snapshot(row));
-    } catch (error) {
-      return this.wrap_error('get_snapshot', error);
-    }
+    return snapshots_get(this.ctx, id);
   }
 
   async list_snapshots(graph_id: string): Promise<Result<StateSnapshot[], IceError>> {
-    try {
-      this.ensure_initialized();
-
-      const rows = this.db!.prepare('SELECT * FROM snapshots WHERE graph_id = ? ORDER BY created_at DESC').all(
-        graph_id,
-      ) as SnapshotRow[];
-
-      return success(rows.map((row) => this.row_to_snapshot(row)));
-    } catch (error) {
-      return this.wrap_error('list_snapshots', error);
-    }
+    return snapshots_list(this.ctx, graph_id);
   }
 
   async restore_snapshot(id: string): Promise<Result<void, IceError>> {
-    try {
-      this.ensure_initialized();
-
-      const transaction = this.db!.transaction(() => {
-        const snapshot = this.db!.prepare('SELECT * FROM snapshots WHERE id = ?').get(id) as SnapshotRow | undefined;
-
-        if (!snapshot) {
-          throw new Error(`Snapshot not found: ${id}`);
-        }
-
-        const resources = JSON.parse(snapshot.resource_data) as ResourceRow[];
-
-        // Delete current resources
-        this.db!.prepare('DELETE FROM resources WHERE graph_id = ?').run(snapshot.graph_id);
-
-        // Restore resources from snapshot
-        const stmt = this.statements.get('upsert_resource')!;
-        for (const resource of resources) {
-          stmt.run(
-            resource.graph_id,
-            resource.node_id,
-            resource.ice_type,
-            resource.name,
-            resource.state_json,
-            resource.status,
-            resource.created_at,
-            resource.updated_at,
-            resource.version,
-          );
-        }
-
-        return snapshot.graph_id;
-      });
-
-      const graph_id = transaction();
-      this.emit_event('snapshot_restored', graph_id);
-      return success(undefined);
-    } catch (error) {
-      return this.wrap_error('restore_snapshot', error);
-    }
+    return snapshots_restore(this.ctx, id);
   }
 
   async delete_snapshot(id: string): Promise<Result<void, IceError>> {
-    try {
-      this.ensure_initialized();
-
-      this.db!.prepare('DELETE FROM snapshots WHERE id = ?').run(id);
-      return success(undefined);
-    } catch (error) {
-      return this.wrap_error('delete_snapshot', error);
-    }
+    return snapshots_delete(this.ctx, id);
   }
 
   // ---------------------------------------------------------------------------

@@ -29,11 +29,11 @@ import {
 } from 'lucide-react';
 import React from 'react';
 
-import { getApi } from '../../../api/api-adapter';
 import { cn } from '../../../utils/cn';
 import type { TranslatorFn } from '../hooks/use-provider-handlers';
 import type { ProviderConfig, ProviderRuntimeState, ProviderStatesMap } from '../types';
 import { openExternalLink } from '../utils/open-external-link';
+import { AddProjectForm } from './add-project-form';
 
 export interface ProviderCardProps {
   provider: ProviderConfig;
@@ -152,93 +152,18 @@ export const ProviderCard: React.FC<ProviderCardProps> = ({
 
               {/* Add project form for GCP */}
               {showAddProject === provider.id && provider.id === 'gcp' && (
-                <div className="p-3 bg-muted/50 rounded-md space-y-2 border border-dashed border-border">
-                  <div className="text-xs font-medium text-muted-foreground">
-                    {t('providerSettings.projects.addAnother')}
-                  </div>
-                  {provider.configFields.map((field) => (
-                    <div key={field.name}>
-                      <label className="text-xs text-muted-foreground">{field.label}</label>
-                      {field.type === 'textarea' ? (
-                        <textarea
-                          value={state.formValues[`new_${field.name}`] || ''}
-                          onChange={(e) =>
-                            onUpdateFormValue(provider.id, `new_${field.name}`, e.target.value)
-                          }
-                          placeholder={field.placeholder}
-                          rows={3}
-                          className="w-full mt-1 p-2 text-xs border border-input rounded-md bg-background font-mono"
-                        />
-                      ) : (
-                        <input
-                          type={field.type}
-                          value={state.formValues[`new_${field.name}`] || ''}
-                          onChange={(e) =>
-                            onUpdateFormValue(provider.id, `new_${field.name}`, e.target.value)
-                          }
-                          placeholder={field.placeholder}
-                          className="w-full mt-1 p-2 text-xs border border-input rounded-md bg-background"
-                        />
-                      )}
-                    </div>
-                  ))}
-                  <div className="flex gap-2 pt-1">
-                    <button
-                      onClick={async () => {
-                        const newCreds = {
-                          projectId: state.formValues.new_projectId || '',
-                          serviceAccountKey: state.formValues.new_serviceAccountKey || '',
-                        };
-                        if (!newCreds.serviceAccountKey) {
-                          setError(t('providerSettings.connect.serviceAccountRequired'));
-                          return;
-                        }
-                        setConnecting(provider.id);
-                        try {
-                          const result = await getApi().provider.connect(provider.id, newCreds);
-                          if (result.success && result.projects) {
-                            // Add new projects to existing list
-                            setProviderStates((prev) => ({
-                              ...prev,
-                              [provider.id]: {
-                                ...prev[provider.id],
-                                projects: [...prev[provider.id].projects, ...result.projects],
-                                formValues: {
-                                  ...prev[provider.id].formValues,
-                                  new_projectId: '',
-                                  new_serviceAccountKey: '',
-                                },
-                              },
-                            }));
-                            onShowAddProjectChange(null);
-                            setSuccess(t('providerSettings.projects.addedSuccess'));
-                          } else {
-                            setError(result.error || t('providerSettings.connect.failedToAdd'));
-                          }
-                        } catch (err) {
-                          setError(String(err));
-                        } finally {
-                          setConnecting(null);
-                        }
-                      }}
-                      disabled={connecting === provider.id}
-                      className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-xs rounded bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-                    >
-                      {connecting === provider.id ? (
-                        <RefreshCw className="w-3 h-3 animate-spin" />
-                      ) : (
-                        <Plus className="w-3 h-3" />
-                      )}
-                      {t('providerSettings.projects.addButton')}
-                    </button>
-                    <button
-                      onClick={() => onShowAddProjectChange(null)}
-                      className="px-3 py-1.5 text-xs rounded hover:bg-muted"
-                    >
-                      {t('providerSettings.projects.cancelButton')}
-                    </button>
-                  </div>
-                </div>
+                <AddProjectForm
+                  provider={provider}
+                  state={state}
+                  connecting={connecting}
+                  t={t}
+                  onUpdateFormValue={onUpdateFormValue}
+                  onShowAddProjectChange={onShowAddProjectChange}
+                  setProviderStates={setProviderStates}
+                  setError={setError}
+                  setSuccess={setSuccess}
+                  setConnecting={setConnecting}
+                />
               )}
 
               {state.projects.length > 0 ? (

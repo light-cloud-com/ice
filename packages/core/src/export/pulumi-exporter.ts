@@ -16,6 +16,11 @@ import {
   get_package_name,
   parse_resource_type,
 } from './pulumi/type-mapping.js';
+import {
+  build_options,
+  map_properties,
+  transform_value,
+} from './pulumi/value-transform.js';
 import type { MutableGraph } from '../graph/mutable-graph.js';
 import type { IceType } from '../schema/schema-provider.js';
 import type { Node } from '../types/graph.js';
@@ -157,8 +162,8 @@ export class PulumiExporter {
           resource: {
             type: fallback,
             name: sanitize_name(node.name),
-            properties: this.mapProperties(node.properties || {}),
-            options: this.buildOptions(dependency_map.get(node.id) || []),
+            properties: map_properties(node.properties || {}),
+            options: build_options(dependency_map.get(node.id) || []),
           },
         };
       }
@@ -177,62 +182,10 @@ export class PulumiExporter {
       resource: {
         type: pulumi_type,
         name: sanitize_name(node.name),
-        properties: this.mapProperties(node.properties || {}),
-        options: this.buildOptions(dependency_map.get(node.id) || []),
+        properties: map_properties(node.properties || {}),
+        options: build_options(dependency_map.get(node.id) || []),
       },
     };
-  }
-
-  /**
-   * Build resource options.
-   */
-  private buildOptions(deps: string[]): PulumiResourceOptions | undefined {
-    if (deps.length === 0) return undefined;
-
-    return {
-      depends_on: deps,
-    };
-  }
-
-  /**
-   * Map ICE properties to Pulumi properties.
-   */
-  private mapProperties(properties: Record<string, unknown>): Record<string, unknown> {
-    const result: Record<string, unknown> = {};
-
-    for (const [key, value] of Object.entries(properties)) {
-      // Skip internal properties (starting with _)
-      if (key.startsWith('_')) continue;
-
-      // Convert property names to camelCase (Pulumi convention)
-      const pulumi_key = to_camel_case(key);
-      result[pulumi_key] = this.transformValue(value);
-    }
-
-    return result;
-  }
-
-  /**
-   * Transform a value for Pulumi output.
-   */
-  private transformValue(value: unknown): unknown {
-    if (value === null || value === undefined) {
-      return null;
-    }
-
-    if (Array.isArray(value)) {
-      return value.map((v) => this.transformValue(v));
-    }
-
-    if (typeof value === 'object') {
-      const result: Record<string, unknown> = {};
-      for (const [k, v] of Object.entries(value)) {
-        result[to_camel_case(k)] = this.transformValue(v);
-      }
-      return result;
-    }
-
-    return value;
   }
 
   /**

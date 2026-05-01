@@ -4,21 +4,24 @@
  * Handles: gcp.run.service, gcp.run.job
  */
 
-import { SERVICE_NAMES, sdk_not_available, sdk_not_available_short } from '../messages.js';
-import { resolve_image, deleteArtifactRegistryImagesForService } from './cloud-run/image-resolver.js';
-import { result, fail, TYPE_SERVICE, TYPE_JOB } from './cloud-run/result-helpers.js';
+import { SERVICE_NAMES, sdk_not_available_short } from '../messages.js';
+import { create_job } from './cloud-run/create-job.js';
+import { create_service } from './cloud-run/create-service.js';
+import { grant_public_access } from './cloud-run/iam.js';
+import { deleteArtifactRegistryImagesForService, resolve_image } from './cloud-run/image-resolver.js';
+import { fail, result, TYPE_JOB, TYPE_SERVICE } from './cloud-run/result-helpers.js';
 import { build_env_vars, extract_region, fetch_service_outputs } from './cloud-run/utils.js';
-import type { ResourceDeployResult } from '../../../types.js';
-import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
+import type { GCPResourceHandler } from '../types.js';
 
 export const cloud_run_handler: GCPResourceHandler = {
   async create(name, properties, ctx) {
     const start = Date.now();
-    const type = properties.max_retries !== undefined ? 'gcp.run.job' : 'gcp.run.service';
+    const is_job = properties.max_retries !== undefined;
+    const type = is_job ? TYPE_JOB : TYPE_SERVICE;
     const region = (properties.region as string) || ctx.region;
 
     try {
-      if (type === 'gcp.run.job') {
+      if (is_job) {
         return await create_job(name, properties, region, ctx, start);
       }
       return await create_service(name, properties, region, ctx, start);
@@ -30,7 +33,7 @@ export const cloud_run_handler: GCPResourceHandler = {
   async update(name, provider_id, properties, _current, ctx) {
     const start = Date.now();
     const is_job = provider_id.includes('/jobs/');
-    const type = is_job ? 'gcp.run.job' : 'gcp.run.service';
+    const type = is_job ? TYPE_JOB : TYPE_SERVICE;
     const region = extract_region(provider_id) || ctx.region;
 
     try {
@@ -108,20 +111,7 @@ export const cloud_run_handler: GCPResourceHandler = {
         const outputs = await fetch_service_outputs(ctx, provider_id, properties, image);
 
         // Set IAM policy for public access if allow_unauthenticated is enabled (ENGINE-18)
-        if (properties.allow_unauthenticated !== false && provider_id) {
-          try {
-            const iamUrl = `https://run.googleapis.com/v2/${provider_id}:setIamPolicy`;
-            await ctx.rest_client.post(iamUrl, {
-              policy: {
-                bindings: [{ role: 'roles/run.invoker', members: ['allUsers'] }],
-              },
-            });
-            ctx.on_log?.('Set public access (allUsers invoker)');
-          } catch (iamErr: any) {
-            ctx.on_log?.(`Warning: Could not set public access: ${iamErr.message || iamErr}`);
-            // Non-fatal — service is deployed but may not be publicly accessible
-          }
-        }
+        await grant_public_access(ctx, provider_id, properties);
 
         return result(name, type, 'update', start, { provider_id, outputs });
       }
@@ -133,7 +123,7 @@ export const cloud_run_handler: GCPResourceHandler = {
   async delete(name, provider_id, ctx) {
     const start = Date.now();
     const is_job = provider_id.includes('/jobs/');
-    const type = is_job ? 'gcp.run.job' : 'gcp.run.service';
+    const type = is_job ? TYPE_JOB : TYPE_SERVICE;
     const region = extract_region(provider_id) || ctx.region;
 
     try {
@@ -226,150 +216,4 @@ export const cloud_run_handler: GCPResourceHandler = {
     }
   },
 };
-
-// =============================================================================
-// Per-method helpers
-// =============================================================================
-
-async function create_service(
-  name: string,
-  properties: Record<string, unknown>,
-  region: string,
-  ctx: GCPHandlerContext,
-  start: number,
-): Promise<ResourceDeployResult> {
-  const services_client = ctx.clients.get('run.services') as any;
-  if (!services_client)
-    return fail(name, 'gcp.run.service', 'create', start, sdk_not_available(SERVICE_NAMES.CLOUD_RUN, 'run.services'));
-
-  // Outer milestones for the cloud-run create. When a repository is wired,
-  // the slow path is steps 1-2 (artifact registry + build). When an explicit
-  // image is provided, those steps no-op and the user goes straight to step
-  // 3 (deploying the revision). Total stays at 4 in both cases — the build
-  // helper's sub-states refresh the label at index 2.
-  const TOTAL_STEPS = 4;
-  const reportStep = (index: number, label: string) => {
-    ctx.on_step?.(name, { label, index, total: TOTAL_STEPS });
-  };
-
-  let image: string;
-  try {
-    image = await resolve_image(name, properties, region, ctx, ctx.on_log, reportStep);
-  } catch (err) {
-    return fail(name, 'gcp.run.service', 'create', start, err instanceof Error ? err.message : String(err));
-  }
-
-  // invokerIamDisabled: Cloud Run v2 service property (schema: Cloud.Cloudrunv2service)
-  // Disables IAM permission check for run.routes.invoke — makes the URL publicly reachable
-  // without a separate setIamPolicy call.
-  const invokerIamDisabled = properties.allow_unauthenticated !== false;
-
-  reportStep(3, 'Deploying revision');
-  const [operation] = await services_client.createService({
-    parent: `projects/${ctx.project}/locations/${region}`,
-    serviceId: name,
-    service: {
-      invokerIamDisabled,
-      template: {
-        containers: [
-          {
-            image,
-            ports: [{ containerPort: properties.port || 8080 }],
-            env: build_env_vars(properties.env_vars),
-            resources: {
-              limits: { cpu: properties.cpu || '1', memory: properties.memory || '512Mi' },
-            },
-          },
-        ],
-        scaling: {
-          minInstanceCount: properties.min_instances ?? 0,
-          maxInstanceCount: properties.max_instances ?? 3,
-        },
-      },
-      labels: properties.labels as Record<string, string>,
-    },
-  });
-  reportStep(4, 'Waiting for revision to serve traffic');
-  await operation.promise();
-
-  const provider_id = `projects/${ctx.project}/locations/${region}/services/${name}`;
-
-  const outputs = await fetch_service_outputs(ctx, provider_id, properties, image);
-
-  // Set IAM policy for public access if allow_unauthenticated is enabled (ENGINE-18)
-  if (properties.allow_unauthenticated !== false && provider_id) {
-    try {
-      const iamUrl = `https://run.googleapis.com/v2/${provider_id}:setIamPolicy`;
-      await ctx.rest_client.post(iamUrl, {
-        policy: {
-          bindings: [{ role: 'roles/run.invoker', members: ['allUsers'] }],
-        },
-      });
-      ctx.on_log?.('Set public access (allUsers invoker)');
-    } catch (iamErr: any) {
-      ctx.on_log?.(`Warning: Could not set public access: ${iamErr.message || iamErr}`);
-      // Non-fatal — service is deployed but may not be publicly accessible
-    }
-  }
-
-  return result(name, 'gcp.run.service', 'create', start, { provider_id, outputs });
-}
-
-async function create_job(
-  name: string,
-  properties: Record<string, unknown>,
-  region: string,
-  ctx: GCPHandlerContext,
-  start: number,
-): Promise<ResourceDeployResult> {
-  const jobs_client = ctx.clients.get('run.jobs') as any;
-  if (!jobs_client)
-    return fail(name, 'gcp.run.job', 'create', start, sdk_not_available(SERVICE_NAMES.CLOUD_RUN_JOBS, 'run.jobs'));
-
-  // Same milestone shape as create_service: AR + build = steps 1-2, deploy
-  // = step 3, wait = step 4.
-  const TOTAL_STEPS = 4;
-  const reportStep = (index: number, label: string) => {
-    ctx.on_step?.(name, { label, index, total: TOTAL_STEPS });
-  };
-
-  let image: string;
-  try {
-    image = await resolve_image(name, properties, region, ctx, ctx.on_log, reportStep);
-  } catch (err) {
-    return fail(name, 'gcp.run.job', 'create', start, err instanceof Error ? err.message : String(err));
-  }
-
-  reportStep(3, 'Deploying job');
-  const [operation] = await jobs_client.createJob({
-    parent: `projects/${ctx.project}/locations/${region}`,
-    jobId: name,
-    job: {
-      template: {
-        template: {
-          containers: [
-            {
-              image,
-              env: build_env_vars(properties.env_vars),
-              resources: {
-                limits: { cpu: properties.cpu || '1', memory: properties.memory || '512Mi' },
-              },
-            },
-          ],
-          maxRetries: properties.max_retries ?? 3,
-          timeout: properties.timeout || '600s',
-        },
-      },
-      labels: properties.labels as Record<string, string>,
-    },
-  });
-  reportStep(4, 'Waiting for job to be ready');
-  await operation.promise();
-
-  const provider_id = `projects/${ctx.project}/locations/${region}/jobs/${name}`;
-  return result(name, 'gcp.run.job', 'create', start, {
-    provider_id,
-    outputs: { deployed_image: image },
-  });
-}
 

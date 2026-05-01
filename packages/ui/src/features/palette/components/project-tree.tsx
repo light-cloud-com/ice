@@ -21,12 +21,10 @@ import {
   Check,
   X,
   Layers,
-  Loader2,
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { TREE_INDENT_PX, TREE_INDENT_BASE } from '../../../config/canvas-constants';
-import { ENV_DOT_COLORS } from '../../../config/color-palette';
 import { useTranslation } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
 import {
@@ -48,9 +46,7 @@ import type { AppDispatch, RootState } from '../../../store';
 import { useTreeDrag } from '../hooks/use-tree-drag';
 import { useTreeEffects } from '../hooks/use-tree-effects';
 import { useTreeHandlers } from '../hooks/use-tree-handlers';
-
-// Environment type → dot color
-const ENV_DOT_COLOR = ENV_DOT_COLORS;
+import { EnvironmentRow } from './environment-row';
 
 // =============================================================================
 // Context Menu
@@ -134,35 +130,19 @@ export const ProjectTree: React.FC = () => {
 
   // ── Renderers ─────────────────────────────────────────────────────────────
 
-  const renderEnvironment = (env: Environment, project: Project, depth: number) => {
-    const isActiveEnv = activeEnvId === env.id && activeProjectId === project.id;
-    const dotColor = ENV_DOT_COLOR[env.type] || 'bg-gray-500';
-    const isDeploying = deployingCardId === env.cardId && (deployStatus === 'deploying' || deployStatus === 'planning');
-    const isDeployFailed = deployingCardId === env.cardId && deployStatus === 'error';
-
-    return (
-      <div
-        key={env.id}
-        onClick={(e) => handleEnvClick(e, project, env)}
-        className={cn(
-          'flex items-center gap-2 px-2 py-1 cursor-pointer rounded-md mx-1 transition-colors',
-          isActiveEnv ? 'bg-blue-500/10 text-ice-text-1' : 'text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-2',
-          isDeploying && 'bg-blue-500/20 ring-1 ring-blue-500/40 animate-pulse',
-          isDeployFailed && 'bg-red-500/10 ring-1 ring-red-500/40',
-        )}
-        style={{ paddingLeft: `calc(${depth * TREE_INDENT_PX + TREE_INDENT_BASE}px * var(--ice-space-scale, 1))` }}
-        title={isDeploying ? 'Deploying…' : isDeployFailed ? 'Last deploy failed' : undefined}
-      >
-        {isDeploying ? (
-          <Loader2 className="w-3 h-3 shrink-0 text-blue-400 animate-spin" />
-        ) : (
-          <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', dotColor)} />
-        )}
-        <span className="text-ice-sm truncate">{env.name}</span>
-        <span className="text-ice-2xs text-ice-text-3 ml-auto shrink-0">{isDeploying ? 'deploying' : env.region}</span>
-      </div>
-    );
-  };
+  const renderEnvironment = (env: Environment, project: Project, depth: number) => (
+    <EnvironmentRow
+      key={env.id}
+      env={env}
+      project={project}
+      depth={depth}
+      activeEnvId={activeEnvId}
+      activeProjectId={activeProjectId}
+      deployingCardId={deployingCardId}
+      deployStatus={deployStatus}
+      onClick={handleEnvClick}
+    />
+  );
 
   const renderProject = (project: Project, depth: number) => {
     const isActive = project.id === activeProjectId;

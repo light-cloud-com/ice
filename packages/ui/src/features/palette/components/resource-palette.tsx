@@ -46,18 +46,11 @@ import { useResolvePath } from '../../../shared/hooks/use-resolve-path';
 import { cn } from '../../../shared/utils/cn';
 import { ProjectBrowser } from '../../project-browser';
 import { TemplateCategoriesPanel } from '../../templates/components/template-categories-panel';
+import type { CategoryDef, ComponentDef, Provider, ResourcePaletteProps, RuntimeOption } from '../types';
 
 // =============================================================================
 // Category definitions with metadata
 // =============================================================================
-
-interface CategoryDef {
-  id: string;
-  label: string;
-  icon: React.ElementType;
-  color: string;
-  tooltip: string;
-}
 
 const CATEGORY_DEFS: CategoryDef[] = [
   {
@@ -166,23 +159,6 @@ const CATEGORY_MAP = new Map(CATEGORY_DEFS.map((c) => [c.id, c]));
 // =============================================================================
 // Component definitions
 // =============================================================================
-
-interface RuntimeOption {
-  label: string;
-  value: string;
-  icon?: string;
-}
-
-interface ComponentDef {
-  type: string;
-  name: string;
-  description: string;
-  tooltip: string;
-  icon: React.ElementType;
-  providers: ('aws' | 'gcp' | 'azure' | 'kubernetes' | 'alibaba' | 'oci' | 'digitalocean')[];
-  category: string;
-  runtimes?: RuntimeOption[];
-}
 
 /** Convert "Compute.Container" → "computeContainer" for block translation keys */
 function blockKey(type: string): string {
@@ -304,8 +280,6 @@ function nextGroupColor(): string {
 // =============================================================================
 // Provider filter
 // =============================================================================
-
-type Provider = 'aws' | 'gcp' | 'azure';
 
 const PROVIDERS: { id: string; label: string; color?: string }[] = [
   { id: 'all', label: translate('palette.providerAll') },
@@ -566,11 +540,7 @@ const BlocksSection: React.FC<BlocksSectionProps> = ({
 // Main Component
 // =============================================================================
 
-export interface ResourcePaletteProps {
-  showProjectSection?: boolean;
-  showBlocksSection?: boolean;
-  showTemplatesSection?: boolean;
-}
+export type { ResourcePaletteProps } from '../types';
 
 export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
   showProjectSection = true,

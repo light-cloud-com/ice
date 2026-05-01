@@ -11,17 +11,8 @@
 
 import {
   Rocket,
-  Brain,
-  BrainCircuit,
-  ShieldCheck,
   Zap,
-  Server,
-  Activity,
-  Globe,
   ArrowLeft,
-  Waypoints,
-  ShoppingCart,
-  Smartphone,
   GitBranch,
   LayoutTemplate,
   ChevronRight,
@@ -30,14 +21,6 @@ import {
   Cable,
   Layers,
   Plus,
-  Heart,
-  Landmark,
-  Play,
-  Cloud,
-  Cpu,
-  Gamepad2,
-  Truck,
-  GraduationCap,
 } from 'lucide-react';
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -60,35 +43,9 @@ import { cn } from '../../../shared/utils/cn';
 import { toSlug } from '../../../shared/utils/slug';
 import { store } from '../../../store';
 import { closeTemplateGallery } from '../../../store/slices/ui-slice';
+import { ICON_MAP } from '../data/icon-map';
 import type { ComposedTemplate, TemplateCategory, TemplateCategoryMeta } from '../../../config/templates';
 import type { AppDispatch, RootState } from '../../../store';
-
-// =============================================================================
-// Icon map
-// =============================================================================
-
-const ICON_MAP: Record<string, React.ElementType> = {
-  Rocket,
-  Brain,
-  BrainCircuit,
-  ShieldCheck,
-  Zap,
-  Server,
-  Activity,
-  Globe,
-  Waypoints,
-  ShoppingCart,
-  Smartphone,
-  GitBranch,
-  Heart,
-  Landmark,
-  Play,
-  Cloud,
-  Cpu,
-  Gamepad2,
-  Truck,
-  GraduationCap,
-};
 
 function getDifficultyLabels(t: (key: string) => string): Record<string, { label: string; dots: number }> {
   return {

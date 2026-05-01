@@ -11,21 +11,20 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from '../../../i18n';
 import { getApi } from '../../../shared/api/api-adapter';
-import { IceSelect } from '../../../shared/components/ui/ice-select';
 import { cn } from '../../../shared/utils/cn';
 import { setActiveCard, importToActiveCard, createCard } from '../../../store/slices/cards-slice';
 import { openDeployPanel } from '../../../store/slices/deploy-slice';
 import {
   fetchEnvironments,
-  createEnvironment,
   deleteEnvironment,
-  renameEnvironment,
   setActiveEnvironment,
   compareEnvironments,
   type Environment,
 } from '../../../store/slices/environments-slice';
 import type { RootState, AppDispatch } from '../../../store';
 import { getDeployStatusDotColor } from '../utils/deploy-status-color';
+import { CreateEnvironmentModal } from './create-environment-modal';
+import { RenameEnvironmentModal } from './rename-environment-modal';
 
 interface EnvironmentTabBarProps {
   projectId: string;
@@ -351,196 +350,3 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
   );
 };
 
-// ─── Rename Environment Modal ───────────────────────────────────────────────
-
-const RenameEnvironmentModal: React.FC<{
-  env: Environment;
-  projectId: string;
-  onClose: () => void;
-}> = ({ env, projectId, onClose }) => {
-  const { t } = useTranslation();
-  const dispatch = useDispatch<AppDispatch>();
-  const [name, setName] = useState(env.name);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSave = async () => {
-    const trimmed = name.trim();
-    if (!trimmed) {
-      setError(t('environments.renameModal.errorNameRequired'));
-      return;
-    }
-    if (trimmed === env.name) {
-      onClose();
-      return;
-    }
-    setSaving(true);
-    setError(null);
-    try {
-      await dispatch(renameEnvironment({ envId: env.id, projectId, name: trimmed })).unwrap();
-      onClose();
-    } catch (err: any) {
-      setError(typeof err === 'string' ? err : err?.message || t('environments.renameModal.errorFallback'));
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div
-        className="w-[380px] bg-ice-surface border border-ice-border rounded-lg shadow-xl p-5 space-y-4"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h3 className="text-sm font-semibold text-ice-text-1">{t('environments.renameModal.title')}</h3>
-
-        {error && (
-          <div className="rounded bg-red-500/10 border border-red-500/20 px-3 py-2 text-ice-xs text-red-400">
-            {error}
-          </div>
-        )}
-
-        <div>
-          <label className="text-ice-xs font-medium text-ice-text-2 block mb-1">
-            {t('environments.renameModal.nameLabel')}
-          </label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            autoFocus
-            className="w-full px-2.5 py-1.5 text-ice-sm rounded border border-ice-border bg-ice-base text-ice-text-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-          />
-        </div>
-
-        <div className="flex justify-end gap-2 pt-2">
-          <button
-            onClick={onClose}
-            className="px-3 py-1.5 text-ice-sm text-ice-text-3 hover:text-ice-text-2 transition-colors"
-          >
-            {t('environments.renameModal.cancelButton')}
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={saving || !name.trim() || name.trim() === env.name}
-            className="px-3 py-1.5 text-ice-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors disabled:opacity-50"
-          >
-            {saving ? t('environments.renameModal.savingButton') : t('environments.renameModal.saveButton')}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ─── Create Environment Modal ───────────────────────────────────────────────
-
-const CreateEnvironmentModal: React.FC<{
-  projectId: string;
-  onClose: () => void;
-}> = ({ projectId, onClose }) => {
-  const { t } = useTranslation();
-  const dispatch = useDispatch<AppDispatch>();
-  const [name, setName] = useState('');
-  const [type, setType] = useState<string>('staging');
-  const [region, setRegion] = useState('');
-  const [creating, setCreating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleCreate = async () => {
-    if (!name.trim()) {
-      setError(t('environments.createModal.errorNameRequired'));
-      return;
-    }
-    setCreating(true);
-    setError(null);
-    try {
-      await dispatch(createEnvironment({ projectId, name: name.trim(), type, region: region || undefined })).unwrap();
-      onClose();
-    } catch (err: any) {
-      setError(typeof err === 'string' ? err : err?.message || t('environments.createModal.errorFallback'));
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50" onClick={onClose}>
-      <div
-        className="w-[380px] bg-ice-surface border border-ice-border rounded-lg shadow-xl p-5 space-y-4"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h3 className="text-sm font-semibold text-ice-text-1">{t('environments.createModal.title')}</h3>
-        <p className="text-ice-xs text-ice-text-3">{t('environments.createModal.description')}</p>
-
-        {error && (
-          <div className="rounded bg-red-500/10 border border-red-500/20 px-3 py-2 text-ice-xs text-red-400">
-            {error}
-          </div>
-        )}
-
-        <div className="space-y-3">
-          <div>
-            <label className="text-ice-xs font-medium text-ice-text-2 block mb-1">
-              {t('environments.createModal.nameLabel')}
-            </label>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t('environments.createModal.namePlaceholder')}
-              autoFocus
-              className="w-full px-2.5 py-1.5 text-ice-sm rounded border border-ice-border bg-ice-base text-ice-text-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
-            />
-          </div>
-
-          <div>
-            <label className="text-ice-xs font-medium text-ice-text-2 block mb-1">
-              {t('environments.createModal.typeLabel')}
-            </label>
-            <IceSelect
-              value={type}
-              onChange={setType}
-              size="md"
-              fullWidth
-              allowEmpty={false}
-              options={[
-                { value: 'staging', label: t('environments.createModal.typeStaging') },
-                { value: 'development', label: t('environments.createModal.typeDevelopment') },
-                { value: 'pr', label: t('environments.createModal.typePrPreview') },
-              ]}
-            />
-          </div>
-
-          <div>
-            <label className="text-ice-xs font-medium text-ice-text-2 block mb-1">
-              {t('environments.createModal.regionLabel')}
-            </label>
-            <input
-              value={region}
-              onChange={(e) => setRegion(e.target.value)}
-              placeholder={t('environments.createModal.regionPlaceholder')}
-              className="w-full px-2.5 py-1.5 text-ice-sm rounded border border-ice-border bg-ice-base text-ice-text-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
-          </div>
-        </div>
-
-        <div className="flex justify-end gap-2 pt-2">
-          <button
-            onClick={onClose}
-            className="px-3 py-1.5 text-ice-sm text-ice-text-3 hover:text-ice-text-2 transition-colors"
-          >
-            {t('environments.createModal.cancelButton')}
-          </button>
-          <button
-            onClick={handleCreate}
-            disabled={creating || !name.trim()}
-            className="px-3 py-1.5 text-ice-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors disabled:opacity-50"
-          >
-            {creating ? t('environments.createModal.creatingButton') : t('environments.createModal.createButton')}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};

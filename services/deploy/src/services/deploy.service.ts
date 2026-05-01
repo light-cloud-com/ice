@@ -1,48 +1,26 @@
 /**
  * Deploy Service — Real deployment using @ice/core deployers
  *
+ * Thin orchestrator: each public entry point (plan/apply/destroy/destroyAll/
+ * rollback) lives in its own sibling module after the rf-deploy2 series
+ * (2026-04-30 follow-up to rf-deploy). This file is now a re-export shim
+ * + the small DB-only helpers (`getDeploymentStatus`, `getDeployedResources`,
+ * `getDeploymentHistory`) and the in-memory snapshot accessors
+ * (`requestDeployCancel`, `getCurrentDeploySnapshot`).
+ *
  * Translates canvas card nodes → deployable graph → cloud provisioning.
  * Uses user's own cloud credentials (not Light Cloud's).
  */
 
 import prisma from '@ice/db';
-import * as providerService from '@ice/service-credentials';
-import {
-  acquireDeployLock,
-  cancelDeploy as cancelLockDeploy,
-  DeployLockError,
-  finishDeploySnapshot,
-  getDeploySnapshot,
-  releaseTempDir,
-  startDeploySnapshot,
-  type DeployProgressSnapshot,
-} from './deploy-locks.js';
-import {
-  getExistingNameMap,
-  getResourceMap,
-  seedMappingsFromHistory,
-  upsertResourceMapping,
-  removeResourceMapping,
-} from './resource-mapping.service.js';
-import { resolveProviderAuth, cleanupProviderAuth } from '../providers/registry.js';
-import { computeCompleteTotals, deriveCompleteOutcome, computeDeploySummary } from '../utils/deploy-outcome.js';
-import { buildResourceNameMaps, makeFindSourceNodeId } from '../utils/find-source-node-id.js';
-import { resolveProjectContext } from '../utils/project-context.js';
-import { createDeployer, getCoreEngine } from './deployer-factory.js';
-import { autoEnableGCPApis } from './gcp-api-enabler.js';
-import { installSnapshotPersister, flushSnapshotNow } from './snapshot-persister.js';
-import { acquireWriteLock } from './deploy-lock-wrapper.js';
-import { emitDeployEvent, emitLog } from './deploy-event-dispatcher.js';
-import { makeSchedulerCallbacks } from './scheduler-callbacks.js';
-import { buildBaselineGraph } from './baseline-graph.js';
-import {
-  collectDestroyAllTargets,
-  orderTargetsForDelete,
-  resolveDestroyAllProject,
-} from './destroy-targets.js';
-import { attemptDestroy, emitDestroyLifecycle } from './destroy-runner.js';
-import { retryAfterQuotaCleanup } from './quota-retry.js';
+import { cancelDeploy as cancelLockDeploy, getDeploySnapshot } from './deploy-locks.js';
+import { installSnapshotPersister } from './snapshot-persister.js';
 
+// Side-effect: install the DB persister for `DeployProgressSnapshot` on
+// module load. Without this call, refreshed pages can't see live progress
+// after a gateway restart (the in-memory snapshot is lost; the DB copy
+// is the only fallback). Has to happen at module-load time so it runs
+// before the first deploy/destroy/rollback.
 installSnapshotPersister();
 
 export type { DeployProgressSnapshot } from './deploy-locks.js';

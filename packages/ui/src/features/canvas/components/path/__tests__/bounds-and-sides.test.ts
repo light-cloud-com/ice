@@ -18,8 +18,8 @@
 
 import { describe, it, expect } from 'vitest';
 import { getEffectiveBounds, chooseSides, getEdgePoint } from '../bounds-and-sides';
-import type { Bounds } from '../types';
 import type { CanvasNode } from '../../svg-canvas';
+import type { Bounds } from '../types';
 
 const nodeFixture = (over: Partial<CanvasNode> = {}): CanvasNode => ({
   id: 'n',

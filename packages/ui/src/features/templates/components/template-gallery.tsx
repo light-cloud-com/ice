@@ -44,17 +44,9 @@ import { toSlug } from '../../../shared/utils/slug';
 import { store } from '../../../store';
 import { closeTemplateGallery } from '../../../store/slices/ui-slice';
 import { ICON_MAP } from '../data/icon-map';
+import { getDifficultyLabels } from '../utils/difficulty-labels';
 import type { ComposedTemplate, TemplateCategory, TemplateCategoryMeta } from '../../../config/templates';
 import type { AppDispatch, RootState } from '../../../store';
-
-function getDifficultyLabels(t: (key: string) => string): Record<string, { label: string; dots: number }> {
-  return {
-    starter: { label: t('templates.gallery.difficultyStarter'), dots: 1 },
-    intermediate: { label: t('templates.gallery.difficultyIntermediate'), dots: 2 },
-    advanced: { label: t('templates.gallery.difficultyAdvanced'), dots: 3 },
-    expert: { label: t('templates.gallery.difficultyExpert'), dots: 4 },
-  };
-}
 
 // =============================================================================
 // Sub-components

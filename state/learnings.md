@@ -1254,3 +1254,69 @@ match (`/(?<!^)_([a-z])/g`). Diagnostic: a fixture asserting
 'X'`. Pair with `sed-greedy-dot-star-eats-chained-calls-on-one-line`
 — both are about regex behaviour that looks innocuous in isolation
 breaking on inputs the brief-time author didn't enumerate.
+
+## class-private-brand-blocks-this-as-context-passthrough
+
+_Discovered: 2026-04-30 by implementer in rf-sched-3_
+
+When extracting class methods to standalone helpers that take
+`ctx: SomeContext` as their first arg (the rf-sqlite-1 +
+rf-parse-1 pattern), the obvious mid-refactor move is "pass
+`this` to the helper because the class fields structurally
+match `SomeContext`". TypeScript rejects that with TS2345:
+`Property 'foo' is private in type 'TheClass' but not in type
+'SomeContext'`. The `private` modifier is a nominal brand —
+even when every field name + shape lines up, the structural
+assignment fails because the helper doesn't have access to the
+brand. Two fixes work: (a) cast at the call site
+(`this as unknown as SomeContext`) — fast, ugly, scales
+poorly; (b) lift the fields onto a real
+`private readonly ctx: SomeContext` field, build the ctx in
+the constructor, and pass `this.ctx` to every helper —
+clean, what rf-sqlite-7 did, what rf-sched-6 did. Pattern
+(a) is fine as a *temporary* stepping-stone inside the same
+PR series — extract the helpers in unit N with the cast, then
+pay off the cast in unit N+M when the orchestrator slim-down
+lands. Generalizes: any class decomposition that wants to
+delegate to standalone helpers should plan for the `ctx`
+field from unit-1 instead of trying to keep separate
+`private readonly` fields and pass `this`. Diagnostic: TS2345
+naming a `private` field of the orchestrator class. Pair with
+`staged-lifecycle-extraction-needs-two-modules-when-dependency-graph-is-cyclic`
+— both rules are about getting the surface area right BEFORE
+extracting, not retrofitting after the symptoms surface.
+
+## scheduler-context-pattern-fits-mutable-state-classes-better-than-pure-helpers-classes
+
+_Discovered: 2026-04-30 by implementer in rf-sched-4_
+
+The decision tree in the rf-sched brief said: "pure (no state
+read/write) → extract; reads class state only → extract with
+state arg; writes class state → likely stay on class". That
+heuristic is too conservative once a `ctx: SchedulerContext`
+mutable handle is on the table — the rf-sqlite shape proves
+that helpers writing ctx (resources_save mutates `ctx.statements`
+backing store, locks_acquire mutates the lock row, etc.) all
+extract cleanly because the writes go through the ctx, not
+through `this.x = ...`. So for rf-sched-4 every method that
+mutated `this.in_flight`, `this.handler_in_flight`, `this.results`,
+`this.records[*].terminal`, `this.hard_failed`, or `this.settle_waker`
+extracted to a standalone fn taking ctx; only `run()` stayed on
+the class. The orchestrator shell ended up at 164 LOC (a
+constructor + a run loop) — well under the 250-350 LOC
+brief target, which was set assuming some mutating methods
+would stay. Generalizes: when a class has a mutable bag of
+state that's already structurally describable (`SqliteContext`,
+`SchedulerContext`, `ParserState`), nearly every private method
+can extract regardless of whether it reads or writes that state,
+because the writes are mechanically `ctx.x` instead of `this.x`.
+The brief's decision tree applies to classes WITHOUT the ctx
+pattern (where each writer would have to take 3-5 separate
+mutable refs as args). With the ctx pattern, default to
+"extract everything" and reserve the class for entry-point
+orchestration only. Diagnostic: if your decomposed shell
+file is over 300 LOC after extracting "pure" + "state-reading"
+helpers, you're probably leaving state-writing helpers on
+the class that could also extract. Pair with
+`class-private-brand-blocks-this-as-context-passthrough`:
+both rules push toward "lift the ctx first, decompose later".

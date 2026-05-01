@@ -15,19 +15,12 @@ import React, { useRef } from 'react';
 import { useDispatch } from 'react-redux';
 // Note: Graph actions no longer used - all node operations go through cardsSlice
 // Viewport is now stored per-pane in uiSlice (for split view support)
-import { CanvasGrid } from './canvas-grid';
 import { CanvasContextMenu } from './context/canvas-context-menu';
 import { ControlsHelpModal } from './controls-help-modal';
 // ConnectionTypePopover removed — connections are fully auto-configured
-import { SelectionFrame } from './selection-frame';
-import { ConnectionLayer } from './connection-layer';
-import { ConnectionPreviewOverlay } from './connection-preview-overlay';
 import { ConnectionTooltip } from './connection-tooltip';
-import { UserTrafficOverlay } from './user-traffic-overlay';
 import { CanvasDeployBanner } from './deploy-banner';
-import { GhostOverlay } from './ghost/ghost-overlay';
-import { ParentClipDefs } from './canvas-renderer/parent-clip-defs';
-import { NodesLayer } from './canvas-renderer/nodes-layer';
+import { CanvasContent } from './canvas-renderer/canvas-content';
 import { type RenderCtx } from './canvas-renderer/node-renderer-registry';
 // Bespoke-from-day-one nodes with inline editing
 import {
@@ -442,119 +435,46 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
       >
         <defs />
 
-        {/* Transform group for pan/zoom */}
-        <g transform={`translate(${viewport.x}, ${viewport.y}) scale(${viewport.zoom})`}>
-          {/* Grid background */}
-          <CanvasGrid
-            viewState={{ scale: viewport.zoom, panX: viewport.x, panY: viewport.y }}
-            width={dimensions.width}
-            height={dimensions.height}
-          />
-
-          {/* Selection frame */}
-          <SelectionFrame />
-
-          {/* VPC/Subnet now render as SvgGroupNode in the nodes layer */}
-
-          {/* Connections layer — non-highlighted (behind nodes).
-              rf-canv-13: extracted to ConnectionLayer in mode='background'.
-              Inner-vs-outer key shape (`anim-edge-${id}` outer wrap,
-              `${id}` SvgConnectionPath inner) preserved verbatim per
-              blueprint risk #4 — SvgConnectionPath's internal hover state
-              survives reconciliation when the wrap toggles. */}
-          <ConnectionLayer
-            mode="background"
-            canvasConnections={canvasConnections}
-            effectiveNodes={effectiveNodes}
-            portMap={portMap}
-            animatingEdges={animatingEdges}
-            pipelineNodeStatus={pipelineNodeStatus}
-            selectedNodes={selectedNodes}
-            selectedEdges={selectedEdges}
-            hoveredNodeId={hoveredNodeId}
-            lod={lod}
-            viewport={viewport}
-            edgeStyle={edgeStyle}
-            handleConnectionHover={handleConnectionHover}
-            handleEdgeDelete={handleEdgeDelete}
-            handleEdgeSelect={handleEdgeSelect}
-            handleContextMenu={handleContextMenu}
-          />
-
-          {/* rf-canv-11: <defs> block (shift-drag-shadow filter +
-              per-container clipPaths) extracted to ParentClipDefs. */}
-          <ParentClipDefs nodes={sortedNodes} />
-
-          {/* Nodes layer — Groups, Blocks, Resources, or Log terminals.
-              rf-canv-12: per-node dispatch (iceType + node.type → component
-              choice) lives in `./canvas-renderer/node-renderer-registry`.
-              rf-canv2-7: the wrap-and-key loop lives in
-              `./canvas-renderer/nodes-layer`; the wrapper's outer-key
-              priority chain (rf-canv-10) is preserved verbatim. */}
-          <NodesLayer
-            sortedNodes={sortedNodes}
-            animatingNodes={animatingNodes}
-            shiftDraggingNodeIds={shiftDraggingNodeIds}
-            dragOverGroupId={dragOverGroupId}
-            renderCtx={renderCtx}
-          />
-
-          {/* Connection drawing preview — extracted to ConnectionPreviewOverlay (rf-canv-14).
-              Bezier math + color picker live in `../utils/connection-preview` (rf-canv-8). */}
-          {drawingConnection && (
-            <ConnectionPreviewOverlay
-              drawingConnection={drawingConnection}
-              effectiveNodes={effectiveNodes}
-              connectionDragTargets={connectionDragTargets}
-            />
-          )}
-
-          {/* User traffic icon + outbound connections to exposed services —
-              extracted to UserTrafficOverlay (rf-canv-15). Both render only
-              when no explicit Network.PublicEndpoint block is on the canvas. */}
-          <UserTrafficOverlay
-            show={showVirtualUserNode}
-            userConnections={userConnections}
-            nodesWithUserNode={nodesWithUserNode}
-            pinnedUserPos={pinnedUserPos}
-            zoom={viewport.zoom}
-            setUserNodePos={setUserNodePos}
-            edgeStyle={edgeStyle}
-          />
-
-          {/* Highlighted connections layer — ON TOP of nodes.
-              rf-canv-13: extracted to ConnectionLayer in mode='highlighted'.
-              No animation wrap; computes the direction prop relative to the
-              active node (hovered, falling back to first selected). */}
-          <ConnectionLayer
-            mode="highlighted"
-            canvasConnections={canvasConnections}
-            effectiveNodes={effectiveNodes}
-            portMap={portMap}
-            animatingEdges={animatingEdges}
-            pipelineNodeStatus={pipelineNodeStatus}
-            selectedNodes={selectedNodes}
-            selectedEdges={selectedEdges}
-            hoveredNodeId={hoveredNodeId}
-            lod={lod}
-            viewport={viewport}
-            edgeStyle={edgeStyle}
-            handleConnectionHover={handleConnectionHover}
-            handleEdgeDelete={handleEdgeDelete}
-            handleEdgeSelect={handleEdgeSelect}
-            handleContextMenu={handleContextMenu}
-          />
-
-          {/* Ghost-mode suggestions (AI-Native #1) — rf-canv2-7: extracted
-              to `./ghost/ghost-overlay`. Returns null when ghosts is empty
-              so the orchestrator's JSX surface stays compact. */}
-          <GhostOverlay
-            ghosts={ghosts}
-            nodes={nodes}
-            onAccept={handleAcceptGhost}
-            onDismiss={handleDismissGhost}
-          />
-        </g>
+        {/* rf-svgcv2-1: the entire pan/zoom transform `<g>` body — grid +
+            selection frame + background ConnectionLayer + clipPaths +
+            NodesLayer + connection-drawing preview + UserTrafficOverlay +
+            highlighted ConnectionLayer + GhostOverlay — lives in
+            `./canvas-renderer/canvas-content`. Visual draw order, prop
+            flow, and dep arrays are preserved verbatim. */}
+        <CanvasContent
+          viewport={viewport}
+          dimensions={dimensions}
+          canvasConnections={canvasConnections}
+          effectiveNodes={effectiveNodes}
+          portMap={portMap}
+          animatingEdges={animatingEdges}
+          pipelineNodeStatus={pipelineNodeStatus}
+          selectedNodes={selectedNodes}
+          selectedEdges={selectedEdges}
+          hoveredNodeId={hoveredNodeId}
+          lod={lod}
+          edgeStyle={edgeStyle}
+          handleConnectionHover={handleConnectionHover}
+          handleEdgeDelete={handleEdgeDelete}
+          handleEdgeSelect={handleEdgeSelect}
+          handleContextMenu={handleContextMenu}
+          sortedNodes={sortedNodes}
+          animatingNodes={animatingNodes}
+          shiftDraggingNodeIds={shiftDraggingNodeIds}
+          dragOverGroupId={dragOverGroupId}
+          renderCtx={renderCtx}
+          drawingConnection={drawingConnection}
+          connectionDragTargets={connectionDragTargets}
+          showVirtualUserNode={showVirtualUserNode}
+          userConnections={userConnections}
+          nodesWithUserNode={nodesWithUserNode}
+          pinnedUserPos={pinnedUserPos}
+          setUserNodePos={setUserNodePos}
+          ghosts={ghosts}
+          nodes={nodes}
+          onAcceptGhost={handleAcceptGhost}
+          onDismissGhost={handleDismissGhost}
+        />
       </svg>
 
       {/* Connection tooltip — follows mouse, rendered as HTML overlay */}

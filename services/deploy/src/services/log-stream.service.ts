@@ -22,110 +22,39 @@ import { getSocketServer } from '@ice/shared';
 import * as providerService from '@ice/service-credentials';
 
 import { resolveLogFilter } from './log-stream/filter-resolver.js';
+import type {
+  ActiveStream,
+  LogEntry,
+  SourceResolution,
+  StreamingMode,
+  SubscribeArgs,
+  SubscribeResult,
+  SubscriberRef,
+} from './log-stream/types.js';
+import {
+  IDLE_TEARDOWN_MS,
+  MAX_CONSECUTIVE_ERRORS_POLLING,
+  POLL_INTERVAL_MS,
+  POLL_PAGE_SIZE,
+  RECONNECT_BASE_MS,
+  RECONNECT_MAX_MS,
+  SEEN_INSERT_ID_CAP,
+} from './log-stream/types.js';
 
-// ── Types ───────────────────────────────────────────────────────────────
-
-export type StreamingMode = 'polling' | 'tail';
-
-export interface SubscribeArgs {
-  cardId: string;
-  environmentId: string;
-  /** Monitoring.Log node id — also the Socket.IO room key. */
-  terminalNodeId: string;
-  /** 'polling' default, 'tail' opt-in. */
-  mode: StreamingMode;
-  /** Override when 0 or 2+ inbound edges resolve to supported sources. */
-  sourceNodeIdOverride?: string;
-  /** Routes credential lookup to the correct GCP project. */
-  organisationId: string;
-  /**
-   * Client-computed candidate sources from live Redux state. When provided
-   * the resolver SKIPS the Prisma `nodes`/`edges` JSON read — the canvas's
-   * persistence subscriber debounces saves by 2s, so the backend would
-   * otherwise read stale rows when the user wires an edge and immediately
-   * subscribes. An empty array OR `undefined` falls back to the Prisma
-   * read for older clients.
-   */
-  candidateSources?: Array<{ nodeId: string; iceType: string; label?: string }>;
-}
-
-export interface LogEntry {
-  /** ISO 8601, monotonically non-decreasing per stream. */
-  ts: string;
-  level: 'debug' | 'info' | 'notice' | 'warn' | 'error';
-  /** textPayload OR JSON.stringify(jsonPayload). */
-  message: string;
-  resource: { type: string; labels: Record<string, string> };
-  /** Dedupe key. */
-  insertId: string;
-}
-
-export type SourceResolution =
-  | { state: 'resolved'; sourceNodeId: string; iceType: string; caveats?: string[] }
-  | { state: 'pre-deploy'; sourceNodeId: string; iceType: string }
-  | {
-      state: 'ambiguous';
-      candidates: Array<{ nodeId: string; iceType: string; label?: string }>;
-    }
-  | { state: 'unsupported-source'; sourceNodeId: string; iceType: string }
-  | { state: 'permission-denied'; message: string }
-  | { state: 'none' };
-
-export interface SubscribeResult {
-  /** Opaque; LT-4 returns it via HTTP. */
-  subscriptionId: string;
-  resolution: SourceResolution;
-}
+export type {
+  StreamingMode,
+  SubscribeArgs,
+  LogEntry,
+  SourceResolution,
+  SubscribeResult,
+} from './log-stream/types.js';
 
 // ── Internal state ─────────────────────────────────────────────────────
-
-interface SubscriberRef {
-  subscriptionId: string;
-  args: SubscribeArgs;
-}
-
-interface ActiveStream {
-  /** Log node id is the room key. One stream per terminalNodeId. */
-  terminalNodeId: string;
-  mode: StreamingMode;
-  filter: string;
-  projectId: string;
-  resolution: SourceResolution;
-  /** Subscribers sharing this underlying stream. */
-  subscribers: Map<string, SubscriberRef>;
-  /** In-memory dedupe across reconnects (capped). */
-  seenInsertIds: Set<string>;
-  insertIdOrder: string[];
-  /** Polling cursor — last entry's timestamp. */
-  lastTs?: string;
-  /** Polling cursor — last entry's insertId (defensive only). */
-  lastInsertId?: string;
-  /** Polling-only. */
-  pollTimer?: ReturnType<typeof setInterval>;
-  /** Tail-only. */
-  tailStream?: { destroy?: () => void; cancel?: () => void } | null;
-  /** When refCount drops to 0, scheduled teardown. */
-  idleTeardownTimer?: ReturnType<typeof setTimeout>;
-  /** Backoff state shared between polling + tail reconnect loops. */
-  consecutiveErrors: number;
-  /** Set true when teardown is initiated to short-circuit in-flight callbacks. */
-  stopped: boolean;
-  /** Cached Logging client; one per stream. */
-  loggingClient: any;
-}
 
 /** terminalNodeId -> ActiveStream. */
 const streams = new Map<string, ActiveStream>();
 /** subscriptionId -> terminalNodeId so unsubscribe can find its stream. */
 const subscriptionIndex = new Map<string, string>();
-
-const POLL_INTERVAL_MS = 2000;
-const POLL_PAGE_SIZE = 100;
-const IDLE_TEARDOWN_MS = 60_000;
-const RECONNECT_BASE_MS = 1500;
-const RECONNECT_MAX_MS = 30_000;
-const MAX_CONSECUTIVE_ERRORS_POLLING = 3;
-const SEEN_INSERT_ID_CAP = 500;
 
 // ── Public API ─────────────────────────────────────────────────────────
 

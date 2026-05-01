@@ -10,11 +10,7 @@
 import {
   FolderPlus,
   Plus,
-  Folder,
   FolderOpen,
-  ChevronRight,
-  ChevronDown,
-  MoreHorizontal,
   Pencil,
   Trash2,
   FolderInput,
@@ -23,7 +19,6 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { TREE_INDENT_PX, TREE_INDENT_BASE } from '../../../config/canvas-constants';
 import { useTranslation } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
 import {
@@ -44,6 +39,7 @@ import type { AppDispatch, RootState } from '../../../store';
 import { useTreeDrag } from '../hooks/use-tree-drag';
 import { useTreeEffects } from '../hooks/use-tree-effects';
 import { useTreeHandlers } from '../hooks/use-tree-handlers';
+import { FolderRow } from './folder-row';
 import { ProjectRow } from './project-row';
 
 // =============================================================================
@@ -151,88 +147,29 @@ export const ProjectTree: React.FC = () => {
     />
   );
 
-  const renderFolder = (folder: ProjectFolder, depth: number) => {
-    const isEditing = editingId === folder.id;
-    const isDragTarget = dragOverId === folder.id;
-    const childFolders = folders.filter((f) => f.parentFolderId === folder.id).sort((a, b) => a.order - b.order);
-    const childProjects = projects.filter((p) => p.folderId === folder.id).sort((a, b) => a.order - b.order);
-    const FolderIcon = folder.expanded ? FolderOpen : Folder;
-    const ChevronIcon = folder.expanded ? ChevronDown : ChevronRight;
-
-    return (
-      <div key={folder.id}>
-        {/* Folder row */}
-        <div
-          draggable={!isEditing}
-          onDragStart={(e) => handleDragStart(e, 'folder', folder.id)}
-          onDragOver={(e) => handleDragOver(e, folder.id)}
-          onDragLeave={handleDragLeave}
-          onDrop={(e) => handleDrop(e, folder.id)}
-          onClick={() => !isEditing && dispatch(toggleFolderExpanded(folder.id))}
-          onContextMenu={(e) => handleContextMenu(e, 'folder', folder.id)}
-          className={cn(
-            'group flex items-center gap-1.5 px-2 py-1.5 cursor-pointer rounded-md mx-1 transition-colors',
-            isDragTarget
-              ? 'bg-green-500/15 text-green-400'
-              : 'text-ice-text-2 hover:bg-ice-hover hover:text-ice-text-1',
-          )}
-          style={{ paddingLeft: `calc(${depth * TREE_INDENT_PX + TREE_INDENT_BASE}px * var(--ice-space-scale, 1))` }}
-        >
-          <ChevronIcon className="w-3 h-3 shrink-0 opacity-50" />
-          <FolderIcon className="w-3.5 h-3.5 shrink-0 text-amber-400/70" />
-
-          {isEditing ? (
-            <input
-              ref={editInputRef}
-              type="text"
-              value={editingName}
-              onChange={(e) => setEditingName(e.target.value)}
-              onBlur={handleFinishRename}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleFinishRename();
-                if (e.key === 'Escape') {
-                  setEditingId(null);
-                  setEditingName('');
-                }
-              }}
-              className="flex-1 bg-ice-active text-white text-ice-base px-1.5 py-0.5 rounded border border-amber-500/50 outline-none"
-              onClick={(e) => e.stopPropagation()}
-            />
-          ) : (
-            <span className="flex-1 text-ice-base font-medium truncate">{folder.name}</span>
-          )}
-
-          {/* Item count */}
-          {!isEditing && childFolders.length + childProjects.length > 0 && (
-            <span className="text-ice-xs text-ice-text-3 tabular-nums shrink-0">
-              {childFolders.length + childProjects.length}
-            </span>
-          )}
-
-          {/* More button */}
-          {!isEditing && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleContextMenu(e, 'folder', folder.id);
-              }}
-              className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-ice-active transition-opacity shrink-0"
-            >
-              <MoreHorizontal className="w-3 h-3" />
-            </button>
-          )}
-        </div>
-
-        {/* Children */}
-        {folder.expanded && (
-          <>
-            {childFolders.map((f) => renderFolder(f, depth + 1))}
-            {childProjects.map((p) => renderProject(p, depth + 1))}
-          </>
-        )}
-      </div>
-    );
-  };
+  const renderFolder = (folder: ProjectFolder, depth: number) => (
+    <FolderRow
+      key={folder.id}
+      folder={folder}
+      depth={depth}
+      folders={folders}
+      projects={projects}
+      editingId={editingId}
+      editingName={editingName}
+      dragOverId={dragOverId}
+      editInputRef={editInputRef}
+      renderProject={renderProject}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      onContextMenu={handleContextMenu}
+      onFinishRename={handleFinishRename}
+      onToggleExpanded={(id) => dispatch(toggleFolderExpanded(id))}
+      setEditingId={setEditingId}
+      setEditingName={setEditingName}
+    />
+  );
 
   // Top-level items
   const topFolders = folders.filter((f) => f.parentFolderId === null).sort((a, b) => a.order - b.order);

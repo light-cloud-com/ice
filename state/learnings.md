@@ -1481,6 +1481,8 @@ the general rule that refactors preserve behaviour byte for
 byte — pre-existing bugs ARE part of the contract for the
 duration of the refactor.
 
+_Fixed: <PENDING-BUGFIX-3-SHA>_
+
 ## refactor-cohort-data-table-uses-376-loc-and-stays
 
 _Discovered: 2026-04-30 by implementer in rf-pmap-1_
@@ -1646,3 +1648,23 @@ satisfies the strict overlap check. This is the standard escape
 hatch when a test wants to assert a property is absent on a typed
 return shape. Pair with `expect(x).toBeUndefined()` on the cast-read
 key.
+
+## category-bundle-split-preserve-original-array-ordering
+
+_Discovered: 2026-04-30 by implementer in rf-cbdat_
+
+When splitting a single ordered data array (here `BLOCK_TEMPLATES: BlockTemplate[]` 16 entries → 9 per-category files), the natural assembly is `[...frontend, ...backend, ...data, ...]` but that imposes a NEW ordering that groups all-frontend-first, then all-backend-next, etc. — discarding the original file's hand-curated palette order (static-site, scalable-backend, worker, database, redis-cache, scheduled-task, api-gateway, …). Consumers that read by traversal (here: `BLOCK_CATEGORIES.filter` does NOT depend on order, but the palette UI renders in BLOCK_TEMPLATES order, and any consumer that iterates and prints would silently change). The fix is to write an explicit assembly in the orchestrator that index-picks from each bundle:
+
+```ts
+export const BLOCK_TEMPLATES = [
+  ...FRONTEND_TEMPLATES,        // static-site
+  BACKEND_TEMPLATES[0]!,        // scalable-backend
+  BACKEND_TEMPLATES[1]!,        // worker
+  DATA_TEMPLATES[0]!,           // database
+  DATA_TEMPLATES[1]!,           // redis-cache
+  BACKEND_TEMPLATES[2]!,        // scheduled-task
+  // ...
+];
+```
+
+The non-null assertions are load-bearing — TS narrows `Array[idx]` to `T | undefined` even when the array literal length is statically known. The smoke test must pin the assembled ordering against an `EXPECTED_ORDER` array of names — without that, a future maintainer who "tidies up" the orchestrator into `[...frontend, ...backend, ...data]` would land with a green typecheck and 16 templates but a re-ordered palette. Generalizes: ANY data-array split where the original order is hand-curated needs (1) explicit index-picks in the orchestrator OR (2) a single big spread + a stable-ordering smoke test that pins names against the original sequence. Bonus: if the per-category files are also alphabetical or otherwise sorted, doc the choice in the orchestrator's header comment so the next reader doesn't "fix" it back to a category-grouped spread.

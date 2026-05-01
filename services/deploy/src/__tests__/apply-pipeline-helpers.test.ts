@@ -114,7 +114,7 @@ describe('persistResourceMappings', () => {
       environment: 'development',
     });
 
-    expect(result.resources[0].source_node_id).toBe('node-A');
+    expect((result.resources[0] as { source_node_id?: string }).source_node_id).toBe('node-A');
     expect(upsertResourceMapping).toHaveBeenCalledTimes(1);
     expect(upsertResourceMapping).toHaveBeenCalledWith({
       cardId: 'card-1',
@@ -142,7 +142,7 @@ describe('persistResourceMappings', () => {
       environment: 'development',
     });
 
-    expect(result.resources[0].source_node_id).toBeUndefined();
+    expect((result.resources[0] as { source_node_id?: string }).source_node_id).toBeUndefined();
     expect(upsertResourceMapping).not.toHaveBeenCalled();
   });
 

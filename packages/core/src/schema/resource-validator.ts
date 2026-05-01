@@ -10,99 +10,22 @@ import { success, failure } from '../types/result.js';
 import type { IceType, PropertySchema, PropertyValidation, SchemaProvider } from './schema-provider.js';
 import type { ValidationViolation } from '../types/errors.js';
 import type { Result } from '../types/result.js';
+import { validate_type } from './validation/type-checker.js';
 
-// =============================================================================
-// Validation Types
-// =============================================================================
-
-/**
- * Validation severity level.
- */
-export type ValidationSeverity = 'error' | 'warning' | 'info';
-
-/**
- * Single validation issue.
- */
-export interface ValidationIssue {
-  /** Property path (e.g., "network.subnet_id") */
-  readonly path: string;
-
-  /** Issue message */
-  readonly message: string;
-
-  /** Severity level */
-  readonly severity: ValidationSeverity;
-
-  /** Error code for programmatic handling */
-  readonly code: ValidationCode;
-
-  /** Expected value or type */
-  readonly expected?: string;
-
-  /** Actual value or type */
-  readonly actual?: string;
-
-  /** Suggested fix */
-  readonly suggestion?: string;
-}
-
-/**
- * Validation error codes.
- */
-export type ValidationCode =
-  | 'MISSING_REQUIRED'
-  | 'TYPE_MISMATCH'
-  | 'PATTERN_MISMATCH'
-  | 'VALUE_NOT_ALLOWED'
-  | 'VALUE_TOO_SMALL'
-  | 'VALUE_TOO_LARGE'
-  | 'STRING_TOO_SHORT'
-  | 'STRING_TOO_LONG'
-  | 'ARRAY_TOO_SHORT'
-  | 'ARRAY_TOO_LONG'
-  | 'UNKNOWN_PROPERTY'
-  | 'SCHEMA_NOT_FOUND'
-  | 'NESTED_VALIDATION';
-
-/**
- * Complete validation result.
- */
-export interface ValidationResult {
-  /** Whether validation passed (no errors) */
-  readonly valid: boolean;
-
-  /** ICE type that was validated */
-  readonly ice_type: IceType;
-
-  /** All validation issues */
-  readonly issues: readonly ValidationIssue[];
-
-  /** Just errors */
-  readonly errors: readonly ValidationIssue[];
-
-  /** Just warnings */
-  readonly warnings: readonly ValidationIssue[];
-
-  /** Validation timestamp */
-  readonly validated_at: string;
-}
-
-/**
- * Options for validation.
- */
-export interface ValidationOptions {
-  /** Whether to report unknown properties */
-  readonly strict?: boolean;
-
-  /** Whether to include warnings */
-  readonly include_warnings?: boolean;
-
-  /** Maximum depth for nested validation */
-  readonly max_depth?: number;
-
-  /** Properties to skip validation for */
-  readonly skip_properties?: string[];
-}
+// Re-export the validation types (extracted in rf-rval-1 to a sibling
+// file so the helpers can import without pulling in the orchestrator).
+export type {
+  ValidationCode,
+  ValidationIssue,
+  ValidationOptions,
+  ValidationResult,
+  ValidationSeverity,
+} from './resource-validator-types.js';
+import type {
+  ValidationIssue,
+  ValidationOptions,
+  ValidationResult,
+} from './resource-validator-types.js';
 
 // =============================================================================
 // Resource Validator
@@ -217,7 +140,7 @@ export class ResourceValidator {
     }
 
     // Type validation
-    const type_issue = this.validate_type(path, value, schema.type);
+    const type_issue = validate_type(path, value, schema.type);
     if (type_issue) {
       issues.push(type_issue);
       return issues; // Wrong type, skip further validation
@@ -271,87 +194,6 @@ export class ResourceValidator {
     }
 
     return issues;
-  }
-
-  /**
-   * Validate value type.
-   */
-  private validate_type(path: string, value: unknown, expected_type: string): ValidationIssue | null {
-    const actual_type = this.get_type_name(value);
-
-    switch (expected_type) {
-      case 'string':
-        if (typeof value !== 'string') {
-          return {
-            path,
-            message: `Expected string, got ${actual_type}`,
-            severity: 'error',
-            code: 'TYPE_MISMATCH',
-            expected: 'string',
-            actual: actual_type,
-          };
-        }
-        break;
-
-      case 'number':
-        if (typeof value !== 'number' || Number.isNaN(value)) {
-          return {
-            path,
-            message: `Expected number, got ${actual_type}`,
-            severity: 'error',
-            code: 'TYPE_MISMATCH',
-            expected: 'number',
-            actual: actual_type,
-          };
-        }
-        break;
-
-      case 'boolean':
-        if (typeof value !== 'boolean') {
-          return {
-            path,
-            message: `Expected boolean, got ${actual_type}`,
-            severity: 'error',
-            code: 'TYPE_MISMATCH',
-            expected: 'boolean',
-            actual: actual_type,
-          };
-        }
-        break;
-
-      case 'array':
-        if (!Array.isArray(value)) {
-          return {
-            path,
-            message: `Expected array, got ${actual_type}`,
-            severity: 'error',
-            code: 'TYPE_MISMATCH',
-            expected: 'array',
-            actual: actual_type,
-          };
-        }
-        break;
-
-      case 'object':
-      case 'map':
-        if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-          return {
-            path,
-            message: `Expected object, got ${actual_type}`,
-            severity: 'error',
-            code: 'TYPE_MISMATCH',
-            expected: 'object',
-            actual: actual_type,
-          };
-        }
-        break;
-
-      case 'any':
-        // Any type is always valid
-        break;
-    }
-
-    return null;
   }
 
   /**
@@ -469,17 +311,6 @@ export class ResourceValidator {
     }
 
     return issues;
-  }
-
-  /**
-   * Get human-readable type name.
-   */
-  private get_type_name(value: unknown): string {
-    if (value === null) return 'null';
-    if (value === undefined) return 'undefined';
-    if (Array.isArray(value)) return 'array';
-    if (Number.isNaN(value)) return 'NaN';
-    return typeof value;
   }
 
   /**

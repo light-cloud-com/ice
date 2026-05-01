@@ -24,140 +24,9 @@ import type {
 } from './schema-provider.js';
 import type { IceError } from '../types/errors.js';
 import type { Result } from '../types/result.js';
-
-// =============================================================================
-// Type Definitions for SQLite Schema Registry
-// =============================================================================
-
-/**
- * SQLite schema registry interface (from @ice-engine/schemas/db).
- */
-interface SqliteSchemaRegistry {
-  get(ice_type: string): SqliteResourceType | null;
-  has(ice_type: string): boolean;
-  get_all(limit?: number, offset?: number): SqliteResourceType[];
-  get_by_category(category: string): SqliteResourceType[];
-  get_by_provider(provider: string): SqliteResourceType[];
-  get_by_source(source: 'terraform' | 'pulumi' | 'custom'): SqliteResourceType[];
-  get_properties(ice_type: string, include_nested?: boolean): SqliteProperty[];
-  get_implementations(ice_type: string): SqliteImplementation[];
-  get_implementation(
-    ice_type: string,
-    source: 'terraform' | 'pulumi' | 'custom',
-    provider: string,
-  ): SqliteImplementation | null;
-  get_native_type(ice_type: string, source: 'terraform' | 'pulumi' | 'custom', provider: string): string | null;
-  get_property(ice_type: string, property_name: string): SqliteProperty | null;
-  get_required_properties(ice_type: string): SqliteProperty[];
-  get_computed_properties(ice_type: string): SqliteProperty[];
-  query(query: SqliteSchemaQuery): SqliteQueryResult;
-  search(query: string, limit?: number, offset?: number): SqliteQueryResult;
-  get_categories(): string[];
-  get_providers(): SqliteProviderInfo[];
-  get_stats(): SqliteSchemaStats;
-  get_dependencies(ice_type: string, max_depth?: number): SqliteResourceType[];
-  get_dependents(ice_type: string, max_depth?: number): SqliteResourceType[];
-  get_equivalents(ice_type: string): SqliteResourceType[];
-  get_relationships_from(ice_type: string): SqliteRelationship[];
-  get_relationships_to(ice_type: string): SqliteRelationship[];
-  close(): void;
-}
-
-interface SqliteResourceType {
-  id: number;
-  ice_type: string;
-  display_name: string;
-  description: string | null;
-  category: string;
-  icon: string | null;
-  source: 'terraform' | 'pulumi' | 'custom';
-  deprecated: boolean;
-  deprecation_message: string | null;
-}
-
-interface SqliteImplementation {
-  id: number;
-  resource_type_id: number;
-  source: 'terraform' | 'pulumi' | 'custom';
-  provider_name: string;
-  native_type: string;
-  docs_url: string | null;
-  provider_version: string | null;
-}
-
-interface SqliteProperty {
-  id: number;
-  resource_type_id: number;
-  name: string;
-  type: string;
-  description: string | null;
-  required: boolean;
-  computed: boolean;
-  sensitive: boolean;
-  deprecated: boolean;
-  default_value: unknown;
-  parent_property_id: number | null;
-  element_type: string | null;
-  nested_properties?: SqliteProperty[];
-  validation?: SqlitePropertyValidation;
-}
-
-interface SqlitePropertyValidation {
-  pattern?: string | null;
-  min_value?: number | null;
-  max_value?: number | null;
-  min_length?: number | null;
-  max_length?: number | null;
-  enum_values?: string[];
-}
-
-interface SqliteRelationship {
-  source_type: string;
-  target_type: string;
-  relationship_type: string;
-  property_name: string | null;
-  cardinality: 'one' | 'many';
-  description: string | null;
-  confidence: number;
-}
-
-interface SqliteSchemaQuery {
-  ice_type?: string;
-  category?: string;
-  provider?: string;
-  source?: 'terraform' | 'pulumi' | 'custom';
-  search?: string;
-  limit?: number;
-  offset?: number;
-}
-
-interface SqliteQueryResult {
-  resources: SqliteResourceType[];
-  total: number;
-  has_more: boolean;
-}
-
-interface SqliteProviderInfo {
-  name: string;
-  namespace: string;
-  source: 'terraform' | 'pulumi' | 'custom';
-  resource_count: number;
-}
-
-interface SqliteSchemaStats {
-  total_resources: number;
-  total_implementations: number;
-  total_relationships: number;
-  total_properties: number;
-  categories: Record<string, number>;
-  providers: Record<string, number>;
-  sources: Record<string, number>;
-  total_resource_types?: number;
-  total_categories?: number;
-  total_providers?: number;
-  custom_resource_types?: number;
-  custom_relationships?: number;
-}
+import type { SqliteSchemaRegistry } from './embedded/sqlite-types.js';
+import { to_sqlite_query } from './embedded/sqlite-types.js';
+import { convert_property, convert_resource_to_schema } from './embedded/converters.js';
 
 // =============================================================================
 // Extended Schema Provider Interface
@@ -273,7 +142,7 @@ export class EmbeddedSchemaProvider implements GraphSchemaProvider {
       return failure(new InternalError(`Schema not found: ${ice_type}`, 'NOT_IMPLEMENTED', { ice_type }));
     }
 
-    return success(this.convert_resource_to_schema(resource));
+    return success(convert_resource_to_schema(this.registry, resource));
   }
 
   /**
@@ -291,18 +160,10 @@ export class EmbeddedSchemaProvider implements GraphSchemaProvider {
       return failure(new InternalError('Schema provider not initialized', 'INTERNAL_ERROR'));
     }
 
-    const result = this.registry.query({
-      ice_type: query.ice_type,
-      category: query.category,
-      provider: query.provider,
-      source: query.source as 'terraform' | 'pulumi' | 'custom' | undefined,
-      search: query.search,
-      limit: query.limit,
-      offset: query.offset,
-    });
+    const result = this.registry.query(to_sqlite_query(query));
 
     return success({
-      schemas: result.resources.map((r) => this.convert_resource_to_schema(r)),
+      schemas: result.resources.map((r) => convert_resource_to_schema(this.registry, r)),
       total: result.total,
       has_more: result.has_more,
     });
@@ -375,7 +236,7 @@ export class EmbeddedSchemaProvider implements GraphSchemaProvider {
     }
 
     const property = this.registry.get_property(ice_type, property_path);
-    return property ? this.convert_property(property) : undefined;
+    return property ? convert_property(property) : undefined;
   }
 
   /**
@@ -383,7 +244,7 @@ export class EmbeddedSchemaProvider implements GraphSchemaProvider {
    */
   get_required_properties(ice_type: IceType): PropertySchema[] {
     const properties = this.registry?.get_required_properties(ice_type) ?? [];
-    return properties.map((p) => this.convert_property(p));
+    return properties.map((p) => convert_property(p));
   }
 
   /**
@@ -391,7 +252,7 @@ export class EmbeddedSchemaProvider implements GraphSchemaProvider {
    */
   get_computed_properties(ice_type: IceType): PropertySchema[] {
     const properties = this.registry?.get_computed_properties(ice_type) ?? [];
-    return properties.map((p) => this.convert_property(p));
+    return properties.map((p) => convert_property(p));
   }
 
   /**
@@ -441,7 +302,7 @@ export class EmbeddedSchemaProvider implements GraphSchemaProvider {
     }
 
     const deps = this.registry.get_dependencies(ice_type, max_depth);
-    return success(deps.map((r) => this.convert_resource_to_schema(r)));
+    return success(deps.map((r) => convert_resource_to_schema(this.registry, r)));
   }
 
   /**
@@ -453,7 +314,7 @@ export class EmbeddedSchemaProvider implements GraphSchemaProvider {
     }
 
     const dependents = this.registry.get_dependents(ice_type, max_depth);
-    return success(dependents.map((r) => this.convert_resource_to_schema(r)));
+    return success(dependents.map((r) => convert_resource_to_schema(this.registry, r)));
   }
 
   /**
@@ -465,7 +326,7 @@ export class EmbeddedSchemaProvider implements GraphSchemaProvider {
     }
 
     const equivalents = this.registry.get_equivalents(ice_type);
-    return success(equivalents.map((r) => this.convert_resource_to_schema(r)));
+    return success(equivalents.map((r) => convert_resource_to_schema(this.registry, r)));
   }
 
   // ===========================================================================
@@ -516,56 +377,6 @@ export class EmbeddedSchemaProvider implements GraphSchemaProvider {
     }
   }
 
-  // ===========================================================================
-  // Conversion Methods
-  // ===========================================================================
-
-  /**
-   * Convert SQLite resource to ResourceSchema.
-   */
-  private convert_resource_to_schema(resource: SqliteResourceType): ResourceSchema {
-    const properties = this.registry?.get_properties(resource.ice_type) ?? [];
-    const implementations = this.registry?.get_implementations(resource.ice_type) ?? [];
-
-    return {
-      ice_type: resource.ice_type as IceType,
-      display_name: resource.display_name,
-      description: resource.description ?? '',
-      category: resource.category,
-      properties: properties.map((p) => this.convert_property(p)),
-      implementations: implementations.map((i) => ({
-        source: i.source as 'terraform' | 'pulumi',
-        provider: i.provider_name,
-        native_type: i.native_type,
-        docs_url: i.docs_url ?? undefined,
-      })),
-    };
-  }
-
-  /**
-   * Convert SQLite property to PropertySchema.
-   */
-  private convert_property(prop: SqliteProperty): PropertySchema {
-    return {
-      name: prop.name,
-      type: prop.type as PropertySchema['type'],
-      description: prop.description ?? '',
-      required: prop.required,
-      computed: prop.computed,
-      sensitive: prop.sensitive,
-      validation: prop.validation
-        ? {
-            pattern: prop.validation.pattern ?? undefined,
-            allowed_values: prop.validation.enum_values,
-            min: prop.validation.min_value ?? undefined,
-            max: prop.validation.max_value ?? undefined,
-            min_length: prop.validation.min_length ?? undefined,
-            max_length: prop.validation.max_length ?? undefined,
-          }
-        : undefined,
-      nested_properties: prop.nested_properties?.map((p) => this.convert_property(p)),
-    };
-  }
 }
 
 // =============================================================================

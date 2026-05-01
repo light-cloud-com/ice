@@ -64,7 +64,7 @@
  */
 
 import React, { useCallback } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { getBlueprint, expandBlueprint } from '../../../config/blocks';
 import { canContain } from '../../../config/containment-rules';
 import {
@@ -77,7 +77,7 @@ import { setGhosts } from '../../../store/slices/ghost-slice';
 import { generateGhostSuggestions } from '../utils/ghost-suggestions';
 import { computeCompactNodeHeight, computeCompactNodeWidth } from '../components/nodes/compact-node';
 import { logDrop, logBlueprint } from '../../../shared/utils/debug-logger';
-import type { AppDispatch } from '../../../store';
+import type { AppDispatch, RootState } from '../../../store';
 import type { CanvasNode } from '../components/types';
 
 export interface UseCanvasDropArgs {
@@ -105,6 +105,7 @@ export interface UseCanvasDropResult {
 export function useCanvasDrop(args: UseCanvasDropArgs): UseCanvasDropResult {
   const { screenToCanvas, findContainerAtPosition, nodes, edges } = args;
   const dispatch = useDispatch<AppDispatch>();
+  const deployProvider = useSelector((s: RootState) => s.deploy.provider);
 
   // Handle drop from palette
   const handleDrop = useCallback(
@@ -152,8 +153,11 @@ export function useCanvasDrop(args: UseCanvasDropArgs): UseCanvasDropResult {
 
       // --- Blueprint expansion for blocks (flat cards) ---
       if (blockType) {
-        const provider = event.dataTransfer.getData('application/ice-block-provider') || 'all';
-        const blueprint = getBlueprint(blockType, provider !== 'all' ? provider : undefined);
+        const paletteProvider = event.dataTransfer.getData('application/ice-block-provider') || 'all';
+        // Fall back to the active deploy provider when palette didn't pin one,
+        // so deploy-panel doesn't filter the block as "skipped — non-<provider>".
+        const effectiveProvider = paletteProvider !== 'all' ? paletteProvider : deployProvider;
+        const blueprint = getBlueprint(blockType, effectiveProvider);
         if (blueprint) {
           // Validate containment for the node's iceType
           const nodeIceType = (blueprint.nodeData.iceType as string) || '';
@@ -162,7 +166,7 @@ export function useCanvasDrop(args: UseCanvasDropArgs): UseCanvasDropResult {
 
           const expanded = expandBlueprint(blueprint, {
             position: canvasPos,
-            provider: provider as any,
+            provider: effectiveProvider as any,
             parentContainerId: canContainNode && targetContainer ? targetContainer.id : undefined,
           });
 
@@ -179,7 +183,7 @@ export function useCanvasDrop(args: UseCanvasDropArgs): UseCanvasDropResult {
 
           logBlueprint({
             type: blueprint.iceType,
-            provider: provider !== 'all' ? provider : undefined,
+            provider: paletteProvider !== 'all' ? paletteProvider : undefined,
             childCount: 0,
             containerWidth: expanded.node.width,
             containerHeight: expanded.node.height,
@@ -209,6 +213,7 @@ export function useCanvasDrop(args: UseCanvasDropArgs): UseCanvasDropResult {
         behavior: 'singleton',
         status: 'active',
         folded: false,
+        provider: deployProvider,
       };
       const newNode: CardNode = {
         id: `node-${Date.now()}`,
@@ -227,7 +232,7 @@ export function useCanvasDrop(args: UseCanvasDropArgs): UseCanvasDropResult {
       dispatch(addNodeToCard(newNode));
       dispatch(setGhosts(generateGhostSuggestions(newNode, nodes, edges)));
     },
-    [screenToCanvas, findContainerAtPosition, dispatch, nodes, edges],
+    [screenToCanvas, findContainerAtPosition, dispatch, nodes, edges, deployProvider],
   );
 
   const handleDragOver = useCallback((event: React.DragEvent) => {

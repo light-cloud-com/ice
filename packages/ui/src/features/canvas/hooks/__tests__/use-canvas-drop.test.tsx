@@ -84,12 +84,23 @@ const ghostsStubSlice = createSlice({
   initialState: { ghosts: [] },
   reducers: {},
 });
+const deployStubSlice = createSlice({
+  name: 'deploy',
+  initialState: { provider: 'gcp' as string },
+  reducers: {},
+});
 
-const makeStore = () =>
+const makeStore = (deployProvider = 'gcp') =>
   configureStore({
     reducer: {
       cards: cardsStubSlice.reducer,
       ghosts: ghostsStubSlice.reducer,
+      deploy: deployStubSlice.reducer,
+    },
+    preloadedState: {
+      cards: { activeCardId: null, cards: [] } as any,
+      ghosts: { ghosts: [] } as any,
+      deploy: { provider: deployProvider } as any,
     },
     middleware: (getDefault) =>
       getDefault({ serializableCheck: false, immutableCheck: false }),
@@ -319,10 +330,12 @@ describe('useCanvasDrop — block drop with blueprint', () => {
     const { event } = mockDataTransferEvent({ 'application/ice-block': 'service' }, 50, 60);
     result.handleDrop(event);
 
-    expect(mocks.getBlueprintSpy).toHaveBeenCalledWith('service', undefined);
+    // pdl-11: palette didn't pin a provider, so the active deploy provider
+    // (default 'gcp') is threaded into both getBlueprint and expandBlueprint.
+    expect(mocks.getBlueprintSpy).toHaveBeenCalledWith('service', 'gcp');
     expect(mocks.expandBlueprintSpy).toHaveBeenCalledWith(fakeBlueprint, {
       position: { x: 50, y: 60 },
-      provider: 'all',
+      provider: 'gcp',
       parentContainerId: undefined,
     });
 
@@ -404,6 +417,9 @@ describe('useCanvasDrop — block drop with blueprint', () => {
     result.handleDrop(event);
 
     expect(mocks.logBlueprintSpy).toHaveBeenCalledTimes(1);
+    // logBlueprint logs the *palette* provider (undefined here), not the
+    // deploy-provider fallback — analytics tracks user intent, not the
+    // post-fallback effective value.
     expect(mocks.logBlueprintSpy).toHaveBeenCalledWith({
       type: 'Compute.Service',
       provider: undefined,
@@ -411,6 +427,36 @@ describe('useCanvasDrop — block drop with blueprint', () => {
       containerWidth: 200,
       containerHeight: 100,
     });
+  });
+
+  // ─── pdl-11: deploy-provider fallback ───────────────────────────────────
+  it('falls back to the active deploy provider when palette omits one', () => {
+    const store = makeStore('aws');
+    const result = captureHook(store);
+    const { event } = mockDataTransferEvent({ 'application/ice-block': 'service' });
+    result.handleDrop(event);
+
+    expect(mocks.getBlueprintSpy).toHaveBeenCalledWith('service', 'aws');
+    expect(mocks.expandBlueprintSpy).toHaveBeenCalledWith(
+      fakeBlueprint,
+      expect.objectContaining({ provider: 'aws' }),
+    );
+  });
+
+  it('palette provider wins over the active deploy provider', () => {
+    const store = makeStore('gcp');
+    const result = captureHook(store);
+    const { event } = mockDataTransferEvent({
+      'application/ice-block': 'service',
+      'application/ice-block-provider': 'azure',
+    });
+    result.handleDrop(event);
+
+    expect(mocks.getBlueprintSpy).toHaveBeenCalledWith('service', 'azure');
+    expect(mocks.expandBlueprintSpy).toHaveBeenCalledWith(
+      fakeBlueprint,
+      expect.objectContaining({ provider: 'azure' }),
+    );
   });
 });
 
@@ -467,6 +513,10 @@ describe('useCanvasDrop — resource drop branch', () => {
         behavior: 'singleton',
         status: 'active',
         folded: false,
+        // pdl-11: resource drops default provider to the active deploy
+        // provider (default 'gcp') so the deploy panel doesn't filter the
+        // node out as "skipped — non-<provider>".
+        provider: 'gcp',
       },
     });
     expect(a1.payload.id).toMatch(/^node-/);
@@ -474,6 +524,19 @@ describe('useCanvasDrop — resource drop branch', () => {
     const a2 = dispatchSpy.mock.calls[1][0] as { type: string };
     expect(a2.type).toBe('ghosts/setGhosts');
     expect(mocks.generateGhostSuggestionsSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('uses active deploy provider for resource drops (pdl-11)', () => {
+    const store = makeStore('azure');
+    const dispatchSpy = vi.spyOn(store, 'dispatch');
+    const result = captureHook(store);
+    dispatchSpy.mockClear();
+
+    const { event } = mockDataTransferEvent({ 'application/ice-resource': 'Storage.Bucket' });
+    result.handleDrop(event);
+
+    const a1 = dispatchSpy.mock.calls[0][0] as { type: string; payload: CardNode };
+    expect(a1.payload.data.provider).toBe('azure');
   });
 
   it('uses application/ice-resource-name for label, then iceType as final fallback', () => {

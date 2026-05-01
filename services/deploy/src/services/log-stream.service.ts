@@ -27,6 +27,7 @@ import { resolveSource } from './log-stream/source-resolution.js';
 import { teardownStream } from './log-stream/stream-lifecycle.js';
 import {
   openStreamForResolved,
+  registerPlaceholderStream,
   restartStreamWithMode,
 } from './log-stream/stream-open.js';
 import type {
@@ -82,18 +83,11 @@ export async function subscribe(args: SubscribeArgs): Promise<SubscribeResult> {
   // Fresh subscribe — resolve the source.
   const resolution = await resolveSource(args);
 
-  // Open a placeholder stream entry even when we can't tail yet, so a
-  // re-subscribe with an override can attach to a ready room.
-  if (
-    resolution.state === 'none' ||
-    resolution.state === 'ambiguous' ||
-    resolution.state === 'pre-deploy' ||
-    resolution.state === 'unsupported-source' ||
-    resolution.state === 'permission-denied'
-  ) {
-    // Holding state — no SDK stream opened. Emit the resolution event
-    // so clients know why nothing is flowing. Do NOT register an
-    // ActiveStream; on next subscribe with an override we re-resolve.
+  // Holding state — no SDK stream opened. Emit the resolution event so
+  // clients know why nothing is flowing, then register a placeholder
+  // ActiveStream so a subsequent subscribe with an override or
+  // post-deploy retry can attach to a ready room.
+  if (resolution.state !== 'resolved') {
     emitToRoom(terminalNodeId, 'logs:source-resolved', resolution);
     if (resolution.state === 'permission-denied') {
       // Surface the actionable message to the room.
@@ -102,52 +96,21 @@ export async function subscribe(args: SubscribeArgs): Promise<SubscribeResult> {
         recoverable: false,
       });
     }
-    // For non-resolved states we still wire a minimal record so a
-    // subsequent subscribe with an override or after-deploy retry can
-    // join. Track via subscriptionIndex against a sentinel terminal id
-    // so unsubscribe is a no-op without crashing.
-    subscriptionIndex.set(subscriptionId, terminalNodeId);
-    streams.set(terminalNodeId, {
-      terminalNodeId,
-      mode: args.mode,
-      filter: '',
-      projectId: '',
-      resolution,
-      subscribers: new Map([[subscriptionId, { subscriptionId, args }]]),
-      seenInsertIds: new Set(),
-      insertIdOrder: [],
-      consecutiveErrors: 0,
-      stopped: false,
-      loggingClient: null,
-    });
+    registerPlaceholderStream(args, subscriptionId, resolution);
     return { subscriptionId, resolution };
   }
 
   // resolved — open a stream.
   const stream = await openStreamForResolved(args, resolution);
   if (!stream) {
-    // openStreamForResolved either created the stream + started it, or
-    // returned null after IAM probe / SDK failure (in which case it
-    // emitted permission-denied / error already).
-    // Register the subscriber in a holding state so unsubscribe works.
+    // openStreamForResolved returned null after IAM probe / SDK failure
+    // (it emitted permission-denied / error already). Register the
+    // subscriber against a denied placeholder so unsubscribe works.
     const denied: SourceResolution = {
       state: 'permission-denied',
       message: 'Cloud Logging access denied. Grant roles/logging.viewer to the deploy service account.',
     };
-    streams.set(terminalNodeId, {
-      terminalNodeId,
-      mode: args.mode,
-      filter: '',
-      projectId: '',
-      resolution: denied,
-      subscribers: new Map([[subscriptionId, { subscriptionId, args }]]),
-      seenInsertIds: new Set(),
-      insertIdOrder: [],
-      consecutiveErrors: 0,
-      stopped: false,
-      loggingClient: null,
-    });
-    subscriptionIndex.set(subscriptionId, terminalNodeId);
+    registerPlaceholderStream(args, subscriptionId, denied);
     return { subscriptionId, resolution: denied };
   }
 

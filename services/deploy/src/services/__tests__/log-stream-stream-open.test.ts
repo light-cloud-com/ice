@@ -38,9 +38,10 @@ vi.mock('@ice/core', () => ({
   load_sdk: mocks.loadSdk,
 }));
 
-import { resetRegistry, streams } from '../log-stream/registry.js';
+import { resetRegistry, streams, subscriptionIndex } from '../log-stream/registry.js';
 import {
   openStreamForResolved,
+  registerPlaceholderStream,
   restartStreamWithMode,
 } from '../log-stream/stream-open.js';
 import type { ActiveStream } from '../log-stream/types.js';
@@ -198,6 +199,35 @@ describe('openStreamForResolved — happy path', () => {
     expect(result).not.toBeNull();
     expect(streams.size).toBe(1);
     expect(streams.get('log-1')?.tailStream).toBe(tailFake);
+  });
+});
+
+describe('registerPlaceholderStream', () => {
+  it('registers a holding-state ActiveStream with empty filter and null SDK client', () => {
+    const stream = registerPlaceholderStream(
+      baseArgs,
+      'sub-1',
+      { state: 'pre-deploy', sourceNodeId: 'src-1', iceType: 'Compute.Container' },
+    );
+    expect(stream.terminalNodeId).toBe('log-1');
+    expect(stream.filter).toBe('');
+    expect(stream.projectId).toBe('');
+    expect(stream.loggingClient).toBeNull();
+    expect(stream.subscribers.size).toBe(1);
+    expect(stream.subscribers.get('sub-1')?.subscriptionId).toBe('sub-1');
+    expect(streams.get('log-1')).toBe(stream);
+    expect(subscriptionIndex.get('sub-1')).toBe('log-1');
+  });
+
+  it('replaces an existing registry entry under the same terminalNodeId', () => {
+    registerPlaceholderStream(baseArgs, 'sub-1', { state: 'none' });
+    const replacement = registerPlaceholderStream(
+      baseArgs,
+      'sub-2',
+      { state: 'permission-denied', message: 'no creds' },
+    );
+    expect(streams.get('log-1')).toBe(replacement);
+    expect(replacement.resolution.state).toBe('permission-denied');
   });
 });
 

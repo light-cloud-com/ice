@@ -1,12 +1,21 @@
 /**
- * Stream open + mode-restart for the Log Stream service.
+ * Stream open + mode-restart + placeholder-registration for the
+ * Log Stream service.
  *
- * Extracted from `log-stream.service.ts` (rf-lstream-7b). The richer
- * counterpart to `stream-lifecycle.ts`: where stream-lifecycle owns
- * the dependency-free "stop / teardown" primitives, this module owns
- * the heavier "open" path that re-derives the filter, lazy-loads the
- * @google-cloud/logging SDK, runs the IAM probe, registers the
- * ActiveStream, and starts the appropriate polling / tail loop.
+ * Extracted from `log-stream.service.ts` (rf-lstream-7b + rf-lstream-8).
+ * The richer counterpart to `stream-lifecycle.ts`: where
+ * stream-lifecycle owns the dependency-free "stop / teardown"
+ * primitives, this module owns the heavier "open" path that
+ * re-derives the filter, lazy-loads the @google-cloud/logging SDK,
+ * runs the IAM probe, registers the ActiveStream, and starts the
+ * appropriate polling / tail loop.
+ *
+ * Also owns `registerPlaceholderStream` (rf-lstream-8): the
+ * holding-state ActiveStream construction the orchestrator uses for
+ * non-resolved states (none / ambiguous / pre-deploy /
+ * unsupported-source / permission-denied) and for the openStream
+ * fallback. Lifting it here keeps the orchestrator's `subscribe()`
+ * focused on flow rather than ActiveStream-shape boilerplate.
  *
  * Lives in its own module because the imports here (Prisma,
  * provider-credentials, polling/tail loop entry points) are heavier
@@ -24,7 +33,7 @@ import {
 } from './entry-mapping.js';
 import { resolveLogFilter } from './filter-resolver.js';
 import { startPolling } from './polling.js';
-import { emitToRoom, streams } from './registry.js';
+import { emitToRoom, streams, subscriptionIndex } from './registry.js';
 import { stopUnderlyingStream } from './stream-lifecycle.js';
 import { startTail } from './tail.js';
 import type {
@@ -163,6 +172,42 @@ export async function openStreamForResolved(
     startTail(stream);
   }
 
+  return stream;
+}
+
+/**
+ * Register a placeholder ActiveStream + subscriber index entry for a
+ * holding state (none / ambiguous / pre-deploy / unsupported-source /
+ * permission-denied) or for the openStream fallback. The placeholder
+ * carries no SDK handle (`loggingClient: null`) and an empty filter +
+ * projectId — the registry slot is what makes a subsequent subscribe
+ * with an override or post-deploy retry land on a known room. Without
+ * a placeholder the next subscribe would re-resolve from scratch and
+ * the wait-and-then-retry pattern would feel laggy.
+ *
+ * Returns the registered stream so callers that want to inspect or
+ * extend it can chain.
+ */
+export function registerPlaceholderStream(
+  args: SubscribeArgs,
+  subscriptionId: string,
+  resolution: SourceResolution,
+): ActiveStream {
+  const stream: ActiveStream = {
+    terminalNodeId: args.terminalNodeId,
+    mode: args.mode,
+    filter: '',
+    projectId: '',
+    resolution,
+    subscribers: new Map([[subscriptionId, { subscriptionId, args }]]),
+    seenInsertIds: new Set(),
+    insertIdOrder: [],
+    consecutiveErrors: 0,
+    stopped: false,
+    loggingClient: null,
+  };
+  streams.set(args.terminalNodeId, stream);
+  subscriptionIndex.set(subscriptionId, args.terminalNodeId);
   return stream;
 }
 

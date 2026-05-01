@@ -7,9 +7,10 @@
 
 import { ValidationError } from '../types/errors.js';
 import { success, failure } from '../types/result.js';
-import type { IceType, PropertySchema, PropertyValidation, SchemaProvider } from './schema-provider.js';
+import type { IceType, PropertySchema, SchemaProvider } from './schema-provider.js';
 import type { ValidationViolation } from '../types/errors.js';
 import type { Result } from '../types/result.js';
+import { validate_constraints } from './validation/constraints.js';
 import { validate_type } from './validation/type-checker.js';
 
 // Re-export the validation types (extracted in rf-rval-1 to a sibling
@@ -148,7 +149,7 @@ export class ResourceValidator {
 
     // Constraint validation
     if (schema.validation) {
-      const constraint_issues = this.validate_constraints(path, value, schema.validation);
+      const constraint_issues = validate_constraints(path, value, schema.validation);
       issues.push(...constraint_issues);
     }
 
@@ -190,123 +191,6 @@ export class ResourceValidator {
             }
           }
         }
-      }
-    }
-
-    return issues;
-  }
-
-  /**
-   * Validate value against constraints.
-   */
-  private validate_constraints(path: string, value: unknown, validation: PropertyValidation): ValidationIssue[] {
-    const issues: ValidationIssue[] = [];
-
-    // Enum validation
-    if (validation.allowed_values && validation.allowed_values.length > 0) {
-      if (!validation.allowed_values.includes(value as string | number | boolean)) {
-        issues.push({
-          path,
-          message: `Value not allowed. Must be one of: ${validation.allowed_values.join(', ')}`,
-          severity: 'error',
-          code: 'VALUE_NOT_ALLOWED',
-          expected: validation.allowed_values.join(' | '),
-          actual: String(value),
-        });
-      }
-    }
-
-    // Pattern validation
-    if (validation.pattern && typeof value === 'string') {
-      try {
-        const regex = new RegExp(validation.pattern);
-        if (!regex.test(value)) {
-          issues.push({
-            path,
-            message: `Value does not match pattern: ${validation.pattern}`,
-            severity: 'error',
-            code: 'PATTERN_MISMATCH',
-            expected: validation.pattern,
-            actual: value,
-          });
-        }
-      } catch {
-        // Invalid regex pattern in schema, skip validation
-      }
-    }
-
-    // Numeric range validation
-    if (typeof value === 'number') {
-      if (validation.min !== undefined && value < validation.min) {
-        issues.push({
-          path,
-          message: `Value ${value} is less than minimum ${validation.min}`,
-          severity: 'error',
-          code: 'VALUE_TOO_SMALL',
-          expected: `>= ${validation.min}`,
-          actual: String(value),
-        });
-      }
-
-      if (validation.max !== undefined && value > validation.max) {
-        issues.push({
-          path,
-          message: `Value ${value} is greater than maximum ${validation.max}`,
-          severity: 'error',
-          code: 'VALUE_TOO_LARGE',
-          expected: `<= ${validation.max}`,
-          actual: String(value),
-        });
-      }
-    }
-
-    // String length validation
-    if (typeof value === 'string') {
-      if (validation.min_length !== undefined && value.length < validation.min_length) {
-        issues.push({
-          path,
-          message: `String length ${value.length} is less than minimum ${validation.min_length}`,
-          severity: 'error',
-          code: 'STRING_TOO_SHORT',
-          expected: `length >= ${validation.min_length}`,
-          actual: `length ${value.length}`,
-        });
-      }
-
-      if (validation.max_length !== undefined && value.length > validation.max_length) {
-        issues.push({
-          path,
-          message: `String length ${value.length} is greater than maximum ${validation.max_length}`,
-          severity: 'error',
-          code: 'STRING_TOO_LONG',
-          expected: `length <= ${validation.max_length}`,
-          actual: `length ${value.length}`,
-        });
-      }
-    }
-
-    // Array length validation
-    if (Array.isArray(value)) {
-      if (validation.min_length !== undefined && value.length < validation.min_length) {
-        issues.push({
-          path,
-          message: `Array length ${value.length} is less than minimum ${validation.min_length}`,
-          severity: 'error',
-          code: 'ARRAY_TOO_SHORT',
-          expected: `length >= ${validation.min_length}`,
-          actual: `length ${value.length}`,
-        });
-      }
-
-      if (validation.max_length !== undefined && value.length > validation.max_length) {
-        issues.push({
-          path,
-          message: `Array length ${value.length} is greater than maximum ${validation.max_length}`,
-          severity: 'error',
-          code: 'ARRAY_TOO_LONG',
-          expected: `length <= ${validation.max_length}`,
-          actual: `length ${value.length}`,
-        });
       }
     }
 

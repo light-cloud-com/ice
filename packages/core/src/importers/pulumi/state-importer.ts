@@ -6,26 +6,19 @@
 
 import { existsSync } from 'fs';
 import { readFile } from 'fs/promises';
-import {
-  get_ice_type,
-  get_provider_from_type,
-  parse_urn,
-  is_provider_resource,
-  is_stack_resource,
-} from './type-mapper.js';
+import { is_provider_resource, is_stack_resource } from './type-mapper.js';
 import {
   get_deployment,
   get_stack_info,
-  extract_name_from_urn,
   is_secret_value,
   unwrap_secret,
   create_empty_metadata,
 } from './parsing.js';
+import { import_resource } from './resource-conversion.js';
 import { MutableGraph, create_mutable_graph } from '../../graph/mutable-graph.js';
 import type {
   PulumiStackState,
   PulumiStackExport,
-  PulumiResource,
   PulumiImportResult,
   PulumiImportedResource,
   PulumiImportedOutput,
@@ -277,93 +270,6 @@ export function import_pulumi_state_object(
     warnings,
     metadata,
   };
-}
-
-/**
- * Import a single Pulumi resource.
- */
-function import_resource(
-  resource: PulumiResource,
-  options: Required<Omit<PulumiImportOptions, 'target_graph'>>,
-  warnings: PulumiImportWarning[],
-): PulumiImportedResource {
-  const pulumi_type = resource.type;
-  const ice_type = get_ice_type(pulumi_type);
-  const provider = get_provider_from_type(pulumi_type);
-
-  // Parse the URN to get name
-  const parsed_urn = parse_urn(resource.urn);
-  let name = parsed_urn?.name ?? extract_name_from_urn(resource.urn);
-
-  // Apply name prefix
-  if (options.name_prefix) {
-    name = `${options.name_prefix}${name}`;
-  }
-
-  // Process properties from outputs (the actual state) or inputs
-  let properties: Record<string, unknown> = {};
-  if (resource.outputs) {
-    properties = process_properties(resource.outputs, options);
-  } else if (resource.inputs) {
-    properties = process_properties(resource.inputs, options);
-    warnings.push({
-      code: 'NO_OUTPUTS',
-      message: 'Resource has no outputs, using inputs instead',
-      resource: resource.urn,
-    });
-  }
-
-  // Extract dependencies
-  const dependencies: string[] = [];
-  if (resource.dependencies) {
-    dependencies.push(...resource.dependencies);
-  }
-  if (resource.parent) {
-    dependencies.push(resource.parent);
-  }
-
-  // Extract secret outputs
-  const secret_outputs: string[] = [];
-  if (resource.additional_secret_outputs) {
-    secret_outputs.push(...resource.additional_secret_outputs);
-  }
-
-  return {
-    pulumi_urn: resource.urn,
-    pulumi_type,
-    ice_type,
-    name,
-    id: resource.id,
-    properties,
-    dependencies,
-    provider,
-    parent: resource.parent,
-    protect: resource.protect ?? false,
-    external: resource.external ?? false,
-    secret_outputs,
-  };
-}
-
-/**
- * Process properties, handling secrets.
- */
-function process_properties(
-  props: Record<string, unknown>,
-  options: Required<Omit<PulumiImportOptions, 'target_graph'>>,
-): Record<string, unknown> {
-  const result: Record<string, unknown> = {};
-
-  for (const [key, value] of Object.entries(props)) {
-    if (is_secret_value(value)) {
-      result[key] = options.include_secrets ? unwrap_secret(value) : '***SECRET***';
-    } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      result[key] = process_properties(value as Record<string, unknown>, options);
-    } else {
-      result[key] = value;
-    }
-  }
-
-  return result;
 }
 
 // =============================================================================

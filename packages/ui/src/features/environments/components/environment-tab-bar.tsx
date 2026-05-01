@@ -6,12 +6,11 @@
  * Clicking switches the active canvas card.
  */
 
-import { Lock, Plus, GitPullRequest, Loader2, ArrowUpRight, Trash2, Rocket, Pencil } from 'lucide-react';
+import { Plus, Loader2, ArrowUpRight, Rocket } from 'lucide-react';
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from '../../../i18n';
 import { getApi } from '../../../shared/api/api-adapter';
-import { cn } from '../../../shared/utils/cn';
 import { setActiveCard, importToActiveCard, createCard } from '../../../store/slices/cards-slice';
 import { openDeployPanel } from '../../../store/slices/deploy-slice';
 import {
@@ -22,8 +21,9 @@ import {
   type Environment,
 } from '../../../store/slices/environments-slice';
 import type { RootState, AppDispatch } from '../../../store';
-import { getDeployStatusDotColor } from '../utils/deploy-status-color';
 import { CreateEnvironmentModal } from './create-environment-modal';
+import { EnvironmentContextMenu } from './environment-context-menu';
+import { EnvironmentTabItem } from './environment-tab-item';
 import { RenameEnvironmentModal } from './rename-environment-modal';
 
 interface EnvironmentTabBarProps {
@@ -181,56 +181,16 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
         ) : (
           <>
             {/* Environment tabs */}
-            {environments.map((env) => {
-              const isActive = env.id === activeEnvId;
-              const deployStatus = envDeployStatus[env.id];
-              const dotColor = getDeployStatusDotColor(deployStatus);
-
-              return (
-                <button
-                  key={env.id}
-                  onClick={() => handleSwitchEnv(env)}
-                  onContextMenu={(e) => handleContextMenu(e, env.id)}
-                  title={deployStatus?.url || env.name}
-                  className={cn(
-                    'flex items-center gap-1 px-2.5 py-1 text-ice-xs font-medium rounded transition-colors',
-                    isActive
-                      ? 'bg-ice-active text-ice-text-1'
-                      : 'text-ice-text-3 hover:text-ice-text-2 hover:bg-ice-hover',
-                  )}
-                >
-                  {/* Status dot — reflects real deploy status */}
-                  <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', dotColor)} />
-
-                  {/* Name */}
-                  {env.name}
-
-                  {/* Deployed URL — shown as a small link icon when available */}
-                  {deployStatus?.url && isActive && (
-                    <a
-                      href={deployStatus.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-ice-2xs text-blue-400 hover:text-blue-300 truncate max-w-[100px]"
-                      title={deployStatus.url}
-                    >
-                      {deployStatus.url.replace(/^https?:\/\//, '').slice(0, 20)}
-                    </a>
-                  )}
-
-                  {/* Lock icon for production */}
-                  {env.is_protected && <Lock className="w-2.5 h-2.5 text-ice-text-3" />}
-
-                  {/* PR badge */}
-                  {env.type === 'pr' && env.pr_number && (
-                    <span className="flex items-center gap-0.5 text-ice-2xs text-purple-400">
-                      <GitPullRequest className="w-2.5 h-2.5" />#{env.pr_number}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+            {environments.map((env) => (
+              <EnvironmentTabItem
+                key={env.id}
+                env={env}
+                isActive={env.id === activeEnvId}
+                deployStatus={envDeployStatus[env.id]}
+                onSwitch={handleSwitchEnv}
+                onContextMenu={handleContextMenu}
+              />
+            ))}
 
             {/* Add environment button */}
             <button
@@ -276,68 +236,24 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
       </div>
 
       {/* Context menu */}
-      {contextMenu &&
-        (() => {
-          const env = environments.find((e) => e.id === contextMenu.envId);
-          if (!env) return null;
-          const showPromote = !env.is_protected && prodEnv;
-          const showRename = !env.is_protected;
-          const showDelete = !env.is_protected;
-
-          return (
-            <div
-              className="fixed z-[9999] bg-ice-surface border border-ice-border rounded-md shadow-lg py-1 min-w-[170px]"
-              style={{ left: contextMenu.x, top: contextMenu.y }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Deploy — available for all environments */}
-              <button
-                onClick={() => {
-                  setContextMenu(null);
-                  handleSwitchEnv(env);
-                  dispatch(openDeployPanel());
-                }}
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-ice-xs text-ice-text-2 hover:bg-ice-hover transition-colors"
-              >
-                <Rocket className="w-3.5 h-3.5" />
-                {t('environments.tabBar.contextDeploy')}
-              </button>
-              {showPromote && (
-                <button
-                  onClick={() => handlePromote(contextMenu.envId)}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-ice-xs text-ice-text-2 hover:bg-ice-hover transition-colors"
-                >
-                  <ArrowUpRight className="w-3.5 h-3.5" />
-                  {t('environments.tabBar.contextPromote')}
-                </button>
-              )}
-              {showRename && (
-                <button
-                  onClick={() => {
-                    setContextMenu(null);
-                    setRenameTarget(env);
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-ice-xs text-ice-text-2 hover:bg-ice-hover transition-colors"
-                >
-                  <Pencil className="w-3.5 h-3.5" />
-                  {t('environments.tabBar.contextRename')}
-                </button>
-              )}
-              {showDelete && (
-                <>
-                  <div className="h-px bg-ice-border my-1" />
-                  <button
-                    onClick={() => handleDelete(contextMenu.envId)}
-                    className="w-full flex items-center gap-2 px-3 py-1.5 text-ice-xs text-red-400 hover:bg-red-500/10 transition-colors"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    {t('environments.tabBar.contextDelete')}
-                  </button>
-                </>
-              )}
-            </div>
-          );
-        })()}
+      {contextMenu && (
+        <EnvironmentContextMenu
+          envId={contextMenu.envId}
+          x={contextMenu.x}
+          y={contextMenu.y}
+          environments={environments}
+          prodEnv={prodEnv}
+          onDeploy={(env) => {
+            setContextMenu(null);
+            handleSwitchEnv(env);
+            dispatch(openDeployPanel());
+          }}
+          onPromote={handlePromote}
+          onRename={(env) => setRenameTarget(env)}
+          onDelete={handleDelete}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
 
       {/* Create environment modal */}
       {showCreate && <CreateEnvironmentModal projectId={projectId} onClose={() => setShowCreate(false)} />}

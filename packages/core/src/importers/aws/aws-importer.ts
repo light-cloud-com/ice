@@ -6,6 +6,12 @@
  */
 
 import { get_ice_type, map_properties } from './type-mapper.js';
+import {
+  extract_name_from_arn,
+  extract_account_from_arn,
+  extract_region_from_arn,
+  parse_tags,
+} from './arn-helpers.js';
 import { classifyAWSError, ImportErrorCode } from '../../errors/import-errors.js';
 import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph.js';
 import type {
@@ -463,50 +469,6 @@ async function discover_with_config(
 // =============================================================================
 // Helper Functions
 // =============================================================================
-
-function extract_name_from_arn(arn: string): string {
-  // ARN format: arn:partition:service:region:account:resource
-  const parts = arn.split(':');
-  if (parts.length >= 6) {
-    const resource = parts.slice(5).join(':');
-    // Handle resource/name or resource:name formats
-    const name_parts = resource.split(/[/:]/);
-    return name_parts[name_parts.length - 1] || resource;
-  }
-  return arn;
-}
-
-function extract_account_from_arn(arn: string): string {
-  const parts = arn.split(':');
-  return parts[4] || '';
-}
-
-function extract_region_from_arn(arn: string): string {
-  const parts = arn.split(':');
-  return parts[3] || 'global';
-}
-
-function parse_tags(properties: unknown): Record<string, string> {
-  if (!properties || typeof properties !== 'object') {
-    return {};
-  }
-
-  const props = properties as Record<string, unknown>;
-  const tags: Record<string, string> = {};
-
-  // Try different tag formats
-  if (Array.isArray(props.Tags)) {
-    for (const tag of props.Tags) {
-      if (tag && typeof tag === 'object' && 'Key' in tag && 'Value' in tag) {
-        tags[String(tag.Key)] = String(tag.Value);
-      }
-    }
-  } else if (props.tags && typeof props.tags === 'object') {
-    Object.assign(tags, props.tags);
-  }
-
-  return tags;
-}
 
 function infer_relationships(resources: AWSImportedResource[]): void {
   const arn_set = new Set(resources.map((r) => r.aws_arn));

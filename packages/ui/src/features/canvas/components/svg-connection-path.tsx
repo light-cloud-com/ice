@@ -18,6 +18,7 @@ import type { CanvasNode, CanvasConnection } from './svg-canvas';
 import type { EdgeStyle } from '../../../store/slices/ui-slice';
 import type { Point, Side } from './path/types';
 import { chooseSides, getEdgePoint, getEffectiveBounds } from './path/bounds-and-sides';
+import { buildBezierPath } from './path/builders/bezier';
 
 // ─── Tooltip info passed up to canvas ───────────────────────────────────────
 
@@ -71,41 +72,6 @@ export { EDGE_COLORS } from '../../../config/color-palette';
 // =============================================================================
 // Bezier Curve Routing
 // =============================================================================
-
-function buildBezierPath(
-  start: Point,
-  end: Point,
-  exitSide: Side,
-  entrySide: Side,
-): { pathD: string; midX: number; midY: number } {
-  const dx = end.x - start.x;
-  const dy = end.y - start.y;
-  const dist = Math.sqrt(dx * dx + dy * dy);
-  const offset = Math.min(Math.max(dist * 0.35, 40), 200);
-
-  const cp1 = getControlPoint(start, exitSide, offset);
-  const cp2 = getControlPoint(end, entrySide, offset);
-
-  const pathD = `M ${start.x} ${start.y} C ${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${end.x} ${end.y}`;
-
-  const midX = 0.125 * start.x + 0.375 * cp1.x + 0.375 * cp2.x + 0.125 * end.x;
-  const midY = 0.125 * start.y + 0.375 * cp1.y + 0.375 * cp2.y + 0.125 * end.y;
-
-  return { pathD, midX, midY };
-}
-
-function getControlPoint(point: Point, side: Side, offset: number): Point {
-  switch (side) {
-    case 'left':
-      return { x: point.x - offset, y: point.y };
-    case 'right':
-      return { x: point.x + offset, y: point.y };
-    case 'top':
-      return { x: point.x, y: point.y - offset };
-    case 'bottom':
-      return { x: point.x, y: point.y + offset };
-  }
-}
 
 function buildStraightPath(start: Point, end: Point): { pathD: string; midX: number; midY: number } {
   const pathD = `M ${start.x} ${start.y} L ${end.x} ${end.y}`;

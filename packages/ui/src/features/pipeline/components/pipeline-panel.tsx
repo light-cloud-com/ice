@@ -46,6 +46,7 @@ import {
   type DeployStep,
 } from '../../../store/slices/pipeline-slice';
 import type { RootState, AppDispatch } from '../../../store';
+import { formatRelativeTime, formatDuration, formatFramework } from '../utils/format';
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
@@ -685,40 +686,3 @@ const EventRow: React.FC<{ event: DeploymentEvent }> = ({ event }) => {
   );
 };
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
-
-function formatRelativeTime(date: string): string {
-  const diff = Date.now() - new Date(date).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
-
-function formatDuration(seconds: number): string {
-  if (seconds < 60) return `${seconds}s`;
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}m ${secs}s`;
-}
-
-function formatFramework(framework: string): string {
-  const names: Record<string, string> = {
-    nextjs: 'Next.js',
-    nuxt: 'Nuxt',
-    sveltekit: 'SvelteKit',
-    react: 'React',
-    vue: 'Vue',
-    angular: 'Angular',
-    express: 'Express',
-    fastify: 'Fastify',
-    docker: 'Docker',
-    python: 'Python',
-    go: 'Go',
-    node: 'Node.js',
-  };
-  return names[framework] || framework;
-}

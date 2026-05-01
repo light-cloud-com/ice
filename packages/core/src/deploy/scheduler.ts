@@ -32,9 +32,16 @@
 
 import { build_dag } from './scheduler/dag.js';
 import {
+  collect_ready,
+  deps_satisfied,
+  is_unfinished,
+  match_handler_prefix,
+} from './scheduler/predicates.js';
+import {
   DEFAULT_PER_HANDLER_CAPS,
   DEFAULT_POOL_SIZE,
   type NodeRecord,
+  type SchedulerContext,
   type SchedulerPhase,
   type SchedulerRunInput,
 } from './scheduler/types.js';
@@ -139,7 +146,14 @@ export class ParallelChangeScheduler {
     }
 
     try {
-      while (this.is_unfinished()) {
+      // `this` is structurally a `SchedulerContext` — every field on the
+      // context interface is also a (non-private) field on the class via
+      // the constructor. The cast strips the `private` brand TypeScript
+      // adds to the class so the standalone helpers in `./scheduler/`
+      // can read the context. rf-sched-6 will collapse this by lifting
+      // the fields onto a real `ctx: SchedulerContext` field.
+      const ctx = this as unknown as SchedulerContext;
+      while (is_unfinished(ctx)) {
         // Cancel all not-yet-applying nodes when aborted or hard-failed
         // (continue_on_error: false). In-flight nodes are left alone —
         // handlers' existing abort_signal plumbing handles graceful
@@ -148,7 +162,7 @@ export class ParallelChangeScheduler {
           this.cancel_remaining_not_in_flight();
         }
 
-        const ready = this.collect_ready();
+        const ready = collect_ready(ctx);
         for (const id of ready) this.dispatch(id);
 
         if (this.in_flight.size === 0) {
@@ -168,67 +182,6 @@ export class ParallelChangeScheduler {
     return this.results;
   }
 
-  /** Has every node either succeeded, failed, skipped, or been cancelled? */
-  private is_unfinished(): boolean {
-    for (const rec of this.records.values()) {
-      if (!rec.terminal) return true;
-    }
-    return false;
-  }
-
-  /**
-   * Find all nodes whose deps are satisfied AND a slot is available
-   * AND we're allowed to dispatch (not aborted/hard-failed/already in
-   * flight). Order is insertion order over `records` (Map iteration).
-   *
-   * Reservations are tracked locally inside this loop so that the
-   * second SQL node can't slip past the per-handler cap before the
-   * first one's dispatch landed: we count both `in_flight` and a
-   * within-loop reservation map.
-   */
-  private collect_ready(): string[] {
-    if (this.aborted || this.hard_failed) return [];
-    const ready: string[] = [];
-    let pool_reserved = 0;
-    const handler_reserved = new Map<string, number>();
-    for (const [id, rec] of this.records) {
-      if (rec.terminal) continue;
-      if (this.in_flight.has(id)) continue;
-      if (!this.deps_satisfied(rec)) continue;
-      // Pool cap (combine in-flight with already-reserved-this-tick).
-      if (this.in_flight.size + pool_reserved >= this.pool_size) break;
-      // Per-handler cap (same combination).
-      const prefix = this.match_handler_prefix(rec.change.type);
-      if (prefix !== null) {
-        const cap = this.per_handler_caps[prefix] ?? this.pool_size;
-        const used = (this.handler_in_flight.get(prefix) ?? 0) + (handler_reserved.get(prefix) ?? 0);
-        if (used >= cap) continue;
-      }
-      ready.push(id);
-      pool_reserved++;
-      if (prefix !== null) {
-        handler_reserved.set(prefix, (handler_reserved.get(prefix) ?? 0) + 1);
-      }
-    }
-    return ready;
-  }
-
-  /** All deps must be in `succeeded` state. */
-  private deps_satisfied(rec: NodeRecord): boolean {
-    for (const dep_id of rec.deps) {
-      const dep_rec = this.records.get(dep_id);
-      if (!dep_rec || dep_rec.terminal !== 'succeeded') return false;
-    }
-    return true;
-  }
-
-  private match_handler_prefix(resource_type: string): string | null {
-    for (const prefix of this.handler_cap_prefixes) {
-      if (resource_type.startsWith(prefix)) return prefix;
-    }
-    return null;
-  }
-
   /**
    * Begin applying a node. Marks `in_flight`, emits `applying`, then
    * fires off the async handler call. The handler's resolution drives
@@ -240,7 +193,7 @@ export class ParallelChangeScheduler {
     if (rec.terminal) return;
 
     this.in_flight.add(node_id);
-    const prefix = this.match_handler_prefix(rec.change.type);
+    const prefix = match_handler_prefix(this as unknown as SchedulerContext, rec.change.type);
     if (prefix !== null) {
       this.handler_in_flight.set(prefix, (this.handler_in_flight.get(prefix) ?? 0) + 1);
     }
@@ -322,7 +275,7 @@ export class ParallelChangeScheduler {
    */
   private on_settled(rec: NodeRecord, result: ResourceDeployResult | undefined, err: unknown): void {
     this.in_flight.delete(rec.change.id);
-    const prefix = this.match_handler_prefix(rec.change.type);
+    const prefix = match_handler_prefix(this as unknown as SchedulerContext, rec.change.type);
     if (prefix !== null) {
       const used = (this.handler_in_flight.get(prefix) ?? 1) - 1;
       if (used <= 0) this.handler_in_flight.delete(prefix);

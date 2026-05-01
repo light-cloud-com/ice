@@ -16,6 +16,7 @@
 import { describe, expect, it } from 'vitest';
 import { compute } from '../high-level-resources/categories/compute.js';
 import { database } from '../high-level-resources/categories/database.js';
+import { storage } from '../high-level-resources/categories/storage.js';
 
 describe('compute category (rf-hlres-2)', () => {
   it('has the expected metadata', () => {
@@ -98,5 +99,23 @@ describe('database category (rf-hlres-3)', () => {
     const redis = database.resources.find((r) => r.id === 'redis-cache');
     expect(redis).toBeDefined();
     expect(redis!.properties.length).toBeGreaterThan(0);
+  });
+});
+
+describe('storage category (rf-hlres-4)', () => {
+  it('has the expected metadata', () => {
+    expect(storage.id).toBe('storage');
+    expect(storage.name).toBe('Storage');
+  });
+
+  it('contains the canonical resource ids in order', () => {
+    const ids = storage.resources.map((r) => r.id);
+    expect(ids).toEqual(['object-storage', 'oss', 'oci-object-storage', 'do-spaces', 'file-storage']);
+  });
+
+  it('object-storage has multi-provider implementations', () => {
+    const obj = storage.resources.find((r) => r.id === 'object-storage');
+    expect(obj).toBeDefined();
+    expect(obj!.implementations.length).toBeGreaterThan(0);
   });
 });

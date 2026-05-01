@@ -33,6 +33,7 @@ import {
   streams,
   subscriptionIndex,
 } from './log-stream/registry.js';
+import { startPolling } from './log-stream/polling.js';
 import { resolveSource } from './log-stream/source-resolution.js';
 import {
   stopUnderlyingStream,
@@ -350,56 +351,6 @@ async function restartStreamWithMode(stream: ActiveStream, newMode: StreamingMod
     startPolling(stream);
   } else {
     startTail(stream);
-  }
-}
-
-// ── Polling mode ──────────────────────────────────────────────────────
-
-function startPolling(stream: ActiveStream): void {
-  // Tick immediately, then every POLL_INTERVAL_MS.
-  void pollOnce(stream);
-  stream.pollTimer = setInterval(() => {
-    void pollOnce(stream);
-  }, POLL_INTERVAL_MS);
-}
-
-async function pollOnce(stream: ActiveStream): Promise<void> {
-  if (stream.stopped) return;
-  const filter = stream.lastTs
-    ? `${stream.filter} AND timestamp > "${stream.lastTs}"`
-    : stream.filter;
-  try {
-    const [entries] = (await stream.loggingClient.getEntries({
-      filter,
-      pageSize: POLL_PAGE_SIZE,
-      resourceNames: [`projects/${stream.projectId}`],
-      orderBy: 'timestamp asc',
-      autoPaginate: false,
-    })) as [any[]];
-    stream.consecutiveErrors = 0;
-    if (!entries || entries.length === 0) return;
-
-    for (const raw of entries) {
-      const mapped = mapEntry(raw);
-      if (!mapped) continue;
-      if (stream.seenInsertIds.has(mapped.insertId)) continue;
-      rememberInsertId(stream, mapped.insertId);
-      emitToRoom(stream.terminalNodeId, 'logs:entry', mapped);
-      stream.lastTs = mapped.ts;
-      stream.lastInsertId = mapped.insertId;
-    }
-  } catch (err: any) {
-    stream.consecutiveErrors += 1;
-    const recoverable = stream.consecutiveErrors < MAX_CONSECUTIVE_ERRORS_POLLING;
-    emitToRoom(stream.terminalNodeId, 'logs:error', {
-      message: probeErrorMessage(err),
-      recoverable,
-    });
-    if (!recoverable) {
-      // After 3 consecutive failures, stop the loop. The room stays
-      // open so the client can re-subscribe to retry.
-      stopUnderlyingStream(stream);
-    }
   }
 }
 

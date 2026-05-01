@@ -5,29 +5,24 @@
  * Deployment history with live log streaming.
  *
  * Opens from: clicking ⚡ badge on canvas node, right-click → Pipeline
+ *
+ * Sub-component splits (rf-ppanel series):
+ *   - `../utils/format.ts`              — formatRelativeTime / formatDuration / formatFramework (rf-ppanel-1)
+ *   - `./section.tsx`                   — Section collapsible wrapper (rf-ppanel-2)
+ *   - `./status-pill.tsx`               — StatusPill status badge (rf-ppanel-3)
+ *   - `./build-row.tsx`                 — BuildRow label/value row (rf-ppanel-4)
+ *   - `./event-row.tsx`                 — EventRow deployment-history row (rf-ppanel-5)
+ *   - `../sections/trigger-row.tsx`     — TriggerRow per-rule trigger config (rf-ppanel-6)
+ *   - `../sections/active-deployment.tsx` — ActiveDeployment live progress (rf-ppanel-7)
  */
 
-import {
-  X,
-  Zap,
-  GitBranch,
-  ChevronDown,
-  Plus,
-  Trash2,
-  Loader2,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Rocket,
-  Circle,
-  ArrowRight,
-} from 'lucide-react';
+import { X, Zap, GitBranch, Plus, Loader2, Clock, Rocket } from 'lucide-react';
 import React, { useEffect, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSelector, useDispatch } from 'react-redux';
+
 import { useTranslation } from '../../../i18n';
 import { getApi } from '../../../shared/api/api-adapter';
-import { cn } from '../../../shared/utils/cn';
 import { selectActiveCard } from '../../../store/slices/cards-slice';
 import { fetchGitHubBranches } from '../../../store/slices/integrations-slice';
 import {
@@ -41,14 +36,11 @@ import {
   triggerManualDeploy,
   receivePipelineUpdate,
   receiveCardPipelineUpdate,
-  type DeploymentRule,
-  type DeploymentEvent,
-  type DeployStep,
 } from '../../../store/slices/pipeline-slice';
 import type { RootState, AppDispatch } from '../../../store';
-import { formatRelativeTime, formatDuration, formatFramework } from '../utils/format';
 import { ActiveDeployment } from '../sections/active-deployment';
 import { TriggerRow } from '../sections/trigger-row';
+import { formatFramework } from '../utils/format';
 import { BuildRow } from './build-row';
 import { EventRow } from './event-row';
 import { Section } from './section';
@@ -446,8 +438,5 @@ export const PipelinePanel: React.FC = () => {
     document.body,
   );
 };
-
-// ─── Sub-components ─────────────────────────────────────────────────────────
-
 
 

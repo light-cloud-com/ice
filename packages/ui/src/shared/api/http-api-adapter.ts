@@ -12,6 +12,9 @@ import { emitMenuAction, getSocket, menuCallbacks } from './http-api/socket';
 import { createGraphAdapter } from './http-api/graph';
 import { createSchemaAdapter } from './http-api/schema';
 import { createResourcesAdapter } from './http-api/resources';
+import { createDialogAdapter } from './http-api/dialog';
+import { createProjectsAdapter } from './http-api/projects';
+import { createTemplatesAdapter } from './http-api/templates';
 
 // Re-export for the existing public surface; consumers calling
 // `emitMenuAction(...)` from the toolbar continue to work.
@@ -31,58 +34,10 @@ export function createHttpApiAdapter(): IceAPI {
     resources: createResourcesAdapter(),
 
     // ── Dialog (web alternatives) ──────────────────────────────────────
-    dialog: {
-      openFile: async () => {
-        return new Promise<string | null>((resolve) => {
-          const input = document.createElement('input');
-          input.type = 'file';
-          input.accept = '.ice,.json';
-          input.onchange = () => {
-            const file = input.files?.[0];
-            if (file) {
-              const reader = new FileReader();
-              reader.onload = () => resolve(reader.result as string);
-              reader.readAsText(file);
-            } else {
-              resolve(null);
-            }
-          };
-          input.click();
-        });
-      },
-      saveFile: async () => {
-        // Web version saves to cloud — use download for local export
-        return null;
-      },
-      importTerraform: async () => {
-        return new Promise<any>((resolve) => {
-          const input = document.createElement('input');
-          input.type = 'file';
-          input.accept = '.tf,.hcl';
-          input.multiple = true;
-          input.onchange = () => {
-            resolve(input.files);
-          };
-          input.click();
-        });
-      },
-      selectDirectory: async () => {
-        // Not applicable for web — projects are cloud-stored
-        return null;
-      },
-    },
+    dialog: createDialogAdapter(),
 
     // ── Projects (cloud-stored) ────────────────────────────────────────
-    projects: {
-      scanDirectory: async () => {
-        // Not applicable for web — projects are cloud-stored
-        return { files: [], folders: [] };
-      },
-      createFolder: async () => {
-        // Not applicable for web
-        return null;
-      },
-    },
+    projects: createProjectsAdapter(),
 
     // ── Provider credentials ───────────────────────────────────────────
     provider: {
@@ -127,13 +82,7 @@ export function createHttpApiAdapter(): IceAPI {
     },
 
     // ── Templates ──────────────────────────────────────────────────────
-    templates: {
-      loadToGraph: async (_data) => {
-        // In web version, templates are expanded client-side via config/templates
-        // No backend call needed — Redux state is the source of truth
-        return { success: true };
-      },
-    },
+    templates: createTemplatesAdapter(),
 
     // ── GitHub ──────────────────────────────────────────────────────────
     github: {

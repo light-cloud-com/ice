@@ -27,46 +27,12 @@ export {
   updateEventProgress,
   failEvent,
 } from './pipeline/events.js';
+export {
+  matchRulesForPush,
+  matchRulesForMerge,
+  shouldSkipDuplicate,
+} from './pipeline/rule-matching.js';
 export type { DeployStep, FrameworkDetection } from './pipeline/types.js';
-
-// ─── Webhook Matching ───────────────────────────────────────────────────────
-
-export async function matchRulesForPush(repository: string, branch: string, _commitSha: string) {
-  const rules = await prisma.deploymentRule.findMany({
-    where: {
-      repository,
-      enabled: true,
-      trigger_type: 'push',
-    },
-  });
-
-  return rules.filter((rule) => branchMatches(branch, rule.branch_pattern));
-}
-
-export async function matchRulesForMerge(repository: string, targetBranch: string) {
-  const rules = await prisma.deploymentRule.findMany({
-    where: {
-      repository,
-      enabled: true,
-      trigger_type: 'merge',
-    },
-  });
-
-  return rules.filter((rule) => branchMatches(targetBranch, rule.branch_pattern));
-}
-
-/**
- * Check if the last deployment for this rule had the same commit SHA and failed.
- * If so, skip to prevent infinite retry loops (same as platform pattern).
- */
-export async function shouldSkipDuplicate(ruleId: string, commitSha: string): Promise<boolean> {
-  const lastEvent = await prisma.deploymentEvent.findFirst({
-    where: { rule_id: ruleId },
-    orderBy: { started_at: 'desc' },
-  });
-
-  return !!(lastEvent && lastEvent.commit_sha === commitSha && lastEvent.status === 'failed');
-}
 
 // ─── Framework Detection ────────────────────────────────────────────────────
 
@@ -311,15 +277,6 @@ async function fetchFileContent(
   } catch {
     return null;
   }
-}
-
-function branchMatches(branch: string, pattern: string): boolean {
-  if (pattern === '*') return true;
-  if (pattern.endsWith('/*')) {
-    const prefix = pattern.slice(0, -1); // "feature/"
-    return branch.startsWith(prefix);
-  }
-  return branch === pattern;
 }
 
 // ─── Environment Resolution (for Canvas Branching) ──────────────────────────

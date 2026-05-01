@@ -36,6 +36,7 @@ import {
   setSelectionRect,
 } from '../../../store/slices/selection-slice';
 import { useCanvasInteractions } from '../hooks/use-canvas-interactions';
+import { useCanvasMouseRouting } from '../hooks/use-canvas-mouse-routing';
 import { useCanvasValidation } from '../hooks/use-canvas-validation';
 import { useComputingFlows } from '../hooks/use-computing-flows';
 import { useCanvasDimensions } from '../hooks/use-canvas-resize';
@@ -353,6 +354,19 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     handleConnectionEnd,
   } = useConnectionDrawing({ effectiveNodes, card, screenToCanvas });
 
+  // rf-svgcv2-2: SVG mouse-event routing — port-drag vs connection-drag
+  // vs canvas pan/select. The classList sniff for `.connection-port` on
+  // onMouseDown stays in the hook (orchestrator-side per blueprint risk
+  // #5 — keeps port-drag and pan/select disjoint at the dispatch seam).
+  const svgMouseHandlers = useCanvasMouseRouting({
+    bindCanvas,
+    drawingConnection,
+    handleConnectionPortDown,
+    handleConnectionMove,
+    handleConnectionEnd,
+    setConnTooltip,
+  });
+
   // Connection popover handlers removed — connections are auto-configured
 
   // rf-canv-12: bundle every dependency the per-node renderer dispatch
@@ -400,38 +414,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
         width={dimensions.width}
         height={dimensions.height}
         style={{ cursor: drawingConnection ? 'crosshair' : cursor }}
-        onMouseDown={(e) => {
-          // Dismiss any lingering connection tooltip on interaction start
-          setConnTooltip(null);
-          // Check if click is on a connection port first
-          const target = e.target as SVGElement;
-          if (target.classList.contains('connection-port')) {
-            handleConnectionPortDown(e);
-            return;
-          }
-          // Otherwise delegate to normal canvas interactions
-          bindCanvas.onMouseDown(e);
-        }}
-        onMouseMove={(e) => {
-          if (drawingConnection) {
-            handleConnectionMove(e);
-            return;
-          }
-          bindCanvas.onMouseMove(e);
-        }}
-        onMouseUp={(e) => {
-          if (drawingConnection) {
-            handleConnectionEnd(e);
-            return;
-          }
-          bindCanvas.onMouseUp(e);
-        }}
-        onMouseLeave={(e) => {
-          setConnTooltip(null);
-          bindCanvas.onMouseLeave(e);
-        }}
-        onAuxClick={bindCanvas.onAuxClick}
-        onContextMenu={bindCanvas.onContextMenu}
+        {...svgMouseHandlers}
       >
         <defs />
 

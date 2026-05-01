@@ -1127,3 +1127,25 @@ When extracting a JSX layer into its own component (e.g. `NodesLayer`'s `sortedN
 _Discovered: 2026-04-30 by implementer in rf-canv2-7_
 
 When extracting an inline JSX overlay block into its own component (e.g. `<GhostOverlay>` lifting the ghosts.map block out of svg-canvas), the natural-looking type for the accept/dismiss callbacks is `(ghost: GhostNode) => void` for both — symmetrical signatures read cleanly. The reality: `SvgGhostNode`'s prop types are `onAccept: (ghost: GhostNode) => void` and `onDismiss: (ghostId: string) => void` — asymmetric. The accept path needs the whole node object (callers create a new card node from the ghost's `suggestedType` + `position`); the dismiss path only needs the id (the ghost-slice reducer takes `removeGhost(ghostId)` keyed by id). Typing both as `(ghost: GhostNode) => void` triggers a TS2322 from the inner SvgGhostNode call: `Type '(ghost: GhostNode) => void' is not assignable to type '(ghostId: string) => void'`. Fix: preserve the asymmetry verbatim in the extracted component's props. Cite the asymmetry in a comment at the prop-type definition so the next refactorer doesn't try to "clean up" the inconsistency. Generalizes: any future overlay/render-prop extract that thread paired callbacks must consult the inner consumer's prop types verbatim BEFORE choosing the extracted component's signature — symmetry is not a goal here, behavior preservation is. The same shape recurs in any future props-extract from svg-canvas's render block (rf-canv2-7 + downstream rf-canv2-8+ if any). Diagnostic: TS2322 on a callback-prop pass-through that "looks the same as the other callback" — check whether the inner consumer expects different signatures.
+
+## rf-pipe-dependency-order-vs-brief-numbering
+
+_Discovered: 2026-04-30 by implementer in rf-pipe-2_
+
+The rf-pipe planner brief numbered units by topic affinity (rf-pipe-2 = rule-management, rf-pipe-5 = github-webhooks), but the *actual* dependency order is the inverse for these two: rule-management imports `registerGitHubWebhook` / `unregisterGitHubWebhook`, so github-webhooks must exist as a real module first or you eat a back-import (rule-management imports back from pipeline.service, which imports forward from rule-management — a cycle that resolves at runtime but smells terrible and breaks if the orchestrator ever stops re-exporting). Resolution: extract in dependency order, not brief order. Commit messages keep the brief's unit IDs (rf-pipe-1, rf-pipe-5, rf-pipe-2, rf-pipe-3, rf-pipe-4, rf-pipe-6, rf-pipe-7) so the orchestrator can match them against the plan, but the chronological commit order reflects the dependency DAG. Generalizes: when a planner brief lists N units with an explicit topic-grouping numbering, before starting unit-2 verify whether unit-N (for N>2) is actually a *dependency* of unit-2. If yes, run it first and let the commit message keep its assigned unit-id. The same shape will recur for any future ICE refactor where the planner's natural reading order differs from the import DAG (e.g. types modules near the end of a brief but consumed by everything earlier — pull them up; service modules near the front of a brief but with cross-cutting dependencies on a "helpers" module flagged late — pull the helpers up).
+
+## fetch-mock-as-vi-fn-with-arrow-typed-url-needs-no-vi-fn-default-type-workaround
+
+_Discovered: 2026-04-30 by implementer in rf-pipe-6_
+
+The `vi-fn-default-type-rejects-typed-callback-parameter` learning warns that `vi.fn()` with no generic rejects when the first call passes a callback typed by the test author. That gotcha is specifically about *passing* a typed callback to `vi.fn()` (e.g. `vi.fn().mockImplementation((cb: NodeStatusCallback) => ...)`). It does NOT apply to writing a fetch mock as `vi.fn(async (url: string) => { ... })` — there the typed parameter is on the *implementation function itself*, which `vi.fn` accepts via overload inference; the resulting mock has return-type inferred from the body, no generic needed. So the fetch-mock pattern in the framework-detection test reads as:
+
+```ts
+fetchMock = vi.fn(async (url: string) => {
+  if (url.includes('/contents/Dockerfile')) return { ok: true, json: async () => ({...}) };
+  return { ok: false, json: async () => ({}) };
+});
+vi.stubGlobal('fetch', fetchMock);
+```
+
+…and it typechecks cleanly without `vi.fn<typeof fetch>()` or `vi.fn<(u: string) => Promise<...>>()`. Generalizes: the `vi-fn-default-type-rejects-typed-callback-parameter` rule is narrower than its name suggests — it bites callbacks-as-arguments, not arrow-typed-url-as-implementation. When writing fetch mocks for any future pipeline-internal module that hits the GitHub Contents API (or any other URL-keyed dispatcher), reach for the inline `vi.fn(async (url: string) => {...})` shape; it gives you readable URL routing without a typing dance.

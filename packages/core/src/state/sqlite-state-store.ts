@@ -1,14 +1,30 @@
 /**
  * SQLite State Store
  *
- * SQLite-based implementation of the state store.
- * Uses better-sqlite3 for synchronous, transactional operations.
+ * SQLite-based implementation of the state store. The class itself
+ * is a thin orchestration shell — every method delegates to a
+ * standalone helper in `./sqlite/<domain>.ts`. Field-level mutable
+ * state lives on `this.ctx: SqliteContext`; the `options` object
+ * is read-only post-construction and only consumed by
+ * `lifecycle_initialize`.
+ *
+ * Decomposition map:
+ *  - `./sqlite/types.ts` — shapes (rf-sqlite-1)
+ *  - `./sqlite/resources.ts` — get/save/delete/query resources, plus
+ *    the shared `ensure_db` / `emit_event` / `wrap_error` /
+ *    `row_to_resource` helpers (rf-sqlite-2)
+ *  - `./sqlite/deployments.ts` — deployment record CRUD + status
+ *    update (rf-sqlite-3)
+ *  - `./sqlite/locks.ts` — graph lock acquire/refresh/release (rf-sqlite-4)
+ *  - `./sqlite/snapshots.ts` — snapshot create/restore/delete (rf-sqlite-5)
+ *  - `./sqlite/lifecycle.ts` — initialize/close/health_check + DDL +
+ *    statement priming (rf-sqlite-6)
+ *
+ * Public API unchanged — `SqliteStateStore`,
+ * `create_sqlite_state_store`, `create_memory_state_store`,
+ * `SqliteStateStoreOptions` all keep their pre-extraction shape.
  */
 
-import { create_deployment_id } from '../types/deployment.js';
-import { InternalError } from '../types/errors.js';
-import { create_node_id } from '../types/graph.js';
-import { success, failure } from '../types/result.js';
 import {
   deployments_get,
   deployments_get_all,
@@ -17,49 +33,38 @@ import {
   deployments_update_status,
 } from './sqlite/deployments.js';
 import { lifecycle_close, lifecycle_health_check, lifecycle_initialize } from './sqlite/lifecycle.js';
+import { locks_acquire, locks_get, locks_is_locked, locks_refresh, locks_release } from './sqlite/locks.js';
 import {
-  locks_acquire,
-  locks_refresh,
-  locks_release,
-  locks_is_locked,
-  locks_get,
-} from './sqlite/locks.js';
-import {
-  snapshots_create,
-  snapshots_get,
-  snapshots_list,
-  snapshots_restore,
-  snapshots_delete,
-} from './sqlite/snapshots.js';
-import {
+  resources_delete,
+  resources_delete_all,
   resources_get,
   resources_get_all,
   resources_query,
   resources_save,
   resources_save_many,
-  resources_delete,
-  resources_delete_all,
 } from './sqlite/resources.js';
-import { DEFAULT_OPTIONS, type SqliteContext } from './sqlite/types.js';
-import type {
-  StoredResourceState,
-  DeploymentRecord,
-  StateLock,
-  StateSnapshot,
-  ResourceQuery,
-  DeploymentQuery,
-  ObservableStateStore,
-  StateChangeListener,
-  StateChangeEvent,
-  StateChangeType,
-} from './state-store.js';
+import {
+  snapshots_create,
+  snapshots_delete,
+  snapshots_get,
+  snapshots_list,
+  snapshots_restore,
+} from './sqlite/snapshots.js';
+import { DEFAULT_OPTIONS, type SqliteContext, type SqliteStateStoreOptions } from './sqlite/types.js';
 import type { DeploymentId, DeploymentStatus } from '../types/deployment.js';
 import type { IceError } from '../types/errors.js';
 import type { NodeId } from '../types/graph.js';
-import type { ResourceState } from '../types/providers.js';
 import type { Result } from '../types/result.js';
-import type { SqliteStateStoreOptions } from './sqlite/types.js';
-import type { Database, Statement } from 'better-sqlite3';
+import type {
+  DeploymentQuery,
+  DeploymentRecord,
+  ObservableStateStore,
+  ResourceQuery,
+  StateChangeListener,
+  StateLock,
+  StateSnapshot,
+  StoredResourceState,
+} from './state-store.js';
 
 export type { SqliteStateStoreOptions };
 
@@ -80,21 +85,6 @@ export class SqliteStateStore implements ObservableStateStore {
 
   constructor(options: Partial<SqliteStateStoreOptions> = {}) {
     this.options = { ...DEFAULT_OPTIONS, ...options };
-  }
-
-  // Backwards-compat private accessors — kept while rf-sqlite-3..6 still
-  // touch class-private state. Removed in rf-sqlite-7.
-  private get db(): Database | null {
-    return this.ctx.db;
-  }
-  private set db(value: Database | null) {
-    this.ctx.db = value;
-  }
-  private get listeners(): Set<StateChangeListener> {
-    return this.ctx.listeners;
-  }
-  private get statements(): Map<string, Statement> {
-    return this.ctx.statements;
   }
 
   // ---------------------------------------------------------------------------
@@ -232,234 +222,12 @@ export class SqliteStateStore implements ObservableStateStore {
   // ---------------------------------------------------------------------------
 
   on_change(listener: StateChangeListener): void {
-    this.listeners.add(listener);
+    this.ctx.listeners.add(listener);
   }
 
   off_change(listener: StateChangeListener): void {
-    this.listeners.delete(listener);
+    this.ctx.listeners.delete(listener);
   }
-
-  // ---------------------------------------------------------------------------
-  // Private Methods
-  // ---------------------------------------------------------------------------
-
-  private ensure_initialized(): void {
-    if (!this.db) {
-      throw new Error('State store not initialized');
-    }
-  }
-
-  private create_tables(): void {
-    this.db!.exec(`
-      CREATE TABLE IF NOT EXISTS resources (
-        graph_id TEXT NOT NULL,
-        node_id TEXT NOT NULL,
-        ice_type TEXT NOT NULL,
-        name TEXT NOT NULL,
-        state_json TEXT NOT NULL,
-        status TEXT NOT NULL,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        version INTEGER NOT NULL DEFAULT 1,
-        PRIMARY KEY (graph_id, node_id)
-      );
-
-      CREATE INDEX IF NOT EXISTS idx_resources_graph ON resources(graph_id);
-      CREATE INDEX IF NOT EXISTS idx_resources_type ON resources(ice_type);
-      CREATE INDEX IF NOT EXISTS idx_resources_status ON resources(status);
-
-      CREATE TABLE IF NOT EXISTS deployments (
-        id TEXT PRIMARY KEY,
-        graph_id TEXT NOT NULL,
-        status TEXT NOT NULL,
-        started_at TEXT NOT NULL,
-        completed_at TEXT,
-        resource_count INTEGER NOT NULL DEFAULT 0,
-        success_count INTEGER NOT NULL DEFAULT 0,
-        failure_count INTEGER NOT NULL DEFAULT 0,
-        error_message TEXT,
-        version INTEGER NOT NULL DEFAULT 1
-      );
-
-      CREATE INDEX IF NOT EXISTS idx_deployments_graph ON deployments(graph_id);
-      CREATE INDEX IF NOT EXISTS idx_deployments_status ON deployments(status);
-
-      CREATE TABLE IF NOT EXISTS locks (
-        id TEXT PRIMARY KEY,
-        graph_id TEXT NOT NULL UNIQUE,
-        owner TEXT NOT NULL,
-        acquired_at TEXT NOT NULL,
-        expires_at TEXT NOT NULL,
-        deployment_id TEXT
-      );
-
-      CREATE INDEX IF NOT EXISTS idx_locks_expires ON locks(expires_at);
-
-      CREATE TABLE IF NOT EXISTS snapshots (
-        id TEXT PRIMARY KEY,
-        graph_id TEXT NOT NULL,
-        created_at TEXT NOT NULL,
-        description TEXT,
-        resource_data TEXT NOT NULL
-      );
-
-      CREATE INDEX IF NOT EXISTS idx_snapshots_graph ON snapshots(graph_id);
-    `);
-  }
-
-  private prepare_statements(): void {
-    this.statements.set(
-      'upsert_resource',
-      this.db!.prepare(`
-        INSERT INTO resources (graph_id, node_id, ice_type, name, state_json, status, created_at, updated_at, version)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ON CONFLICT(graph_id, node_id) DO UPDATE SET
-          ice_type = excluded.ice_type,
-          name = excluded.name,
-          state_json = excluded.state_json,
-          status = excluded.status,
-          updated_at = excluded.updated_at,
-          version = version + 1
-      `),
-    );
-
-    this.statements.set(
-      'upsert_deployment',
-      this.db!.prepare(`
-        INSERT INTO deployments (id, graph_id, status, started_at, completed_at, resource_count, success_count, failure_count, error_message, version)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ON CONFLICT(id) DO UPDATE SET
-          status = excluded.status,
-          completed_at = COALESCE(excluded.completed_at, completed_at),
-          resource_count = excluded.resource_count,
-          success_count = excluded.success_count,
-          failure_count = excluded.failure_count,
-          error_message = COALESCE(excluded.error_message, error_message),
-          version = version + 1
-      `),
-    );
-  }
-
-  private emit_event(type: StateChangeType, graph_id: string, node_id?: NodeId, deployment_id?: DeploymentId): void {
-    const event: StateChangeEvent = {
-      type,
-      timestamp: new Date().toISOString(),
-      graph_id,
-      node_id,
-      deployment_id,
-    };
-
-    for (const listener of this.listeners) {
-      try {
-        listener(event);
-      } catch {
-        // Ignore listener errors
-      }
-    }
-  }
-
-  private wrap_error(operation: string, error: unknown): Result<never, IceError> {
-    const err = error instanceof Error ? error : new Error(String(error));
-    return failure(
-      new InternalError(`State store ${operation} failed: ${err.message}`, 'INTERNAL_ERROR', { operation }, err),
-    );
-  }
-
-  private row_to_resource(row: ResourceRow): StoredResourceState {
-    return {
-      node_id: create_node_id(row.node_id),
-      ice_type: row.ice_type,
-      name: row.name,
-      state: JSON.parse(row.state_json) as ResourceState,
-      created_at: row.created_at,
-      updated_at: row.updated_at,
-      graph_id: row.graph_id,
-      version: row.version,
-    };
-  }
-
-  private row_to_deployment(row: DeploymentRow): DeploymentRecord {
-    return {
-      id: create_deployment_id(row.id),
-      graph_id: row.graph_id,
-      status: row.status as DeploymentStatus,
-      started_at: row.started_at,
-      completed_at: row.completed_at ?? undefined,
-      resource_count: row.resource_count,
-      success_count: row.success_count,
-      failure_count: row.failure_count,
-      error_message: row.error_message ?? undefined,
-      version: row.version,
-    };
-  }
-
-  private row_to_lock(row: LockRow): StateLock {
-    return {
-      id: row.id,
-      graph_id: row.graph_id,
-      owner: row.owner,
-      acquired_at: row.acquired_at,
-      expires_at: row.expires_at,
-      deployment_id: row.deployment_id ? create_deployment_id(row.deployment_id) : undefined,
-    };
-  }
-
-  private row_to_snapshot(row: SnapshotRow): StateSnapshot {
-    const resources = JSON.parse(row.resource_data) as ResourceRow[];
-    return {
-      id: row.id,
-      graph_id: row.graph_id,
-      created_at: row.created_at,
-      description: row.description ?? undefined,
-      resources: resources.map((r) => this.row_to_resource(r)),
-    };
-  }
-}
-
-// =============================================================================
-// Row Types
-// =============================================================================
-
-interface ResourceRow {
-  graph_id: string;
-  node_id: string;
-  ice_type: string;
-  name: string;
-  state_json: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
-  version: number;
-}
-
-interface DeploymentRow {
-  id: string;
-  graph_id: string;
-  status: string;
-  started_at: string;
-  completed_at: string | null;
-  resource_count: number;
-  success_count: number;
-  failure_count: number;
-  error_message: string | null;
-  version: number;
-}
-
-interface LockRow {
-  id: string;
-  graph_id: string;
-  owner: string;
-  acquired_at: string;
-  expires_at: string;
-  deployment_id: string | null;
-}
-
-interface SnapshotRow {
-  id: string;
-  graph_id: string;
-  created_at: string;
-  description: string | null;
-  resource_data: string;
 }
 
 // =============================================================================

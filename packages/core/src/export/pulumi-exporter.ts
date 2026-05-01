@@ -10,8 +10,12 @@ import {
   sanitize_name,
   sanitize_var_name,
   to_camel_case,
-  to_pascal_case,
 } from './pulumi/case-utils.js';
+import {
+  fallback_type_mapping,
+  get_package_name,
+  parse_resource_type,
+} from './pulumi/type-mapping.js';
 import type { MutableGraph } from '../graph/mutable-graph.js';
 import type { IceType } from '../schema/schema-provider.js';
 import type { Node } from '../types/graph.js';
@@ -146,7 +150,7 @@ export class PulumiExporter {
 
     if (!impl) {
       // Try fallback mapping
-      const fallback = this.fallbackTypeMapping(node.type, options.provider);
+      const fallback = fallback_type_mapping(node.type, options.provider);
       if (fallback) {
         return {
           success: true,
@@ -177,66 +181,6 @@ export class PulumiExporter {
         options: this.buildOptions(dependency_map.get(node.id) || []),
       },
     };
-  }
-
-  /**
-   * Fallback type mapping for common types.
-   */
-  private fallbackTypeMapping(ice_type: string, provider: string): string | null {
-    // Map ICE provider prefixes to Pulumi providers
-    const provider_map: Record<string, string> = {
-      google: 'gcp',
-      gcp: 'gcp',
-      aws: 'aws',
-      azure: 'azure-native',
-      azurerm: 'azure-native',
-    };
-
-    const pulumi_provider = provider_map[provider] || provider;
-
-    // Convert ICE type to Pulumi type
-    // e.g., gcp.compute.instance -> gcp:compute/instance:Instance
-    // e.g., aws.ec2.instance -> aws:ec2/instance:Instance
-    if (ice_type.startsWith('gcp.')) {
-      const parts = ice_type.substring(4).split('.');
-      if (parts.length >= 2) {
-        const module = parts[0];
-        const resource = parts.slice(1).join('/');
-        const className = to_pascal_case(parts[parts.length - 1] || '');
-        return `${pulumi_provider}:${module}/${resource}:${className}`;
-      }
-    }
-
-    if (ice_type.startsWith('aws.')) {
-      const parts = ice_type.substring(4).split('.');
-      if (parts.length >= 2) {
-        const module = parts[0];
-        const resource = parts.slice(1).join('/');
-        const className = to_pascal_case(parts[parts.length - 1] || '');
-        return `aws:${module}/${resource}:${className}`;
-      }
-    }
-
-    if (ice_type.startsWith('azure.')) {
-      const parts = ice_type.substring(6).split('.');
-      if (parts.length >= 2) {
-        const module = parts[0];
-        const resource = parts.slice(1).join('/');
-        const className = to_pascal_case(parts[parts.length - 1] || '');
-        return `azure-native:${module}/${resource}:${className}`;
-      }
-    }
-
-    // Generic fallback
-    const parts = ice_type.split('.');
-    if (parts.length >= 3) {
-      const [prov, module, ...rest] = parts;
-      const resource = rest.join('/');
-      const className = to_pascal_case(rest[rest.length - 1] || '');
-      return `${prov}:${module}/${resource}:${className}`;
-    }
-
-    return null;
   }
 
   /**
@@ -421,7 +365,7 @@ export class PulumiExporter {
 
     lines.push('import * as pulumi from "@pulumi/pulumi";');
     for (const provider of providers) {
-      const package_name = this.getPackageName(provider);
+      const package_name = get_package_name(provider);
       lines.push(`import * as ${provider.replace(/-/g, '_')} from "@pulumi/${package_name}";`);
     }
     lines.push('');
@@ -446,7 +390,7 @@ export class PulumiExporter {
     }
 
     for (const resource of program.resources) {
-      const { provider_alias: _provider_alias, class_path } = this.parseResourceType(resource.type);
+      const { provider_alias: _provider_alias, class_path } = parse_resource_type(resource.type);
 
       if (options.include_comments) {
         lines.push(`// ${resource.name}`);
@@ -473,42 +417,6 @@ export class PulumiExporter {
     }
 
     return lines.join('\n');
-  }
-
-  /**
-   * Get package name from provider.
-   */
-  private getPackageName(provider: string): string {
-    const package_map: Record<string, string> = {
-      gcp: 'gcp',
-      aws: 'aws',
-      'azure-native': 'azure-native',
-      azure: 'azure-native',
-      kubernetes: 'kubernetes',
-    };
-    return package_map[provider] || provider;
-  }
-
-  /**
-   * Parse resource type into provider alias and class path.
-   */
-  private parseResourceType(type: string): { provider_alias: string; class_path: string } {
-    // Format: provider:module/resource:Class
-    const match = type.match(/^([^:]+):([^/]+)\/([^:]+):(.+)$/);
-    if (match) {
-      const [, provider, module, , className] = match;
-      const provider_alias = provider!.replace(/-/g, '_');
-      return {
-        provider_alias,
-        class_path: `${provider_alias}.${module}.${className}`,
-      };
-    }
-
-    // Fallback
-    return {
-      provider_alias: 'unknown',
-      class_path: type,
-    };
   }
 
   /**

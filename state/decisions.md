@@ -130,3 +130,34 @@ Workflow per file: orchestrator picks target → decomposer drafts blueprint →
 - The agent .md files themselves stay in `.claude/agents/` for harness discovery; only `state/` was moved.
 
 **Related.** Supersedes the path choice in the [`2026-04-27 — Adopt persistent state system`](#2026-04-27--adopt-persistent-state-system) decision.
+
+---
+
+## 2026-05-02 — Merge `refactoring` branch as a single PR
+
+**Context.** The `refactoring` branch carries 509 commits ahead of `main`: the parallel-deploy initiative (pdl-1..10), the workspace-wide LOC discipline initiative (Phase 1 / 2 / 3 / Final round, 73 files refactored, ~7,500 new tests added, 4 latent bugs fixed). Branch is internally coherent — every commit ships with tests; the orchestrator pattern (planner / implementer / critic / ux-tester) and the per-unit cadence enforced behavior preservation throughout. ICE is pre-1.0; no external API stability obligations gate the cut.
+
+**Decision.** Merge the `refactoring` branch into `main` as **one squash-or-merge PR**, not split per phase.
+
+Rationale:
+- The two initiatives (parallel-deploy + LOC discipline) are interleaved in the commit graph; phase-PR splits would require cherry-picking and lose accurate `git blame`.
+- Each refactor unit was already gated by a critic pass + test deltas; per-unit reviewability already exists in the commit messages and per-unit blueprints (`state/blueprints/rf-*.md`).
+- A single merge preserves chronological order in `main`'s history and is the cheapest path to closing the long-running branch.
+- Pre-1.0 status means no semver / changelog burden tied to the cut shape.
+- No active feature work depends on a phase-by-phase cut; the deferred follow-ups (current In flight) layer cleanly on top of `main` post-merge.
+
+**Alternatives considered.**
+
+- *Split into Phase-1 / Phase-2 / Phase-3 / Final-round / bugfixes PRs.* Rejected. The refactor units were dispatched by file, not by phase boundary; many commits touch utilities shared across phase boundaries. Splitting would require synthetic boundaries and lose the per-unit shim-drop sequencing. Review burden is the same total but more painful when interleaved.
+- *Merge straight to `main` without a PR.* Rejected. Even though ICE is pre-1.0, the volume warrants a PR record for `main` history searchability — title + body capture the high-level summary that 509 individual commit messages don't.
+- *Keep cooking on `refactoring` and merge at end of Q2-2026.* Rejected. The branch is a closed initiative, not work-in-progress; further commits would be the deferred follow-ups (current In flight) and those are independent enough to ship as their own PRs after the merge.
+- *Merge commit vs squash.* No preference recorded — let the human PR reviewer pick. A merge commit preserves the per-unit history (richer `git log`); a squash collapses 509 → 1 (cleaner mainline graph). Both are acceptable.
+
+**Consequences.**
+
+- After merge, the deferred follow-ups (pdl-11, rollupPercentage extraction, nodesById warm-seed, dead snapshot fields, data.status fallback, 3 cross-package dedups) ship as their own PRs against the new `main`.
+- `state/refactor-targets.md` becomes historical reference — the queue is empty other than the 4 documented data-leaf exceptions.
+- `state/learnings.md` Q2-2026 quarterly compaction (separate work) lands either on `refactoring` pre-merge or on `main` post-merge — both are fine, no ordering constraint.
+- The pre-commit hook auto-bumps `package.json` version on every commit, so the cut version on `main` will be wherever the bump lands. Not load-bearing.
+
+**Related.** [`state/progress.md`](progress.md) (Archive entries for both initiatives), [`docs/refactoring-patterns.md`](../docs/refactoring-patterns.md) (the playbook distilled from the LOC initiative).

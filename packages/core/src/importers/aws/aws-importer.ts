@@ -6,13 +6,8 @@
  */
 
 import { get_ice_type, map_properties } from './type-mapper.js';
-import {
-  extract_name_from_arn,
-  extract_account_from_arn,
-  extract_region_from_arn,
-  parse_tags,
-} from './arn-helpers.js';
-import { init_aws_sdk, get_account_id, type AWSSdk } from './sdk-init.js';
+import { init_aws_sdk, get_account_id } from './sdk-init.js';
+import { discover_with_resource_explorer, discover_with_config } from './discovery.js';
 import { classifyAWSError, ImportErrorCode } from '../../errors/import-errors.js';
 import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph.js';
 import type {
@@ -320,93 +315,6 @@ export function aws_result_to_graph(result: AWSImportResult, graph_name: string 
   }
 
   return graph;
-}
-
-// =============================================================================
-// Resource Discovery
-// =============================================================================
-
-async function discover_with_resource_explorer(
-  sdk: AWSSdk,
-  _opts: Required<Omit<AWSImportOptions, 'profile'>>,
-): Promise<AWSResource[]> {
-  const resources: AWSResource[] = [];
-
-  const re_module_name = '@aws-sdk/client-resource-explorer-2';
-  const re_mod = await Function('m', 'return import(m)')(re_module_name);
-
-  // Search for all resources
-  let next_token: string | undefined;
-
-  do {
-    const command = new re_mod.SearchCommand({
-      QueryString: '*', // Search all resources
-      MaxResults: 100,
-      NextToken: next_token,
-    });
-
-    const response = await sdk.ResourceExplorer.send(command);
-
-    for (const resource of response.Resources || []) {
-      resources.push({
-        arn: resource.Arn || '',
-        name: extract_name_from_arn(resource.Arn || ''),
-        resource_type: resource.ResourceType || '',
-        region: resource.Region || 'global',
-        account_id: extract_account_from_arn(resource.Arn || ''),
-        properties: resource.Properties || {},
-        tags: parse_tags(resource.Properties),
-      });
-    }
-
-    next_token = response.NextToken;
-  } while (next_token);
-
-  return resources;
-}
-
-async function discover_with_config(
-  sdk: AWSSdk,
-  _opts: Required<Omit<AWSImportOptions, 'profile'>>,
-): Promise<AWSResource[]> {
-  const resources: AWSResource[] = [];
-
-  const config_module_name = '@aws-sdk/client-config-service';
-  const config_mod = await Function('m', 'return import(m)')(config_module_name);
-
-  // Query all resources using AWS Config's advanced query
-  let next_token: string | undefined;
-
-  do {
-    const command = new config_mod.SelectResourceConfigCommand({
-      Expression: "SELECT resourceId, resourceType, arn, configuration, tags WHERE resourceType LIKE '%'",
-      Limit: 100,
-      NextToken: next_token,
-    });
-
-    const response = await sdk.ConfigService.send(command);
-
-    for (const result of response.Results || []) {
-      try {
-        const resource_data = JSON.parse(result);
-        resources.push({
-          arn: resource_data.arn || '',
-          name: resource_data.resourceId || extract_name_from_arn(resource_data.arn || ''),
-          resource_type: resource_data.resourceType || '',
-          region: extract_region_from_arn(resource_data.arn || ''),
-          account_id: extract_account_from_arn(resource_data.arn || ''),
-          properties: resource_data.configuration || {},
-          tags: resource_data.tags || {},
-        });
-      } catch {
-        // Skip unparseable results
-      }
-    }
-
-    next_token = response.NextToken;
-  } while (next_token);
-
-  return resources;
 }
 
 // =============================================================================

@@ -20,6 +20,11 @@ import { randomUUID } from 'node:crypto';
 import prisma from '@ice/db';
 import * as providerService from '@ice/service-credentials';
 
+import {
+  isPermissionDenied,
+  mapEntry,
+  probeErrorMessage,
+} from './log-stream/entry-mapping.js';
 import { resolveLogFilter } from './log-stream/filter-resolver.js';
 import {
   emitToRoom,
@@ -686,94 +691,3 @@ function scheduleTailReconnect(stream: ActiveStream): void {
   }, delay);
 }
 
-// ── Entry mapping ─────────────────────────────────────────────────────
-
-function mapEntry(entry: any): LogEntry | null {
-  if (!entry) return null;
-  // The SDK's Entry has `metadata` for envelope fields and `data` for
-  // payload. Both are populated for entries returned from getEntries +
-  // tailEntries (Entry.fromApiResponse_).
-  const meta = entry.metadata ?? {};
-  const tsRaw = meta.timestamp ?? entry.timestamp;
-  const ts = normalizeTimestamp(tsRaw);
-  if (!ts) return null;
-  const insertId = String(meta.insertId ?? entry.insertId ?? '');
-  if (!insertId) return null;
-  const severity = String(meta.severity ?? entry.severity ?? 'INFO').toLowerCase();
-  const level = mapLevel(severity);
-
-  const data = entry.data;
-  let message: string;
-  if (typeof data === 'string') {
-    message = data;
-  } else if (data == null) {
-    message = '';
-  } else {
-    try {
-      message = JSON.stringify(data);
-    } catch {
-      message = String(data);
-    }
-  }
-
-  const resourceMeta = meta.resource ?? entry.resource ?? {};
-  const resource = {
-    type: String(resourceMeta.type ?? ''),
-    labels: (resourceMeta.labels ?? {}) as Record<string, string>,
-  };
-
-  return { ts, level, message, resource, insertId };
-}
-
-function mapLevel(severity: string): LogEntry['level'] {
-  switch (severity) {
-    case 'debug':
-      return 'debug';
-    case 'info':
-      return 'info';
-    case 'notice':
-      return 'notice';
-    case 'warning':
-    case 'warn':
-      return 'warn';
-    case 'error':
-    case 'critical':
-    case 'alert':
-    case 'emergency':
-      return 'error';
-    default:
-      return 'info';
-  }
-}
-
-function normalizeTimestamp(raw: unknown): string | null {
-  if (!raw) return null;
-  if (typeof raw === 'string') return raw;
-  if (raw instanceof Date) return raw.toISOString();
-  // Protobuf Timestamp shape — { seconds, nanos }.
-  if (typeof raw === 'object' && raw !== null && 'seconds' in (raw as any)) {
-    const seconds = Number((raw as any).seconds ?? 0);
-    const nanos = Number((raw as any).nanos ?? 0);
-    return new Date(seconds * 1000 + nanos / 1e6).toISOString();
-  }
-  return null;
-}
-
-// ── Error classification ──────────────────────────────────────────────
-
-function isPermissionDenied(err: any): boolean {
-  if (!err) return false;
-  // gRPC code 7 = PERMISSION_DENIED. The SDK surfaces it on err.code
-  // (numeric) and sometimes err.status === 'PERMISSION_DENIED'.
-  if (err.code === 7) return true;
-  if (typeof err.code === 'string' && err.code.toUpperCase() === 'PERMISSION_DENIED') return true;
-  if (err.status && String(err.status).toUpperCase() === 'PERMISSION_DENIED') return true;
-  const msg = String(err.message ?? '').toLowerCase();
-  if (msg.includes('permission_denied') || msg.includes('permission denied')) return true;
-  return false;
-}
-
-function probeErrorMessage(err: any): string {
-  if (!err) return 'Unknown Cloud Logging error.';
-  return err.message ?? String(err);
-}

@@ -7,11 +7,10 @@
 
 import { ValidationError } from '../types/errors.js';
 import { success, failure } from '../types/result.js';
-import type { IceType, PropertySchema, SchemaProvider } from './schema-provider.js';
-import type { ValidationViolation } from '../types/errors.js';
+import type { IceType, SchemaProvider } from './schema-provider.js';
 import type { Result } from '../types/result.js';
-import { validate_constraints } from './validation/constraints.js';
-import { validate_type } from './validation/type-checker.js';
+import { to_validation_error } from './validation/error-conversion.js';
+import { validate_property } from './validation/property-validator.js';
 
 // Re-export the validation types (extracted in rf-rval-1 to a sibling
 // file so the helpers can import without pulling in the orchestrator).
@@ -68,7 +67,7 @@ export class ResourceValidator {
     for (const prop_schema of schema.properties) {
       if (skip_set.has(prop_schema.name)) continue;
 
-      const prop_issues = this.validate_property(
+      const prop_issues = validate_property(
         prop_schema.name,
         properties[prop_schema.name],
         prop_schema,
@@ -111,110 +110,10 @@ export class ResourceValidator {
   }
 
   /**
-   * Validate a single property.
-   */
-  private validate_property(
-    path: string,
-    value: unknown,
-    schema: PropertySchema,
-    options: ValidationOptions,
-    depth: number,
-    max_depth: number,
-  ): ValidationIssue[] {
-    const issues: ValidationIssue[] = [];
-
-    // Check required
-    if (schema.required && (value === undefined || value === null)) {
-      issues.push({
-        path,
-        message: `Required property '${schema.name}' is missing`,
-        severity: 'error',
-        code: 'MISSING_REQUIRED',
-        expected: schema.type,
-      });
-      return issues; // No further validation if missing
-    }
-
-    // Skip validation if value is undefined and not required
-    if (value === undefined || value === null) {
-      return issues;
-    }
-
-    // Type validation
-    const type_issue = validate_type(path, value, schema.type);
-    if (type_issue) {
-      issues.push(type_issue);
-      return issues; // Wrong type, skip further validation
-    }
-
-    // Constraint validation
-    if (schema.validation) {
-      const constraint_issues = validate_constraints(path, value, schema.validation);
-      issues.push(...constraint_issues);
-    }
-
-    // Nested property validation
-    if (schema.nested_properties && schema.nested_properties.length > 0 && depth < max_depth) {
-      if (schema.type === 'object' && typeof value === 'object' && value !== null) {
-        const nested = value as Record<string, unknown>;
-        for (const nested_schema of schema.nested_properties) {
-          const nested_path = `${path}.${nested_schema.name}`;
-          const nested_issues = this.validate_property(
-            nested_path,
-            nested[nested_schema.name],
-            nested_schema,
-            options,
-            depth + 1,
-            max_depth,
-          );
-          issues.push(...nested_issues);
-        }
-      }
-
-      if (schema.type === 'array' && Array.isArray(value)) {
-        for (let i = 0; i < value.length; i++) {
-          const item_path = `${path}[${i}]`;
-          // For arrays, nested_properties typically describe the item schema
-          if (typeof value[i] === 'object' && value[i] !== null) {
-            for (const nested_schema of schema.nested_properties) {
-              const item = value[i] as Record<string, unknown>;
-              const nested_path = `${item_path}.${nested_schema.name}`;
-              const nested_issues = this.validate_property(
-                nested_path,
-                item[nested_schema.name],
-                nested_schema,
-                options,
-                depth + 1,
-                max_depth,
-              );
-              issues.push(...nested_issues);
-            }
-          }
-        }
-      }
-    }
-
-    return issues;
-  }
-
-  /**
    * Convert validation result to ValidationError.
    */
   to_validation_error(result: ValidationResult): ValidationError | null {
-    if (result.valid) return null;
-
-    const violations: ValidationViolation[] = result.errors.map((issue) => ({
-      path: issue.path,
-      message: issue.message,
-      code: issue.code,
-      value: issue.actual,
-    }));
-
-    return new ValidationError(
-      `Validation failed for ${result.ice_type}: ${result.errors.length} error(s)`,
-      violations,
-      'VALIDATION_FAILED',
-    );
+    return to_validation_error(result);
   }
 
   /**
@@ -242,7 +141,7 @@ export class ResourceValidator {
       ];
     }
 
-    return this.validate_property(property_path, value, prop_schema, {}, 0, 10);
+    return validate_property(property_path, value, prop_schema, {}, 0, 10);
   }
 }
 

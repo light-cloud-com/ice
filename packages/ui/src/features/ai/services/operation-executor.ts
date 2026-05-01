@@ -5,7 +5,6 @@
  * Handles ID remapping, blueprint resolution, validation, and undo snapshots.
  */
 
-import { getBlueprint, expandBlueprint } from '../../../config/blocks';
 import { canContain } from '../../../config/containment-rules';
 import { store } from '../../../store';
 import {
@@ -22,10 +21,9 @@ import {
   autoOrganizeCard,
   selectActiveCard,
 } from '../../../store/slices/cards-slice';
-import type { Provider } from '../../../config/blocks/types';
 import type { AppDispatch } from '../../../store';
 import type { Card, CardNode } from '../../../store/slices/cards-slice';
-import type { AiCanvasOp, AddBlueprintOp } from '@ice/types';
+import type { AiCanvasOp } from '@ice/types';
 import {
   MAX_OPS,
   NODE_GAP_X,
@@ -46,6 +44,7 @@ import {
   findPosition,
   findChildPosition,
 } from './ai-ops/position-finder';
+import { resolveBlueprint } from './ai-ops/blueprint-resolver';
 
 // =============================================================================
 // Types — re-exported from ai-ops/types
@@ -53,35 +52,6 @@ import {
 
 import type { SkippedOp, ExecutionResult } from './ai-ops/types';
 export type { SkippedOp, ExecutionResult } from './ai-ops/types';
-
-// =============================================================================
-// Blueprint Resolution
-// =============================================================================
-
-function resolveBlueprint(op: AddBlueprintOp, card: Card, idMap: Map<string, string>): CardNode | null {
-  const blueprint = getBlueprint(op.iceType, op.provider);
-  if (!blueprint) return null;
-
-  const parentContainerId = op.parentId ? resolveId(op.parentId, idMap) : undefined;
-  const position = op.position || findPosition(card, parentContainerId);
-
-  const expanded = expandBlueprint(blueprint, {
-    position,
-    provider: (op.provider as Provider) || undefined,
-    parentContainerId,
-  });
-
-  const node = expanded.node as CardNode;
-
-  if (op.label) {
-    node.data = { ...node.data, label: op.label };
-  }
-  if (op.dataOverrides) {
-    node.data = { ...node.data, ...op.dataOverrides };
-  }
-
-  return node;
-}
 
 // =============================================================================
 // Container Auto-Resize

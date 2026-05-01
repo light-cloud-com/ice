@@ -47,6 +47,7 @@ import {
 } from '../../../store/slices/pipeline-slice';
 import type { RootState, AppDispatch } from '../../../store';
 import { formatRelativeTime, formatDuration, formatFramework } from '../utils/format';
+import { Section } from './section';
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
@@ -442,21 +443,6 @@ export const PipelinePanel: React.FC = () => {
 };
 
 // ─── Sub-components ─────────────────────────────────────────────────────────
-
-const Section: React.FC<{
-  title: string;
-  icon: React.ElementType;
-  iconClassName?: string;
-  children: React.ReactNode;
-}> = ({ title, icon: Icon, iconClassName, children }) => (
-  <div className="px-4 py-3 border-b border-ice-border">
-    <div className="flex items-center gap-1.5 mb-2">
-      <Icon className={cn('w-3.5 h-3.5 text-ice-text-3', iconClassName)} />
-      <span className="text-xs font-semibold text-ice-text-2 uppercase tracking-wider">{title}</span>
-    </div>
-    {children}
-  </div>
-);
 
 const StatusPill: React.FC<{ status: string }> = ({ status }) => {
   const { t } = useTranslation();

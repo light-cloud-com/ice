@@ -26,26 +26,27 @@ import type { Provider } from '../../../config/blocks/types';
 import type { AppDispatch } from '../../../store';
 import type { Card, CardNode } from '../../../store/slices/cards-slice';
 import type { AiCanvasOp, AddBlueprintOp } from '@ice/types';
+import {
+  MAX_OPS,
+  NODE_GAP_X,
+  NODE_GAP_Y,
+  NODE_WIDTH,
+  NODE_HEIGHT,
+  HELPER_NODE_WIDTH,
+  HELPER_NODE_HEIGHT,
+  COLS_PER_ROW,
+  CONTAINER_INNER_PAD,
+  CONTAINER_HEADER_PAD,
+  RESIZE_PAD,
+  RESIZE_HEADER,
+} from './ai-ops/types';
 
 // =============================================================================
-// Types
+// Types — re-exported from ai-ops/types
 // =============================================================================
 
-export interface SkippedOp {
-  op: AiCanvasOp;
-  reason: string;
-}
-
-export interface ExecutionResult {
-  success: boolean;
-  executedOps: number;
-  skippedOps: SkippedOp[];
-  /** Map of AI-generated placeholder IDs to real IDs */
-  createdNodeIds: Map<string, string>;
-}
-
-/** Max operations per AI response to prevent overwhelming the canvas */
-const MAX_OPS = 50;
+import type { SkippedOp, ExecutionResult } from './ai-ops/types';
+export type { SkippedOp, ExecutionResult } from './ai-ops/types';
 
 // =============================================================================
 // ID Generation (matches expand-blueprint.ts pattern)
@@ -79,16 +80,6 @@ function nodeExists(nodeId: string, card: Card, idMap: Map<string, string>): boo
 // =============================================================================
 // Positioning — non-overlapping grid placement
 // =============================================================================
-
-const NODE_GAP_X = 36;
-const NODE_GAP_Y = 36;
-const NODE_WIDTH = 220;
-const NODE_HEIGHT = 72;
-const HELPER_NODE_WIDTH = 170;
-const HELPER_NODE_HEIGHT = 56;
-const COLS_PER_ROW = 3;
-const CONTAINER_INNER_PAD = 30;
-const CONTAINER_HEADER_PAD = 50;
 
 /** Helper/utility nodes get a smaller default size */
 function isHelperIceType(iceType: string): boolean {
@@ -243,9 +234,6 @@ function resolveBlueprint(op: AddBlueprintOp, card: Card, idMap: Map<string, str
 // =============================================================================
 // Container Auto-Resize
 // =============================================================================
-
-const RESIZE_PAD = 24;
-const RESIZE_HEADER = 40;
 
 /**
  * After AI operations, auto-resize all group/container nodes

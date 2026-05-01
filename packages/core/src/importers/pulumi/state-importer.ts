@@ -15,7 +15,7 @@ import {
   create_empty_metadata,
 } from './parsing.js';
 import { import_resource } from './resource-conversion.js';
-import { MutableGraph, create_mutable_graph } from '../../graph/mutable-graph.js';
+import type { MutableGraph } from '../../graph/mutable-graph.js';
 import type {
   PulumiStackState,
   PulumiStackExport,
@@ -26,7 +26,6 @@ import type {
   PulumiImportWarning,
   PulumiImportMetadata,
 } from './types.js';
-import type { NodeInput, EdgeInput } from '../../types/graph.js';
 
 // =============================================================================
 // Import Options
@@ -273,115 +272,7 @@ export function import_pulumi_state_object(
 }
 
 // =============================================================================
-// Graph Conversion
+// Graph Conversion (re-exports)
 // =============================================================================
 
-/**
- * Convert imported resources to an ICE graph.
- */
-export function import_result_to_graph(result: PulumiImportResult, graph_name: string = 'pulumi-import'): MutableGraph {
-  const graph = create_mutable_graph(graph_name, {
-    description: `Imported from Pulumi stack ${result.metadata.stack}`,
-    labels: {
-      source: 'pulumi',
-      pulumi_version: result.metadata.pulumi_version,
-      stack: result.metadata.stack,
-      project: result.metadata.project,
-    },
-  });
-
-  // Track URN to node ID mapping
-  const urn_to_node_id = new Map<string, string>();
-
-  // Add nodes for each resource
-  for (const resource of result.resources) {
-    const node_input: NodeInput = {
-      type: resource.ice_type,
-      name: resource.name,
-      properties: {
-        ...resource.properties,
-        _pulumi_urn: resource.pulumi_urn,
-        _pulumi_type: resource.pulumi_type,
-      },
-      labels: {
-        provider: resource.provider,
-        pulumi_type: resource.pulumi_type,
-      },
-      annotations: {
-        imported_from: 'pulumi',
-        pulumi_urn: resource.pulumi_urn,
-      },
-    };
-
-    if (resource.id) {
-      node_input.properties!['id'] = resource.id;
-    }
-
-    if (resource.protect) {
-      node_input.labels!['protected'] = 'true';
-    }
-
-    if (resource.external) {
-      node_input.labels!['external'] = 'true';
-    }
-
-    const add_result = graph.add_node(node_input);
-    if (add_result.success && add_result.node) {
-      urn_to_node_id.set(resource.pulumi_urn, add_result.node.id);
-    }
-  }
-
-  // Add edges for dependencies
-  for (const resource of result.resources) {
-    const source_id = urn_to_node_id.get(resource.pulumi_urn);
-    if (!source_id) continue;
-
-    for (const dep_urn of resource.dependencies) {
-      const target_id = urn_to_node_id.get(dep_urn);
-      if (!target_id) continue;
-
-      // Skip self-dependencies
-      if (source_id === target_id) continue;
-
-      const edge_input: EdgeInput = {
-        source: source_id,
-        target: target_id,
-        relationship: 'depends_on',
-        labels: {
-          source: 'pulumi',
-        },
-      };
-
-      graph.add_edge(edge_input);
-    }
-  }
-
-  return graph;
-}
-
-/**
- * Import Pulumi state directly to a graph.
- */
-export async function import_pulumi_to_graph(
-  state_path: string,
-  options: PulumiImportOptions = {},
-): Promise<{ graph: MutableGraph; result: PulumiImportResult }> {
-  const result = await import_pulumi_state(state_path, options);
-  const graph = options.target_graph ?? import_result_to_graph(result);
-
-  if (options.target_graph) {
-    // Merge into existing graph
-    const merge_result = import_result_to_graph(result, 'temp');
-    for (const node of merge_result.nodes.values()) {
-      options.target_graph.add_node({
-        type: node.type,
-        name: node.name,
-        properties: node.properties,
-        labels: node.metadata.labels,
-        annotations: node.metadata.annotations,
-      });
-    }
-  }
-
-  return { graph, result };
-}
+export { import_result_to_graph, import_pulumi_to_graph } from './graph-conversion.js';

@@ -11,26 +11,24 @@
  * - Scroll wheel: zoom in/out
  */
 
-import React, { useRef, type CSSProperties } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useRef } from 'react';
+import { useDispatch } from 'react-redux';
 // Note: Graph actions no longer used - all node operations go through cardsSlice
 // Viewport is now stored per-pane in uiSlice (for split view support)
 import { CanvasGrid } from './canvas-grid';
 import { CanvasContextMenu } from './context/canvas-context-menu';
 import { ControlsHelpModal } from './controls-help-modal';
 // ConnectionTypePopover removed — connections are fully auto-configured
-import { SvgGhostEdge } from './ghost/svg-ghost-edge';
 import { SelectionFrame } from './selection-frame';
 import { ConnectionLayer } from './connection-layer';
 import { ConnectionPreviewOverlay } from './connection-preview-overlay';
 import { ConnectionTooltip } from './connection-tooltip';
 import { UserTrafficOverlay } from './user-traffic-overlay';
 import { CanvasDeployBanner } from './deploy-banner';
-import { selectActiveCard } from '../../../store/slices/cards-slice';
-import { SvgGhostNode } from './ghost/svg-ghost-node';
-import { NodeLiftWrapper } from './canvas-renderer/lift-wrapper';
+import { GhostOverlay } from './ghost/ghost-overlay';
 import { ParentClipDefs } from './canvas-renderer/parent-clip-defs';
-import { renderCanvasNode, type RenderCtx } from './canvas-renderer/node-renderer-registry';
+import { NodesLayer } from './canvas-renderer/nodes-layer';
+import { type RenderCtx } from './canvas-renderer/node-renderer-registry';
 // Bespoke-from-day-one nodes with inline editing
 import {
   GRID_SIZE,
@@ -62,8 +60,9 @@ import { useCanvasData } from '../hooks/use-canvas-data';
 import { useCanvasTraversal } from '../hooks/use-canvas-traversal';
 import { useCanvasHandlers } from '../hooks/use-canvas-handlers';
 import { useCanvasEffects } from '../hooks/use-canvas-effects';
+import { useCanvasSelectors } from '../hooks/use-canvas-selectors';
 import { getConnectedPipelineStatuses } from '../utils/get-connected-pipeline-statuses';
-import type { RootState, AppDispatch } from '../../../store';
+import type { AppDispatch } from '../../../store';
 
 // rf-canv-1: re-export shim — the canonical home for these three types is
 // `./types`. 11+ consumers still import them from this file; keep the shim
@@ -115,25 +114,26 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Redux state - use specified card or active card for nodes/edges
-  const activeCard = useSelector(selectActiveCard);
-  const allCards = useSelector((state: RootState) => state.cards.cards);
-  // rf-canv-17: the canvas-level deploy banner (status text +
-  // terminal-of-total count + active-node line + progress bar) lives in
-  // `./deploy-banner` as `<CanvasDeployBanner cardId={...} />`. It owns
-  // its own `state.deploy.{status, currentDeployCardId, nodesById}`
-  // selectors + `deriveRollup` / `bannerActiveNode` / `bannerPct` memos
-  // — the orchestrator only threads the active-card id.
-  const card = cardId ? allCards.find((c) => c.id === cardId) : activeCard;
-  const selectedNodes = useSelector((state: RootState) => state.selection.selectedNodes);
-  const selectedEdges = useSelector((state: RootState) => state.selection.selectedEdges);
-  const viewLevel = useSelector((state: RootState) => state.view.viewLevel);
-  const animatingNodes = useSelector((state: RootState) => state.ai.animatingNodes);
-  const animatingEdges = useSelector((state: RootState) => state.ai.animatingEdges);
-  const aiCurrentIntent = useSelector((state: RootState) => state.ai.currentIntent);
-  const pipelineNodeStatus = useSelector((state: RootState) => state.pipeline.nodeStatus);
-  const edgeStyle = useSelector((state: RootState) => state.ui.edgeStyle);
-  const validationIssues = useSelector((state: RootState) => state.validation.issues);
+  // rf-canv2-7: the eleven cross-slice useSelector calls + the derived
+  // `card` lookup (explicit cardId vs active card) live in
+  // `useCanvasSelectors`. rf-canv-17: the canvas-level deploy banner
+  // owns its own deploy-slice selectors — the orchestrator only threads
+  // the activeCard.id below.
+  const {
+    card,
+    activeCard,
+    selectedNodes,
+    selectedEdges,
+    viewLevel,
+    animatingNodes,
+    animatingEdges,
+    aiCurrentIntent,
+    pipelineNodeStatus,
+    edgeStyle,
+    validationIssues,
+    snapToGrid,
+    canvasLocked,
+  } = useCanvasSelectors({ cardId });
   // Clipboard (Ctrl+C/V/X) and Undo/Redo (Ctrl+Z / Ctrl+Shift+Z)
   useClipboard();
   useUndoRedo();
@@ -158,9 +158,6 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   // effect, and the persistViewport callback that picks the right
   // setPaneViewport / setCardViewportById / setCardViewport action creator.
   const { viewport, lod, persistViewport } = useCanvasViewport({ cardId, paneId });
-
-  const snapToGrid = useSelector((state: RootState) => state.ui.snapToGrid);
-  const canvasLocked = useSelector((state: RootState) => state.ui.canvasLocked);
 
   // Canvas dimensions — ResizeObserver-tracked, default 800x600 until first
   // measurement. rf-canv-18: extracted to `../hooks/use-canvas-resize`.
@@ -491,56 +488,16 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
           {/* Nodes layer — Groups, Blocks, Resources, or Log terminals.
               rf-canv-12: per-node dispatch (iceType + node.type → component
               choice) lives in `./canvas-renderer/node-renderer-registry`.
-              The orchestrator wraps the factory's element in
-              `<NodeLiftWrapper>` (rf-canv-10) and derives the wrapper's
-              outer `key` from a priority chain that mirrors the original
-              `wrapLift` closure: lifted → bare id, parentId → clipped-id,
-              animating → anim-id, else the per-call-site `innerKey` the
-              factory hands back. */}
-          <g className="nodes-layer">
-            {sortedNodes.map((node) => {
-              // Entrance animation for AI-generated nodes
-              const animDelay = animatingNodes[node.id];
-              const isAnimating = animDelay !== undefined;
-              const animStyle: CSSProperties | undefined = isAnimating
-                ? {
-                    animation: `ice-node-entrance 0.4s cubic-bezier(0.16, 1, 0.3, 1) ${animDelay}ms both`,
-                    transformOrigin: `${node.x + node.width / 2}px ${node.y + node.height / 2}px`,
-                  }
-                : undefined;
-
-              // Shift-drag highlight: colored border + shadow for all dragged nodes
-              const isLifted = shiftDraggingNodeIds.has(node.id);
-
-              const { element, innerKey } = renderCanvasNode(node, renderCtx);
-
-              // Wrapper key derivation — mirrors the original `wrapLift` outer-key
-              // priority chain so React reconciliation behavior is preserved when
-              // the (isLifted, parentId, isAnimating) tuple changes between renders.
-              // Falls back to the per-call-site inner key (e.g. `${id}-lod${lod}`)
-              // when no wrapper-level branch applies (rf-canv-10).
-              const wrapperKey = isLifted
-                ? node.id
-                : node.parentId
-                  ? `clipped-${node.id}`
-                  : isAnimating
-                    ? `anim-${node.id}`
-                    : innerKey;
-
-              return (
-                <NodeLiftWrapper
-                  key={wrapperKey}
-                  node={node}
-                  isAnimating={isAnimating}
-                  animStyle={animStyle}
-                  isLifted={isLifted}
-                  dragOverGroupId={dragOverGroupId}
-                >
-                  {element}
-                </NodeLiftWrapper>
-              );
-            })}
-          </g>
+              rf-canv2-7: the wrap-and-key loop lives in
+              `./canvas-renderer/nodes-layer`; the wrapper's outer-key
+              priority chain (rf-canv-10) is preserved verbatim. */}
+          <NodesLayer
+            sortedNodes={sortedNodes}
+            animatingNodes={animatingNodes}
+            shiftDraggingNodeIds={shiftDraggingNodeIds}
+            dragOverGroupId={dragOverGroupId}
+            renderCtx={renderCtx}
+          />
 
           {/* Connection drawing preview — extracted to ConnectionPreviewOverlay (rf-canv-14).
               Bezier math + color picker live in `../utils/connection-preview` (rf-canv-8). */}
@@ -588,20 +545,15 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             handleContextMenu={handleContextMenu}
           />
 
-          {/* Ghost-mode suggestions (AI-Native #1) */}
-          {ghosts.length > 0 && (
-            <g pointerEvents="auto">
-              {ghosts.map((ghost) => {
-                const sourceNode = nodes.find((n) => n.id === ghost.sourceNodeId);
-                return (
-                  <React.Fragment key={ghost.id}>
-                    {sourceNode && <SvgGhostEdge ghost={ghost} sourceNode={sourceNode} />}
-                    <SvgGhostNode ghost={ghost} onAccept={handleAcceptGhost} onDismiss={handleDismissGhost} />
-                  </React.Fragment>
-                );
-              })}
-            </g>
-          )}
+          {/* Ghost-mode suggestions (AI-Native #1) — rf-canv2-7: extracted
+              to `./ghost/ghost-overlay`. Returns null when ghosts is empty
+              so the orchestrator's JSX surface stays compact. */}
+          <GhostOverlay
+            ghosts={ghosts}
+            nodes={nodes}
+            onAccept={handleAcceptGhost}
+            onDismiss={handleDismissGhost}
+          />
         </g>
       </svg>
 

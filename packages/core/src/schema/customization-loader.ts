@@ -8,17 +8,22 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { create_example_files } from './customization/example-files.js';
+import {
+  CUSTOM_SUBDIR,
+  DEFAULT_CUSTOMIZATION_DIR,
+  OVERRIDES_SUBDIR,
+  PROVIDERS_SUBDIR,
+  RELATIONSHIPS_SUBDIR,
+} from './customization/paths.js';
 
 // ============================================================================
-// Types
+// Types (re-exported from customization/paths.js so external consumers
+// continue importing them from this shim)
 // ============================================================================
 
-export interface CustomizationPaths {
-  providers_dir: string;
-  overrides_dir: string;
-  custom_dir: string;
-  relationships_dir: string;
-}
+export type { CustomizationPaths } from './customization/paths.js';
+import type { CustomizationPaths } from './customization/paths.js';
 
 export interface CustomizationSummary {
   base_path: string;
@@ -52,16 +57,6 @@ export interface ValidationWarning {
   file: string;
   message: string;
 }
-
-// ============================================================================
-// Constants
-// ============================================================================
-
-const DEFAULT_CUSTOMIZATION_DIR = '.ice/schemas';
-const PROVIDERS_SUBDIR = 'providers';
-const OVERRIDES_SUBDIR = 'overrides';
-const CUSTOM_SUBDIR = 'custom';
-const RELATIONSHIPS_SUBDIR = 'relationships';
 
 // ============================================================================
 // Customization Loader
@@ -127,7 +122,7 @@ export class CustomizationLoader {
     }
 
     // Create example files if directories are empty
-    await this.create_example_files(paths);
+    await create_example_files(paths);
   }
 
   /**
@@ -224,112 +219,6 @@ export class CustomizationLoader {
     }
 
     return files;
-  }
-
-  private async create_example_files(paths: CustomizationPaths): Promise<void> {
-    // Example provider
-    const provider_example = path.join(paths.providers_dir, '_example.json.disabled');
-    if (!fs.existsSync(provider_example)) {
-      const content = JSON.stringify(
-        {
-          _comment: 'Remove .disabled extension to enable this file',
-          source: 'custom',
-          provider_name: 'mycompany/internal',
-          version: '1.0.0',
-          resources: {
-            mycompany_api_endpoint: {
-              description: 'Internal API endpoint',
-              category: 'compute',
-              properties: {
-                name: { type: 'string', required: true },
-                url: { type: 'string', required: true },
-                auth_type: { type: 'string', enum: ['oauth', 'apikey', 'none'] },
-              },
-            },
-          },
-        },
-        null,
-        2,
-      );
-      fs.writeFileSync(provider_example, content);
-    }
-
-    // Example override
-    const override_example = path.join(paths.overrides_dir, '_example.yaml.disabled');
-    if (!fs.existsSync(override_example)) {
-      const content = `# Remove .disabled extension to enable this file
-# This example shows how to override an existing resource type
-ice_type: aws.ec2.instance
-overrides:
-  display_name: "Custom EC2 Name"
-  icon: "server-custom"
-  description: |
-    Our standard EC2 instance configuration.
-    Must use approved AMIs only.
-
-  # Restrict allowed values for a property
-  properties:
-    instance_type:
-      allowed_values: ["t3.micro", "t3.small", "t3.medium"]
-      description: "Only t3 instances allowed per policy"
-
-  # Add custom relationships
-  relationships:
-    - target: mycompany.monitoring.agent
-      type: depends_on
-      description: "All instances must have monitoring agent"
-`;
-      fs.writeFileSync(override_example, content);
-    }
-
-    // Example custom resource
-    const custom_example = path.join(paths.custom_dir, '_example.yaml.disabled');
-    if (!fs.existsSync(custom_example)) {
-      const content = `# Remove .disabled extension to enable this file
-# This example shows how to define a custom resource type
-ice_type: mycompany.api.gateway
-display_name: "API Gateway"
-category: application
-icon: gateway
-description: "Internal API Gateway for microservices"
-
-properties:
-  name:
-    type: string
-    required: true
-    description: "Gateway name"
-
-  endpoints:
-    type: array
-    description: "List of API endpoints"
-
-relationships:
-  - target: aws.ec2.instance
-    type: connects_to
-    property: backend_url
-    description: "Gateway connects to backend instances"
-`;
-      fs.writeFileSync(custom_example, content);
-    }
-
-    // Example relationships
-    const relationships_example = path.join(paths.relationships_dir, '_example.yaml.disabled');
-    if (!fs.existsSync(relationships_example)) {
-      const content = `# Remove .disabled extension to enable this file
-# This example shows how to add custom relationships between resource types
-relationships:
-  - source: aws.lambda.function
-    target: mycompany.secrets.vault
-    type: depends_on
-    description: "All lambdas must use our secrets vault"
-
-  - source: aws.ec2.instance
-    target: aws.ec2.instance
-    type: equivalent_to
-    condition: "same availability zone"
-`;
-      fs.writeFileSync(relationships_example, content);
-    }
   }
 
   private async validate_provider_file(

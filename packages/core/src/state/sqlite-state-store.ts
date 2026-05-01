@@ -17,6 +17,13 @@ import {
   deployments_update_status,
 } from './sqlite/deployments.js';
 import {
+  locks_acquire,
+  locks_refresh,
+  locks_release,
+  locks_is_locked,
+  locks_get,
+} from './sqlite/locks.js';
+import {
   resources_get,
   resources_get_all,
   resources_query,
@@ -225,124 +232,23 @@ export class SqliteStateStore implements ObservableStateStore {
     ttl_seconds: number,
     deployment_id?: DeploymentId,
   ): Promise<Result<StateLock, IceError>> {
-    try {
-      this.ensure_initialized();
-
-      const now = new Date();
-      const expires_at = new Date(now.getTime() + ttl_seconds * 1000);
-      const lock_id = `lock_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-
-      // Try to acquire lock (only if no valid lock exists)
-      const transaction = this.db!.transaction(() => {
-        // Clean up expired locks
-        this.db!.prepare('DELETE FROM locks WHERE expires_at < ?').run(now.toISOString());
-
-        // Check for existing lock
-        const existing = this.db!.prepare('SELECT * FROM locks WHERE graph_id = ?').get(graph_id) as
-          | LockRow
-          | undefined;
-
-        if (existing) {
-          throw new Error(`Graph ${graph_id} is already locked by ${existing.owner}`);
-        }
-
-        // Insert new lock
-        this.db!.prepare(
-          `
-            INSERT INTO locks (id, graph_id, owner, acquired_at, expires_at, deployment_id)
-            VALUES (?, ?, ?, ?, ?, ?)
-          `,
-        ).run(lock_id, graph_id, owner, now.toISOString(), expires_at.toISOString(), deployment_id ?? null);
-
-        return {
-          id: lock_id,
-          graph_id,
-          owner,
-          acquired_at: now.toISOString(),
-          expires_at: expires_at.toISOString(),
-          deployment_id,
-        } as StateLock;
-      });
-
-      const lock = transaction();
-      this.emit_event('lock_acquired', graph_id);
-      return success(lock);
-    } catch (error) {
-      return this.wrap_error('acquire_lock', error);
-    }
+    return locks_acquire(this.ctx, graph_id, owner, ttl_seconds, deployment_id);
   }
 
   async refresh_lock(lock_id: string, ttl_seconds: number): Promise<Result<StateLock, IceError>> {
-    try {
-      this.ensure_initialized();
-
-      const expires_at = new Date(Date.now() + ttl_seconds * 1000).toISOString();
-
-      const result = this.db!.prepare('UPDATE locks SET expires_at = ? WHERE id = ? RETURNING *').get(
-        expires_at,
-        lock_id,
-      ) as LockRow | undefined;
-
-      if (!result) {
-        return failure(new InternalError(`Lock not found: ${lock_id}`, 'STATE_NOT_FOUND'));
-      }
-
-      return success(this.row_to_lock(result));
-    } catch (error) {
-      return this.wrap_error('refresh_lock', error);
-    }
+    return locks_refresh(this.ctx, lock_id, ttl_seconds);
   }
 
   async release_lock(lock_id: string): Promise<Result<void, IceError>> {
-    try {
-      this.ensure_initialized();
-
-      const lock = this.db!.prepare('SELECT graph_id FROM locks WHERE id = ?').get(lock_id) as
-        | { graph_id: string }
-        | undefined;
-
-      this.db!.prepare('DELETE FROM locks WHERE id = ?').run(lock_id);
-
-      if (lock) {
-        this.emit_event('lock_released', lock.graph_id);
-      }
-
-      return success(undefined);
-    } catch (error) {
-      return this.wrap_error('release_lock', error);
-    }
+    return locks_release(this.ctx, lock_id);
   }
 
   async is_locked(graph_id: string): Promise<Result<boolean, IceError>> {
-    try {
-      this.ensure_initialized();
-
-      const now = new Date().toISOString();
-      const row = this.db!.prepare('SELECT 1 FROM locks WHERE graph_id = ? AND expires_at > ?').get(graph_id, now);
-
-      return success(row !== undefined);
-    } catch (error) {
-      return this.wrap_error('is_locked', error);
-    }
+    return locks_is_locked(this.ctx, graph_id);
   }
 
   async get_lock(graph_id: string): Promise<Result<StateLock | null, IceError>> {
-    try {
-      this.ensure_initialized();
-
-      const now = new Date().toISOString();
-      const row = this.db!.prepare('SELECT * FROM locks WHERE graph_id = ? AND expires_at > ?').get(graph_id, now) as
-        | LockRow
-        | undefined;
-
-      if (!row) {
-        return success(null);
-      }
-
-      return success(this.row_to_lock(row));
-    } catch (error) {
-      return this.wrap_error('get_lock', error);
-    }
+    return locks_get(this.ctx, graph_id);
   }
 
   // ---------------------------------------------------------------------------

@@ -16,6 +16,7 @@
 import { describe, expect, it } from 'vitest';
 import { compute } from '../high-level-resources/categories/compute.js';
 import { database } from '../high-level-resources/categories/database.js';
+import { networking } from '../high-level-resources/categories/networking.js';
 import { storage } from '../high-level-resources/categories/storage.js';
 
 describe('compute category (rf-hlres-2)', () => {
@@ -117,5 +118,23 @@ describe('storage category (rf-hlres-4)', () => {
     const obj = storage.resources.find((r) => r.id === 'object-storage');
     expect(obj).toBeDefined();
     expect(obj!.implementations.length).toBeGreaterThan(0);
+  });
+});
+
+describe('networking category (rf-hlres-5)', () => {
+  it('has the expected metadata', () => {
+    expect(networking.id).toBe('networking');
+    expect(networking.name).toBe('Networking');
+  });
+
+  it('contains the canonical resource ids in order', () => {
+    const ids = networking.resources.map((r) => r.id);
+    expect(ids).toEqual(['public-endpoint', 'vpc-network', 'subnet', 'load-balancer', 'cdn', 'api-gateway', 'dns-zone']);
+  });
+
+  it('public-endpoint exposes property catalogue', () => {
+    const pe = networking.resources.find((r) => r.id === 'public-endpoint');
+    expect(pe).toBeDefined();
+    expect(pe!.properties.length).toBeGreaterThan(0);
   });
 });

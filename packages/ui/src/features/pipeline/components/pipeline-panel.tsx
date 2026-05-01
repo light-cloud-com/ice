@@ -47,6 +47,7 @@ import {
 } from '../../../store/slices/pipeline-slice';
 import type { RootState, AppDispatch } from '../../../store';
 import { formatRelativeTime, formatDuration, formatFramework } from '../utils/format';
+import { BuildRow } from './build-row';
 import { Section } from './section';
 import { StatusPill } from './status-pill';
 
@@ -539,13 +540,6 @@ const TriggerRow: React.FC<{
     </div>
   );
 };
-
-const BuildRow: React.FC<{ label: string; value: string | null }> = ({ label, value }) => (
-  <div className="flex items-center justify-between text-xs">
-    <span className="text-ice-text-3">{label}</span>
-    <span className="font-mono text-ice-text-2">{value || '—'}</span>
-  </div>
-);
 
 const ActiveDeployment: React.FC<{
   status: { status: string; stage?: string; progress?: number; commitSha?: string; commitMessage?: string };

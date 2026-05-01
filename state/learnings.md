@@ -1537,3 +1537,24 @@ fingerprint of a tri-state; collapsing it to `setter(extract(X, Y))`
 loses branch information. Cite from any future hook-extraction unit
 where a callback decides whether-to-call a setter (rf-canv-26 will
 likely face this with `setDragOverGroupId`).
+
+## awk-line-range-delete-beats-edit-tool-for-large-function-bodies
+
+_Discovered: 2026-04-30 by implementer in rf-deploy2-2_
+
+When extracting a 500+ LOC function body to a new module, `Edit`'s
+`old_string`/`new_string` is a footgun: the body has so many internal
+similarities (multiple `try/catch` blocks, multiple `await
+prisma.canvasDeployment.update({...})` blocks, repeated emit-event
+shapes) that constructing a unique `old_string` is fragile, and any
+typo silently leaves a partial body behind. The reliable shape: write
+the new file from scratch, then `awk 'NR<START || NR>END' src.ts > /tmp/x
+&& mv /tmp/x src.ts` to surgically delete the line range. Follow with
+a small `Edit` that inserts the re-export comment + `export { ... }
+from './new-module.js'` at the now-empty seam. The line numbers come
+from `grep -n '^export async function'` before the awk pass. Caveat:
+re-grep after every awk delete because line numbers shift; never
+batch multiple awk deletes against pre-computed numbers. Generalizes:
+for any line-range surgery on big files, awk + targeted re-insert
+beats Edit + giant `old_string`. Edit's strength is small targeted
+swaps; large-body removal is a different shape.

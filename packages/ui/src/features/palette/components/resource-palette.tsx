@@ -19,8 +19,8 @@ import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react'
 import { useLocation } from 'react-router-dom';
 import { getBrandIcon } from '../../../assets/icons/brand-registry';
 import { GROUP_COLOR_PRESETS } from '../../../config/color-palette';
-import { ENABLED_PROVIDER_IDS, ENABLED_PROVIDERS as ENABLED_CLOUD_PROVIDERS } from '../../../config/providers';
-import { useTranslation, t as translate } from '../../../i18n';
+import { ENABLED_PROVIDER_IDS } from '../../../config/providers';
+import { useTranslation } from '../../../i18n';
 import axiosInstance from '../../../shared/api/axios-instance';
 import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../../../shared/components/ui/resizable';
@@ -31,6 +31,7 @@ import { ProjectBrowser } from '../../project-browser';
 import { TemplateCategoriesPanel } from '../../templates/components/template-categories-panel';
 import { CATEGORY_DEFS, CATEGORY_MAP, CATEGORY_ORDER } from '../data/categories';
 import { COMPONENTS } from '../data/components';
+import { PALETTE_STYLES, PROVIDERS, loadCollapsed, saveCollapsed } from '../data/providers';
 import type { CategoryDef, ComponentDef, Provider, ResourcePaletteProps } from '../types';
 
 // Category definitions live in `../data/categories.ts` (rf-rpal-2). They are
@@ -46,63 +47,8 @@ function nextGroupColor(): string {
   return color;
 }
 
-// =============================================================================
-// Provider filter
-// =============================================================================
-
-const PROVIDERS: { id: string; label: string; color?: string }[] = [
-  { id: 'all', label: translate('palette.providerAll') },
-  ...ENABLED_CLOUD_PROVIDERS.map((p) => ({ id: p.id, label: p.shortName, color: p.color })),
-];
-
-// =============================================================================
-// Collapsed state helpers
-// =============================================================================
-
-const STORAGE_KEY = 'ice-palette-collapsed';
-
-function loadCollapsed(): Set<string> {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return new Set(JSON.parse(raw));
-  } catch {
-    /* ignore */
-  }
-  return new Set();
-}
-
-function saveCollapsed(collapsed: Set<string>): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([...collapsed]));
-  } catch {
-    /* ignore */
-  }
-}
-
-// =============================================================================
-// CSS keyframes (injected once)
-// =============================================================================
-
-const PALETTE_STYLES = `
-  @keyframes palette-item-in {
-    from { opacity: 0; transform: translateX(-6px); }
-    to   { opacity: 1; transform: translateX(0); }
-  }
-  @keyframes palette-fade-in {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-  }
-  @keyframes palette-pulse-glow {
-    0%, 100% { opacity: 0.5; }
-    50% { opacity: 1; }
-  }
-  .palette-item-enter {
-    animation: palette-item-in 0.25s ease-out both;
-  }
-  .palette-fade-enter {
-    animation: palette-fade-in 0.2s ease-out both;
-  }
-`;
+// PROVIDERS, STORAGE_KEY, loadCollapsed, saveCollapsed and PALETTE_STYLES
+// live in `../data/providers.ts` (rf-rpal-4).
 
 // =============================================================================
 // Blocks Section (extracted for use in resizable split)

@@ -1,9 +1,18 @@
 /**
- * AI Chat Panel
+ * AI Chat Panel — Orchestrator
  *
  * Always-visible chat interface for natural language canvas operations.
  * Conversations persisted in the backend, scoped per org → project → user.
  * Supports conversation list, new chat, and resume.
+ *
+ * Sub-component splits (rf-aichat series):
+ *   - `../utils/format-date-time.ts`           — formatDateTime (rf-aichat-1)
+ *   - `../utils/op-display.ts`                 — opSummary + opBadgeColor (rf-aichat-2)
+ *   - `../hooks/use-chat-handlers.ts`          — 8 callbacks (rf-aichat-3)
+ *   - `../hooks/use-chat-effects.ts`           — 5 effects (rf-aichat-4)
+ *   - `./message-row.tsx`                      — single chat bubble (rf-aichat-5)
+ *   - `./conversation-history-sidebar.tsx`     — history dropdown (rf-aichat-6)
+ *   - `./empty-state.tsx`                      — pre-conversation hint (rf-aichat-7)
  */
 
 import { Sparkles, Loader2, Undo2, Send, Plus, MessageSquare, Cpu, Cloud } from 'lucide-react';
@@ -166,7 +175,6 @@ export const AiChatPanel: React.FC = () => {
         onLoadConversation={loadConversation}
         onDeleteConversation={handleDeleteConversation}
       />
-
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-3 min-h-0">

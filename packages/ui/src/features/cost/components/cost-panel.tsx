@@ -43,6 +43,7 @@ import { generateSuggestions } from '../utils/generate-suggestions';
 import { TRAFFIC_TIERS, EGRESS_RATES } from '../utils/provider-pricing';
 import { loadTrafficTier, saveTrafficTier } from '../utils/traffic-tier-storage';
 import { ProjectionRow } from './projection-row';
+import { ScalingRangeBar } from './scaling-range-bar';
 import { Section } from './section';
 import type { RootState, AppDispatch } from '../../../store';
 import type { Environment } from '../../../store/slices/environments-slice';
@@ -391,41 +392,6 @@ const CategoryRow: React.FC<{
           ))}
         </div>
       )}
-    </div>
-  );
-};
-
-// ── Scaling Range Bar ───────────────────────────────────────────────────────
-
-const ScalingRangeBar: React.FC<{ range: { minCost: number; currentCost: number; maxCost: number } }> = ({ range }) => {
-  const { minCost, currentCost, maxCost } = range;
-  const totalRange = maxCost - minCost;
-  const currentPos = totalRange > 0 ? ((currentCost - minCost) / totalRange) * 100 : 50;
-
-  return (
-    <div>
-      <div className="flex items-center justify-between text-ice-xs text-ice-text-3 mb-1">
-        <span>{t('cost.minInstances')}</span>
-        <span>{t('cost.maxInstances')}</span>
-      </div>
-      <div className="relative h-3 bg-ice-border rounded-full overflow-hidden">
-        {/* Gradient from green to red */}
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/40 via-amber-500/40 to-red-500/40 rounded-full" />
-        {/* Current position marker */}
-        <div
-          className="absolute top-0 h-full w-0.5 bg-white shadow-sm shadow-black/30"
-          style={{ left: `${currentPos}%` }}
-        />
-        <div
-          className="absolute -top-0.5 w-3 h-4 bg-white rounded-sm border border-ice-border shadow-sm"
-          style={{ left: `calc(${currentPos}% - 6px)` }}
-        />
-      </div>
-      <div className="flex items-center justify-between mt-1">
-        <span className="text-ice-xs text-emerald-400 font-mono">{formatCost(minCost)}</span>
-        <span className="text-ice-xs text-ice-text-1 font-mono font-semibold">Current: {formatCost(currentCost)}</span>
-        <span className="text-ice-xs text-red-400 font-mono">{formatCost(maxCost)}</span>
-      </div>
     </div>
   );
 };

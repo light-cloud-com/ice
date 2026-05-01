@@ -16,114 +16,29 @@
  * - Delete/Backspace: delete selected
  */
 
-import { useCallback, useRef, useEffect, type RefObject, type MouseEvent } from 'react';
+import { useCallback, useRef, useEffect, type MouseEvent } from 'react';
 
-// =============================================================================
-// Types
-// =============================================================================
+// rf-canvint-1: types live in `./interactions/types`. Re-export for outside
+// consumers (svg-canvas.tsx imports `CanvasItem` from this orchestrator),
+// AND import for in-file usages — both lines are required, see the rf-canv-1
+// `export-from-and-import-from-pattern` learning.
+export type {
+  CanvasViewport,
+  CanvasItem,
+  UseCanvasInteractionsOptions,
+  UseCanvasInteractionsResult,
+} from './interactions/types.js';
+import type {
+  CanvasItem,
+  DragItemOffset,
+  InteractionState,
+  InteractionMode,
+  UseCanvasInteractionsOptions,
+  UseCanvasInteractionsResult,
+} from './interactions/types.js';
 
-export interface CanvasViewport {
-  x: number;
-  y: number;
-  zoom: number;
-}
-
-export interface CanvasItem {
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  parentId?: string | null;
-}
-
-type InteractionMode = 'none' | 'pan' | 'drag' | 'resize' | 'boxSelect';
-
-interface DragItemOffset {
-  dx: number;
-  dy: number;
-  startX: number;
-  startY: number;
-}
-
-interface InteractionState {
-  mode: InteractionMode;
-  itemId: string | null;
-  startX: number;
-  startY: number;
-  startItemX: number;
-  startItemY: number;
-  startItemWidth: number;
-  startItemHeight: number;
-  // Box selection start in canvas coords
-  boxStartCanvasX: number;
-  boxStartCanvasY: number;
-  // Multi-drag: offsets for each selected item relative to primary drag item
-  dragItemOffsets: Map<string, DragItemOffset>;
-}
-
-export interface UseCanvasInteractionsOptions {
-  svgRef: RefObject<SVGSVGElement | null>;
-  viewport: CanvasViewport;
-  items: CanvasItem[];
-  selectedIds?: string[];
-  onViewportChange: (viewport: CanvasViewport) => void;
-  onItemMove?: (id: string, x: number, y: number, skipAncestorResize?: boolean) => void;
-  onItemResize?: (id: string, width: number, height: number) => void;
-  onSelect?: (ids: string[]) => void;
-  onToggleSelect?: (id: string) => void;
-  onBoxSelect?: (rect: { x: number; y: number; width: number; height: number } | null) => void;
-  onContextMenu?: (position: { x: number; y: number }, type: 'canvas' | 'node' | 'edge', targetId?: string) => void;
-  onDelete?: () => void;
-  onDragOverGroup?: (groupId: string | null, draggedNodeId?: string | null, centerX?: number, centerY?: number) => void;
-  onDragEnd?: (itemId: string, x: number, y: number, forceReparent?: boolean) => void;
-  gridSize?: number;
-  locked?: boolean;
-  minZoom?: number;
-  maxZoom?: number;
-  resizeHandleSize?: number;
-}
-
-export interface UseCanvasInteractionsResult {
-  bindCanvas: {
-    onMouseDown: (e: MouseEvent) => void;
-    onMouseMove: (e: MouseEvent) => void;
-    onMouseUp: (e: MouseEvent) => void;
-    onMouseLeave: (e: MouseEvent) => void;
-    onWheel: (e: React.WheelEvent) => void;
-    onAuxClick: (e: MouseEvent) => void;
-    onContextMenu: (e: MouseEvent) => void;
-  };
-  cursor: string;
-  screenToCanvas: (screenX: number, screenY: number) => { x: number; y: number };
-  isInteracting: boolean;
-  mode: InteractionMode;
-}
-
-// =============================================================================
-// Constants
-// =============================================================================
-
-const INITIAL_STATE: InteractionState = {
-  mode: 'none',
-  itemId: null,
-  startX: 0,
-  startY: 0,
-  startItemX: 0,
-  startItemY: 0,
-  startItemWidth: 0,
-  startItemHeight: 0,
-  boxStartCanvasX: 0,
-  boxStartCanvasY: 0,
-  dragItemOffsets: new Map(),
-};
-
-const KEYBOARD_PAN_SPEED = 15;
-
-/** Snap a value to the nearest grid increment */
-function snapToGrid(value: number, grid: number): number {
-  return Math.round(value / grid) * grid;
-}
+// rf-canvint-1: constants + helpers in `./interactions/state`.
+import { INITIAL_STATE, KEYBOARD_PAN_SPEED, freshInitialState, snapToGrid } from './interactions/state.js';
 
 // =============================================================================
 // Hook
@@ -150,7 +65,7 @@ export function useCanvasInteractions({
   maxZoom = 2,
   resizeHandleSize = 20,
 }: UseCanvasInteractionsOptions): UseCanvasInteractionsResult {
-  const stateRef = useRef<InteractionState>({ ...INITIAL_STATE, dragItemOffsets: new Map() });
+  const stateRef = useRef<InteractionState>(freshInitialState());
   const lastMousePos = useRef({ x: 0, y: 0 });
   const viewportRef = useRef(viewport);
   viewportRef.current = viewport;
@@ -443,7 +358,7 @@ export function useCanvasInteractions({
         onBoxSelect?.(null);
       }
 
-      stateRef.current = { ...INITIAL_STATE, dragItemOffsets: new Map() };
+      stateRef.current = freshInitialState();
     },
     [screenToCanvas, onSelect, onBoxSelect, onDragEnd, onDragOverGroup],
   );

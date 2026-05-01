@@ -23,21 +23,13 @@ import {
 import type { AppDispatch } from '../../../store';
 import type { Card } from '../../../store/slices/cards-slice';
 import type { AiCanvasOp } from '@ice/types';
-import {
-  MAX_OPS,
-  NODE_WIDTH,
-  NODE_HEIGHT,
-  HELPER_NODE_WIDTH,
-  HELPER_NODE_HEIGHT,
-} from './ai-ops/types';
+import { MAX_OPS, NODE_WIDTH, NODE_HEIGHT } from './ai-ops/types';
 import { generateNodeId, generateEdgeId, resolveId, nodeExists } from './ai-ops/id-utils';
-import {
-  isHelperIceType,
-  findPosition,
-  findChildPosition,
-} from './ai-ops/position-finder';
+import { findPosition, findChildPosition } from './ai-ops/position-finder';
 import { resolveBlueprint } from './ai-ops/blueprint-resolver';
 import { autoResizeContainers } from './ai-ops/auto-resize';
+import { pickNodeDefaults } from './ai-ops/node-defaults';
+import { connectOrphanHelpers } from './ai-ops/orphan-helpers';
 
 // =============================================================================
 // Types — re-exported from ai-ops/types
@@ -130,23 +122,10 @@ export function executeAiOperations(
 
           // Size: groups/containers start small — auto-resize will expand them.
           // Helper nodes (auth, secrets, logs, etc.) get a compact size.
-          const isGroup = op.node.type === 'container';
           const iceType = (op.node.data?.iceType as string) || '';
-          const isVpc = iceType === 'Network.VPC';
-          const isSubnet = iceType === 'Network.Subnet';
-          const isHelper = isHelperIceType(iceType);
-          const defaultWidth = isVpc ? 280 : isSubnet ? 260 : isGroup ? 260 : isHelper ? HELPER_NODE_WIDTH : NODE_WIDTH;
-          const defaultHeight = isVpc
-            ? 180
-            : isSubnet
-              ? 150
-              : isGroup
-                ? 150
-                : isHelper
-                  ? HELPER_NODE_HEIGHT
-                  : NODE_HEIGHT;
-          const nodeW = op.node.width || defaultWidth;
-          const nodeH = op.node.height || defaultHeight;
+          const defaults = pickNodeDefaults(op.node.type, iceType);
+          const nodeW = op.node.width || defaults.width;
+          const nodeH = op.node.height || defaults.height;
 
           // Use shared positioning — avoids overlaps
           const position =
@@ -333,41 +312,7 @@ export function executeAiOperations(
   // Safety net: auto-connect orphaned security/helper nodes to the nearest backend.
   // The AI sometimes adds auth/secrets without connecting them via edges.
   if (executedOps > 0) {
-    const finalCard = getCard();
-    const connectedIds = new Set<string>();
-    for (const e of finalCard.edges) {
-      connectedIds.add(e.source);
-      connectedIds.add(e.target);
-    }
-
-    // Find backend nodes (Compute.Container, scalable backend, etc.)
-    const backends = finalCard.nodes.filter((n) => {
-      const t = ((n.data?.iceType as string) || '').toLowerCase();
-      return /container|backend|worker|service/.test(t) && n.type !== 'container';
-    });
-
-    // Find orphaned helper nodes (security, auth, secrets, logs) with no edges
-    const orphanHelpers = finalCard.nodes.filter((n) => {
-      if (connectedIds.has(n.id)) return false;
-      const t = ((n.data?.iceType as string) || '').toLowerCase();
-      return /security|auth|secret|identity|monitoring|log|observ/.test(t);
-    });
-
-    if (backends.length > 0 && orphanHelpers.length > 0) {
-      const primaryBackend = backends[0];
-      for (const helper of orphanHelpers) {
-        const edgeId = generateEdgeId();
-        dispatch(
-          addEdgeToCard({
-            id: edgeId,
-            source: primaryBackend.id,
-            target: helper.id,
-            data: { relationship: 'depends_on' },
-          }),
-        );
-        executedOps++;
-      }
-    }
+    executedOps += connectOrphanHelpers(dispatch, getCard());
   }
 
   // Auto-resize all container/group nodes to fit their children + margin

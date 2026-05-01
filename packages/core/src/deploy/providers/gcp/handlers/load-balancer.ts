@@ -4,46 +4,9 @@
  * Handles: gcp.compute.globalForwardingRule
  */
 
-import { SERVICE_NAMES, operation_failed, operation_timed_out } from '../messages.js';
-import type { ResourceDeployResult } from '../../../types.js';
-import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
-
-const TYPE = 'gcp.compute.globalForwardingRule';
-const BASE_URL = 'https://compute.googleapis.com/compute/v1';
-
-function result(
-  name: string,
-  action: 'create' | 'update' | 'delete',
-  start: number,
-  overrides: Partial<ResourceDeployResult> = {},
-): ResourceDeployResult {
-  return {
-    resource_id: name,
-    name,
-    type: TYPE,
-    action,
-    success: true,
-    duration_ms: Date.now() - start,
-    ...overrides,
-  };
-}
-
-function fail(
-  name: string,
-  action: 'create' | 'update' | 'delete',
-  start: number,
-  error: string,
-): ResourceDeployResult {
-  return {
-    resource_id: name,
-    name,
-    type: TYPE,
-    action,
-    success: false,
-    error,
-    duration_ms: Date.now() - start,
-  };
-}
+import { wait_for_compute_op } from './load-balancer/compute-ops.js';
+import { BASE_URL, fail, result } from './load-balancer/result-helpers.js';
+import type { GCPResourceHandler } from '../types.js';
 
 export const load_balancer_handler: GCPResourceHandler = {
   async create(name, properties, ctx) {
@@ -513,15 +476,3 @@ export const load_balancer_handler: GCPResourceHandler = {
   },
 };
 
-async function wait_for_compute_op(ctx: GCPHandlerContext, op_name: string): Promise<void> {
-  const start = Date.now();
-  while (Date.now() - start < 120_000) {
-    const op = (await ctx.rest_client.get(`${BASE_URL}/projects/${ctx.project}/global/operations/${op_name}`)) as any;
-    if (op?.status === 'DONE') {
-      if (op.error) throw new Error(operation_failed(SERVICE_NAMES.COMPUTE, JSON.stringify(op.error)));
-      return;
-    }
-    await new Promise((r) => setTimeout(r, 3000));
-  }
-  throw new Error(operation_timed_out(SERVICE_NAMES.COMPUTE));
-}

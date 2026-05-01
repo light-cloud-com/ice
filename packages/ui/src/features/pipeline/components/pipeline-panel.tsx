@@ -48,6 +48,7 @@ import {
 import type { RootState, AppDispatch } from '../../../store';
 import { formatRelativeTime, formatDuration, formatFramework } from '../utils/format';
 import { Section } from './section';
+import { StatusPill } from './status-pill';
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
@@ -443,19 +444,6 @@ export const PipelinePanel: React.FC = () => {
 };
 
 // ─── Sub-components ─────────────────────────────────────────────────────────
-
-const StatusPill: React.FC<{ status: string }> = ({ status }) => {
-  const { t } = useTranslation();
-  const config: Record<string, { label: string; className: string }> = {
-    queued: { label: t('pipeline.status.queued'), className: 'bg-yellow-500/10 text-yellow-500' },
-    building: { label: t('pipeline.status.building'), className: 'bg-blue-500/10 text-blue-500' },
-    deploying: { label: t('pipeline.status.deploying'), className: 'bg-purple-500/10 text-purple-500' },
-    success: { label: t('pipeline.status.success'), className: 'bg-emerald-500/10 text-emerald-500' },
-    failed: { label: t('pipeline.status.failed'), className: 'bg-red-500/10 text-red-500' },
-  };
-  const c = config[status] || { label: status, className: 'bg-ice-hover text-ice-text-3' };
-  return <span className={cn('px-1.5 py-0.5 text-ice-2xs font-semibold rounded-full', c.className)}>{c.label}</span>;
-};
 
 interface BranchInfo {
   name: string;

@@ -25,8 +25,22 @@ import type {
 import type { IceError } from '../types/errors.js';
 import type { Result } from '../types/result.js';
 import type { SqliteSchemaRegistry } from './embedded/sqlite-types.js';
-import { to_sqlite_query } from './embedded/sqlite-types.js';
-import { convert_property, convert_resource_to_schema } from './embedded/converters.js';
+import { convert_resource_to_schema } from './embedded/converters.js';
+import {
+  get_categories as q_get_categories,
+  get_computed_properties as q_get_computed_properties,
+  get_implementation as q_get_implementation,
+  get_native_type as q_get_native_type,
+  get_property_schema as q_get_property_schema,
+  get_providers as q_get_providers,
+  get_required_properties as q_get_required_properties,
+  get_schema as q_get_schema,
+  get_stats as q_get_stats,
+  has_schema as q_has_schema,
+  make_query_cache,
+  query_schemas as q_query_schemas,
+  type QueryCache,
+} from './embedded/queries.js';
 
 // =============================================================================
 // Extended Schema Provider Interface
@@ -63,8 +77,7 @@ export class EmbeddedSchemaProvider implements GraphSchemaProvider {
   private registry: SqliteSchemaRegistry | null = null;
   private initialized = false;
   private event_listeners: Map<SchemaEventType, Set<SchemaEventListener>> = new Map();
-  private cached_stats: SchemaStats | null = null;
-  private cached_providers: ProviderInfo[] | null = null;
+  private query_cache: QueryCache = make_query_cache();
   private db_path: string | null = null;
 
   /**
@@ -132,70 +145,35 @@ export class EmbeddedSchemaProvider implements GraphSchemaProvider {
    * Get a schema by ICE type.
    */
   async get_schema(ice_type: IceType): Promise<Result<ResourceSchema, IceError>> {
-    if (!this.registry) {
-      return failure(new InternalError('Schema provider not initialized', 'INTERNAL_ERROR'));
-    }
-
-    const resource = this.registry.get(ice_type);
-
-    if (!resource) {
-      return failure(new InternalError(`Schema not found: ${ice_type}`, 'NOT_IMPLEMENTED', { ice_type }));
-    }
-
-    return success(convert_resource_to_schema(this.registry, resource));
+    return q_get_schema(this.registry, ice_type);
   }
 
   /**
    * Check if a schema exists.
    */
   has_schema(ice_type: IceType): boolean {
-    return this.registry?.has(ice_type) ?? false;
+    return q_has_schema(this.registry, ice_type);
   }
 
   /**
    * Query schemas with filters.
    */
   async query(query: SchemaQuery): Promise<Result<SchemaQueryResult, IceError>> {
-    if (!this.registry) {
-      return failure(new InternalError('Schema provider not initialized', 'INTERNAL_ERROR'));
-    }
-
-    const result = this.registry.query(to_sqlite_query(query));
-
-    return success({
-      schemas: result.resources.map((r) => convert_resource_to_schema(this.registry, r)),
-      total: result.total,
-      has_more: result.has_more,
-    });
+    return q_query_schemas(this.registry, query);
   }
 
   /**
    * Get all available categories.
    */
   get_categories(): string[] {
-    return this.registry?.get_categories() ?? [];
+    return q_get_categories(this.registry);
   }
 
   /**
    * Get all available providers.
    */
   get_providers(): ProviderInfo[] {
-    if (this.cached_providers) {
-      return this.cached_providers;
-    }
-
-    if (!this.registry) {
-      return [];
-    }
-
-    const sqlite_providers = this.registry.get_providers();
-    this.cached_providers = sqlite_providers.map((p) => ({
-      name: p.name,
-      source: p.source as 'terraform' | 'pulumi',
-      resource_count: p.resource_count,
-    }));
-
-    return this.cached_providers;
+    return q_get_providers(this.registry, this.query_cache);
   }
 
   /**
@@ -206,87 +184,42 @@ export class EmbeddedSchemaProvider implements GraphSchemaProvider {
     source: 'terraform' | 'pulumi',
     provider: string,
   ): ProviderImplementation | undefined {
-    const impl = this.registry?.get_implementation(ice_type, source, provider);
-
-    if (!impl) {
-      return undefined;
-    }
-
-    return {
-      source: impl.source as 'terraform' | 'pulumi',
-      provider: impl.provider_name,
-      native_type: impl.native_type,
-      docs_url: impl.docs_url ?? undefined,
-    };
+    return q_get_implementation(this.registry, ice_type, source, provider);
   }
 
   /**
    * Get the native type for a provider.
    */
   get_native_type(ice_type: IceType, source: 'terraform' | 'pulumi', provider: string): string | undefined {
-    return this.registry?.get_native_type(ice_type, source, provider) ?? undefined;
+    return q_get_native_type(this.registry, ice_type, source, provider);
   }
 
   /**
    * Get property schema for a specific property.
    */
   get_property_schema(ice_type: IceType, property_path: string): PropertySchema | undefined {
-    if (!this.registry) {
-      return undefined;
-    }
-
-    const property = this.registry.get_property(ice_type, property_path);
-    return property ? convert_property(property) : undefined;
+    return q_get_property_schema(this.registry, ice_type, property_path);
   }
 
   /**
    * Get all required properties for a type.
    */
   get_required_properties(ice_type: IceType): PropertySchema[] {
-    const properties = this.registry?.get_required_properties(ice_type) ?? [];
-    return properties.map((p) => convert_property(p));
+    return q_get_required_properties(this.registry, ice_type);
   }
 
   /**
    * Get all computed properties for a type.
    */
   get_computed_properties(ice_type: IceType): PropertySchema[] {
-    const properties = this.registry?.get_computed_properties(ice_type) ?? [];
-    return properties.map((p) => convert_property(p));
+    return q_get_computed_properties(this.registry, ice_type);
   }
 
   /**
    * Get schema statistics.
    */
   get_stats(): SchemaStats {
-    if (this.cached_stats) {
-      return this.cached_stats;
-    }
-
-    if (!this.registry) {
-      return {
-        total_schemas: 0,
-        total_categories: 0,
-        total_providers: 0,
-        by_source: { terraform: 0, pulumi: 0 },
-        by_category: {},
-      };
-    }
-
-    const sqlite_stats = this.registry.get_stats();
-
-    this.cached_stats = {
-      total_schemas: sqlite_stats.total_resources,
-      total_categories: Object.keys(sqlite_stats.categories).length,
-      total_providers: Object.keys(sqlite_stats.providers).length,
-      by_source: {
-        terraform: sqlite_stats.sources['terraform'] ?? 0,
-        pulumi: sqlite_stats.sources['pulumi'] ?? 0,
-      },
-      by_category: sqlite_stats.categories,
-    };
-
-    return this.cached_stats;
+    return q_get_stats(this.registry, this.query_cache);
   }
 
   // ===========================================================================

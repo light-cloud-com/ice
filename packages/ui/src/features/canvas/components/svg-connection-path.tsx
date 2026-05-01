@@ -16,6 +16,7 @@ import { inferConnectionMeta, type ConnectionCategory } from '../utils/connectio
 import { getCustomDomainRoutePortY } from './nodes/custom-domain';
 import type { CanvasNode, CanvasConnection } from './svg-canvas';
 import type { EdgeStyle } from '../../../store/slices/ui-slice';
+import type { Bounds, Point, Side } from './path/types';
 
 // ─── Tooltip info passed up to canvas ───────────────────────────────────────
 
@@ -69,18 +70,6 @@ export { EDGE_COLORS } from '../../../config/color-palette';
 // =============================================================================
 // Bezier Curve Routing
 // =============================================================================
-
-type Side = 'left' | 'right' | 'top' | 'bottom';
-interface Point {
-  x: number;
-  y: number;
-}
-interface Bounds {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
 
 /**
  * Returns the visual bounds of a node at the current LOD/zoom.

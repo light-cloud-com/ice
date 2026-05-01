@@ -21,8 +21,8 @@ import {
   type ChatMessage,
   type ConversationSummary,
 } from '../hooks/use-chat-handlers';
-import { suggestPatterns } from '../utils/suggest-patterns';
 import { ConversationHistorySidebar } from './conversation-history-sidebar';
+import { EmptyState } from './empty-state';
 import { MessageRow } from './message-row';
 import type { AppDispatch, RootState } from '../../../store';
 
@@ -170,34 +170,9 @@ export const AiChatPanel: React.FC = () => {
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-3 min-h-0">
-        {messages.length === 0 &&
-          !isProcessing &&
-          (() => {
-            const canvasNodes = activeCard?.nodes || [];
-            const canvasEdges = activeCard?.edges || [];
-            const patterns = suggestPatterns(canvasNodes as any, canvasEdges as any);
-            return (
-              <div className="flex flex-col items-center justify-center h-full text-center px-4 gap-4">
-                <div className="w-10 h-10 rounded-xl bg-ice-accent/10 flex items-center justify-center">
-                  <Sparkles aria-hidden="true" className="w-5 h-5 text-ice-accent" />
-                </div>
-                <p className="text-ice-xs text-ice-text-3 leading-relaxed max-w-[220px]">
-                  {canvasNodes.length === 0 ? t('ai.chat.emptyCanvasPrompt') : t('ai.chat.existingCanvasPrompt')}
-                </p>
-                <div className="flex flex-wrap gap-1.5 justify-center">
-                  {patterns.map((p) => (
-                    <button
-                      key={p.label}
-                      onClick={() => handleSuggestionClick(p.intent)}
-                      className="px-2.5 py-1 text-ice-xs text-ice-text-2 rounded-lg border border-ice-border hover:border-ice-accent/40 hover:text-ice-text-1 hover:bg-ice-accent/5 transition-colors"
-                    >
-                      {p.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            );
-          })()}
+        {messages.length === 0 && !isProcessing && (
+          <EmptyState activeCard={activeCard} t={t} onSuggestionClick={handleSuggestionClick} />
+        )}
 
         {messages.map((msg) => (
           <MessageRow key={msg.id} msg={msg} t={t} onSuggestionClick={handleSuggestionClick} />

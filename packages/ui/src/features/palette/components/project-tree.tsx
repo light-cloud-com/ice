@@ -23,7 +23,7 @@ import {
   Layers,
   Loader2,
 } from 'lucide-react';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { TREE_INDENT_PX, TREE_INDENT_BASE } from '../../../config/canvas-constants';
 import { ENV_DOT_COLORS } from '../../../config/color-palette';
@@ -35,7 +35,6 @@ import {
   selectActiveProjectId,
   selectActiveEnvironmentId,
   selectLoadedOrgId,
-  fetchProjectTree,
   toggleFolderExpanded,
   toggleProjectExpanded,
   moveProjectToFolder,
@@ -47,6 +46,7 @@ import {
 import { openDialog } from '../../../store/slices/ui-slice';
 import type { AppDispatch, RootState } from '../../../store';
 import { useTreeDrag } from '../hooks/use-tree-drag';
+import { useTreeEffects } from '../hooks/use-tree-effects';
 import { useTreeHandlers } from '../hooks/use-tree-handlers';
 
 // Environment type → dot color
@@ -83,48 +83,22 @@ export const ProjectTree: React.FC = () => {
   const deployStatus = useSelector((state: RootState) => state.deploy.status);
   const panes = useSelector((state: RootState) => state.ui.splitView.panes);
 
-  // Fetch project tree from backend when org changes
-  useEffect(() => {
-    if (orgId && orgId !== loadedOrgId) {
-      dispatch(fetchProjectTree(orgId));
-    }
-  }, [orgId, loadedOrgId, dispatch]);
-
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
   const [creatingFolder, setCreatingFolder] = useState<string | null>(null);
   const [newFolderName, setNewFolderName] = useState('');
 
-  const menuRef = useRef<HTMLDivElement>(null);
-  const editInputRef = useRef<HTMLInputElement>(null);
-  const newFolderRef = useRef<HTMLInputElement>(null);
+  // ── Effects + refs ──────────────────────────────────────────────────────
 
-  // Focus inputs
-  useEffect(() => {
-    if (editingId && editInputRef.current) {
-      editInputRef.current.focus();
-      editInputRef.current.select();
-    }
-  }, [editingId]);
-
-  useEffect(() => {
-    if (creatingFolder !== null && newFolderRef.current) {
-      newFolderRef.current.focus();
-    }
-  }, [creatingFolder]);
-
-  // Close context menu on outside click
-  useEffect(() => {
-    if (!contextMenu) return;
-    const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setContextMenu(null);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [contextMenu]);
+  const { menuRef, editInputRef, newFolderRef } = useTreeEffects({
+    orgId,
+    loadedOrgId,
+    editingId,
+    creatingFolder,
+    contextMenu,
+    setContextMenu,
+  });
 
   // ── Handlers ────────────────────────────────────────────────────────────
 

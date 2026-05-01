@@ -3,21 +3,25 @@
  *
  * Extracted from `pipeline.service.ts` (rf-pipe-6). The detector
  * fetches a small set of marker files (package.json, Dockerfile,
- * requirements.txt, go.mod, ...) and returns a structured
- * FrameworkDetection result the UI uses to pre-fill build/install
- * commands when a user wires up a Source.Repository node.
+ * requirements.txt, go.mod, ..., plus the three JS lockfiles) and
+ * returns a structured FrameworkDetection result the UI uses to
+ * pre-fill build/install commands when a user wires up a
+ * Source.Repository node.
  *
  * The JS-ecosystem detector (`detectJsFramework`) is module-private —
  * it's a deeply branched matcher over `pkg.dependencies` and only
  * makes sense as a sub-routine of `detectFramework`. The package-
  * manager guess uses lock-file presence (pnpm-lock.yaml > yarn.lock >
- * default to npm), but the surrounding `detectFramework` only adds
- * `package.json`, `Dockerfile`, etc. to `detectedFiles` — the lock
- * files are never added, so `pnpm-lock.yaml` / `yarn.lock` checks
- * inside `detectJsFramework` always fall through to npm. This is a
- * known caveat from the pre-extraction file: the planner flagged it
- * as out-of-scope for the refactor (verbatim preservation). Fix-up
- * is for a future unit (rf-pipe follow-up).
+ * default to npm).
+ *
+ * bugfix-4: pre-fix `filesToCheck` excluded the JS lockfiles, so
+ * `detectedFiles.includes('pnpm-lock.yaml')` always returned false
+ * inside `detectJsFramework` and the package-manager guess always
+ * fell through to npm. Fix: include `pnpm-lock.yaml`, `yarn.lock`,
+ * `package-lock.json` in `filesToCheck` so the lockfile signal
+ * actually reaches `detectJsFramework`. Costs three extra
+ * Contents-API GETs per call but the GitHub API rate limits are
+ * generous and this is a one-shot path.
  */
 
 import { GITHUB_API, GITHUB_HEADERS, type FrameworkDetection } from './types.js';
@@ -36,8 +40,20 @@ export async function detectFramework(
   const [owner, repo] = repository.split('/');
   const detectedFiles: string[] = [];
 
-  // Check for key files
-  const filesToCheck = ['package.json', 'Dockerfile', 'requirements.txt', 'go.mod', 'pom.xml', 'Cargo.toml'];
+  // Check for key files. The three JS lockfiles are included so
+  // `detectJsFramework` can actually read the package-manager
+  // signal off `detectedFiles` (bugfix-4).
+  const filesToCheck = [
+    'package.json',
+    'Dockerfile',
+    'requirements.txt',
+    'go.mod',
+    'pom.xml',
+    'Cargo.toml',
+    'pnpm-lock.yaml',
+    'yarn.lock',
+    'package-lock.json',
+  ];
 
   const fileContents: Record<string, string | null> = {};
   for (const file of filesToCheck) {

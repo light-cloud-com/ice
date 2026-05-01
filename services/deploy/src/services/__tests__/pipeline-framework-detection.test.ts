@@ -242,15 +242,72 @@ describe('detectFramework: package.json (JS ecosystem)', () => {
     expect(r.runtime).toBe('static');
   });
 
-  it('package.json defaults to npm package manager (lock files are not in detectedFiles list)', async () => {
-    // The pre-extraction code never adds pnpm-lock.yaml / yarn.lock to
-    // detectedFiles — only the six files in `filesToCheck` are added.
-    // So `detectJsFramework`'s `detectedFiles.includes('pnpm-lock.yaml')`
-    // always falls through to npm. This test pins that behavior.
+  it('detects pnpm from pnpm-lock.yaml (bugfix-4)', async () => {
+    // Pre-fix: filesToCheck excluded lockfiles, so
+    // detectedFiles.includes('pnpm-lock.yaml') always returned
+    // false and the package-manager guess fell through to npm.
+    // Post-fix: filesToCheck contains pnpm-lock.yaml.
+    fetchMock = mockContentsApi({
+      'package.json': JSON.stringify({ dependencies: { next: '13.0' } }),
+      'pnpm-lock.yaml': 'lockfileVersion: 6.0',
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const r = await detectFramework('u', 'o/r');
+    expect(r.packageManager).toBe('pnpm');
+    expect(r.installCommand).toBe('pnpm install --frozen-lockfile');
+    expect(r.detectedFiles).toContain('pnpm-lock.yaml');
+  });
+
+  it('detects yarn from yarn.lock (bugfix-4)', async () => {
+    fetchMock = mockContentsApi({
+      'package.json': JSON.stringify({ dependencies: { next: '13.0' } }),
+      'yarn.lock': '# yarn lockfile v1',
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const r = await detectFramework('u', 'o/r');
+    expect(r.packageManager).toBe('yarn');
+    expect(r.installCommand).toBe('yarn install --frozen-lockfile');
+    expect(r.detectedFiles).toContain('yarn.lock');
+  });
+
+  it('detects npm from package-lock.json (default install command)', async () => {
+    // package-lock.json is now in filesToCheck and shows up in
+    // detectedFiles, but `detectJsFramework`'s ladder doesn't have
+    // an explicit branch for it (npm is the default fall-through),
+    // so packageManager stays 'npm' and installCommand stays 'npm ci'.
+    fetchMock = mockContentsApi({
+      'package.json': JSON.stringify({ dependencies: { next: '13.0' } }),
+      'package-lock.json': '{}',
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const r = await detectFramework('u', 'o/r');
+    expect(r.packageManager).toBe('npm');
+    expect(r.installCommand).toBe('npm ci');
+    expect(r.detectedFiles).toContain('package-lock.json');
+  });
+
+  it('falls back to npm when no lockfile is present', async () => {
     withPackageJson({ dependencies: { next: '13.0' } });
     const r = await detectFramework('u', 'o/r');
     expect(r.packageManager).toBe('npm');
     expect(r.installCommand).toBe('npm ci');
+    expect(r.detectedFiles).not.toContain('pnpm-lock.yaml');
+    expect(r.detectedFiles).not.toContain('yarn.lock');
+    expect(r.detectedFiles).not.toContain('package-lock.json');
+  });
+
+  it('prefers pnpm over yarn when both lockfiles are present', async () => {
+    // The ladder in detectJsFramework checks pnpm-lock.yaml first,
+    // then yarn.lock. Pin that order.
+    fetchMock = mockContentsApi({
+      'package.json': JSON.stringify({ dependencies: { next: '13.0' } }),
+      'pnpm-lock.yaml': 'lockfileVersion: 6.0',
+      'yarn.lock': '# yarn lockfile v1',
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const r = await detectFramework('u', 'o/r');
+    expect(r.packageManager).toBe('pnpm');
+    expect(r.installCommand).toBe('pnpm install --frozen-lockfile');
   });
 
   it('returns the default detection when package.json is malformed JSON', async () => {

@@ -1481,7 +1481,7 @@ the general rule that refactors preserve behaviour byte for
 byte — pre-existing bugs ARE part of the contract for the
 duration of the refactor.
 
-_Fixed: <PENDING-BUGFIX-3-SHA>_
+_Fixed: 0c44dc2_
 
 ## refactor-cohort-data-table-uses-376-loc-and-stays
 

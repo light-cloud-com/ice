@@ -60,11 +60,10 @@ import { Section } from '../fields';
 import { PropertyFields } from '../fields/render-property-field';
 import { ConnectionCard } from './connection-card';
 import { CustomDomainBanner } from './custom-domain-banner';
+import { DeployTabBody } from './deploy-tab-body';
 import { PropertiesTabBar } from './properties-tab-bar';
 import { CustomDomainPanel } from './custom-domain-panel';
-import { DeployHistory } from './deploy-history';
 import { PublicEndpointDomainSection } from './domain-section';
-import { DriftIndicator, DriftCheckButton } from './drift';
 import { EnvVarsEditor } from './env-vars-editor';
 import { GroupColorPicker } from './group-color-picker';
 import { MonitoringLogSection } from './monitoring-log-section';
@@ -213,66 +212,7 @@ export const NodePropertiesSection: React.FC<{
 
             {/* ════ DEPLOY TAB ════ */}
             {activeTab === 'deploy' && hasDeployment && (
-              <div className="pt-1">
-                <DriftIndicator nodeId={selectedNode.id} />
-                <Section title={t('properties.deploy.current')}>
-                  <div className="space-y-2.5">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="text-ice-xs text-emerald-500 font-medium">{t('properties.deploy.live')}</span>
-                    </div>
-                    {!!selectedNode.data?.url && (
-                      <div>
-                        <div className="text-ice-2xs text-ice-text-3 mb-0.5">{t('properties.deploy.urlLabel')}</div>
-                        <a
-                          href={selectedNode.data.url as string}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-ice-xs text-blue-400 hover:underline break-all"
-                        >
-                          {selectedNode.data.url as string}
-                        </a>
-                      </div>
-                    )}
-                    {!!selectedNode.data?.deployed_image && (
-                      <div>
-                        <div className="text-ice-2xs text-ice-text-3 mb-0.5">{t('properties.deploy.imageLabel')}</div>
-                        <div className="text-ice-xs text-ice-text-2 font-mono break-all">
-                          {selectedNode.data.deployed_image as string}
-                        </div>
-                      </div>
-                    )}
-                    <div>
-                      <div className="text-ice-2xs text-ice-text-3 mb-0.5">
-                        {t('properties.deploy.resourceIdLabel')}
-                      </div>
-                      <div className="text-ice-xs text-ice-text-2 font-mono break-all">
-                        {selectedNode.data.provider_id as string}
-                      </div>
-                    </div>
-                    {!!selectedNode.data?.region && (
-                      <div>
-                        <div className="text-ice-2xs text-ice-text-3 mb-0.5">
-                          {t('properties.deploy.regionLabel')}
-                        </div>
-                        <div className="text-ice-xs text-ice-text-2">{selectedNode.data.region as string}</div>
-                      </div>
-                    )}
-                    {!!selectedNode.data?.max_instances && (
-                      <div>
-                        <div className="text-ice-2xs text-ice-text-3 mb-0.5">
-                          {t('properties.deploy.instancesLabel')}
-                        </div>
-                        <div className="text-ice-xs text-ice-text-2">
-                          {String(selectedNode.data.min_instances || 0)} – {String(selectedNode.data.max_instances)}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </Section>
-                <DeployHistory cardId={activeCard.id} />
-                <DriftCheckButton cardId={activeCard.id} nodes={activeCard.nodes} />
-              </div>
+              <DeployTabBody selectedNode={selectedNode} activeCard={activeCard} />
             )}
 
             {/* ════ SOURCE & CI TAB ════ */}

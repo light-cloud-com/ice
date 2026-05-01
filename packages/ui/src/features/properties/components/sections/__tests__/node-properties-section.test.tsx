@@ -83,6 +83,7 @@ const mocks = vi.hoisted(() => ({
   MockNodeIdentityCard: vi.fn(),
   MockCustomDomainBanner: vi.fn(),
   MockPropertiesTabBar: vi.fn(),
+  MockDeployTabBody: vi.fn(),
 
   // Identity passthrough for cn — joins truthy strings with a space so
   // className walk comparisons stay legible.
@@ -196,6 +197,10 @@ vi.mock('../custom-domain-banner', () => ({
 
 vi.mock('../properties-tab-bar', () => ({
   PropertiesTabBar: mocks.MockPropertiesTabBar,
+}));
+
+vi.mock('../deploy-tab-body', () => ({
+  DeployTabBody: mocks.MockDeployTabBody,
 }));
 
 vi.mock('../../../../../shared/components/ui/panel-header', () => ({
@@ -644,17 +649,15 @@ describe('NodePropertiesSection', () => {
     const card = makeCard({ nodes: [node] });
     const setSpy = vi.fn();
     const tree = renderSection({ selectedNode: node, activeCard: card, propsTab: 'deploy', setPropsTab: setSpy });
-    expect(findByType(tree, mocks.MockDriftIndicator)).toHaveLength(1);
-    expect(findByType(tree, mocks.MockDeployHistory)).toHaveLength(1);
-    expect(findByType(tree, mocks.MockDriftCheckButton)).toHaveLength(1);
-    const text = collectText(tree);
-    expect(text).toContain('https://svc.example.com');
-    expect(text).toContain('gcr.io/foo:v1');
-    expect(text).toContain('gcp:proj/svc');
-    expect(text).toContain('us-central1');
+    // DeployTabBody owns the inline JSX now; orchestrator just routes the
+    // selectedNode + activeCard to it.
+    const bodies = findByType(tree, mocks.MockDeployTabBody);
+    expect(bodies).toHaveLength(1);
+    expect((bodies[0].props as { selectedNode: CardNode }).selectedNode).toBe(node);
+    expect((bodies[0].props as { activeCard: Card }).activeCard).toBe(card);
   });
 
-  it('DriftIndicator receives selectedNode.id', () => {
+  it('DeployTabBody receives selectedNode and activeCard refs', () => {
     const node = makeNode('svc-1', {
       iceType: 'Compute.Service',
       provider_id: 'gcp:proj/svc',
@@ -662,8 +665,8 @@ describe('NodePropertiesSection', () => {
     const card = makeCard({ nodes: [node] });
     const setSpy = vi.fn();
     const tree = renderSection({ selectedNode: node, activeCard: card, propsTab: 'deploy', setPropsTab: setSpy });
-    const drift = findByType(tree, mocks.MockDriftIndicator);
-    expect((drift[0].props as any).nodeId).toBe('svc-1');
+    const bodies = findByType(tree, mocks.MockDeployTabBody);
+    expect((bodies[0].props as { selectedNode: CardNode }).selectedNode).toBe(node);
   });
 
   // ── Source tab content ───────────────────────────────────────────────────

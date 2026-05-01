@@ -27,6 +27,7 @@ Shorter pages that describe one subsystem each. Each ends with pointers to the c
 | [desktop.md](desktop.md) | Electron wrapper, embedded gateway, packaging status |
 | [ai-assistant.md](ai-assistant.md) | Claude integration, SSE streaming, what it can do |
 | [blocks-reference.md](blocks-reference.md) | The concept palette and the provider blocks behind it |
+| [refactoring-patterns.md](refactoring-patterns.md) | Six proven decomposition patterns + common test patterns + gotchas distilled from Phase 1+2 refactors |
 
 ## How these docs are maintained
 

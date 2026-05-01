@@ -29,6 +29,7 @@ import {
   type LayoutOptions,
 } from './auto-layout/types';
 import { intrinsicContainerMin, resolveVisualSize } from './auto-layout/visual-size';
+import { buildHierarchy, collectRootIds, buildPostOrder } from './auto-layout/hierarchy';
 
 export type { LayoutNode, LayoutEdge, Point, LayoutResult } from './auto-layout/types';
 
@@ -325,59 +326,6 @@ function circularLayout(nodes: LayoutNode[], edges: LayoutEdge[], opts: Required
   absolutizeAll(rootIds, nodeMap, childrenOf, relPos, containerSize);
   snapToGrid(nodeMap);
   return { nodes: Array.from(nodeMap.values()), edgeRoutes: new Map() };
-}
-
-// =============================================================================
-// Hierarchy helpers
-// =============================================================================
-
-function buildHierarchy(
-  nodes: LayoutNode[],
-  edges: LayoutEdge[],
-): { parentOf: Map<string, string>; childrenOf: Map<string, string[]> } {
-  const parentOf = new Map<string, string>();
-  const childrenOf = new Map<string, string[]>();
-  const nodeIds = new Set(nodes.map((n) => n.id));
-
-  for (const e of edges) {
-    if (e.relationship !== 'contains') continue;
-    if (!nodeIds.has(e.source) || !nodeIds.has(e.target)) continue;
-    parentOf.set(e.target, e.source);
-    const list = childrenOf.get(e.source) ?? [];
-    if (!list.includes(e.target)) list.push(e.target);
-    childrenOf.set(e.source, list);
-  }
-
-  for (const n of nodes) {
-    if (n.parentId && nodeIds.has(n.parentId)) {
-      if (!parentOf.has(n.id)) parentOf.set(n.id, n.parentId);
-      const list = childrenOf.get(n.parentId) ?? [];
-      if (!list.includes(n.id)) list.push(n.id);
-      childrenOf.set(n.parentId, list);
-    }
-  }
-
-  return { parentOf, childrenOf };
-}
-
-function collectRootIds(nodes: LayoutNode[], nodeMap: Map<string, LayoutNode>): string[] {
-  return nodes.filter((n) => !n.parentId || !nodeMap.has(n.parentId)).map((n) => n.id);
-}
-
-function buildPostOrder(rootIds: string[], childrenOf: Map<string, string[]>): (string | null)[] {
-  const order: (string | null)[] = [];
-  const visited = new Set<string | null>();
-  const visit = (ownerId: string | null) => {
-    if (visited.has(ownerId)) return;
-    visited.add(ownerId);
-    const kids = ownerId === null ? rootIds : (childrenOf.get(ownerId) ?? []);
-    for (const kid of kids) {
-      if ((childrenOf.get(kid) ?? []).length > 0) visit(kid);
-    }
-    order.push(ownerId);
-  };
-  visit(null);
-  return order;
 }
 
 /**

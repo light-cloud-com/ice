@@ -24,6 +24,13 @@ import {
   nodes_update_node,
 } from './mutable-graph/nodes.js';
 import {
+  stats_clear,
+  stats_copy_state,
+  stats_get_stats,
+  stats_populate_from_serialized,
+  stats_to_json,
+} from './mutable-graph/stats-serialize.js';
+import {
   traversal_get_all_dependencies,
   traversal_get_all_dependents,
   traversal_get_dependencies,
@@ -207,48 +214,23 @@ export class MutableGraph implements Graph {
   }
 
   // ---------------------------------------------------------------------------
-  // Graph Statistics
+  // Graph Statistics (delegated to ./mutable-graph/stats-serialize.ts)
   // ---------------------------------------------------------------------------
 
-  /**
-   * Get the number of nodes.
-   */
   get node_count(): number {
     return this.state.nodes.size;
   }
 
-  /**
-   * Get the number of edges.
-   */
   get edge_count(): number {
     return this.state.edges.size;
   }
 
-  /**
-   * Get graph statistics.
-   */
   get_stats(): GraphStats {
-    const node_types: Record<string, number> = {};
-    const edge_types: Record<string, number> = {};
-
-    for (const node of this.state.nodes.values()) {
-      node_types[node.type] = (node_types[node.type] ?? 0) + 1;
-    }
-
-    for (const edge of this.state.edges.values()) {
-      edge_types[edge.relationship] = (edge_types[edge.relationship] ?? 0) + 1;
-    }
-
-    return {
-      node_count: this.state.nodes.size,
-      edge_count: this.state.edges.size,
-      node_types,
-      edge_types,
-    };
+    return stats_get_stats(this.state);
   }
 
   // ---------------------------------------------------------------------------
-  // Utility Methods
+  // Utility Methods (delegated to ./mutable-graph/stats-serialize.ts)
   // ---------------------------------------------------------------------------
 
   /**
@@ -263,49 +245,23 @@ export class MutableGraph implements Graph {
       providers: this.metadata.providers ? [...this.metadata.providers] : undefined,
       regions: this.metadata.regions ? [...this.metadata.regions] : undefined,
     });
-
-    for (const node of this.state.nodes.values()) {
-      copy.state.nodes.set(node.id, { ...node });
-      copy.state.node_names.set(node.name, node.id);
-      copy.state.outgoing.set(node.id, new Set(this.state.outgoing.get(node.id)));
-      copy.state.incoming.set(node.id, new Set(this.state.incoming.get(node.id)));
-    }
-
-    for (const edge of this.state.edges.values()) {
-      copy.state.edges.set(edge.id, { ...edge });
-    }
-
+    stats_copy_state(this.state, copy.state);
     return copy;
   }
 
-  /**
-   * Clear all nodes and edges.
-   */
   clear(): void {
-    this.state.nodes.clear();
-    this.state.edges.clear();
-    this.state.outgoing.clear();
-    this.state.incoming.clear();
-    this.state.node_names.clear();
+    stats_clear(this.state);
   }
 
-  /**
-   * Export to a serializable format.
-   */
   to_json(): SerializedGraph {
-    return {
+    return stats_to_json(this.state, {
       id: this.id,
       name: this.name,
       version: this.version,
       metadata: this.metadata,
-      nodes: Array.from(this.state.nodes.values()),
-      edges: Array.from(this.state.edges.values()),
-    };
+    });
   }
 
-  /**
-   * Import from a serialized format.
-   */
   static from_json(data: SerializedGraph): MutableGraph {
     const graph = new MutableGraph(data.name, {
       id: data.id,
@@ -316,20 +272,7 @@ export class MutableGraph implements Graph {
       providers: data.metadata.providers,
       regions: data.metadata.regions,
     });
-
-    for (const node of data.nodes) {
-      graph.state.nodes.set(node.id, node);
-      graph.state.node_names.set(node.name, node.id);
-      graph.state.outgoing.set(node.id, new Set());
-      graph.state.incoming.set(node.id, new Set());
-    }
-
-    for (const edge of data.edges) {
-      graph.state.edges.set(edge.id, edge);
-      graph.state.outgoing.get(edge.source)?.add(edge.id);
-      graph.state.incoming.get(edge.target)?.add(edge.id);
-    }
-
+    stats_populate_from_serialized(graph.state, data);
     return graph;
   }
 }

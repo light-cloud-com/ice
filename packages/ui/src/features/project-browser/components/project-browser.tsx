@@ -26,19 +26,10 @@ import { useTranslation } from '../../../i18n';
 import axiosInstance from '../../../shared/api/axios-instance';
 import { PanelHeader, PanelHeaderAction } from '../../../shared/components/ui/panel-header';
 import { useResolvePath } from '../../../shared/hooks/use-resolve-path';
-import { toSlug } from '../../../shared/utils/slug';
 import { openDialog } from '../../../store/slices/ui-slice';
 import type { RootState, AppDispatch } from '../../../store';
-
-interface ProjectNode {
-  id: string;
-  name: string;
-  slug?: string;
-  type: 'folder' | 'project';
-  parent_id: string | null;
-  cards: { id: string; name: string; updated_at: string }[];
-  children: ProjectNode[];
-}
+import type { ProjectNode } from '../types/project-node';
+import { buildPath, flattenItems } from '../utils/build-path';
 
 // ─── Tree Item ──────────────────────────────────────────────────────────────
 
@@ -445,63 +436,23 @@ export function ProjectBrowser() {
     [fetchProjects],
   );
 
-  // Build URL path by walking up the tree from a node
-  const buildPath = useCallback(
-    (node: ProjectNode, allItems: ProjectNode[]): string => {
-      const parts: string[] = [];
-      let current: ProjectNode | undefined = node;
-
-      // Walk up via parent_id to build full path
-      while (current) {
-        const slug =
-          current.slug ||
-          current.name
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/^-|-$/g, '');
-        parts.unshift(slug);
-        if (current.parent_id) {
-          current = allItems.find((n) => n.id === current!.parent_id);
-        } else {
-          break;
-        }
-      }
-
-      // Prepend org slug
-      const orgSlug = selectedOrg ? toSlug(selectedOrg.name) : '';
-      return orgSlug ? `/${orgSlug}/${parts.join('/')}` : '/' + parts.join('/');
-    },
-    [selectedOrg],
-  );
-
   const handleNavigateSubpage = useCallback(
     (node: ProjectNode, subpage: string) => {
-      const allFlat = flatFolders.concat(
-        items.flatMap(function flatten(n: ProjectNode): ProjectNode[] {
-          return [n, ...(n.children || []).flatMap(flatten)];
-        }),
-      );
-      const path = buildPath(node, allFlat);
+      const allFlat = flattenItems(items, flatFolders);
+      const path = buildPath(node, allFlat, selectedOrg?.name);
       // Canvas is the default view — no suffix needed
       navigate(subpage === 'canvas' ? path : `${path}/${subpage}`);
     },
-    [buildPath, flatFolders, items, navigate],
+    [flatFolders, items, navigate, selectedOrg],
   );
 
   const handleOpen = useCallback(
     (node: ProjectNode) => {
       // Build the URL path and navigate
-      const path = buildPath(
-        node,
-        flatFolders.concat(
-          items.flatMap(function flatten(n: ProjectNode): ProjectNode[] {
-            return [n, ...(n.children || []).flatMap(flatten)];
-          }),
-        ),
-      );
+      const path = buildPath(node, flattenItems(items, flatFolders), selectedOrg?.name);
       navigate(path);
     },
-    [buildPath, flatFolders, items, navigate],
+    [flatFolders, items, navigate, selectedOrg],
   );
 
   return (

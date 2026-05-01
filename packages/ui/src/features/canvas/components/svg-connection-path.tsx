@@ -13,15 +13,9 @@ import React, { memo, useMemo, useState, useCallback, useRef } from 'react';
 import { EDGE_COLORS } from '../../../config/color-palette';
 import { useReducedMotion } from '../../../shared/hooks/use-reduced-motion';
 import { inferConnectionMeta, type ConnectionCategory } from '../utils/connection-rules';
-import { getCustomDomainRoutePortY } from './nodes/custom-domain';
 import type { CanvasNode, CanvasConnection } from './svg-canvas';
 import type { EdgeStyle } from '../../../store/slices/ui-slice';
-import type { Point, Side } from './path/types';
-import { chooseSides, getEdgePoint, getEffectiveBounds } from './path/bounds-and-sides';
-import { buildBezierPath } from './path/builders/bezier';
-import { buildStraightPath } from './path/builders/straight';
-import { buildDagreRoutedPath } from './path/builders/dagre-routed';
-import { buildRectangularPath } from './path/builders/rectangular';
+import { computePath } from './path/compute-path';
 
 // ─── Tooltip info passed up to canvas ───────────────────────────────────────
 
@@ -71,10 +65,6 @@ interface SvgConnectionPathProps {
 
 // Re-export for backwards compatibility
 export { EDGE_COLORS } from '../../../config/color-palette';
-
-// =============================================================================
-// Bezier Curve Routing
-// =============================================================================
 
 // =============================================================================
 // Component
@@ -196,94 +186,36 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
       [onConnectionHover, buildTooltip, clearTooltipTimer, scheduleTooltipDismiss],
     );
 
-    // Calculate path — symmetric port distribution with sorted order.
-    //
-    // Special case: when the source node is a `Network.CustomDomain`
-    // block AND the edge has a `routeId`, anchor the start point to
-    // the EXACT row port position on the source node (computed via
-    // `getCustomDomainRoutePortY`). The exit side is forced to 'right'
-    // so the bezier curls outward from the row, not from the block's
-    // generic midpoint. Without this override, edges from a multi-row
-    // Custom Domain block would all converge at the right midpoint and
-    // visually obscure which row they belong to.
-    const pathData = useMemo(() => {
-      if (!fromNode || !toNode) return null;
-      const effFrom = getEffectiveBounds(fromNode, lod, zoom);
-      const effTo = getEffectiveBounds(toNode, lod, zoom);
-
-      const fromIce = (fromNode.data?.iceType as string) || '';
-      const routeId = (connection.data as any)?.routeId as string | undefined;
-      // Network.CustomDomain exposes per-row connection ports that the
-      // path should anchor to EXACTLY (not at the generic right-side
-      // midpoint). Works for standalone and nested-inside-PrivateNetwork
-      // usage alike — the CD's routes are always on its own right edge.
-      const isCustomDomainSource = fromIce === 'Network.CustomDomain' && !!routeId;
-      const isRowSource = isCustomDomainSource;
-
-      let exitSide: Side;
-      let entrySide: Side;
-      let start: Point;
-
-      if (isRowSource) {
-        const routes = (fromNode.data?.routes as Array<{ id: string; subdomain: string }> | undefined) || [];
-        const rowIndex = routes.findIndex((r) => r.id === routeId);
-        if (rowIndex >= 0) {
-          exitSide = 'right';
-          start = {
-            x: effFrom.x + effFrom.width,
-            y: effFrom.y + getCustomDomainRoutePortY(rowIndex),
-          };
-          // Entry side picked relative to where the start point sits,
-          // not the source bounds midpoint, so the curve doesn't loop
-          // back if the target is above/below the row.
-          const dx = effTo.x + effTo.width / 2 - start.x;
-          const dy = effTo.y + effTo.height / 2 - start.y;
-          if (Math.abs(dx) > Math.abs(dy)) {
-            entrySide = dx > 0 ? 'left' : 'right';
-          } else {
-            entrySide = dy > 0 ? 'top' : 'bottom';
-          }
-        } else {
-          // Route was deleted but the edge still references it — fall
-          // back to the generic side selection.
-          const sides = chooseSides(effFrom, effTo);
-          exitSide = sides.exitSide;
-          entrySide = sides.entrySide;
-          start = getEdgePoint(effFrom, exitSide, sourcePortIndex, sourcePortCount);
-        }
-      } else {
-        const sides = chooseSides(effFrom, effTo);
-        exitSide = sides.exitSide;
-        entrySide = sides.entrySide;
-        start = getEdgePoint(effFrom, exitSide, sourcePortIndex, sourcePortCount);
-      }
-
-      const end = getEdgePoint(effTo, entrySide, targetPortIndex, targetPortCount);
-      if (edgeStyle === 'straight') return buildStraightPath(start, end);
-      if (edgeStyle === 'rectangular') {
-        // If auto-layout left us a routed polyline on this edge, follow it —
-        // dagre already bent the path around obstacles. Fall back to a plain
-        // L when the route is absent or too short.
-        const routePoints = (connection.data as { routePoints?: Point[] } | undefined)?.routePoints;
-        if (routePoints && routePoints.length >= 3) {
-          const routed = buildDagreRoutedPath(routePoints, start, end);
-          if (routed) return routed;
-        }
-        return buildRectangularPath(start, end, exitSide, entrySide);
-      }
-      return buildBezierPath(start, end, exitSide, entrySide);
-    }, [
-      fromNode,
-      toNode,
-      sourcePortIndex,
-      sourcePortCount,
-      targetPortIndex,
-      targetPortCount,
-      edgeStyle,
-      lod,
-      zoom,
-      connection.data,
-    ]);
+    // Calculate path — see `./path/compute-path.ts` for the full
+    // dispatch table (CustomDomain row-port override, dagre-routed
+    // polylines, edge-style switch, etc).
+    const pathData = useMemo(
+      () =>
+        computePath({
+          connection,
+          fromNode,
+          toNode,
+          sourcePortIndex,
+          sourcePortCount,
+          targetPortIndex,
+          targetPortCount,
+          edgeStyle,
+          lod,
+          zoom,
+        }),
+      [
+        connection,
+        fromNode,
+        toNode,
+        sourcePortIndex,
+        sourcePortCount,
+        targetPortIndex,
+        targetPortCount,
+        edgeStyle,
+        lod,
+        zoom,
+      ],
+    );
 
     if (!pathData) return null;
 

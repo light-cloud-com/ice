@@ -9,101 +9,23 @@ import { EmbeddedSchemaProvider } from '../schema/embedded-schema-provider.js';
 import type { MutableGraph } from '../graph/mutable-graph.js';
 import type { IceType } from '../schema/schema-provider.js';
 import type { Node } from '../types/graph.js';
+import type {
+  PulumiExportOptions,
+  PulumiExportResult,
+  PulumiProgram,
+  PulumiResource,
+  PulumiResourceOptions,
+} from './pulumi/types.js';
 
-// =============================================================================
-// Types
-// =============================================================================
-
-/**
- * Pulumi export options.
- */
-export interface PulumiExportOptions {
-  /** Target provider (e.g., "gcp", "aws", "azure") */
-  provider: string;
-
-  /** Output format: yaml or typescript */
-  format?: 'yaml' | 'typescript';
-
-  /** Project name */
-  project_name?: string;
-
-  /** Stack name */
-  stack_name?: string;
-
-  /** Runtime (for TypeScript: nodejs, for Python: python) */
-  runtime?: string;
-
-  /** Include comments in output */
-  include_comments?: boolean;
-
-  /** Configuration values */
-  config?: Record<string, unknown>;
-}
-
-/**
- * Pulumi resource definition.
- */
-export interface PulumiResource {
-  /** Resource type (e.g., "gcp:compute/instance:Instance") */
-  type: string;
-
-  /** Resource name (identifier) */
-  name: string;
-
-  /** Resource properties */
-  properties: Record<string, unknown>;
-
-  /** Resource options */
-  options?: PulumiResourceOptions;
-}
-
-/**
- * Pulumi resource options.
- */
-export interface PulumiResourceOptions {
-  depends_on?: string[];
-  protect?: boolean;
-  provider?: string;
-  parent?: string;
-  delete_before_replace?: boolean;
-  ignore_changes?: string[];
-}
-
-/**
- * Complete Pulumi program.
- */
-export interface PulumiProgram {
-  /** Project name */
-  name: string;
-
-  /** Runtime */
-  runtime: string;
-
-  /** Description */
-  description?: string;
-
-  /** Configuration values */
-  config?: Record<string, unknown>;
-
-  /** Resource definitions */
-  resources: PulumiResource[];
-
-  /** Output values */
-  outputs?: Record<string, unknown>;
-}
-
-/**
- * Export result.
- */
-export interface PulumiExportResult {
-  success: boolean;
-  program: PulumiProgram;
-  yaml?: string;
-  typescript?: string;
-  warnings: string[];
-  errors: string[];
-  unmapped_types: string[];
-}
+// Re-export the public type surface so external consumers keep their
+// `import { ... } from './pulumi-exporter'` imports.
+export type {
+  PulumiExportOptions,
+  PulumiExportResult,
+  PulumiProgram,
+  PulumiResource,
+  PulumiResourceOptions,
+};
 
 // =============================================================================
 // Pulumi Exporter

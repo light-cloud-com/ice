@@ -1162,3 +1162,29 @@ The rf-lstream brief planned a single `stream-lifecycle.ts` for the four lifecyc
 _Discovered: 2026-05-01 by implementer in rf-aisvc-7_
 
 When extracting a leaf module out of an orchestrator and writing a smoke test for the orchestrator that mocks the leaf, intuition says: "use the same import path the SUT uses, since `vi.mock` rewrites that resolution." That intuition is wrong. Vitest resolves `vi.mock(specifier)` from the **test file's location**, NOT from the SUT's location. So if the SUT lives at `services/ai/src/services/ai.service.ts` and imports `'./ai/provider'`, but the test lives at `services/ai/src/services/__tests__/ai.service.test.ts`, the test must call `vi.mock('../ai/provider', ...)` — the path traverses from `__tests__/` up to `services/`, then into `ai/`. Symptom: with the wrong path, the mock factory silently does NOT replace the SUT's import, the SUT loads the real leaf module, and tests fail with the real module's error message ("No AI provider configured. Set ANTHROPIC_API_KEY or ICE_AI_URL." in this case) — utterly mystifying because the mock was right there in the file. The fix is one character per path: replace `./X` with `../X`. The same effect at deeper nesting drove `services/ai/src/services/ai/__tests__/post-processing.test.ts` to use `'../../ai-audit.service'` (test → up two → over to `ai-audit.service`). Generalizes: any test file under `__tests__/` mocking sibling modules of the SUT must compute the path from the TEST file's directory, NOT copy the SUT's path verbatim. Build the path mentally as: test_dir → up to common parent → down to mocked module. When in doubt, count the `..` segments: a test in `services/__tests__/` mocking `services/ai/provider` needs ONE `..` segment (`'../ai/provider'`); a test in `services/ai/__tests__/` mocking `services/ai-audit.service` needs TWO (`'../../ai-audit.service'`). Pair this with `vi-mock-factory-hoist-blocks-top-level-class-references`: that rule covers WHEN the factory runs (early, hoisted); this rule covers WHERE the path resolves (test file, not SUT).
+
+## snapshot-restore-preserves-version-not-via-on-conflict
+
+_Discovered: 2026-04-30 by implementer in rf-sqlite-5_
+
+The SQLite state store's `restore_snapshot` looks like it should hit the
+`upsert_resource` ON CONFLICT path because the prepared statement is the
+same one `save_resource` uses (`ON CONFLICT(graph_id, node_id) DO UPDATE
+SET ... version = version + 1`). The natural reading is "restore re-upserts
+each snapshot row, so version bumps by one per resource". That's wrong.
+The restore txn does `DELETE FROM resources WHERE graph_id = ?` BEFORE
+the upsert loop, so when the loop runs there are no rows to conflict
+against — every INSERT lands fresh and the version field is preserved
+EXACTLY as it was at snapshot time. A test that asserted "version
+becomes original+1 after restore" failed with the actual value being
+the original; the SQL is unchanged from pre-extraction so the bug is
+in the test's mental model, not the code. Generalizes: when reasoning
+about ON CONFLICT semantics inside a transaction, look at what other
+DML the txn does first — a DELETE that strips the conflict-target rows
+turns "upsert" into "insert", and any version-tracking field is preserved
+verbatim. This is the documented restore semantics (full snapshot-state
+replacement, not a state-merge), so do NOT "fix" the test by adjusting
+the SQL; pin the actual behaviour. Pair with snapshot/restore behaviour
+in any other state store: if the store uses upserts with a version-bump
+clause AND restore involves a clearing pass, the `version` field after
+restore equals the snapshotted version, NOT snapshot+1.

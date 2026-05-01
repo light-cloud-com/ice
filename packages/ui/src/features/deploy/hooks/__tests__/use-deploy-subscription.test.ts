@@ -18,7 +18,7 @@ import type {
   DeployNodeStatusEvent,
   DeployRequirementVerifiedEvent,
 } from '@ice/types';
-import { applyDeployEvent, mapWireStatusToOverlay } from '../use-deploy-subscription';
+import { applyDeployEvent, mapWireStatusToOverlay, overlayToWireStatus } from '../use-deploy-subscription';
 
 const CARD = 'card-1';
 const N1 = 'node-1';
@@ -46,6 +46,34 @@ describe('mapWireStatusToOverlay', () => {
     expect(mapWireStatusToOverlay('failed')).toBe('error');
     expect(mapWireStatusToOverlay('skipped')).toBe('skipped');
     expect(mapWireStatusToOverlay('cancelled-due-to-dep')).toBe('cancelled');
+  });
+});
+
+describe('overlayToWireStatus', () => {
+  it('inverts every overlay back to the wire DeployNodeStatus', () => {
+    expect(overlayToWireStatus('queued')).toBe('queued');
+    expect(overlayToWireStatus('deploying')).toBe('applying');
+    expect(overlayToWireStatus('active')).toBe('succeeded');
+    expect(overlayToWireStatus('error')).toBe('failed');
+    expect(overlayToWireStatus('skipped')).toBe('skipped');
+    expect(overlayToWireStatus('cancelled')).toBe('cancelled-due-to-dep');
+  });
+
+  it('returns null for overlay strings that do not correspond to a wire status', () => {
+    // pre-pdl-10 destroy paths wrote 'destroying' / 'gone' overlays that
+    // never existed on the wire — the warm-seed must skip them rather
+    // than guess. Phase 2.5 replay fills them in from the event tape.
+    expect(overlayToWireStatus('destroying')).toBeNull();
+    expect(overlayToWireStatus('gone')).toBeNull();
+    expect(overlayToWireStatus('')).toBeNull();
+    expect(overlayToWireStatus('whatever')).toBeNull();
+  });
+
+  it('round-trips through mapWireStatusToOverlay', () => {
+    const all = ['queued', 'applying', 'succeeded', 'failed', 'skipped', 'cancelled-due-to-dep'] as const;
+    for (const w of all) {
+      expect(overlayToWireStatus(mapWireStatusToOverlay(w))).toBe(w);
+    }
   });
 });
 

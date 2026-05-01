@@ -89,7 +89,9 @@ const render = (args: UseCanvasInteractionsBindingsArgs) => {
   });
   const store = makeStore();
   renderToStaticMarkup(
-    React.createElement(Provider, { store }, React.createElement(Probe, args)),
+    <Provider store={store}>
+      <Probe {...args} />
+    </Provider>,
   );
 };
 

@@ -7,16 +7,7 @@
  * - Click environment → activate it and open its card
  */
 
-import {
-  FolderPlus,
-  Plus,
-  FolderOpen,
-  Pencil,
-  Trash2,
-  FolderInput,
-  Check,
-  X,
-} from 'lucide-react';
+import { FolderPlus, Plus, FolderOpen, Check, X } from 'lucide-react';
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from '../../../i18n';
@@ -29,8 +20,6 @@ import {
   selectLoadedOrgId,
   toggleFolderExpanded,
   toggleProjectExpanded,
-  moveProjectToFolder,
-  moveFolder,
   type Project,
   type ProjectFolder,
 } from '../../../store/slices/projects-slice';
@@ -41,6 +30,7 @@ import { useTreeEffects } from '../hooks/use-tree-effects';
 import { useTreeHandlers } from '../hooks/use-tree-handlers';
 import { FolderRow } from './folder-row';
 import { ProjectRow } from './project-row';
+import { TreeContextMenu } from './tree-context-menu';
 
 // =============================================================================
 // Context Menu
@@ -260,76 +250,21 @@ export const ProjectTree: React.FC = () => {
         )}
       </div>
       {/* Context Menu */}
-      {contextMenu &&
-        (() => {
-          const isProject = contextMenu.type === 'project';
-          const isFolder = contextMenu.type === 'folder';
-          // Only show "Move to Top Level" if item is nested
-          const isNested = isProject
-            ? projects.find((p) => p.id === contextMenu.id)?.folderId != null
-            : folders.find((f) => f.id === contextMenu.id)?.parentFolderId != null;
-
-          return (
-            <div
-              ref={menuRef}
-              className="fixed z-50 w-48 rounded-md border border-ice-border bg-ice-surface shadow-xl py-1"
-              style={{ left: contextMenu.x, top: contextMenu.y }}
-            >
-              <button
-                onClick={() => handleStartRename(contextMenu.type, contextMenu.id)}
-                className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-ice-base text-ice-text-1 hover:bg-ice-active transition-colors"
-              >
-                <Pencil className="w-3 h-3" />
-                {t('projectTree.contextRename')}
-              </button>
-              {isNested && isProject && (
-                <button
-                  onClick={() => {
-                    setContextMenu(null);
-                    dispatch(moveProjectToFolder({ projectId: contextMenu.id, folderId: null }));
-                  }}
-                  className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-ice-base text-ice-text-1 hover:bg-ice-active transition-colors"
-                >
-                  <FolderInput className="w-3 h-3" />
-                  {t('projectTree.contextMoveToTopLevel')}
-                </button>
-              )}
-              {isNested && isFolder && (
-                <button
-                  onClick={() => {
-                    setContextMenu(null);
-                    dispatch(moveFolder({ folderId: contextMenu.id, parentFolderId: null }));
-                  }}
-                  className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-ice-base text-ice-text-1 hover:bg-ice-active transition-colors"
-                >
-                  <FolderInput className="w-3 h-3" />
-                  {t('projectTree.contextMoveToTopLevel')}
-                </button>
-              )}
-              {isFolder && (
-                <button
-                  onClick={() => {
-                    setContextMenu(null);
-                    setCreatingFolder(contextMenu.id);
-                    setNewFolderName(t('projectTree.defaultFolderName'));
-                  }}
-                  className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-ice-base text-ice-text-1 hover:bg-ice-active transition-colors"
-                >
-                  <FolderPlus className="w-3 h-3" />
-                  {t('projectTree.contextNewSubfolder')}
-                </button>
-              )}
-              <div className="h-px bg-ice-border my-1" />
-              <button
-                onClick={() => handleDelete(contextMenu.type, contextMenu.id)}
-                className="flex items-center gap-2 w-full px-3 py-1.5 text-left text-ice-base text-red-400 hover:bg-red-500/10 transition-colors"
-              >
-                <Trash2 className="w-3 h-3" />
-                {t('projectTree.contextDelete')}
-              </button>
-            </div>
-          );
-        })()}
+      {contextMenu && (
+        <TreeContextMenu
+          contextMenu={contextMenu}
+          projects={projects}
+          folders={folders}
+          menuRef={menuRef}
+          dispatch={dispatch}
+          t={t}
+          onStartRename={handleStartRename}
+          onDelete={handleDelete}
+          setContextMenu={setContextMenu}
+          setCreatingFolder={setCreatingFolder}
+          setNewFolderName={setNewFolderName}
+        />
+      )}
     </div>
   );
 };

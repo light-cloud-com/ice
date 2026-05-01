@@ -25,7 +25,11 @@ import type {
 import type { IceError } from '../types/errors.js';
 import type { Result } from '../types/result.js';
 import type { SqliteSchemaRegistry } from './embedded/sqlite-types.js';
-import { convert_resource_to_schema } from './embedded/converters.js';
+import {
+  get_dependencies as g_get_dependencies,
+  get_dependents as g_get_dependents,
+  get_equivalents as g_get_equivalents,
+} from './embedded/graph-queries.js';
 import {
   get_categories as q_get_categories,
   get_computed_properties as q_get_computed_properties,
@@ -230,36 +234,21 @@ export class EmbeddedSchemaProvider implements GraphSchemaProvider {
    * Get dependencies for a resource type.
    */
   async get_dependencies(ice_type: IceType, max_depth: number = 10): Promise<Result<ResourceSchema[], IceError>> {
-    if (!this.registry) {
-      return failure(new InternalError('Schema provider not initialized', 'INTERNAL_ERROR'));
-    }
-
-    const deps = this.registry.get_dependencies(ice_type, max_depth);
-    return success(deps.map((r) => convert_resource_to_schema(this.registry, r)));
+    return g_get_dependencies(this.registry, ice_type, max_depth);
   }
 
   /**
    * Get dependents for a resource type.
    */
   async get_dependents(ice_type: IceType, max_depth: number = 10): Promise<Result<ResourceSchema[], IceError>> {
-    if (!this.registry) {
-      return failure(new InternalError('Schema provider not initialized', 'INTERNAL_ERROR'));
-    }
-
-    const dependents = this.registry.get_dependents(ice_type, max_depth);
-    return success(dependents.map((r) => convert_resource_to_schema(this.registry, r)));
+    return g_get_dependents(this.registry, ice_type, max_depth);
   }
 
   /**
    * Get cross-provider equivalents.
    */
   async get_equivalents(ice_type: IceType): Promise<Result<ResourceSchema[], IceError>> {
-    if (!this.registry) {
-      return failure(new InternalError('Schema provider not initialized', 'INTERNAL_ERROR'));
-    }
-
-    const equivalents = this.registry.get_equivalents(ice_type);
-    return success(equivalents.map((r) => convert_resource_to_schema(this.registry, r)));
+    return g_get_equivalents(this.registry, ice_type);
   }
 
   // ===========================================================================

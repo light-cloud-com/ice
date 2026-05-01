@@ -3,10 +3,18 @@
  *
  * Opened from the sidebar category panel or empty canvas overlay.
  * Full searchable, filterable gallery with:
- * - Sidebar filters (category, provider, compliance, difficulty)
- * - Grid of template cards with metadata
- * - Detail view with resource breakdown
- * - "Use Template" adds to the ACTIVE canvas (does NOT replace)
+ *   - Sidebar filters (category, provider, compliance, difficulty)
+ *   - Grid of template cards with metadata
+ *   - Detail view with resource breakdown
+ *   - "Use Template" adds to the ACTIVE canvas (does NOT replace)
+ *
+ * Sub-component splits (rf-tgal series):
+ *   - `../data/icon-map.ts`               — ICON_MAP lucide registry (rf-tgal-1)
+ *   - `../utils/difficulty-labels.ts`     — getDifficultyLabels(t) (rf-tgal-2)
+ *   - `./badges.tsx`                      — DifficultyDots / ProviderBadges /
+ *                                            TrustBadge / TechStackLogos (rf-tgal-3)
+ *   - `./template-card.tsx`               — memoised grid card (rf-tgal-4)
+ *   - `./template-detail.tsx`             — full detail panel (rf-tgal-5)
  */
 
 import { Zap, LayoutTemplate, Sparkles } from 'lucide-react';

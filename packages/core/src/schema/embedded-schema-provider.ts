@@ -5,8 +5,6 @@
  * Supports both the bundled base database and project-specific customized databases.
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
 import { InternalError } from '../types/errors.js';
 import { success, failure } from '../types/result.js';
 import type {
@@ -26,10 +24,17 @@ import type { IceError } from '../types/errors.js';
 import type { Result } from '../types/result.js';
 import type { SqliteSchemaRegistry } from './embedded/sqlite-types.js';
 import {
+  add_listener,
+  emit_event as emit_schema_event,
+  remove_listener,
+  type EventListenerMap,
+} from './embedded/events.js';
+import {
   get_dependencies as g_get_dependencies,
   get_dependents as g_get_dependents,
   get_equivalents as g_get_equivalents,
 } from './embedded/graph-queries.js';
+import { initialize_registry, resolve_db_path } from './embedded/initialization.js';
 import {
   get_categories as q_get_categories,
   get_computed_properties as q_get_computed_properties,
@@ -80,7 +85,7 @@ interface GraphSchemaProvider extends ObservableSchemaProvider {
 export class EmbeddedSchemaProvider implements GraphSchemaProvider {
   private registry: SqliteSchemaRegistry | null = null;
   private initialized = false;
-  private event_listeners: Map<SchemaEventType, Set<SchemaEventListener>> = new Map();
+  private event_listeners: EventListenerMap = new Map();
   private query_cache: QueryCache = make_query_cache();
   private db_path: string | null = null;
 
@@ -101,15 +106,8 @@ export class EmbeddedSchemaProvider implements GraphSchemaProvider {
     }
 
     try {
-      // Dynamically import the schemas db module.
-      // Graceful fallback: if the module or export doesn't exist, the provider runs without a registry.
-      const schemas: Record<string, unknown> | null = await import("../schemas/db").catch(() => null);
-
-      if (schemas && typeof schemas.get_schema_registry === 'function') {
-        const factory = schemas.get_schema_registry as (dbPath?: string) => SqliteSchemaRegistry;
-        const db_path = this.db_path ?? this.resolve_db_path();
-        this.registry = factory(db_path);
-      }
+      const db_path = this.db_path ?? resolve_db_path();
+      this.registry = await initialize_registry(db_path);
 
       if (!this.registry) {
         return failure(
@@ -129,20 +127,6 @@ export class EmbeddedSchemaProvider implements GraphSchemaProvider {
         new InternalError(`Failed to initialize schema provider: ${err.message}`, 'INTERNAL_ERROR', {}, err),
       );
     }
-  }
-
-  /**
-   * Resolve the database path - project DB if exists, otherwise bundled.
-   */
-  private resolve_db_path(): string | undefined {
-    // Check for project-specific database first
-    const project_db = path.join(process.cwd(), '.ice', 'schemas.db');
-    if (fs.existsSync(project_db)) {
-      return project_db;
-    }
-
-    // Let the registry use its default (bundled database)
-    return undefined;
   }
 
   /**
@@ -259,46 +243,22 @@ export class EmbeddedSchemaProvider implements GraphSchemaProvider {
    * Subscribe to schema events.
    */
   on(event: SchemaEventType, listener: SchemaEventListener): void {
-    let listeners = this.event_listeners.get(event);
-    if (!listeners) {
-      listeners = new Set();
-      this.event_listeners.set(event, listeners);
-    }
-    listeners.add(listener);
+    add_listener(this.event_listeners, event, listener);
   }
 
   /**
    * Unsubscribe from schema events.
    */
   off(event: SchemaEventType, listener: SchemaEventListener): void {
-    const listeners = this.event_listeners.get(event);
-    if (listeners) {
-      listeners.delete(listener);
-    }
+    remove_listener(this.event_listeners, event, listener);
   }
 
   /**
    * Emit an event.
    */
   private emit_event(type: SchemaEventType, ice_type?: IceType, message?: string): void {
-    const listeners = this.event_listeners.get(type);
-    if (listeners) {
-      const event = {
-        type,
-        timestamp: new Date().toISOString(),
-        ice_type,
-        message,
-      };
-      for (const listener of listeners) {
-        try {
-          listener(event);
-        } catch {
-          // Ignore listener errors
-        }
-      }
-    }
+    emit_schema_event(this.event_listeners, type, ice_type, message);
   }
-
 }
 
 // =============================================================================

@@ -1,8 +1,14 @@
 /**
- * Tests for `algorithms/analysis.ts` (rf-galg-4).
+ * Tests for `algorithms/analysis.ts` (rf-galg-4 + bugfix-3).
  *
- * Behaviour preserved verbatim from pre-extraction L412-586 of
- * `graph/algorithms.ts`.
+ * `get_critical_path` was extracted verbatim in rf-galg-4 with a
+ * documented quirk: the distance update walked `get_incoming_edges`
+ * but in the topo order `topological_sort` emits (leaves-first for
+ * `depends_on`), source distances were always `-Infinity` and the
+ * chain never propagated. The function returned just the start
+ * node for any DAG. bugfix-3 swaps the loop to walk
+ * `get_outgoing_edges` and read the *target's* distance — target
+ * is processed earlier in topo order, so the chain propagates.
  */
 import { describe, expect, it } from 'vitest';
 import {
@@ -10,7 +16,7 @@ import {
   get_critical_path,
   get_execution_layers,
 } from '../analysis.js';
-import { make_graph } from './fixtures.js';
+import { make_graph, id_of } from './fixtures.js';
 
 describe('get_execution_layers', () => {
   it('returns empty for empty graph', () => {
@@ -83,15 +89,15 @@ describe('get_critical_path', () => {
     expect(path.length).toBe(1);
   });
 
-  it('returns a path of length >= 1 for non-empty DAG (preserves pre-extraction behaviour)', () => {
-    // a -> b -> c (3-node chain). Pre-extraction get_critical_path
-    // walks topo order using incoming-edge predecessors; the
-    // distance update doesn't propagate through the chain because
-    // the source-distance lookup happens before the source is
-    // processed in topo order. The result: critical_path is just
-    // the single start-node (the leaf with no dependencies).
-    // Preserved verbatim — fixing this is out-of-scope for the
-    // refactor.
+  it('returns the full chain for a 3-node depends_on chain (bugfix-3)', () => {
+    // a depends_on b depends_on c. Edges: [a→b], [b→c]. Pre-fix
+    // returned just `[c]` because the distance update walked
+    // get_incoming_edges and read source distance — sources are
+    // processed AFTER the current node in topo order, so the
+    // lookup returned -Infinity and the chain never propagated.
+    // Post-fix walks get_outgoing_edges and reads target distance:
+    // for each node, examine its dependencies, take the
+    // longest-yet path through them.
     const graph = make_graph(
       ['a', 'b', 'c'],
       [
@@ -100,7 +106,58 @@ describe('get_critical_path', () => {
       ],
     );
     const path = get_critical_path(graph);
-    expect(path.length).toBeGreaterThanOrEqual(1);
+    expect(path.length).toBe(3);
+    // Path is reported leaf-first → root-last: c (no deps) → b → a.
+    expect(path).toEqual([id_of(graph, 'c'), id_of(graph, 'b'), id_of(graph, 'a')]);
+  });
+
+  it('returns the full 4-node chain (a→b→c→d, 3 hops)', () => {
+    const graph = make_graph(
+      ['a', 'b', 'c', 'd'],
+      [
+        ['a', 'b'],
+        ['b', 'c'],
+        ['c', 'd'],
+      ],
+    );
+    const path = get_critical_path(graph);
+    expect(path.length).toBe(4);
+    expect(path).toEqual([
+      id_of(graph, 'd'),
+      id_of(graph, 'c'),
+      id_of(graph, 'b'),
+      id_of(graph, 'a'),
+    ]);
+  });
+
+  it('picks one of the longest paths in a diamond DAG', () => {
+    // a depends_on b, a depends_on c; b depends_on d; c depends_on d.
+    // Edges: [a→b], [a→c], [b→d], [c→d].
+    // Two equal-length paths exist: d→b→a and d→c→a (3 nodes each).
+    // The algorithm picks whichever is encountered first when the
+    // 'a' update fires; either is correct.
+    const graph = make_graph(
+      ['a', 'b', 'c', 'd'],
+      [
+        ['a', 'b'],
+        ['a', 'c'],
+        ['b', 'd'],
+        ['c', 'd'],
+      ],
+    );
+    const path = get_critical_path(graph);
+    expect(path.length).toBe(3);
+    expect(path[0]).toBe(id_of(graph, 'd'));
+    expect(path[2]).toBe(id_of(graph, 'a'));
+    // Middle node is either b or c — both valid longest paths.
+    expect([id_of(graph, 'b'), id_of(graph, 'c')]).toContain(path[1]);
+  });
+
+  it('returns the single node for an isolated node', () => {
+    const graph = make_graph(['solo'], []);
+    const path = get_critical_path(graph);
+    expect(path.length).toBe(1);
+    expect(path[0]).toBe(id_of(graph, 'solo'));
   });
 
   it('returns empty array on cyclic graph', () => {
@@ -114,18 +171,16 @@ describe('get_critical_path', () => {
     expect(get_critical_path(graph)).toEqual([]);
   });
 
-  it('returns at least one node for a chain (preserves pre-extraction behaviour)', () => {
-    // The same graph shape — pre-extraction returns just the
-    // leaf node, not the full chain. Documented quirk preserved.
+  it('handles disconnected components: returns the longest of all chains', () => {
+    // Two components: chain a→b (length 2) and isolated c (length 1).
+    // The longest chain is a→b → 2 nodes.
     const graph = make_graph(
       ['a', 'b', 'c'],
-      [
-        ['a', 'b'],
-        ['b', 'c'],
-      ],
+      [['a', 'b']],
     );
     const path = get_critical_path(graph);
-    expect(path.length).toBeGreaterThanOrEqual(1);
+    expect(path.length).toBe(2);
+    expect(path).toEqual([id_of(graph, 'b'), id_of(graph, 'a')]);
   });
 });
 

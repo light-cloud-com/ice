@@ -10,7 +10,7 @@
  *    `find_connected_components` (components), `has_cycle` (topo-cycle),
  *    `get_critical_path` (this file), `get_execution_layers` (this file).
  *
- * Pre-extraction quirks preserved verbatim:
+ * Notes:
  *  - `get_execution_layers` uses iterative "layer-peel" pattern;
  *    if a cycle is present, the inner loop produces an empty
  *    `layer` and breaks — silently ceasing layer production.
@@ -21,16 +21,16 @@
  *    map is only populated when a longer path is found, so the
  *    reconstruction starts at the node with max distance and
  *    walks back via predecessors.
- *  - get_critical_path KNOWN QUIRK: the distance update walks
- *    `get_incoming_edges`, but the source nodes for those incoming
- *    edges are processed AFTER the current node in the topo
- *    order produced by topological_sort (which emits leaves first
- *    for `depends_on` graphs). Result: the distance update reads
- *    `-Infinity` for the source, the new_dist comparison fails,
- *    and the chain never propagates. The function effectively
- *    returns just the start (no-deps) node. Preserved verbatim
- *    from pre-extraction — fixing this would change the public
- *    behaviour and is out-of-scope for the refactor.
+ *  - bugfix-3: the distance update now walks `get_outgoing_edges`
+ *    (the dependencies of the current node) and reads the
+ *    target's distance — both processed earlier in the topo order
+ *    that `topological_sort` produces (leaves first for
+ *    `depends_on` graphs). Pre-fix the loop walked
+ *    `get_incoming_edges`, but the source nodes for those
+ *    incoming edges were processed AFTER the current node in topo
+ *    order, so source distances always read `-Infinity` and the
+ *    chain never propagated — the function returned just the
+ *    start (no-deps) node for any DAG.
  *  - `calculate_metrics` density formula: `edge_count / (n*(n-1))`.
  *    For directed graphs this gives ratio of present-to-possible
  *    directed edges. Self-loops would inflate density above 1.0
@@ -95,6 +95,21 @@ export function get_execution_layers(graph: MutableGraph): NodeId[][] {
  * predecessors when a longer path is found. Reconstruct path from
  * the max-distance node.
  *
+ * The path is reported leaf-first (start node = node with no
+ * outgoing `depends_on` edges) → root-last (end node = the
+ * deepest dependent). For chain `a depends_on b depends_on c`
+ * (encoded as edges `a→b`, `b→c`), the result is `[c, b, a]`.
+ *
+ * bugfix-3: distance propagation walks `get_outgoing_edges` (the
+ * current node's dependencies) and reads the *target's* distance.
+ * In the topo order produced by `topological_sort` (leaves first
+ * for `depends_on`), targets are visited before sources, so the
+ * target distance is always populated by the time we read it. The
+ * pre-fix code walked `get_incoming_edges` and read the source's
+ * distance — sources are processed AFTER the current node in topo
+ * order, so the lookup always returned `-Infinity` and the chain
+ * never propagated past the start node.
+ *
  * Returns `[]` if the graph has a cycle (topological_sort fails).
  */
 export function get_critical_path(graph: MutableGraph): NodeId[] {
@@ -120,18 +135,24 @@ export function get_critical_path(graph: MutableGraph): NodeId[] {
     return [];
   }
 
-  // Calculate longest paths
+  // Calculate longest paths.
+  //
+  // For each node in topo order, look at its dependencies (outgoing
+  // `depends_on` edges). Each dependency was processed earlier in
+  // topo order (leaves first), so its distance is already set. If
+  // chaining through this dependency yields a longer path, update.
   for (const node_id of sort_result.order) {
-    const current_dist = distances.get(node_id) ?? -Infinity;
+    let current_dist = distances.get(node_id) ?? -Infinity;
 
-    for (const edge of graph.get_incoming_edges(node_id)) {
+    for (const edge of graph.get_outgoing_edges(node_id)) {
       if (edge.relationship === 'depends_on') {
-        const source_dist = distances.get(edge.source) ?? -Infinity;
-        const new_dist = source_dist + 1;
+        const target_dist = distances.get(edge.target) ?? -Infinity;
+        const new_dist = target_dist + 1;
 
         if (new_dist > current_dist) {
+          current_dist = new_dist;
           distances.set(node_id, new_dist);
-          predecessors.set(node_id, edge.source);
+          predecessors.set(node_id, edge.target);
         }
       }
     }
@@ -152,7 +173,12 @@ export function get_critical_path(graph: MutableGraph): NodeId[] {
     return [];
   }
 
-  // Reconstruct path
+  // Reconstruct path. `end_node` has the largest distance — the
+  // most-dependent node. Walking predecessors traces back through
+  // each dependency hop: predecessor[N] = the dependency that
+  // yielded N's longest chain, so the chain reads dependent → ... →
+  // leaf. We push to the FRONT (`unshift`) so the final array reads
+  // leaf → ... → dependent (start → end).
   const path: NodeId[] = [end_node];
   let current = end_node;
 

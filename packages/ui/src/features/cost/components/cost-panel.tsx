@@ -13,7 +13,6 @@
  */
 
 import {
-  ChevronRight,
   DollarSign,
   TrendingDown,
   TrendingUp,
@@ -43,32 +42,9 @@ import {
 import { generateSuggestions } from '../utils/generate-suggestions';
 import { TRAFFIC_TIERS, EGRESS_RATES } from '../utils/provider-pricing';
 import { loadTrafficTier, saveTrafficTier } from '../utils/traffic-tier-storage';
+import { Section } from './section';
 import type { RootState, AppDispatch } from '../../../store';
 import type { Environment } from '../../../store/slices/environments-slice';
-
-// ─── Section component ──────────────────────────────────────────────────────
-
-const Section: React.FC<{
-  title: string;
-  icon?: React.ReactNode;
-  defaultOpen?: boolean;
-  children: React.ReactNode;
-}> = ({ title, icon, defaultOpen = true, children }) => {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div className="border-b border-ice-border">
-      <button
-        className="w-full flex items-center gap-2 px-3 py-2 text-ice-xs uppercase tracking-wider text-ice-text-3 hover:bg-ice-hover transition-colors"
-        onClick={() => setOpen(!open)}
-      >
-        <ChevronRight className={cn('w-3 h-3 transition-transform', open && 'rotate-90')} />
-        {icon}
-        <span className="flex-1 text-left">{title}</span>
-      </button>
-      {open && <div className="px-3 pb-3">{children}</div>}
-    </div>
-  );
-};
 
 // Stable empty-array fallback (avoids creating new [] references in selectors)
 const EMPTY_ENVIRONMENTS: Environment[] = [];

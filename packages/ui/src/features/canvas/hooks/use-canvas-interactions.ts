@@ -18,17 +18,6 @@
 
 import { useCallback, useRef } from 'react';
 
-// rf-canvint-1: types live in `./interactions/types`. Re-export for outside
-// consumers (svg-canvas.tsx imports `CanvasItem` from this orchestrator),
-// AND import for in-file usages — both lines are required, see the rf-canv-1
-// `export-from-and-import-from-pattern` learning.
-export type {
-  CanvasViewport,
-  CanvasItem,
-  UseCanvasInteractionsOptions,
-  UseCanvasInteractionsResult,
-} from './interactions/types.js';
-
 // rf-canvint-2: pure hit-test helpers.
 import {
   screenToCanvas as screenToCanvasPure,
@@ -44,6 +33,17 @@ import { useMouseHandlers } from './interactions/use-mouse-handlers.js';
 import type {
   CanvasItem,
   InteractionState,
+  UseCanvasInteractionsOptions,
+  UseCanvasInteractionsResult,
+} from './interactions/types.js';
+
+// rf-canvint-1: types live in `./interactions/types`. Re-export for outside
+// consumers (svg-canvas.tsx imports `CanvasItem` from this orchestrator),
+// AND import for in-file usages — both lines are required, see the rf-canv-1
+// `export-from-and-import-from-pattern` learning.
+export type {
+  CanvasViewport,
+  CanvasItem,
   UseCanvasInteractionsOptions,
   UseCanvasInteractionsResult,
 } from './interactions/types.js';

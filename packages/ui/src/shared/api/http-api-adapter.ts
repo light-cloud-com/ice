@@ -17,6 +17,9 @@ import { createProjectsAdapter } from './http-api/projects';
 import { createTemplatesAdapter } from './http-api/templates';
 import { createProviderAdapter } from './http-api/provider';
 import { createGithubAdapter } from './http-api/github';
+import { createDeployAdapter } from './http-api/deploy';
+import { createPipelineAdapter } from './http-api/pipeline';
+import { createEnvironmentsAdapter } from './http-api/environments';
 
 // Re-export for the existing public surface; consumers calling
 // `emitMenuAction(...)` from the toolbar continue to work.
@@ -51,142 +54,13 @@ export function createHttpApiAdapter(): IceAPI {
     github: createGithubAdapter(),
 
     // ── Deploy ──────────────────────────────────────────────────────────
-    deploy: {
-      plan: async (cardId, nodes, edges, options) => {
-        const res = await axiosInstance.post('/canvas/deploy/plan', { cardId, nodes, edges, options });
-        return res.data;
-      },
-      apply: async (cardId, nodes, edges, options) => {
-        const res = await axiosInstance.post('/canvas/deploy/apply', { cardId, nodes, edges, options });
-        return res.data;
-      },
-      destroy: async (cardId, options) => {
-        const res = await axiosInstance.post('/canvas/deploy/destroy', { cardId, options });
-        return res.data;
-      },
-      destroyAll: async (cardId: string, options?: { gcpProject?: string }) => {
-        const res = await axiosInstance.post('/canvas/deploy/destroy-all', {
-          cardId,
-          gcpProject: options?.gcpProject,
-        });
-        return res.data;
-      },
-      getStatus: async (deploymentId) => {
-        const res = await axiosInstance.get(`/canvas/deploy/status/${deploymentId}`);
-        return res.data;
-      },
-      authenticate: async () => {
-        // Web version uses platform auth — already authenticated
-        return { success: true };
-      },
-      getResources: async (cardId) => {
-        const res = await axiosInstance.get(`/canvas/deploy/resources/${cardId}`);
-        return res.data;
-      },
-      getDeployments: async (cardId) => {
-        const res = await axiosInstance.get(`/canvas/deploy/history/${cardId}`);
-        return res.data;
-      },
-      requirements: async (cardId: string, nodes: any[], options: any) => {
-        const res = await axiosInstance.post('/canvas/deploy/requirements', { cardId, nodes, options });
-        return res.data;
-      },
-      getCurrentDeploy: async (cardId: string) => {
-        const res = await axiosInstance.get(`/canvas/deploy/current/${cardId}`);
-        return res.data;
-      },
-      getDeployStream: async (cardId: string, since = 0, deploymentId?: string) => {
-        const res = await axiosInstance.get(`/canvas/deploy/stream/${cardId}`, {
-          params: { since, ...(deploymentId ? { deployment_id: deploymentId } : {}) },
-        });
-        return res.data;
-      },
-      getNodeOutputs: async (cardId: string, environment?: string) => {
-        const res = await axiosInstance.get(`/canvas/deploy/node-outputs/${cardId}`, {
-          params: environment ? { environment } : undefined,
-        });
-        return res.data;
-      },
-      cleanupOrphans: async (args?: { gcpProject?: string; dryRun?: boolean }) => {
-        const res = await axiosInstance.post('/canvas/deploy/cleanup-orphans', args || {});
-        return res.data;
-      },
-      openExternal: (url: string) => {
-        window.open(url, '_blank', 'noopener,noreferrer');
-      },
-    },
+    deploy: createDeployAdapter(),
 
     // ── Pipeline ─────────────────────────────────────────────────────────
-    pipeline: {
-      getRules: async (cardId: string, nodeId: string) => {
-        const res = await axiosInstance.get(`/pipeline/rules/${cardId}/${nodeId}`);
-        return res.data;
-      },
-      createRule: async (input: any) => {
-        const res = await axiosInstance.post('/pipeline/rules', input);
-        return res.data;
-      },
-      updateRule: async (ruleId: string, updates: any) => {
-        const res = await axiosInstance.put(`/pipeline/rules/${ruleId}`, updates);
-        return res.data;
-      },
-      deleteRule: async (ruleId: string) => {
-        const res = await axiosInstance.delete(`/pipeline/rules/${ruleId}`);
-        return res.data;
-      },
-      getEvents: async (cardId: string, nodeId: string) => {
-        const res = await axiosInstance.get(`/pipeline/events/${cardId}/${nodeId}`);
-        return res.data;
-      },
-      detectFramework: async (repository: string, branch?: string) => {
-        const res = await axiosInstance.post('/pipeline/detect-framework', { repository, branch });
-        return res.data;
-      },
-      triggerDeploy: async (ruleId: string, branch?: string) => {
-        const res = await axiosInstance.post('/pipeline/trigger', { ruleId, branch });
-        return res.data;
-      },
-      retryDeploy: async (eventId: string) => {
-        const res = await axiosInstance.post('/pipeline/retry', { eventId });
-        return res.data;
-      },
-      cancelDeploy: async (eventId: string) => {
-        const res = await axiosInstance.post('/pipeline/cancel', { eventId });
-        return res.data;
-      },
-    },
+    pipeline: createPipelineAdapter(),
 
     // ── Environments ─────────────────────────────────────────────────────
-    environments: {
-      list: async (projectId: string) => {
-        const res = await axiosInstance.post('/environments/list', { projectId });
-        return res.data;
-      },
-      create: async (input: { projectId: string; name: string; type: string; region?: string }) => {
-        const res = await axiosInstance.post('/environments/create', input);
-        return res.data;
-      },
-      update: async (envId: string, data: { name?: string; region?: string }) => {
-        const res = await axiosInstance.post('/environments/update', { envId, ...data });
-        return res.data;
-      },
-      delete: async (envId: string) => {
-        const res = await axiosInstance.post('/environments/delete', { envId });
-        return res.data;
-      },
-      compare: async (sourceEnvId: string, targetEnvId: string) => {
-        const res = await axiosInstance.post('/environments/compare', { sourceEnvId, targetEnvId });
-        return res.data;
-      },
-      promote: async (sourceEnvId: string, targetEnvId: string) => {
-        const res = await axiosInstance.post('/environments/promote', { sourceEnvId, targetEnvId });
-        return res.data;
-      },
-      togglePrPreviews: async (projectId: string, enabled: boolean) => {
-        const res = await axiosInstance.post('/environments/pr-previews', { projectId, enabled });
-        return res.data;
-      },
-    },
+    environments: createEnvironmentsAdapter(),
 
     // ── Canvas Log Terminal block (Cloud Logging tail) ─────────────────
     //

@@ -7,9 +7,9 @@
  * Supports Anthropic (cloud, default) and any OpenAI-compatible endpoint.
  */
 
-import { createProviderAsync, getProvider, type AiProvider } from '@ice/ai';
 import prisma from '@ice/db';
 import { generateAiConnectionPrompt } from '@ice/types';
+import { getAiProvider, getAiProviderSync } from './ai/provider';
 import { createAuditEntry, finalizeAuditEntry, writeAuditEntry } from './ai-audit.service';
 import { buildSchemaContext } from './ai-schema-context.service';
 import { validateCanvas } from './canvas-validation.service';
@@ -18,26 +18,12 @@ import type { AiCanvasOp, AiResponse, SerializedCanvas, AiStreamEvent } from '@i
 import type { Response } from 'express';
 
 // =============================================================================
-// AI Provider
+// AI Provider — re-export from ./ai/provider so external consumers
+// (routes/ai.ts, diagnose-deploy.service.ts) keep working through the
+// orchestrator's public surface.
 // =============================================================================
 
-let _providerReady: Promise<AiProvider> | null = null;
-
-/**
- * Get the AI provider (auto-detects on first call).
- * Tries Anthropic first, falls back to OpenAI-compat (ICE_AI_URL), then null.
- */
-export async function getAiProvider(): Promise<AiProvider> {
-  if (!_providerReady) {
-    _providerReady = createProviderAsync();
-  }
-  return _providerReady;
-}
-
-/** Get provider synchronously (null if not yet initialized) */
-export function getAiProviderSync(): AiProvider | null {
-  return getProvider();
-}
+export { getAiProvider, getAiProviderSync };
 
 // =============================================================================
 // System Prompt

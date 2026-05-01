@@ -4,8 +4,10 @@
  * Handles: gcp.compute.globalForwardingRule
  */
 
+import { fetch_current_status, fetch_initial_status, fetch_ip_address } from './load-balancer/cert-fetcher.js';
 import { wait_for_compute_op } from './load-balancer/compute-ops.js';
 import { BASE_URL, fail, result } from './load-balancer/result-helpers.js';
+import { backend_ref, compute_primary_url } from './load-balancer/url-builder.js';
 import type { GCPResourceHandler } from '../types.js';
 
 export const load_balancer_handler: GCPResourceHandler = {
@@ -43,9 +45,7 @@ export const load_balancer_handler: GCPResourceHandler = {
 
     // Helper: build a GCP resource reference URL for a backend by name + type.
     const backendRef = (backendName: string, backendType: 'bucket' | 'service') =>
-      backendType === 'bucket'
-        ? `projects/${ctx.project}/global/backendBuckets/${backendName}`
-        : `projects/${ctx.project}/global/backendServices/${backendName}`;
+      backend_ref(ctx.project, backendName, backendType);
 
     // Helper: fail-fast verify a backend bucket actually exists before
     // we reference it in the URL map. GCP accepts URL-map references to
@@ -313,52 +313,23 @@ export const load_balancer_handler: GCPResourceHandler = {
         if (redirectFrOp?.name) await wait_for_compute_op(ctx, redirectFrOp.name);
       }
 
-      // After the forwarding rule exists, fetch it so we can surface its
-      // externally-reachable IP address as an output. The UI uses this for
-      // the per-block output pill, the DNS requirement post-deploy check,
-      // and the "open in browser" deep-link.
-      let ipAddress: string | undefined;
-      try {
-        const rule = (await ctx.rest_client.get(
-          `${BASE_URL}/projects/${ctx.project}/global/forwardingRules/${name}`,
-        )) as any;
-        ipAddress = rule?.IPAddress || rule?.ipAddress;
-      } catch {
-        // Non-fatal — we can still return success without the IP.
-      }
+      // After the forwarding rule exists, fetch its externally-reachable
+      // IP address. The UI uses this for the per-block output pill, the
+      // DNS requirement post-deploy check, and the "open in browser"
+      // deep-link.
+      const ipAddress = await fetch_ip_address(ctx, name);
 
       // Fetch the SSL cert status so the Custom Domain / PublicEndpoint
       // block header can show "Provisioning SSL cert..." right after
       // deploy. This is the INITIAL status — the post-deploy
       // managedCertIssuanceRequirement polls every 60s for live updates
       // and surfaces them in the deploy panel's Requirements section.
-      let certStatus: string | undefined;
-      let certDomainStatuses: Record<string, string> | undefined;
-      if (sslCertificateName) {
-        try {
-          const cert = (await ctx.rest_client.get(
-            `${BASE_URL}/projects/${ctx.project}/global/sslCertificates/${sslCertificateName}`,
-          )) as any;
-          certStatus = cert?.managed?.status || 'PROVISIONING';
-          certDomainStatuses = cert?.managed?.domainStatus;
-        } catch {
-          // Cert might not be ready to read yet; the requirement poll
-          // will pick it up shortly.
-          certStatus = 'PROVISIONING';
-        }
-      }
+      const { cert_status: certStatus, cert_domain_statuses: certDomainStatuses } = await fetch_initial_status(
+        ctx,
+        sslCertificateName,
+      );
 
-      // Primary URL priority:
-      //   1. Custom domain (user's intended public URL)
-      //   2. HTTPS IP (shouldn't usually be visited but technically works)
-      //   3. HTTP IP (fallback for non-TLS deploys)
-      const primaryUrl = customDomain
-        ? `https://${customDomain}`
-        : wantsHttps && ipAddress
-          ? `https://${ipAddress}`
-          : ipAddress
-            ? `http://${ipAddress}`
-            : undefined;
+      const primaryUrl = compute_primary_url({ customDomain, wantsHttps, ipAddress });
 
       // When multi-host routing is in play, expose the full list so the
       // overlay propagation on the backend and the canvas block pill on
@@ -405,45 +376,22 @@ export const load_balancer_handler: GCPResourceHandler = {
     // an update deploy would have NO `ip_address` / `url` outputs and
     // the canvas pill would lose its URL on every redeploy.
     const start = Date.now();
-    let ipAddress: string | undefined;
-    try {
-      const rule = (await ctx.rest_client.get(
-        `${BASE_URL}/projects/${ctx.project}/global/forwardingRules/${name}`,
-      )) as any;
-      ipAddress = rule?.IPAddress || rule?.ipAddress;
-    } catch {
-      // Non-fatal — fall through with no IP if the GET fails for any reason.
-    }
+    const ipAddress = await fetch_ip_address(ctx, name);
 
     const sslCertificateName = (properties.ssl_certificate_name as string | undefined) || '';
     const wantsHttps = String(properties.protocol || '').toUpperCase() === 'HTTPS' && Boolean(sslCertificateName);
     const customDomain = (properties.domain as string | undefined) || '';
-    const primaryUrl = customDomain
-      ? `https://${customDomain}`
-      : wantsHttps && ipAddress
-        ? `https://${ipAddress}`
-        : ipAddress
-          ? `http://${ipAddress}`
-          : undefined;
+    const primaryUrl = compute_primary_url({ customDomain, wantsHttps, ipAddress });
 
     // Re-fetch the cert status on every update so the Custom Domain
     // header reflects the current state. This is what makes "click
     // Deploy again 30min after the original create" actually update
     // the block to ACTIVE without forcing the user to wait for the
     // background poller.
-    let certStatus: string | undefined;
-    let certDomainStatuses: Record<string, string> | undefined;
-    if (sslCertificateName) {
-      try {
-        const cert = (await ctx.rest_client.get(
-          `${BASE_URL}/projects/${ctx.project}/global/sslCertificates/${sslCertificateName}`,
-        )) as any;
-        certStatus = cert?.managed?.status;
-        certDomainStatuses = cert?.managed?.domainStatus;
-      } catch {
-        // Cert was deleted or unreadable — leave undefined.
-      }
-    }
+    const { cert_status: certStatus, cert_domain_statuses: certDomainStatuses } = await fetch_current_status(
+      ctx,
+      sslCertificateName,
+    );
 
     return result(name, 'update', start, {
       provider_id,

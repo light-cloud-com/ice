@@ -23,7 +23,7 @@ import {
   Layers,
   Loader2,
 } from 'lucide-react';
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { TREE_INDENT_PX, TREE_INDENT_BASE } from '../../../config/canvas-constants';
 import { ENV_DOT_COLORS } from '../../../config/color-palette';
@@ -46,8 +46,8 @@ import {
 } from '../../../store/slices/projects-slice';
 import { openDialog } from '../../../store/slices/ui-slice';
 import type { AppDispatch, RootState } from '../../../store';
+import { useTreeDrag } from '../hooks/use-tree-drag';
 import { useTreeHandlers } from '../hooks/use-tree-handlers';
-import { encodeDrag, decodeDrag, type DragItemType } from '../utils/drag-encoding';
 
 // Environment type → dot color
 const ENV_DOT_COLOR = ENV_DOT_COLORS;
@@ -95,7 +95,6 @@ export const ProjectTree: React.FC = () => {
   const [editingName, setEditingName] = useState('');
   const [creatingFolder, setCreatingFolder] = useState<string | null>(null);
   const [newFolderName, setNewFolderName] = useState('');
-  const [dragOverId, setDragOverId] = useState<string | null>(null);
 
   const menuRef = useRef<HTMLDivElement>(null);
   const editInputRef = useRef<HTMLInputElement>(null);
@@ -157,42 +156,7 @@ export const ProjectTree: React.FC = () => {
 
   // ── Drag & Drop (unified for projects + folders) ─────────────────────────
 
-  const handleDragStart = useCallback((e: React.DragEvent, type: DragItemType, id: string) => {
-    e.dataTransfer.setData('text/plain', encodeDrag(type, id));
-    e.dataTransfer.effectAllowed = 'move';
-  }, []);
-
-  const handleDragOver = useCallback((e: React.DragEvent, targetFolderId: string | null) => {
-    e.preventDefault();
-    e.stopPropagation();
-    e.dataTransfer.dropEffect = 'move';
-    setDragOverId(targetFolderId);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.stopPropagation();
-    setDragOverId(null);
-  }, []);
-
-  const handleDrop = useCallback(
-    (e: React.DragEvent, targetFolderId: string | null) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setDragOverId(null);
-      const raw = e.dataTransfer.getData('text/plain');
-      const item = decodeDrag(raw);
-      if (!item) return;
-
-      if (item.type === 'project') {
-        dispatch(moveProjectToFolder({ projectId: item.id, folderId: targetFolderId }));
-      } else if (item.type === 'folder') {
-        // Don't drop a folder into itself
-        if (item.id === targetFolderId) return;
-        dispatch(moveFolder({ folderId: item.id, parentFolderId: targetFolderId }));
-      }
-    },
-    [dispatch],
-  );
+  const { dragOverId, handleDragStart, handleDragOver, handleDragLeave, handleDrop } = useTreeDrag();
 
   // ── Renderers ─────────────────────────────────────────────────────────────
 

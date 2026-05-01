@@ -10,6 +10,13 @@ import { InternalError } from '../types/errors.js';
 import { create_node_id } from '../types/graph.js';
 import { success, failure } from '../types/result.js';
 import {
+  deployments_get,
+  deployments_get_all,
+  deployments_query,
+  deployments_save,
+  deployments_update_status,
+} from './sqlite/deployments.js';
+import {
   resources_get,
   resources_get_all,
   resources_query,
@@ -184,94 +191,19 @@ export class SqliteStateStore implements ObservableStateStore {
   // ---------------------------------------------------------------------------
 
   async get_deployment(id: DeploymentId): Promise<Result<DeploymentRecord | null, IceError>> {
-    try {
-      this.ensure_initialized();
-
-      const row = this.db!.prepare('SELECT * FROM deployments WHERE id = ?').get(id) as DeploymentRow | undefined;
-
-      if (!row) {
-        return success(null);
-      }
-
-      return success(this.row_to_deployment(row));
-    } catch (error) {
-      return this.wrap_error('get_deployment', error);
-    }
+    return deployments_get(this.ctx, id);
   }
 
   async get_deployments(graph_id: string): Promise<Result<DeploymentRecord[], IceError>> {
-    try {
-      this.ensure_initialized();
-
-      const rows = this.db!.prepare('SELECT * FROM deployments WHERE graph_id = ? ORDER BY started_at DESC').all(
-        graph_id,
-      ) as DeploymentRow[];
-
-      return success(rows.map((row) => this.row_to_deployment(row)));
-    } catch (error) {
-      return this.wrap_error('get_deployments', error);
-    }
+    return deployments_get_all(this.ctx, graph_id);
   }
 
   async query_deployments(query: DeploymentQuery): Promise<Result<DeploymentRecord[], IceError>> {
-    try {
-      this.ensure_initialized();
-
-      let sql = 'SELECT * FROM deployments WHERE 1=1';
-      const params: unknown[] = [];
-
-      if (query.graph_id) {
-        sql += ' AND graph_id = ?';
-        params.push(query.graph_id);
-      }
-
-      if (query.status) {
-        sql += ' AND status = ?';
-        params.push(query.status);
-      }
-
-      sql += ' ORDER BY started_at DESC';
-
-      if (query.limit) {
-        sql += ' LIMIT ?';
-        params.push(query.limit);
-      }
-
-      if (query.offset) {
-        sql += ' OFFSET ?';
-        params.push(query.offset);
-      }
-
-      const rows = this.db!.prepare(sql).all(...params) as DeploymentRow[];
-      return success(rows.map((row) => this.row_to_deployment(row)));
-    } catch (error) {
-      return this.wrap_error('query_deployments', error);
-    }
+    return deployments_query(this.ctx, query);
   }
 
   async save_deployment(deployment: DeploymentRecord): Promise<Result<void, IceError>> {
-    try {
-      this.ensure_initialized();
-
-      const stmt = this.statements.get('upsert_deployment')!;
-      stmt.run(
-        deployment.id,
-        deployment.graph_id,
-        deployment.status,
-        deployment.started_at,
-        deployment.completed_at ?? null,
-        deployment.resource_count,
-        deployment.success_count,
-        deployment.failure_count,
-        deployment.error_message ?? null,
-        deployment.version,
-      );
-
-      this.emit_event('deployment_started', deployment.graph_id, undefined, deployment.id);
-      return success(undefined);
-    } catch (error) {
-      return this.wrap_error('save_deployment', error);
-    }
+    return deployments_save(this.ctx, deployment);
   }
 
   async update_deployment_status(
@@ -280,29 +212,7 @@ export class SqliteStateStore implements ObservableStateStore {
     counts?: { success?: number; failure?: number },
     error_message?: string,
   ): Promise<Result<void, IceError>> {
-    try {
-      this.ensure_initialized();
-
-      const now = new Date().toISOString();
-      const completed_at = ['succeeded', 'failed', 'cancelled'].includes(status) ? now : null;
-
-      this.db!.prepare(
-        `
-          UPDATE deployments
-          SET status = ?,
-              completed_at = COALESCE(?, completed_at),
-              success_count = COALESCE(?, success_count),
-              failure_count = COALESCE(?, failure_count),
-              error_message = COALESCE(?, error_message),
-              version = version + 1
-          WHERE id = ?
-        `,
-      ).run(status, completed_at, counts?.success ?? null, counts?.failure ?? null, error_message ?? null, id);
-
-      return success(undefined);
-    } catch (error) {
-      return this.wrap_error('update_deployment_status', error);
-    }
+    return deployments_update_status(this.ctx, id, status, counts, error_message);
   }
 
   // ---------------------------------------------------------------------------

@@ -42,6 +42,7 @@ import {
 import { generateSuggestions } from '../utils/generate-suggestions';
 import { TRAFFIC_TIERS, EGRESS_RATES } from '../utils/provider-pricing';
 import { loadTrafficTier, saveTrafficTier } from '../utils/traffic-tier-storage';
+import { ProjectionRow } from './projection-row';
 import { Section } from './section';
 import type { RootState, AppDispatch } from '../../../store';
 import type { Environment } from '../../../store/slices/environments-slice';
@@ -393,18 +394,6 @@ const CategoryRow: React.FC<{
     </div>
   );
 };
-
-// ── Projection Row ──────────────────────────────────────────────────────────
-
-const ProjectionRow: React.FC<{ label: string; value: number }> = ({ label, value }) => (
-  <div className="flex items-center justify-between py-0.5">
-    <span className="text-ice-xs text-ice-text-2">{label}</span>
-    <span className="text-ice-sm text-ice-text-1 font-mono">
-      {formatCostRaw(value)}
-      {label === 'Monthly' ? '/mo' : label === 'Quarterly' ? '/qtr' : '/yr'}
-    </span>
-  </div>
-);
 
 // ── Scaling Range Bar ───────────────────────────────────────────────────────
 

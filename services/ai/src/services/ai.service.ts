@@ -10,6 +10,7 @@
 import prisma from '@ice/db';
 import { generateAiConnectionPrompt } from '@ice/types';
 import { getAiProvider, getAiProviderSync } from './ai/provider';
+import { detectSkill, isQuestionIntent } from './ai/skill-detection';
 import { createAuditEntry, finalizeAuditEntry, writeAuditEntry } from './ai-audit.service';
 import { buildSchemaContext } from './ai-schema-context.service';
 import { validateCanvas } from './canvas-validation.service';
@@ -24,55 +25,6 @@ import type { Response } from 'express';
 // =============================================================================
 
 export { getAiProvider, getAiProviderSync };
-
-// =============================================================================
-// System Prompt
-// =============================================================================
-
-// =============================================================================
-// Skill Detection — detect specialized intents from user language
-// =============================================================================
-
-type AiSkill = 'cloud-architect' | 'default';
-
-const ARCHITECT_TRIGGERS = [
-  /\b(?:i want to (?:build|create|make|launch|develop|design))\b/i,
-  /\b(?:what (?:infra(?:structure)?|resources?|services?|cloud) (?:do i|would i|should i|will i) need)\b/i,
-  /\b(?:design (?:the |a )?(?:cloud|infra(?:structure)?|architecture|platform|setup|system))\b/i,
-  /\b(?:what (?:does|would) .+ (?:need|require|look like))\b/i,
-  /\b(?:architect(?:ure)? for)\b/i,
-  /\b(?:full (?:stack|infrastructure|architecture|setup))\b/i,
-  /\b(?:platform (?:like|similar to|for))\b/i,
-  /\b(?:saas|platform|marketplace|e-?commerce|social (?:media|network)|streaming|fintech|healthtech)\b/i,
-  /\b(?:microservice(?:s)? architecture)\b/i,
-  /\b(?:production[- ]ready|enterprise[- ]grade|scalable (?:system|app|platform))\b/i,
-];
-
-function detectSkill(intent: string): AiSkill {
-  for (const trigger of ARCHITECT_TRIGGERS) {
-    if (trigger.test(intent)) return 'cloud-architect';
-  }
-  return 'default';
-}
-
-// =============================================================================
-// Question Intent Detection (AI Read L1)
-// =============================================================================
-
-/**
- * Detects intents asking about current deployment state rather than building.
- * Matches question-shaped openers ("what is", "how many", "is X running") and
- * state-query phrases. Tight enough to avoid swallowing "add a deployed X".
- */
-function isQuestionIntent(intent: string): boolean {
-  const trimmed = intent.trim();
-  return (
-    /^(?:what|when|why|how|is|are|does|did|show me|tell me|describe|list)\b/i.test(trimmed) ||
-    /\b(?:deployment\s+status|current\s+state|last\s+deploy|health\s*check|instance\s+count|what's\s+deployed)\b/i.test(
-      trimmed,
-    )
-  );
-}
 
 // =============================================================================
 // Deployment Context (AI Read L1)

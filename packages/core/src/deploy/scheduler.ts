@@ -32,11 +32,13 @@
 
 import { build_dag } from './scheduler/dag.js';
 import {
-  collect_ready,
-  deps_satisfied,
-  is_unfinished,
-  match_handler_prefix,
-} from './scheduler/predicates.js';
+  cancel_remaining_not_in_flight,
+  dispatch,
+  emit_status,
+  wait_for_settle,
+  wake,
+} from './scheduler/dispatch.js';
+import { collect_ready, is_unfinished } from './scheduler/predicates.js';
 import {
   DEFAULT_PER_HANDLER_CAPS,
   DEFAULT_POOL_SIZE,
@@ -47,14 +49,7 @@ import {
 } from './scheduler/types.js';
 import type { ResourceChange } from '../diff/types.js';
 import type { Graph } from '../types/graph.js';
-import type {
-  DeployOptions,
-  NodeProgressEvent,
-  NodeStatusEvent,
-  NodeTerminalStatus,
-  ProviderDeployer,
-  ResourceDeployResult,
-} from './types.js';
+import type { DeployOptions, ProviderDeployer, ResourceDeployResult } from './types.js';
 
 export { DEFAULT_PER_HANDLER_CAPS, DEFAULT_POOL_SIZE } from './scheduler/types.js';
 export type { SchedulerPhase, SchedulerRunInput } from './scheduler/types.js';
@@ -125,10 +120,18 @@ export class ParallelChangeScheduler {
   async run(): Promise<ResourceDeployResult[]> {
     if (this.records.size === 0) return [];
 
+    // `this` is structurally a `SchedulerContext` — every field on the
+    // context interface is also a (non-private) field on the class via
+    // the constructor. The cast strips the `private` brand TypeScript
+    // adds to the class so the standalone helpers in `./scheduler/`
+    // can read the context. rf-sched-6 will collapse this by lifting
+    // the fields onto a real `ctx: SchedulerContext` field.
+    const ctx = this as unknown as SchedulerContext;
+
     // Pre-emit `queued` for every node so the host (pdl-4) can bulk-init
     // `nodesById` before any `applying` arrives.
     for (const rec of this.records.values()) {
-      this.emit_status(rec, 'queued');
+      emit_status(ctx, rec, 'queued');
     }
 
     // Wire abort_signal observation. Once aborted, we stop scheduling
@@ -138,7 +141,7 @@ export class ParallelChangeScheduler {
     const signal = this.options.abort_signal;
     const on_abort = () => {
       this.aborted = true;
-      this.wake();
+      wake(ctx);
     };
     if (signal) {
       if (signal.aborted) this.aborted = true;
@@ -146,24 +149,17 @@ export class ParallelChangeScheduler {
     }
 
     try {
-      // `this` is structurally a `SchedulerContext` — every field on the
-      // context interface is also a (non-private) field on the class via
-      // the constructor. The cast strips the `private` brand TypeScript
-      // adds to the class so the standalone helpers in `./scheduler/`
-      // can read the context. rf-sched-6 will collapse this by lifting
-      // the fields onto a real `ctx: SchedulerContext` field.
-      const ctx = this as unknown as SchedulerContext;
       while (is_unfinished(ctx)) {
         // Cancel all not-yet-applying nodes when aborted or hard-failed
         // (continue_on_error: false). In-flight nodes are left alone —
         // handlers' existing abort_signal plumbing handles graceful
         // cancellation.
         if (this.aborted || this.hard_failed) {
-          this.cancel_remaining_not_in_flight();
+          cancel_remaining_not_in_flight(ctx);
         }
 
         const ready = collect_ready(ctx);
-        for (const id of ready) this.dispatch(id);
+        for (const id of ready) dispatch(ctx, id);
 
         if (this.in_flight.size === 0) {
           // No one in flight and nothing newly ready — done. The
@@ -173,294 +169,13 @@ export class ParallelChangeScheduler {
         }
 
         // Wait for any in-flight to settle before re-evaluating ready.
-        await this.wait_for_settle();
+        await wait_for_settle(ctx);
       }
     } finally {
       if (signal) signal.removeEventListener('abort', on_abort);
     }
 
     return this.results;
-  }
-
-  /**
-   * Begin applying a node. Marks `in_flight`, emits `applying`, then
-   * fires off the async handler call. The handler's resolution drives
-   * the settle wake.
-   */
-  private dispatch(node_id: string): void {
-    const rec = this.records.get(node_id);
-    if (!rec) return;
-    if (rec.terminal) return;
-
-    this.in_flight.add(node_id);
-    const prefix = match_handler_prefix(this as unknown as SchedulerContext, rec.change.type);
-    if (prefix !== null) {
-      this.handler_in_flight.set(prefix, (this.handler_in_flight.get(prefix) ?? 0) + 1);
-    }
-
-    rec.applying_at = Date.now();
-    this.emit_status(rec, 'applying');
-    // Legacy on_progress bridge — keeps the deploy.service.ts:757-821
-    // 'running' tracker working without changes to the service layer.
-    try {
-      this.options.on_progress?.(rec.change.name, this.phase, 'running');
-    } catch {
-      // Host callback bugs must not break the deploy.
-    }
-
-    // Kick off async — settle is wired in the .then handler.
-    this.invoke_handler(rec)
-      .then((result) => this.on_settled(rec, result, undefined))
-      .catch((err) => this.on_settled(rec, undefined, err));
-  }
-
-  /**
-   * Translate a `ResourceChange` into the right `ProviderDeployer`
-   * call. Mirrors the legacy engine's call shape exactly so handler
-   * behavior is unchanged.
-   *
-   * Note on milestone forwarding: the existing path is
-   * `handler → ctx.on_step → deployer.on_progress(resource, 'create',
-   * 'step', { step })`. The scheduler bridges this in
-   * `deploy-engine.ts` by wrapping `options.on_progress` before
-   * `deployer.initialize` runs — so by the time we land here, sub-step
-   * events flow through the wrapper and reach `on_node_progress`. We
-   * don't intercept inside the scheduler dispatch path itself.
-   */
-  private invoke_handler(rec: NodeRecord): Promise<ResourceDeployResult> {
-    const change = rec.change;
-    const node = this.lookup_node(change);
-    const dispatch_options: Record<string, unknown> = node ? { node } : {};
-
-    if (this.options.dry_run) {
-      const action = this.phase;
-      const result: ResourceDeployResult = {
-        resource_id: change.id,
-        name: change.name,
-        type: change.type,
-        action,
-        success: true,
-        duration_ms: 0,
-      };
-      return Promise.resolve(result);
-    }
-
-    if (this.phase === 'create') {
-      return this.deployer.create(change.type, change.name, change.desired_properties || {}, dispatch_options);
-    }
-    if (this.phase === 'update') {
-      return this.deployer.update(
-        change.type,
-        change.name,
-        change.provider_id || '',
-        change.desired_properties || {},
-        change.current_properties || {},
-        dispatch_options,
-      );
-    }
-    return this.deployer.delete(change.type, change.name, change.provider_id || '', dispatch_options);
-  }
-
-  /** Find the engine graph node for a change, by name. */
-  private lookup_node(change: ResourceChange): unknown {
-    for (const node of this.graph.nodes.values()) {
-      if (node.name === change.name) return node;
-    }
-    return undefined;
-  }
-
-  /**
-   * Handler resolution — convert the result/error into a terminal
-   * state, emit events, decrement bookkeeping, and wake the loop.
-   */
-  private on_settled(rec: NodeRecord, result: ResourceDeployResult | undefined, err: unknown): void {
-    this.in_flight.delete(rec.change.id);
-    const prefix = match_handler_prefix(this as unknown as SchedulerContext, rec.change.type);
-    if (prefix !== null) {
-      const used = (this.handler_in_flight.get(prefix) ?? 1) - 1;
-      if (used <= 0) this.handler_in_flight.delete(prefix);
-      else this.handler_in_flight.set(prefix, used);
-    }
-
-    let final_result: ResourceDeployResult;
-    if (result) {
-      final_result = result;
-    } else {
-      const message = err instanceof Error ? err.message : String(err);
-      final_result = {
-        resource_id: rec.change.id,
-        name: rec.change.name,
-        type: rec.change.type,
-        action: this.phase,
-        success: false,
-        error: message,
-        duration_ms: rec.applying_at ? Date.now() - rec.applying_at : 0,
-      };
-    }
-
-    this.results.push(final_result);
-    try {
-      this.options.on_resource_result?.(final_result);
-    } catch {
-      // Host callback bugs must not break the schedule loop.
-    }
-
-    // Legacy on_progress bridge — re-emit a `completed`/`failed` event
-    // with the historical extra payload so deploy.service.ts can
-    // surface outputs/URLs/provider_ids without changes.
-    try {
-      this.options.on_progress?.(
-        final_result.name,
-        final_result.action === 'skip' ? this.phase : final_result.action,
-        final_result.success ? 'completed' : 'failed',
-        {
-          outputs: final_result.outputs,
-          error: final_result.success ? undefined : final_result.error,
-          provider_id: final_result.provider_id,
-        },
-      );
-    } catch {
-      // Host callback bugs must not break the schedule loop.
-    }
-
-    const succeeded = final_result.success !== false;
-    if (succeeded) {
-      this.set_terminal(rec, 'succeeded', undefined);
-    } else {
-      this.set_terminal(rec, 'failed', {
-        code: this.error_code_for(this.phase),
-        message: final_result.error || 'unknown error',
-        recoverable: this.phase !== 'create',
-      });
-
-      // Cancel descendants. With continue_on_error: true (default),
-      // only descendants of THIS node are cancelled — siblings keep
-      // running. With continue_on_error: false, the next loop tick
-      // flips every other not-yet-applying node to cancelled.
-      this.cancel_descendants(rec);
-      if (this.options.continue_on_error === false) this.hard_failed = true;
-    }
-
-    this.wake();
-  }
-
-  /**
-   * Mark a node as terminal, fire `on_node_status`, return without
-   * any further state mutation.
-   */
-  private set_terminal(rec: NodeRecord, status: NodeTerminalStatus, error?: NodeStatusEvent['error']): void {
-    if (rec.terminal) return;
-    rec.terminal = status;
-    this.emit_status(rec, status, error);
-  }
-
-  /**
-   * Recursively flip all transitive dependents of `rec` to
-   * `cancelled-due-to-dep`. In-flight descendants are left alone (they
-   * finish naturally and emit their own terminal status).
-   */
-  private cancel_descendants(rec: NodeRecord): void {
-    const queue: string[] = Array.from(rec.dependents);
-    while (queue.length > 0) {
-      const id = queue.shift()!;
-      const dependent = this.records.get(id);
-      if (!dependent) continue;
-      if (dependent.terminal) continue;
-      if (this.in_flight.has(id)) continue;
-      this.set_terminal(dependent, 'cancelled-due-to-dep');
-      // Also push synthetic results so the caller sees them in the
-      // returned array — matches the shape callers built before.
-      this.push_cancelled_result(dependent);
-      for (const sub of dependent.dependents) queue.push(sub);
-    }
-  }
-
-  /**
-   * On hard-fail or abort, flip every not-yet-applying node to
-   * `cancelled-due-to-dep`.
-   */
-  private cancel_remaining_not_in_flight(): void {
-    for (const [id, rec] of this.records) {
-      if (rec.terminal) continue;
-      if (this.in_flight.has(id)) continue;
-      this.set_terminal(rec, 'cancelled-due-to-dep');
-      this.push_cancelled_result(rec);
-    }
-  }
-
-  /**
-   * Synthesize a `ResourceDeployResult` for a cancelled node so the
-   * caller's downstream summary stays accurate.
-   */
-  private push_cancelled_result(rec: NodeRecord): void {
-    const result: ResourceDeployResult = {
-      resource_id: rec.change.id,
-      name: rec.change.name,
-      type: rec.change.type,
-      action: this.phase,
-      success: false,
-      error: 'cancelled — dependency failed or deploy aborted',
-      duration_ms: 0,
-    };
-    this.results.push(result);
-    this.options.on_resource_result?.(result);
-  }
-
-  private error_code_for(phase: SchedulerPhase): string {
-    if (phase === 'create') return 'CREATE_FAILED';
-    if (phase === 'update') return 'UPDATE_FAILED';
-    return 'DELETE_FAILED';
-  }
-
-  /**
-   * Emit one `on_node_status` event. Intentionally tolerant — a
-   * thrown handler must not abort the scheduler loop.
-   */
-  private emit_status(rec: NodeRecord, status: NodeStatusEvent['status'], error?: NodeStatusEvent['error']): void {
-    if (status === 'queued' && rec.queued_emitted) return;
-    if (status === 'queued') rec.queued_emitted = true;
-
-    const cb = this.options.on_node_status;
-    if (!cb) return;
-    const event: NodeStatusEvent = {
-      node_id: rec.change.id,
-      resource_name: rec.change.name,
-      resource_type: rec.change.type,
-      action: this.phase,
-      status,
-      at: new Date().toISOString(),
-    };
-    if (error) event.error = error;
-    if (status !== 'queued' && status !== 'applying' && rec.applying_at) {
-      event.duration_ms = Date.now() - rec.applying_at;
-    }
-    try {
-      cb(event);
-    } catch {
-      // Host callback bugs must not break the schedule loop.
-    }
-  }
-
-  /**
-   * Wait for at least one in-flight node to settle. Implemented as a
-   * one-shot promise that the resolution paths complete.
-   */
-  private wait_for_settle(): Promise<void> {
-    if (!this.settle_waker) {
-      let resolve!: () => void;
-      const promise = new Promise<void>((r) => (resolve = r));
-      this.settle_waker = { promise, resolve };
-    }
-    return this.settle_waker.promise;
-  }
-
-  /** Wake any current `wait_for_settle` waiters. */
-  private wake(): void {
-    if (this.settle_waker) {
-      const { resolve } = this.settle_waker;
-      this.settle_waker = undefined;
-      resolve();
-    }
   }
 }
 

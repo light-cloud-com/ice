@@ -40,6 +40,7 @@ import {
   RESIZE_PAD,
   RESIZE_HEADER,
 } from './ai-ops/types';
+import { generateNodeId, generateEdgeId, resolveId, nodeExists } from './ai-ops/id-utils';
 
 // =============================================================================
 // Types — re-exported from ai-ops/types
@@ -47,35 +48,6 @@ import {
 
 import type { SkippedOp, ExecutionResult } from './ai-ops/types';
 export type { SkippedOp, ExecutionResult } from './ai-ops/types';
-
-// =============================================================================
-// ID Generation (matches expand-blueprint.ts pattern)
-// =============================================================================
-
-let _counter = 0;
-
-function generateNodeId(): string {
-  return `node-${Date.now()}-${_counter++}`;
-}
-
-function generateEdgeId(): string {
-  return `edge-${Date.now()}-${_counter++}`;
-}
-
-// =============================================================================
-// Helpers
-// =============================================================================
-
-/** Resolve an ID through the remapping table, falling back to the original */
-function resolveId(id: string, idMap: Map<string, string>): string {
-  return idMap.get(id) || id;
-}
-
-/** Check if a node exists in the current card (by actual or remapped ID) */
-function nodeExists(nodeId: string, card: Card, idMap: Map<string, string>): boolean {
-  const resolvedId = resolveId(nodeId, idMap);
-  return card.nodes.some((n) => n.id === resolvedId);
-}
 
 // =============================================================================
 // Positioning — non-overlapping grid placement

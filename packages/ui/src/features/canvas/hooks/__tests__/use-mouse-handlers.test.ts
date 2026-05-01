@@ -156,6 +156,11 @@ const setupHandlers = (opts: SetupOpts = {}) => {
   ): UseCanvasInteractionsOptions[K] | undefined =>
     key in cbs ? (cbs[key] as UseCanvasInteractionsOptions[K] | undefined) : spy;
 
+  // The hook only uses `useCallback` (mocked to identity above) and reads
+  // refs/options; no React fiber needed. The rules-of-hooks lint trigger
+  // is a false positive in this test harness — the "hook" is reduced to
+  // a plain factory after the mock.
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const handlers = useMouseHandlers({
     stateRef,
     lastMousePos,

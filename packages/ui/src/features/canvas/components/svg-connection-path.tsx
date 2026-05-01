@@ -19,6 +19,7 @@ import type { EdgeStyle } from '../../../store/slices/ui-slice';
 import type { Point, Side } from './path/types';
 import { chooseSides, getEdgePoint, getEffectiveBounds } from './path/bounds-and-sides';
 import { buildBezierPath } from './path/builders/bezier';
+import { buildStraightPath } from './path/builders/straight';
 
 // ─── Tooltip info passed up to canvas ───────────────────────────────────────
 
@@ -72,11 +73,6 @@ export { EDGE_COLORS } from '../../../config/color-palette';
 // =============================================================================
 // Bezier Curve Routing
 // =============================================================================
-
-function buildStraightPath(start: Point, end: Point): { pathD: string; midX: number; midY: number } {
-  const pathD = `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
-  return { pathD, midX: (start.x + end.x) / 2, midY: (start.y + end.y) / 2 };
-}
 
 /**
  * Draw a polyline through dagre's routed waypoints, orthogonalizing each

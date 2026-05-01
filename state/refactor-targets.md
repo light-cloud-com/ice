@@ -105,32 +105,37 @@ These were refactored but the remaining body is genuinely cohesive (cohesive swi
 - `packages/ui/src/features/canvas/components/svg-canvas.tsx` — **570 LOC** post-rf-canv2. Remaining body is the SVG render tree; further splitting would break React.memo identity.
 - `services/ai/src/services/ai/system-prompt.ts` — **516 LOC** post-rf-aisvc-4. One cohesive template literal; splitting swaps one big string for two smaller strings + composer (no gain).
 
-### Audit 2026-05-01 — files over 500 LOC NEVER refactored
+### Phase 3 — DONE 2026-05-01 (18 files, 6 cohorts, 64 commits, +1356 tests)
 
-Workspace-wide audit on the post-Phase-2 codebase. 14 files between 500-600 LOC remain unrefactored. Recommend Phase-3 follow-up.
+All 18 files audited at the start of Phase 3 are now within ceiling. Remaining files over 500 LOC are documented exceptions only.
 
-| File | LOC | Suggested pattern |
-|---|---|---|
-| `packages/core/src/schema/embedded-schema-provider.ts` | 591 | rf-deploy method-grouping |
-| `packages/core/src/graph/algorithms.ts` | 586 | rf-parse standalone-functions (graph algorithms) |
-| `packages/ui/src/features/project-browser/components/project-browser.tsx` | 584 | rf-pdpl section pattern |
-| `packages/ui/src/features/properties/components/sections/node-properties-section.tsx` | 576 | extracted during rf-props but still over; further sub-sectioning |
-| `packages/ui/src/features/canvas/hooks/use-container-move.ts` | 564 | extracted during rf-canv but still over; rf-pdpl-21 hook-bundle |
-| `packages/core/src/importers/pulumi/state-importer.ts` | 564 | rf-deploy method-grouping (importer phases) |
-| `packages/core/src/export/terraform-exporter.ts` | 558 | rf-pulumi pattern |
-| `packages/ui/src/features/environments/components/environment-tab-bar.tsx` | 554 | rf-pdpl section pattern |
-| `packages/core/src/importers/terraform/state-importer.ts` | 547 | rf-deploy method-grouping |
-| `packages/core/src/schema/resource-validator.ts` | 543 | rf-deploy method-grouping |
-| `packages/core/src/importers/aws/aws-importer.ts` | 533 | rf-deploy method-grouping |
-| `packages/core/src/deploy/providers/gcp/handlers/cloud-run.ts` | 530 | rf-fbh handler pattern |
-| `packages/core/src/importers/pulumi/type-mapper.ts` | 527 | rf-pulumi pattern |
-| `packages/core/src/deploy/providers/gcp/handlers/load-balancer.ts` | 527 | rf-fbh handler pattern |
-| `packages/core/src/graph/validator/validators.ts` | 524 | rf-deploy method-grouping |
-| `packages/core/src/schema/customization-loader.ts` | 521 | rf-deploy method-grouping |
-| `packages/ui/src/shared/components/inline-table-view.tsx` | 509 | rf-pdpl section pattern (small) |
-| `packages/core/src/errors/import-errors.ts` | 507 | likely data-heavy (error map), check first |
+| File | LOC delta | Cohort | Commits |
+|---|---|---|---|
+| ~~`packages/core/src/deploy/providers/gcp/handlers/cloud-run.ts`~~ | 530 → **219** | C1 | 3 |
+| ~~`packages/core/src/deploy/providers/gcp/handlers/load-balancer.ts`~~ | 527 → **263** | C1 | 3 |
+| ~~`packages/ui/src/shared/components/inline-table-view.tsx`~~ | 509 → **210** | C1 | 3 |
+| ~~`packages/ui/src/features/project-browser/components/project-browser.tsx`~~ | 584 → **140** | C2 | 3 |
+| ~~`packages/ui/src/features/environments/components/environment-tab-bar.tsx`~~ | 554 → **268** | C2 | 3 |
+| ~~`packages/ui/src/features/properties/components/sections/node-properties-section.tsx`~~ | 576 → **418** | C2 | 4 |
+| ~~`packages/core/src/schema/embedded-schema-provider.ts`~~ | 591 → **284** | C3 | 4 |
+| ~~`packages/core/src/schema/resource-validator.ts`~~ | 543 → **157** | C3 | 3 |
+| ~~`packages/core/src/schema/customization-loader.ts`~~ | 521 → **204** | C3 | 3 |
+| ~~`packages/core/src/importers/pulumi/state-importer.ts`~~ | 564 → **278** | C4 | 3 |
+| ~~`packages/core/src/importers/terraform/state-importer.ts`~~ | 547 → **268** | C4 | 3 |
+| ~~`packages/core/src/importers/aws/aws-importer.ts`~~ | 533 → **250** | C4 | 4 |
+| ~~`packages/core/src/export/terraform-exporter.ts`~~ | 558 → **102** | C5 | 7 |
+| ~~`packages/core/src/importers/pulumi/type-mapper.ts`~~ | 527 → **42 (shim)** | C5 | 4 |
+| ~~`packages/core/src/graph/algorithms.ts`~~ | 586 → **51 (shim)** | C5 | 5 |
+| ~~`packages/ui/src/features/canvas/hooks/use-container-move.ts`~~ | 564 → **189** | C6 | 1 |
+| ~~`packages/core/src/graph/validator/validators.ts`~~ | 524 → **68 (shim)** | C6 | 1 |
+| ~~`packages/core/src/errors/import-errors.ts`~~ | 507 → **30 (shim)** | C6 | 1 |
 
-All within 500-600 LOC. Modest decomposition wins per file. Could be tackled in a single Phase-3 cohort (~17 files × 5-7 commits each = ~100-120 commits).
+**Phase 3 totals**: 9756 → 3441 LOC (-65%), +1356 tests, 64 commits.
+
+Three pre-existing bugs surfaced during Phase 3 (preserved verbatim per refactor discipline):
+- `customization-loader.ts::get_base_db_path` — eager `require.resolve` evaluation throws when `@ice-engine/schemas` not installed (rf-cload-3).
+- `algorithms.ts::get_critical_path` — distance never propagates beyond start node due to topo-order/incoming-edge mismatch (rf-galg-4).
+- `pipeline.service.ts::detectJsFramework` (Phase 2) — pnpm-lock detection always falls through to npm because lockfiles aren't added to detectedFiles. Already noted in rf-pipe-6.
 
 Files in the 200–500 range continue to fit the ceiling and don't need follow-up splits.
 

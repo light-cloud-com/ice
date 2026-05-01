@@ -60,6 +60,7 @@ import { DesignRequirements } from '../design-requirements';
 import { Section } from '../fields';
 import { PropertyFields } from '../fields/render-property-field';
 import { ConnectionCard } from './connection-card';
+import { CustomDomainBanner } from './custom-domain-banner';
 import { CustomDomainPanel } from './custom-domain-panel';
 import { DeployHistory } from './deploy-history';
 import { PublicEndpointDomainSection } from './domain-section';
@@ -67,6 +68,7 @@ import { DriftIndicator, DriftCheckButton } from './drift';
 import { EnvVarsEditor } from './env-vars-editor';
 import { GroupColorPicker } from './group-color-picker';
 import { MonitoringLogSection } from './monitoring-log-section';
+import { NodeIdentityCard } from './node-identity-card';
 import { PipelineSection } from './pipeline-section';
 import { PrivateNetworkPanel } from './private-network-panel';
 import { ScalingSection } from './scaling-section';
@@ -82,7 +84,6 @@ import type { AppDispatch } from '../../../../store';
 import type { ResourceDef } from '../../hooks/use-resource-map';
 import type { CanvasIssue } from '../../../../store/slices/validation-slice';
 import {
-  findCustomDomainEdge,
   nodeHasSourceTab,
   resolveNodeIconUrl,
 } from '../../utils/node-properties-derivations';
@@ -154,42 +155,15 @@ export const NodePropertiesSection: React.FC<{
       />
 
       {/* Node identity */}
-      <div className="px-3 py-3 border-b border-ice-border">
-        <div className="flex items-center gap-2 mb-1.5">
-          <img src={iconUrl} alt="" className="w-5 h-5" />
-          <input
-            id="ice-properties-node-name"
-            type="text"
-            defaultValue={label}
-            key={selectedNode?.id}
-            onBlur={(e) => {
-              const v = e.target.value.trim();
-              if (v && v !== label) updateNodeField('name', v);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-            }}
-            className="flex-1 bg-transparent border-none text-ice-md text-ice-text-1 font-semibold outline-none focus:bg-ice-raised rounded px-1 -ml-1 transition-colors"
-          />
-        </div>
-        <div className="flex items-center gap-1.5">
-          {resourceDef && (
-            <span className="text-ice-2xs bg-ice-raised text-ice-text-2 px-1.5 py-0.5 rounded font-mono">
-              {resourceDef.display_name}
-            </span>
-          )}
-          {iceType && !resourceDef && (
-            <span className="text-ice-2xs bg-ice-raised text-ice-text-2 px-1.5 py-0.5 rounded font-mono">
-              {iceType}
-            </span>
-          )}
-          {provider && (
-            <span className="text-ice-2xs bg-blue-950/50 text-blue-400 px-1.5 py-0.5 rounded font-mono uppercase">
-              {provider}
-            </span>
-          )}
-        </div>
-      </div>
+      <NodeIdentityCard
+        selectedNode={selectedNode}
+        iconUrl={iconUrl}
+        label={label}
+        iceType={iceType}
+        provider={provider}
+        resourceDef={resourceDef}
+        onUpdateName={(name) => updateNodeField('name', name)}
+      />
 
       {/* ── Design requirements (prototype: Postgres + PrivateNetwork) ──
           Surfaces missing connections, missing required props, and
@@ -207,36 +181,8 @@ export const NodePropertiesSection: React.FC<{
         />
       )}
 
-      {/* ── Custom Domain inheritance banner ──
-          When this node is the target of a Network.CustomDomain edge,
-          its `domain` property is force-managed by the Custom Domain
-          block (the canvas effect in svg-canvas.tsx keeps it in sync).
-          Surface this prominently so the user understands why editing
-          the domain field gets immediately overwritten. */}
-      {(() => {
-        if (!activeCard || !selectedNode) return null;
-        const cdResult = findCustomDomainEdge(activeCard, selectedNode);
-        if (!cdResult) return null;
-        const cdLabel = (cdResult.cdNode.data?.label as string) || 'Custom Domain';
-        const inheritedDomain = (selectedNode.data?.domain as string) || '';
-        return (
-          <div className="px-3 py-2 border-b border-ice-border bg-blue-500/5">
-            <div className="flex items-center gap-1.5 text-ice-2xs text-blue-400">
-              <span>🌐</span>
-              <span className="font-medium">Domain managed by</span>
-              <span className="font-mono">{cdLabel}</span>
-            </div>
-            {inheritedDomain && (
-              <div className="mt-0.5 text-ice-xs font-mono text-ice-text-1 truncate" title={inheritedDomain}>
-                {inheritedDomain}
-              </div>
-            )}
-            <div className="mt-0.5 text-ice-2xs text-ice-text-3 leading-snug">
-              Edit the route on the Custom Domain block to change this. Disconnect the edge to set a domain manually.
-            </div>
-          </div>
-        );
-      })()}
+      {/* ── Custom Domain inheritance banner ── */}
+      <CustomDomainBanner selectedNode={selectedNode} activeCard={activeCard} />
 
       {/* ── Navigation Tabs ── */}
       {(() => {

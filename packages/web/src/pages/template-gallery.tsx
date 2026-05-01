@@ -40,93 +40,13 @@ import {
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ProviderLogos, TechStackLogos, DifficultyDots, TrustBadge } from './template-gallery/components/badges';
+import { TrustBadge } from './template-gallery/components/badges';
 import { FilterChip } from './template-gallery/components/filter-chip';
+import { TemplateCard } from './template-gallery/components/template-card';
 import { ICON_MAP } from './template-gallery/data/icon-map';
 import { getDifficultyMeta } from './template-gallery/utils/difficulty-meta';
 import type { ComposedTemplate, TemplateCategoryMeta } from '@ui/config/templates';
 import type { AppDispatch, RootState } from '@ui/store';
-
-// =============================================================================
-// Template Card
-// =============================================================================
-
-const TemplateCard: React.FC<{
-  template: ComposedTemplate;
-  onSelect: (t: ComposedTemplate) => void;
-}> = React.memo(({ template, onSelect }) => {
-  const { t } = useTranslation();
-  const Icon = ICON_MAP[template.icon] || Rocket;
-  const catMeta = TEMPLATE_CATEGORIES.find((c) => c.id === template.category);
-  const color = catMeta?.color || '#3b82f6';
-
-  return (
-    <button
-      onClick={() => onSelect(template)}
-      aria-label={`View ${template.name} template`}
-      className={cn(
-        'flex flex-col rounded-xl border text-left transition-colors w-full group',
-        'border-ice-border bg-ice-surface hover:border-ice-border-strong hover:shadow-lg',
-        'focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none',
-      )}
-    >
-      {/* ── Top section: icon, name, cost ─────────────────────────────── */}
-      <div className="flex items-start gap-3 p-4 pb-2">
-        <div
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-          style={{ backgroundColor: color + '12' }}
-        >
-          <Icon className="h-5 w-5" style={{ color }} aria-hidden="true" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm font-semibold text-ice-text-1 truncate">
-              {t(`templates.items.${template.id}.name`)}
-            </span>
-            <TrustBadge trust={template.trust} />
-          </div>
-          <p className="text-ice-xs text-ice-text-2 leading-snug line-clamp-2 mt-0.5">
-            {t(`templates.items.${template.id}.description`)}
-          </p>
-        </div>
-      </div>
-
-      {/* ── Cost banner ──────────────────────────────────────────────── */}
-      <div className="mx-4 mb-2 flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-ice-raised/60">
-        <span className="text-xs font-semibold text-ice-text-1 font-variant-numeric tabular-nums">
-          {template.estimatedCost}
-        </span>
-        <span className="text-ice-2xs text-ice-text-3">{t('templates.gallery.monthEst')}</span>
-        <span className="flex-1" />
-        <DifficultyDots level={template.difficulty} />
-        <span className="text-ice-2xs text-ice-text-3">
-          {template.blocks.length} {t('templates.gallery.blocks')}
-        </span>
-      </div>
-
-      {/* ── Provider logos + tech stack logos ─────────────────────────── */}
-      <div className="flex items-center gap-3 px-4 pb-3">
-        {/* Cloud providers */}
-        <ProviderLogos providers={template.providers} size={18} />
-
-        {/* Divider */}
-        {template.providers && template.providers.length > 0 && template.tags.length > 0 && (
-          <span className="w-px h-4 bg-ice-border" aria-hidden="true" />
-        )}
-
-        {/* Tech stack from tags */}
-        <TechStackLogos tags={template.tags} max={5} />
-
-        <span className="flex-1" />
-        <ChevronRight
-          className="w-4 h-4 text-ice-text-3 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-          aria-hidden="true"
-        />
-      </div>
-    </button>
-  );
-});
-TemplateCard.displayName = 'TemplateCard';
 
 // =============================================================================
 // Template Detail — slide-in right panel

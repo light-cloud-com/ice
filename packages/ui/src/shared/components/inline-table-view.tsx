@@ -7,29 +7,21 @@
  * Editing lives in the properties panel — every cell here is read-only.
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
-import {
-  buildEndpoints,
-  deriveStatus,
-  providerLabel,
-  type RowStatus,
-  type StatusContext,
-} from './inline-table-view-helpers';
-import { type TableRowData } from './inline-table-view-row';
+import { type RowStatus } from './inline-table-view-helpers';
 import { ColumnHeader } from './inline-table-view/column-header';
 import { TableBody } from './inline-table-view/table-body';
 import { TableFooter } from './inline-table-view/table-footer';
 import { Toolbar } from './inline-table-view/toolbar';
-import { STATUS_ORDER, type Density, type GroupBy, type SortCol, type SortDir } from './inline-table-view/types';
-import { getServiceName } from '../../assets/icons/service-names';
+import { type Density, type GroupBy, type SortCol, type SortDir } from './inline-table-view/types';
+import { useTableRows } from './inline-table-view/use-table-rows';
 import { useTranslation } from '../../i18n';
 import { selectActiveCard, deleteCardNode } from '../../store/slices/cards-slice';
 import { setSelectedNodes } from '../../store/slices/selection-slice';
 import { toggleProperties } from '../../store/slices/ui-slice';
 import type { AppDispatch, RootState } from '../../store';
-import type { CardNode } from '../../store/slices/cards-slice';
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
@@ -57,136 +49,21 @@ export const InlineTableView: React.FC = () => {
   const [density, setDensity] = useState<Density>('comfortable');
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
-  // ─── Build rows ─────────────────────────────────────────────────────────
+  // ─── Data pipeline (rows / sorted / grouped / counts / providers) ──────
 
-  const statusCtx: StatusContext = useMemo(
-    () => ({ nodePipelineStatus, driftByNode, deployedResources }),
-    [nodePipelineStatus, driftByNode, deployedResources],
-  );
-
-  const rows = useMemo<TableRowData[]>(() => {
-    if (!activeCard?.nodes) return [];
-    return activeCard.nodes.map((n) => {
-      const node = n as CardNode;
-      const data = node.data || {};
-      const iceType = (data.iceType as string) || (node.type as string) || '';
-      const provider = (data.provider as string) || '';
-      const deployed = deployedResources.find((r) => r.node_id === node.id);
-      const status = deriveStatus(node, statusCtx);
-      const endpoints = buildEndpoints(node, deployed);
-      const typeLabel =
-        (provider && getServiceName(iceType, provider)) || iceType.split('.').pop() || (node.type as string) || '';
-      return {
-        node,
-        label: (data.label as string) || (data.name as string) || (data.title as string) || typeLabel || node.id,
-        typeLabel,
-        iceType,
-        provider,
-        status,
-        endpoints,
-        providerId: (data.provider_id as string) || deployed?.provider_id || '',
-        region: (data.region as string) || '',
-        updatedAt: deployed?.deployed_at,
-        isChild: !!node.parentId,
-      };
-    });
-  }, [activeCard?.nodes, deployedResources, statusCtx]);
-
-  // ─── Filter ─────────────────────────────────────────────────────────────
-
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return rows.filter((r) => {
-      if (statusFilter.size > 0 && !statusFilter.has(r.status)) return false;
-      if (providerFilter.size > 0 && !providerFilter.has(r.provider || 'none')) return false;
-      if (q) {
-        const hay = `${r.label} ${r.typeLabel} ${r.iceType} ${r.provider} ${r.providerId} ${r.region}`.toLowerCase();
-        if (!hay.includes(q)) return false;
-      }
-      return true;
-    });
-  }, [rows, search, statusFilter, providerFilter]);
-
-  // ─── Sort ───────────────────────────────────────────────────────────────
-
-  const sorted = useMemo(() => {
-    const v = [...filtered];
-    v.sort((a, b) => {
-      let av: string | number;
-      let bv: string | number;
-      if (sortCol === 'status') {
-        av = STATUS_ORDER[a.status];
-        bv = STATUS_ORDER[b.status];
-      } else if (sortCol === 'updatedAt') {
-        av = a.updatedAt ? Date.parse(a.updatedAt) : 0;
-        bv = b.updatedAt ? Date.parse(b.updatedAt) : 0;
-      } else {
-        av = (a[sortCol] || '').toString().toLowerCase();
-        bv = (b[sortCol] || '').toString().toLowerCase();
-      }
-      if (av < bv) return sortDir === 'asc' ? -1 : 1;
-      if (av > bv) return sortDir === 'asc' ? 1 : -1;
-      return 0;
-    });
-    return v;
-  }, [filtered, sortCol, sortDir]);
-
-  // ─── Group ──────────────────────────────────────────────────────────────
-
-  const grouped = useMemo<Array<{ key: string; label: string; rows: TableRowData[] }>>(() => {
-    if (groupBy === 'none') return [{ key: '_all', label: '', rows: sorted }];
-
-    const labelFor = (key: string): string => {
-      if (groupBy === 'status') return t(`table.status.${key}`);
-      if (groupBy === 'provider') return key === 'none' ? t('table.group.noProvider') : providerLabel(key);
-      if (groupBy === 'family')
-        return key === 'other' ? t('table.group.other') : key.charAt(0).toUpperCase() + key.slice(1);
-      if (groupBy === 'group') {
-        if (key === '_root') return t('table.group.root');
-        const parent = activeCard?.nodes?.find((n) => n.id === key);
-        return (parent?.data?.label as string) || key;
-      }
-      return key;
-    };
-
-    const keyFor = (r: TableRowData): string => {
-      if (groupBy === 'status') return r.status;
-      if (groupBy === 'provider') return r.provider || 'none';
-      if (groupBy === 'family') return (r.iceType.split('.')[0] || 'other').toLowerCase();
-      if (groupBy === 'group') return r.node.parentId || '_root';
-      return '_all';
-    };
-
-    const map = new Map<string, TableRowData[]>();
-    for (const r of sorted) {
-      const k = keyFor(r);
-      if (!map.has(k)) map.set(k, []);
-      map.get(k)!.push(r);
-    }
-    return Array.from(map.entries()).map(([key, rows]) => ({ key, label: labelFor(key), rows }));
-  }, [sorted, groupBy, t, activeCard?.nodes]);
-
-  // ─── Counts (for footer) ────────────────────────────────────────────────
-
-  const counts = useMemo(() => {
-    const c: Record<RowStatus, number> = {
-      live: 0,
-      drifted: 0,
-      deploying: 0,
-      building: 0,
-      queued: 0,
-      failed: 0,
-      idle: 0,
-    };
-    for (const r of rows) c[r.status] += 1;
-    return c;
-  }, [rows]);
-
-  const availableProviders = useMemo(() => {
-    const s = new Set<string>();
-    for (const r of rows) if (r.provider) s.add(r.provider);
-    return Array.from(s).sort();
-  }, [rows]);
+  const { rows, sorted, grouped, counts, availableProviders } = useTableRows({
+    activeCard,
+    deployedResources,
+    driftByNode,
+    nodePipelineStatus,
+    search,
+    sortCol,
+    sortDir,
+    statusFilter,
+    providerFilter,
+    groupBy,
+    t,
+  });
 
   // ─── Handlers ───────────────────────────────────────────────────────────
 

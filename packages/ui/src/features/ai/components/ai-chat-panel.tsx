@@ -6,17 +6,7 @@
  * Supports conversation list, new chat, and resume.
  */
 
-import {
-  Sparkles,
-  Loader2,
-  Undo2,
-  Send,
-  Plus,
-  MessageSquare,
-  Trash2,
-  Cpu,
-  Cloud,
-} from 'lucide-react';
+import { Sparkles, Loader2, Undo2, Send, Plus, MessageSquare, Cpu, Cloud } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from '../../../i18n';
@@ -31,8 +21,8 @@ import {
   type ChatMessage,
   type ConversationSummary,
 } from '../hooks/use-chat-handlers';
-import { formatDateTime } from '../utils/format-date-time';
 import { suggestPatterns } from '../utils/suggest-patterns';
+import { ConversationHistorySidebar } from './conversation-history-sidebar';
 import { MessageRow } from './message-row';
 import type { AppDispatch, RootState } from '../../../store';
 
@@ -168,41 +158,15 @@ export const AiChatPanel: React.FC = () => {
       />
 
       {/* Conversation history dropdown */}
-      {showHistory && (
-        <div className="border-b border-ice-border max-h-48 overflow-y-auto">
-          {conversations.length === 0 ? (
-            <p className="px-3 py-4 text-ice-xs text-ice-text-3/50 text-center">{t('ai.chat.noConversations')}</p>
-          ) : (
-            conversations.map((conv) => (
-              <div
-                key={conv.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => loadConversation(conv.id)}
-                onKeyDown={(e) => e.key === 'Enter' && loadConversation(conv.id)}
-                className={cn(
-                  'group flex items-center gap-2 w-full px-3 py-1.5 text-left transition-colors cursor-pointer',
-                  conversationId === conv.id ? 'text-ice-text-1' : 'text-ice-text-3 hover:text-ice-text-2',
-                )}
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="text-ice-xs truncate">{conv.title || t('ai.chat.untitledConversation')}</p>
-                  <p className="text-ice-2xs text-ice-text-3/40">
-                    {conv._count.messages} {t('ai.chat.msgs')} · {formatDateTime(conv.updated_at)}
-                  </p>
-                </div>
-                <button
-                  onClick={(e) => handleDeleteConversation(conv.id, e)}
-                  aria-label={t('ai.chat.deleteTitle')}
-                  className="p-0.5 rounded text-ice-text-3/30 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
-                >
-                  <Trash2 aria-hidden="true" className="w-3 h-3" />
-                </button>
-              </div>
-            ))
-          )}
-        </div>
-      )}
+      <ConversationHistorySidebar
+        show={showHistory}
+        conversations={conversations}
+        conversationId={conversationId}
+        t={t}
+        onLoadConversation={loadConversation}
+        onDeleteConversation={handleDeleteConversation}
+      />
+
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-3 min-h-0">

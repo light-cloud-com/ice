@@ -48,6 +48,7 @@ import {
   type ResourceMap,
 } from '../utils/cost-calculator';
 import { TRAFFIC_TIERS, EGRESS_RATES } from '../utils/provider-pricing';
+import { loadTrafficTier, saveTrafficTier } from '../utils/traffic-tier-storage';
 import type { RootState, AppDispatch } from '../../../store';
 import type { Environment } from '../../../store/slices/environments-slice';
 
@@ -108,27 +109,6 @@ const CATEGORY_COLORS: Record<string, string> = {
   Source: 'bg-slate-400',
   Other: 'bg-gray-500',
 };
-
-const TRAFFIC_TIER_KEY = 'ice-cost-traffic-tier';
-
-function loadTrafficTier(): number {
-  try {
-    const v = localStorage.getItem(TRAFFIC_TIER_KEY);
-    if (!v) return 2;
-    const parsed = parseInt(v, 10);
-    return Math.max(0, Math.min(TRAFFIC_TIERS.length - 1, parsed));
-  } catch {
-    return 2;
-  }
-}
-
-function saveTrafficTier(value: number) {
-  try {
-    localStorage.setItem(TRAFFIC_TIER_KEY, String(value));
-  } catch {
-    /* ignore */
-  }
-}
 
 // Stable empty-array fallback (avoids creating new [] references in selectors)
 const EMPTY_ENVIRONMENTS: Environment[] = [];

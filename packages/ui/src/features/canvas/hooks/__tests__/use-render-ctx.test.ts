@@ -68,7 +68,7 @@ describe('useRenderCtx', () => {
   it('does NOT leak `card` onto the returned ctx surface', () => {
     const args = makeArgs();
     const ctx = useRenderCtx(args);
-    expect((ctx as Record<string, unknown>).card).toBeUndefined();
+    expect((ctx as unknown as Record<string, unknown>).card).toBeUndefined();
   });
 
   it('binds getConnectedPipelineStatuses with (node, card, pipelineNodeStatus)', () => {

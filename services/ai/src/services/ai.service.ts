@@ -7,13 +7,14 @@
  * Supports Anthropic (cloud, default) and any OpenAI-compatible endpoint.
  */
 
+import { validateOperations } from './ai/operation-validation';
 import { getAiProvider, getAiProviderSync } from './ai/provider';
 import { detectSkill } from './ai/skill-detection';
 import { buildSystemPrompt } from './ai/system-prompt';
 import { createAuditEntry, finalizeAuditEntry, writeAuditEntry } from './ai-audit.service';
 import { validateCanvas } from './canvas-validation.service';
 import { dryRunDeploy } from './deploy-dryrun.service';
-import type { AiCanvasOp, AiResponse, SerializedCanvas, AiStreamEvent } from '@ice/types';
+import type { AiResponse, SerializedCanvas, AiStreamEvent } from '@ice/types';
 import type { Response } from 'express';
 
 // =============================================================================
@@ -336,61 +337,3 @@ function repairJson(text: string): string | null {
   return s !== text ? s : null;
 }
 
-const VALID_OPS = new Set([
-  'addNode',
-  'addEdge',
-  'updateNodeData',
-  'updateNodePosition',
-  'resizeNode',
-  'reparentNode',
-  'deleteNode',
-  'deleteEdge',
-  'updateEdgeData',
-  'autoOrganize',
-  'addBlueprint',
-]);
-
-// Valid addNode group iceTypes (containers, not resources)
-const VALID_GROUP_TYPES = new Set([
-  'Network.VPC',
-  'Network.Subnet',
-  'Group.Frontend',
-  'Group.Services',
-  'Group.Data',
-  'Group.Messaging',
-  'Group.Monitoring',
-  'Group.External',
-  'Group.Custom',
-]);
-
-function validateOperations(ops: unknown[], allowedBlockTypes?: Set<string>): AiCanvasOp[] {
-  return ops.filter((op): op is AiCanvasOp => {
-    if (!op || typeof op !== 'object') return false;
-    const record = op as Record<string, unknown>;
-    const opType = record.op;
-    if (typeof opType !== 'string' || !VALID_OPS.has(opType)) return false;
-
-    // Validate addBlueprint uses a real registered iceType
-    if (opType === 'addBlueprint' && allowedBlockTypes) {
-      const iceType = record.iceType as string;
-      if (!iceType || !allowedBlockTypes.has(iceType)) {
-        console.warn(`[AI] Rejected unknown iceType: "${iceType}"`);
-        return false;
-      }
-    }
-
-    // Validate addNode group types
-    if (opType === 'addNode') {
-      const node = record.node as Record<string, unknown> | undefined;
-      if (node?.type === 'group') {
-        const iceType = (node.data as Record<string, unknown>)?.iceType as string;
-        if (iceType && !VALID_GROUP_TYPES.has(iceType)) {
-          console.warn(`[AI] Rejected unknown group iceType: "${iceType}"`);
-          return false;
-        }
-      }
-    }
-
-    return true;
-  });
-}

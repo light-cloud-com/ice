@@ -3,110 +3,30 @@
  *
  * User-friendly abstractions over low-level cloud resources.
  * Users work with these concepts, and ICE maps them to actual cloud resources.
+ *
+ * Module layout (rf-hlres split — in progress):
+ *   - `./high-level-resources/types.ts`              — interfaces + NodeBehavior re-export (rf-hlres-1)
+ *   - `./high-level-resources/categories/<name>.ts`  — per-category data (rf-hlres-2..7, size exception)
+ *   - `./high-level-resources/helpers.ts`            — palette/provider/asset helpers (rf-hlres-8)
+ *   - this file                                      — public re-export shim that assembles
+ *                                                      `HIGH_LEVEL_CATEGORIES` (rf-hlres-9)
  */
 
 import { type NodeBehavior, BEHAVIOR_LABELS, BEHAVIOR_COLORS } from '@ice/constants';
+import type {
+  HighLevelCategory,
+  HighLevelProperty,
+  HighLevelResource,
+} from './high-level-resources/types.js';
 
 export type { NodeBehavior };
-
-/**
- * Provider-specific implementation of a high-level resource
- */
-export interface ProviderImplementation {
-  provider: 'aws' | 'gcp' | 'azure' | 'kubernetes' | 'alibaba' | 'oci' | 'digitalocean';
-  resource_type: string; // e.g., 'aws:s3:Bucket', 'gcp:storage:Bucket'
-  display_name: string; // e.g., 'S3 Bucket', 'Cloud Storage Bucket'
-}
-
-export interface HighLevelResource {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  category: string;
-  // Node behavior type
-  behavior: NodeBehavior;
-  // Which providers support this resource
-  providers: Array<'aws' | 'gcp' | 'azure' | 'kubernetes' | 'alibaba' | 'oci' | 'digitalocean'>;
-  // Provider-specific implementations
-  implementations: ProviderImplementation[];
-  // Keywords to match against low-level resources
-  keywords: string[];
-  // Common properties users care about
-  properties: HighLevelProperty[];
-}
-
-/**
- * Rich option detail for select fields — replaces generic options with
- * real cloud values, descriptions, and per-provider filtering.
- */
-export interface OptionDetail {
-  /** Stored in node.data (e.g., "db.t3.micro") — the real cloud value */
-  value: string;
-  /** Display title (e.g., "db.t3.micro") */
-  label: string;
-  /** Subtitle (e.g., "2 vCPU · 1 GB RAM") */
-  description?: string;
-  /** Cost hint (e.g., "~$15/mo") */
-  cost?: string;
-  /** When set, only show for this provider (e.g., "aws", "gcp", "azure") */
-  provider?: string;
-  /** Detailed help text shown on hover */
-  tooltip?: string;
-}
-
-export interface HighLevelProperty {
-  name: string;
-  label: string;
-  /**
-   * Property type drives the renderer in the properties panel.
-   * - `string` / `number` / `boolean`: plain inputs
-   * - `select`: dropdown or card picker (see optionDetails)
-   * - `list`: generic string list with add/remove
-   * - `queue_list`: bespoke queue renderer — each item shows as a queue pill
-   *   with a distinct icon, FIFO badge, and queue-semantic affordances
-   */
-  type: 'string' | 'number' | 'boolean' | 'select' | 'list' | 'queue_list';
-  required: boolean;
-  description: string;
-  options?: string[];
-  default?: unknown;
-  /** Controls visibility in the properties panel */
-  tier?: 'essential' | 'detailed' | 'advanced';
-  /** Placeholder text for string/list inputs */
-  placeholder?: string;
-  /** For 'list' type: label for the add button (e.g. "Add queue") */
-  addLabel?: string;
-  /** Rich option details — when present, renders a card picker instead of a plain dropdown.
-   *  Takes precedence over `options` for rendering. */
-  optionDetails?: OptionDetail[];
-  /** Detailed help text shown on hover (info icon next to label) */
-  tooltip?: string;
-  /** Configuration for the inline input shown when 'custom' option is selected.
-   *  Requires a { value: 'custom', ... } entry in optionDetails. */
-  customInput?: {
-    /** Input field type */
-    type: 'number' | 'string';
-    /** Unit label displayed after the input (e.g., 'GB', 'MB', 'days') */
-    unit: string;
-    /** Minimum allowed value (number type only) */
-    min?: number;
-    /** Maximum allowed value (number type only) */
-    max?: number;
-    /** Step increment (number type only) */
-    step?: number;
-    /** Placeholder text for the input */
-    placeholder?: string;
-  };
-}
-
-export interface HighLevelCategory {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  resources: HighLevelResource[];
-}
+export type {
+  HighLevelCategory,
+  HighLevelProperty,
+  HighLevelResource,
+  OptionDetail,
+  ProviderImplementation,
+} from './high-level-resources/types.js';
 
 /**
  * High-level resource categories that make sense to developers

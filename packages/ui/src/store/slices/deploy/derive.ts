@@ -87,6 +87,21 @@ export function deriveRollup(nodesById: Record<string, NodeDeployState>): Deploy
   return rollup;
 }
 
+/**
+ * Project a `DeployRollup` onto a 0–100 progress percentage, applying the
+ * cap-at-99 rule: while any node is still queued or applying, the bar
+ * holds short of 100% so the user never sees "100% complete" with work
+ * still in flight. Empty rollup → 0%; fully terminal → 100% exactly.
+ *
+ * Extracted from three identical inline copies in deploy-in-flight-panel,
+ * deploy-banner, and status-bar (pdl-5 critic findings #2 and #4).
+ */
+export function deriveRollupPercentage(rollup: DeployRollup): number {
+  if (rollup.total === 0) return 0;
+  if (rollup.terminal === rollup.total) return 100;
+  return Math.min(99, Math.round((rollup.terminal / Math.max(rollup.total, 1)) * 100));
+}
+
 export function orderNodesForPanel(nodesById: Record<string, NodeDeployState>): NodeDeployState[] {
   const all = Object.values(nodesById);
   return [...all].sort((a, b) => {

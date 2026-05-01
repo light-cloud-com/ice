@@ -53,7 +53,7 @@ export type {
 // (rf-dslice-2). The re-export preserves the public import path for external
 // consumers (deploy-banner, deploy-in-flight-panel, etc.).
 
-export { deriveRollup, orderNodesForPanel } from './deploy/derive';
+export { deriveRollup, deriveRollupPercentage, orderNodesForPanel } from './deploy/derive';
 
 const initialState: DeployState = {
   isOpen: false,

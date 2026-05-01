@@ -62,10 +62,18 @@ vi.mock('../../../../i18n', () => ({
   useTranslation: () => ({ t: mocks.t }),
 }));
 
-vi.mock('../../../../store/slices/deploy-slice', () => ({
-  deriveRollup: mocks.deriveRollup,
-  orderNodesForPanel: mocks.orderNodesForPanel,
-}));
+// `deriveRollupPercentage` is a pure projection from the rollup the test
+// already controls via `mocks.deriveRollup`, so we keep its real
+// implementation rather than maintaining a parallel mock that has to
+// mirror the cap-at-99 formula.
+vi.mock('../../../../store/slices/deploy-slice', async (importOriginal) => {
+  const actual = (await importOriginal()) as typeof import('../../../../store/slices/deploy-slice');
+  return {
+    ...actual,
+    deriveRollup: mocks.deriveRollup,
+    orderNodesForPanel: mocks.orderNodesForPanel,
+  };
+});
 
 vi.mock('../deploy-node-row', () => ({
   DeployNodeRow: mocks.DeployNodeRowStub,

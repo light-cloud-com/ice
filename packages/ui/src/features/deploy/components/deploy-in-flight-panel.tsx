@@ -22,6 +22,7 @@ import { useTranslation } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
 import {
   deriveRollup,
+  deriveRollupPercentage,
   orderNodesForPanel,
   type DeployStatus,
   type NodeDeployState,
@@ -39,15 +40,7 @@ export const DeployInFlightPanel: React.FC<{
   const ordered = useMemo(() => orderNodesForPanel(nodesById), [nodesById]);
 
   const empty = rollup.total === 0;
-  // Cap at 99% while any node is non-terminal. The legacy bug was a
-  // per-resource percentage that bounced; this one is monotonic over the
-  // whole deploy, but we still hold short of 100% until the last
-  // terminal lands so the user doesn't see "100% with 1 still applying".
-  const pct = empty
-    ? 0
-    : rollup.terminal === rollup.total
-      ? 100
-      : Math.min(99, Math.round((rollup.terminal / Math.max(rollup.total, 1)) * 100));
+  const pct = deriveRollupPercentage(rollup);
 
   return (
     <div id="ice-deploy-progress" className="space-y-3">

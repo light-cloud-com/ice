@@ -49,7 +49,7 @@
 import React, { useMemo } from 'react';
 import { useSelector, shallowEqual } from 'react-redux';
 
-import { deriveRollup, type NodeDeployState } from '../../../store/slices/deploy-slice';
+import { deriveRollup, deriveRollupPercentage, type NodeDeployState } from '../../../store/slices/deploy-slice';
 import type { RootState } from '../../../store';
 
 export interface CanvasDeployBannerProps {
@@ -86,12 +86,7 @@ export const CanvasDeployBanner: React.FC<CanvasDeployBannerProps> = ({ cardId }
     }
     return active;
   }, [deployNodesById]);
-  const bannerPct =
-    deployRollup.total === 0
-      ? 0
-      : deployRollup.terminal === deployRollup.total
-        ? 100
-        : Math.min(99, Math.round((deployRollup.terminal / Math.max(deployRollup.total, 1)) * 100));
+  const bannerPct = deriveRollupPercentage(deployRollup);
   const showDeployBanner =
     cardId &&
     deployingCardId === cardId &&

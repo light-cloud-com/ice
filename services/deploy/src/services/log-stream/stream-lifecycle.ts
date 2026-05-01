@@ -1,16 +1,21 @@
 /**
  * Stream lifecycle primitives for the Log Stream service.
  *
- * Extracted from `log-stream.service.ts` (rf-lstream-5). Concerned with
- * starting / stopping / restarting / tearing down the underlying SDK
- * connection bound to an `ActiveStream`. The polling and tail modules
- * (rf-lstream-6 / rf-lstream-7) depend on `stopUnderlyingStream` so it
- * lives here as the canonical place to release SDK handles.
+ * Extracted from `log-stream.service.ts` (rf-lstream-5). Owns the
+ * low-level "release SDK + registry handles" helpers used by the
+ * polling and tail loops on terminal failures and by the orchestrator's
+ * idle-teardown timer:
  *
- * `openStreamForResolved` + `restartStreamWithMode` (which call into
- * `startPolling` / `startTail`) are added in rf-lstream-7b once those
- * helpers exist as their own modules; keeping them out of this initial
- * version avoids a circular import during the staged extraction.
+ *   - stopUnderlyingStream: cancel poll timer + destroy/cancel tail
+ *     stream. Idempotent.
+ *   - teardownStream: stopUnderlyingStream + clear idle teardown timer
+ *     + remove from registry.
+ *
+ * Deliberately small and dependency-free apart from the registry
+ * binding. The richer setup helpers (openStreamForResolved,
+ * restartStreamWithMode) live in `stream-open.ts` so that the polling
+ * and tail modules can import these primitives without inheriting the
+ * Prisma/credentials/SDK transitive imports.
  */
 
 import { streams } from './registry.js';

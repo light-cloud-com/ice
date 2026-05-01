@@ -5,7 +5,6 @@
  * Handles ID remapping, blueprint resolution, validation, and undo snapshots.
  */
 
-import { canContain } from '../../../config/containment-rules';
 import { store } from '../../../store';
 import {
   addNodeToCard,
@@ -30,6 +29,7 @@ import { resolveBlueprint } from './ai-ops/blueprint-resolver';
 import { autoResizeContainers } from './ai-ops/auto-resize';
 import { pickNodeDefaults } from './ai-ops/node-defaults';
 import { connectOrphanHelpers } from './ai-ops/orphan-helpers';
+import { validateReparent } from './ai-ops/reparent-validator';
 
 // =============================================================================
 // Types — re-exported from ai-ops/types
@@ -221,30 +221,19 @@ export function executeAiOperations(
 
           if (op.parentId) {
             const resolvedParentId = resolveId(op.parentId, idMap);
-            const parentNode = currentCard.nodes.find((n) => n.id === resolvedParentId);
-            if (!parentNode) {
-              skippedOps.push({ op, reason: `Parent node not found: ${op.parentId}` });
+            const verdict = validateReparent(currentCard, childNode, resolvedParentId, op.parentId);
+            if (verdict.kind === 'skip') {
+              skippedOps.push({ op, reason: verdict.reason });
               break;
             }
-            // Only containers can have children
-            if (parentNode.type !== 'container') {
-              skippedOps.push({ op, reason: `${parentNode.data?.label || parentNode.id} is not a container` });
-              break;
-            }
-            const parentIceType = (parentNode.data?.iceType as string) || '';
-            const childIceType = (childNode?.data?.iceType as string) || '';
-            if (parentIceType && childIceType && !canContain(parentIceType, childIceType)) {
-              skippedOps.push({ op, reason: `${parentIceType} cannot contain ${childIceType}` });
-              break;
-            }
-            dispatch(updateCardNodeParent({ nodeId: resolvedNodeId, parentId: resolvedParentId }));
+            dispatch(updateCardNodeParent({ nodeId: resolvedNodeId, parentId: verdict.resolvedParentId }));
 
             // Reposition the child inside the new parent using the non-overlapping
             // grid algorithm so it doesn't land on top of existing siblings.
             const updatedCard = getCard();
             const newPos = findChildPosition(
               updatedCard,
-              resolvedParentId,
+              verdict.resolvedParentId,
               childNode.width || NODE_WIDTH,
               childNode.height || NODE_HEIGHT,
             );

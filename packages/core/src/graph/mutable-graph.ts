@@ -5,8 +5,24 @@
  * Provides efficient node/edge management and traversal.
  */
 
-import { create_graph_id, create_node_id, create_edge_id } from '../types/graph.js';
-import { classify_resource } from './classifier/category-classifier.js';
+import { create_graph_id } from '../types/graph.js';
+import {
+  edges_add_edge,
+  edges_get_edge,
+  edges_get_edges_between,
+  edges_get_incoming_edges,
+  edges_get_outgoing_edges,
+  edges_remove_edge,
+} from './mutable-graph/edges.js';
+import {
+  nodes_add_node,
+  nodes_get_node,
+  nodes_get_node_by_name,
+  nodes_get_nodes_by_type,
+  nodes_has_node,
+  nodes_remove_node,
+  nodes_update_node,
+} from './mutable-graph/nodes.js';
 import {
   create_mutable_graph_state,
   type GraphStats,
@@ -93,75 +109,21 @@ export class MutableGraph implements Graph {
   }
 
   // ---------------------------------------------------------------------------
-  // Node Operations
+  // Node Operations (delegated to ./mutable-graph/nodes.ts)
   // ---------------------------------------------------------------------------
 
-  /**
-   * Add a node to the graph.
-   */
   add_node(input: NodeInput): AddNodeResult {
-    // Generate node ID
-    const id = create_node_id(`${input.type}:${input.name}`);
-
-    // Check for duplicates
-    if (this.state.nodes.has(id)) {
-      return {
-        success: false,
-        errors: [`Node already exists: ${id}`],
-      };
-    }
-
-    if (this.state.node_names.has(input.name)) {
-      return {
-        success: false,
-        errors: [`Node with name '${input.name}' already exists`],
-      };
-    }
-
-    const now = new Date().toISOString();
-    // Auto-classify category based on resource type
-    const category = classify_resource(input.type);
-
-    const node: Node = {
-      id,
-      type: input.type,
-      name: input.name,
-      properties: input.properties,
-      metadata: {
-        created_at: now,
-        updated_at: now,
-        labels: input.labels ?? {},
-        annotations: input.annotations ?? {},
-        category,
-      },
-    };
-
-    this.state.nodes.set(id, node);
-    this.state.node_names.set(input.name, id);
-    this.state.outgoing.set(id, new Set());
-    this.state.incoming.set(id, new Set());
-
-    return { success: true, node };
+    return nodes_add_node(this.state, input);
   }
 
-  /**
-   * Get a node by ID.
-   */
   get_node(id: NodeId): Node | undefined {
-    return this.state.nodes.get(id);
+    return nodes_get_node(this.state, id);
   }
 
-  /**
-   * Get a node by name.
-   */
   get_node_by_name(name: string): Node | undefined {
-    const id = this.state.node_names.get(name);
-    return id ? this.state.nodes.get(id) : undefined;
+    return nodes_get_node_by_name(this.state, name);
   }
 
-  /**
-   * Update a node's properties.
-   */
   update_node(
     id: NodeId,
     updates: {
@@ -170,182 +132,47 @@ export class MutableGraph implements Graph {
       annotations?: Record<string, unknown>;
     },
   ): boolean {
-    const node = this.state.nodes.get(id);
-    if (!node) return false;
-
-    const updated: Node = {
-      ...node,
-      properties: updates.properties ? { ...node.properties, ...updates.properties } : node.properties,
-      metadata: {
-        ...node.metadata,
-        updated_at: new Date().toISOString(),
-        labels: updates.labels ? { ...node.metadata.labels, ...updates.labels } : node.metadata.labels,
-        annotations: updates.annotations
-          ? { ...node.metadata.annotations, ...updates.annotations }
-          : node.metadata.annotations,
-      },
-    };
-
-    this.state.nodes.set(id, updated);
-    return true;
+    return nodes_update_node(this.state, id, updates);
   }
 
-  /**
-   * Remove a node and its connected edges.
-   */
   remove_node(id: NodeId): boolean {
-    const node = this.state.nodes.get(id);
-    if (!node) return false;
-
-    // Remove connected edges
-    const out_edges = this.state.outgoing.get(id) ?? new Set();
-    const in_edges = this.state.incoming.get(id) ?? new Set();
-
-    for (const edge_id of out_edges) {
-      this.remove_edge(edge_id);
-    }
-    for (const edge_id of in_edges) {
-      this.remove_edge(edge_id);
-    }
-
-    // Remove node
-    this.state.nodes.delete(id);
-    this.state.node_names.delete(node.name);
-    this.state.outgoing.delete(id);
-    this.state.incoming.delete(id);
-
-    return true;
+    return nodes_remove_node(this.state, id);
   }
 
-  /**
-   * Check if a node exists.
-   */
   has_node(id: NodeId): boolean {
-    return this.state.nodes.has(id);
+    return nodes_has_node(this.state, id);
   }
 
-  /**
-   * Get all nodes of a specific type.
-   */
   get_nodes_by_type(type: string): Node[] {
-    return Array.from(this.state.nodes.values()).filter((n) => n.type === type);
+    return nodes_get_nodes_by_type(this.state, type);
   }
 
   // ---------------------------------------------------------------------------
-  // Edge Operations
+  // Edge Operations (delegated to ./mutable-graph/edges.ts)
   // ---------------------------------------------------------------------------
 
-  /**
-   * Add an edge to the graph.
-   */
   add_edge(input: EdgeInput): AddEdgeResult {
-    // Resolve source and target IDs
-    const source_id = this.resolve_node_id(input.source);
-    const target_id = this.resolve_node_id(input.target);
-
-    if (!source_id) {
-      return {
-        success: false,
-        errors: [`Source node not found: ${input.source}`],
-      };
-    }
-
-    if (!target_id) {
-      return {
-        success: false,
-        errors: [`Target node not found: ${input.target}`],
-      };
-    }
-
-    // Generate edge ID
-    const id = create_edge_id(`${source_id}->${target_id}:${input.relationship}`);
-
-    // Check for duplicates
-    if (this.state.edges.has(id)) {
-      return {
-        success: false,
-        errors: [`Edge already exists: ${id}`],
-      };
-    }
-
-    const now = new Date().toISOString();
-    const edge: Edge = {
-      id,
-      source: source_id,
-      target: target_id,
-      relationship: input.relationship,
-      metadata: {
-        created_at: now,
-        labels: input.labels ?? {},
-        inferred: false,
-      },
-    };
-
-    this.state.edges.set(id, edge);
-
-    // Update adjacency lists
-    this.state.outgoing.get(source_id)?.add(id);
-    this.state.incoming.get(target_id)?.add(id);
-
-    return { success: true, edge };
+    return edges_add_edge(this.state, input);
   }
 
-  /**
-   * Get an edge by ID.
-   */
   get_edge(id: EdgeId): Edge | undefined {
-    return this.state.edges.get(id);
+    return edges_get_edge(this.state, id);
   }
 
-  /**
-   * Remove an edge.
-   */
   remove_edge(id: EdgeId): boolean {
-    const edge = this.state.edges.get(id);
-    if (!edge) return false;
-
-    this.state.edges.delete(id);
-    this.state.outgoing.get(edge.source)?.delete(id);
-    this.state.incoming.get(edge.target)?.delete(id);
-
-    return true;
+    return edges_remove_edge(this.state, id);
   }
 
-  /**
-   * Get edges between two nodes.
-   */
   get_edges_between(source: NodeId, target: NodeId): Edge[] {
-    const out_edges = this.state.outgoing.get(source) ?? new Set();
-    const result: Edge[] = [];
-
-    for (const edge_id of out_edges) {
-      const edge = this.state.edges.get(edge_id);
-      if (edge && edge.target === target) {
-        result.push(edge);
-      }
-    }
-
-    return result;
+    return edges_get_edges_between(this.state, source, target);
   }
 
-  /**
-   * Get outgoing edges from a node.
-   */
   get_outgoing_edges(node_id: NodeId): Edge[] {
-    const edge_ids = this.state.outgoing.get(node_id) ?? new Set();
-    return Array.from(edge_ids)
-      .map((id) => this.state.edges.get(id))
-      .filter((e): e is Edge => e !== undefined);
+    return edges_get_outgoing_edges(this.state, node_id);
   }
 
-  /**
-   * Get incoming edges to a node.
-   */
   get_incoming_edges(node_id: NodeId): Edge[] {
-    const edge_ids = this.state.incoming.get(node_id) ?? new Set();
-    return Array.from(edge_ids)
-      .map((id) => this.state.edges.get(id))
-      .filter((e): e is Edge => e !== undefined);
+    return edges_get_incoming_edges(this.state, node_id);
   }
 
   // ---------------------------------------------------------------------------
@@ -519,19 +346,6 @@ export class MutableGraph implements Graph {
   // ---------------------------------------------------------------------------
   // Utility Methods
   // ---------------------------------------------------------------------------
-
-  /**
-   * Resolve a node ID from a string (either ID or name).
-   */
-  private resolve_node_id(ref: NodeId | string): NodeId | undefined {
-    // Check if it's already a valid ID
-    if (this.state.nodes.has(ref as NodeId)) {
-      return ref as NodeId;
-    }
-
-    // Try to resolve by name
-    return this.state.node_names.get(ref);
-  }
 
   /**
    * Create a shallow copy of the graph.

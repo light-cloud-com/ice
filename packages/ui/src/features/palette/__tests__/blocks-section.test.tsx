@@ -427,6 +427,29 @@ describe('BlocksSection — category groups', () => {
     expect(toggleCategory).toHaveBeenCalledWith('Network');
   });
 
+  it('chevron span onClick stops propagation AND forwards toggleCategory(category.id)', () => {
+    const toggleCategory = vi.fn();
+    const stopPropagation = vi.fn();
+    const tree = renderSection(
+      makeProps({
+        categorizedItems: [{ category: makeCategory({ id: 'AI' }), items: [] }],
+        toggleCategory,
+      }),
+    );
+    // Find the inner span carrying the chevron's onClick (the one with class
+    // 'w-4 h-4').
+    const spans = findByPredicate(tree, (el) => {
+      if (el.type !== 'span') return false;
+      const cn = (el.props as { className?: string }).className;
+      return typeof cn === 'string' && cn.includes('w-4') && cn.includes('h-4') && cn.includes('hover:bg-ice-hover');
+    });
+    expect(spans).toHaveLength(1);
+    const onClick = (spans[0].props as { onClick: (e: { stopPropagation: () => void }) => void }).onClick;
+    onClick({ stopPropagation });
+    expect(stopPropagation).toHaveBeenCalled();
+    expect(toggleCategory).toHaveBeenCalledWith('AI');
+  });
+
   it('omits ComponentItem children when category is collapsed', () => {
     const tree = renderSection(
       makeProps({

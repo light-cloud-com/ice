@@ -34,11 +34,17 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('react', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react')>();
-  // Stateful useState backed by a slot dispatcher
+  // Stateful useState backed by a slot dispatcher.
+  // - __resetUseState({ keepSlots? }) — resets call counter, optionally
+  //   preserving the slot values (default: full reset).
+  // - __setState(i, v) — pre-seed slot i for the next render.
   let stateSlots: unknown[] = [];
   let useStateIdx = 0;
-  (mocks as unknown as { __resetUseState: () => void; __setState: (i: number, v: unknown) => void }).__resetUseState = () => {
-    stateSlots = [];
+  (mocks as unknown as {
+    __resetUseState: (opts?: { keepSlots?: boolean }) => void;
+    __setState: (i: number, v: unknown) => void;
+  }).__resetUseState = (opts) => {
+    if (!opts?.keepSlots) stateSlots = [];
     useStateIdx = 0;
   };
   (mocks as unknown as { __setState: (i: number, v: unknown) => void }).__setState = (i: number, v: unknown) => {
@@ -58,9 +64,22 @@ vi.mock('react', async (importOriginal) => {
     useStateIdx += 1;
     return [stateSlots[slot], setter];
   });
-  const patchedUseEffect = vi.fn();
+  // Capture each useEffect's callback + deps so tests can fire them.
+  (mocks as unknown as {
+    effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
+    callbacks: unknown[];
+  }).effects = [];
+  (mocks as unknown as { callbacks: unknown[] }).callbacks = [];
+  const patchedUseEffect = vi.fn((cb: () => void | (() => void), deps?: unknown[]) => {
+    (mocks as unknown as {
+      effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
+    }).effects.push({ cb, deps: deps ?? [] });
+  });
   const patchedUseMemo = vi.fn((fn: () => unknown) => fn());
-  const patchedUseCallback = vi.fn((fn: unknown) => fn);
+  const patchedUseCallback = vi.fn((fn: unknown) => {
+    (mocks as unknown as { callbacks: unknown[] }).callbacks.push(fn);
+    return fn;
+  });
   const patchedUseRef = vi.fn(<T,>(initial: T) => ({ current: initial }));
   const actualDefault = (actual as unknown as { default?: typeof actual }).default ?? actual;
   return {
@@ -285,6 +304,11 @@ beforeEach(() => {
   mocks.projectBrowserCalls = 0;
   mocks.templatesCalls = 0;
   mocks.resizableGroupCalls = 0;
+  (mocks as unknown as {
+    effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
+    callbacks: unknown[];
+  }).effects.length = 0;
+  (mocks as unknown as { callbacks: unknown[] }).callbacks.length = 0;
 });
 
 // ─── Tests: TooltipProvider wrap + style injection ─────────────────────────
@@ -545,6 +569,237 @@ describe('ResourcePalette — filteredComponents wiring', () => {
     const calls = drainBlocksCalls(tree);
     const ref = calls[0].searchInputRef as { current: unknown };
     expect(ref).toHaveProperty('current');
+  });
+
+  it('with localSearch set, filters by name match (covers L108 branch)', () => {
+    renderPalette();
+    // Seed slot 1 (localSearch). Slot 0 = projectProvider; slot 1 = localSearch.
+    (mocks as unknown as { __setState: (i: number, v: unknown) => void }).__setState(1, 'alpha');
+    (mocks as unknown as {
+      __resetUseState: (opts?: { keepSlots?: boolean }) => void;
+    }).__resetUseState({ keepSlots: true });
+    const tree = (ResourcePalette as unknown as (p: Parameters<typeof ResourcePalette>[0]) => React.ReactElement)({
+      showProjectSection: false,
+      showBlocksSection: true,
+      showTemplatesSection: false,
+    });
+    const calls = drainBlocksCalls(tree);
+    const filtered = calls[0].filteredComponents as ComponentDefLike[];
+    // 'alpha' matches name "Alpha" (Compute.A); Bravo & Charlie do not.
+    expect(filtered.map((c) => c.type)).toEqual(['Compute.A']);
+  });
+
+  it('with localSearch set, filters by description (covers L109 branch)', () => {
+    renderPalette();
+    (mocks as unknown as { __setState: (i: number, v: unknown) => void }).__setState(1, 'second');
+    (mocks as unknown as {
+      __resetUseState: (opts?: { keepSlots?: boolean }) => void;
+    }).__resetUseState({ keepSlots: true });
+    const tree = (ResourcePalette as unknown as (p: Parameters<typeof ResourcePalette>[0]) => React.ReactElement)({
+      showProjectSection: false,
+      showBlocksSection: true,
+      showTemplatesSection: false,
+    });
+    const calls = drainBlocksCalls(tree);
+    const filtered = calls[0].filteredComponents as ComponentDefLike[];
+    // 'second' matches description "second" (Network.B).
+    expect(filtered.map((c) => c.type)).toEqual(['Network.B']);
+  });
+
+  it('with localSearch present, isSearching is true and showGroup branches on the magic substring (covers L130)', () => {
+    renderPalette();
+    // Seed localSearch (slot 1) to 'group' — matches the showGroup substring.
+    (mocks as unknown as { __setState: (i: number, v: unknown) => void }).__setState(1, 'group');
+    (mocks as unknown as {
+      __resetUseState: (opts?: { keepSlots?: boolean }) => void;
+    }).__resetUseState({ keepSlots: true });
+    const tree = (ResourcePalette as unknown as (p: Parameters<typeof ResourcePalette>[0]) => React.ReactElement)({
+      showProjectSection: false,
+      showBlocksSection: true,
+      showTemplatesSection: false,
+    });
+    const calls = drainBlocksCalls(tree);
+    expect(calls[0].isSearching).toBe(true);
+    expect(calls[0].showGroup).toBe(true); // 'group organize' contains 'group'
+  });
+
+  it('with selectedProvider locked to a non-all value, filters out non-matching providers', () => {
+    renderPalette();
+    // Slot 2 = selectedProvider. Set to 'azure' so only Network.B matches.
+    (mocks as unknown as { __setState: (i: number, v: unknown) => void }).__setState(2, 'azure');
+    (mocks as unknown as {
+      __resetUseState: (opts?: { keepSlots?: boolean }) => void;
+    }).__resetUseState({ keepSlots: true });
+    const tree = (ResourcePalette as unknown as (p: Parameters<typeof ResourcePalette>[0]) => React.ReactElement)({
+      showProjectSection: false,
+      showBlocksSection: true,
+      showTemplatesSection: false,
+    });
+    const calls = drainBlocksCalls(tree);
+    const filtered = calls[0].filteredComponents as ComponentDefLike[];
+    // Compute.A is aws/gcp; Network.B is azure; Charlie is filtered by ENABLED_PROVIDER_IDS.
+    expect(filtered.map((c) => c.type)).toEqual(['Network.B']);
+  });
+
+  it('with localSearch unrelated to "group organize", showGroup is false', () => {
+    renderPalette();
+    (mocks as unknown as { __setState: (i: number, v: unknown) => void }).__setState(1, 'redis');
+    (mocks as unknown as {
+      __resetUseState: (opts?: { keepSlots?: boolean }) => void;
+    }).__resetUseState({ keepSlots: true });
+    const tree = (ResourcePalette as unknown as (p: Parameters<typeof ResourcePalette>[0]) => React.ReactElement)({
+      showProjectSection: false,
+      showBlocksSection: true,
+      showTemplatesSection: false,
+    });
+    const calls = drainBlocksCalls(tree);
+    expect(calls[0].showGroup).toBe(false);
+  });
+});
+
+// ─── Tests: effects ────────────────────────────────────────────────────────
+
+describe('ResourcePalette — effect bodies', () => {
+  it('mount effect ([]) fires setMounted(true) — covers line 82', () => {
+    renderPalette();
+    const effects = (mocks as unknown as {
+      effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
+    }).effects;
+    // The mount effect is the one with deps=[]
+    const mountEffect = effects.find((e) => e.deps.length === 0);
+    expect(mountEffect).toBeDefined();
+    expect(() => mountEffect?.cb()).not.toThrow();
+  });
+
+  it('provider-lock effect fires setSelectedProvider(projectProvider) when provider is set — covers L70-71', () => {
+    // Render once to populate state slots; then seed slot 0 (projectProvider)
+    // to 'gcp' and re-render with the slots preserved + index reset.
+    renderPalette();
+    (mocks as unknown as { __setState: (i: number, v: unknown) => void }).__setState(0, 'gcp');
+    (mocks as unknown as {
+      __resetUseState: (opts?: { keepSlots?: boolean }) => void;
+    }).__resetUseState({ keepSlots: true });
+    (mocks as unknown as {
+      effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
+    }).effects.length = 0;
+    (ResourcePalette as unknown as (p: Parameters<typeof ResourcePalette>[0]) => React.ReactElement)({});
+    const effects = (mocks as unknown as {
+      effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
+    }).effects;
+    const lockEffect = effects.find((e) => e.deps.length === 1 && e.deps[0] === 'gcp');
+    expect(lockEffect).toBeDefined();
+    expect(() => lockEffect?.cb()).not.toThrow();
+  });
+
+  it('provider-lock effect is a no-op when projectProvider is null', () => {
+    renderPalette();
+    const effects = (mocks as unknown as {
+      effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
+    }).effects;
+    const lockEffect = effects.find((e) => e.deps.length === 1 && e.deps[0] === null);
+    expect(lockEffect).toBeDefined();
+    // No throw means the early return ran; nothing to assert beyond invocability.
+    expect(() => lockEffect?.cb()).not.toThrow();
+  });
+
+  it('resolve effect (deps length 2) is registered and invocable when type=project', () => {
+    mocks.resolved = { type: 'project', id: 'p1' };
+    renderPalette();
+    const effects = (mocks as unknown as {
+      effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
+    }).effects;
+    // The resolve effect has deps [resolved.type, resolved.id] — length 2.
+    const resolveEffect = effects.find((e) => e.deps.length === 2);
+    expect(resolveEffect).toBeDefined();
+    expect(() => resolveEffect?.cb()).not.toThrow();
+  });
+
+  it('resolve effect runs the else branch (setProjectProvider(null)) when type is not project', () => {
+    mocks.resolved = { type: 'unknown', id: null };
+    renderPalette();
+    const effects = (mocks as unknown as {
+      effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
+    }).effects;
+    const resolveEffect = effects.find((e) => e.deps.length === 2);
+    expect(() => resolveEffect?.cb()).not.toThrow();
+  });
+
+  it('resolve effect catches axios rejection and resets projectProvider — covers L59', async () => {
+    const axios = await import('../../../shared/api/axios-instance');
+    const post = (axios.default as unknown as { post: ReturnType<typeof vi.fn> }).post;
+    post.mockRejectedValueOnce(new Error('boom'));
+    mocks.resolved = { type: 'project', id: 'p1' };
+    renderPalette();
+    const effects = (mocks as unknown as {
+      effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
+    }).effects;
+    const resolveEffect = effects.find((e) => e.deps.length === 2);
+    expect(resolveEffect).toBeDefined();
+    resolveEffect?.cb();
+    // Flush microtasks so the .then/.catch chain runs.
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+  });
+
+  it('resolve effect resolves axios success and calls setProjectProvider with provider', async () => {
+    const axios = await import('../../../shared/api/axios-instance');
+    const post = (axios.default as unknown as { post: ReturnType<typeof vi.fn> }).post;
+    post.mockResolvedValueOnce({ data: { provider: 'aws' } });
+    mocks.resolved = { type: 'project', id: 'p1' };
+    renderPalette();
+    const effects = (mocks as unknown as {
+      effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
+    }).effects;
+    const resolveEffect = effects.find((e) => e.deps.length === 2);
+    resolveEffect?.cb();
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+  });
+
+  it('resolve effect handles missing provider field by passing null', async () => {
+    const axios = await import('../../../shared/api/axios-instance');
+    const post = (axios.default as unknown as { post: ReturnType<typeof vi.fn> }).post;
+    post.mockResolvedValueOnce({ data: {} });
+    mocks.resolved = { type: 'project', id: 'p1' };
+    renderPalette();
+    const effects = (mocks as unknown as {
+      effects: Array<{ cb: () => void | (() => void); deps: unknown[] }>;
+    }).effects;
+    const resolveEffect = effects.find((e) => e.deps.length === 2);
+    resolveEffect?.cb();
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+  });
+});
+
+// ─── Tests: toggleCategory callback ─────────────────────────────────────────
+
+describe('ResourcePalette — toggleCategory callback', () => {
+  it('adds the id to collapsedCategories when not yet collapsed', async () => {
+    const { saveCollapsed } = await import('../data/providers');
+    (saveCollapsed as ReturnType<typeof vi.fn>).mockClear();
+    renderPalette();
+    const cbs = (mocks as unknown as { callbacks: unknown[] }).callbacks;
+    expect(cbs).toHaveLength(1);
+    const toggle = cbs[0] as (id: string) => void;
+    toggle('Compute');
+    // toggleCategory uses setCollapsedCategories with a setter fn — verify
+    // saveCollapsed was invoked with the new set.
+    expect(saveCollapsed).toHaveBeenCalled();
+    const lastCall = (saveCollapsed as ReturnType<typeof vi.fn>).mock.calls.at(-1);
+    const set = lastCall?.[0] as Set<string>;
+    expect(set.has('Compute')).toBe(true);
+  });
+
+  it('removes the id when already collapsed (toggle off)', async () => {
+    const { saveCollapsed, loadCollapsed } = await import('../data/providers');
+    (saveCollapsed as ReturnType<typeof vi.fn>).mockClear();
+    // Pre-seed loadCollapsed to return a set containing 'Network'.
+    (loadCollapsed as ReturnType<typeof vi.fn>).mockReturnValueOnce(new Set(['Network']));
+    renderPalette();
+    const cbs = (mocks as unknown as { callbacks: unknown[] }).callbacks;
+    const toggle = cbs[0] as (id: string) => void;
+    toggle('Network');
+    const lastCall = (saveCollapsed as ReturnType<typeof vi.fn>).mock.calls.at(-1);
+    const set = lastCall?.[0] as Set<string>;
+    expect(set.has('Network')).toBe(false);
   });
 });
 

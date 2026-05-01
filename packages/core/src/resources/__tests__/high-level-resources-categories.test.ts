@@ -17,7 +17,9 @@ import { describe, expect, it } from 'vitest';
 import { compute } from '../high-level-resources/categories/compute.js';
 import { database } from '../high-level-resources/categories/database.js';
 import { messaging } from '../high-level-resources/categories/messaging.js';
+import { monitoring } from '../high-level-resources/categories/monitoring.js';
 import { networking } from '../high-level-resources/categories/networking.js';
+import { security } from '../high-level-resources/categories/security.js';
 import { storage } from '../high-level-resources/categories/storage.js';
 
 describe('compute category (rf-hlres-2)', () => {
@@ -166,5 +168,41 @@ describe('messaging category (rf-hlres-6)', () => {
     expect(queueType).toBeDefined();
     expect(Array.isArray(queueType!.optionDetails)).toBe(true);
     expect((queueType!.optionDetails ?? []).length).toBeGreaterThan(0);
+  });
+});
+
+describe('security category (rf-hlres-7)', () => {
+  it('has the expected metadata', () => {
+    expect(security.id).toBe('security');
+    expect(security.name).toBe('Security');
+  });
+
+  it('contains the canonical resource ids in order', () => {
+    const ids = security.resources.map((r) => r.id);
+    expect(ids).toEqual(['secret-store', 'ssl-certificate', 'service-account']);
+  });
+
+  it('secret-store covers AWS, GCP, Azure, and K8s', () => {
+    const ss = security.resources.find((r) => r.id === 'secret-store');
+    expect(ss).toBeDefined();
+    expect(ss!.providers).toEqual(['aws', 'gcp', 'azure', 'kubernetes']);
+  });
+});
+
+describe('monitoring category (rf-hlres-7)', () => {
+  it('has the expected metadata', () => {
+    expect(monitoring.id).toBe('monitoring');
+    expect(monitoring.name).toBe('Monitoring');
+  });
+
+  it('contains the canonical resource ids in order', () => {
+    const ids = monitoring.resources.map((r) => r.id);
+    expect(ids).toEqual(['log-group', 'alert', 'dashboard']);
+  });
+
+  it('alert exposes property catalogue', () => {
+    const al = monitoring.resources.find((r) => r.id === 'alert');
+    expect(al).toBeDefined();
+    expect(al!.properties.length).toBeGreaterThan(0);
   });
 });

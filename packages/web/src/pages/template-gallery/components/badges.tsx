@@ -25,7 +25,6 @@ import { getBrandIcon, getProviderBrandIcon } from '@ui/assets/icons/brand-regis
 import { useTranslation } from '@ui/i18n';
 import { cn } from '@ui/shared/utils/cn';
 import React, { useMemo } from 'react';
-
 import { getDifficultyMeta } from '../utils/difficulty-meta';
 
 export interface ProviderLogosProps {

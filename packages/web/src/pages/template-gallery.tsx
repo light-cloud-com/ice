@@ -4,12 +4,20 @@
  * Route: /templates?category=xxx&search=xxx&provider=xxx&difficulty=xxx
  *
  * Full-page layout:
- * - Header with title, count, search, and filter chips
- * - Responsive grid of template cards
- * - Slide-in detail panel when a card is clicked
+ *   - Header with title, count, search, and filter chips
+ *   - Responsive grid of template cards
+ *   - Slide-in detail panel when a card is clicked
+ *
+ * Sub-component splits (rf-wgal series):
+ *   - `./template-gallery/data/icon-map.ts`              — ICON_MAP lucide registry (rf-wgal-1)
+ *   - `./template-gallery/utils/difficulty-meta.ts`      — getDifficultyMeta(t) (rf-wgal-2)
+ *   - `./template-gallery/components/badges.tsx`         — ProviderLogos / TechStackLogos /
+ *                                                          DifficultyDots / TrustBadge (rf-wgal-3)
+ *   - `./template-gallery/components/filter-chip.tsx`    — FilterChip toggle pill (rf-wgal-4)
+ *   - `./template-gallery/components/template-card.tsx`  — memoised grid card (rf-wgal-5)
+ *   - `./template-gallery/components/template-detail.tsx` — full detail panel (rf-wgal-6)
  */
 
-import { getBrandIcon, getProviderBrandIcon } from '@ui/assets/icons/brand-registry';
 import {
   ALL_TEMPLATES,
   TEMPLATE_CATEGORIES,
@@ -23,20 +31,7 @@ import { SearchInput } from '@ui/shared/components/ui/search-input';
 import { cn } from '@ui/shared/utils/cn';
 import { toSlug } from '@ui/shared/utils/slug';
 import { store } from '@ui/store';
-import {
-  Rocket,
-  Zap,
-  GitBranch,
-  LayoutTemplate,
-  ChevronRight,
-  Sparkles,
-  Box,
-  Cable,
-  Layers,
-  Plus,
-  ArrowUpRight,
-  X,
-} from 'lucide-react';
+import { Zap, LayoutTemplate, Sparkles, X } from 'lucide-react';
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useSearchParams } from 'react-router-dom';

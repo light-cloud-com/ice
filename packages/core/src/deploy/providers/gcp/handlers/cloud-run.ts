@@ -4,15 +4,10 @@
  * Handles: gcp.run.service, gcp.run.job
  */
 
-import {
-  SERVICE_NAMES,
-  sdk_not_available,
-  sdk_not_available_short,
-  HANDLER_MESSAGES,
-  BUILD_MESSAGES,
-} from '../messages.js';
-import { ensure_artifact_registry, build_from_source } from './cloud-build-helper.js';
+import { SERVICE_NAMES, sdk_not_available, sdk_not_available_short } from '../messages.js';
+import { resolve_image, deleteArtifactRegistryImagesForService } from './cloud-run/image-resolver.js';
 import { result, fail, TYPE_SERVICE, TYPE_JOB } from './cloud-run/result-helpers.js';
+import { build_env_vars, extract_region, fetch_service_outputs } from './cloud-run/utils.js';
 import type { ResourceDeployResult } from '../../../types.js';
 import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
 
@@ -167,7 +162,7 @@ export const cloud_run_handler: GCPResourceHandler = {
       // Artifact Registry that the user pays for indefinitely. Best-effort:
       // we tolerate 404 (already gone), permission errors, and missing
       // repositories without failing the Cloud Run delete itself.
-      await deleteArtifactRegistryImagesForService(ctx, name, region, type).catch((err) => {
+      await deleteArtifactRegistryImagesForService(ctx, name, region).catch((err) => {
         ctx.on_log?.(
           `[cloud-run] Cloud Run service deleted but Artifact Registry image cleanup failed: ${err?.message || err}. ` +
             `You can manually delete the image at https://console.cloud.google.com/artifacts/docker/${ctx.project}/${region}/ice-deploy/${name}`,
@@ -233,111 +228,8 @@ export const cloud_run_handler: GCPResourceHandler = {
 };
 
 // =============================================================================
-// Helpers
+// Per-method helpers
 // =============================================================================
-
-/**
- * Delete every Artifact Registry container image ICE pushed for this
- * Cloud Run service. The image name in Artifact Registry matches the
- * service name (see `resolve_image` above — `${region}-docker.pkg.dev/
- * ${project}/ice-images/${name}:latest`), so we can target a single
- * repository path and delete all tags + manifests under it.
- *
- * Best-effort: 404 and permission errors are tolerated. The Cloud Run
- * delete itself should not fail just because the image couldn't be
- * cleaned up — we log and move on.
- */
-async function deleteArtifactRegistryImagesForService(
-  ctx: GCPHandlerContext,
-  serviceName: string,
-  region: string,
-  _type: string,
-): Promise<void> {
-  const arRepo = 'ice-images';
-  const base = `https://artifactregistry.googleapis.com/v1/projects/${ctx.project}/locations/${region}/repositories/${arRepo}`;
-
-  // 1. List all tags under the package so we can delete each one
-  //    (GCP won't let you delete a manifest while tags still reference it).
-  const packagePath = `${base}/packages/${encodeURIComponent(serviceName)}`;
-  try {
-    // Delete the whole package. This cascades to all versions and tags.
-    // If the package doesn't exist we'll get a 404, which is fine.
-    const op = (await ctx.rest_client.delete(packagePath)) as any;
-    // Artifact Registry delete returns a long-running operation — we don't
-    // need to wait for it to complete, the cascade happens asynchronously.
-    void op;
-  } catch (err: any) {
-    const msg = err?.message || String(err);
-    if (msg.includes('404') || msg.includes('NOT_FOUND') || msg.includes('notFound')) {
-      return;
-    }
-    throw err;
-  }
-}
-
-async function resolve_image(
-  name: string,
-  properties: Record<string, unknown>,
-  region: string,
-  ctx: GCPHandlerContext,
-  onLog?: (msg: string) => void,
-  reportStep?: (index: number, label: string) => void,
-): Promise<string> {
-  const image = properties.image as string;
-  const repository = properties.repository as string;
-
-  // Repository takes priority — if the user linked a repo, build from source
-  // even if a previous deploy left an image value on the card node.
-  if (repository) {
-    const branch = (properties.branch as string) || 'main';
-    const arRepo = 'ice-images';
-    const imageUri = `${region}-docker.pkg.dev/${ctx.project}/${arRepo}/${name}:latest`;
-
-    onLog?.(BUILD_MESSAGES.BUILDING_FROM_SOURCE(repository));
-    onLog?.(BUILD_MESSAGES.CREATING_ARTIFACT_REGISTRY(region));
-
-    // Step 1 of the cloud-run create — ensure the AR repo is in place.
-    reportStep?.(1, 'Ensuring artifact registry');
-    await ensure_artifact_registry(ctx, region, arRepo);
-
-    // Step 2 of the cloud-run create — kick off the Cloud Build. The
-    // build helper emits sub-state labels at its OWN index (1 within its
-    // caller-supplied space); we forward those at our outer index 2 so
-    // the bar shows refreshing labels under the same step. See the
-    // BUILD_STEP_INDEX note in cloud-build-helper.ts.
-    reportStep?.(2, 'Building from source');
-    const forwardBuildStep = reportStep
-      ? (_inner_index: number, label: string) => reportStep(2, label)
-      : undefined;
-
-    return await build_from_source(ctx, region, repository, branch, imageUri, onLog, forwardBuildStep);
-  }
-
-  // Fallback: use explicit image (no repo set)
-  if (image) return image;
-
-  throw new Error(HANDLER_MESSAGES.CLOUD_RUN_NO_SOURCE);
-}
-
-async function fetch_service_outputs(
-  ctx: GCPHandlerContext,
-  provider_id: string,
-  properties: Record<string, unknown>,
-  deployedImage: string,
-): Promise<Record<string, unknown>> {
-  try {
-    const svc = (await ctx.rest_client.get(`https://run.googleapis.com/v2/${provider_id}`)) as any;
-    return {
-      url: svc?.uri || '',
-      region: properties.region,
-      min_instances: properties.min_instances,
-      max_instances: properties.max_instances,
-      deployed_image: deployedImage,
-    };
-  } catch {
-    return { deployed_image: deployedImage };
-  }
-}
 
 async function create_service(
   name: string,
@@ -481,15 +373,3 @@ async function create_job(
   });
 }
 
-function build_env_vars(env_vars: unknown): Array<{ name: string; value: string }> | undefined {
-  if (!env_vars || typeof env_vars !== 'object') return undefined;
-  return Object.entries(env_vars as Record<string, string>).map(([name, value]) => ({
-    name,
-    value,
-  }));
-}
-
-function extract_region(provider_id: string): string {
-  const match = provider_id.match(/locations\/([^/]+)/);
-  return match?.[1] ?? 'us-central1';
-}

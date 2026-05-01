@@ -19,7 +19,7 @@ import {
   Cpu,
   Cloud,
 } from 'lucide-react';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from '../../../i18n';
 import axiosInstance from '../../../shared/api/axios-instance';
@@ -29,35 +29,15 @@ import { clearAiState } from '../../../store/slices/ai-slice';
 import { selectActiveCard } from '../../../store/slices/cards-slice';
 import { toggleAiChat } from '../../../store/slices/ui-slice';
 import { useAiCommand } from '../hooks/use-ai-command';
+import {
+  useChatHandlers,
+  type ChatMessage,
+  type ConversationSummary,
+} from '../hooks/use-chat-handlers';
 import { formatDateTime } from '../utils/format-date-time';
 import { opBadgeColor, opSummary } from '../utils/op-display';
 import { suggestPatterns } from '../utils/suggest-patterns';
 import type { AppDispatch, RootState } from '../../../store';
-import type { AiCanvasOp } from '@ice/types';
-
-// =============================================================================
-// Types
-// =============================================================================
-
-interface ChatMessage {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  operations?: AiCanvasOp[];
-  operationCount?: number;
-  suggestions?: string[];
-  applied?: boolean;
-  timestamp: number;
-}
-
-interface ConversationSummary {
-  id: string;
-  title: string | null;
-  card_id: string | null;
-  created_at: string;
-  updated_at: string;
-  _count: { messages: number };
-}
 
 // =============================================================================
 // Component
@@ -107,44 +87,35 @@ export const AiChatPanel: React.FC = () => {
       .catch(() => setProviderInfo(null));
   }, []);
 
-  // ── Load a conversation ───────────────────────────────────────────────────
+  // ── Handlers (extracted to useChatHandlers — rf-aichat-3) ─────────────────
 
-  const loadConversation = useCallback(async (id: string) => {
-    try {
-      const res = await axiosInstance.get(`/ai/conversations/${id}`);
-      const conv = res.data;
-      setConversationId(conv.id);
-      setMessages(
-        conv.messages.map((m: any) => ({
-          id: m.id,
-          role: m.role,
-          content: m.content,
-          operations: m.operations || undefined,
-          operationCount: m.operation_count || 0,
-          suggestions: m.suggestions || undefined,
-          applied: m.role === 'assistant' && m.operation_count > 0,
-          timestamp: new Date(m.created_at).getTime(),
-        })),
-      );
-      setShowHistory(false);
-    } catch {
-      /* ignore */
-    }
-  }, []);
+  const persistLockRef = useRef(false);
+  const {
+    loadConversation,
+    fetchConversations,
+    startNewConversation,
+    persistMessages,
+    handleSubmit,
+    handleKeyDown,
+    handleSuggestionClick,
+    handleDeleteConversation,
+  } = useChatHandlers({
+    projectId,
+    activeCard,
+    conversationId,
+    conversationIdRef,
+    persistLockRef,
+    input,
+    isProcessing,
+    sendIntent,
+    setInput,
+    setMessages,
+    setConversationId,
+    setConversations,
+    setShowHistory,
+  });
 
   // ── Fetch conversations and auto-resume on project/card change ───────────
-
-  const fetchConversations = useCallback(async () => {
-    if (!projectId) return;
-    try {
-      const res = await axiosInstance.get(`/ai/conversations?projectId=${projectId}`);
-      const convs: ConversationSummary[] = res.data;
-      setConversations(convs);
-      return convs;
-    } catch {
-      return [];
-    }
-  }, [projectId]);
 
   // When project or card changes, fetch conversations and resume the most recent one
   useEffect(() => {
@@ -180,62 +151,6 @@ export const AiChatPanel: React.FC = () => {
       cancelled = true;
     };
   }, [projectId, activeCard?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Start new conversation ────────────────────────────────────────────────
-
-  const startNewConversation = useCallback(() => {
-    setConversationId(null);
-    setMessages([]);
-    setShowHistory(false);
-    dispatch(clearAiState());
-  }, [dispatch]);
-
-  // ── Persist messages to backend ───────────────────────────────────────────
-
-  const _persistLock = useRef(false);
-  const persistMessages = useCallback(
-    async (msgs: ChatMessage[]) => {
-      if (!projectId || msgs.length === 0) return;
-
-      try {
-        let convId = conversationIdRef.current;
-
-        // Create conversation if needed (with lock to prevent duplicates)
-        if (!convId) {
-          if (_persistLock.current) return;
-          _persistLock.current = true;
-          try {
-            const res = await axiosInstance.post('/ai/conversations', {
-              projectId,
-              cardId: activeCard?.id || null,
-            });
-            convId = res.data.id;
-            conversationIdRef.current = convId;
-            setConversationId(convId);
-          } finally {
-            _persistLock.current = false;
-          }
-        }
-
-        // Append new messages
-        await axiosInstance.post(`/ai/conversations/${convId}/messages`, {
-          messages: msgs.map((m) => ({
-            role: m.role,
-            content: m.content,
-            operations: m.operations || null,
-            operationCount: m.operationCount || 0,
-            suggestions: m.suggestions || null,
-          })),
-        });
-
-        // Refresh conversation list (title may have been auto-set)
-        fetchConversations();
-      } catch (err) {
-        console.warn('Failed to persist AI messages:', err);
-      }
-    },
-    [projectId, activeCard?.id, fetchConversations],
-  );
 
   // ── Auto-scroll ───────────────────────────────────────────────────────────
 
@@ -310,68 +225,6 @@ export const AiChatPanel: React.FC = () => {
       persistMessages([errMsg]);
     }
   }, [isProcessing, error]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Submit ────────────────────────────────────────────────────────────────
-
-  const handleSubmit = useCallback(() => {
-    const trimmed = input.trim();
-    if (!trimmed || isProcessing) return;
-
-    const userMsg: ChatMessage = {
-      id: `msg-${Date.now()}`,
-      role: 'user',
-      content: trimmed,
-      timestamp: Date.now(),
-    };
-
-    setMessages((prev) => [...prev, userMsg]);
-    setInput('');
-    dispatch(clearAiState());
-    sendIntent(trimmed);
-
-    // Persist user message
-    persistMessages([userMsg]);
-  }, [input, isProcessing, sendIntent, dispatch, persistMessages]);
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        handleSubmit();
-      }
-    },
-    [handleSubmit],
-  );
-
-  const handleSuggestionClick = useCallback(
-    (suggestion: string) => {
-      const userMsg: ChatMessage = {
-        id: `msg-${Date.now()}`,
-        role: 'user',
-        content: suggestion,
-        timestamp: Date.now(),
-      };
-      setMessages((prev) => [...prev, userMsg]);
-      dispatch(clearAiState());
-      sendIntent(suggestion);
-      persistMessages([userMsg]);
-    },
-    [sendIntent, dispatch, persistMessages],
-  );
-
-  const handleDeleteConversation = useCallback(
-    async (id: string, e: React.MouseEvent) => {
-      e.stopPropagation();
-      try {
-        await axiosInstance.delete(`/ai/conversations/${id}`);
-        setConversations((prev) => prev.filter((c) => c.id !== id));
-        if (conversationId === id) startNewConversation();
-      } catch {
-        /* ignore */
-      }
-    },
-    [conversationId, startNewConversation],
-  );
 
   // ── Render ────────────────────────────────────────────────────────────────
 

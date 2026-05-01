@@ -1500,7 +1500,7 @@ Purpose: Tracks temp build dirs so we can clean them on deploy cancel/exit.
 
 _Indexed: 2026-04-29 by util-broker_
 
-`startDeploySnapshot(cardId, deploymentId?)` / `updateDeploySnapshot(cardId, patch)` / `updateDeploySnapshotNode(...)` / `finishDeploySnapshot(cardId, status)` / `getDeploySnapshot(cardId)` / `clearDeploySnapshot(cardId)`
+`startDeploySnapshot(cardId, deploymentId?)` / `updateDeploySnapshotNode(...)` / `finishDeploySnapshot(cardId, status)` / `getDeploySnapshot(cardId)` / `clearDeploySnapshot(cardId)`
 Path: `services/deploy/src/services/deploy-locks.ts`
 Purpose: In-memory deploy progress snapshots — read by the `/canvas/deploy/current` route to hydrate clients mid-deploy.
 

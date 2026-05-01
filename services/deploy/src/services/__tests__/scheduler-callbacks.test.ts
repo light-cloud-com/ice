@@ -24,7 +24,6 @@ vi.mock('../deploy-event-dispatcher.js', () => ({
 }));
 
 vi.mock('../deploy-locks.js', () => ({
-  updateDeploySnapshot: vi.fn(),
   updateDeploySnapshotNode: vi.fn(),
 }));
 
@@ -34,7 +33,6 @@ import * as deployLocks from '../deploy-locks.js';
 
 const emitDeployEventMock = (dispatcher as any).emitDeployEvent as ReturnType<typeof vi.fn>;
 const emitLogMock = (dispatcher as any).emitLog as ReturnType<typeof vi.fn>;
-const updateDeploySnapshotMock = (deployLocks as any).updateDeploySnapshot as ReturnType<typeof vi.fn>;
 const updateDeploySnapshotNodeMock = (deployLocks as any).updateDeploySnapshotNode as ReturnType<typeof vi.fn>;
 
 function makeStatusEvent(overrides: Partial<NodeStatusEvent> = {}): NodeStatusEvent {
@@ -137,7 +135,7 @@ describe('scheduler-callbacks', () => {
       expect(updateDeploySnapshotNodeMock).not.toHaveBeenCalled();
     });
 
-    it('bumps completed.count and writes capped overall progress on terminal succeeded', () => {
+    it('bumps completed.count on terminal succeeded when totals is provided', () => {
       const map = new Map([['gcp.run.service:web', 'canvas-1']]);
       const completed = { count: 0 };
       const callbacks = makeSchedulerCallbacks({
@@ -152,31 +150,11 @@ describe('scheduler-callbacks', () => {
       );
 
       expect(completed.count).toBe(1);
-      expect(updateDeploySnapshotMock).toHaveBeenCalledWith('card-A', {
-        progress: 25,
-        currentResource: 'ice-web-abc',
-      });
+      // Per-node mirror still happens.
+      expect(updateDeploySnapshotNodeMock).toHaveBeenCalledWith('card-A', 'canvas-1', 'active');
     });
 
-    it('caps overall progress at 99 even when 100% complete', () => {
-      const map = new Map([['gcp.run.service:web', 'canvas-1']]);
-      const completed = { count: 0 };
-      const callbacks = makeSchedulerCallbacks({
-        cardId: 'card-A',
-        graphIdToCanvasId: map,
-        totals: { total: 1, completed },
-      });
-
-      callbacks.on_node_status(makeStatusEvent({ status: 'succeeded' }));
-
-      // 1/1 = 100%, but Math.min capped at 99
-      expect(updateDeploySnapshotMock).toHaveBeenCalledWith(
-        'card-A',
-        expect.objectContaining({ progress: 99 }),
-      );
-    });
-
-    it('writes only currentResource (no progress) on applying when totals provided', () => {
+    it('does not bump completed.count on applying status', () => {
       const map = new Map([['gcp.run.service:web', 'canvas-1']]);
       const completed = { count: 0 };
       const callbacks = makeSchedulerCallbacks({
@@ -190,13 +168,11 @@ describe('scheduler-callbacks', () => {
       );
 
       expect(completed.count).toBe(0);
-      expect(updateDeploySnapshotMock).toHaveBeenCalledTimes(1);
-      expect(updateDeploySnapshotMock).toHaveBeenCalledWith('card-A', {
-        currentResource: 'ice-applying',
-      });
+      // Per-node mirror still happens.
+      expect(updateDeploySnapshotNodeMock).toHaveBeenCalledWith('card-A', 'canvas-1', 'deploying');
     });
 
-    it('does not call updateDeploySnapshot when totals is undefined and status is terminal', () => {
+    it('does not bump completed.count when totals is undefined (retry path)', () => {
       const map = new Map([['gcp.run.service:web', 'canvas-1']]);
       const callbacks = makeSchedulerCallbacks({
         cardId: 'card-A',
@@ -207,23 +183,8 @@ describe('scheduler-callbacks', () => {
 
       callbacks.on_node_status(makeStatusEvent({ status: 'succeeded' }));
 
-      expect(updateDeploySnapshotMock).not.toHaveBeenCalled();
-      // Per-node mirror still happens
+      // Per-node mirror still happens.
       expect(updateDeploySnapshotNodeMock).toHaveBeenCalledWith('card-A', 'canvas-1', 'active');
-    });
-
-    it('does not call updateDeploySnapshot when totals is undefined and status is applying', () => {
-      const map = new Map([['gcp.run.service:web', 'canvas-1']]);
-      const callbacks = makeSchedulerCallbacks({
-        cardId: 'card-A',
-        graphIdToCanvasId: map,
-        warnOnMiss: false,
-      });
-
-      callbacks.on_node_status(makeStatusEvent({ status: 'applying' }));
-
-      expect(updateDeploySnapshotMock).not.toHaveBeenCalled();
-      expect(updateDeploySnapshotNodeMock).toHaveBeenCalledWith('card-A', 'canvas-1', 'deploying');
     });
 
     it('bumps completed.count for all four terminal statuses', () => {

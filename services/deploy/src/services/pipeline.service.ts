@@ -1,11 +1,23 @@
 /**
- * Pipeline Service — CI/CD deployment rules, webhook registration, framework detection
+ * Pipeline Service — CI/CD deployment rules, webhook registration, framework detection.
  *
- * Manages DeploymentRules that map GitHub push/merge events to deployments.
- * Registers webhooks on GitHub repos and processes incoming events.
+ * This module is a thin re-export shim over the `pipeline/` subdirectory.
+ * The implementation was decomposed in the rf-pipe series (rf-pipe-1..7)
+ * across:
+ *
+ *   - pipeline/types.ts                — shared types + GitHub API constants
+ *   - pipeline/rule-management.ts      — rule CRUD + canvas-edge auto-creator
+ *   - pipeline/events.ts               — deployment event lifecycle
+ *   - pipeline/rule-matching.ts        — webhook → rule matchers + duplicate guard
+ *   - pipeline/github-webhooks.ts      — GitHub auth + webhook lifecycle
+ *   - pipeline/framework-detection.ts  — repo framework probe via Contents API
+ *   - pipeline/environment-resolution.ts — Canvas Branching env → card_id resolver
+ *
+ * External consumers (queue.service, routes/pipeline.ts, routes/webhooks.ts,
+ * deploy.service via dynamic import) should keep importing from this shim
+ * to insulate themselves from internal restructuring of the pipeline
+ * subdirectory.
  */
-
-import prisma from '@ice/db';
 
 export {
   ensureRulesForCanvas,
@@ -26,30 +38,5 @@ export {
   shouldSkipDuplicate,
 } from './pipeline/rule-matching.js';
 export { detectFramework } from './pipeline/framework-detection.js';
+export { resolveEnvironmentCardId } from './pipeline/environment-resolution.js';
 export type { DeployStep, FrameworkDetection } from './pipeline/types.js';
-
-// ─── Environment Resolution (for Canvas Branching) ──────────────────────────
-
-/**
- * Given a card_id from a DeploymentRule and an environment name,
- * find the project that owns that card, then find the environment
- * by name, and return its card_id. Falls back to the original cardId.
- */
-export async function resolveEnvironmentCardId(ruleCardId: string, environmentName: string): Promise<string> {
-  try {
-    const card = await prisma.canvasCard.findUnique({
-      where: { id: ruleCardId },
-      select: { project_id: true },
-    });
-    if (!card) return ruleCardId;
-
-    const env = await prisma.environment.findFirst({
-      where: { project_id: card.project_id, name: environmentName },
-      select: { card_id: true },
-    });
-
-    return env?.card_id ?? ruleCardId;
-  } catch {
-    return ruleCardId;
-  }
-}

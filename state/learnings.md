@@ -1598,3 +1598,51 @@ line-range deletion (reusing the rf-deploy2-2 awk pattern):
 4. Re-grep brace boundaries before each next splice — the line numbers
    shift after every awk pass. Never batch deletes against pre-computed
    numbers (same caveat as the rf-deploy2-2 learning).
+
+## byte-identity-snapshot-must-be-captured-pre-refactor-not-post
+
+_Discovered: 2026-04-30 by implementer in rf-spr2-1_
+
+When extracting a large template literal into composable section
+builders (system-prompt.ts → system-prompt-sections.ts), the only way
+to verify the output is byte-identical is a snapshot test — but the
+snapshot must be captured BEFORE the refactor, not after. Order of
+operations: (1) write the snapshot test against the unrefactored
+source, (2) run vitest to write the snapshot file, (3) edit the
+source, (4) re-run vitest with no `-u` flag — if the comparison
+passes, byte-identity holds; if it fails, the diff tells you where
+the whitespace drifted. If you reverse steps 1 and 3 the test only
+proves "the post-refactor output matches itself" — useless for the
+verification you actually wanted. Generalizes: any refactor where
+output must remain stable (prompts, generated code, fixtures) needs a
+captured snapshot before the first edit.
+
+## svg-canvas-orchestrator-loc-budget-flexible-with-renderctx-bundling
+
+_Discovered: 2026-04-30 by implementer in rf-svgcv2-4_
+
+After rf-canv2 already trimmed svg-canvas to 570 LOC, four more
+extractions (CanvasContent for the inner transform group, three thin
+hooks for mouse routing / interactions bindings / renderCtx assembly)
+brought it to 453 LOC. The CanvasContent extraction was the largest
+single move (570 → 490) because the inner `<g>` body was a 110-line
+JSX block; the three hooks each shaved 15-20 lines but became low-LOC
+focused units. The lesson: when an orchestrator looks "done" at
+500-something, consider whether the JSX body has any further
+sub-trees that compose well as named components; the extracted
+CanvasContent is the orchestrator's single biggest dependency, and
+testing it independently with the FC-walker pattern is far cheaper
+than testing the orchestrator's full render tree.
+
+## render-ctx-record-cast-needs-double-as-unknown-as-record
+
+_Discovered: 2026-04-30 by implementer in rf-svgcv2-4_
+
+`as Record<string, unknown>` fails TS2352 against an interface that
+has no index signature (RenderCtx in this case): "Conversion ... may
+be a mistake because neither type sufficiently overlaps with the
+other." The two-step cast `as unknown as Record<string, unknown>`
+satisfies the strict overlap check. This is the standard escape
+hatch when a test wants to assert a property is absent on a typed
+return shape. Pair with `expect(x).toBeUndefined()` on the cast-read
+key.

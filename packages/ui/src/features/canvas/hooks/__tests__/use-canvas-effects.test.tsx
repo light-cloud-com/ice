@@ -109,11 +109,9 @@ const renderHook = (store: TestStore, args: CaptureArgs = {}): void => {
     return React.createElement('div', null, 'probe');
   };
   renderToString(
-    React.createElement(
-      Provider,
-      { store },
-      React.createElement(Probe),
-    ),
+    <Provider store={store}>
+      <Probe />
+    </Provider>,
   );
 };
 

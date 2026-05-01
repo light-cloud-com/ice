@@ -18,10 +18,16 @@
 import { randomUUID } from 'node:crypto';
 
 import prisma from '@ice/db';
-import { getSocketServer } from '@ice/shared';
 import * as providerService from '@ice/service-credentials';
 
 import { resolveLogFilter } from './log-stream/filter-resolver.js';
+import {
+  emitToRoom,
+  rememberInsertId,
+  resetRegistry,
+  streams,
+  subscriptionIndex,
+} from './log-stream/registry.js';
 import type {
   ActiveStream,
   LogEntry,
@@ -29,7 +35,6 @@ import type {
   StreamingMode,
   SubscribeArgs,
   SubscribeResult,
-  SubscriberRef,
 } from './log-stream/types.js';
 import {
   IDLE_TEARDOWN_MS,
@@ -38,7 +43,6 @@ import {
   POLL_PAGE_SIZE,
   RECONNECT_BASE_MS,
   RECONNECT_MAX_MS,
-  SEEN_INSERT_ID_CAP,
 } from './log-stream/types.js';
 
 export type {
@@ -48,13 +52,6 @@ export type {
   SourceResolution,
   SubscribeResult,
 } from './log-stream/types.js';
-
-// ── Internal state ─────────────────────────────────────────────────────
-
-/** terminalNodeId -> ActiveStream. */
-const streams = new Map<string, ActiveStream>();
-/** subscriptionId -> terminalNodeId so unsubscribe can find its stream. */
-const subscriptionIndex = new Map<string, string>();
 
 // ── Public API ─────────────────────────────────────────────────────────
 
@@ -216,8 +213,7 @@ export const __testing = {
     for (const stream of streams.values()) {
       teardownStream(stream);
     }
-    streams.clear();
-    subscriptionIndex.clear();
+    resetRegistry();
   },
   getStream(terminalNodeId: string): ActiveStream | undefined {
     return streams.get(terminalNodeId);
@@ -763,16 +759,7 @@ function normalizeTimestamp(raw: unknown): string | null {
   return null;
 }
 
-function rememberInsertId(stream: ActiveStream, insertId: string): void {
-  stream.seenInsertIds.add(insertId);
-  stream.insertIdOrder.push(insertId);
-  if (stream.insertIdOrder.length > SEEN_INSERT_ID_CAP) {
-    const evict = stream.insertIdOrder.shift();
-    if (evict) stream.seenInsertIds.delete(evict);
-  }
-}
-
-// ── Errors + emit ─────────────────────────────────────────────────────
+// ── Error classification ──────────────────────────────────────────────
 
 function isPermissionDenied(err: any): boolean {
   if (!err) return false;
@@ -789,10 +776,4 @@ function isPermissionDenied(err: any): boolean {
 function probeErrorMessage(err: any): string {
   if (!err) return 'Unknown Cloud Logging error.';
   return err.message ?? String(err);
-}
-
-function emitToRoom(terminalNodeId: string, event: string, payload: unknown): void {
-  const io = getSocketServer();
-  if (!io) return;
-  io.to(`logs:${terminalNodeId}`).emit(event, payload);
 }

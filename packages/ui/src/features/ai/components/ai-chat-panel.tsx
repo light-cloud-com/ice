@@ -29,6 +29,7 @@ import { clearAiState } from '../../../store/slices/ai-slice';
 import { selectActiveCard } from '../../../store/slices/cards-slice';
 import { toggleAiChat } from '../../../store/slices/ui-slice';
 import { useAiCommand } from '../hooks/use-ai-command';
+import { formatDateTime } from '../utils/format-date-time';
 import { suggestPatterns } from '../utils/suggest-patterns';
 import type { AppDispatch, RootState } from '../../../store';
 import type { AiCanvasOp } from '@ice/types';
@@ -60,15 +61,6 @@ interface ConversationSummary {
 // =============================================================================
 // Operation helpers
 // =============================================================================
-
-function formatDateTime(dateStr: string): string {
-  const d = new Date(dateStr);
-  return (
-    d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) +
-    ' ' +
-    d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
-  );
-}
 
 function opSummary(op: AiCanvasOp): string {
   switch (op.op) {

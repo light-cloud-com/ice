@@ -21,6 +21,7 @@ import {
   map_properties,
   transform_value,
 } from './pulumi/value-transform.js';
+import { to_yaml } from './pulumi/yaml-formatter.js';
 import type { MutableGraph } from '../graph/mutable-graph.js';
 import type { IceType } from '../schema/schema-provider.js';
 import type { Node } from '../types/graph.js';
@@ -111,7 +112,7 @@ export class PulumiExporter {
     if (options.format === 'typescript') {
       typescript = this.toTypeScript(program, options);
     } else {
-      yaml = this.toYAML(program, options);
+      yaml = to_yaml(program, options);
     }
 
     return {
@@ -186,119 +187,6 @@ export class PulumiExporter {
         options: build_options(dependency_map.get(node.id) || []),
       },
     };
-  }
-
-  /**
-   * Convert program to YAML format.
-   */
-  private toYAML(program: PulumiProgram, options: PulumiExportOptions): string {
-    const lines: string[] = [];
-
-    lines.push(`name: ${program.name}`);
-    lines.push(`runtime: ${program.runtime}`);
-
-    if (program.description) {
-      lines.push(`description: ${program.description}`);
-    }
-
-    lines.push('');
-
-    // Configuration
-    if (program.config && Object.keys(program.config).length > 0) {
-      lines.push('config:');
-      for (const [key, value] of Object.entries(program.config)) {
-        lines.push(`  ${key}: ${this.formatYAMLValue(value, 4)}`);
-      }
-      lines.push('');
-    }
-
-    // Resources
-    if (program.resources.length > 0) {
-      lines.push('resources:');
-      for (const resource of program.resources) {
-        if (options.include_comments) {
-          lines.push(`  # ${resource.name}`);
-        }
-        lines.push(`  ${resource.name}:`);
-        lines.push(`    type: ${resource.type}`);
-
-        if (Object.keys(resource.properties).length > 0) {
-          lines.push('    properties:');
-          for (const [key, value] of Object.entries(resource.properties)) {
-            if (value !== null && value !== undefined) {
-              lines.push(`      ${key}: ${this.formatYAMLValue(value, 8)}`);
-            }
-          }
-        }
-
-        if (resource.options?.depends_on && resource.options.depends_on.length > 0) {
-          lines.push('    options:');
-          lines.push('      dependsOn:');
-          for (const dep of resource.options.depends_on) {
-            lines.push(`        - \${${dep}}`);
-          }
-        }
-
-        lines.push('');
-      }
-    }
-
-    // Outputs
-    if (program.outputs && Object.keys(program.outputs).length > 0) {
-      lines.push('outputs:');
-      for (const [key, value] of Object.entries(program.outputs)) {
-        lines.push(`  ${key}: ${this.formatYAMLValue(value, 4)}`);
-      }
-    }
-
-    return lines.join('\n');
-  }
-
-  /**
-   * Format a value for YAML output.
-   */
-  private formatYAMLValue(value: unknown, indent: number = 0): string {
-    const spaces = ' '.repeat(indent);
-
-    if (value === null || value === undefined) {
-      return 'null';
-    }
-
-    if (typeof value === 'string') {
-      // Check if string needs quoting
-      if (value.includes(':') || value.includes('#') || value.includes('\n')) {
-        return `"${value.replace(/"/g, '\\"')}"`;
-      }
-      return value;
-    }
-
-    if (typeof value === 'number') {
-      return String(value);
-    }
-
-    if (typeof value === 'boolean') {
-      return value ? 'true' : 'false';
-    }
-
-    if (Array.isArray(value)) {
-      if (value.length === 0) return '[]';
-
-      const items = value.map((v) => `${spaces}  - ${this.formatYAMLValue(v, indent + 4)}`);
-      return `\n${items.join('\n')}`;
-    }
-
-    if (typeof value === 'object') {
-      const entries = Object.entries(value);
-      if (entries.length === 0) return '{}';
-
-      const formatted = entries.map(([k, v]) => {
-        const formattedValue = this.formatYAMLValue(v, indent + 2);
-        return `${spaces}  ${k}: ${formattedValue}`;
-      });
-      return `\n${formatted.join('\n')}`;
-    }
-
-    return String(value);
   }
 
   /**

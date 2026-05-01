@@ -16,7 +16,8 @@ import { inferConnectionMeta, type ConnectionCategory } from '../utils/connectio
 import { getCustomDomainRoutePortY } from './nodes/custom-domain';
 import type { CanvasNode, CanvasConnection } from './svg-canvas';
 import type { EdgeStyle } from '../../../store/slices/ui-slice';
-import type { Bounds, Point, Side } from './path/types';
+import type { Point, Side } from './path/types';
+import { chooseSides, getEdgePoint, getEffectiveBounds } from './path/bounds-and-sides';
 
 // ─── Tooltip info passed up to canvas ───────────────────────────────────────
 
@@ -70,36 +71,6 @@ export { EDGE_COLORS } from '../../../config/color-palette';
 // =============================================================================
 // Bezier Curve Routing
 // =============================================================================
-
-/**
- * Returns the visual bounds of a node at the current LOD/zoom.
- */
-function getEffectiveBounds(node: CanvasNode, _lod: number, _zoom: number): Bounds {
-  return { x: node.x, y: node.y, width: node.width, height: node.height };
-}
-
-function chooseSides(from: Bounds, to: Bounds): { exitSide: Side; entrySide: Side } {
-  const dx = to.x + to.width / 2 - (from.x + from.width / 2);
-  const dy = to.y + to.height / 2 - (from.y + from.height / 2);
-  if (Math.abs(dx) > Math.abs(dy)) {
-    return dx > 0 ? { exitSide: 'right', entrySide: 'left' } : { exitSide: 'left', entrySide: 'right' };
-  }
-  return dy > 0 ? { exitSide: 'bottom', entrySide: 'top' } : { exitSide: 'top', entrySide: 'bottom' };
-}
-
-function getEdgePoint(bounds: Bounds, side: Side, portIndex = 0, portCount = 1): Point {
-  const r = (portIndex + 1) / (portCount + 1);
-  switch (side) {
-    case 'left':
-      return { x: bounds.x, y: bounds.y + bounds.height * r };
-    case 'right':
-      return { x: bounds.x + bounds.width, y: bounds.y + bounds.height * r };
-    case 'top':
-      return { x: bounds.x + bounds.width * r, y: bounds.y };
-    case 'bottom':
-      return { x: bounds.x + bounds.width * r, y: bounds.y + bounds.height };
-  }
-}
 
 function buildBezierPath(
   start: Point,

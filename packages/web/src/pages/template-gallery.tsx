@@ -25,16 +25,7 @@ import { toSlug } from '@ui/shared/utils/slug';
 import { store } from '@ui/store';
 import {
   Rocket,
-  Brain,
-  BrainCircuit,
-  ShieldCheck,
   Zap,
-  Server,
-  Activity,
-  Globe,
-  Waypoints,
-  ShoppingCart,
-  Smartphone,
   GitBranch,
   LayoutTemplate,
   ChevronRight,
@@ -49,27 +40,9 @@ import {
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ICON_MAP } from './template-gallery/data/icon-map';
 import type { ComposedTemplate, TemplateCategoryMeta } from '@ui/config/templates';
 import type { AppDispatch, RootState } from '@ui/store';
-
-// =============================================================================
-// Constants
-// =============================================================================
-
-const ICON_MAP: Record<string, React.ElementType> = {
-  Rocket,
-  Brain,
-  BrainCircuit,
-  ShieldCheck,
-  Zap,
-  Server,
-  Activity,
-  Globe,
-  Waypoints,
-  ShoppingCart,
-  Smartphone,
-  GitBranch,
-};
 
 function getDifficultyMeta(t: (key: string) => string): Record<string, { label: string; dots: number }> {
   return {

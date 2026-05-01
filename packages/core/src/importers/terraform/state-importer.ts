@@ -8,7 +8,7 @@ import { existsSync } from 'fs';
 import { readFile } from 'fs/promises';
 import { create_empty_metadata } from './sensitive.js';
 import { import_resource_instance, infer_dependencies } from './resource-conversion.js';
-import { MutableGraph, create_mutable_graph } from '../../graph/mutable-graph.js';
+import type { MutableGraph } from '../../graph/mutable-graph.js';
 import type {
   TerraformState,
   TerraformImportResult,
@@ -18,7 +18,6 @@ import type {
   ImportWarning,
   ImportMetadata,
 } from './types.js';
-import type { NodeInput, EdgeInput } from '../../types/graph.js';
 
 // =============================================================================
 // Import Options
@@ -263,106 +262,7 @@ export function import_terraform_state_object(
 }
 
 // =============================================================================
-// Graph Conversion
+// Graph Conversion (re-exports)
 // =============================================================================
 
-/**
- * Convert imported resources to an ICE graph.
- */
-export function import_result_to_graph(
-  result: TerraformImportResult,
-  graph_name: string = 'terraform-import',
-): MutableGraph {
-  const graph = create_mutable_graph(graph_name, {
-    description: `Imported from Terraform state (v${result.metadata.state_version})`,
-    labels: {
-      source: 'terraform',
-      terraform_version: result.metadata.terraform_version,
-      lineage: result.metadata.lineage,
-    },
-  });
-
-  // Track terraform address to node ID mapping
-  const address_to_node_id = new Map<string, string>();
-
-  // Add nodes for each resource
-  for (const resource of result.resources) {
-    const node_input: NodeInput = {
-      type: resource.ice_type,
-      name: resource.name,
-      properties: {
-        ...resource.properties,
-        _terraform_address: resource.terraform_address,
-        _terraform_type: resource.terraform_type,
-      },
-      labels: {
-        provider: resource.provider,
-        terraform_type: resource.terraform_type,
-      },
-      annotations: {
-        imported_from: 'terraform',
-        terraform_address: resource.terraform_address,
-      },
-    };
-
-    if (resource.module) {
-      node_input.labels!['module'] = resource.module;
-    }
-
-    const add_result = graph.add_node(node_input);
-    if (add_result.success && add_result.node) {
-      address_to_node_id.set(resource.terraform_address, add_result.node.id);
-    }
-  }
-
-  // Add edges for dependencies
-  for (const resource of result.resources) {
-    const source_id = address_to_node_id.get(resource.terraform_address);
-    if (!source_id) continue;
-
-    for (const dep_address of resource.dependencies) {
-      const target_id = address_to_node_id.get(dep_address);
-      if (!target_id) continue;
-
-      const edge_input: EdgeInput = {
-        source: source_id,
-        target: target_id,
-        relationship: 'depends_on',
-        labels: {
-          inferred: 'true',
-        },
-      };
-
-      graph.add_edge(edge_input);
-    }
-  }
-
-  return graph;
-}
-
-/**
- * Import Terraform state directly to a graph.
- */
-export async function import_terraform_to_graph(
-  state_path: string,
-  options: TerraformImportOptions = {},
-): Promise<{ graph: MutableGraph; result: TerraformImportResult }> {
-  const result = await import_terraform_state(state_path, options);
-  const graph = options.target_graph ?? import_result_to_graph(result);
-
-  if (options.target_graph) {
-    // Merge into existing graph
-    const merge_result = import_result_to_graph(result, 'temp');
-    for (const node of merge_result.nodes.values()) {
-      options.target_graph.add_node({
-        type: node.type,
-        name: node.name,
-        properties: node.properties,
-        labels: node.metadata.labels,
-        annotations: node.metadata.annotations,
-      });
-    }
-  }
-
-  return { graph, result };
-}
+export { import_result_to_graph, import_terraform_to_graph } from './graph-conversion.js';

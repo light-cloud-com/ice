@@ -5,87 +5,14 @@
  * Replaces Electron IPC for the web version.
  */
 
-import { io, type Socket } from 'socket.io-client';
 import { DEPLOY_EVENT_CHANNEL, type DeployEvent } from '@ice/types';
 import axiosInstance from './axios-instance';
 import type { IceAPI } from './api-adapter';
+import { emitMenuAction, getSocket, menuCallbacks } from './http-api/socket';
 
-// ─── Event emitter for menu actions (replaces Electron menu) ─────────────────
-
-type MenuCallback = (action: string) => void;
-const menuCallbacks = new Set<MenuCallback>();
-
-export function emitMenuAction(action: string) {
-  menuCallbacks.forEach((cb) => cb(action));
-}
-
-// ─── Socket.IO for deploy progress ──────────────────────────────────────────
-//
-// The socket carries every live deploy event (progress, logs, resource
-// results, completion). If the connection is broken, the user has to
-// refresh the page to see ANY deploy state changes — the HTTP replay
-// endpoint (`/stream/:cardId`) is the only fallback.
-//
-// We aggressively log connection state and force reconnection on errors
-// so silent failures are visible in the browser console.
-
-let socket: Socket | null = null;
-
-function getSocket(): Socket {
-  if (!socket) {
-    const wsUrl = import.meta.env.VITE_WS_URL || window.location.origin;
-    // `auth: {}` is intentionally an empty object rather than omitted so
-    // the server sees `handshake.auth` as defined (some middlewares read
-    // it unconditionally). In community edition the server ignores it
-    // entirely via the `isDesktopMode` bypass.
-    const token = (() => {
-      try {
-        return localStorage.getItem('ice-token') || undefined;
-      } catch {
-        return undefined;
-      }
-    })();
-
-    socket = io(wsUrl, {
-      withCredentials: true,
-      autoConnect: true,
-      // Force websocket first, fall back to polling. This avoids certain
-      // proxy/CDN setups that strip the upgrade header.
-      transports: ['websocket', 'polling'],
-      // Retry forever with exponential backoff — don't silently give up
-      // if the first connection fails due to a stale gateway restart.
-      reconnection: true,
-      reconnectionAttempts: Infinity,
-      reconnectionDelay: 500,
-      reconnectionDelayMax: 5000,
-      auth: token ? { token } : {},
-    });
-
-    // ── Visibility into connection state ───────────────────────────
-    // These logs are essential for diagnosing "why don't live updates
-    // reach my UI" bugs. Leave them in — they're cheap and invaluable.
-    socket.on('connect', () => {
-      console.log('[ice-socket] connected id=', socket?.id);
-    });
-    socket.on('disconnect', (reason: string) => {
-      console.warn('[ice-socket] disconnected:', reason);
-    });
-    socket.on('connect_error', (err: Error) => {
-      console.error('[ice-socket] connect_error:', err.message);
-      // Try again with polling transport if websocket upgrade failed.
-      if (socket && (err as any)?.message?.includes('websocket')) {
-        (socket.io as any).opts.transports = ['polling', 'websocket'];
-      }
-    });
-    socket.io.on('reconnect', (attempt: number) => {
-      console.log('[ice-socket] reconnected after', attempt, 'attempts');
-    });
-    socket.io.on('reconnect_error', (err: Error) => {
-      console.warn('[ice-socket] reconnect_error:', err.message);
-    });
-  }
-  return socket;
-}
+// Re-export for the existing public surface; consumers calling
+// `emitMenuAction(...)` from the toolbar continue to work.
+export { emitMenuAction };
 
 // ─── HTTP API Adapter ────────────────────────────────────────────────────────
 

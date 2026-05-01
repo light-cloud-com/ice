@@ -60,22 +60,7 @@ import {
   closeTabsByCardIds,
 } from '../../../store/slices/ui-slice';
 import type { AppDispatch, RootState } from '../../../store';
-
-// Drag data is encoded as "type:id"
-type DragItemType = 'project' | 'folder';
-
-function encodeDrag(type: DragItemType, id: string) {
-  return `${type}:${id}`;
-}
-
-function decodeDrag(data: string): { type: DragItemType; id: string } | null {
-  const sep = data.indexOf(':');
-  if (sep === -1) return null;
-  const type = data.slice(0, sep) as DragItemType;
-  const id = data.slice(sep + 1);
-  if (type !== 'project' && type !== 'folder') return null;
-  return { type, id };
-}
+import { encodeDrag, decodeDrag, type DragItemType } from '../utils/drag-encoding';
 
 // Environment type → dot color
 const ENV_DOT_COLOR = ENV_DOT_COLORS;

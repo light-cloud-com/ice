@@ -11,7 +11,6 @@
 import { LayoutTemplate, Zap } from 'lucide-react';
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-
 import { FilterChip, type FilterChipProps } from '../filter-chip';
 
 // ─── Tree-walker helpers ──────────────────────────────────────────────────

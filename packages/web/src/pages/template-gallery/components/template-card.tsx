@@ -24,7 +24,6 @@ import { useTranslation } from '@ui/i18n';
 import { cn } from '@ui/shared/utils/cn';
 import { Rocket, ChevronRight } from 'lucide-react';
 import React from 'react';
-
 import { ProviderLogos, TechStackLogos, DifficultyDots, TrustBadge } from './badges';
 import { ICON_MAP } from '../data/icon-map';
 import type { ComposedTemplate } from '@ui/config/templates';

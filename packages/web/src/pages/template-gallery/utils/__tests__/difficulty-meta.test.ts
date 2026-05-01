@@ -8,7 +8,6 @@
  */
 
 import { describe, it, expect } from 'vitest';
-
 import { getDifficultyMeta } from '../difficulty-meta';
 
 describe('getDifficultyMeta (web)', () => {

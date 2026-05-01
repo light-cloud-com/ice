@@ -25,7 +25,6 @@ import { TEMPLATE_CATEGORIES } from '@ui/config/templates';
 import { useTranslation } from '@ui/i18n';
 import { Rocket, GitBranch, Box, Cable, Layers, Plus, ArrowUpRight, X } from 'lucide-react';
 import React, { useMemo } from 'react';
-
 import { TrustBadge } from './badges';
 import { ICON_MAP } from '../data/icon-map';
 import { getDifficultyMeta } from '../utils/difficulty-meta';

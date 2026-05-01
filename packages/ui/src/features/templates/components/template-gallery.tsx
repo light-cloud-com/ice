@@ -24,7 +24,6 @@ import {
 } from 'lucide-react';
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getBrandIcon } from '../../../assets/icons/brand-registry';
 import {
   ALL_TEMPLATES,
   TEMPLATE_CATEGORIES,
@@ -43,75 +42,11 @@ import { cn } from '../../../shared/utils/cn';
 import { toSlug } from '../../../shared/utils/slug';
 import { store } from '../../../store';
 import { closeTemplateGallery } from '../../../store/slices/ui-slice';
+import { DifficultyDots, ProviderBadges, TrustBadge, TechStackLogos } from './badges';
 import { ICON_MAP } from '../data/icon-map';
 import { getDifficultyLabels } from '../utils/difficulty-labels';
 import type { ComposedTemplate, TemplateCategory, TemplateCategoryMeta } from '../../../config/templates';
 import type { AppDispatch, RootState } from '../../../store';
-
-// =============================================================================
-// Sub-components
-// =============================================================================
-
-const DifficultyDots: React.FC<{ level?: string }> = ({ level }) => {
-  const { t } = useTranslation();
-  const labels = getDifficultyLabels(t);
-  const info = labels[level || 'starter'] || labels.starter;
-  return (
-    <span className="flex items-center gap-0.5" title={info.label}>
-      {[1, 2, 3, 4].map((i) => (
-        <span key={i} className={cn('w-1 h-1 rounded-full', i <= info.dots ? 'bg-ice-accent' : 'bg-ice-border')} />
-      ))}
-    </span>
-  );
-};
-
-const ProviderBadges: React.FC<{ providers?: string[] }> = ({ providers }) => {
-  if (!providers || providers.length === 0) return null;
-  return (
-    <span className="flex items-center gap-0.5">
-      {providers.map((p) => (
-        <span key={p} className="text-ice-2xs font-medium px-1 py-0 rounded bg-ice-raised text-ice-text-3 uppercase">
-          {p}
-        </span>
-      ))}
-    </span>
-  );
-};
-
-const TrustBadge: React.FC<{ trust?: string }> = ({ trust }) => {
-  const { t } = useTranslation();
-  if (!trust || trust === 'community') return null;
-  return (
-    <span
-      className={cn(
-        'text-ice-2xs font-semibold px-1 py-0 rounded',
-        trust === 'official' ? 'bg-ice-accent/15 text-ice-accent' : 'bg-emerald-500/15 text-emerald-400',
-      )}
-    >
-      {trust === 'official' ? t('templates.gallery.official') : t('templates.gallery.verified')}
-    </span>
-  );
-};
-
-const TechStackLogos: React.FC<{ tags: string[]; max?: number }> = ({ tags, max = 5 }) => {
-  const resolved = useMemo(() => {
-    const items: { key: string; url: string; label: string }[] = [];
-    for (const tag of tags) {
-      if (items.length >= max) break;
-      const brand = getBrandIcon(tag);
-      if (brand) items.push({ key: tag, url: brand.url, label: brand.label });
-    }
-    return items;
-  }, [tags, max]);
-  if (resolved.length === 0) return null;
-  return (
-    <span className="flex items-center gap-2">
-      {resolved.map((b) => (
-        <img key={b.key} src={b.url} alt={b.label} title={b.label} width={18} height={18} className="shrink-0" />
-      ))}
-    </span>
-  );
-};
 
 // =============================================================================
 // Template Card — for the grid

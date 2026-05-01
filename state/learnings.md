@@ -1320,3 +1320,10 @@ helpers, you're probably leaving state-writing helpers on
 the class that could also extract. Pair with
 `class-private-brand-blocks-this-as-context-passthrough`:
 both rules push toward "lift the ctx first, decompose later".
+
+
+## ai-ops-orchestrator-keeps-the-switch-block
+
+_Discovered: 2026-04-30 by implementer in rf-aiop-6_
+
+The operation-executor.ts orchestrator decomposed cleanly into seven helper modules (types, id-utils, position-finder, blueprint-resolver, auto-resize, node-defaults, orphan-helpers, reparent-validator) — but the central switch-on-op-type dispatch loop stayed in the orchestrator at ~250 LOC. Each `case` arm is 5-25 LOC of (1) resolve placeholder ids through idMap, (2) check the resolved node/edge exists in the live card, (3) push to skippedOps with a reason or dispatch the matching action. Trying to extract per-op handlers (`handleAddNode`, `handleAddEdge`, etc.) into separate files would have forced each handler to take `dispatch + idMap + skippedOps + getCard()` as arguments — four mutable references per call site — and the resulting "handler" would just be the case body re-wrapped in a function, with nothing pulled out. The wins came from the *opportunistic* extractions instead: `pickNodeDefaults` collapsed a stack of nested ternaries inside one case arm, `connectOrphanHelpers` lifted a 35-LOC post-loop block, `validateReparent` lifted a 25-LOC inline gauntlet. Generalizes: when a switch-on-tag dispatch is the central pattern of a function, the cohesion the switch creates is real — leave it intact and look for the inline math/validation INSIDE the arms (or before/after the loop) instead. The diagnostic is: if extracting an arm body would just shuffle four mutable refs across a function boundary, the arm is already correctly placed.

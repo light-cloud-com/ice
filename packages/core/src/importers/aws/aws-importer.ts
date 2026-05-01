@@ -12,6 +12,7 @@ import {
   extract_region_from_arn,
   parse_tags,
 } from './arn-helpers.js';
+import { init_aws_sdk, get_account_id, type AWSSdk } from './sdk-init.js';
 import { classifyAWSError, ImportErrorCode } from '../../errors/import-errors.js';
 import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph.js';
 import type {
@@ -319,64 +320,6 @@ export function aws_result_to_graph(result: AWSImportResult, graph_name: string 
   }
 
   return graph;
-}
-
-// =============================================================================
-// AWS SDK Initialization
-// =============================================================================
-
-interface AWSSdk {
-  STS: any;
-  ResourceExplorer: any;
-  ConfigService: any;
-  credentials?: any;
-}
-
-async function init_aws_sdk(profile?: string): Promise<AWSSdk> {
-  try {
-    // Dynamic imports for AWS SDK v3
-    const sts_module_name = '@aws-sdk/client-sts';
-    const re_module_name = '@aws-sdk/client-resource-explorer-2';
-    const config_module_name = '@aws-sdk/client-config-service';
-
-    const [sts_mod, re_mod, config_mod] = await Promise.all([
-      Function('m', 'return import(m)')(sts_module_name),
-      Function('m', 'return import(m)')(re_module_name),
-      Function('m', 'return import(m)')(config_module_name),
-    ]);
-
-    const config: Record<string, unknown> = {};
-
-    if (profile) {
-      // Load credentials from profile
-      const creds_module_name = '@aws-sdk/credential-providers';
-      const creds_mod = await Function('m', 'return import(m)')(creds_module_name);
-      config.credentials = creds_mod.fromIni({ profile });
-    }
-
-    return {
-      STS: new sts_mod.STSClient(config),
-      ResourceExplorer: new re_mod.ResourceExplorer2Client(config),
-      ConfigService: new config_mod.ConfigServiceClient(config),
-    };
-  } catch (error) {
-    throw new Error(
-      `Failed to initialize AWS SDK. Make sure AWS SDK v3 packages are installed: ${error instanceof Error ? error.message : String(error)}`,
-      { cause: error },
-    );
-  }
-}
-
-async function get_account_id(sdk: AWSSdk): Promise<string> {
-  try {
-    const sts_module_name = '@aws-sdk/client-sts';
-    const sts_mod = await Function('m', 'return import(m)')(sts_module_name);
-    const command = new sts_mod.GetCallerIdentityCommand({});
-    const response = await sdk.STS.send(command);
-    return response.Account || '';
-  } catch {
-    return 'unknown';
-  }
 }
 
 // =============================================================================

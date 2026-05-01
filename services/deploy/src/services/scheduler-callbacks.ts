@@ -17,7 +17,7 @@
 
 import type { NodeStatusEvent, NodeProgressEvent } from '@ice/core';
 import { emitDeployEvent, emitLog } from './deploy-event-dispatcher.js';
-import { updateDeploySnapshot, updateDeploySnapshotNode } from './deploy-locks.js';
+import { updateDeploySnapshotNode } from './deploy-locks.js';
 import { mapStatusToOverlay } from '../utils/deploy-event-formatter.js';
 
 export interface SchedulerCallbacksArgs {
@@ -27,15 +27,21 @@ export interface SchedulerCallbacksArgs {
   graphIdToCanvasId: Map<string, string>;
   /**
    * Overall-progress tracker. Provide on the primary apply path so the
-   * factory bumps `completed.count` on each terminal status and writes
-   * `progress: Math.min(Math.round((completed/total)*100), 99)` to the
-   * in-memory snapshot. Omit on the retry path — the original retry
-   * callback never wrote overall progress (only per-node mirror).
+   * factory bumps `completed.count` on each terminal status. Omit on the
+   * retry path — the original retry callback never tracked overall
+   * progress.
    *
    * `completed` is a small object box (`{ count: 0 }`) so the closure can
    * mutate it in place — JS doesn't pass numbers by reference, and the
    * orchestrator may want to read the running tally from the outer scope
    * after the deploy returns.
+   *
+   * Note: prior to the dead-fields cleanup (state/progress.md) this
+   * factory also wrote `progress` / `currentResource` to the in-memory
+   * `DeployProgressSnapshot`. The frontend now derives every in-flight
+   * signal from the typed `node_status` wire stream (pdl-5), so those
+   * snapshot fields became unread and were removed; the count bump is
+   * preserved because callers still read it after the deploy returns.
    */
   totals?: { total: number; completed: { count: number } };
   /**
@@ -101,22 +107,14 @@ export function makeSchedulerCallbacks(args: SchedulerCallbacksArgs): SchedulerC
       // without waiting for the next live event.
       const overlayStatus = mapStatusToOverlay(event.status);
       updateDeploySnapshotNode(cardId, canvasId, overlayStatus);
-      if (totals) {
-        if (
-          event.status === 'succeeded' ||
+      if (
+        totals &&
+        (event.status === 'succeeded' ||
           event.status === 'failed' ||
           event.status === 'skipped' ||
-          event.status === 'cancelled-due-to-dep'
-        ) {
-          totals.completed.count += 1;
-          const overallProgress = Math.min(Math.round((totals.completed.count / totals.total) * 100), 99);
-          updateDeploySnapshot(cardId, {
-            progress: overallProgress,
-            currentResource: event.resource_name,
-          });
-        } else if (event.status === 'applying') {
-          updateDeploySnapshot(cardId, { currentResource: event.resource_name });
-        }
+          event.status === 'cancelled-due-to-dep')
+      ) {
+        totals.completed.count += 1;
       }
     },
     on_node_progress: (event: NodeProgressEvent) => {

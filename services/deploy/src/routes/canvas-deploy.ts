@@ -216,7 +216,6 @@ router.get('/current/:cardId', requireProjectAccess('viewer'), async (req: AuthR
         snapshot: {
           cardId,
           status: active.status,
-          progress: 0,
           deploymentId: active.id,
           startedAt: active.created_at,
           updatedAt: active.updated_at,

@@ -1510,3 +1510,30 @@ helpers" file should treat the table as a single export and
 size-cap only the helpers. Pair with the parent pattern
 doc's "Data-heavy shim split" — both rules say the same thing:
 data sizes don't trigger the LOC ceiling, but logic sizes do.
+
+## tri-state-setter-directive-pattern-for-ref-callbacks
+
+_Discovered: 2026-04-30 by implementer in rf-cmove_
+
+When extracting a pure runner from a hook callback that conditionally
+invokes a React setter (here: `setExitingGroupId` from rf-canv-25b
+`useContainerMove`), the original code path had three distinct branches:
+(a) call `setExitingGroupId(null)` (no parentId), (b) call
+`setExitingGroupId(parent.id)` or `setExitingGroupId(null)` (parent
+found, near/far edge), (c) call NEITHER branch (parentId set but parent
+missing from visibleNodes — guarded by `if (parent) {}`). Initially I
+returned a single `string | null` from the helper, which collapsed
+branch (c) into branch (a) — silently introducing a behavior change
+(setter would fire `null` on missing-parent paths instead of skipping).
+Fix: return a tagged tri-state `{ call: false } | { call: true; value:
+string | null }` so the orchestrator can decide whether to invoke the
+setter at all. Generalizes: any pure runner extracted from a hook that
+might skip a side-effect call (vs. always firing with a default value)
+should use a tagged-union return rather than a sentinel `null` — `null`
+is ambiguous when null IS a valid argument to the side-effect.
+Diagnostic: the original code uses `if (X) { setter(...) } else if (Y) {
+setter(...) }` with NO else branch — that no-else form is the
+fingerprint of a tri-state; collapsing it to `setter(extract(X, Y))`
+loses branch information. Cite from any future hook-extraction unit
+where a callback decides whether-to-call a setter (rf-canv-26 will
+likely face this with `setDragOverGroupId`).

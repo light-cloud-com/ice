@@ -276,4 +276,47 @@ _(no blockers)_
 
 ## Archive
 
-_(prior weeks not yet swept)_
+### 2026-04-29 → 2026-05-02 — Workspace-wide LOC discipline initiative — COMPLETE
+
+Multi-day effort to bring every actionable source file in the monorepo within the 200-500 LOC range. ~470 commits, ~7,500 new tests, 73 files refactored, 4 latent bugs fixed.
+
+**Phase 1 — 5 monster files (>2000 LOC each)**:
+- `services/deploy/src/services/deploy.service.ts` (2843 → 1572 → eventually 107 in final round)
+- `packages/ui/src/features/properties/components/properties-panel.tsx` (3268 → 94)
+- `packages/ui/src/features/canvas/components/svg-canvas.tsx` (3234 → 909 → eventually 453)
+- `packages/ui/src/features/deploy/components/deploy-panel.tsx` (2229 → 262)
+- `packages/core/src/deploy/card-translator.ts` (1585 → 401)
+
+**Phase 2 cohorts** (1000-2000 LOC files):
+- 5 files via various patterns (cards-slice, firebase-hosting, parser, lexer, deploy-slice, cloud-storage)
+- 12 UI components via rf-pdpl section pattern
+- 12 code-heavy files (sqlite-state-store, auto-layout, scheduler, mutable-graph, ai.service, pulumi-exporter, operation-executor, pipeline.service, log-stream.service, etc.)
+- 3 data-heavy splits (scale-presets, cloud-blocks, dev-accent-picker themes)
+- 3 tail files (connection-rules, ast, http-api-adapter)
+
+**Phase 3** — 18 files in 500-600 LOC band, 6 cohorts (rf-fbh handlers, rf-pdpl sections, rf-deploy method-grouping, importers, rf-pulumi/rf-parse, mixed). Eliminated all "slightly over" files.
+
+**Final round** — 8 documented exceptions decomposed (excluding generated `resource-types.ts` per user instruction). Reduced 12,754 → 1,082 orchestrator LOC across remaining files.
+
+**Bug fixes** (2026-05-02):
+- `bugfix-1` — graph-nodes-keyed-by-type-colon-name (5 callsites switched to `graph.get_node_by_name`)
+- `bugfix-2` — `get_base_db_path` lazy `require.resolve`
+- `bugfix-3` — `get_critical_path` distance propagation
+- `bugfix-4` — `detectJsFramework` pnpm-lock detection
+
+**Documentation**:
+- `/docs/refactoring-patterns.md` — 6 proven decomposition patterns + test patterns + gotchas, distilled from the initiative
+- 24 stabilized learnings promoted from `state/learnings.md` to the new doc
+
+**Final state of the codebase**:
+- Every actionable file within 200-500 LOC band.
+- 4 documented data-leaf exceptions remain (high-level-resources category files, all carrying SIZE EXCEPTION headers).
+- 1 generated file excluded per user instruction (`resource-types.ts`).
+- 0 known latent bugs.
+- 162 fine-grained learning anchors retained in `state/learnings.md` for future reference.
+
+The codebase decomposition initiative is complete. Future contributors have:
+- A documented set of patterns to follow (`/docs/refactoring-patterns.md`).
+- A clean LOC discipline across the workspace.
+- ~7,500 tests covering every extracted module.
+- A concrete audit trail in `refactor-targets.md` of every file touched.

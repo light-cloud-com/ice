@@ -7,6 +7,7 @@
 import { existsSync } from 'fs';
 import { readFile } from 'fs/promises';
 import { get_ice_type, get_ice_provider, map_properties } from './type-mapper.js';
+import { mask_sensitive_attributes, create_empty_metadata } from './sensitive.js';
 import { MutableGraph, create_mutable_graph } from '../../graph/mutable-graph.js';
 import type {
   TerraformState,
@@ -331,43 +332,6 @@ function import_resource_instance(
 }
 
 /**
- * Mask sensitive attributes in properties.
- */
-function mask_sensitive_attributes(
-  properties: Record<string, unknown>,
-  sensitive_paths: string[],
-): Record<string, unknown> {
-  const result = { ...properties };
-
-  for (const path of sensitive_paths) {
-    // Parse the path (handles array notation like "password" or "connection[0].password")
-    const parts = path.split(/\.|\[|\]/).filter(Boolean);
-    mask_path(result, parts);
-  }
-
-  return result;
-}
-
-/**
- * Mask a specific path in an object.
- */
-function mask_path(obj: Record<string, unknown>, path: string[]): void {
-  if (path.length === 0) return;
-
-  const [first, ...rest] = path;
-  if (!first || !(first in obj)) return;
-
-  if (rest.length === 0) {
-    obj[first] = '***SENSITIVE***';
-  } else {
-    const next = obj[first];
-    if (typeof next === 'object' && next !== null) {
-      mask_path(next as Record<string, unknown>, rest);
-    }
-  }
-}
-
-/**
  * Infer dependencies from attribute references.
  */
 function infer_dependencies(resources: ImportedResource[], _warnings: ImportWarning[]): void {
@@ -424,21 +388,6 @@ function scan_for_references(obj: unknown, id_lookup: Map<string, string>, deps:
       scan_for_references(value, id_lookup, deps);
     }
   }
-}
-
-/**
- * Create empty metadata for error cases.
- */
-function create_empty_metadata(): ImportMetadata {
-  return {
-    terraform_version: 'unknown',
-    state_version: 0,
-    serial: 0,
-    lineage: '',
-    resource_count: 0,
-    output_count: 0,
-    imported_at: new Date().toISOString(),
-  };
 }
 
 // =============================================================================

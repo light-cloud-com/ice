@@ -9,8 +9,8 @@
  */
 
 import { describe, expect, it, vi, afterEach } from 'vitest';
-import { deriveRollup, orderNodesForPanel } from '../derive';
-import type { NodeDeployState } from '../types';
+import { deriveRollup, deriveRollupPercentage, orderNodesForPanel } from '../derive';
+import type { DeployRollup, NodeDeployState } from '../types';
 import type { DeployNodeStatus } from '@ice/types';
 
 function makeNode(id: string, status: DeployNodeStatus, last_at = '2026-01-01T00:00:00.000Z'): NodeDeployState {
@@ -160,5 +160,55 @@ describe('orderNodesForPanel', () => {
     const before = Object.values(map).map((n) => n.node_id);
     orderNodesForPanel(map);
     expect(Object.values(map).map((n) => n.node_id)).toEqual(before);
+  });
+});
+
+// -----------------------------------------------------------------------------
+// deriveRollupPercentage
+// -----------------------------------------------------------------------------
+
+function makeRollup(overrides: Partial<DeployRollup> = {}): DeployRollup {
+  return {
+    queued: 0,
+    applying: 0,
+    succeeded: 0,
+    failed: 0,
+    skipped: 0,
+    cancelled: 0,
+    total: 0,
+    terminal: 0,
+    ...overrides,
+  };
+}
+
+describe('deriveRollupPercentage', () => {
+  it('returns 0 when total is 0', () => {
+    expect(deriveRollupPercentage(makeRollup())).toBe(0);
+  });
+
+  it('returns 100 when terminal === total (everything finished)', () => {
+    expect(deriveRollupPercentage(makeRollup({ total: 5, terminal: 5, succeeded: 5 }))).toBe(100);
+  });
+
+  it('caps at 99% while any node is still queued or applying', () => {
+    // 3/4 terminal would round to 75; cap kicks in only at the 99 boundary.
+    expect(deriveRollupPercentage(makeRollup({ total: 4, terminal: 3, applying: 1 }))).toBe(75);
+    // 99/100 → would round to 99 anyway; cap is a no-op below the threshold.
+    expect(deriveRollupPercentage(makeRollup({ total: 100, terminal: 99, applying: 1 }))).toBe(99);
+    // 199/200 → rounds to 100 without the cap; with the cap holds at 99.
+    expect(deriveRollupPercentage(makeRollup({ total: 200, terminal: 199, applying: 1 }))).toBe(99);
+  });
+
+  it('rounds to nearest integer', () => {
+    // 1/3 → 33.333… → 33
+    expect(deriveRollupPercentage(makeRollup({ total: 3, terminal: 1, applying: 2 }))).toBe(33);
+    // 2/3 → 66.666… → 67
+    expect(deriveRollupPercentage(makeRollup({ total: 3, terminal: 2, applying: 1 }))).toBe(67);
+  });
+
+  it('falls back to total=1 in the divisor for zero-total edge case (defensive)', () => {
+    // Caller already guards total === 0 → returns 0; this shouldn't be reachable,
+    // but the inline `Math.max(rollup.total, 1)` guard documents the intent.
+    expect(deriveRollupPercentage(makeRollup({ total: 0, terminal: 0 }))).toBe(0);
   });
 });

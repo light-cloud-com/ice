@@ -21,13 +21,13 @@ import { ControlsHelpModal } from './controls-help-modal';
 import { ConnectionTooltip } from './connection-tooltip';
 import { CanvasDeployBanner } from './deploy-banner';
 import { CanvasContent } from './canvas-renderer/canvas-content';
-import { type RenderCtx } from './canvas-renderer/node-renderer-registry';
 // Bespoke-from-day-one nodes with inline editing
 import { useClipboard } from '../../../shared/hooks/use-clipboard';
 import { useExposedServices } from '../../../shared/hooks/use-exposed-services';
 import { useUndoRedo } from '../../../shared/hooks/use-undo-redo';
 import { useCanvasInteractionsBindings } from '../hooks/use-canvas-interactions-bindings';
 import { useCanvasMouseRouting } from '../hooks/use-canvas-mouse-routing';
+import { useRenderCtx } from '../hooks/use-render-ctx';
 import { useCanvasValidation } from '../hooks/use-canvas-validation';
 import { useComputingFlows } from '../hooks/use-computing-flows';
 import { useCanvasDimensions } from '../hooks/use-canvas-resize';
@@ -46,7 +46,6 @@ import { useCanvasTraversal } from '../hooks/use-canvas-traversal';
 import { useCanvasHandlers } from '../hooks/use-canvas-handlers';
 import { useCanvasEffects } from '../hooks/use-canvas-effects';
 import { useCanvasSelectors } from '../hooks/use-canvas-selectors';
-import { getConnectedPipelineStatuses } from '../utils/get-connected-pipeline-statuses';
 import type { AppDispatch } from '../../../store';
 
 // rf-canv-1: re-export shim — the canonical home for these three types is
@@ -353,14 +352,12 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
 
   // Connection popover handlers removed — connections are auto-configured
 
-  // rf-canv-12: bundle every dependency the per-node renderer dispatch
-  // consumes into a single object so the `sortedNodes.map(...)` body stays
-  // a one-liner. Field shapes mirror the local declarations verbatim — see
-  // `RenderCtx` in `./canvas-renderer/node-renderer-registry.tsx`.
-  // rf-canv2-5: `getConnectedPipelineStatuses` is bound here from the pure
-  // util in `../utils/get-connected-pipeline-statuses` so the renderCtx
-  // surface stays a single-arg function.
-  const renderCtx: RenderCtx = {
+  // rf-svgcv2-4: the eighteen-field `RenderCtx` bundle (every dep the
+  // per-node renderer dispatch consumes) is constructed by `useRenderCtx`.
+  // The hook also binds `getConnectedPipelineStatuses` to the live
+  // `card` + `pipelineNodeStatus` slot so renderers call it as a
+  // single-arg function (rf-canv2-5).
+  const renderCtx = useRenderCtx({
     sortedNodes,
     selectedNodes,
     lod,
@@ -378,9 +375,8 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     handleRenameCancel,
     handleUpdateNodeData,
     handlePipelineClick,
-    getConnectedPipelineStatuses: (node) =>
-      getConnectedPipelineStatuses(node, card, pipelineNodeStatus),
-  };
+    card,
+  });
 
   return (
     <div

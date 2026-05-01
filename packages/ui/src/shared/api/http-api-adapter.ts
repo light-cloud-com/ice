@@ -9,6 +9,9 @@ import { DEPLOY_EVENT_CHANNEL, type DeployEvent } from '@ice/types';
 import axiosInstance from './axios-instance';
 import type { IceAPI } from './api-adapter';
 import { emitMenuAction, getSocket, menuCallbacks } from './http-api/socket';
+import { createGraphAdapter } from './http-api/graph';
+import { createSchemaAdapter } from './http-api/schema';
+import { createResourcesAdapter } from './http-api/resources';
 
 // Re-export for the existing public surface; consumers calling
 // `emitMenuAction(...)` from the toolbar continue to work.
@@ -19,96 +22,13 @@ export { emitMenuAction };
 export function createHttpApiAdapter(): IceAPI {
   return {
     // ── Graph (canvas persistence via backend) ─────────────────────────
-    graph: {
-      create: async (name?: string) => {
-        const res = await axiosInstance.post('/canvas/cards/create', { name: name || 'Untitled' });
-        return res.data;
-      },
-      load: async (cardId: string) => {
-        const res = await axiosInstance.post('/canvas/cards/get', { cardId });
-        return res.data;
-      },
-      save: async (cardId?: string) => {
-        if (!cardId) return { success: true, path: cardId };
-
-        // Read current card state from Redux and persist to backend
-        const { store } = await import('../../store');
-        const state = store.getState();
-        const card = state.cards.cards.find((c: any) => c.id === cardId);
-        if (!card) return { success: true, path: cardId };
-
-        await axiosInstance.post('/canvas/cards/update', {
-          cardId,
-          nodes: card.nodes,
-          edges: card.edges,
-          viewport: card.viewport,
-        });
-        return { success: true, path: cardId };
-      },
-      get: async () => {
-        // Returns current active card data
-        return null;
-      },
-      addNode: async (input: any) => {
-        // Nodes managed in Redux, synced via card update
-        return { success: true, node: input };
-      },
-      updateNode: async (id: string, updates: any) => {
-        return { success: true, id, updates };
-      },
-      removeNode: async (id: string) => {
-        return { success: true, id };
-      },
-      addEdge: async (input: any) => {
-        return { success: true, edge: input };
-      },
-      removeEdge: async (id: string) => {
-        return { success: true, id };
-      },
-      validate: async () => {
-        return { valid: true, errors: [] };
-      },
-    },
+    graph: createGraphAdapter(),
 
     // ── Schema ─────────────────────────────────────────────────────────
-    schema: {
-      getCategories: async () => {
-        const res = await axiosInstance.get('/schemas/categories');
-        return res.data;
-      },
-      query: async (query) => {
-        const res = await axiosInstance.get('/schemas/query', { params: query });
-        return res.data;
-      },
-      get: async (iceType: string) => {
-        const res = await axiosInstance.get(`/schemas/${encodeURIComponent(iceType)}`);
-        return res.data;
-      },
-    },
+    schema: createSchemaAdapter(),
 
     // ── Resources ──────────────────────────────────────────────────────
-    resources: {
-      getCategories: async () => {
-        const res = await axiosInstance.get('/resources/categories');
-        return res.data;
-      },
-      getAll: async () => {
-        const res = await axiosInstance.get('/resources/all');
-        return res.data;
-      },
-      getByCategory: async (categoryId: string) => {
-        const res = await axiosInstance.get(`/resources/category/${encodeURIComponent(categoryId)}`);
-        return res.data;
-      },
-      search: async (query: string) => {
-        const res = await axiosInstance.get('/resources/search', { params: { q: query } });
-        return res.data;
-      },
-      getLowLevel: async (highLevelId: string) => {
-        const res = await axiosInstance.get(`/resources/low-level/${encodeURIComponent(highLevelId)}`);
-        return res.data;
-      },
-    },
+    resources: createResourcesAdapter(),
 
     // ── Dialog (web alternatives) ──────────────────────────────────────
     dialog: {

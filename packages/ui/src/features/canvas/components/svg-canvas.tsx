@@ -23,19 +23,10 @@ import { CanvasDeployBanner } from './deploy-banner';
 import { CanvasContent } from './canvas-renderer/canvas-content';
 import { type RenderCtx } from './canvas-renderer/node-renderer-registry';
 // Bespoke-from-day-one nodes with inline editing
-import {
-  GRID_SIZE,
-} from '../../../config/canvas-constants';
 import { useClipboard } from '../../../shared/hooks/use-clipboard';
 import { useExposedServices } from '../../../shared/hooks/use-exposed-services';
 import { useUndoRedo } from '../../../shared/hooks/use-undo-redo';
-import {
-  setSelectedNodes,
-  setSelectedEdges,
-  toggleNodeSelection,
-  setSelectionRect,
-} from '../../../store/slices/selection-slice';
-import { useCanvasInteractions } from '../hooks/use-canvas-interactions';
+import { useCanvasInteractionsBindings } from '../hooks/use-canvas-interactions-bindings';
 import { useCanvasMouseRouting } from '../hooks/use-canvas-mouse-routing';
 import { useCanvasValidation } from '../hooks/use-canvas-validation';
 import { useComputingFlows } from '../hooks/use-computing-flows';
@@ -286,8 +277,12 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     handleCanvasClick,
   } = useCanvasHandlers({ selectedNodes, viewport, svgRef, onFocus });
 
-  // Canvas interactions
-  const { bindCanvas, cursor, screenToCanvas } = useCanvasInteractions({
+  // rf-svgcv2-3: the three inline selection-dispatch callbacks
+  // (onSelect/onToggleSelect/onBoxSelect) and the snapToGrid ternary
+  // live in `useCanvasInteractionsBindings`. The wrapper hook calls
+  // `useCanvasInteractions` internally; the orchestrator just threads
+  // its remaining args through.
+  const { bindCanvas, cursor, screenToCanvas } = useCanvasInteractionsBindings({
     svgRef,
     viewport: { x: viewport.x, y: viewport.y, zoom: viewport.zoom },
     items: canvasItems,
@@ -295,22 +290,11 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     onViewportChange: persistViewport,
     onItemMove: handleNodeMove,
     onItemResize: handleNodeResize,
-    onSelect: (ids) => {
-      dispatch(setSelectedNodes(ids));
-      dispatch(setSelectedEdges([]));
-    },
-    onToggleSelect: (id) => {
-      dispatch(toggleNodeSelection(id));
-      dispatch(setSelectedEdges([]));
-    },
-    onBoxSelect: (rect) => {
-      dispatch(setSelectionRect(rect));
-    },
     onContextMenu: handleContextMenu,
     onDelete: handleDeleteSelected,
     onDragOverGroup: handleDragOverGroup,
     onDragEnd: handleDragEnd,
-    gridSize: snapToGrid ? GRID_SIZE : 0,
+    snapToGrid,
     locked: canvasLocked,
   });
 

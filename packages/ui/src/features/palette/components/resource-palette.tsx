@@ -26,7 +26,6 @@ import {
   Brain,
   BrainCircuit,
   Waypoints,
-  BarChart3,
   Blocks,
   Check,
   ChevronDown,
@@ -46,115 +45,12 @@ import { useResolvePath } from '../../../shared/hooks/use-resolve-path';
 import { cn } from '../../../shared/utils/cn';
 import { ProjectBrowser } from '../../project-browser';
 import { TemplateCategoriesPanel } from '../../templates/components/template-categories-panel';
+import { CATEGORY_DEFS, CATEGORY_MAP, CATEGORY_ORDER } from '../data/categories';
 import type { CategoryDef, ComponentDef, Provider, ResourcePaletteProps, RuntimeOption } from '../types';
 
-// =============================================================================
-// Category definitions with metadata
-// =============================================================================
-
-const CATEGORY_DEFS: CategoryDef[] = [
-  {
-    id: 'Compute',
-    label: t('blocks.categories.compute.label'),
-    icon: Server,
-    color: '#22c55e',
-    tooltip: t('blocks.categories.compute.tooltip'),
-  },
-  {
-    id: 'Scheduler',
-    label: t('blocks.categories.scheduler.label'),
-    icon: Clock,
-    color: '#eab308',
-    tooltip: t('blocks.categories.scheduler.tooltip'),
-  },
-  {
-    id: 'Frontend',
-    label: t('blocks.categories.frontend.label'),
-    icon: Globe,
-    color: '#3b82f6',
-    tooltip: t('blocks.categories.frontend.tooltip'),
-  },
-  {
-    id: 'Network',
-    label: t('blocks.categories.network.label'),
-    icon: GitBranch,
-    color: '#06b6d4',
-    tooltip: t('blocks.categories.network.tooltip'),
-  },
-  {
-    id: 'Database',
-    label: t('blocks.categories.database.label'),
-    icon: Database,
-    color: '#f59e0b',
-    tooltip: t('blocks.categories.database.tooltip'),
-  },
-  {
-    id: 'Cache',
-    label: t('blocks.categories.cache.label'),
-    icon: Zap,
-    color: '#ef4444',
-    tooltip: t('blocks.categories.cache.tooltip'),
-  },
-  {
-    id: 'Messaging',
-    label: t('blocks.categories.messaging.label'),
-    icon: List,
-    color: '#8b5cf6',
-    tooltip: t('blocks.categories.messaging.tooltip'),
-  },
-  {
-    id: 'Storage',
-    label: t('blocks.categories.storage.label'),
-    icon: HardDrive,
-    color: '#64748b',
-    tooltip: t('blocks.categories.storage.tooltip'),
-  },
-  {
-    id: 'Security',
-    label: t('blocks.categories.security.label'),
-    icon: Key,
-    color: '#ec4899',
-    tooltip: t('blocks.categories.security.tooltip'),
-  },
-  {
-    id: 'AI',
-    label: t('blocks.categories.ai.label'),
-    icon: Brain,
-    color: '#a855f7',
-    tooltip: t('blocks.categories.ai.tooltip'),
-  },
-  {
-    id: 'Analytics',
-    label: t('blocks.categories.analytics.label'),
-    icon: BarChart3,
-    color: '#14b8a6',
-    tooltip: t('blocks.categories.analytics.tooltip'),
-  },
-  {
-    id: 'Monitoring',
-    label: t('blocks.categories.monitoring.label'),
-    icon: FileText,
-    color: '#f97316',
-    tooltip: t('blocks.categories.monitoring.tooltip'),
-  },
-  {
-    id: 'Source',
-    label: t('blocks.categories.source.label'),
-    icon: GitBranch,
-    color: '#6366f1',
-    tooltip: t('blocks.categories.source.tooltip'),
-  },
-  {
-    id: 'Config',
-    label: t('blocks.categories.config.label'),
-    icon: Cog,
-    color: '#78716c',
-    tooltip: t('blocks.categories.config.tooltip'),
-  },
-];
-
-const CATEGORY_ORDER = CATEGORY_DEFS.map((c) => c.id);
-const CATEGORY_MAP = new Map(CATEGORY_DEFS.map((c) => [c.id, c]));
+// Category definitions live in `../data/categories.ts` (rf-rpal-2). They are
+// re-exported as `CATEGORY_DEFS`, `CATEGORY_ORDER`, and `CATEGORY_MAP` and
+// imported here below.
 
 // =============================================================================
 // Component definitions

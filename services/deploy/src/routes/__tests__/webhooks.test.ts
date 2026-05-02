@@ -926,51 +926,27 @@ describe('POST /api/webhooks/github — internal failure', () => {
     expect(res.body).toEqual({ error: 'outer fail' });
   });
 
-  it('escapes the async handler when webhookDelivery.create throws a non-P2002 error', async () => {
-    // The SUT's `throw err` at the idempotency catch (webhooks.ts L57) escapes
-    // the async route handler. Express 4 has no default async-error handler,
-    // so the request will never receive a response and times out at the client.
-    // We assert the code path is actually entered (delivery.create was called
-    // exactly once with the non-P2002 error) and that the request never
-    // resolves to a successful status. The unhandled rejection from the
-    // orphaned route handler is captured locally so Vitest doesn't surface it
-    // as a run error.
-    const captured: unknown[] = [];
-    const onUnhandled = (err: unknown) => captured.push(err);
-    process.on('unhandledRejection', onUnhandled);
+  it('returns a 500 envelope when webhookDelivery.create throws a non-P2002 error (findings #8)', async () => {
+    // Previously the SUT re-threw out of an async route handler.
+    // Express 4 has no default async-error handler, so the request
+    // hung until the client timed out. The fix converts the rethrow
+    // into a 500 with an error envelope, same shape as the outer
+    // catch arm. Pinned here so a regression to the rethrow surfaces.
+    const fatal: any = new Error('db unavailable');
+    fatal.code = 'P9999';
+    webhookDeliveryCreate.mockRejectedValueOnce(fatal);
 
-    try {
-      const fatal: any = new Error('db unavailable');
-      fatal.code = 'P9999';
-      webhookDeliveryCreate.mockRejectedValue(fatal);
+    const body = pushPayload();
+    const res = await postWebhook(body, {
+      'X-GitHub-Event': 'push',
+      'X-Hub-Signature-256': sign(JSON.stringify(body)),
+    });
 
-      const body = pushPayload();
-      const raw = JSON.stringify(body);
-      const result = await fetch(`${baseUrl}/api/webhooks/github`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-GitHub-Event': 'push',
-          'X-GitHub-Delivery': 'd-rethrow',
-          'X-Hub-Signature-256': sign(raw),
-        },
-        body: raw,
-        signal: AbortSignal.timeout(150),
-      })
-        .then(() => ({ aborted: false }))
-        .catch(() => ({ aborted: true }));
-
-      expect(result.aborted).toBe(true);
-      expect(webhookDeliveryCreate).toHaveBeenCalledTimes(1);
-      // The SUT bailed before reaching push handling
-      expect(matchRulesForPushMock).not.toHaveBeenCalled();
-
-      // Drain the unhandled-rejection callback queue before un-installing.
-      await new Promise((r) => setTimeout(r, 50));
-      expect(captured.length).toBeGreaterThan(0);
-    } finally {
-      process.off('unhandledRejection', onUnhandled);
-    }
+    expect(res.status).toBe(500);
+    expect(res.body).toEqual({ error: 'db unavailable' });
+    expect(webhookDeliveryCreate).toHaveBeenCalledTimes(1);
+    // The SUT bails before reaching push handling.
+    expect(matchRulesForPushMock).not.toHaveBeenCalled();
   });
 });
 

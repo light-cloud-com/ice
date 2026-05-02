@@ -141,14 +141,30 @@ describe('import_gcp — service dispatch', () => {
     expect(result.errors.some((e) => e.message.includes('string-thrown'))).toBe(true);
   });
 
-  it('regards the import as success when every error is ACCESS_DENIED', async () => {
+  it('flags failure when ALL errors are ACCESS_DENIED and zero resources came in (findings #27)', async () => {
+    // Previously every ACCESS_DENIED was treated as benign, so an
+    // importer run that hit permission errors on every service still
+    // reported success and silently produced an empty resource set —
+    // exactly the misconfiguration mode that most needs surfacing.
     h.assetDiscover.mockResolvedValueOnce({
       resources: [],
       errors: [{ code: 'AUTH_INSUFFICIENT_PERMISSIONS_ACCESS_DENIED', message: 'forbidden' }],
       warnings: [],
     });
     const result = await import_gcp({ project: 'p1' });
+    expect(result.success).toBe(false);
+  });
+
+  it('treats ACCESS_DENIED as partial success when at least one resource imported (findings #27)', async () => {
+    h.assetDiscover.mockResolvedValueOnce({
+      resources: [{ kind: 'compute#instance', id: 'i-1', name: 'i-1', region: 'us-central1', zone: 'us-central1-a', properties: {} }] as any,
+      errors: [{ code: 'AUTH_INSUFFICIENT_PERMISSIONS_ACCESS_DENIED', message: 'forbidden on storage' }],
+      warnings: [],
+    });
+    const result = await import_gcp({ project: 'p1' });
     expect(result.success).toBe(true);
+    expect(result.errors).toHaveLength(1);
+    expect(result.resources.length).toBeGreaterThan(0);
   });
 
   it('regards the import as failure when any error is non-ACCESS_DENIED', async () => {

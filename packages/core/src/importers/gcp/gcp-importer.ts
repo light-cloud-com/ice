@@ -169,8 +169,23 @@ export async function import_gcp(options: GCPImportOptions): Promise<GCPImportRe
     duration_ms: Date.now() - start_time,
   };
 
+  // findings.md #27 — the previous `success` formula treated ALL
+  // ACCESS_DENIED errors as benign, so an importer run that hit
+  // permission errors on every single service still reported success
+  // and silently produced an empty resource set. Distinguish:
+  //   - any non-ACCESS_DENIED error → hard failure
+  //   - ACCESS_DENIED + zero resources imported → likely a
+  //     misconfigured project / IAM bind, not partial success
+  //   - ACCESS_DENIED + at least one imported resource → partial
+  //     success (caller treats warnings as "some scopes skipped")
+  const hard_errors = errors.filter((e) => !e.code.includes('ACCESS_DENIED'));
+  const access_denied_only = errors.length > 0 && hard_errors.length === 0;
+  const success =
+    hard_errors.length === 0 &&
+    !(access_denied_only && imported_resources.length === 0);
+
   return {
-    success: errors.filter((e) => !e.code.includes('ACCESS_DENIED')).length === 0,
+    success,
     resources: imported_resources,
     errors,
     warnings,

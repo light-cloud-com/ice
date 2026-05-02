@@ -127,6 +127,33 @@ describe('gridPackKids', () => {
     expect(size.width).toBe(GRID_STEP + 240 + GRID_STEP);
     expect(size.height).toBe(GRID_STEP * 2 + 160 + GRID_STEP);
   });
+
+  it('owner with empty iceType (`""`) falls through to the generic MIN_CONTAINER floor', () => {
+    // Pin the `(... .iceType as string) || ''` fallback branch.
+    const owner: LayoutNode = {
+      id: 'owner',
+      type: 'container',
+      iceType: '',
+      label: 'owner',
+      width: 240,
+      height: 160,
+      x: 0,
+      y: 0,
+      data: {},
+    };
+    const k1 = mk('k1', 'Compute.Container', 50, 50);
+    const k2 = mk('k2', 'Compute.Container', 50, 50);
+    const nodeMap = new Map<string, LayoutNode>([owner, k1, k2].map((n) => [n.id, n] as const));
+    const containerSize = new Map<string, { width: number; height: number }>();
+    const relPos = new Map<string, { x: number; y: number }>();
+
+    gridPackKids(['k1', 'k2'], 'owner', nodeMap, containerSize, relPos);
+
+    // visualMin = MIN_CONTAINER for empty iceType → 240×150.
+    const size = containerSize.get('owner')!;
+    expect(size.width).toBeGreaterThanOrEqual(240);
+    expect(size.height).toBeGreaterThanOrEqual(150);
+  });
 });
 
 describe('repackIsolatedTopLevel', () => {
@@ -420,5 +447,44 @@ describe('repackIsolatedTopLevel', () => {
     expect(positions.length).toBe(4);
     // Last kid on a different column than the first.
     expect(positions[3].x).toBeGreaterThan(positions[0].x);
+  });
+
+  it('shared child via two parent chains: checkFlow cache-hit branch fires', () => {
+    // p1 and p2 both list `shared` as a child. When we descend p1's subtree
+    // we cache shared→true; when descending p2's subtree, the cache is hit
+    // and the early-return branch (`if (cached !== undefined) return cached`)
+    // executes.
+    const p1 = mk('p1');
+    const p2 = mk('p2');
+    const shared = mk('shared');
+    const q = mk('q');
+    const nodeMap = new Map<string, LayoutNode>(
+      [p1, p2, shared, q].map((n) => [n.id, n] as const),
+    );
+    const childrenOf = new Map<string, string[]>([
+      ['p1', ['shared']],
+      ['p2', ['shared']],
+    ]);
+    const relPos = new Map<string, { x: number; y: number }>([
+      ['p1', { x: 0, y: 0 }],
+      ['q', { x: 300, y: 0 }],
+    ]);
+
+    // p1 has flow (via the shared edge to q).
+    repackIsolatedTopLevel(
+      ['p1', 'p2', 'q'],
+      [ce('shared', 'q')],
+      childrenOf,
+      nodeMap,
+      new Map(),
+      relPos,
+      'TB',
+      40,
+    );
+    // p2 is processed AFTER p1; when checkFlow walks p2's subtree, it hits
+    // shared which is already cached as true — both p1 and p2 classified as
+    // flow roots, so no isolated → early return.
+    // Pin the early-return outcome (no isolated were repacked).
+    expect(relPos.has('p2')).toBe(false);
   });
 });

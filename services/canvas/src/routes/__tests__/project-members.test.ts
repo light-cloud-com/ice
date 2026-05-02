@@ -173,8 +173,14 @@ describe('POST /api/project-members/list', () => {
 // ── 2. POST /add ──────────────────────────────────────────────────────
 
 describe('POST /api/project-members/add', () => {
+  // findings.md #44 — owner-gating delegated to the shared
+  // requireProjectAccess('owner') middleware. The previous
+  // hasProjectAccessMock setup lines are now no-ops on the happy
+  // path; tests that exercised the inline 403 path now flip
+  // currentAuth to 'no-project-access' to drive the test mock
+  // for requireProjectAccess.
+
   it('adds a member with default role=editor and sends an invite email', async () => {
-    hasProjectAccessMock.mockResolvedValue(true);
     addProjectMemberMock.mockResolvedValue(undefined);
     userFindUniqueMock
       .mockResolvedValueOnce({ email: 'invitee@example.com' }) // target user
@@ -188,7 +194,6 @@ describe('POST /api/project-members/add', () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ success: true });
-    expect(hasProjectAccessMock).toHaveBeenCalledWith('user-caller', 'p1', 'owner');
     expect(addProjectMemberMock).toHaveBeenCalledWith('p1', 'u-target', 'editor', 'user-caller');
     expect(sendProjectInviteEmailMock).toHaveBeenCalledWith({
       to: 'invitee@example.com',
@@ -199,7 +204,6 @@ describe('POST /api/project-members/add', () => {
   });
 
   it('normalises uppercase role to lowercase before persisting', async () => {
-    hasProjectAccessMock.mockResolvedValue(true);
     addProjectMemberMock.mockResolvedValue(undefined);
     userFindUniqueMock.mockResolvedValue(null); // skip email branch
     projectFindUniqueMock.mockResolvedValue(null);
@@ -215,7 +219,6 @@ describe('POST /api/project-members/add', () => {
   });
 
   it('falls back to "A team member" when inviter has no name', async () => {
-    hasProjectAccessMock.mockResolvedValue(true);
     addProjectMemberMock.mockResolvedValue(undefined);
     userFindUniqueMock
       .mockResolvedValueOnce({ email: 'invitee@example.com' })
@@ -233,7 +236,6 @@ describe('POST /api/project-members/add', () => {
   });
 
   it('falls back to "A team member" when the inviter user record is missing', async () => {
-    hasProjectAccessMock.mockResolvedValue(true);
     addProjectMemberMock.mockResolvedValue(undefined);
     userFindUniqueMock
       .mockResolvedValueOnce({ email: 'invitee@example.com' })
@@ -248,7 +250,6 @@ describe('POST /api/project-members/add', () => {
   });
 
   it('skips email notification when target user does not exist', async () => {
-    hasProjectAccessMock.mockResolvedValue(true);
     addProjectMemberMock.mockResolvedValue(undefined);
     userFindUniqueMock.mockResolvedValueOnce(null); // target user missing
     projectFindUniqueMock.mockResolvedValue({ name: 'Project X' });
@@ -263,7 +264,6 @@ describe('POST /api/project-members/add', () => {
   });
 
   it('skips email notification when project does not exist', async () => {
-    hasProjectAccessMock.mockResolvedValue(true);
     addProjectMemberMock.mockResolvedValue(undefined);
     userFindUniqueMock.mockResolvedValueOnce({ email: 'invitee@example.com' });
     projectFindUniqueMock.mockResolvedValue(null);
@@ -281,7 +281,6 @@ describe('POST /api/project-members/add', () => {
     const res = await post('/api/project-members/add', { userId: 'u' });
     expect(res.status).toBe(400);
     expect(res.body.message).toBe('projectId and userId are required');
-    expect(hasProjectAccessMock).not.toHaveBeenCalled();
   });
 
   it('returns 400 when userId is missing', async () => {
@@ -290,19 +289,18 @@ describe('POST /api/project-members/add', () => {
     expect(res.body.message).toBe('projectId and userId are required');
   });
 
-  it('returns 403 when caller is not a project owner', async () => {
-    hasProjectAccessMock.mockResolvedValue(false);
+  it('returns 403 when caller is not a project owner (findings #44)', async () => {
+    // Owner-gating is now provided by the shared middleware mock.
+    currentAuth = 'no-project-access';
 
     const res = await post('/api/project-members/add', { projectId: 'p1', userId: 'u' });
 
     expect(res.status).toBe(403);
-    expect(res.body.message).toBe('Only project owners can add members');
+    expect(res.body.message).toBe('Insufficient project permissions');
     expect(addProjectMemberMock).not.toHaveBeenCalled();
   });
 
   it('returns 400 when role is not one of owner/editor/viewer', async () => {
-    hasProjectAccessMock.mockResolvedValue(true);
-
     const res = await post('/api/project-members/add', {
       projectId: 'p1',
       userId: 'u',
@@ -315,7 +313,6 @@ describe('POST /api/project-members/add', () => {
   });
 
   it('returns 500 when the IAM service throws', async () => {
-    hasProjectAccessMock.mockResolvedValue(true);
     addProjectMemberMock.mockRejectedValue(new Error('duplicate membership'));
 
     const res = await post('/api/project-members/add', { projectId: 'p1', userId: 'u' });
@@ -325,7 +322,6 @@ describe('POST /api/project-members/add', () => {
   });
 
   it('returns a default 500 message when the error has no message', async () => {
-    hasProjectAccessMock.mockResolvedValue(true);
     addProjectMemberMock.mockRejectedValue({}); // truthy but no .message
 
     const res = await post('/api/project-members/add', { projectId: 'p1', userId: 'u' });
@@ -339,7 +335,6 @@ describe('POST /api/project-members/add', () => {
 
 describe('POST /api/project-members/update-role', () => {
   it('updates the role after owner check + role normalisation', async () => {
-    hasProjectAccessMock.mockResolvedValue(true);
     updateProjectMemberRoleMock.mockResolvedValue(undefined);
 
     const res = await post('/api/project-members/update-role', {
@@ -380,8 +375,8 @@ describe('POST /api/project-members/update-role', () => {
     expect(res.body.message).toBe('projectId, userId, and role are required');
   });
 
-  it('returns 403 when caller is not a project owner', async () => {
-    hasProjectAccessMock.mockResolvedValue(false);
+  it('returns 403 when caller is not a project owner (findings #44)', async () => {
+    currentAuth = 'no-project-access';
 
     const res = await post('/api/project-members/update-role', {
       projectId: 'p1',
@@ -390,13 +385,11 @@ describe('POST /api/project-members/update-role', () => {
     });
 
     expect(res.status).toBe(403);
-    expect(res.body.message).toBe('Only project owners can change roles');
+    expect(res.body.message).toBe('Insufficient project permissions');
     expect(updateProjectMemberRoleMock).not.toHaveBeenCalled();
   });
 
   it('returns 400 when caller targets themselves', async () => {
-    hasProjectAccessMock.mockResolvedValue(true);
-
     const res = await post('/api/project-members/update-role', {
       projectId: 'p1',
       userId: 'user-caller', // === currentUserId
@@ -409,8 +402,6 @@ describe('POST /api/project-members/update-role', () => {
   });
 
   it('returns 400 for an unknown role value', async () => {
-    hasProjectAccessMock.mockResolvedValue(true);
-
     const res = await post('/api/project-members/update-role', {
       projectId: 'p1',
       userId: 'u',
@@ -423,7 +414,6 @@ describe('POST /api/project-members/update-role', () => {
   });
 
   it('returns 500 with service message when IAM service throws', async () => {
-    hasProjectAccessMock.mockResolvedValue(true);
     updateProjectMemberRoleMock.mockRejectedValue(new Error('db connection lost'));
 
     const res = await post('/api/project-members/update-role', {
@@ -437,7 +427,6 @@ describe('POST /api/project-members/update-role', () => {
   });
 
   it('returns a default 500 message when error has no .message', async () => {
-    hasProjectAccessMock.mockResolvedValue(true);
     updateProjectMemberRoleMock.mockRejectedValue({});
 
     const res = await post('/api/project-members/update-role', {
@@ -455,7 +444,6 @@ describe('POST /api/project-members/update-role', () => {
 
 describe('POST /api/project-members/remove', () => {
   it('removes the member after owner check', async () => {
-    hasProjectAccessMock.mockResolvedValue(true);
     removeProjectMemberMock.mockResolvedValue(undefined);
 
     const res = await post('/api/project-members/remove', {
@@ -480,19 +468,17 @@ describe('POST /api/project-members/remove', () => {
     expect(res.body.message).toBe('projectId and userId are required');
   });
 
-  it('returns 403 when caller is not a project owner', async () => {
-    hasProjectAccessMock.mockResolvedValue(false);
+  it('returns 403 when caller is not a project owner (findings #44)', async () => {
+    currentAuth = 'no-project-access';
 
     const res = await post('/api/project-members/remove', { projectId: 'p1', userId: 'u' });
 
     expect(res.status).toBe(403);
-    expect(res.body.message).toBe('Only project owners can remove members');
+    expect(res.body.message).toBe('Insufficient project permissions');
     expect(removeProjectMemberMock).not.toHaveBeenCalled();
   });
 
   it('returns 400 when caller tries to remove themselves', async () => {
-    hasProjectAccessMock.mockResolvedValue(true);
-
     const res = await post('/api/project-members/remove', {
       projectId: 'p1',
       userId: 'user-caller',
@@ -504,7 +490,6 @@ describe('POST /api/project-members/remove', () => {
   });
 
   it('returns 500 with service message when IAM service throws', async () => {
-    hasProjectAccessMock.mockResolvedValue(true);
     removeProjectMemberMock.mockRejectedValue(new Error('FK violation'));
 
     const res = await post('/api/project-members/remove', { projectId: 'p1', userId: 'u' });
@@ -514,7 +499,6 @@ describe('POST /api/project-members/remove', () => {
   });
 
   it('returns a default 500 message when error has no .message', async () => {
-    hasProjectAccessMock.mockResolvedValue(true);
     removeProjectMemberMock.mockRejectedValue({});
 
     const res = await post('/api/project-members/remove', { projectId: 'p1', userId: 'u' });
@@ -531,7 +515,6 @@ describe('Auth — requireAuth applies to all routes', () => {
     currentAuth = 'no-auth';
     const res = await post('/api/project-members/add', { projectId: 'p1', userId: 'u' });
     expect(res.status).toBe(401);
-    expect(hasProjectAccessMock).not.toHaveBeenCalled();
   });
 
   it('returns 401 on /update-role when requireAuth rejects', async () => {
@@ -542,13 +525,11 @@ describe('Auth — requireAuth applies to all routes', () => {
       role: 'viewer',
     });
     expect(res.status).toBe(401);
-    expect(hasProjectAccessMock).not.toHaveBeenCalled();
   });
 
   it('returns 401 on /remove when requireAuth rejects', async () => {
     currentAuth = 'no-auth';
     const res = await post('/api/project-members/remove', { projectId: 'p1', userId: 'u' });
     expect(res.status).toBe(401);
-    expect(hasProjectAccessMock).not.toHaveBeenCalled();
   });
 });

@@ -41,17 +41,16 @@ router.post('/list', requireProjectAccess('viewer'), async (req: AuthRequest, re
 
 // ── Add member ───────────────────────────────────────────────────────────────
 
-router.post('/add', async (req: AuthRequest, res: Response) => {
+// findings.md #44 — owner-gating is now done by the shared
+// `requireProjectAccess('owner')` middleware (the same one canvas.ts
+// uses). The previous inline `hasProjectAccess(req.userId, projectId,
+// 'owner')` re-implemented the same check with a slightly different
+// 403 message and skipped the middleware's project-existence 404.
+router.post('/add', requireProjectAccess('owner'), async (req: AuthRequest, res: Response) => {
   try {
     const { projectId, userId, role = 'editor' } = req.body;
     if (!projectId || !userId) {
       return res.status(400).json({ message: 'projectId and userId are required' });
-    }
-
-    // Check caller has owner/admin access
-    const hasAccess = await projectAccess.hasProjectAccess(req.userId!, projectId, 'owner');
-    if (!hasAccess) {
-      return res.status(403).json({ message: 'Only project owners can add members' });
     }
 
     const normalizedRole = role.toLowerCase();
@@ -84,16 +83,12 @@ router.post('/add', async (req: AuthRequest, res: Response) => {
 
 // ── Update role ──────────────────────────────────────────────────────────────
 
-router.post('/update-role', async (req: AuthRequest, res: Response) => {
+// findings.md #44 — owner-gating delegated to the shared middleware.
+router.post('/update-role', requireProjectAccess('owner'), async (req: AuthRequest, res: Response) => {
   try {
     const { projectId, userId, role } = req.body;
     if (!projectId || !userId || !role) {
       return res.status(400).json({ message: 'projectId, userId, and role are required' });
-    }
-
-    const hasAccess = await projectAccess.hasProjectAccess(req.userId!, projectId, 'owner');
-    if (!hasAccess) {
-      return res.status(403).json({ message: 'Only project owners can change roles' });
     }
 
     if (userId === req.userId) {
@@ -114,16 +109,12 @@ router.post('/update-role', async (req: AuthRequest, res: Response) => {
 
 // ── Remove member ────────────────────────────────────────────────────────────
 
-router.post('/remove', async (req: AuthRequest, res: Response) => {
+// findings.md #44 — owner-gating delegated to the shared middleware.
+router.post('/remove', requireProjectAccess('owner'), async (req: AuthRequest, res: Response) => {
   try {
     const { projectId, userId } = req.body;
     if (!projectId || !userId) {
       return res.status(400).json({ message: 'projectId and userId are required' });
-    }
-
-    const hasAccess = await projectAccess.hasProjectAccess(req.userId!, projectId, 'owner');
-    if (!hasAccess) {
-      return res.status(403).json({ message: 'Only project owners can remove members' });
     }
 
     if (userId === req.userId) {

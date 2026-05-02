@@ -299,6 +299,30 @@ describe('POST /api/ai/canvas-intent', () => {
     expect(res.status).toBe(500);
     expect(res.body.message).toBe('AI processing failed');
   });
+
+  it('emits an SSE error frame when stream errors AFTER headers were flushed (findings #22)', async () => {
+    // The previous handler called res.status(500).json(...) inside
+    // the catch — once SSE headers were already on the wire that
+    // throws ERR_HTTP_HEADERS_SENT and crashes the request handler.
+    // The fix detects res.headersSent and ships one last
+    // `event: error` frame instead.
+    streamCanvasIntentMock.mockImplementation(async (_intent, _canvas, res) => {
+      res.writeHead(200, { 'Content-Type': 'text/event-stream' });
+      res.write('event: thinking\ndata: {}\n\n');
+      throw new Error('upstream rugpull');
+    });
+
+    const res = await request(
+      'POST',
+      '/api/ai/canvas-intent',
+      { intent: 'hi', canvasContext: baseCanvasContext, cardId: 'card-1' },
+      { Accept: 'text/event-stream' },
+    );
+
+    expect(res.contentType).toContain('text/event-stream');
+    expect(res.raw).toContain('event: error');
+    expect(res.raw).toContain('upstream rugpull');
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────

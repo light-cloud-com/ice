@@ -431,9 +431,12 @@ describe('apply_plan — failure handling', () => {
     expect(result.results[0]!.error?.message).toBe('string-rejection');
   });
 
-  it('omits the error.retryable shortcut from the recoverable flag when handler returns no error', async () => {
-    // Edge case: success=false but no error attached → engine still records
-    // a failure but does not push an ApplyError (no error → no errors[] entry)
+  it('marks the run as failed when a handler reports success=false even without an error (findings #24)', async () => {
+    // Edge case: success=false but no error attached → engine records
+    // a failure (summary.failed=1) but does not push an ApplyError.
+    // Previously result.success was true because build_result keyed
+    // off errors.length === 0; now it derives from summary.failed
+    // too so the two views agree.
     const graph = create_mutable_graph('g');
     const a = add_node(graph, 'a');
 
@@ -443,10 +446,8 @@ describe('apply_plan — failure handling', () => {
 
     const result = await apply_plan(make_plan([make_change(a, 'create')]), graph);
     expect(result.summary.failed).toBe(1);
-    // No DeploymentError on result → errors[] stays empty, success is true
-    // (build_result keys success on errors.length === 0).
     expect(result.errors).toHaveLength(0);
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(false);
   });
 
   it('marks a missing-from-graph node as NODE_NOT_FOUND', async () => {

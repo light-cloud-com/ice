@@ -29,14 +29,14 @@ vi.mock('react', async (importOriginal) => {
   };
 });
 
-import { useMouseHandlers } from '../interactions/use-mouse-handlers';
-import { freshInitialState } from '../interactions/state';
+import { useMouseHandlers } from '../use-mouse-handlers';
+import { freshInitialState } from '../state';
 import type {
   CanvasItem,
   CanvasViewport,
   InteractionState,
   UseCanvasInteractionsOptions,
-} from '../interactions/types';
+} from '../types';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -827,5 +827,114 @@ describe('rf-canvint-3 — handleContextMenu', () => {
     const ctx = setupHandlers({ items: [] });
     ctx.handlers.handleContextMenu(mkEvent({ clientX: 200, clientY: 200 }) as never);
     expect(ctx.spies.onContextMenu).toHaveBeenCalledWith({ x: 200, y: 200 }, 'canvas');
+  });
+});
+
+// ─── Branch closures: stale selection ids, grid snap on multi-drag, grid snap on resize ──
+
+describe('rf-canvint-3 — handleMouseDown: stale selection id is skipped (L178)', () => {
+  it('multi-drag offset map skips ids in selectedIds that are NOT in items', () => {
+    // selectedIds includes 'phantom' but items only has 'a' + 'b'.
+    // The handler does itemsRef.current.find(i => i.id === id); for 'phantom'
+    // this is undefined → `if (!otherItem) continue;` (line 178).
+    const a = mkItem({ id: 'a', x: 0, y: 0 });
+    const b = mkItem({ id: 'b', x: 50, y: 50 });
+    const ctx = setupHandlers({ items: [a, b], selectedIds: ['a', 'b', 'phantom'] });
+    ctx.handlers.handleMouseDown(mkEvent({ clientX: 25, clientY: 25 }) as never);
+    expect(ctx.refs.stateRef.current.mode).toBe('drag');
+    const offsets = ctx.refs.stateRef.current.dragItemOffsets;
+    // Only 'b' is included; 'phantom' was filtered by L178.
+    expect(offsets.size).toBe(1);
+    expect(offsets.has('b')).toBe(true);
+    expect(offsets.has('phantom')).toBe(false);
+  });
+});
+
+describe('rf-canvint-3 — handleMouseMove: grid snap applies to multi-drag siblings (L272-273)', () => {
+  it('snaps each sibling position to the grid increment', () => {
+    const offsets = new Map([
+      ['b', { dx: 23, dy: 47, startX: 23, startY: 47 }],
+    ]);
+    const ctx = setupHandlers({
+      state: {
+        ...freshInitialState(),
+        mode: 'drag',
+        itemId: 'a',
+        startX: 0,
+        startY: 0,
+        startItemX: 0,
+        startItemY: 0,
+        dragItemOffsets: offsets,
+      },
+      gridSize: 20,
+    });
+    // Primary position: snap of (0+0, 0+0) is (0, 0).
+    // Sibling raw: 0 + 23 = 23, 0 + 47 = 47 → snapped to (20, 40).
+    ctx.handlers.handleMouseMove(mkEvent({ clientX: 0, clientY: 0 }) as never);
+    expect(ctx.spies.onItemMove).toHaveBeenNthCalledWith(1, 'a', 0, 0, false);
+    expect(ctx.spies.onItemMove).toHaveBeenNthCalledWith(2, 'b', 20, 40, false);
+  });
+});
+
+describe('rf-canvint-3 — handleMouseMove: grid snap applies to resize (L294-295)', () => {
+  it('snaps the new width/height to the grid increment', () => {
+    const ctx = setupHandlers({
+      state: {
+        ...freshInitialState(),
+        mode: 'resize',
+        itemId: 'a',
+        startX: 0,
+        startY: 0,
+        startItemWidth: 100,
+        startItemHeight: 60,
+      },
+      // raw width: 100 + 28 = 128 → snap to 120 (grid=20).
+      // raw height: 60 + 35 = 95 → snap to 100.
+      gridSize: 20,
+    });
+    ctx.handlers.handleMouseMove(mkEvent({ clientX: 28, clientY: 35 }) as never);
+    expect(ctx.spies.onItemResize).toHaveBeenCalledWith('a', 120, 100);
+  });
+});
+
+describe('rf-canvint-3 — handleMouseMove: drag with onDragOverGroup undefined (L278 false)', () => {
+  it('skips the drag-over notification block when onDragOverGroup is not provided', () => {
+    const ctx = setupHandlers({
+      state: {
+        ...freshInitialState(),
+        mode: 'drag',
+        itemId: 'a',
+        startX: 0,
+        startY: 0,
+        startItemX: 0,
+        startItemY: 0,
+      },
+      callbacks: { onDragOverGroup: undefined },
+    });
+    ctx.handlers.handleMouseMove(mkEvent({ clientX: 50, clientY: 50, shiftKey: true }) as never);
+    // Primary item still moves; the drag-over notification path is skipped
+    // (no spy to assert on — explicitly opted out).
+    expect(ctx.spies.onItemMove).toHaveBeenCalled();
+  });
+});
+
+describe('rf-canvint-3 — handleMouseMove: resize mode with onItemResize undefined (L289-297 false)', () => {
+  it('falls through past the resize branch when onItemResize is not provided', () => {
+    const ctx = setupHandlers({
+      state: {
+        ...freshInitialState(),
+        mode: 'resize',
+        itemId: 'a',
+        startX: 0,
+        startY: 0,
+        startItemWidth: 100,
+        startItemHeight: 60,
+      },
+      callbacks: { onItemResize: undefined },
+    });
+    ctx.handlers.handleMouseMove(mkEvent({ clientX: 200, clientY: 100 }) as never);
+    // No item move/resize fired — handler returned without doing work.
+    expect(ctx.spies.onItemResize).not.toHaveBeenCalled();
+    expect(ctx.spies.onItemMove).not.toHaveBeenCalled();
   });
 });

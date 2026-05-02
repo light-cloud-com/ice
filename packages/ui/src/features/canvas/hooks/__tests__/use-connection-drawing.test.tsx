@@ -825,6 +825,177 @@ describe('useConnectionDrawing — risk #3: card stays in dep array', () => {
     expect(mocks.findExistingSpecialConnectionSpy).not.toHaveBeenCalled();
   });
 
+  // ─── Falsy iceType branches ────────────────────────────────────────────────
+  // Each of L145, L153, L246-247, L278-279 carries an `(... as string) || ''`
+  // fallback when the data shape lacks `iceType`. These tests pin the empty-
+  // string fallback through the dragTargets memo and the validation cascade.
+
+  it('connectionDragTargets memo: handles source node with empty data (L145 fallback)', () => {
+    const store = makeStore();
+    startDrag({ sourceId: 'svc' });
+
+    const nodes: CanvasNode[] = [
+      makeNode({ id: 'svc', data: {} }),
+      makeNode({ id: 'n1' }),
+    ];
+    captureHook(store, { effectiveNodes: nodes });
+    // canConnect was called with src iceType === '' (the empty-string fallback).
+    const args = mocks.canConnectSpy.mock.calls[0];
+    expect(args[0]).toBe('');
+  });
+
+  it('connectionDragTargets memo: handles target node with empty data (L153 fallback)', () => {
+    const store = makeStore();
+    startDrag({ sourceId: 'svc' });
+
+    const nodes: CanvasNode[] = [
+      makeNode({ id: 'svc' }),
+      // n1 has empty data — its iceType resolves to ''.
+      makeNode({ id: 'n1', data: {} }),
+    ];
+    captureHook(store, { effectiveNodes: nodes });
+    const args = mocks.canConnectSpy.mock.calls[0];
+    expect(args[1]).toBe('');
+  });
+
+  it('handleConnectionEnd: source node missing iceType uses empty-string fallback (L246, L278)', () => {
+    const store = makeStore();
+    const dispatchSpy = vi.spyOn(store, 'dispatch');
+    const nodes: CanvasNode[] = [
+      // src has no iceType — both `srcIceTypeCheck` (L246) and `srcIceType` (L278)
+      // fall back to ''.
+      makeNode({ id: 'src', x: 0, y: 0, width: 50, height: 50, data: {} }),
+      makeNode({ id: 'tgt', x: 200, y: 200, width: 100, height: 100 }),
+    ];
+    startDrag({ sourceId: 'src' });
+    dispatchSpy.mockClear();
+
+    const r = captureHook(store, { effectiveNodes: nodes, card: makeCard([]) });
+    r.handleConnectionEnd({ clientX: 250, clientY: 250 } as unknown as React.MouseEvent);
+
+    // canConnect is the L246/L278 consumer — assert the fallback string was used.
+    expect(mocks.canConnectSpy).toHaveBeenCalled();
+    expect(mocks.canConnectSpy.mock.calls[0][0]).toBe('');
+    expect(mocks.inferConnectionMetaSpy).toHaveBeenCalledWith('', 'Compute.Service');
+  });
+
+  it('handleConnectionEnd: target missing iceType uses empty-string fallback (L247, L279)', () => {
+    const store = makeStore();
+    const dispatchSpy = vi.spyOn(store, 'dispatch');
+    const nodes: CanvasNode[] = [
+      makeNode({ id: 'src', x: 0, y: 0, width: 50, height: 50 }),
+      // tgt has no iceType.
+      makeNode({ id: 'tgt', x: 200, y: 200, width: 100, height: 100, data: {} }),
+    ];
+    startDrag({ sourceId: 'src' });
+    dispatchSpy.mockClear();
+
+    const r = captureHook(store, { effectiveNodes: nodes, card: makeCard([]) });
+    r.handleConnectionEnd({ clientX: 250, clientY: 250 } as unknown as React.MouseEvent);
+
+    // canConnect's tgtIceType arg is the second positional arg.
+    expect(mocks.canConnectSpy.mock.calls[0][1]).toBe('');
+    expect(mocks.inferConnectionMetaSpy).toHaveBeenCalledWith('Compute.Service', '');
+  });
+
+  it('handleConnectionEnd: warning-level entry without suggestion logs without suffix (L320 false)', () => {
+    const store = makeStore();
+    const dispatchSpy = vi.spyOn(store, 'dispatch');
+    const nodes: CanvasNode[] = [
+      makeNode({ id: 'src', x: 0, y: 0, width: 50, height: 50 }),
+      makeNode({ id: 'tgt', x: 200, y: 200, width: 100, height: 100 }),
+    ];
+    startDrag({ sourceId: 'src' });
+    dispatchSpy.mockClear();
+
+    mocks.validateConnectionSpy.mockReturnValue([
+      { level: 'warning', message: 'minor concern' /* no suggestion */ },
+    ]);
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const r = captureHook(store, { effectiveNodes: nodes, card: makeCard([]) });
+    r.handleConnectionEnd({ clientX: 250, clientY: 250 } as unknown as React.MouseEvent);
+
+    // The warning is logged WITHOUT the suggestion suffix — pure message text.
+    const warningCall = warnSpy.mock.calls.find((c) =>
+      String(c[0]).includes('minor concern'),
+    );
+    expect(warningCall).toBeDefined();
+    expect(String(warningCall![0])).not.toContain(' — ');
+    warnSpy.mockRestore();
+  });
+
+  it('handleConnectionEnd: special-rule reports specialType but no conflict → no block (L269 false)', () => {
+    // The conflict gate is `if (specialType && conflict)` — feed `{specialType:
+    // 'source', conflict: false}` to exercise the AND-short-circuit's "false"
+    // half (specialType truthy, conflict falsy → no block).
+    const store = makeStore();
+    const dispatchSpy = vi.spyOn(store, 'dispatch');
+    const nodes: CanvasNode[] = [
+      makeNode({ id: 'src', x: 0, y: 0, width: 50, height: 50 }),
+      makeNode({ id: 'tgt', x: 200, y: 200, width: 100, height: 100 }),
+    ];
+    startDrag({ sourceId: 'src' });
+    dispatchSpy.mockClear();
+
+    mocks.findExistingSpecialConnectionSpy.mockReturnValue({
+      specialType: 'source',
+      conflict: false,
+    });
+
+    const r = captureHook(store, { effectiveNodes: nodes, card: makeCard([]) });
+    r.handleConnectionEnd({ clientX: 250, clientY: 250 } as unknown as React.MouseEvent);
+
+    // Edge dispatch fires; no block.
+    expect(dispatchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('hit-test keeps the SMALLER node when iteration order is "smallest first" (L237 false)', () => {
+    // The hit-test loop scans nodes in array order and only swaps when
+    // area < targetArea. When the smallest node is encountered FIRST and a
+    // larger candidate appears later, the second `area < targetArea` is
+    // false → the smaller stays. Pin this to exercise the false arm of L237.
+    const store = makeStore();
+    const dispatchSpy = vi.spyOn(store, 'dispatch');
+    // Order matters: small comes first so big later fails the < check.
+    const small = makeNode({ id: 'small', x: 30, y: 30, width: 50, height: 50 });
+    const big = makeNode({ id: 'big', x: 0, y: 0, width: 200, height: 200 });
+    const src = makeNode({ id: 'src', x: 500, y: 500, width: 10, height: 10 });
+    const nodes: CanvasNode[] = [small, big, src];
+
+    startDrag({ sourceId: 'src' });
+    dispatchSpy.mockClear();
+    const r = captureHook(store, { effectiveNodes: nodes, card: makeCard([]) });
+    r.handleConnectionEnd({ clientX: 50, clientY: 50 } as unknown as React.MouseEvent);
+
+    // Edge target stays 'small' even though 'big' came later in the array.
+    const action = dispatchSpy.mock.calls[0][0] as { type: string; payload: CardEdge };
+    expect(action.payload.target).toBe('small');
+  });
+
+  it('handleConnectionMove: setter callback evaluates the null branch when slot is reset mid-drag (L199)', () => {
+    // The setter callback `(prev) => prev ? {...prev, ...} : null` falls through
+    // to `null` when the slot was reset between handler invocation and setter
+    // call. Drive it by clearing the slot mid-call: the closure-captured
+    // drawingConnection is truthy (so the early return doesn't fire), but the
+    // setter is invoked against the now-null slot. The resulting setter call
+    // produces null and writes null back.
+    const store = makeStore();
+    startDrag({ sourceId: 'svc' });
+    const result = captureHook(store);
+    // Flip the slot to null AFTER captureHook closed over the truthy slot but
+    // BEFORE handleConnectionMove fires.
+    mocks.drawingConnectionSlot.current = null;
+
+    result.handleConnectionMove({
+      clientX: 5,
+      clientY: 5,
+    } as unknown as React.MouseEvent);
+
+    // Slot stayed null — the `prev ? ... : null` callback hit the null branch.
+    expect(mocks.drawingConnectionSlot.current).toBeNull();
+  });
+
   it('passes card.edges via cardEdgesArr through validateConnection + wouldCreateCycle', () => {
     const store = makeStore();
     const nodes: CanvasNode[] = [

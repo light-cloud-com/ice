@@ -50,7 +50,18 @@ export async function bootstrapProductionEnvironment(
   const existing = await prisma.environment.findFirst({
     where: { project_id: projectId, type: 'production' },
   });
-  if (existing) return existing;
+  if (existing) {
+    // findings.md #15 — the previous unconditional return masked
+    // stale callsites: a caller that thought it was seeding a fresh
+    // env with their `existingCardId` got back the OLD env unchanged
+    // and never noticed. The loud failure mode is preferable.
+    if (existingCardId && existing.card_id !== existingCardId) {
+      throw new Error(
+        `Production environment already exists for project ${projectId} with card_id=${existing.card_id}; refused to attach to a different card_id=${existingCardId}.`,
+      );
+    }
+    return existing;
+  }
 
   return prisma.$transaction(async (tx) => {
     let cardId = existingCardId;

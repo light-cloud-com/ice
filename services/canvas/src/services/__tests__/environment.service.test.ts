@@ -157,6 +157,31 @@ describe('bootstrapProductionEnvironment', () => {
     expect(txEnvCreate.mock.calls[0]![0].data.is_protected).toBe(true);
     expect(txEnvCreate.mock.calls[0]![0].data.type).toBe('production');
   });
+
+  it('returns the existing env when existingCardId matches (findings #15)', async () => {
+    // The idempotent fast-path is preserved for matching inputs —
+    // callers that pass an existingCardId equal to the env's
+    // card_id still get the existing env back without a transaction.
+    const existing = { id: 'env-prod', type: 'production', card_id: 'card-x' };
+    envFindFirst.mockResolvedValue(existing);
+
+    const result = await bootstrapProductionEnvironment('p1', 'u1', 'My Project', 'card-x');
+
+    expect(result).toBe(existing);
+    expect(transactionMock).not.toHaveBeenCalled();
+  });
+
+  it('throws when an existing prod env has a different card_id than the one requested (findings #15)', async () => {
+    // The previous unconditional return masked stale callsites: a
+    // caller that thought it was seeding a fresh env got back the
+    // old env unchanged and never noticed. Loud failure is preferred.
+    envFindFirst.mockResolvedValue({ id: 'env-prod', type: 'production', card_id: 'card-old' });
+
+    await expect(
+      bootstrapProductionEnvironment('p1', 'u1', 'My Project', 'card-different'),
+    ).rejects.toThrow(/Production environment already exists.*card_id=card-old.*card_id=card-different/);
+    expect(transactionMock).not.toHaveBeenCalled();
+  });
 });
 
 // ── createEnvironment ───────────────────────────────────────────────────────

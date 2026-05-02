@@ -154,6 +154,52 @@ describe('http-api/events — onDeployEvent', () => {
     cleanup();
     expect(mockSocket.off).toHaveBeenCalledWith(DEPLOY_EVENT_CHANNEL, wrapped);
   });
+
+  it('logs "?" for type and "" for ids when the event is null/undefined or sparse', async () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    const { createOnDeployEvent } = await import('../http-api/events');
+    const onDeploy = createOnDeployEvent();
+    const cb = vi.fn();
+    onDeploy(cb);
+    const wrapped = mockSocket.on.mock.calls.find((c: unknown[]) => c[0] === DEPLOY_EVENT_CHANNEL)![1] as (
+      e: any,
+    ) => void;
+
+    // Drive the `event?.type ?? '?'` and id fallback chain — both
+    // branches of every `?.` and `??` operator.
+    wrapped(null);
+    expect(cb).toHaveBeenCalledWith(null);
+    expect(logSpy).toHaveBeenLastCalledWith(
+      `[ice-socket] ${DEPLOY_EVENT_CHANNEL}`,
+      '?',
+      '',
+    );
+
+    wrapped({});
+    expect(logSpy).toHaveBeenLastCalledWith(
+      `[ice-socket] ${DEPLOY_EVENT_CHANNEL}`,
+      '?',
+      '',
+    );
+
+    // node_id arm — present, resource_name absent
+    wrapped({ type: 'node_status', node_id: 'n1' });
+    expect(logSpy).toHaveBeenLastCalledWith(
+      `[ice-socket] ${DEPLOY_EVENT_CHANNEL}`,
+      'node_status',
+      'n1',
+    );
+
+    // resource_name arm — used when node_id is absent (?? falls through)
+    wrapped({ type: 'resource_status', resource_name: 'redis' });
+    expect(logSpy).toHaveBeenLastCalledWith(
+      `[ice-socket] ${DEPLOY_EVENT_CHANNEL}`,
+      'resource_status',
+      'redis',
+    );
+
+    logSpy.mockRestore();
+  });
 });
 
 describe('http-api/events — pipeline listeners', () => {

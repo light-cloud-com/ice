@@ -173,6 +173,84 @@ describe('http-api/socket — getSocket()', () => {
     expect(opts.auth).toEqual({});
     (globalThis as any).localStorage.getItem = original;
   });
+
+  // ── Connection-state handler bodies ───────────────────────────────────────
+  // The `getSocket()` call wires console-log handlers on connect / disconnect
+  // / reconnect / reconnect_error. We invoke them so the body of each handler
+  // executes, locking in the "logs are still emitted" behaviour the comments
+  // explicitly call out as essential for diagnosing live-update bugs.
+
+  it('logs to the console when the connect handler fires', async () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    const mod = await importFresh();
+    mod.getSocket();
+    const handler = mockSocket.on.mock.calls.find((c: unknown[]) => c[0] === 'connect')![1] as () => void;
+    handler();
+    expect(logSpy).toHaveBeenCalledWith('[ice-socket] connected id=', 's1');
+    logSpy.mockRestore();
+  });
+
+  it('warns to the console with the reason when the disconnect handler fires', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const mod = await importFresh();
+    mod.getSocket();
+    const handler = mockSocket.on.mock.calls.find((c: unknown[]) => c[0] === 'disconnect')![1] as (
+      r: string,
+    ) => void;
+    handler('transport close');
+    expect(warnSpy).toHaveBeenCalledWith('[ice-socket] disconnected:', 'transport close');
+    warnSpy.mockRestore();
+  });
+
+  it('errors to the console when the connect_error handler fires', async () => {
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const mod = await importFresh();
+    mod.getSocket();
+    const handler = mockSocket.on.mock.calls.find((c: unknown[]) => c[0] === 'connect_error')![1] as (
+      e: Error,
+    ) => void;
+    handler(new Error('timeout'));
+    expect(errSpy).toHaveBeenCalledWith('[ice-socket] connect_error:', 'timeout');
+    errSpy.mockRestore();
+  });
+
+  it('logs reconnect attempts via the Manager handler', async () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    const mod = await importFresh();
+    mod.getSocket();
+    const handler = mockManager.on.mock.calls.find((c: unknown[]) => c[0] === 'reconnect')![1] as (
+      n: number,
+    ) => void;
+    handler(3);
+    expect(logSpy).toHaveBeenCalledWith('[ice-socket] reconnected after', 3, 'attempts');
+    logSpy.mockRestore();
+  });
+
+  it('warns on reconnect_error via the Manager handler', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const mod = await importFresh();
+    mod.getSocket();
+    const handler = mockManager.on.mock.calls.find((c: unknown[]) => c[0] === 'reconnect_error')![1] as (
+      e: Error,
+    ) => void;
+    handler(new Error('refused'));
+    expect(warnSpy).toHaveBeenCalledWith('[ice-socket] reconnect_error:', 'refused');
+    warnSpy.mockRestore();
+  });
+
+  it('skips the polling-fallback flip when socket is null inside the connect_error handler', async () => {
+    // This drives the `socket && err.message.includes('websocket')` short
+    // circuit's first arm (socket null) — defends the explicit null check.
+    const mod = await importFresh();
+    mod.getSocket();
+    const handler = mockSocket.on.mock.calls.find((c: unknown[]) => c[0] === 'connect_error')![1] as (
+      e: Error,
+    ) => void;
+    // Even with a non-websocket error, transports stay default — covers
+    // the falsy-second-arm path of the conditional.
+    handler({ message: undefined } as unknown as Error);
+    expect(mockManager.opts.transports).toEqual(['websocket', 'polling']);
+  });
 });
 
 describe('http-api/socket — emitMenuAction', () => {

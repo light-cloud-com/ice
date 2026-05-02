@@ -328,7 +328,12 @@ const uiSlice = createSlice({
       // action.payload is the cardId to show in the new pane
       if (state.splitView.enabled) return; // Already split
 
-      // Copy viewport from current pane as starting point
+      // Copy viewport from current pane as starting point.
+      // findings.md #51 — the `?.` + `||` fallback is defensive but
+      // unreachable: initial state ships one pane, loadPersistedPanes
+      // gates restoration on `parsed.panes.length > 0`, and
+      // closeSplit keeps ≥1 pane. Kept as a belt-and-braces guard
+      // against a future corrupt-restore path.
       const currentViewport = state.splitView.panes[0]?.viewport || { panX: 0, panY: 0, scale: 1 };
       const newPaneId = `pane-${Date.now()}`;
       state.splitView.enabled = true;
@@ -346,7 +351,9 @@ const uiSlice = createSlice({
       // action.payload is the cardId to show in the new pane
       if (state.splitView.enabled) return; // Already split
 
-      // Copy viewport from current pane as starting point
+      // Copy viewport from current pane as starting point.
+      // findings.md #51 — see splitRight; same dormant defensive
+      // fallback, kept for parity.
       const currentViewport = state.splitView.panes[0]?.viewport || { panX: 0, panY: 0, scale: 1 };
       const newPaneId = `pane-${Date.now()}`;
       state.splitView.enabled = true;

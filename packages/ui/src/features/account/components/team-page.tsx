@@ -83,6 +83,11 @@ export function TeamPage() {
   }, [fetchMembers]);
 
   const handleRoleChange = async (userId: string, newRole: string) => {
+    // findings.md #52 — defensive guard. Only reachable in theory:
+    // the role <select> only renders when isAdmin, and isAdmin
+    // derives from selectedOrg.role, so by the time this handler
+    // is bound to a button selectedOrg is provably truthy.
+    // Kept as a belt-and-braces guard.
     if (!selectedOrg) return;
     setActionLoading(userId);
     try {

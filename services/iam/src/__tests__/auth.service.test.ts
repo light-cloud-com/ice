@@ -316,19 +316,21 @@ describe('refreshToken', () => {
     ).rejects.toMatchObject({ status: 401 });
   });
 
-  it('treats a missing refresh-token row as reuse and revokes the user family', async () => {
+  it('rejects a missing refresh-token row without wiping the family (findings #3)', async () => {
+    // Previously a missing row triggered `deleteMany({ user_id })`, so
+    // a stolen token replayed after the legit user rotated would log
+    // the legit user out everywhere. The fix scopes the response to a
+    // 401 and leaves other sessions intact — see comments in
+    // auth.service.refreshToken for the rationale.
     (prisma.refreshToken.findUnique as any).mockResolvedValue(null);
-    (prisma.refreshToken.deleteMany as any).mockResolvedValue({ count: 3 });
 
     const { refreshToken } = await import('../services/auth.service.js');
 
     await expect(
       refreshToken('stolen-tok', { userId: 'u-1', organisationId: 'o-1', type: 'refresh' }),
-    ).rejects.toMatchObject({ status: 401, message: /reuse detected/ });
+    ).rejects.toMatchObject({ status: 401, message: /Invalid refresh token/ });
 
-    expect(prisma.refreshToken.deleteMany).toHaveBeenCalledWith({
-      where: { user_id: 'u-1' },
-    });
+    expect(prisma.refreshToken.deleteMany).not.toHaveBeenCalled();
   });
 
   it('rejects an expired refresh token and best-effort deletes the row', async () => {

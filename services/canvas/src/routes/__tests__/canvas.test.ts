@@ -382,6 +382,13 @@ describe('POST /api/canvas/cards/create', () => {
     expect(res.status).toBe(403);
     expect(createCardMock).not.toHaveBeenCalled();
   });
+
+  it('returns 500 with the service error message when create throws (findings #43)', async () => {
+    createCardMock.mockRejectedValue(new Error('db blew up'));
+    const res = await post('/api/canvas/cards/create', { projectId: 'p1', name: 'X' });
+    expect(res.status).toBe(500);
+    expect(res.body.message).toBe('db blew up');
+  });
 });
 
 // ── 8. POST /cards/get ────────────────────────────────────────────────
@@ -480,5 +487,19 @@ describe('POST /api/canvas/cards/delete', () => {
 
     expect(res.status).toBe(403);
     expect(deleteCardMock).not.toHaveBeenCalled();
+  });
+
+  it('returns 404 when the card row is gone (Prisma P2025) (findings #43)', async () => {
+    deleteCardMock.mockRejectedValue(Object.assign(new Error('row missing'), { code: 'P2025' }));
+    const res = await post('/api/canvas/cards/delete', { cardId: 'gone' });
+    expect(res.status).toBe(404);
+    expect(res.body.message).toBe('Card not found');
+  });
+
+  it('returns 500 with the service error message on other failures (findings #43)', async () => {
+    deleteCardMock.mockRejectedValue(new Error('FK violation'));
+    const res = await post('/api/canvas/cards/delete', { cardId: 'c1' });
+    expect(res.status).toBe(500);
+    expect(res.body.message).toBe('FK violation');
   });
 });

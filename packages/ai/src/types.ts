@@ -122,10 +122,15 @@ export class NullProvider implements AiProvider {
     throw new Error('No AI provider configured. Set ANTHROPIC_API_KEY or ICE_AI_URL.');
   }
 
+  // findings.md #54 — the previous body did `yield undefined as ChatChunk`
+  // before throwing to satisfy eslint's require-yield. That made
+  // `for await (const c of provider.streamChat())` deliver an
+  // undefined chunk to consumers that didn't check `c.content`,
+  // which silently corrupted partial outputs. The eslint rule is
+  // suppressed for this single function so the generator can throw
+  // on first iteration without an observable undefined first.
+  // eslint-disable-next-line require-yield
   async *streamChat(): AsyncIterable<ChatChunk> {
-    // Generator throws before yielding; explicit empty yield satisfies
-    // eslint's require-yield and doesn't change observed behaviour.
-    yield undefined as unknown as ChatChunk;
     throw new Error('No AI provider configured. Set ANTHROPIC_API_KEY or ICE_AI_URL.');
   }
 }

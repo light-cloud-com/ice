@@ -35,13 +35,14 @@ describe('NullProvider', () => {
     await expect(p.chat()).rejects.toThrow(/no ai provider/i);
   });
 
-  it('throws when streamChat() is iterated', async () => {
+  it('throws on the FIRST iteration of streamChat (findings #54)', async () => {
+    // Previous behaviour yielded one `undefined` chunk before
+    // throwing, so consumers using `for await (const c of …)` that
+    // didn't pre-check `c.content` silently processed an undefined
+    // token. The eslint require-yield rule is suppressed on the
+    // function so the generator throws on first .next() instead.
     const p = new NullProvider();
     const it = p.streamChat()[Symbol.asyncIterator]();
-    // The generator yields one undefined chunk to satisfy require-yield, then throws.
-    const first = await it.next();
-    expect(first.done).toBe(false);
-    expect(first.value).toBeUndefined();
     await expect(it.next()).rejects.toThrow(/no ai provider/i);
   });
 });

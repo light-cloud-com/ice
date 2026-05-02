@@ -422,8 +422,14 @@ function emit_progress(context: ApplyContext, event: any): void {
 function build_result(context: ApplyContext): ApplyResult {
   const summary = build_summary(context.results);
 
+  // findings.md #24 — derive overall success from the summary, not
+  // from `errors.length`. A handler that returns `{ success: false }`
+  // without pushing an error onto `context.errors` would otherwise
+  // produce a result that says "1 failed" in the summary AND
+  // `success: true` overall. Using `summary.failed === 0` makes the
+  // two views of success consistent.
   return {
-    success: context.errors.length === 0,
+    success: summary.failed === 0 && context.errors.length === 0,
     deployment_id: context.deployment_id,
     summary,
     results: context.results,

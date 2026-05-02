@@ -358,20 +358,68 @@ describe('createEnvironment', () => {
     expect(ruleCreate.mock.calls[0]![0].data.branch_pattern).toBe('pr-x');
   });
 
-  it('logs and continues when trigger-rule cloning fails (does not bubble the error)', async () => {
+  it('bubbles trigger-rule lookup failures instead of swallowing (findings #14)', async () => {
+    // Findings #14: previously every step (find-prod-rules + per-rule
+    // create) was wrapped in a single try/catch + console.warn, so a
+    // DB outage during the find masked the partial-success state. Now
+    // the find runs outside the catch, so its errors bubble.
     envCount.mockResolvedValue(0);
     envFindFirst.mockResolvedValue({ card_id: 'pc', card: { nodes: [], edges: [], viewport: null } });
-    const result = { id: 'env-new', card: { id: 'newc' } };
-    transactionMock.mockImplementation(async (cb: any) => cb({
-      canvasCard: { create: vi.fn().mockResolvedValue({ id: 'newc' }) },
-      environment: { create: vi.fn().mockResolvedValue(result) },
-    }));
+    transactionMock.mockImplementation(async (cb: any) =>
+      cb({
+        canvasCard: { create: vi.fn().mockResolvedValue({ id: 'newc' }) },
+        environment: { create: vi.fn().mockResolvedValue({ id: 'env-new', card: { id: 'newc' } }) },
+      }),
+    );
     ruleFindMany.mockRejectedValue(new Error('db blew up'));
+
+    await expect(createEnvironment('p1', 'u1', 'staging', 'staging')).rejects.toThrow('db blew up');
+  });
+
+  it('bubbles per-rule create failures other than P2002 (findings #14)', async () => {
+    // FK violations, permission errors, and similar are real failures
+    // — the previous catch-all hid them as "trigger-rule cloning
+    // failed" warnings while the env was created. Now they bubble.
+    envCount.mockResolvedValue(0);
+    envFindFirst.mockResolvedValue({ card_id: 'pc', card: { nodes: [], edges: [], viewport: null } });
+    transactionMock.mockImplementation(async (cb: any) =>
+      cb({
+        canvasCard: { create: vi.fn().mockResolvedValue({ id: 'newc' }) },
+        environment: { create: vi.fn().mockResolvedValue({ id: 'env-new', card: { id: 'newc' } }) },
+      }),
+    );
+    ruleFindMany.mockResolvedValue([{ node_id: 'n1', repository: 'r', trigger_type: 'push' }]);
+    ruleCreate.mockRejectedValue(Object.assign(new Error('FK violation'), { code: 'P2003' }));
+
+    await expect(createEnvironment('p1', 'u1', 'staging', 'staging')).rejects.toThrow('FK violation');
+  });
+
+  it('skips P2002 unique-constraint failures during retries (findings #14)', async () => {
+    // P2002 is the documented "expected skip" — a rule with the same
+    // tuple already exists, e.g., when the route is retried after a
+    // partial failure. The clone proceeds for the next rule.
+    envCount.mockResolvedValue(0);
+    envFindFirst.mockResolvedValue({ card_id: 'pc', card: { nodes: [], edges: [], viewport: null } });
+    const created = { id: 'env-new', card: { id: 'newc' } };
+    transactionMock.mockImplementation(async (cb: any) =>
+      cb({
+        canvasCard: { create: vi.fn().mockResolvedValue({ id: 'newc' }) },
+        environment: { create: vi.fn().mockResolvedValue(created) },
+      }),
+    );
+    ruleFindMany.mockResolvedValue([
+      { node_id: 'n1', repository: 'r1', trigger_type: 'push' },
+      { node_id: 'n2', repository: 'r2', trigger_type: 'push' },
+    ]);
+    ruleCreate
+      .mockRejectedValueOnce(Object.assign(new Error('exists'), { code: 'P2002' }))
+      .mockResolvedValueOnce({});
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     const out = await createEnvironment('p1', 'u1', 'staging', 'staging');
 
-    expect(out).toBe(result);
+    expect(out).toBe(created);
+    expect(ruleCreate).toHaveBeenCalledTimes(2);
     expect(warnSpy).toHaveBeenCalled();
     warnSpy.mockRestore();
   });

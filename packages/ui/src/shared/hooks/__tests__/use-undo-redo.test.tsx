@@ -34,12 +34,15 @@ const mocks = vi.hoisted(() => {
   };
 });
 
+const effectCleanups = vi.hoisted(() => ({ list: [] as Array<() => void> }));
+
 vi.mock('react', async (orig) => {
   const actual = await orig<typeof import('react')>();
   return {
     ...actual,
     useEffect: (cb: () => void | (() => void)) => {
-      cb();
+      const cleanup = cb();
+      if (typeof cleanup === 'function') effectCleanups.list.push(cleanup);
     },
   };
 });
@@ -87,6 +90,7 @@ function fire(init: KeydownInit) {
 beforeEach(() => {
   mocks.keydownListeners.length = 0;
   mocks.preventDefault.mockReset();
+  effectCleanups.list.length = 0;
 
   vi.stubGlobal('window', {
     addEventListener: (type: string, cb: (e: unknown) => void) => {
@@ -204,5 +208,15 @@ describe('useUndoRedo', () => {
     const types = dispatchSpy.mock.calls.map((c) => (c[0] as { type: string }).type);
     expect(types).not.toContain('cards/undoCardChange');
     expect(types).not.toContain('cards/redoCardChange');
+  });
+
+  it('cleanup removes the keydown listener', () => {
+    const store = makeStore();
+    mount(store);
+    const beforeCount = mocks.keydownListeners.length;
+    expect(beforeCount).toBeGreaterThan(0);
+    // Run all effect cleanups.
+    for (const c of effectCleanups.list) c();
+    expect(mocks.keydownListeners.length).toBe(beforeCount - 1);
   });
 });

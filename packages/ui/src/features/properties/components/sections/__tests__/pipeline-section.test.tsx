@@ -411,6 +411,54 @@ describe('PipelineSection', () => {
     expect(mocks.fetchGitHubBranchesSpy).toHaveBeenCalledWith('org/behavior');
   });
 
+  it('handles activeCard with no edges array (|| [] fallback)', () => {
+    const activeCard = {
+      nodes: [{ id: 'node-1', data: {} }],
+      // edges intentionally missing
+    } as unknown as { id: string; nodes: unknown[]; edges: unknown[] };
+    // Must not throw — repo-resolution branch hits the `|| []` fallback for edges.
+    expect(() =>
+      renderSection({ nodeRepo: '', activeCard, nodeId: 'node-1' }),
+    ).not.toThrow();
+  });
+
+  it('handles activeCard with no nodes array (|| [] fallback)', () => {
+    const activeCard = {
+      // nodes intentionally missing
+      edges: [{ source: 'a', target: 'node-1' }],
+    } as unknown as { id: string; nodes: unknown[]; edges: unknown[] };
+    expect(() =>
+      renderSection({ nodeRepo: '', activeCard, nodeId: 'node-1' }),
+    ).not.toThrow();
+  });
+
+  it('skips repo resolution when the connected node is missing in nodes list', () => {
+    const activeCard = {
+      nodes: [
+        { id: 'node-1', data: {} },
+        // 'src-2' referenced by the edge but not in nodes
+      ],
+      edges: [{ source: 'src-2', target: 'node-1' }],
+    };
+    renderSection({ nodeRepo: '', activeCard, nodeId: 'node-1' });
+    // No source resolved → no branch fetch fired.
+    expect(mocks.fetchGitHubBranchesSpy).not.toHaveBeenCalled();
+  });
+
+  it("falls back to '' when connected source node has no repository field", () => {
+    const activeCard = {
+      nodes: [
+        { id: 'node-1', data: {} },
+        { id: 'src-2', data: { iceType: 'Source.Repository' /* no repository */ } },
+      ],
+      edges: [{ source: 'src-2', target: 'node-1' }],
+    };
+    renderSection({ nodeRepo: '', activeCard, nodeId: 'node-1' });
+    // repository resolves to '' so the branch-fetch effect doesn't fire (||
+    // '' is falsy).
+    expect(mocks.fetchGitHubBranchesSpy).not.toHaveBeenCalled();
+  });
+
   // ── Auto-create rule effect ───────────────────────────────────────────────
 
   it('does NOT auto-create when rulesLoaded is false', () => {
@@ -782,6 +830,54 @@ describe('PipelineSection', () => {
     expect(dots.length).toBeGreaterThan(0);
   });
 
+  it('event row picks blue animate-pulse dot for status=deploying', () => {
+    mocks.state.pipeline.rules['card-1:node-1'] = [makeRule()];
+    mocks.state.pipeline.history['card-1:node-1'] = [makeEvent({ id: 'ev-D', status: 'deploying' })];
+    const tree = renderSection();
+    const dots = findByPredicate(
+      tree,
+      (el) =>
+        el.type === 'span' &&
+        typeof (el.props as { className?: string }).className === 'string' &&
+        (el.props as { className: string }).className.includes('w-1.5 h-1.5') &&
+        (el.props as { className: string }).className.includes('animate-pulse'),
+    );
+    expect(dots.length).toBeGreaterThan(0);
+  });
+
+  it('event row picks ice-text-3 dot for status=cancelled', () => {
+    mocks.state.pipeline.rules['card-1:node-1'] = [makeRule()];
+    mocks.state.pipeline.history['card-1:node-1'] = [makeEvent({ id: 'ev-C', status: 'cancelled' })];
+    const tree = renderSection();
+    const dots = findByPredicate(
+      tree,
+      (el) =>
+        el.type === 'span' &&
+        typeof (el.props as { className?: string }).className === 'string' &&
+        (el.props as { className: string }).className.includes('w-1.5 h-1.5') &&
+        (el.props as { className: string }).className.includes('bg-ice-text-3') &&
+        !(el.props as { className: string }).className.includes('animate-pulse'),
+    );
+    expect(dots.length).toBeGreaterThan(0);
+  });
+
+  it('event row picks ice-text-3 dot for unknown status (default branch)', () => {
+    mocks.state.pipeline.rules['card-1:node-1'] = [makeRule()];
+    mocks.state.pipeline.history['card-1:node-1'] = [
+      makeEvent({ id: 'ev-U', status: 'queued' as unknown as 'success' }),
+    ];
+    const tree = renderSection();
+    const dots = findByPredicate(
+      tree,
+      (el) =>
+        el.type === 'span' &&
+        typeof (el.props as { className?: string }).className === 'string' &&
+        (el.props as { className: string }).className.includes('w-1.5 h-1.5') &&
+        (el.props as { className: string }).className.includes('bg-ice-text-3'),
+    );
+    expect(dots.length).toBeGreaterThan(0);
+  });
+
   it('clicking an event header dispatches expandedSetter with that ev.id', () => {
     mocks.state.pipeline.rules['card-1:node-1'] = [makeRule()];
     mocks.state.pipeline.history['card-1:node-1'] = [
@@ -835,6 +931,158 @@ describe('PipelineSection', () => {
     const text = collectText(tree);
     expect(text).toContain('deps installed');
     expect(text).toContain('build broke');
+  });
+
+  it('expanded log step renders the check glyph for status=completed', () => {
+    mocks.state.pipeline.rules['card-1:node-1'] = [makeRule()];
+    mocks.state.pipeline.history['card-1:node-1'] = [
+      makeEvent({
+        id: 'ev-OK',
+        deployment_logs: [
+          { step: 'install', status: 'completed', message: 'ok', timestamp: 'T:1' },
+        ],
+      }),
+    ];
+    mocks.expandedEventIdRef.current = 'ev-OK';
+    const tree = renderSection();
+    expect(collectText(tree)).toContain('✓');
+  });
+
+  it('expanded log step renders the cross glyph + red text for status=failed', () => {
+    mocks.state.pipeline.rules['card-1:node-1'] = [makeRule()];
+    mocks.state.pipeline.history['card-1:node-1'] = [
+      makeEvent({
+        id: 'ev-FAIL',
+        deployment_logs: [
+          { step: 'build', status: 'failed', message: 'broken', timestamp: 'T:1' },
+        ],
+      }),
+    ];
+    mocks.expandedEventIdRef.current = 'ev-FAIL';
+    const tree = renderSection();
+    expect(collectText(tree)).toContain('✗');
+    // The failed message-span wraps the text in red.
+    const reds = findByPredicate(
+      tree,
+      (el) =>
+        el.type === 'span' &&
+        typeof (el.props as { className?: string }).className === 'string' &&
+        (el.props as { className: string }).className === 'text-red-400',
+    );
+    expect(reds.length).toBeGreaterThan(0);
+  });
+
+  it('expanded log step renders the bullet glyph + blue text for status=running (default branch)', () => {
+    mocks.state.pipeline.rules['card-1:node-1'] = [makeRule()];
+    mocks.state.pipeline.history['card-1:node-1'] = [
+      makeEvent({
+        id: 'ev-RUN',
+        deployment_logs: [
+          { step: 'deploy', status: 'running', message: 'in progress', timestamp: 'T:1' },
+        ],
+      }),
+    ];
+    mocks.expandedEventIdRef.current = 'ev-RUN';
+    const tree = renderSection();
+    expect(collectText(tree)).toContain('●');
+    const blues = findByPredicate(
+      tree,
+      (el) =>
+        el.type === 'span' &&
+        typeof (el.props as { className?: string }).className === 'string' &&
+        (el.props as { className: string }).className.includes('text-blue-400'),
+    );
+    expect(blues.length).toBeGreaterThan(0);
+  });
+
+  it('expanded log step shows duration when log.duration_ms is set', () => {
+    mocks.state.pipeline.rules['card-1:node-1'] = [makeRule()];
+    mocks.state.pipeline.history['card-1:node-1'] = [
+      makeEvent({
+        id: 'ev-DUR',
+        deployment_logs: [
+          { step: 'install', status: 'completed', message: 'ok', timestamp: 'T:1', duration_ms: 1500 },
+        ],
+      }),
+    ];
+    mocks.expandedEventIdRef.current = 'ev-DUR';
+    const tree = renderSection();
+    // Walker tokenizes interpolation arms — duration is rendered inside a
+    // span as `${(log.duration_ms / 1000).toFixed(1)}s`. The walker collects
+    // the number ('1.5') and the literal 's' as separate text fragments.
+    const durSpans = findByPredicate(
+      tree,
+      (el) =>
+        el.type === 'span' &&
+        typeof (el.props as { className?: string }).className === 'string' &&
+        (el.props as { className: string }).className.includes('ml-auto') &&
+        (el.props as { className: string }).className.includes('text-slate-500'),
+    );
+    expect(durSpans).toHaveLength(1);
+    expect(collectText(durSpans[0])).toContain('1.5');
+  });
+
+  it('rule row renders with opacity-50 + half-border when rule.enabled is false', () => {
+    mocks.state.pipeline.rules['card-1:node-1'] = [makeRule({ id: 'r-OFF', enabled: false })];
+    const tree = renderSection();
+    const rows = findByPredicate(
+      tree,
+      (el) =>
+        el.type === 'div' &&
+        typeof (el.props as { className?: string }).className === 'string' &&
+        (el.props as { className: string }).className.includes('opacity-50'),
+    );
+    expect(rows.length).toBeGreaterThan(0);
+  });
+
+  it('rule row toggle has bg-ice-border when rule.enabled is false', () => {
+    mocks.state.pipeline.rules['card-1:node-1'] = [makeRule({ id: 'r-OFF', enabled: false })];
+    const tree = renderSection();
+    const toggles = findByPredicate(
+      tree,
+      (el) =>
+        el.type === 'button' &&
+        typeof (el.props as { className?: string }).className === 'string' &&
+        (el.props as { className: string }).className.includes('w-6 h-3.5 rounded-full') &&
+        (el.props as { className: string }).className.includes('bg-ice-border'),
+    );
+    expect(toggles).toHaveLength(1);
+  });
+
+  it('event renders without crashing when ev.deployment_logs is undefined (|| [] fallback)', () => {
+    mocks.state.pipeline.rules['card-1:node-1'] = [makeRule()];
+    // deployment_logs intentionally absent (use overrides spread without it).
+    const ev = makeEvent({ id: 'ev-NOLOGS' });
+    delete (ev as { deployment_logs?: unknown }).deployment_logs;
+    mocks.state.pipeline.history['card-1:node-1'] = [ev];
+    mocks.expandedEventIdRef.current = 'ev-NOLOGS';
+    const tree = renderSection();
+    // Empty-logs branch shows the placeholder (logs = [] from the || fallback).
+    expect(collectText(tree)).toContain('t:pipeline.noLogs');
+  });
+
+  it('expanded log step omits duration when log.duration_ms is missing', () => {
+    mocks.state.pipeline.rules['card-1:node-1'] = [makeRule()];
+    mocks.state.pipeline.history['card-1:node-1'] = [
+      makeEvent({
+        id: 'ev-NODUR',
+        deployment_logs: [
+          { step: 'install', status: 'completed', message: 'ok', timestamp: 'T:1' },
+        ],
+      }),
+    ];
+    mocks.expandedEventIdRef.current = 'ev-NODUR';
+    const tree = renderSection();
+    expect(collectText(tree)).not.toContain('s\n'); // crude — check the duration span isn't in tree
+    const durSpans = findByPredicate(
+      tree,
+      (el) =>
+        el.type === 'span' &&
+        typeof (el.props as { className?: string }).className === 'string' &&
+        (el.props as { className: string }).className.includes('ml-auto') &&
+        (el.props as { className: string }).className.includes('text-slate-500'),
+    );
+    expect(durSpans).toHaveLength(0);
   });
 
   it('expanded row with empty logs shows the "no logs" placeholder', () => {

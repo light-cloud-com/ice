@@ -86,7 +86,21 @@ export const createEnvironment = createAsyncThunk(
 
 export const deleteEnvironment = createAsyncThunk(
   'environments/delete',
-  async ({ envId, projectId }: { envId: string; projectId: string }, { rejectWithValue }) => {
+  async (
+    { envId, projectId }: { envId: string; projectId: string },
+    { rejectWithValue, getState },
+  ) => {
+    // findings.md #29 — `is_protected` was only checked at UI render
+    // (the trash button was hidden for protected envs). Any callsite
+    // that dispatched the thunk directly bypassed the guard. The
+    // server still rejects with "Production environment cannot be
+    // deleted", but a thunk-level check turns a wasted round-trip
+    // into an immediate, structured rejection.
+    const state = getState() as { environments: EnvironmentsState };
+    const env = state.environments.byProject[projectId]?.find((e) => e.id === envId);
+    if (env?.is_protected) {
+      return rejectWithValue('Cannot delete a protected environment');
+    }
     try {
       const res = await getApi().environments.delete(envId);
       if (!res.success) return rejectWithValue(res.error);

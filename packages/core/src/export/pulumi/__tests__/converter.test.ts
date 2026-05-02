@@ -173,6 +173,34 @@ describe('node_to_resource', () => {
     const result = await node_to_resource(provider, a.node, { provider: 'gcp' }, new Map());
     expect(result.resource?.options).toBeUndefined();
   });
+
+  it('uses {} when node.properties is missing (schema-provider hit)', async () => {
+    // Drives the defensive `node.properties || {}` branch on the
+    // schema-provider-hit path.
+    const provider = makeSchemaProvider({
+      't': { native_type: 't:m/r:C' },
+    });
+    const a = g.add_node({ type: 't', name: 'x', properties: {} });
+    if (!a.success) throw new Error('node add failed');
+    const node = { ...a.node, properties: undefined as unknown as Record<string, unknown> };
+
+    const result = await node_to_resource(provider, node, { provider: 'gcp' }, new Map());
+    expect(result.success).toBe(true);
+    expect(result.resource?.properties).toEqual({});
+  });
+
+  it('uses {} when node.properties is missing (fallback path)', async () => {
+    // Drives the defensive `node.properties || {}` branch on the
+    // fallback (schema-provider miss + fallback hit) path.
+    const provider = makeSchemaProvider({});
+    const a = g.add_node({ type: 'gcp.compute.instance', name: 'x', properties: {} });
+    if (!a.success) throw new Error('node add failed');
+    const node = { ...a.node, properties: undefined as unknown as Record<string, unknown> };
+
+    const result = await node_to_resource(provider, node, { provider: 'gcp' }, new Map());
+    expect(result.success).toBe(true);
+    expect(result.resource?.properties).toEqual({});
+  });
 });
 
 describe('export_graph', () => {

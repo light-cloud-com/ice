@@ -37,7 +37,11 @@ const TYPE_MAP: Record<string, string> = {
   // Web / App Service
   'microsoft.web/sites': 'azure.web.app',
   'microsoft.web/serverfarms': 'azure.web.app_service_plan',
-  'microsoft.web/staticSites': 'azure.web.static_site',
+  // Key must be all-lowercase: `get_ice_type` lowercases input before lookup.
+  // The previous capital-S key was dead — Microsoft.Web/staticSites fell
+  // through to the synthesized `azure.web.staticsites` fallback. See
+  // findings.md #11.
+  'microsoft.web/staticsites': 'azure.web.static_site',
 
   // Databases
   'microsoft.sql/servers': 'azure.sql.server',

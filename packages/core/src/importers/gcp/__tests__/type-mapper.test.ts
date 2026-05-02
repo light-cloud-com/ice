@@ -453,17 +453,22 @@ describe('map_properties — storage#bucket extractor', () => {
 });
 
 describe('map_properties — pubsub#topic and pubsub#subscription extractors', () => {
-  it('topic returns name and message_retention', () => {
+  it('topic extracts the bare name from the qualified path (findings #26)', () => {
+    // Previously the extractor returned the full
+    // `projects/p/topics/t1` path because `props.name || extractName(...)`
+    // short-circuited on the truthy path. Now we always extract.
     const out = map_properties('pubsub#topic', { name: 'projects/p/topics/t1', messageRetentionDuration: '600s' });
-    expect(out).toEqual({ name: 'projects/p/topics/t1', message_retention: '600s' });
+    expect(out).toEqual({ name: 't1', message_retention: '600s' });
   });
-  it('topic falls through to extractName(undefined) when name is absent', () => {
-    // props.name is undefined, so `props.name || extractName(...)` evaluates the right
-    // side, which calls extractName(undefined) → returns undefined.
+  it('topic returns undefined name when name is absent (findings #26)', () => {
     const out = map_properties('pubsub#topic', { messageRetentionDuration: '60s' });
     expect(out).toEqual({ message_retention: '60s' });
   });
-  it('subscription extracts topic by trailing path segment + push_endpoint', () => {
+  it('topic accepts a bare name (extractName is identity for bare strings)', () => {
+    const out = map_properties('pubsub#topic', { name: 't-bare' });
+    expect(out).toMatchObject({ name: 't-bare' });
+  });
+  it('subscription extracts both name and topic by trailing path segment', () => {
     const out = map_properties('pubsub#subscription', {
       name: 'projects/p/subscriptions/s1',
       topic: 'projects/p/topics/t1',
@@ -472,7 +477,7 @@ describe('map_properties — pubsub#topic and pubsub#subscription extractors', (
       pushConfig: { pushEndpoint: 'https://h/push' },
     });
     expect(out).toEqual({
-      name: 'projects/p/subscriptions/s1',
+      name: 's1',
       topic: 't1',
       ack_deadline: 30,
       message_retention: '7d',
@@ -484,27 +489,25 @@ describe('map_properties — pubsub#topic and pubsub#subscription extractors', (
     // extractName('') returns '' which is falsy → branch covered
     expect(out).toMatchObject({ name: 's', ack_deadline: 10 });
   });
-  it('subscription falls through to extractName when name is absent', () => {
+  it('subscription returns undefined name when name is absent', () => {
     const out = map_properties('pubsub#subscription', { ackDeadlineSeconds: 10 });
-    // No name + extractName(undefined) returns undefined → filtered out
     expect(out).toEqual({ ack_deadline: 10 });
   });
 });
 
 describe('map_properties — secret manager extractor', () => {
-  it('reports automatic vs manual replication', () => {
+  it('extracts the bare secret name from the qualified path (findings #26)', () => {
     expect(map_properties('secretmanager#secret', { name: 'projects/p/secrets/s', replication: { automatic: {} } })).toEqual({
-      name: 'projects/p/secrets/s',
+      name: 's',
       replication: 'automatic',
     });
     expect(map_properties('secretmanager#secret', { name: 'projects/p/secrets/s', replication: {} })).toEqual({
-      name: 'projects/p/secrets/s',
+      name: 's',
       replication: 'manual',
     });
   });
-  it('falls through to extractName when name is missing', () => {
+  it('returns undefined name when name is missing', () => {
     const out = map_properties('secretmanager#secret', { replication: { automatic: {} } });
-    // extractName falls through (path = '' is falsy in extractName guard) → undefined → filtered out.
     expect(out).toEqual({ replication: 'automatic' });
   });
 });

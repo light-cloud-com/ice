@@ -12,9 +12,14 @@ import * as authService from '../services/auth.service';
 import { AuthError } from '../services/auth.service';
 
 const router: RouterType = Router();
+// Test fallback is gated on `process.env.VITEST`, which vitest sets
+// automatically and only inside its own runtime. The previous gate of
+// `NODE_ENV === 'test'` was too loose: any process started with that
+// env (CI runners, local dev scripts, accidentally-staged) would have
+// signed prod-shaped tokens with the literal `'test-secret'`.
 const JWT_SECRET =
   process.env.JWT_SECRET ||
-  (process.env.NODE_ENV === 'test'
+  (process.env.VITEST
     ? 'test-secret'
     : (() => {
         throw new Error('JWT_SECRET is required');

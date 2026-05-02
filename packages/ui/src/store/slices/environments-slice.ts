@@ -157,6 +157,14 @@ const environmentsSlice = createSlice({
   initialState,
   reducers: {
     setActiveEnvironment(state, action: PayloadAction<{ projectId: string; envId: string }>) {
+      // findings.md #30 — only pin an envId that actually exists in
+      // the project's bucket. The previous unconditional write let a
+      // stale callsite point activeEnvId at a deleted env, and
+      // downstream selectors quietly resolved to undefined.
+      const exists = state.byProject[action.payload.projectId]?.some(
+        (e) => e.id === action.payload.envId,
+      );
+      if (!exists) return;
       state.activeEnvId[action.payload.projectId] = action.payload.envId;
     },
     clearPendingDiff(state) {

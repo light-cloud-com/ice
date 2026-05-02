@@ -253,9 +253,12 @@ describe('projects-slice', () => {
       expect(s.activeEnvironmentId).toBeNull();
     });
 
-    it('still updates activeProjectId when the id does not exist (no validation)', () => {
+    it('ignores an unknown project id (findings #30)', () => {
+      // The previous reducer wrote the id unconditionally even when
+      // no matching project existed; downstream selectors then
+      // returned undefined. Now we gate on existence.
       const s = projectsReducer(init(), setActiveProject('ghost'));
-      expect(s.activeProjectId).toBe('ghost');
+      expect(s.activeProjectId).toBeNull();
     });
   });
 

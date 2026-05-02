@@ -118,7 +118,11 @@ export function requireProjectAccess(minRole: 'viewer' | 'editor' | 'owner') {
       return res.status(400).json({ message: 'projectId is required' });
     }
 
-    // BE-10: Single query — fetch project with org membership and project membership in one round trip
+    // findings.md #46 — single query for real this time. The previous
+    // "BE-10: Single query" comment was aspirational: the org-member
+    // lookup ran as a separate `findUnique` round-trip. Nesting it
+    // under `organisation.members` collapses the auth check to one
+    // DB call per gated request.
     const project = await prisma.canvasProject.findUnique({
       where: { id: projectId },
       select: {
@@ -128,6 +132,15 @@ export function requireProjectAccess(minRole: 'viewer' | 'editor' | 'owner') {
           select: { role: true },
           take: 1,
         },
+        organisation: {
+          select: {
+            members: {
+              where: { user_id: req.userId! },
+              select: { role: true },
+              take: 1,
+            },
+          },
+        },
       },
     });
     if (!project) {
@@ -135,9 +148,7 @@ export function requireProjectAccess(minRole: 'viewer' | 'editor' | 'owner') {
     }
 
     // Check org-level role (admins/owners bypass project-level check)
-    const orgMember = await prisma.organisationMember.findUnique({
-      where: { user_id_organisation_id: { user_id: req.userId!, organisation_id: project.organisation_id } },
-    });
+    const orgMember = project.organisation.members[0];
     if (orgMember?.role && ORG_ADMIN_ROLES.has(orgMember.role)) {
       return next();
     }

@@ -211,11 +211,14 @@ describe('requireProjectAccess', () => {
 
   it('reads projectId from req.body', async () => {
     const { requireProjectAccess } = await freshAuth();
+    // findings.md #46 — the org-member lookup is now nested under
+    // `organisation.members` in the same query, so test fixtures
+    // include both relations.
     h.prisma.canvasProject.findUnique.mockResolvedValue({
       organisation_id: 'org-x',
       members: [{ role: 'editor' }],
+      organisation: { members: [] },
     });
-    h.prisma.organisationMember.findUnique.mockResolvedValue(null);
 
     const handler = requireProjectAccess('editor');
     const req: any = { headers: {}, body: { projectId: 'p-body' }, params: {}, query: {}, userId: 'u' };
@@ -235,8 +238,8 @@ describe('requireProjectAccess', () => {
     h.prisma.canvasProject.findUnique.mockResolvedValue({
       organisation_id: 'org-x',
       members: [{ role: 'owner' }],
+      organisation: { members: [] },
     });
-    h.prisma.organisationMember.findUnique.mockResolvedValue(null);
 
     const handler = requireProjectAccess('viewer');
     const req: any = { headers: {}, body: {}, params: { projectId: 'p-param' }, query: {}, userId: 'u' };
@@ -256,8 +259,8 @@ describe('requireProjectAccess', () => {
     h.prisma.canvasProject.findUnique.mockResolvedValue({
       organisation_id: 'org-x',
       members: [{ role: 'owner' }],
+      organisation: { members: [] },
     });
-    h.prisma.organisationMember.findUnique.mockResolvedValue(null);
 
     const handler = requireProjectAccess('viewer');
     const req: any = { headers: {}, body: {}, params: {}, query: { projectId: 'p-query' }, userId: 'u' };
@@ -278,8 +281,8 @@ describe('requireProjectAccess', () => {
     h.prisma.canvasProject.findUnique.mockResolvedValue({
       organisation_id: 'org-x',
       members: [{ role: 'owner' }],
+      organisation: { members: [] },
     });
-    h.prisma.organisationMember.findUnique.mockResolvedValue(null);
 
     const handler = requireProjectAccess('viewer');
     const req: any = { headers: {}, body: { cardId: 'card-1' }, params: {}, query: {}, userId: 'u' };
@@ -304,8 +307,8 @@ describe('requireProjectAccess', () => {
     h.prisma.canvasProject.findUnique.mockResolvedValue({
       organisation_id: 'org-x',
       members: [{ role: 'owner' }],
+      organisation: { members: [] },
     });
-    h.prisma.organisationMember.findUnique.mockResolvedValue(null);
 
     const handler = requireProjectAccess('viewer');
     const req: any = { headers: {}, body: {}, params: { cardId: 'card-2' }, query: {}, userId: 'u' };
@@ -326,8 +329,8 @@ describe('requireProjectAccess', () => {
     h.prisma.canvasProject.findUnique.mockResolvedValue({
       organisation_id: 'org-x',
       members: [{ role: 'owner' }],
+      organisation: { members: [] },
     });
-    h.prisma.organisationMember.findUnique.mockResolvedValue(null);
 
     const handler = requireProjectAccess('viewer');
     const req: any = { headers: {}, body: {}, params: {}, query: { cardId: 'card-3' }, userId: 'u' };
@@ -376,8 +379,8 @@ describe('requireProjectAccess', () => {
     h.prisma.canvasProject.findUnique.mockResolvedValue({
       organisation_id: 'org-x',
       members: [], // no project membership
+      organisation: { members: [{ role: 'admin' }] },
     });
-    h.prisma.organisationMember.findUnique.mockResolvedValue({ role: 'admin' });
 
     const handler = requireProjectAccess('owner');
     const req: any = { headers: {}, body: { projectId: 'p1' }, params: {}, query: {}, userId: 'u' };
@@ -394,8 +397,8 @@ describe('requireProjectAccess', () => {
     h.prisma.canvasProject.findUnique.mockResolvedValue({
       organisation_id: 'org-x',
       members: [],
+      organisation: { members: [{ role: 'owner' }] },
     });
-    h.prisma.organisationMember.findUnique.mockResolvedValue({ role: 'owner' });
 
     const handler = requireProjectAccess('owner');
     const req: any = { headers: {}, body: { projectId: 'p1' }, params: {}, query: {}, userId: 'u' };
@@ -411,8 +414,8 @@ describe('requireProjectAccess', () => {
     h.prisma.canvasProject.findUnique.mockResolvedValue({
       organisation_id: 'org-x',
       members: [{ role: 'viewer' }], // viewer
+      organisation: { members: [{ role: 'member' }] }, // not admin
     });
-    h.prisma.organisationMember.findUnique.mockResolvedValue({ role: 'member' }); // not admin
 
     const handler = requireProjectAccess('editor');
     const req: any = { headers: {}, body: { projectId: 'p1' }, params: {}, query: {}, userId: 'u' };
@@ -430,8 +433,8 @@ describe('requireProjectAccess', () => {
     h.prisma.canvasProject.findUnique.mockResolvedValue({
       organisation_id: 'org-x',
       members: [],
+      organisation: { members: [] },
     });
-    h.prisma.organisationMember.findUnique.mockResolvedValue(null);
 
     const handler = requireProjectAccess('viewer');
     const req: any = { headers: {}, body: { projectId: 'p1' }, params: {}, query: {}, userId: 'u' };
@@ -448,8 +451,8 @@ describe('requireProjectAccess', () => {
     h.prisma.canvasProject.findUnique.mockResolvedValue({
       organisation_id: 'org-x',
       members: [{ role: 'spectator' }], // unknown role string
+      organisation: { members: [] },
     });
-    h.prisma.organisationMember.findUnique.mockResolvedValue(null);
 
     const handler = requireProjectAccess('viewer');
     const req: any = { headers: {}, body: { projectId: 'p1' }, params: {}, query: {}, userId: 'u' };
@@ -466,8 +469,8 @@ describe('requireProjectAccess', () => {
     h.prisma.canvasProject.findUnique.mockResolvedValue({
       organisation_id: 'org-x',
       members: [{ role: 'viewer' }],
+      organisation: { members: [{ role: 'member' }] },
     });
-    h.prisma.organisationMember.findUnique.mockResolvedValue({ role: 'member' });
 
     const handler = requireProjectAccess('viewer');
     const req: any = { headers: {}, body: { projectId: 'p1' }, params: {}, query: {}, userId: 'u' };
@@ -483,8 +486,8 @@ describe('requireProjectAccess', () => {
     h.prisma.canvasProject.findUnique.mockResolvedValue({
       organisation_id: 'org-x',
       members: [{ role: 'editor' }],
+      organisation: { members: [{ role: 'member' }] },
     });
-    h.prisma.organisationMember.findUnique.mockResolvedValue({ role: 'member' });
 
     const handler = requireProjectAccess('editor');
     const req: any = { headers: {}, body: { projectId: 'p1' }, params: {}, query: {}, userId: 'u' };

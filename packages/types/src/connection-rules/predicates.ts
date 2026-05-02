@@ -13,6 +13,8 @@
  * with care.
  */
 
+import { NETWORK_CONTAINER_TYPES } from '@ice/constants';
+
 export function isDatabase(t: string): boolean {
   return (
     t.startsWith('Database.') ||
@@ -117,10 +119,14 @@ export function isPrivateNetwork(t: string): boolean {
 
 export function isContainer(iceType: string, nodeType?: string): boolean {
   if (nodeType === 'container' || nodeType === 'group') return true;
+  // The iceType-only branch shares its set of network container types
+  // with `@ice/core`'s `is_container_type` via the canonical
+  // `NETWORK_CONTAINER_TYPES` constant in `@ice/constants` — adding a
+  // new container type once flips both predicates in lockstep (rf-0c
+  // dedup). Group.* is exclusive to this predicate; the core function
+  // is type-only and doesn't see node types.
   return (
-    iceType === 'Network.VPC' ||
-    iceType === 'Network.Subnet' ||
-    iceType === 'Network.PrivateNetwork' ||
+    (NETWORK_CONTAINER_TYPES as readonly string[]).includes(iceType) ||
     iceType.startsWith('Group.')
   );
 }

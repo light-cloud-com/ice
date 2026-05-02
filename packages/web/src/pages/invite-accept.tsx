@@ -22,7 +22,14 @@ export const InviteAcceptPage: React.FC = () => {
 
   useEffect(() => {
     if (!isAuthenticated()) {
-      navigate(`/login?redirect=/invite/${token}`, { replace: true });
+      // findings.md #5 — the token is read from useParams and can
+      // legitimately contain `?`, `&`, `+`, `#`, etc. once we ever
+      // change the token format. Without encoding, those would be
+      // re-parsed as query separators on the next round-trip and the
+      // accept POST would receive a mangled token. The server-side
+      // email-match check (BE) closes the spoofing surface; this
+      // change closes the URL-mangle surface.
+      navigate(`/login?redirect=/invite/${encodeURIComponent(token ?? '')}`, { replace: true });
       return;
     }
 

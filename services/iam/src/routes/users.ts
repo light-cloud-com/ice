@@ -181,6 +181,20 @@ router.post('/invite/accept', async (req: AuthRequest, res: Response) => {
     if (invitation.accepted_at) return res.status(400).json({ message: 'Invitation already accepted' });
     if (invitation.expires_at < new Date()) return res.status(400).json({ message: 'Invitation expired' });
 
+    // findings.md #5 — bind the invitation to the recipient. Without
+    // this check anyone who learns a token (forwarded email, server
+    // log, share URL) could log in as themselves and accept the
+    // invitation, joining a team they were never invited to. The
+    // Invitation row already carries the recipient's email, so we
+    // require the authenticated user to match it (case-insensitive).
+    const callerUser = await prisma.user.findUnique({
+      where: { id: req.userId! },
+      select: { email: true },
+    });
+    if (!callerUser || callerUser.email.toLowerCase() !== invitation.email.toLowerCase()) {
+      return res.status(403).json({ message: 'This invitation was sent to a different email address' });
+    }
+
     // Add the current user to the org
     await prisma.organisationMember.upsert({
       where: {

@@ -72,11 +72,30 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
   }
 }
 
+// Role rank used by `requireProjectAccess`. Hoisted to module scope so the
+// fail-fast check at handler-build time and the per-request comparison
+// share the same source of truth — see findings #2 in `state/findings.md`.
+const ROLE_LEVEL: Record<string, number> = { viewer: 1, editor: 2, owner: 3 };
+const ORG_ADMIN_ROLES = new Set(['owner', 'admin']);
+
 /**
  * Project-level access middleware.
  * Reads projectId/cardId from req.body, req.params, or req.query (supports both POST and GET routes).
  */
 export function requireProjectAccess(minRole: 'viewer' | 'editor' | 'owner') {
+  // Fail fast if a caller passed a `minRole` that's not in the ROLE_LEVEL
+  // table — without this, an unknown minRole collapsed to `0` via the
+  // `|| 0` fallback and the per-request comparison `(... < 0)` was always
+  // false, so the gate effectively became "auth-required-only". TS narrows
+  // the parameter to the three known values, but a callsite using `as
+  // string`, a JSON-loaded config, or a future loosened signature could
+  // still slip an unknown value through.
+  if (!(minRole in ROLE_LEVEL)) {
+    throw new Error(
+      `requireProjectAccess: unknown minRole '${minRole}'. Expected one of ${Object.keys(ROLE_LEVEL).join(', ')}.`,
+    );
+  }
+
   return async (req: AuthRequest, res: Response, next: NextFunction) => {
     // Lazy-import to avoid circular deps at startup
     const prisma = (await import('@ice/db')).default;
@@ -98,9 +117,6 @@ export function requireProjectAccess(minRole: 'viewer' | 'editor' | 'owner') {
     if (!projectId) {
       return res.status(400).json({ message: 'projectId is required' });
     }
-
-    const ROLE_LEVEL: Record<string, number> = { viewer: 1, editor: 2, owner: 3 };
-    const ORG_ADMIN_ROLES = new Set(['owner', 'admin']);
 
     // BE-10: Single query — fetch project with org membership and project membership in one round trip
     const project = await prisma.canvasProject.findUnique({
@@ -126,9 +142,12 @@ export function requireProjectAccess(minRole: 'viewer' | 'editor' | 'owner') {
       return next();
     }
 
-    // Check project-level membership (already fetched with the project query)
+    // Check project-level membership (already fetched with the project query).
+    // ROLE_LEVEL[minRole] is guaranteed truthy by the handler-build-time check
+    // above; the OR-fallback on pm.role only kicks in for an unknown
+    // role string in the DB row (treated as "no access").
     const pm = project.members[0];
-    if (!pm?.role || (ROLE_LEVEL[pm.role] || 0) < (ROLE_LEVEL[minRole] || 0)) {
+    if (!pm?.role || (ROLE_LEVEL[pm.role] || 0) < ROLE_LEVEL[minRole]!) {
       return res.status(403).json({ message: 'Insufficient project permissions' });
     }
     next();

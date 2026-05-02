@@ -495,25 +495,16 @@ describe('requireProjectAccess', () => {
     expect(next).toHaveBeenCalledTimes(1);
   });
 
-  it('rejects with 403 when minRole is unknown (defaults to 0, never satisfied by member with role>0)', async () => {
+  it('throws at handler-build time when minRole is unknown (closes the fail-open gap)', async () => {
     const { requireProjectAccess } = await freshAuth();
-    h.prisma.canvasProject.findUnique.mockResolvedValue({
-      organisation_id: 'org-x',
-      members: [{ role: 'viewer' }],
-    });
-    h.prisma.organisationMember.findUnique.mockResolvedValue(null);
-
-    // Unknown minRole — ROLE_LEVEL[minRole] is undefined, fall back to 0.
-    // Member's `viewer` is level 1, which IS >= 0, so this should admit.
-    const handler = requireProjectAccess('non-existent-role' as any);
-    const req: any = { headers: {}, body: { projectId: 'p1' }, params: {}, query: {}, userId: 'u' };
-    const res = makeRes();
-    const next = vi.fn();
-    await handler(req, res, next);
-
-    // The level check is `(ROLE_LEVEL[role] || 0) < (ROLE_LEVEL[minRole] || 0)`.
-    // viewer = 1 < 0 is false, so admit.
-    expect(next).toHaveBeenCalledTimes(1);
+    // Unknown minRole used to collapse to 0 via the `|| 0` fallback in
+    // the per-request check, making `(role >= 0)` always true and the
+    // gate effectively auth-required-only. The current code throws at
+    // handler-build time so a misconfigured route can never silently
+    // admit unauthorized callers. See findings.md #2.
+    expect(() => requireProjectAccess('non-existent-role' as any)).toThrow(
+      /unknown minRole 'non-existent-role'/,
+    );
   });
 });
 

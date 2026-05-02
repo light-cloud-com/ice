@@ -766,3 +766,172 @@ describe('useDragTargetHighlight — setExitingGroupId thread-up', () => {
     expect(() => result.setExitingGroupId(null)).not.toThrow();
   });
 });
+
+// ─── Branch closures: descendant exclusion + multi-edge expansion ───────────
+
+describe('useDragTargetHighlight — descendant exclusion (L226, L267)', () => {
+  it('handleDragOverGroup: descendants of dragged node are added to the exclusion set (L226)', () => {
+    // getDescendantIds returns a non-empty list — the inner `excludeIds.add(desc)`
+    // body fires once per descendant.
+    const store = makeStore();
+    const visibleNodes = [
+      mkNode({ id: 'outer', type: 'container', x: 0, y: 0, width: 800, height: 600 }),
+      mkNode({ id: 'parent', type: 'container', x: 100, y: 100, width: 400, height: 300 }),
+      mkNode({ id: 'kid', x: 150, y: 150, width: 50, height: 30, parentId: 'parent' }),
+    ];
+    const getDescendantIdsSpy = vi.fn((id: string) => (id === 'parent' ? ['kid'] : []));
+    const result = captureHook(store, {
+      visibleNodes,
+      selectedNodes: [],
+      getDescendantIds: getDescendantIdsSpy,
+    });
+
+    // Drag 'parent' → descendants ['kid'] should be added to exclusion via L226.
+    result.handleDragOverGroup(null, 'parent', 200, 200);
+    expect(getDescendantIdsSpy).toHaveBeenCalledWith('parent');
+  });
+
+  it('handleDragEnd: selectedNodes are added to the descendantIds exclusion set (L267)', () => {
+    // selectedNodes carries multi-drag siblings; the for-of loop at L266-268 adds
+    // each into descendantIds. The bestContainer hit-test then excludes them.
+    const store = makeStore();
+    const dispatchSpy = vi.spyOn(store, 'dispatch');
+    const visibleNodes = [
+      mkNode({ id: 'outer', type: 'container', x: 0, y: 0, width: 800, height: 600 }),
+      mkNode({ id: 'child', x: 0, y: 0, width: 50, height: 30 }),
+      // 'sibling' is also being dragged (in selectedNodes); must be excluded.
+      mkNode({ id: 'sibling', type: 'container', x: 50, y: 50, width: 200, height: 200 }),
+    ];
+    const result = captureHook(store, {
+      visibleNodes,
+      selectedNodes: ['sibling'],
+      getDescendantIds: () => [],
+    });
+    dispatchSpy.mockClear();
+
+    // Drop center inside both 'sibling' and 'outer'. Without L267 exclusion,
+    // sibling would win (it's smaller). With L267, sibling is excluded → outer wins.
+    result.handleDragEnd('child', 100, 100, true);
+    const reparentAction = dispatchSpy.mock.calls.find(
+      (c) => (c[0] as { type: string }).type === 'cards/updateCardNodeParent',
+    );
+    expect(reparentAction).toBeDefined();
+    const payload = (reparentAction![0] as { type: string; payload: { parentId: string | null } }).payload;
+    expect(payload.parentId).toBe('outer');
+  });
+});
+
+describe('useDragTargetHighlight — post-reparent expansion (L327-330, L355-357)', () => {
+  it('existing children expand the bounding box (L327-330 inner-loop body fires)', () => {
+    // The bounding-box loop at L326-331 walks `existingChildren`. With at least
+    // one existing child, the four Math.min/max writes fire.
+    const store = makeStore();
+    const dispatchSpy = vi.spyOn(store, 'dispatch');
+    const visibleNodes = [
+      mkNode({ id: 'outer', type: 'container', x: 0, y: 0, width: 400, height: 300 }),
+      // existing child of outer at (10, 10) extends the bounding box.
+      mkNode({ id: 'sibling', x: 10, y: 10, width: 30, height: 30, parentId: 'outer' }),
+      mkNode({ id: 'child', x: 0, y: 0, width: 50, height: 30 }),
+    ];
+    const result = captureHook(store, {
+      visibleNodes,
+      nodes: [{ id: 'child', height: 30, width: 50 } as unknown as CardNode],
+      selectedNodes: [],
+      getDescendantIds: () => [],
+    });
+    dispatchSpy.mockClear();
+
+    // Drop child at (5, 5) — left/top overflow ensures changed=true. With
+    // existing 'sibling' at (10,10), the loop body adjusts the bounding box.
+    result.handleDragEnd('child', 5, 5, true);
+
+    // Reparent + expansion both fire (this exercises the L327-330 path).
+    const reparentAction = dispatchSpy.mock.calls.find(
+      (c) => (c[0] as { type: string }).type === 'cards/updateCardNodeParent',
+    );
+    expect(reparentAction).toBeDefined();
+    const resizeAction = dispatchSpy.mock.calls.find(
+      (c) => (c[0] as { type: string }).type === 'cards/resizeCardNode',
+    );
+    expect(resizeAction).toBeDefined();
+  });
+
+  it('non-container parent + canContain=true: reparent proceeds (L294 implicit-else)', () => {
+    // bestContainer.type !== 'container' triggers the canContain validator
+    // gate. With canContain=true, the function does NOT early-return; reparent
+    // continues into updateCardNodeParent dispatch.
+    mocks.canContainSpy.mockReturnValue(true);
+    const store = makeStore();
+    const dispatchSpy = vi.spyOn(store, 'dispatch');
+    const visibleNodes = [
+      // VPC iceType triggers isContainerNode (so it's a hit-test target),
+      // but node.type='block' triggers the canContain validator branch.
+      mkNode({
+        id: 'parent',
+        type: 'block',
+        x: 0,
+        y: 0,
+        width: 800,
+        height: 600,
+        data: { iceType: 'Network.VPC' },
+      }),
+      mkNode({
+        id: 'child',
+        x: 0,
+        y: 0,
+        width: 50,
+        height: 30,
+        data: { iceType: 'Compute.Service' },
+      }),
+    ];
+    const result = captureHook(store, {
+      visibleNodes,
+      nodes: [{ id: 'child', height: 30, width: 50 } as unknown as CardNode],
+      selectedNodes: [],
+      getDescendantIds: () => [],
+    });
+    dispatchSpy.mockClear();
+
+    result.handleDragEnd('child', 200, 200, true);
+
+    // canContain queried; reparent then proceeds (validator did NOT return).
+    expect(mocks.canContainSpy).toHaveBeenCalled();
+    const reparentAction = dispatchSpy.mock.calls.find(
+      (c) => (c[0] as { type: string }).type === 'cards/updateCardNodeParent',
+    );
+    expect(reparentAction).toBeDefined();
+    const payload = (reparentAction![0] as { type: string; payload: { parentId: string | null } }).payload;
+    expect(payload.parentId).toBe('parent');
+  });
+
+  it('right-edge overflow grows pw and marks changed=true (L355-357 true)', () => {
+    // Drop child near outer's right edge so childMaxR > parent's right budget.
+    // Outer at (0, 0, 400, 300). Drop child at x=370 width=50 → childMaxR=420.
+    // Right budget = 0 + 400 - PAD = 400 - PAD. overflowR = 420 - (400 - PAD) > 0.
+    const store = makeStore();
+    const dispatchSpy = vi.spyOn(store, 'dispatch');
+    const visibleNodes = [
+      mkNode({ id: 'outer', type: 'container', x: 0, y: 0, width: 400, height: 300 }),
+      mkNode({ id: 'child', x: 0, y: 0, width: 50, height: 30 }),
+    ];
+    const result = captureHook(store, {
+      visibleNodes,
+      nodes: [{ id: 'child', height: 30, width: 50 } as unknown as CardNode],
+      selectedNodes: [],
+      getDescendantIds: () => [],
+    });
+    dispatchSpy.mockClear();
+
+    // Drop center at (370+25, 50+15)=(395, 65). 395 ≤ outer.x+outer.width=400 →
+    // inside outer. overflowR = 420 - (400 - PAD) = 20 + PAD > 0. L355 true.
+    result.handleDragEnd('child', 370, 50, true);
+
+    const resizeAction = dispatchSpy.mock.calls.find(
+      (c) => (c[0] as { type: string }).type === 'cards/resizeCardNode',
+    );
+    expect(resizeAction).toBeDefined();
+    const resizePayload = (resizeAction![0] as { type: string; payload: { width: number; height: number } }).payload;
+    // Width grew by overflowR.
+    expect(resizePayload.width).toBe(400 + (20 + CONTAINER_PAD));
+  });
+});

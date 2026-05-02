@@ -4,17 +4,17 @@ Triage of bugs, dead code, and architecture surprises surfaced while
 bringing workspace coverage from 8,261 → 13,231 tests. Each entry cites
 its origin commit so the fix can land on the same branch.
 
-**Status update (2026-05-02 PM)** — 22 of 30 Tier 1 findings have
+**Status update (2026-05-02 PM)** — all 30 Tier 1 findings have
 landed on `refactoring`; commits not yet pushed to remote per user
-request. Each fix has its own commit with an inverted regression test.
-Items marked ✅ below are committed; remaining items are blocked on
-larger surgery (apply-engine AbortSignal threading).
+request. Each fix has its own commit with an inverted regression
+test. Tier 2 (cleanup) and Tier 3 (subtle/debatable) entries below
+remain open.
 
 ## Tier 1 — Security / correctness bugs (fix soon)
 
 ### Auth / authorization
 
-✅ **Fixed in this sweep:**
+✅ **All 30 Tier 1 findings fixed in this sweep:**
 #1 (JWT_SECRET gate), #2 (requireProjectAccess fail-open),
 #3 (refresh-token over-deletion), #4 (web/app.tsx trust model),
 #5 (invite-accept email-bind + URL-encode), #6 (last-owner guards),
@@ -26,13 +26,13 @@ larger surgery (apply-engine AbortSignal threading).
 #17 (OpenAICompatProvider.healthCheck auth), #18 (chat finishReason),
 #19 (architecture-rules Redis), #20 (connection-rules phantom cycle),
 #21 (audit silent fire-and-forget), #22 (canvas-intent SSE error),
+#23 (apply-engine AbortSignal — between layers + between batches,
+in-flight ops not interrupted, `cancelled` flag on result),
 #24 (apply-engine success-vs-error), #25 (apply-engine replace skip warn),
 #26 (GCP CLEAN_PROPERTY_EXTRACTORS), #27 (GCP importer access-denied),
 #28 (use-clipboard cut), #29 (environments thunk guard), #30 (setActive guards).
 
-⏳ **Remaining Tier 1:** #23 (apply-engine AbortSignal threading) — needs
-larger surgery: signal plumbed into apply_plan options, checked between
-layers, and propagated to provider operations. Tracked separately.
+Tier 1 closed. Next: Tier 2 cleanup pass.
 
 1. **JWT_SECRET falls back to literal `'test-secret'`** when
    `NODE_ENV === 'test'`. Any process started with that env (CI, dev

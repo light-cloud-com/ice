@@ -71,6 +71,14 @@ packages/web/src/**/*.js
 packages/web/src/**/*.js.map
 packages/web/src/**/*.d.ts
 packages/web/src/**/*.d.ts.map
+# findings.md #33 — these collide with Vite's `.js`-over-`.ts`
+# resolver and shipped on a stale `tsc --emit`. ambient.d.ts is the
+# only legitimate `.d.ts` in apps/desktop/src; whitelist it back.
+apps/desktop/src/**/*.js
+apps/desktop/src/**/*.js.map
+apps/desktop/src/**/*.d.ts
+apps/desktop/src/**/*.d.ts.map
+!apps/desktop/src/ambient.d.ts
 
 # Playwright MCP artifacts
 .playwright-mcp/

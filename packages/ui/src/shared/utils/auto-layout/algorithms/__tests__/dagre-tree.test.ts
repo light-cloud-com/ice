@@ -266,3 +266,64 @@ describe('dagreTreeLayout — determinism', () => {
     expect(map1).toEqual(map2);
   });
 });
+
+describe('dagreTreeLayout — branch-coverage edge cases', () => {
+  it('top-level container with zero children: kids.length === 0 → continue', () => {
+    // An empty container at top level: kids = [] under it → the per-owner loop
+    // hits `if (kids.length === 0) continue;` (the early-exit branch).
+    const nodes = [mk('p', 'Group.Custom')];
+    const { nodes: out } = dagreTreeLayout(nodes, [], DEFAULT_OPTIONS);
+    expect(out).toHaveLength(1);
+    const p = out[0];
+    expect(p.id).toBe('p');
+    // No layout work happened on the empty container's interior.
+    expect(p.x).toBeGreaterThanOrEqual(0);
+  });
+
+  it('shared child via two contains edges: checkFlowSubtree cache-hit branch fires', () => {
+    // Two top-level nodes share a child via `contains` edges. `buildHierarchy`
+    // appends the shared child to both parents' children lists. When
+    // `checkFlowSubtree` traverses the second parent's subtree, the shared
+    // child's `topHasFlow` entry is already populated → cache hit at
+    // `if (cached !== undefined) return cached;`.
+    const nodes = [mk('a', 'Group.Custom'), mk('b', 'Group.Custom'), mk('shared')];
+    const edges: LayoutEdge[] = [
+      { source: 'a', target: 'shared', relationship: 'contains' },
+      { source: 'b', target: 'shared', relationship: 'contains' },
+    ];
+    const { nodes: out } = dagreTreeLayout(nodes, edges, DEFAULT_OPTIONS);
+    // No throw; everyone placed.
+    expect(out).toHaveLength(3);
+  });
+
+  it('container with empty iceType (`""`) falls through visualMin to MIN_CONTAINER', () => {
+    // The fallback `(... .iceType as string) || ''` is exercised when the
+    // container's iceType is the empty string. visualMin then resolves to
+    // MIN_CONTAINER (240×150).
+    const blankContainer: LayoutNode = {
+      id: 'blank',
+      type: 'container',
+      iceType: '',
+      label: 'blank',
+      parentId: null,
+      width: 240,
+      height: 160,
+      x: 0,
+      y: 0,
+      data: {},
+    };
+    const child = mk('c', 'Compute.Container', 'blank');
+    const { nodes: out } = dagreTreeLayout([blankContainer, child], [], DEFAULT_OPTIONS);
+    const blankOut = out.find((n) => n.id === 'blank')!;
+    expect(blankOut.width).toBeGreaterThanOrEqual(240);
+    expect(blankOut.height).toBeGreaterThanOrEqual(150);
+  });
+
+  it('only-isolated top-level (no flow at all): early-out leaves nodes placed', () => {
+    // No flow edges → flowRoots is empty. `repackIsolatedTopLevel` short-
+    // circuits on `flowRoots.length === 0`. Dagre still positions each root.
+    const nodes = [mk('a'), mk('b'), mk('c')];
+    const { nodes: out } = dagreTreeLayout(nodes, [], DEFAULT_OPTIONS);
+    expect(out).toHaveLength(3);
+  });
+});

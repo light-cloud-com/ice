@@ -75,7 +75,7 @@ describe('action-logger — gate (cache hit branch)', () => {
     logApiCall('GET', '/a');
     logApiCall('GET', '/b');
     // Both calls passed the gate → buffer has 2 events.
-    expect((globalThis.window as IceWindow).__ICE_ACTION_LOG__).toHaveLength(2);
+    expect((globalThis.window as unknown as IceWindow).__ICE_ACTION_LOG__).toHaveLength(2);
   });
 });
 
@@ -269,5 +269,16 @@ describe('action-logger — public API surface', () => {
     // detail is the final positional arg.
     const detail = args[args.length - 1] as Record<string, unknown>;
     expect(detail).toMatchObject({ method: 'GET', path: '/api/x' });
+  });
+
+  it('skips console.debug when global `console` is undefined (typeof guard)', async () => {
+    // Stub the global so the SUT's `typeof console !== 'undefined'` guard
+    // takes the falsy branch. The buffer write still happens.
+    setupWindow();
+    vi.stubGlobal('console', undefined);
+    const { logApiCall } = await import('../action-logger');
+    expect(() => logApiCall('GET', '/api/x')).not.toThrow();
+    const win = globalThis.window as unknown as IceWindow;
+    expect(win.__ICE_ACTION_LOG__).toHaveLength(1);
   });
 });

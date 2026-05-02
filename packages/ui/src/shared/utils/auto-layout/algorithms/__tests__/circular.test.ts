@@ -119,6 +119,27 @@ describe('circularLayout', () => {
     expect(c.x).toBeGreaterThanOrEqual(p.x);
     expect(c.x + c.width).toBeLessThanOrEqual(p.x + p.width);
   });
+
+  it('all-nodes-have-known-parents (rootIds empty): kids.length===0 continue branch', () => {
+    // Cyclic parentId pair → both nodes excluded from rootIds (their parent is
+    // in the nodeMap). groupOrder = [null]; null's kids = [] → continue.
+    const a: LayoutNode = {
+      id: 'a',
+      type: 'resource',
+      iceType: 'Compute.Container',
+      label: 'a',
+      parentId: 'b',
+      width: 240,
+      height: 160,
+      x: 0,
+      y: 0,
+      data: {},
+    };
+    const b: LayoutNode = { ...a, id: 'b', parentId: 'a' };
+    const { nodes: out } = circularLayout([a, b], [], { ...DEFAULT_OPTIONS, layout: 'circular' });
+    // No throw; the early-out continue keeps us safe.
+    expect(out).toHaveLength(2);
+  });
 });
 
 describe('forceResolveOverlaps', () => {
@@ -238,5 +259,40 @@ describe('forceResolveOverlaps', () => {
     // No movement because the loop breaks immediately.
     expect(a.x).toBe(0);
     expect(b.x).toBe(50);
+  });
+
+  it('x-axis push, a-left-of-b (ox<oy, a.cx<b.cx → if branch)', () => {
+    // Tall narrow rectangles with a small horizontal overlap → ox < oy.
+    // a's x-center (25) < b's x-center (65) → if branch fires (a is pushed left).
+    const a = rect('a', 0, 0, 50, 200);
+    const b = rect('b', 40, 50, 50, 200);
+    const beforeAx = a.x;
+    forceResolveOverlaps([a, b], 0, 60, 0.8);
+    // a should have moved left (or stayed), b right; either way they no longer overlap.
+    expect(overlaps(a, b, 0)).toBe(false);
+    // a's center moved leftward of its starting position (the if-branch decreases a.vx).
+    expect(a.x).toBeLessThanOrEqual(beforeAx);
+  });
+
+  it('x-axis push, a-right-of-b (ox<oy, a.cx>=b.cx → else branch)', () => {
+    // Same shape, but with a positioned to the right of b.
+    // a center x = 65, b center x = 25 → else branch fires (a pushed right, b pushed left).
+    const a = rect('a', 40, 0, 50, 200);
+    const b = rect('b', 0, 50, 50, 200);
+    const beforeAx = a.x;
+    forceResolveOverlaps([a, b], 0, 60, 0.8);
+    expect(overlaps(a, b, 0)).toBe(false);
+    expect(a.x).toBeGreaterThanOrEqual(beforeAx);
+  });
+
+  it('y-axis push, a-below-b (oy<=ox, a.cy>=b.cy → else branch)', () => {
+    // Wide flat overlap with a positioned BELOW b → ox > oy → y-axis push.
+    // a center y = 65, b center y = 25 → else branch (a pushed down, b pushed up).
+    const a = rect('a', 0, 40, 200, 50);
+    const b = rect('b', 0, 0, 200, 50);
+    const beforeAy = a.y;
+    forceResolveOverlaps([a, b], 0, 60, 0.8);
+    expect(overlaps(a, b, 0)).toBe(false);
+    expect(a.y).toBeGreaterThanOrEqual(beforeAy);
   });
 });

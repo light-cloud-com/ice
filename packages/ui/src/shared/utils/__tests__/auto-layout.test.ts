@@ -67,3 +67,36 @@ describe('autoLayout — empty + dispatch', () => {
     expect(minY).toBeGreaterThanOrEqual(0);
   });
 });
+
+// `calculateZIndex` is also exported from auto-layout. The richer ordering
+// tests live in z-index-depth.test.ts; the cases below pin the four conditional
+// branches (VPC / Subnet / Group / Container / leaf) so coverage hits each arm.
+import { calculateZIndex } from '../auto-layout';
+
+describe('calculateZIndex — branch coverage', () => {
+  it('Network.VPC returns 0 + depth', () => {
+    expect(calculateZIndex('Network.VPC')).toBe(0);
+    expect(calculateZIndex('Network.VPC', 5)).toBe(5);
+  });
+
+  it('Network.Subnet returns 10 + depth', () => {
+    expect(calculateZIndex('Network.Subnet')).toBe(10);
+    expect(calculateZIndex('Network.Subnet', 3)).toBe(13);
+  });
+
+  it('Group.* returns 15 + depth', () => {
+    expect(calculateZIndex('Group.Custom')).toBe(15);
+    expect(calculateZIndex('Group.Frontend', 2)).toBe(17);
+  });
+
+  it('non-Group container (e.g. Network.PrivateNetwork) returns 20 + depth', () => {
+    // PN goes through `isContainerType()` rather than the Group prefix.
+    expect(calculateZIndex('Network.PrivateNetwork')).toBe(20);
+    expect(calculateZIndex('Network.PrivateNetwork', 4)).toBe(24);
+  });
+
+  it('leaf resource returns 100 + depth', () => {
+    expect(calculateZIndex('Compute.Container')).toBe(100);
+    expect(calculateZIndex('Compute.Container', 7)).toBe(107);
+  });
+});

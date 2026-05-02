@@ -202,3 +202,66 @@ describe('create_tables / prepare_statements (direct)', () => {
     db.close();
   });
 });
+
+// =============================================================================
+// initialize() error paths
+// =============================================================================
+
+describe('lifecycle_initialize error paths', () => {
+  it('returns failure when sqlite open throws (catch branch)', async () => {
+    // Open a path that better-sqlite3 cannot resolve. A nested non-existent
+    // directory triggers "SqliteError: unable to open database file" inside
+    // the `new BetterSqlite3(path)` call, which falls into the outer catch
+    // and maps to "Failed to initialize SQLite state store".
+    const ctx = makeCtx();
+    const result = await lifecycle_initialize(ctx, {
+      ...memoryOptions,
+      path: '/nonexistent-dir-from-vitest/should-not-exist/state.db',
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.message).toContain('Failed to initialize SQLite state store');
+      expect(result.error.code).toBe('INTERNAL_ERROR');
+    }
+  });
+});
+
+describe('lifecycle_close error paths', () => {
+  it('returns failure when ctx.db.close() throws (catch branch)', async () => {
+    // Construct a ctx with a fake db whose close() throws. The standalone
+    // helper hits the catch and maps to "Failed to close state store".
+    const ctx = makeCtx();
+    ctx.db = {
+      close: () => {
+        throw new Error('close failed');
+      },
+      // The remaining Database surface isn't used in lifecycle_close; cast
+      // through unknown to silence the type checker on the partial fake.
+    } as unknown as Database;
+
+    const result = await lifecycle_close(ctx);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.message).toContain('Failed to close state store');
+      expect(result.error.message).toContain('close failed');
+    }
+  });
+
+  it('coerces non-Error throws via String() (the `: new Error(String(error))` branch)', async () => {
+    // Throw a plain string from close() to exercise the
+    // `error instanceof Error ? error : new Error(String(error))` else.
+    const ctx = makeCtx();
+    ctx.db = {
+      close: () => {
+        // eslint-disable-next-line @typescript-eslint/no-throw-literal
+        throw 'plain string error';
+      },
+    } as unknown as Database;
+
+    const result = await lifecycle_close(ctx);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.message).toContain('plain string error');
+    }
+  });
+});

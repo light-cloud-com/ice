@@ -311,4 +311,25 @@ describe('error wrapping', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.message).toContain('list_snapshots');
   });
+
+  it('wraps a thrown error from snapshots_create when ctx.db is null', async () => {
+    const ctx: SqliteContext = { db: null, listeners: new Set(), statements: new Map() };
+    const result = await snapshots_create(ctx, 'g1');
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.message).toContain('create_snapshot');
+  });
+
+  it('wraps a thrown error from snapshots_get when ctx.db is null', async () => {
+    const ctx: SqliteContext = { db: null, listeners: new Set(), statements: new Map() };
+    const result = await snapshots_get(ctx, 'snap-1');
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.message).toContain('get_snapshot');
+  });
+
+  it('wraps a thrown error from snapshots_delete when ctx.db is null', async () => {
+    const ctx: SqliteContext = { db: null, listeners: new Set(), statements: new Map() };
+    const result = await snapshots_delete(ctx, 'snap-1');
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.message).toContain('delete_snapshot');
+  });
 });

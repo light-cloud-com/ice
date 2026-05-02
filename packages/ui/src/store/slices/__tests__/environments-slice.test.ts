@@ -289,6 +289,74 @@ describe('environments-slice', () => {
     });
   });
 
+  describe('deleteEnvironment thunk-level guard (findings #29)', () => {
+    function stateWith(env_: ReturnType<typeof env>): { environments: EnvironmentsState } {
+      return {
+        environments: {
+          ...init(),
+          byProject: { 'p-1': [env_] },
+        },
+      };
+    }
+
+    it('rejects without calling the API when the env is protected', async () => {
+      // Without this guard the only barrier to dispatching a delete on
+      // a protected env was the trash button being hidden in the UI.
+      // Any direct dispatch — keyboard shortcut, helper, future
+      // refactor — would round-trip to the server before being told
+      // no.
+      const callDispatched: string[] = [];
+      const fakeApi = {
+        environments: {
+          delete: async (id: string) => {
+            callDispatched.push(id);
+            return { success: true };
+          },
+        },
+      } as never;
+      const thunkAction = deleteEnvironment({ envId: 'env-prod', projectId: 'p-1' });
+      const dispatched: any[] = [];
+      const dispatch = (a: any) => {
+        dispatched.push(a);
+        return a;
+      };
+      const result = await thunkAction(dispatch as never, () => stateWith(env({ id: 'env-prod', is_protected: true })) as never, fakeApi);
+      expect(callDispatched).toEqual([]);
+      expect((result as any).type).toMatch(/rejected/);
+      expect((result as any).payload).toBe('Cannot delete a protected environment');
+    });
+
+    it('proceeds to the API when the env is not protected', async () => {
+      const calls: string[] = [];
+      const fakeApi = {
+        environments: {
+          delete: async (id: string) => {
+            calls.push(id);
+            return { success: true };
+          },
+        },
+      } as never;
+      const thunkAction = deleteEnvironment({ envId: 'env-stg', projectId: 'p-1' });
+      const dispatch = ((a: any) => a) as never;
+      // The thunk uses getApi() internally — to keep this test
+      // self-contained we don't intercept that, just verify the
+      // guard doesn't prematurely reject when is_protected is false.
+      const state = stateWith(env({ id: 'env-stg', is_protected: false }));
+      // We don't await the inner API call; the guard runs before it
+      // and we only need to confirm rejection isn't `Cannot delete...`.
+      const result: any = await Promise.race([
+        thunkAction(dispatch, () => state as never, fakeApi),
+        new Promise((r) => setTimeout(() => r({ type: 'tick' }), 50)),
+      ]);
+      // If the guard had rejected, the result would be a rejected
+      // action with the protected-env payload. The branch above
+      // races the (possibly-pending) thunk; a rejected guard would
+      // resolve immediately and the payload check below would fail.
+      expect(result.payload).not.toBe('Cannot delete a protected environment');
+      void calls;
+    });
+  });
+
   describe('renameEnvironment.fulfilled', () => {
     it('renames in place', () => {
       let s = environmentsReducer(

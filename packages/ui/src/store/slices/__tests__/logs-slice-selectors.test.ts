@@ -7,7 +7,9 @@
 import { describe, it, expect } from 'vitest';
 import logsReducer, {
   appendEntry,
+  clearEntries,
   setError,
+  setMode,
   setSource,
   selectLogStream,
   selectLogEntries,
@@ -80,5 +82,34 @@ describe('selectLogStatus', () => {
     let state = logsReducer(undefined, { type: '@@INIT' });
     state = logsReducer(state, setError({ terminalNodeId: 't-1', message: 'boom' }));
     expect(selectLogStatus({ logs: state }, 't-1')).toBe('error');
+  });
+});
+
+describe('clearEntries', () => {
+  it('wipes a slot.entries array but preserves the slot itself', () => {
+    let state = makeRoot().logs;
+    state = logsReducer(state, clearEntries({ terminalNodeId: 't-1' }));
+    expect(state.byTerminalNodeId['t-1']?.entries).toEqual([]);
+    expect(state.byTerminalNodeId['t-1']?.status).toBe('streaming'); // status preserved
+  });
+
+  it('is a no-op when the terminal id is unknown', () => {
+    const root = makeRoot();
+    const next = logsReducer(root.logs, clearEntries({ terminalNodeId: 'unknown' }));
+    expect(next).toEqual(root.logs);
+  });
+});
+
+describe('setMode', () => {
+  it('switches mode on an existing slot', () => {
+    let state = makeRoot().logs;
+    state = logsReducer(state, setMode({ terminalNodeId: 't-1', mode: 'tail' }));
+    expect(state.byTerminalNodeId['t-1']?.mode).toBe('tail');
+  });
+
+  it('creates a slot at the chosen mode when the terminal id is new', () => {
+    let state = logsReducer(undefined, { type: '@@INIT' });
+    state = logsReducer(state, setMode({ terminalNodeId: 'fresh', mode: 'tail' }));
+    expect(state.byTerminalNodeId['fresh']?.mode).toBe('tail');
   });
 });

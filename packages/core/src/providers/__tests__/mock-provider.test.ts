@@ -337,29 +337,28 @@ describe('MockProvider.state_generator override', () => {
 describe('default_state_generator status branch', () => {
   it('marks state status as "deleted" when the action is not create or update', async () => {
     // The destroy/get_state public methods do not call the state generator,
-    // so we exercise the branch by passing a custom generator-free instance
-    // and reaching into the resource_counter via deploy then forcing the
-    // generator with an unusual action via update path is impossible. Instead
-    // we re-bind the default generator and invoke it directly on the public API.
+    // findings.md #40 — the previous `'deleted'` fallback in the
+    // default state generator was unreachable through the public
+    // ProviderClient surface (destroy doesn't call the generator;
+    // only deploy/update do). The default now always returns
+    // `'available'`; callers wanting other statuses must inject a
+    // custom state_generator.
     const provider = new MockProvider(make_config(), { delay_range: [0, 0] });
 
-    // Build the same default generator behaviour by exercising both branches
-    // through the public deploy + update entry points.
     const create_result = await provider.deploy(make_node('one'));
     const update_result = await provider.update(make_node('one'), make_state({ cloud_id: 'cid' }));
     expect(create_result.state!.status).toBe('available');
     expect(update_result.state!.status).toBe('available');
 
-    // The 'deleted' branch is gated behind action !== 'create' && action !== 'update'.
-    // Reach it by handing a custom generator a controlled "noop" action through
-    // the only callsite that takes an arbitrary action: the bound default
-    // generator surfaced as options.state_generator after construction.
+    // Even when the generator is invoked with an unusual action it
+    // returns 'available' — the action label still threads through
+    // to the message and provider_metadata, just not the status.
     const generator = (provider as unknown as {
       options: { state_generator: (n: Node, a: string) => ResourceState };
     }).options.state_generator;
 
     const noop_state = generator(make_node('two'), 'noop');
-    expect(noop_state.status).toBe('deleted');
+    expect(noop_state.status).toBe('available');
     expect(noop_state.message).toBe('Mock noop successful');
   });
 });

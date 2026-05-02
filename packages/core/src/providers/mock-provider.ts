@@ -236,7 +236,13 @@ export class MockProvider implements ProviderClient {
     const cloud_id = `mock-${this.provider}-${this.resource_counter}-${Date.now()}`;
     const now = new Date().toISOString();
 
-    const status: ResourceStatus = action === 'create' || action === 'update' ? 'available' : 'deleted';
+    // findings.md #40 — only `create` and `update` call the state
+    // generator through the public ProviderClient interface;
+    // `destroy` builds its own DestroyResult without consulting it.
+    // The previous `'deleted'` fallback was therefore unreachable
+    // unless a custom `state_generator` was wired up to fire on a
+    // 'destroy' action — which the default generator below isn't.
+    const status: ResourceStatus = 'available';
 
     return {
       cloud_id,

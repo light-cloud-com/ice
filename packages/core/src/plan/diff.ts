@@ -155,6 +155,15 @@ export function deep_equal(a: unknown, b: unknown): boolean {
 /**
  * Known resource types and their force-replacement properties.
  * When these properties change, the resource must be replaced.
+ *
+ * Keys here MUST match the output of `normalize_resource_type`,
+ * which converts `_` to `.` along with `::` and `/`. Previously this
+ * table held keys like `azure.compute.virtual_machine` that the
+ * normalizer rewrote to `azure.compute.virtual.machine` before the
+ * lookup — so the entries for Azure VMs, Azure storage accounts, and
+ * GCP SQL instances were silently unreachable, and destructive
+ * changes to those resources never triggered the destroy/recreate
+ * flow. See `state/findings.md` #10.
  */
 const FORCE_NEW_PROPERTIES: Record<string, string[]> = {
   // AWS
@@ -168,14 +177,14 @@ const FORCE_NEW_PROPERTIES: Record<string, string[]> = {
   'aws.dynamodb.table': ['name', 'hash_key', 'range_key'],
 
   // Azure
-  'azure.compute.virtual_machine': ['vm_size', 'location'],
-  'azure.storage.storage_account': ['name', 'location'],
+  'azure.compute.virtual.machine': ['vm_size', 'location'],
+  'azure.storage.storage.account': ['name', 'location'],
   'azure.sql.database': ['name', 'server_id'],
 
   // GCP
   'gcp.compute.instance': ['machine_type', 'zone'],
   'gcp.storage.bucket': ['name', 'location'],
-  'gcp.sql.database_instance': ['name', 'region'],
+  'gcp.sql.database.instance': ['name', 'region'],
 
   // Kubernetes
   'kubernetes.core.namespace': ['name'],

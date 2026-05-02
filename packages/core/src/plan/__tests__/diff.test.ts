@@ -327,17 +327,30 @@ describe('is_destructive_change', () => {
     expect(is_destructive_change('gcp.compute.instance', changes)).toBe(true);
   });
 
-  it('cannot reach map keys that contain underscores (logic surprise)', () => {
-    // The FORCE_NEW_PROPERTIES map contains keys like 'azure.compute.virtual_machine'.
-    // normalize_resource_type rewrites '_' to '.' before lookup, so neither
-    // 'azure.compute.virtual_machine' (input) nor any other input shape can
-    // match the literal map key — those entries are dead code under the
-    // current normalization rule.
+  it('detects azure.compute.virtual_machine vm_size as force-new (was dead — fixed via key normalization)', () => {
+    // Findings #10 — the FORCE_NEW_PROPERTIES map keys were rewritten
+    // to use `.` everywhere so they round-trip through
+    // normalize_resource_type (which converts `_` → `.`). Both input
+    // shapes now hit the rule.
     const changes: PropertyChange[] = [
       { path: 'vm_size', old_value: 'a', new_value: 'b', sensitive: false },
     ];
-    expect(is_destructive_change('azure.compute.virtual_machine', changes)).toBe(false);
-    expect(is_destructive_change('azure.compute.virtual.machine', changes)).toBe(false);
+    expect(is_destructive_change('azure.compute.virtual_machine', changes)).toBe(true);
+    expect(is_destructive_change('azure.compute.virtual.machine', changes)).toBe(true);
+  });
+
+  it('detects gcp.sql.database_instance region as force-new (also fixed via normalization)', () => {
+    const changes: PropertyChange[] = [
+      { path: 'region', old_value: 'us-central1', new_value: 'us-east1', sensitive: false },
+    ];
+    expect(is_destructive_change('gcp.sql.database_instance', changes)).toBe(true);
+  });
+
+  it('detects azure.storage.storage_account name as force-new (also fixed via normalization)', () => {
+    const changes: PropertyChange[] = [
+      { path: 'name', old_value: 'old', new_value: 'new', sensitive: false },
+    ];
+    expect(is_destructive_change('azure.storage.storage_account', changes)).toBe(true);
   });
 
   it('detects kubernetes.apps.deployment namespace as force-new', () => {

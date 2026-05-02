@@ -42,11 +42,10 @@ describe('get_ice_type', () => {
     // Web / App Service
     ['microsoft.web/sites', 'azure.web.app'],
     ['microsoft.web/serverfarms', 'azure.web.app_service_plan'],
-    // NOTE: `'microsoft.web/staticSites'` (capital S) is in the TYPE_MAP, but
-    // `get_ice_type` lowercases input before lookup — so the table key is
-    // dead code and lookups fall through to the synthesized fallback. The
-    // assertion below pins the *actual* behavior; flag for the critic.
-    ['microsoft.web/staticsites', 'azure.web.staticsites'],
+    // findings.md #11 — TYPE_MAP key was lowercased so it round-trips
+    // through `get_ice_type`'s lowercase normalization. Both input
+    // shapes now resolve to the intended iceType.
+    ['microsoft.web/staticsites', 'azure.web.static_site'],
     // Databases
     ['microsoft.sql/servers', 'azure.sql.server'],
     ['microsoft.sql/servers/databases', 'azure.sql.database'],
@@ -118,14 +117,13 @@ describe('get_ice_type', () => {
     expect(get_ice_type('weird.thing')).toBe('azure.unknown.weird_thing');
   });
 
-  // The `'microsoft.web/staticSites'` TYPE_MAP entry is dead code:
-  // get_ice_type lowercases the input first, so the capital-S key is
-  // never hit. is_type_supported also returns false because it checks
-  // by lowercased lookup. Document the dissonance here so a future fix
-  // (lowercase the table key) trips this test.
-  it('does NOT route Microsoft.Web/staticSites to azure.web.static_site (TYPE_MAP key is mis-cased)', () => {
-    expect(get_ice_type('Microsoft.Web/staticSites')).toBe('azure.web.staticsites');
-    expect(is_type_supported('Microsoft.Web/staticSites')).toBe(false);
+  // findings.md #11 — `'microsoft.web/staticSites'` (capital S) used to
+  // be dead code because get_ice_type lowercased the input before lookup.
+  // The TYPE_MAP key is now lowercase so both `Microsoft.Web/staticSites`
+  // and `microsoft.web/staticsites` resolve to `azure.web.static_site`.
+  it('routes Microsoft.Web/staticSites to azure.web.static_site (case-insensitive)', () => {
+    expect(get_ice_type('Microsoft.Web/staticSites')).toBe('azure.web.static_site');
+    expect(is_type_supported('Microsoft.Web/staticSites')).toBe(true);
   });
 });
 

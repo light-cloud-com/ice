@@ -22,9 +22,15 @@ const router: RouterType = Router();
 router.use(requireAuth);
 
 function getOrgId(req: AuthRequest): string {
-  // Prefer JWT-derived organisationId; fall back to client-supplied value
-  // (needed when JWT hasn't been refreshed yet after org switch)
-  return req.organisationId || req.body?.organisationId || '';
+  // findings.md #7 — JWT-derived organisationId only. The previous
+  // `req.body?.organisationId` fallback was a UX shortcut for stale
+  // JWTs after an org switch, but it let any authenticated caller
+  // scope `/projects` (list/create) to ANY org id by passing it in
+  // the body. The hardened path: refresh the JWT after an org switch
+  // before issuing canvas writes; if the JWT carries no org, the
+  // route returns an empty list rather than reading another org's
+  // data.
+  return req.organisationId || '';
 }
 
 // ── Projects & Folders ──────────────────────────────────────────────────────

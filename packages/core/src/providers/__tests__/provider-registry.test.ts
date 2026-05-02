@@ -133,6 +133,25 @@ describe('Provider Registry', () => {
     expect(manager.get_registry()).toBeDefined();
     manager.dispose();
   });
+
+  it('warns when register is called twice for the same name (findings #41)', () => {
+    // Last-write-wins behaviour is preserved — a future plugin host
+    // may legitimately replace a built-in — but the silent override
+    // used to mask typo'd / accidental double-registers in plugin
+    // discovery. The warning surfaces them.
+    const registry = create_provider_registry();
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const make_factory = (id: string) => async () => ({ provider: id }) as unknown as ProviderClient;
+    registry.register('dup', make_factory('first'));
+    expect(warnSpy).not.toHaveBeenCalled();
+
+    registry.register('dup', make_factory('second'));
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringMatching(/register\("dup"\) replacing an existing factory/),
+    );
+    warnSpy.mockRestore();
+  });
 });
 
 // ─── DefaultProviderRegistry ────────────────────────────────────────

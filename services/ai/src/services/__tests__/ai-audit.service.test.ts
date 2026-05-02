@@ -216,6 +216,7 @@ describe('writeAuditEntry', () => {
 
   it('swallows a prisma rejection so the caller is never broken (fire-and-forget)', async () => {
     mocks.create.mockRejectedValue(new Error('db down'));
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const e = fixture();
 
     // The function returns void synchronously; the rejection is attached to
@@ -225,6 +226,15 @@ describe('writeAuditEntry', () => {
     expect(() => writeAuditEntry(e)).not.toThrow();
     await Promise.resolve();
     await Promise.resolve();
+
+    // findings.md #21 — the rejection must reach console.error so an
+    // operator can see when audit-log persistence is broken. The
+    // request path still doesn't throw.
+    expect(errSpy).toHaveBeenCalledWith(
+      expect.stringMatching(/\[ai-audit\] writeAuditEntry failed/),
+      expect.any(Error),
+    );
+    errSpy.mockRestore();
   });
 });
 

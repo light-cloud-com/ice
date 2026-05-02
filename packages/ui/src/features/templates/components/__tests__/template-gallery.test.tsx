@@ -656,3 +656,205 @@ describe('TemplateGalleryDialog — initial-category sync effect', () => {
     expect(mocks.stateSlots[2]).toEqual({ id: 'preserve-tpl' });
   });
 });
+
+// ─── Tab + filter onClicks (extra branch coverage) ────────────────────────
+
+describe('TemplateGalleryDialog — tab + filter wiring', () => {
+  it('the "all" tab button updates activeCategory to "all"', () => {
+    mocks.stateSlots[0] = '';
+    mocks.stateSlots[1] = 'web';
+    const tree = render();
+    const tabs = findByPredicate(
+      tree,
+      (el) =>
+        el.type === 'button' &&
+        ((el.props as { className?: string }).className ?? '').includes('rounded-full') &&
+        (el.props as { children?: unknown }).children === 'templates.gallery.allCategories',
+    );
+    expect(tabs.length).toBe(1);
+    (tabs[0].props as { onClick: () => void }).onClick();
+    expect(mocks.stateSlots[1]).toBe('all');
+  });
+
+  it('per-category tab button updates activeCategory to that category id', () => {
+    const tree = render();
+    const tabs = findByPredicate(
+      tree,
+      (el) =>
+        el.type === 'button' &&
+        ((el.props as { className?: string }).className ?? '').includes('rounded-full') &&
+        Array.isArray((el.props as { children?: unknown }).children),
+    );
+    // tabs are: 'web', 'ai', 'empty' (non-"all" labels)
+    expect(tabs.length).toBeGreaterThanOrEqual(1);
+    (tabs[0].props as { onClick: () => void }).onClick();
+    // The first dynamic tab is web (TEMPLATE_CATEGORIES[0])
+    expect(mocks.stateSlots[1]).toBe('web');
+  });
+
+  it('SearchInput onChange updates the search slot', () => {
+    const tree = render();
+    const inputs = findByPredicate(
+      tree,
+      (el) =>
+        typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
+        (el.props as { ['data-stub']: string })['data-stub'] === 'SearchInput',
+    );
+    expect(inputs.length).toBe(1);
+    (inputs[0].props as { onChange: (e: { target: { value: string } }) => void }).onChange({
+      target: { value: 'foo' },
+    });
+    expect(mocks.stateSlots[0]).toBe('foo');
+  });
+
+  it('TemplateCard click invokes setSelectedTemplate via onSelect', () => {
+    const tree = render();
+    const cards = findByPredicate(
+      tree,
+      (el) =>
+        typeof (el.props as { ['data-stub']?: string })['data-stub'] === 'string' &&
+        (el.props as { ['data-stub']: string })['data-stub'] === 'TemplateCard',
+    );
+    expect(cards.length).toBeGreaterThanOrEqual(1);
+    (cards[0].props as { onClick: () => void }).onClick();
+    // slot 2 is selectedTemplate
+    expect(mocks.stateSlots[2]).toBeDefined();
+    expect(mocks.stateSlots[2]).not.toBeNull();
+  });
+
+  it('detail-view onBack callback resets selectedTemplate to null', () => {
+    mocks.stateSlots[0] = '';
+    mocks.stateSlots[1] = 'all';
+    mocks.stateSlots[2] = { id: 'tpl-a', name: 'Tpl A', provider: 'aws' };
+    const tree = render();
+    // Find the TemplateDetail React element to read onBack
+    const detail = findByPredicate(
+      tree,
+      (el) =>
+        typeof el.type === 'function' &&
+        (el.props as { template?: { id?: string } }).template?.id === 'tpl-a',
+    )[0];
+    expect(detail).toBeDefined();
+    (detail.props as { onBack: () => void }).onBack();
+    // After invocation slot 2 should be null
+    expect(mocks.stateSlots[2]).toBeNull();
+  });
+
+  it('Dialog onOpenChange(false) routes through handleClose', () => {
+    const tree = render();
+    // Find the JSX <Dialog> FC element (the original, before the mock replaces it).
+    const dialogs = findByPredicate(
+      tree,
+      (el) =>
+        typeof el.type === 'function' &&
+        typeof (el.props as { onOpenChange?: unknown }).onOpenChange === 'function',
+    );
+    expect(dialogs.length).toBeGreaterThanOrEqual(1);
+    (dialogs[0].props as { onOpenChange: (open: boolean) => void }).onOpenChange(false);
+    const types = mocks.dispatch.mock.calls.map((c) => (c[0] as { type: string }).type);
+    expect(types).toContain('ui/closeTemplateGallery');
+  });
+
+  it('Dialog onOpenChange(true) does NOT close', () => {
+    const tree = render();
+    const dialogs = findByPredicate(
+      tree,
+      (el) =>
+        typeof el.type === 'function' &&
+        typeof (el.props as { onOpenChange?: unknown }).onOpenChange === 'function',
+    );
+    (dialogs[0].props as { onOpenChange: (open: boolean) => void }).onOpenChange(true);
+    const types = mocks.dispatch.mock.calls.map((c) => (c[0] as { type: string }).type);
+    expect(types).not.toContain('ui/closeTemplateGallery');
+  });
+
+  it('detail-view Dialog onOpenChange(false) closes the gallery', () => {
+    mocks.stateSlots[0] = '';
+    mocks.stateSlots[1] = 'all';
+    mocks.stateSlots[2] = { id: 'tpl-a', name: 'Tpl A', provider: 'aws' };
+    const tree = render();
+    const dialog = findByPredicate(
+      tree,
+      (el) =>
+        typeof el.type === 'function' &&
+        typeof (el.props as { onOpenChange?: unknown }).onOpenChange === 'function',
+    )[0];
+    (dialog.props as { onOpenChange: (open: boolean) => void }).onOpenChange(false);
+    const types = mocks.dispatch.mock.calls.map((c) => (c[0] as { type: string }).type);
+    expect(types).toContain('ui/closeTemplateGallery');
+  });
+
+  it('handleUseTemplate falls back to "" when environmentPresets[0] is missing', async () => {
+    mocks.axios.post
+      .mockResolvedValueOnce({ data: { id: 'proj-1', slug: 'app' } })
+      .mockResolvedValueOnce({ data: {} })
+      .mockResolvedValueOnce({ data: { cards: [{ id: 'card-1' }] } })
+      .mockResolvedValueOnce({ data: {} });
+
+    render();
+    const handleUseTemplate = mocks.callbacks[0] as (t: unknown) => Promise<void>;
+    await handleUseTemplate({
+      id: 'tpl-x',
+      name: 'X',
+      provider: 'aws',
+      environmentPresets: [], // empty → ?.region falls through to ''
+    });
+    expect(mocks.axios.post.mock.calls[1]).toEqual([
+      '/canvas/projects/update',
+      { projectId: 'proj-1', provider: 'aws', region: '' },
+    ]);
+  });
+
+  it('handleUseTemplate skips fetchProjectTree when no orgId', async () => {
+    mocks.selectedOrg = null;
+    mocks.axios.post
+      .mockResolvedValueOnce({ data: { id: 'proj-1', slug: 'lone-app' } })
+      .mockResolvedValueOnce({ data: {} })
+      .mockResolvedValueOnce({ data: { cards: [{ id: 'card-1' }] } })
+      .mockResolvedValueOnce({ data: {} });
+
+    render();
+    const handleUseTemplate = mocks.callbacks[0] as (t: unknown) => Promise<void>;
+    await handleUseTemplate({
+      id: 'tpl-z',
+      name: 'Z',
+      provider: 'aws',
+      environmentPresets: [{ region: 'us-east-1' }],
+    });
+    // No 'projects/fetch' dispatch since orgId is null
+    const types = mocks.dispatch.mock.calls.map((c) => (c[0] as { type: string }).type);
+    expect(types).not.toContain('projects/fetch');
+  });
+
+  it('handleUseTemplate skips /cards/update when project response has no card', async () => {
+    mocks.axios.post
+      .mockResolvedValueOnce({ data: { id: 'proj-1', slug: 'app' } })
+      .mockResolvedValueOnce({ data: {} })
+      .mockResolvedValueOnce({ data: { cards: [] } }) // no cards
+      .mockResolvedValueOnce({ data: {} });
+
+    render();
+    const handleUseTemplate = mocks.callbacks[0] as (t: unknown) => Promise<void>;
+    await handleUseTemplate({
+      id: 'tpl-q',
+      name: 'Q',
+      provider: 'aws',
+      environmentPresets: [{ region: 'us-east-1' }],
+    });
+    const paths = mocks.axios.post.mock.calls.map((c) => c[0]);
+    expect(paths).toEqual(['/canvas/projects/create', '/canvas/projects/update', '/canvas/projects/get']);
+  });
+
+  it('renders no featured group when activeCategory is set', () => {
+    mocks.stateSlots[0] = '';
+    mocks.stateSlots[1] = 'web';
+    const tree = render();
+    let text = '';
+    for (const el of walk(tree)) {
+      const c = (el.props as { children?: unknown }).children;
+      if (typeof c === 'string') text += c + '|';
+    }
+    // Featured banner is gated on activeCategory==='all' && !search
+    expect(text).not.toContain('templates.gallery.featured');
+  });
+});

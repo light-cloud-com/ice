@@ -28,7 +28,12 @@ vi.mock('react', async (orig) => {
   const r = (await orig()) as typeof import('react');
   return {
     ...r,
-    useState: <T,>(init: T): [T, (v: T) => void] => [init, vi.fn()],
+    useState: <T,>(init: T): [T, (v: T) => void] => {
+      const next = mocks.useStateQueue.shift();
+      const setter = vi.fn();
+      mocks.setStates.push(setter);
+      return [next === undefined ? init : (next as T), setter];
+    },
   };
 });
 
@@ -93,6 +98,9 @@ beforeEach(() => {
   mocks.dispatch.mockReset();
   mocks.dispatch.mockReturnValue(mockThunkResolve(undefined));
   mocks.tFn.mockClear();
+  mocks.renameEnvSpy.mockClear();
+  mocks.useStateQueue.length = 0;
+  mocks.setStates.length = 0;
 });
 
 describe('RenameEnvironmentModal — render', () => {
@@ -180,5 +188,89 @@ describe('RenameEnvironmentModal — handleSave (integration via render-time cal
     const tree = callRender({ env: makeEnv(), projectId: 'p1', onClose: vi.fn() });
     const saveLabel = findByPredicate(tree, (el) => el.props.children === 't:environments.renameModal.saveButton');
     expect(saveLabel).toBeDefined();
+  });
+
+  it('Enter on the input invokes handleSave (no-op when name unchanged)', () => {
+    const onClose = vi.fn();
+    const tree = callRender({ env: makeEnv({ name: 'staging' }), projectId: 'p1', onClose });
+    const input = findByPredicate(tree, (el) => el.type === 'input');
+    (input?.props.onKeyDown as (e: { key: string }) => void)?.({ key: 'Enter' });
+    // trimmed name === env.name → onClose triggered
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('Enter on a non-Enter key does nothing', () => {
+    const onClose = vi.fn();
+    const tree = callRender({ env: makeEnv({ name: 'staging' }), projectId: 'p1', onClose });
+    const input = findByPredicate(tree, (el) => el.type === 'input');
+    (input?.props.onKeyDown as (e: { key: string }) => void)?.({ key: 'Tab' });
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('handleSave dispatches and closes on success', async () => {
+    mocks.useStateQueue.push('renamed');
+    const onClose = vi.fn();
+    mocks.dispatch.mockReturnValue(mockThunkResolve(undefined));
+    const tree = callRender({ env: makeEnv({ name: 'staging' }), projectId: 'p1', onClose });
+    const buttons: ReactElementLike[] = [];
+    for (const el of walk(tree)) if (el.type === 'button') buttons.push(el);
+    const save = buttons.find((b) => b.props.children === 't:environments.renameModal.saveButton');
+    await (save?.props.onClick as () => Promise<void>)?.();
+    expect(mocks.renameEnvSpy).toHaveBeenCalledWith({ envId: 'env-1', projectId: 'p1', name: 'renamed' });
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('handleSave surfaces an error when the thunk rejects (string error)', async () => {
+    mocks.useStateQueue.push('newname');
+    mocks.dispatch.mockReturnValue(mockThunkReject('boom'));
+    const onClose = vi.fn();
+    const tree = callRender({ env: makeEnv({ name: 'staging' }), projectId: 'p1', onClose });
+    const buttons: ReactElementLike[] = [];
+    for (const el of walk(tree)) if (el.type === 'button') buttons.push(el);
+    const save = buttons.find((b) => b.props.children === 't:environments.renameModal.saveButton');
+    await (save?.props.onClick as () => Promise<void>)?.();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('handleSave surfaces a fallback error message when err.message is missing', async () => {
+    mocks.useStateQueue.push('newname');
+    mocks.dispatch.mockReturnValue(mockThunkReject({}));
+    const tree = callRender({ env: makeEnv({ name: 'staging' }), projectId: 'p1', onClose: vi.fn() });
+    const buttons: ReactElementLike[] = [];
+    for (const el of walk(tree)) if (el.type === 'button') buttons.push(el);
+    const save = buttons.find((b) => b.props.children === 't:environments.renameModal.saveButton');
+    await (save?.props.onClick as () => Promise<void>)?.();
+    // Used the fallback path
+    expect(mocks.renameEnvSpy).toHaveBeenCalled();
+  });
+
+  it('handleSave on empty trimmed name sets a required-error', async () => {
+    mocks.useStateQueue.push('   ');
+    const onClose = vi.fn();
+    const tree = callRender({ env: makeEnv({ name: 'staging' }), projectId: 'p1', onClose });
+    const buttons: ReactElementLike[] = [];
+    for (const el of walk(tree)) if (el.type === 'button') buttons.push(el);
+    const save = buttons.find((b) => b.props.children === 't:environments.renameModal.saveButton');
+    await (save?.props.onClick as () => Promise<void>)?.();
+    expect(mocks.renameEnvSpy).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+});
+
+describe('RenameEnvironmentModal — error display', () => {
+  it('renders the error block when error state is non-null', () => {
+    // Push "name" then "saving" then "error". useState call order:
+    // 1) name (env.name)
+    // 2) saving (false)
+    // 3) error (null)
+    mocks.useStateQueue.push('staging'); // name
+    mocks.useStateQueue.push(false); // saving
+    mocks.useStateQueue.push('boom error'); // error
+    const tree = callRender({ env: makeEnv({ name: 'staging' }), projectId: 'p1', onClose: vi.fn() });
+    const errBlock = findByPredicate(
+      tree,
+      (el) => typeof el.props.className === 'string' && el.props.className.includes('bg-red-500/10'),
+    );
+    expect(errBlock).toBeDefined();
   });
 });

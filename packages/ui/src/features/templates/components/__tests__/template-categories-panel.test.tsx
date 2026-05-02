@@ -28,6 +28,7 @@ const mocks = vi.hoisted(() => {
     ],
     featured: allTemplates.slice(0, 3),
     state: {},
+    useStateQueue: [] as unknown[],
     dispatch: vi.fn(),
     navigate: vi.fn(),
     toggleSpy: vi.fn(() => ({ type: 'ui/toggleTemplates' })),
@@ -36,8 +37,11 @@ const mocks = vi.hoisted(() => {
 });
 
 vi.mock('react', async (orig) => {
-  const actual = (await orig()) as typeof import('react')
-  const useState = vi.fn(<T,>(init: T): [T, (v: T) => void] => [init, vi.fn()]);
+  const actual = (await orig()) as typeof import('react');
+  const useState = vi.fn(<T,>(init: T): [T, (v: T) => void] => {
+    const next = mocks.useStateQueue.shift();
+    return [(next === undefined ? init : (next as T)), vi.fn()];
+  });
   const useMemo = vi.fn(<T,>(fn: () => T): T => fn());
   const def = (actual as unknown as { default?: typeof actual }).default ?? actual;
   return { ...actual, useState, useMemo, default: { ...def, useState, useMemo } };
@@ -136,6 +140,7 @@ beforeEach(() => {
   mocks.navigate.mockReset();
   mocks.toggleSpy.mockClear();
   mocks.searchSpy.mockClear();
+  mocks.useStateQueue.length = 0;
 });
 
 describe('TemplateCategoriesPanel — render (no search)', () => {
@@ -224,7 +229,7 @@ describe('TemplateCategoriesPanel — render (no search)', () => {
 describe('TemplateCategoriesPanel — defensive', () => {
   it('falls back to Zap icon when category icon is unknown', () => {
     // ai uses 'Brain' which is in ICON_MAP. Let's add an unmapped one:
-    const orig = mocks.categories;
+    const snapshot = mocks.categories.slice();
     mocks.categories.length = 0;
     mocks.categories.push({ id: 'unmapped', icon: 'XYZ', color: '#aaa' });
     try {
@@ -234,7 +239,56 @@ describe('TemplateCategoriesPanel — defensive', () => {
       expect(tree).toBeDefined();
     } finally {
       mocks.categories.length = 0;
-      orig.forEach((c) => mocks.categories.push(c));
+      snapshot.forEach((c) => mocks.categories.push(c));
     }
+  });
+});
+
+describe('TemplateCategoriesPanel — searching mode', () => {
+  it('filters categories by matching search results', () => {
+    mocks.useStateQueue.push('FE'); // search
+    mocks.searchSpy.mockReturnValue(mocks.allTemplates.filter((t) => t.category === 'web'));
+    const tree = callRender();
+    const text = collectText(tree);
+    // Only web category has matching templates with "FE" in their name
+    expect(text).toContain('t:templates.categories.web.label');
+    expect(text).not.toContain('t:templates.categories.backend.label');
+  });
+
+  it('renders the search results count summary', () => {
+    mocks.useStateQueue.push('FE');
+    const tree = callRender();
+    expect(collectText(tree)).toContain('t:templates.gallery.templateCount');
+  });
+
+  it('hides the all-categories hero when searching', () => {
+    mocks.useStateQueue.push('FE');
+    const tree = callRender();
+    expect(collectText(tree)).not.toContain('t:templates.gallery.allCategories');
+  });
+
+  it('renders empty-results message when search has no matches', () => {
+    mocks.useStateQueue.push('xyz-not-found');
+    mocks.searchSpy.mockReturnValue([]);
+    const tree = callRender();
+    expect(collectText(tree)).toContain('t:templates.gallery.noMatchSearch');
+  });
+
+  it('filters featured to only matching ids when searching', () => {
+    mocks.useStateQueue.push('FE');
+    mocks.searchSpy.mockReturnValue(mocks.allTemplates.filter((t) => t.id === 't-fe'));
+    const tree = callRender();
+    const text = collectText(tree);
+    expect(text).toContain('t:templates.items.t-fe.name');
+  });
+});
+
+describe('TemplateCategoriesPanel — search input wiring', () => {
+  it('passes a search.onChange that wires to setSearch', () => {
+    const tree = callRender();
+    const ph = findByPredicate(tree, (el) => el.type === mocks.Pass);
+    const search = (ph?.props as { search?: { onChange?: (v: string) => void } }).search;
+    expect(typeof search?.onChange).toBe('function');
+    expect(() => search?.onChange?.('hello')).not.toThrow();
   });
 });

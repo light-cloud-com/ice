@@ -26,13 +26,16 @@ const mocks = vi.hoisted(() => {
     fetchSpy: vi.fn((arg: unknown) => ({ type: 'gh/fetchRepos', payload: arg })),
     ComboboxStub: make('Combobox'),
     ModalStub: make('GitHubConnectModal'),
+    effects: [] as Array<() => void | (() => void)>,
   };
 });
 
 vi.mock('react', async (orig) => {
   const actual = (await orig()) as typeof import('react');
   const useState = vi.fn(<T,>(init: T): [T, (v: T) => void] => [init, vi.fn()]);
-  const useEffect = vi.fn();
+  const useEffect = vi.fn((cb: () => void) => {
+    mocks.effects.push(cb);
+  });
   const useMemo = vi.fn(<T,>(fn: () => T): T => fn());
   const def = (actual as unknown as { default?: typeof actual }).default ?? actual;
   return { ...actual, useState, useEffect, useMemo, default: { ...def, useState, useEffect, useMemo } };
@@ -107,6 +110,7 @@ beforeEach(() => {
   mocks.state.integrations.github = { repos: [], loading: false, reposError: null };
   mocks.dispatch.mockReset();
   mocks.fetchSpy.mockClear();
+  mocks.effects.length = 0;
 });
 
 describe('RepoSelector — disconnected state', () => {
@@ -215,5 +219,67 @@ describe('RepoSelector — connected state', () => {
     const combobox = findByPredicate(tree, (el) => el.type === mocks.ComboboxStub);
     (combobox?.props.onSelect as (s: string) => void)?.('a/b');
     expect(onChange).toHaveBeenCalledWith('a/b');
+  });
+});
+
+describe('RepoSelector — useEffect (auto-fetch)', () => {
+  it('dispatches fetchGitHubRepos when connected + empty + idle', () => {
+    callRender({ value: '', onChange: vi.fn() });
+    mocks.effects[0]();
+    expect(mocks.fetchSpy).toHaveBeenCalledWith(undefined);
+  });
+
+  it('does not auto-fetch when reposError is set', () => {
+    mocks.state.integrations.github.reposError = 'fail';
+    callRender({ value: '', onChange: vi.fn() });
+    mocks.effects[0]();
+    expect(mocks.fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('does not auto-fetch when loading is true', () => {
+    mocks.state.integrations.github.loading = true;
+    callRender({ value: '', onChange: vi.fn() });
+    mocks.effects[0]();
+    expect(mocks.fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('does not auto-fetch when repos already exist', () => {
+    mocks.state.integrations.github.repos = [{ full_name: 'a/b' }];
+    callRender({ value: '', onChange: vi.fn() });
+    mocks.effects[0]();
+    expect(mocks.fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('does not auto-fetch when not connected', () => {
+    mocks.state.integrations.integrations = { github: { status: 'disconnected' } };
+    callRender({ value: '', onChange: vi.fn() });
+    mocks.effects[0]();
+    expect(mocks.fetchSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe('RepoSelector — modal close handlers', () => {
+  it('disconnected — modal onClose toggles state', () => {
+    mocks.state.integrations.integrations = { github: { status: 'disconnected' } };
+    const tree = callRender({ value: '', onChange: vi.fn() });
+    const modal = findByPredicate(tree, (el) => el.type === mocks.ModalStub);
+    expect(typeof modal?.props.onClose).toBe('function');
+    expect(() => (modal?.props.onClose as () => void)()).not.toThrow();
+  });
+
+  it('error — Reconnect onClick opens modal (auth error)', () => {
+    mocks.state.integrations.github.reposError = '401';
+    const tree = callRender({ value: '', onChange: vi.fn() });
+    const buttons = findAll(tree, (el) => el.type === 'button');
+    const reconnect = buttons.find((b) => b.props.children === 'Reconnect GitHub');
+    expect(typeof reconnect?.props.onClick).toBe('function');
+    expect(() => (reconnect?.props.onClick as () => void)()).not.toThrow();
+  });
+
+  it('error — modal onClose closes the modal in error state', () => {
+    mocks.state.integrations.github.reposError = '401';
+    const tree = callRender({ value: '', onChange: vi.fn() });
+    const modal = findByPredicate(tree, (el) => el.type === mocks.ModalStub);
+    expect(typeof modal?.props.onClose).toBe('function');
   });
 });

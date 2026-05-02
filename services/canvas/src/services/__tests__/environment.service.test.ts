@@ -45,6 +45,9 @@ vi.mock('@ice/db', () => ({
       findMany: vi.fn(),
       create: vi.fn(),
     },
+    canvasDeployment: {
+      findFirst: vi.fn(),
+    },
     $transaction: vi.fn(),
   },
 }));
@@ -86,6 +89,7 @@ const cardDelete = (prisma as any).canvasCard.delete as ReturnType<typeof vi.fn>
 const projectUpdate = (prisma as any).canvasProject.update as ReturnType<typeof vi.fn>;
 const ruleFindMany = (prisma as any).deploymentRule.findMany as ReturnType<typeof vi.fn>;
 const ruleCreate = (prisma as any).deploymentRule.create as ReturnType<typeof vi.fn>;
+const deploymentFindFirst = (prisma as any).canvasDeployment.findFirst as ReturnType<typeof vi.fn>;
 const transactionMock = (prisma as any).$transaction as ReturnType<typeof vi.fn>;
 const createDeploymentEventMock = createDeploymentEvent as unknown as ReturnType<typeof vi.fn>;
 const getDeployQueueMock = getDeployQueue as unknown as ReturnType<typeof vi.fn>;
@@ -436,11 +440,43 @@ describe('deleteEnvironment', () => {
 
   it('deletes the underlying card (cascading the env via the 1:1 relation)', async () => {
     envFindUnique.mockResolvedValue({ id: 'e1', is_protected: false, card_id: 'card-x' });
+    deploymentFindFirst.mockResolvedValue(null);
     cardDelete.mockResolvedValue({});
 
     await deleteEnvironment('e1');
 
     expect(cardDelete).toHaveBeenCalledWith({ where: { id: 'card-x' } });
+  });
+
+  it('refuses to delete while a deployment is in flight (findings #13)', async () => {
+    // Without this guard the canvasCard.delete cascades through
+    // CanvasDeployment.card_id and a worker tearing down resources
+    // either races against the cascade or finds its parent row gone.
+    envFindUnique.mockResolvedValue({ id: 'e1', is_protected: false, card_id: 'card-x' });
+    deploymentFindFirst.mockResolvedValue({ id: 'd1', status: 'deploying' });
+
+    await expect(deleteEnvironment('e1')).rejects.toThrow(/in flight.*deploying/);
+    expect(cardDelete).not.toHaveBeenCalled();
+  });
+
+  it('does NOT consider terminal deployments (success/failed/cancelled) as in-flight', async () => {
+    // The check filters by status so completed history rows don't
+    // permanently lock the environment. The findFirst query itself
+    // is what enforces this — we only verify the call shape.
+    envFindUnique.mockResolvedValue({ id: 'e1', is_protected: false, card_id: 'card-x' });
+    deploymentFindFirst.mockResolvedValue(null);
+    cardDelete.mockResolvedValue({});
+
+    await deleteEnvironment('e1');
+
+    expect(deploymentFindFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          card_id: 'card-x',
+          status: { in: ['planning', 'planned', 'deploying'] },
+        }),
+      }),
+    );
   });
 });
 

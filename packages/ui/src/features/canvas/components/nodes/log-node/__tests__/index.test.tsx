@@ -225,6 +225,18 @@ describe('SvgLogNode — fold/unfold layout', () => {
     const fo = findByType(tree, 'foreignObject')[0];
     expect((fo.props as { height: number }).height).toBe(160);
   });
+
+  it('foreignObject width uses 400 fallback when node.width=0 (falsy)', () => {
+    const tree = renderLN({ node: makeNode({ width: 0 }) });
+    const fo = findByType(tree, 'foreignObject')[0];
+    expect((fo.props as { width: number }).width).toBe(400);
+  });
+
+  it('foreignObject height uses 240 fallback when node.height=0', () => {
+    const tree = renderLN({ node: makeNode({ height: 0 }) });
+    const fo = findByType(tree, 'foreignObject')[0];
+    expect((fo.props as { height: number }).height).toBe(240);
+  });
 });
 
 describe('SvgLogNode — placeholder + log mapping', () => {

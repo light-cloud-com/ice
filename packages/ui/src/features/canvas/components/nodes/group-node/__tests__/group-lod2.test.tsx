@@ -200,3 +200,11 @@ describe('GroupLod2 — strokeWidth & dasharray', () => {
     expect((findRect(renderL2({ invZoom: 1 })).props as { strokeDasharray: string }).strokeDasharray).toBe('6 3');
   });
 });
+
+describe('GroupLod2 — undefined-label fallback', () => {
+  it('treats undefined label as empty (no truncation, label = "")', () => {
+    const tree = renderL2({ label: undefined as unknown as string });
+    const row = findByType(tree, mocks.GroupLabelRow)[0];
+    expect((row.props as { label: string }).label).toBe('');
+  });
+});

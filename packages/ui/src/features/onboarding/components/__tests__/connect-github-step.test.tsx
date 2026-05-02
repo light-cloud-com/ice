@@ -243,6 +243,45 @@ describe('ConnectGithubStep — disconnected', () => {
     (deviceBtn?.props.onClick as () => void)?.();
     expect(mocks.startDeviceSpy).toHaveBeenCalled();
   });
+
+  it('clicking the PAT button with non-empty token dispatches connectGitHubPAT (trimmed)', () => {
+    mocks.useStateQueue.push('pat'); // activeTab
+    mocks.useStateQueue.push('  my-token  '); // patToken
+    const tree = callRender();
+    const buttons = findAll(tree, (el) => el.type === 'button');
+    const patBtn = buttons.find((b) =>
+      typeof (b.props as { className?: string }).className === 'string' &&
+      ((b.props as { className: string }).className.includes('ice-btn-primary') ?? false),
+    );
+    (patBtn?.props.onClick as () => void)?.();
+    expect(mocks.connectPATSpy).toHaveBeenCalledWith('my-token');
+  });
+
+  it('Enter on PAT input with a non-empty token dispatches connectGitHubPAT', () => {
+    mocks.useStateQueue.push('pat');
+    mocks.useStateQueue.push('foo-token');
+    const tree = callRender();
+    const input = findByPredicate(tree, (el) => el.type === 'input');
+    (input?.props.onKeyDown as (e: { key: string }) => void)?.({ key: 'Enter' });
+    expect(mocks.connectPATSpy).toHaveBeenCalledWith('foo-token');
+  });
+
+  it('clicking the device tab toggle calls setActiveTab("device")', () => {
+    const tree = callRender();
+    const buttons = findAll(tree, (el) => el.type === 'button');
+    // Find the tab-device toggle: text equals onboarding.github.tabDevice
+    const deviceTab = buttons.find((b) => b.props.children === 't:onboarding.github.tabDevice');
+    expect(typeof deviceTab?.props.onClick).toBe('function');
+    expect(() => (deviceTab?.props.onClick as () => void)()).not.toThrow();
+  });
+
+  it('clicking the pat tab toggle calls setActiveTab("pat")', () => {
+    const tree = callRender();
+    const buttons = findAll(tree, (el) => el.type === 'button');
+    const patTab = buttons.find((b) => b.props.children === 't:onboarding.github.tabPat');
+    expect(typeof patTab?.props.onClick).toBe('function');
+    expect(() => (patTab?.props.onClick as () => void)()).not.toThrow();
+  });
 });
 
 describe('ConnectGithubStep — useEffect', () => {

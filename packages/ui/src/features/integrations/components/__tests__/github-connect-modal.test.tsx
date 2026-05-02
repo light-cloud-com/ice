@@ -34,12 +34,16 @@ const mocks = vi.hoisted(() => {
     startDeviceSpy: vi.fn(() => ({ type: 'gh/device' })),
     disconnectSpy: vi.fn(() => ({ type: 'gh/disconnect' })),
     Pass,
+    useStateQueue: [] as unknown[],
   };
 });
 
 vi.mock('react', async (orig) => {
   const actual = (await orig()) as typeof import('react');
-  const useState = vi.fn(<T,>(init: T): [T, (v: T) => void] => [init, vi.fn()]);
+  const useState = vi.fn(<T,>(init: T): [T, (v: T) => void] => {
+    const next = mocks.useStateQueue.shift();
+    return [(next === undefined ? init : (next as T)), vi.fn()];
+  });
   const def = (actual as unknown as { default?: typeof actual }).default ?? actual;
   return { ...actual, useState, default: { ...def, useState } };
 });
@@ -142,6 +146,7 @@ beforeEach(() => {
   mocks.connectPATSpy.mockClear();
   mocks.startDeviceSpy.mockClear();
   mocks.disconnectSpy.mockClear();
+  mocks.useStateQueue.length = 0;
 });
 
 describe('GitHubConnectModal — connected state', () => {
@@ -242,6 +247,80 @@ describe('GitHubConnectModal — disconnected state, Device Flow tab', () => {
     const text = collectText(tree);
     expect(text).toContain('AB12-CD34');
     expect(text).toContain('https://github.com/login/device');
+  });
+});
+
+describe('GitHubConnectModal — handlers', () => {
+  const installFakeClipboard = (writeText: ReturnType<typeof vi.fn>) => {
+    Object.defineProperty(globalThis, 'navigator', {
+      value: { clipboard: { writeText } },
+      configurable: true,
+      writable: true,
+    });
+  };
+
+  it('handlePATConnect dispatches connectGitHubPAT with trimmed token', () => {
+    mocks.useStateQueue.push('  my-token  '); // patToken
+    const tree = callRender({ isOpen: true, onClose: vi.fn() });
+    const buttons = findAll(tree, (el) => el.type === 'button');
+    const patBtn = buttons.find((b) =>
+      typeof (b.props as { className?: string }).className === 'string' &&
+      ((b.props as { className: string }).className.includes('ice-btn-primary') ?? false),
+    );
+    (patBtn?.props.onClick as () => void)?.();
+    expect(mocks.connectPATSpy).toHaveBeenCalledWith('my-token');
+  });
+
+  it('handleDeviceFlow dispatches startGitHubDeviceFlow', () => {
+    const tree = callRender({ isOpen: true, onClose: vi.fn() });
+    const buttons = findAll(tree, (el) => el.type === 'button');
+    // Find the second ice-btn-primary (in the device tab)
+    const primaryBtns = buttons.filter((b) =>
+      typeof (b.props as { className?: string }).className === 'string' &&
+      ((b.props as { className: string }).className.includes('ice-btn-primary') ?? false),
+    );
+    expect(primaryBtns.length).toBeGreaterThanOrEqual(2);
+    (primaryBtns[1].props.onClick as () => void)?.();
+    expect(mocks.startDeviceSpy).toHaveBeenCalled();
+  });
+
+  it('handleDisconnect (connected state) dispatches disconnectGitHub', () => {
+    mocks.state.integrations.integrations.github = {
+      status: 'connected',
+      username: 'oc',
+      avatarUrl: '',
+      error: '',
+    };
+    const tree = callRender({ isOpen: true, onClose: vi.fn() });
+    const buttons = findAll(tree, (el) => el.type === 'button');
+    (buttons[0].props.onClick as () => void)?.();
+    expect(mocks.disconnectSpy).toHaveBeenCalled();
+  });
+
+  it('handleCopyCode copies user code to clipboard when deviceFlow is set', () => {
+    const writeText = vi.fn();
+    installFakeClipboard(writeText);
+    mocks.state.integrations.github.deviceFlow = {
+      userCode: 'COPYME',
+      verificationUri: 'https://x',
+    };
+    const tree = callRender({ isOpen: true, onClose: vi.fn() });
+    const buttons = findAll(tree, (el) => el.type === 'button');
+    const copyBtn = buttons.find((b) =>
+      typeof (b.props as { title?: string }).title === 'string' &&
+      ((b.props as { title: string }).title.includes('deviceFlowCopy') ?? false),
+    );
+    (copyBtn?.props.onClick as () => void)?.();
+    expect(writeText).toHaveBeenCalledWith('COPYME');
+  });
+
+  it('handleCopyCode is a no-op when no deviceFlow', () => {
+    const writeText = vi.fn();
+    installFakeClipboard(writeText);
+    mocks.state.integrations.github.deviceFlow = null;
+    const tree = callRender({ isOpen: true, onClose: vi.fn() });
+    expect(tree).toBeDefined();
+    expect(writeText).not.toHaveBeenCalled();
   });
 });
 

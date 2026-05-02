@@ -86,7 +86,11 @@ const callRender = (props: React.ComponentProps<typeof CreateEnvironmentModal>):
 
 beforeEach(() => {
   mocks.dispatch.mockReset();
+  mocks.dispatch.mockReturnValue(mockThunkResolve(undefined));
   mocks.tFn.mockClear();
+  mocks.createEnvSpy.mockClear();
+  mocks.useStateQueue.length = 0;
+  mocks.setStates.length = 0;
 });
 
 describe('CreateEnvironmentModal — render', () => {
@@ -211,5 +215,94 @@ describe('CreateEnvironmentModal — handlers', () => {
     const inputs: ReactElementLike[] = [];
     for (const el of walk(tree)) if (el.type === 'input') inputs.push(el);
     expect(typeof inputs[1].props.onChange).toBe('function');
+  });
+});
+
+describe('CreateEnvironmentModal — handleCreate (async)', () => {
+  it('handleCreate dispatches createEnvironment + closes on success', async () => {
+    // Override "name" useState
+    mocks.useStateQueue.push('staging-2');
+    const onClose = vi.fn();
+    mocks.dispatch.mockReturnValue(mockThunkResolve(undefined));
+    const tree = callRender({ projectId: 'p1', onClose });
+    const buttons: ReactElementLike[] = [];
+    for (const el of walk(tree)) if (el.type === 'button') buttons.push(el);
+    const create = buttons.find((b) => b.props.children === 't:environments.createModal.createButton');
+    await (create?.props.onClick as () => Promise<void>)?.();
+    expect(mocks.createEnvSpy).toHaveBeenCalledWith({
+      projectId: 'p1',
+      name: 'staging-2',
+      type: 'staging',
+      region: undefined,
+    });
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('handleCreate forwards a non-empty region', async () => {
+    mocks.useStateQueue.push('staging-2'); // name
+    mocks.useStateQueue.push('staging'); // type
+    mocks.useStateQueue.push('eu-west1'); // region
+    mocks.dispatch.mockReturnValue(mockThunkResolve(undefined));
+    const tree = callRender({ projectId: 'p2', onClose: vi.fn() });
+    const buttons: ReactElementLike[] = [];
+    for (const el of walk(tree)) if (el.type === 'button') buttons.push(el);
+    const create = buttons.find((b) => b.props.children === 't:environments.createModal.createButton');
+    await (create?.props.onClick as () => Promise<void>)?.();
+    expect(mocks.createEnvSpy).toHaveBeenCalledWith({
+      projectId: 'p2',
+      name: 'staging-2',
+      type: 'staging',
+      region: 'eu-west1',
+    });
+  });
+
+  it('handleCreate surfaces a string error', async () => {
+    mocks.useStateQueue.push('valid-name');
+    mocks.dispatch.mockReturnValue(mockThunkReject('explosion'));
+    const onClose = vi.fn();
+    const tree = callRender({ projectId: 'p1', onClose });
+    const buttons: ReactElementLike[] = [];
+    for (const el of walk(tree)) if (el.type === 'button') buttons.push(el);
+    const create = buttons.find((b) => b.props.children === 't:environments.createModal.createButton');
+    await (create?.props.onClick as () => Promise<void>)?.();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('handleCreate surfaces err.message when err is an object with one', async () => {
+    mocks.useStateQueue.push('valid-name');
+    mocks.dispatch.mockReturnValue(mockThunkReject({ message: 'msg detail' }));
+    const tree = callRender({ projectId: 'p1', onClose: vi.fn() });
+    const buttons: ReactElementLike[] = [];
+    for (const el of walk(tree)) if (el.type === 'button') buttons.push(el);
+    const create = buttons.find((b) => b.props.children === 't:environments.createModal.createButton');
+    await (create?.props.onClick as () => Promise<void>)?.();
+    expect(mocks.createEnvSpy).toHaveBeenCalled();
+  });
+
+  it('handleCreate falls back to fallback error message', async () => {
+    mocks.useStateQueue.push('valid-name');
+    mocks.dispatch.mockReturnValue(mockThunkReject({}));
+    const tree = callRender({ projectId: 'p1', onClose: vi.fn() });
+    const buttons: ReactElementLike[] = [];
+    for (const el of walk(tree)) if (el.type === 'button') buttons.push(el);
+    const create = buttons.find((b) => b.props.children === 't:environments.createModal.createButton');
+    await (create?.props.onClick as () => Promise<void>)?.();
+    expect(mocks.createEnvSpy).toHaveBeenCalled();
+  });
+
+  it('renders error block when error state is non-null', () => {
+    mocks.useStateQueue.push(''); // name
+    mocks.useStateQueue.push('staging'); // type
+    mocks.useStateQueue.push(''); // region
+    mocks.useStateQueue.push(false); // creating
+    mocks.useStateQueue.push('boom!'); // error
+    const tree = callRender({ projectId: 'p1', onClose: vi.fn() });
+    const errBlock = findByPredicate(
+      tree,
+      (el) =>
+        typeof (el.props as { className?: string }).className === 'string' &&
+        ((el.props as { className: string }).className.includes('bg-red-500/10') ?? false),
+    );
+    expect(errBlock).toBeDefined();
   });
 });

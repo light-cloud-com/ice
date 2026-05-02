@@ -316,4 +316,24 @@ describe('DesignRequirements — render', () => {
     const noHintReq: DesignRequirement = { id: 'x', level: 'info', title: 'no hint here' };
     expect(noHintReq.hint).toBeUndefined();
   });
+
+  it('clicking the header button toggles expanded', () => {
+    const node = makeNode({ id: 'pg', data: { iceType: 'Database.PostgreSQL' } });
+    const out = callRender({ node, allNodes: [node], edges: [] });
+    const headerBtn = findByPredicate(
+      out,
+      (el) =>
+        el.type === 'button' &&
+        typeof (el.props as { className?: string }).className === 'string' &&
+        ((el.props as { className: string }).className.includes('w-full flex items-center') ?? false),
+    );
+    expect(typeof headerBtn?.props.onClick).toBe('function');
+    expect(() => (headerBtn?.props.onClick as () => void)()).not.toThrow();
+    // Probe the setExpanded reducer-style call
+    const lastSetter = mocks.useStateMock.mock.calls[0][1] as ReturnType<typeof vi.fn>;
+    expect(lastSetter).toHaveBeenCalled();
+    const reducer = lastSetter.mock.calls[0][0] as (v: boolean) => boolean;
+    expect(reducer(true)).toBe(false);
+    expect(reducer(false)).toBe(true);
+  });
 });

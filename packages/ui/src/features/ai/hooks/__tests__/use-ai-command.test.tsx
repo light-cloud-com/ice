@@ -445,8 +445,6 @@ describe('sendIntent — SSE path', () => {
     // The parser keeps the last line in `buffer` across reads. Ship the
     // event lines split *before* the trailing blank line so the second
     // read's blank-line completion fires the dispatch.
-    // Note: eventType/eventData are re-declared per read, so the entire
-    // SSE event must arrive within a single read to dispatch.
     const chunks = [
       'event: operation\ndata: {"op":"autoOrganize"}\n\nev',
       'ent: explanation\ndata: {"text":"x"}\n\n',
@@ -460,6 +458,28 @@ describe('sendIntent — SSE path', () => {
     // and fires the explanation. So one op + one explanation.
     expect(store.getState().ai.pendingOperations.length).toBe(1);
     expect(store.getState().ai.lastResponse?.explanation).toBe('x');
+  });
+
+  it('persists eventType across reads when the event spans chunks (findings #12)', async () => {
+    // The bug: eventType / eventData used to be reset on every read()
+    // iteration, so an SSE event whose `event:` line landed in chunk
+    // N and whose `data:` + blank-line landed in chunk N+1 silently
+    // dropped — the second-chunk processing of `data:` had no event
+    // type, and the trailing blank line failed the
+    // `eventType && eventData` gate.
+    //
+    // The fix hoists parser state outside the loop so the event still
+    // dispatches when the boundary falls between `event:` and `data:`.
+    const chunks = [
+      'event: operation\n', // chunk 1: only the event-type line + LF
+      'data: {"op":"autoOrganize"}\n\n', // chunk 2: the data line + blank line
+    ];
+    (globalThis.fetch as any).mockResolvedValueOnce(sseResponse(chunks));
+    const store = makeStore();
+    const cap = captureHook(store);
+
+    await cap.sendIntent('do thing');
+    expect(store.getState().ai.pendingOperations.length).toBe(1);
   });
 
   it('handles unknown SSE event types silently', async () => {

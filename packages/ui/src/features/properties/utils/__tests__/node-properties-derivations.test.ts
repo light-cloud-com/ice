@@ -124,6 +124,19 @@ describe('findCustomDomainEdge', () => {
     });
     expect(findCustomDomainEdge(card, node)).toBeNull();
   });
+
+  it('skips edges that touch neither the source nor target of the selected node', () => {
+    const node = makeNode({ id: 'a' });
+    const cd = makeNode({ id: 'cd', data: { iceType: 'Network.CustomDomain' } });
+    const other = makeNode({ id: 'b' });
+    const card = makeCard({
+      nodes: [node, cd, other],
+      // Edge between two unrelated nodes — exercises the early-return-false branch
+      // in the inner predicate (line 45).
+      edges: [{ id: 'e-unrelated', source: 'b', target: 'cd' } as Card['edges'][number]],
+    });
+    expect(findCustomDomainEdge(card, node)).toBeNull();
+  });
 });
 
 describe('nodeHasSourceTab', () => {

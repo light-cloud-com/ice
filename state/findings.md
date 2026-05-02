@@ -4,11 +4,23 @@ Triage of bugs, dead code, and architecture surprises surfaced while
 bringing workspace coverage from 8,261 → 13,231 tests. Each entry cites
 its origin commit so the fix can land on the same branch.
 
-**Status update (2026-05-02 PM)** — all 30 Tier 1 findings have
-landed on `refactoring`; commits not yet pushed to remote per user
-request. Each fix has its own commit with an inverted regression
-test. Tier 2 (cleanup) and Tier 3 (subtle/debatable) entries below
-remain open.
+**Status update (2026-05-02 PM)** — all 30 Tier 1 findings AND all
+16 Tier 2 cleanup items have landed on `refactoring`; commits not
+yet pushed to remote per user request. Each fix has its own commit
+with an inverted regression test. Only Tier 3 (8 subtle/debatable
+items, judgment-call territory) remains open.
+
+**Tier 2 (closed 2026-05-02 PM)** — #31 (svg-connection-path arrows),
+#32 (use-canvas-mouse-events orphan), #33 (desktop tsc artifacts),
+#34 (terraform/pulumi dead error branch), #35 (architecture-rules
+incoming Map — already done with #19), #36 (deploy/structure-rules
+redundant nodeType), #37 (deploy-rules tautology), #38 (connection-
+rules unreachable label fallback), #39 (property-rules unreachable
+guard), #40 (mock-provider 'deleted' branch), #41 (provider-registry
+duplicate-warn), #42 (provider-registry health-check lazy doc),
+#43 (canvas/cards try/catch), #44 (project-members shared
+middleware), #45 (templates/validate.ts unit-testable), #46
+(requireProjectAccess single query).
 
 ## Tier 1 — Security / correctness bugs (fix soon)
 

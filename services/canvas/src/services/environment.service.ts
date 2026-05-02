@@ -209,10 +209,34 @@ export async function updateEnvironment(envId: string, data: { name?: string; re
 
 // ─── Delete ─────────────────────────────────────────────────────────────────
 
+// findings.md #13 — CanvasDeployment statuses that mean "in flight".
+// Anything outside this set is terminal (success / partial / failed /
+// cancelled) and safe to leave behind when the parent card is deleted.
+const ACTIVE_DEPLOYMENT_STATUSES = ['planning', 'planned', 'deploying'] as const;
+
 export async function deleteEnvironment(envId: string) {
   const env = await prisma.environment.findUnique({ where: { id: envId } });
   if (!env) throw new Error('Environment not found');
   if (env.is_protected) throw new Error('Production environment cannot be deleted');
+
+  // findings.md #13 — refuse to delete while a deployment is still in
+  // flight. Without this check the canvasCard.delete cascades through
+  // CanvasDeployment.card_id and the worker tearing down resources
+  // either races against the cascade or finds its parent row gone.
+  // Deploys that already finished (success/partial/failed/cancelled)
+  // are not blocking — they're history rows.
+  const activeDeploy = await prisma.canvasDeployment.findFirst({
+    where: {
+      card_id: env.card_id,
+      status: { in: [...ACTIVE_DEPLOYMENT_STATUSES] },
+    },
+    select: { id: true, status: true },
+  });
+  if (activeDeploy) {
+    throw new Error(
+      `Cannot delete environment while a deployment is in flight (id=${activeDeploy.id}, status=${activeDeploy.status}). Wait for it to finish or cancel it first.`,
+    );
+  }
 
   // Delete card (cascades to environment via the 1:1 relation)
   await prisma.canvasCard.delete({ where: { id: env.card_id } });

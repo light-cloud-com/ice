@@ -759,3 +759,124 @@ describe('utility exports', () => {
     expect(get_successful_resources(result)[0]!.success).toBe(true);
   });
 });
+
+// =========================================================================
+// AbortSignal cancellation (findings #23)
+// =========================================================================
+
+describe('apply_plan — AbortSignal cancellation (findings #23)', () => {
+  it('returns immediately with cancelled:true when the signal is already aborted', async () => {
+    const graph = create_mutable_graph('g');
+    const a = add_node(graph, 'a');
+    const b = add_node(graph, 'b');
+
+    const controller = new AbortController();
+    controller.abort();
+
+    const result = await apply_plan(
+      make_plan([make_change(a, 'create'), make_change(b, 'create')]),
+      graph,
+      { signal: controller.signal },
+    );
+
+    expect(result.cancelled).toBe(true);
+    expect(result.success).toBe(false);
+    // Both changes are recorded as CANCELLED — no provider calls fired.
+    expect(result.results).toHaveLength(2);
+    for (const r of result.results) {
+      expect(r.success).toBe(false);
+      expect(r.error?.code).toBe('CANCELLED');
+    }
+    expect(result.errors.every((e) => e.error.code === 'CANCELLED')).toBe(true);
+    expect(current_provider.deploy).not.toHaveBeenCalled();
+  });
+
+  it('stops scheduling new layers once aborted mid-flight', async () => {
+    // Two layers via depends_on chain: B depends on A, so they
+    // execute in separate layers. Aborting after layer 0 settles
+    // means layer 1's change is recorded as CANCELLED and B's
+    // provider.deploy never fires.
+    const graph = create_mutable_graph('g');
+    const a = add_node(graph, 'a');
+    const b = add_node(graph, 'b');
+
+    const controller = new AbortController();
+    let deployedFirst = false;
+    current_provider = make_provider({
+      on_deploy: (id) => {
+        // Trigger the abort the moment the first deploy returns.
+        if (!deployedFirst) {
+          deployedFirst = true;
+          controller.abort();
+        }
+        return {
+          success: true,
+          node_id: id,
+          state: state_for(id, 'create'),
+          duration_ms: 1,
+        };
+      },
+    });
+
+    const result = await apply_plan(
+      make_plan([make_change(a, 'create'), make_change(b, 'create', { depends_on: [a] })]),
+      graph,
+      { signal: controller.signal },
+    );
+
+    expect(result.cancelled).toBe(true);
+    expect(result.success).toBe(false);
+    // a completed, b is the cancelled one.
+    const a_result = result.results.find((r) => r.node_id === a);
+    const b_result = result.results.find((r) => r.node_id === b);
+    expect(a_result?.success).toBe(true);
+    expect(b_result?.success).toBe(false);
+    expect(b_result?.error?.code).toBe('CANCELLED');
+    expect((current_provider.deploy as any).mock.calls).toHaveLength(1);
+  });
+
+  it('stops between batches when parallelism makes a single layer take many rounds', async () => {
+    // Two changes in the SAME layer (no dependencies), parallelism=1
+    // forces them into two batches. Abort after the first batch
+    // returns: the second change should be recorded as CANCELLED
+    // and never dispatched.
+    const graph = create_mutable_graph('g');
+    const a = add_node(graph, 'a');
+    const b = add_node(graph, 'b');
+
+    const controller = new AbortController();
+    let batchesDispatched = 0;
+    current_provider = make_provider({
+      on_deploy: (id) => {
+        batchesDispatched++;
+        if (batchesDispatched === 1) controller.abort();
+        return {
+          success: true,
+          node_id: id,
+          state: state_for(id, 'create'),
+          duration_ms: 1,
+        };
+      },
+    });
+
+    const result = await apply_plan(
+      make_plan([make_change(a, 'create'), make_change(b, 'create')]),
+      graph,
+      { signal: controller.signal, parallelism: 1 },
+    );
+
+    expect(result.cancelled).toBe(true);
+    expect(result.success).toBe(false);
+    expect((current_provider.deploy as any).mock.calls).toHaveLength(1);
+    // Second change must be present and marked CANCELLED.
+    const cancelled = result.results.find((r) => r.error?.code === 'CANCELLED');
+    expect(cancelled).toBeDefined();
+  });
+
+  it('omits cancelled flag on a normal completed run', async () => {
+    const graph = create_mutable_graph('g');
+    const a = add_node(graph, 'a');
+    const result = await apply_plan(make_plan([make_change(a, 'create')]), graph);
+    expect(result.cancelled).toBeUndefined();
+  });
+});

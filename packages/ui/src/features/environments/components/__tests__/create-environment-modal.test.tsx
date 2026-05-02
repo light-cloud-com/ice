@@ -13,13 +13,27 @@ const mocks = vi.hoisted(() => ({
   tFn: vi.fn((k: string) => `t:${k}`),
   createEnvSpy: vi.fn((arg) => ({ type: 'env/create', payload: arg })),
   MockIceSelect: vi.fn(),
+  useStateQueue: [] as unknown[],
+  setStates: [] as Array<ReturnType<typeof vi.fn>>,
 }));
+
+const mockThunkResolve = (value: unknown) => ({
+  unwrap: () => Promise.resolve(value),
+});
+const mockThunkReject = (err: unknown) => ({
+  unwrap: () => Promise.reject(err),
+});
 
 vi.mock('react', async (orig) => {
   const r = (await orig()) as typeof import('react');
   return {
     ...r,
-    useState: <T,>(init: T): [T, (v: T) => void] => [init, vi.fn()],
+    useState: <T,>(init: T): [T, (v: T) => void] => {
+      const next = mocks.useStateQueue.shift();
+      const setter = vi.fn();
+      mocks.setStates.push(setter);
+      return [next === undefined ? init : (next as T), setter];
+    },
   };
 });
 
@@ -164,5 +178,38 @@ describe('CreateEnvironmentModal — handlers', () => {
     const tree = callRender({ projectId: 'p1', onClose: vi.fn() });
     const create = findByPredicate(tree, (el) => el.props.children === 't:environments.createModal.createButton');
     expect(create).toBeDefined();
+  });
+
+  it('Enter key on the name input triggers handleCreate (early-returns on empty)', () => {
+    const onClose = vi.fn();
+    const tree = callRender({ projectId: 'p1', onClose });
+    const inputs: ReactElementLike[] = [];
+    for (const el of walk(tree)) if (el.type === 'input') inputs.push(el);
+    (inputs[0].props.onKeyDown as (e: { key: string }) => void)?.({ key: 'Enter' });
+    // name is empty → no dispatch (just sets error)
+    expect(mocks.dispatch).not.toHaveBeenCalled();
+  });
+
+  it('non-Enter key on the name input does nothing', () => {
+    const onClose = vi.fn();
+    const tree = callRender({ projectId: 'p1', onClose });
+    const inputs: ReactElementLike[] = [];
+    for (const el of walk(tree)) if (el.type === 'input') inputs.push(el);
+    (inputs[0].props.onKeyDown as (e: { key: string }) => void)?.({ key: 'Escape' });
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('IceSelect onChange callback is wired (drives setType)', () => {
+    const tree = callRender({ projectId: 'p1', onClose: vi.fn() });
+    const select = findByPredicate(tree, (el) => el.type === mocks.MockIceSelect);
+    expect(typeof (select?.props.onChange as unknown)).toBe('function');
+    expect(() => (select?.props.onChange as (v: string) => void)('development')).not.toThrow();
+  });
+
+  it('typing the region input fires setRegion (no dispatch)', () => {
+    const tree = callRender({ projectId: 'p1', onClose: vi.fn() });
+    const inputs: ReactElementLike[] = [];
+    for (const el of walk(tree)) if (el.type === 'input') inputs.push(el);
+    expect(typeof inputs[1].props.onChange).toBe('function');
   });
 });

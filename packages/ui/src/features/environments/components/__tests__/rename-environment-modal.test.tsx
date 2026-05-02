@@ -12,6 +12,8 @@ const mocks = vi.hoisted(() => ({
   dispatch: vi.fn(),
   tFn: vi.fn((k: string) => `t:${k}`),
   renameEnvSpy: vi.fn((arg) => ({ type: 'env/rename', payload: arg })),
+  useStateQueue: [] as unknown[],
+  setStates: [] as Array<ReturnType<typeof vi.fn>>,
 }));
 
 // Make rename thunk return a thunk-like object with .unwrap

@@ -60,15 +60,29 @@ describe('environments-slice', () => {
   });
 
   describe('setActiveEnvironment', () => {
-    it('writes activeEnvId[projectId] without validating env existence', () => {
-      // Distinguishes from projects-slice.setActiveEnvironment which DOES
-      // validate the project containing the env. setActiveEnvironment here
-      // is intentionally loose — see "wave 5A bug-shape" in CLAUDE.md.
+    it('ignores an unknown env id (findings #30)', () => {
+      // The previous reducer wrote the id unconditionally — a stale
+      // callsite could pin a deleted env into activeEnvId and
+      // downstream selectors would resolve to undefined. Now we gate
+      // on existence.
       const s = environmentsReducer(
         init(),
         setActiveEnvironment({ projectId: 'p-1', envId: 'never-fetched' }),
       );
-      expect(s.activeEnvId['p-1']).toBe('never-fetched');
+      expect(s.activeEnvId['p-1']).toBeUndefined();
+    });
+
+    it('writes the active env id when it exists in byProject', () => {
+      let s = environmentsReducer(
+        init(),
+        fetchEnvironments.fulfilled(
+          { projectId: 'p-1', environments: [env({ id: 'env-stg' }), env({ id: 'env-prod', type: 'production' })] },
+          'r-1',
+          'p-1',
+        ),
+      );
+      s = environmentsReducer(s, setActiveEnvironment({ projectId: 'p-1', envId: 'env-stg' }));
+      expect(s.activeEnvId['p-1']).toBe('env-stg');
     });
   });
 
@@ -112,18 +126,25 @@ describe('environments-slice', () => {
     });
 
     it('keeps existing active env intact across re-fetches', () => {
-      // First fetch sets active to env-prod.
+      // First fetch with both envs available so the user's pick can
+      // resolve under the existence guard (findings #30).
       let s = environmentsReducer(
         init(),
         fetchEnvironments.fulfilled(
-          { projectId: 'p-1', environments: [env({ id: 'env-prod', type: 'production' })] },
+          {
+            projectId: 'p-1',
+            environments: [
+              env({ id: 'env-prod', type: 'production' }),
+              env({ id: 'env-stg', type: 'staging' }),
+            ],
+          },
           'r-1',
           'p-1',
         ),
       );
       // User explicitly picks staging.
       s = environmentsReducer(s, setActiveEnvironment({ projectId: 'p-1', envId: 'env-stg' }));
-      // Re-fetch with both envs — active stays env-stg.
+      // Re-fetch with the same set — active stays env-stg.
       s = environmentsReducer(
         s,
         fetchEnvironments.fulfilled(

@@ -1095,10 +1095,13 @@ describe('SvgConnectionPath — outer <g> shape', () => {
     expect((g.props as { className: string }).className).toBe('connection-path cursor-pointer');
   });
 
-  it('renders a <defs> child for arrow markers (even though no marker is rendered today)', () => {
+  it('does not render a <defs> block now that arrow markers are gone (findings #31)', () => {
+    // The <defs>+<marker> block was unreachable behind a hardcoded
+    // `hasArrow = false` in the SUT; dropping the dead branch
+    // simplified the tree to just the path elements.
     const tree = renderEdge();
     const defs = findByType(tree, 'defs');
-    expect(defs).toHaveLength(1);
+    expect(defs).toHaveLength(0);
   });
 });
 

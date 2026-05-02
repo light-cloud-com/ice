@@ -4,9 +4,12 @@
  * Clean bezier curves between nodes:
  * - Default: very subtle thin lines (1px, low opacity)
  * - Hover: brighter line, no animated dots
- * - Arrow markers (small)
  * - Edge labels for protocol/port info
  * - Delete button on hover
+ *
+ * Arrow markers were removed (findings #31) — direction is implied by
+ * the data model and line style (dashed / dotted / thin) carries the
+ * connection type.
  */
 
 import React, { memo, useMemo, useState, useCallback, useRef } from 'react';
@@ -122,7 +125,6 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
     const isDashedEdge = lineStyle === 'dashed' || isLogEdge;
     const isDottedEdge = lineStyle === 'dotted';
     const isThinEdge = lineStyle === 'thin';
-    const hasArrow = false; // Arrows removed — line style communicates connection type
     const bundleCount = (connection.data?.bundleCount as number) || 0;
 
     const buildTooltip = useCallback(
@@ -261,9 +263,6 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
     // Hover target must stay large enough on screen
     const hoverTargetWidth = lod < 3 ? Math.max(16, 24 * invZoom) : 16;
     const showLabels = lod >= 3;
-    const showArrow = lod >= 2 && hasArrow;
-
-    const markerId = `arrow-${connection.id.replace(/[^a-zA-Z0-9]/g, '-')}`;
 
     return (
       <g
@@ -274,22 +273,6 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
         onPointerLeave={handleMouseLeave}
         onMouseMove={handleMouseMove}
       >
-        <defs>
-          {hasArrow && (
-            <marker
-              id={markerId}
-              markerWidth="5"
-              markerHeight="3.5"
-              refX="4"
-              refY="1.75"
-              orient="auto"
-              markerUnits="strokeWidth"
-            >
-              <polygon points="0 0, 5 1.75, 0 3.5" fill={strokeColor} opacity={isHover || isActive ? 0.8 : 0.4} />
-            </marker>
-          )}
-        </defs>
-
         {/* Invisible wider path for easier hover targeting + click-to-select */}
         <path
           d={pathD}
@@ -308,14 +291,14 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
           }}
         />
 
-        {/* Main bezier path */}
+        {/* Main bezier path. Arrow markers removed — line style
+            (dashed / dotted / thin) carries the connection type. */}
         <path
           d={pathD}
           stroke={pipelineActive ? '#3b82f6' : strokeColor}
           strokeWidth={pipelineActive ? 2 * (lod < 3 ? invZoom : 1) : strokeWidth}
           fill="none"
           strokeDasharray={isDashedEdge ? '6 4' : isDottedEdge ? '2 3' : undefined}
-          markerEnd={showArrow ? `url(#${markerId})` : undefined}
           strokeLinecap="round"
           opacity={pipelineActive ? 0.6 : strokeOpacity}
         />

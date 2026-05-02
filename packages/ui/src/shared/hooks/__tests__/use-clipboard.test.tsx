@@ -343,11 +343,57 @@ describe('useClipboard', () => {
         nodes: [makeNode({ id: 'n-1' })],
         selectedNodes: ['n-1'],
       });
+      const dispatchSpy = vi.spyOn(store, 'dispatch');
       mount(store);
+      dispatchSpy.mockClear();
       fire({ key: 'x', ctrlKey: true });
       await flush();
       await flush();
       expect(mocks.storage['ice-clipboard']).toBeDefined();
+      // After the sessionStorage fallback succeeds the cut still
+      // deletes — completeCut runs from inside the fallback branch.
+      const types = dispatchSpy.mock.calls.map((c) => (c[0] as { type: string }).type);
+      expect(types).toContain('cards/deleteCardNode');
+    });
+
+    it('keeps nodes on the canvas when BOTH clipboard and sessionStorage fail (findings #28)', async () => {
+      // Without the gate, the delete fired synchronously while the
+      // clipboard write was still in flight, so a failed clipboard +
+      // a failing sessionStorage fallback (e.g., quota exceeded) lost
+      // the data with no way to restore it.
+      mocks.writeText.mockRejectedValue(new Error('denied'));
+      // Re-stub sessionStorage so setItem throws (simulating a
+      // quota-exceeded condition). The default stub is set in
+      // beforeEach; override it here for this single test.
+      vi.stubGlobal('sessionStorage', {
+        getItem: (k: string) => mocks.storage[k] ?? null,
+        setItem: () => {
+          throw new Error('QuotaExceeded');
+        },
+        removeItem: (k: string) => {
+          delete mocks.storage[k];
+        },
+      });
+      const store = makeStore({
+        nodes: [makeNode({ id: 'n-1' })],
+        selectedNodes: ['n-1'],
+      });
+      const dispatchSpy = vi.spyOn(store, 'dispatch');
+      const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mount(store);
+      dispatchSpy.mockClear();
+      fire({ key: 'x', ctrlKey: true });
+      await flush();
+      await flush();
+
+      const types = dispatchSpy.mock.calls.map((c) => (c[0] as { type: string }).type);
+      expect(types).not.toContain('cards/deleteCardNode');
+      expect(types).not.toContain('selection/setSelectedNodes');
+      expect(errSpy).toHaveBeenCalledWith(
+        expect.stringMatching(/Cut aborted/),
+        expect.any(Error),
+      );
+      errSpy.mockRestore();
     });
   });
 

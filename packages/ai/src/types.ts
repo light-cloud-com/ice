@@ -46,17 +46,32 @@ export interface ChatMessage {
   content: string;
 }
 
+/**
+ * Wire-level finish reasons reported by OpenAI-compatible providers.
+ * findings.md #18 — the previous types pinned this to 'stop' and the
+ * provider implementations unconditionally returned 'stop', hiding
+ * length-cap truncations, content filtering, and tool-call boundaries.
+ */
+export type ChatFinishReason =
+  | 'stop'
+  | 'length'
+  | 'content_filter'
+  | 'tool_calls'
+  | 'function_call'
+  | string;
+
 export interface ChatChunk {
   /** Token text (may be empty on final chunk) */
   content: string;
-  /** Set to 'stop' on the final chunk */
-  finishReason?: 'stop' | null;
+  /** Set on the final chunk; null/undefined while tokens are still streaming. */
+  finishReason?: ChatFinishReason | null;
 }
 
 export interface ChatResponse {
   /** Full response text */
   content: string;
-  finishReason: 'stop';
+  /** The wire-level finish reason; defaults to 'stop' when the wire didn't supply one. */
+  finishReason: ChatFinishReason;
 }
 
 // =============================================================================

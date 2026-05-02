@@ -59,7 +59,14 @@ vi.mock('../block-summary-card', () => ({
 vi.mock('../compact-lod1', () => ({ CompactLod1: mocks.CompactLod1 }));
 vi.mock('../compact-lod3', () => ({ CompactLod3: mocks.CompactLod3 }));
 
-// Hook mocks: enable invocation outside a render context.
+// Hook mocks: enable invocation outside a render context. The useEffect
+// mock runs the effect synchronously when `runEffects=true`, allowing
+// the renaming-focus path to be exercised.
+const hookState = vi.hoisted(() => ({
+  runEffects: false as boolean,
+  refValue: null as unknown,
+}));
+
 vi.mock('react', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react')>();
   return {
@@ -72,8 +79,10 @@ vi.mock('react', async (importOriginal) => {
       }
       return [initialValue, vi.fn()];
     }),
-    useRef: vi.fn(<T,>(init: T): { current: T } => ({ current: init })),
-    useEffect: vi.fn(),
+    useRef: vi.fn(<T,>(_init: T): { current: T } => ({ current: hookState.refValue as T })),
+    useEffect: vi.fn((fn: () => void) => {
+      if (hookState.runEffects) fn();
+    }),
     useCallback: vi.fn(<T,>(fn: T, _deps: unknown[]) => fn),
   };
 });
@@ -123,6 +132,8 @@ const renderSCN = (
 beforeEach(() => {
   mocks.state.hoverValue = false;
   mocks.state.setHoverSpy.mockClear();
+  hookState.runEffects = false;
+  hookState.refValue = null;
 });
 
 // ─── Constants ──────────────────────────────────────────────────────

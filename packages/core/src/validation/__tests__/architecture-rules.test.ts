@@ -212,19 +212,18 @@ describe('validateArchitecture', () => {
     expect(r?.message).toContain('2 databases');
   });
 
-  it('does not flag multi-db when a cache is present', () => {
-    // Logic surprise: Database.Redis is classified as a database (Database.
-    // prefix wins the `else if` chain), so a Redis node is NOT counted in the
-    // caches bucket. Only iceTypes that match isCache but NOT isDatabase land
-    // in `caches` — for example a Cache.Memcache iceType. This is documented
-    // as a finding in the deliverable; using a non-database cache iceType to
-    // exercise the suppression branch.
+  it('does not flag multi-db when a cache is present (Database.Redis counts as cache after findings #19)', () => {
+    // findings.md #19 — the if/elseif order was changed so isCache runs
+    // BEFORE isDatabase. Database.Redis matches both predicates, but now
+    // lands in the caches bucket (which is what users mean when they
+    // pick "Redis"). Two SQL databases + one Redis no longer trips
+    // MULTI_DB_NO_CACHE.
     const issues = validateArchitecture(
       [
         node('db1', 'Database.PostgreSQL'),
         node('db2', 'Database.MySQL'),
         node('be', 'Compute.BackendAPI'),
-        node('cache', 'Cache.Memcache'),
+        node('cache', 'Database.Redis'),
       ],
       [],
       { mode: 'pre-deploy' },

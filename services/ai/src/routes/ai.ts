@@ -70,6 +70,26 @@ router.post('/canvas-intent', aiLimiter, async (req: AuthRequest, res: Response)
     }
   } catch (err: any) {
     console.error('AI canvas-intent error:', err);
+    // findings.md #22 — once streamCanvasIntent has flushed SSE
+    // headers any attempt to res.status(500).json(...) throws
+    // ERR_HTTP_HEADERS_SENT and crashes the request handler. The
+    // SSE channel is the only place left to surface the failure;
+    // try to ship one last `event: error` frame before tearing
+    // the connection down. Best-effort — if even the write throws
+    // (socket already closed), drop it.
+    if (res.headersSent) {
+      try {
+        res.write(`event: error\ndata: ${JSON.stringify({ message: err.message || 'AI processing failed' })}\n\n`);
+      } catch {
+        // socket already closed
+      }
+      try {
+        res.end();
+      } catch {
+        // already ended
+      }
+      return;
+    }
     res.status(500).json({ message: err.message || 'AI processing failed' });
   }
 });

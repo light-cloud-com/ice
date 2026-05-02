@@ -217,6 +217,15 @@ describe('SvgEnvConfigNode — populated state', () => {
     expect(findByType(tree, MockKvLine)).toHaveLength(0);
   });
 
+  it('object form: missing value coerces to empty string', () => {
+    const node = makeNode({ data: { variables: [{ key: 'OK_KEY' }] } });
+    const tree = renderEC({ node });
+    const lines = findByType(tree, MockKvLine);
+    expect(lines).toHaveLength(1);
+    expect((lines[0].props as { name: string; value: string }).name).toBe('OK_KEY');
+    expect((lines[0].props as { name: string; value: string }).value).toBe('');
+  });
+
   it('non-string non-object input yields empty key (filtered)', () => {
     const node = makeNode({ data: { variables: [42, true, null, undefined] } });
     const tree = renderEC({ node });

@@ -233,8 +233,10 @@ function checkSelectValue(
 }
 
 function checkRange(nodeId: string, prop: HighLevelProperty, value: number): CanvasIssue | null {
-  const ci = prop.customInput;
-  if (!ci) return null;
+  // findings.md #39 — the caller (line 67) already gates the call
+  // on `prop.customInput` being truthy, so the previous
+  // `if (!ci) return null;` guard was unreachable.
+  const ci = prop.customInput!;
 
   if (ci.min !== undefined && value < ci.min) {
     return {

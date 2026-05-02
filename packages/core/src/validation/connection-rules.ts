@@ -67,8 +67,13 @@ export function validateConnections(
 
     // ── Invalid connection pair ───────────────────────────────────────
     if (srcIceType && tgtIceType && !canConnect(srcIceType, tgtIceType, srcNode.type, tgtNode.type)) {
-      const srcLabel = (srcNode.data.label as string) || srcIceType.split('.').pop() || 'Source';
-      const tgtLabel = (tgtNode.data.label as string) || tgtIceType.split('.').pop() || 'Target';
+      // findings.md #38 — the `'Source'` / `'Target'` literal
+      // fallbacks were unreachable: the branch is already gated on
+      // both iceTypes being truthy, and `split('.').pop()` on a
+      // non-empty string always returns a non-empty segment unless
+      // the iceType is exactly `'.'` (not a real iceType). Dropped.
+      const srcLabel = (srcNode.data.label as string) || srcIceType.split('.').pop()!;
+      const tgtLabel = (tgtNode.data.label as string) || tgtIceType.split('.').pop()!;
       issues.push({
         id: `conn:${edge.id}:INVALID_CONNECTION`,
         severity: 'error',

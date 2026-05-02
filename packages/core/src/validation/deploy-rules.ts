@@ -170,9 +170,12 @@ export function validateDeployability(
     const iceType = node.data.iceType as string | undefined;
     if (!iceType) continue;
 
-    // Skip containers, groups, and special types
+    // Skip containers, groups, and special types.
+    // findings.md #36 — isContainer already returns true when
+    // nodeType is 'container' / 'group' (see classifiers.ts:90),
+    // so the dedicated nodeType check that used to follow was
+    // redundant.
     if (isContainer(iceType, node.type)) continue;
-    if (node.type === 'container' || node.type === 'group') continue;
     if (iceType === 'Source.Repository' || iceType === 'Config.Environment') continue;
 
     const label = (node.data.label as string) || iceType.split('.').pop() || 'Resource';
@@ -215,6 +218,9 @@ export function validateDeployability(
       // Check if any provider supports this iceType
       const supportedProviders = getSupportedProviders(iceType);
       if (supportedProviders.length > 0) {
+        // findings.md #37 — the suggestion ternary was a tautology:
+        // we're already inside `if (supportedProviders.length > 0)`,
+        // so the false arm was unreachable.
         issues.push({
           id: `deploy:${node.id}:NO_TYPE_MAPPING`,
           severity: 'warning',
@@ -222,7 +228,7 @@ export function validateDeployability(
           code: 'NO_TYPE_MAPPING',
           message: `${label} (${iceType}) has no ${provider.toUpperCase()} deployer — will be skipped`,
           nodeId: node.id,
-          suggestion: supportedProviders.length > 0 ? `Supported on: ${supportedProviders.join(', ')}` : undefined,
+          suggestion: `Supported on: ${supportedProviders.join(', ')}`,
         });
       }
     }

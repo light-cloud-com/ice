@@ -184,12 +184,13 @@ export async function export_graph(
     if (result.success && result.resource) {
       resources.push(result.resource);
     } else if (result.error) {
-      if (result.unmapped) {
-        unmapped_types.push(node.type);
-        warnings.push(`No Pulumi mapping for ICE type: ${node.type}`);
-      } else {
-        errors.push(result.error);
-      }
+      // findings.md #34 — `node_to_resource` only returns
+      // `success: false` on the no-impl-and-no-fallback branch,
+      // which always co-emits `unmapped: true`. The previous else
+      // arm was structurally unreachable; collapsed to the
+      // unmapped-only branch.
+      unmapped_types.push(node.type);
+      warnings.push(`No Pulumi mapping for ICE type: ${node.type}`);
     }
   }
 

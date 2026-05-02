@@ -17,7 +17,11 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    include: ['packages/*/src/**/*.test.{ts,tsx}', 'services/*/src/**/*.test.{ts,tsx}'],
+    include: [
+      'packages/*/src/**/*.test.{ts,tsx}',
+      'services/*/src/**/*.test.{ts,tsx}',
+      'apps/*/src/**/*.test.{ts,tsx}',
+    ],
     // `.int.test.ts` files are integration tests that require a live SQLite DB
     // (via `pnpm dev:setup`). Run them with `pnpm test:int` instead.
     exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**', '**/*.int.test.ts', '**/*.int.test.tsx', '**/*.svg'],
@@ -25,7 +29,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json-summary', 'html'],
       reportsDirectory: './coverage',
-      include: ['packages/*/src/**', 'services/*/src/**'],
+      include: ['packages/*/src/**', 'services/*/src/**', 'apps/*/src/**'],
       exclude: [
         '**/*.test.{ts,tsx}',
         '**/__tests__/**',

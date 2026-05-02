@@ -1,7 +1,15 @@
 /**
  * Main Application Component — Community Edition
  *
- * No login/signup — app loads straight to content.
+ * Trust model (findings.md #4):
+ *   This shell intentionally has NO client-side auth gate. The
+ *   community edition is single-user / local-first; every route here
+ *   renders unconditionally. Authorization is enforced server-side on
+ *   each API request (see services/iam, packages/shared/src/auth).
+ *   The only client-side redirect lives in `DynamicContent` and is a
+ *   UX hint to send users into onboarding — it is NOT a security
+ *   boundary. Cloud / multi-tenant editions ship a different shell
+ *   that wraps this one with a token gate.
  *
  * Route-based project navigation:
  *   /                         → Home (root folder view)

@@ -1,14 +1,26 @@
 /**
- * Reducer tests for onboarding-slice.
+ * Reducer + thunk tests for onboarding-slice.
  *
  * Covers every synchronous action plus the four async-thunk lifecycle
- * branches (pending/fulfilled/rejected for fetchStatus, fulfilled
- * for complete and skip). Async thunks themselves are not exercised
- * end-to-end here — we drive the matching action creators directly,
- * matching the harness pattern in environments-slice.test.ts.
+ * branches. Thunks themselves are also driven end-to-end with axios
+ * mocked at the module boundary so the request body / response
+ * mapping path is exercised.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+const mocks = vi.hoisted(() => ({
+  axiosGet: vi.fn(),
+  axiosPut: vi.fn(),
+}));
+
+vi.mock('../../../shared/api/axios-instance', () => ({
+  default: {
+    get: (...args: unknown[]) => mocks.axiosGet(...args),
+    put: (...args: unknown[]) => mocks.axiosPut(...args),
+  },
+}));
+
 import onboardingReducer, {
   setStep,
   setDefaultProvider,
@@ -24,10 +36,17 @@ import onboardingReducer, {
   setSelectedTemplateId,
   resetOnboarding,
   fetchOnboardingStatus,
+  saveOnboardingStep,
   completeOnboarding,
   skipOnboarding,
   type OnboardingState,
 } from '../onboarding-slice';
+import { configureStore } from '@reduxjs/toolkit';
+
+beforeEach(() => {
+  mocks.axiosGet.mockReset();
+  mocks.axiosPut.mockReset();
+});
 
 function init(): OnboardingState {
   return onboardingReducer(undefined, { type: '@@INIT' });
@@ -190,5 +209,52 @@ describe('completeOnboarding / skipOnboarding lifecycle', () => {
   it('skipOnboarding.fulfilled flips completed=true', () => {
     const s = onboardingReducer(init(), skipOnboarding.fulfilled({}, 'r-1', undefined));
     expect(s.completed).toBe(true);
+  });
+});
+
+describe('thunks (axios mocked at module boundary)', () => {
+  function makeStore() {
+    return configureStore({ reducer: { onboarding: onboardingReducer } });
+  }
+
+  it('fetchOnboardingStatus() GETs /onboarding/status', async () => {
+    mocks.axiosGet.mockResolvedValue({
+      data: {
+        onboarding_completed: false,
+        onboarding_step: 1,
+        default_provider: null,
+        default_region: null,
+      },
+    });
+    const store = makeStore();
+    await store.dispatch(fetchOnboardingStatus() as any);
+    expect(mocks.axiosGet).toHaveBeenCalledWith('/onboarding/status');
+    expect(store.getState().onboarding.loading).toBe(false);
+  });
+
+  it('saveOnboardingStep() PUTs /onboarding/step with the supplied body', async () => {
+    mocks.axiosPut.mockResolvedValue({ data: {} });
+    const store = makeStore();
+    await store.dispatch(saveOnboardingStep({ step: 2, defaultProvider: 'gcp' }) as any);
+    expect(mocks.axiosPut).toHaveBeenCalledWith('/onboarding/step', {
+      step: 2,
+      defaultProvider: 'gcp',
+    });
+  });
+
+  it('completeOnboarding() PUTs /onboarding/complete', async () => {
+    mocks.axiosPut.mockResolvedValue({ data: {} });
+    const store = makeStore();
+    await store.dispatch(completeOnboarding() as any);
+    expect(mocks.axiosPut).toHaveBeenCalledWith('/onboarding/complete');
+    expect(store.getState().onboarding.completed).toBe(true);
+  });
+
+  it('skipOnboarding() PUTs /onboarding/skip', async () => {
+    mocks.axiosPut.mockResolvedValue({ data: {} });
+    const store = makeStore();
+    await store.dispatch(skipOnboarding() as any);
+    expect(mocks.axiosPut).toHaveBeenCalledWith('/onboarding/skip');
+    expect(store.getState().onboarding.completed).toBe(true);
   });
 });

@@ -21,6 +21,18 @@ import {
 // =============================================================================
 
 describe('canContain', () => {
+  describe('Network.PrivateNetwork — universal container', () => {
+    // Like Group.Custom, PrivateNetwork is a logical wrapper that accepts
+    // any deployable block. The compiler enforces what's *actually* useful
+    // inside a VPC; the canvas just drops things in the bubble.
+    it('accepts any resource type as child', () => {
+      expect(canContain('Network.PrivateNetwork', 'Compute.Container')).toBe(true);
+      expect(canContain('Network.PrivateNetwork', 'Database.PostgreSQL')).toBe(true);
+      expect(canContain('Network.PrivateNetwork', 'Network.CustomDomain')).toBe(true);
+      expect(canContain('Network.PrivateNetwork', 'TotallyMade.Up.Type')).toBe(true);
+    });
+  });
+
   describe('Group.Custom — universal container', () => {
     it('should accept any resource type', () => {
       expect(canContain('Group.Custom', 'Compute.Container')).toBe(true);
@@ -155,6 +167,12 @@ describe('isContainer', () => {
     expect(isContainer('Network.Subnet')).toBe(true);
   });
 
+  it('should return true for Network.PrivateNetwork (no CONTAINMENT_RULES entry)', () => {
+    // PrivateNetwork is not a key in parentToChildrenMap, but the explicit
+    // string-comparison branch in isContainer catches it as a container.
+    expect(isContainer('Network.PrivateNetwork')).toBe(true);
+  });
+
   it('should return false for leaf resources', () => {
     expect(isContainer('Compute.Container')).toBe(false);
     expect(isContainer('Database.PostgreSQL')).toBe(false);
@@ -247,6 +265,13 @@ describe('getContainmentDepth', () => {
   it('should return 1 for resources with root-level parents', () => {
     // Application.Container can be in Group.Frontend (root) → depth 1
     expect(getContainmentDepth('Compute.Container')).toBe(1);
+  });
+
+  it('should return 2 for resources whose only parents are non-root containers', () => {
+    // Storage.Disk only appears in Group.Data — Group.Data starts with
+    // 'Group.', so Storage.Disk *would* be depth 1. Pick something that
+    // appears nowhere as a child to fall through to depth 2.
+    expect(getContainmentDepth('Totally.Unknown.Type')).toBe(2);
   });
 });
 

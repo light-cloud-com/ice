@@ -3,7 +3,7 @@
  *
  * Shared constants for canvas geometry, dimensions, zoom, and colors.
  * Imported by svg-compact-node, svg-group-node, svg-log-node,
- * svg-canvas, use-canvas-mouse-events, and auto-layout.
+ * svg-canvas, and auto-layout.
  */
 
 import { CARD_WIDTH, CARD_HEIGHT, HEADER_HEIGHT, CONTAINER_PADDING } from '@ice/constants';

@@ -67,18 +67,36 @@ describe('getContextLines — compute', () => {
     expect(
       getContextLines({ resourceId: 'worker', purpose: 'queue-consumer' }, 'Compute.Worker').lines,
     ).toEqual(['queue-consumer']);
+    expect(
+      getContextLines({ resourceId: 'worker', size: '1GB' }, 'Compute.Worker').lines,
+    ).toEqual(['1GB']);
+    expect(
+      getContextLines({ resourceId: 'worker', purpose: 'p', size: '512MB' }, 'Compute.Worker').lines,
+    ).toEqual(['p', '512MB']);
   });
 
   it('serverless-function/function-compute/oci-functions all share the purpose/size branch', () => {
     for (const id of ['serverless-function', 'function-compute', 'oci-functions']) {
       const r = getContextLines({ resourceId: id, purpose: 'p', size: 's' }, 'Compute.Serverless');
       expect(r.lines).toEqual(['p', 's']);
+      // size-only branch
+      expect(getContextLines({ resourceId: id, size: 's' }, '').lines).toEqual(['s']);
+      // empty branch
+      expect(getContextLines({ resourceId: id }, '').lines).toEqual([]);
     }
   });
 
   it('do-app-platform emits purpose + size', () => {
-    const r = getContextLines({ resourceId: 'do-app-platform', purpose: 'web' }, 'Compute');
-    expect(r.lines).toEqual(['web']);
+    expect(
+      getContextLines({ resourceId: 'do-app-platform', purpose: 'web' }, 'Compute').lines,
+    ).toEqual(['web']);
+    expect(
+      getContextLines({ resourceId: 'do-app-platform', size: '1GB' }, 'Compute').lines,
+    ).toEqual(['1GB']);
+    expect(
+      getContextLines({ resourceId: 'do-app-platform', purpose: 'web', size: '1GB' }, 'Compute').lines,
+    ).toEqual(['web', '1GB']);
+    expect(getContextLines({ resourceId: 'do-app-platform' }, 'Compute').lines).toEqual([]);
   });
 
   it('scheduled-task uses frequency or placeholder', () => {
@@ -104,6 +122,18 @@ describe('getContextLines — database', () => {
   it('mysql-db shares the postgres path', () => {
     const r = getContextLines({ resourceId: 'mysql-db', production: true }, 'Database.SQL');
     expect(r.lines).toEqual(['Production-ready']);
+  });
+
+  it('mongodb without size emits only the production/dev line', () => {
+    expect(
+      getContextLines({ resourceId: 'mongodb', production: true }, 'Database.NoSQL').lines,
+    ).toEqual(['Production-ready']);
+  });
+
+  it('postgres-db without size emits only the production/dev line', () => {
+    expect(
+      getContextLines({ resourceId: 'postgres-db', production: true }, 'Database.SQL').lines,
+    ).toEqual(['Production-ready']);
   });
 
   it('mongodb shares production-mode pattern', () => {

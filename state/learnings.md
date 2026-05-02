@@ -877,3 +877,15 @@ A SUT shaped like `(typeof import.meta !== 'undefined' && import.meta.env?.DEV) 
 _Discovered: 2026-05-02 by test-author in shared/utils/auto-layout coverage_
 
 `dagreTreeLayout`'s `checkFlowSubtree` and `repackIsolatedTopLevel`'s `checkFlow` both have `if (cached !== undefined) return cached;` cache-hit branches. Naturally these never fire when `buildHierarchy` produces a tree with single-parent edges — each id is visited at most once. The fixture that exercises the cache hit is TWO `contains` edges pointing at the SAME child (`p1 → shared`, `p2 → shared`): `buildHierarchy` appends `shared` to BOTH parents' children lists, so when the recursive descent visits the second parent's subtree, `shared`'s flow flag is already cached. Pin via two separate top-level fake-containers and a shared kid; assert the layout call doesn't throw (and optionally that the cache-hit code path is taken via line counters in coverage). Generalizes: any "memoize subtree property" recursion in a graph with single-parent invariants needs a multi-parent fixture to hit the cache-hit branch — single-parent trees never re-enter a node.
+
+## expand-blueprint-schema-driven-fallback-branches-need-fixture-not-real-schema
+
+_Discovered: 2026-05-02 by test-author in packages/blocks coverage_
+
+Three branches in `expand-blueprint.ts` are unreachable from the public API given the current shape of `HIGH_LEVEL_CATEGORIES`:
+
+1. `(hasPipeline ? PIPELINE_ROW_H : 0)` (line ~49 in `computeCompactNodeHeight`) — `expandBlueprint` always invokes `computeCompactNodeHeight(data, false)` and never threads `hasPipeline=true`. The `true` branch is dead from this caller.
+2. `prop.default ? providerOptions.find(...) : undefined` (line ~144) — every `select`+`optionDetails` entry in `HIGH_LEVEL_CATEGORIES` ships with a non-empty `default`. The `: undefined` fallback only fires for a property without a default.
+3. `(prop.default as string) ?? prop.options[0]!` (line ~159) — same shape: every `select`+`options` entry in `HIGH_LEVEL_CATEGORIES` ships with a `default`, so the `??` right operand is dead.
+
+Reachable only by hijacking the schema (mocking `@ice/core/resources` to return a fixture without `default`) — but this couples the `expand-blueprint` test to `getResourceProperties`'s import shape, which the test specifically avoids by relying on the real schema. The 100% statements / 97.29% branches / 100% functions outcome is the structural ceiling. Generalizes: any pure function that branches on an OPTIONAL field in a single-source-of-truth data table accepts a structural coverage gap on the "field absent" branches as long as every existing record in the table sets the field. Document the gap, point to the schema invariant, and don't introduce a fake-schema mock just for the branch counter.

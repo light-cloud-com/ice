@@ -46,6 +46,20 @@ describe('validateConnections', () => {
     expect(issues.filter((i) => i.edgeId === 'e1' || i.edgeId === 'e2')).toEqual([]);
   });
 
+  it('cycle detector skips phantom-target edges (findings #20)', () => {
+    // findings.md #20 — previously the cycle-detection adjacency map
+    // was built from ALL edges (including phantom targets), producing
+    // false-positive `a → ghost → a` reports. The fix filters dataEdges
+    // by node-existence so dangling targets can never participate in
+    // a cycle.
+    const issues = validateConnections(
+      [node('a', 'Compute.Container')],
+      [edge('e1', 'a', 'ghost'), edge('e2', 'ghost', 'a')],
+      ctx,
+    );
+    expect(issues.find((i) => i.code === 'CYCLE_DETECTED')).toBeUndefined();
+  });
+
   it('skips containment edges entirely', () => {
     const issues = validateConnections(
       [node('vpc', 'Network.VPC', { type: 'container' }), node('svc', 'Compute.Container')],

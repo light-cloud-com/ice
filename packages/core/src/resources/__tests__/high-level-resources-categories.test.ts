@@ -179,7 +179,7 @@ describe('security category (rf-hlres-7)', () => {
 
   it('contains the canonical resource ids in order', () => {
     const ids = security.resources.map((r) => r.id);
-    expect(ids).toEqual(['secret-store', 'ssl-certificate', 'service-account']);
+    expect(ids).toEqual(['secret-store', 'ssl-certificate', 'service-account', 'auth']);
   });
 
   it('secret-store covers AWS, GCP, Azure, and K8s', () => {

@@ -147,4 +147,17 @@ describe('rf-aiop-6 connectOrphanHelpers', () => {
     ]);
     expect(connectOrphanHelpers(dispatch, card)).toBe(2);
   });
+
+  it('falls back to empty-string iceType for nodes with no data.iceType (no match)', () => {
+    const { dispatch, calls } = makeDispatch();
+    // Node with no iceType at all — exercises the `|| ''` coalesce path in
+    // both backend and helper-detection regex tests. None of these match,
+    // so no edges get dispatched.
+    const card = makeCard([
+      makeNode({ id: 'b1', data: { iceType: 'Compute.Container' } }),
+      makeNode({ id: 'no-icetype', data: {} }),
+    ]);
+    expect(connectOrphanHelpers(dispatch, card)).toBe(0);
+    expect(calls).toEqual([]);
+  });
 });

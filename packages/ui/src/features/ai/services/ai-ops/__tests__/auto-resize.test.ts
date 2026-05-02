@@ -199,6 +199,64 @@ describe('rf-aiop-5 autoResizeContainers', () => {
     expect(innerResize).toBeLessThan(outerResize);
   });
 
+  it('breaks the depth walk when a parentId points to a missing node', () => {
+    const { dispatch, calls } = makeDispatch();
+    // Container that claims to be parented to a non-existent node — the depth
+    // walk in depthOf() should encounter `parent === undefined` and break out
+    // rather than looping forever.
+    const orphanContainer = makeNode({
+      id: 'orphan',
+      type: 'container',
+      parentId: 'ghost-parent',
+      position: { x: 0, y: 0 },
+      width: 100,
+      height: 100,
+    });
+    const child = makeNode({
+      id: 'child',
+      parentId: 'orphan',
+      position: { x: 10, y: 10 },
+      width: 50,
+      height: 50,
+    });
+    const card = makeCard([orphanContainer, child]);
+
+    autoResizeContainers(dispatch, card);
+
+    // The container still got processed — at least one dispatch fired.
+    expect(calls.length).toBeGreaterThan(0);
+  });
+
+  it('falls back to 280/160 when the container itself has no width/height', () => {
+    const { dispatch, calls } = makeDispatch();
+    const container = makeNode({
+      id: 'c1',
+      type: 'container',
+      position: { x: 0, y: 0 },
+      width: 0, // falsy → fallback 280 in newW math
+      height: 0, // falsy → fallback 160 in newH math
+    });
+    const child = makeNode({
+      id: 'child-1',
+      parentId: 'c1',
+      position: { x: 50, y: 50 },
+      width: 100,
+      height: 50,
+    });
+    const card = makeCard([container, child]);
+
+    autoResizeContainers(dispatch, card);
+
+    // The resize dispatch should fire because newW/newH != container.width/height
+    // (which were 0 and 0).
+    const resize = calls.find(
+      (c) =>
+        (c.payload as { id?: string }).id === 'c1' &&
+        (c.payload as { width?: number }).width !== undefined,
+    );
+    expect(resize).toBeDefined();
+  });
+
   it('uses 280/160 fallback when child width/height is missing', () => {
     const { dispatch, calls } = makeDispatch();
     const container = makeNode({

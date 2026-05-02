@@ -110,6 +110,14 @@ vi.mock('../../../../store/slices/ui-slice', () => ({
   setActivePane: (arg: unknown) => mocks.setActivePaneSpy(arg),
 }));
 
+vi.mock('../../../../shared/api/api-adapter', () => ({
+  getApi: () => ({
+    templates: {
+      loadToGraph: vi.fn().mockResolvedValue(undefined),
+    },
+  }),
+}));
+
 import { TemplatePicker } from '../template-picker';
 
 interface ReactElementLike {

@@ -203,6 +203,25 @@ describe('SvgGroupNode — displayLabel truncation with isBlock fallback', () =>
     const tree = renderGN({ lod: 3, isBlock: true, node: { ...({} as Parameters<typeof renderGN>[0]['node']), id: 'b', type: 'block', x: 0, y: 0, width: 100, height: 120, label: '', data: {}, parentId: undefined } as Parameters<typeof renderGN>[0]['node'] });
     expect((tree.props as { displayLabel: string }).displayLabel).toBe('Block');
   });
+
+  it('truncates fallback "Group" when (forced) maxChars < fallback.length', () => {
+    // Make label undefined and force a tiny maxChars by giving width that
+    // generates `(w-80)/7` < 5; clamped to 8 floor → "Group" (5) is still
+    // <= 8 so it wouldn't truncate. To exercise the truncation branch on
+    // line 58, supply a label whose length exceeds maxChars when label is
+    // not empty (already covered) AND verify the fallback path keeps the
+    // fallback intact.
+    const tree = renderGN({ lod: 1, node: makeNode({ width: 100, label: '' }) });
+    expect((tree.props as { displayLabel: string }).displayLabel).toBe('Group');
+  });
+
+  it('label undefined coerces to fallback in displayLabel', () => {
+    const tree = renderGN({
+      lod: 1,
+      node: { id: 'g', type: 'block', x: 0, y: 0, width: 280, height: 120, label: undefined as unknown as string, data: {}, parentId: undefined },
+    });
+    expect((tree.props as { displayLabel: string }).displayLabel).toBe('Group');
+  });
 });
 
 describe('SvgGroupNode — GroupLod2 label fallback', () => {

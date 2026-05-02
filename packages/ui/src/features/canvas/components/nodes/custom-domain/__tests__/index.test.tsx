@@ -372,6 +372,36 @@ describe('SvgCustomDomainNode — route rows', () => {
     const call = onUpdateData.mock.calls[0][1] as { routes: Array<{ subdomain: string }> };
     expect(call.routes[0].subdomain).toBe('my-sub');
   });
+
+  it('subdomain input onMouseDown stops propagation', () => {
+    const tree = renderCD({
+      node: makeNode({ data: { routes: [{ id: 'r1', subdomain: 'a' }] } }),
+    });
+    const sub = findByPredicate(tree, (el) => {
+      if (el.type !== 'input') return false;
+      return (el.props as { placeholder?: string }).placeholder === 'root';
+    })[0];
+    const stops: string[] = [];
+    (sub.props as { onMouseDown: (e: React.MouseEvent) => void }).onMouseDown({
+      stopPropagation: () => stops.push('m'),
+    } as React.MouseEvent);
+    expect(stops).toEqual(['m']);
+  });
+
+  it('subdomain input onClick stops propagation', () => {
+    const tree = renderCD({
+      node: makeNode({ data: { routes: [{ id: 'r1', subdomain: 'a' }] } }),
+    });
+    const sub = findByPredicate(tree, (el) => {
+      if (el.type !== 'input') return false;
+      return (el.props as { placeholder?: string }).placeholder === 'root';
+    })[0];
+    const stops: string[] = [];
+    (sub.props as { onClick: (e: React.MouseEvent) => void }).onClick({
+      stopPropagation: () => stops.push('c'),
+    } as React.MouseEvent);
+    expect(stops).toEqual(['c']);
+  });
 });
 
 describe('SvgCustomDomainNode — delete row button', () => {
@@ -468,6 +498,14 @@ describe('SvgCustomDomainNode — add route button', () => {
     onClick({ stopPropagation: () => {} } as React.MouseEvent);
     const call = onUpdateData.mock.calls[0][1] as { routes: Array<{ id: string }> };
     expect(call.routes).toHaveLength(1);
+  });
+
+  it('add button onMouseDown stops propagation', () => {
+    const tree = renderCD();
+    const stops: string[] = [];
+    const md = (findAddBtn(tree)!.props as { onMouseDown: (e: React.MouseEvent) => void }).onMouseDown;
+    md({ stopPropagation: () => stops.push('m') } as React.MouseEvent);
+    expect(stops).toEqual(['m']);
   });
 });
 

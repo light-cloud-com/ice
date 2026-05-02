@@ -544,6 +544,7 @@ describe('POST /api/users/invite/accept', () => {
   it('returns 400 when invitation has already been accepted', async () => {
     inviteFindUniqueMock.mockResolvedValue({
       id: 'i1',
+      email: 'admin@x.com',
       organisation_id: 'org-1',
       role: 'member',
       accepted_at: new Date('2025-01-01'),
@@ -559,6 +560,7 @@ describe('POST /api/users/invite/accept', () => {
   it('returns 400 when invitation is expired', async () => {
     inviteFindUniqueMock.mockResolvedValue({
       id: 'i1',
+      email: 'admin@x.com',
       organisation_id: 'org-1',
       role: 'member',
       accepted_at: null,
@@ -571,9 +573,52 @@ describe('POST /api/users/invite/accept', () => {
     expect(res.body).toEqual({ message: 'Invitation expired' });
   });
 
+  it('returns 403 when caller email does not match invitation email (findings #5)', async () => {
+    // Anyone who learns a token (forwarded email, leaked link) used
+    // to be able to accept the invitation as themselves and join a
+    // team they were never invited to. The route now requires the
+    // authenticated user's email to match the invitation's recipient.
+    inviteFindUniqueMock.mockResolvedValue({
+      id: 'i1',
+      email: 'invited@x.com',
+      organisation_id: 'org-target',
+      role: 'admin',
+      accepted_at: null,
+      expires_at: new Date(Date.now() + 100000),
+    });
+    userFindUniqueMock.mockResolvedValueOnce({ email: 'attacker@x.com' });
+
+    const res = await request('POST', '/api/users/invite/accept', { token: 't' });
+
+    expect(res.status).toBe(403);
+    expect(res.body).toEqual({
+      message: 'This invitation was sent to a different email address',
+    });
+    expect(memberUpsertMock).not.toHaveBeenCalled();
+    expect(inviteUpdateMock).not.toHaveBeenCalled();
+  });
+
+  it('returns 403 when the caller user record is missing (findings #5)', async () => {
+    inviteFindUniqueMock.mockResolvedValue({
+      id: 'i1',
+      email: 'invited@x.com',
+      organisation_id: 'org-target',
+      role: 'admin',
+      accepted_at: null,
+      expires_at: new Date(Date.now() + 100000),
+    });
+    userFindUniqueMock.mockResolvedValueOnce(null);
+
+    const res = await request('POST', '/api/users/invite/accept', { token: 't' });
+
+    expect(res.status).toBe(403);
+    expect(memberUpsertMock).not.toHaveBeenCalled();
+  });
+
   it('upserts membership, marks invitation accepted, and links default org when missing', async () => {
     inviteFindUniqueMock.mockResolvedValue({
       id: 'i1',
+      email: 'admin@x.com',
       organisation_id: 'org-target',
       role: 'admin',
       accepted_at: null,
@@ -581,10 +626,11 @@ describe('POST /api/users/invite/accept', () => {
     });
     memberUpsertMock.mockResolvedValue({});
     inviteUpdateMock.mockResolvedValue({});
-    userFindUniqueMock.mockResolvedValueOnce({
-      id: 'admin-1',
-      organisation_id: null,
-    });
+    // First lookup: email-match check (findings #5).
+    // Second lookup: default-org linking.
+    userFindUniqueMock
+      .mockResolvedValueOnce({ email: 'admin@x.com' })
+      .mockResolvedValueOnce({ id: 'admin-1', organisation_id: null });
     userUpdateMock.mockResolvedValue({});
     orgFindUniqueMock.mockResolvedValueOnce({ id: 'org-target', name: 'Target' });
 
@@ -608,9 +654,33 @@ describe('POST /api/users/invite/accept', () => {
     });
   });
 
+  it('matches emails case-insensitively (findings #5)', async () => {
+    // Email comparison is case-insensitive (mailbox part is locally
+    // case-sensitive in spec but every real-world provider folds).
+    inviteFindUniqueMock.mockResolvedValue({
+      id: 'i1',
+      email: 'Admin@X.com',
+      organisation_id: 'org-target',
+      role: 'admin',
+      accepted_at: null,
+      expires_at: new Date(Date.now() + 100000),
+    });
+    memberUpsertMock.mockResolvedValue({});
+    inviteUpdateMock.mockResolvedValue({});
+    userFindUniqueMock
+      .mockResolvedValueOnce({ email: 'admin@x.com' })
+      .mockResolvedValueOnce({ id: 'admin-1', organisation_id: 'existing' });
+    orgFindUniqueMock.mockResolvedValueOnce({ id: 'org-target', name: 'Target' });
+
+    const res = await request('POST', '/api/users/invite/accept', { token: 't' });
+
+    expect(res.status).toBe(200);
+  });
+
   it('does not update default org when user already has one', async () => {
     inviteFindUniqueMock.mockResolvedValue({
       id: 'i1',
+      email: 'admin@x.com',
       organisation_id: 'org-target',
       role: 'member',
       accepted_at: null,
@@ -618,10 +688,9 @@ describe('POST /api/users/invite/accept', () => {
     });
     memberUpsertMock.mockResolvedValue({});
     inviteUpdateMock.mockResolvedValue({});
-    userFindUniqueMock.mockResolvedValueOnce({
-      id: 'admin-1',
-      organisation_id: 'existing-default',
-    });
+    userFindUniqueMock
+      .mockResolvedValueOnce({ email: 'admin@x.com' })
+      .mockResolvedValueOnce({ id: 'admin-1', organisation_id: 'existing-default' });
     orgFindUniqueMock.mockResolvedValueOnce({ id: 'org-target', name: 'Target' });
 
     const res = await request('POST', '/api/users/invite/accept', { token: 't' });
@@ -630,11 +699,12 @@ describe('POST /api/users/invite/accept', () => {
     expect(userUpdateMock).not.toHaveBeenCalled();
   });
 
-  it('handles user lookup returning null (still calls update because optional-chain falls through)', async () => {
+  it('handles user lookup returning null on the default-org check (still calls update because optional-chain falls through)', async () => {
     // `if (!user?.organisation_id)` — when user is null, optional-chain
     // yields undefined which is falsy, so the linking branch fires.
     inviteFindUniqueMock.mockResolvedValue({
       id: 'i1',
+      email: 'admin@x.com',
       organisation_id: 'org-target',
       role: 'member',
       accepted_at: null,
@@ -642,7 +712,9 @@ describe('POST /api/users/invite/accept', () => {
     });
     memberUpsertMock.mockResolvedValue({});
     inviteUpdateMock.mockResolvedValue({});
-    userFindUniqueMock.mockResolvedValueOnce(null);
+    userFindUniqueMock
+      .mockResolvedValueOnce({ email: 'admin@x.com' })
+      .mockResolvedValueOnce(null);
     userUpdateMock.mockResolvedValue({});
     orgFindUniqueMock.mockResolvedValueOnce(null);
 
@@ -656,11 +728,13 @@ describe('POST /api/users/invite/accept', () => {
   it('returns 500 when upsert throws', async () => {
     inviteFindUniqueMock.mockResolvedValue({
       id: 'i1',
+      email: 'admin@x.com',
       organisation_id: 'org-target',
       role: 'member',
       accepted_at: null,
       expires_at: new Date(Date.now() + 100000),
     });
+    userFindUniqueMock.mockResolvedValueOnce({ email: 'admin@x.com' });
     memberUpsertMock.mockRejectedValue(new Error('FK violation'));
 
     const res = await request('POST', '/api/users/invite/accept', { token: 't' });

@@ -192,6 +192,20 @@ describe('InviteAcceptPage — auth gate', () => {
     await mocks.effects[0].cb();
     expect(mocks.navigate).toHaveBeenCalledWith('/login?redirect=/invite/special-token-99', { replace: true });
   });
+
+  it('URL-encodes the token in the redirect (findings #5)', async () => {
+    // Tokens that contain `?`, `&`, `+`, `#`, etc. would otherwise
+    // be re-parsed as query separators on the next round-trip and
+    // the accept POST would receive a mangled token.
+    mocks.token = 'a+b/c?d=e&f';
+    mocks.isAuthenticated.mockReturnValueOnce(false);
+    render();
+    await mocks.effects[0].cb();
+    expect(mocks.navigate).toHaveBeenCalledWith(
+      '/login?redirect=/invite/a%2Bb%2Fc%3Fd%3De%26f',
+      { replace: true },
+    );
+  });
 });
 
 // ─── Accept flow — success ───────────────────────────────────────────────

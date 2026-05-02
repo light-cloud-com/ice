@@ -225,18 +225,37 @@ describe('useMenuActions — edit menu actions', () => {
   });
 
   it('dispatches selectAll with current node/edge ids on menu:selectAll', async () => {
-    const store = makeStore();
-    // Seed a few nodes/edges so the selectAll payload is non-trivial.
-    store.dispatch({
-      type: 'graph/initialize/fulfilled',
-      payload: null,
+    // Use preloadedState to seed nodes/edges so selectAll's `nodes.map((n) => n.id)`
+    // and `edges.map((e) => e.id)` arrows actually execute.
+    const seededStore = configureStore({
+      reducer: { graph: graphReducer, selection: selectionReducer, ui: uiReducer } as any,
+      preloadedState: {
+        graph: {
+          iceGraph: null,
+          nodes: [
+            { id: 'n-1', type: 'block', position: { x: 0, y: 0 }, data: {} },
+            { id: 'n-2', type: 'block', position: { x: 0, y: 0 }, data: {} },
+          ],
+          edges: [{ id: 'e-1', source: 'n-1', target: 'n-2' }],
+          isLoading: false,
+          error: null,
+          isDirty: false,
+          filePath: null,
+          history: { past: [], future: [] },
+        },
+      } as any,
+      middleware: (g) => g({ serializableCheck: false, immutableCheck: false }),
     });
-    const dispatchSpy = vi.spyOn(store, 'dispatch');
-    mount(store);
+    const dispatchSpy = vi.spyOn(seededStore, 'dispatch');
+    mount(seededStore);
     dispatchSpy.mockClear();
     await mocks.onMenuActionCb!('menu:selectAll');
-    const calls = dispatchSpy.mock.calls.map((c) => c[0] as { type: string });
-    expect(calls.some((c) => c.type === 'selection/selectAll')).toBe(true);
+    const calls = dispatchSpy.mock.calls.map((c) => c[0] as { type: string; payload?: unknown });
+    const selectAllCall = calls.find((c) => c.type === 'selection/selectAll');
+    expect(selectAllCall).toBeTruthy();
+    const payload = selectAllCall!.payload as { nodes: string[]; edges: string[] };
+    expect(payload.nodes).toEqual(['n-1', 'n-2']);
+    expect(payload.edges).toEqual(['e-1']);
   });
 
   it('dispatches clearSelection on menu:deselectAll', async () => {

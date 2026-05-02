@@ -305,4 +305,12 @@ describe('BlockSummaryCard — category fallback', () => {
     const hdr = findByType(tree, MockNodeHeader)[0];
     expect((hdr.props as { category: string }).category).toBe('default');
   });
+
+  it('falls back to CATEGORY_STYLE.Block (3b82f6) when category is unknown', () => {
+    // 'NotAKnownCategory' is not in CATEGORY_STYLE → first || arm is undefined →
+    // falls through to CATEGORY_STYLE.Block (border #253548, glow #3b82f6).
+    const tree = renderBSC({ node: makeNode({ data: { iceType: 'NotAKnownCategory.Foo' } }) });
+    const hdr = findByType(tree, MockNodeHeader)[0];
+    expect((hdr.props as { categoryColor: string }).categoryColor).toBe('#3b82f6');
+  });
 });

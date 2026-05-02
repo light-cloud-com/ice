@@ -478,6 +478,83 @@ describe('SvgCompactNode — callbacks', () => {
   });
 });
 
+// ─── Rename focus useEffect ───────────────────────────────────
+
+describe('SvgCompactNode — rename focus effect', () => {
+  it('focuses + selects the rename input when isRenaming + ref present', () => {
+    const focus = vi.fn();
+    const select = vi.fn();
+    hookState.runEffects = true;
+    hookState.refValue = { focus, select } as unknown;
+    renderSCN({ isRenaming: true });
+    expect(focus).toHaveBeenCalledTimes(1);
+    expect(select).toHaveBeenCalledTimes(1);
+  });
+
+  it('does nothing when isRenaming=false even if ref present', () => {
+    const focus = vi.fn();
+    const select = vi.fn();
+    hookState.runEffects = true;
+    hookState.refValue = { focus, select } as unknown;
+    renderSCN({ isRenaming: false });
+    expect(focus).not.toHaveBeenCalled();
+    expect(select).not.toHaveBeenCalled();
+  });
+
+  it('does nothing when isRenaming=true but ref is null', () => {
+    hookState.runEffects = true;
+    hookState.refValue = null;
+    expect(() => renderSCN({ isRenaming: true })).not.toThrow();
+  });
+});
+
+// ─── dedupedRuntime ─────────────────────────────────────────────
+
+describe('SvgCompactNode — dedupedRuntime', () => {
+  const propsOf = (cmp: React.ReactElement): Record<string, unknown> => cmp.props as Record<string, unknown>;
+
+  it('returns runtimeLabel as-is when serviceName is empty', () => {
+    // Use unknown iceType / provider so getServiceName returns ''. runtime stays.
+    const node = makeNode({ data: { iceType: 'NotARealType.Foo', runtime: 'go-1.21' } });
+    const p = propsOf(renderSCN({ node }));
+    expect(p.serviceLineText).toBe('go-1.21');
+  });
+
+  it('drops runtime when runtime exactly matches serviceName trailing word', () => {
+    // 'Compute.Function' + 'aws' → 'AWS Lambda'. Trailing word = 'Lambda'.
+    // runtime = 'Lambda' equals trailing word → branch returns ''.
+    const node = makeNode({
+      data: { iceType: 'Compute.Function', provider: 'aws', runtime: 'Lambda' },
+    });
+    const p = propsOf(renderSCN({ node }));
+    // serviceLineText should be just 'AWS Lambda' (runtime dropped, no '·' separator).
+    expect(p.serviceLineText).toBe('AWS Lambda');
+  });
+
+  it('strips serviceName trailing word prefix from runtime when present', () => {
+    // runtime = 'Lambda Node 18' starts with 'Lambda ' → returns 'Node 18'.
+    const node = makeNode({
+      data: { iceType: 'Compute.Function', provider: 'aws', runtime: 'Lambda Node 18' },
+    });
+    const p = propsOf(renderSCN({ node }));
+    expect(p.serviceLineText).toBe('AWS Lambda · Node 18');
+  });
+
+  it('returns runtime untouched when no overlap with trailing word', () => {
+    const node = makeNode({
+      data: { iceType: 'Compute.Function', provider: 'aws', runtime: 'go-1.21' },
+    });
+    const p = propsOf(renderSCN({ node }));
+    expect(p.serviceLineText).toBe('AWS Lambda · go-1.21');
+  });
+
+  it('omits runtime when runtimeLabel is empty', () => {
+    const node = makeNode({ data: { iceType: 'Compute.Function', provider: 'aws' } });
+    const p = propsOf(renderSCN({ node }));
+    expect(p.serviceLineText).toBe('AWS Lambda');
+  });
+});
+
 // ─── CompactLod1 arm — surface check ────────────────────────────
 
 describe('SvgCompactNode — CompactLod1 branch surface', () => {
@@ -495,6 +572,12 @@ describe('SvgCompactNode — CompactLod1 branch surface', () => {
   it('label falls back to empty string when undefined', () => {
     const node = makeNode({ label: undefined as unknown as string });
     const tree = renderSCN({ node, lod: 1 });
+    expect((tree.props as { label: string }).label).toBe('');
+  });
+
+  it('label fallback for CompactLod3 branch when undefined', () => {
+    const node = makeNode({ label: undefined as unknown as string });
+    const tree = renderSCN({ node });
     expect((tree.props as { label: string }).label).toBe('');
   });
 });

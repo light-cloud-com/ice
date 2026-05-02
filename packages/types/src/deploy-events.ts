@@ -240,6 +240,84 @@ export function isRequirementVerifiedEvent(
   return e.type === 'requirement_verified';
 }
 
+// ── Wire-status → canvas-overlay mapping ────────────────────────────────
+
+/**
+ * Maps a wire {@link DeployNodeStatus} to the canvas-overlay status
+ * string the compact-node renderer reads from `data.deploy_status`.
+ *
+ * Co-located with {@link DeployNodeStatus} (rf-0c dedup) so the service
+ * layer (`updateDeploySnapshotNode` mirror, destroy-status emitter) and
+ * the frontend (`use-deploy-subscription` live-event handler) share the
+ * single mapping. Drift between the two used to mean a tab opened
+ * mid-deploy hydrated a `queued` node with one color via the snapshot
+ * path and got the same node overwritten to a different color
+ * microseconds later by the live event.
+ *
+ * Mapping:
+ *   queued                  → 'queued'
+ *   applying                → 'deploying'
+ *   succeeded               → 'active'
+ *   failed                  → 'error'
+ *   skipped                 → 'skipped'
+ *   cancelled-due-to-dep    → 'cancelled'   // upstream-failure cascade,
+ *                                            // distinct from operator skip
+ *
+ * The matching `STATUS_COLORS` entries live in
+ * `packages/ui/src/config/canvas-constants.ts`.
+ */
+export type DeployOverlayStatus =
+  | 'queued'
+  | 'deploying'
+  | 'active'
+  | 'error'
+  | 'skipped'
+  | 'cancelled';
+
+export function mapStatusToOverlay(status: DeployNodeStatus): DeployOverlayStatus {
+  switch (status) {
+    case 'queued':
+      return 'queued';
+    case 'applying':
+      return 'deploying';
+    case 'succeeded':
+      return 'active';
+    case 'failed':
+      return 'error';
+    case 'skipped':
+      return 'skipped';
+    case 'cancelled-due-to-dep':
+      return 'cancelled';
+  }
+}
+
+/**
+ * Inverse of {@link mapStatusToOverlay}. Used by the Phase 2 warm-seed
+ * (pdl-5 critic finding #7) to reconstruct synthetic `node_status` events
+ * from the server's persisted snapshot. The snapshot stores the
+ * post-mapping overlay string; to populate `nodesById` we need to walk
+ * back to the wire status. Returns null for overlay strings that don't
+ * correspond to a wire status (e.g. legacy 'destroying' / 'gone').
+ */
+export function overlayToWireStatus(overlay: string): DeployNodeStatus | null {
+  switch (overlay) {
+    case 'queued':
+      return 'queued';
+    case 'deploying':
+      return 'applying';
+    case 'active':
+      return 'succeeded';
+    case 'error':
+      return 'failed';
+    case 'skipped':
+      return 'skipped';
+    case 'cancelled':
+      return 'cancelled-due-to-dep';
+    default:
+      return null;
+  }
+}
+
 // ── Terminal-status helper ──────────────────────────────────────────────
 
 /** The set of {@link DeployNodeStatus} values that signal "no further

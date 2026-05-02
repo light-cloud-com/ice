@@ -32,7 +32,8 @@
 
 import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import type { DeployEvent, DeployNodeStatus } from '@ice/types';
+import type { DeployEvent } from '@ice/types';
+import { mapStatusToOverlay, overlayToWireStatus } from '@ice/types';
 import { getApi } from '../../../shared/api/api-adapter';
 import { updateCardNodeData } from '../../../store/slices/cards-slice';
 import {
@@ -51,76 +52,16 @@ import type {
 import type { AppDispatch, RootState } from '../../../store';
 
 /**
- * Map a wire `DeployNodeStatus` to the canvas overlay status string the
- * compact-node renderer reads from `data.deploy_status`. Mirrors the
- * service-layer mapping in `deploy.service.ts:mapStatusToOverlay`.
+ * Re-exported from `@ice/types` (rf-0c dedup). Historically the
+ * service-side and UI-side had separate copies of the wire→overlay
+ * mapping, kept in sync by hand. The canonical home is now next to
+ * {@link DeployNodeStatus} so drift is impossible.
  *
- *   queued                  → 'queued'
- *   applying                → 'deploying'
- *   succeeded               → 'active'
- *   failed                  → 'error'
- *   skipped                 → 'skipped'
- *   cancelled-due-to-dep    → 'cancelled'  // upstream-failure cascade,
- *                                          // distinct from operator skip
- *
- * Must agree with the service-side `mapStatusToOverlay` in
- * `services/deploy/src/services/deploy.service.ts:191` — the snapshot
- * path goes through the service mapping; the live-event path goes
- * through this one. Divergence means a tab opened mid-deploy snapshots
- * with one color and live-event-overwrites with a different one for
- * the same wire status. The corresponding `STATUS_COLORS` entries for
- * `'queued'` / `'skipped'` / `'cancelled'` live in
- * `packages/ui/src/config/canvas-constants.ts`.
+ * Old name `mapWireStatusToOverlay` kept as an alias here so the
+ * existing UI consumers (deploy-node-row, etc.) don't have to all
+ * migrate at once.
  */
-export function mapWireStatusToOverlay(
-  status: DeployNodeStatus,
-): 'queued' | 'deploying' | 'active' | 'error' | 'skipped' | 'cancelled' {
-  switch (status) {
-    case 'queued':
-      return 'queued';
-    case 'applying':
-      return 'deploying';
-    case 'succeeded':
-      return 'active';
-    case 'failed':
-      return 'error';
-    case 'skipped':
-      return 'skipped';
-    case 'cancelled-due-to-dep':
-      return 'cancelled';
-  }
-}
-
-/**
- * Inverse of `mapWireStatusToOverlay`. Used by the Phase 2 warm-seed (pdl-5
- * critic finding #7) to reconstruct synthetic `node_status` events from the
- * server's persisted snapshot. The snapshot stores the post-mapping overlay
- * string; to populate `nodesById` we need to walk back to the wire status.
- *
- * Returns null for overlay strings that don't correspond to a wire
- * `DeployNodeStatus` (e.g. 'destroying' / 'gone' from legacy destroy paths
- * that wrote their own overlay strings) — those nodes simply don't get
- * warm-seeded into `nodesById`. The Phase 2.5 replay will fill them in
- * with the real wire events from the deploy-event-log.
- */
-export function overlayToWireStatus(overlay: string): DeployNodeStatus | null {
-  switch (overlay) {
-    case 'queued':
-      return 'queued';
-    case 'deploying':
-      return 'applying';
-    case 'active':
-      return 'succeeded';
-    case 'error':
-      return 'failed';
-    case 'skipped':
-      return 'skipped';
-    case 'cancelled':
-      return 'cancelled-due-to-dep';
-    default:
-      return null;
-  }
-}
+export { mapStatusToOverlay as mapWireStatusToOverlay, overlayToWireStatus };
 
 /**
  * Handle a single typed deploy event — used by both the live socket
@@ -154,7 +95,7 @@ export function applyDeployEvent(
       dispatch(applyNodeStatusEvent(event));
       // Mirror the per-block overlay onto the canvas. event.node_id is
       // the canvas node id (post-pdl-4 service-layer translation).
-      const overlay = mapWireStatusToOverlay(event.status);
+      const overlay = mapStatusToOverlay(event.status);
       const data: Record<string, unknown> = {
         deploy_status: overlay,
       };

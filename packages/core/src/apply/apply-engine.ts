@@ -326,6 +326,14 @@ async function execute_provider_operation(
 
     case 'replace':
       // Replace = destroy + create
+      // findings.md #25 — when current_state is missing the destroy
+      // step used to be silently skipped. That diverges from the
+      // scheduler's stricter destroy/create choreography and produces
+      // orphaned cloud resources for any caller that didn't pass a
+      // current_state alongside a 'replace' action. We can't destroy
+      // what we don't know about, so emit a warning before falling
+      // through to deploy-only — the log makes the "create-only on
+      // replace" mode observable.
       if (current_state) {
         const destroy_result = await provider.destroy(node, current_state);
         if (!destroy_result.success) {
@@ -334,6 +342,10 @@ async function execute_provider_operation(
             error: destroy_result.error,
           };
         }
+      } else {
+        console.warn(
+          `[apply-engine] replace action for node ${node.id} has no current_state; skipping destroy and proceeding as create-only. Existing cloud resources for this node may be orphaned.`,
+        );
       }
       return provider.deploy(node);
 

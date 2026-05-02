@@ -509,15 +509,25 @@ describe('apply_plan — provider operation dispatch', () => {
     expect(result.summary.replaced).toBe(1);
   });
 
-  it('replaces by deploying directly when there is no current_state', async () => {
+  it('replaces by deploying directly when there is no current_state, with a warning (findings #25)', async () => {
+    // The replace path used to silently skip the destroy step when
+    // current_state was missing — orphaned cloud resources for any
+    // caller that mis-paired a 'replace' action with no state. The
+    // skip is preserved (we can't destroy what we don't know about)
+    // but a warning now makes the create-only mode observable.
     const graph = create_mutable_graph('g');
     const a = add_node(graph, 'a');
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     const result = await apply_plan(make_plan([make_change(a, 'replace')]), graph);
 
     expect(current_provider.destroy).not.toHaveBeenCalled();
     expect(current_provider.deploy).toHaveBeenCalledTimes(1);
     expect(result.summary.replaced).toBe(1);
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringMatching(/replace action.*no current_state/),
+    );
+    warnSpy.mockRestore();
   });
 
   it('aborts replace when destroy fails and reports the destroy error', async () => {

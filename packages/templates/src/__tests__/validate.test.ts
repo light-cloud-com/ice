@@ -119,9 +119,19 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+// findings.md #45 — validate.ts no longer self-runs at import time;
+// the SUT now exposes runValidation + printReport as named exports
+// and the CLI driver is gated behind an isMain() check that stays
+// dormant under vitest. The helper imports the module fresh (so
+// h.templates is read from the matching mocked '../index'), invokes
+// runValidation, prints the report — and surfaces process.exit(1)
+// behaviour for tests that asserted on it via the existing exitSpy.
 async function loadValidate() {
   vi.resetModules();
-  await import('../validate');
+  const mod = await import('../validate');
+  const issues = mod.runValidation(h.templates);
+  const { errors } = mod.printReport(issues, h.templates.length);
+  if (errors.length > 0) process.exit(1);
 }
 
 function makeTemplate(overrides: Partial<ComposedTemplate> = {}): ComposedTemplate {

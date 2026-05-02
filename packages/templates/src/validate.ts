@@ -311,44 +311,93 @@ function checkExpansion(t: ComposedTemplate, issues: Issue[]) {
   }
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+// ─── Public API ───────────────────────────────────────────────────────────────
 
-const issues: Issue[] = [];
-
-for (const t of ALL_TEMPLATES) {
-  checkCore(t, issues); // @ice/core structural checks
-  checkBlueprints(t, issues); // R1: blueprints exist
-  checkBounds(t, issues); // R2: block positions
-  checkUngrouped(t, issues); // R3: ungrouped below groups
-  checkVpcSubnet(t, issues); // R5: VPC/Subnet nesting
-  checkProperties(t, issues); // R6: required properties
-  checkColors(t, issues); // R7: group colors
-  checkMetadata(t, issues); // R10: metadata
-  checkExpansion(t, issues); // Expansion for all providers
+/**
+ * Walk every supplied template and collect rule-violation issues.
+ *
+ * Pure: no I/O, no process.exit, no console.log. Pass `ALL_TEMPLATES`
+ * (or any subset) and inspect the returned issues yourself, OR pipe
+ * the result through `printReport`.
+ *
+ * findings.md #45 — extracted from the previous top-level driver so
+ * the module is unit-testable without `vi.resetModules() + import`
+ * tricks and so importing the file from another script can't trigger
+ * `process.exit(1)` as a side effect.
+ */
+export function runValidation(templates: readonly ComposedTemplate[]): Issue[] {
+  const issues: Issue[] = [];
+  for (const t of templates) {
+    checkCore(t, issues); // @ice/core structural checks
+    checkBlueprints(t, issues); // R1: blueprints exist
+    checkBounds(t, issues); // R2: block positions
+    checkUngrouped(t, issues); // R3: ungrouped below groups
+    checkVpcSubnet(t, issues); // R5: VPC/Subnet nesting
+    checkProperties(t, issues); // R6: required properties
+    checkColors(t, issues); // R7: group colors
+    checkMetadata(t, issues); // R10: metadata
+    checkExpansion(t, issues); // Expansion for all providers
+  }
+  return issues;
 }
 
-// ─── Report ───────────────────────────────────────────────────────────────────
+/**
+ * Print the validation report to stdout. Returns the partitioned
+ * issues so a caller (the CLI driver, or a test) can decide what to
+ * do with them — process.exit is intentionally NOT called here.
+ */
+export function printReport(
+  issues: Issue[],
+  totalTemplates: number,
+): { errors: Issue[]; warnings: Issue[] } {
+  const errors = issues.filter((i) => i.severity === 'error');
+  const warnings = issues.filter((i) => i.severity === 'warn');
 
-const errors = issues.filter((i) => i.severity === 'error');
-const warnings = issues.filter((i) => i.severity === 'warn');
+  console.log(`\nValidated ${totalTemplates} templates\n`);
 
-console.log(`\nValidated ${ALL_TEMPLATES.length} templates\n`);
-
-if (warnings.length > 0) {
-  console.log(`⚠  ${warnings.length} warning(s):`);
-  for (const w of warnings) {
-    console.log(`   [${w.rule}] ${w.template}: ${w.message}`);
+  if (warnings.length > 0) {
+    console.log(`⚠  ${warnings.length} warning(s):`);
+    for (const w of warnings) {
+      console.log(`   [${w.rule}] ${w.template}: ${w.message}`);
+    }
+    console.log();
   }
-  console.log();
+
+  if (errors.length > 0) {
+    console.log(`✗  ${errors.length} error(s):`);
+    for (const e of errors) {
+      console.log(`   [${e.rule}] ${e.template}: ${e.message}`);
+    }
+    console.log();
+  } else {
+    console.log(`✓  All templates pass validation\n`);
+  }
+
+  return { errors, warnings };
 }
 
-if (errors.length > 0) {
-  console.log(`✗  ${errors.length} error(s):`);
-  for (const e of errors) {
-    console.log(`   [${e.rule}] ${e.template}: ${e.message}`);
+// ─── CLI driver ───────────────────────────────────────────────────────────────
+
+/**
+ * Module-detection that survives both `node validate.js` and
+ * `tsx validate.ts`. Tests do `await import('../validate')` and the
+ * vitest runner is the entry point in that case, so the driver
+ * stays dormant — no top-level work, no process.exit.
+ */
+async function isMain(): Promise<boolean> {
+  if (!process.argv[1]) return false;
+  const { fileURLToPath } = await import('url');
+  try {
+    return process.argv[1] === fileURLToPath(import.meta.url);
+  } catch {
+    return false;
   }
-  console.log();
-  process.exit(1);
-} else {
-  console.log(`✓  All templates pass validation\n`);
+}
+
+if (await isMain()) {
+  const issues = runValidation(ALL_TEMPLATES);
+  const { errors } = printReport(issues, ALL_TEMPLATES.length);
+  if (errors.length > 0) {
+    process.exit(1);
+  }
 }

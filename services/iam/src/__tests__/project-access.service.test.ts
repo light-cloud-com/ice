@@ -212,16 +212,57 @@ describe('project-access.service', () => {
   });
 
   describe('updateProjectMemberRole', () => {
-    it('updates the existing member to the new role', async () => {
+    it('updates a non-owner member without checking owner count', async () => {
+      // findings.md #6 — when promoting TO owner the guard short-
+      // circuits without a count call (the operation can only add
+      // owners). When the target ISN'T currently an owner, demoting
+      // to a non-owner role is also safe — `isLastOwner` returns false
+      // early on `pm?.role !== 'owner'`.
+      (prisma.projectMember.findUnique as any).mockResolvedValue({ role: 'editor' });
       (prisma.projectMember.update as any).mockResolvedValue({ id: 'pm-1' });
       const { updateProjectMemberRole } = await import('../services/project-access.service.js');
 
       await updateProjectMemberRole('p-1', 'u-1', 'viewer');
 
+      expect(prisma.projectMember.count).not.toHaveBeenCalled();
       expect(prisma.projectMember.update).toHaveBeenCalledWith({
         where: { project_id_user_id: { project_id: 'p-1', user_id: 'u-1' } },
         data: { role: 'viewer' },
       });
+    });
+
+    it('skips the count check when promoting TO owner', async () => {
+      // newRole === 'owner' short-circuits before `isLastOwner` —
+      // adding owners can never reduce the count.
+      (prisma.projectMember.update as any).mockResolvedValue({ id: 'pm-1' });
+      const { updateProjectMemberRole } = await import('../services/project-access.service.js');
+
+      await updateProjectMemberRole('p-1', 'u-1', 'owner');
+
+      expect(prisma.projectMember.findUnique).not.toHaveBeenCalled();
+      expect(prisma.projectMember.update).toHaveBeenCalled();
+    });
+
+    it('throws when demoting the last project owner (findings #6)', async () => {
+      (prisma.projectMember.findUnique as any).mockResolvedValue({ role: 'owner' });
+      (prisma.projectMember.count as any).mockResolvedValue(1);
+      const { updateProjectMemberRole } = await import('../services/project-access.service.js');
+
+      await expect(updateProjectMemberRole('p-1', 'u-1', 'editor')).rejects.toThrow(
+        /Cannot demote the last project owner/,
+      );
+      expect(prisma.projectMember.update).not.toHaveBeenCalled();
+    });
+
+    it('demotes an owner when other owners remain (findings #6)', async () => {
+      (prisma.projectMember.findUnique as any).mockResolvedValue({ role: 'owner' });
+      (prisma.projectMember.count as any).mockResolvedValue(2);
+      (prisma.projectMember.update as any).mockResolvedValue({ id: 'pm-1' });
+      const { updateProjectMemberRole } = await import('../services/project-access.service.js');
+
+      await updateProjectMemberRole('p-1', 'u-1', 'editor');
+
+      expect(prisma.projectMember.update).toHaveBeenCalled();
     });
   });
 

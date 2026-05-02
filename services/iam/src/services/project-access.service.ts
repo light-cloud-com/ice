@@ -73,6 +73,14 @@ export async function addProjectMember(projectId: string, userId: string, role: 
 }
 
 export async function updateProjectMemberRole(projectId: string, userId: string, newRole: string) {
+  // findings.md #6 — block demotion of the last owner. Without this
+  // an owner could update-role-themselves to "editor" and leave the
+  // project unmanageable. (Self-update is also blocked at the route
+  // layer, but other owners could still demote them; this guard is
+  // the one consistent layer that fires regardless of caller.)
+  if (newRole !== 'owner' && (await isLastOwner(projectId, userId))) {
+    throw new Error('Cannot demote the last project owner');
+  }
   return prisma.projectMember.update({
     where: { project_id_user_id: { project_id: projectId, user_id: userId } },
     data: { role: newRole },

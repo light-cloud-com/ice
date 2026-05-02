@@ -295,6 +295,22 @@ router.post('/update-role', async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ message: 'Only owners can promote to admin or owner' });
     }
 
+    // findings.md #6 — refuse to demote the last owner. Without this
+    // guard an org could end up with zero owners and become
+    // unmanageable: only owners can promote, so no one would be able
+    // to restore an owner.
+    if (normalizedRole !== 'owner') {
+      const targetCurrentRole = await getCallerRole(userId, orgId);
+      if (targetCurrentRole === 'owner') {
+        const remainingOwners = await prisma.organisationMember.count({
+          where: { organisation_id: orgId, role: 'owner' },
+        });
+        if (remainingOwners <= 1) {
+          return res.status(400).json({ message: 'Cannot demote the last owner' });
+        }
+      }
+    }
+
     await prisma.organisationMember.update({
       where: { user_id_organisation_id: { user_id: userId, organisation_id: orgId } },
       data: { role: normalizedRole },
@@ -331,6 +347,20 @@ router.post('/remove', async (req: AuthRequest, res: Response) => {
     const targetRole = await getCallerRole(userId, orgId);
     if (targetRole === 'owner' && callerRole !== 'owner') {
       return res.status(403).json({ message: 'Cannot remove an owner' });
+    }
+
+    // findings.md #6 — block removal of the last owner. The guard
+    // above stops non-owners from removing owners; this one stops
+    // an owner from removing the only remaining owner (themselves
+    // is already blocked separately, but a co-owner reassigned then
+    // removed could otherwise produce an ownerless org).
+    if (targetRole === 'owner') {
+      const remainingOwners = await prisma.organisationMember.count({
+        where: { organisation_id: orgId, role: 'owner' },
+      });
+      if (remainingOwners <= 1) {
+        return res.status(400).json({ message: 'Cannot remove the last owner' });
+      }
     }
 
     // Remove membership

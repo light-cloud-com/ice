@@ -967,6 +967,39 @@ describe('POST /api/users/update-role', () => {
     });
   });
 
+  it('blocks demotion of the last owner (findings #6)', async () => {
+    // Without this guard an owner could be demoted to member and the
+    // org would lose its last owner — only owners can promote to
+    // admin/owner, so the org becomes unmanageable.
+    withCallerRole('owner'); // caller
+    memberFindUniqueMock.mockResolvedValueOnce({ role: 'owner' }); // target's current role
+    memberCountMock.mockResolvedValueOnce(1); // only one owner remaining
+
+    const res = await request('POST', '/api/users/update-role', {
+      userId: 'other',
+      role: 'admin',
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({ message: 'Cannot demote the last owner' });
+    expect(memberUpdateMock).not.toHaveBeenCalled();
+  });
+
+  it('allows demotion of an owner when other owners remain (findings #6)', async () => {
+    withCallerRole('owner');
+    memberFindUniqueMock.mockResolvedValueOnce({ role: 'owner' });
+    memberCountMock.mockResolvedValueOnce(3);
+    memberUpdateMock.mockResolvedValue({});
+
+    const res = await request('POST', '/api/users/update-role', {
+      userId: 'other',
+      role: 'admin',
+    });
+
+    expect(res.status).toBe(200);
+    expect(memberUpdateMock).toHaveBeenCalled();
+  });
+
   it('returns 500 when prisma update throws', async () => {
     withCallerRole('admin');
     memberUpdateMock.mockRejectedValue(new Error('db down'));
@@ -1042,9 +1075,11 @@ describe('POST /api/users/remove', () => {
     expect(memberDeleteManyMock).not.toHaveBeenCalled();
   });
 
-  it('allows owner to remove an owner', async () => {
+  it('allows owner to remove an owner when other owners remain', async () => {
     withCallerRole('owner'); // caller
     memberFindUniqueMock.mockResolvedValueOnce({ role: 'owner' }); // target
+    // findings.md #6 — 2 remaining owners means removal is safe.
+    memberCountMock.mockResolvedValueOnce(2);
     memberDeleteManyMock.mockResolvedValue({ count: 1 });
     userFindUniqueMock.mockResolvedValueOnce({ organisation_id: 'other-org' });
 
@@ -1057,6 +1092,21 @@ describe('POST /api/users/remove', () => {
     });
     // user's default org was different — leave it alone
     expect(userUpdateMock).not.toHaveBeenCalled();
+  });
+
+  it('blocks removal of the last owner (findings #6)', async () => {
+    // Without this guard an owner could be removed and leave the org
+    // unmanageable: only owners can promote other members up to admin
+    // or owner, so a zero-owner org can never recover.
+    withCallerRole('owner'); // caller
+    memberFindUniqueMock.mockResolvedValueOnce({ role: 'owner' }); // target
+    memberCountMock.mockResolvedValueOnce(1);
+
+    const res = await request('POST', '/api/users/remove', { userId: 'owner-target' });
+
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({ message: 'Cannot remove the last owner' });
+    expect(memberDeleteManyMock).not.toHaveBeenCalled();
   });
 
   it('clears default org when removed user had it set as default', async () => {

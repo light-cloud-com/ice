@@ -73,7 +73,7 @@ beforeEach(async () => {
   currentAuth = 'allow';
   currentUserId = 'user-1';
   // Force the test branch of the JWT_SECRET fallback.
-  process.env.NODE_ENV = 'test';
+  process.env.VITEST = 'true';
   delete process.env.JWT_SECRET;
   vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -325,14 +325,15 @@ describe('JWT_SECRET resolution', () => {
     await new Promise<void>((resolve) => localServer.close(() => resolve()));
   });
 
-  it('throws at module load when JWT_SECRET is missing and NODE_ENV is not test', async () => {
+  it('throws at module load when JWT_SECRET is missing and VITEST flag is unset', async () => {
     delete process.env.JWT_SECRET;
-    process.env.NODE_ENV = 'production';
+    const previousVitest = process.env.VITEST;
+    delete process.env.VITEST;
     vi.resetModules();
 
     await expect(import('../auth.js')).rejects.toThrow('JWT_SECRET is required');
 
     // Restore for subsequent tests in case the suite uses ordered execution.
-    process.env.NODE_ENV = 'test';
+    if (previousVitest !== undefined) process.env.VITEST = previousVitest;
   });
 });

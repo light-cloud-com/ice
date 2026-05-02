@@ -149,7 +149,43 @@ describe('UnifiedTypeResolver.initialize', () => {
     expect(r.resolveToICE('AWS::EC2::Instance', 'aws').is_exact_match).toBe(true);
   });
 
-  it('swallows query results that do not match the legacy shape', async () => {
+  it('builds native_to_ice + ice_to_native maps from the Result shape (findings #9)', async () => {
+    // The previous code only matched the legacy `{ data: { schemas } }`
+    // envelope, but EmbeddedSchemaProvider.query actually returns a
+    // canonical `Result<SchemaQueryResult, …>` (`{ ok: true, value: ... }`).
+    // Once the provider migrated to Result the resolver silently no-op'd
+    // and every importer fell back to a derived ICE name. Both shapes
+    // now build the maps.
+    providerSpy.query.mockResolvedValue({
+      ok: true,
+      value: {
+        schemas: [
+          {
+            ice_type: 'compute.instance',
+            implementations: [
+              { source: 'gcp', provider: 'google', native_type: 'compute#instance' },
+              { source: 'terraform', provider: 'google', native_type: 'google_compute_instance' },
+            ],
+          },
+        ],
+        total: 1,
+        has_more: false,
+      },
+    });
+
+    const r = new UnifiedTypeResolver();
+    await r.initialize();
+
+    const result = r.resolveToICE('compute#instance', 'gcp');
+    expect(result.ice_type).toBe('compute.instance');
+    expect(result.is_exact_match).toBe(true);
+    expect(result.resolution_source).toBe('schema');
+    expect(r.resolveToNative('compute.instance' as IceType, 'terraform', 'google')).toBe(
+      'google_compute_instance',
+    );
+  });
+
+  it('handles an empty Result-shape payload without crashing', async () => {
     providerSpy.query.mockResolvedValue({ ok: true, value: { schemas: [], total: 0, has_more: false } });
     const r = new UnifiedTypeResolver();
     await expect(r.initialize()).resolves.toBeUndefined();
@@ -157,6 +193,13 @@ describe('UnifiedTypeResolver.initialize', () => {
     const out = r.resolveToICE('compute#instance', 'gcp');
     expect(out.is_exact_match).toBe(false);
     expect(out.resolution_source).toBe('fallback');
+  });
+
+  it('swallows a Failure-shape Result (ok: false) without crashing', async () => {
+    providerSpy.query.mockResolvedValue({ ok: false, error: { code: 'X', message: 'no' } });
+    const r = new UnifiedTypeResolver();
+    await expect(r.initialize()).resolves.toBeUndefined();
+    expect(r.resolveToICE('compute#instance', 'gcp').is_exact_match).toBe(false);
   });
 
   it('swallows query results where data.schemas is not an array', async () => {

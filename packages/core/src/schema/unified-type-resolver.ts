@@ -85,41 +85,22 @@ export class UnifiedTypeResolver {
     // Build reverse mappings from all implementations
     try {
       const query_result = await this.schema_provider.query({});
+      const schemas = extractSchemas(query_result);
 
-      // Check if the query was successful and we have data
-      const result_data = query_result as unknown;
-      if (
-        result_data &&
-        typeof result_data === 'object' &&
-        'data' in result_data &&
-        result_data.data &&
-        typeof result_data.data === 'object' &&
-        'schemas' in result_data.data &&
-        Array.isArray((result_data.data as { schemas: unknown }).schemas)
-      ) {
-        const schemas = (
-          result_data.data as {
-            schemas: Array<{
-              ice_type: string;
-              implementations: Array<{ source: string; provider: string; native_type: string }>;
-            }>;
-          }
-        ).schemas;
-        for (const schema of schemas) {
-          for (const impl of schema.implementations) {
-            // Map native type to ICE type
-            const normalized_native = this.normalizeNativeType(impl.native_type, impl.source as ProviderSource);
-            this.native_to_ice.set(normalized_native, schema.ice_type);
+      for (const schema of schemas) {
+        for (const impl of schema.implementations) {
+          // Map native type to ICE type
+          const normalized_native = this.normalizeNativeType(impl.native_type, impl.source as ProviderSource);
+          this.native_to_ice.set(normalized_native, schema.ice_type);
 
-            // Map ICE type to native implementations
-            const source_key = `${impl.source}:${impl.provider}`;
-            let ice_map = this.ice_to_native.get(schema.ice_type);
-            if (!ice_map) {
-              ice_map = new Map();
-              this.ice_to_native.set(schema.ice_type, ice_map);
-            }
-            ice_map.set(source_key, impl.native_type);
+          // Map ICE type to native implementations
+          const source_key = `${impl.source}:${impl.provider}`;
+          let ice_map = this.ice_to_native.get(schema.ice_type);
+          if (!ice_map) {
+            ice_map = new Map();
+            this.ice_to_native.set(schema.ice_type, ice_map);
           }
+          ice_map.set(source_key, impl.native_type);
         }
       }
     } catch {
@@ -431,4 +412,51 @@ export async function initialize_type_resolver(): Promise<UnifiedTypeResolver> {
  */
 export function create_type_resolver(schema_provider?: EmbeddedSchemaProvider): UnifiedTypeResolver {
   return new UnifiedTypeResolver(schema_provider);
+}
+
+// =============================================================================
+// Internal helpers
+// =============================================================================
+
+/**
+ * Extract the `schemas` array from whatever shape the schema provider
+ * happens to return.
+ *
+ * Findings #9 — `EmbeddedSchemaProvider.query` returns the canonical
+ * `Result<SchemaQueryResult, …>` shape (`{ ok: true, value: { schemas } }`),
+ * but earlier callers also accepted a legacy `{ data: { schemas } }` envelope.
+ * The previous code only matched the legacy shape, which made the resolver
+ * silently no-op once the provider migrated to Result. Both shapes are now
+ * handled; everything else falls through to an empty array.
+ */
+type RawSchemaImpl = { source: string; provider: string; native_type: string };
+type RawSchemaEntry = { ice_type: string; implementations: RawSchemaImpl[] };
+
+function extractSchemas(query_result: unknown): RawSchemaEntry[] {
+  if (!query_result || typeof query_result !== 'object') return [];
+
+  // Result<SchemaQueryResult, …> — { ok: true, value: { schemas } }
+  const as_result = query_result as { ok?: unknown; value?: unknown };
+  if (
+    as_result.ok === true &&
+    as_result.value &&
+    typeof as_result.value === 'object' &&
+    'schemas' in as_result.value &&
+    Array.isArray((as_result.value as { schemas: unknown }).schemas)
+  ) {
+    return (as_result.value as { schemas: RawSchemaEntry[] }).schemas;
+  }
+
+  // Legacy `{ data: { schemas } }` envelope.
+  const as_legacy = query_result as { data?: unknown };
+  if (
+    as_legacy.data &&
+    typeof as_legacy.data === 'object' &&
+    'schemas' in as_legacy.data &&
+    Array.isArray((as_legacy.data as { schemas: unknown }).schemas)
+  ) {
+    return (as_legacy.data as { schemas: RawSchemaEntry[] }).schemas;
+  }
+
+  return [];
 }

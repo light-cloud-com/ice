@@ -141,8 +141,18 @@ describe('validateCanvas', () => {
     expect(result.summary).toContain('validation skipped');
     expect(result.summary).toContain('2 nodes');
     expect(result.summary).toContain('1 edges');
+    // findings.md #16 — frontends need to tell "engine ran clean" from
+    // "engine couldn't run". Both look like valid:true; validatedBy
+    // disambiguates so deploy gates don't fire on an unvalidated canvas.
+    expect(result.validatedBy).toBe('skipped');
     expect(errSpy).toHaveBeenCalled();
     errSpy.mockRestore();
+  });
+
+  it('reports validatedBy:"engine" on the happy path (findings #16)', async () => {
+    coreValidateMock.mockReturnValue({ issues: [] });
+    const result = await validateCanvas([{ id: 'a' }], []);
+    expect(result.validatedBy).toBe('engine');
   });
 
   describe('mapIssueCodeToType', () => {

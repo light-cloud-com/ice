@@ -419,6 +419,36 @@ describe('diff_graphs property comparison', () => {
     ]);
   });
 
+  it('skips `_`-prefixed keys at every nesting level (findings #48)', () => {
+    // Top-level `_internal` is already filtered. The fix extends the
+    // skip to nested levels — `spec._internal.foo` would otherwise
+    // surface as a drift record even though `_`-prefixed keys are
+    // documented as opaque provider metadata.
+    const desired = make_graph([
+      make_node({
+        type: 'A',
+        name: 'x',
+        properties: {
+          spec: { tier: 'PREMIUM', _internal: { hidden: 'desired' } },
+          _provider_id: 'p-1',
+        },
+      }),
+    ]);
+    const current = make_graph([
+      make_node({
+        type: 'A',
+        name: 'x',
+        properties: {
+          spec: { tier: 'PREMIUM', _internal: { hidden: 'current' } },
+          _provider_id: 'p-2',
+        },
+      }),
+    ]);
+
+    const result = diff_graphs(desired, current, 'aws');
+    expect(find_change(result, 'x')!.change_type).toBe('no_change');
+  });
+
   it('treats arrays of primitives as a single field — element-by-element compared', () => {
     const desired = make_graph([
       make_node({ type: 'A', name: 'x', properties: { tags: ['a', 'b', 'c'] } }),
@@ -501,22 +531,40 @@ describe('diff_graphs property comparison', () => {
     expect(find_change(result, 'x')!.change_type).toBe('update');
   });
 
-  it('treats null and an empty object as different values', () => {
+  it('treats null and an empty object as equivalent (findings #47)', () => {
+    // Cloud provider responses commonly omit empty fields entirely
+    // (returning null) while the desired-state generator produces {}.
+    // The literal-different-but-semantically-equal pair was the most
+    // common false-positive vector in drift reports.
     const desired = make_graph([make_node({ type: 'A', name: 'x', properties: { v: {} } })]);
     const current = make_graph([make_node({ type: 'A', name: 'x', properties: { v: null } })]);
 
     const result = diff_graphs(desired, current, 'aws');
-    const change = find_change(result, 'x')!;
-    expect(change.change_type).toBe('update');
-    expect(change.property_changes).toEqual([{ path: 'v', old_value: null, new_value: {} }]);
+    expect(find_change(result, 'x')!.change_type).toBe('no_change');
   });
 
-  it('treats null and an array as different values', () => {
+  it('treats null and an empty array as equivalent (findings #47)', () => {
     const desired = make_graph([make_node({ type: 'A', name: 'x', properties: { v: [] } })]);
     const current = make_graph([make_node({ type: 'A', name: 'x', properties: { v: null } })]);
 
     const result = diff_graphs(desired, current, 'aws');
+    expect(find_change(result, 'x')!.change_type).toBe('no_change');
+  });
+
+  it('still treats null and a non-empty array as different (findings #47)', () => {
+    const desired = make_graph([make_node({ type: 'A', name: 'x', properties: { v: ['a'] } })]);
+    const current = make_graph([make_node({ type: 'A', name: 'x', properties: { v: null } })]);
+
+    const result = diff_graphs(desired, current, 'aws');
     expect(find_change(result, 'x')!.change_type).toBe('update');
+  });
+
+  it('treats undefined and an empty object as equivalent (findings #47)', () => {
+    const desired = make_graph([make_node({ type: 'A', name: 'x', properties: { v: {} } })]);
+    const current = make_graph([make_node({ type: 'A', name: 'x', properties: {} })]);
+
+    const result = diff_graphs(desired, current, 'aws');
+    expect(find_change(result, 'x')!.change_type).toBe('no_change');
   });
 
   it('treats two equal nulls as no change', () => {

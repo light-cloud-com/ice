@@ -179,6 +179,47 @@ describe('OpenAICompatProvider — healthCheck', () => {
     expect(result.model).toBe('configured');
   });
 
+  it('returns auth-error from /health on 401 instead of falling through (findings #17)', async () => {
+    // The previous code treated a 401 from /health identically to
+    // "endpoint missing", so a misconfigured API key looked like
+    // "no /health endpoint" and the user was sent to debug the
+    // wrong layer. Now an auth status surfaces directly.
+    server = await startTestServer({
+      '/health': (_req, res) => {
+        res.statusCode = 401;
+        res.end('unauthorized');
+      },
+      '/v1/models': (_req, res) => {
+        // Should never be called once /health returns 401.
+        res.statusCode = 200;
+        res.end(JSON.stringify({ data: [{ id: 'fake' }] }));
+      },
+    });
+    const p = new OpenAICompatProvider({ baseUrl: server.baseUrl });
+    const result = await p.healthCheck();
+    expect(result.ok).toBe(false);
+    expect(result.error).toMatch(/Authentication failed/);
+    expect(result.error).toMatch(/401/);
+  });
+
+  it('returns auth-error from /v1/models on 403 (findings #17)', async () => {
+    server = await startTestServer({
+      '/health': (_req, res) => {
+        res.statusCode = 404;
+        res.end('not found');
+      },
+      '/v1/models': (_req, res) => {
+        res.statusCode = 403;
+        res.end('forbidden');
+      },
+    });
+    const p = new OpenAICompatProvider({ baseUrl: server.baseUrl });
+    const result = await p.healthCheck();
+    expect(result.ok).toBe(false);
+    expect(result.error).toMatch(/Authentication failed/);
+    expect(result.error).toMatch(/403/);
+  });
+
   it('reports not-ok when both /health and /v1/models fail with non-2xx', async () => {
     server = await startTestServer({
       '/health': (_req, res) => {
@@ -289,7 +330,7 @@ describe('OpenAICompatProvider — streamChat', () => {
       '/v1/chat/completions': async (_req, res) => {
         res.statusCode = 200;
         res.write(sseDelta('one '));
-        res.write(sseDelta('two'));
+        res.write(sseDelta('two', 'stop'));
         res.write('data: [DONE]\n\n');
         res.end();
       },
@@ -301,6 +342,48 @@ describe('OpenAICompatProvider — streamChat', () => {
       maxTokens: 32,
     });
     expect(result.content).toBe('one two');
+    expect(result.finishReason).toBe('stop');
+  });
+
+  it('chat() surfaces the wire-level finish reason (findings #18)', async () => {
+    // The previous chat() always returned `finishReason: 'stop'`,
+    // hiding length-cap truncations and content-filter rejections
+    // even though the stream parser already extracted the field.
+    server = await startTestServer({
+      '/v1/chat/completions': async (_req, res) => {
+        res.statusCode = 200;
+        res.write(sseDelta('partial '));
+        res.write(sseDelta('answer', 'length'));
+        res.write('data: [DONE]\n\n');
+        res.end();
+      },
+    });
+    const p = new OpenAICompatProvider({ baseUrl: server.baseUrl });
+    const result = await p.chat({
+      systemPrompt: '',
+      messages: [{ role: 'user', content: 'q' }],
+      maxTokens: 4,
+    });
+    expect(result.content).toBe('partial answer');
+    expect(result.finishReason).toBe('length');
+  });
+
+  it('chat() defaults finishReason to "stop" when wire never reports one (findings #18)', async () => {
+    server = await startTestServer({
+      '/v1/chat/completions': async (_req, res) => {
+        res.statusCode = 200;
+        res.write(sseDelta('hello'));
+        res.write('data: [DONE]\n\n');
+        res.end();
+      },
+    });
+    const p = new OpenAICompatProvider({ baseUrl: server.baseUrl });
+    const result = await p.chat({
+      systemPrompt: '',
+      messages: [{ role: 'user', content: 'q' }],
+      maxTokens: 16,
+    });
+    expect(result.content).toBe('hello');
     expect(result.finishReason).toBe('stop');
   });
 

@@ -4,11 +4,19 @@ Triage of bugs, dead code, and architecture surprises surfaced while
 bringing workspace coverage from 8,261 → 13,231 tests. Each entry cites
 its origin commit so the fix can land on the same branch.
 
-**Status update (2026-05-02 PM)** — all 30 Tier 1 findings AND all
-16 Tier 2 cleanup items have landed on `refactoring`; commits not
+**Status update (2026-05-02 PM)** — all 30 Tier 1, all 16 Tier 2,
+AND all 8 Tier 3 findings have landed on `refactoring`; commits not
 yet pushed to remote per user request. Each fix has its own commit
-with an inverted regression test. Only Tier 3 (8 subtle/debatable
-items, judgment-call territory) remains open.
+with an inverted regression test (where applicable — Tier 3 entries
+are mostly documentation-only because they're judgment calls).
+
+**Tier 3 (closed 2026-05-02 PM)** — #47 (diff null↔empty equivalence),
+#48 (diff nested `_`-skip), #49 (diff array-of-objects positional —
+documented), #50 (graph-slice empty-container hide — documented as
+dormant), #51 (ui-slice panes[0]? fallbacks — documented as
+dormant), #52 (team-page null-org guard — documented as dormant),
+#53 (createProvider sync/async divergence — documented), #54
+(NullProvider streamChat throws on first iteration).
 
 **Tier 2 (closed 2026-05-02 PM)** — #31 (svg-connection-path arrows),
 #32 (use-canvas-mouse-events orphan), #33 (desktop tsc artifacts),
@@ -21,6 +29,10 @@ duplicate-warn), #42 (provider-registry health-check lazy doc),
 #43 (canvas/cards try/catch), #44 (project-members shared
 middleware), #45 (templates/validate.ts unit-testable), #46
 (requireProjectAccess single query).
+
+**Sweep complete: 54 / 54 findings closed.** Branch `refactoring`
+has 50+ commits ahead of `main` across this multi-day session,
+none pushed yet.
 
 ## Tier 1 — Security / correctness bugs (fix soon)
 

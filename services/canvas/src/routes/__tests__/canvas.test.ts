@@ -132,7 +132,13 @@ describe('POST /api/canvas/projects', () => {
     expect(listProjectsMock).toHaveBeenCalledWith('org-real', 'folder-1', 'hello');
   });
 
-  it('falls back to body.organisationId when JWT carries none (org-switch)', async () => {
+  it('ignores body.organisationId — uses empty string when JWT has no org (findings #7)', async () => {
+    // The body-org fallback used to be honored to smooth an
+    // org-switch UX gap, but it let any authenticated caller scope
+    // `/projects` to ANY org id. The hardened path: rely on the JWT
+    // only; a stale JWT yields an empty org and the underlying
+    // service returns an empty list rather than reading another
+    // org's data.
     currentAuth = 'no-org';
     listProjectsMock.mockResolvedValue([]);
 
@@ -142,7 +148,7 @@ describe('POST /api/canvas/projects', () => {
     });
 
     expect(res.status).toBe(200);
-    expect(listProjectsMock).toHaveBeenCalledWith('org-from-body', null, undefined);
+    expect(listProjectsMock).toHaveBeenCalledWith('', null, undefined);
   });
 
   it('passes empty string when no orgId is available from any source', async () => {

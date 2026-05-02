@@ -467,4 +467,46 @@ describe('error wrapping', () => {
       expect(result.error.message).toContain('State store not initialized');
     }
   });
+
+  it('wraps a thrown error from resources_get_all when ctx.db is null', async () => {
+    const ctx: SqliteContext = { db: null, listeners: new Set(), statements: new Map() };
+    const result = await resources_get_all(ctx, 'g1');
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.message).toContain('get_resources');
+  });
+
+  it('wraps a thrown error from resources_query when ctx.db is null', async () => {
+    const ctx: SqliteContext = { db: null, listeners: new Set(), statements: new Map() };
+    const result = await resources_query(ctx, {});
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.message).toContain('query_resources');
+  });
+
+  it('wraps a thrown error from resources_save when ctx.db is null', async () => {
+    const ctx: SqliteContext = { db: null, listeners: new Set(), statements: new Map() };
+    const result = await resources_save(ctx, fixture());
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.message).toContain('save_resource');
+  });
+
+  it('wraps a thrown error from resources_save_many when ctx.db is null', async () => {
+    const ctx: SqliteContext = { db: null, listeners: new Set(), statements: new Map() };
+    const result = await resources_save_many(ctx, [fixture()]);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.message).toContain('save_resources');
+  });
+
+  it('wraps a thrown error from resources_delete when ctx.db is null', async () => {
+    const ctx: SqliteContext = { db: null, listeners: new Set(), statements: new Map() };
+    const result = await resources_delete(ctx, 'g1', create_node_id('n1'));
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.message).toContain('delete_resource');
+  });
+
+  it('wraps a thrown error from resources_delete_all when ctx.db is null', async () => {
+    const ctx: SqliteContext = { db: null, listeners: new Set(), statements: new Map() };
+    const result = await resources_delete_all(ctx, 'g1');
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.message).toContain('delete_resources');
+  });
 });

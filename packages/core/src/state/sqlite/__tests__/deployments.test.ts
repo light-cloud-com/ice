@@ -328,4 +328,32 @@ describe('error wrapping', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.message).toContain('update_deployment_status');
   });
+
+  it('wraps a thrown error from deployments_get when ctx.db is null', async () => {
+    const ctx: SqliteContext = { db: null, listeners: new Set(), statements: new Map() };
+    const result = await deployments_get(ctx, create_deployment_id('x'));
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.message).toContain('get_deployment');
+  });
+
+  it('wraps a thrown error from deployments_get_all when ctx.db is null', async () => {
+    const ctx: SqliteContext = { db: null, listeners: new Set(), statements: new Map() };
+    const result = await deployments_get_all(ctx, 'g1');
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.message).toContain('get_deployments');
+  });
+
+  it('wraps a thrown error from deployments_query when ctx.db is null', async () => {
+    const ctx: SqliteContext = { db: null, listeners: new Set(), statements: new Map() };
+    const result = await deployments_query(ctx, {});
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.message).toContain('query_deployments');
+  });
+
+  it('wraps a thrown error from deployments_save when ctx.db is null', async () => {
+    const ctx: SqliteContext = { db: null, listeners: new Set(), statements: new Map() };
+    const result = await deployments_save(ctx, deployment());
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.message).toContain('save_deployment');
+  });
 });

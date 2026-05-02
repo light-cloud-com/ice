@@ -276,4 +276,32 @@ describe('error wrapping', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.message).toContain('is_locked');
   });
+
+  it('wraps a thrown error from locks_acquire when ctx.db is null', async () => {
+    const ctx: SqliteContext = { db: null, listeners: new Set(), statements: new Map() };
+    const result = await locks_acquire(ctx, 'g1', 'owner', 60);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.message).toContain('acquire_lock');
+  });
+
+  it('wraps a thrown error from locks_refresh when ctx.db is null', async () => {
+    const ctx: SqliteContext = { db: null, listeners: new Set(), statements: new Map() };
+    const result = await locks_refresh(ctx, 'lock-1', 60);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.message).toContain('refresh_lock');
+  });
+
+  it('wraps a thrown error from locks_release when ctx.db is null', async () => {
+    const ctx: SqliteContext = { db: null, listeners: new Set(), statements: new Map() };
+    const result = await locks_release(ctx, 'lock-1');
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.message).toContain('release_lock');
+  });
+
+  it('wraps a thrown error from locks_get when ctx.db is null', async () => {
+    const ctx: SqliteContext = { db: null, listeners: new Set(), statements: new Map() };
+    const result = await locks_get(ctx, 'g1');
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.message).toContain('get_lock');
+  });
 });

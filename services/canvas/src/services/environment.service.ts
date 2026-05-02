@@ -144,23 +144,31 @@ export async function createEnvironment(
   });
 
   // Auto-create trigger rules for the new environment by cloning production rules
-  try {
-    const prodRules = await prisma.deploymentRule.findMany({
-      where: { card_id: prodEnv.card_id },
-    });
+  // findings.md #14 — the previous implementation wrapped EVERY step
+  // (find-prod-rules + the per-rule create loop) in a single
+  // try/catch and downgraded all errors to a console.warn. A
+  // permission error or FK violation looked the same as "no prod
+  // rules to clone", so users got a "created" status with zero rules
+  // cloned. The reshape below scopes the catch to known
+  // best-effort failures (P2002 unique-constraint on the per-rule
+  // create) and lets everything else bubble to the route handler so
+  // the caller sees a real 500 instead of a silent green path.
+  const prodRules = await prisma.deploymentRule.findMany({
+    where: { card_id: prodEnv.card_id },
+  });
 
-    // Pick a default branch for this environment
-    const defaultBranch =
-      envName === 'staging'
-        ? 'staging'
-        : envName === 'develop' || envName === 'development'
-          ? 'develop'
-          : type === 'pr' && prBranch
-            ? prBranch
-            : envName;
+  const defaultBranch =
+    envName === 'staging'
+      ? 'staging'
+      : envName === 'develop' || envName === 'development'
+        ? 'develop'
+        : type === 'pr' && prBranch
+          ? prBranch
+          : envName;
 
-    for (const prodRule of prodRules) {
-      const webhookSecret = (await import('crypto')).randomBytes(32).toString('hex');
+  for (const prodRule of prodRules) {
+    const webhookSecret = (await import('crypto')).randomBytes(32).toString('hex');
+    try {
       await prisma.deploymentRule.create({
         data: {
           card_id: result.card.id,
@@ -179,9 +187,21 @@ export async function createEnvironment(
           created_by: userId,
         },
       });
+    } catch (err: any) {
+      // P2002 = unique constraint violation. That means a rule with
+      // the same (card_id, node_id, repository, branch_pattern) tuple
+      // already exists — expected when this codepath retries after a
+      // partial failure. Anything else (FK violation, RLS deny,
+      // permission error from the DB user, network) is a real failure
+      // and should bubble.
+      if (err?.code === 'P2002') {
+        console.warn(
+          `Trigger rule for node ${prodRule.node_id} already exists on env ${envName}; skipping clone.`,
+        );
+        continue;
+      }
+      throw err;
     }
-  } catch (err) {
-    console.warn('Failed to auto-create trigger rules for new environment:', err);
   }
 
   return result;

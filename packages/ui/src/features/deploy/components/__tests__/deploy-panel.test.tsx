@@ -425,6 +425,15 @@ describe('DeployPanel — destroy modal', () => {
     renderPanel();
     expect(mocks.DestroyConfirmModal).toHaveBeenCalled();
   });
+
+  it('DestroyConfirmModal onCancel calls setDestroyModalOpen(false)', () => {
+    mocks.destroyModalOpenRef.current = true;
+    mocks.selectActiveCard.mockReturnValue({ id: 'c1', name: 'My Card', nodes: [], edges: [] });
+    renderPanel();
+    const props = mocks.DestroyConfirmModal.mock.calls[0][0] as { onCancel: () => void };
+    props.onCancel();
+    expect(mocks.setDestroyModalOpenSpy).toHaveBeenCalledWith(false);
+  });
 });
 
 describe('DeployPanel — config wiring', () => {
@@ -565,6 +574,24 @@ describe('DeployPanel — canvas summary', () => {
     });
     const tree = renderPanel();
     const text = collectText(tree);
+    expect(text).toContain('unknown-provider');
+  });
+
+  it('uses provider id in the "skipped" suffix when label is missing AND there are non-matching resources', () => {
+    mocks.state.deploy.provider = 'unknown-provider' as 'gcp';
+    mocks.selectActiveCard.mockReturnValue({
+      id: 'c1',
+      name: 'C',
+      nodes: [
+        { id: 'n1', type: 'resource', data: { provider: 'gcp' } },
+        { id: 'n2', type: 'resource', data: { provider: 'aws' } },
+      ],
+      edges: [],
+    });
+    const tree = renderPanel();
+    const text = collectText(tree);
+    // Both occurrences of fallback (line 156 + 160) collapse to 'unknown-provider'.
+    expect(text).toContain('skipped');
     expect(text).toContain('unknown-provider');
   });
 });

@@ -10,13 +10,13 @@ import { EmptyHint } from '../empty-hint';
 
 describe('EmptyHint', () => {
   it('renders the supplied message inside a div', () => {
-    const tree = EmptyHint({ message: 'Configure in side panel' });
+    const tree = EmptyHint({ message: 'Configure in side panel' }) as React.ReactElement;
     expect(tree.type).toBe('div');
     expect((tree.props as { children: unknown }).children).toBe('Configure in side panel');
   });
 
   it('uses uppercase / tracked-caps typographic treatment', () => {
-    const tree = EmptyHint({ message: 'x' });
+    const tree = EmptyHint({ message: 'x' }) as React.ReactElement;
     const style = (tree.props as { style: Record<string, string> }).style;
     expect(style.textTransform).toBe('uppercase');
     expect(style.letterSpacing).toBe('0.14em');
@@ -25,7 +25,7 @@ describe('EmptyHint', () => {
   });
 
   it('uses a dashed tertiary border to read as "waiting for content"', () => {
-    const tree = EmptyHint({ message: 'x' });
+    const tree = EmptyHint({ message: 'x' }) as React.ReactElement;
     const style = (tree.props as { style: Record<string, string | number> }).style;
     expect(style.border).toBe('1px dashed var(--ice-border)');
     expect(style.color).toBe('var(--ice-text-tertiary)');

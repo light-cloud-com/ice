@@ -67,9 +67,11 @@ const findByPredicate = (tree: React.ReactNode, p: (el: React.ReactElement) => b
 
 const FakeIcon: LucideIcon = (() => null) as unknown as LucideIcon;
 
-const makeNode = (overrides: Partial<React.ComponentProps<typeof CardShell>['node']> = {}) => ({
+type Node = React.ComponentProps<typeof CardShell>['node'];
+
+const makeNode = (overrides: Partial<Node> = {}): Node => ({
   id: 'n1',
-  type: 'block',
+  type: 'block' as const,
   x: 100,
   y: 200,
   width: 300,
@@ -87,7 +89,7 @@ const renderInner = (props: Partial<React.ComponentProps<typeof CardShell>> = {}
     children: React.createElement('span', { 'data-stub': 'body' }),
     ...props,
   };
-  return CardShell(full);
+  return CardShell(full) as React.ReactElement;
 };
 
 beforeEach(() => {

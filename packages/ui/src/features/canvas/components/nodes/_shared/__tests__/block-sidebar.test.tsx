@@ -47,7 +47,7 @@ const findByType = (tree: React.ReactNode, type: unknown) =>
   [...walk(tree)].filter((el) => el.type === type);
 
 const renderInner = (props: React.ComponentProps<typeof BlockSidebar>): React.ReactElement => {
-  return BlockSidebar(props);
+  return BlockSidebar(props) as React.ReactElement;
 };
 
 beforeEach(() => {

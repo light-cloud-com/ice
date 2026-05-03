@@ -149,6 +149,27 @@ describe('init_aws_sdk — success paths via Function() stub', () => {
       fakeRegistry['@aws-sdk/credential-providers'] = original;
     }
   });
+
+  it('stringifies non-Error rejection values in the friendly error message', async () => {
+    // Replace the resolver to return a non-Error rejection so the
+    // catch arm hits the `String(error)` branch (line 66).
+    const fnStub2 = function (...args: unknown[]) {
+      if (
+        args.length === 2 &&
+        args[0] === 'm' &&
+        typeof args[1] === 'string' &&
+        (args[1] as string).includes('return import')
+      ) {
+        return () => Promise.reject('plain-string-rejection');
+      }
+      // @ts-expect-error passthrough
+      return new originalFunction(...args);
+    } as unknown as FunctionConstructor;
+    fnStub2.prototype = originalFunction.prototype;
+    globalThis.Function = fnStub2;
+
+    await expect(init_aws_sdk()).rejects.toThrow(/plain-string-rejection/);
+  });
 });
 
 describe('get_account_id', () => {

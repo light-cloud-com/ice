@@ -77,19 +77,15 @@ describe('parse_source — error short-circuits', () => {
   });
 
   it('returns success=false and program=null when the lexer produces a non-recoverable error', () => {
-    // An unterminated string is a fatal lexer error in the ICE lexer; the
-    // barrel short-circuits before invoking the parser so program is null
-    // and parser_errors is empty.
-    const result = parserBarrel.parse_source('"unterminated');
-    if (result.lexer_errors.some((e) => !e.recoverable)) {
-      expect(result.success).toBe(false);
-      expect(result.program).toBeNull();
-      expect(result.parser_errors).toEqual([]);
-    } else {
-      // If the lexer recovers, the parser still surfaces an error and the
-      // mixed-errors path is exercised.
-      expect(result.success).toBe(false);
-    }
+    // The "Too many errors, stopping lexer" guard is the only non-recoverable
+    // lexer error site. Drive it by capping max_errors at 0 — every input
+    // hits the guard immediately and the barrel short-circuits before the
+    // parser runs (program is null, parser_errors is empty).
+    const result = parserBarrel.parse_source('resource Ec2 web {}', { max_errors: 0 });
+    expect(result.lexer_errors.some((e) => !e.recoverable)).toBe(true);
+    expect(result.success).toBe(false);
+    expect(result.program).toBeNull();
+    expect(result.parser_errors).toEqual([]);
   });
 
   it('reports lexer_errors when present even on otherwise-recoverable input', () => {

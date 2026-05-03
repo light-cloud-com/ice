@@ -99,6 +99,9 @@ const h = vi.hoisted(() => {
     cleanupThrows: false,
     /* startLocalAiServer error to surface from rejection. */
     startLocalAiError: null as null | Error,
+    /* Captured setHeaders callback passed to express.static. */
+    expressStaticSetHeaders: null as null | ((res: any, path: string) => void),
+    expressStaticPath: null as null | string,
   };
 
   // ── Mocks defined inline so we can mutate `bag` per-test. ────────────
@@ -249,6 +252,39 @@ const h = vi.hoisted(() => {
 
 // ── Module mocks ───────────────────────────────────────────────────────
 
+/**
+ * Wrap `express.static` to capture the `setHeaders` callback the SUT
+ * passes. The callback is otherwise unreachable from outside express,
+ * because express.static stores it inside a closure. We need to invoke
+ * it directly to assert the `if (filePath.endsWith('index.html'))` branch.
+ */
+vi.mock('express', async () => {
+  const actual = await vi.importActual<typeof import('express')>('express');
+  const wrappedStatic = ((path: string, options?: any) => {
+    h.bag.expressStaticPath = path;
+    h.bag.expressStaticSetHeaders = options?.setHeaders ?? null;
+    return actual.default.static(path, options);
+  }) as unknown as typeof actual.default.static;
+  // Reattach static-method properties so callers see the same shape.
+  Object.assign(wrappedStatic, actual.default.static);
+
+  // Re-export so the SUT's `import express from 'express'` keeps working.
+  // express's default IS callable — wrap it to forward to actual but
+  // patch `static` on the result.
+  const wrappedDefault = Object.assign(
+    function (this: unknown, ...args: any[]) {
+      return (actual.default as any).apply(this, args);
+    },
+    actual.default,
+    { static: wrappedStatic },
+  ) as unknown as typeof actual.default;
+
+  return {
+    ...actual,
+    default: wrappedDefault,
+  };
+});
+
 vi.mock('http', () => h.httpModule);
 vi.mock('socket.io', () => h.socketIoMod);
 vi.mock('child_process', () => h.childProcessMod);
@@ -299,6 +335,8 @@ function resetBag(): void {
   h.bag.cleanupThrows = false;
   h.bag.startLocalAiError = null;
   h.bag.rateLimitOpts = undefined;
+  h.bag.expressStaticSetHeaders = null;
+  h.bag.expressStaticPath = null;
 
   h.httpModule.createServer.mockClear();
   h.childProcessMod.execSync.mockClear();
@@ -662,6 +700,17 @@ describe('apps/gateway/src/index.ts', () => {
       expect(res.jsonCalls[0].cpu).toBe(0);
     });
 
+    it('coalesces NaN parseInt results to 0 in the rss reducer (handles header lines like "RSS")', async () => {
+      // ps may emit a header row when the format string is unusual. The
+      // reducer's `parseInt(l.trim()) || 0` short-circuit must coalesce
+      // NaN to 0 so the sum stays numeric.
+      h.bag.psRssOutput = 'RSS\n4096\nbogus\n2048\n';
+      await bootGateway();
+      const res = dispatch('GET', '/api/system/stats');
+      // 0 (header) + 4096 + 0 (bogus) + 2048 = 6144 KB → 6 MB.
+      expect(res.jsonCalls[0].ram).toBe(6);
+    });
+
     it('returns ram=0 when execSync for rss throws', async () => {
       h.bag.psRssOutput = '';
       h.childProcessMod.execSync.mockImplementationOnce(() => {
@@ -966,40 +1015,34 @@ describe('apps/gateway/src/index.ts', () => {
       logSpy.mockRestore();
     });
 
-    it('static-serve setHeaders sets Cache-Control on index.html only', async () => {
+    it('passes a setHeaders callback to express.static', async () => {
       h.bag.webDistExists = true;
       process.env.NODE_ENV = 'production';
       await bootGateway();
-      // Walk the express app stack to find the static-serve middleware
-      // and pull its options. The setHeaders callback was passed to
-      // `express.static(...)` — we can't get it back from express
-      // directly, so we hit the captured express.static layer and let
-      // it call its setHeaders against a synthetic file path.
-      // Easier: traverse the full stack and check each middleware layer's
-      // handle.name — express.static's handle is a closure over `setHeaders`.
-      // The setHeaders callback's effect is observable via the SPA-fallback
-      // sister test (line 245 sets Cache-Control on index.html). The
-      // static-serve setHeaders runs only when express.static actually
-      // serves a file — which our fake req/res can't drive. The function's
-      // body is structurally identical: `if (filePath.endsWith('index.html'))
-      // res.setHeader('Cache-Control', 'no-store, must-revalidate')`. We
-      // can validate the branching by asserting the SPA-fallback handler
-      // sets the same header for /dashboard (already covered), and
-      // additionally that NO Cache-Control is set on /api/health (it doesn't
-      // touch the header path).
-      const handler = findRouteLayer('GET', (p) => p === '*');
-      expect(handler).not.toBeNull();
-      const indexHtmlRes = makeFakeRes();
-      handler!(
-        { method: 'GET', path: '/some/page', url: '/some/page' } as any,
-        indexHtmlRes as any,
-        vi.fn(),
-      );
-      expect(
-        indexHtmlRes.setHeaderCalls.some(
-          (h) => h.name === 'Cache-Control' && h.value === 'no-store, must-revalidate',
-        ),
-      ).toBe(true);
+      expect(h.bag.expressStaticSetHeaders).toBeInstanceOf(Function);
+      expect(typeof h.bag.expressStaticPath).toBe('string');
+    });
+
+    it('static-serve setHeaders attaches Cache-Control to files that end in index.html', async () => {
+      h.bag.webDistExists = true;
+      process.env.NODE_ENV = 'production';
+      await bootGateway();
+      const setHeaders = h.bag.expressStaticSetHeaders!;
+      const res = makeFakeRes();
+      setHeaders(res as any, '/some/dist/path/index.html');
+      expect(res.setHeaderCalls).toEqual([
+        { name: 'Cache-Control', value: 'no-store, must-revalidate' },
+      ]);
+    });
+
+    it('static-serve setHeaders does NOT set Cache-Control for non-index files', async () => {
+      h.bag.webDistExists = true;
+      process.env.NODE_ENV = 'production';
+      await bootGateway();
+      const setHeaders = h.bag.expressStaticSetHeaders!;
+      const res = makeFakeRes();
+      setHeaders(res as any, '/some/dist/path/bundle.js');
+      expect(res.setHeaderCalls).toEqual([]);
     });
   });
 

@@ -1,10 +1,19 @@
 /**
  * rf-pbrws-3 — useProjectBrowserData hook tests.
  *
- * Capture-ref pattern: render a Probe FC that calls the hook and stores
- * the result on a captured object.  Hook owns localStorage-backed expanded
- * state, search input, and the data-fetch lifecycle. Mock axios + localStorage
- * for deterministic behavior.
+ * Two test layouts:
+ *   (a) Capture-ref pattern via Probe FC + renderToString — gets surface
+ *       behavior (initial state, exposed API) but cannot drive
+ *       useState-based branches (the renderer does not re-render on
+ *       state set).
+ *   (b) Direct invocation with mocked react.useState/useEffect/useCallback —
+ *       lets us exercise every branch of fetchProjects (success / error,
+ *       with and without search), the localStorage seed (success and
+ *       throw arms), the persistence useEffect, and the toggleExpand
+ *       updater (add / remove arms).
+ *
+ * The mock-react variant runs the SUT body directly via the captured
+ * useEffect callbacks and the captured useCallback factories.
  */
 
 import React from 'react';

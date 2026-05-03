@@ -158,6 +158,22 @@ describe('import_terraform_state — file path', () => {
 // import_terraform_state_object — per-resource error capture
 // =============================================================================
 
+describe('import_terraform_state_json — non-Error JSON.parse throw', () => {
+  it('stringifies non-Error throws via the String(error) fallback (line 149)', () => {
+    const originalParse = JSON.parse;
+    JSON.parse = (() => {
+      throw 'json-non-error';
+    }) as typeof JSON.parse;
+    try {
+      const result = import_terraform_state_json('{}');
+      expect(result.errors[0]!.code).toBe('PARSE_ERROR');
+      expect(result.errors[0]!.message).toContain('json-non-error');
+    } finally {
+      JSON.parse = originalParse;
+    }
+  });
+});
+
 describe('import_terraform_state_object — per-resource error capture', () => {
   it('Error throws inside import_resource_instance are captured as IMPORT_ERROR with the message', async () => {
     // The orchestrator wraps each instance import in try/catch — a

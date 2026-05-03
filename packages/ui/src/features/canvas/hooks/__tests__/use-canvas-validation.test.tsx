@@ -32,6 +32,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 const effectCleanups: Array<() => void> = [];
+const sharedRef = { current: null as ReturnType<typeof setTimeout> | null };
 
 vi.mock('react', async (orig) => {
   const actual = (await orig()) as typeof import('react');
@@ -40,6 +41,15 @@ vi.mock('react', async (orig) => {
     useEffect: (cb: () => void | (() => void)) => {
       const cleanup = cb();
       if (typeof cleanup === 'function') effectCleanups.push(cleanup);
+    },
+    // Reuse the same ref across `mount()` calls so the `if (timerRef.current)`
+    // guard can be exercised on the second mount.
+    useRef: <T,>(initial: T) => {
+      if (sharedRef.current === null && initial !== null) {
+        // First render — honor initial.
+        sharedRef.current = initial as unknown as ReturnType<typeof setTimeout>;
+      }
+      return sharedRef as unknown as { current: T };
     },
   };
 });
@@ -75,6 +85,8 @@ const mount = () => {
 
 beforeEach(() => {
   vi.useFakeTimers();
+  effectCleanups.length = 0;
+  sharedRef.current = null;
   mocks.state = {
     environments: {},
   };
@@ -214,5 +226,42 @@ describe('useCanvasValidation — window mirroring', () => {
     });
     mount();
     expect(() => vi.advanceTimersByTime(500)).not.toThrow();
+  });
+});
+
+describe('useCanvasValidation — cleanup', () => {
+  it('the effect cleanup clears the pending timeout', () => {
+    mocks.selectActiveCard.mockReturnValue({
+      nodes: [{ id: 'n1', type: 'block', data: {}, parentId: undefined }],
+      edges: [],
+    });
+    const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout');
+    mount();
+    expect(effectCleanups.length).toBeGreaterThan(0);
+    effectCleanups[0]();
+    expect(clearTimeoutSpy).toHaveBeenCalled();
+  });
+
+  it('cleanup is a no-op when no timer was scheduled (early return)', () => {
+    mocks.selectActiveCard.mockReturnValue(null);
+    mount();
+    // Early return path — no cleanup function pushed.
+    expect(effectCleanups.length).toBe(0);
+  });
+
+  it('clears an existing pending timer on a re-render', () => {
+    mocks.selectActiveCard.mockReturnValue({
+      nodes: [{ id: 'n1', type: 'block', data: {}, parentId: undefined }],
+      edges: [],
+    });
+    const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout');
+    // First mount schedules a timer; sharedRef.current becomes the timer ref.
+    mount();
+    expect(sharedRef.current).not.toBeNull();
+    clearTimeoutSpy.mockClear();
+    // Second mount with the SAME shared ref will hit the
+    // `if (timerRef.current) clearTimeout(...)` guard.
+    mount();
+    expect(clearTimeoutSpy).toHaveBeenCalled();
   });
 });

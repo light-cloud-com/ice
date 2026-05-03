@@ -329,6 +329,42 @@ describe('RequirementsSection — message + lastChecked', () => {
     expect(collectText(tree)).toContain('Last checked');
   });
 
+  it('renders "Xs ago" for under-1-minute timestamps', () => {
+    const ago30s = new Date(Date.now() - 30 * 1000).toISOString();
+    const tree = render({
+      requirements: [
+        makeReq({
+          result: { status: 'verified', lastCheckedAt: ago30s },
+        }),
+      ],
+    });
+    expect(collectText(tree)).toContain('30s ago');
+  });
+
+  it('renders "Xm ago" for sub-hour timestamps', () => {
+    const ago3m = new Date(Date.now() - 3 * 60 * 1000).toISOString();
+    const tree = render({
+      requirements: [
+        makeReq({
+          result: { status: 'verified', lastCheckedAt: ago3m },
+        }),
+      ],
+    });
+    expect(collectText(tree)).toContain('3m ago');
+  });
+
+  it('renders "Xh ago" for sub-day timestamps', () => {
+    const ago2h = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+    const tree = render({
+      requirements: [
+        makeReq({
+          result: { status: 'verified', lastCheckedAt: ago2h },
+        }),
+      ],
+    });
+    expect(collectText(tree)).toContain('2h ago');
+  });
+
   it('treats invalid dates as empty (no "Last checked" rendered)', () => {
     const tree = render({
       requirements: [
@@ -341,6 +377,60 @@ describe('RequirementsSection — message + lastChecked', () => {
     // The "Last checked" prefix is still present though — it's part of the source.
     // So just check that it doesn't crash.
     expect(() => collectText(tree)).not.toThrow();
+  });
+
+  it('renders message in amber for unmet status', () => {
+    const tree = render({
+      requirements: [
+        makeReq({
+          result: { status: 'unmet', message: 'Almost there', lastCheckedAt: '' },
+        }),
+      ],
+    });
+    const matches = findAll(
+      tree,
+      (el) =>
+        el.type === 'p' &&
+        typeof (el.props as { className?: string }).className === 'string' &&
+        ((el.props as { className: string }).className).includes('text-amber-600'),
+    );
+    expect(matches.length).toBeGreaterThan(0);
+  });
+
+  it('renders message in sky for expired status', () => {
+    const tree = render({
+      requirements: [
+        makeReq({
+          result: { status: 'expired', message: 'Timed out', lastCheckedAt: '' },
+        }),
+      ],
+    });
+    const matches = findAll(
+      tree,
+      (el) =>
+        el.type === 'p' &&
+        typeof (el.props as { className?: string }).className === 'string' &&
+        ((el.props as { className: string }).className).includes('text-sky-600'),
+    );
+    expect(matches.length).toBeGreaterThan(0);
+  });
+
+  it('renders message in muted color for non-unmet/non-expired status', () => {
+    const tree = render({
+      requirements: [
+        makeReq({
+          result: { status: 'verified', message: 'OK', lastCheckedAt: '' },
+        }),
+      ],
+    });
+    const matches = findAll(
+      tree,
+      (el) =>
+        el.type === 'p' &&
+        typeof (el.props as { className?: string }).className === 'string' &&
+        ((el.props as { className: string }).className).includes('text-muted-foreground'),
+    );
+    expect(matches.length).toBeGreaterThan(0);
   });
 });
 

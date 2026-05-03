@@ -287,6 +287,32 @@ describe('DnsRecordCard — clipboard rejection', () => {
   });
 });
 
+describe('DnsRecordCard — setCopied timer callback', () => {
+  it('the deferred reset calls setCopied with a function that returns null when current === key', async () => {
+    const tree = render({ recordType: 'A', name: 'h', value: 'v' });
+    const valueBtn = findFirst(
+      tree,
+      (el) => el.type === 'button' && (el.props as { title?: string }).title === 'Click to copy',
+    )!;
+    const onClick = (valueBtn.props as { onClick: () => Promise<void> }).onClick;
+    await onClick();
+    // Two setCopied calls: immediate setCopied(key) + deferred reset.
+    expect(mocks.setCopiedSpy).toHaveBeenCalledWith('value');
+    // Advance the 1200ms timer.
+    vi.advanceTimersByTime(1500);
+    // The deferred call passes a function — apply it manually.
+    const deferred = mocks.setCopiedSpy.mock.calls.find(
+      (c) => typeof c[0] === 'function',
+    );
+    expect(deferred).toBeDefined();
+    const fn = deferred![0] as (c: string | null) => string | null;
+    // Returns null when current === key.
+    expect(fn('value')).toBeNull();
+    // Returns current verbatim when current !== key (race-condition path).
+    expect(fn('different-key')).toBe('different-key');
+  });
+});
+
 describe('DnsRecordCard — timeAgo helper', () => {
   it('renders "minutes" granularity', () => {
     const ago2m = new Date(Date.now() - 2 * 60 * 1000).toISOString();

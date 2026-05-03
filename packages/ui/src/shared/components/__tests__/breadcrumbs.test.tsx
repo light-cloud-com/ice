@@ -124,6 +124,13 @@ describe('Breadcrumbs — root', () => {
     const links = findAll(tree, (el) => el.type === 'a');
     expect((links[0].props as { href: string }).href).toBe('/orgs/acme');
   });
+
+  it('falls back to "/" when resolved.orgPrefix is the empty string', () => {
+    mocks.resolved.orgPrefix = '';
+    const tree = renderBC();
+    const links = findAll(tree, (el) => el.type === 'a');
+    expect((links[0].props as { href: string }).href).toBe('/');
+  });
 });
 
 describe('Breadcrumbs — top-level routes', () => {

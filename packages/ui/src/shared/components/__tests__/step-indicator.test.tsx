@@ -46,6 +46,17 @@ function findAll(tree: unknown, pred: (el: ElLike) => boolean): ElLike[] {
   return out;
 }
 
+const circlePred = (el: ElLike): boolean =>
+  el.type === 'div' &&
+  typeof (el.props as { className?: string }).className === 'string' &&
+  ((el.props as { className: string }).className).includes('rounded-full') &&
+  ((el.props as { className: string }).className).includes('w-8');
+
+const connectorPred = (el: ElLike): boolean =>
+  el.type === 'div' &&
+  typeof (el.props as { className?: string }).className === 'string' &&
+  ((el.props as { className: string }).className).includes('h-0.5');
+
 function collectText(tree: unknown): string {
   let s = '';
   for (const el of walk(tree)) {
@@ -76,13 +87,7 @@ describe('StepIndicator', () => {
   it('renders one step circle per totalSteps', () => {
     const tree = render({ currentStep: 1, totalSteps: 3, labels: ['A', 'B', 'C'] });
     // Each step renders a circle div with className containing 'rounded-full'
-    const circles = findAll(
-      tree,
-      (el) =>
-        el.type === 'div' &&
-        typeof (el.props as { className?: string }).className === 'string' &&
-        ((el.props as { className: string }).className).includes('rounded-full'),
-    );
+    const circles = findAll(tree, circlePred);
     expect(circles).toHaveLength(3);
   });
 
@@ -97,13 +102,7 @@ describe('StepIndicator', () => {
   it('marks step < currentStep as done (Check icon, no number)', () => {
     const tree = render({ currentStep: 3, totalSteps: 3, labels: ['A', 'B', 'C'] });
     // Step 1 + 2 are done (rendered as Check icon); step 3 is active (no Check)
-    const circles = findAll(
-      tree,
-      (el) =>
-        el.type === 'div' &&
-        typeof (el.props as { className?: string }).className === 'string' &&
-        ((el.props as { className: string }).className).includes('rounded-full'),
-    );
+    const circles = findAll(tree, circlePred);
     // First two should NOT contain '1' / '2' as text — they have Check icon.
     const step1Children = circles[0].props.children;
     const step2Children = circles[1].props.children;
@@ -117,26 +116,14 @@ describe('StepIndicator', () => {
 
   it('marks step === currentStep as active (with ring class)', () => {
     const tree = render({ currentStep: 2, totalSteps: 3, labels: ['A', 'B', 'C'] });
-    const circles = findAll(
-      tree,
-      (el) =>
-        el.type === 'div' &&
-        typeof (el.props as { className?: string }).className === 'string' &&
-        ((el.props as { className: string }).className).includes('rounded-full'),
-    );
+    const circles = findAll(tree, circlePred);
     expect((circles[1].props as { className: string }).className).toContain('ring-2');
     expect((circles[1].props as { className: string }).className).toContain('bg-ice-accent');
   });
 
   it('marks step > currentStep as pending (with border + raised bg)', () => {
     const tree = render({ currentStep: 1, totalSteps: 3, labels: ['A', 'B', 'C'] });
-    const circles = findAll(
-      tree,
-      (el) =>
-        el.type === 'div' &&
-        typeof (el.props as { className?: string }).className === 'string' &&
-        ((el.props as { className: string }).className).includes('rounded-full'),
-    );
+    const circles = findAll(tree, circlePred);
     // Steps 2 and 3 are pending.
     expect((circles[1].props as { className: string }).className).toContain('bg-ice-raised');
     expect((circles[2].props as { className: string }).className).toContain('border-ice-border');
@@ -145,26 +132,14 @@ describe('StepIndicator', () => {
   it('renders connector between steps but not after the last', () => {
     const tree = render({ currentStep: 1, totalSteps: 3, labels: ['A', 'B', 'C'] });
     // Connector divs have className with `flex-1 h-0.5`.
-    const connectors = findAll(
-      tree,
-      (el) =>
-        el.type === 'div' &&
-        typeof (el.props as { className?: string }).className === 'string' &&
-        ((el.props as { className: string }).className).includes('h-0.5'),
-    );
+    const connectors = findAll(tree, connectorPred);
     // 3 steps → 2 connectors.
     expect(connectors).toHaveLength(2);
   });
 
   it('connector before currentStep uses bg-ice-green; after uses bg-ice-border', () => {
     const tree = render({ currentStep: 2, totalSteps: 3, labels: ['A', 'B', 'C'] });
-    const connectors = findAll(
-      tree,
-      (el) =>
-        el.type === 'div' &&
-        typeof (el.props as { className?: string }).className === 'string' &&
-        ((el.props as { className: string }).className).includes('h-0.5'),
-    );
+    const connectors = findAll(tree, connectorPred);
     // Step 1 < currentStep(2) → green; step 2 not < 2 → border.
     expect((connectors[0].props as { className: string }).className).toContain('bg-ice-green');
     expect((connectors[1].props as { className: string }).className).toContain('bg-ice-border');
@@ -172,13 +147,7 @@ describe('StepIndicator', () => {
 
   it('renders single-step indicator with no connectors', () => {
     const tree = render({ currentStep: 1, totalSteps: 1, labels: ['One'] });
-    const connectors = findAll(
-      tree,
-      (el) =>
-        el.type === 'div' &&
-        typeof (el.props as { className?: string }).className === 'string' &&
-        ((el.props as { className: string }).className).includes('h-0.5'),
-    );
+    const connectors = findAll(tree, connectorPred);
     expect(connectors).toHaveLength(0);
   });
 

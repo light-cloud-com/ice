@@ -2,17 +2,22 @@
  * Tests for AWS resource discovery (rf-aimp-3 extraction).
  *
  * The two paginated discover_*() entrypoints begin with a dynamic
- * import of an `@aws-sdk/client-*` module, which can't be intercepted
- * in tests because the import is wrapped in `Function('m', 'return
- * import(m)')` — the runtime call-site bypasses any Vitest module
- * registry.  We exercise:
+ * import of an `@aws-sdk/client-*` module wrapped in
+ * `Function('m', 'return import(m)')` — bypassing Vitest's module
+ * registry. The working pattern (learnings.md: function-constructor-
+ * stub-intercepts-bypass-bundler-imports) is to swap globalThis.Function
+ * for the test, returning canned modules whose Command classes are
+ * real constructors so `new mod.SearchCommand(...)` works.
  *
+ * What's tested:
  *   - The two pure mappers (map_resource_explorer_hit, map_config_result)
  *     which carry the response-shape -> AWSResource conversion logic.
- *   - The dynamic-import failure path on each entrypoint.
+ *   - The dynamic-import failure path on each entrypoint (no SDK).
+ *   - Pagination + mapping success path with stubbed Function() (the
+ *     do-while loop body that drains NextToken).
  */
 
-import { describe, it, expect } from 'vitest';
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import {
   map_resource_explorer_hit,
   map_config_result,
@@ -131,7 +136,7 @@ describe('map_config_result', () => {
   });
 });
 
-describe('discover_with_resource_explorer', () => {
+describe('discover_with_resource_explorer — failure paths', () => {
   it('throws when @aws-sdk/client-resource-explorer-2 is not installed', async () => {
     // The dynamic import is the first await in the function body.
     // Without the SDK installed the import rejects, which propagates.
@@ -139,8 +144,189 @@ describe('discover_with_resource_explorer', () => {
   });
 });
 
-describe('discover_with_config', () => {
+describe('discover_with_config — failure paths', () => {
   it('throws when @aws-sdk/client-config-service is not installed', async () => {
     await expect(discover_with_config(mock_sdk, opts)).rejects.toBeDefined();
+  });
+});
+
+// =============================================================================
+// Pagination success paths (Function-stub pattern from learnings.md)
+// =============================================================================
+
+const originalFunction = globalThis.Function;
+
+function stub_function_with_registry(fakeRegistry: Record<string, unknown>): void {
+  const fnStub = function (...args: unknown[]) {
+    if (
+      args.length === 2 &&
+      args[0] === 'm' &&
+      typeof args[1] === 'string' &&
+      (args[1] as string).includes('return import')
+    ) {
+      return (spec: string) =>
+        spec in fakeRegistry ? Promise.resolve(fakeRegistry[spec]) : Promise.reject(new Error(`miss ${spec}`));
+    }
+    // @ts-expect-error passthrough to original Function constructor
+    return new originalFunction(...args);
+  } as unknown as FunctionConstructor;
+  fnStub.prototype = originalFunction.prototype;
+  globalThis.Function = fnStub;
+}
+
+describe('discover_with_resource_explorer — paginated success', () => {
+  class FakeSearchCommand {
+    input: { QueryString?: string; MaxResults?: number; NextToken?: string };
+    constructor(input: { QueryString?: string; MaxResults?: number; NextToken?: string }) {
+      this.input = input;
+    }
+  }
+
+  beforeEach(() => {
+    stub_function_with_registry({
+      '@aws-sdk/client-resource-explorer-2': { SearchCommand: FakeSearchCommand },
+    });
+  });
+
+  afterEach(() => {
+    globalThis.Function = originalFunction;
+  });
+
+  it('drains a single page when NextToken is absent', async () => {
+    const send = vi.fn(async () => ({
+      Resources: [
+        { Arn: 'arn:aws:s3:::a', ResourceType: 'AWS::S3::Bucket', Region: 'us-east-1' },
+        { Arn: 'arn:aws:s3:::b', ResourceType: 'AWS::S3::Bucket', Region: 'us-east-1' },
+      ],
+      NextToken: undefined,
+    }));
+    const sdk = { ...mock_sdk, ResourceExplorer: { send } };
+    const result = await discover_with_resource_explorer(sdk as AWSSdk, opts);
+    expect(result).toHaveLength(2);
+    expect(result[0]!.arn).toBe('arn:aws:s3:::a');
+    expect(send).toHaveBeenCalledTimes(1);
+    // First call: NextToken is undefined
+    const firstCmd = send.mock.calls[0]![0] as InstanceType<typeof FakeSearchCommand>;
+    expect(firstCmd.input.QueryString).toBe('*');
+    expect(firstCmd.input.MaxResults).toBe(100);
+    expect(firstCmd.input.NextToken).toBeUndefined();
+  });
+
+  it('drains multiple pages following NextToken until null', async () => {
+    let call = 0;
+    const send = vi.fn(async () => {
+      call++;
+      if (call === 1) {
+        return {
+          Resources: [{ Arn: 'arn:aws:s3:::a', ResourceType: 'AWS::S3::Bucket', Region: 'us-east-1' }],
+          NextToken: 'page2',
+        };
+      }
+      return {
+        Resources: [{ Arn: 'arn:aws:s3:::b', ResourceType: 'AWS::S3::Bucket', Region: 'us-east-1' }],
+        NextToken: undefined,
+      };
+    });
+    const sdk = { ...mock_sdk, ResourceExplorer: { send } };
+    const result = await discover_with_resource_explorer(sdk as AWSSdk, opts);
+    expect(result).toHaveLength(2);
+    expect(send).toHaveBeenCalledTimes(2);
+    // Second call: NextToken from page 1
+    const secondCmd = send.mock.calls[1]![0] as InstanceType<typeof FakeSearchCommand>;
+    expect(secondCmd.input.NextToken).toBe('page2');
+  });
+
+  it('returns an empty array when Resources is missing on the response', async () => {
+    const send = vi.fn(async () => ({ NextToken: undefined }));
+    const sdk = { ...mock_sdk, ResourceExplorer: { send } };
+    const result = await discover_with_resource_explorer(sdk as AWSSdk, opts);
+    expect(result).toEqual([]);
+    expect(send).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('discover_with_config — paginated success', () => {
+  class FakeSelectResourceConfigCommand {
+    input: { Expression?: string; Limit?: number; NextToken?: string };
+    constructor(input: { Expression?: string; Limit?: number; NextToken?: string }) {
+      this.input = input;
+    }
+  }
+
+  beforeEach(() => {
+    stub_function_with_registry({
+      '@aws-sdk/client-config-service': { SelectResourceConfigCommand: FakeSelectResourceConfigCommand },
+    });
+  });
+
+  afterEach(() => {
+    globalThis.Function = originalFunction;
+  });
+
+  it('drains a single page when NextToken is absent', async () => {
+    const send = vi.fn(async () => ({
+      Results: [
+        JSON.stringify({
+          arn: 'arn:aws:s3:::a',
+          resourceId: 'a',
+          resourceType: 'AWS::S3::Bucket',
+          configuration: { foo: 'bar' },
+        }),
+      ],
+      NextToken: undefined,
+    }));
+    const sdk = { ...mock_sdk, ConfigService: { send } };
+    const result = await discover_with_config(sdk as AWSSdk, opts);
+    expect(result).toHaveLength(1);
+    expect(result[0]!.arn).toBe('arn:aws:s3:::a');
+    expect(result[0]!.properties).toEqual({ foo: 'bar' });
+    const firstCmd = send.mock.calls[0]![0] as InstanceType<typeof FakeSelectResourceConfigCommand>;
+    expect(firstCmd.input.Expression).toContain('SELECT');
+    expect(firstCmd.input.Limit).toBe(100);
+  });
+
+  it('drains multiple pages following NextToken until null', async () => {
+    let call = 0;
+    const send = vi.fn(async () => {
+      call++;
+      if (call === 1) {
+        return {
+          Results: [JSON.stringify({ arn: 'arn:aws:s3:::a', resourceType: 'AWS::S3::Bucket' })],
+          NextToken: 'cursor',
+        };
+      }
+      return {
+        Results: [JSON.stringify({ arn: 'arn:aws:s3:::b', resourceType: 'AWS::S3::Bucket' })],
+        NextToken: undefined,
+      };
+    });
+    const sdk = { ...mock_sdk, ConfigService: { send } };
+    const result = await discover_with_config(sdk as AWSSdk, opts);
+    expect(result).toHaveLength(2);
+    expect(send).toHaveBeenCalledTimes(2);
+    const secondCmd = send.mock.calls[1]![0] as InstanceType<typeof FakeSelectResourceConfigCommand>;
+    expect(secondCmd.input.NextToken).toBe('cursor');
+  });
+
+  it('skips entries whose JSON.parse returns null (malformed Config rows)', async () => {
+    const send = vi.fn(async () => ({
+      Results: [
+        'not-json',
+        JSON.stringify({ arn: 'arn:aws:s3:::ok', resourceType: 'AWS::S3::Bucket' }),
+      ],
+      NextToken: undefined,
+    }));
+    const sdk = { ...mock_sdk, ConfigService: { send } };
+    const result = await discover_with_config(sdk as AWSSdk, opts);
+    expect(result).toHaveLength(1);
+    expect(result[0]!.arn).toBe('arn:aws:s3:::ok');
+  });
+
+  it('returns an empty array when Results is missing on the response', async () => {
+    const send = vi.fn(async () => ({ NextToken: undefined }));
+    const sdk = { ...mock_sdk, ConfigService: { send } };
+    const result = await discover_with_config(sdk as AWSSdk, opts);
+    expect(result).toEqual([]);
+    expect(send).toHaveBeenCalledTimes(1);
   });
 });

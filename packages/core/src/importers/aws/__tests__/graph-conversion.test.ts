@@ -146,6 +146,49 @@ describe('aws_result_to_graph', () => {
     const graph = aws_result_to_graph(make_result([r]));
     expect(graph.edges.size).toBe(0);
   });
+
+  it('skips edges from resources whose add_node failed (no source_id)', () => {
+    // Two resources with the same name but different ARNs: the second
+    // add_node fails (duplicate name) and the second resource never lands
+    // in arn_to_node_id, so the edge loop's `if (!source_id) continue`
+    // path triggers. The first resource should still emit an edge to the
+    // second IF it has a dep on it — but the dep target won't resolve
+    // either, so the edge is skipped at the target check. Here we make
+    // the SECOND resource depend on the first to exercise the source_id
+    // skip directly.
+    const a = make_resource({
+      aws_arn: 'arn:aws:ec2:us-east-1:123:vpc/a',
+      name: 'duplicate',
+    });
+    const b = make_resource({
+      aws_arn: 'arn:aws:ec2:us-east-1:123:vpc/b',
+      name: 'duplicate', // collision -> add_node fails for b
+      dependencies: ['arn:aws:ec2:us-east-1:123:vpc/a'],
+    });
+    const graph = aws_result_to_graph(make_result([a, b]));
+    // Only the first resource was added
+    expect(graph.nodes.size).toBe(1);
+    // The edge would have been a -> b, but b has no source_id so
+    // the loop continues without emitting.
+    expect(graph.edges.size).toBe(0);
+  });
+
+  it('keeps edges intact when both endpoints are present', () => {
+    // Verifies the full edge-loop happy path executes, not just the
+    // continue branches.
+    const a = make_resource({
+      aws_arn: 'arn:aws:ec2:us-east-1:123:vpc/a',
+      name: 'a',
+    });
+    const b = make_resource({
+      aws_arn: 'arn:aws:ec2:us-east-1:123:subnet/b',
+      name: 'b',
+      dependencies: ['arn:aws:ec2:us-east-1:123:vpc/a'],
+    });
+    const graph = aws_result_to_graph(make_result([a, b]));
+    expect(graph.nodes.size).toBe(2);
+    expect(graph.edges.size).toBe(1);
+  });
 });
 
 describe('infer_relationships', () => {

@@ -265,21 +265,59 @@ describe('OnboardingChecklist — tour entry points', () => {
     expect(typeof showMeHowBtn?.props.onClick).toBe('function');
   });
 
-  it('clicking "Show me how" calls useTour().start("canvas-tour")', () => {
+  it('clicking "Show me how" while on a canvas page calls useTour().start("canvas-tour")', () => {
     mocks.useStateQueue.push(false); // dismissed
     mocks.useStateQueue.push(false); // collapsed
-    const tree = callRender();
-    const showMeHowBtn = findByPredicate(
-      tree,
-      (el) =>
-        el.type === 'button' &&
-        typeof (el.props as { children?: unknown }).children === 'string' &&
-        ((el.props as { children: string }).children).includes('showMeHow'),
-    );
-    expect(showMeHowBtn).toBeDefined();
-    (showMeHowBtn?.props.onClick as () => void)?.();
-    expect(mocks.startTour).toHaveBeenCalledWith('canvas-tour');
-    expect(mocks.startTour).toHaveBeenCalledTimes(1);
+    mocks.useStateQueue.push(null); // tourHint
+    // Pretend the canvas SVG is on the page — the handler short-circuits
+    // to startTour when document.getElementById('ice-canvas-svg') !== null.
+    const fakeCanvas = { id: 'ice-canvas-svg' } as unknown as HTMLElement;
+    const prevDoc = (globalThis as { document?: unknown }).document;
+    (globalThis as { document?: unknown }).document = {
+      getElementById: (id: string) => (id === 'ice-canvas-svg' ? fakeCanvas : null),
+    };
+    try {
+      const tree = callRender();
+      const showMeHowBtn = findByPredicate(
+        tree,
+        (el) =>
+          el.type === 'button' &&
+          typeof (el.props as { children?: unknown }).children === 'string' &&
+          ((el.props as { children: string }).children).includes('showMeHow'),
+      );
+      expect(showMeHowBtn).toBeDefined();
+      (showMeHowBtn?.props.onClick as () => void)?.();
+      expect(mocks.startTour).toHaveBeenCalledWith('canvas-tour');
+      expect(mocks.startTour).toHaveBeenCalledTimes(1);
+    } finally {
+      (globalThis as { document?: unknown }).document = prevDoc;
+    }
+  });
+
+  it('clicking "Show me how" without a canvas on screen surfaces a hint instead of firing the tour', () => {
+    mocks.useStateQueue.push(false); // dismissed
+    mocks.useStateQueue.push(false); // collapsed
+    mocks.useStateQueue.push(null); // tourHint initial
+    const prevDoc = (globalThis as { document?: unknown }).document;
+    (globalThis as { document?: unknown }).document = {
+      getElementById: () => null,
+    };
+    try {
+      const tree = callRender();
+      const showMeHowBtn = findByPredicate(
+        tree,
+        (el) =>
+          el.type === 'button' &&
+          typeof (el.props as { children?: unknown }).children === 'string' &&
+          ((el.props as { children: string }).children).includes('showMeHow'),
+      );
+      (showMeHowBtn?.props.onClick as () => void)?.();
+      // No tour fired — the runner would silently auto-skip every step
+      // since none of the canvas anchors exist on the folder view.
+      expect(mocks.startTour).not.toHaveBeenCalled();
+    } finally {
+      (globalThis as { document?: unknown }).document = prevDoc;
+    }
   });
 
   it('does NOT render "Show me how" once the tour is completed (item is done)', () => {

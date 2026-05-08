@@ -21,6 +21,7 @@ import pipelineReducer from './slices/pipeline-slice';
 import projectListReducer from './slices/project-list-slice';
 import projectsReducer from './slices/projects-slice';
 import selectionReducer from './slices/selection-slice';
+import tourReducer from '../features/tour/store/tour-slice';
 import uiReducer from './slices/ui-slice';
 import validationReducer from './slices/validation-slice';
 import viewReducer from './slices/view-slice';
@@ -36,6 +37,7 @@ const LOGGED_ACTION_PREFIXES = [
   'onboarding/',
   'ai/',
   'projects/',
+  'tour/',
 ];
 const actionLoggerMiddleware: Middleware = () => (next) => (action: any) => {
   const type = action?.type || '';
@@ -64,6 +66,7 @@ export const store = configureStore({
     ghosts: ghostsReducer,
     logs: logsReducer,
     onboarding: onboardingReducer,
+    tour: tourReducer,
     validation: validationReducer,
   },
   middleware: (getDefaultMiddleware) =>

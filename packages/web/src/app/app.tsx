@@ -25,6 +25,7 @@
 import { DebugOverlay } from '@ui/features/debug/components/debug-overlay';
 import { useDeploySubscription } from '@ui/features/deploy/hooks/use-deploy-subscription';
 import { OnboardingPage, OnboardingChecklist } from '@ui/features/onboarding';
+import { TourRunner } from '@ui/features/tour/components/tour-runner';
 import { ProjectWizard } from '@ui/features/wizard';
 import { useTranslation, LocaleProvider } from '@ui/i18n';
 import { AppBar } from '@ui/shared/components/app-bar';
@@ -253,6 +254,12 @@ const App: React.FC = () => (
     <ErrorBoundary name="App">
       <DevAccentPicker>
         <BrowserRouter>
+          {/* TourRunner: mounted as a sibling of Routes so the popover/overlay
+              portals at document.body regardless of which route is active.
+              Inside BrowserRouter (needs useNavigate / useLocation), inside
+              LocaleProvider (popover uses i18n), inside Provider (slice
+              dispatch). See blueprint §2.1. */}
+          <TourRunner />
           <Routes>
             <Route path="/onboarding" element={<OnboardingPage />} />
             <Route

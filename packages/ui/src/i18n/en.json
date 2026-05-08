@@ -1561,5 +1561,52 @@
     "monitoringTerminal": { "name": "Log Terminal", "description": "Live streaming log viewer.", "tooltip": "Terminal-style log viewer with color-coded levels, auto-scroll, and click-to-copy. Streams live logs from connected services." },
     "sourceRepository": { "name": "GitHub Repo", "description": "Source code. Connect to a service to deploy.", "tooltip": "GitHub repository as a deployment source. Specify repo, branch, build command, and output directory. Connect to any service to define where its code comes from. Supports auto-deploy on push." },
     "configEnvironment": { "name": "Env Variables", "description": "Key-value environment variables.", "tooltip": "Environment variables and configuration values. Define key-value pairs like DATABASE_URL, API keys, and feature flags. Connect to services that consume them." }
+  },
+  "tour": {
+    "actions": {
+      "next": "Next",
+      "back": "Back",
+      "skip": "Skip tour",
+      "finish": "Got it",
+      "close": "Close"
+    },
+    "canvas": {
+      "title": "Welcome to your canvas",
+      "overview": {
+        "title": "Your project canvas",
+        "body": "This is where you compose blocks into a deployable architecture. Drag blocks here from the palette."
+      },
+      "palette": {
+        "title": "Block palette",
+        "body": "Drag any block from this panel onto the canvas to start."
+      },
+      "search": {
+        "title": "Find a block",
+        "body": "Type to filter — services, databases, frontends, networking, anything."
+      },
+      "properties": {
+        "title": "Properties panel",
+        "body": "Click any block on the canvas to configure it here."
+      },
+      "ai": {
+        "title": "Ask the AI",
+        "body": "Describe what you want — the assistant edits the canvas for you."
+      }
+    },
+    "palette": {
+      "title": "Browse blocks",
+      "search": {
+        "title": "Search",
+        "body": "Filter by name to jump to a specific block."
+      },
+      "providerFilter": {
+        "title": "Provider filter",
+        "body": "Show blocks for one cloud at a time."
+      },
+      "dragHint": {
+        "title": "Drag onto the canvas",
+        "body": "Press and drag any block onto the canvas to add it to your architecture."
+      }
+    }
   }
 }

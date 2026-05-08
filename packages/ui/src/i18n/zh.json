@@ -1561,5 +1561,52 @@
     "monitoringTerminal": { "name": "日志终端", "description": "实时流式日志查看器。", "tooltip": "终端风格的日志查看器，支持颜色编码级别、自动滚动和点击复制。从连接的服务实时流式传输日志。" },
     "sourceRepository": { "name": "GitHub 仓库", "description": "源代码。连接到服务以部署。", "tooltip": "GitHub 仓库作为部署源。指定仓库、分支、构建命令和输出目录。连接到任何服务以定义其代码来源。支持推送时自动部署。" },
     "configEnvironment": { "name": "环境变量", "description": "键值对环境变量。", "tooltip": "环境变量和配置值。定义 DATABASE_URL、API 密钥和功能标志等键值对。连接到使用它们的服务。" }
+  },
+  "tour": {
+    "actions": {
+      "next": "Next",
+      "back": "Back",
+      "skip": "Skip tour",
+      "finish": "Got it",
+      "close": "Close"
+    },
+    "canvas": {
+      "title": "Welcome to your canvas",
+      "overview": {
+        "title": "Your project canvas",
+        "body": "This is where you compose blocks into a deployable architecture. Drag blocks here from the palette."
+      },
+      "palette": {
+        "title": "Block palette",
+        "body": "Drag any block from this panel onto the canvas to start."
+      },
+      "search": {
+        "title": "Find a block",
+        "body": "Type to filter — services, databases, frontends, networking, anything."
+      },
+      "properties": {
+        "title": "Properties panel",
+        "body": "Click any block on the canvas to configure it here."
+      },
+      "ai": {
+        "title": "Ask the AI",
+        "body": "Describe what you want — the assistant edits the canvas for you."
+      }
+    },
+    "palette": {
+      "title": "Browse blocks",
+      "search": {
+        "title": "Search",
+        "body": "Filter by name to jump to a specific block."
+      },
+      "providerFilter": {
+        "title": "Provider filter",
+        "body": "Show blocks for one cloud at a time."
+      },
+      "dragHint": {
+        "title": "Drag onto the canvas",
+        "body": "Press and drag any block onto the canvas to add it to your architecture."
+      }
+    }
   }
 }

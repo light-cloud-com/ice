@@ -230,7 +230,7 @@ export const ProjectWizard: React.FC = () => {
             <button
               onClick={handleCreate}
               className="flex items-center gap-1.5 text-xs font-medium px-4 py-1.5 rounded-md bg-ice-green text-ice-text-1 hover:bg-ice-green/90 transition-colors"
-              data-tour-id="wizard-btn-next"
+              data-tour-id="wizard-btn-create"
             >
               <Sparkles className="w-3.5 h-3.5" />
               {t('wizard.createButton')}

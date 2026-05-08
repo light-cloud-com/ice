@@ -210,6 +210,11 @@ describe('setStep / setPhase', () => {
     const s = tourReducer(init(), setPhase('placed'));
     expect(s.phase).toBe('placed');
   });
+
+  it("setPhase accepts 'entering' (post-resolve, pre-paint gate)", () => {
+    const s = tourReducer(init(), setPhase('entering'));
+    expect(s.phase).toBe('entering');
+  });
 });
 
 // ---------------------------------------------------------------------------

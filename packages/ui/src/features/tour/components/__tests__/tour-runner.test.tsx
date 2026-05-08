@@ -487,6 +487,179 @@ describe('TourRunner — onEnter / onExit lifecycle', () => {
     expect(calls).toEqual(['onExit:step-1', 'onEnter:step-2']);
   });
 
+  it('overlay does NOT render until onEnter resolves (paint gates on entering→placed)', async () => {
+    makeAnchor('anchor-1');
+    let resolveEnter!: () => void;
+    const enterPromise = new Promise<void>((r) => {
+      resolveEnter = r;
+    });
+    const t = makeTour({
+      id: 'gate-onenter-tour',
+      steps: [
+        {
+          id: 'step-1',
+          target: '#anchor-1',
+          title: 'tour.t1',
+          body: 'tour.b1',
+          onEnter: () => enterPromise,
+        },
+      ],
+    });
+    mocks.tours = [t];
+    registerTour(t);
+    const store = makeStore();
+    mountRunner(store);
+    act(() => {
+      store.dispatch(startTour({ tourId: 'gate-onenter-tour', totalSteps: 1 }));
+    });
+    // Pump enough rAF for the resolver to land — phase should now be
+    // 'entering' (NOT 'placed'), and the overlay/popover MUST NOT have
+    // rendered yet because onEnter is still pending.
+    await flushAsync();
+    await flushAsync();
+    expect(store.getState().tour.phase).toBe('entering');
+    expect(mocks.overlayProps.length).toBe(0);
+    expect(mocks.popoverProps.length).toBe(0);
+    expect(document.querySelector('[data-testid="tour-overlay-mock"]')).toBeNull();
+
+    // Resolve the onEnter promise — the runner should flip phase to
+    // 'placed' and the overlay/popover should mount.
+    await act(async () => {
+      resolveEnter();
+      await new Promise((r) => setTimeout(r, 20));
+    });
+    expect(store.getState().tour.phase).toBe('placed');
+    expect(mocks.overlayProps.length).toBeGreaterThan(0);
+    expect(document.querySelector('[data-testid="tour-overlay-mock"]')).not.toBeNull();
+  });
+
+  it("phase transitions: idle → navigating → resolving → entering → placed", async () => {
+    makeAnchor('anchor-1');
+    let resolveEnter!: () => void;
+    const enterPromise = new Promise<void>((r) => {
+      resolveEnter = r;
+    });
+    const t = makeTour({
+      id: 'phase-tour',
+      steps: [
+        {
+          id: 'step-1',
+          target: '#anchor-1',
+          title: 'tour.t1',
+          body: 'tour.b1',
+          onEnter: () => enterPromise,
+        },
+      ],
+    });
+    mocks.tours = [t];
+    registerTour(t);
+    const store = makeStore();
+    // Subscribe BEFORE the tour starts so we capture every phase
+    // transition the runner drives. React batches effect dispatches
+    // tightly under act, so polling AFTER each act-block can miss
+    // intermediate phases — the subscription log is the reliable
+    // ordering oracle.
+    const seen: string[] = [store.getState().tour.phase];
+    const unsub = store.subscribe(() => {
+      const p = store.getState().tour.phase;
+      if (seen[seen.length - 1] !== p) seen.push(p);
+    });
+    mountRunner(store);
+    act(() => {
+      store.dispatch(startTour({ tourId: 'phase-tour', totalSteps: 1 }));
+    });
+    // Pump for resolver — should land in 'entering', NOT 'placed'.
+    await flushAsync();
+    await flushAsync();
+    expect(store.getState().tour.phase).toBe('entering');
+    // Resolve onEnter → phase flips to 'placed'.
+    await act(async () => {
+      resolveEnter();
+      await new Promise((r) => setTimeout(r, 20));
+    });
+    expect(store.getState().tour.phase).toBe('placed');
+    unsub();
+    // The subscription log captures the full ordering. We assert each
+    // phase appeared in order; intermediate duplicates are tolerated
+    // (React/effect re-renders can resample without changing phase).
+    const expected = ['idle', 'navigating', 'resolving', 'entering', 'placed'];
+    let cursor = 0;
+    for (const p of seen) {
+      if (cursor < expected.length && p === expected[cursor]) cursor++;
+    }
+    expect(cursor).toBe(expected.length);
+  });
+
+  it('advancing during onEnter cancels the pending placement', async () => {
+    makeAnchor('anchor-1');
+    makeAnchor('anchor-2');
+    let resolveEnter1!: () => void;
+    const enterPromise1 = new Promise<void>((r) => {
+      resolveEnter1 = r;
+    });
+    const calls: string[] = [];
+    const t = makeTour({
+      id: 'cancel-tour',
+      steps: [
+        {
+          id: 'step-1',
+          target: '#anchor-1',
+          title: 'tour.t1',
+          body: 'tour.b1',
+          onEnter: () => {
+            calls.push('onEnter:step-1');
+            return enterPromise1;
+          },
+        },
+        {
+          id: 'step-2',
+          target: '#anchor-2',
+          title: 'tour.t2',
+          body: 'tour.b2',
+          onEnter: () => {
+            calls.push('onEnter:step-2');
+          },
+        },
+      ],
+    });
+    mocks.tours = [t];
+    registerTour(t);
+    const store = makeStore();
+    mountRunner(store);
+    act(() => {
+      store.dispatch(startTour({ tourId: 'cancel-tour', totalSteps: 2 }));
+    });
+    await flushAsync();
+    await flushAsync();
+    // step-1 is in 'entering' with onEnter pending.
+    expect(store.getState().tour.phase).toBe('entering');
+    expect(calls).toEqual(['onEnter:step-1']);
+    // No overlay yet — the gate is closed.
+    expect(mocks.overlayProps.length).toBe(0);
+    // User advances mid-await. The slice flips to step-2 / 'navigating'.
+    act(() => {
+      store.dispatch(setStep(1));
+      store.dispatch(setPhase('navigating'));
+    });
+    // Now resolve the stale onEnter — the runner must NOT flip the
+    // phase back to 'placed' for step-1 (the active step is step-2).
+    await act(async () => {
+      resolveEnter1();
+      await new Promise((r) => setTimeout(r, 20));
+    });
+    // After settling, we should be on step-2 (resolved + entered).
+    await flushAsync();
+    await flushAsync();
+    const finalState = store.getState().tour;
+    expect(finalState.stepIdx).toBe(1);
+    // Step-2 should have entered cleanly.
+    expect(calls).toContain('onEnter:step-2');
+    expect(finalState.phase).toBe('placed');
+    // The popover is showing step-2 (NOT step-1).
+    const lastPopover = mocks.popoverProps[mocks.popoverProps.length - 1];
+    expect(lastPopover.stepId).toBe('step-2');
+  });
+
   it('onExit errors are caught and warned', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     makeAnchor('anchor-1');

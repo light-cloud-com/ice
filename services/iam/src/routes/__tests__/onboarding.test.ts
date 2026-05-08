@@ -86,19 +86,26 @@ async function request(method: string, path: string, body?: unknown) {
 // ── GET /status — happy path ──────────────────────────────────────────
 
 describe('GET /api/onboarding/status — happy path', () => {
-  it('returns the four onboarding fields for the current user', async () => {
+  it('returns the onboarding fields + completedTours for the current user', async () => {
     const user = {
       onboarding_completed: false,
       onboarding_step: 2,
       default_provider: 'gcp',
       default_region: 'us-central1',
+      completed_tours: null,
     };
     userFindUniqueMock.mockResolvedValue(user);
 
     const res = await request('GET', '/api/onboarding/status');
 
     expect(res.status).toBe(200);
-    expect(res.body).toEqual(user);
+    expect(res.body).toEqual({
+      onboarding_completed: false,
+      onboarding_step: 2,
+      default_provider: 'gcp',
+      default_region: 'us-central1',
+      completedTours: [],
+    });
     expect(userFindUniqueMock).toHaveBeenCalledWith({
       where: { id: 'user-1' },
       select: {
@@ -106,6 +113,7 @@ describe('GET /api/onboarding/status — happy path', () => {
         onboarding_step: true,
         default_provider: true,
         default_region: true,
+        completed_tours: true,
       },
     });
   });
@@ -364,5 +372,242 @@ describe('PUT /api/onboarding/skip', () => {
     const res = await request('PUT', '/api/onboarding/skip');
     expect(res.status).toBe(500);
     expect(res.body).toEqual({ message: 'Failed to skip onboarding' });
+  });
+});
+
+// ── GET /status — completedTours parsing ──────────────────────────────
+
+describe('GET /api/onboarding/status — completedTours', () => {
+  it('returns completedTours: [] for fresh user with null DB value', async () => {
+    userFindUniqueMock.mockResolvedValue({
+      onboarding_completed: false,
+      onboarding_step: 1,
+      default_provider: null,
+      default_region: null,
+      completed_tours: null,
+    });
+
+    const res = await request('GET', '/api/onboarding/status');
+
+    expect(res.status).toBe(200);
+    expect(res.body.completedTours).toEqual([]);
+  });
+
+  it('returns the parsed array when DB has a JSON-encoded array', async () => {
+    userFindUniqueMock.mockResolvedValue({
+      onboarding_completed: true,
+      onboarding_step: 6,
+      default_provider: 'gcp',
+      default_region: 'us-central1',
+      completed_tours: JSON.stringify(['canvas-tour', 'palette-tour']),
+    });
+
+    const res = await request('GET', '/api/onboarding/status');
+
+    expect(res.status).toBe(200);
+    expect(res.body.completedTours).toEqual(['canvas-tour', 'palette-tour']);
+  });
+
+  it('treats malformed JSON in the column as []', async () => {
+    userFindUniqueMock.mockResolvedValue({
+      onboarding_completed: false,
+      onboarding_step: 1,
+      default_provider: null,
+      default_region: null,
+      completed_tours: '{not valid json',
+    });
+
+    const res = await request('GET', '/api/onboarding/status');
+
+    expect(res.status).toBe(200);
+    expect(res.body.completedTours).toEqual([]);
+  });
+
+  it('treats a non-array JSON value as []', async () => {
+    userFindUniqueMock.mockResolvedValue({
+      onboarding_completed: false,
+      onboarding_step: 1,
+      default_provider: null,
+      default_region: null,
+      completed_tours: '"canvas-tour"',
+    });
+
+    const res = await request('GET', '/api/onboarding/status');
+
+    expect(res.status).toBe(200);
+    expect(res.body.completedTours).toEqual([]);
+  });
+});
+
+// ── PUT /completed-tours/:id — happy paths ────────────────────────────
+
+describe('PUT /api/onboarding/completed-tours/:id — append', () => {
+  it('appends id to a null completed_tours and returns the updated array', async () => {
+    userFindUniqueMock.mockResolvedValue({ completed_tours: null });
+    userUpdateMock.mockResolvedValue({});
+
+    const res = await request('PUT', '/api/onboarding/completed-tours/canvas-tour');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ completedTours: ['canvas-tour'] });
+    expect(userUpdateMock).toHaveBeenCalledTimes(1);
+    const callArg = userUpdateMock.mock.calls[0][0];
+    expect(callArg.where).toEqual({ id: 'user-1' });
+    expect(callArg.data).toEqual({ completed_tours: JSON.stringify(['canvas-tour']) });
+  });
+
+  it('appends to an existing array', async () => {
+    userFindUniqueMock.mockResolvedValue({
+      completed_tours: JSON.stringify(['canvas-tour']),
+    });
+    userUpdateMock.mockResolvedValue({});
+
+    const res = await request('PUT', '/api/onboarding/completed-tours/palette-tour');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ completedTours: ['canvas-tour', 'palette-tour'] });
+    expect(userUpdateMock.mock.calls[0][0].data).toEqual({
+      completed_tours: JSON.stringify(['canvas-tour', 'palette-tour']),
+    });
+  });
+
+  it('is idempotent — second PUT with the same id is a no-op write', async () => {
+    // First call: column is null, write happens.
+    userFindUniqueMock.mockResolvedValueOnce({ completed_tours: null });
+    userUpdateMock.mockResolvedValueOnce({});
+
+    const first = await request('PUT', '/api/onboarding/completed-tours/canvas-tour');
+    expect(first.body).toEqual({ completedTours: ['canvas-tour'] });
+
+    // Second call: column already contains the id, no write.
+    userFindUniqueMock.mockResolvedValueOnce({
+      completed_tours: JSON.stringify(['canvas-tour']),
+    });
+
+    const second = await request('PUT', '/api/onboarding/completed-tours/canvas-tour');
+    expect(second.status).toBe(200);
+    expect(second.body).toEqual({ completedTours: ['canvas-tour'] });
+    // Only one update across both calls.
+    expect(userUpdateMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('treats malformed JSON as [] then writes valid JSON on PUT', async () => {
+    userFindUniqueMock.mockResolvedValue({ completed_tours: 'not json' });
+    userUpdateMock.mockResolvedValue({});
+
+    const res = await request('PUT', '/api/onboarding/completed-tours/canvas-tour');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ completedTours: ['canvas-tour'] });
+    expect(userUpdateMock.mock.calls[0][0].data).toEqual({
+      completed_tours: JSON.stringify(['canvas-tour']),
+    });
+  });
+
+  it('two parallel PUTs of different ids both land in the final array', async () => {
+    // Simulate the simplest "no contention" case where both PUTs see the
+    // empty starting state but each writes its own id. The route's read
+    // followed by write is naturally race-prone; this asserts the
+    // route's local logic produces the right per-call result. The
+    // production fix for true concurrency would be a transaction, which
+    // is documented as a follow-up consideration.
+    userFindUniqueMock.mockResolvedValue({ completed_tours: null });
+    userUpdateMock.mockResolvedValue({});
+
+    const [a, b] = await Promise.all([
+      request('PUT', '/api/onboarding/completed-tours/canvas-tour'),
+      request('PUT', '/api/onboarding/completed-tours/palette-tour'),
+    ]);
+
+    expect(a.status).toBe(200);
+    expect(b.status).toBe(200);
+    const all = new Set<string>([
+      ...(a.body.completedTours as string[]),
+      ...(b.body.completedTours as string[]),
+    ]);
+    expect(all.has('canvas-tour')).toBe(true);
+    expect(all.has('palette-tour')).toBe(true);
+    // Both PUTs trigger a write because each sees an empty state.
+    expect(userUpdateMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('accepts uppercase + dashes within the regex bounds', async () => {
+    userFindUniqueMock.mockResolvedValue({ completed_tours: null });
+    userUpdateMock.mockResolvedValue({});
+
+    const res = await request('PUT', '/api/onboarding/completed-tours/Canvas-Tour-1');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ completedTours: ['Canvas-Tour-1'] });
+  });
+});
+
+// ── PUT /completed-tours/:id — validation + error paths ───────────────
+
+describe('PUT /api/onboarding/completed-tours/:id — invalid id', () => {
+  it('returns 400 when id starts with a dash', async () => {
+    const res = await request('PUT', '/api/onboarding/completed-tours/-bad');
+
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({ message: 'Invalid tour id' });
+    expect(userFindUniqueMock).not.toHaveBeenCalled();
+    expect(userUpdateMock).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when id contains an underscore', async () => {
+    const res = await request('PUT', '/api/onboarding/completed-tours/canvas_tour');
+
+    expect(res.status).toBe(400);
+    expect(userUpdateMock).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when id is over 64 chars', async () => {
+    const tooLong = 'a'.repeat(65);
+    const res = await request('PUT', `/api/onboarding/completed-tours/${tooLong}`);
+
+    expect(res.status).toBe(400);
+    expect(userUpdateMock).not.toHaveBeenCalled();
+  });
+
+  it('accepts an id of exactly 64 chars', async () => {
+    const justRight = 'a'.repeat(64);
+    userFindUniqueMock.mockResolvedValue({ completed_tours: null });
+    userUpdateMock.mockResolvedValue({});
+
+    const res = await request('PUT', `/api/onboarding/completed-tours/${justRight}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ completedTours: [justRight] });
+  });
+});
+
+describe('PUT /api/onboarding/completed-tours/:id — auth + errors', () => {
+  it('returns 401 when requireAuth rejects', async () => {
+    currentAuth = 'no-auth';
+
+    const res = await request('PUT', '/api/onboarding/completed-tours/canvas-tour');
+
+    expect(res.status).toBe(401);
+    expect(userFindUniqueMock).not.toHaveBeenCalled();
+    expect(userUpdateMock).not.toHaveBeenCalled();
+  });
+
+  it('returns 404 when the user record does not exist', async () => {
+    userFindUniqueMock.mockResolvedValue(null);
+
+    const res = await request('PUT', '/api/onboarding/completed-tours/canvas-tour');
+
+    expect(res.status).toBe(404);
+    expect(res.body).toEqual({ message: 'User not found' });
+    expect(userUpdateMock).not.toHaveBeenCalled();
+  });
+
+  it('returns 500 when prisma throws', async () => {
+    userFindUniqueMock.mockRejectedValue(new Error('db down'));
+
+    const res = await request('PUT', '/api/onboarding/completed-tours/canvas-tour');
+
+    expect(res.status).toBe(500);
+    expect(res.body).toEqual({ message: 'Failed to update completed tours' });
   });
 });

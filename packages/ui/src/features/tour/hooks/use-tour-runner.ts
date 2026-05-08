@@ -2,13 +2,20 @@
  * tour-12 — TourRunner state-machine hook.
  *
  * Hosts the cross-cutting effects that drive the runner's phase
- * transitions (idle → navigating → resolving → placed) plus the
- * onEnter / onExit lifecycle firing. Extracted from `tour-runner.tsx`
- * to keep that component file ≤ 280 LOC (per `feedback_200_loc_ceiling`).
+ * transitions (idle → navigating → resolving → entering → placed) plus
+ * the onEnter / onExit lifecycle firing. Extracted from
+ * `tour-runner.tsx` to keep that component file ≤ 280 LOC (per
+ * `feedback_200_loc_ceiling`).
+ *
+ * The `'entering'` phase (added in the tour-12 followup) gates the
+ * overlay/popover paint on the awaited onEnter. Without it, a step
+ * whose onEnter mutates layout (sidebar open, scroll, focus) would
+ * paint against stale DOM. Render still keys on `phase === 'placed'`;
+ * we only flip to `'placed'` AFTER onEnter resolves. See learnings.md
+ * `tour-12-entering-phase-required-because-render-gate-must-wait-for-onenter`.
  *
  * Returned shape carries everything the runner needs to render the
- * overlay/popover when `placed`. Behavior is identical to the prior
- * single-file form — see blueprint §3.5 for the lifecycle spec.
+ * overlay/popover when `placed`.
  */
 import * as React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -121,11 +128,14 @@ export function useTourRunner(): UseTourRunnerReturn {
     }
   }, [phase, activeStep, activeTourId, route, dispatch]);
 
-  // resolving → placed (or auto-advance on missing).
+  // resolving → entering (or auto-advance on missing). The 'entering'
+  // phase is the await-onEnter gate: we move to 'placed' (and the
+  // render gate opens) ONLY after the next effect resolves the
+  // lifecycle hook.
   React.useEffect(() => {
     if (phase !== 'resolving') return;
     if (resolver.status === 'placed') {
-      dispatch(setPhase('placed'));
+      dispatch(setPhase('entering'));
     } else if (resolver.status === 'missing') {
       // eslint-disable-next-line no-console
       console.warn(`[tour] Step "${activeStep?.id}" target missing; skipping.`);
@@ -133,27 +143,34 @@ export function useTourRunner(): UseTourRunnerReturn {
     }
   }, [phase, resolver.status, activeStep, advance, dispatch]);
 
-  // onExit (previous step) → onEnter (current step) on placed transitions.
+  // entering → placed: await onExit (previous step) then onEnter
+  // (current step), THEN flip to 'placed' so the overlay/popover
+  // mount. Cancellation: if the user advances/skips/stops while
+  // onEnter is pending, the activeRef tuple won't match by the time we
+  // get back; drop the setPhase('placed') so we don't paint a stale
+  // step.
   React.useEffect(() => {
     if (!lifecycleCtx) {
       prevStepRef.current = null;
       enteredStepRef.current = null;
       return;
     }
-    if (phase !== 'placed') return;
+    if (phase !== 'entering') return;
     const stepKey = `${lifecycleCtx.tourId}:${lifecycleCtx.stepId}`;
     if (enteredStepRef.current === stepKey) return;
     enteredStepRef.current = stepKey;
 
+    const ctxAtStart = lifecycleCtx;
     let cancelled = false;
+    let settled = false;
     (async () => {
       const prev = prevStepRef.current;
-      if (prev && prev.stepId !== lifecycleCtx.stepId) {
+      if (prev && prev.stepId !== ctxAtStart.stepId) {
         const prevTour = getTour(prev.tourId);
         const prevStep = prevTour?.steps.find((s) => s.id === prev.stepId);
         if (prevStep?.onExit) {
           try {
-            await prevStep.onExit({ ...lifecycleCtx, stepId: prev.stepId });
+            await prevStep.onExit({ ...ctxAtStart, stepId: prev.stepId });
           } catch (err) {
             // eslint-disable-next-line no-console
             console.warn(`[tour] onExit("${prev.stepId}") threw:`, err);
@@ -164,19 +181,32 @@ export function useTourRunner(): UseTourRunnerReturn {
       const enterFn = activeStep?.onEnter;
       if (enterFn) {
         try {
-          await enterFn(lifecycleCtx);
+          await enterFn(ctxAtStart);
         } catch (err) {
           // eslint-disable-next-line no-console
-          console.warn(`[tour] onEnter("${lifecycleCtx.stepId}") threw:`, err);
+          console.warn(`[tour] onEnter("${ctxAtStart.stepId}") threw:`, err);
         }
       }
       if (cancelled) return;
-      prevStepRef.current = { tourId: lifecycleCtx.tourId, stepId: lifecycleCtx.stepId };
+      prevStepRef.current = {
+        tourId: ctxAtStart.tourId,
+        stepId: ctxAtStart.stepId,
+      };
+      settled = true;
+      dispatch(setPhase('placed'));
     })();
     return () => {
       cancelled = true;
+      // If we got cancelled BEFORE settling (user advanced mid-await),
+      // re-arm the entered-step guard so the step can be re-entered
+      // from scratch on a future return. After a successful settle,
+      // the guard must persist — we don't want phase oscillations to
+      // re-fire onEnter for a step already entered.
+      if (!settled && enteredStepRef.current === stepKey) {
+        enteredStepRef.current = null;
+      }
     };
-  }, [lifecycleCtx, phase, activeStep]);
+  }, [lifecycleCtx, phase, activeStep, dispatch]);
 
   // Live rect: from the position hook, falling back to resolver's snapshot
   // for the first frame of `placed` before the position observer fires.

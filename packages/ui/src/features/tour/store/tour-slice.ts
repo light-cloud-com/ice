@@ -6,9 +6,15 @@
  * tour feature stays self-contained. Registered in the root store at
  * `packages/ui/src/store/index.ts` exactly once.
  *
- * State machine (blueprint §3.5):
- *   idle → navigating → resolving → placed → ... → idle
+ * State machine (blueprint §3.5, refined per tour-12 followup):
+ *   idle → navigating → resolving → entering → placed → ... → idle
  *   any → missing → idle (when resolver gives up)
+ *
+ * The `'entering'` phase exists so `step.onEnter` resolves BEFORE the
+ * overlay/popover paints. Without it, an onEnter that mutates layout
+ * (sidebar open, scroll, focus) would paint against stale DOM. Render
+ * gate stays at `phase === 'placed'`; the runner only flips to
+ * `'placed'` after the awaited onEnter settles.
  *
  * Persistence (blueprint §4.2): three-tier — localStorage fast-path,
  * server (`PUT /api/onboarding/completed-tours/:id`), and slice merge.
@@ -28,7 +34,13 @@ declare const process: { env: { NODE_ENV?: string } };
 /** localStorage key for the completed-tours fast-path read. */
 export const COMPLETED_TOURS_STORAGE_KEY = 'ice-completed-tours';
 
-export type TourPhase = 'idle' | 'navigating' | 'resolving' | 'placed' | 'missing';
+export type TourPhase =
+  | 'idle'
+  | 'navigating'
+  | 'resolving'
+  | 'entering'
+  | 'placed'
+  | 'missing';
 
 export interface TourPerTourTelemetry {
   /** Number of `recordAdvance` dispatches for this tour. Reset on `start`. */

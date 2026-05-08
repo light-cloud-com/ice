@@ -501,7 +501,8 @@
       "createAccount": "创建账户",
       "chooseProvider": "选择云服务提供商",
       "connectCloud": "连接云凭据",
-      "connectGithub": "连接 GitHub"
+      "connectGithub": "连接 GitHub",
+      "takeCanvasTour": "Take the canvas tour"
     }
   },
 
@@ -1572,7 +1573,8 @@
       "back": "Back",
       "skip": "Skip tour",
       "finish": "Got it",
-      "close": "Close"
+      "close": "Close",
+      "showMeHow": "Show me how"
     },
     "canvas": {
       "title": "Welcome to your canvas",

@@ -9,6 +9,7 @@
 import { Check, X, ChevronUp, ChevronDown, ListChecks } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTour } from '../../tour';
 import { useTranslation } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
 import { checkGitHubConnection } from '../../../store/slices/integrations-slice';
@@ -18,6 +19,8 @@ interface ChecklistItem {
   id: string;
   label: string;
   done: boolean;
+  /** Optional tour id — when present a "Show me how" link starts the tour. */
+  tourId?: string;
 }
 
 const STORAGE_KEY = 'ice-onboarding-checklist-dismissed';
@@ -25,6 +28,7 @@ const STORAGE_KEY = 'ice-onboarding-checklist-dismissed';
 export const OnboardingChecklist: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { t } = useTranslation();
+  const { start: startTour, isCompleted: isTourCompleted } = useTour();
   const user = useSelector((s: RootState) => s.account.user);
   const githubStatus = useSelector((s: RootState) => s.integrations.integrations.github);
   const gcpStatus = useSelector((s: RootState) => s.integrations.integrations.gcp);
@@ -50,6 +54,12 @@ export const OnboardingChecklist: React.FC = () => {
     { id: 'provider', label: t('onboarding.checklist.chooseProvider'), done: !!user.defaultProvider },
     { id: 'cloud', label: t('onboarding.checklist.connectCloud'), done: gcpStatus?.status === 'connected' },
     { id: 'github', label: t('onboarding.checklist.connectGithub'), done: githubStatus?.status === 'connected' },
+    {
+      id: 'canvas-tour',
+      label: t('onboarding.checklist.takeCanvasTour'),
+      done: isTourCompleted('canvas-tour'),
+      tourId: 'canvas-tour',
+    },
   ];
 
   const doneCount = items.filter((i) => i.done).length;
@@ -112,7 +122,20 @@ export const OnboardingChecklist: React.FC = () => {
                 >
                   {item.done && <Check className="w-2.5 h-2.5 text-white" />}
                 </div>
-                <span className={cn(item.done ? 'text-ice-text-2 line-through' : 'text-ice-text-1')}>{item.label}</span>
+                <span
+                  className={cn('flex-1', item.done ? 'text-ice-text-2 line-through' : 'text-ice-text-1')}
+                >
+                  {item.label}
+                </span>
+                {item.tourId && !item.done && (
+                  <button
+                    type="button"
+                    onClick={() => startTour(item.tourId!)}
+                    className="text-xs text-ice-accent hover:underline shrink-0"
+                  >
+                    {t('tour.actions.showMeHow')}
+                  </button>
+                )}
               </div>
             ))}
           </div>

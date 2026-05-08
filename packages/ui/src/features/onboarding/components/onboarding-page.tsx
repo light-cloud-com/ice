@@ -99,7 +99,13 @@ export const OnboardingPage: React.FC = () => {
 
       const orgSlug = selectedOrg ? toSlug(selectedOrg.name) : '';
       const projectSlug = project.slug || toSlug(name);
-      navigate(`/${orgSlug}/${projectSlug}`, { replace: true });
+      // Append `?tour=canvas-tour` so first-launch users get the canvas
+      // tour automatically (consumed by use-tour-autostart). Use
+      // URLSearchParams so any future params on the redirect URL are
+      // preserved rather than smashed.
+      const search = new URLSearchParams();
+      search.set('tour', 'canvas-tour');
+      navigate(`/${orgSlug}/${projectSlug}?${search.toString()}`, { replace: true });
     } catch (err) {
       console.error('Failed to create project:', err);
       await dispatch(completeOnboarding());

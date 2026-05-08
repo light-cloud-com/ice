@@ -501,7 +501,8 @@
       "createAccount": "Create account",
       "chooseProvider": "Choose cloud provider",
       "connectCloud": "Connect cloud credentials",
-      "connectGithub": "Connect GitHub"
+      "connectGithub": "Connect GitHub",
+      "takeCanvasTour": "Take the canvas tour"
     }
   },
 
@@ -1572,7 +1573,8 @@
       "back": "Back",
       "skip": "Skip tour",
       "finish": "Got it",
-      "close": "Close"
+      "close": "Close",
+      "showMeHow": "Show me how"
     },
     "canvas": {
       "title": "Welcome to your canvas",

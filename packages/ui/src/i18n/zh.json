@@ -1162,6 +1162,10 @@
         "clientIdLabel": "客户端 ID",
         "clientSecretLabel": "客户端密钥"
       }
+    },
+    "help": {
+      "tooltip": "帮助",
+      "showMeAround": "带我浏览"
     }
   },
 

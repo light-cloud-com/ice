@@ -167,4 +167,10 @@ describe('SidebarStrip — buttons', () => {
     const btn = findFirst(out, (el) => el.type === 'button')!;
     expect(btn.props.title).toBe('Hello');
   });
+
+  it('button gets a data-tour-id derived from tab.id (sidebar-strip-${id})', () => {
+    const out = render({ side: 'right', tabs: [tab({ id: 'cost' })] });
+    const btn = findFirst(out, (el) => el.type === 'button')!;
+    expect(btn.props['data-tour-id']).toBe('sidebar-strip-cost');
+  });
 });

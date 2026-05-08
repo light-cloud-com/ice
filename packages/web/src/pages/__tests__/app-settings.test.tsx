@@ -657,3 +657,25 @@ describe('AppSettings — Language tab', () => {
     expect((buttons[0].props as { className: string }).className).not.toContain('border-ice-accent');
   });
 });
+
+// ─── Tour anchors (tour-9) ───────────────────────────────────────────────
+
+describe('AppSettings — tour anchors', () => {
+  it('AI tab button has data-tour-id="app-settings-tab-ai" and Save button has data-tour-id="app-settings-btn-save"', () => {
+    const tree = render();
+    const aiTabButton = findByPredicate(
+      tree,
+      (el) =>
+        el.type === 'button' &&
+        (el.props as { ['data-tour-id']?: string })['data-tour-id'] === 'app-settings-tab-ai',
+    );
+    expect(aiTabButton).toHaveLength(1);
+    const saveButton = findByPredicate(
+      tree,
+      (el) =>
+        el.type === 'button' &&
+        (el.props as { ['data-tour-id']?: string })['data-tour-id'] === 'app-settings-btn-save',
+    );
+    expect(saveButton).toHaveLength(1);
+  });
+});

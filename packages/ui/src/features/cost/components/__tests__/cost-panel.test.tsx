@@ -826,3 +826,22 @@ describe('CostPanel — header close', () => {
     expect(mocks.dispatch).toHaveBeenCalledWith({ type: 'ui/toggleCostPanel' });
   });
 });
+
+// ─── Tour anchors (tour-9) ────────────────────────────────────────────────
+
+describe('CostPanel — tour anchors', () => {
+  it('root container and tier slider both carry data-tour-id', () => {
+    mocks.selectors.activeCard = { projectId: 'p-1', nodes: [{ id: 'n' }], edges: [] };
+    const tree = render();
+    const roots = findByPredicate(
+      tree,
+      (el) => el.type === 'div' && (el.props as { ['data-tour-id']?: string })['data-tour-id'] === 'cost-panel-root',
+    );
+    expect(roots).toHaveLength(1);
+    const sliders = findByPredicate(
+      tree,
+      (el) => el.type === 'input' && (el.props as { ['data-tour-id']?: string })['data-tour-id'] === 'cost-panel-tier-slider',
+    );
+    expect(sliders).toHaveLength(1);
+  });
+});

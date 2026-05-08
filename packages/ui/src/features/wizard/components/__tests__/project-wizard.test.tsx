@@ -668,5 +668,20 @@ describe('ProjectWizard', () => {
       );
       expect(backBtn).toHaveLength(1);
     });
+
+    it('step 4 Create button uses distinct wizard-btn-create anchor', () => {
+      mocks.wizard.state.step = 4;
+      const tree = render();
+      const createBtn = findByPredicate(
+        tree,
+        (el) => el.type === 'button' && (el.props as { ['data-tour-id']?: string })['data-tour-id'] === 'wizard-btn-create',
+      );
+      expect(createBtn).toHaveLength(1);
+      const nextBtn = findByPredicate(
+        tree,
+        (el) => el.type === 'button' && (el.props as { ['data-tour-id']?: string })['data-tour-id'] === 'wizard-btn-next',
+      );
+      expect(nextBtn).toHaveLength(0);
+    });
   });
 });

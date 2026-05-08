@@ -91,7 +91,7 @@ export const CostPanel: React.FC = () => {
 
   if (!activeCard || !hasNodes) {
     return (
-      <div className="h-full flex flex-col bg-inherit border-l border-ice-border">
+      <div className="h-full flex flex-col bg-inherit border-l border-ice-border" data-tour-id="cost-panel-root">
         <PanelHeader
           icon={<DollarSign aria-hidden="true" className="w-3.5 h-3.5 text-emerald-400" />}
           title={t('cost.title')}
@@ -116,7 +116,7 @@ export const CostPanel: React.FC = () => {
   const suggestions = generateSuggestions(summary, activeCard.nodes, environments);
 
   return (
-    <div className="h-full flex flex-col bg-inherit border-l border-ice-border">
+    <div className="h-full flex flex-col bg-inherit border-l border-ice-border" data-tour-id="cost-panel-root">
       {/* Header */}
       <PanelHeader
         icon={<DollarSign aria-hidden="true" className="w-3.5 h-3.5 text-emerald-400" />}
@@ -234,6 +234,7 @@ export const CostPanel: React.FC = () => {
               value={trafficTierIndex}
               onChange={(e) => handleTrafficTierChange(parseInt(e.target.value))}
               className="w-full h-1.5 bg-ice-border rounded-full appearance-none cursor-pointer accent-emerald-500"
+              data-tour-id="cost-panel-tier-slider"
             />
             <div className="flex justify-between text-ice-xs text-ice-text-3">
               <span>{t('cost.dev')}</span>

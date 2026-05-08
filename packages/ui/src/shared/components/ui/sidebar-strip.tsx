@@ -49,6 +49,7 @@ const SidebarStripButton: React.FC<{ tab: SidebarStripTab; side: SidebarSide }> 
     <button
       onClick={tab.onClick}
       title={tab.label}
+      data-tour-id={`sidebar-strip-${tab.id}`}
       className={cn(
         'relative flex items-center justify-center w-[26px] py-1.5 rounded-sm transition-colors cursor-pointer',
         'hover:bg-ice-bg-hover',

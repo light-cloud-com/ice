@@ -647,4 +647,26 @@ describe('ProjectWizard', () => {
       errSpy.mockRestore();
     });
   });
+
+  describe('Tour anchors (tour-9)', () => {
+    it('renders Next/Back/wizard-step-N data-tour-id anchors', () => {
+      mocks.wizard.state.step = 2;
+      const tree = render();
+      const stepDiv = findByPredicate(
+        tree,
+        (el) => el.type === 'div' && (el.props as { ['data-tour-id']?: string })['data-tour-id'] === 'wizard-step-2',
+      );
+      expect(stepDiv).toHaveLength(1);
+      const nextBtn = findByPredicate(
+        tree,
+        (el) => el.type === 'button' && (el.props as { ['data-tour-id']?: string })['data-tour-id'] === 'wizard-btn-next',
+      );
+      expect(nextBtn).toHaveLength(1);
+      const backBtn = findByPredicate(
+        tree,
+        (el) => el.type === 'button' && (el.props as { ['data-tour-id']?: string })['data-tour-id'] === 'wizard-btn-back',
+      );
+      expect(backBtn).toHaveLength(1);
+    });
+  });
 });

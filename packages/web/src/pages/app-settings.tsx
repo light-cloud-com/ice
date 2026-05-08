@@ -33,13 +33,15 @@ const TabButton: React.FC<{
   icon: React.ElementType;
   label: string;
   onClick: () => void;
-}> = ({ active, icon: Icon, label, onClick }) => (
+  'data-tour-id'?: string;
+}> = ({ active, icon: Icon, label, onClick, ...rest }) => (
   <button
     onClick={onClick}
     className={cn(
       'flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 transition-colors -mb-px',
       active ? 'border-blue-500 text-ice-text-1' : 'border-transparent text-ice-text-3 hover:text-ice-text-2',
     )}
+    {...rest}
   >
     <Icon className="w-3.5 h-3.5" />
     {label}
@@ -95,7 +97,13 @@ export const AppSettings: React.FC = () => {
 
       {/* Tabs */}
       <div className="flex items-center gap-1 mb-6 border-b border-ice-border">
-        <TabButton active={tab === 'ai'} icon={Brain} label={t('appSettings.tabs.ai')} onClick={() => setTab('ai')} />
+        <TabButton
+          active={tab === 'ai'}
+          icon={Brain}
+          label={t('appSettings.tabs.ai')}
+          onClick={() => setTab('ai')}
+          data-tour-id="app-settings-tab-ai"
+        />
         <TabButton
           active={tab === 'appearance'}
           icon={Palette}
@@ -187,7 +195,12 @@ export const AppSettings: React.FC = () => {
           )}
 
           <div className="flex justify-end">
-            <button onClick={handleSaveAi} disabled={saving} className="ice-btn ice-btn-primary">
+            <button
+              onClick={handleSaveAi}
+              disabled={saving}
+              className="ice-btn ice-btn-primary"
+              data-tour-id="app-settings-btn-save"
+            >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               {t('common.buttons.save')}
             </button>

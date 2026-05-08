@@ -20,6 +20,7 @@ model User {
   onboarding_step      Int      @default(1)
   default_provider     String?  // 'gcp', 'aws', 'azure'
   default_region       String?  // cloud region e.g. 'us-central1', 'eu-west-1'
+  completed_tours      String?  // JSON-encoded string[] (sqlite has no array type) — null treated as []
   created_at           DateTime @default(now())
   updated_at           DateTime @updatedAt
 

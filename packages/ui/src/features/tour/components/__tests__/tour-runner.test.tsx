@@ -683,6 +683,46 @@ describe('TourRunner — overlay rect prop', () => {
     const last = mocks.overlayProps[mocks.overlayProps.length - 1];
     expect(last.pad).toBe(24);
   });
+
+  it('overlay rect reflects live anchor position when scroll fires', async () => {
+    const anchor = makeAnchor('anchor-1', { left: 50, top: 60, width: 70, height: 80 });
+    const t = makeTour({
+      id: 'live-rect-tour',
+      steps: [{ id: 'step-1', target: '#anchor-1', title: 'tour.t1', body: 'tour.b1' }],
+    });
+    mocks.tours = [t];
+    registerTour(t);
+    const store = makeStore();
+    mountRunner(store);
+    act(() => {
+      store.dispatch(startTour({ tourId: 'live-rect-tour', totalSteps: 1 }));
+    });
+    await flushAsync();
+    await flushAsync();
+    const beforeRect = mocks.overlayProps[mocks.overlayProps.length - 1].rect!;
+    expect(beforeRect.left).toBe(50);
+
+    anchor.getBoundingClientRect = () =>
+      ({
+        x: 200,
+        y: 300,
+        left: 200,
+        top: 300,
+        width: 70,
+        height: 80,
+        right: 270,
+        bottom: 380,
+        toJSON: () => ({}),
+      }) as DOMRect;
+
+    await act(async () => {
+      window.dispatchEvent(new Event('scroll'));
+      await new Promise((r) => setTimeout(r, 20));
+    });
+    const afterRect = mocks.overlayProps[mocks.overlayProps.length - 1].rect!;
+    expect(afterRect.left).toBe(200);
+    expect(afterRect.top).toBe(300);
+  });
 });
 
 // ─── Tests: completion + skip + close ──────────────────────────────────────

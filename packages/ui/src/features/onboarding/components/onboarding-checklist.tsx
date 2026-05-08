@@ -41,6 +41,22 @@ export const OnboardingChecklist: React.FC = () => {
     }
   });
   const [collapsed, setCollapsed] = useState(true);
+  const [tourHint, setTourHint] = useState<string | null>(null);
+
+  // The canvas-tour highlights elements that only render on a project
+  // canvas (#ice-canvas-svg, palette panel, properties panel, AI panel).
+  // Folder view (the "dashboard" at /) doesn't render any of those, so
+  // firing the tour from there would auto-skip every step silently and
+  // "complete" without showing anything. Refuse the launch and surface
+  // a hint instead.
+  const handleStartTour = (tourId: string) => {
+    if (typeof document !== 'undefined' && document.getElementById('ice-canvas-svg')) {
+      setTourHint(null);
+      startTour(tourId);
+      return;
+    }
+    setTourHint(t('onboarding.checklist.openProjectForTour'));
+  };
 
   useEffect(() => {
     dispatch(checkGitHubConnection());
@@ -130,7 +146,7 @@ export const OnboardingChecklist: React.FC = () => {
                 {item.tourId && !item.done && (
                   <button
                     type="button"
-                    onClick={() => startTour(item.tourId!)}
+                    onClick={() => handleStartTour(item.tourId!)}
                     className="text-xs text-ice-accent hover:underline shrink-0"
                   >
                     {t('tour.actions.showMeHow')}
@@ -138,6 +154,11 @@ export const OnboardingChecklist: React.FC = () => {
                 )}
               </div>
             ))}
+            {tourHint && (
+              <p className="px-2 pt-1 text-[11px] text-ice-text-3 italic">
+                {tourHint}
+              </p>
+            )}
           </div>
         </div>
       )}

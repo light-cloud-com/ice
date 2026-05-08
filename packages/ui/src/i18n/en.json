@@ -502,7 +502,8 @@
       "chooseProvider": "Choose cloud provider",
       "connectCloud": "Connect cloud credentials",
       "connectGithub": "Connect GitHub",
-      "takeCanvasTour": "Take the canvas tour"
+      "takeCanvasTour": "Take the canvas tour",
+      "openProjectForTour": "Open a project to start the tour."
     }
   },
 

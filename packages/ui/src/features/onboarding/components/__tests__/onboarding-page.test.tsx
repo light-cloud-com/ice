@@ -449,10 +449,23 @@ describe('OnboardingPage', () => {
       expect(mocks.thunks.fetchProfile).toHaveBeenCalled();
       expect(mocks.navigate).toHaveBeenCalledWith('/', { replace: true });
     });
+
+    it('does NOT append tour=canvas-tour when "Skip all" is used (skip means bypass guided onboarding)', async () => {
+      const tree = render();
+      const headerSkip = findByPredicate(
+        tree,
+        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('skipSetup') === false &&
+          (el.props as { className?: string }).className?.includes('text-ice-text-3') === true,
+      )[0];
+      await (headerSkip.props as { onClick: () => Promise<void> }).onClick();
+      const navUrl = mocks.navigate.mock.calls.at(-1)?.[0] as string;
+      expect(navUrl).not.toContain('tour=canvas-tour');
+      expect(navUrl).toBe('/');
+    });
   });
 
   describe('handleFinish — happy path', () => {
-    it('creates project, completes onboarding, and navigates to org/project slug', async () => {
+    it('creates project, completes onboarding, and navigates to org/project slug with tour param', async () => {
       mocks.reduxState.currentStep = 3;
       mocks.reduxState.projectName = 'My Cool App';
       mocks.reduxState.selectedOrg = { id: 'org-1', name: 'My Org' };
@@ -465,7 +478,18 @@ describe('OnboardingPage', () => {
         organisationId: 'org-1',
       });
       expect(mocks.thunks.completeOnboarding).toHaveBeenCalled();
-      expect(mocks.navigate).toHaveBeenCalledWith('/my-org/my-project', { replace: true });
+      expect(mocks.navigate).toHaveBeenCalledWith('/my-org/my-project?tour=canvas-tour', { replace: true });
+    });
+
+    it('appends ?tour=canvas-tour to the post-create redirect URL', async () => {
+      mocks.reduxState.currentStep = 3;
+      mocks.reduxState.projectName = 'Tour App';
+      mocks.reduxState.selectedOrg = { id: 'org-1', name: 'Org' };
+      const tree = render();
+      const next = findById(tree, 'ice-onboarding-nav-btn-next')!;
+      await (next.props as { onClick: () => Promise<void> }).onClick();
+      const navUrl = mocks.navigate.mock.calls.at(-1)?.[0] as string;
+      expect(navUrl).toContain('?tour=canvas-tour');
     });
 
     it('uses "My Project" default when projectName is blank', async () => {
@@ -586,7 +610,7 @@ describe('OnboardingPage', () => {
       const tree = render();
       const next = findById(tree, 'ice-onboarding-nav-btn-next')!;
       await (next.props as { onClick: () => Promise<void> }).onClick();
-      expect(mocks.navigate).toHaveBeenCalledWith('//my-project', { replace: true });
+      expect(mocks.navigate).toHaveBeenCalledWith('//my-project?tour=canvas-tour', { replace: true });
     });
 
     it('falls back to slugified name when project.slug is missing', async () => {

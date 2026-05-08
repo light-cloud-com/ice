@@ -1162,6 +1162,10 @@
         "clientIdLabel": "Client ID",
         "clientSecretLabel": "Client Secret"
       }
+    },
+    "help": {
+      "tooltip": "Help",
+      "showMeAround": "Show me around"
     }
   },
 

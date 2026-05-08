@@ -5,16 +5,26 @@
 import awsIcon from 'devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg';
 import azureIcon from 'devicon/icons/azure/azure-original.svg';
 import gcpIcon from 'devicon/icons/googlecloud/googlecloud-original.svg';
-import { Settings, Github } from 'lucide-react';
+import { Settings, Github, HelpCircle } from 'lucide-react';
 import React, { memo, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Breadcrumbs } from './breadcrumbs';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './ui/tooltip';
 import { Logo } from '../../assets/logo';
 import { PromoteModal } from '../../features/environments/components/promote-modal';
 import { GitHubConnectModal } from '../../features/integrations/components/github-connect-modal';
 import { ProviderConnectModal } from '../../features/integrations/components/provider-connect-modal';
+import { allTours, useTour } from '../../features/tour';
 import { useTranslation } from '../../i18n';
 import { checkGitHubConnection } from '../../store/slices/integrations-slice';
 import { cn } from '../utils/cn';
@@ -109,6 +119,7 @@ export const AppBar: React.FC = memo(() => {
               className={githubStatus === 'connected' ? 'text-emerald-500' : undefined}
             />
             <BarSep />
+            <HelpMenu />
             <BarBtn icon={Settings} onClick={() => navigate('/settings')} tip="Settings" />
           </div>
         </header>
@@ -282,3 +293,58 @@ const BarImgBtn: React.FC<{ id?: string; src: string; onClick: () => void; tip?:
   );
 };
 const BarSep: React.FC = () => <div className="w-px h-4 bg-ice-border mx-1" />;
+
+/**
+ * Help menu — currently a single submenu "Show me around" listing every
+ * registered tour. The submenu is the canonical surface for users who
+ * already know the app to re-launch any tour. Auto-fire policy lives in
+ * `use-tour-autostart` (URL `?tour=` param). See blueprint §4.3 +
+ * §6/tour-13.
+ */
+const HelpMenu: React.FC = () => {
+  const { t } = useTranslation();
+  const { start } = useTour();
+  // `allTours()` returns insertion order from `config/tours.ts`. Tour
+  // titles are i18n keys — pass through `t()`.
+  const tours = allTours();
+  return (
+    <DropdownMenu>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DropdownMenuTrigger asChild>
+            <button
+              id="ice-appbar-btn-help"
+              aria-label={t('appBar.help.tooltip')}
+              className={cn(
+                'p-1.5 rounded text-ice-text-3 hover:text-ice-text-1 hover:bg-ice-hover transition-[color,background-color]',
+              )}
+            >
+              <HelpCircle className="w-4 h-4" aria-hidden="true" />
+            </button>
+          </DropdownMenuTrigger>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" className="text-ice-xs">
+          {t('appBar.help.tooltip')}
+        </TooltipContent>
+      </Tooltip>
+      <DropdownMenuContent align="end">
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger data-testid="ice-appbar-help-show-me-around">
+            {t('appBar.help.showMeAround')}
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent>
+            {tours.map((tour) => (
+              <DropdownMenuItem
+                key={tour.id}
+                data-testid={`ice-appbar-help-tour-${tour.id}`}
+                onSelect={() => start(tour.id)}
+              >
+                {t(tour.title as never)}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};

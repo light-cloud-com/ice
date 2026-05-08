@@ -24,6 +24,11 @@ const mocks = vi.hoisted(() => ({
   dispatch: vi.fn(),
   navigate: vi.fn(),
   checkGitHubConnection: vi.fn(() => ({ type: 'integrations/checkGitHubConnection' })),
+  startTour: vi.fn(),
+  tours: [
+    { id: 'canvas-tour', title: 'tour.canvas.title', steps: [] },
+    { id: 'palette-tour', title: 'tour.palette.title', steps: [] },
+  ] as Array<{ id: string; title: string; steps: unknown[] }>,
   // Sub-components — opaque markers.
   Breadcrumbs: vi.fn(() => null),
   Logo: vi.fn(() => null),
@@ -34,6 +39,13 @@ const mocks = vi.hoisted(() => ({
   TooltipTrigger: vi.fn(({ children }: { children?: React.ReactNode }) => children ?? null),
   TooltipContent: vi.fn(({ children }: { children?: React.ReactNode }) => children ?? null),
   TooltipProvider: vi.fn(({ children }: { children?: React.ReactNode }) => children ?? null),
+  DropdownMenu: vi.fn(({ children }: { children?: React.ReactNode }) => children ?? null),
+  DropdownMenuTrigger: vi.fn(({ children }: { children?: React.ReactNode }) => children ?? null),
+  DropdownMenuContent: vi.fn(({ children }: { children?: React.ReactNode }) => children ?? null),
+  DropdownMenuItem: vi.fn(({ children }: { children?: React.ReactNode }) => children ?? null),
+  DropdownMenuSub: vi.fn(({ children }: { children?: React.ReactNode }) => children ?? null),
+  DropdownMenuSubTrigger: vi.fn(({ children }: { children?: React.ReactNode }) => children ?? null),
+  DropdownMenuSubContent: vi.fn(({ children }: { children?: React.ReactNode }) => children ?? null),
 }));
 
 vi.mock('react', async (orig) => {
@@ -110,6 +122,21 @@ vi.mock('../ui/tooltip', () => ({
   TooltipProvider: mocks.TooltipProvider,
 }));
 
+vi.mock('../ui/dropdown-menu', () => ({
+  DropdownMenu: mocks.DropdownMenu,
+  DropdownMenuTrigger: mocks.DropdownMenuTrigger,
+  DropdownMenuContent: mocks.DropdownMenuContent,
+  DropdownMenuItem: mocks.DropdownMenuItem,
+  DropdownMenuSub: mocks.DropdownMenuSub,
+  DropdownMenuSubTrigger: mocks.DropdownMenuSubTrigger,
+  DropdownMenuSubContent: mocks.DropdownMenuSubContent,
+}));
+
+vi.mock('../../../features/tour', () => ({
+  allTours: () => mocks.tours,
+  useTour: () => ({ start: mocks.startTour }),
+}));
+
 vi.mock('../../../assets/logo', () => ({
   Logo: mocks.Logo,
 }));
@@ -156,6 +183,13 @@ const KNOWN_MOCKS = [
   mocks.TooltipTrigger,
   mocks.TooltipContent,
   mocks.TooltipProvider,
+  mocks.DropdownMenu,
+  mocks.DropdownMenuTrigger,
+  mocks.DropdownMenuContent,
+  mocks.DropdownMenuItem,
+  mocks.DropdownMenuSub,
+  mocks.DropdownMenuSubTrigger,
+  mocks.DropdownMenuSubContent,
 ] as const;
 
 function* walk(node: unknown): Generator<ElLike> {
@@ -203,6 +237,11 @@ beforeEach(() => {
   mocks.dispatch.mockReset();
   mocks.navigate.mockReset();
   mocks.checkGitHubConnection.mockClear();
+  mocks.startTour.mockReset();
+  mocks.tours = [
+    { id: 'canvas-tour', title: 'tour.canvas.title', steps: [] },
+    { id: 'palette-tour', title: 'tour.palette.title', steps: [] },
+  ];
   for (const m of KNOWN_MOCKS) (m as { mockClear?: () => void }).mockClear?.();
   vi.stubGlobal('window', {
     addEventListener: vi.fn(),
@@ -703,5 +742,83 @@ describe('AppBar — modal close handlers', () => {
       expect(typeof m.props.onClose).toBe('function');
       (m.props.onClose as () => void)();
     }
+  });
+});
+
+// ─── tour-13: Help menu (Show me around) ────────────────────────────────────
+
+describe('AppBar — Help menu (tour-13)', () => {
+  it('renders the Help button trigger with the help icon button id', () => {
+    const tree = callRender();
+    const btn = findFirst(
+      tree,
+      (el) =>
+        el.type === 'button' &&
+        (el.props as { id?: string }).id === 'ice-appbar-btn-help',
+    );
+    expect(btn).toBeDefined();
+  });
+
+  it('renders the "Show me around" submenu trigger', () => {
+    const tree = callRender();
+    const trigger = findFirst(
+      tree,
+      (el) =>
+        el.type === mocks.DropdownMenuSubTrigger &&
+        (el.props as { 'data-testid'?: string })['data-testid'] ===
+          'ice-appbar-help-show-me-around',
+    );
+    expect(trigger).toBeDefined();
+  });
+
+  it('renders one DropdownMenuItem per registered tour', () => {
+    const tree = callRender();
+    const items = findAll(
+      tree,
+      (el) =>
+        el.type === mocks.DropdownMenuItem &&
+        typeof (el.props as { 'data-testid'?: string })['data-testid'] === 'string' &&
+        (
+          (el.props as { 'data-testid'?: string })['data-testid'] as string
+        ).startsWith('ice-appbar-help-tour-'),
+    );
+    // Two registered tours → two items.
+    expect(items.length).toBe(2);
+    const ids = items
+      .map((it) => (it.props as { 'data-testid': string })['data-testid'])
+      .sort();
+    expect(ids).toEqual([
+      'ice-appbar-help-tour-canvas-tour',
+      'ice-appbar-help-tour-palette-tour',
+    ]);
+  });
+
+  it('clicking a tour entry dispatches start(tour.id)', () => {
+    const tree = callRender();
+    const item = findFirst(
+      tree,
+      (el) =>
+        el.type === mocks.DropdownMenuItem &&
+        (el.props as { 'data-testid'?: string })['data-testid'] ===
+          'ice-appbar-help-tour-canvas-tour',
+    )!;
+    expect(typeof item.props.onSelect).toBe('function');
+    (item.props.onSelect as () => void)();
+    expect(mocks.startTour).toHaveBeenCalledWith('canvas-tour');
+  });
+
+  it('reflects an empty registry as zero submenu items', () => {
+    mocks.tours = [];
+    const tree = callRender();
+    const items = findAll(
+      tree,
+      (el) =>
+        el.type === mocks.DropdownMenuItem &&
+        typeof (el.props as { 'data-testid'?: string })['data-testid'] === 'string' &&
+        (
+          (el.props as { 'data-testid'?: string })['data-testid'] as string
+        ).startsWith('ice-appbar-help-tour-'),
+    );
+    expect(items.length).toBe(0);
   });
 });

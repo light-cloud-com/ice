@@ -28,6 +28,7 @@ import {
   getTour,
 } from '../utils/tour-registry';
 import { tours } from '../config/tours';
+import { useTourAutostart } from '../hooks/use-tour-autostart';
 import { useTourKeyboard } from '../hooks/use-tour-keyboard';
 import { useTourRunner } from '../hooks/use-tour-runner';
 import { TourOverlay } from './tour-overlay';
@@ -66,6 +67,8 @@ function useRegisterTours(): void {
 
 export function TourRunner(): JSX.Element | null {
   useRegisterTours();
+  // tour-13: watch `?tour=<id>` URL param + auto-launch matching tour.
+  useTourAutostart();
   const {
     phase,
     activeStep,

@@ -67,16 +67,16 @@ vi.mock('@ice/blocks/requirements', () => ({
   },
 }));
 
-vi.mock('../google-verification.service.js', () => ({
+vi.mock('../google-verification.service', () => ({
   checkSearchConsoleVerification: mocks.checkSearchConsoleVerification,
   fetchSslCertificateStatus: mocks.fetchSslCertificateStatus,
 }));
 
-vi.mock('../resource-mapping.service.js', () => ({
+vi.mock('../resource-mapping.service', () => ({
   getResourceMap: mocks.getResourceMap,
 }));
 
-import { startRequirementPoller, stopRequirementPoller } from '../requirement-poller.service.js';
+import { startRequirementPoller, stopRequirementPoller } from '../requirement-poller.service';
 
 /**
  * Drive exactly one poll tick under fake timers and let any pending

@@ -32,8 +32,9 @@ export async function processCanvasIntent(
   intent: string,
   canvas: SerializedCanvas,
   cardId?: string,
+  orgId?: string,
 ): Promise<AiResponse> {
-  const provider = await getAiProvider();
+  const provider = await getAiProvider(orgId);
   const audit = createAuditEntry(intent, canvas);
   const startTime = Date.now();
 
@@ -92,8 +93,9 @@ export async function streamCanvasIntent(
   canvas: SerializedCanvas,
   res: Response,
   cardId?: string,
+  orgId?: string,
 ): Promise<void> {
-  const provider = await getAiProvider();
+  const provider = await getAiProvider(orgId);
   const audit = createAuditEntry(intent, canvas);
   const startTime = Date.now();
   const systemPrompt = await buildSystemPrompt(canvas, intent, cardId);

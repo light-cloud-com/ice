@@ -8,7 +8,7 @@
  */
 
 import { AUTH_MESSAGES } from '@ice/core';
-import { load_sdk } from './sdk-loader.js';
+import { load_sdk } from './sdk-loader';
 
 // =============================================================================
 // Types

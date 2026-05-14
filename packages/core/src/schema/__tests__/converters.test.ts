@@ -15,14 +15,14 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   convert_property,
   convert_resource_to_schema,
-} from '../embedded/converters.js';
-import { to_sqlite_query } from '../embedded/sqlite-types.js';
+} from '../embedded/converters';
+import { to_sqlite_query } from '../embedded/sqlite-types';
 import type {
   SqliteImplementation,
   SqliteProperty,
   SqliteResourceType,
   SqliteSchemaRegistry,
-} from '../embedded/sqlite-types.js';
+} from '../embedded/sqlite-types';
 
 function makeRegistry(
   props: SqliteProperty[] = [],

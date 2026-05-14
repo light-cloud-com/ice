@@ -18,7 +18,7 @@ import {
   computeCompleteTotals,
   computeDeploySummary,
   deriveCompleteOutcome,
-} from '../deploy-outcome.js';
+} from '../deploy-outcome';
 
 describe('computeCompleteTotals', () => {
   it('returns zero counts for undefined input', () => {

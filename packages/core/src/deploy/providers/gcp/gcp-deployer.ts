@@ -6,36 +6,36 @@
  */
 
 // Import handlers
-import { api_gateway_handler } from './handlers/api-gateway.js';
-import { backend_bucket_handler } from './handlers/backend-bucket.js';
-import { bigquery_handler } from './handlers/bigquery.js';
-import { cloud_armor_handler } from './handlers/cloud-armor.js';
-import { cloud_functions_handler } from './handlers/cloud-functions.js';
-import { cloud_run_handler } from './handlers/cloud-run.js';
-import { cloud_scheduler_handler } from './handlers/cloud-scheduler.js';
-import { cloud_sql_handler } from './handlers/cloud-sql.js';
-import { cloud_storage_handler } from './handlers/cloud-storage.js';
-import { dataflow_handler } from './handlers/dataflow.js';
-import { discovery_engine_handler } from './handlers/discovery-engine.js';
-import { domain_mapping_handler } from './handlers/domain-mapping.js';
-import { firebase_hosting_handler } from './handlers/firebase-hosting.js';
-import { firestore_handler } from './handlers/firestore.js';
-import { gke_handler } from './handlers/gke.js';
-import { identity_platform_handler } from './handlers/identity-platform.js';
-import { load_balancer_handler } from './handlers/load-balancer.js';
-import { logging_handler } from './handlers/logging.js';
-import { managed_ssl_certificate_handler } from './handlers/managed-ssl-certificate.js';
-import { memorystore_handler } from './handlers/memorystore.js';
-import { pubsub_handler } from './handlers/pubsub.js';
-import { secret_manager_handler } from './handlers/secret-manager.js';
-import { subnet_handler } from './handlers/subnet.js';
-import { vpc_handler } from './handlers/vpc.js';
-import { isApiNotEnabledError, isResourceNotFoundError, extractApiName, buildApiEnableUrl } from './messages.js';
-import { GCP_DEPLOYER_MESSAGES } from '../../messages.js';
-import { vertex_ai_handler } from './handlers/vertex-ai.js';
-import { initialize_gcp_clients, create_rest_client } from './sdk-loader.js';
-import type { GCPHandlerContext, GCPResourceHandler } from './types.js';
-import type { DeployOptions, ResourceDeployResult, ProviderDeployer } from '../../types.js';
+import { api_gateway_handler } from './handlers/api-gateway';
+import { backend_bucket_handler } from './handlers/backend-bucket';
+import { bigquery_handler } from './handlers/bigquery';
+import { cloud_armor_handler } from './handlers/cloud-armor';
+import { cloud_functions_handler } from './handlers/cloud-functions';
+import { cloud_run_handler } from './handlers/cloud-run';
+import { cloud_scheduler_handler } from './handlers/cloud-scheduler';
+import { cloud_sql_handler } from './handlers/cloud-sql';
+import { cloud_storage_handler } from './handlers/cloud-storage';
+import { dataflow_handler } from './handlers/dataflow';
+import { discovery_engine_handler } from './handlers/discovery-engine';
+import { domain_mapping_handler } from './handlers/domain-mapping';
+import { firebase_hosting_handler } from './handlers/firebase-hosting';
+import { firestore_handler } from './handlers/firestore';
+import { gke_handler } from './handlers/gke';
+import { identity_platform_handler } from './handlers/identity-platform';
+import { load_balancer_handler } from './handlers/load-balancer';
+import { logging_handler } from './handlers/logging';
+import { managed_ssl_certificate_handler } from './handlers/managed-ssl-certificate';
+import { memorystore_handler } from './handlers/memorystore';
+import { pubsub_handler } from './handlers/pubsub';
+import { secret_manager_handler } from './handlers/secret-manager';
+import { subnet_handler } from './handlers/subnet';
+import { vpc_handler } from './handlers/vpc';
+import { isApiNotEnabledError, isResourceNotFoundError, extractApiName, buildApiEnableUrl } from './messages';
+import { GCP_DEPLOYER_MESSAGES } from '../../messages';
+import { vertex_ai_handler } from './handlers/vertex-ai';
+import { initialize_gcp_clients, create_rest_client } from './sdk-loader';
+import type { GCPHandlerContext, GCPResourceHandler } from './types';
+import type { DeployOptions, ResourceDeployResult, ProviderDeployer } from '../../types';
 
 // =============================================================================
 // GCP API name mapping — resource type prefix → googleapis.com service name

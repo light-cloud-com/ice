@@ -13,8 +13,8 @@ import type {
   DiffError,
   DiffWarning,
   ChangeType,
-} from './types.js';
-import type { Graph, Node } from '../types/graph.js';
+} from './types';
+import type { Graph, Node } from '../types/graph';
 
 /**
  * Default diff options.

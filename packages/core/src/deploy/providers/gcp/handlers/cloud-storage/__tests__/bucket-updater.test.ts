@@ -6,8 +6,8 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { applySimpleProperties, prepareForAclFallback } from '../bucket-updater.js';
-import type { GCPHandlerContext } from '../../../types.js';
+import { applySimpleProperties, prepareForAclFallback } from '../bucket-updater';
+import type { GCPHandlerContext } from '../../../types';
 
 function makeBucket() {
   return {

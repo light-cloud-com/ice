@@ -10,10 +10,10 @@
  *    <count> error(s)".
  */
 import { describe, expect, it } from 'vitest';
-import { ValidationError } from '../../types/errors.js';
-import { to_validation_error } from '../validation/error-conversion.js';
-import type { ValidationResult } from '../resource-validator-types.js';
-import type { IceType } from '../schema-provider.js';
+import { ValidationError } from '../../types/errors';
+import { to_validation_error } from '../validation/error-conversion';
+import type { ValidationResult } from '../resource-validator-types';
+import type { IceType } from '../schema-provider';
 
 function makeResult(over: Partial<ValidationResult> = {}): ValidationResult {
   return {

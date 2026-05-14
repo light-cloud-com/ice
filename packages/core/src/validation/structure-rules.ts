@@ -9,8 +9,8 @@
  * - Orphan detection
  */
 
-import { isContainer } from './classifiers.js';
-import type { CanvasIssue, ValidatableNode, ValidatableEdge } from './types.js';
+import { isContainer } from './classifiers';
+import type { CanvasIssue, ValidatableNode, ValidatableEdge } from './types';
 
 /**
  * Validate structural integrity of the canvas.

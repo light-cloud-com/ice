@@ -10,9 +10,9 @@ import {
   sdk_not_available_short,
   HANDLER_MESSAGES,
   BUILD_MESSAGES,
-} from '../messages.js';
-import { ensure_artifact_registry, build_from_source } from './cloud-build-helper.js';
-import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
+} from '../messages';
+import { ensure_artifact_registry, build_from_source } from './cloud-build-helper';
+import type { GCPResourceHandler, GCPHandlerContext } from '../types';
 import type { ResourceDeployResult } from '@ice/core';
 
 function result(

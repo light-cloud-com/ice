@@ -24,7 +24,7 @@
  * `'azure-native'`; everything else is identity unless on the table.
  */
 
-import { to_pascal_case } from './case-utils.js';
+import { to_pascal_case } from './case-utils';
 
 /**
  * Fallback type mapping for common types.

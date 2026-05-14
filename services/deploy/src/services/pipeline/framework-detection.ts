@@ -24,8 +24,8 @@
  * generous and this is a one-shot path.
  */
 
-import { GITHUB_API, GITHUB_HEADERS, type FrameworkDetection } from './types.js';
-import { getGitHubToken } from './github-webhooks.js';
+import { GITHUB_API, GITHUB_HEADERS, type FrameworkDetection } from './types';
+import { getGitHubToken } from './github-webhooks';
 
 export async function detectFramework(
   userId: string,

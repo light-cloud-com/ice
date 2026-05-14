@@ -4,14 +4,14 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('../../cloud-build-helper.js', () => ({
+vi.mock('../../cloud-build-helper', () => ({
   ensure_artifact_registry: vi.fn().mockResolvedValue(undefined),
   build_from_source: vi.fn().mockResolvedValue('built-image-uri'),
 }));
 
-import { ensure_artifact_registry, build_from_source } from '../../cloud-build-helper.js';
-import { resolve_image, deleteArtifactRegistryImagesForService, AR_REPO } from '../image-resolver.js';
-import type { GCPHandlerContext } from '../../../types.js';
+import { ensure_artifact_registry, build_from_source } from '../../cloud-build-helper';
+import { resolve_image, deleteArtifactRegistryImagesForService, AR_REPO } from '../image-resolver';
+import type { GCPHandlerContext } from '../../../types';
 
 function makeCtx(overrides: Partial<GCPHandlerContext> = {}): GCPHandlerContext {
   return {

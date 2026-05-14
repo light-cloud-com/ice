@@ -5,9 +5,9 @@
  * DeployStateStore interface used by state-bridge.ts.
  */
 
-import { create_node_id } from '../types/graph.js';
-import type { DeployStateStore, StoredResourceEntry } from './state-bridge.js';
-import type { SqliteStateStore } from '../state/sqlite-state-store.js';
+import { create_node_id } from '../types/graph';
+import type { DeployStateStore, StoredResourceEntry } from './state-bridge';
+import type { SqliteStateStore } from '../state/sqlite-state-store';
 
 /**
  * Create a DeployStateStore adapter around a SqliteStateStore.

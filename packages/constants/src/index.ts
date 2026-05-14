@@ -11,9 +11,24 @@ export {
   DEFAULT_TEMPLATE_PROVIDERS,
   type CloudProviderMeta,
   CLOUD_PROVIDERS,
-} from './providers.js';
+  type ProviderReadiness,
+  PROVIDER_READINESS,
+} from './providers';
 
-export { Cat, type NodeCategory, type ResourceEntry, TREE, ICE } from './ice-types.js';
+export {
+  buildHeaderPrompt,
+  buildIntentRoutingPrompt,
+  buildOperationsPrompt,
+  buildPropertyPrefillPrompt,
+  buildOptimizationGuidelinesPrompt,
+  buildCanvasContextPrompt,
+  buildContainerNetworkingPrompt,
+  buildCloudArchitectPrompt,
+  DIAGNOSE_DEPLOY_SYSTEM_PROMPT,
+  AI_PROMPT_REGISTRY,
+} from './ai';
+
+export { Cat, type NodeCategory, type ResourceEntry, TREE, ICE } from './ice-types';
 
 export {
   ICE_TYPE_TO_RESOURCE_ID,
@@ -23,7 +38,7 @@ export {
   REQUIRED_PROPS,
   DEFAULT_PORTS,
   DEFAULT_ENV_VARS,
-} from './derived.js';
+} from './derived';
 
 export {
   CARD_WIDTH,
@@ -38,11 +53,37 @@ export {
   LAYOUT_GRID_STEP,
   PRIVATE_NETWORK_MIN_WIDTH,
   PRIVATE_NETWORK_MIN_HEIGHT,
+  PN_HEADER_HEIGHT,
+  CD_EXTRA_WIDTH,
+  CD_HEADER_HEIGHT,
+  CD_DOMAIN_FIELD_HEIGHT,
+  CD_ROUTE_ROW_HEIGHT,
+  CD_ROUTE_ROW_GAP,
+  CD_PADDING,
+  CD_ADD_BUTTON_HEIGHT,
+  MQ_HEADER_HEIGHT,
+  MQ_ROW_HEIGHT,
+  MQ_ROW_GAP,
+  MQ_PADDING,
+  SS_HEADER_HEIGHT,
+  SS_ROW_HEIGHT,
+  SS_PADDING,
+  EC_HEADER_HEIGHT,
+  EC_ROW_HEIGHT,
+  EC_PADDING,
+  ES_HEADER_HEIGHT,
+  ES_FIELD_HEIGHT,
+  ES_PADDING,
+  BLOCK_SUMMARY_W,
+  BLOCK_SUMMARY_H,
+  SIDEBAR_WIDTH,
+  GROUP_NODE_MIN_WIDTH,
+  GROUP_NODE_FOLDED_HEIGHT,
   groupWidth,
   groupHeight,
-} from './grid.js';
+} from './grid';
 
-export { type ConnectionCategory, CATEGORY_COLORS, CATEGORY_TO_RELATIONSHIP } from './connections.js';
+export { type ConnectionCategory, CATEGORY_COLORS, CATEGORY_TO_RELATIONSHIP } from './connections';
 
 export {
   type NodeBehavior,
@@ -50,7 +91,7 @@ export {
   BEHAVIOR_COLORS,
   type SecurityLevel,
   SECURITY_LEVEL_COLORS,
-} from './node-traits.js';
+} from './node-traits';
 
 export {
   type TemplateCategory,
@@ -60,6 +101,6 @@ export {
   type TemplateTrust,
   type ComplianceTag,
   GROUP_COLORS,
-} from './templates.js';
+} from './templates';
 
-export { LEVEL_VISIBLE_CATEGORIES, NETWORK_CONTAINER_TYPES, L1_VISIBLE_NETWORK_TYPES } from './categories.js';
+export { LEVEL_VISIBLE_CATEGORIES, NETWORK_CONTAINER_TYPES, L1_VISIBLE_NETWORK_TYPES } from './categories';

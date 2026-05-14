@@ -11,10 +11,10 @@
 
 import { requireAuth, requireProjectAccess, type AuthRequest } from '@ice/shared';
 import { Router, type Router as RouterType, type Response } from 'express';
-import * as deployEventLog from '../services/deploy-event-log.js';
+import * as deployEventLog from '../services/deploy-event-log';
 import * as deployService from '../services/deploy.service';
-import { cleanupOrphanedIceResources } from '../services/orphan-cleanup.service.js';
-import { resolveForCard, loadPersistedStatuses } from '../services/requirements.service.js';
+import { cleanupOrphanedIceResources } from '../services/orphan-cleanup.service';
+import { resolveForCard, loadPersistedStatuses } from '../services/requirements.service';
 
 const router: RouterType = Router();
 router.use(requireAuth);

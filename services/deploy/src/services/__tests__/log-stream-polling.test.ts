@@ -29,9 +29,9 @@ vi.mock('@ice/shared', () => ({
   }),
 }));
 
-import { pollOnce, startPolling } from '../log-stream/polling.js';
-import { resetRegistry } from '../log-stream/registry.js';
-import { MAX_CONSECUTIVE_ERRORS_POLLING, type ActiveStream } from '../log-stream/types.js';
+import { pollOnce, startPolling } from '../log-stream/polling';
+import { resetRegistry } from '../log-stream/registry';
+import { MAX_CONSECUTIVE_ERRORS_POLLING, type ActiveStream } from '../log-stream/types';
 
 function makeStream(overrides: Partial<ActiveStream> = {}): ActiveStream {
   return {

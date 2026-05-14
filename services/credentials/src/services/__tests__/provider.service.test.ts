@@ -65,7 +65,7 @@ import {
   getValidGCPAccessToken,
   getGCPAuthType,
   updateGCPOAuthTokens,
-} from '../provider.service.js';
+} from '../provider.service';
 
 beforeEach(() => {
   vi.clearAllMocks();

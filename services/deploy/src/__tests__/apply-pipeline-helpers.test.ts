@@ -19,18 +19,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const emitLog = vi.fn();
 const upsertResourceMapping = vi.fn().mockResolvedValue(undefined);
 
-vi.mock('../services/deploy-event-dispatcher.js', () => ({
+vi.mock('../services/deploy-event-dispatcher', () => ({
   emitDeployEvent: vi.fn(),
   emitLog,
   emitDestroyNodeStatus: vi.fn(),
 }));
 
-vi.mock('../services/resource-mapping.service.js', () => ({
+vi.mock('../services/resource-mapping.service', () => ({
   upsertResourceMapping,
 }));
 
 async function getHelpers() {
-  const mod = await import('../services/apply-pipeline-helpers.js');
+  const mod = await import('../services/apply-pipeline-helpers');
   return mod;
 }
 

@@ -1,7 +1,7 @@
 {
   "name": "ice",
   "license": "Apache-2.0",
-  "version": "0.1.700",
+  "version": "0.1.701",
   "description": "ICE - Integrated Cloud Environment (Web + Backend)",
   "private": true,
   "type": "module",
@@ -10,6 +10,8 @@
     "dev:web": "pnpm --filter @ice/web dev",
     "dev:gateway": "pnpm --filter @ice/gateway dev",
     "dev:setup": "pnpm --filter @ice/db generate && DATABASE_URL=\"file:$(pwd)/.desktop-dev.db\" pnpm --filter @ice/db exec prisma db push --accept-data-loss",
+    "schemas:build": "tsx tools/build-schemas.ts",
+    "schemas:build:db": "pnpm --filter @ice/core build:db",
     "dev:desktop": "pnpm dev:setup && ICE_DESKTOP=true DATABASE_URL=\"file:$(pwd)/.desktop-dev.db\" REDIS_URL= JWT_SECRET=desktop-dev CREDENTIAL_ENCRYPTION_KEY=desktop-dev-key-32chars! PORT=15173 FRONTEND_URL=http://localhost:5174 concurrently -n gw,web,app -c blue,green,magenta \"pnpm dev:gateway\" \"pnpm dev:web\" \"sleep 5 && ELECTRON_RENDERER_URL=http://localhost:5174 pnpm --filter @ice/desktop dev\"",
     "dev:all": "pnpm dev:setup && DATABASE_URL=\"file:$(pwd)/.desktop-dev.db\" REDIS_URL= PORT=15173 FRONTEND_URL=http://localhost:5174 concurrently -n gw,web -c blue,green \"pnpm dev:gateway\" \"pnpm dev:web\"",
     "build": "pnpm -r --workspace-concurrency=1 build",

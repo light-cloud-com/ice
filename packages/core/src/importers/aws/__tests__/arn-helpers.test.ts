@@ -8,7 +8,7 @@ import {
   extract_account_from_arn,
   extract_region_from_arn,
   parse_tags,
-} from '../arn-helpers.js';
+} from '../arn-helpers';
 
 describe('extract_name_from_arn', () => {
   it('extracts the trailing /-separated name', () => {

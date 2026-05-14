@@ -17,7 +17,7 @@
  */
 import * as fs from 'fs';
 import * as path from 'path';
-import type { CustomizationPaths } from './paths.js';
+import type { CustomizationPaths } from './paths';
 
 export const PROVIDER_EXAMPLE_JSON = JSON.stringify(
   {

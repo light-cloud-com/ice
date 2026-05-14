@@ -4,9 +4,9 @@
  * Dynamic provider registration and management.
  */
 
-import { InternalError, ProviderError } from '../types/errors.js';
-import { success, failure } from '../types/result.js';
-import type { IceError } from '../types/errors.js';
+import { InternalError, ProviderError } from '../types/errors';
+import { success, failure } from '../types/result';
+import type { IceError } from '../types/errors';
 import type {
   ProviderName,
   ProviderConfig,
@@ -15,8 +15,8 @@ import type {
   ProviderRegistry,
   ProviderCapabilities,
   HealthCheckResult,
-} from '../types/providers.js';
-import type { Result } from '../types/result.js';
+} from '../types/providers';
+import type { Result } from '../types/result';
 
 // =============================================================================
 // Provider Registry Implementation

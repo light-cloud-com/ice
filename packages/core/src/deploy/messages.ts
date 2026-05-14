@@ -33,7 +33,7 @@ export {
   extractApiName,
   extractApiEnableUrl,
   buildApiEnableUrl,
-} from './providers/gcp/messages.js';
+} from './providers/gcp/messages';
 
 // =============================================================================
 // Deploy Error Codes

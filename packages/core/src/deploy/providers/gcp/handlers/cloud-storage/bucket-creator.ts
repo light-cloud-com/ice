@@ -29,7 +29,7 @@
  *   non-handled errors. The asymmetric behaviour is preserved.
  */
 
-import type { GCPHandlerContext } from '../../types.js';
+import type { GCPHandlerContext } from '../../types';
 
 export interface CreateOrAdoptResult {
   /** True iff UBLA could not be turned off (initial UBLA-on retry succeeded OR adopted bucket has UBLA locked on). */

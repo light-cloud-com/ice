@@ -62,7 +62,7 @@ export const BlocksSection: React.FC<BlocksSectionProps> = ({
   let staggerIdx = initialStaggerIdx;
 
   return (
-    <div className="h-full flex flex-col">
+    <div id="ice-palette-blocks-section" className="h-full flex flex-col">
       <PanelHeader
         icon={<Blocks aria-hidden="true" className="w-3.5 h-3.5" />}
         title={t('palette.title')}

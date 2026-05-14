@@ -78,8 +78,8 @@ import {
   ls_is_at_end,
   ls_match,
   ls_peek,
-} from './lexer-state.js';
-import { is_alpha, is_digit } from './lexer-scanners.js';
+} from './lexer-state';
+import { is_alpha, is_digit } from './lexer-scanners';
 
 /**
  * Scan a heredoc string. The caller (scan_token's `case '<':` branch)

@@ -3,8 +3,8 @@
  * — `fetch_service_outputs` mocks the rest_client only.
  */
 import { describe, it, expect, vi } from 'vitest';
-import { build_env_vars, extract_region, fetch_service_outputs } from '../utils.js';
-import type { GCPHandlerContext } from '../../../types.js';
+import { build_env_vars, extract_region, fetch_service_outputs } from '../utils';
+import type { GCPHandlerContext } from '../../../types';
 
 describe('cloud-run/utils', () => {
   describe('build_env_vars', () => {

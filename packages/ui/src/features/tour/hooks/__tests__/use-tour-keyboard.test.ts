@@ -335,6 +335,22 @@ describe('useTourKeyboard — ArrowRight / Enter (advance)', () => {
     dispatchKey('Enter');
     expect(spies.onAdvance).not.toHaveBeenCalled();
   });
+
+  it('Space → onAdvance + preventDefault', () => {
+    const spies = freshSpies();
+    mount(true, spies);
+    const ev = dispatchKey(' ');
+    expect(spies.onAdvance).toHaveBeenCalledTimes(1);
+    expect(ev.defaultPrevented).toBe(true);
+  });
+
+  it('Space on INPUT → no advance (do not steal typing)', () => {
+    const spies = freshSpies();
+    mount(true, spies);
+    setActiveElement({ tagName: 'INPUT' });
+    dispatchKey(' ');
+    expect(spies.onAdvance).not.toHaveBeenCalled();
+  });
 });
 
 describe('useTourKeyboard — ArrowLeft (previous)', () => {

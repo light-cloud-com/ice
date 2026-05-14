@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { import_result_to_graph } from '../graph-conversion.js';
-import type { PulumiImportResult, PulumiImportedResource } from '../types.js';
+import { import_result_to_graph } from '../graph-conversion';
+import type { PulumiImportResult, PulumiImportedResource } from '../types';
 
 const empty_metadata = {
   pulumi_version: 'v3.100.0',

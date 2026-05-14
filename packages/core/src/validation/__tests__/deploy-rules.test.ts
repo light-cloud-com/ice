@@ -10,15 +10,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const supportedProvidersByType = new Map<string, string[]>();
 
-vi.mock('../schema-bridge.js', () => ({
+vi.mock('../schema-bridge', () => ({
   getSupportedProviders: (iceType: string) => supportedProvidersByType.get(iceType) ?? [],
   getPropertiesForIceType: () => [],
   isKnownIceType: () => true,
   getResourceForIceType: () => undefined,
 }));
 
-import { validateDeployability } from '../deploy-rules.js';
-import type { ValidatableNode, ValidationContext } from '../types.js';
+import { validateDeployability } from '../deploy-rules';
+import type { ValidatableNode, ValidationContext } from '../types';
 
 const node = (
   id: string,

@@ -45,13 +45,17 @@ import { COMPONENTS, blockKey, def } from '../data/components';
 // ─── blockKey ───────────────────────────────────────────────────────────────
 
 describe('blockKey', () => {
-  it('lowercases the first letter of the category and concatenates with the name', () => {
+  it('lowercases the full category prefix and concatenates with the name', () => {
     expect(blockKey('Compute.Container')).toBe('computeContainer');
     expect(blockKey('Database.PostgreSQL')).toBe('databasePostgreSQL');
-    expect(blockKey('AI.VectorDB')).toBe('aIVectorDB');
+    // All-caps acronym prefixes (AI) must map to the i18n bundle's
+    // lowercase `ai` keys (`aiVectorDB`, `aiLLMGateway`, …).
+    expect(blockKey('AI.VectorDB')).toBe('aiVectorDB');
+    expect(blockKey('AI.LLMGateway')).toBe('aiLLMGateway');
+    expect(blockKey('AI.ModelServing')).toBe('aiModelServing');
   });
 
-  it('preserves case after the first character of the category', () => {
+  it('preserves case after the category prefix', () => {
     expect(blockKey('Compute.SSRSite')).toBe('computeSSRSite');
     expect(blockKey('Storage.Bucket')).toBe('storageBucket');
   });

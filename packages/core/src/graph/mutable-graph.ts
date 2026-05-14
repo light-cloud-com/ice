@@ -5,7 +5,7 @@
  * Provides efficient node/edge management and traversal.
  */
 
-import { create_graph_id } from '../types/graph.js';
+import { create_graph_id } from '../types/graph';
 import {
   edges_add_edge,
   edges_get_edge,
@@ -13,7 +13,7 @@ import {
   edges_get_incoming_edges,
   edges_get_outgoing_edges,
   edges_remove_edge,
-} from './mutable-graph/edges.js';
+} from './mutable-graph/edges';
 import {
   nodes_add_node,
   nodes_get_node,
@@ -22,27 +22,27 @@ import {
   nodes_has_node,
   nodes_remove_node,
   nodes_update_node,
-} from './mutable-graph/nodes.js';
+} from './mutable-graph/nodes';
 import {
   stats_clear,
   stats_copy_state,
   stats_get_stats,
   stats_populate_from_serialized,
   stats_to_json,
-} from './mutable-graph/stats-serialize.js';
+} from './mutable-graph/stats-serialize';
 import {
   traversal_get_all_dependencies,
   traversal_get_all_dependents,
   traversal_get_dependencies,
   traversal_get_dependents,
   traversal_traverse,
-} from './mutable-graph/traversal.js';
+} from './mutable-graph/traversal';
 import {
   create_mutable_graph_state,
   type GraphStats,
   type MutableGraphState,
   type SerializedGraph,
-} from './mutable-graph/types.js';
+} from './mutable-graph/types';
 import type {
   Graph,
   GraphId,
@@ -56,11 +56,11 @@ import type {
   AddNodeResult,
   AddEdgeResult,
   TraversalOptions,
-} from '../types/graph.js';
+} from '../types/graph';
 
 // Re-export internal types so the public surface (`./graph/index.ts` and
 // `core/src/index.ts`) stays unchanged.
-export type { GraphStats, SerializedGraph } from './mutable-graph/types.js';
+export type { GraphStats, SerializedGraph } from './mutable-graph/types';
 
 // =============================================================================
 // Mutable Graph

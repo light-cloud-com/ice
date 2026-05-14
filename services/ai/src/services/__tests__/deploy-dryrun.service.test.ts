@@ -13,7 +13,7 @@ vi.mock('@ice/core', () => ({
   translate_card_to_graph: vi.fn(),
 }));
 
-import { dryRunDeploy } from '../deploy-dryrun.service.js';
+import { dryRunDeploy } from '../deploy-dryrun.service';
 // @ts-ignore — workspace-resolved at runtime; mocked above
 import * as core from '@ice/core';
 

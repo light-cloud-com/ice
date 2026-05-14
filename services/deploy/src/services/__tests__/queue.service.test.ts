@@ -158,21 +158,21 @@ vi.mock('@ice/shared', () => ({
   emitPipelineUpdate: mocks.emitPipelineUpdateMock,
 }));
 
-vi.mock('../build.service.js', () => ({
+vi.mock('../build.service', () => ({
   buildFromSource: mocks.buildFromSourceMock,
   cleanupBuild: mocks.cleanupBuildMock,
 }));
 
-vi.mock('../deploy.service.js', () => ({
+vi.mock('../deploy.service', () => ({
   applyDeployment: mocks.applyDeploymentMock,
 }));
 
-vi.mock('../memory-queue.js', () => ({
+vi.mock('../memory-queue', () => ({
   InMemoryQueue: mocks.MockInMemoryQueueWrap,
   InMemoryWorker: mocks.MockInMemoryWorker,
 }));
 
-vi.mock('../pipeline.service.js', () => ({
+vi.mock('../pipeline.service', () => ({
   updateEventProgress: mocks.updateEventProgressMock,
   failEvent: mocks.failEventMock,
   resolveEnvironmentCardId: mocks.resolveEnvironmentCardIdMock,
@@ -191,7 +191,7 @@ async function loadModule(env: Record<string, string | undefined>) {
   for (const [k, v] of Object.entries(env)) {
     if (v === undefined) delete (process.env as any)[k];
   }
-  return await import('../queue.service.js');
+  return await import('../queue.service');
 }
 
 describe('queue.service', () => {
@@ -274,7 +274,7 @@ describe('queue.service', () => {
 
     it('retryStrategy returns null after 3 attempts and warns', async () => {
       await loadModule({ REDIS_URL: 'redis://prod:6379' });
-      const { default: _Module } = await import('../queue.service.js').then((m) => ({
+      const { default: _Module } = await import('../queue.service').then((m) => ({
         default: m,
       }));
       _Module.getDeployQueue();
@@ -287,7 +287,7 @@ describe('queue.service', () => {
 
     it('retryStrategy backs off with capped delay below the threshold', async () => {
       await loadModule({ REDIS_URL: 'redis://prod:6379' });
-      const mod = await import('../queue.service.js');
+      const mod = await import('../queue.service');
       mod.getDeployQueue();
       const opts = mocks.IORedisCtorMock.mock.calls[0][1];
       expect(opts.retryStrategy(1)).toBe(500);

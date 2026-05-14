@@ -20,7 +20,7 @@ vi.mock('@ice/core', () => ({
   GCPDeployer: vi.fn(),
 }));
 
-import { createDeployer, getCoreEngine } from '../deployer-factory.js';
+import { createDeployer, getCoreEngine } from '../deployer-factory';
 // @ts-ignore — resolved at runtime via pnpm workspace; mocked above
 import * as iceCore from '@ice/core';
 

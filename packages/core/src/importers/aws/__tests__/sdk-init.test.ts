@@ -18,7 +18,7 @@
  */
 
 import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
-import { init_aws_sdk, get_account_id } from '../sdk-init.js';
+import { init_aws_sdk, get_account_id } from '../sdk-init';
 
 describe('init_aws_sdk — failure paths (no SDK installed)', () => {
   it('throws a friendly install-the-sdk error when the dynamic import fails', async () => {

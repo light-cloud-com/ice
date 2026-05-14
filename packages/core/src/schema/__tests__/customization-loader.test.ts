@@ -36,22 +36,22 @@ const customizationMocks = vi.hoisted(() => ({
   resolve_base_db_path: vi.fn(() => '/bundled/base.db'),
 }));
 
-vi.mock('../customization/scanner.js', () => ({
+vi.mock('../customization/scanner', () => ({
   scan_directory: customizationMocks.scan_directory,
 }));
 
-vi.mock('../customization/example-files.js', () => ({
+vi.mock('../customization/example-files', () => ({
   create_example_files: customizationMocks.create_example_files,
 }));
 
-vi.mock('../customization/file-validators.js', () => ({
+vi.mock('../customization/file-validators', () => ({
   validate_provider_file: customizationMocks.validate_provider_file,
   validate_override_file: customizationMocks.validate_override_file,
   validate_custom_resource_file: customizationMocks.validate_custom_resource_file,
   validate_relationships_file: customizationMocks.validate_relationships_file,
 }));
 
-vi.mock('../customization/base-db.js', () => ({
+vi.mock('../customization/base-db', () => ({
   get_base_db_path: customizationMocks.resolve_base_db_path,
 }));
 
@@ -59,7 +59,7 @@ import {
   CustomizationLoader,
   create_customization_loader,
   get_base_db_path,
-} from '../customization-loader.js';
+} from '../customization-loader';
 
 beforeEach(() => {
   vi.clearAllMocks();

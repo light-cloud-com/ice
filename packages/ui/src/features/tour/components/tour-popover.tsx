@@ -224,7 +224,14 @@ export function TourPopover(props: TourPopoverProps): JSX.Element | null {
           side={side}
           align="center"
           sideOffset={10}
-          collisionPadding={8}
+          // Keep the popover at least 16px from any viewport edge, and
+          // let Radix flip / shift the side as needed to stay in view.
+          // `sticky="always"` means the popover follows the anchor even
+          // when the anchor scrolls, but Radix will still shift away
+          // from edges first.
+          avoidCollisions
+          collisionPadding={16}
+          sticky="always"
           role="dialog"
           aria-modal={false}
           aria-labelledby="tour-popover-title"
@@ -235,7 +242,10 @@ export function TourPopover(props: TourPopoverProps): JSX.Element | null {
           onOpenAutoFocus={(e) => e.preventDefault()}
           onCloseAutoFocus={(e) => e.preventDefault()}
           className={cn(
-            'w-80',
+            // z-[9999] sits above the overlay (`z-[9998]` for spotlight +
+            // shield strips in tour-overlay.tsx). Without this, Radix's
+            // default `z-50` puts the popover under the shields.
+            'z-[9999] w-80 max-w-[calc(100vw-32px)] max-h-[calc(100vh-32px)] overflow-auto',
             // Neutralize Radix's animation when reduced motion is on. The
             // wrapped `PopoverContent` declares animate-in/animate-out;
             // these utilities counter them under reduced-motion.

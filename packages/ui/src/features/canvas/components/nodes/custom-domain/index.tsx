@@ -33,31 +33,29 @@
  * routes are added/removed.
  */
 
+import {
+  CD_ADD_BUTTON_HEIGHT,
+  CD_DOMAIN_FIELD_HEIGHT,
+  CD_HEADER_HEIGHT,
+  CD_PADDING,
+  CD_ROUTE_ROW_GAP,
+  CD_ROUTE_ROW_HEIGHT,
+} from '@ice/constants';
 import { Globe, Plus, X } from 'lucide-react';
 import React, { useCallback, useState } from 'react';
-import { CARD_WIDTH, CATEGORY_STYLE, CORNER_RADIUS } from '../../../../../config/canvas-constants';
+import { CARD_PX, CARD_WIDTH, CATEGORY_STYLE, CORNER_RADIUS } from '../../../../../config/canvas-constants';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
-// ─── Layout constants ───────────────────────────────────────────────────────
-//
-// Exported so SvgConnectionPath can compute the exact y-coordinate of
-// each route's port when routing edges from this block. Without this,
-// edges would attach to the generic right-side midpoint instead of the
-// row the user dragged from.
-
-export const CD_HEADER_HEIGHT = 48;
-export const CD_DOMAIN_FIELD_HEIGHT = 38;
-export const CD_ROUTE_ROW_HEIGHT = 36;
-export const CD_ROUTE_ROW_GAP = 4;
-export const CD_PADDING = 10;
-const ADD_BUTTON_HEIGHT = 32;
-const CARD_PX = 12;
+// Re-exported so SvgConnectionPath / tests can compute the exact y-coordinate
+// of each route's port when routing edges from this block.
+export { CD_HEADER_HEIGHT, CD_DOMAIN_FIELD_HEIGHT, CD_ROUTE_ROW_HEIGHT, CD_ROUTE_ROW_GAP, CD_PADDING };
 
 const HEADER_HEIGHT = CD_HEADER_HEIGHT;
 const DOMAIN_FIELD_HEIGHT = CD_DOMAIN_FIELD_HEIGHT;
 const ROUTE_ROW_HEIGHT = CD_ROUTE_ROW_HEIGHT;
 const ROUTE_ROW_GAP = CD_ROUTE_ROW_GAP;
 const PADDING = CD_PADDING;
+const ADD_BUTTON_HEIGHT = CD_ADD_BUTTON_HEIGHT;
 
 /**
  * Compute the absolute y-coordinate (relative to the node's top edge)

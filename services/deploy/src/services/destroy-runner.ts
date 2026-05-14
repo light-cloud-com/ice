@@ -33,7 +33,7 @@
  * callsites and only extract the truly-reusable bits.
  */
 
-import { emitDestroyNodeStatus } from './deploy-event-dispatcher.js';
+import { emitDestroyNodeStatus } from './deploy-event-dispatcher';
 
 /**
  * Per-item destroy attempt: calls `deployer.delete` with a standardized

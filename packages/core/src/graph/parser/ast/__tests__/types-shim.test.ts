@@ -60,7 +60,7 @@ import type {
   Block,
   Attribute,
   NestedBlock,
-} from '../types.js';
+} from '../types';
 
 // Stub source span — every AstNode carries one.
 const span = { start: { line: 1, column: 0, offset: 0 }, end: { line: 1, column: 0, offset: 0 } } as never;

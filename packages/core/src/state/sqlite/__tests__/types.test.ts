@@ -14,7 +14,7 @@
  * is the line of defense for those.
  */
 import { describe, it, expect } from 'vitest';
-import { DEFAULT_OPTIONS, type SqliteContext, type SqliteStateStoreOptions } from '../types.js';
+import { DEFAULT_OPTIONS, type SqliteContext, type SqliteStateStoreOptions } from '../types';
 
 describe('DEFAULT_OPTIONS', () => {
   it('uses .ice/state.db as the default on-disk path', () => {

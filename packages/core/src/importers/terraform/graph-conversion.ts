@@ -8,11 +8,11 @@
  * entry — the graph treats both the same way.
  */
 
-import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph.js';
-import { import_terraform_state } from './state-importer.js';
-import type { TerraformImportOptions } from './state-importer.js';
-import type { TerraformImportResult } from './types.js';
-import type { NodeInput, EdgeInput } from '../../types/graph.js';
+import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph';
+import { import_terraform_state } from './state-importer';
+import type { TerraformImportOptions } from './state-importer';
+import type { TerraformImportResult } from './types';
+import type { NodeInput, EdgeInput } from '../../types/graph';
 
 /**
  * Convert imported resources to an ICE graph.

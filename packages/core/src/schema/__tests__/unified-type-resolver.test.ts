@@ -28,7 +28,7 @@ const providerSpy = vi.hoisted(() => ({
 
 const EmbeddedCtor = vi.hoisted(() => vi.fn());
 
-vi.mock('../embedded-schema-provider.js', () => {
+vi.mock('../embedded-schema-provider', () => {
   // Reset spies-on-instance per construction, but share the same identity
   // so tests can poke at them.
   EmbeddedCtor.mockImplementation(function (this: unknown) {
@@ -46,8 +46,8 @@ import {
   create_type_resolver,
   get_type_resolver,
   initialize_type_resolver,
-} from '../unified-type-resolver.js';
-import type { IceType } from '../schema-provider.js';
+} from '../unified-type-resolver';
+import type { IceType } from '../schema-provider';
 
 beforeEach(() => {
   vi.clearAllMocks();

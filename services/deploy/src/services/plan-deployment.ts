@@ -10,9 +10,9 @@
  */
 
 import prisma from '@ice/db';
-import { getExistingNameMap, seedMappingsFromHistory } from './resource-mapping.service.js';
-import { resolveProjectContext } from '../utils/project-context.js';
-import { getCoreEngine } from './deployer-factory.js';
+import { getExistingNameMap, seedMappingsFromHistory } from './resource-mapping.service';
+import { resolveProjectContext } from '../utils/project-context';
+import { getCoreEngine } from './deployer-factory';
 
 export async function planDeployment(cardId: string, nodes: any[], edges: any[], options: any, userId?: string) {
   try {

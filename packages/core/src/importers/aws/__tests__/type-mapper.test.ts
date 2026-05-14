@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { get_ice_type, is_type_supported, get_supported_types, map_properties } from '../type-mapper.js';
+import { get_ice_type, is_type_supported, get_supported_types, map_properties } from '../type-mapper';
 
 describe('get_ice_type', () => {
   it('returns the mapped ICE type for a known AWS type', () => {

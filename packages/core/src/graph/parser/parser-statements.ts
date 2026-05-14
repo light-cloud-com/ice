@@ -52,7 +52,7 @@ import type {
   OutputBlock,
   StringLiteral,
   VariableBlock,
-} from './ast.js';
+} from './ast';
 import {
   type ParserState,
   ps_add_error,
@@ -62,15 +62,15 @@ import {
   ps_is_at_end,
   ps_match,
   ps_previous,
-} from './parser-state.js';
+} from './parser-state';
 import {
   create_null_literal,
   create_span,
   parse_boolean_literal,
   parse_identifier,
   parse_string_literal,
-} from './parser-literals.js';
-import { parse_expression } from './parser-binary-exprs.js';
+} from './parser-literals';
+import { parse_expression } from './parser-binary-exprs';
 
 /**
  * `variable <name> { description?, default?, sensitive?, ... }`. The

@@ -180,13 +180,13 @@ describe('OnboardingChecklist — gating', () => {
 });
 
 describe('OnboardingChecklist — collapsed pill', () => {
-  it('renders the small pill by default', () => {
+  it('renders the small pill by default with 0 / 1', () => {
     // collapsed=true is the default 2nd useState init
     const tree = callRender();
     const text = collectText(tree);
     expect(text).toContain('t:onboarding.checklist.setup');
-    expect(text).toContain('1'); // default "account" item is done = 1/5
-    expect(text).toContain('5');
+    expect(text).toContain('0');
+    expect(text).toContain('1');
   });
 
   it('clicking the pill calls setCollapsed(false)', () => {
@@ -198,27 +198,23 @@ describe('OnboardingChecklist — collapsed pill', () => {
 });
 
 describe('OnboardingChecklist — expanded panel', () => {
-  it('renders the title and four items when collapsed=false', () => {
+  it('renders only the canvas-tour entry (cloud/github moved into the tour itself)', () => {
     mocks.useStateQueue.push(false); // dismissed
     mocks.useStateQueue.push(false); // collapsed
     const tree = callRender();
     const text = collectText(tree);
     expect(text).toContain('t:onboarding.checklist.title');
-    expect(text).toContain('t:onboarding.checklist.createAccount');
-    expect(text).toContain('t:onboarding.checklist.connectCloud');
-    expect(text).toContain('t:onboarding.checklist.connectGithub');
+    expect(text).toContain('t:onboarding.checklist.takeCanvasTour');
+    // The cloud/github/account chores were absorbed into the canvas tour.
+    expect(text).not.toContain('t:onboarding.checklist.createAccount');
+    expect(text).not.toContain('t:onboarding.checklist.connectCloud');
+    expect(text).not.toContain('t:onboarding.checklist.connectGithub');
   });
 
-  it('marks items as done based on integration state', () => {
+  it('returns null when canvas-tour is the only item and it is completed', () => {
     mocks.useStateQueue.push(false);
     mocks.useStateQueue.push(false);
-    mocks.state.integrations.integrations = {
-      github: { status: 'connected' },
-      gcp: { status: 'connected' },
-    };
-    mocks.state.account.user = { onboardingCompleted: true, defaultProvider: 'gcp' };
     mocks.isTourCompleted.mockImplementation(() => true);
-    // All items done — short circuits return null
     expect(callRender()).toBeNull();
   });
 
@@ -237,13 +233,6 @@ describe('OnboardingChecklist — expanded panel', () => {
   });
 });
 
-describe('OnboardingChecklist — useEffect', () => {
-  it('dispatches checkGitHubConnection on mount', () => {
-    callRender();
-    mocks.effects.forEach((f) => f());
-    expect(mocks.checkSpy).toHaveBeenCalled();
-  });
-});
 
 describe('OnboardingChecklist — tour entry points', () => {
   it('renders a "Show me how" button next to the canvas-tour item when not completed', () => {
@@ -320,23 +309,18 @@ describe('OnboardingChecklist — tour entry points', () => {
     }
   });
 
-  it('does NOT render "Show me how" once the tour is completed (item is done)', () => {
+  it('hides the whole checklist once the canvas tour is completed (only item)', () => {
     mocks.useStateQueue.push(false); // dismissed
     mocks.useStateQueue.push(false); // collapsed
     mocks.isTourCompleted.mockImplementation((id: string) => id === 'canvas-tour');
-    const tree = callRender();
-    const text = collectText(tree);
-    // The canvas-tour item still renders (label remains in the list) but the
-    // "Show me how" affordance is suppressed once done.
-    expect(text).toContain('t:onboarding.checklist.takeCanvasTour');
-    expect(text).not.toContain('t:tour.actions.showMeHow');
+    // Only one item left and it's done → allDone short-circuits to null.
+    expect(callRender()).toBeNull();
   });
 
-  it('does NOT render a "Show me how" link for items without a tourId (e.g. Connect cloud)', () => {
+  it('renders exactly one "Show me how" button (the canvas tour entry)', () => {
     mocks.useStateQueue.push(false); // dismissed
     mocks.useStateQueue.push(false); // collapsed
     const tree = callRender();
-    // Count the showMeHow buttons — only the canvas-tour item should produce one.
     const showMeHowButtons = findAll(
       tree,
       (el) =>

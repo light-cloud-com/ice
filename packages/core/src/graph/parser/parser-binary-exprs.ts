@@ -52,7 +52,7 @@ import type {
   PropertyAccess,
   UnaryExpression,
   UnaryOperator,
-} from './ast.js';
+} from './ast';
 import {
   type ParserState,
   ps_add_error,
@@ -60,13 +60,13 @@ import {
   ps_consume,
   ps_match,
   ps_previous,
-} from './parser-state.js';
-import { create_span, parse_identifier } from './parser-literals.js';
+} from './parser-state';
+import { create_span, parse_identifier } from './parser-literals';
 // Circular import resolves at function-call time, not module-init time
 // — `parse_primary` is only referenced inside the body of
 // `parse_postfix`, never at top level. See parser-primary.ts for the
 // matching back-edge. (rf-parse-3/4 atomic landing.)
-import { parse_primary } from './parser-primary.js';
+import { parse_primary } from './parser-primary';
 
 /**
  * Top of the expression grammar — entry point that every block- /

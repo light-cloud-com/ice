@@ -28,15 +28,15 @@ import {
   isPermissionDenied,
   mapEntry,
   probeErrorMessage,
-} from './entry-mapping.js';
-import { emitToRoom, rememberInsertId } from './registry.js';
-import { stopUnderlyingStream } from './stream-lifecycle.js';
+} from './entry-mapping';
+import { emitToRoom, rememberInsertId } from './registry';
+import { stopUnderlyingStream } from './stream-lifecycle';
 import {
   RECONNECT_BASE_MS,
   RECONNECT_MAX_MS,
   type ActiveStream,
   type SourceResolution,
-} from './types.js';
+} from './types';
 
 export function startTail(stream: ActiveStream): void {
   if (stream.stopped) return;

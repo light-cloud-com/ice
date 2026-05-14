@@ -5,12 +5,12 @@
  * Provides detailed validation errors with paths and suggestions.
  */
 
-import { ValidationError } from '../types/errors.js';
-import { success, failure } from '../types/result.js';
-import type { IceType, SchemaProvider } from './schema-provider.js';
-import type { Result } from '../types/result.js';
-import { to_validation_error } from './validation/error-conversion.js';
-import { validate_property } from './validation/property-validator.js';
+import { ValidationError } from '../types/errors';
+import { success, failure } from '../types/result';
+import type { IceType, SchemaProvider } from './schema-provider';
+import type { Result } from '../types/result';
+import { to_validation_error } from './validation/error-conversion';
+import { validate_property } from './validation/property-validator';
 
 // Re-export the validation types (extracted in rf-rval-1 to a sibling
 // file so the helpers can import without pulling in the orchestrator).
@@ -20,12 +20,12 @@ export type {
   ValidationOptions,
   ValidationResult,
   ValidationSeverity,
-} from './resource-validator-types.js';
+} from './resource-validator-types';
 import type {
   ValidationIssue,
   ValidationOptions,
   ValidationResult,
-} from './resource-validator-types.js';
+} from './resource-validator-types';
 
 // =============================================================================
 // Resource Validator

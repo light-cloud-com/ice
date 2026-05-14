@@ -5,4 +5,4 @@
  */
 
 // Export import error classification
-export * from './import-errors.js';
+export * from './import-errors';

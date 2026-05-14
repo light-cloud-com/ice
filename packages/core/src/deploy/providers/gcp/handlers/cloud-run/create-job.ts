@@ -5,12 +5,12 @@
  * service. Same 4-step milestone shape: AR + build = steps 1-2, deploy
  * = step 3, wait = step 4.
  */
-import { SERVICE_NAMES, sdk_not_available } from '../../messages.js';
-import { resolve_image } from './image-resolver.js';
-import { fail, result, TYPE_JOB } from './result-helpers.js';
-import { build_env_vars } from './utils.js';
-import type { ResourceDeployResult } from '../../../../types.js';
-import type { GCPHandlerContext } from '../../types.js';
+import { SERVICE_NAMES, sdk_not_available } from '../../messages';
+import { resolve_image } from './image-resolver';
+import { fail, result, TYPE_JOB } from './result-helpers';
+import { build_env_vars } from './utils';
+import type { ResourceDeployResult } from '../../../../types';
+import type { GCPHandlerContext } from '../../types';
 
 export async function create_job(
   name: string,

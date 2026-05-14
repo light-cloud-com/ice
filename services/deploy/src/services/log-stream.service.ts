@@ -22,21 +22,21 @@ import {
   resetRegistry,
   streams,
   subscriptionIndex,
-} from './log-stream/registry.js';
-import { resolveSource } from './log-stream/source-resolution.js';
-import { teardownStream } from './log-stream/stream-lifecycle.js';
+} from './log-stream/registry';
+import { resolveSource } from './log-stream/source-resolution';
+import { teardownStream } from './log-stream/stream-lifecycle';
 import {
   openStreamForResolved,
   registerPlaceholderStream,
   restartStreamWithMode,
-} from './log-stream/stream-open.js';
+} from './log-stream/stream-open';
 import type {
   ActiveStream,
   SourceResolution,
   SubscribeArgs,
   SubscribeResult,
-} from './log-stream/types.js';
-import { IDLE_TEARDOWN_MS } from './log-stream/types.js';
+} from './log-stream/types';
+import { IDLE_TEARDOWN_MS } from './log-stream/types';
 
 export type {
   StreamingMode,
@@ -44,7 +44,7 @@ export type {
   LogEntry,
   SourceResolution,
   SubscribeResult,
-} from './log-stream/types.js';
+} from './log-stream/types';
 
 // ── Public API ─────────────────────────────────────────────────────────
 

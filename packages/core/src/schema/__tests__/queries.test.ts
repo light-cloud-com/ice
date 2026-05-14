@@ -25,14 +25,14 @@ import {
   has_schema,
   make_query_cache,
   query_schemas,
-} from '../embedded/queries.js';
+} from '../embedded/queries';
 import type {
   SqliteImplementation,
   SqliteProperty,
   SqliteResourceType,
   SqliteSchemaRegistry,
-} from '../embedded/sqlite-types.js';
-import type { IceType } from '../schema-provider.js';
+} from '../embedded/sqlite-types';
+import type { IceType } from '../schema-provider';
 
 function baseProp(over: Partial<SqliteProperty> = {}): SqliteProperty {
   return {

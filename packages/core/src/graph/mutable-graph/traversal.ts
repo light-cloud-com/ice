@@ -10,9 +10,9 @@
  * All helpers take `MutableGraphState` as their first arg.
  */
 
-import type { Edge, Node, NodeId, TraversalOptions } from '../../types/graph.js';
-import { edges_get_incoming_edges, edges_get_outgoing_edges } from './edges.js';
-import type { MutableGraphState } from './types.js';
+import type { Edge, Node, NodeId, TraversalOptions } from '../../types/graph';
+import { edges_get_incoming_edges, edges_get_outgoing_edges } from './edges';
+import type { MutableGraphState } from './types';
 
 /**
  * Get direct dependencies (successors) of a node.

@@ -6,9 +6,9 @@
  * orchestrator under the 500 LOC ceiling.
  */
 
-import { has_cycle, find_cycles } from '../../algorithms.js';
-import type { Validator, ValidationIssue } from '../base-validator.js';
-import type { MutableGraph } from '../../mutable-graph.js';
+import { has_cycle, find_cycles } from '../../algorithms';
+import type { Validator, ValidationIssue } from '../base-validator';
+import type { MutableGraph } from '../../mutable-graph';
 
 /**
  * Validates that the graph has no cycles.

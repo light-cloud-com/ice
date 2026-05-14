@@ -22,7 +22,7 @@ import {
   check_pattern,
   check_string_length,
   validate_constraints,
-} from '../validation/constraints.js';
+} from '../validation/constraints';
 
 describe('check_enum', () => {
   it('returns null when allowed_values is undefined', () => {

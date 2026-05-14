@@ -18,18 +18,18 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { NodeStatusEvent, NodeProgressEvent } from '@ice/core';
 
-vi.mock('../deploy-event-dispatcher.js', () => ({
+vi.mock('../deploy-event-dispatcher', () => ({
   emitDeployEvent: vi.fn(),
   emitLog: vi.fn(),
 }));
 
-vi.mock('../deploy-locks.js', () => ({
+vi.mock('../deploy-locks', () => ({
   updateDeploySnapshotNode: vi.fn(),
 }));
 
-import { makeSchedulerCallbacks } from '../scheduler-callbacks.js';
-import * as dispatcher from '../deploy-event-dispatcher.js';
-import * as deployLocks from '../deploy-locks.js';
+import { makeSchedulerCallbacks } from '../scheduler-callbacks';
+import * as dispatcher from '../deploy-event-dispatcher';
+import * as deployLocks from '../deploy-locks';
 
 const emitDeployEventMock = (dispatcher as any).emitDeployEvent as ReturnType<typeof vi.fn>;
 const emitLogMock = (dispatcher as any).emitLog as ReturnType<typeof vi.fn>;

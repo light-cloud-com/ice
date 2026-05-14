@@ -47,39 +47,39 @@ vi.mock('@ice/service-credentials', () => ({
   getDecryptedCredentials: mocks.getDecryptedCredentials,
 }));
 
-vi.mock('../../providers/registry.js', () => ({
+vi.mock('../../providers/registry', () => ({
   resolveProviderAuth: mocks.resolveProviderAuth,
 }));
 
-vi.mock('../deployer-factory.js', () => ({
+vi.mock('../deployer-factory', () => ({
   createDeployer: mocks.createDeployer,
 }));
 
-vi.mock('../deploy-lock-wrapper.js', () => ({
+vi.mock('../deploy-lock-wrapper', () => ({
   acquireWriteLock: mocks.acquireWriteLock,
 }));
 
-vi.mock('../deploy-event-dispatcher.js', () => ({
+vi.mock('../deploy-event-dispatcher', () => ({
   emitDeployEvent: mocks.emitDeployEvent,
   emitLog: mocks.emitLog,
 }));
 
-vi.mock('../destroy-runner.js', () => ({
+vi.mock('../destroy-runner', () => ({
   attemptDestroy: mocks.attemptDestroy,
   emitDestroyLifecycle: mocks.emitDestroyLifecycle,
 }));
 
-vi.mock('../resource-mapping.service.js', () => ({
+vi.mock('../resource-mapping.service', () => ({
   removeResourceMapping: mocks.removeResourceMapping,
 }));
 
-vi.mock('../deploy-locks.js', () => ({
+vi.mock('../deploy-locks', () => ({
   startDeploySnapshot: mocks.startDeploySnapshot,
   finishDeploySnapshot: mocks.finishDeploySnapshot,
   releaseTempDir: mocks.releaseTempDir,
 }));
 
-import { destroyDeployment } from '../destroy-deployment.js';
+import { destroyDeployment } from '../destroy-deployment';
 
 const APPLY_BASELINE = {
   id: 'apply-baseline-1',

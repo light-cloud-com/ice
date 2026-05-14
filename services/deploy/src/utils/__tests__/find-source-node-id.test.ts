@@ -14,7 +14,7 @@ import {
   makeFindSourceNodeId,
   type DeployableForResourceMaps,
   type PersistedMappingEntry,
-} from '../find-source-node-id.js';
+} from '../find-source-node-id';
 
 describe('buildResourceNameMaps', () => {
   it('returns empty maps when given an empty deployables array and empty persisted map', () => {

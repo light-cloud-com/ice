@@ -114,7 +114,7 @@ beforeEach(async () => {
   currentOrgId = 'org-1';
   vi.spyOn(console, 'error').mockImplementation(() => {});
 
-  const { default: aiRouter } = await import('../ai.js');
+  const { default: aiRouter } = await import('../ai');
   const app = express();
   app.use(express.json());
   app.use('/api/ai', aiRouter);
@@ -229,7 +229,7 @@ describe('POST /api/ai/canvas-intent', () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual(result);
-    expect(processCanvasIntentMock).toHaveBeenCalledWith('add a redis', baseCanvasContext, 'card-1');
+    expect(processCanvasIntentMock).toHaveBeenCalledWith('add a redis', baseCanvasContext, 'card-1', expect.any(String));
     expect(streamCanvasIntentMock).not.toHaveBeenCalled();
   });
 
@@ -344,7 +344,7 @@ describe('POST /api/ai/diagnose-deploy', () => {
     const res = await request('POST', '/api/ai/diagnose-deploy', validBody);
     expect(res.status).toBe(200);
     expect(res.body).toEqual(result);
-    expect(diagnoseDeployMock).toHaveBeenCalledWith(validBody);
+    expect(diagnoseDeployMock).toHaveBeenCalledWith(validBody, expect.any(String));
   });
 
   it('returns 400 when error is missing', async () => {

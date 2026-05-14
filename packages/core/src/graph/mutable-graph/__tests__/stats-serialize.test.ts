@@ -4,9 +4,9 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { create_graph_id, type GraphMetadata, type NodeInput } from '../../../types/graph.js';
-import { edges_add_edge } from '../edges.js';
-import { nodes_add_node } from '../nodes.js';
+import { create_graph_id, type GraphMetadata, type NodeInput } from '../../../types/graph';
+import { edges_add_edge } from '../edges';
+import { nodes_add_node } from '../nodes';
 import {
   stats_clear,
   stats_copy_state,
@@ -14,8 +14,8 @@ import {
   stats_populate_from_serialized,
   stats_to_json,
   type SerializedGraphIdentity,
-} from '../stats-serialize.js';
-import { create_mutable_graph_state, type SerializedGraph } from '../types.js';
+} from '../stats-serialize';
+import { create_mutable_graph_state, type SerializedGraph } from '../types';
 
 function input(name: string, type = 't.x'): NodeInput {
   return { type, name, properties: {} };

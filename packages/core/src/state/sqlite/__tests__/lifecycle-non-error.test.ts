@@ -29,8 +29,8 @@ vi.mock('better-sqlite3', () => {
 
 describe('lifecycle_initialize coerces non-Error throws', () => {
   it('wraps a non-Error throw via String(error) (defensive branch)', async () => {
-    const { lifecycle_initialize } = await import('../lifecycle.js');
-    const { DEFAULT_OPTIONS } = await import('../types.js');
+    const { lifecycle_initialize } = await import('../lifecycle');
+    const { DEFAULT_OPTIONS } = await import('../types');
 
     const ctx = { db: null, listeners: new Set(), statements: new Map() };
     const result = await lifecycle_initialize(ctx, { ...DEFAULT_OPTIONS, path: ':memory:' });

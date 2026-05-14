@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { aws_result_to_graph, infer_relationships } from '../graph-conversion.js';
-import type { AWSImportResult, AWSImportedResource } from '../types.js';
+import { aws_result_to_graph, infer_relationships } from '../graph-conversion';
+import type { AWSImportResult, AWSImportedResource } from '../types';
 
 const empty_metadata = {
   account_id: '123456789',

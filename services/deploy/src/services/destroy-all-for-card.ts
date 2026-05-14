@@ -13,17 +13,17 @@
 
 import prisma from '@ice/db';
 import * as providerService from '@ice/service-credentials';
-import { finishDeploySnapshot, releaseTempDir, startDeploySnapshot } from './deploy-locks.js';
-import { resolveProviderAuth } from '../providers/registry.js';
-import { createDeployer } from './deployer-factory.js';
-import { acquireWriteLock } from './deploy-lock-wrapper.js';
-import { emitDeployEvent, emitLog } from './deploy-event-dispatcher.js';
+import { finishDeploySnapshot, releaseTempDir, startDeploySnapshot } from './deploy-locks';
+import { resolveProviderAuth } from '../providers/registry';
+import { createDeployer } from './deployer-factory';
+import { acquireWriteLock } from './deploy-lock-wrapper';
+import { emitDeployEvent, emitLog } from './deploy-event-dispatcher';
 import {
   collectDestroyAllTargets,
   orderTargetsForDelete,
   resolveDestroyAllProject,
-} from './destroy-targets.js';
-import { attemptDestroy, emitDestroyLifecycle } from './destroy-runner.js';
+} from './destroy-targets';
+import { attemptDestroy, emitDestroyLifecycle } from './destroy-runner';
 
 /**
  * Destroy EVERY ICE-managed resource for a card across all historical

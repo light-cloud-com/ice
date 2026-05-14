@@ -7,7 +7,7 @@
  * Pattern-identical to `cloud-storage/result-helpers.ts` and
  * `firebase-hosting/result-helpers.ts`.
  */
-import type { ResourceDeployResult } from '../../../../types.js';
+import type { ResourceDeployResult } from '../../../../types';
 
 /** ICE resource type emitted by the Load Balancer handler. */
 export const TYPE = 'gcp.compute.globalForwardingRule';

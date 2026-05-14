@@ -4,17 +4,17 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { create_node_id, type NodeInput } from '../../../types/graph.js';
-import { edges_add_edge } from '../edges.js';
-import { nodes_add_node } from '../nodes.js';
+import { create_node_id, type NodeInput } from '../../../types/graph';
+import { edges_add_edge } from '../edges';
+import { nodes_add_node } from '../nodes';
 import {
   traversal_get_all_dependencies,
   traversal_get_all_dependents,
   traversal_get_dependencies,
   traversal_get_dependents,
   traversal_traverse,
-} from '../traversal.js';
-import { create_mutable_graph_state, type MutableGraphState } from '../types.js';
+} from '../traversal';
+import { create_mutable_graph_state, type MutableGraphState } from '../types';
 
 function input(name: string, type = 't.x'): NodeInput {
   return { type, name, properties: {} };

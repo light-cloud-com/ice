@@ -13,7 +13,7 @@
  * service is already deployed, the IAM grant is a separate concern, so
  * we don't fail the whole deploy if this step trips.
  */
-import type { GCPHandlerContext } from '../../types.js';
+import type { GCPHandlerContext } from '../../types';
 
 /**
  * Apply the `roles/run.invoker` binding for `allUsers` to a Cloud Run

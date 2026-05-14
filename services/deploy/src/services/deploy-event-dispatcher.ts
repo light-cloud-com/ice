@@ -17,9 +17,9 @@ import {
   emitDeployRequirementVerified,
 } from '@ice/shared';
 import type { DeployEvent, DeployLogEvent } from '@ice/types';
-import { nextDeploySeq, recordDeployEvent } from './deploy-event-log.js';
-import { updateDeploySnapshotNode } from './deploy-locks.js';
-import { describeEventForLog, mapStatusToOverlay } from '../utils/deploy-event-formatter.js';
+import { nextDeploySeq, recordDeployEvent } from './deploy-event-log';
+import { updateDeploySnapshotNode } from './deploy-locks';
+import { describeEventForLog, mapStatusToOverlay } from '../utils/deploy-event-formatter';
 
 /**
  * Emit a typed {@link DeployEvent} over the socket and persist a row to

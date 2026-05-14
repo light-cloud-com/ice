@@ -6,7 +6,7 @@
  * `import-errors.ts`.
  */
 
-import { ImportErrorCode, type ImportError } from './types.js';
+import { ImportErrorCode, type ImportError } from './types';
 
 /**
  * Classify an Azure error and return a structured ImportError.

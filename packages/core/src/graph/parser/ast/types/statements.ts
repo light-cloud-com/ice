@@ -13,15 +13,15 @@
  * Extracted from `ast/types.ts` in rf-asttyp-1.
  */
 
-import type { AstNode } from './base.js';
+import type { AstNode } from './base';
 import type {
   Expression,
   Identifier,
   Reference,
   StringLiteral,
   TypeIdentifier,
-} from './expressions.js';
-import type { Block } from './blocks.js';
+} from './expressions';
+import type { Block } from './blocks';
 
 // =============================================================================
 // Program

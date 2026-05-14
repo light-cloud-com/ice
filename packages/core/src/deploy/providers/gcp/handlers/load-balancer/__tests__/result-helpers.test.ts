@@ -2,7 +2,7 @@
  * Tests for `load-balancer/result-helpers.ts` (rf-lbal-1).
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { TYPE, BASE_URL, result, fail } from '../result-helpers.js';
+import { TYPE, BASE_URL, result, fail } from '../result-helpers';
 
 describe('load-balancer/result-helpers', () => {
   describe('TYPE', () => {

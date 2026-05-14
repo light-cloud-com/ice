@@ -114,7 +114,17 @@ export function TourOverlay({ rect, pad = 8, radius = 8, onSkip }: TourOverlayPr
     height: layout.height,
     borderRadius: radius,
     pointerEvents: 'none',
-    boxShadow: '0 0 0 9999px rgba(0,0,0,0.55)',
+    // Three layered shadows:
+    //   1. The big inset paints the dim outside (0.72 opacity for solid
+    //      dark-mode contrast against the highlighted cutout).
+    //   2. A 2px accent ring around the cutout makes the highlight
+    //      visually distinct rather than "merely undimmed."
+    //   3. A softer outer glow draws the eye to the target.
+    boxShadow: [
+      '0 0 0 9999px rgba(0,0,0,0.72)',
+      '0 0 0 2px rgb(99 167 252 / 0.95)',
+      '0 0 18px 4px rgb(99 167 252 / 0.45)',
+    ].join(', '),
     transition: reducedMotion ? undefined : TRANSITION,
   };
 

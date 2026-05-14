@@ -23,7 +23,7 @@ import {
   fallback_type_mapping,
   get_package_name,
   parse_resource_type,
-} from '../type-mapping.js';
+} from '../type-mapping';
 
 describe('fallback_type_mapping — provider table', () => {
   it("maps 'google' to 'gcp' inside the gcp branch", () => {

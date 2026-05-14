@@ -14,7 +14,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { parseTar, type FileEntry } from '../tar-parser.js';
+import { parseTar, type FileEntry } from '../tar-parser';
 
 /**
  * Build a 512-byte ustar header.

@@ -6,7 +6,6 @@
  * No separate IPC handlers — same code path as the web app.
  */
 
-import { randomBytes } from 'crypto';
 import { existsSync, mkdirSync, cpSync } from 'fs';
 import Module from 'module';
 import { join } from 'path';
@@ -102,8 +101,13 @@ async function startEmbeddedBackend(): Promise<void> {
   // Set environment for desktop mode
   process.env.ICE_DESKTOP = 'true';
   process.env.DATABASE_URL = `file:${dbPath}`;
-  process.env.JWT_SECRET = `desktop-${randomBytes(16).toString('hex')}`;
-  process.env.CREDENTIAL_ENCRYPTION_KEY = `desktop-enc-${randomBytes(16).toString('hex')}`;
+  // JWT_SECRET and CREDENTIAL_ENCRYPTION_KEY are now bootstrapped by the
+  // gateway itself via `ensureLocalSecrets()` (apps/gateway/src/index.ts).
+  // The desktop main starts the gateway in-process in production and as a
+  // child via `pnpm dev:gateway` in dev, so the secrets land before any
+  // downstream code reads them either way. Persisted per-user; survive
+  // restarts. Replaces the previous randomBytes-per-launch that silently
+  // invalidated saved provider credentials on every relaunch.
   process.env.FRONTEND_URL = `http://localhost:${GATEWAY_PORT}`;
   process.env.PORT = String(GATEWAY_PORT);
   process.env.NODE_ENV = 'production';

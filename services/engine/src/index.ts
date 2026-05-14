@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import importRoutes from './routes/import.js';
-import resourceRoutes from './routes/resources.js';
-import schemaRoutes from './routes/schemas.js';
-export * from './services/schema.service.js';
+import importRoutes from './routes/import';
+import resourceRoutes from './routes/resources';
+import schemaRoutes from './routes/schemas';
+export * from './services/schema.service';
 export {
   getAll,
   getForPalette,
@@ -11,7 +11,7 @@ export {
   getLowLevel,
   getByProvider,
   getCategories as getResourceCategories,
-} from './services/resource.service.js';
+} from './services/resource.service';
 
 export function createEngineRouter(): Router {
   const router = Router();

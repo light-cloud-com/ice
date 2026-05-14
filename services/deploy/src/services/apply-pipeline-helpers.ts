@@ -19,8 +19,8 @@
  * cannot fail the parent deploy.
  */
 
-import { emitLog } from './deploy-event-dispatcher.js';
-import { upsertResourceMapping } from './resource-mapping.service.js';
+import { emitLog } from './deploy-event-dispatcher';
+import { upsertResourceMapping } from './resource-mapping.service';
 
 /**
  * Scan the canvas for Source.Repository nodes and emit a `[diagnostic]`
@@ -92,7 +92,7 @@ export async function ensureAutoDeployRules(args: {
   const { cardId, nodes, edges, orgId, userId, environment } = args;
   if (!userId) return;
   try {
-    const { ensureRulesForCanvas } = await import('./pipeline.service.js');
+    const { ensureRulesForCanvas } = await import('./pipeline.service');
     const ruleResult = await ensureRulesForCanvas(
       cardId,
       nodes,
@@ -122,12 +122,9 @@ export async function ensureAutoDeployRules(args: {
   }
 }
 
-/**
- * Console.log dump of the desired vs current graph node lists. Pure
- * debug output — every line is `console.log` (not `emitLog`) so it
- * stays in server-side logs without polluting the deploy panel scroll.
- */
+// Gated behind DEBUG=ice:deploy so production logs stay clean.
 export function logDiffForDebugging(translationGraph: any, currentGraph: any): void {
+  if (!process.env.DEBUG?.includes('ice:deploy')) return;
   const desiredNodes = translationGraph?.nodes?.values ? [...translationGraph.nodes.values()] : [];
   const currentNodes = currentGraph?.nodes?.values ? [...currentGraph.nodes.values()] : [];
   console.log(`Diff: desired=${desiredNodes.length} nodes, current=${currentNodes.length} nodes`);
@@ -202,7 +199,9 @@ export async function persistResourceMappings(args: {
       res.source_node_id = source_node_id;
     }
     const label = source_node_id ? nameToLabel.get(res.name) || '-' : '-';
-    console.log(`Resource result: ${res.name} → matched node: ${source_node_id || 'NONE'} (label: ${label})`);
+    if (process.env.DEBUG?.includes('ice:deploy')) {
+      console.log(`Resource result: ${res.name} → matched node: ${source_node_id || 'NONE'} (label: ${label})`);
+    }
 
     if (source_node_id && res.success && res.name && res.type) {
       await upsertResourceMapping({

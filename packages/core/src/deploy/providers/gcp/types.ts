@@ -4,7 +4,7 @@
  * Shared interfaces for all GCP resource handlers.
  */
 
-import type { ResourceDeployResult } from '../../types.js';
+import type { ResourceDeployResult } from '../../types';
 
 /**
  * Context passed to every GCP resource handler.

@@ -19,8 +19,8 @@
  * heavy mock and follows the existing pattern of injecting the engine.
  */
 
-import { emitLog } from './deploy-event-dispatcher.js';
-import { makeSchedulerCallbacks } from './scheduler-callbacks.js';
+import { emitLog } from './deploy-event-dispatcher';
+import { makeSchedulerCallbacks } from './scheduler-callbacks';
 
 const QUOTA_PATTERNS = ['QUOTA_EXCEEDED', "Quota 'BACKEND_BUCKETS'", 'Backend bucket quota exceeded'];
 
@@ -78,7 +78,7 @@ export async function retryAfterQuotaCleanup(args: RetryAfterQuotaCleanupArgs): 
   try {
     // Dynamic import preserves the lazy-load behavior of the original
     // inline block (only paid when a quota failure actually fires).
-    const { cleanupOrphanedIceResources } = await import('./orphan-cleanup.service.js');
+    const { cleanupOrphanedIceResources } = await import('./orphan-cleanup.service');
     const cleanup = await cleanupOrphanedIceResources(args.orgId, args.gcpProject, { dryRun: false });
     const deletedCount = cleanup.deleted.length;
     emitLog(

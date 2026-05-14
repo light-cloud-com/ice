@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import * as CloudBlocksModule from '../cloud-blocks.js';
+import * as CloudBlocksModule from '../cloud-blocks';
 import {
   BLOCK_CATEGORIES,
   BLOCK_TEMPLATES,
@@ -16,7 +16,7 @@ import {
   getBlockTemplate,
   getBlockTypeTag,
   getProviderIcon,
-} from '../cloud-blocks.js';
+} from '../cloud-blocks';
 
 describe('cloud-blocks shim — public API', () => {
   it('re-exports all 7 named runtime exports', () => {

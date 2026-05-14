@@ -4,9 +4,9 @@
  * Types for deployment apply operations.
  */
 
-import type { DeploymentId, DeploymentPlan, PlannedChange } from '../types/deployment.js';
-import type { NodeId } from '../types/graph.js';
-import type { DeploymentError, ResourceState } from '../types/providers.js';
+import type { DeploymentId, DeploymentPlan, PlannedChange } from '../types/deployment';
+import type { NodeId } from '../types/graph';
+import type { DeploymentError, ResourceState } from '../types/providers';
 
 // =============================================================================
 // Apply Options

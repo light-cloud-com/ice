@@ -6,7 +6,7 @@
  * `type-mapper.ts`.
  */
 import { describe, expect, it } from 'vitest';
-import { TYPE_MAP } from '../data.js';
+import { TYPE_MAP } from '../data';
 import {
   get_ice_provider,
   get_ice_type,
@@ -17,7 +17,7 @@ import {
   is_provider_resource,
   is_stack_resource,
   is_type_supported,
-} from '../mapping.js';
+} from '../mapping';
 
 describe('get_ice_type', () => {
   it('returns direct TYPE_MAP hit when present', () => {

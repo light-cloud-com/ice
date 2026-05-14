@@ -27,8 +27,8 @@
  */
 
 import { gunzipSync } from 'zlib';
-import type { GCPHandlerContext } from '../../types.js';
-import { parseTar, type FileEntry } from './tar-parser.js';
+import type { GCPHandlerContext } from '../../types';
+import { parseTar, type FileEntry } from './tar-parser';
 
 /**
  * Download a GitHub repo as a tarball and extract it into an in-memory

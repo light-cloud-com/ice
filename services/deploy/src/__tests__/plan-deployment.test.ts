@@ -53,13 +53,13 @@ vi.mock('@ice/core', () => ({
   translate_card_to_graph: (input: any) => translatorImpl(input),
 }));
 
-vi.mock('../services/resource-mapping.service.js', () => ({
+vi.mock('../services/resource-mapping.service', () => ({
   getExistingNameMap: vi.fn().mockResolvedValue(new Map()),
   seedMappingsFromHistory: vi.fn().mockResolvedValue(undefined),
 }));
 
 async function getPlanDeployment() {
-  const mod = await import('../services/plan-deployment.js');
+  const mod = await import('../services/plan-deployment');
   return mod.planDeployment;
 }
 

@@ -2,8 +2,8 @@
  * Tests for `cloud-run/iam.ts` (rf-crun-3).
  */
 import { describe, it, expect, vi } from 'vitest';
-import { grant_public_access } from '../iam.js';
-import type { GCPHandlerContext } from '../../../types.js';
+import { grant_public_access } from '../iam';
+import type { GCPHandlerContext } from '../../../types';
 
 function makeCtx(post: (...args: any[]) => any, on_log?: (msg: string) => void): GCPHandlerContext {
   return {

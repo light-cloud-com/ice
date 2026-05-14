@@ -37,7 +37,7 @@ describe('project-access.service', () => {
   describe('hasProjectAccess', () => {
     it('returns false when the project does not exist', async () => {
       (prisma.canvasProject.findUnique as any).mockResolvedValue(null);
-      const { hasProjectAccess } = await import('../services/project-access.service.js');
+      const { hasProjectAccess } = await import('../services/project-access.service');
 
       const result = await hasProjectAccess('user-1', 'missing-project', 'viewer');
       expect(result).toBe(false);
@@ -48,7 +48,7 @@ describe('project-access.service', () => {
       (prisma.canvasProject.findUnique as any).mockResolvedValue({ organisation_id: 'org-1' });
       (prisma.organisationMember.findUnique as any).mockResolvedValue({ role: 'owner' });
 
-      const { hasProjectAccess } = await import('../services/project-access.service.js');
+      const { hasProjectAccess } = await import('../services/project-access.service');
 
       const result = await hasProjectAccess('user-1', 'p-1', 'owner');
       expect(result).toBe(true);
@@ -60,7 +60,7 @@ describe('project-access.service', () => {
       (prisma.canvasProject.findUnique as any).mockResolvedValue({ organisation_id: 'org-1' });
       (prisma.organisationMember.findUnique as any).mockResolvedValue({ role: 'admin' });
 
-      const { hasProjectAccess } = await import('../services/project-access.service.js');
+      const { hasProjectAccess } = await import('../services/project-access.service');
 
       const result = await hasProjectAccess('user-1', 'p-1', 'editor');
       expect(result).toBe(true);
@@ -71,7 +71,7 @@ describe('project-access.service', () => {
       (prisma.organisationMember.findUnique as any).mockResolvedValue(null);
       (prisma.projectMember.findUnique as any).mockResolvedValue(null);
 
-      const { hasProjectAccess } = await import('../services/project-access.service.js');
+      const { hasProjectAccess } = await import('../services/project-access.service');
 
       const result = await hasProjectAccess('user-1', 'p-1', 'viewer');
       expect(result).toBe(false);
@@ -82,7 +82,7 @@ describe('project-access.service', () => {
       (prisma.organisationMember.findUnique as any).mockResolvedValue({ role: 'member' });
       (prisma.projectMember.findUnique as any).mockResolvedValue(null);
 
-      const { hasProjectAccess } = await import('../services/project-access.service.js');
+      const { hasProjectAccess } = await import('../services/project-access.service');
 
       const result = await hasProjectAccess('user-1', 'p-1', 'viewer');
       expect(result).toBe(false);
@@ -93,7 +93,7 @@ describe('project-access.service', () => {
       (prisma.organisationMember.findUnique as any).mockResolvedValue({ role: 'member' });
       (prisma.projectMember.findUnique as any).mockResolvedValue({ role: 'viewer' });
 
-      const { hasProjectAccess } = await import('../services/project-access.service.js');
+      const { hasProjectAccess } = await import('../services/project-access.service');
 
       expect(await hasProjectAccess('u', 'p', 'viewer')).toBe(true);
     });
@@ -103,7 +103,7 @@ describe('project-access.service', () => {
       (prisma.organisationMember.findUnique as any).mockResolvedValue({ role: 'member' });
       (prisma.projectMember.findUnique as any).mockResolvedValue({ role: 'viewer' });
 
-      const { hasProjectAccess } = await import('../services/project-access.service.js');
+      const { hasProjectAccess } = await import('../services/project-access.service');
 
       expect(await hasProjectAccess('u', 'p', 'editor')).toBe(false);
     });
@@ -113,7 +113,7 @@ describe('project-access.service', () => {
       (prisma.organisationMember.findUnique as any).mockResolvedValue({ role: 'member' });
       (prisma.projectMember.findUnique as any).mockResolvedValue({ role: 'editor' });
 
-      const { hasProjectAccess } = await import('../services/project-access.service.js');
+      const { hasProjectAccess } = await import('../services/project-access.service');
 
       expect(await hasProjectAccess('u', 'p', 'editor')).toBe(true);
     });
@@ -123,7 +123,7 @@ describe('project-access.service', () => {
       (prisma.organisationMember.findUnique as any).mockResolvedValue({ role: 'member' });
       (prisma.projectMember.findUnique as any).mockResolvedValue({ role: 'editor' });
 
-      const { hasProjectAccess } = await import('../services/project-access.service.js');
+      const { hasProjectAccess } = await import('../services/project-access.service');
 
       expect(await hasProjectAccess('u', 'p', 'owner')).toBe(false);
     });
@@ -133,7 +133,7 @@ describe('project-access.service', () => {
       (prisma.organisationMember.findUnique as any).mockResolvedValue({ role: 'member' });
       (prisma.projectMember.findUnique as any).mockResolvedValue({ role: 'owner' });
 
-      const { hasProjectAccess } = await import('../services/project-access.service.js');
+      const { hasProjectAccess } = await import('../services/project-access.service');
 
       expect(await hasProjectAccess('u', 'p', 'owner')).toBe(true);
     });
@@ -145,7 +145,7 @@ describe('project-access.service', () => {
       (prisma.organisationMember.findUnique as any).mockResolvedValue({ role: 'member' });
       (prisma.projectMember.findUnique as any).mockResolvedValue({ role: 'gibberish' });
 
-      const { hasProjectAccess } = await import('../services/project-access.service.js');
+      const { hasProjectAccess } = await import('../services/project-access.service');
 
       expect(await hasProjectAccess('u', 'p', 'viewer')).toBe(false);
     });
@@ -157,7 +157,7 @@ describe('project-access.service', () => {
       (prisma.organisationMember.findUnique as any).mockResolvedValue({ role: 'member' });
       (prisma.projectMember.findUnique as any).mockResolvedValue({ role: 'viewer' });
 
-      const { hasProjectAccess } = await import('../services/project-access.service.js');
+      const { hasProjectAccess } = await import('../services/project-access.service');
 
       // Cast through unknown — TS type forbids 'foo' but runtime accepts it.
       expect(await hasProjectAccess('u', 'p', 'foo' as unknown as 'viewer')).toBe(true);
@@ -167,7 +167,7 @@ describe('project-access.service', () => {
   describe('grantCreatorAccess', () => {
     it('upserts the creator as project owner', async () => {
       (prisma.projectMember.upsert as any).mockResolvedValue({});
-      const { grantCreatorAccess } = await import('../services/project-access.service.js');
+      const { grantCreatorAccess } = await import('../services/project-access.service');
 
       await grantCreatorAccess('p-1', 'u-1');
 
@@ -183,7 +183,7 @@ describe('project-access.service', () => {
     it('returns project members ordered by granted_at ascending with user fields', async () => {
       const fixture = [{ id: 'pm-1', user: { id: 'u-1', email: 'a@b.com', name: 'A', avatar: null } }];
       (prisma.projectMember.findMany as any).mockResolvedValue(fixture);
-      const { listProjectMembers } = await import('../services/project-access.service.js');
+      const { listProjectMembers } = await import('../services/project-access.service');
 
       const result = await listProjectMembers('p-1');
 
@@ -199,7 +199,7 @@ describe('project-access.service', () => {
   describe('addProjectMember', () => {
     it('upserts the member with the given role and grantedBy', async () => {
       (prisma.projectMember.upsert as any).mockResolvedValue({ id: 'pm-1' });
-      const { addProjectMember } = await import('../services/project-access.service.js');
+      const { addProjectMember } = await import('../services/project-access.service');
 
       await addProjectMember('p-1', 'u-1', 'editor', 'admin-1');
 
@@ -220,7 +220,7 @@ describe('project-access.service', () => {
       // early on `pm?.role !== 'owner'`.
       (prisma.projectMember.findUnique as any).mockResolvedValue({ role: 'editor' });
       (prisma.projectMember.update as any).mockResolvedValue({ id: 'pm-1' });
-      const { updateProjectMemberRole } = await import('../services/project-access.service.js');
+      const { updateProjectMemberRole } = await import('../services/project-access.service');
 
       await updateProjectMemberRole('p-1', 'u-1', 'viewer');
 
@@ -235,7 +235,7 @@ describe('project-access.service', () => {
       // newRole === 'owner' short-circuits before `isLastOwner` —
       // adding owners can never reduce the count.
       (prisma.projectMember.update as any).mockResolvedValue({ id: 'pm-1' });
-      const { updateProjectMemberRole } = await import('../services/project-access.service.js');
+      const { updateProjectMemberRole } = await import('../services/project-access.service');
 
       await updateProjectMemberRole('p-1', 'u-1', 'owner');
 
@@ -246,7 +246,7 @@ describe('project-access.service', () => {
     it('throws when demoting the last project owner (findings #6)', async () => {
       (prisma.projectMember.findUnique as any).mockResolvedValue({ role: 'owner' });
       (prisma.projectMember.count as any).mockResolvedValue(1);
-      const { updateProjectMemberRole } = await import('../services/project-access.service.js');
+      const { updateProjectMemberRole } = await import('../services/project-access.service');
 
       await expect(updateProjectMemberRole('p-1', 'u-1', 'editor')).rejects.toThrow(
         /Cannot demote the last project owner/,
@@ -258,7 +258,7 @@ describe('project-access.service', () => {
       (prisma.projectMember.findUnique as any).mockResolvedValue({ role: 'owner' });
       (prisma.projectMember.count as any).mockResolvedValue(2);
       (prisma.projectMember.update as any).mockResolvedValue({ id: 'pm-1' });
-      const { updateProjectMemberRole } = await import('../services/project-access.service.js');
+      const { updateProjectMemberRole } = await import('../services/project-access.service');
 
       await updateProjectMemberRole('p-1', 'u-1', 'editor');
 
@@ -271,7 +271,7 @@ describe('project-access.service', () => {
       (prisma.projectMember.findUnique as any).mockResolvedValue({ role: 'owner' });
       (prisma.projectMember.count as any).mockResolvedValue(1);
 
-      const { removeProjectMember } = await import('../services/project-access.service.js');
+      const { removeProjectMember } = await import('../services/project-access.service');
 
       await expect(removeProjectMember('p-1', 'u-1')).rejects.toThrow(
         /Cannot remove the last project owner/,
@@ -284,7 +284,7 @@ describe('project-access.service', () => {
       (prisma.projectMember.findUnique as any).mockResolvedValue({ role: 'editor' });
       (prisma.projectMember.delete as any).mockResolvedValue({});
 
-      const { removeProjectMember } = await import('../services/project-access.service.js');
+      const { removeProjectMember } = await import('../services/project-access.service');
 
       await removeProjectMember('p-1', 'u-1');
 
@@ -299,7 +299,7 @@ describe('project-access.service', () => {
       (prisma.projectMember.count as any).mockResolvedValue(2);
       (prisma.projectMember.delete as any).mockResolvedValue({});
 
-      const { removeProjectMember } = await import('../services/project-access.service.js');
+      const { removeProjectMember } = await import('../services/project-access.service');
 
       await removeProjectMember('p-1', 'u-1');
 
@@ -314,7 +314,7 @@ describe('project-access.service', () => {
       (prisma.projectMember.findUnique as any).mockResolvedValue(null);
       (prisma.projectMember.delete as any).mockResolvedValue({});
 
-      const { removeProjectMember } = await import('../services/project-access.service.js');
+      const { removeProjectMember } = await import('../services/project-access.service');
 
       await removeProjectMember('p-1', 'u-1');
       expect(prisma.projectMember.delete).toHaveBeenCalled();

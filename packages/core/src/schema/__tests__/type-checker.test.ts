@@ -9,7 +9,7 @@
  *    'any' always passes. Unknown expected_type returns null (no issue).
  */
 import { describe, expect, it } from 'vitest';
-import { get_type_name, validate_type } from '../validation/type-checker.js';
+import { get_type_name, validate_type } from '../validation/type-checker';
 
 describe('get_type_name', () => {
   it('null -> "null"', () => {

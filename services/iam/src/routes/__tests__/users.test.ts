@@ -99,7 +99,7 @@ beforeEach(async () => {
   vi.spyOn(console, 'error').mockImplementation(() => {});
   vi.spyOn(console, 'log').mockImplementation(() => {});
 
-  const { default: usersRouter } = await import('../users.js');
+  const { default: usersRouter } = await import('../users');
   const app = express();
   app.use(express.json());
   app.use('/api/users', usersRouter);

@@ -13,12 +13,12 @@ import {
   MockProvider,
   create_mock_provider,
   create_mock_provider_factory,
-} from '../mock-provider.js';
+} from '../mock-provider';
 import type {
   ProviderConfig,
   ResourceState,
-} from '../../types/providers.js';
-import type { Node, NodeId } from '../../types/graph.js';
+} from '../../types/providers';
+import type { Node, NodeId } from '../../types/graph';
 
 // ─── Helpers ────────────────────────────────────────────────────────
 

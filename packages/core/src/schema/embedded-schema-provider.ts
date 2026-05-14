@@ -5,8 +5,8 @@
  * Supports both the bundled base database and project-specific customized databases.
  */
 
-import { InternalError } from '../types/errors.js';
-import { success, failure } from '../types/result.js';
+import { InternalError } from '../types/errors';
+import { success, failure } from '../types/result';
 import type {
   IceType,
   PropertySchema,
@@ -19,22 +19,22 @@ import type {
   SchemaQueryResult,
   SchemaStats,
   ObservableSchemaProvider,
-} from './schema-provider.js';
-import type { IceError } from '../types/errors.js';
-import type { Result } from '../types/result.js';
-import type { SqliteSchemaRegistry } from './embedded/sqlite-types.js';
+} from './schema-provider';
+import type { IceError } from '../types/errors';
+import type { Result } from '../types/result';
+import type { SqliteSchemaRegistry } from './embedded/sqlite-types';
 import {
   add_listener,
   emit_event as emit_schema_event,
   remove_listener,
   type EventListenerMap,
-} from './embedded/events.js';
+} from './embedded/events';
 import {
   get_dependencies as g_get_dependencies,
   get_dependents as g_get_dependents,
   get_equivalents as g_get_equivalents,
-} from './embedded/graph-queries.js';
-import { initialize_registry, resolve_db_path } from './embedded/initialization.js';
+} from './embedded/graph-queries';
+import { initialize_registry, resolve_db_path } from './embedded/initialization';
 import {
   get_categories as q_get_categories,
   get_computed_properties as q_get_computed_properties,
@@ -49,7 +49,7 @@ import {
   make_query_cache,
   query_schemas as q_query_schemas,
   type QueryCache,
-} from './embedded/queries.js';
+} from './embedded/queries';
 
 // =============================================================================
 // Extended Schema Provider Interface

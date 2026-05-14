@@ -10,7 +10,9 @@
  * the next dev-server reload — no further wiring required.
  */
 import { canvasTour } from './canvas-tour';
-import { paletteTour } from './palette-tour';
+import { dashboardTour } from './dashboard-tour';
 import type { Tour } from '../tour.types';
 
-export const tours: readonly Tour[] = [canvasTour, paletteTour] as const;
+// Order is the order ids appear in the Help menu's "Show me around"
+// submenu. Dashboard first because it's the user's first surface.
+export const tours: readonly Tour[] = [dashboardTour, canvasTour] as const;

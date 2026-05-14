@@ -20,19 +20,19 @@ import { Router } from 'express';
 // `../routes/<name>.js` from this test file's perspective. Vitest matches
 // on the canonicalized path so either spelling works; we use the SUT-side
 // spelling for clarity.
-vi.mock('../routes/import.js', () => {
+vi.mock('../routes/import', () => {
   const r = Router();
   r.get('/ping', (_req, res) => res.json({ where: 'import' }));
   return { default: r };
 });
 
-vi.mock('../routes/resources.js', () => {
+vi.mock('../routes/resources', () => {
   const r = Router();
   r.get('/ping', (_req, res) => res.json({ where: 'resources' }));
   return { default: r };
 });
 
-vi.mock('../routes/schemas.js', () => {
+vi.mock('../routes/schemas', () => {
   const r = Router();
   r.get('/ping', (_req, res) => res.json({ where: 'schemas' }));
   return { default: r };
@@ -41,13 +41,13 @@ vi.mock('../routes/schemas.js', () => {
 // Service modules are imported via `export *` / named re-exports. The
 // runtime needs them resolvable for the barrel to import cleanly. We mock
 // them to lightweight stubs so we can verify the re-export surface.
-vi.mock('../services/schema.service.js', () => ({
+vi.mock('../services/schema.service', () => ({
   getCategories: vi.fn(async () => 'schema-getCategories'),
   querySchemas: vi.fn(async () => 'schema-querySchemas'),
   getSchema: vi.fn(async () => 'schema-getSchema'),
 }));
 
-vi.mock('../services/resource.service.js', () => ({
+vi.mock('../services/resource.service', () => ({
   getAll: vi.fn(async () => 'resource-getAll'),
   getForPalette: vi.fn(async () => 'resource-getForPalette'),
   getByCategory: vi.fn(async () => 'resource-getByCategory'),

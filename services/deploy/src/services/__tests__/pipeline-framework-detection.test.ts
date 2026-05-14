@@ -21,12 +21,12 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-vi.mock('../pipeline/github-webhooks.js', () => ({
+vi.mock('../pipeline/github-webhooks', () => ({
   getGitHubToken: vi.fn(),
 }));
 
-import * as webhooks from '../pipeline/github-webhooks.js';
-import { detectFramework } from '../pipeline/framework-detection.js';
+import * as webhooks from '../pipeline/github-webhooks';
+import { detectFramework } from '../pipeline/framework-detection';
 
 const getTokenMock = (webhooks as any).getGitHubToken as ReturnType<typeof vi.fn>;
 

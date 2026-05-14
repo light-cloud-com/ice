@@ -7,16 +7,16 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { run_parallel_apply, type SchedulerPhase } from '../scheduler.js';
-import type { ResourceChange } from '../../diff/types.js';
-import type { Graph, Node, NodeId, Edge, EdgeId } from '../../types/graph.js';
+import { run_parallel_apply, type SchedulerPhase } from '../scheduler';
+import type { ResourceChange } from '../../diff/types';
+import type { Graph, Node, NodeId, Edge, EdgeId } from '../../types/graph';
 import type {
   DeployOptions,
   NodeStatusEvent,
   NodeProgressEvent,
   ProviderDeployer,
   ResourceDeployResult,
-} from '../types.js';
+} from '../types';
 
 // ─── Test helpers ────────────────────────────────────────────────────
 
@@ -606,7 +606,7 @@ describe('ParallelChangeScheduler', () => {
 
     // Wire it through deploy_changes to exercise the wrap_on_progress_for_node_progress
     // bridge AND through the scheduler's own dispatch.
-    const { deploy_changes } = await import('../deploy-engine.js');
+    const { deploy_changes } = await import('../deploy-engine');
     await deployer.initialize({
       provider: 'gcp',
       on_node_progress: (e) => captured_progress.push(e),

@@ -35,9 +35,9 @@ router.use(requireAuth);
 
 // ── Health (no rate limit) ──────────────────────────────────────────────────
 
-router.get('/health', async (_req: AuthRequest, res: Response) => {
+router.get('/health', async (req: AuthRequest, res: Response) => {
   try {
-    const provider = await getAiProvider();
+    const provider = await getAiProvider(req.organisationId);
     const health = await provider.healthCheck();
     res.json(health);
   } catch (err: any) {
@@ -63,9 +63,9 @@ router.post('/canvas-intent', aiLimiter, async (req: AuthRequest, res: Response)
     const wantsStream = req.headers.accept?.includes('text/event-stream');
 
     if (wantsStream) {
-      await streamCanvasIntent(intent, canvasContext, res, cardId);
+      await streamCanvasIntent(intent, canvasContext, res, cardId, req.organisationId);
     } else {
-      const result = await processCanvasIntent(intent, canvasContext, cardId);
+      const result = await processCanvasIntent(intent, canvasContext, cardId, req.organisationId);
       res.json(result);
     }
   } catch (err: any) {
@@ -102,7 +102,7 @@ router.post('/diagnose-deploy', aiLimiter, async (req: AuthRequest, res: Respons
     return res.status(400).json({ message: 'Missing error or canvasContext' });
   }
   try {
-    const result = await diagnoseDeploy(body);
+    const result = await diagnoseDeploy(body, req.organisationId);
     res.json(result);
   } catch (err: any) {
     console.error('AI diagnose-deploy error:', err);

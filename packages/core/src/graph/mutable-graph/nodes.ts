@@ -12,16 +12,16 @@
  * the node maps.
  */
 
-import { create_node_id } from '../../types/graph.js';
+import { create_node_id } from '../../types/graph';
 import type {
   AddNodeResult,
   Node,
   NodeId,
   NodeInput,
-} from '../../types/graph.js';
-import { classify_resource } from '../classifier/category-classifier.js';
-import { edges_remove_edge } from './edges.js';
-import type { MutableGraphState } from './types.js';
+} from '../../types/graph';
+import { classify_resource } from '../classifier/category-classifier';
+import { edges_remove_edge } from './edges';
+import type { MutableGraphState } from './types';
 
 /**
  * Add a node to the graph.

@@ -19,13 +19,13 @@
  *     entry; throws on error.
  */
 import { describe, it, expect, vi } from 'vitest';
-import { create_deploy_state_adapter } from '../state-store-adapter.js';
-import type { StoredResourceEntry } from '../state-bridge.js';
-import type { SqliteStateStore } from '../../state/sqlite-state-store.js';
-import type { StoredResourceState } from '../../state/state-store.js';
-import type { NodeId } from '../../types/graph.js';
-import type { Result } from '../../types/result.js';
-import type { IceError } from '../../types/errors.js';
+import { create_deploy_state_adapter } from '../state-store-adapter';
+import type { StoredResourceEntry } from '../state-bridge';
+import type { SqliteStateStore } from '../../state/sqlite-state-store';
+import type { StoredResourceState } from '../../state/state-store';
+import type { NodeId } from '../../types/graph';
+import type { Result } from '../../types/result';
+import type { IceError } from '../../types/errors';
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 

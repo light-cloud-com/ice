@@ -72,8 +72,8 @@ vi.mock('@ice/service-credentials', () => ({
   getDecryptedCredentials: mocks.getDecryptedCredentials,
 }));
 
-vi.mock('../deploy-locks.js', async () => {
-  const actual = await vi.importActual<typeof import('../deploy-locks.js')>('../deploy-locks.js');
+vi.mock('../deploy-locks', async () => {
+  const actual = await vi.importActual<typeof import('../deploy-locks')>('../deploy-locks.js');
   return {
     acquireDeployLock: mocks.acquireDeployLock,
     DeployLockError: actual.DeployLockError,
@@ -83,17 +83,17 @@ vi.mock('../deploy-locks.js', async () => {
   };
 });
 
-vi.mock('../resource-mapping.service.js', () => ({
+vi.mock('../resource-mapping.service', () => ({
   getExistingNameMap: mocks.getExistingNameMap,
   getResourceMap: mocks.getResourceMap,
   seedMappingsFromHistory: mocks.seedMappingsFromHistory,
 }));
 
-vi.mock('../../providers/registry.js', () => ({
+vi.mock('../../providers/registry', () => ({
   resolveProviderAuth: mocks.resolveProviderAuth,
 }));
 
-vi.mock('../../utils/find-source-node-id.js', () => ({
+vi.mock('../../utils/find-source-node-id', () => ({
   buildResourceNameMaps: () => ({
     nameToNodeId: new Map(),
     graphIdToCanvasId: new Map(),
@@ -103,11 +103,11 @@ vi.mock('../../utils/find-source-node-id.js', () => ({
   makeFindSourceNodeId: () => () => undefined,
 }));
 
-vi.mock('../../utils/project-context.js', () => ({
+vi.mock('../../utils/project-context', () => ({
   resolveProjectContext: mocks.resolveProjectContext,
 }));
 
-vi.mock('../deployer-factory.js', () => ({
+vi.mock('../deployer-factory', () => ({
   createDeployer: mocks.createDeployer,
   getCoreEngine: async () => ({
     translate_card_to_graph: mocks.translateCardToGraph,
@@ -115,20 +115,20 @@ vi.mock('../deployer-factory.js', () => ({
   }),
 }));
 
-vi.mock('../gcp-api-enabler.js', () => ({
+vi.mock('../gcp-api-enabler', () => ({
   autoEnableGCPApis: mocks.autoEnableGCPApis,
 }));
 
-vi.mock('../snapshot-persister.js', () => ({
+vi.mock('../snapshot-persister', () => ({
   flushSnapshotNow: mocks.flushSnapshotNow,
 }));
 
-vi.mock('../deploy-event-dispatcher.js', () => ({
+vi.mock('../deploy-event-dispatcher', () => ({
   emitDeployEvent: mocks.emitDeployEvent,
   emitLog: mocks.emitLog,
 }));
 
-vi.mock('../scheduler-callbacks.js', () => ({
+vi.mock('../scheduler-callbacks', () => ({
   makeSchedulerCallbacks: (..._args: any[]) => ({
     on_node_status: vi.fn(),
     on_node_progress: vi.fn(),
@@ -137,15 +137,15 @@ vi.mock('../scheduler-callbacks.js', () => ({
   }),
 }));
 
-vi.mock('../baseline-graph.js', () => ({
+vi.mock('../baseline-graph', () => ({
   buildBaselineGraph: mocks.buildBaselineGraph,
 }));
 
-vi.mock('../quota-retry.js', () => ({
+vi.mock('../quota-retry', () => ({
   retryAfterQuotaCleanup: mocks.retryAfterQuotaCleanup,
 }));
 
-vi.mock('../apply-pipeline-helpers.js', () => ({
+vi.mock('../apply-pipeline-helpers', () => ({
   ensureAutoDeployRules: mocks.ensureAutoDeployRules,
   logDiffForDebugging: mocks.logDiffForDebugging,
   logSourceRepoDiagnostics: mocks.logSourceRepoDiagnostics,
@@ -153,8 +153,8 @@ vi.mock('../apply-pipeline-helpers.js', () => ({
   persistResourceMappings: mocks.persistResourceMappings,
 }));
 
-import { applyDeployment } from '../apply-deployment.js';
-import { DeployLockError } from '../deploy-locks.js';
+import { applyDeployment } from '../apply-deployment';
+import { DeployLockError } from '../deploy-locks';
 
 const ONE_NODE = [{ id: 'canvas-id-A', type: 'resource', data: { iceType: 'Database.PostgreSQL' } }];
 const HAPPY_TRANSLATION = {

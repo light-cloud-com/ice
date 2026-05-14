@@ -14,7 +14,7 @@
  *   patches are shallow-merged in rule order (last write wins per key)
  */
 
-import { PROPAGATION_RULES, AGGREGATE_RULES } from './propagation-rules.js';
+import { PROPAGATION_RULES, AGGREGATE_RULES } from './propagation-rules';
 import type {
   PropagationNode,
   PropagationEdge,
@@ -23,7 +23,7 @@ import type {
   PropagationContext,
   PatchSet,
   NodePatch,
-} from './types.js';
+} from './types';
 
 // ─── Graph Index ────────────────────────────────────────────────────────────
 

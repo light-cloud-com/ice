@@ -18,7 +18,7 @@ vi.mock('@ice/db', () => ({
 }));
 
 import prisma from '@ice/db';
-import { resolveEnvironmentCardId } from '../pipeline/environment-resolution.js';
+import { resolveEnvironmentCardId } from '../pipeline/environment-resolution';
 
 const cardFindUnique = (prisma as any).canvasCard.findUnique as ReturnType<typeof vi.fn>;
 const envFindFirst = (prisma as any).environment.findFirst as ReturnType<typeof vi.fn>;

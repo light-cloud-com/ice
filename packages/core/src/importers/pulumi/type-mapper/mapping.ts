@@ -36,8 +36,8 @@
  *    capture is dropped).
  */
 
-import { PROVIDER_MAP, TYPE_MAP } from './data.js';
-import { parse_type, parse_urn } from './parse.js';
+import { PROVIDER_MAP, TYPE_MAP } from './data';
+import { parse_type, parse_urn } from './parse';
 
 // =============================================================================
 // Mapping Functions

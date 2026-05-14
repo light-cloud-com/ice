@@ -20,11 +20,11 @@
  *   - this file                 — public re-export shim + 5 helpers
  */
 
-import { BLOCK_TEMPLATES } from './cloud-blocks-data.js';
-import type { BlockTemplate, BlockType, CloudBlock, CloudProvider } from './cloud-blocks-types.js';
+import { BLOCK_TEMPLATES } from './cloud-blocks-data';
+import type { BlockTemplate, BlockType, CloudBlock, CloudProvider } from './cloud-blocks-types';
 
 // Re-exports — public API consumers import from `./cloud-blocks.js`.
-export { BLOCK_TEMPLATES, BLOCK_CATEGORIES } from './cloud-blocks-data.js';
+export { BLOCK_TEMPLATES, BLOCK_CATEGORIES } from './cloud-blocks-data';
 export {
   type BlockConfig,
   type BlockDeployment,
@@ -35,7 +35,7 @@ export {
   type CloudBlock,
   type CloudProvider,
   type EnvVar,
-} from './cloud-blocks-types.js';
+} from './cloud-blocks-types';
 
 // =============================================================================
 // Helper Functions

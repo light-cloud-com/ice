@@ -55,7 +55,7 @@ beforeEach(async () => {
   currentUserId = 'user-1';
   vi.spyOn(console, 'error').mockImplementation(() => {});
 
-  const { default: orgRouter } = await import('../organisations.js');
+  const { default: orgRouter } = await import('../organisations');
   const app = express();
   app.use(express.json());
   app.use('/api/organisations', orgRouter);

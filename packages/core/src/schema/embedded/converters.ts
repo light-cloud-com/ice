@@ -8,8 +8,8 @@
  * Conversion is byte-identical to the pre-extraction class methods. Tests
  * pin the exact field shapes for both nested and validation cases.
  */
-import type { IceType, PropertySchema, ResourceSchema } from '../schema-provider.js';
-import type { SqliteProperty, SqliteResourceType, SqliteSchemaRegistry } from './sqlite-types.js';
+import type { IceType, PropertySchema, ResourceSchema } from '../schema-provider';
+import type { SqliteProperty, SqliteResourceType, SqliteSchemaRegistry } from './sqlite-types';
 
 /**
  * Convert a `SqliteResourceType` row + its child properties/implementations

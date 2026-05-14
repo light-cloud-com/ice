@@ -9,7 +9,7 @@
  * `parser-literals.ts`.
  */
 
-import type { SourceSpan } from '../tokens.js';
+import type { SourceSpan } from '../tokens';
 import type {
   ArrayExpression,
   AstNode,
@@ -25,7 +25,7 @@ import type {
   PropertyAccess,
   ResourceBlock,
   UnaryExpression,
-} from './types.js';
+} from './types';
 
 /**
  * Check if a node is of a specific kind.

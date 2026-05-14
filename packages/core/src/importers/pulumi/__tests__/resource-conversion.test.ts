@@ -3,9 +3,9 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { import_resource, process_properties } from '../resource-conversion.js';
-import type { PulumiResource, PulumiImportWarning } from '../types.js';
-import type { PulumiImportOptions } from '../state-importer.js';
+import { import_resource, process_properties } from '../resource-conversion';
+import type { PulumiResource, PulumiImportWarning } from '../types';
+import type { PulumiImportOptions } from '../state-importer';
 
 const SECRET_WRAPPER = {
   '4dabf18193072939515e22aab3b80af9': '1b47061264138c4ac30d75fd1eb44270',

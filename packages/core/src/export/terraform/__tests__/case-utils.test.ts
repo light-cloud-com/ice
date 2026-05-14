@@ -6,7 +6,7 @@
  * `terraform-exporter.ts`.
  */
 import { describe, expect, it } from 'vitest';
-import { sanitize_name } from '../case-utils.js';
+import { sanitize_name } from '../case-utils';
 
 describe('sanitize_name', () => {
   it('passes through alphanumerics, underscores, and hyphens', () => {

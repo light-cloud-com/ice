@@ -59,11 +59,11 @@ vi.mock('@ice/service-credentials', () => ({
   getDecryptedCredentials: mocks.getDecryptedCredentials,
 }));
 
-vi.mock('../../providers/registry.js', () => ({
+vi.mock('../../providers/registry', () => ({
   resolveProviderAuth: mocks.resolveProviderAuth,
 }));
 
-vi.mock('../deployer-factory.js', () => ({
+vi.mock('../deployer-factory', () => ({
   createDeployer: mocks.createDeployer,
   getCoreEngine: async () => ({
     MutableGraph: mocks.MutableGraph,
@@ -71,24 +71,24 @@ vi.mock('../deployer-factory.js', () => ({
   }),
 }));
 
-vi.mock('../deploy-lock-wrapper.js', () => ({
+vi.mock('../deploy-lock-wrapper', () => ({
   acquireWriteLock: mocks.acquireWriteLock,
 }));
 
-vi.mock('../deploy-event-dispatcher.js', () => ({
+vi.mock('../deploy-event-dispatcher', () => ({
   emitDeployEvent: mocks.emitDeployEvent,
   emitLog: mocks.emitLog,
 }));
 
-vi.mock('../baseline-graph.js', () => ({
+vi.mock('../baseline-graph', () => ({
   buildBaselineGraph: mocks.buildBaselineGraph,
 }));
 
-vi.mock('../deploy-locks.js', () => ({
+vi.mock('../deploy-locks', () => ({
   releaseTempDir: mocks.releaseTempDir,
 }));
 
-import { rollbackDeployment } from '../rollback-deployment.js';
+import { rollbackDeployment } from '../rollback-deployment';
 
 const SUCCESSFUL_TARGET = {
   id: 'deploy-target-1',

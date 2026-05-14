@@ -12,7 +12,7 @@
  * Extracted from `ast/types.ts` in rf-asttyp-1.
  */
 
-import type { AstNode } from './base.js';
+import type { AstNode } from './base';
 
 // =============================================================================
 // Expressions

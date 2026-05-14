@@ -27,9 +27,9 @@ import {
   build_dependency_map,
   export_graph,
   node_to_resource,
-} from '../converter.js';
-import { MutableGraph } from '../../../graph/mutable-graph.js';
-import type { EmbeddedSchemaProvider } from '../../../schema/embedded-schema-provider.js';
+} from '../converter';
+import { MutableGraph } from '../../../graph/mutable-graph';
+import type { EmbeddedSchemaProvider } from '../../../schema/embedded-schema-provider';
 
 /**
  * Build a minimal fake schema provider that only implements the
@@ -427,7 +427,7 @@ describe('export_graph — error and unmapped paths', () => {
     vi.doMock('../type-mapping.js', () => ({
       fallback_type_mapping: () => null,
     }));
-    const { export_graph: exg } = await import('../converter.js');
+    const { export_graph: exg } = await import('../converter');
     const provider = makeSchemaProvider();
     const g = new MutableGraph('test');
     g.add_node({ type: 'foo', name: 'x', properties: {} });
@@ -443,7 +443,7 @@ describe('export_graph — error and unmapped paths', () => {
     vi.doMock('../type-mapping.js', () => ({
       fallback_type_mapping: () => null,
     }));
-    const { export_graph: exg } = await import('../converter.js');
+    const { export_graph: exg } = await import('../converter');
     const provider = makeSchemaProvider();
     const g = new MutableGraph('test');
     g.add_node({ type: 'foo', name: 'x', properties: {} });
@@ -459,7 +459,7 @@ describe('export_graph — error and unmapped paths', () => {
     vi.doMock('../type-mapping.js', () => ({
       fallback_type_mapping: () => null,
     }));
-    const { node_to_resource: ntr } = await import('../converter.js');
+    const { node_to_resource: ntr } = await import('../converter');
     const provider = makeSchemaProvider();
     const g = new MutableGraph('test');
     const a = g.add_node({ type: 'foo', name: 'x', properties: {} });

@@ -15,7 +15,7 @@ import {
   mapLevel,
   normalizeTimestamp,
   probeErrorMessage,
-} from '../log-stream/entry-mapping.js';
+} from '../log-stream/entry-mapping';
 
 describe('mapEntry', () => {
   it('maps a typical Cloud Run entry with metadata + string data', () => {

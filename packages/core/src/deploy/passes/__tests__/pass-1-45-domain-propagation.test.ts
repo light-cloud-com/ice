@@ -27,9 +27,9 @@
  *   - fullHost composition: `<subdomain>.<rootDomain>` vs bare `<rootDomain>`.
  */
 import { describe, it, expect } from 'vitest';
-import { create_mutable_graph } from '../../../graph/mutable-graph.js';
-import type { CardEdgeInput, CardNodeInput } from '../../card-translator.js';
-import { propagate_custom_domain_hosts } from '../pass-1-45-domain-propagation.js';
+import { create_mutable_graph } from '../../../graph/mutable-graph';
+import type { CardEdgeInput, CardNodeInput } from '../../card-translator';
+import { propagate_custom_domain_hosts } from '../pass-1-45-domain-propagation';
 
 /**
  * Build a fresh graph with one compute node already added. Returns the

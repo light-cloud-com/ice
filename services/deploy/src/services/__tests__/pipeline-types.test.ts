@@ -16,7 +16,7 @@ import {
   type DeployStep,
   type FrameworkDetection,
   type WebhookRegistrationResult,
-} from '../pipeline/types.js';
+} from '../pipeline/types';
 
 describe('pipeline/types: GitHub API constants', () => {
   it('GITHUB_API points at api.github.com root', () => {

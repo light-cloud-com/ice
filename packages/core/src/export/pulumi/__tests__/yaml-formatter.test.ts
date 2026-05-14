@@ -18,8 +18,8 @@
  *    preserved (intra-loop `lines.push('')` runs once per resource).
  */
 import { describe, expect, it } from 'vitest';
-import { format_yaml_value, to_yaml } from '../yaml-formatter.js';
-import type { PulumiProgram } from '../types.js';
+import { format_yaml_value, to_yaml } from '../yaml-formatter';
+import type { PulumiProgram } from '../types';
 
 describe('format_yaml_value — primitives', () => {
   it('returns "null" for null', () => {

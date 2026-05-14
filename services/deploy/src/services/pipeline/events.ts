@@ -15,7 +15,7 @@
 
 import prisma from '@ice/db';
 import { emitPipelineUpdate, emitCardPipelineUpdate } from '@ice/shared';
-import { type DeployStep } from './types.js';
+import { type DeployStep } from './types';
 
 export async function getEventsForNode(cardId: string, nodeId: string, limit = 20) {
   // Find all cards in the same project (rules are shared across environments)

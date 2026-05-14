@@ -13,8 +13,8 @@ import type {
   GraphId,
   GraphMetadata,
   Node,
-} from '../../types/graph.js';
-import type { GraphStats, MutableGraphState, SerializedGraph } from './types.js';
+} from '../../types/graph';
+import type { GraphStats, MutableGraphState, SerializedGraph } from './types';
 
 /**
  * Compute graph statistics from raw state.

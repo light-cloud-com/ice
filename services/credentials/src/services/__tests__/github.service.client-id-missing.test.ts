@@ -34,7 +34,7 @@ describe('startDeviceFlow with no GITHUB_CLIENT_ID', () => {
     delete process.env.GITHUB_CLIENT_ID;
     vi.resetModules();
     try {
-      const { startDeviceFlow } = await import('../github.service.js');
+      const { startDeviceFlow } = await import('../github.service');
       await expect(startDeviceFlow()).rejects.toThrow('GITHUB_CLIENT_ID not configured');
     } finally {
       if (previous !== undefined) process.env.GITHUB_CLIENT_ID = previous;

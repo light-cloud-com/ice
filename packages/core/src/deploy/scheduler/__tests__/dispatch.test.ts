@@ -32,16 +32,16 @@ import {
   set_terminal,
   wait_for_settle,
   wake,
-} from '../dispatch.js';
-import type { ResourceChange } from '../../../diff/types.js';
-import type { Graph, Node, NodeId } from '../../../types/graph.js';
+} from '../dispatch';
+import type { ResourceChange } from '../../../diff/types';
+import type { Graph, Node, NodeId } from '../../../types/graph';
 import type {
   DeployOptions,
   NodeStatusEvent,
   ProviderDeployer,
   ResourceDeployResult,
-} from '../../types.js';
-import type { NodeRecord, SchedulerContext } from '../types.js';
+} from '../../types';
+import type { NodeRecord, SchedulerContext } from '../types';
 
 // ─── helpers ─────────────────────────────────────────────────────────
 

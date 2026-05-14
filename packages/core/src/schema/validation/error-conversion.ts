@@ -10,9 +10,9 @@
  *  - Top-level error message format: "Validation failed for <ice_type>:
  *    <count> error(s)".
  */
-import { ValidationError } from '../../types/errors.js';
-import type { ValidationViolation } from '../../types/errors.js';
-import type { ValidationResult } from '../resource-validator-types.js';
+import { ValidationError } from '../../types/errors';
+import type { ValidationViolation } from '../../types/errors';
+import type { ValidationResult } from '../resource-validator-types';
 
 export function to_validation_error(result: ValidationResult): ValidationError | null {
   if (result.valid) return null;

@@ -4,7 +4,7 @@
  * Deep comparison of property values for deployment planning.
  */
 
-import type { PropertyChange } from '../types/deployment.js';
+import type { PropertyChange } from '../types/deployment';
 
 // =============================================================================
 // Property Comparison

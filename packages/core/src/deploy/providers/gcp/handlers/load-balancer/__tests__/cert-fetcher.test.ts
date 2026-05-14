@@ -2,8 +2,8 @@
  * Tests for `load-balancer/cert-fetcher.ts` (rf-lbal-2).
  */
 import { describe, it, expect, vi } from 'vitest';
-import { fetch_initial_status, fetch_current_status, fetch_ip_address } from '../cert-fetcher.js';
-import type { GCPHandlerContext } from '../../../types.js';
+import { fetch_initial_status, fetch_current_status, fetch_ip_address } from '../cert-fetcher';
+import type { GCPHandlerContext } from '../../../types';
 
 function ctxWithGet(get: (...args: any[]) => any): GCPHandlerContext {
   return {

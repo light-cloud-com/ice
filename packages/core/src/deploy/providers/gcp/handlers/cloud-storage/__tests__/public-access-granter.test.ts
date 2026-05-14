@@ -11,8 +11,8 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { grantPublicAccess } from '../public-access-granter.js';
-import type { GCPHandlerContext } from '../../../types.js';
+import { grantPublicAccess } from '../public-access-granter';
+import type { GCPHandlerContext } from '../../../types';
 
 function makeCtx(): { ctx: GCPHandlerContext; logs: string[] } {
   const logs: string[] = [];

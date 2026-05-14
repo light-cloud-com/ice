@@ -17,7 +17,7 @@ export {
   edges_get_outgoing_edges,
   edges_remove_edge,
   edges_resolve_node_id,
-} from './edges.js';
+} from './edges';
 
 export {
   nodes_add_node,
@@ -27,7 +27,7 @@ export {
   nodes_has_node,
   nodes_remove_node,
   nodes_update_node,
-} from './nodes.js';
+} from './nodes';
 
 export {
   stats_clear,
@@ -36,7 +36,7 @@ export {
   stats_populate_from_serialized,
   stats_to_json,
   type SerializedGraphIdentity,
-} from './stats-serialize.js';
+} from './stats-serialize';
 
 export {
   traversal_get_all_dependencies,
@@ -44,11 +44,11 @@ export {
   traversal_get_dependencies,
   traversal_get_dependents,
   traversal_traverse,
-} from './traversal.js';
+} from './traversal';
 
 export {
   create_mutable_graph_state,
   type GraphStats,
   type MutableGraphState,
   type SerializedGraph,
-} from './types.js';
+} from './types';

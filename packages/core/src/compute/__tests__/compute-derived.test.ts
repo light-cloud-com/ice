@@ -15,7 +15,7 @@
  *  - diffPatches strips patches whose values already match current state.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { computeDerived, diffPatches } from '../compute-derived.js';
+import { computeDerived, diffPatches } from '../compute-derived';
 import type {
   AggregateRule,
   PropagationContext,
@@ -23,7 +23,7 @@ import type {
   PropagationNode,
   PropagationRule,
   PatchSet,
-} from '../types.js';
+} from '../types';
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
@@ -814,7 +814,7 @@ describe('computeDerived: default rules', () => {
 
 describe('compute/index barrel', () => {
   it('re-exports computeDerived, diffPatches, and the rule arrays', async () => {
-    const barrel = await import('../index.js');
+    const barrel = await import('../index');
     expect(typeof barrel.computeDerived).toBe('function');
     expect(typeof barrel.diffPatches).toBe('function');
     expect(Array.isArray(barrel.PROPAGATION_RULES)).toBe(true);

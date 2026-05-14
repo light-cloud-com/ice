@@ -9,7 +9,7 @@
  */
 
 import { createHash } from 'crypto';
-import { sanitize_name } from './name-utils.js';
+import { sanitize_name } from './name-utils';
 
 /**
  * Generate a stable resource name from the canvas node id, the concrete

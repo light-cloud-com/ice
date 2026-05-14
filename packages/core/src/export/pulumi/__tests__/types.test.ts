@@ -15,7 +15,7 @@ import type {
   PulumiProgram,
   PulumiResource,
   PulumiResourceOptions,
-} from '../types.js';
+} from '../types';
 
 describe('PulumiExportOptions shape', () => {
   it('accepts the minimal required field (provider) with all options absent', () => {

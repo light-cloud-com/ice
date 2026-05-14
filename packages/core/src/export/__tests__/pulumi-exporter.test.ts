@@ -33,17 +33,17 @@ const mocks = vi.hoisted(() => {
   return { ProviderConstructorCalls, initialize, FakeProvider, export_graph };
 });
 
-vi.mock('../../schema/embedded-schema-provider.js', () => ({
+vi.mock('../../schema/embedded-schema-provider', () => ({
   EmbeddedSchemaProvider: mocks.FakeProvider,
 }));
 
-vi.mock('../pulumi/converter.js', () => ({
+vi.mock('../pulumi/converter', () => ({
   export_graph: mocks.export_graph,
 }));
 
-import { PulumiExporter, create_pulumi_exporter } from '../pulumi-exporter.js';
-import type { MutableGraph } from '../../graph/mutable-graph.js';
-import type { PulumiExportOptions } from '../pulumi/types.js';
+import { PulumiExporter, create_pulumi_exporter } from '../pulumi-exporter';
+import type { MutableGraph } from '../../graph/mutable-graph';
+import type { PulumiExportOptions } from '../pulumi/types';
 
 beforeEach(() => {
   mocks.ProviderConstructorCalls.length = 0;

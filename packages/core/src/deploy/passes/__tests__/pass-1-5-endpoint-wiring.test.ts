@@ -46,10 +46,10 @@
  *   - Domain trimming: rootDomain whitespace trimmed.
  */
 import { describe, it, expect } from 'vitest';
-import { create_mutable_graph } from '../../../graph/mutable-graph.js';
-import type { CardEdgeInput, CardNodeInput, DeployableNodeInfo } from '../../card-translator.js';
-import { sanitize_name } from '../../utils/name-utils.js';
-import { wire_public_endpoints } from '../pass-1-5-endpoint-wiring.js';
+import { create_mutable_graph } from '../../../graph/mutable-graph';
+import type { CardEdgeInput, CardNodeInput, DeployableNodeInfo } from '../../card-translator';
+import { sanitize_name } from '../../utils/name-utils';
+import { wire_public_endpoints } from '../pass-1-5-endpoint-wiring';
 
 /**
  * Build a fixture: a graph populated with a forwarding-rule node for the

@@ -22,7 +22,7 @@ import {
   REDIS_SIZE_MAP,
   REDIS_VALID_TIERS,
   extract_memorystore_properties,
-} from '../database.js';
+} from '../database';
 
 describe('extract_cloud_sql_properties', () => {
   it('returns MySQL defaults for an empty data object', () => {

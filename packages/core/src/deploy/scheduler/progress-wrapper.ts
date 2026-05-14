@@ -18,8 +18,8 @@
  * `scheduler.ts` L662-694. Lifted verbatim — no semantic change.
  */
 
-import type { ResourceChange } from '../../diff/types.js';
-import type { DeployOptions } from '../types.js';
+import type { ResourceChange } from '../../diff/types';
+import type { DeployOptions } from '../types';
 
 /**
  * Wrap the host-supplied `on_progress` callback so that handler-level

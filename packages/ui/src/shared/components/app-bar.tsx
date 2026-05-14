@@ -5,28 +5,20 @@
 import awsIcon from 'devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg';
 import azureIcon from 'devicon/icons/azure/azure-original.svg';
 import gcpIcon from 'devicon/icons/googlecloud/googlecloud-original.svg';
-import { Settings, Github, HelpCircle } from 'lucide-react';
+import { Settings, Github, HelpCircle, Sparkles } from 'lucide-react';
 import React, { memo, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Breadcrumbs } from './breadcrumbs';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from './ui/dropdown-menu';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './ui/tooltip';
 import { Logo } from '../../assets/logo';
 import { PromoteModal } from '../../features/environments/components/promote-modal';
+import { AnthropicConnectModal } from '../../features/integrations/components/anthropic-connect-modal';
 import { GitHubConnectModal } from '../../features/integrations/components/github-connect-modal';
 import { ProviderConnectModal } from '../../features/integrations/components/provider-connect-modal';
-import { allTours, useTour } from '../../features/tour';
+import { useTour } from '../../features/tour';
 import { useTranslation } from '../../i18n';
-import { checkGitHubConnection } from '../../store/slices/integrations-slice';
+import { checkAnthropicConnection, checkGitHubConnection } from '../../store/slices/integrations-slice';
 import { cn } from '../utils/cn';
 import type { RootState, AppDispatch } from '../../store';
 
@@ -56,13 +48,16 @@ export const AppBar: React.FC = memo(() => {
   const navigate = useNavigate();
   const githubStatus = useSelector((s: RootState) => s.integrations.integrations.github?.status);
   const gcpStatus = useSelector((s: RootState) => s.integrations.integrations.gcp?.status);
+  const anthropicStatus = useSelector((s: RootState) => s.integrations.integrations.anthropic?.status);
   const [showGitHub, setShowGitHub] = useState(false);
   const [showGcp, setShowGcp] = useState(false);
   const [showAws, setShowAws] = useState(false);
   const [showAzure, setShowAzure] = useState(false);
+  const [showAnthropic, setShowAnthropic] = useState(false);
 
   useEffect(() => {
     dispatch(checkGitHubConnection());
+    dispatch(checkAnthropicConnection());
   }, [dispatch]);
 
   return (
@@ -118,6 +113,13 @@ export const AppBar: React.FC = memo(() => {
               tip={t('integrations.github.title')}
               className={githubStatus === 'connected' ? 'text-emerald-500' : undefined}
             />
+            <BarBtn
+              id="ice-appbar-btn-anthropic"
+              icon={Sparkles}
+              onClick={() => setShowAnthropic(true)}
+              tip={t('integrations.anthropic.appBarTip')}
+              className={anthropicStatus === 'connected' ? 'text-amber-500' : undefined}
+            />
             <BarSep />
             <HelpMenu />
             <BarBtn icon={Settings} onClick={() => navigate('/settings')} tip="Settings" />
@@ -125,6 +127,7 @@ export const AppBar: React.FC = memo(() => {
         </header>
       </TooltipProvider>
 
+      <AnthropicConnectModal isOpen={showAnthropic} onClose={() => setShowAnthropic(false)} />
       <GitHubConnectModal isOpen={showGitHub} onClose={() => setShowGitHub(false)} />
       <ProviderConnectModal
         isOpen={showGcp}
@@ -295,56 +298,30 @@ const BarImgBtn: React.FC<{ id?: string; src: string; onClick: () => void; tip?:
 const BarSep: React.FC = () => <div className="w-px h-4 bg-ice-border mx-1" />;
 
 /**
- * Help menu — currently a single submenu "Show me around" listing every
- * registered tour. The submenu is the canonical surface for users who
- * already know the app to re-launch any tour. Auto-fire policy lives in
- * `use-tour-autostart` (URL `?tour=` param). See blueprint §4.3 +
- * §6/tour-13.
+ * Help button — single click launches the canvas tour. Used to be a
+ * dropdown listing every registered tour, but the canvas tour is the
+ * comprehensive product walkthrough so the dropdown was extra friction.
  */
 const HelpMenu: React.FC = () => {
   const { t } = useTranslation();
   const { start } = useTour();
-  // `allTours()` returns insertion order from `config/tours.ts`. Tour
-  // titles are i18n keys — pass through `t()`.
-  const tours = allTours();
   return (
-    <DropdownMenu>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <DropdownMenuTrigger asChild>
-            <button
-              id="ice-appbar-btn-help"
-              aria-label={t('appBar.help.tooltip')}
-              className={cn(
-                'p-1.5 rounded text-ice-text-3 hover:text-ice-text-1 hover:bg-ice-hover transition-[color,background-color]',
-              )}
-            >
-              <HelpCircle className="w-4 h-4" aria-hidden="true" />
-            </button>
-          </DropdownMenuTrigger>
-        </TooltipTrigger>
-        <TooltipContent side="bottom" className="text-ice-xs">
-          {t('appBar.help.tooltip')}
-        </TooltipContent>
-      </Tooltip>
-      <DropdownMenuContent align="end">
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger data-testid="ice-appbar-help-show-me-around">
-            {t('appBar.help.showMeAround')}
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>
-            {tours.map((tour) => (
-              <DropdownMenuItem
-                key={tour.id}
-                data-testid={`ice-appbar-help-tour-${tour.id}`}
-                onSelect={() => start(tour.id)}
-              >
-                {t(tour.title as never)}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          id="ice-appbar-btn-help"
+          aria-label={t('appBar.help.tooltip')}
+          onClick={() => start('canvas-tour')}
+          className={cn(
+            'p-1.5 rounded text-ice-text-3 hover:text-ice-text-1 hover:bg-ice-hover transition-[color,background-color]',
+          )}
+        >
+          <HelpCircle className="w-4 h-4" aria-hidden="true" />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" className="text-ice-xs">
+        {t('appBar.help.tooltip')}
+      </TooltipContent>
+    </Tooltip>
   );
 };

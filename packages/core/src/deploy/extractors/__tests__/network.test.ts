@@ -28,7 +28,7 @@ import {
   extract_vpc_properties,
   extract_subnet_properties,
   extract_cloud_armor_properties,
-} from '../network.js';
+} from '../network';
 
 describe('extract_storage_bucket_properties', () => {
   it('returns defaults for an empty data object', () => {

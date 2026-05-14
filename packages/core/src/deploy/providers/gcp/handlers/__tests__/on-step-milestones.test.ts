@@ -10,14 +10,14 @@
  */
 
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { cloud_sql_handler } from '../cloud-sql.js';
-import { memorystore_handler } from '../memorystore.js';
-import { cloud_run_handler } from '../cloud-run.js';
-import { cloud_functions_handler } from '../cloud-functions.js';
-import { api_gateway_handler } from '../api-gateway.js';
-import { gke_handler } from '../gke.js';
-import { build_from_source, ensure_artifact_registry } from '../cloud-build-helper.js';
-import type { GCPHandlerContext } from '../../types.js';
+import { cloud_sql_handler } from '../cloud-sql';
+import { memorystore_handler } from '../memorystore';
+import { cloud_run_handler } from '../cloud-run';
+import { cloud_functions_handler } from '../cloud-functions';
+import { api_gateway_handler } from '../api-gateway';
+import { gke_handler } from '../gke';
+import { build_from_source, ensure_artifact_registry } from '../cloud-build-helper';
+import type { GCPHandlerContext } from '../../types';
 
 interface CapturedStep {
   resource: string;

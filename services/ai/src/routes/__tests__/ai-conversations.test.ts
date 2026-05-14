@@ -66,7 +66,7 @@ beforeEach(async () => {
   currentOrgId = 'org-1';
   vi.spyOn(console, 'error').mockImplementation(() => {});
 
-  const { default: convoRouter } = await import('../ai-conversations.js');
+  const { default: convoRouter } = await import('../ai-conversations');
   const app = express();
   app.use(express.json());
   app.use('/api/ai', convoRouter);

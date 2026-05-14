@@ -11,7 +11,7 @@ import {
   is_type_supported,
   get_supported_types,
   map_properties,
-} from '../type-mapper.js';
+} from '../type-mapper';
 
 describe('get_ice_type', () => {
   // The TYPE_MAP table is the source of truth for "supported" Azure types.

@@ -6,8 +6,8 @@
  * Includes a REST client utility for services without Node.js SDKs.
  */
 
-import { isAuthMissingError, isAuthExpiredError, AUTH_MESSAGES } from '../../messages.js';
-import type { GCPRestClient } from './types.js';
+import { isAuthMissingError, isAuthExpiredError, AUTH_MESSAGES } from '../../messages';
+import type { GCPRestClient } from './types';
 
 /**
  * Dynamically import a GCP SDK package.

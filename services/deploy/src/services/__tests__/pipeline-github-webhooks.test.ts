@@ -37,7 +37,7 @@ import {
   getWebhookCallbackUrl,
   registerGitHubWebhook,
   unregisterGitHubWebhook,
-} from '../pipeline/github-webhooks.js';
+} from '../pipeline/github-webhooks';
 
 const findUniqueMock = (prisma as any).gitHubToken.findUnique as ReturnType<typeof vi.fn>;
 const decryptMock = (shared as any).decryptString as ReturnType<typeof vi.fn>;

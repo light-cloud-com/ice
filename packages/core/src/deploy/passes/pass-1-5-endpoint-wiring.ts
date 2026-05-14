@@ -17,13 +17,13 @@
 import {
   sanitize_name,
   sanitize_label_value,
-} from '../utils/name-utils.js';
+} from '../utils/name-utils';
 import type {
   CardEdgeInput,
   CardNodeInput,
   DeployableNodeInfo,
-} from '../card-translator.js';
-import type { MutableGraph } from '../../graph/mutable-graph.js';
+} from '../card-translator';
+import type { MutableGraph } from '../../graph/mutable-graph';
 
 /**
  * One backend connected to a PublicEndpoint. Promoted to module-level

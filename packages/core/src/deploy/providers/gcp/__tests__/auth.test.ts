@@ -20,7 +20,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // Hoisted bag so each test can swap the synthetic SDK without re-mocking.
 const sdkBag: { load_sdk: any } = { load_sdk: vi.fn() };
 
-vi.mock('../sdk-loader.js', () => ({
+vi.mock('../sdk-loader', () => ({
   load_sdk: (...args: unknown[]) => sdkBag.load_sdk(...args),
 }));
 
@@ -29,7 +29,7 @@ import {
   validate_gcp_credentials,
   list_gcp_projects,
   type GCPAuthConfig,
-} from '../auth.js';
+} from '../auth';
 
 // =============================================================================
 // Helpers

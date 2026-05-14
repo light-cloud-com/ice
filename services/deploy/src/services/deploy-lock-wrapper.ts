@@ -18,7 +18,7 @@
  * reason — see `.claude/state/blueprints/rf-deploy.md` line 97.
  */
 
-import { acquireDeployLock, DeployLockError } from './deploy-locks.js';
+import { acquireDeployLock, DeployLockError } from './deploy-locks';
 
 /**
  * Acquire a per-card deploy lock for `action`, returning the release fn.

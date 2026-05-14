@@ -10,9 +10,9 @@
  * Routing mode defaults to GLOBAL ("single global VPC" semantics).
  */
 
-import { SERVICE_NAMES, operation_failed, operation_timed_out } from '../messages.js';
-import type { ResourceDeployResult } from '../../../types.js';
-import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
+import { SERVICE_NAMES, operation_failed, operation_timed_out } from '../messages';
+import type { ResourceDeployResult } from '../../../types';
+import type { GCPResourceHandler, GCPHandlerContext } from '../types';
 
 const TYPE = 'gcp.compute.network';
 const BASE_URL = 'https://compute.googleapis.com/compute/v1';

@@ -5,8 +5,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { create_mutable_graph } from '../../../mutable-graph.js';
-import { SensitiveDataValidator, BestPracticesValidator } from '../security.js';
+import { create_mutable_graph } from '../../../mutable-graph';
+import { SensitiveDataValidator, BestPracticesValidator } from '../security';
 
 // ─── SensitiveDataValidator ──────────────────────────────────────────────────
 

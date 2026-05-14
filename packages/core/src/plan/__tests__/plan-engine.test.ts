@@ -18,10 +18,10 @@ import {
   get_plan_execution_layers,
   serialize_plan,
   deserialize_plan,
-} from '../plan-engine.js';
-import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph.js';
-import type { NodeId } from '../../types/graph.js';
-import type { ResourceState } from '../../types/providers.js';
+} from '../plan-engine';
+import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph';
+import type { NodeId } from '../../types/graph';
+import type { ResourceState } from '../../types/providers';
 
 beforeEach(() => {
   vi.clearAllMocks();

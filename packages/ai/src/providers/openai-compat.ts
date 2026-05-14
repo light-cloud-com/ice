@@ -23,7 +23,14 @@ export class OpenAICompatProvider implements AiProvider {
   protected readonly apiKey: string | undefined;
 
   constructor(options?: { baseUrl?: string; model?: string; apiKey?: string; name?: string; isLocal?: boolean }) {
-    this.baseUrl = (options?.baseUrl || process.env.ICE_AI_URL || 'http://localhost:8000').replace(/\/+$/, '');
+    const explicitUrl = options?.baseUrl || process.env.ICE_AI_URL;
+    if (!explicitUrl && process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'OpenAICompatProvider requires ICE_AI_URL (or an explicit baseUrl) in production. ' +
+          'Localhost defaults are only allowed in development.',
+      );
+    }
+    this.baseUrl = (explicitUrl || 'http://localhost:8000').replace(/\/+$/, '');
     this.model = options?.model || process.env.ICE_AI_MODEL || 'default';
     this.apiKey = options?.apiKey;
     this.name = options?.name || 'openai-compat';

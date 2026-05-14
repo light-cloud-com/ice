@@ -33,7 +33,7 @@
  * names) coming from `map_properties` / `sanitize_name`.
  */
 
-import type { PulumiExportOptions, PulumiProgram } from './types.js';
+import type { PulumiExportOptions, PulumiProgram } from './types';
 
 /**
  * Format a value for YAML output.

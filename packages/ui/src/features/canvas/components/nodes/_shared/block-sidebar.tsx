@@ -11,11 +11,12 @@
  * and visually restrained — the sidebar is a stamp, not a header.
  */
 
+import { SIDEBAR_WIDTH } from '@ice/constants';
 import React, { type ReactNode } from 'react';
 import { getBrandIcon } from '../../../../../assets/icons/brand-registry';
 import { getServiceName } from '../../../../../assets/icons/service-names';
 
-export const SIDEBAR_WIDTH = 56;
+export { SIDEBAR_WIDTH };
 
 interface BlockSidebarProps {
   /** Pre-rendered type icon node (Lucide icon or CategoryIcon). */

@@ -45,7 +45,7 @@ vi.mock('@ice/db', () => ({
  */
 async function freshAuth() {
   vi.resetModules();
-  return import('../middleware.js');
+  return import('../middleware');
 }
 
 function makeRes() {

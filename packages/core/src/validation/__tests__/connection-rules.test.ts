@@ -6,8 +6,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { validateConnections } from '../connection-rules.js';
-import type { ValidatableNode, ValidatableEdge, ValidationContext } from '../types.js';
+import { validateConnections } from '../connection-rules';
+import type { ValidatableNode, ValidatableEdge, ValidationContext } from '../types';
 
 const ctx: ValidationContext = { mode: 'design' };
 

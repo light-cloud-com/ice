@@ -28,8 +28,8 @@ import {
   publishVersion,
   publishPlaceholderVersion,
   parseRepository,
-} from '../version-publisher.js';
-import type { GCPHandlerContext } from '../../../types.js';
+} from '../version-publisher';
+import type { GCPHandlerContext } from '../../../types';
 
 // Hoisted mocks: vitest hoists `vi.hoisted` and the `vi.mock` blocks
 // below ABOVE all import statements (per the rf-fbh-5 import-x/order
@@ -58,7 +58,7 @@ vi.mock('zlib', () => ({
   gzipSync: mocks.gzipSync,
 }));
 
-vi.mock('../rest-client.js', () => ({
+vi.mock('../rest-client', () => ({
   restRequest: mocks.restRequest,
   FIREBASE_HOSTING_API: mocks.FIREBASE_HOSTING_API,
 }));

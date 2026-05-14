@@ -38,8 +38,8 @@ import {
   parse_factor,
   parse_unary,
   parse_postfix,
-} from '../parser-binary-exprs.js';
-import { make_parser_state } from '../parser-state.js';
+} from '../parser-binary-exprs';
+import { make_parser_state } from '../parser-state';
 import type {
   BinaryExpression,
   ConditionalExpression,
@@ -50,8 +50,8 @@ import type {
   PropertyAccess,
   StringLiteral,
   UnaryExpression,
-} from '../ast.js';
-import type { Token, TokenType, SourcePosition } from '../tokens.js';
+} from '../ast';
+import type { Token, TokenType, SourcePosition } from '../tokens';
 
 /** Build a minimal token at line/col 1 (with optional literal). */
 function tk(

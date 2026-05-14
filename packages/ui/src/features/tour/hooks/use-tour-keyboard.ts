@@ -64,8 +64,9 @@ export function useTourKeyboard(opts: UseTourKeyboardOptions): void {
         return;
       }
 
-      if (event.key === 'Enter') {
-        // Don't steal Enter when the user is typing in a form field.
+      if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
+        // Don't steal Enter / Space when the user is typing in a form field.
+        // ('Spacebar' is the legacy IE/Edge name; modern browsers use ' '.)
         if (isFormFieldActive()) return;
         event.preventDefault();
         cb.onAdvance();

@@ -13,7 +13,7 @@
  * for both, JSON parse error, YAML parse error.
  */
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { parse_json, parse_yaml, parse_auto } from '../format-parser.js';
+import { parse_json, parse_yaml, parse_auto } from '../format-parser';
 import type {
   Program,
   ResourceBlock,
@@ -28,7 +28,7 @@ import type {
   ArrayExpression,
   ObjectExpression,
   Reference,
-} from '../ast.js';
+} from '../ast';
 
 // -----------------------------------------------------------------------------
 // parse_json — happy path + every block type
@@ -644,7 +644,7 @@ describe('parse_yaml — module-mock paths', () => {
     });
 
     vi.resetModules();
-    const mod = await import('../format-parser.js');
+    const mod = await import('../format-parser');
     const result = await mod.parse_yaml('resources: {}');
 
     expect(result.program).toBeNull();
@@ -666,7 +666,7 @@ describe('parse_yaml — module-mock paths', () => {
       }),
     }));
     vi.resetModules();
-    const mod = await import('../format-parser.js');
+    const mod = await import('../format-parser');
     const result = await mod.parse_yaml('ignored');
 
     expect(result.errors).toHaveLength(0);

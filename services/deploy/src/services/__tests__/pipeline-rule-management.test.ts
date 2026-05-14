@@ -32,20 +32,20 @@ vi.mock('@ice/db', () => ({
   },
 }));
 
-vi.mock('../pipeline/github-webhooks.js', () => ({
+vi.mock('../pipeline/github-webhooks', () => ({
   registerGitHubWebhook: vi.fn(),
   unregisterGitHubWebhook: vi.fn(),
 }));
 
 import prisma from '@ice/db';
-import * as webhooks from '../pipeline/github-webhooks.js';
+import * as webhooks from '../pipeline/github-webhooks';
 import {
   createRule,
   updateRule,
   deleteRule,
   getRulesForNode,
   ensureRulesForCanvas,
-} from '../pipeline/rule-management.js';
+} from '../pipeline/rule-management';
 
 const ruleFindFirst = (prisma as any).deploymentRule.findFirst as ReturnType<typeof vi.fn>;
 const ruleFindMany = (prisma as any).deploymentRule.findMany as ReturnType<typeof vi.fn>;

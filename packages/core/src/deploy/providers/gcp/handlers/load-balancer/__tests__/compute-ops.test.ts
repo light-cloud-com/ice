@@ -2,8 +2,8 @@
  * Tests for `load-balancer/compute-ops.ts` (rf-lbal-1).
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { wait_for_compute_op } from '../compute-ops.js';
-import type { GCPHandlerContext } from '../../../types.js';
+import { wait_for_compute_op } from '../compute-ops';
+import type { GCPHandlerContext } from '../../../types';
 
 function ctxWithGet(get: (...args: any[]) => any): GCPHandlerContext {
   return {

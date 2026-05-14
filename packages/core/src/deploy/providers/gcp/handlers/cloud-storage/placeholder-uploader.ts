@@ -20,9 +20,9 @@
  * for surfacing those via the deploy result.
  */
 
-import { placeholderIndexHtml, placeholderNotFoundHtml } from './bucket-utils.js';
-import type { PublicGrantStrategy } from './public-access-granter.js';
-import type { GCPHandlerContext } from '../../types.js';
+import { placeholderIndexHtml, placeholderNotFoundHtml } from './bucket-utils';
+import type { PublicGrantStrategy } from './public-access-granter';
+import type { GCPHandlerContext } from '../../types';
 
 export interface UploadPlaceholdersInput {
   bucket: any;

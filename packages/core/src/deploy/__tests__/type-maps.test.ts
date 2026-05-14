@@ -17,8 +17,8 @@ import {
   AZURE_TYPE_MAP,
   DESIGN_ONLY_PROVIDERS,
   get_type_map,
-} from '../type-maps.js';
-import type { DeployProvider } from '../card-translator.js';
+} from '../type-maps';
+import type { DeployProvider } from '../card-translator';
 
 describe('GCP_TYPE_MAP', () => {
   it('exposes 32 iceType entries', () => {

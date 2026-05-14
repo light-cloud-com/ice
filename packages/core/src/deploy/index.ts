@@ -4,7 +4,7 @@
  * Deploy infrastructure changes directly to cloud providers.
  */
 
-export { deploy_changes, deploy_graph, format_deploy_result } from './deploy-engine.js';
+export { deploy_changes, deploy_graph, format_deploy_result } from './deploy-engine';
 
 export {
   GCPDeployer,
@@ -28,15 +28,15 @@ export type {
   NodeStatusEvent,
   NodeProgressEvent,
   NodeTerminalStatus,
-} from './types.js';
+} from './types';
 
 // Parallel scheduler (pdl-1) — exposed for service-layer wiring (pdl-4).
-export { run_parallel_apply, ParallelChangeScheduler, DEFAULT_POOL_SIZE, DEFAULT_PER_HANDLER_CAPS } from './scheduler.js';
+export { run_parallel_apply, ParallelChangeScheduler, DEFAULT_POOL_SIZE, DEFAULT_PER_HANDLER_CAPS } from './scheduler';
 
-export type { SchedulerPhase, SchedulerRunInput } from './scheduler.js';
+export type { SchedulerPhase, SchedulerRunInput } from './scheduler';
 
 // Card-to-Graph translation layer
-export { translate_card_to_graph } from './card-translator.js';
+export { translate_card_to_graph } from './card-translator';
 
 export type {
   CardTranslationInput,
@@ -45,7 +45,7 @@ export type {
   CardEdgeInput,
   DeployProvider,
   SkippedNode,
-} from './card-translator.js';
+} from './card-translator';
 
 // State persistence bridge
 export {
@@ -53,32 +53,32 @@ export {
   enrich_graph_with_state,
   sync_deploy_result_to_state,
   sync_resource_results_to_state,
-} from './state-bridge.js';
+} from './state-bridge';
 
-export type { DeployStateStore, StoredResourceEntry } from './state-bridge.js';
+export type { DeployStateStore, StoredResourceEntry } from './state-bridge';
 
 // State store adapter (SqliteStateStore → DeployStateStore)
-export { create_deploy_state_adapter } from './state-store-adapter.js';
+export { create_deploy_state_adapter } from './state-store-adapter';
 
 // Environment-aware deployment
-export { apply_environment_overrides, get_environment_label, get_cost_multiplier } from './environment-config.js';
+export { apply_environment_overrides, get_environment_label, get_cost_multiplier } from './environment-config';
 
-export type { EnvironmentType } from './environment-config.js';
+export type { EnvironmentType } from './environment-config';
 
 // GCP SDK lazy loader — exposed so consumers outside the deploy engine
 // (e.g. the log-stream service) can load `@google-cloud/logging` without
 // re-implementing the dynamic-import dance.
-export { load_sdk } from './providers/gcp/sdk-loader.js';
+export { load_sdk } from './providers/gcp/sdk-loader';
 
 // GCP Authentication
-export { get_gcp_credentials, validate_gcp_credentials, list_gcp_projects } from './providers/gcp/auth.js';
+export { get_gcp_credentials, validate_gcp_credentials, list_gcp_projects } from './providers/gcp/auth';
 
 export type {
   GCPAuthConfig as GCPDeployAuthConfig,
   GCPAuthMethod,
   GCPAuthResult,
   GCPProject,
-} from './providers/gcp/auth.js';
+} from './providers/gcp/auth';
 
 // Centralized messages
 export {
@@ -103,4 +103,4 @@ export {
   DEPLOY_DISPLAY,
   IPC_ERRORS,
   ALLOWED_EXTERNAL_URL_PREFIXES,
-} from './messages.js';
+} from './messages';

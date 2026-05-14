@@ -38,18 +38,18 @@ const mocks = vi.hoisted(() => ({
   g_get_equivalents: vi.fn(async () => ({ ok: true, value: [] })),
 }));
 
-vi.mock('../embedded/initialization.js', () => ({
+vi.mock('../embedded/initialization', () => ({
   initialize_registry: mocks.initialize_registry,
   resolve_db_path: mocks.resolve_db_path,
 }));
 
-vi.mock('../embedded/events.js', () => ({
+vi.mock('../embedded/events', () => ({
   add_listener: mocks.add_listener,
   remove_listener: mocks.remove_listener,
   emit_event: mocks.emit_event,
 }));
 
-vi.mock('../embedded/queries.js', () => ({
+vi.mock('../embedded/queries', () => ({
   get_schema: mocks.q_get_schema,
   has_schema: mocks.q_has_schema,
   query_schemas: mocks.q_query_schemas,
@@ -64,7 +64,7 @@ vi.mock('../embedded/queries.js', () => ({
   make_query_cache: mocks.make_query_cache,
 }));
 
-vi.mock('../embedded/graph-queries.js', () => ({
+vi.mock('../embedded/graph-queries', () => ({
   get_dependencies: mocks.g_get_dependencies,
   get_dependents: mocks.g_get_dependents,
   get_equivalents: mocks.g_get_equivalents,
@@ -74,8 +74,8 @@ import {
   EmbeddedSchemaProvider,
   create_embedded_schema_provider,
   create_embedded_schema_provider_with_registry,
-} from '../embedded-schema-provider.js';
-import type { IceType } from '../schema-provider.js';
+} from '../embedded-schema-provider';
+import type { IceType } from '../schema-provider';
 
 const FAKE_REGISTRY = { __id: 'fake-registry' };
 

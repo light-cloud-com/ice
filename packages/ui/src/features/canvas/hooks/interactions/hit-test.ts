@@ -20,7 +20,7 @@
  * orchestrator must KEEP the refs and snapshot at call time.
  */
 
-import type { CanvasItem, CanvasViewport } from './types.js';
+import type { CanvasItem, CanvasViewport } from './types';
 
 /**
  * Convert a screen-space (clientX, clientY) to canvas-space, given the

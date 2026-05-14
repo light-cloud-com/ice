@@ -24,9 +24,9 @@ import {
   build_dependency_map,
   export_graph,
   node_to_resource,
-} from '../converter.js';
-import { MutableGraph } from '../../../graph/mutable-graph.js';
-import type { EmbeddedSchemaProvider } from '../../../schema/embedded-schema-provider.js';
+} from '../converter';
+import { MutableGraph } from '../../../graph/mutable-graph';
+import type { EmbeddedSchemaProvider } from '../../../schema/embedded-schema-provider';
 
 /**
  * Build a minimal fake schema provider that only implements the

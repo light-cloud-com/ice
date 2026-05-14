@@ -20,12 +20,12 @@ vi.mock('@ice/service-credentials', () => ({
   updateGCPOAuthTokens: vi.fn(),
 }));
 
-vi.mock('../../services/deploy-locks.js', () => ({
+vi.mock('../../services/deploy-locks', () => ({
   registerTempDir: vi.fn(),
   releaseTempDir: vi.fn(),
 }));
 
-vi.mock('../aws/credential-resolver.js', () => ({
+vi.mock('../aws/credential-resolver', () => ({
   awsCredentialResolver: {
     provider: 'aws',
     resolve: vi.fn(),
@@ -33,7 +33,7 @@ vi.mock('../aws/credential-resolver.js', () => ({
   },
 }));
 
-vi.mock('../gcp/credential-resolver.js', () => ({
+vi.mock('../gcp/credential-resolver', () => ({
   gcpCredentialResolver: {
     provider: 'gcp',
     resolve: vi.fn(),
@@ -45,9 +45,9 @@ import {
   CREDENTIAL_RESOLVERS,
   resolveProviderAuth,
   cleanupProviderAuth,
-} from '../registry.js';
-import { awsCredentialResolver } from '../aws/credential-resolver.js';
-import { gcpCredentialResolver } from '../gcp/credential-resolver.js';
+} from '../registry';
+import { awsCredentialResolver } from '../aws/credential-resolver';
+import { gcpCredentialResolver } from '../gcp/credential-resolver';
 
 beforeEach(() => {
   vi.clearAllMocks();

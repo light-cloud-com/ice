@@ -25,9 +25,9 @@
 
 import { createHash } from 'crypto';
 import { gzipSync } from 'zlib';
-import { restRequest, FIREBASE_HOSTING_API } from './rest-client.js';
-import { type FileEntry } from './tar-parser.js';
-import type { GCPHandlerContext } from '../../types.js';
+import { restRequest, FIREBASE_HOSTING_API } from './rest-client';
+import { type FileEntry } from './tar-parser';
+import type { GCPHandlerContext } from '../../types';
 
 /**
  * Create a hosting version from a set of files, finalize and release.

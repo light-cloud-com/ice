@@ -16,9 +16,9 @@
  */
 
 import type { NodeStatusEvent, NodeProgressEvent } from '@ice/core';
-import { emitDeployEvent, emitLog } from './deploy-event-dispatcher.js';
-import { updateDeploySnapshotNode } from './deploy-locks.js';
-import { mapStatusToOverlay } from '../utils/deploy-event-formatter.js';
+import { emitDeployEvent, emitLog } from './deploy-event-dispatcher';
+import { updateDeploySnapshotNode } from './deploy-locks';
+import { mapStatusToOverlay } from '../utils/deploy-event-formatter';
 
 export interface SchedulerCallbacksArgs {
   /** Card id used for every wire emit + snapshot mutation. */

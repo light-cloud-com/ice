@@ -6,14 +6,13 @@
  * Store). Editing moves to the properties panel.
  */
 
+import { EC_HEADER_HEIGHT, EC_PADDING, EC_ROW_HEIGHT } from '@ice/constants';
 import { Cog } from 'lucide-react';
 import React from 'react';
 import { CardShell, EmptyHint, KvLine } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
-export const EC_HEADER_HEIGHT = 48;
-export const EC_ROW_HEIGHT = 20;
-export const EC_PADDING = 12;
+export { EC_HEADER_HEIGHT, EC_ROW_HEIGHT, EC_PADDING };
 
 export function computeEnvConfigHeight(data: Record<string, unknown>): number {
   const rows = (data?.variables as unknown[] | undefined) || [];

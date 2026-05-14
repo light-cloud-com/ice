@@ -10,15 +10,15 @@
  * (it was the class's private `resolve_node_id` utility).
  */
 
-import { create_edge_id } from '../../types/graph.js';
+import { create_edge_id } from '../../types/graph';
 import type {
   AddEdgeResult,
   Edge,
   EdgeId,
   EdgeInput,
   NodeId,
-} from '../../types/graph.js';
-import type { MutableGraphState } from './types.js';
+} from '../../types/graph';
+import type { MutableGraphState } from './types';
 
 /**
  * Resolve a node ID from a string (either ID or name).

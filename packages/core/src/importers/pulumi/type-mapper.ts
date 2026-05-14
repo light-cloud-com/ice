@@ -27,7 +27,7 @@
  * index.ts) continue importing through this shim.
  */
 
-export { parse_type, parse_urn } from './type-mapper/parse.js';
+export { parse_type, parse_urn } from './type-mapper/parse';
 
 export {
   get_ice_provider,
@@ -39,4 +39,4 @@ export {
   is_provider_resource,
   is_stack_resource,
   is_type_supported,
-} from './type-mapper/mapping.js';
+} from './type-mapper/mapping';

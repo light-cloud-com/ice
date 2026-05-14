@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { StorageService } from '../storage.js';
+import { StorageService } from '../storage';
 
 interface FakeBucket {
   name: string;

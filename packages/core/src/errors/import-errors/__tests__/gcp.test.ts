@@ -6,8 +6,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { classifyGCPError } from '../gcp.js';
-import { ImportErrorCode } from '../types.js';
+import { classifyGCPError } from '../gcp';
+import { ImportErrorCode } from '../types';
 
 describe('classifyGCPError — reauth (invalid_grant family)', () => {
   it.each([

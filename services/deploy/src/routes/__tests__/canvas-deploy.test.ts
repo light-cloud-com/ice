@@ -47,21 +47,21 @@ vi.mock('../../services/deploy.service', () => ({
 const findLatestDeploymentIdMock = vi.fn();
 const loadDeployEventsMock = vi.fn();
 
-vi.mock('../../services/deploy-event-log.js', () => ({
+vi.mock('../../services/deploy-event-log', () => ({
   findLatestDeploymentId: (...args: unknown[]) => findLatestDeploymentIdMock(...args),
   loadDeployEvents: (...args: unknown[]) => loadDeployEventsMock(...args),
 }));
 
 const cleanupOrphansMock = vi.fn();
 
-vi.mock('../../services/orphan-cleanup.service.js', () => ({
+vi.mock('../../services/orphan-cleanup.service', () => ({
   cleanupOrphanedIceResources: (...args: unknown[]) => cleanupOrphansMock(...args),
 }));
 
 const resolveForCardMock = vi.fn();
 const loadPersistedStatusesMock = vi.fn();
 
-vi.mock('../../services/requirements.service.js', () => ({
+vi.mock('../../services/requirements.service', () => ({
   resolveForCard: (...args: unknown[]) => resolveForCardMock(...args),
   loadPersistedStatuses: (...args: unknown[]) => loadPersistedStatusesMock(...args),
 }));
@@ -104,7 +104,7 @@ beforeEach(async () => {
 
   vi.spyOn(console, 'error').mockImplementation(() => {});
 
-  const { default: canvasDeployRouter } = await import('../canvas-deploy.js');
+  const { default: canvasDeployRouter } = await import('../canvas-deploy');
   const app = express();
   app.use(express.json());
   app.use('/api/canvas/deploy', canvasDeployRouter);

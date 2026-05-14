@@ -11,8 +11,8 @@
  *   - `fetch_current_status` (update) — leaves the status undefined on
  *     failure, since update reflects an existing cert.
  */
-import { BASE_URL } from './result-helpers.js';
-import type { GCPHandlerContext } from '../../types.js';
+import { BASE_URL } from './result-helpers';
+import type { GCPHandlerContext } from '../../types';
 
 export interface CertStatus {
   cert_status?: string;

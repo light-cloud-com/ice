@@ -5,13 +5,13 @@
  * detection, and metadata defaults from a parsed Pulumi state object.
  */
 
-import { parse_urn, is_stack_resource } from './type-mapper.js';
+import { parse_urn, is_stack_resource } from './type-mapper';
 import type {
   PulumiStackState,
   PulumiStackExport,
   PulumiDeployment,
   PulumiImportMetadata,
-} from './types.js';
+} from './types';
 
 /**
  * Get the deployment from state data.

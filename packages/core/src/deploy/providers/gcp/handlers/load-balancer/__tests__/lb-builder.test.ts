@@ -3,19 +3,19 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('../compute-ops.js', () => ({
+vi.mock('../compute-ops', () => ({
   wait_for_compute_op: vi.fn().mockResolvedValue(undefined),
 }));
 
-import { wait_for_compute_op } from '../compute-ops.js';
+import { wait_for_compute_op } from '../compute-ops';
 import {
   create_url_map,
   create_target_proxy,
   create_forwarding_rule,
   create_redirect_chain,
-} from '../lb-builder.js';
-import type { GCPHandlerContext } from '../../../types.js';
-import type { HostRule } from '../backend-creator.js';
+} from '../lb-builder';
+import type { GCPHandlerContext } from '../../../types';
+import type { HostRule } from '../backend-creator';
 
 function makeCtx(post: any): GCPHandlerContext {
   return {

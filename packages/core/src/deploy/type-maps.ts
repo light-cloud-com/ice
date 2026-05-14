@@ -11,7 +11,7 @@
  * architecture planning but never compile to a real resource.
  */
 
-import type { DeployProvider } from './card-translator.js';
+import type { DeployProvider } from './card-translator';
 
 // =============================================================================
 // GCP iceType → deployer type mapping

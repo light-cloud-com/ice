@@ -743,11 +743,14 @@ describe('main process bootstrap', () => {
     it('seeds desktop env vars and the prisma client cache in production', async () => {
       h.bag.isDev = false;
       h.bag.targetDirExists = false; // forces the mkdirSync + cpSync branch
+      // JWT_SECRET and CREDENTIAL_ENCRYPTION_KEY are no longer set here —
+      // the gateway calls `ensureLocalSecrets()` itself at boot. We're
+      // mocking the gateway here, so those env vars stay unset.
+      delete process.env.JWT_SECRET;
+      delete process.env.CREDENTIAL_ENCRYPTION_KEY;
       await bootAndDriveReady();
       expect(process.env.ICE_DESKTOP).toBe('true');
       expect(process.env.DATABASE_URL).toMatch(/^file:/);
-      expect(process.env.JWT_SECRET).toMatch(/^desktop-/);
-      expect(process.env.CREDENTIAL_ENCRYPTION_KEY).toMatch(/^desktop-enc-/);
       expect(process.env.FRONTEND_URL).toBe('http://localhost:15173');
       expect(process.env.PORT).toBe('15173');
       expect(process.env.NODE_ENV).toBe('production');

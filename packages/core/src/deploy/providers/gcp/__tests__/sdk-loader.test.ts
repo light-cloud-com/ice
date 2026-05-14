@@ -31,7 +31,7 @@
  *   ensures `authClient` and `requestRaw` are attached.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { AUTH_MESSAGES } from '../../../messages.js';
+import { AUTH_MESSAGES } from '../../../messages';
 
 // =============================================================================
 // Function-constructor stub
@@ -184,7 +184,7 @@ describe('load_sdk', () => {
     install_dynamic_import_stub({
       '@google-cloud/compute': makeComputeModule(),
     });
-    const { load_sdk } = await import('../sdk-loader.js');
+    const { load_sdk } = await import('../sdk-loader');
     const mod = await load_sdk('@google-cloud/compute');
     expect(mod).toBeTruthy();
     expect(mod.InstancesClient).toBeDefined();
@@ -193,7 +193,7 @@ describe('load_sdk', () => {
   it('returns null when the dynamic import rejects', async () => {
     // No registry entry → import rejects → catch returns null.
     install_dynamic_import_stub({});
-    const { load_sdk } = await import('../sdk-loader.js');
+    const { load_sdk } = await import('../sdk-loader');
     const mod = await load_sdk('@google-cloud/missing');
     expect(mod).toBeNull();
   });
@@ -206,7 +206,7 @@ describe('load_sdk', () => {
 describe('initialize_gcp_clients', () => {
   it('returns an empty Map when every SDK is missing', async () => {
     install_dynamic_import_stub({});
-    const { initialize_gcp_clients } = await import('../sdk-loader.js');
+    const { initialize_gcp_clients } = await import('../sdk-loader');
     const clients = await initialize_gcp_clients('p1');
     expect(clients).toBeInstanceOf(Map);
     expect(clients.size).toBe(0);
@@ -214,7 +214,7 @@ describe('initialize_gcp_clients', () => {
 
   it('initializes every client when every SDK is present', async () => {
     install_dynamic_import_stub(fullRegistry());
-    const { initialize_gcp_clients } = await import('../sdk-loader.js');
+    const { initialize_gcp_clients } = await import('../sdk-loader');
     const clients = await initialize_gcp_clients('p1');
 
     expect(clients.has('compute.instances')).toBe(true);
@@ -237,7 +237,7 @@ describe('initialize_gcp_clients', () => {
 
   it('passes projectId on every client', async () => {
     install_dynamic_import_stub(fullRegistry());
-    const { initialize_gcp_clients } = await import('../sdk-loader.js');
+    const { initialize_gcp_clients } = await import('../sdk-loader');
     const clients = await initialize_gcp_clients('proj-xyz');
 
     const compute = clients.get('compute.instances') as any;
@@ -249,7 +249,7 @@ describe('initialize_gcp_clients', () => {
 
   it('threads keyFilename onto every client when auth.keyFilename is provided', async () => {
     install_dynamic_import_stub(fullRegistry());
-    const { initialize_gcp_clients } = await import('../sdk-loader.js');
+    const { initialize_gcp_clients } = await import('../sdk-loader');
     const clients = await initialize_gcp_clients('p1', { keyFilename: '/tmp/sa.json' });
 
     expect((clients.get('compute.instances') as any).args[0].keyFilename).toBe('/tmp/sa.json');
@@ -260,7 +260,7 @@ describe('initialize_gcp_clients', () => {
 
   it('threads credentials onto every client when auth.credentials is provided (no keyFilename)', async () => {
     install_dynamic_import_stub(fullRegistry());
-    const { initialize_gcp_clients } = await import('../sdk-loader.js');
+    const { initialize_gcp_clients } = await import('../sdk-loader');
     const creds = { client_email: 'svc@p.iam', private_key: '-----' };
     const clients = await initialize_gcp_clients('p1', { credentials: creds });
 
@@ -270,7 +270,7 @@ describe('initialize_gcp_clients', () => {
 
   it('threads authClient onto every client when only authClient is provided', async () => {
     install_dynamic_import_stub(fullRegistry());
-    const { initialize_gcp_clients } = await import('../sdk-loader.js');
+    const { initialize_gcp_clients } = await import('../sdk-loader');
     const fakeAuthClient = { kind: 'pre-auth-client' };
     const clients = await initialize_gcp_clients('p1', { authClient: fakeAuthClient });
 
@@ -283,7 +283,7 @@ describe('initialize_gcp_clients', () => {
       ...fullRegistry(),
       '@google-cloud/run': makeRunModule({ withJobs: false }),
     });
-    const { initialize_gcp_clients } = await import('../sdk-loader.js');
+    const { initialize_gcp_clients } = await import('../sdk-loader');
     const clients = await initialize_gcp_clients('p1');
 
     expect(clients.has('run.services')).toBe(true);
@@ -295,7 +295,7 @@ describe('initialize_gcp_clients', () => {
       ...fullRegistry(),
       '@google-cloud/functions': makeFunctionsModule({ underV2: true }),
     });
-    const { initialize_gcp_clients } = await import('../sdk-loader.js');
+    const { initialize_gcp_clients } = await import('../sdk-loader');
     const clients = await initialize_gcp_clients('p1');
 
     const fn = clients.get('functions') as any;
@@ -307,7 +307,7 @@ describe('initialize_gcp_clients', () => {
       ...fullRegistry(),
       '@google-cloud/functions': makeFunctionsModule({ underV2: false, underTopLevel: true }),
     });
-    const { initialize_gcp_clients } = await import('../sdk-loader.js');
+    const { initialize_gcp_clients } = await import('../sdk-loader');
     const clients = await initialize_gcp_clients('p1');
 
     const fn = clients.get('functions') as any;
@@ -319,7 +319,7 @@ describe('initialize_gcp_clients', () => {
       ...fullRegistry(),
       '@google-cloud/functions': {},
     });
-    const { initialize_gcp_clients } = await import('../sdk-loader.js');
+    const { initialize_gcp_clients } = await import('../sdk-loader');
     const clients = await initialize_gcp_clients('p1');
 
     expect(clients.has('functions')).toBe(false);
@@ -330,7 +330,7 @@ describe('initialize_gcp_clients', () => {
       ...fullRegistry(),
       '@google-cloud/aiplatform': makeAiPlatformModule({ withIndex: false }),
     });
-    const { initialize_gcp_clients } = await import('../sdk-loader.js');
+    const { initialize_gcp_clients } = await import('../sdk-loader');
     const clients = await initialize_gcp_clients('p1');
 
     expect(clients.has('aiplatform.endpoint')).toBe(true);
@@ -343,7 +343,7 @@ describe('initialize_gcp_clients', () => {
       ...fullRegistry(),
       '@google-cloud/aiplatform': makeAiPlatformModule({ withIndexEndpoint: false }),
     });
-    const { initialize_gcp_clients } = await import('../sdk-loader.js');
+    const { initialize_gcp_clients } = await import('../sdk-loader');
     const clients = await initialize_gcp_clients('p1');
 
     expect(clients.has('aiplatform.indexEndpoint')).toBe(false);
@@ -353,7 +353,7 @@ describe('initialize_gcp_clients', () => {
     const reg = fullRegistry();
     delete reg['@google-cloud/compute'];
     install_dynamic_import_stub(reg);
-    const { initialize_gcp_clients } = await import('../sdk-loader.js');
+    const { initialize_gcp_clients } = await import('../sdk-loader');
     const clients = await initialize_gcp_clients('p1');
 
     expect(clients.has('compute.instances')).toBe(false);
@@ -366,7 +366,7 @@ describe('initialize_gcp_clients', () => {
     const reg = fullRegistry();
     delete reg['@google-cloud/storage'];
     install_dynamic_import_stub(reg);
-    const { initialize_gcp_clients } = await import('../sdk-loader.js');
+    const { initialize_gcp_clients } = await import('../sdk-loader');
     const clients = await initialize_gcp_clients('p1');
     expect(clients.has('storage')).toBe(false);
   });
@@ -375,7 +375,7 @@ describe('initialize_gcp_clients', () => {
     const reg = fullRegistry();
     delete reg['@google-cloud/pubsub'];
     install_dynamic_import_stub(reg);
-    const { initialize_gcp_clients } = await import('../sdk-loader.js');
+    const { initialize_gcp_clients } = await import('../sdk-loader');
     const clients = await initialize_gcp_clients('p1');
     expect(clients.has('pubsub')).toBe(false);
   });
@@ -384,7 +384,7 @@ describe('initialize_gcp_clients', () => {
     const reg = fullRegistry();
     delete reg['@google-cloud/secret-manager'];
     install_dynamic_import_stub(reg);
-    const { initialize_gcp_clients } = await import('../sdk-loader.js');
+    const { initialize_gcp_clients } = await import('../sdk-loader');
     const clients = await initialize_gcp_clients('p1');
     expect(clients.has('secretmanager')).toBe(false);
   });
@@ -393,7 +393,7 @@ describe('initialize_gcp_clients', () => {
     const reg = fullRegistry();
     delete reg['@google-cloud/bigquery'];
     install_dynamic_import_stub(reg);
-    const { initialize_gcp_clients } = await import('../sdk-loader.js');
+    const { initialize_gcp_clients } = await import('../sdk-loader');
     const clients = await initialize_gcp_clients('p1');
     expect(clients.has('bigquery')).toBe(false);
   });
@@ -402,7 +402,7 @@ describe('initialize_gcp_clients', () => {
     const reg = fullRegistry();
     delete reg['@google-cloud/logging'];
     install_dynamic_import_stub(reg);
-    const { initialize_gcp_clients } = await import('../sdk-loader.js');
+    const { initialize_gcp_clients } = await import('../sdk-loader');
     const clients = await initialize_gcp_clients('p1');
     expect(clients.has('logging')).toBe(false);
   });
@@ -411,7 +411,7 @@ describe('initialize_gcp_clients', () => {
     const reg = fullRegistry();
     delete reg['@google-cloud/scheduler'];
     install_dynamic_import_stub(reg);
-    const { initialize_gcp_clients } = await import('../sdk-loader.js');
+    const { initialize_gcp_clients } = await import('../sdk-loader');
     const clients = await initialize_gcp_clients('p1');
     expect(clients.has('scheduler')).toBe(false);
   });
@@ -420,7 +420,7 @@ describe('initialize_gcp_clients', () => {
     const reg = fullRegistry();
     delete reg['@google-cloud/firestore'];
     install_dynamic_import_stub(reg);
-    const { initialize_gcp_clients } = await import('../sdk-loader.js');
+    const { initialize_gcp_clients } = await import('../sdk-loader');
     const clients = await initialize_gcp_clients('p1');
     expect(clients.has('firestore')).toBe(false);
   });
@@ -429,7 +429,7 @@ describe('initialize_gcp_clients', () => {
     const reg = fullRegistry();
     delete reg['@google-cloud/aiplatform'];
     install_dynamic_import_stub(reg);
-    const { initialize_gcp_clients } = await import('../sdk-loader.js');
+    const { initialize_gcp_clients } = await import('../sdk-loader');
     const clients = await initialize_gcp_clients('p1');
     expect(clients.has('aiplatform.endpoint')).toBe(false);
     expect(clients.has('aiplatform.index')).toBe(false);
@@ -440,7 +440,7 @@ describe('initialize_gcp_clients', () => {
     const reg = fullRegistry();
     delete reg['@google-cloud/container'];
     install_dynamic_import_stub(reg);
-    const { initialize_gcp_clients } = await import('../sdk-loader.js');
+    const { initialize_gcp_clients } = await import('../sdk-loader');
     const clients = await initialize_gcp_clients('p1');
     expect(clients.has('container')).toBe(false);
   });
@@ -480,7 +480,7 @@ function makeAuthLib(opts: {
 describe('verify_gcp_auth', () => {
   it('returns the external_client unchanged when one is provided', async () => {
     install_dynamic_import_stub({});
-    const { verify_gcp_auth } = await import('../sdk-loader.js');
+    const { verify_gcp_auth } = await import('../sdk-loader');
     const ext = { tag: 'external' };
     const out = await verify_gcp_auth(ext);
     expect(out).toBe(ext);
@@ -488,13 +488,13 @@ describe('verify_gcp_auth', () => {
 
   it('throws AUTH_LIB_NOT_INSTALLED_PNPM when google-auth-library is not available', async () => {
     install_dynamic_import_stub({});
-    const { verify_gcp_auth } = await import('../sdk-loader.js');
+    const { verify_gcp_auth } = await import('../sdk-loader');
     await expect(verify_gcp_auth()).rejects.toThrow(AUTH_MESSAGES.AUTH_LIB_NOT_INSTALLED_PNPM);
   });
 
   it('returns the auth client when getClient and getAccessToken both succeed', async () => {
     install_dynamic_import_stub({ 'google-auth-library': makeAuthLib() });
-    const { verify_gcp_auth } = await import('../sdk-loader.js');
+    const { verify_gcp_auth } = await import('../sdk-loader');
     const client = await verify_gcp_auth();
     expect(client).toBeDefined();
     expect(typeof client.getAccessToken).toBe('function');
@@ -506,7 +506,7 @@ describe('verify_gcp_auth', () => {
         getClientThrows: new Error('Could not load the default credentials'),
       }),
     });
-    const { verify_gcp_auth } = await import('../sdk-loader.js');
+    const { verify_gcp_auth } = await import('../sdk-loader');
     await expect(verify_gcp_auth()).rejects.toThrow(/GCP credentials not found/);
   });
 
@@ -515,7 +515,7 @@ describe('verify_gcp_auth', () => {
     install_dynamic_import_stub({
       'google-auth-library': makeAuthLib({ getClientThrows: original }),
     });
-    const { verify_gcp_auth } = await import('../sdk-loader.js');
+    const { verify_gcp_auth } = await import('../sdk-loader');
     let caught: any;
     try {
       await verify_gcp_auth();
@@ -532,7 +532,7 @@ describe('verify_gcp_auth', () => {
         getClientThrows: new Error('boom-other'),
       }),
     });
-    const { verify_gcp_auth } = await import('../sdk-loader.js');
+    const { verify_gcp_auth } = await import('../sdk-loader');
     await expect(verify_gcp_auth()).rejects.toThrow(/GCP authentication failed: boom-other/);
   });
 
@@ -544,7 +544,7 @@ describe('verify_gcp_auth', () => {
         getClientThrows: 'plain-throw' as unknown as Error,
       }),
     });
-    const { verify_gcp_auth } = await import('../sdk-loader.js');
+    const { verify_gcp_auth } = await import('../sdk-loader');
     await expect(verify_gcp_auth()).rejects.toThrow(/GCP authentication failed: plain-throw/);
   });
 
@@ -557,7 +557,7 @@ describe('verify_gcp_auth', () => {
         },
       }),
     });
-    const { verify_gcp_auth } = await import('../sdk-loader.js');
+    const { verify_gcp_auth } = await import('../sdk-loader');
     await expect(verify_gcp_auth()).rejects.toThrow(AUTH_MESSAGES.COULD_NOT_OBTAIN_TOKEN);
   });
 
@@ -570,7 +570,7 @@ describe('verify_gcp_auth', () => {
         },
       }),
     });
-    const { verify_gcp_auth } = await import('../sdk-loader.js');
+    const { verify_gcp_auth } = await import('../sdk-loader');
     await expect(verify_gcp_auth()).rejects.toThrow(AUTH_MESSAGES.COULD_NOT_OBTAIN_TOKEN);
   });
 
@@ -583,7 +583,7 @@ describe('verify_gcp_auth', () => {
         },
       }),
     });
-    const { verify_gcp_auth } = await import('../sdk-loader.js');
+    const { verify_gcp_auth } = await import('../sdk-loader');
     await expect(verify_gcp_auth()).rejects.toThrow(/GCP credentials have expired/);
   });
 
@@ -596,7 +596,7 @@ describe('verify_gcp_auth', () => {
         },
       }),
     });
-    const { verify_gcp_auth } = await import('../sdk-loader.js');
+    const { verify_gcp_auth } = await import('../sdk-loader');
     await expect(verify_gcp_auth()).rejects.toThrow(/GCP authentication failed: throttled/);
   });
 
@@ -609,7 +609,7 @@ describe('verify_gcp_auth', () => {
         },
       }),
     });
-    const { verify_gcp_auth } = await import('../sdk-loader.js');
+    const { verify_gcp_auth } = await import('../sdk-loader');
     await expect(verify_gcp_auth()).rejects.toThrow(/GCP authentication failed: plain-token-throw/);
   });
 });
@@ -626,7 +626,7 @@ describe('create_rest_client', () => {
       request,
     };
     install_dynamic_import_stub({});
-    const { create_rest_client } = await import('../sdk-loader.js');
+    const { create_rest_client } = await import('../sdk-loader');
     const rc = await create_rest_client('p1', externalAuth);
 
     const r1 = await rc.get('https://example.com/g');
@@ -662,7 +662,7 @@ describe('create_rest_client', () => {
       request,
     };
     install_dynamic_import_stub({});
-    const { create_rest_client } = await import('../sdk-loader.js');
+    const { create_rest_client } = await import('../sdk-loader');
     const rc = await create_rest_client('p1', externalAuth);
 
     expect((rc as any).authClient).toBe(externalAuth);
@@ -680,7 +680,7 @@ describe('create_rest_client', () => {
       request,
     };
     install_dynamic_import_stub({});
-    const { create_rest_client } = await import('../sdk-loader.js');
+    const { create_rest_client } = await import('../sdk-loader');
     const rc = await create_rest_client('p1', externalAuth);
 
     const validateStatus = (s: number) => s === 201;
@@ -719,7 +719,7 @@ describe('create_rest_client', () => {
       request,
     };
     install_dynamic_import_stub({});
-    const { create_rest_client } = await import('../sdk-loader.js');
+    const { create_rest_client } = await import('../sdk-loader');
     const rc = await create_rest_client('p1', externalAuth);
 
     const result = await (rc as any).requestRaw({
@@ -748,7 +748,7 @@ describe('create_rest_client', () => {
       request,
     };
     install_dynamic_import_stub({});
-    const { create_rest_client } = await import('../sdk-loader.js');
+    const { create_rest_client } = await import('../sdk-loader');
     const rc = await create_rest_client('p1', externalAuth);
 
     await expect(rc.get('https://example.com/x')).rejects.toThrow('forbidden');
@@ -784,7 +784,7 @@ describe('create_rest_client withRetry behaviour', () => {
 
     install_dynamic_import_stub({});
     vi.useFakeTimers();
-    const { create_rest_client } = await import('../sdk-loader.js');
+    const { create_rest_client } = await import('../sdk-loader');
     const rc = await create_rest_client('p1', externalAuth);
 
     const promise = rc.get('https://example.com/x');
@@ -813,7 +813,7 @@ describe('create_rest_client withRetry behaviour', () => {
 
     install_dynamic_import_stub({});
     vi.useFakeTimers();
-    const { create_rest_client } = await import('../sdk-loader.js');
+    const { create_rest_client } = await import('../sdk-loader');
     const rc = await create_rest_client('p1', externalAuth);
 
     const p = rc.get('https://example.com/r');
@@ -838,7 +838,7 @@ describe('create_rest_client withRetry behaviour', () => {
 
     install_dynamic_import_stub({});
     vi.useFakeTimers();
-    const { create_rest_client } = await import('../sdk-loader.js');
+    const { create_rest_client } = await import('../sdk-loader');
     const rc = await create_rest_client('p1', externalAuth);
 
     const p = rc.delete('https://example.com/x');
@@ -862,7 +862,7 @@ describe('create_rest_client withRetry behaviour', () => {
 
     install_dynamic_import_stub({});
     vi.useFakeTimers();
-    const { create_rest_client } = await import('../sdk-loader.js');
+    const { create_rest_client } = await import('../sdk-loader');
     const rc = await create_rest_client('p1', externalAuth);
 
     const p = rc.post('https://example.com/r', {});
@@ -886,7 +886,7 @@ describe('create_rest_client withRetry behaviour', () => {
 
     install_dynamic_import_stub({});
     vi.useFakeTimers();
-    const { create_rest_client } = await import('../sdk-loader.js');
+    const { create_rest_client } = await import('../sdk-loader');
     const rc = await create_rest_client('p1', externalAuth);
 
     const p = rc.patch('https://example.com/r', { v: 1 });
@@ -912,7 +912,7 @@ describe('create_rest_client withRetry behaviour', () => {
 
     install_dynamic_import_stub({});
     vi.useFakeTimers();
-    const { create_rest_client } = await import('../sdk-loader.js');
+    const { create_rest_client } = await import('../sdk-loader');
     const rc = await create_rest_client('p1', externalAuth);
 
     const p = rc.get('https://example.com/r');
@@ -932,7 +932,7 @@ describe('create_rest_client withRetry behaviour', () => {
     };
 
     install_dynamic_import_stub({});
-    const { create_rest_client } = await import('../sdk-loader.js');
+    const { create_rest_client } = await import('../sdk-loader');
     const rc = await create_rest_client('p1', externalAuth);
 
     await expect(rc.get('https://example.com/x')).rejects.toThrow('bad request');
@@ -950,7 +950,7 @@ describe('create_rest_client withRetry behaviour', () => {
     };
 
     install_dynamic_import_stub({});
-    const { create_rest_client } = await import('../sdk-loader.js');
+    const { create_rest_client } = await import('../sdk-loader');
     const rc = await create_rest_client('p1', externalAuth);
 
     await expect(rc.get('https://example.com/x')).rejects.toThrow('weird');
@@ -969,7 +969,7 @@ describe('create_rest_client withRetry behaviour', () => {
     };
 
     install_dynamic_import_stub({});
-    const { create_rest_client } = await import('../sdk-loader.js');
+    const { create_rest_client } = await import('../sdk-loader');
     const rc = await create_rest_client('p1', externalAuth);
 
     await expect(rc.get('https://example.com/x')).rejects.toBeDefined();
@@ -986,7 +986,7 @@ describe('create_rest_client withRetry behaviour', () => {
 
     install_dynamic_import_stub({});
     vi.useFakeTimers();
-    const { create_rest_client } = await import('../sdk-loader.js');
+    const { create_rest_client } = await import('../sdk-loader');
     const rc = await create_rest_client('p1', externalAuth);
 
     // Attach catch handler eagerly so the unhandled rejection warning never
@@ -1027,7 +1027,7 @@ describe('create_rest_client withRetry behaviour', () => {
 
     install_dynamic_import_stub({});
     vi.useFakeTimers();
-    const { create_rest_client } = await import('../sdk-loader.js');
+    const { create_rest_client } = await import('../sdk-loader');
     const rc = await create_rest_client('p1', externalAuth);
 
     const p = (rc as any).requestRaw({ method: 'GET', url: 'https://example.com/r' });

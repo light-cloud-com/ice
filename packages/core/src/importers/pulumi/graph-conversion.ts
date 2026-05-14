@@ -7,11 +7,11 @@
  * (the ICE graph treats labels as denormalised state).
  */
 
-import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph.js';
-import { import_pulumi_state } from './state-importer.js';
-import type { PulumiImportOptions } from './state-importer.js';
-import type { PulumiImportResult } from './types.js';
-import type { NodeInput, EdgeInput } from '../../types/graph.js';
+import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph';
+import { import_pulumi_state } from './state-importer';
+import type { PulumiImportOptions } from './state-importer';
+import type { PulumiImportResult } from './types';
+import type { NodeInput, EdgeInput } from '../../types/graph';
 
 /**
  * Convert imported resources to an ICE graph.

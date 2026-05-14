@@ -4,7 +4,7 @@
  * A mock provider for testing apply operations without real cloud resources.
  */
 
-import type { Node, NodeId } from '../types/graph.js';
+import type { Node, NodeId } from '../types/graph';
 import type {
   ProviderClient,
   ProviderConfig,
@@ -15,7 +15,7 @@ import type {
   DeploymentResult,
   DestroyResult,
   HealthCheckResult,
-} from '../types/providers.js';
+} from '../types/providers';
 
 // =============================================================================
 // Mock Provider Configuration

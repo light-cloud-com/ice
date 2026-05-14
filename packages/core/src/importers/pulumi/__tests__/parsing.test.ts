@@ -10,8 +10,8 @@ import {
   is_secret_value,
   unwrap_secret,
   create_empty_metadata,
-} from '../parsing.js';
-import type { PulumiStackExport, PulumiStackState, PulumiDeployment } from '../types.js';
+} from '../parsing';
+import type { PulumiStackExport, PulumiStackState, PulumiDeployment } from '../types';
 
 const sample_deployment: PulumiDeployment = {
   manifest: { time: '2024-01-15T10:30:00.000Z', magic: 'm', version: 'v3.100.0' },

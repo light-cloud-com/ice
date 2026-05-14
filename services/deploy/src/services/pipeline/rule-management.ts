@@ -12,8 +12,8 @@
 
 import crypto from 'crypto';
 import prisma from '@ice/db';
-import { type CreateRuleInput } from './types.js';
-import { registerGitHubWebhook, unregisterGitHubWebhook } from './github-webhooks.js';
+import { type CreateRuleInput } from './types';
+import { registerGitHubWebhook, unregisterGitHubWebhook } from './github-webhooks';
 
 /**
  * Walk the deploy graph for Source.Repository → Compute edges and ensure

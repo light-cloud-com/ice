@@ -25,8 +25,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { downloadGitHubRepo } from '../github-downloader.js';
-import type { GCPHandlerContext } from '../../../types.js';
+import { downloadGitHubRepo } from '../github-downloader';
+import type { GCPHandlerContext } from '../../../types';
 
 // Hoisted mocks: vitest hoists both `vi.hoisted` and the `vi.mock` calls
 // below above ALL import statements (per the rf-fbh-5 learning on
@@ -41,7 +41,7 @@ vi.mock('zlib', () => ({
   gunzipSync: mocks.gunzipSync,
 }));
 
-vi.mock('../tar-parser.js', () => ({
+vi.mock('../tar-parser', () => ({
   parseTar: mocks.parseTar,
 }));
 

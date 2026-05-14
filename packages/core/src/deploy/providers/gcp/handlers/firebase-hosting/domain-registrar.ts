@@ -13,9 +13,9 @@
  * with focused unit tests instead of spinning up the full create/update
  * harness.
  */
-import { extractDnsRecords, type FirebaseHostingDnsRecord } from './dns-extractor.js';
-import { FIREBASE_HOSTING_API, restRequest } from './rest-client.js';
-import type { GCPHandlerContext } from '../../types.js';
+import { extractDnsRecords, type FirebaseHostingDnsRecord } from './dns-extractor';
+import { FIREBASE_HOSTING_API, restRequest } from './rest-client';
+import type { GCPHandlerContext } from '../../types';
 
 /**
  * Register a custom domain on a Firebase Hosting site and extract the

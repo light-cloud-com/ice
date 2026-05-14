@@ -14,13 +14,13 @@
 
 import prisma from '@ice/db';
 import * as providerService from '@ice/service-credentials';
-import { releaseTempDir } from './deploy-locks.js';
-import { resolveProviderAuth } from '../providers/registry.js';
-import { computeCompleteTotals, deriveCompleteOutcome, computeDeploySummary } from '../utils/deploy-outcome.js';
-import { createDeployer, getCoreEngine } from './deployer-factory.js';
-import { acquireWriteLock } from './deploy-lock-wrapper.js';
-import { emitDeployEvent, emitLog } from './deploy-event-dispatcher.js';
-import { buildBaselineGraph } from './baseline-graph.js';
+import { releaseTempDir } from './deploy-locks';
+import { resolveProviderAuth } from '../providers/registry';
+import { computeCompleteTotals, deriveCompleteOutcome, computeDeploySummary } from '../utils/deploy-outcome';
+import { createDeployer, getCoreEngine } from './deployer-factory';
+import { acquireWriteLock } from './deploy-lock-wrapper';
+import { emitDeployEvent, emitLog } from './deploy-event-dispatcher';
+import { buildBaselineGraph } from './baseline-graph';
 
 export async function rollbackDeployment(deploymentId: string, cardId: string, orgId: string, userId?: string) {
   // Per-card lock — rollback is a deploy variant; blocks concurrent applies.

@@ -23,9 +23,9 @@ import {
   sync_resource_results_to_state,
   type DeployStateStore,
   type StoredResourceEntry,
-} from '../state-bridge.js';
-import type { Graph, Node, NodeId, EdgeId } from '../../types/graph.js';
-import type { DeployResult, ResourceDeployResult } from '../types.js';
+} from '../state-bridge';
+import type { Graph, Node, NodeId, EdgeId } from '../../types/graph';
+import type { DeployResult, ResourceDeployResult } from '../types';
 
 // ─── Test helpers ────────────────────────────────────────────────────
 

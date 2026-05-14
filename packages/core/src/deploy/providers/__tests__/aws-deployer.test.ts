@@ -25,7 +25,7 @@
  * - `create_aws_deployer` factory
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { AWSDeployer, create_aws_deployer } from '../aws-deployer.js';
+import { AWSDeployer, create_aws_deployer } from '../aws-deployer';
 
 // =============================================================================
 // Function-constructor stub

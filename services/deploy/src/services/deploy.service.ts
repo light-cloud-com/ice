@@ -13,8 +13,8 @@
  */
 
 import prisma from '@ice/db';
-import { cancelDeploy as cancelLockDeploy, getDeploySnapshot } from './deploy-locks.js';
-import { installSnapshotPersister } from './snapshot-persister.js';
+import { cancelDeploy as cancelLockDeploy, getDeploySnapshot } from './deploy-locks';
+import { installSnapshotPersister } from './snapshot-persister';
 
 // Side-effect: install the DB persister for `DeployProgressSnapshot` on
 // module load. Without this call, refreshed pages can't see live progress
@@ -23,7 +23,7 @@ import { installSnapshotPersister } from './snapshot-persister.js';
 // before the first deploy/destroy/rollback.
 installSnapshotPersister();
 
-export type { DeployProgressSnapshot } from './deploy-locks.js';
+export type { DeployProgressSnapshot } from './deploy-locks';
 
 /** Public re-export so routes can hit the cancel machinery directly. */
 export function requestDeployCancel(cardId: string): boolean {
@@ -39,28 +39,28 @@ export function getCurrentDeploySnapshot(cardId: string) {
 // Re-export so `routes/canvas-deploy.ts`'s `import * as deployService`
 // namespace import keeps resolving and `services/deploy/src/index.ts`'s
 // `export *` continues to surface the public API.
-export { planDeployment } from './plan-deployment.js';
+export { planDeployment } from './plan-deployment';
 
 // `applyDeployment` was extracted to `./apply-deployment.ts` in rf-deploy2-2.
 // Re-export so `routes/canvas-deploy.ts`'s `import * as deployService`
 // namespace import keeps resolving and `services/queue.service.ts`'s
 // `import { applyDeployment } from './deploy.service'` continues to work.
-export { applyDeployment } from './apply-deployment.js';
+export { applyDeployment } from './apply-deployment';
 
 // `destroyAllForCard` was extracted to `./destroy-all-for-card.ts` in
 // rf-deploy2-3. Re-export so `routes/canvas-deploy.ts`'s namespace
 // import keeps resolving the symbol.
-export { destroyAllForCard } from './destroy-all-for-card.js';
+export { destroyAllForCard } from './destroy-all-for-card';
 
 // `destroyDeployment` was extracted to `./destroy-deployment.ts` in
 // rf-deploy2-4. Re-export so `routes/canvas-deploy.ts`'s namespace
 // import keeps resolving the symbol.
-export { destroyDeployment } from './destroy-deployment.js';
+export { destroyDeployment } from './destroy-deployment';
 
 // `rollbackDeployment` was extracted to `./rollback-deployment.ts` in
 // rf-deploy2-5. Re-export so `routes/canvas-deploy.ts`'s namespace
 // import keeps resolving the symbol.
-export { rollbackDeployment } from './rollback-deployment.js';
+export { rollbackDeployment } from './rollback-deployment';
 
 export async function getDeploymentStatus(deploymentId: string) {
   return prisma.canvasDeployment.findUnique({ where: { id: deploymentId } });
@@ -77,13 +77,13 @@ export async function getDeployedResources(cardId: string) {
 // `getNodeDeploymentOverlay` was extracted to `./canvas-overlay.ts` in
 // rf-deploy-15. Re-export so `routes/canvas-deploy.ts`'s
 // `import * as deployService` namespace import keeps resolving.
-export { getNodeDeploymentOverlay } from './canvas-overlay.js';
+export { getNodeDeploymentOverlay } from './canvas-overlay';
 
 // `checkDrift` was extracted to `./drift.service.ts` in rf-deploy-16.
 // Re-export so `services/deploy/src/index.ts`'s `export *` and any
 // existing tests importing via `services/deploy.service.js` keep
 // resolving the symbol unchanged.
-export { checkDrift } from './drift.service.js';
+export { checkDrift } from './drift.service';
 
 export async function getDeploymentHistory(
   cardId: string,

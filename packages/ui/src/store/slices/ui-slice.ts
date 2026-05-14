@@ -92,6 +92,14 @@ export interface UIState {
 
   // Split view
   splitView: SplitViewState;
+
+  /**
+   * Optional override for the resizable sidebars. When non-null, the
+   * `DragResizePanel` instances ignore their persisted width and render
+   * at the override width. The tour engine sets these to the panel's
+   * `maxWidth` on entry and clears them on exit so guided steps fit.
+   */
+  sidebarOverride: { left: number | null; right: number | null };
 }
 
 // =============================================================================
@@ -222,6 +230,7 @@ const initialState: UIState = {
     aiCommand: false,
   },
   splitView: loadPersistedPanes(),
+  sidebarOverride: { left: null, right: null },
 };
 
 const uiSlice = createSlice({
@@ -251,6 +260,47 @@ const uiSlice = createSlice({
     toggleCostPanel: (state) => {
       state.showCostPanel = !state.showCostPanel;
       persistPanels(state);
+    },
+    /**
+     * Direct boolean setters for the tour engine — `toggle*` is wrong
+     * when the caller needs to *guarantee* a panel is open (or closed)
+     * regardless of current state.
+     */
+    setShowPalette: (state, action: PayloadAction<boolean>) => {
+      state.showPalette = action.payload;
+      persistPanels(state);
+    },
+    setShowBlocks: (state, action: PayloadAction<boolean>) => {
+      state.showBlocks = action.payload;
+      persistPanels(state);
+    },
+    setShowProperties: (state, action: PayloadAction<boolean>) => {
+      state.showProperties = action.payload;
+      persistPanels(state);
+    },
+    setShowAiChat: (state, action: PayloadAction<boolean>) => {
+      state.showAiChat = action.payload;
+      persistPanels(state);
+    },
+    setShowCostPanel: (state, action: PayloadAction<boolean>) => {
+      state.showCostPanel = action.payload;
+      persistPanels(state);
+    },
+    setShowTemplates: (state, action: PayloadAction<boolean>) => {
+      state.showTemplates = action.payload;
+      persistPanels(state);
+    },
+    /**
+     * Override (or clear) the rendered width of one of the side
+     * sidebars. `null` clears the override and the panel falls back to
+     * its persisted local width. The override is intentionally NOT
+     * persisted — it's a transient state used by the tour engine.
+     */
+    setSidebarOverride: (
+      state,
+      action: PayloadAction<{ side: 'left' | 'right'; width: number | null }>,
+    ) => {
+      state.sidebarOverride[action.payload.side] = action.payload.width;
     },
     toggleValidation: (state) => {
       state.showValidation = !state.showValidation;
@@ -454,6 +504,13 @@ export const {
   toggleMinimap,
   toggleAiChat,
   toggleCostPanel,
+  setShowPalette,
+  setShowBlocks,
+  setShowProperties,
+  setShowAiChat,
+  setShowCostPanel,
+  setShowTemplates,
+  setSidebarOverride,
   toggleTemplates,
   openTemplateGallery,
   closeTemplateGallery,

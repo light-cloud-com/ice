@@ -41,7 +41,7 @@ function mockCore(impl: any) {
 }
 
 async function load() {
-  return await import('../ai-schema-context.service.js');
+  return await import('../ai-schema-context.service');
 }
 
 describe('buildSchemaContext — empty / fall-through cases', () => {

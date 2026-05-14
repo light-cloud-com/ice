@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { classifyAWSError } from '../aws.js';
-import { ImportErrorCode } from '../types.js';
+import { classifyAWSError } from '../aws';
+import { ImportErrorCode } from '../types';
 
 describe('classifyAWSError — credentials expired', () => {
   it.each([

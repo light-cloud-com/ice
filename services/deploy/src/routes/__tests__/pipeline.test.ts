@@ -96,7 +96,7 @@ beforeEach(async () => {
   // The SUT's `/rules` POST handler logs to console.error on service throw.
   vi.spyOn(console, 'error').mockImplementation(() => {});
 
-  const { default: pipelineRouter } = await import('../pipeline.js');
+  const { default: pipelineRouter } = await import('../pipeline');
   const app = express();
   app.use(express.json());
   app.use('/api/pipeline', pipelineRouter);

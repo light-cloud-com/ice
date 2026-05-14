@@ -10,8 +10,8 @@ import {
   has_cycle,
   reverse_topological_sort,
   topological_sort,
-} from '../topo-cycle.js';
-import { id_of, make_graph } from './fixtures.js';
+} from '../topo-cycle';
+import { id_of, make_graph } from './fixtures';
 
 describe('topological_sort', () => {
   it('returns nodes in dependency order for linear chain', () => {

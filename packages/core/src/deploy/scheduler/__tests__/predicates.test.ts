@@ -8,11 +8,11 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { collect_ready, deps_satisfied, is_unfinished, match_handler_prefix } from '../predicates.js';
-import type { ResourceChange } from '../../../diff/types.js';
-import type { Graph } from '../../../types/graph.js';
-import type { ProviderDeployer, DeployOptions, NodeTerminalStatus } from '../../types.js';
-import type { NodeRecord, SchedulerContext } from '../types.js';
+import { collect_ready, deps_satisfied, is_unfinished, match_handler_prefix } from '../predicates';
+import type { ResourceChange } from '../../../diff/types';
+import type { Graph } from '../../../types/graph';
+import type { ProviderDeployer, DeployOptions, NodeTerminalStatus } from '../../types';
+import type { NodeRecord, SchedulerContext } from '../types';
 
 // ─── helpers ─────────────────────────────────────────────────────────
 

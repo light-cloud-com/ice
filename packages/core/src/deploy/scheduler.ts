@@ -30,26 +30,26 @@
  * `on_progress` callback before the deployer is initialized.
  */
 
-import { build_dag } from './scheduler/dag.js';
+import { build_dag } from './scheduler/dag';
 import {
   cancel_remaining_not_in_flight,
   dispatch,
   emit_status,
   wait_for_settle,
   wake,
-} from './scheduler/dispatch.js';
-import { collect_ready, is_unfinished } from './scheduler/predicates.js';
+} from './scheduler/dispatch';
+import { collect_ready, is_unfinished } from './scheduler/predicates';
 import {
   DEFAULT_PER_HANDLER_CAPS,
   DEFAULT_POOL_SIZE,
   type SchedulerContext,
   type SchedulerRunInput,
-} from './scheduler/types.js';
-import type { ResourceDeployResult } from './types.js';
+} from './scheduler/types';
+import type { ResourceDeployResult } from './types';
 
-export { DEFAULT_PER_HANDLER_CAPS, DEFAULT_POOL_SIZE } from './scheduler/types.js';
-export type { SchedulerPhase, SchedulerRunInput } from './scheduler/types.js';
-export { wrap_on_progress_for_node_progress } from './scheduler/progress-wrapper.js';
+export { DEFAULT_PER_HANDLER_CAPS, DEFAULT_POOL_SIZE } from './scheduler/types';
+export type { SchedulerPhase, SchedulerRunInput } from './scheduler/types';
+export { wrap_on_progress_for_node_progress } from './scheduler/progress-wrapper';
 
 /**
  * Run one phase of the parallel scheduler. Returns the per-node

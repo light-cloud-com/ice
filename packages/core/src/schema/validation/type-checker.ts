@@ -15,7 +15,7 @@
  *  - For 'number', NaN is treated as a type mismatch (matches the original
  *    `Number.isNaN(value)` check after `typeof value !== 'number'`).
  */
-import type { ValidationCode, ValidationIssue, ValidationSeverity } from '../resource-validator-types.js';
+import type { ValidationCode, ValidationIssue, ValidationSeverity } from '../resource-validator-types';
 
 /**
  * Get human-readable type name for a value.

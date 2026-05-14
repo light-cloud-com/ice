@@ -49,7 +49,7 @@ beforeEach(async () => {
   currentUserId = 'user-1';
   vi.spyOn(console, 'error').mockImplementation(() => {});
 
-  const { default: profileRouter } = await import('../profile.js');
+  const { default: profileRouter } = await import('../profile');
   const app = express();
   app.use(express.json());
   app.use('/api/profile', profileRouter);

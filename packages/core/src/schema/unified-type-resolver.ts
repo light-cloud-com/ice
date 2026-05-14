@@ -8,8 +8,8 @@
  * with a single source of truth from the schema package.
  */
 
-import { EmbeddedSchemaProvider } from './embedded-schema-provider.js';
-import type { IceType, ProviderImplementation } from './schema-provider.js';
+import { EmbeddedSchemaProvider } from './embedded-schema-provider';
+import type { IceType, ProviderImplementation } from './schema-provider';
 
 // =============================================================================
 // Types

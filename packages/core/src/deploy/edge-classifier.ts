@@ -7,7 +7,7 @@
  * relationship strings resolve to typed `EdgeRelationship` values.
  */
 
-import type { EdgeRelationship } from '../types/graph.js';
+import type { EdgeRelationship } from '../types/graph';
 
 // iceTypes that are UI-only and should not be deployed
 // Non-deployable canvas annotations. These blocks live on the canvas to

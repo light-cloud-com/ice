@@ -31,9 +31,9 @@
  *    formatter which uses multi-line block form.
  */
 
-import { sanitize_var_name, to_camel_case } from './case-utils.js';
-import { get_package_name, parse_resource_type } from './type-mapping.js';
-import type { PulumiExportOptions, PulumiProgram } from './types.js';
+import { sanitize_var_name, to_camel_case } from './case-utils';
+import { get_package_name, parse_resource_type } from './type-mapping';
+import type { PulumiExportOptions, PulumiProgram } from './types';
 
 /**
  * Format a value for TypeScript output.

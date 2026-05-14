@@ -14,13 +14,13 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { compute } from '../high-level-resources/categories/compute.js';
-import { database } from '../high-level-resources/categories/database.js';
-import { messaging } from '../high-level-resources/categories/messaging.js';
-import { monitoring } from '../high-level-resources/categories/monitoring.js';
-import { networking } from '../high-level-resources/categories/networking.js';
-import { security } from '../high-level-resources/categories/security.js';
-import { storage } from '../high-level-resources/categories/storage.js';
+import { compute } from '../high-level-resources/categories/compute';
+import { database } from '../high-level-resources/categories/database';
+import { messaging } from '../high-level-resources/categories/messaging';
+import { monitoring } from '../high-level-resources/categories/monitoring';
+import { networking } from '../high-level-resources/categories/networking';
+import { security } from '../high-level-resources/categories/security';
+import { storage } from '../high-level-resources/categories/storage';
 
 describe('compute category (rf-hlres-2)', () => {
   it('has the expected metadata', () => {

@@ -8,7 +8,7 @@
  * - Security group rules (network access)
  */
 
-import type { Node, NodeId, EdgeRelationship, InferenceConfidence, InferenceSource } from '../../types/graph.js';
+import type { Node, NodeId, EdgeRelationship, InferenceConfidence, InferenceSource } from '../../types/graph';
 
 // =============================================================================
 // Types

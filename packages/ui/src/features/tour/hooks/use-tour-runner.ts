@@ -137,11 +137,17 @@ export function useTourRunner(): UseTourRunnerReturn {
     if (resolver.status === 'placed') {
       dispatch(setPhase('entering'));
     } else if (resolver.status === 'missing') {
+      // Any missing target → stop. Auto-advancing through missing
+      // steps silently runs the tour to completion and marks it done
+      // forever, even though the user saw nothing — exactly the bug we
+      // were chasing. Stop instead so the user can re-launch later.
       // eslint-disable-next-line no-console
-      console.warn(`[tour] Step "${activeStep?.id}" target missing; skipping.`);
-      advance();
+      console.warn(
+        `[tour] Step "${activeStep?.id}" target missing; aborting tour.`,
+      );
+      stop();
     }
-  }, [phase, resolver.status, activeStep, advance, dispatch]);
+  }, [phase, resolver.status, activeStep, stop, dispatch]);
 
   // entering → placed: await onExit (previous step) then onEnter
   // (current step), THEN flip to 'placed' so the overlay/popover

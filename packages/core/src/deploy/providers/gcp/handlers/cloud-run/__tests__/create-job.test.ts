@@ -3,13 +3,13 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('../image-resolver.js', () => ({
+vi.mock('../image-resolver', () => ({
   resolve_image: vi.fn().mockResolvedValue('gcr.io/p/job:built'),
 }));
 
-import { resolve_image } from '../image-resolver.js';
-import { create_job } from '../create-job.js';
-import type { GCPHandlerContext } from '../../../types.js';
+import { resolve_image } from '../image-resolver';
+import { create_job } from '../create-job';
+import type { GCPHandlerContext } from '../../../types';
 
 function clientWithCreate(operation: any) {
   return { createJob: vi.fn().mockResolvedValue([operation]) };

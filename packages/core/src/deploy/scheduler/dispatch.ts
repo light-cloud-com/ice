@@ -37,14 +37,14 @@
  * `ctx.x`).
  */
 
-import { match_handler_prefix } from './predicates.js';
-import type { ResourceChange } from '../../diff/types.js';
+import { match_handler_prefix } from './predicates';
+import type { ResourceChange } from '../../diff/types';
 import type {
   NodeStatusEvent,
   NodeTerminalStatus,
   ResourceDeployResult,
-} from '../types.js';
-import type { NodeRecord, SchedulerContext, SchedulerPhase } from './types.js';
+} from '../types';
+import type { NodeRecord, SchedulerContext, SchedulerPhase } from './types';
 
 /**
  * Begin applying a node. Marks `in_flight`, emits `applying`, then

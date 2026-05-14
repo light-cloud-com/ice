@@ -25,8 +25,8 @@ vi.mock('better-sqlite3', () => {
 
 describe('lifecycle_initialize falls back to the namespace when default is undefined', () => {
   it('evaluates `m.default || m` and lands in the fallback (CJS-interop) branch', async () => {
-    const { lifecycle_initialize } = await import('../lifecycle.js');
-    const { DEFAULT_OPTIONS } = await import('../types.js');
+    const { lifecycle_initialize } = await import('../lifecycle');
+    const { DEFAULT_OPTIONS } = await import('../types');
 
     const ctx = { db: null, listeners: new Set(), statements: new Map() };
     const result = await lifecycle_initialize(ctx, { ...DEFAULT_OPTIONS, path: ':memory:' });

@@ -38,10 +38,16 @@ import {
 import { t } from '../../../i18n';
 import type { ComponentDef, RuntimeOption } from '../types';
 
-/** Convert "Compute.Container" → "computeContainer" for block translation keys */
+/**
+ * Convert "Compute.Container" → "computeContainer" for block translation
+ * keys. The category prefix is fully lowercased so all-caps acronym
+ * prefixes like "AI" map to "ai" (matching `aiVectorDB`, `aiLLMGateway`,
+ * `aiModelServing` in the i18n bundle) instead of the broken `aI...`
+ * shape the old single-letter lowercase produced.
+ */
 export function blockKey(type: string): string {
   const [cat, name] = type.split('.');
-  return cat.charAt(0).toLowerCase() + cat.slice(1) + name;
+  return cat.toLowerCase() + name;
 }
 
 /** Helper: builds a ComponentDef from i18n keys with inline fallbacks for newly-added concept iceTypes. */

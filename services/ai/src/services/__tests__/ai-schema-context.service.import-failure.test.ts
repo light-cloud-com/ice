@@ -16,7 +16,7 @@ vi.mock('@ice/core', () => {
 
 describe('buildSchemaContext — @ice/core import failure', () => {
   it('returns "" when the dynamic import of @ice/core throws', async () => {
-    const { buildSchemaContext } = await import('../ai-schema-context.service.js');
+    const { buildSchemaContext } = await import('../ai-schema-context.service');
     const out = await buildSchemaContext({
       existingIceTypes: ['anything'],
       dominantProvider: 'gcp',

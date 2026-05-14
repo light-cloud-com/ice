@@ -3,18 +3,18 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('../compute-ops.js', () => ({
+vi.mock('../compute-ops', () => ({
   wait_for_compute_op: vi.fn().mockResolvedValue(undefined),
 }));
 
-import { wait_for_compute_op } from '../compute-ops.js';
+import { wait_for_compute_op } from '../compute-ops';
 import {
   ignore_conflict,
   verify_backend_bucket_exists,
   create_serverless_backend,
   create_default_backend_service,
-} from '../backend-creator.js';
-import type { GCPHandlerContext } from '../../../types.js';
+} from '../backend-creator';
+import type { GCPHandlerContext } from '../../../types';
 
 function makeCtx(rest: { get?: any; post?: any } = {}): GCPHandlerContext {
   return {

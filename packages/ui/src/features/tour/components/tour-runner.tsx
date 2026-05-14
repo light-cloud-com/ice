@@ -28,8 +28,10 @@ import {
   getTour,
 } from '../utils/tour-registry';
 import { tours } from '../config/tours';
+import { useCanvasTourPanels } from '../hooks/use-canvas-tour-panels';
 import { useTourAutostart } from '../hooks/use-tour-autostart';
 import { useTourKeyboard } from '../hooks/use-tour-keyboard';
+import { useTourPredicateAutostart } from '../hooks/use-tour-predicate-autostart';
 import { useTourRunner } from '../hooks/use-tour-runner';
 import { TourOverlay } from './tour-overlay';
 import { TourPopover } from './tour-popover';
@@ -67,8 +69,15 @@ function useRegisterTours(): void {
 
 export function TourRunner(): JSX.Element | null {
   useRegisterTours();
-  // tour-13: watch `?tour=<id>` URL param + auto-launch matching tour.
+  // URL-driven autostart: `?tour=<id>` (legacy v1 path).
   useTourAutostart();
+  // Predicate-driven autostart: each Tour declares its own `autoStart(ctx)`
+  // and the runner fires the first one whose predicate matches AND whose
+  // first-step anchor is in the DOM.
+  useTourPredicateAutostart();
+  // Open the right panel for each canvas-tour step (and restore the
+  // user's pre-tour layout when the tour ends).
+  useCanvasTourPanels();
   const {
     phase,
     activeStep,

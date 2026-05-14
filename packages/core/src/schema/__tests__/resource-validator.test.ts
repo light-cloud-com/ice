@@ -13,15 +13,15 @@
  *  - to_validation_error proxy
  */
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { ResourceValidator, create_resource_validator } from '../resource-validator.js';
-import { ValidationError } from '../../types/errors.js';
-import { failure, success } from '../../types/result.js';
+import { ResourceValidator, create_resource_validator } from '../resource-validator';
+import { ValidationError } from '../../types/errors';
+import { failure, success } from '../../types/result';
 import type {
   IceType,
   PropertySchema,
   ResourceSchema,
   SchemaProvider,
-} from '../schema-provider.js';
+} from '../schema-provider';
 
 function prop(over: Partial<PropertySchema> = {}): PropertySchema {
   return {

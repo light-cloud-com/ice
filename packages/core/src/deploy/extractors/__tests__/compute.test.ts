@@ -18,7 +18,7 @@ import {
   extract_cloud_run_job_properties,
   extract_cloud_functions_properties,
   extract_cloud_scheduler_properties,
-} from '../compute.js';
+} from '../compute';
 
 describe('extract_cloud_run_properties', () => {
   it('returns defaults for an empty data object', () => {

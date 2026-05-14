@@ -19,8 +19,8 @@ vi.mock('better-sqlite3', () => {
 describe('lifecycle_initialize when better-sqlite3 is missing', () => {
   it('returns "not installed" failure (the falsy-import branch)', async () => {
     // Import lazily after the mock is registered so the SUT picks it up.
-    const { lifecycle_initialize } = await import('../lifecycle.js');
-    const { DEFAULT_OPTIONS } = await import('../types.js');
+    const { lifecycle_initialize } = await import('../lifecycle');
+    const { DEFAULT_OPTIONS } = await import('../types');
 
     const ctx = { db: null, listeners: new Set(), statements: new Map() };
     const result = await lifecycle_initialize(ctx, DEFAULT_OPTIONS);

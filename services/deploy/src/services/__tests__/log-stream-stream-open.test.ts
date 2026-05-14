@@ -38,13 +38,13 @@ vi.mock('@ice/core', () => ({
   load_sdk: mocks.loadSdk,
 }));
 
-import { resetRegistry, streams, subscriptionIndex } from '../log-stream/registry.js';
+import { resetRegistry, streams, subscriptionIndex } from '../log-stream/registry';
 import {
   openStreamForResolved,
   registerPlaceholderStream,
   restartStreamWithMode,
-} from '../log-stream/stream-open.js';
-import type { ActiveStream } from '../log-stream/types.js';
+} from '../log-stream/stream-open';
+import type { ActiveStream } from '../log-stream/types';
 
 const baseArgs = {
   cardId: 'card-1',

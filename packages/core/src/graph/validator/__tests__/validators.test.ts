@@ -18,7 +18,7 @@ import {
   PropertyValidator,
   SensitiveDataValidator,
   BestPracticesValidator,
-} from '../validators.js';
+} from '../validators';
 
 describe('create_builtin_validators', () => {
   it('returns 8 validators in stable order', () => {

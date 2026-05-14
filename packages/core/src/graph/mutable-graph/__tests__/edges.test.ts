@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { create_edge_id, create_node_id, type NodeInput } from '../../../types/graph.js';
+import { create_edge_id, create_node_id, type NodeInput } from '../../../types/graph';
 import {
   edges_add_edge,
   edges_get_edge,
@@ -13,9 +13,9 @@ import {
   edges_get_outgoing_edges,
   edges_remove_edge,
   edges_resolve_node_id,
-} from '../edges.js';
-import { nodes_add_node } from '../nodes.js';
-import { create_mutable_graph_state } from '../types.js';
+} from '../edges';
+import { nodes_add_node } from '../nodes';
+import { create_mutable_graph_state } from '../types';
 
 function makeState() {
   const state = create_mutable_graph_state();

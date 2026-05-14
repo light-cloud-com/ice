@@ -7,8 +7,8 @@
  * Domain mappings cannot be updated in-place — update deletes and recreates.
  */
 
-import type { ResourceDeployResult } from '../../../types.js';
-import type { GCPResourceHandler } from '../types.js';
+import type { ResourceDeployResult } from '../../../types';
+import type { GCPResourceHandler } from '../types';
 
 const TYPE = 'gcp.run.domainMapping';
 const BASE_URL = 'https://run.googleapis.com/apis/domains.cloudrun.com/v1';

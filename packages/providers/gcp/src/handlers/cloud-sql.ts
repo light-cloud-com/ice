@@ -5,8 +5,8 @@
  * Uses REST API (Cloud SQL Admin v1beta4) since there's no official Node.js SDK.
  */
 
-import { SERVICE_NAMES, operation_failed, operation_timed_out } from '../messages.js';
-import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
+import { SERVICE_NAMES, operation_failed, operation_timed_out } from '../messages';
+import type { GCPResourceHandler, GCPHandlerContext } from '../types';
 import type { ResourceDeployResult } from '@ice/core';
 
 const BASE_URL = 'https://sqladmin.googleapis.com/v1';

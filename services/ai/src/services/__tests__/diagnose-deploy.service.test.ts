@@ -24,7 +24,7 @@ vi.mock('../ai.service', () => ({
   getAiProviderSync: vi.fn(),
 }));
 
-import { diagnoseDeploy } from '../diagnose-deploy.service.js';
+import { diagnoseDeploy } from '../diagnose-deploy.service';
 import type { DiagnoseDeployRequest } from '@ice/types';
 
 const baseRequest: DiagnoseDeployRequest = {

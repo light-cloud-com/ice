@@ -10,13 +10,13 @@
  *  - the dedup of overlapping required/computed properties
  */
 import { describe, expect, it, vi } from 'vitest';
-import { TypeMapper, create_type_mapper } from '../type-mapper.js';
+import { TypeMapper, create_type_mapper } from '../type-mapper';
 import type {
   IceType,
   PropertySchema,
   ProviderImplementation,
   SchemaProvider,
-} from '../schema-provider.js';
+} from '../schema-provider';
 
 function prop(over: Partial<PropertySchema> = {}): PropertySchema {
   return {

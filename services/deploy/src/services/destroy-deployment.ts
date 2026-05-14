@@ -17,21 +17,19 @@ import {
   finishDeploySnapshot,
   releaseTempDir,
   startDeploySnapshot,
-} from './deploy-locks.js';
-import { removeResourceMapping } from './resource-mapping.service.js';
-import { resolveProviderAuth } from '../providers/registry.js';
-import { createDeployer } from './deployer-factory.js';
-import { acquireWriteLock } from './deploy-lock-wrapper.js';
-import { emitDeployEvent, emitLog } from './deploy-event-dispatcher.js';
-import { attemptDestroy, emitDestroyLifecycle } from './destroy-runner.js';
+} from './deploy-locks';
+import { removeResourceMapping } from './resource-mapping.service';
+import { resolveProviderAuth } from '../providers/registry';
+import { createDeployer } from './deployer-factory';
+import { acquireWriteLock } from './deploy-lock-wrapper';
+import { emitDeployEvent, emitLog } from './deploy-event-dispatcher';
+import { attemptDestroy, emitDestroyLifecycle } from './destroy-runner';
 
 export async function destroyDeployment(cardId: string, orgId: string, userId?: string) {
-  console.log('[destroy] ENTRY cardId=' + cardId + ' orgId=' + orgId);
   // Per-card lock — no concurrent destroys on the same card.
   let releaseLock: () => void;
   try {
     releaseLock = acquireWriteLock(cardId, 'destroy');
-    console.log('[destroy] lock acquired cardId=' + cardId);
   } catch (err) {
     console.warn('[destroy] LOCK FAILED cardId=' + cardId + ' err=' + (err as any)?.message);
     throw err;
@@ -81,7 +79,6 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
   }
 
   const deployment = latestApply;
-  console.log('[destroy] baseline found deploymentId=' + deployment.id + ' status=' + deployment.status);
 
   const provider = deployment.provider || 'gcp';
   const credentials = await providerService.getDecryptedCredentials(orgId, provider);
@@ -90,7 +87,6 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
     releaseLock();
     throw new Error('Provider not connected');
   }
-  console.log('[destroy] credentials resolved provider=' + provider);
 
   // Create destroy record
   const destroyRecord = await prisma.canvasDeployment.create({
@@ -158,13 +154,6 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
 
     const destroyProject =
       scopedAuth.scope.project || (authClient as any)?.projectId || (authClient as any)?.project_id;
-    console.log(
-      '[destroy] begin delete loop project=' +
-        destroyProject +
-        ' resources=' +
-        resources.length +
-        ' (will delete in reverse deployment order)',
-    );
 
     // pdl-10 — emit `queued` for every resource that has a canvas
     // correlation, BEFORE the loop starts. This matches the apply-path
@@ -188,7 +177,6 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
 
     for (const res of resources) {
       if (res.success && res.provider_id) {
-        console.log('[destroy] deleting ' + res.type + '/' + res.name + ' provider_id=' + res.provider_id);
         // pdl-10 — capture the applying-at marker so duration_ms can be
         // computed for the terminal event below. Only resources with a
         // canvas correlation get the wire emit.
@@ -222,15 +210,6 @@ export async function destroyDeployment(cardId: string, orgId: string, userId?: 
           // !success). Mirror the original raw-response push to
           // `deleteResults` so downstream readers see the original shape.
           const deleteResult = result.raw;
-          console.log(
-            '[destroy]   → ' +
-              res.type +
-              '/' +
-              res.name +
-              ' success=' +
-              deleteResult.success +
-              (deleteResult.error ? ' error=' + deleteResult.error : ''),
-          );
           deleteResults.push(deleteResult);
           const durationMs = Date.now() - applyingAt;
           emitDestroyLifecycle({

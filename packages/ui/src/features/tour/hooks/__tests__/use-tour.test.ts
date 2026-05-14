@@ -154,6 +154,19 @@ describe('useTour.start', () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('"nope"'));
     warn.mockRestore();
   });
+
+  it('re-launches a previously completed tour (Help button path)', () => {
+    // After completion the autostart predicate filters this id out, but
+    // a manual `start()` call from the Help button must still fire.
+    registerTour('canvas-tour', 4);
+    mocks.selectorState.completedTours = ['canvas-tour'];
+    const t = useTour();
+    t.start('canvas-tour');
+    expect(mocks.dispatch).toHaveBeenCalledWith({
+      type: 'tour/startTour',
+      payload: { tourId: 'canvas-tour', totalSteps: 4 },
+    });
+  });
 });
 
 describe('useTour.advance', () => {
@@ -258,6 +271,18 @@ describe('useTour.stop', () => {
     const t = useTour();
     t.stop();
     expect(mocks.dispatch).not.toHaveBeenCalled();
+  });
+
+  it('on last step → markCompleted + persist (user saw every step)', () => {
+    registerTour('canvas-tour', 3);
+    mocks.selectorState.activeTourId = 'canvas-tour';
+    mocks.selectorState.stepIdx = 2;
+    const t = useTour();
+    t.stop();
+    expect(dispatchedTypes()).toEqual([
+      'tour/markCompleted',
+      'tour/persistCompletedTour',
+    ]);
   });
 });
 

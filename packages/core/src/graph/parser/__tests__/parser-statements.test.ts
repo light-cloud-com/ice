@@ -36,15 +36,15 @@ import {
   parse_module_block,
   parse_output_block,
   parse_variable_block,
-} from '../parser-statements.js';
-import { make_parser_state } from '../parser-state.js';
+} from '../parser-statements';
+import { make_parser_state } from '../parser-state';
 import type {
   Identifier,
   NullLiteral,
   NumberLiteral,
   StringLiteral,
-} from '../ast.js';
-import type { Token, TokenType, SourcePosition } from '../tokens.js';
+} from '../ast';
+import type { Token, TokenType, SourcePosition } from '../tokens';
 
 /** Build a minimal token at line/col 1 (with optional literal). */
 function tk(

@@ -35,21 +35,21 @@
  *    "No Pulumi mapping" messages — preserved verbatim.
  */
 
-import { sanitize_name } from './case-utils.js';
-import { fallback_type_mapping } from './type-mapping.js';
-import { to_typescript } from './typescript-formatter.js';
-import { build_options, map_properties } from './value-transform.js';
-import { to_yaml } from './yaml-formatter.js';
-import type { EmbeddedSchemaProvider } from '../../schema/embedded-schema-provider.js';
-import type { MutableGraph } from '../../graph/mutable-graph.js';
-import type { IceType } from '../../schema/schema-provider.js';
-import type { Node } from '../../types/graph.js';
+import { sanitize_name } from './case-utils';
+import { fallback_type_mapping } from './type-mapping';
+import { to_typescript } from './typescript-formatter';
+import { build_options, map_properties } from './value-transform';
+import { to_yaml } from './yaml-formatter';
+import type { EmbeddedSchemaProvider } from '../../schema/embedded-schema-provider';
+import type { MutableGraph } from '../../graph/mutable-graph';
+import type { IceType } from '../../schema/schema-provider';
+import type { Node } from '../../types/graph';
 import type {
   PulumiExportOptions,
   PulumiExportResult,
   PulumiProgram,
   PulumiResource,
-} from './types.js';
+} from './types';
 
 /**
  * Build a `node.id -> node.id[]` dependency map from a graph's edges.

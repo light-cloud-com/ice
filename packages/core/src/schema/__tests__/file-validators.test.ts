@@ -24,7 +24,7 @@ import {
   validate_override_file,
   validate_provider_file,
   validate_relationships_file,
-} from '../customization/file-validators.js';
+} from '../customization/file-validators';
 
 let tmp: string;
 beforeEach(() => {

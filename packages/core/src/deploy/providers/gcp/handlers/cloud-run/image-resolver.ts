@@ -21,9 +21,9 @@
  *
  * Extracted from `cloud-run.ts` (rf-crun-2).
  */
-import { BUILD_MESSAGES, HANDLER_MESSAGES } from '../../messages.js';
-import { build_from_source, ensure_artifact_registry } from '../cloud-build-helper.js';
-import type { GCPHandlerContext } from '../../types.js';
+import { BUILD_MESSAGES, HANDLER_MESSAGES } from '../../messages';
+import { build_from_source, ensure_artifact_registry } from '../cloud-build-helper';
+import type { GCPHandlerContext } from '../../types';
 
 /** Artifact Registry repo name ICE uses for every Cloud Run build. */
 export const AR_REPO = 'ice-images';

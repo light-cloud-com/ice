@@ -14,8 +14,8 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import * as providerService from '@ice/service-credentials';
-import { registerTempDir, releaseTempDir } from '../../services/deploy-locks.js';
-import type { CredentialResolver, ResolveAuthOptions, ScopedDeployAuth } from '../types.js';
+import { registerTempDir, releaseTempDir } from '../../services/deploy-locks';
+import type { CredentialResolver, ResolveAuthOptions, ScopedDeployAuth } from '../types';
 
 /** Small SA-key sanity check — we'd rather throw now than mid-deploy. */
 function validateSaKey(parsed: any): void {

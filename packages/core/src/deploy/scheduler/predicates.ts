@@ -20,7 +20,7 @@
  * directly.
  */
 
-import type { NodeRecord, SchedulerContext } from './types.js';
+import type { NodeRecord, SchedulerContext } from './types';
 
 /** Has every node either succeeded, failed, skipped, or been cancelled? */
 export function is_unfinished(ctx: SchedulerContext): boolean {

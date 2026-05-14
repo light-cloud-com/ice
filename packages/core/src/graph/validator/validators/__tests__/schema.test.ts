@@ -6,9 +6,9 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { create_mutable_graph } from '../../../mutable-graph.js';
-import { TypeValidator, PropertyValidator } from '../schema.js';
-import type { SchemaProvider, IceType } from '../../../../schema/schema-provider.js';
+import { create_mutable_graph } from '../../../mutable-graph';
+import { TypeValidator, PropertyValidator } from '../schema';
+import type { SchemaProvider, IceType } from '../../../../schema/schema-provider';
 
 // ─── Mock schema provider ─────────────────────────────────────────────────────
 

@@ -7,7 +7,7 @@
  * orchestrator and `../cloud-blocks-types.ts` for the shared types.
  */
 
-import type { BlockTemplate } from '../cloud-blocks-types.js';
+import type { BlockTemplate } from '../cloud-blocks-types';
 
 export const SECURITY_TEMPLATES: BlockTemplate[] = [
   // -------------------------------------------------------------------------

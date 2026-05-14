@@ -17,7 +17,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // because `vi.mock(...)` is hoisted above any top-level `class`/`let`
 // bindings — declaring it outside triggers
 // "Cannot access 'MockDeployLockError' before initialization".
-vi.mock('../deploy-locks.js', () => {
+vi.mock('../deploy-locks', () => {
   class MockDeployLockError extends Error {
     public code: string;
     constructor(code: string, message: string) {
@@ -32,8 +32,8 @@ vi.mock('../deploy-locks.js', () => {
   };
 });
 
-import { acquireWriteLock } from '../deploy-lock-wrapper.js';
-import * as deployLocks from '../deploy-locks.js';
+import { acquireWriteLock } from '../deploy-lock-wrapper';
+import * as deployLocks from '../deploy-locks';
 
 const acquireDeployLockMock = (deployLocks as any).acquireDeployLock as ReturnType<typeof vi.fn>;
 const MockDeployLockError = (deployLocks as any).DeployLockError as new (code: string, message: string) => Error & { code: string };

@@ -20,7 +20,7 @@ import {
   sanitize_var_name,
   to_camel_case,
   to_pascal_case,
-} from '../case-utils.js';
+} from '../case-utils';
 
 describe('to_pascal_case', () => {
   it('TitleCases a single word', () => {

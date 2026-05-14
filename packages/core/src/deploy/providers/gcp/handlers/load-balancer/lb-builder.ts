@@ -7,11 +7,11 @@
  * awaits the long-running operation, and returns the resource name so
  * the orchestrator can wire it into the next step's body.
  */
-import { wait_for_compute_op } from './compute-ops.js';
-import { BASE_URL } from './result-helpers.js';
-import { backend_ref } from './url-builder.js';
-import type { HostRule } from './backend-creator.js';
-import type { GCPHandlerContext } from '../../types.js';
+import { wait_for_compute_op } from './compute-ops';
+import { BASE_URL } from './result-helpers';
+import { backend_ref } from './url-builder';
+import type { HostRule } from './backend-creator';
+import type { GCPHandlerContext } from '../../types';
 
 /**
  * Build + create the URL map. Single-host deploys pass `defaultServiceRef`

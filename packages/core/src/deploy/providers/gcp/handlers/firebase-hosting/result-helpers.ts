@@ -5,7 +5,7 @@
  * success / failure builders without re-implementing the shape.
  */
 
-import type { ResourceDeployResult } from '../../../../types.js';
+import type { ResourceDeployResult } from '../../../../types';
 
 /** ICE resource type emitted by the Firebase Hosting handler. */
 export const TYPE = 'gcp.firebase.hosting';

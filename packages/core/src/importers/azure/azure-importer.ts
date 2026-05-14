@@ -5,9 +5,9 @@
  * Uses Azure Resource Graph to discover ALL resources.
  */
 
-import { get_ice_type, map_properties } from './type-mapper.js';
-import { classifyAzureError } from '../../errors/import-errors.js';
-import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph.js';
+import { get_ice_type, map_properties } from './type-mapper';
+import { classifyAzureError } from '../../errors/import-errors';
+import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph';
 import type {
   AzureImportOptions,
   AzureImportResult,
@@ -16,8 +16,8 @@ import type {
   AzureImportWarning,
   AzureImportMetadata,
   AzureResource,
-} from './types.js';
-import type { NodeInput, EdgeInput } from '../../types/graph.js';
+} from './types';
+import type { NodeInput, EdgeInput } from '../../types/graph';
 
 // =============================================================================
 // Default Options

@@ -18,7 +18,7 @@ import {
   build_options,
   map_properties,
   transform_value,
-} from '../value-transform.js';
+} from '../value-transform';
 
 describe('build_options', () => {
   it('returns undefined when deps is empty', () => {

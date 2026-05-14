@@ -4,9 +4,9 @@
  * Core logic for executing deployment plans.
  */
 
-import { get_plan_execution_layers } from '../plan/plan-engine.js';
-import { create_mock_provider } from '../providers/mock-provider.js';
-import { create_deployment_id } from '../types/deployment.js';
+import { get_plan_execution_layers } from '../plan/plan-engine';
+import { create_mock_provider } from '../providers/mock-provider';
+import { create_deployment_id } from '../types/deployment';
 import type {
   ApplyOptions,
   ApplyResult,
@@ -14,11 +14,11 @@ import type {
   ApplyContext,
   ResourceApplyResult,
   ExecutionLayer,
-} from './types.js';
-import type { MutableGraph } from '../graph/mutable-graph.js';
-import type { DeploymentPlan, PlannedChange, DeploymentAction } from '../types/deployment.js';
-import type { Node } from '../types/graph.js';
-import type { ProviderClient, ResourceState } from '../types/providers.js';
+} from './types';
+import type { MutableGraph } from '../graph/mutable-graph';
+import type { DeploymentPlan, PlannedChange, DeploymentAction } from '../types/deployment';
+import type { Node } from '../types/graph';
+import type { ProviderClient, ResourceState } from '../types/providers';
 
 // =============================================================================
 // Apply Function

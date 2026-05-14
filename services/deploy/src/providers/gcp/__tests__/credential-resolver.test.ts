@@ -33,7 +33,7 @@ vi.mock('@ice/service-credentials', () => ({
   updateGCPOAuthTokens: mocks.updateGCPOAuthTokensMock,
 }));
 
-vi.mock('../../../services/deploy-locks.js', () => ({
+vi.mock('../../../services/deploy-locks', () => ({
   registerTempDir: mocks.registerTempDirMock,
   releaseTempDir: mocks.releaseTempDirMock,
 }));
@@ -53,7 +53,7 @@ vi.mock('google-auth-library', () => ({
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { gcpCredentialResolver } from '../credential-resolver.js';
+import { gcpCredentialResolver } from '../credential-resolver';
 
 const VALID_SA_KEY = {
   type: 'service_account',

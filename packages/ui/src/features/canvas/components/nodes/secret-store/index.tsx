@@ -6,14 +6,13 @@
  * onlookers. Editing moves to the properties panel.
  */
 
+import { SS_HEADER_HEIGHT, SS_PADDING, SS_ROW_HEIGHT } from '@ice/constants';
 import { Lock } from 'lucide-react';
 import React from 'react';
 import { CardShell, EmptyHint, KvLine } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
-export const SS_HEADER_HEIGHT = 48;
-export const SS_ROW_HEIGHT = 20;
-export const SS_PADDING = 12;
+export { SS_HEADER_HEIGHT, SS_ROW_HEIGHT, SS_PADDING };
 
 export function computeSecretStoreHeight(data: Record<string, unknown>): number {
   const rows = (data?.secrets as unknown[] | undefined) || [];

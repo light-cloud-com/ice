@@ -16,14 +16,14 @@
  * tested directly without instantiating the class.
  */
 
-import type { ResourceChange } from '../../diff/types.js';
-import type { Graph } from '../../types/graph.js';
+import type { ResourceChange } from '../../diff/types';
+import type { Graph } from '../../types/graph';
 import type {
   DeployOptions,
   NodeTerminalStatus,
   ProviderDeployer,
   ResourceDeployResult,
-} from '../types.js';
+} from '../types';
 
 /**
  * Default per-handler concurrency caps. Cloud SQL and Memorystore Redis

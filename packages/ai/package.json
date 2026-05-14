@@ -2,6 +2,7 @@
   "name": "@ice/ai",
   "license": "Apache-2.0",
   "version": "0.1.0",
+  "private": true,
   "description": "AI provider abstraction layer for ICE — supports Anthropic (cloud) and OpenAI-compatible endpoints",
   "type": "module",
   "main": "./src/index.ts",

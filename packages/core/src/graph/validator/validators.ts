@@ -13,17 +13,17 @@
  * rf-vval-1/2/3/4 (P3 cohort 6).
  */
 
-import type { Validator } from './base-validator.js';
-import type { SchemaProvider } from '../../schema/schema-provider.js';
+import type { Validator } from './base-validator';
+import type { SchemaProvider } from '../../schema/schema-provider';
 
 import {
   CycleValidator,
   ReferenceValidator,
   NamingValidator,
   ConnectivityValidator,
-} from './validators/structure.js';
-import { TypeValidator, PropertyValidator } from './validators/schema.js';
-import { SensitiveDataValidator, BestPracticesValidator } from './validators/security.js';
+} from './validators/structure';
+import { TypeValidator, PropertyValidator } from './validators/schema';
+import { SensitiveDataValidator, BestPracticesValidator } from './validators/security';
 
 // Public API re-exports (consumed by `validator/index.ts` and the `core/src/index.ts` barrel).
 export {
@@ -31,9 +31,9 @@ export {
   ReferenceValidator,
   NamingValidator,
   ConnectivityValidator,
-} from './validators/structure.js';
-export { TypeValidator, PropertyValidator } from './validators/schema.js';
-export { SensitiveDataValidator, BestPracticesValidator } from './validators/security.js';
+} from './validators/structure';
+export { TypeValidator, PropertyValidator } from './validators/schema';
+export { SensitiveDataValidator, BestPracticesValidator } from './validators/security';
 
 /**
  * Create all built-in validators.
@@ -56,8 +56,8 @@ export function create_builtin_validators(schema_provider?: SchemaProvider): Val
  */
 export async function create_configured_validator(
   schema_provider?: SchemaProvider,
-): Promise<import('./base-validator.js').GraphValidator> {
-  const { create_graph_validator } = await import('./base-validator.js');
+): Promise<import('./base-validator').GraphValidator> {
+  const { create_graph_validator } = await import('./base-validator');
   const validator = create_graph_validator();
 
   for (const v of create_builtin_validators(schema_provider)) {

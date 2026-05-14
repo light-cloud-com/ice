@@ -5,14 +5,14 @@
  * with GCP-typed nodes that the deploy pipeline understands.
  */
 
-import { create_mutable_graph } from '../graph/mutable-graph.js';
-import type { Graph } from '../types/graph.js';
+import { create_mutable_graph } from '../graph/mutable-graph';
+import type { Graph } from '../types/graph';
 import {
   sanitize_name,
   sanitize_label_value,
-} from './utils/name-utils.js';
-import { generate_stable_name } from './utils/stable-name.js';
-import { DESIGN_ONLY_PROVIDERS, get_type_map } from './type-maps.js';
+} from './utils/name-utils';
+import { generate_stable_name } from './utils/stable-name';
+import { DESIGN_ONLY_PROVIDERS, get_type_map } from './type-maps';
 import {
   UI_ONLY_TYPES,
   SERVICE_BACKEND_ICE_TYPES_FOR_INGRESS,
@@ -20,11 +20,11 @@ import {
   hasPrivateNetworkAncestor,
   isCustomDomainStandalone,
   map_edge_relationship,
-} from './edge-classifier.js';
-import { PROPERTY_EXTRACTORS } from './extractors/dispatch.js';
-import { wire_source_repositories } from './passes/pass-1-4-repo-wiring.js';
-import { propagate_custom_domain_hosts } from './passes/pass-1-45-domain-propagation.js';
-import { wire_public_endpoints } from './passes/pass-1-5-endpoint-wiring.js';
+} from './edge-classifier';
+import { PROPERTY_EXTRACTORS } from './extractors/dispatch';
+import { wire_source_repositories } from './passes/pass-1-4-repo-wiring';
+import { propagate_custom_domain_hosts } from './passes/pass-1-45-domain-propagation';
+import { wire_public_endpoints } from './passes/pass-1-5-endpoint-wiring';
 
 // =============================================================================
 // Types

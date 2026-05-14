@@ -29,12 +29,12 @@ vi.mock('@ice/shared', () => ({
   emitDeployRequirementVerified: vi.fn(),
 }));
 
-vi.mock('../deploy-event-log.js', () => ({
+vi.mock('../deploy-event-log', () => ({
   nextDeploySeq: vi.fn(),
   recordDeployEvent: vi.fn(),
 }));
 
-vi.mock('../deploy-locks.js', () => ({
+vi.mock('../deploy-locks', () => ({
   updateDeploySnapshotNode: vi.fn(),
 }));
 
@@ -42,11 +42,11 @@ import {
   emitDeployEvent,
   emitLog,
   emitDestroyNodeStatus,
-} from '../deploy-event-dispatcher.js';
+} from '../deploy-event-dispatcher';
 // @ts-ignore — resolved at runtime via pnpm workspace; mocked above
 import * as iceShared from '@ice/shared';
-import * as deployEventLog from '../deploy-event-log.js';
-import * as deployLocks from '../deploy-locks.js';
+import * as deployEventLog from '../deploy-event-log';
+import * as deployLocks from '../deploy-locks';
 
 const emitDeployNodeStatusMock = (iceShared as any).emitDeployNodeStatus as ReturnType<typeof vi.fn>;
 const emitDeployNodeProgressMock = (iceShared as any).emitDeployNodeProgress as ReturnType<typeof vi.fn>;

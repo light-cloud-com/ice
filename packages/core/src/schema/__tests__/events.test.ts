@@ -14,8 +14,8 @@ import {
   emit_event,
   remove_listener,
   type EventListenerMap,
-} from '../embedded/events.js';
-import type { IceType, SchemaEvent } from '../schema-provider.js';
+} from '../embedded/events';
+import type { IceType, SchemaEvent } from '../schema-provider';
 
 describe('add_listener', () => {
   it('lazily creates a Set when slot is empty', () => {

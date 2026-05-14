@@ -7,8 +7,8 @@
  * 3. OAuth2 browser flow — for desktop users without gcloud
  */
 
-import { load_sdk } from './sdk-loader.js';
-import { AUTH_MESSAGES } from '../../messages.js';
+import { load_sdk } from './sdk-loader';
+import { AUTH_MESSAGES } from '../../messages';
 
 // =============================================================================
 // Types

@@ -31,7 +31,7 @@
  *  - JSON output uses `JSON.stringify(config, null, 2)`.
  */
 
-import type { TerraformConfig, TerraformExportOptions } from './types.js';
+import type { TerraformConfig, TerraformExportOptions } from './types';
 
 /**
  * Format a value for HCL output.

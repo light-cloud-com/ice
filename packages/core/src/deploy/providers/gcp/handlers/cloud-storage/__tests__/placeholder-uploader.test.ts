@@ -8,8 +8,8 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { uploadPlaceholders } from '../placeholder-uploader.js';
-import type { GCPHandlerContext } from '../../../types.js';
+import { uploadPlaceholders } from '../placeholder-uploader';
+import type { GCPHandlerContext } from '../../../types';
 
 function makeCtx(): { ctx: GCPHandlerContext; logs: string[] } {
   const logs: string[] = [];

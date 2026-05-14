@@ -49,7 +49,7 @@ beforeEach(async () => {
   currentUserId = 'user-1';
   vi.spyOn(console, 'error').mockImplementation(() => {});
 
-  const { default: onboardingRouter } = await import('../onboarding.js');
+  const { default: onboardingRouter } = await import('../onboarding');
   const app = express();
   app.use(express.json());
   app.use('/api/onboarding', onboardingRouter);

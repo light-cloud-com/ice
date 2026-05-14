@@ -5,8 +5,8 @@
  * `graph/algorithms.ts`.
  */
 import { describe, expect, it } from 'vitest';
-import { find_all_paths, find_shortest_path } from '../paths.js';
-import { id_of, make_graph } from './fixtures.js';
+import { find_all_paths, find_shortest_path } from '../paths';
+import { id_of, make_graph } from './fixtures';
 
 describe('find_all_paths', () => {
   it('returns single path for direct edge', () => {

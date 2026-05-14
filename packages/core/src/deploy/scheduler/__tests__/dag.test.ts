@@ -7,10 +7,10 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { build_dag, assert_no_cycle } from '../dag.js';
-import type { ResourceChange } from '../../../diff/types.js';
-import type { Graph, Node, NodeId, Edge, EdgeId } from '../../../types/graph.js';
-import type { NodeRecord, SchedulerPhase } from '../types.js';
+import { build_dag, assert_no_cycle } from '../dag';
+import type { ResourceChange } from '../../../diff/types';
+import type { Graph, Node, NodeId, Edge, EdgeId } from '../../../types/graph';
+import type { NodeRecord, SchedulerPhase } from '../types';
 
 // ─── helpers ─────────────────────────────────────────────────────────
 

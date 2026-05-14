@@ -12,7 +12,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { validateCanvas } from '../canvas-validation.service.js';
+import { validateCanvas } from '../canvas-validation.service';
 
 vi.mock('@ice/core', () => ({
   validateCanvas: vi.fn(),

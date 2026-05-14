@@ -9,11 +9,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock the underlying routers so this test isolates the wiring concern.
 // Each mock returns a tiny express middleware so we can probe URL routing.
-vi.mock('../routes/github.js', () => ({
+vi.mock('../routes/github', () => ({
   default: (req: any, res: any) => res.json({ where: 'github', path: req.path }),
 }));
 
-vi.mock('../routes/providers.js', () => ({
+vi.mock('../routes/providers', () => ({
   default: (req: any, res: any) => res.json({ where: 'providers', path: req.path }),
 }));
 
@@ -39,7 +39,7 @@ beforeEach(() => {
 
 describe('createCredentialsRouter', () => {
   it('mounts github routes under /github and provider routes under /providers', async () => {
-    const { createCredentialsRouter } = await import('../index.js');
+    const { createCredentialsRouter } = await import('../index');
     const express = (await import('express')).default;
     const http = await import('node:http');
 
@@ -66,7 +66,7 @@ describe('createCredentialsRouter', () => {
   });
 
   it('re-exports the GitHub + provider service surface', async () => {
-    const mod = await import('../index.js');
+    const mod = await import('../index');
     // Service functions should be accessible via the package barrel.
     expect(typeof (mod as any).connectWithPAT).toBe('function');
     expect(typeof (mod as any).pollDeviceFlow).toBe('function');

@@ -4,14 +4,14 @@
  * Handles: gcp.run.service, gcp.run.job
  */
 
-import { SERVICE_NAMES, sdk_not_available_short } from '../messages.js';
-import { create_job } from './cloud-run/create-job.js';
-import { create_service } from './cloud-run/create-service.js';
-import { grant_public_access } from './cloud-run/iam.js';
-import { deleteArtifactRegistryImagesForService, resolve_image } from './cloud-run/image-resolver.js';
-import { fail, result, TYPE_JOB, TYPE_SERVICE } from './cloud-run/result-helpers.js';
-import { build_env_vars, extract_region, fetch_service_outputs } from './cloud-run/utils.js';
-import type { GCPResourceHandler } from '../types.js';
+import { SERVICE_NAMES, sdk_not_available_short } from '../messages';
+import { create_job } from './cloud-run/create-job';
+import { create_service } from './cloud-run/create-service';
+import { grant_public_access } from './cloud-run/iam';
+import { deleteArtifactRegistryImagesForService, resolve_image } from './cloud-run/image-resolver';
+import { fail, result, TYPE_JOB, TYPE_SERVICE } from './cloud-run/result-helpers';
+import { build_env_vars, extract_region, fetch_service_outputs } from './cloud-run/utils';
+import type { GCPResourceHandler } from '../types';
 
 export const cloud_run_handler: GCPResourceHandler = {
   async create(name, properties, ctx) {

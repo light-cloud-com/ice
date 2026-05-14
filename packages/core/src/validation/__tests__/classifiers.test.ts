@@ -26,7 +26,7 @@ import {
   isDomain,
   isContainer,
   canConnect,
-} from '../classifiers.js';
+} from '../classifiers';
 
 describe('isDatabase', () => {
   it('matches the Database. prefix', () => {

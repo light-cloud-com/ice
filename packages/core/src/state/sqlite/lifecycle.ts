@@ -33,11 +33,11 @@
  *  - busy_timeout pragma always fires (no conditional, even on 0).
  */
 
-import { InternalError } from '../../types/errors.js';
-import { failure, success } from '../../types/result.js';
-import type { IceError } from '../../types/errors.js';
-import type { Result } from '../../types/result.js';
-import type { SqliteContext, SqliteStateStoreOptions } from './types.js';
+import { InternalError } from '../../types/errors';
+import { failure, success } from '../../types/result';
+import type { IceError } from '../../types/errors';
+import type { Result } from '../../types/result';
+import type { SqliteContext, SqliteStateStoreOptions } from './types';
 import type { Database, Statement } from 'better-sqlite3';
 
 // =============================================================================

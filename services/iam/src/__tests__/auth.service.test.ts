@@ -46,7 +46,7 @@ vi.mock('bcryptjs', () => ({
 
 describe('AuthError', () => {
   it('should create error with status code', async () => {
-    const { AuthError } = await import('../services/auth.service.js');
+    const { AuthError } = await import('../services/auth.service');
 
     const err = new AuthError('Not found', 404);
     expect(err.message).toBe('Not found');
@@ -120,7 +120,7 @@ describe('registerUser', () => {
   });
 
   it('throws 400 when name, email, or password is missing', async () => {
-    const { registerUser, AuthError } = await import('../services/auth.service.js');
+    const { registerUser, AuthError } = await import('../services/auth.service');
 
     await expect(registerUser('', 'a@b.com', 'pw')).rejects.toMatchObject({ status: 400 });
     await expect(registerUser('A', '', 'pw')).rejects.toMatchObject({ status: 400 });
@@ -133,7 +133,7 @@ describe('registerUser', () => {
   it('throws 409 when the email is already registered', async () => {
     (prisma.user.findUnique as any).mockResolvedValue({ id: 'existing' });
 
-    const { registerUser } = await import('../services/auth.service.js');
+    const { registerUser } = await import('../services/auth.service');
 
     await expect(registerUser('A', 'a@b.com', 'pw')).rejects.toMatchObject({
       status: 409,
@@ -154,7 +154,7 @@ describe('registerUser', () => {
     (prisma.organisationMember.create as any).mockResolvedValue({});
     (prisma.refreshToken.create as any).mockResolvedValue({});
 
-    const { registerUser } = await import('../services/auth.service.js');
+    const { registerUser } = await import('../services/auth.service');
 
     const result = await registerUser('Alice', 'a@b.com', 'pw');
 
@@ -195,7 +195,7 @@ describe('loginUser', () => {
 
   it('throws 401 when no user matches the email', async () => {
     (prisma.user.findUnique as any).mockResolvedValue(null);
-    const { loginUser } = await import('../services/auth.service.js');
+    const { loginUser } = await import('../services/auth.service');
 
     await expect(loginUser('a@b.com', 'pw')).rejects.toMatchObject({
       status: 401,
@@ -211,7 +211,7 @@ describe('loginUser', () => {
       organisation_id: 'org-1',
       password_hash: '@@oauth-only@@',
     });
-    const { loginUser } = await import('../services/auth.service.js');
+    const { loginUser } = await import('../services/auth.service');
 
     await expect(loginUser('a@b.com', 'pw')).rejects.toMatchObject({
       status: 401,
@@ -228,7 +228,7 @@ describe('loginUser', () => {
       organisation_id: 'org-1',
       password_hash: '',
     });
-    const { loginUser } = await import('../services/auth.service.js');
+    const { loginUser } = await import('../services/auth.service');
 
     await expect(loginUser('a@b.com', 'pw')).rejects.toMatchObject({ status: 401 });
   });
@@ -243,7 +243,7 @@ describe('loginUser', () => {
     });
     (bcrypt.compare as any).mockResolvedValue(false);
 
-    const { loginUser } = await import('../services/auth.service.js');
+    const { loginUser } = await import('../services/auth.service');
 
     await expect(loginUser('a@b.com', 'wrong-pw')).rejects.toMatchObject({
       status: 401,
@@ -262,7 +262,7 @@ describe('loginUser', () => {
     (bcrypt.compare as any).mockResolvedValue(true);
     (prisma.refreshToken.create as any).mockResolvedValue({});
 
-    const { loginUser } = await import('../services/auth.service.js');
+    const { loginUser } = await import('../services/auth.service');
 
     const result = await loginUser('a@b.com', 'pw');
 
@@ -288,7 +288,7 @@ describe('loginUser', () => {
     (bcrypt.compare as any).mockResolvedValue(true);
     (prisma.refreshToken.create as any).mockResolvedValue({});
 
-    const { loginUser } = await import('../services/auth.service.js');
+    const { loginUser } = await import('../services/auth.service');
 
     const result = await loginUser('a@b.com', 'pw');
     expect(result.user.organisationId).toBe('');
@@ -301,7 +301,7 @@ describe('refreshToken', () => {
   });
 
   it('rejects payloads whose type is not "refresh"', async () => {
-    const { refreshToken } = await import('../services/auth.service.js');
+    const { refreshToken } = await import('../services/auth.service');
 
     await expect(
       refreshToken('tok', { userId: 'u', organisationId: 'o' /* no type */ }),
@@ -309,7 +309,7 @@ describe('refreshToken', () => {
   });
 
   it('rejects payloads where type is set to a non-refresh value', async () => {
-    const { refreshToken } = await import('../services/auth.service.js');
+    const { refreshToken } = await import('../services/auth.service');
 
     await expect(
       refreshToken('tok', { userId: 'u', organisationId: 'o', type: 'access' }),
@@ -324,7 +324,7 @@ describe('refreshToken', () => {
     // auth.service.refreshToken for the rationale.
     (prisma.refreshToken.findUnique as any).mockResolvedValue(null);
 
-    const { refreshToken } = await import('../services/auth.service.js');
+    const { refreshToken } = await import('../services/auth.service');
 
     await expect(
       refreshToken('stolen-tok', { userId: 'u-1', organisationId: 'o-1', type: 'refresh' }),
@@ -341,7 +341,7 @@ describe('refreshToken', () => {
     });
     (prisma.refreshToken.delete as any).mockResolvedValue({});
 
-    const { refreshToken } = await import('../services/auth.service.js');
+    const { refreshToken } = await import('../services/auth.service');
 
     await expect(
       refreshToken('tok', { userId: 'u-1', organisationId: 'o-1', type: 'refresh' }),
@@ -358,7 +358,7 @@ describe('refreshToken', () => {
     // Force the catch(() => {}) branch — delete throws, caller still gets the 401.
     (prisma.refreshToken.delete as any).mockRejectedValue(new Error('db down'));
 
-    const { refreshToken } = await import('../services/auth.service.js');
+    const { refreshToken } = await import('../services/auth.service');
 
     await expect(
       refreshToken('tok', { userId: 'u-1', organisationId: 'o-1', type: 'refresh' }),
@@ -374,7 +374,7 @@ describe('refreshToken', () => {
     (prisma.refreshToken.delete as any).mockResolvedValue({});
     (prisma.refreshToken.create as any).mockResolvedValue({});
 
-    const { refreshToken } = await import('../services/auth.service.js');
+    const { refreshToken } = await import('../services/auth.service');
 
     const result = await refreshToken('old-tok', {
       userId: 'u-1',
@@ -400,7 +400,7 @@ describe('logoutUser', () => {
   });
 
   it('is a no-op when no refresh token is supplied', async () => {
-    const { logoutUser } = await import('../services/auth.service.js');
+    const { logoutUser } = await import('../services/auth.service');
 
     await logoutUser(undefined);
     expect(prisma.refreshToken.deleteMany).not.toHaveBeenCalled();
@@ -408,7 +408,7 @@ describe('logoutUser', () => {
 
   it('deletes matching refresh-token rows when a token is supplied', async () => {
     (prisma.refreshToken.deleteMany as any).mockResolvedValue({ count: 1 });
-    const { logoutUser } = await import('../services/auth.service.js');
+    const { logoutUser } = await import('../services/auth.service');
 
     await logoutUser('tok-1');
     expect(prisma.refreshToken.deleteMany).toHaveBeenCalledWith({ where: { token: 'tok-1' } });
@@ -416,7 +416,7 @@ describe('logoutUser', () => {
 
   it('swallows DB errors so logout is idempotent', async () => {
     (prisma.refreshToken.deleteMany as any).mockRejectedValue(new Error('db down'));
-    const { logoutUser } = await import('../services/auth.service.js');
+    const { logoutUser } = await import('../services/auth.service');
 
     await expect(logoutUser('tok-1')).resolves.toBeUndefined();
   });
@@ -429,7 +429,7 @@ describe('getProfile', () => {
 
   it('throws 404 when the user does not exist', async () => {
     (prisma.user.findUnique as any).mockResolvedValue(null);
-    const { getProfile } = await import('../services/auth.service.js');
+    const { getProfile } = await import('../services/auth.service');
 
     await expect(getProfile('u-missing')).rejects.toMatchObject({
       status: 404,
@@ -454,7 +454,7 @@ describe('getProfile', () => {
       ],
       organisation: { id: 'org-1', name: 'A Inc' },
     });
-    const { getProfile } = await import('../services/auth.service.js');
+    const { getProfile } = await import('../services/auth.service');
 
     const result = await getProfile('u-1');
 
@@ -484,7 +484,7 @@ describe('getProfile', () => {
       memberships: [],
       organisation: { id: 'legacy-org', name: 'Legacy' },
     });
-    const { getProfile } = await import('../services/auth.service.js');
+    const { getProfile } = await import('../services/auth.service');
 
     const result = await getProfile('u-1');
     expect(result.organisations).toEqual([{ id: 'legacy-org', name: 'Legacy', role: 'owner' }]);
@@ -506,7 +506,7 @@ describe('getProfile', () => {
       ],
       organisation: { id: 'org-1', name: 'A Inc' },
     });
-    const { getProfile } = await import('../services/auth.service.js');
+    const { getProfile } = await import('../services/auth.service');
 
     const result = await getProfile('u-1');
     expect(result.organisations).toEqual([{ id: 'org-1', name: 'A Inc', role: 'admin' }]);
@@ -526,7 +526,7 @@ describe('getProfile', () => {
       memberships: [],
       organisation: null,
     });
-    const { getProfile } = await import('../services/auth.service.js');
+    const { getProfile } = await import('../services/auth.service');
 
     const result = await getProfile('u-1');
     expect(result.organisations).toEqual([]);
@@ -547,7 +547,7 @@ describe('getProfile', () => {
       memberships: [],
       organisation: null,
     });
-    const { getProfile } = await import('../services/auth.service.js');
+    const { getProfile } = await import('../services/auth.service');
 
     const result = await getProfile('u-1');
     expect(result.organisations).toEqual([]);
@@ -563,7 +563,7 @@ describe('findOrCreateOAuthUser', () => {
     const existing = { id: 'u-1', email: 'a@b.com', name: 'A' };
     (prisma.user.findFirst as any).mockResolvedValue(existing);
 
-    const { findOrCreateOAuthUser } = await import('../services/auth.service.js');
+    const { findOrCreateOAuthUser } = await import('../services/auth.service');
 
     const result = await findOrCreateOAuthUser('a@b.com', 'A', 'avatar.png');
 
@@ -579,7 +579,7 @@ describe('findOrCreateOAuthUser', () => {
     (prisma.user.create as any).mockResolvedValue(created);
     (prisma.organisationMember.create as any).mockResolvedValue({});
 
-    const { findOrCreateOAuthUser } = await import('../services/auth.service.js');
+    const { findOrCreateOAuthUser } = await import('../services/auth.service');
 
     const result = await findOrCreateOAuthUser('a@b.com', 'Alice', 'avatar.png');
 
@@ -607,7 +607,7 @@ describe('findOrCreateOAuthUser', () => {
     (prisma.user.create as any).mockResolvedValue({ id: 'u-new' });
     (prisma.organisationMember.create as any).mockResolvedValue({});
 
-    const { findOrCreateOAuthUser } = await import('../services/auth.service.js');
+    const { findOrCreateOAuthUser } = await import('../services/auth.service');
 
     await findOrCreateOAuthUser('a@b.com', 'Alice', null);
 

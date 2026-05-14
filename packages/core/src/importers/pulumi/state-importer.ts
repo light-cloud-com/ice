@@ -6,16 +6,16 @@
 
 import { existsSync } from 'fs';
 import { readFile } from 'fs/promises';
-import { is_provider_resource, is_stack_resource } from './type-mapper.js';
+import { is_provider_resource, is_stack_resource } from './type-mapper';
 import {
   get_deployment,
   get_stack_info,
   is_secret_value,
   unwrap_secret,
   create_empty_metadata,
-} from './parsing.js';
-import { import_resource } from './resource-conversion.js';
-import type { MutableGraph } from '../../graph/mutable-graph.js';
+} from './parsing';
+import { import_resource } from './resource-conversion';
+import type { MutableGraph } from '../../graph/mutable-graph';
 import type {
   PulumiStackState,
   PulumiStackExport,
@@ -25,7 +25,7 @@ import type {
   PulumiImportError,
   PulumiImportWarning,
   PulumiImportMetadata,
-} from './types.js';
+} from './types';
 
 // =============================================================================
 // Import Options
@@ -275,4 +275,4 @@ export function import_pulumi_state_object(
 // Graph Conversion (re-exports)
 // =============================================================================
 
-export { import_result_to_graph, import_pulumi_to_graph } from './graph-conversion.js';
+export { import_result_to_graph, import_pulumi_to_graph } from './graph-conversion';

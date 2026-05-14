@@ -11,7 +11,7 @@ import {
   sanitize_label_value,
   parse_storage_gb,
   normalize_runtime,
-} from '../name-utils.js';
+} from '../name-utils';
 
 describe('sanitize_name', () => {
   it('returns empty string when given empty input', () => {

@@ -25,7 +25,7 @@ describe('email.service', () => {
   describe('sendOrgInviteEmail', () => {
     it('logs recipient, subject and invite URL with default FRONTEND_URL', async () => {
       // Default branch: FRONTEND_URL env var not set, falls back to localhost.
-      const { sendOrgInviteEmail } = await import('../services/email.service.js');
+      const { sendOrgInviteEmail } = await import('../services/email.service');
 
       await sendOrgInviteEmail({
         to: 'invitee@example.com',
@@ -44,7 +44,7 @@ describe('email.service', () => {
       process.env.FRONTEND_URL = 'https://app.example.com';
       // Module reads env at import-time — must reset modules so the new value sticks.
       vi.resetModules();
-      const { sendOrgInviteEmail } = await import('../services/email.service.js');
+      const { sendOrgInviteEmail } = await import('../services/email.service');
 
       await sendOrgInviteEmail({
         to: 'x@y.com',
@@ -58,7 +58,7 @@ describe('email.service', () => {
     });
 
     it('returns void / undefined', async () => {
-      const { sendOrgInviteEmail } = await import('../services/email.service.js');
+      const { sendOrgInviteEmail } = await import('../services/email.service');
       const result = await sendOrgInviteEmail({
         to: 'a@b.com',
         inviterName: 'A',
@@ -71,7 +71,7 @@ describe('email.service', () => {
 
   describe('sendProjectInviteEmail', () => {
     it('logs recipient and project subject with role', async () => {
-      const { sendProjectInviteEmail } = await import('../services/email.service.js');
+      const { sendProjectInviteEmail } = await import('../services/email.service');
 
       await sendProjectInviteEmail({
         to: 'dev@example.com',
@@ -86,7 +86,7 @@ describe('email.service', () => {
     });
 
     it('returns void / undefined', async () => {
-      const { sendProjectInviteEmail } = await import('../services/email.service.js');
+      const { sendProjectInviteEmail } = await import('../services/email.service');
       const result = await sendProjectInviteEmail({
         to: 'a@b.com',
         inviterName: 'A',

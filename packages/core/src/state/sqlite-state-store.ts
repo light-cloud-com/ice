@@ -31,9 +31,9 @@ import {
   deployments_query,
   deployments_save,
   deployments_update_status,
-} from './sqlite/deployments.js';
-import { lifecycle_close, lifecycle_health_check, lifecycle_initialize } from './sqlite/lifecycle.js';
-import { locks_acquire, locks_get, locks_is_locked, locks_refresh, locks_release } from './sqlite/locks.js';
+} from './sqlite/deployments';
+import { lifecycle_close, lifecycle_health_check, lifecycle_initialize } from './sqlite/lifecycle';
+import { locks_acquire, locks_get, locks_is_locked, locks_refresh, locks_release } from './sqlite/locks';
 import {
   resources_delete,
   resources_delete_all,
@@ -42,19 +42,19 @@ import {
   resources_query,
   resources_save,
   resources_save_many,
-} from './sqlite/resources.js';
+} from './sqlite/resources';
 import {
   snapshots_create,
   snapshots_delete,
   snapshots_get,
   snapshots_list,
   snapshots_restore,
-} from './sqlite/snapshots.js';
-import { DEFAULT_OPTIONS, type SqliteContext, type SqliteStateStoreOptions } from './sqlite/types.js';
-import type { DeploymentId, DeploymentStatus } from '../types/deployment.js';
-import type { IceError } from '../types/errors.js';
-import type { NodeId } from '../types/graph.js';
-import type { Result } from '../types/result.js';
+} from './sqlite/snapshots';
+import { DEFAULT_OPTIONS, type SqliteContext, type SqliteStateStoreOptions } from './sqlite/types';
+import type { DeploymentId, DeploymentStatus } from '../types/deployment';
+import type { IceError } from '../types/errors';
+import type { NodeId } from '../types/graph';
+import type { Result } from '../types/result';
 import type {
   DeploymentQuery,
   DeploymentRecord,
@@ -64,7 +64,7 @@ import type {
   StateLock,
   StateSnapshot,
   StoredResourceState,
-} from './state-store.js';
+} from './state-store';
 
 export type { SqliteStateStoreOptions };
 

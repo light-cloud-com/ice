@@ -23,8 +23,8 @@ import {
   lifecycle_health_check,
   lifecycle_initialize,
   prepare_statements,
-} from '../lifecycle.js';
-import type { SqliteContext, SqliteStateStoreOptions } from '../types.js';
+} from '../lifecycle';
+import type { SqliteContext, SqliteStateStoreOptions } from '../types';
 import type { Database, Statement } from 'better-sqlite3';
 
 function makeCtx(): SqliteContext {

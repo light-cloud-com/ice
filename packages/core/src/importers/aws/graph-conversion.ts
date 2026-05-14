@@ -6,9 +6,9 @@
  * embedded in resource properties.
  */
 
-import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph.js';
-import type { AWSImportResult, AWSImportedResource } from './types.js';
-import type { NodeInput, EdgeInput } from '../../types/graph.js';
+import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph';
+import type { AWSImportResult, AWSImportedResource } from './types';
+import type { NodeInput, EdgeInput } from '../../types/graph';
 
 /**
  * Infer cross-resource dependencies by scanning each resource's

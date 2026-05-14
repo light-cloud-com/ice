@@ -11,14 +11,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const knownIceTypes = new Set<string>();
 
-vi.mock('../schema-bridge.js', () => ({
+vi.mock('../schema-bridge', () => ({
   isKnownIceType: (t: string) => knownIceTypes.has(t),
   getPropertiesForIceType: () => [],
   getResourceForIceType: () => undefined,
   getSupportedProviders: () => [],
 }));
 
-import { validateTemplate } from '../template-validator.js';
+import { validateTemplate } from '../template-validator';
 
 const blocks = (...types: string[]) =>
   types.map((iceType, i) => ({ iceType, label: `Block${i}`, position: { x: 0, y: 0 } }));

@@ -12,7 +12,7 @@
  *     already on.
  *
  * The orchestrator re-exports `enableGcpApi` so legacy import paths
- * (`from './deploy.service.js'`) keep resolving while
+ * (`from './deploy.service'`) keep resolving while
  * `google-verification.service.ts` switches to the canonical home here.
  */
 
@@ -124,16 +124,6 @@ export async function enableGcpApi(project: string, apiName: string, accessToken
 }
 
 export async function autoEnableGCPApis(project: string, accessToken: string, canvasNodes: any[], log: (msg: string) => void) {
-  // Collect required APIs from the actual canvas resource nodes. Match by
-  // iceType directly (see ICE_TYPE_API_MAP above) — no more string-prefix
-  // pattern matching that was both over-eager (false positives) and
-  // incomplete (missed new Phase 8 types).
-  console.log(
-    'autoEnableGCPApis called, nodes:',
-    canvasNodes.length,
-    'node types:',
-    canvasNodes.map((n: any) => `${n.data?.iceType}|${n.data?.resourceId}|${n.data?.blockTypeName}`),
-  );
   const requiredApis = new Set<string>(BASE_APIS);
 
   for (const node of canvasNodes) {
@@ -145,9 +135,6 @@ export async function autoEnableGCPApis(project: string, accessToken: string, ca
     }
   }
 
-  console.log('Required APIs:', [...requiredApis]);
-
-  // Check which APIs are already enabled
   let enabledApis: Set<string>;
   try {
     const res = await fetch(
@@ -162,21 +149,17 @@ export async function autoEnableGCPApis(project: string, accessToken: string, ca
     }
     const data = (await res.json()) as { services?: Array<{ config?: { name: string } }> };
     enabledApis = new Set((data.services || []).map((s) => s.config?.name || '').filter(Boolean));
-    console.log('Enabled APIs count:', enabledApis.size);
   } catch (err: any) {
     console.error('Service Usage API fetch error:', err.message);
-    return; // Non-fatal
+    return;
   }
 
   const toEnable = [...requiredApis].filter((api) => !enabledApis.has(api));
-  console.log('APIs to enable:', toEnable);
   if (toEnable.length === 0) {
-    console.log('All required APIs already enabled');
     log('All required GCP APIs are enabled');
     return;
   }
 
-  console.log('Enabling APIs:', toEnable);
   log(`Enabling ${toEnable.length} required GCP API(s): ${toEnable.join(', ')}`);
 
   // Enable APIs in parallel (batch)
@@ -191,7 +174,6 @@ export async function autoEnableGCPApis(project: string, accessToken: string, ca
         body: '{}',
       });
       const responseText = await res.text();
-      console.log(`Enable ${api}: status=${res.status}`, responseText.slice(0, 200));
       if (res.ok) {
         log(`  Enabled ${api}`);
         return true;

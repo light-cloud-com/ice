@@ -25,14 +25,15 @@
  */
 
 import { useCallback, type MouseEvent, type MutableRefObject, type RefObject } from 'react';
-import { freshInitialState, INITIAL_STATE, snapToGrid } from './state.js';
+import { freshInitialState, INITIAL_STATE, snapToGrid } from './state';
+import { SCALE_MAX, SCALE_MIN } from '../../../../config/canvas-constants';
 import type {
   CanvasItem,
   CanvasViewport,
   DragItemOffset,
   InteractionState,
   UseCanvasInteractionsOptions,
-} from './types.js';
+} from './types';
 
 interface UseMouseHandlersDeps {
   // Refs owned by the orchestrator — passed by reference (NOT snapshotted)
@@ -56,10 +57,7 @@ interface UseMouseHandlersDeps {
 
   // Closures from the orchestrator that snapshot live refs per call.
   screenToCanvas: (screenX: number, screenY: number) => { x: number; y: number };
-  findItemAtPosition: (
-    canvasX: number,
-    canvasY: number,
-  ) => { item: CanvasItem | null; isResize: boolean };
+  findItemAtPosition: (canvasX: number, canvasY: number) => { item: CanvasItem | null; isResize: boolean };
 
   // Option callbacks + scalars threaded through verbatim.
   onViewportChange: UseCanvasInteractionsOptions['onViewportChange'];
@@ -72,8 +70,6 @@ interface UseMouseHandlersDeps {
   onDragOverGroup: UseCanvasInteractionsOptions['onDragOverGroup'];
   onDragEnd: UseCanvasInteractionsOptions['onDragEnd'];
   gridSize: number;
-  minZoom: number;
-  maxZoom: number;
 }
 
 interface UseMouseHandlersResult {
@@ -107,8 +103,6 @@ export function useMouseHandlers(deps: UseMouseHandlersDeps): UseMouseHandlersRe
     onDragOverGroup,
     onDragEnd,
     gridSize,
-    minZoom,
-    maxZoom,
   } = deps;
 
   // Mouse down
@@ -387,14 +381,14 @@ export function useMouseHandlers(deps: UseMouseHandlersDeps): UseMouseHandlersRe
 
       // Smooth continuous zoom — layout re-org is debounced separately
       const zoomFactor = e.deltaY > 0 ? 0.95 : 1.05;
-      const newZoom = Math.max(minZoom, Math.min(maxZoom, vp.zoom * zoomFactor));
+      const newZoom = Math.max(SCALE_MIN, Math.min(SCALE_MAX, vp.zoom * zoomFactor));
       const zoomRatio = newZoom / vp.zoom;
       const newX = mouseX - (mouseX - vp.x) * zoomRatio;
       const newY = mouseY - (mouseY - vp.y) * zoomRatio;
 
       onViewportChange({ x: newX, y: newY, zoom: newZoom });
     },
-    [svgRef, viewportRef, minZoom, maxZoom, onViewportChange],
+    [svgRef, viewportRef, SCALE_MIN, SCALE_MAX, onViewportChange],
   );
 
   // Aux click — prevent middle-click auto-scroll

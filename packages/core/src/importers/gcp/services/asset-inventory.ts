@@ -5,10 +5,10 @@
  * This is the scalable approach - one API discovers everything.
  */
 
-import { BaseGCPService } from './base-service.js';
-import { classifyGCPError } from '../../../errors/import-errors.js';
-import { getGCPCloudAssetTypes } from '../../../resources/high-level-resources.js';
-import type { ServiceDiscoveryResult, GCPServiceType, GCPResource } from '../types.js';
+import { BaseGCPService } from './base-service';
+import { classifyGCPError } from '../../../errors/import-errors';
+import { getGCPCloudAssetTypes } from '../../../resources/high-level-resources';
+import type { ServiceDiscoveryResult, GCPServiceType, GCPResource } from '../types';
 
 /**
  * Flatten protobuf Struct format to plain JSON.
@@ -172,59 +172,26 @@ export class AssetInventoryService extends BaseGCPService {
     }
 
     try {
-      // Generate unique debug ID for this import session
-      const debugId = `IMPORT-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
-      // List only business-relevant assets (not infrastructure noise)
-      // Uses the high-level resource definitions to determine what to import
       const requestedAssetTypes = getGCPCloudAssetTypes();
-
-      console.log(`\n[${debugId}] ========== GCP ASSET INVENTORY DEBUG ==========`);
-      console.log(`[${debugId}] Project: ${this.project}`);
-      console.log(`[${debugId}] Requested asset types (${requestedAssetTypes.length}):`);
-      requestedAssetTypes.forEach((t, i) => console.log(`[${debugId}]   ${i + 1}. ${t}`));
 
       const request = {
         parent: `projects/${this.project}`,
         contentType: 'RESOURCE',
-        // Only import high-level resources users care about
         assetTypes: requestedAssetTypes,
       };
 
-      // Use listAssets which returns all resources
-      console.log(`[${debugId}] Calling listAssets API...`);
       const [assets] = await this.asset_client.listAssets(request);
-
-      console.log(`[${debugId}] API returned ${assets?.length || 0} raw assets`);
-
-      // Track asset types found
-      const assetTypeCounts: Record<string, number> = {};
 
       for (const asset of assets || []) {
         const asset_type = asset.assetType || 'UNKNOWN';
-        assetTypeCounts[asset_type] = (assetTypeCounts[asset_type] || 0) + 1;
 
-        if (!asset.resource?.data) {
-          console.log(`[${debugId}] SKIP: Asset ${asset.name} has no resource.data`);
-          continue;
-        }
+        if (!asset.resource?.data) continue;
 
         const resource_data = asset.resource.data;
-
-        // Convert asset type to GCP kind format
-        // e.g., "compute.googleapis.com/Instance" -> "compute#instance"
         const kind = this.asset_type_to_kind(asset_type);
-
-        // Extract location info from asset name
         const { zone, region } = this.extract_location(asset.name || '');
-
-        // Flatten protobuf Struct format to clean JSON
         const clean_properties = extractCleanProperties(resource_data);
-
-        const resourceId = `res-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
         const resourceName = resource_data.name || this.extract_name(asset.name || '');
-
-        console.log(`[${debugId}] FOUND: [${resourceId}] type=${asset_type} kind=${kind} name=${resourceName}`);
 
         resources.push({
           self_link: resource_data.selfLink || asset.resource.resourceUrl || asset.name || '',
@@ -241,15 +208,6 @@ export class AssetInventoryService extends BaseGCPService {
             resource_data.createTime) as string | undefined,
         });
       }
-
-      console.log(`[${debugId}] ========== ASSET TYPE SUMMARY ==========`);
-      Object.entries(assetTypeCounts)
-        .sort((a, b) => b[1] - a[1])
-        .forEach(([type, count]) => {
-          console.log(`[${debugId}]   ${type}: ${count}`);
-        });
-      console.log(`[${debugId}] Total resources collected: ${resources.length}`);
-      console.log(`[${debugId}] ==========================================\n`);
 
       return {
         service: this.service_type,

@@ -7,8 +7,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { validateStructure } from '../structure-rules.js';
-import type { ValidatableNode, ValidatableEdge } from '../types.js';
+import { validateStructure } from '../structure-rules';
+import type { ValidatableNode, ValidatableEdge } from '../types';
 
 const node = (overrides: Partial<ValidatableNode> & { id: string }): ValidatableNode => ({
   type: 'resource',

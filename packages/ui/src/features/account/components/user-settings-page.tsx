@@ -4,23 +4,39 @@
  * Profile name editing only. No password management (no auth in community).
  */
 
-import { Save, Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import awsIcon from 'devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg';
+import azureIcon from 'devicon/icons/azure/azure-original.svg';
+import gcpIcon from 'devicon/icons/googlecloud/googlecloud-original.svg';
+import { Save, Loader2, Github, Sparkles, Check } from 'lucide-react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from '../../../i18n';
 import axiosInstance from '../../../shared/api/axios-instance';
+import { AnthropicConnectModal } from '../../../features/integrations/components/anthropic-connect-modal';
+import { GitHubConnectModal } from '../../../features/integrations/components/github-connect-modal';
+import { ProviderConnectModal } from '../../../features/integrations/components/provider-connect-modal';
 import { fetchProfile } from '../../../store/slices/account-slice';
+import {
+  checkAnthropicConnection,
+  checkGitHubConnection,
+  type IntegrationStatus,
+} from '../../../store/slices/integrations-slice';
 import type { RootState, AppDispatch } from '../../../store';
 
 export function UserSettingsPage() {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((s: RootState) => s.account.user);
+  const integrations = useSelector((s: RootState) => s.integrations.integrations);
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileMessage, setProfileMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const [openIntegration, setOpenIntegration] = useState<
+    'github' | 'anthropic' | 'gcp' | 'aws' | 'azure' | null
+  >(null);
 
   useEffect(() => {
     if (user?.name) {
@@ -29,6 +45,11 @@ export function UserSettingsPage() {
       setLastName(parts.slice(1).join(' '));
     }
   }, [user?.name]);
+
+  useEffect(() => {
+    dispatch(checkGitHubConnection());
+    dispatch(checkAnthropicConnection());
+  }, [dispatch]);
 
   const handleProfileSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,6 +144,164 @@ export function UserSettingsPage() {
           </div>
         </form>
       </section>
+
+      {/* Integrations Section */}
+      <section className="mt-6 rounded-lg border border-ice-border bg-ice-raised">
+        <div className="border-b border-ice-border px-6 py-4">
+          <h2 className="text-lg font-semibold text-ice-text-1">{t('integrations.settings.sectionTitle')}</h2>
+          <p className="mt-1 text-sm text-ice-text-3">{t('integrations.settings.sectionDescription')}</p>
+        </div>
+
+        <ul className="divide-y divide-ice-border">
+          <IntegrationRow
+            icon={<Sparkles className="h-5 w-5 text-amber-500" />}
+            label={t('integrations.anthropic.settingsLabel')}
+            description={t('integrations.anthropic.settingsDescription')}
+            connectedLabel={t('integrations.connected')}
+            disconnectedLabel={t('integrations.disconnected')}
+            status={integrations.anthropic?.status}
+            onClick={() => setOpenIntegration('anthropic')}
+          />
+          <IntegrationRow
+            icon={<Github className="h-5 w-5 text-ice-text-1" />}
+            label={t('integrations.settings.github.label')}
+            description={t('integrations.settings.github.description')}
+            connectedLabel={t('integrations.connected')}
+            disconnectedLabel={t('integrations.disconnected')}
+            status={integrations.github?.status}
+            onClick={() => setOpenIntegration('github')}
+          />
+          <IntegrationRow
+            icon={<img src={gcpIcon} alt="" className="h-5 w-5" />}
+            label={t('integrations.settings.gcp.label')}
+            description={t('integrations.settings.gcp.description')}
+            connectedLabel={t('integrations.connected')}
+            disconnectedLabel={t('integrations.disconnected')}
+            status={integrations.gcp?.status}
+            onClick={() => setOpenIntegration('gcp')}
+          />
+          <IntegrationRow
+            icon={<img src={awsIcon} alt="" className="h-5 w-5" />}
+            label={t('integrations.settings.aws.label')}
+            description={t('integrations.settings.aws.description')}
+            connectedLabel={t('integrations.connected')}
+            disconnectedLabel={t('integrations.disconnected')}
+            status={integrations.aws?.status}
+            onClick={() => setOpenIntegration('aws')}
+          />
+          <IntegrationRow
+            icon={<img src={azureIcon} alt="" className="h-5 w-5" />}
+            label={t('integrations.settings.azure.label')}
+            description={t('integrations.settings.azure.description')}
+            connectedLabel={t('integrations.connected')}
+            disconnectedLabel={t('integrations.disconnected')}
+            status={integrations.azure?.status}
+            onClick={() => setOpenIntegration('azure')}
+          />
+        </ul>
+      </section>
+
+      <AnthropicConnectModal
+        isOpen={openIntegration === 'anthropic'}
+        onClose={() => setOpenIntegration(null)}
+      />
+      <GitHubConnectModal isOpen={openIntegration === 'github'} onClose={() => setOpenIntegration(null)} />
+      <ProviderConnectModal
+        isOpen={openIntegration === 'gcp'}
+        onClose={() => setOpenIntegration(null)}
+        providerId="gcp"
+        providerName="Google Cloud Platform"
+        providerIcon={gcpIcon}
+        description="Service account key (JSON) or OAuth"
+        fields={[
+          {
+            name: 'service_account_key',
+            label: 'Service Account Key (JSON)',
+            type: 'textarea',
+            placeholder: '{ "type": "service_account", ... }',
+            required: false,
+            helpLink: {
+              url: 'https://console.cloud.google.com/iam-admin/serviceaccounts',
+              text: 'Create service account',
+            },
+          },
+        ]}
+      />
+      <ProviderConnectModal
+        isOpen={openIntegration === 'aws'}
+        onClose={() => setOpenIntegration(null)}
+        providerId="aws"
+        providerName="Amazon Web Services"
+        providerIcon={awsIcon}
+        description="Access keys"
+        fields={[
+          { name: 'accessKeyId', label: 'Access Key ID', type: 'text', placeholder: 'AKIA...', required: true },
+          { name: 'secretAccessKey', label: 'Secret Access Key', type: 'password', placeholder: '********', required: true },
+        ]}
+      />
+      <ProviderConnectModal
+        isOpen={openIntegration === 'azure'}
+        onClose={() => setOpenIntegration(null)}
+        providerId="azure"
+        providerName="Microsoft Azure"
+        providerIcon={azureIcon}
+        description="Service principal"
+        fields={[
+          { name: 'subscriptionId', label: 'Subscription ID', type: 'text', placeholder: 'xxxxxxxx-xxxx-...', required: true },
+          { name: 'tenantId', label: 'Tenant ID', type: 'text', placeholder: 'xxxxxxxx-xxxx-...', required: true },
+          { name: 'clientId', label: 'Client ID', type: 'text', placeholder: 'xxxxxxxx-xxxx-...', required: true },
+          { name: 'clientSecret', label: 'Client Secret', type: 'password', placeholder: '********', required: true },
+        ]}
+      />
     </div>
+  );
+}
+
+interface IntegrationRowProps {
+  icon: ReactNode;
+  label: string;
+  description: string;
+  connectedLabel: string;
+  disconnectedLabel: string;
+  status: IntegrationStatus | undefined;
+  onClick: () => void;
+}
+
+function IntegrationRow({
+  icon,
+  label,
+  description,
+  connectedLabel,
+  disconnectedLabel,
+  status,
+  onClick,
+}: IntegrationRowProps) {
+  const isConnected = status === 'connected';
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={onClick}
+        className="w-full flex items-center gap-3 px-6 py-3 text-left hover:bg-ice-hover transition-colors"
+      >
+        <div className="shrink-0 flex items-center justify-center w-9 h-9 rounded-md bg-ice-surface border border-ice-border">
+          {icon}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-medium text-ice-text-1">{label}</div>
+          <div className="text-xs text-ice-text-3 truncate">{description}</div>
+        </div>
+        <div className="shrink-0 flex items-center gap-1.5 text-xs">
+          {isConnected ? (
+            <>
+              <Check className="w-3.5 h-3.5 text-emerald-500" />
+              <span className="text-emerald-500">{connectedLabel}</span>
+            </>
+          ) : (
+            <span className="text-ice-text-3">{disconnectedLabel}</span>
+          )}
+        </div>
+      </button>
+    </li>
   );
 }

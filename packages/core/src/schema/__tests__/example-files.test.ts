@@ -19,8 +19,8 @@ import {
   PROVIDER_EXAMPLE_JSON,
   RELATIONSHIPS_EXAMPLE_YAML,
   create_example_files,
-} from '../customization/example-files.js';
-import type { CustomizationPaths } from '../customization/paths.js';
+} from '../customization/example-files';
+import type { CustomizationPaths } from '../customization/paths';
 
 describe('example-file content constants', () => {
   it('PROVIDER_EXAMPLE_JSON has _comment pointing to .disabled rename', () => {

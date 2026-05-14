@@ -53,7 +53,7 @@ function makeFakeSocket(): FakeSocket {
 
 describe('socket service — subscribe:logs / unsubscribe:logs', () => {
   it('joins the room "logs:<terminalNodeId>" matching the LT-3 emit prefix', async () => {
-    const { setupSocketService } = await import('../socket/service.js');
+    const { setupSocketService } = await import('../socket/service');
 
     // Capture the connection callback so we can fire it ourselves with a
     // fake socket — no real Socket.IO server needed.

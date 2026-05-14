@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ComputeService } from '../compute.js';
+import { ComputeService } from '../compute';
 
 interface FakeClients {
   instances: { list: ReturnType<typeof vi.fn> };

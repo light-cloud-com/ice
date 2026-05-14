@@ -12,7 +12,7 @@ The cohort process: planner audits files >500 LOC, the orchestrator picks 3-9 co
 
 Each pattern below has been applied to 2+ files with consistent results. Pick the one that fits the source file's shape.
 
-### 1. Section pattern — React panels and pages
+### 1. Section pattern - React panels and pages
 
 **When**: Single React.FC that exceeds 500 LOC by accreting subcomponents, hooks, utils, and inline render helpers.
 
@@ -24,13 +24,13 @@ Each pattern below has been applied to 2+ files with consistent results. Pick th
 - Orchestrator becomes a thin compose-and-route shell
 
 **Hooks frequently extract into 2-3 bundles**:
-- `useXActions` — useCallback handlers (often dispatching Redux thunks)
-- `useXEffects` — useEffect blocks (auto-scroll, hydrate, subscribe-listeners)
+- `useXActions` - useCallback handlers (often dispatching Redux thunks)
+- `useXEffects` - useEffect blocks (auto-scroll, hydrate, subscribe-listeners)
 - `useXState` or domain-specific (e.g. `useDestroyAction`)
 
 **Applied to**: deploy-panel.tsx (2229 → 262 LOC), properties-panel.tsx (3268 → 94 LOC), resource-palette.tsx (962 → 220), provider-settings.tsx (784 → 224), pipeline-panel.tsx (724 → 442), template-gallery × 2, project-tree.tsx (707 → 270), ai-chat-panel.tsx (688 → 255), cost-panel.tsx (678 → 348), dev-accent-picker.tsx (826 → 184), and others.
 
-### 2. Reducer-group pattern — RTK slices
+### 2. Reducer-group pattern - RTK slices
 
 **When**: A `createSlice` call with 20+ reducers exceeds 500 LOC.
 
@@ -65,7 +65,7 @@ const slice = createSlice({
 
 **Applied to**: cards-slice.ts (1195 → 162 LOC, 14 units), deploy-slice.ts (918 → 186 LOC, 14 units).
 
-### 3. Standalone functions taking a state interface — class decomposition
+### 3. Standalone functions taking a state interface - class decomposition
 
 **When**: A class with many methods sharing private state exceeds 500 LOC.
 
@@ -95,7 +95,7 @@ export class ParallelChangeScheduler {
 
 **Applied to**: parser.ts (1061 → 184 LOC, ParserState), lexer.ts (647 → 316 LOC, LexerState), sqlite-state-store.ts (946 → 249 LOC, SqliteContext), pulumi-exporter.ts (660 → 101 LOC), scheduler.ts (694 → 164 LOC, SchedulerContext), mutable-graph.ts (657 → 299 LOC, MutableGraphState).
 
-### 4. Handler-domain pattern — service modules
+### 4. Handler-domain pattern - service modules
 
 **When**: A service file with many independent exported functions grouped by domain (e.g. CRUD by resource type, or REST endpoints by domain).
 
@@ -115,14 +115,14 @@ export { createDeploymentEvent, updateEventProgress } from './pipeline/events.js
 
 **Applied to**: deploy.service.ts (2843 → 1572 LOC, 17 units), pipeline.service.ts (880 → 42 shim), log-stream.service.ts (869 → 181), ai.service.ts (994 → 164), firebase-hosting.ts (1140 → 422), cloud-storage.ts (856 → 267).
 
-### 5. Data-heavy shim split — files dominated by lookup tables
+### 5. Data-heavy shim split - files dominated by lookup tables
 
 **When**: A file with mostly data (a giant `Record`, array, or `Map`) plus a few helpers.
 
 **Shape**: Three files:
-- `<name>-data.ts` — the giant data dict (size exception, document in file header)
-- `<name>-types.ts` — interfaces and types
-- `<name>.ts` — re-export shim + small helpers (`<200 LOC`)
+- `<name>-data.ts` - the giant data dict (size exception, document in file header)
+- `<name>-types.ts` - interfaces and types
+- `<name>.ts` - re-export shim + small helpers (`<200 LOC`)
 
 ```ts
 // <name>.ts
@@ -282,7 +282,7 @@ export type { CardNode, CardEdge, CardsState } from './cards/types.js';
 export { migrateCardNodes } from './cards/migration.js';
 ```
 
-Type-only re-exports (`export type {}`) don't create runtime cycles; runtime re-exports (`export {}`) do — be careful with import order if cycles form.
+Type-only re-exports (`export type {}`) don't create runtime cycles; runtime re-exports (`export {}`) do - be careful with import order if cycles form.
 
 ### JSDoc `*/` inside prose closes the block early
 
@@ -306,7 +306,7 @@ The `state/learnings.md` file accumulates non-obvious gotchas discovered during 
 
 ## See also
 
-- [agents.md](agents.md) — multi-agent workflow and per-agent responsibilities
-- [`state/refactor-targets.md`](../state/refactor-targets.md) — current decomposition queue
-- [`state/learnings.md`](../state/learnings.md) — granular gotchas (citations to this doc indicate "promoted from learnings")
-- [`state/decisions.md`](../state/decisions.md) — architectural decisions
+- [agents.md](agents.md) - multi-agent workflow and per-agent responsibilities
+- [`state/refactor-targets.md`](../state/refactor-targets.md) - current decomposition queue
+- [`state/learnings.md`](../state/learnings.md) - granular gotchas (citations to this doc indicate "promoted from learnings")
+- [`state/decisions.md`](../state/decisions.md) - architectural decisions

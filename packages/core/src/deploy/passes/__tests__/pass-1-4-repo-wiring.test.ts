@@ -24,9 +24,9 @@
  *     target retains its prior value.
  */
 import { describe, it, expect } from 'vitest';
-import { create_mutable_graph } from '../../../graph/mutable-graph.js';
-import type { CardEdgeInput, CardNodeInput } from '../../card-translator.js';
-import { wire_source_repositories } from '../pass-1-4-repo-wiring.js';
+import { create_mutable_graph } from '../../../graph/mutable-graph';
+import type { CardEdgeInput, CardNodeInput } from '../../card-translator';
+import { wire_source_repositories } from '../pass-1-4-repo-wiring';
 
 /**
  * Build a fresh graph with one compute node already added. Returns the

@@ -23,8 +23,8 @@ export {
   type ImportErrorActionType,
   type ImportError,
   type ImportWarning,
-} from './import-errors/types.js';
+} from './import-errors/types';
 
-export { classifyGCPError } from './import-errors/gcp.js';
-export { classifyAWSError } from './import-errors/aws.js';
-export { classifyAzureError } from './import-errors/azure.js';
+export { classifyGCPError } from './import-errors/gcp';
+export { classifyAWSError } from './import-errors/aws';
+export { classifyAzureError } from './import-errors/azure';

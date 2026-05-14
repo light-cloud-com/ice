@@ -18,15 +18,15 @@ import {
   create_provider_manager,
   get_global_registry,
   set_global_registry,
-} from '../provider-registry.js';
-import { ProviderError, InternalError } from '../../types/errors.js';
+} from '../provider-registry';
+import { ProviderError, InternalError } from '../../types/errors';
 import type {
   ProviderClient,
   ProviderConfig,
   ProviderFactory,
   ProviderCapabilities,
   HealthCheckResult,
-} from '../../types/providers.js';
+} from '../../types/providers';
 
 // Stub one of the auto-discovered provider packages so discover_providers
 // reaches the success branch (lines 300-304 of provider-registry.ts).

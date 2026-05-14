@@ -6,9 +6,9 @@
 
 import { existsSync } from 'fs';
 import { readFile } from 'fs/promises';
-import { create_empty_metadata } from './sensitive.js';
-import { import_resource_instance, infer_dependencies } from './resource-conversion.js';
-import type { MutableGraph } from '../../graph/mutable-graph.js';
+import { create_empty_metadata } from './sensitive';
+import { import_resource_instance, infer_dependencies } from './resource-conversion';
+import type { MutableGraph } from '../../graph/mutable-graph';
 import type {
   TerraformState,
   TerraformImportResult,
@@ -17,7 +17,7 @@ import type {
   ImportError,
   ImportWarning,
   ImportMetadata,
-} from './types.js';
+} from './types';
 
 // =============================================================================
 // Import Options
@@ -265,4 +265,4 @@ export function import_terraform_state_object(
 // Graph Conversion (re-exports)
 // =============================================================================
 
-export { import_result_to_graph, import_terraform_to_graph } from './graph-conversion.js';
+export { import_result_to_graph, import_terraform_to_graph } from './graph-conversion';

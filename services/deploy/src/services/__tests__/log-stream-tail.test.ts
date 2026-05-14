@@ -35,13 +35,13 @@ vi.mock('@ice/shared', () => ({
   }),
 }));
 
-import { resetRegistry } from '../log-stream/registry.js';
-import { scheduleTailReconnect, startTail } from '../log-stream/tail.js';
+import { resetRegistry } from '../log-stream/registry';
+import { scheduleTailReconnect, startTail } from '../log-stream/tail';
 import {
   RECONNECT_BASE_MS,
   RECONNECT_MAX_MS,
   type ActiveStream,
-} from '../log-stream/types.js';
+} from '../log-stream/types';
 
 interface FakeTailStream {
   on(event: 'data' | 'error' | 'end', cb: (arg?: any) => void): FakeTailStream;

@@ -6,8 +6,8 @@
  * self-connections, cycles, missing critical connections.
  */
 
-import { canConnect, isContainer, isFrontend, isDatabase, isQueue } from './classifiers.js';
-import type { CanvasIssue, ValidatableNode, ValidatableEdge, ValidationContext } from './types.js';
+import { canConnect, isContainer, isFrontend, isDatabase, isQueue } from './classifiers';
+import type { CanvasIssue, ValidatableNode, ValidatableEdge, ValidationContext } from './types';
 
 /**
  * Validate all edges and connection patterns.

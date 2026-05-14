@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { sanitizeSiteId, placeholderIndexHtml } from '../site-utils.js';
+import { sanitizeSiteId, placeholderIndexHtml } from '../site-utils';
 
 describe('firebase-hosting/site-utils', () => {
   describe('sanitizeSiteId()', () => {

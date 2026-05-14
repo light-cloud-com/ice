@@ -3,7 +3,7 @@
  * (rf-crun-2). No GCP SDK calls — these operate on plain inputs +
  * `ctx.rest_client` only.
  */
-import type { GCPHandlerContext } from '../../types.js';
+import type { GCPHandlerContext } from '../../types';
 
 /**
  * Convert ICE's `env_vars` property (an object map) into the array

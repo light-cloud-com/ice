@@ -9,10 +9,10 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-import { diff_graphs, format_plan } from '../diff.js';
-import type { DiffResult, ResourceChange } from '../types.js';
-import { create_node_id, create_graph_id } from '../../types/graph.js';
-import type { Edge, EdgeId, Graph, GraphMetadata, Node, NodeId } from '../../types/graph.js';
+import { diff_graphs, format_plan } from '../diff';
+import type { DiffResult, ResourceChange } from '../types';
+import { create_node_id, create_graph_id } from '../../types/graph';
+import type { Edge, EdgeId, Graph, GraphMetadata, Node, NodeId } from '../../types/graph';
 
 // ---------------------------------------------------------------------------
 // Fixtures

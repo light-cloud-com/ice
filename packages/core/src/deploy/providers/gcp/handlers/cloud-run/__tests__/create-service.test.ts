@@ -6,25 +6,25 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('../image-resolver.js', () => ({
+vi.mock('../image-resolver', () => ({
   resolve_image: vi.fn().mockResolvedValue('gcr.io/p/x:built'),
 }));
-vi.mock('../utils.js', async (orig) => {
+vi.mock('../utils', async (orig) => {
   const real = (await orig()) as any;
   return {
     ...real,
     fetch_service_outputs: vi.fn().mockResolvedValue({ url: 'https://x.run.app', deployed_image: 'gcr.io/p/x:built' }),
   };
 });
-vi.mock('../iam.js', () => ({
+vi.mock('../iam', () => ({
   grant_public_access: vi.fn().mockResolvedValue(undefined),
 }));
 
-import { resolve_image } from '../image-resolver.js';
-import { fetch_service_outputs } from '../utils.js';
-import { grant_public_access } from '../iam.js';
-import { create_service } from '../create-service.js';
-import type { GCPHandlerContext } from '../../../types.js';
+import { resolve_image } from '../image-resolver';
+import { fetch_service_outputs } from '../utils';
+import { grant_public_access } from '../iam';
+import { create_service } from '../create-service';
+import type { GCPHandlerContext } from '../../../types';
 
 function clientWithCreate(operation: any) {
   return {

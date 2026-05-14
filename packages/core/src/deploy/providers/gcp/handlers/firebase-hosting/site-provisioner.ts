@@ -17,8 +17,8 @@
  *   GET to populate `data` before returning.
  */
 
-import { restRequest, FIREBASE_HOSTING_API, FIREBASE_MGMT_API } from './rest-client.js';
-import type { GCPHandlerContext } from '../../types.js';
+import { restRequest, FIREBASE_HOSTING_API, FIREBASE_MGMT_API } from './rest-client';
+import type { GCPHandlerContext } from '../../types';
 
 /**
  * Make sure the GCP project has Firebase enabled. AddFirebase is

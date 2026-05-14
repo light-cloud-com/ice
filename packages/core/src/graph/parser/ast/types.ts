@@ -23,12 +23,12 @@
  * ceiling and the per-category narrative readable.
  */
 
-export type { AstNode, AstNodeKind } from './types/base.js';
+export type { AstNode, AstNodeKind } from './types/base';
 export type {
   Block,
   Attribute,
   NestedBlock,
-} from './types/blocks.js';
+} from './types/blocks';
 export type {
   Expression,
   Identifier,
@@ -52,7 +52,7 @@ export type {
   Interpolation,
   Reference,
   SplatExpression,
-} from './types/expressions.js';
+} from './types/expressions';
 export type {
   Program,
   Statement,
@@ -67,4 +67,4 @@ export type {
   ModuleBlock,
   LocalsBlock,
   ImportStatement,
-} from './types/statements.js';
+} from './types/statements';

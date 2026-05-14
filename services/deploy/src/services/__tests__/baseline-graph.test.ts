@@ -43,7 +43,7 @@ vi.mock('@ice/core/graph', () => {
   return { MutableGraph: MockMutableGraph };
 });
 
-import { buildBaselineGraph } from '../baseline-graph.js';
+import { buildBaselineGraph } from '../baseline-graph';
 // @ts-ignore — resolved at runtime via pnpm workspace; mocked above
 import prismaModule from '@ice/db';
 

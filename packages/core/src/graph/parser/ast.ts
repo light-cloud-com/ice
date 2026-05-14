@@ -10,8 +10,8 @@
  *
  * Decomposed in rf-ast-1. The original `ast.ts` was 701 LOC of
  * mixed types-and-helpers; the split keeps every consumer's
- * `import { ... } from './ast.js'` working unchanged.
+ * `import { ... } from './ast'` working unchanged.
  */
 
-export * from './ast/types.js';
-export { is_node_kind, create_span, visit_ast } from './ast/helpers.js';
+export * from './ast/types';
+export { is_node_kind, create_span, visit_ast } from './ast/helpers';

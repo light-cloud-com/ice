@@ -17,17 +17,17 @@
  *    error_message and casts status string → DeploymentStatus
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { create_memory_state_store } from '../../sqlite-state-store.js';
+import { create_memory_state_store } from '../../sqlite-state-store';
 import {
   deployments_get,
   deployments_get_all,
   deployments_query,
   deployments_save,
   deployments_update_status,
-} from '../deployments.js';
-import { create_deployment_id } from '../../../types/deployment.js';
-import type { DeploymentRecord } from '../../state-store.js';
-import type { SqliteContext } from '../types.js';
+} from '../deployments';
+import { create_deployment_id } from '../../../types/deployment';
+import type { DeploymentRecord } from '../../state-store';
+import type { SqliteContext } from '../types';
 
 function getCtx(store: ReturnType<typeof create_memory_state_store>): SqliteContext {
   return (store as unknown as { ctx: SqliteContext }).ctx;
@@ -198,14 +198,14 @@ describe('deployments_save', () => {
     const store = create_memory_state_store();
     await store.initialize();
     const ctx = getCtx(store);
-    let captured: import('../../state-store.js').StateChangeEvent | null = null;
+    let captured: import('../../state-store').StateChangeEvent | null = null;
     ctx.listeners.add((e) => {
       captured = e;
     });
 
     const d = deployment();
     await deployments_save(ctx, d);
-    const e = captured as import('../../state-store.js').StateChangeEvent | null;
+    const e = captured as import('../../state-store').StateChangeEvent | null;
     expect(e).not.toBeNull();
     expect(e!.type).toBe('deployment_started');
     expect(e!.deployment_id).toBe('dep-1');

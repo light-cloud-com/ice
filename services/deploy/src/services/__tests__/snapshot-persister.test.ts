@@ -20,7 +20,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 type SnapshotCallback = (snapshot: any) => void;
 let capturedCallback: SnapshotCallback | null = null;
 
-vi.mock('../deploy-locks.js', () => ({
+vi.mock('../deploy-locks', () => ({
   setSnapshotPersister: vi.fn((cb: SnapshotCallback) => {
     capturedCallback = cb;
   }),
@@ -35,8 +35,8 @@ vi.mock('@ice/db', () => ({
   },
 }));
 
-import { installSnapshotPersister, flushSnapshotNow } from '../snapshot-persister.js';
-import * as deployLocks from '../deploy-locks.js';
+import { installSnapshotPersister, flushSnapshotNow } from '../snapshot-persister';
+import * as deployLocks from '../deploy-locks';
 // @ts-ignore — resolved at runtime via pnpm workspace; mocked above
 import prismaModule from '@ice/db';
 

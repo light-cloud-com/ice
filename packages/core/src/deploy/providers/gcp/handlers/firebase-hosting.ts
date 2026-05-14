@@ -32,25 +32,25 @@
  * replace the version later without ICE being involved.
  */
 
-import { type FirebaseHostingDnsRecord } from './firebase-hosting/dns-extractor.js';
-import { registerHostingDomain } from './firebase-hosting/domain-registrar.js';
-import { downloadGitHubRepo } from './firebase-hosting/github-downloader.js';
+import { type FirebaseHostingDnsRecord } from './firebase-hosting/dns-extractor';
+import { registerHostingDomain } from './firebase-hosting/domain-registrar';
+import { downloadGitHubRepo } from './firebase-hosting/github-downloader';
 import {
   FIREBASE_HOSTING_API,
   restRequest,
-} from './firebase-hosting/rest-client.js';
-import { result, fail } from './firebase-hosting/result-helpers.js';
+} from './firebase-hosting/rest-client';
+import { result, fail } from './firebase-hosting/result-helpers';
 import {
   ensureFirebaseProject,
   ensureHostingSite,
-} from './firebase-hosting/site-provisioner.js';
-import { sanitizeSiteId, placeholderIndexHtml } from './firebase-hosting/site-utils.js';
+} from './firebase-hosting/site-provisioner';
+import { sanitizeSiteId, placeholderIndexHtml } from './firebase-hosting/site-utils';
 import {
   publishVersion,
   publishPlaceholderVersion,
   parseRepository,
-} from './firebase-hosting/version-publisher.js';
-import type { GCPResourceHandler } from '../types.js';
+} from './firebase-hosting/version-publisher';
+import type { GCPResourceHandler } from '../types';
 
 // Re-export the DNS record interface so external consumers (currently
 // only the GCP deployer's own contract — UI uses its own `DnsRec`

@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { AssetInventoryService } from '../asset-inventory.js';
+import { AssetInventoryService } from '../asset-inventory';
 
 function makeAssetClient(assets: any[] | { listAssets: ReturnType<typeof vi.fn> }) {
   if (Array.isArray(assets)) {

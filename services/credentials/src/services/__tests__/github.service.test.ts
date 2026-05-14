@@ -59,7 +59,7 @@ import {
   getStoredUser,
   listRepos,
   listBranches,
-} from '../github.service.js';
+} from '../github.service';
 
 // Replace setTimeout used by polling with a synchronous shim so tests are fast
 // and deterministic. Restore in afterAll.

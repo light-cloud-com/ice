@@ -6,7 +6,7 @@
  * shim file `resource-validator.ts` still re-exports every type from
  * here so consumer code is unaffected.
  */
-import type { IceType } from './schema-provider.js';
+import type { IceType } from './schema-provider';
 
 /**
  * Validation severity level.

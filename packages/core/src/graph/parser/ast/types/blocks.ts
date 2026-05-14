@@ -9,8 +9,8 @@
  * Extracted from `ast/types.ts` in rf-asttyp-1.
  */
 
-import type { AstNode } from './base.js';
-import type { Expression, Identifier } from './expressions.js';
+import type { AstNode } from './base';
+import type { Expression, Identifier } from './expressions';
 
 // =============================================================================
 // Block

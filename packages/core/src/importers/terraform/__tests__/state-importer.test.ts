@@ -25,8 +25,8 @@ import {
   import_terraform_state,
   import_terraform_state_json,
   import_terraform_state_object,
-} from '../state-importer.js';
-import type { TerraformState } from '../types.js';
+} from '../state-importer';
+import type { TerraformState } from '../types';
 
 // =============================================================================
 // Sample
@@ -187,7 +187,7 @@ describe('import_terraform_state_object — per-resource error capture', () => {
       },
       infer_dependencies: () => undefined,
     }));
-    const { import_terraform_state_object: fresh } = await import('../state-importer.js');
+    const { import_terraform_state_object: fresh } = await import('../state-importer');
     const result = fresh(SAMPLE_STATE);
     expect(result.success).toBe(false);
     expect(result.errors[0]!.code).toBe('IMPORT_ERROR');
@@ -205,7 +205,7 @@ describe('import_terraform_state_object — per-resource error capture', () => {
       },
       infer_dependencies: () => undefined,
     }));
-    const { import_terraform_state_object: fresh } = await import('../state-importer.js');
+    const { import_terraform_state_object: fresh } = await import('../state-importer');
     const result = fresh(SAMPLE_STATE);
     expect(result.errors[0]!.code).toBe('IMPORT_ERROR');
     expect(result.errors[0]!.message).toContain('oops-not-error');
@@ -233,7 +233,7 @@ describe('import_terraform_state_object — per-resource error capture', () => {
       },
       infer_dependencies: () => undefined,
     }));
-    const { import_terraform_state_object: fresh } = await import('../state-importer.js');
+    const { import_terraform_state_object: fresh } = await import('../state-importer');
     const state: TerraformState = {
       ...SAMPLE_STATE,
       resources: [

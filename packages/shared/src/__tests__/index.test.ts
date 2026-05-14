@@ -18,7 +18,7 @@ beforeAll(() => {
 
 describe('@ice/shared barrel', () => {
   it('re-exports the auth surface', async () => {
-    const mod: any = await import('../index.js');
+    const mod: any = await import('../index');
     expect(typeof mod.requireAuth).toBe('function');
     expect(typeof mod.requireProjectAccess).toBe('function');
     expect(typeof mod.requireOrgRole).toBe('function');
@@ -29,7 +29,7 @@ describe('@ice/shared barrel', () => {
   });
 
   it('re-exports the crypto surface', async () => {
-    const mod: any = await import('../index.js');
+    const mod: any = await import('../index');
     expect(typeof mod.encryptCredentials).toBe('function');
     expect(typeof mod.decryptCredentials).toBe('function');
     expect(typeof mod.encryptString).toBe('function');
@@ -37,7 +37,7 @@ describe('@ice/shared barrel', () => {
   });
 
   it('re-exports the socket surface', async () => {
-    const mod: any = await import('../index.js');
+    const mod: any = await import('../index');
     expect(typeof mod.setupSocketService).toBe('function');
     expect(typeof mod.getSocketServer).toBe('function');
     expect(typeof mod.emitDeployNodeStatus).toBe('function');

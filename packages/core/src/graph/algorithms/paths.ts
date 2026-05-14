@@ -19,8 +19,8 @@
  *    only forward (depends-on direction) traversal.
  */
 
-import type { MutableGraph } from '../mutable-graph.js';
-import type { NodeId } from '../../types/graph.js';
+import type { MutableGraph } from '../mutable-graph';
+import type { NodeId } from '../../types/graph';
 
 /**
  * Find all paths between two nodes.

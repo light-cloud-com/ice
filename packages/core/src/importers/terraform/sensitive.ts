@@ -6,7 +6,7 @@
  * sentinel used when a state file is missing or unparseable.
  */
 
-import type { ImportMetadata } from './types.js';
+import type { ImportMetadata } from './types';
 
 /**
  * Mask sensitive attributes in properties.

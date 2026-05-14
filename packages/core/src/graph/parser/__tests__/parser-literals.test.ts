@@ -30,9 +30,9 @@ import {
   parse_boolean_literal,
   create_null_literal,
   create_span,
-} from '../parser-literals.js';
-import { make_parser_state } from '../parser-state.js';
-import type { Token, TokenType, SourcePosition } from '../tokens.js';
+} from '../parser-literals';
+import { make_parser_state } from '../parser-state';
+import type { Token, TokenType, SourcePosition } from '../tokens';
 
 /** Build a minimal token at line/col 1 (with optional literal). */
 function tk(

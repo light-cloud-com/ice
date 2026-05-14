@@ -13,7 +13,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ICE_TYPE_API_MAP, BASE_APIS, enableGcpApi, autoEnableGCPApis } from '../gcp-api-enabler.js';
+import { ICE_TYPE_API_MAP, BASE_APIS, enableGcpApi, autoEnableGCPApis } from '../gcp-api-enabler';
 
 // Helper to build a Response-like object that the SUT's `await fetch(...)`
 // path consumes. Only the fields the SUT actually reads are populated.

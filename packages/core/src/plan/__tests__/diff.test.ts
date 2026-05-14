@@ -12,8 +12,8 @@ import {
   is_destructive_change,
   summarize_changes,
   format_property_change,
-} from '../diff.js';
-import type { PropertyChange } from '../../types/deployment.js';
+} from '../diff';
+import type { PropertyChange } from '../../types/deployment';
 
 beforeEach(() => {
   vi.clearAllMocks();

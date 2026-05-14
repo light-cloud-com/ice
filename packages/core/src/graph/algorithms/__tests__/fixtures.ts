@@ -4,8 +4,8 @@
  * Helpers to build small graphs for unit-testing the algorithm
  * helpers without coupling to provider/schema infrastructure.
  */
-import { create_mutable_graph } from '../../mutable-graph.js';
-import type { MutableGraph } from '../../mutable-graph.js';
+import { create_mutable_graph } from '../../mutable-graph';
+import type { MutableGraph } from '../../mutable-graph';
 
 /**
  * Build a graph from a node-list + edge-list.

@@ -1,3 +1,4 @@
+import { BLOCK_SUMMARY_H, BLOCK_SUMMARY_W } from '@ice/constants';
 import React, { memo } from 'react';
 import { CORNER_RADIUS, CARD_PX, CATEGORY_STYLE } from '../../../../../config/canvas-constants';
 import { CostLabel } from '../_shared/cost-label';
@@ -6,8 +7,7 @@ import { NodeHeader } from '../_shared/node-header';
 import { ProviderPill } from '../_shared/provider-pill';
 import type { CanvasNode } from '../../svg-canvas';
 
-export const BLOCK_SUMMARY_H = 80;
-export const BLOCK_SUMMARY_W = 260;
+export { BLOCK_SUMMARY_H, BLOCK_SUMMARY_W };
 
 interface BlockSummaryCardProps {
   node: CanvasNode;

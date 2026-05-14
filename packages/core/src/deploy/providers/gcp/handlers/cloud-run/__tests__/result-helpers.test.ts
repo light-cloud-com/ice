@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { TYPE_SERVICE, TYPE_JOB, result, fail } from '../result-helpers.js';
+import { TYPE_SERVICE, TYPE_JOB, result, fail } from '../result-helpers';
 
 describe('cloud-run/result-helpers', () => {
   describe('TYPE constants', () => {

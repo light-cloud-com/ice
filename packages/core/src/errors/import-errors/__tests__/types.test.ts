@@ -12,7 +12,7 @@ import {
   type ImportWarning,
   type ImportErrorAction,
   type ImportErrorActionType,
-} from '../types.js';
+} from '../types';
 
 describe('ImportErrorCode enum', () => {
   it('preserves all 19 documented codes', () => {

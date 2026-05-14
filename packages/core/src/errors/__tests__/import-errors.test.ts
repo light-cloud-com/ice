@@ -16,7 +16,7 @@ import {
   type ImportWarning,
   type ImportErrorAction,
   type ImportErrorActionType,
-} from '../import-errors.js';
+} from '../import-errors';
 
 describe('import-errors shim', () => {
   it('re-exports ImportErrorCode enum', () => {

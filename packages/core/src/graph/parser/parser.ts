@@ -4,12 +4,12 @@
  * Recursive descent parser that builds an AST from tokens.
  */
 
-import { describe_token } from './tokens.js';
+import { describe_token } from './tokens';
 import type {
   Program,
   Statement,
-} from './ast.js';
-import type { Token, SourcePosition } from './tokens.js';
+} from './ast';
+import type { Token, SourcePosition } from './tokens';
 import {
   type ParserState,
   make_parser_state,
@@ -19,20 +19,20 @@ import {
   ps_is_at_end,
   ps_add_error,
   ps_synchronize,
-} from './parser-state.js';
-import { create_span } from './parser-literals.js';
+} from './parser-state';
+import { create_span } from './parser-literals';
 import {
   parse_resource_block,
   parse_data_block,
   parse_provider_block,
-} from './parser-block-body.js';
+} from './parser-block-body';
 import {
   parse_variable_block,
   parse_output_block,
   parse_module_block,
   parse_locals_block,
   parse_import_statement,
-} from './parser-statements.js';
+} from './parser-statements';
 
 // =============================================================================
 // Parser Error

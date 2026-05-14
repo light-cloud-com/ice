@@ -5,17 +5,14 @@
  * Editing moves to the properties panel (canvas is display-only).
  */
 
+import { MQ_HEADER_HEIGHT, MQ_PADDING, MQ_ROW_GAP, MQ_ROW_HEIGHT } from '@ice/constants';
 import { List } from 'lucide-react';
 import React from 'react';
 import { Badge, CardShell, EmptyHint, Pill } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
-// ─── Layout constants (used by svg-canvas to size the card) ───────────────
-
-export const MQ_HEADER_HEIGHT = 48;
-export const MQ_ROW_HEIGHT = 26;
-export const MQ_ROW_GAP = 4;
-export const MQ_PADDING = 12;
+// Re-exported so svg-canvas / tests can compute card height.
+export { MQ_HEADER_HEIGHT, MQ_ROW_HEIGHT, MQ_ROW_GAP, MQ_PADDING };
 
 /** Compute dynamic height based on the number of queues. */
 export function computeMessageQueueHeight(data: Record<string, unknown>): number {

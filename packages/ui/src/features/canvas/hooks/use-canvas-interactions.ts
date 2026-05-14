@@ -22,20 +22,20 @@ import { useCallback, useRef } from 'react';
 import {
   screenToCanvas as screenToCanvasPure,
   findItemAtPosition as findItemAtPositionPure,
-} from './interactions/hit-test.js';
+} from './interactions/hit-test';
 // rf-canvint-1: constants/helpers in `./interactions/state`. rf-canvint-5
 // adds `cursorForMode`, which replaces the inline `getCursor` switch.
-import { cursorForMode, freshInitialState } from './interactions/state.js';
+import { cursorForMode, freshInitialState } from './interactions/state';
 // rf-canvint-4: keyboard-handler sub-hook.
-import { useKeyboardHandlers } from './interactions/use-keyboard-handlers.js';
+import { useKeyboardHandlers } from './interactions/use-keyboard-handlers';
 // rf-canvint-3: mouse-handler sub-hook.
-import { useMouseHandlers } from './interactions/use-mouse-handlers.js';
+import { useMouseHandlers } from './interactions/use-mouse-handlers';
 import type {
   CanvasItem,
   InteractionState,
   UseCanvasInteractionsOptions,
   UseCanvasInteractionsResult,
-} from './interactions/types.js';
+} from './interactions/types';
 
 // rf-canvint-1: types live in `./interactions/types`. Re-export for outside
 // consumers (svg-canvas.tsx imports `CanvasItem` from this orchestrator),
@@ -46,7 +46,7 @@ export type {
   CanvasItem,
   UseCanvasInteractionsOptions,
   UseCanvasInteractionsResult,
-} from './interactions/types.js';
+} from './interactions/types';
 
 // =============================================================================
 // Hook
@@ -69,8 +69,6 @@ export function useCanvasInteractions({
   onDragEnd,
   gridSize = 20,
   locked = false,
-  minZoom = 0.1,
-  maxZoom = 2,
   resizeHandleSize = 20,
 }: UseCanvasInteractionsOptions): UseCanvasInteractionsResult {
   const stateRef = useRef<InteractionState>(freshInitialState());
@@ -134,8 +132,6 @@ export function useCanvasInteractions({
       onDragOverGroup,
       onDragEnd,
       gridSize,
-      minZoom,
-      maxZoom,
     });
 
   // Keyboard panning + delete — rf-canvint-4 lifts the implementation

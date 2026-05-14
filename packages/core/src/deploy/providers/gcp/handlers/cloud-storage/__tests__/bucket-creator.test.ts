@@ -14,8 +14,8 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { createOrAdoptBucket } from '../bucket-creator.js';
-import type { GCPHandlerContext } from '../../../types.js';
+import { createOrAdoptBucket } from '../bucket-creator';
+import type { GCPHandlerContext } from '../../../types';
 
 function makeCtx(): { ctx: GCPHandlerContext; logs: string[] } {
   const logs: string[] = [];

@@ -29,7 +29,7 @@ vi.mock('@ice/service-credentials', () => mocks.credentials);
 const prismaMock = mocks.prisma;
 const credentialsMock = mocks.credentials;
 
-import { resolveSource } from '../log-stream/source-resolution.js';
+import { resolveSource } from '../log-stream/source-resolution';
 
 beforeEach(() => {
   vi.clearAllMocks();

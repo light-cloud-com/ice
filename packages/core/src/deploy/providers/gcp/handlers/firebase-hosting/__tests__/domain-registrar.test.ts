@@ -30,9 +30,9 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { registerHostingDomain } from '../domain-registrar.js';
-import type { GCPHandlerContext } from '../../../types.js';
-import type { FirebaseHostingDnsRecord } from '../dns-extractor.js';
+import { registerHostingDomain } from '../domain-registrar';
+import type { GCPHandlerContext } from '../../../types';
+import type { FirebaseHostingDnsRecord } from '../dns-extractor';
 
 const mocks = vi.hoisted(() => ({
   restRequest: vi.fn(),
@@ -40,12 +40,12 @@ const mocks = vi.hoisted(() => ({
   FIREBASE_HOSTING_API: 'https://firebasehosting.googleapis.com/v1beta1',
 }));
 
-vi.mock('../rest-client.js', () => ({
+vi.mock('../rest-client', () => ({
   restRequest: mocks.restRequest,
   FIREBASE_HOSTING_API: mocks.FIREBASE_HOSTING_API,
 }));
 
-vi.mock('../dns-extractor.js', () => ({
+vi.mock('../dns-extractor', () => ({
   extractDnsRecords: mocks.extractDnsRecords,
 }));
 

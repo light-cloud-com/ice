@@ -15,8 +15,8 @@ import {
   calculate_metrics,
   get_critical_path,
   get_execution_layers,
-} from '../analysis.js';
-import { make_graph, id_of } from './fixtures.js';
+} from '../analysis';
+import { make_graph, id_of } from './fixtures';
 
 describe('get_execution_layers', () => {
   it('returns empty for empty graph', () => {

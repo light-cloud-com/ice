@@ -17,8 +17,8 @@
  * The `ParserError` and `ParserOptions` types are imported type-only
  * from `./parser.js` to avoid a runtime cycle.
  */
-import type { Token, TokenType } from './tokens.js';
-import type { ParserError, ParserOptions } from './parser.js';
+import type { Token, TokenType } from './tokens';
+import type { ParserError, ParserOptions } from './parser';
 
 /**
  * Default options for the parser. Mirrors `DEFAULT_OPTIONS` in

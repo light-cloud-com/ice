@@ -37,10 +37,10 @@
  *    in pathological cases — preserved verbatim.
  */
 
-import { find_connected_components } from './components.js';
-import { has_cycle, topological_sort } from './topo-cycle.js';
-import type { MutableGraph } from '../mutable-graph.js';
-import type { NodeId } from '../../types/graph.js';
+import { find_connected_components } from './components';
+import { has_cycle, topological_sort } from './topo-cycle';
+import type { MutableGraph } from '../mutable-graph';
+import type { NodeId } from '../../types/graph';
 
 // =============================================================================
 // Dependency Analysis

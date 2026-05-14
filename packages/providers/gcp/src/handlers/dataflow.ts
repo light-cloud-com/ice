@@ -5,7 +5,7 @@
  * Uses REST API.
  */
 
-import type { GCPResourceHandler } from '../types.js';
+import type { GCPResourceHandler } from '../types';
 import type { ResourceDeployResult } from '@ice/core';
 
 const TYPE = 'gcp.dataflow.job';

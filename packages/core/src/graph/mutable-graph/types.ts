@@ -13,7 +13,7 @@ import type {
   GraphMetadata,
   Node,
   NodeId,
-} from '../../types/graph.js';
+} from '../../types/graph';
 
 /**
  * Mutable bag of state shared by all helper functions.

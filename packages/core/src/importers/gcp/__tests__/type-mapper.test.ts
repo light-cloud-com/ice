@@ -15,7 +15,7 @@ import {
   is_kind_supported,
   get_supported_kinds,
   map_properties,
-} from '../type-mapper.js';
+} from '../type-mapper';
 
 // ===========================================================================
 // get_ice_type — high-level KIND_MAP coverage

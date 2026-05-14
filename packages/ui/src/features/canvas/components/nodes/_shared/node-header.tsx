@@ -1,6 +1,8 @@
+import { PN_HEADER_HEIGHT } from '@ice/constants';
 import React, { memo } from 'react';
 import { CategoryIcon } from './category-icon';
 import { NodeLabel } from './node-label';
+import { CARD_PX } from '../../../../../config/canvas-constants';
 
 interface NodeHeaderProps {
   category: string;
@@ -33,10 +35,18 @@ export const NodeHeader: React.FC<NodeHeaderProps> = memo(
     style,
   }) => (
     <div
+      role="group"
+      aria-label={`${category} block: ${label}`}
       style={{
         display: 'flex',
         alignItems: 'center',
         gap: 8,
+        padding: `8px ${CARD_PX}px`,
+        borderBottom: '1px solid var(--ice-border)',
+        background: `linear-gradient(180deg, ${categoryColor}15 0%, transparent 100%)`,
+        flexShrink: 0,
+        height: PN_HEADER_HEIGHT,
+        boxSizing: 'border-box',
         ...style,
       }}
     >

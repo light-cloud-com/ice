@@ -8,8 +8,8 @@
  * contract.
  */
 
-import type { CardEdgeInput, CardNodeInput } from '../card-translator.js';
-import type { MutableGraph } from '../../graph/mutable-graph.js';
+import type { CardEdgeInput, CardNodeInput } from '../card-translator';
+import type { MutableGraph } from '../../graph/mutable-graph';
 
 /**
  * Pass 1.45 — Network.CustomDomain → target host propagation.

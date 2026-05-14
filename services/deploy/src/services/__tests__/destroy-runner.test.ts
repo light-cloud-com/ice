@@ -14,12 +14,12 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('../deploy-event-dispatcher.js', () => ({
+vi.mock('../deploy-event-dispatcher', () => ({
   emitDestroyNodeStatus: vi.fn(),
 }));
 
-import { attemptDestroy, emitDestroyLifecycle } from '../destroy-runner.js';
-import * as dispatcher from '../deploy-event-dispatcher.js';
+import { attemptDestroy, emitDestroyLifecycle } from '../destroy-runner';
+import * as dispatcher from '../deploy-event-dispatcher';
 
 const emitDestroyNodeStatusMock = (dispatcher as any).emitDestroyNodeStatus as ReturnType<typeof vi.fn>;
 

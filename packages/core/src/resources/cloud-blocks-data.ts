@@ -23,16 +23,16 @@
  *   `./cloud-blocks.ts`.
  */
 
-import type { BlockTemplate } from './cloud-blocks-types.js';
-import { BACKEND_TEMPLATES } from './cloud-blocks-data/backend.js';
-import { COMPUTE_TEMPLATES } from './cloud-blocks-data/compute.js';
-import { DATA_TEMPLATES } from './cloud-blocks-data/data.js';
-import { FRONTEND_TEMPLATES } from './cloud-blocks-data/frontend.js';
-import { MESSAGING_TEMPLATES } from './cloud-blocks-data/messaging.js';
-import { NETWORKING_TEMPLATES } from './cloud-blocks-data/networking.js';
-import { OBSERVABILITY_TEMPLATES } from './cloud-blocks-data/observability.js';
-import { SECURITY_TEMPLATES } from './cloud-blocks-data/security.js';
-import { STORAGE_TEMPLATES } from './cloud-blocks-data/storage.js';
+import type { BlockTemplate } from './cloud-blocks-types';
+import { BACKEND_TEMPLATES } from './cloud-blocks-data/backend';
+import { COMPUTE_TEMPLATES } from './cloud-blocks-data/compute';
+import { DATA_TEMPLATES } from './cloud-blocks-data/data';
+import { FRONTEND_TEMPLATES } from './cloud-blocks-data/frontend';
+import { MESSAGING_TEMPLATES } from './cloud-blocks-data/messaging';
+import { NETWORKING_TEMPLATES } from './cloud-blocks-data/networking';
+import { OBSERVABILITY_TEMPLATES } from './cloud-blocks-data/observability';
+import { SECURITY_TEMPLATES } from './cloud-blocks-data/security';
+import { STORAGE_TEMPLATES } from './cloud-blocks-data/storage';
 
 // =============================================================================
 // Block Templates Registry

@@ -24,8 +24,8 @@
  *    on very deep graphs.
  */
 
-import type { MutableGraph } from '../mutable-graph.js';
-import type { NodeId } from '../../types/graph.js';
+import type { MutableGraph } from '../mutable-graph';
+import type { NodeId } from '../../types/graph';
 
 /**
  * Find all connected components in the graph.

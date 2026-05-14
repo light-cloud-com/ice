@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { mask_sensitive_attributes, mask_path, create_empty_metadata } from '../sensitive.js';
+import { mask_sensitive_attributes, mask_path, create_empty_metadata } from '../sensitive';
 
 describe('mask_sensitive_attributes', () => {
   it('masks a top-level sensitive attribute', () => {

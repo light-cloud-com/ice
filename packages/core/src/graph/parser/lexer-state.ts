@@ -18,9 +18,9 @@
  * The `LexerError` and `LexerOptions` types are imported type-only
  * from `./lexer.js` to avoid a runtime cycle.
  */
-import { create_token, create_position } from './tokens.js';
-import type { Token, TokenType, SourcePosition } from './tokens.js';
-import type { LexerError, LexerOptions } from './lexer.js';
+import { create_token, create_position } from './tokens';
+import type { Token, TokenType, SourcePosition } from './tokens';
+import type { LexerError, LexerOptions } from './lexer';
 
 /**
  * Default options for the lexer. Mirrors `DEFAULT_OPTIONS` in

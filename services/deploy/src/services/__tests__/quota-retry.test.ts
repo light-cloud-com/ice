@@ -14,11 +14,11 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('../deploy-event-dispatcher.js', () => ({
+vi.mock('../deploy-event-dispatcher', () => ({
   emitLog: vi.fn(),
 }));
 
-vi.mock('../scheduler-callbacks.js', () => ({
+vi.mock('../scheduler-callbacks', () => ({
   makeSchedulerCallbacks: vi.fn(() => ({
     on_log: vi.fn(),
     on_node_status: vi.fn(),
@@ -27,14 +27,14 @@ vi.mock('../scheduler-callbacks.js', () => ({
   })),
 }));
 
-vi.mock('../orphan-cleanup.service.js', () => ({
+vi.mock('../orphan-cleanup.service', () => ({
   cleanupOrphanedIceResources: vi.fn(),
 }));
 
-import { hasQuotaFailure, retryAfterQuotaCleanup } from '../quota-retry.js';
-import * as dispatcher from '../deploy-event-dispatcher.js';
-import * as schedulerCallbacks from '../scheduler-callbacks.js';
-import * as orphanCleanup from '../orphan-cleanup.service.js';
+import { hasQuotaFailure, retryAfterQuotaCleanup } from '../quota-retry';
+import * as dispatcher from '../deploy-event-dispatcher';
+import * as schedulerCallbacks from '../scheduler-callbacks';
+import * as orphanCleanup from '../orphan-cleanup.service';
 
 const emitLogMock = (dispatcher as any).emitLog as ReturnType<typeof vi.fn>;
 const makeSchedulerCallbacksMock = (schedulerCallbacks as any).makeSchedulerCallbacks as ReturnType<typeof vi.fn>;

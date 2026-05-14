@@ -31,7 +31,7 @@ import { describe, it, expect } from 'vitest';
 import {
   extractDnsRecords,
   type FirebaseHostingDnsRecord,
-} from '../dns-extractor.js';
+} from '../dns-extractor';
 
 describe('firebase-hosting/dns-extractor', () => {
   describe('extractDnsRecords()', () => {

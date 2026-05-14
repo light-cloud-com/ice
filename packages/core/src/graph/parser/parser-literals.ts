@@ -23,7 +23,7 @@
  * from primitives. Same name, different signatures, different purposes.
  * Do not merge them and do not import the AST one in this file.
  */
-import type { SourcePosition, SourceSpan } from './tokens.js';
+import type { SourcePosition, SourceSpan } from './tokens';
 import {
   type ParserState,
   ps_advance,
@@ -33,14 +33,14 @@ import {
   ps_match,
   ps_previous,
   ps_add_error,
-} from './parser-state.js';
+} from './parser-state';
 import type {
   BooleanLiteral,
   Identifier,
   NullLiteral,
   StringLiteral,
   TypeIdentifier,
-} from './ast.js';
+} from './ast';
 
 /**
  * Parse a single identifier token. Errors via `ps_consume` if the

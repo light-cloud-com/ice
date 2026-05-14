@@ -21,7 +21,7 @@
  */
 import * as fs from 'fs';
 import * as path from 'path';
-import type { SqliteSchemaRegistry } from './sqlite-types.js';
+import type { SqliteSchemaRegistry } from './sqlite-types';
 
 /**
  * Resolve the database path used by the registry factory.

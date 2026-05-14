@@ -1,6 +1,6 @@
 # Frontend
 
-ICE's frontend is a React 18 single-page app hosted by Vite (in dev) or served statically from the gateway (in production). The Electron desktop app wraps the same bundle. There are no framework-level surprises — the interesting parts are the custom SVG canvas and the Redux state shape.
+ICE's frontend is a React 18 single-page app hosted by Vite (in dev) or served statically from the gateway (in production). The Electron desktop app wraps the same bundle. There are no framework-level surprises - the interesting parts are the custom SVG canvas and the Redux state shape.
 
 ## Packages involved
 
@@ -26,7 +26,7 @@ packages/ui/src/features/canvas/
 └── utils/                         Ghost suggestions, auto-layout, etc.
 ```
 
-Nodes are drawn as SVG groups; edges are SVG paths. Zoom + pan use native SVG viewBox math, not CSS transforms — predictable semantics at any zoom.
+Nodes are drawn as SVG groups; edges are SVG paths. Zoom + pan use native SVG viewBox math, not CSS transforms - predictable semantics at any zoom.
 
 ## Redux state
 
@@ -36,7 +36,7 @@ Seventeen slices under `packages/ui/src/store/slices/`:
 |---|---|
 | `account-slice` | Current user, org |
 | `ai-slice` | Chat history, streaming state |
-| `cards-slice` | The UI-shaped block model — what the canvas renders |
+| `cards-slice` | The UI-shaped block model - what the canvas renders |
 | `debug-slice` | Feature flags, dev-only toggles |
 | `deploy-slice` | Deploy progress (per-node `nodesById` keyed by canvas node id, populated from the typed `deploy:event` socket channel), last plan, environment status |
 | `environments-slice` | Production / staging / preview selection |
@@ -88,7 +88,7 @@ Each folder is self-contained: components, hooks, and the occasional sub-slice a
 - **Radix UI** for primitives that need accessibility care (popover, dropdown, dialog).
 - **Custom design tokens** named `ice-*` (e.g. `text-ice-text-2`, `bg-ice-raised`). Defined in the Tailwind config.
 
-There is no component library abstraction over Tailwind; components compose raw Tailwind classes. That's a deliberate simplicity choice — the design system lives in tokens and conventions, not in a wrapper library.
+There is no component library abstraction over Tailwind; components compose raw Tailwind classes. That's a deliberate simplicity choice - the design system lives in tokens and conventions, not in a wrapper library.
 
 ## Data flow in the UI
 
@@ -115,20 +115,20 @@ Real-time updates (deploy progress, AI stream, graph events) arrive via Socket.I
 
 ## Internationalisation
 
-`packages/ui/src/i18n/` — hand-rolled, not a framework. Two locales: English and Mandarin, both complete for the current UI surface. Adding a locale means adding a new JSON file and listing it in `i18n/index.ts`.
+`packages/ui/src/i18n/` - hand-rolled, not a framework. Two locales: English and Mandarin, both complete for the current UI surface. Adding a locale means adding a new JSON file and listing it in `i18n/index.ts`.
 
 Usage: `const { t } = useTranslation(); t('templates.gallery.title')`.
 
 ## Entry points worth reading
 
-- [`packages/ui/src/features/canvas/components/svg-canvas.tsx`](../packages/ui/src/features/canvas/components/svg-canvas.tsx) — the canvas container.
-- [`packages/ui/src/store/slices/cards-slice.ts`](../packages/ui/src/store/slices/cards-slice.ts) — the UI model.
-- [`packages/ui/src/features/palette/`](../packages/ui/src/features/palette/) — left sidebar drag source.
-- [`packages/ui/src/features/properties/`](../packages/ui/src/features/properties/) — right sidebar editor.
-- [`packages/web/src/app/app.tsx`](../packages/web/src/app/app.tsx) — routing + top-level layout.
+- [`packages/ui/src/features/canvas/components/svg-canvas.tsx`](../packages/ui/src/features/canvas/components/svg-canvas.tsx) - the canvas container.
+- [`packages/ui/src/store/slices/cards-slice.ts`](../packages/ui/src/store/slices/cards-slice.ts) - the UI model.
+- [`packages/ui/src/features/palette/`](../packages/ui/src/features/palette/) - left sidebar drag source.
+- [`packages/ui/src/features/properties/`](../packages/ui/src/features/properties/) - right sidebar editor.
+- [`packages/web/src/app/app.tsx`](../packages/web/src/app/app.tsx) - routing + top-level layout.
 
 ## See also
 
-- [core-engine.md](core-engine.md) — where the `graph-slice` data ultimately goes.
-- [ai-assistant.md](ai-assistant.md) — the AI chat panel.
-- [desktop.md](desktop.md) — how this bundle runs inside Electron.
+- [core-engine.md](core-engine.md) - where the `graph-slice` data ultimately goes.
+- [ai-assistant.md](ai-assistant.md) - the AI chat panel.
+- [desktop.md](desktop.md) - how this bundle runs inside Electron.

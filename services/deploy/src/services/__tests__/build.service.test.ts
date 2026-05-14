@@ -66,7 +66,7 @@ import { mkdtempSync, rmSync, existsSync, createWriteStream } from 'fs';
 import { pipeline as streamPipeline } from 'stream/promises';
 import prisma from '@ice/db';
 import * as shared from '@ice/shared';
-import { buildFromSource, cleanupBuild } from '../build.service.js';
+import { buildFromSource, cleanupBuild } from '../build.service';
 
 // ─── Spies ──────────────────────────────────────────────────────────────────
 

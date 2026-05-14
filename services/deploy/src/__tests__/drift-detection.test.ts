@@ -35,7 +35,7 @@ describe.skip('Drift Detection — checkDrift', () => {
     // `checkDrift` for the namespace-import path used by
     // `routes/canvas-deploy.ts`, but tests should hit the new module
     // directly so any future un-skip resolves cleanly.
-    const mod = await import('../services/drift.service.js');
+    const mod = await import('../services/drift.service');
     return mod.checkDrift;
   }
 

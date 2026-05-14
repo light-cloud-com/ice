@@ -24,7 +24,7 @@ vi.mock('@ice/db', () => ({
 }));
 
 import prisma from '@ice/db';
-import { matchRulesForPush, matchRulesForMerge, shouldSkipDuplicate } from '../pipeline/rule-matching.js';
+import { matchRulesForPush, matchRulesForMerge, shouldSkipDuplicate } from '../pipeline/rule-matching';
 
 const ruleFindMany = (prisma as any).deploymentRule.findMany as ReturnType<typeof vi.fn>;
 const eventFindFirst = (prisma as any).deploymentEvent.findFirst as ReturnType<typeof vi.fn>;

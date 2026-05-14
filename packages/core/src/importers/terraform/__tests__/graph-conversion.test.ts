@@ -6,9 +6,9 @@ import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 import { mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { import_result_to_graph, import_terraform_to_graph } from '../graph-conversion.js';
-import { create_mutable_graph } from '../../../graph/mutable-graph.js';
-import type { TerraformImportResult, ImportedResource, TerraformState } from '../types.js';
+import { import_result_to_graph, import_terraform_to_graph } from '../graph-conversion';
+import { create_mutable_graph } from '../../../graph/mutable-graph';
+import type { TerraformImportResult, ImportedResource, TerraformState } from '../types';
 
 const empty_metadata = {
   terraform_version: '1.5.0',

@@ -20,7 +20,7 @@ const h = vi.hoisted(() => {
   return { assetCtor, computeCtor, storageCtor, assetDiscover, computeDiscover, storageDiscover };
 });
 
-vi.mock('../services/index.js', () => ({
+vi.mock('../services/index', () => ({
   AssetInventoryService: class {
     constructor(...args: any[]) {
       h.assetCtor(...args);
@@ -48,8 +48,8 @@ vi.mock('../services/index.js', () => ({
   BaseGCPService: class {},
 }));
 
-import { import_gcp, import_gcp_to_graph, gcp_result_to_graph } from '../gcp-importer.js';
-import type { GCPResource } from '../types.js';
+import { import_gcp, import_gcp_to_graph, gcp_result_to_graph } from '../gcp-importer';
+import type { GCPResource } from '../types';
 
 // =========================================================================
 // Helpers

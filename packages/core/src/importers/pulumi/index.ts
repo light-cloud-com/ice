@@ -12,7 +12,7 @@ export {
   import_result_to_graph,
   import_pulumi_to_graph,
   type PulumiImportOptions,
-} from './state-importer.js';
+} from './state-importer';
 
 // Type mapper
 export {
@@ -27,7 +27,7 @@ export {
   get_name_from_urn,
   is_provider_resource,
   is_stack_resource,
-} from './type-mapper.js';
+} from './type-mapper';
 
 // Types
 export type {
@@ -49,4 +49,4 @@ export type {
   PulumiImportError,
   PulumiImportWarning,
   PulumiImportMetadata,
-} from './types.js';
+} from './types';

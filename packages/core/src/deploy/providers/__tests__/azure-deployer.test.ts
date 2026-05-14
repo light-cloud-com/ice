@@ -27,8 +27,8 @@
  * - `create_azure_deployer` factory
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { AzureDeployer, create_azure_deployer } from '../azure-deployer.js';
-import type { DeployOptions } from '../../types.js';
+import { AzureDeployer, create_azure_deployer } from '../azure-deployer';
+import type { DeployOptions } from '../../types';
 
 // =============================================================================
 // Function-constructor stub

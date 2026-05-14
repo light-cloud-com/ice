@@ -4,7 +4,7 @@
  * Compare desired state with current infrastructure and generate diffs.
  */
 
-export { diff_graphs, format_plan } from './diff.js';
+export { diff_graphs, format_plan } from './diff';
 
 export type {
   ChangeType,
@@ -15,4 +15,4 @@ export type {
   DiffError,
   DiffWarning,
   DiffOptions,
-} from './types.js';
+} from './types';

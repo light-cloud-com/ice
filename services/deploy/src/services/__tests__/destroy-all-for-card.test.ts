@@ -49,41 +49,41 @@ vi.mock('@ice/service-credentials', () => ({
   getDecryptedCredentials: mocks.getDecryptedCredentials,
 }));
 
-vi.mock('../../providers/registry.js', () => ({
+vi.mock('../../providers/registry', () => ({
   resolveProviderAuth: mocks.resolveProviderAuth,
 }));
 
-vi.mock('../deployer-factory.js', () => ({
+vi.mock('../deployer-factory', () => ({
   createDeployer: mocks.createDeployer,
 }));
 
-vi.mock('../deploy-lock-wrapper.js', () => ({
+vi.mock('../deploy-lock-wrapper', () => ({
   acquireWriteLock: mocks.acquireWriteLock,
 }));
 
-vi.mock('../deploy-event-dispatcher.js', () => ({
+vi.mock('../deploy-event-dispatcher', () => ({
   emitDeployEvent: mocks.emitDeployEvent,
   emitLog: mocks.emitLog,
 }));
 
-vi.mock('../destroy-targets.js', () => ({
+vi.mock('../destroy-targets', () => ({
   collectDestroyAllTargets: mocks.collectDestroyAllTargets,
   orderTargetsForDelete: mocks.orderTargetsForDelete,
   resolveDestroyAllProject: mocks.resolveDestroyAllProject,
 }));
 
-vi.mock('../destroy-runner.js', () => ({
+vi.mock('../destroy-runner', () => ({
   attemptDestroy: mocks.attemptDestroy,
   emitDestroyLifecycle: mocks.emitDestroyLifecycle,
 }));
 
-vi.mock('../deploy-locks.js', () => ({
+vi.mock('../deploy-locks', () => ({
   startDeploySnapshot: mocks.startDeploySnapshot,
   finishDeploySnapshot: mocks.finishDeploySnapshot,
   releaseTempDir: mocks.releaseTempDir,
 }));
 
-import { destroyAllForCard } from '../destroy-all-for-card.js';
+import { destroyAllForCard } from '../destroy-all-for-card';
 
 const happyDeployer = {
   initialize: vi.fn(),

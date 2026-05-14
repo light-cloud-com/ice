@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import authRoutes from './routes/auth.js';
-import onboardingRoutes from './routes/onboarding.js';
-import organisationRoutes from './routes/organisations.js';
-import profileRoutes from './routes/profile.js';
-export { AuthError } from './services/auth.service.js';
-export * from './services/project-access.service.js';
-export * from './services/email.service.js';
+import authRoutes from './routes/auth';
+import onboardingRoutes from './routes/onboarding';
+import organisationRoutes from './routes/organisations';
+import profileRoutes from './routes/profile';
+export { AuthError } from './services/auth.service';
+export * from './services/project-access.service';
+export * from './services/email.service';
 
 export function createIamRouter(): Router {
   const router = Router();

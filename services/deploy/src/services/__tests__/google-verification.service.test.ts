@@ -36,7 +36,7 @@ vi.mock('@ice/service-credentials', () => ({
   getValidGCPAccessToken: mocks.getValidGCPAccessToken,
 }));
 
-vi.mock('../gcp-api-enabler.js', () => ({
+vi.mock('../gcp-api-enabler', () => ({
   enableGcpApi: mocks.enableGcpApi,
 }));
 
@@ -57,7 +57,7 @@ import {
   generateVerificationToken,
   checkSearchConsoleVerification,
   fetchSslCertificateStatus,
-} from '../google-verification.service.js';
+} from '../google-verification.service';
 
 // ---------- fetch helpers -----------------------------------------------------
 

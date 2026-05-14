@@ -10,14 +10,14 @@
  *    `connectionCategory: 'traffic'`.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { PROPAGATION_RULES, AGGREGATE_RULES } from '../propagation-rules.js';
+import { PROPAGATION_RULES, AGGREGATE_RULES } from '../propagation-rules';
 import type {
   PropagationContext,
   PropagationEdge,
   PropagationNode,
   PropagationRule,
   AggregateRule,
-} from '../types.js';
+} from '../types';
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 

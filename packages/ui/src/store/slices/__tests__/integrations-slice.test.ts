@@ -33,6 +33,7 @@ describe('integrations-slice', () => {
         gcp: { status: 'disconnected' },
         aws: { status: 'disconnected' },
         azure: { status: 'disconnected' },
+        anthropic: { status: 'disconnected' },
       });
       expect(state.github).toEqual({
         repos: [],

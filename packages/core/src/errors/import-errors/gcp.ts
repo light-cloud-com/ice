@@ -8,7 +8,7 @@
  * Asset-Inventory service.
  */
 
-import { ImportErrorCode, type ImportError } from './types.js';
+import { ImportErrorCode, type ImportError } from './types';
 
 /**
  * Classify a GCP error and return a structured ImportError.

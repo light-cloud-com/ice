@@ -13,8 +13,8 @@
  *  - get_providers/get_stats: lazy-cache; cache holders are external so
  *    the orchestrator class can hold the same cache slots it always did.
  */
-import { InternalError } from '../../types/errors.js';
-import { failure, success } from '../../types/result.js';
+import { InternalError } from '../../types/errors';
+import { failure, success } from '../../types/result';
 import type {
   IceType,
   PropertySchema,
@@ -24,11 +24,11 @@ import type {
   SchemaQuery,
   SchemaQueryResult,
   SchemaStats,
-} from '../schema-provider.js';
-import type { IceError } from '../../types/errors.js';
-import type { Result } from '../../types/result.js';
-import { convert_property, convert_resource_to_schema } from './converters.js';
-import { to_sqlite_query, type SqliteSchemaRegistry } from './sqlite-types.js';
+} from '../schema-provider';
+import type { IceError } from '../../types/errors';
+import type { Result } from '../../types/result';
+import { convert_property, convert_resource_to_schema } from './converters';
+import { to_sqlite_query, type SqliteSchemaRegistry } from './sqlite-types';
 
 /**
  * External cache slots passed to the cached query helpers.

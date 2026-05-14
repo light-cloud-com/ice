@@ -5,8 +5,8 @@
  * Handles string interpolation, heredocs, and error recovery.
  */
 
-import { create_token } from './tokens.js';
-import type { Token, SourcePosition } from './tokens.js';
+import { create_token } from './tokens';
+import type { Token, SourcePosition } from './tokens';
 import {
   type LexerState,
   make_lexer_state,
@@ -18,7 +18,7 @@ import {
   ls_current_position,
   ls_add_token,
   ls_add_error,
-} from './lexer-state.js';
+} from './lexer-state';
 import {
   is_digit,
   is_alpha,
@@ -27,8 +27,8 @@ import {
   scan_line_comment,
   scan_number,
   scan_string,
-} from './lexer-scanners.js';
-import { scan_heredoc } from './lexer-heredoc.js';
+} from './lexer-scanners';
+import { scan_heredoc } from './lexer-heredoc';
 
 // =============================================================================
 // Lexer Error

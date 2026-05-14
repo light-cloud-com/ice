@@ -353,6 +353,41 @@
       "linkRepo": "关联仓库",
       "clear": "取消关联",
       "connectGitHub": "连接 GitHub"
+    },
+    "anthropic": {
+      "title": "Claude (Anthropic)",
+      "description": "连接您的 Anthropic API 密钥以启用应用内 AI 助手。密钥经过加密存储,绝不离开此机器。",
+      "connected": "已连接",
+      "connectedSubtitle": "已启用 AI 面板和部署诊断",
+      "disconnect": "断开连接",
+      "apiKeyLabel": "API 密钥",
+      "apiKeyPlaceholder": "sk-ant-...",
+      "apiKeyHelp": "还没有密钥?",
+      "createKey": "在 console.anthropic.com 创建密钥",
+      "connectButton": "连接 Claude",
+      "appBarTip": "Claude (Anthropic)",
+      "settingsLabel": "Claude (Anthropic)",
+      "settingsDescription": "自带 Anthropic API 密钥以启用应用内 AI 助手"
+    },
+    "settings": {
+      "sectionTitle": "集成",
+      "sectionDescription": "自带密钥连接 — GitHub 用于仓库部署,Claude 用于 AI 助手,加上您的云提供商凭据。所有内容均在工作区数据库中加密存储。",
+      "github": {
+        "label": "GitHub",
+        "description": "PAT 或设备流程 — Git 推送流水线所必需"
+      },
+      "gcp": {
+        "label": "Google Cloud Platform",
+        "description": "服务账户密钥或 OAuth — 主要部署目标"
+      },
+      "aws": {
+        "label": "Amazon Web Services",
+        "description": "访问密钥 — 实验性,请参阅 docs/provider-status.md"
+      },
+      "azure": {
+        "label": "Microsoft Azure",
+        "description": "服务主体 — 实验性,请参阅 docs/provider-status.md"
+      }
     }
   },
 
@@ -736,11 +771,22 @@
       "thinking": "思考中...",
       "undoLastAi": "撤销上次 AI 更改",
       "inputPlaceholder": "描述您想构建的内容...",
+      "disconnectedPlaceholder": "连接 Claude 以开始聊天",
       "doneMessage": "完成。",
       "noChangesMessage": "没有需要应用的更改。",
       "collapsedTitle": "AI 助手",
       "sendMessage": "发送消息",
-      "inputHint": "回车发送 · Shift+回车换行"
+      "inputHint": "回车发送 · Shift+回车换行",
+      "disconnectedBadge": "未连接",
+      "disconnectedBadgeTooltip": "未配置 AI 提供商 — 点击添加 Anthropic API 密钥",
+      "disconnectedTitle": "AI 助手未连接",
+      "disconnectedDesc": "添加您的 Anthropic API 密钥以启用 Claude。密钥已加密并存储在本地。",
+      "connectClaude": "连接 Claude"
+    },
+    "diagnosis": {
+      "diagnoseWithAi": "使用 AI 诊断",
+      "connectToDiagnose": "连接 Claude 以进行诊断",
+      "connectToDiagnoseTooltip": "添加 Anthropic API 密钥以启用 AI 部署诊断"
     }
   },
 

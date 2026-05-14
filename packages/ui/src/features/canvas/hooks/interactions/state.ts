@@ -15,7 +15,7 @@
  * here too.
  */
 
-import type { InteractionMode, InteractionState } from './types.js';
+import type { InteractionMode, InteractionState } from './types';
 
 export const INITIAL_STATE: InteractionState = {
   mode: 'none',

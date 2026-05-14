@@ -9,6 +9,7 @@ Thanks for taking the time to contribute. This doc covers how to get the project
 git clone https://github.com/light-cloud-com/ice.git
 cd ice
 pnpm install
+pnpm schemas:build      # Generate provider schemas (~10-15 min first time)
 pnpm dev:all            # Web on localhost:5173, gateway on 15173
 # or
 pnpm dev:desktop        # Electron app
@@ -18,14 +19,14 @@ pnpm dev:desktop        # Electron app
 
 See [README.md](README.md#architecture) for the full tree. The short version:
 
-- `packages/core` — graph engine, schemas, deploy translator
-- `packages/blocks` — cloud resource block definitions (AWS/GCP/Azure/K8s)
-- `packages/ui` — React components (canvas, panels, palette, AI chat)
-- `packages/web` — Vite web app shell
-- `packages/providers/{gcp,aws,azure}` — per-cloud deployer implementations
-- `services/{canvas,deploy,ai,iam,credentials,engine}` — backend express routers
-- `apps/gateway` — composes all services
-- `apps/desktop` — Electron wrapper with embedded gateway
+- `packages/core` - graph engine, schemas, deploy translator
+- `packages/blocks` - cloud resource block definitions (AWS/GCP/Azure/K8s)
+- `packages/ui` - React components (canvas, panels, palette, AI chat)
+- `packages/web` - Vite web app shell
+- `packages/providers/{gcp,aws,azure}` - per-cloud deployer implementations
+- `services/{canvas,deploy,ai,iam,credentials,engine}` - backend express routers
+- `apps/gateway` - composes all services
+- `apps/desktop` - Electron wrapper with embedded gateway
 
 ## Development workflow
 
@@ -69,7 +70,7 @@ Security issues: **do not** open a public issue. See [SECURITY.md](SECURITY.md).
 
 ## Proposing features
 
-Open an issue using the [feature template](.github/ISSUE_TEMPLATE/feature.yml) before writing code. Describe the use case — not the implementation. We'd rather discuss approach once than review a large PR that doesn't fit.
+Open an issue using the [feature template](.github/ISSUE_TEMPLATE/feature.yml) before writing code. Describe the use case - not the implementation. We'd rather discuss approach once than review a large PR that doesn't fit.
 
 ## Pull requests
 
@@ -89,8 +90,8 @@ Open an issue using the [feature template](.github/ISSUE_TEMPLATE/feature.yml) b
 
 ## Licensing
 
-ICE is released under the [Apache License, Version 2.0](LICENSE). By contributing, you agree that your contribution will be licensed under the same terms — see section 5 of the license ("Submission of Contributions"). No separate CLA is required.
+ICE is released under the [Apache License, Version 2.0](LICENSE). By contributing, you agree that your contribution will be licensed under the same terms - see section 5 of the license ("Submission of Contributions"). No separate CLA is required.
 
 ## Conduct
 
-Be kind; call out behaviour, not people. Maintainers reserve the right to remove comments, commits, and contributions that don't meet that bar.
+See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Short version: be kind, call out behaviour not people.

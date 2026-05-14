@@ -16,7 +16,7 @@ import type {
   SchemaEvent,
   SchemaEventListener,
   SchemaEventType,
-} from '../schema-provider.js';
+} from '../schema-provider';
 
 export type EventListenerMap = Map<SchemaEventType, Set<SchemaEventListener>>;
 

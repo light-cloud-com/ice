@@ -9,6 +9,11 @@ This folder is the long-form documentation for ICE. For the 30-second pitch and 
 | Install ICE and run a first deploy | [getting-started.md](getting-started.md) |
 | Understand how the whole system fits together | [architecture.md](architecture.md) |
 | Deploy a real app to GCP | [deploying-to-gcp.md](deploying-to-gcp.md) |
+| Deploy to AWS (experimental) | [deploying-to-aws.md](deploying-to-aws.md) |
+| Deploy to Azure (experimental) | [deploying-to-azure.md](deploying-to-azure.md) |
+| Check what works per provider | [provider-status.md](provider-status.md) |
+| Fix something that's broken | [troubleshooting.md](troubleshooting.md) |
+| Look up a term | [glossary.md](glossary.md) |
 | Contribute code or file a bug | [contributing.md](contributing.md) → [../CONTRIBUTING.md](../CONTRIBUTING.md) |
 | Run the test suites | [testing.md](testing.md) |
 | Understand what "Community Edition" means | [community-edition.md](community-edition.md) |
@@ -16,7 +21,7 @@ This folder is the long-form documentation for ICE. For the 30-second pitch and 
 
 ## Reference
 
-Shorter pages that describe one subsystem each. Each ends with pointers to the code — treat them as entry points into the source, not replacements for it.
+Shorter pages that describe one subsystem each. Each ends with pointers to the code - treat them as entry points into the source, not replacements for it.
 
 | Page | What it covers |
 |---|---|
@@ -31,12 +36,11 @@ Shorter pages that describe one subsystem each. Each ends with pointers to the c
 
 ## How these docs are maintained
 
-These pages are hand-written and versioned with the code. When docs and code disagree, **code wins** — open an issue or PR to fix the docs. There is no auto-generated or LLM-generated content under `docs/` (that's a deliberate choice after a brief Obsidian-plugin experiment).
+These pages are hand-written and versioned with the code. When docs and code disagree, **code wins** - open an issue or PR to fix the docs. There is no auto-generated or LLM-generated content under `docs/` (that's a deliberate choice after a brief Obsidian-plugin experiment).
 
 ## See also
 
-- [ROADMAP.md](../ROADMAP.md) — what's shipped, in progress, and planned.
-- [CHANGELOG.md](../CHANGELOG.md) *(planned)* — release notes once we start cutting tagged releases.
-- [../CONTRIBUTING.md](../CONTRIBUTING.md) — contributor workflow.
-- [../SECURITY.md](../SECURITY.md) — how to report vulnerabilities.
-- [../COMMUNITY_PLEDGE.md](../COMMUNITY_PLEDGE.md) — commitments around ICE Cloud for non-profits.
+- [ROADMAP.md](../ROADMAP.md) - what's shipped, in progress, and planned.
+- [../CONTRIBUTING.md](../CONTRIBUTING.md) - contributor workflow.
+- [../SECURITY.md](../SECURITY.md) - how to report vulnerabilities.
+- [../SUPPORT.md](../SUPPORT.md) - where to get help.

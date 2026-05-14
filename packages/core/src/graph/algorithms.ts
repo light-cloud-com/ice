@@ -33,19 +33,19 @@ export {
   has_cycle,
   reverse_topological_sort,
   topological_sort,
-} from './algorithms/topo-cycle.js';
+} from './algorithms/topo-cycle';
 
-export { find_all_paths, find_shortest_path } from './algorithms/paths.js';
+export { find_all_paths, find_shortest_path } from './algorithms/paths';
 
 export {
   find_connected_components,
   find_strongly_connected_components,
-} from './algorithms/components.js';
+} from './algorithms/components';
 
-export type { GraphMetrics } from './algorithms/analysis.js';
+export type { GraphMetrics } from './algorithms/analysis';
 
 export {
   calculate_metrics,
   get_critical_path,
   get_execution_layers,
-} from './algorithms/analysis.js';
+} from './algorithms/analysis';

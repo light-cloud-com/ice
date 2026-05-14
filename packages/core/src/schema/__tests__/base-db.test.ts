@@ -23,7 +23,7 @@
 import { describe, expect, it, beforeAll, afterAll } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
-import { get_base_db_path } from '../customization/base-db.js';
+import { get_base_db_path } from '../customization/base-db';
 
 describe('get_base_db_path (bugfix-2: lazy require.resolve)', () => {
   it('exports get_base_db_path as a function', () => {

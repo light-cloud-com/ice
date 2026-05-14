@@ -11,7 +11,7 @@
  * can assert on a stable string when an error has no message.
  */
 
-import type { LogEntry } from './types.js';
+import type { LogEntry } from './types';
 
 /**
  * Convert a raw SDK Entry (from `getEntries` or `tailEntries`) to the

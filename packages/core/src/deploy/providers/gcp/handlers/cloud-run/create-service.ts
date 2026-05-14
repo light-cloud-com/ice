@@ -13,13 +13,13 @@
  * stable between repo-builds and direct-image deploys; the build helper
  * refreshes labels at index 2 without advancing the counter.
  */
-import { SERVICE_NAMES, sdk_not_available } from '../../messages.js';
-import { grant_public_access } from './iam.js';
-import { resolve_image } from './image-resolver.js';
-import { fail, result, TYPE_SERVICE } from './result-helpers.js';
-import { build_env_vars, fetch_service_outputs } from './utils.js';
-import type { ResourceDeployResult } from '../../../../types.js';
-import type { GCPHandlerContext } from '../../types.js';
+import { SERVICE_NAMES, sdk_not_available } from '../../messages';
+import { grant_public_access } from './iam';
+import { resolve_image } from './image-resolver';
+import { fail, result, TYPE_SERVICE } from './result-helpers';
+import { build_env_vars, fetch_service_outputs } from './utils';
+import type { ResourceDeployResult } from '../../../../types';
+import type { GCPHandlerContext } from '../../types';
 
 export async function create_service(
   name: string,

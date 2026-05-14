@@ -15,9 +15,9 @@
  *   3. `create_serverless_backend` + `create_default_backend_service`
  *      — provisioning helpers that actually issue the POSTs.
  */
-import { wait_for_compute_op } from './compute-ops.js';
-import { BASE_URL } from './result-helpers.js';
-import type { GCPHandlerContext } from '../../types.js';
+import { wait_for_compute_op } from './compute-ops';
+import { BASE_URL } from './result-helpers';
+import type { GCPHandlerContext } from '../../types';
 
 /** Host rule shape supplied by the card-translator. */
 export interface HostRule {

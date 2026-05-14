@@ -72,7 +72,7 @@ import {
   findEnvironmentByName,
   closePrEnvironment,
   togglePrPreviews,
-} from '../environment.service.js';
+} from '../environment.service';
 // @ts-ignore — workspace-resolved at runtime
 import prisma from '@ice/db';
 import { createDeploymentEvent, getDeployQueue } from '@ice/service-deploy';

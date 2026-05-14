@@ -25,18 +25,18 @@ export {
   updateRule,
   deleteRule,
   getRulesForNode,
-} from './pipeline/rule-management.js';
+} from './pipeline/rule-management';
 export {
   getEventsForNode,
   createDeploymentEvent,
   updateEventProgress,
   failEvent,
-} from './pipeline/events.js';
+} from './pipeline/events';
 export {
   matchRulesForPush,
   matchRulesForMerge,
   shouldSkipDuplicate,
-} from './pipeline/rule-matching.js';
-export { detectFramework } from './pipeline/framework-detection.js';
-export { resolveEnvironmentCardId } from './pipeline/environment-resolution.js';
-export type { DeployStep, FrameworkDetection } from './pipeline/types.js';
+} from './pipeline/rule-matching';
+export { detectFramework } from './pipeline/framework-detection';
+export { resolveEnvironmentCardId } from './pipeline/environment-resolution';
+export type { DeployStep, FrameworkDetection } from './pipeline/types';

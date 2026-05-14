@@ -26,9 +26,9 @@
  * and the eleven exported types all keep their pre-extraction shape.
  */
 
-import { EmbeddedSchemaProvider } from '../schema/embedded-schema-provider.js';
-import { export_graph } from './terraform/converter.js';
-import type { MutableGraph } from '../graph/mutable-graph.js';
+import { EmbeddedSchemaProvider } from '../schema/embedded-schema-provider';
+import { export_graph } from './terraform/converter';
+import type { MutableGraph } from '../graph/mutable-graph';
 import type {
   TerraformBlock,
   TerraformConfig,
@@ -40,7 +40,7 @@ import type {
   TerraformResource,
   TerraformVariable,
   RequiredProvider,
-} from './terraform/types.js';
+} from './terraform/types';
 
 // Re-export the public type surface so external consumers keep their
 // `import { ... } from './terraform-exporter'` imports.

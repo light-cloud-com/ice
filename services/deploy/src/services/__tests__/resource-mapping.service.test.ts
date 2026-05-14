@@ -41,7 +41,7 @@ import {
   removeResourceMapping,
   removeAllMappingsForCard,
   seedMappingsFromHistory,
-} from '../resource-mapping.service.js';
+} from '../resource-mapping.service';
 // @ts-ignore — resolved at runtime via pnpm workspace; mocked above
 import prismaModule from '@ice/db';
 

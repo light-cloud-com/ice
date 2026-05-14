@@ -7,8 +7,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { validateArchitecture } from '../architecture-rules.js';
-import type { ValidatableNode, ValidatableEdge, ValidationContext } from '../types.js';
+import { validateArchitecture } from '../architecture-rules';
+import type { ValidatableNode, ValidatableEdge, ValidationContext } from '../types';
 
 const node = (
   id: string,

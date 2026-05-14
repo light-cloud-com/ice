@@ -154,7 +154,7 @@ export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
             sections.push({
               key: 'projects',
               content: (
-                <div className="h-full overflow-y-auto custom-scrollbar">
+                <div id="ice-palette-projects-section" className="h-full overflow-y-auto custom-scrollbar">
                   <ProjectBrowser />
                 </div>
               ),
@@ -189,7 +189,7 @@ export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
             sections.push({
               key: 'templates',
               content: (
-                <div className="h-full overflow-y-auto custom-scrollbar">
+                <div id="ice-palette-templates-section" className="h-full overflow-y-auto custom-scrollbar">
                   <TemplateCategoriesPanel embedded />
                 </div>
               ),

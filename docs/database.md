@@ -57,26 +57,26 @@ erDiagram
     Environment ||--o{ DeployState : "last-applied"
 ```
 
-- **User, Organization** — auth + multi-tenant scope. Community Edition auto-seeds a single user and single org.
-- **CanvasProject** — one project = one canvas. Holds cards + edges as JSON.
-- **Environment** — production, staging, preview branches. Each has its own deploy state.
-- **Deployment** — one apply run. Holds the plan, the result, and a link to the DeployEvent stream.
-- **DeployEvent** — append-only per-node progress log. Powers the live canvas updates.
-- **DeployState** — the last-applied graph per environment. The input to the next plan.
-- **Pipeline** — CI/CD wiring (GitHub repo + branch → environment).
-- **ProviderCredential** — encrypted cloud provider creds (AES-256-GCM, key from `CREDENTIAL_ENCRYPTION_KEY`).
-- **GitHubInstallation** — OAuth / App installation records.
+- **User, Organization** - auth + multi-tenant scope. Community Edition auto-seeds a single user and single org.
+- **CanvasProject** - one project = one canvas. Holds cards + edges as JSON.
+- **Environment** - production, staging, preview branches. Each has its own deploy state.
+- **Deployment** - one apply run. Holds the plan, the result, and a link to the DeployEvent stream.
+- **DeployEvent** - append-only per-node progress log. Powers the live canvas updates.
+- **DeployState** - the last-applied graph per environment. The input to the next plan.
+- **Pipeline** - CI/CD wiring (GitHub repo + branch → environment).
+- **ProviderCredential** - encrypted cloud provider creds (AES-256-GCM, key from `CREDENTIAL_ENCRYPTION_KEY`).
+- **GitHubInstallation** - OAuth / App installation records.
 
 ## JSON columns
 
-A few columns are Prisma `Json` — notably `CanvasProject.cards`, `CanvasProject.edges`, `DeployState.graph`. These are kept opaque at the DB level and typed in TypeScript via the shapes in `packages/types/`. Querying *into* them is avoided; when we need to index a field, it gets promoted to a real column.
+A few columns are Prisma `Json` - notably `CanvasProject.cards`, `CanvasProject.edges`, `DeployState.graph`. These are kept opaque at the DB level and typed in TypeScript via the shapes in `packages/types/`. Querying *into* them is avoided; when we need to index a field, it gets promoted to a real column.
 
 ## Encryption
 
-`ProviderCredential.encryptedData` holds the AES-256-GCM ciphertext of the provider credentials (service account JSON, API keys, etc.). The encryption happens in `packages/shared/src/crypto.ts` before Prisma sees the value.
+`ProviderCredential.encryptedData` holds the AES-256-GCM ciphertext of the provider credentials (service account JSON, API keys, etc.). The encryption happens in `packages/shared/src/crypto/` before Prisma sees the value.
 
 - **Key:** `CREDENTIAL_ENCRYPTION_KEY` in the environment. Must be exactly 32 characters. Generate with `openssl rand -hex 16` or similar.
-- **Rotation:** replace the key, run a migration that re-encrypts all rows. Not automated — tracked on the [roadmap](../ROADMAP.md).
+- **Rotation:** replace the key, run a migration that re-encrypts all rows. Not automated - tracked on the [roadmap](../ROADMAP.md).
 
 ## Seeding
 
@@ -89,7 +89,7 @@ SQLite is fantastic for Community Edition but has a few constraints to be aware 
 - **Single writer.** Concurrent writes serialize. Fine for a single-user desktop app.
 - **No enum types.** Enums are implemented as strings with Prisma client-side validation.
 - **No `array` columns.** Arrays live in related tables or JSON.
-- **`file:` URLs are relative to the Prisma schema file**, which is why the default `DATABASE_URL` looks like `file:../../.desktop-dev.db` — that path resolves from `packages/db/prisma/`.
+- **`file:` URLs are relative to the Prisma schema file**, which is why the default `DATABASE_URL` looks like `file:../../.desktop-dev.db` - that path resolves from `packages/db/prisma/`.
 
 None of these bite in the current design.
 
@@ -109,12 +109,12 @@ Opens Prisma Studio on http://localhost:5555 against whatever `DATABASE_URL` poi
 
 ## Entry points worth reading
 
-- [`packages/db/prisma/schema.prisma`](../packages/db/prisma/schema.prisma) — the canonical shape.
-- [`packages/db/prisma/seed.ts`](../packages/db/prisma/seed.ts) — seed fixtures.
-- [`packages/shared/src/crypto.ts`](../packages/shared/src/crypto.ts) — encryption helpers.
-- [`packages/core/src/state/`](../packages/core/src/state) — the interface that abstracts over the Prisma store.
+- [`packages/db/prisma/schema.prisma`](../packages/db/prisma/schema.prisma) - the canonical shape.
+- [`packages/db/prisma/seed.ts`](../packages/db/prisma/seed.ts) - seed fixtures.
+- [`packages/shared/src/crypto/`](../packages/shared/src/crypto/) - encryption helpers.
+- [`packages/core/src/state/`](../packages/core/src/state) - the interface that abstracts over the Prisma store.
 
 ## See also
 
-- [services.md](services.md) — every service uses this DB.
-- [`../.env.example`](../.env.example) — `DATABASE_URL`, `CREDENTIAL_ENCRYPTION_KEY`.
+- [services.md](services.md) - every service uses this DB.
+- [`../.env.example`](../.env.example) - `DATABASE_URL`, `CREDENTIAL_ENCRYPTION_KEY`.

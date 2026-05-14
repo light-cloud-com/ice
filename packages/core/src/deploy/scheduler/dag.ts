@@ -15,9 +15,9 @@
  * consistent text from both schedulers.
  */
 
-import type { Graph } from '../../types/graph.js';
-import type { ResourceChange } from '../../diff/types.js';
-import type { NodeRecord, SchedulerPhase } from './types.js';
+import type { Graph } from '../../types/graph';
+import type { ResourceChange } from '../../diff/types';
+import type { NodeRecord, SchedulerPhase } from './types';
 
 /**
  * Build the per-node DAG from the input changes and engine graph.

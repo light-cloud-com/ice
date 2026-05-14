@@ -9,7 +9,7 @@
  * are intentional — handlers further down the pipeline coerce per-resource.
  */
 
-import { parse_storage_gb } from '../utils/name-utils.js';
+import { parse_storage_gb } from '../utils/name-utils';
 
 export function extract_cloud_sql_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
   const ice_type = data.iceType as string;

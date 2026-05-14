@@ -9,7 +9,7 @@
  * are intentional — handlers further down the pipeline coerce per-resource.
  */
 
-import { normalize_runtime } from '../utils/name-utils.js';
+import { normalize_runtime } from '../utils/name-utils';
 
 export function extract_cloud_run_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
   return {

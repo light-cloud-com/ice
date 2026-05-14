@@ -11,14 +11,14 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { SCALE_PRESETS } from '../scale-presets-data.js';
-import { COMPUTE_PRESETS } from '../scale-presets-data/compute.js';
-import { DATABASE_PRESETS } from '../scale-presets-data/database.js';
-import { MESSAGING_PRESETS } from '../scale-presets-data/messaging.js';
-import { MONITORING_PRESETS } from '../scale-presets-data/monitoring.js';
-import { NETWORKING_PRESETS } from '../scale-presets-data/networking.js';
-import { SECURITY_PRESETS } from '../scale-presets-data/security.js';
-import { STORAGE_PRESETS } from '../scale-presets-data/storage.js';
+import { SCALE_PRESETS } from '../scale-presets-data';
+import { COMPUTE_PRESETS } from '../scale-presets-data/compute';
+import { DATABASE_PRESETS } from '../scale-presets-data/database';
+import { MESSAGING_PRESETS } from '../scale-presets-data/messaging';
+import { MONITORING_PRESETS } from '../scale-presets-data/monitoring';
+import { NETWORKING_PRESETS } from '../scale-presets-data/networking';
+import { SECURITY_PRESETS } from '../scale-presets-data/security';
+import { STORAGE_PRESETS } from '../scale-presets-data/storage';
 
 const CATEGORY_BUNDLES = [
   { name: 'compute', record: COMPUTE_PRESETS, expectedCount: 12 },

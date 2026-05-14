@@ -1,39 +1,62 @@
 /**
  * Auto-Layout — shared types and visual size constants.
  *
- * Block-size formulas inlined here to avoid a circular import: the per-node
- * renderers under `features/canvas/components/nodes/*` transitively pull in
- * `svg-canvas.tsx`, which imports `calculateZIndex` from auto-layout.
- * Values MUST stay in sync with the corresponding `compute*` exports in the
- * renderer files.
+ * Per-block layout constants live in `@ice/constants` (zero-dep leaf package)
+ * so this module can re-export them without forming a circular import with
+ * the renderers under `features/canvas/components/nodes/*` (those renderers
+ * transitively pull in `svg-canvas.tsx`, which imports `calculateZIndex`
+ * from this file).
  */
 
-import { LAYOUT_NODE_SEP as NODE_SEP, CONTAINER_PADDING } from '@ice/constants';
+import {
+  LAYOUT_NODE_SEP as NODE_SEP,
+  CONTAINER_PADDING,
+  CD_EXTRA_WIDTH,
+  CD_HEADER_HEIGHT,
+  CD_DOMAIN_FIELD_HEIGHT,
+  CD_ROUTE_ROW_HEIGHT,
+  CD_ROUTE_ROW_GAP,
+  CD_PADDING,
+  CD_ADD_BUTTON_HEIGHT,
+  MQ_HEADER_HEIGHT,
+  MQ_ROW_HEIGHT,
+  MQ_ROW_GAP,
+  MQ_PADDING,
+  SS_HEADER_HEIGHT,
+  SS_ROW_HEIGHT,
+  SS_PADDING,
+  EC_HEADER_HEIGHT,
+  EC_ROW_HEIGHT,
+  EC_PADDING,
+  ES_HEADER_HEIGHT,
+  ES_FIELD_HEIGHT,
+  ES_PADDING,
+} from '@ice/constants';
 
-// =============================================================================
-// Visual size constants — keep in sync with renderer compute* exports
-// =============================================================================
-
-export const CD_EXTRA_WIDTH = 40;
-export const CD_HEADER_HEIGHT = 48;
-export const CD_DOMAIN_FIELD_HEIGHT = 38;
-export const CD_ROUTE_ROW_HEIGHT = 36;
-export const CD_ROUTE_ROW_GAP = 4;
-export const CD_PADDING = 10;
-export const CD_ADD_BUTTON_HEIGHT = 32;
-export const MQ_HEADER_HEIGHT = 48;
-export const MQ_ROW_HEIGHT = 26;
-export const MQ_ROW_GAP = 4;
-export const MQ_PADDING = 12;
-export const SS_HEADER_HEIGHT = 48;
-export const SS_ROW_HEIGHT = 20;
-export const SS_PADDING = 12;
-export const EC_HEADER_HEIGHT = 48;
-export const EC_ROW_HEIGHT = 20;
-export const EC_PADDING = 12;
-export const ES_HEADER_HEIGHT = 48;
-export const ES_FIELD_HEIGHT = 30;
-export const ES_PADDING = 12;
+// Re-export for visual-size.ts and the existing `__tests__/types.test.ts`
+// suite; downstream consumers can keep importing from `./types`.
+export {
+  CD_EXTRA_WIDTH,
+  CD_HEADER_HEIGHT,
+  CD_DOMAIN_FIELD_HEIGHT,
+  CD_ROUTE_ROW_HEIGHT,
+  CD_ROUTE_ROW_GAP,
+  CD_PADDING,
+  CD_ADD_BUTTON_HEIGHT,
+  MQ_HEADER_HEIGHT,
+  MQ_ROW_HEIGHT,
+  MQ_ROW_GAP,
+  MQ_PADDING,
+  SS_HEADER_HEIGHT,
+  SS_ROW_HEIGHT,
+  SS_PADDING,
+  EC_HEADER_HEIGHT,
+  EC_ROW_HEIGHT,
+  EC_PADDING,
+  ES_HEADER_HEIGHT,
+  ES_FIELD_HEIGHT,
+  ES_PADDING,
+};
 
 // =============================================================================
 // Public types

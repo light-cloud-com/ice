@@ -24,8 +24,8 @@ import {
   parse_data_block,
   parse_provider_block,
   parse_resource_block,
-} from '../parser-block-body.js';
-import { make_parser_state } from '../parser-state.js';
+} from '../parser-block-body';
+import { make_parser_state } from '../parser-state';
 import type {
   Block,
   DataBlock,
@@ -35,8 +35,8 @@ import type {
   ResourceBlock,
   StringLiteral,
   TypeIdentifier,
-} from '../ast.js';
-import type { Token, TokenType, SourcePosition } from '../tokens.js';
+} from '../ast';
+import type { Token, TokenType, SourcePosition } from '../tokens';
 
 /** Build a minimal token at line/col 1 (with optional literal). */
 function tk(

@@ -7,10 +7,10 @@
  * dependency aggregation (explicit deps + parent).
  */
 
-import { get_ice_type, get_provider_from_type, parse_urn } from './type-mapper.js';
-import { extract_name_from_urn, is_secret_value, unwrap_secret } from './parsing.js';
-import type { PulumiImportOptions } from './state-importer.js';
-import type { PulumiResource, PulumiImportedResource, PulumiImportWarning } from './types.js';
+import { get_ice_type, get_provider_from_type, parse_urn } from './type-mapper';
+import { extract_name_from_urn, is_secret_value, unwrap_secret } from './parsing';
+import type { PulumiImportOptions } from './state-importer';
+import type { PulumiResource, PulumiImportedResource, PulumiImportWarning } from './types';
 
 type ResolvedOptions = Required<Omit<PulumiImportOptions, 'target_graph'>>;
 

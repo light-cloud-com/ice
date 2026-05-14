@@ -2,8 +2,8 @@
  * View Level Visibility Rules
  */
 
-import { Cat, ICE } from './ice-types.js';
-import type { NodeCategory } from './ice-types.js';
+import { Cat, ICE } from './ice-types';
+import type { NodeCategory } from './ice-types';
 
 export const LEVEL_VISIBLE_CATEGORIES: Record<1 | 2 | 3, NodeCategory[]> = {
   1: [Cat.Compute, Cat.Data],

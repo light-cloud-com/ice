@@ -6,7 +6,7 @@
  *   Network.VPC, Database.PostgreSQL, Application.Container, etc.
  */
 
-import type { NodeBehavior } from '../../resources/high-level-resources.js';
+import type { NodeBehavior } from '../../resources/high-level-resources';
 
 // =============================================================================
 // Kind to High-Level ICE Type Mapping

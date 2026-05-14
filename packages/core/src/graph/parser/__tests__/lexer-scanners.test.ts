@@ -34,13 +34,13 @@ import { describe, it, expect } from 'vitest';
 import {
   type LexerState,
   make_lexer_state,
-} from '../lexer-state.js';
+} from '../lexer-state';
 import {
   scan_block_comment,
   scan_identifier,
   scan_line_comment,
   scan_number,
-} from '../lexer-scanners.js';
+} from '../lexer-scanners';
 
 /**
  * Helper: build a state and advance past `prefix_len` chars to
@@ -341,7 +341,7 @@ describe('scan_block_comment', () => {
 // Integration smoke tests (round-trip through the full Lexer class)
 // =============================================================================
 
-import { Lexer } from '../lexer.js';
+import { Lexer } from '../lexer';
 
 describe('integration — Lexer routes through extracted scanners', () => {
   it('numbers via Lexer.tokenize round-trip', () => {

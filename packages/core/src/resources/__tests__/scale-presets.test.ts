@@ -6,14 +6,14 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import * as ScalePresetsModule from '../scale-presets.js';
+import * as ScalePresetsModule from '../scale-presets';
 import {
   SCALE_PRESETS,
   SCALE_TIERS,
   SCALE_TIER_INFO,
   getAllPresetsForResource,
   getScalePreset,
-} from '../scale-presets.js';
+} from '../scale-presets';
 
 describe('scale-presets shim — public API', () => {
   it('re-exports all 7 named exports (5 values + 2 types via runtime)', () => {

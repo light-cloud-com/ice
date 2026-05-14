@@ -19,7 +19,7 @@
  * tested directly without instantiating the class.
  */
 
-import type { StateChangeListener } from '../state-store.js';
+import type { StateChangeListener } from '../state-store';
 import type { Database, Statement } from 'better-sqlite3';
 
 // =============================================================================

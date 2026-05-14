@@ -35,17 +35,17 @@ const mocks = vi.hoisted(() => {
   return { ProviderConstructorCalls, initialize, FakeProvider, export_graph };
 });
 
-vi.mock('../../schema/embedded-schema-provider.js', () => ({
+vi.mock('../../schema/embedded-schema-provider', () => ({
   EmbeddedSchemaProvider: mocks.FakeProvider,
 }));
 
-vi.mock('../terraform/converter.js', () => ({
+vi.mock('../terraform/converter', () => ({
   export_graph: mocks.export_graph,
 }));
 
-import { TerraformExporter, create_terraform_exporter } from '../terraform-exporter.js';
-import type { MutableGraph } from '../../graph/mutable-graph.js';
-import type { TerraformExportOptions } from '../terraform/types.js';
+import { TerraformExporter, create_terraform_exporter } from '../terraform-exporter';
+import type { MutableGraph } from '../../graph/mutable-graph';
+import type { TerraformExportOptions } from '../terraform/types';
 
 beforeEach(() => {
   mocks.ProviderConstructorCalls.length = 0;

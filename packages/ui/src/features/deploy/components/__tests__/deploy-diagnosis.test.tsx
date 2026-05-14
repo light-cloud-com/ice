@@ -18,6 +18,11 @@ const mocks = vi.hoisted(() => ({
       provider: 'gcp',
       region: 'us-central1',
     },
+    integrations: {
+      integrations: {
+        anthropic: { status: 'connected' as 'connected' | 'disconnected' | 'connecting' | 'error' },
+      },
+    },
   },
   dispatch: vi.fn(),
   startDiagnosis: vi.fn(() => ({ type: 'deploy/startDiagnosis' })),
@@ -35,6 +40,11 @@ vi.mock('react', async (orig) => {
   return {
     ...actual,
     useCallback: vi.fn(<T,>(fn: T) => fn),
+    // Tree-walker tests invoke the FC directly outside the React fiber
+    // runtime, so the real `useState` triggers "Invalid hook call". Stub
+    // it as a plain identity-returning pair — the showAnthropicModal
+    // state added for BYOK awareness doesn't matter for these tests.
+    useState: vi.fn(<T,>(init: T) => [init, vi.fn()] as const),
   };
 });
 
@@ -56,6 +66,25 @@ vi.mock('../../../../store/slices/deploy-slice', () => ({
 
 vi.mock('../../../ai/utils/serialize-canvas', () => ({
   serializeCanvas: mocks.serializeCanvas,
+}));
+
+vi.mock('../../../integrations/components/anthropic-connect-modal', () => ({
+  AnthropicConnectModal: vi.fn(() => null),
+}));
+
+vi.mock('../../../../i18n', () => ({
+  useTranslation: () => ({
+    // Tree-walker tests assert against literal strings, so resolve i18n
+    // keys to the same English copy the bundle ships with.
+    t: (k: string) => {
+      const map: Record<string, string> = {
+        'ai.diagnosis.diagnoseWithAi': 'Diagnose with AI',
+        'ai.diagnosis.connectToDiagnose': 'Connect Claude to diagnose',
+        'ai.diagnosis.connectToDiagnoseTooltip': 'Add an Anthropic API key to enable AI deploy diagnosis',
+      };
+      return map[k] ?? k;
+    },
+  }),
 }));
 
 vi.mock('../../../../store', () => ({

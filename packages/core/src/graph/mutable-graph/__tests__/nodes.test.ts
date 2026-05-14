@@ -4,8 +4,8 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { create_node_id, type NodeInput } from '../../../types/graph.js';
-import { edges_add_edge } from '../edges.js';
+import { create_node_id, type NodeInput } from '../../../types/graph';
+import { edges_add_edge } from '../edges';
 import {
   nodes_add_node,
   nodes_get_node,
@@ -14,8 +14,8 @@ import {
   nodes_has_node,
   nodes_remove_node,
   nodes_update_node,
-} from '../nodes.js';
-import { create_mutable_graph_state } from '../types.js';
+} from '../nodes';
+import { create_mutable_graph_state } from '../types';
 
 function input(name: string, type = 'aws.s3.bucket', props: Record<string, unknown> = {}): NodeInput {
   return { type, name, properties: props };

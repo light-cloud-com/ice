@@ -23,7 +23,7 @@ import type { AddressInfo } from 'node:net';
 const subscribeMock = vi.fn();
 const unsubscribeMock = vi.fn();
 
-vi.mock('../../services/log-stream.service.js', () => ({
+vi.mock('../../services/log-stream.service', () => ({
   subscribe: (...args: unknown[]) => subscribeMock(...args),
   unsubscribe: (...args: unknown[]) => unsubscribeMock(...args),
 }));
@@ -70,7 +70,7 @@ beforeEach(async () => {
 
   // Import after mocks are set up — Vitest hoists `vi.mock` but the
   // router itself must be loaded once mocks are in place.
-  const { default: logsRouter } = await import('../logs.js');
+  const { default: logsRouter } = await import('../logs');
   const app = express();
   app.use(express.json());
   app.use('/api/canvas/logs', logsRouter);

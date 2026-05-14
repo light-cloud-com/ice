@@ -6,7 +6,7 @@
  * change for every external consumer.
  */
 import { describe, expect, it } from 'vitest';
-import { PROVIDER_MAP, TYPE_MAP } from '../data.js';
+import { PROVIDER_MAP, TYPE_MAP } from '../data';
 
 describe('PROVIDER_MAP', () => {
   it('exports a non-empty record', () => {

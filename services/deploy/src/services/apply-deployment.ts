@@ -19,30 +19,30 @@ import {
   finishDeploySnapshot,
   releaseTempDir,
   startDeploySnapshot,
-} from './deploy-locks.js';
+} from './deploy-locks';
 import {
   getExistingNameMap,
   getResourceMap,
   seedMappingsFromHistory,
-} from './resource-mapping.service.js';
-import { resolveProviderAuth } from '../providers/registry.js';
-import { computeCompleteTotals, deriveCompleteOutcome, computeDeploySummary } from '../utils/deploy-outcome.js';
-import { buildResourceNameMaps, makeFindSourceNodeId } from '../utils/find-source-node-id.js';
-import { resolveProjectContext } from '../utils/project-context.js';
-import { createDeployer, getCoreEngine } from './deployer-factory.js';
-import { autoEnableGCPApis } from './gcp-api-enabler.js';
-import { flushSnapshotNow } from './snapshot-persister.js';
-import { emitDeployEvent, emitLog } from './deploy-event-dispatcher.js';
-import { makeSchedulerCallbacks } from './scheduler-callbacks.js';
-import { buildBaselineGraph } from './baseline-graph.js';
-import { retryAfterQuotaCleanup } from './quota-retry.js';
+} from './resource-mapping.service';
+import { resolveProviderAuth } from '../providers/registry';
+import { computeCompleteTotals, deriveCompleteOutcome, computeDeploySummary } from '../utils/deploy-outcome';
+import { buildResourceNameMaps, makeFindSourceNodeId } from '../utils/find-source-node-id';
+import { resolveProjectContext } from '../utils/project-context';
+import { createDeployer, getCoreEngine } from './deployer-factory';
+import { autoEnableGCPApis } from './gcp-api-enabler';
+import { flushSnapshotNow } from './snapshot-persister';
+import { emitDeployEvent, emitLog } from './deploy-event-dispatcher';
+import { makeSchedulerCallbacks } from './scheduler-callbacks';
+import { buildBaselineGraph } from './baseline-graph';
+import { retryAfterQuotaCleanup } from './quota-retry';
 import {
   ensureAutoDeployRules,
   logDiffForDebugging,
   logSourceRepoDiagnostics,
   normalizeIdempotentResultErrors,
   persistResourceMappings,
-} from './apply-pipeline-helpers.js';
+} from './apply-pipeline-helpers';
 
 export async function applyDeployment(
   cardId: string,
@@ -234,7 +234,6 @@ export async function applyDeployment(
     const gcpProject = scopedAuth.scope.project || authClient?.projectId || authClient?.project_id;
     if ((options.provider || 'gcp') === 'gcp') {
       const accessToken = scopedAuth.accessToken || null;
-      console.log('Auto-enable: project=', gcpProject, 'hasToken=', !!accessToken);
       if (accessToken) {
         await autoEnableGCPApis(gcpProject, accessToken, nodes, (msg: string) => {
           emitLog(cardId, msg);

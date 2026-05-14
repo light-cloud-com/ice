@@ -9,7 +9,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { create_mutable_graph_state } from '../types.js';
+import { create_mutable_graph_state } from '../types';
 
 describe('create_mutable_graph_state', () => {
   it('returns an object with five empty Map fields', () => {

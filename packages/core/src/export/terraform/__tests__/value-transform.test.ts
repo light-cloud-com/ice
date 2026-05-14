@@ -10,7 +10,7 @@ import {
   format_dependencies,
   map_properties,
   transform_value,
-} from '../value-transform.js';
+} from '../value-transform';
 
 describe('map_properties', () => {
   it('passes through ordinary keys verbatim (snake_case preserved)', () => {

@@ -36,7 +36,7 @@ import {
   writeAuditEntry,
   listAuditEntries,
   getAuditEntry,
-} from '../ai-audit.service.js';
+} from '../ai-audit.service';
 
 beforeEach(() => {
   vi.clearAllMocks();

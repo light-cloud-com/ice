@@ -26,8 +26,8 @@ import {
   create_validator,
   type Validator,
   type ValidationIssue,
-} from '../base-validator.js';
-import { create_mutable_graph, type MutableGraph } from '../../mutable-graph.js';
+} from '../base-validator';
+import { create_mutable_graph, type MutableGraph } from '../../mutable-graph';
 
 function fresh_graph(): MutableGraph {
   return create_mutable_graph('test');

@@ -18,18 +18,18 @@
  *     PROPERTY_EXTRACTORS …` error path instead of dropping config.
  */
 import { describe, it, expect } from 'vitest';
-import { PROPERTY_EXTRACTORS } from '../dispatch.js';
+import { PROPERTY_EXTRACTORS } from '../dispatch';
 import {
   extract_cloud_run_properties,
   extract_cloud_run_job_properties,
   extract_cloud_functions_properties,
   extract_cloud_scheduler_properties,
-} from '../compute.js';
+} from '../compute';
 import {
   extract_cloud_sql_properties,
   extract_firestore_properties,
   extract_memorystore_properties,
-} from '../database.js';
+} from '../database';
 import {
   extract_storage_bucket_properties,
   extract_pubsub_properties,
@@ -38,7 +38,7 @@ import {
   extract_vpc_properties,
   extract_subnet_properties,
   extract_cloud_armor_properties,
-} from '../network.js';
+} from '../network';
 import {
   extract_secret_manager_properties,
   extract_identity_platform_properties,
@@ -52,7 +52,7 @@ import {
   extract_custom_domain_properties,
   extract_backend_bucket_properties,
   extract_firebase_hosting_properties,
-} from '../ancillary.js';
+} from '../ancillary';
 
 describe('PROPERTY_EXTRACTORS table shape', () => {
   it('has exactly 27 entries (matches the 27 resolved GCP types the deployer supports)', () => {

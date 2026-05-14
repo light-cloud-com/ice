@@ -139,7 +139,7 @@ function commonArgs(overrides: any = {}) {
 }
 
 async function resetService() {
-  const mod = await import('../log-stream.service.js');
+  const mod = await import('../log-stream.service');
   mod.__testing.reset();
   ioEmits.length = 0;
 }
@@ -193,7 +193,7 @@ describe('subscribe — polling happy path', () => {
       ];
     });
 
-    const mod = await import('../log-stream.service.js');
+    const mod = await import('../log-stream.service');
     const result = await mod.subscribe(commonArgs());
     expect(result.resolution.state).toBe('resolved');
 
@@ -239,7 +239,7 @@ describe('subscribe — polling cursor advance', () => {
       return [[]];
     });
 
-    const mod = await import('../log-stream.service.js');
+    const mod = await import('../log-stream.service');
     await mod.subscribe(commonArgs());
 
     await vi.advanceTimersByTimeAsync(0); // first poll tick (after IAM probe)
@@ -272,7 +272,7 @@ describe('subscribe — polling reconnect on transient error', () => {
       ];
     });
 
-    const mod = await import('../log-stream.service.js');
+    const mod = await import('../log-stream.service');
     await mod.subscribe(commonArgs());
 
     await vi.advanceTimersByTimeAsync(0);
@@ -310,7 +310,7 @@ describe('subscribe — tail happy path', () => {
     };
     tailEntriesImpl = vi.fn(() => fakeStream);
 
-    const mod = await import('../log-stream.service.js');
+    const mod = await import('../log-stream.service');
     await mod.subscribe(commonArgs({ mode: 'tail' }));
 
     await vi.advanceTimersByTimeAsync(0); // let IAM probe finish.
@@ -360,7 +360,7 @@ describe('subscribe — tail reconnect on error', () => {
       };
     });
 
-    const mod = await import('../log-stream.service.js');
+    const mod = await import('../log-stream.service');
     await mod.subscribe(commonArgs({ mode: 'tail' }));
     await vi.advanceTimersByTimeAsync(0);
 
@@ -409,7 +409,7 @@ describe('subscribe — IAM probe permission denied', () => {
       throw new Error('should not be called');
     });
 
-    const mod = await import('../log-stream.service.js');
+    const mod = await import('../log-stream.service');
     const result = await mod.subscribe(commonArgs());
 
     expect(result.resolution.state).toBe('permission-denied');
@@ -445,7 +445,7 @@ describe('subscribe — source resolution edge cases', () => {
     prismaMock.environment.findUnique.mockResolvedValue({ type: 'production', region: 'us-central1' });
     prismaMock.deployedResourceMapping.findFirst.mockResolvedValue(null);
 
-    const mod = await import('../log-stream.service.js');
+    const mod = await import('../log-stream.service');
     const result = await mod.subscribe(commonArgs());
     expect(result.resolution.state).toBe('none');
 
@@ -462,7 +462,7 @@ describe('subscribe — source resolution edge cases', () => {
       extraEdges: [{ source: 'src-2', target: 'log-1' }],
     });
 
-    const mod = await import('../log-stream.service.js');
+    const mod = await import('../log-stream.service');
     const result = await mod.subscribe(commonArgs());
     expect(result.resolution.state).toBe('ambiguous');
     if (result.resolution.state === 'ambiguous') {
@@ -479,7 +479,7 @@ describe('subscribe — source resolution edge cases', () => {
     setSupportedSourceCanvas({});
     prismaMock.deployedResourceMapping.findFirst.mockResolvedValue(null);
 
-    const mod = await import('../log-stream.service.js');
+    const mod = await import('../log-stream.service');
     const result = await mod.subscribe(commonArgs());
     expect(result.resolution.state).toBe('pre-deploy');
     if (result.resolution.state === 'pre-deploy') {
@@ -520,7 +520,7 @@ describe('subscribe — candidateSources skips Prisma edges read', () => {
       private_key: '-----BEGIN PRIVATE KEY-----\nfake\n-----END PRIVATE KEY-----\n',
     });
 
-    const mod = await import('../log-stream.service.js');
+    const mod = await import('../log-stream.service');
     const result = await mod.subscribe(
       commonArgs({
         candidateSources: [{ nodeId: 'src-1', iceType: 'Compute.Container', label: 'API Server' }],
@@ -571,7 +571,7 @@ describe('subscribe — candidateSources skips Prisma edges read', () => {
     });
     getEntriesImpl = vi.fn(async () => [[]]); // IAM probe ok.
 
-    const mod = await import('../log-stream.service.js');
+    const mod = await import('../log-stream.service');
     const result = await mod.subscribe(
       commonArgs({
         candidateSources: [{ nodeId: 'src-1', iceType: 'Compute.Container' }],
@@ -592,7 +592,7 @@ describe('subscribe — candidateSources skips Prisma edges read', () => {
     setSupportedSourceCanvas({}); // populates a valid card with edges + mapping
     getEntriesImpl = vi.fn(async () => [[]]);
 
-    const mod = await import('../log-stream.service.js');
+    const mod = await import('../log-stream.service');
     const result = await mod.subscribe(commonArgs({ candidateSources: [] }));
 
     // The fallback Prisma read produced the resolution.
@@ -621,7 +621,7 @@ describe('subscribe — multi-subscriber reuse', () => {
       return [[]];
     });
 
-    const mod = await import('../log-stream.service.js');
+    const mod = await import('../log-stream.service');
     const r1 = await mod.subscribe(commonArgs());
     const r2 = await mod.subscribe(commonArgs());
 
@@ -650,7 +650,7 @@ describe('unsubscribe — idle teardown after 60s', () => {
     setSupportedSourceCanvas({});
     getEntriesImpl = vi.fn(async () => [[]]);
 
-    const mod = await import('../log-stream.service.js');
+    const mod = await import('../log-stream.service');
     const r1 = await mod.subscribe(commonArgs());
     const r2 = await mod.subscribe(commonArgs());
 
@@ -674,7 +674,7 @@ describe('unsubscribe — idle teardown after 60s', () => {
     setSupportedSourceCanvas({});
     getEntriesImpl = vi.fn(async () => [[]]);
 
-    const mod = await import('../log-stream.service.js');
+    const mod = await import('../log-stream.service');
     const r1 = await mod.subscribe(commonArgs());
     await mod.unsubscribe(r1.subscriptionId);
 
@@ -699,7 +699,7 @@ describe('unsubscribe — idle teardown after 60s', () => {
     setSupportedSourceCanvas({});
     getEntriesImpl = vi.fn(async () => [[]]);
 
-    const mod = await import('../log-stream.service.js');
+    const mod = await import('../log-stream.service');
     const r1 = await mod.subscribe(commonArgs());
     await mod.unsubscribe(r1.subscriptionId);
     // The first unsubscribe scheduled a 60s timer. Re-attach a subscriber
@@ -741,7 +741,7 @@ describe('subscribe — mode change between subscribers triggers a restart', () 
       };
     });
 
-    const mod = await import('../log-stream.service.js');
+    const mod = await import('../log-stream.service');
     const r1 = await mod.subscribe(commonArgs({ mode: 'polling' }));
     await vi.advanceTimersByTimeAsync(0);
     const r2 = await mod.subscribe(commonArgs({ mode: 'tail' }));
@@ -765,7 +765,7 @@ describe('subscribe — permission-denied resolution emits logs:error to the roo
     setSupportedSourceCanvas({});
     credentialsMock.getDecryptedCredentials.mockResolvedValueOnce(null);
 
-    const mod = await import('../log-stream.service.js');
+    const mod = await import('../log-stream.service');
     const result = await mod.subscribe(commonArgs());
 
     // Whatever holding state resolveSource picked, we either landed on
@@ -792,7 +792,7 @@ describe('subscribe — permission-denied resolution emits logs:error to the roo
 
 describe('getActiveSubscriptions', () => {
   it('returns an empty map when no streams are active', async () => {
-    const mod = await import('../log-stream.service.js');
+    const mod = await import('../log-stream.service');
     expect(mod.getActiveSubscriptions().size).toBe(0);
   });
 
@@ -801,7 +801,7 @@ describe('getActiveSubscriptions', () => {
     setSupportedSourceCanvas({});
     getEntriesImpl = vi.fn(async () => [[]]);
 
-    const mod = await import('../log-stream.service.js');
+    const mod = await import('../log-stream.service');
     const r1 = await mod.subscribe(commonArgs());
     const r2 = await mod.subscribe(commonArgs());
 

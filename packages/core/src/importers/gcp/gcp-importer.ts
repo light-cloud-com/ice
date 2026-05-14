@@ -4,10 +4,10 @@
  * Imports resources directly from GCP APIs into ICE graph format.
  */
 
-import { infer_relationships } from './relationships.js';
+import { infer_relationships } from './relationships';
 import { ComputeService, StorageService, AssetInventoryService, BaseGCPService } from "./services";
-import { get_ice_type, get_behavior, map_properties } from './type-mapper.js';
-import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph.js';
+import { get_ice_type, get_behavior, map_properties } from './type-mapper';
+import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph';
 import type {
   GCPImportOptions,
   GCPImportResult,
@@ -17,8 +17,8 @@ import type {
   GCPImportMetadata,
   GCPResource,
   GCPServiceType,
-} from './types.js';
-import type { NodeInput, EdgeInput } from '../../types/graph.js';
+} from './types';
+import type { NodeInput, EdgeInput } from '../../types/graph';
 
 // =============================================================================
 // Default Options

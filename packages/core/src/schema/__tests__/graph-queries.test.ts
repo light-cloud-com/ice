@@ -13,12 +13,12 @@ import {
   get_dependencies,
   get_dependents,
   get_equivalents,
-} from '../embedded/graph-queries.js';
+} from '../embedded/graph-queries';
 import type {
   SqliteResourceType,
   SqliteSchemaRegistry,
-} from '../embedded/sqlite-types.js';
-import type { IceType } from '../schema-provider.js';
+} from '../embedded/sqlite-types';
+import type { IceType } from '../schema-provider';
 
 function baseResource(over: Partial<SqliteResourceType> = {}): SqliteResourceType {
   return {

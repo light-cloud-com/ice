@@ -38,7 +38,7 @@ import {
   orderTargetsForDelete,
   resolveDestroyAllProject,
   type DestroyTarget,
-} from '../destroy-targets.js';
+} from '../destroy-targets';
 // @ts-ignore — resolved at runtime via pnpm workspace; mocked above
 import prismaModule from '@ice/db';
 

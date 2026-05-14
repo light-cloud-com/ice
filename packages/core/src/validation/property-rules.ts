@@ -6,9 +6,9 @@
  * numeric ranges, provider-specific options, cross-field constraints.
  */
 
-import { getPropertiesForIceType } from './schema-bridge.js';
-import type { CanvasIssue, ValidatableNode, ValidationContext } from './types.js';
-import type { HighLevelProperty } from '../resources/high-level-resources.js';
+import { getPropertiesForIceType } from './schema-bridge';
+import type { CanvasIssue, ValidatableNode, ValidationContext } from './types';
+import type { HighLevelProperty } from '../resources/high-level-resources';
 
 /**
  * Validate all node properties against their schemas.

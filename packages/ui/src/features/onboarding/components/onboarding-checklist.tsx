@@ -7,13 +7,12 @@
  */
 
 import { Check, X, ChevronUp, ChevronDown, ListChecks } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
 import { useTour } from '../../tour';
 import { useTranslation } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
-import { checkGitHubConnection } from '../../../store/slices/integrations-slice';
-import type { RootState, AppDispatch } from '../../../store';
+import type { RootState } from '../../../store';
 
 interface ChecklistItem {
   id: string;
@@ -26,12 +25,9 @@ interface ChecklistItem {
 const STORAGE_KEY = 'ice-onboarding-checklist-dismissed';
 
 export const OnboardingChecklist: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
   const { t } = useTranslation();
   const { start: startTour, isCompleted: isTourCompleted } = useTour();
   const user = useSelector((s: RootState) => s.account.user);
-  const githubStatus = useSelector((s: RootState) => s.integrations.integrations.github);
-  const gcpStatus = useSelector((s: RootState) => s.integrations.integrations.gcp);
 
   const [dismissed, setDismissed] = useState(() => {
     try {
@@ -58,18 +54,13 @@ export const OnboardingChecklist: React.FC = () => {
     setTourHint(t('onboarding.checklist.openProjectForTour'));
   };
 
-  useEffect(() => {
-    dispatch(checkGitHubConnection());
-  }, [dispatch]);
-
   // Don't show if user hasn't completed onboarding or if dismissed
   if (!user?.onboardingCompleted || dismissed) return null;
 
+  // Cloud-provider + GitHub setup used to be checklist items here, but
+  // the canvas tour now covers those surfaces (steps 8-9), so the
+  // checklist collapses to "take the tour."
   const items: ChecklistItem[] = [
-    { id: 'account', label: t('onboarding.checklist.createAccount'), done: true },
-    { id: 'provider', label: t('onboarding.checklist.chooseProvider'), done: !!user.defaultProvider },
-    { id: 'cloud', label: t('onboarding.checklist.connectCloud'), done: gcpStatus?.status === 'connected' },
-    { id: 'github', label: t('onboarding.checklist.connectGithub'), done: githubStatus?.status === 'connected' },
     {
       id: 'canvas-tour',
       label: t('onboarding.checklist.takeCanvasTour'),

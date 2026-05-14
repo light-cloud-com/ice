@@ -18,9 +18,9 @@ import {
   extract_account_from_arn,
   extract_region_from_arn,
   parse_tags,
-} from './arn-helpers.js';
-import type { AWSSdk } from './sdk-init.js';
-import type { AWSImportOptions, AWSResource } from './types.js';
+} from './arn-helpers';
+import type { AWSSdk } from './sdk-init';
+import type { AWSImportOptions, AWSResource } from './types';
 
 type ResolvedOptions = Required<Omit<AWSImportOptions, 'profile'>>;
 

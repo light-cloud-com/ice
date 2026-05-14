@@ -32,8 +32,8 @@ import {
   FIREBASE_MGMT_API,
   restRequest,
   type RestResponse,
-} from '../rest-client.js';
-import type { GCPHandlerContext } from '../../../types.js';
+} from '../rest-client';
+import type { GCPHandlerContext } from '../../../types';
 
 /**
  * Build a minimal `GCPHandlerContext` whose `rest_client.requestRaw`

@@ -7,8 +7,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { validateCanvas, validateNode } from '../canvas-validator.js';
-import type { ValidatableNode, ValidatableEdge } from '../types.js';
+import { validateCanvas, validateNode } from '../canvas-validator';
+import type { ValidatableNode, ValidatableEdge } from '../types';
 
 const node = (
   id: string,

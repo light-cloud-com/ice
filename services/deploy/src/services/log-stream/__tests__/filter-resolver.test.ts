@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { resolveLogFilter, type SourceContext } from '../filter-resolver.js';
+import { resolveLogFilter, type SourceContext } from '../filter-resolver';
 
 const PROJECT_ID = 'my-project';
 const REGION = 'us-central1';

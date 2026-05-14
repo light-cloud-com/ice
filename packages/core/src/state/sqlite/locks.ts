@@ -27,15 +27,15 @@
  *    returns expired locks.
  */
 
-import { create_deployment_id } from '../../types/deployment.js';
-import { InternalError } from '../../types/errors.js';
-import { failure, success } from '../../types/result.js';
-import { ensure_db, emit_event, wrap_error } from './resources.js';
-import type { DeploymentId } from '../../types/deployment.js';
-import type { IceError } from '../../types/errors.js';
-import type { Result } from '../../types/result.js';
-import type { StateLock } from '../state-store.js';
-import type { LockRow, SqliteContext } from './types.js';
+import { create_deployment_id } from '../../types/deployment';
+import { InternalError } from '../../types/errors';
+import { failure, success } from '../../types/result';
+import { ensure_db, emit_event, wrap_error } from './resources';
+import type { DeploymentId } from '../../types/deployment';
+import type { IceError } from '../../types/errors';
+import type { Result } from '../../types/result';
+import type { StateLock } from '../state-store';
+import type { LockRow, SqliteContext } from './types';
 
 // =============================================================================
 // Row translation

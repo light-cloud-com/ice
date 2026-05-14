@@ -21,7 +21,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   initialize_registry,
   resolve_db_path,
-} from '../embedded/initialization.js';
+} from '../embedded/initialization';
 
 /**
  * resolve_db_path inspects `<cwd>/.ice/schemas.db`. Rather than mock fs

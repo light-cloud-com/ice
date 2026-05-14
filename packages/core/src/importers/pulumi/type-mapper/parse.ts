@@ -30,7 +30,7 @@
  *    because Pulumi class names don't contain `:`).
  */
 
-import type { ParsedUrn } from '../types.js';
+import type { ParsedUrn } from '../types';
 
 // =============================================================================
 // URN Parsing

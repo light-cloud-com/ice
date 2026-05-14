@@ -19,7 +19,7 @@
  *   the caller never has to wrap each call in try/catch.
  */
 
-import type { GCPHandlerContext } from '../../types.js';
+import type { GCPHandlerContext } from '../../types';
 
 /** Base URL for Firebase Hosting REST APIs (sites, versions, releases). */
 export const FIREBASE_HOSTING_API = 'https://firebasehosting.googleapis.com/v1beta1';

@@ -4,7 +4,7 @@
  * Deploys resources to Amazon Web Services using direct API calls.
  */
 
-import type { DeployOptions, ResourceDeployResult, ProviderDeployer } from '../types.js';
+import type { DeployOptions, ResourceDeployResult, ProviderDeployer } from '../types';
 
 /**
  * AWS resource deployer.

@@ -5,8 +5,8 @@
  * violations. Extracted from `validators.ts`.
  */
 
-import type { Validator, ValidationIssue } from '../base-validator.js';
-import type { MutableGraph } from '../../mutable-graph.js';
+import type { Validator, ValidationIssue } from '../base-validator';
+import type { MutableGraph } from '../../mutable-graph';
 
 /**
  * Validates that sensitive data is properly marked.

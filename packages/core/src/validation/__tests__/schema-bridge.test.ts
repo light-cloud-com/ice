@@ -11,7 +11,7 @@ import {
   getPropertiesForIceType,
   getSupportedProviders,
   isKnownIceType,
-} from '../schema-bridge.js';
+} from '../schema-bridge';
 
 describe('getResourceForIceType', () => {
   it('returns the matching HighLevelResource for a known iceType', () => {

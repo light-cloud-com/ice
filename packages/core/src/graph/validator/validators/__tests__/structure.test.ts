@@ -5,13 +5,13 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { create_mutable_graph } from '../../../mutable-graph.js';
+import { create_mutable_graph } from '../../../mutable-graph';
 import {
   CycleValidator,
   ReferenceValidator,
   NamingValidator,
   ConnectivityValidator,
-} from '../structure.js';
+} from '../structure';
 
 // ─── CycleValidator ──────────────────────────────────────────────────────────
 

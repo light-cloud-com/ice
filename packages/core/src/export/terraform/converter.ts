@@ -34,14 +34,14 @@
  *    every other value (including undefined) emits HCL.
  */
 
-import { sanitize_name } from './case-utils.js';
-import { to_hcl, to_json } from './hcl-formatter.js';
-import { fallback_type_mapping } from './type-mapping.js';
-import { format_dependencies, map_properties } from './value-transform.js';
-import type { EmbeddedSchemaProvider } from '../../schema/embedded-schema-provider.js';
-import type { MutableGraph } from '../../graph/mutable-graph.js';
-import type { IceType } from '../../schema/schema-provider.js';
-import type { Node } from '../../types/graph.js';
+import { sanitize_name } from './case-utils';
+import { to_hcl, to_json } from './hcl-formatter';
+import { fallback_type_mapping } from './type-mapping';
+import { format_dependencies, map_properties } from './value-transform';
+import type { EmbeddedSchemaProvider } from '../../schema/embedded-schema-provider';
+import type { MutableGraph } from '../../graph/mutable-graph';
+import type { IceType } from '../../schema/schema-provider';
+import type { Node } from '../../types/graph';
 import type {
   TerraformBlock,
   TerraformConfig,
@@ -49,7 +49,7 @@ import type {
   TerraformExportResult,
   TerraformProviderConfig,
   TerraformResource,
-} from './types.js';
+} from './types';
 
 /**
  * Build a `node.id -> node.id[]` dependency map from a graph's edges.

@@ -28,22 +28,22 @@ vi.mock('@ice/service-credentials', () => ({
   getDecryptedCredentials: vi.fn(),
 }));
 
-vi.mock('../../providers/registry.js', () => ({
+vi.mock('../../providers/registry', () => ({
   resolveProviderAuth: vi.fn(),
   cleanupProviderAuth: vi.fn(),
 }));
 
-vi.mock('../deployer-factory.js', () => ({
+vi.mock('../deployer-factory', () => ({
   createDeployer: vi.fn(),
 }));
 
-import { checkDrift } from '../drift.service.js';
+import { checkDrift } from '../drift.service';
 // @ts-ignore — resolved at runtime via pnpm workspace; mocked above
 import prismaModule from '@ice/db';
 // @ts-ignore — resolved at runtime via pnpm workspace; mocked above
 import * as credentialsModule from '@ice/service-credentials';
-import { resolveProviderAuth, cleanupProviderAuth } from '../../providers/registry.js';
-import { createDeployer } from '../deployer-factory.js';
+import { resolveProviderAuth, cleanupProviderAuth } from '../../providers/registry';
+import { createDeployer } from '../deployer-factory';
 
 const findManyMock = (prismaModule as any).deployedResourceMapping.findMany as ReturnType<typeof vi.fn>;
 const getDecryptedCredentialsMock = (credentialsModule as any).getDecryptedCredentials as ReturnType<typeof vi.fn>;
@@ -61,7 +61,7 @@ describe('checkDrift — canonical export path', () => {
   });
 
   it('also re-exports from deploy.service.js for the orchestrator barrel', async () => {
-    const orch = await import('../deploy.service.js');
+    const orch = await import('../deploy.service');
     expect(orch.checkDrift).toBe(checkDrift);
   });
 });

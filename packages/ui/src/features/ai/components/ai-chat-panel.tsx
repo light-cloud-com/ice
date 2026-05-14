@@ -15,10 +15,11 @@
  *   - `./empty-state.tsx`                      — pre-conversation hint (rf-aichat-7)
  */
 
-import { Sparkles, Loader2, Undo2, Send, Plus, MessageSquare, Cpu, Cloud } from 'lucide-react';
+import { Sparkles, Loader2, Undo2, Send, Plus, MessageSquare, Cpu, Cloud, KeyRound } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from '../../../i18n';
+import { AnthropicConnectModal } from '../../../features/integrations/components/anthropic-connect-modal';
 import { PanelHeader, PanelHeaderAction } from '../../../shared/components/ui/panel-header';
 import { cn } from '../../../shared/utils/cn';
 import { selectActiveCard } from '../../../store/slices/cards-slice';
@@ -66,8 +67,16 @@ export const AiChatPanel: React.FC = () => {
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [providerInfo, setProviderInfo] = useState<ProviderInfo | null>(null);
+  const [showAnthropicModal, setShowAnthropicModal] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // `providerInfo === null` is the still-loading state (the health probe
+  // is in-flight). `providerInfo.ok === false` is the real "no key
+  // configured" state we want to surface to the user. We don't gate the
+  // chat on `null` to avoid a flash of the disconnected CTA before the
+  // first health probe resolves.
+  const aiDisconnected = providerInfo !== null && !providerInfo.ok;
 
   // ── Handlers (extracted to useChatHandlers — rf-aichat-3) ─────────────────
 
@@ -144,6 +153,16 @@ export const AiChatPanel: React.FC = () => {
               )}
               {providerInfo.model || (providerInfo.isLocal ? 'Local' : 'Cloud')}
             </span>
+          ) : aiDisconnected ? (
+            <button
+              type="button"
+              onClick={() => setShowAnthropicModal(true)}
+              className="flex items-center gap-1 px-1.5 py-0.5 rounded text-ice-2xs font-medium leading-none text-amber-500 hover:bg-amber-500/10 transition-colors"
+              title={t('ai.chat.disconnectedBadgeTooltip')}
+            >
+              <KeyRound aria-hidden="true" className="w-2.5 h-2.5 shrink-0" />
+              {t('ai.chat.disconnectedBadge')}
+            </button>
           ) : undefined
         }
         actions={
@@ -178,7 +197,27 @@ export const AiChatPanel: React.FC = () => {
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-3 min-h-0">
-        {messages.length === 0 && !isProcessing && (
+        {aiDisconnected && messages.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-full text-center px-4 gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+              <KeyRound aria-hidden="true" className="w-5 h-5 text-amber-500" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-ice-text-1">{t('ai.chat.disconnectedTitle')}</p>
+              <p className="text-ice-xs text-ice-text-3 max-w-[220px]">{t('ai.chat.disconnectedDesc')}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowAnthropicModal(true)}
+              className="ice-btn ice-btn-primary text-xs"
+            >
+              <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
+              {t('ai.chat.connectClaude')}
+            </button>
+          </div>
+        )}
+
+        {!aiDisconnected && messages.length === 0 && !isProcessing && (
           <EmptyState activeCard={activeCard} t={t} onSuggestionClick={handleSuggestionClick} />
         )}
 
@@ -224,16 +263,16 @@ export const AiChatPanel: React.FC = () => {
               el.style.height = Math.min(el.scrollHeight, 120) + 'px';
             }}
             onKeyDown={handleKeyDown}
-            placeholder={t('ai.chat.inputPlaceholder')}
+            placeholder={aiDisconnected ? t('ai.chat.disconnectedPlaceholder') : t('ai.chat.inputPlaceholder')}
             rows={1}
             className="w-full bg-transparent text-ice-sm text-ice-text-1 placeholder:text-ice-text-3/40 outline-none resize-none pl-4 pr-12 py-3 min-h-[44px]"
-            disabled={isProcessing}
+            disabled={isProcessing || aiDisconnected}
           />
           <button
             id="ice-ai-btn-send"
             aria-label={t('ai.chat.sendMessage')}
             onClick={handleSubmit}
-            disabled={!input.trim() || isProcessing}
+            disabled={!input.trim() || isProcessing || aiDisconnected}
             className={cn(
               'absolute right-2 bottom-2 p-2 rounded-xl transition-all outline-none focus-visible:ring-2 focus-visible:ring-ice-accent',
               input.trim() && !isProcessing
@@ -250,6 +289,7 @@ export const AiChatPanel: React.FC = () => {
         </div>
         <p className="text-center text-ice-2xs text-ice-text-3/30 mt-1.5">{t('ai.chat.inputHint')}</p>
       </div>
+      <AnthropicConnectModal isOpen={showAnthropicModal} onClose={() => setShowAnthropicModal(false)} />
     </div>
   );
 };

@@ -17,13 +17,13 @@ import http from 'node:http';
 import type { AddressInfo } from 'node:net';
 
 // Sentinel routers so we can prove BOTH leaf routers are mounted.
-vi.mock('../routes/ai-conversations.js', () => {
+vi.mock('../routes/ai-conversations', () => {
   const r = express.Router();
   r.get('/conversations/sentinel', (_req, res) => res.json({ from: 'conversations' }));
   return { default: r };
 });
 
-vi.mock('../routes/ai.js', () => {
+vi.mock('../routes/ai', () => {
   const r = express.Router();
   r.get('/sentinel', (_req, res) => res.json({ from: 'ai' }));
   return { default: r };
@@ -31,7 +31,7 @@ vi.mock('../routes/ai.js', () => {
 
 // ai.service is star-exported by index.ts. Mock with a known sentinel so
 // we can assert the re-export survives.
-vi.mock('../services/ai.service.js', () => ({
+vi.mock('../services/ai.service', () => ({
   __sentinel: 'ai-service-export-marker',
   getAiProvider: vi.fn(),
   processCanvasIntent: vi.fn(),
@@ -53,7 +53,7 @@ afterEach(async () => {
 
 describe('createAiRouter', () => {
   it('returns an Express router that mounts the AI router at /ai', async () => {
-    const { createAiRouter } = await import('../index.js');
+    const { createAiRouter } = await import('../index');
     const router = createAiRouter();
 
     const app = express();
@@ -71,7 +71,7 @@ describe('createAiRouter', () => {
   });
 
   it('also mounts the AI conversations router at /ai (both leaf routers register)', async () => {
-    const { createAiRouter } = await import('../index.js');
+    const { createAiRouter } = await import('../index');
     const router = createAiRouter();
 
     const app = express();
@@ -89,7 +89,7 @@ describe('createAiRouter', () => {
   });
 
   it('returns a fresh router each call (no shared listener state)', async () => {
-    const { createAiRouter } = await import('../index.js');
+    const { createAiRouter } = await import('../index');
     const a = createAiRouter();
     const b = createAiRouter();
     expect(a).not.toBe(b);
@@ -98,7 +98,7 @@ describe('createAiRouter', () => {
 
 describe('re-exports from ai.service', () => {
   it('forwards the ai.service namespace via `export * from`', async () => {
-    const mod = (await import('../index.js')) as Record<string, unknown>;
+    const mod = (await import('../index')) as Record<string, unknown>;
     // The mocked sentinel proves the star export went through.
     expect(mod.__sentinel).toBe('ai-service-export-marker');
     expect(typeof mod.getAiProvider).toBe('function');

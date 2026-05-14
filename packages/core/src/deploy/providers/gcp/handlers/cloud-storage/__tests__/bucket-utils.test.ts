@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { placeholderIndexHtml, placeholderNotFoundHtml, resolveOutputUrl } from '../bucket-utils.js';
+import { placeholderIndexHtml, placeholderNotFoundHtml, resolveOutputUrl } from '../bucket-utils';
 
 describe('cloud-storage/bucket-utils', () => {
   describe('placeholderIndexHtml()', () => {

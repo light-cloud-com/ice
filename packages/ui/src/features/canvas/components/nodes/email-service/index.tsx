@@ -5,14 +5,13 @@
  * labeled lines. Editing moves to the properties panel.
  */
 
+import { ES_FIELD_HEIGHT, ES_HEADER_HEIGHT, ES_PADDING } from '@ice/constants';
 import { Mail } from 'lucide-react';
 import React from 'react';
 import { CardShell, LabelLine } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
-export const ES_HEADER_HEIGHT = 48;
-export const ES_FIELD_HEIGHT = 30;
-export const ES_PADDING = 12;
+export { ES_HEADER_HEIGHT, ES_FIELD_HEIGHT, ES_PADDING };
 
 export function computeEmailServiceHeight(): number {
   return ES_HEADER_HEIGHT + ES_PADDING + ES_FIELD_HEIGHT * 2 + 6 + ES_PADDING;

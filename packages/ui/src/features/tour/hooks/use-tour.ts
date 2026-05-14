@@ -18,7 +18,11 @@
  *   - `previous()` no-ops at index 0.
  *   - `skip()` flags the telemetry as skipped, marks completed, and
  *     persists. Effectively a "I've seen this, don't show me again".
- *   - `stop()` closes without marking completed (Escape key path).
+ *   - `stop()` closes the tour. On earlier steps it just resets the
+ *     active tour without marking completed (Esc / X mid-flow means
+ *     "remind me later"). On the LAST step it marks completed +
+ *     persists — the user has seen every step, so the tour shouldn't
+ *     autoplay again on the next session.
  */
 import { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -60,7 +64,11 @@ export interface UseTour {
   previous: () => void;
   /** Mark active tour completed (telemetry flagged as skipped). */
   skip: () => void;
-  /** Close active tour without marking completed. */
+  /**
+   * Close active tour. Marks completed only when called on the LAST
+   * step (user has seen every step); earlier-step closes leave the
+   * tour resumable on a future session.
+   */
   stop: () => void;
   /** Hydrate completedTours from the server (called by account hydration). */
   hydrate: (completedTours: string[]) => void;
@@ -135,8 +143,19 @@ export function useTour(): UseTour {
       // but skipping the dispatch avoids action-log noise.
       return;
     }
+    const total = getTour(activeTourId)?.steps.length ?? 0;
+    // Closing (X) or Escaping ON THE LAST STEP counts as completing: the
+    // user has seen every step, so we mark the tour done and persist so
+    // it doesn't autoplay on the next session. Earlier-step closes stay
+    // non-completing so the user can resume later.
+    if (total > 0 && stepIdx >= total - 1) {
+      const id = activeTourId;
+      dispatch(markCompleted(id));
+      void dispatch(persistCompletedTour(id));
+      return;
+    }
     dispatch(stopTour());
-  }, [dispatch, activeTourId]);
+  }, [dispatch, activeTourId, stepIdx]);
 
   const hydrate = useCallback(
     (ids: string[]) => {

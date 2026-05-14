@@ -329,11 +329,13 @@ describe('TourRunner — phase progression', () => {
     expect(last.stepId).toBe('step-1');
   });
 
-  it('resolver missing → auto-advances to next step (warns in console)', async () => {
+  it('resolver missing → stops the tour (warns in console, does NOT mark completed)', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-    // Neither anchor is in the DOM — both steps will fail and advance.
-    // We assert the warn fires with the step id and the auto-advance
-    // takes the tour past step 1 (stepIdx flips at least once).
+    // Anchor isn't in the DOM. Previously the runner auto-advanced
+    // through every missing step and silently "completed" the tour.
+    // Now: any missing target stops the tour without marking it
+    // completed, so the user can re-launch when the right surface is
+    // up.
     const t = makeTour({ id: 'm-tour' });
     mocks.tours = [t];
     registerTour(t);
@@ -342,31 +344,17 @@ describe('TourRunner — phase progression', () => {
     act(() => {
       store.dispatch(startTour({ tourId: 'm-tour', totalSteps: 2 }));
     });
-    // Wait long enough for both rAF budgets to exhaust. Budget is ~30
-    // frames each → ~500ms at 60Hz; jsdom backs rAF onto ~16ms
-    // setTimeout, so the real elapsed is closer to 500ms × 30 = ~16s
-    // worst case, but rAF throttling under jsdom is usually faster.
-    // We poll for the stepIdx flip + completion.
     for (let i = 0; i < 100; i++) {
       // eslint-disable-next-line no-await-in-loop
       await flushAsync();
-      // Either we've advanced (stepIdx > 0) or the tour completed
-      // (activeTourId nulled out).
-      if (
-        store.getState().tour.stepIdx >= 1 ||
-        store.getState().tour.activeTourId === null
-      ) {
-        break;
-      }
+      if (store.getState().tour.activeTourId === null) break;
     }
-    // Warn fired for at least step-1.
     expect(warnSpy).toHaveBeenCalledWith(
       expect.stringContaining('target missing'),
     );
-    // The advance from step-1 transitions through step-2's auto-advance
-    // and may complete the tour. Either way, we are no longer on step-1.
     const finalState = store.getState().tour;
-    expect(finalState.stepIdx === 1 || finalState.activeTourId === null).toBe(true);
+    expect(finalState.activeTourId).toBeNull();
+    expect(finalState.completedTours).not.toContain('m-tour');
     warnSpy.mockRestore();
   });
 });
@@ -952,18 +940,17 @@ describe('TourRunner — terminal-step advance + skip', () => {
     expect(store.getState().tour.activeTourId).toBeNull();
   });
 
-  it('close (X) stops the tour without marking completed', async () => {
+  it('close (X) on an earlier step stops without marking completed', async () => {
     makeAnchor('anchor-1');
-    const t = makeTour({
-      id: 'close-tour',
-      steps: [{ id: 'step-1', target: '#anchor-1', title: 'tour.t1', body: 'tour.b1' }],
-    });
+    makeAnchor('anchor-2');
+    const t = makeTour({ id: 'close-tour' });
     mocks.tours = [t];
     registerTour(t);
     const store = makeStore();
     mountRunner(store);
     act(() => {
-      store.dispatch(startTour({ tourId: 'close-tour', totalSteps: 1 }));
+      // 2-step tour; the runner lands on step 0 (NOT the last step).
+      store.dispatch(startTour({ tourId: 'close-tour', totalSteps: 2 }));
     });
     await flushAsync();
     await flushAsync();
@@ -976,10 +963,12 @@ describe('TourRunner — terminal-step advance + skip', () => {
     expect(store.getState().tour.completedTours).not.toContain('close-tour');
   });
 
-  it('overlay-shield click (onSkip on overlay) stops without completion', async () => {
+  it('close (X) ON THE LAST STEP marks the tour completed', async () => {
+    // The user has seen every step, so X (or Esc) should behave like
+    // Finish — otherwise the tour autoplays again on the next session.
     makeAnchor('anchor-1');
     const t = makeTour({
-      id: 'shield-tour',
+      id: 'close-last-tour',
       steps: [{ id: 'step-1', target: '#anchor-1', title: 'tour.t1', body: 'tour.b1' }],
     });
     mocks.tours = [t];
@@ -987,7 +976,33 @@ describe('TourRunner — terminal-step advance + skip', () => {
     const store = makeStore();
     mountRunner(store);
     act(() => {
-      store.dispatch(startTour({ tourId: 'shield-tour', totalSteps: 1 }));
+      store.dispatch(startTour({ tourId: 'close-last-tour', totalSteps: 1 }));
+    });
+    await flushAsync();
+    await flushAsync();
+    act(() => {
+      const closeBtn = document.querySelector('[data-testid="mock-close"]') as HTMLButtonElement | null;
+      closeBtn?.click();
+    });
+    await flushAsync();
+    expect(store.getState().tour.activeTourId).toBeNull();
+    expect(store.getState().tour.completedTours).toContain('close-last-tour');
+    expect(mocks.axiosPut).toHaveBeenCalledWith(
+      '/onboarding/completed-tours/close-last-tour',
+    );
+  });
+
+  it('overlay-shield click on an earlier step stops without completion', async () => {
+    makeAnchor('anchor-1');
+    makeAnchor('anchor-2');
+    const t = makeTour({ id: 'shield-tour' });
+    mocks.tours = [t];
+    registerTour(t);
+    const store = makeStore();
+    mountRunner(store);
+    act(() => {
+      // 2-step tour; lands on step 0 (not last).
+      store.dispatch(startTour({ tourId: 'shield-tour', totalSteps: 2 }));
     });
     await flushAsync();
     await flushAsync();
@@ -996,7 +1011,8 @@ describe('TourRunner — terminal-step advance + skip', () => {
       overlay?.click();
     });
     await flushAsync();
-    // Overlay's onSkip is wired to `stop` (not `skip`) — does NOT mark completion.
+    // Overlay's onSkip is wired to `stop`; on an earlier step that does
+    // NOT mark completion (the user can resume later).
     expect(store.getState().tour.activeTourId).toBeNull();
     expect(store.getState().tour.completedTours).not.toContain('shield-tour');
   });

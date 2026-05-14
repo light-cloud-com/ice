@@ -3,7 +3,7 @@
  * `cloud-storage.ts` update() (rf-cstor-6 + rf-cstor-7).
  */
 
-import type { GCPHandlerContext } from '../../types.js';
+import type { GCPHandlerContext } from '../../types';
 
 /**
  * Apply labels + lifecycle + versioning patches if present. Throws on

@@ -13,8 +13,8 @@
  *  - depth >= max_depth halts nested recursion (top-level still validated).
  */
 import { describe, expect, it } from 'vitest';
-import { validate_property } from '../validation/property-validator.js';
-import type { PropertySchema } from '../schema-provider.js';
+import { validate_property } from '../validation/property-validator';
+import type { PropertySchema } from '../schema-provider';
 
 function prop(over: Partial<PropertySchema> = {}): PropertySchema {
   return {

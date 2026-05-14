@@ -16,7 +16,7 @@ vi.mock('@ice/core', () => ({
   validateCanvas: vi.fn(),
 }));
 
-import { validateCanvas } from '../canvas-validation.service.js';
+import { validateCanvas } from '../canvas-validation.service';
 // @ts-ignore — workspace-resolved at runtime; mocked above
 import * as core from '@ice/core';
 

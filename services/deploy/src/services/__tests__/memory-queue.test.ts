@@ -10,7 +10,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { InMemoryQueue, InMemoryWorker } from '../memory-queue.js';
+import { InMemoryQueue, InMemoryWorker } from '../memory-queue';
 
 /** Tick the microtask queue so the queue's `processNext()` chain unwinds. */
 async function flush(): Promise<void> {

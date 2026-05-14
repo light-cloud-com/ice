@@ -6,7 +6,7 @@
  * `type-mapper.ts`.
  */
 import { describe, expect, it } from 'vitest';
-import { parse_type, parse_urn } from '../parse.js';
+import { parse_type, parse_urn } from '../parse';
 
 describe('parse_urn', () => {
   it('parses a standard URN', () => {

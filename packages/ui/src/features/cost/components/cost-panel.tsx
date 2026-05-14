@@ -91,7 +91,7 @@ export const CostPanel: React.FC = () => {
 
   if (!activeCard || !hasNodes) {
     return (
-      <div className="h-full flex flex-col bg-inherit border-l border-ice-border" data-tour-id="cost-panel-root">
+      <div id="ice-cost-panel" className="h-full flex flex-col bg-inherit border-l border-ice-border" data-tour-id="cost-panel-root">
         <PanelHeader
           icon={<DollarSign aria-hidden="true" className="w-3.5 h-3.5 text-emerald-400" />}
           title={t('cost.title')}

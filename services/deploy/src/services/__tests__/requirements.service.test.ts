@@ -16,7 +16,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // All imports up top (per the import-x/order learning), then hoisted mocks
 // after — vitest hoists vi.mock above the imports during pre-execution.
-import { resolveForCard, loadPersistedStatuses } from '../requirements.service.js';
+import { resolveForCard, loadPersistedStatuses } from '../requirements.service';
 // @ts-ignore — resolved at runtime via pnpm workspace; mocked above
 import prismaModule from '@ice/db';
 // @ts-ignore — mocked below
@@ -25,8 +25,8 @@ import {
   checkSearchConsoleVerification,
   fetchSslCertificateStatus,
   generateVerificationToken,
-} from '../google-verification.service.js';
-import { getResourceMap } from '../resource-mapping.service.js';
+} from '../google-verification.service';
+import { getResourceMap } from '../resource-mapping.service';
 
 vi.mock('@ice/db', () => ({
   default: {
@@ -44,13 +44,13 @@ vi.mock('@ice/blocks/requirements', () => ({
   BUILT_IN_REQUIREMENTS: [],
 }));
 
-vi.mock('../google-verification.service.js', () => ({
+vi.mock('../google-verification.service', () => ({
   checkSearchConsoleVerification: vi.fn(),
   fetchSslCertificateStatus: vi.fn(),
   generateVerificationToken: vi.fn(),
 }));
 
-vi.mock('../resource-mapping.service.js', () => ({
+vi.mock('../resource-mapping.service', () => ({
   getResourceMap: vi.fn(),
 }));
 

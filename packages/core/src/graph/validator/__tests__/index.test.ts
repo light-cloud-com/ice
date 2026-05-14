@@ -7,13 +7,13 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import * as barrel from '../index.js';
+import * as barrel from '../index';
 import {
   ValidationContext,
   GraphValidator,
   create_graph_validator,
   create_validator,
-} from '../base-validator.js';
+} from '../base-validator';
 import {
   CycleValidator,
   ReferenceValidator,
@@ -25,7 +25,7 @@ import {
   BestPracticesValidator,
   create_builtin_validators,
   create_configured_validator,
-} from '../validators.js';
+} from '../validators';
 
 describe('validator barrel', () => {
   it('re-exports the base-validator runtime entry points', () => {

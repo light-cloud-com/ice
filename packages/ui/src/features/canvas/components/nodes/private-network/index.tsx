@@ -6,18 +6,6 @@
  * icon container + title + subtitle, and a continuous border. The body
  * is a drop zone; nested children render on top via the standard
  * svg-canvas dispatcher loop (they're separate <g> elements).
- *
- *   ┌────────────────────────────────────────────────────────────────┐
- *   │ 🛡  Private Network                                             │
- *   │     · Open · public reachable                                   │
- *   ├────────────────────────────────────────────────────────────────┤
- *   │                                                                │
- *   │   (children nest here — services, databases, Custom Domain)   │
- *   │                                                                │
- *   │                    drop services here                          │
- *   │                                                                │
- *   └────────────────────────────────────────────────────────────────┘
- *
  * Ingress state (set via properties panel) is surfaced through the
  * shield icon glyph + the live subtitle:
  *   - `'all'`       → Shield      — "Open · public reachable"
@@ -28,15 +16,17 @@
  * rules from `data.ingress` / `data.egress` at deploy time.
  */
 
+import {
+  PN_HEADER_HEIGHT,
+  PRIVATE_NETWORK_MIN_WIDTH as PN_MIN_WIDTH,
+  PRIVATE_NETWORK_MIN_HEIGHT as PN_MIN_HEIGHT,
+} from '@ice/constants';
 import { Shield, ShieldCheck, ShieldAlert } from 'lucide-react';
 import React, { useCallback, useState } from 'react';
-import { CATEGORY_STYLE, CORNER_RADIUS } from '../../../../../config/canvas-constants';
-import type { SvgCompactNodeProps } from '../compact-node/types';
+import { CARD_PX, CATEGORY_STYLE, CORNER_RADIUS } from '../../../../../config/canvas-constants';
+import type { SvgCompactNodeProps } from '../compact-node';
 
-export const PN_HEADER_HEIGHT = 56;
-export const PN_MIN_WIDTH = 560;
-export const PN_MIN_HEIGHT = 320;
-const CARD_PX = 12;
+export { PN_HEADER_HEIGHT, PN_MIN_WIDTH, PN_MIN_HEIGHT };
 
 type Ingress = 'all' | 'allowlist' | 'none';
 

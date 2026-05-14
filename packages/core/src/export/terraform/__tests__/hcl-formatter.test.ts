@@ -9,8 +9,8 @@
  * snapshot regression guards.
  */
 import { describe, expect, it } from 'vitest';
-import { format_hcl_value, to_hcl, to_json } from '../hcl-formatter.js';
-import type { TerraformConfig } from '../types.js';
+import { format_hcl_value, to_hcl, to_json } from '../hcl-formatter';
+import type { TerraformConfig } from '../types';
 
 describe('format_hcl_value', () => {
   describe('null and undefined', () => {

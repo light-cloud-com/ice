@@ -25,7 +25,7 @@ import {
   loadDeployEvents,
   nextDeploySeq,
   recordDeployEvent,
-} from '../deploy-event-log.js';
+} from '../deploy-event-log';
 
 // Hoisted mock holders — vi.mock factories hoist above imports, so any
 // reference inside the factory must come from `vi.hoisted` or the
@@ -49,7 +49,7 @@ vi.mock('@ice/db', () => ({
   },
 }));
 
-vi.mock('../deploy-locks.js', () => ({
+vi.mock('../deploy-locks', () => ({
   getDeploySnapshot: (cardId: string) => mocks.getDeploySnapshotMock(cardId),
 }));
 

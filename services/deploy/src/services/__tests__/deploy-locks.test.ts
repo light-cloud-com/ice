@@ -32,7 +32,7 @@ import {
   startDeploySnapshot,
   updateDeploySnapshotNode,
   _getRegisteredTempDirs,
-} from '../deploy-locks.js';
+} from '../deploy-locks';
 
 beforeEach(() => {
   vi.clearAllMocks();

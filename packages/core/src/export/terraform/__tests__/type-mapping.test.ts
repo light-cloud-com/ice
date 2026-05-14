@@ -6,7 +6,7 @@
  * `terraform-exporter.ts`.
  */
 import { describe, expect, it } from 'vitest';
-import { fallback_type_mapping } from '../type-mapping.js';
+import { fallback_type_mapping } from '../type-mapping';
 
 describe('fallback_type_mapping', () => {
   describe('gcp prefix', () => {

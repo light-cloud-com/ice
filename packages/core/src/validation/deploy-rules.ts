@@ -5,9 +5,9 @@
  * design-only provider detection, and environment-specific requirements.
  */
 
-import { isContainer } from './classifiers.js';
-import { getSupportedProviders } from './schema-bridge.js';
-import type { CanvasIssue, ValidatableNode, ValidatableEdge, ValidationContext } from './types.js';
+import { isContainer } from './classifiers';
+import { getSupportedProviders } from './schema-bridge';
+import type { CanvasIssue, ValidatableNode, ValidatableEdge, ValidationContext } from './types';
 
 // ── Deploy type maps (mirrored from card-translator.ts) ─────────────────────
 // These record which iceTypes have actual deployer implementations.

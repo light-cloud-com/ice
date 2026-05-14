@@ -32,16 +32,16 @@
  * all keep their pre-extraction shape.
  */
 
-import { EmbeddedSchemaProvider } from '../schema/embedded-schema-provider.js';
-import { export_graph } from './pulumi/converter.js';
-import type { MutableGraph } from '../graph/mutable-graph.js';
+import { EmbeddedSchemaProvider } from '../schema/embedded-schema-provider';
+import { export_graph } from './pulumi/converter';
+import type { MutableGraph } from '../graph/mutable-graph';
 import type {
   PulumiExportOptions,
   PulumiExportResult,
   PulumiProgram,
   PulumiResource,
   PulumiResourceOptions,
-} from './pulumi/types.js';
+} from './pulumi/types';
 
 // Re-export the public type surface so external consumers keep their
 // `import { ... } from './pulumi-exporter'` imports.

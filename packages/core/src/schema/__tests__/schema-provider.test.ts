@@ -5,7 +5,7 @@
  * `create_ice_type` — a branded-type helper that returns its input.
  */
 import { describe, expect, it } from 'vitest';
-import { create_ice_type } from '../schema-provider.js';
+import { create_ice_type } from '../schema-provider';
 
 describe('create_ice_type', () => {
   it('returns the same string value (branded)', () => {

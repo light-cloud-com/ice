@@ -49,7 +49,7 @@ vi.mock('@ice/db', () => ({
   },
 }));
 
-vi.mock('../environment.service.js', () => ({
+vi.mock('../environment.service', () => ({
   bootstrapProductionEnvironment: vi.fn(),
 }));
 
@@ -64,10 +64,10 @@ import {
   getCard,
   updateCard,
   deleteCard,
-} from '../canvas.service.js';
+} from '../canvas.service';
 // @ts-ignore — workspace-resolved at runtime
 import prisma from '@ice/db';
-import { bootstrapProductionEnvironment } from '../environment.service.js';
+import { bootstrapProductionEnvironment } from '../environment.service';
 
 const projectFindMany = (prisma as any).canvasProject.findMany as ReturnType<typeof vi.fn>;
 const projectFindFirst = (prisma as any).canvasProject.findFirst as ReturnType<typeof vi.fn>;

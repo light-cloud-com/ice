@@ -8,11 +8,11 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { HighLevelProperty } from '../../resources/high-level-resources.js';
+import type { HighLevelProperty } from '../../resources/high-level-resources';
 
 const propertyMap = new Map<string, HighLevelProperty[]>();
 
-vi.mock('../schema-bridge.js', () => ({
+vi.mock('../schema-bridge', () => ({
   getPropertiesForIceType: (iceType: string): HighLevelProperty[] =>
     propertyMap.get(iceType) ?? [],
   isKnownIceType: () => true,
@@ -20,8 +20,8 @@ vi.mock('../schema-bridge.js', () => ({
   getSupportedProviders: () => [],
 }));
 
-import { validateProperties } from '../property-rules.js';
-import type { ValidatableNode, ValidationContext } from '../types.js';
+import { validateProperties } from '../property-rules';
+import type { ValidatableNode, ValidationContext } from '../types';
 
 const ctx: ValidationContext = { mode: 'design' };
 

@@ -2,7 +2,7 @@
  * Tests for `load-balancer/url-builder.ts` (rf-lbal-2).
  */
 import { describe, it, expect } from 'vitest';
-import { compute_primary_url, backend_ref } from '../url-builder.js';
+import { compute_primary_url, backend_ref } from '../url-builder';
 
 describe('load-balancer/url-builder', () => {
   describe('compute_primary_url', () => {

@@ -112,7 +112,7 @@ beforeEach(async () => {
   vi.spyOn(console, 'warn').mockImplementation(() => {});
 
   // Import after mocks are in place.
-  const { default: webhooksRouter } = await import('../webhooks.js');
+  const { default: webhooksRouter } = await import('../webhooks');
   const app = express();
   // Mirror gateway: raw body parser MUST run before any json middleware
   // for this route — the SUT relies on `Buffer.isBuffer(req.body)`.
@@ -960,7 +960,7 @@ describe('POST /api/webhooks/github — body parsing edge cases', () => {
     // fallback runs. We get to verify the fallback is reachable.
     await new Promise<void>((resolve) => server.close(() => resolve()));
 
-    const { default: webhooksRouter } = await import('../webhooks.js');
+    const { default: webhooksRouter } = await import('../webhooks');
     const app = express();
     app.use(express.json({ limit: '1mb' }));
     app.use('/api/webhooks', webhooksRouter);

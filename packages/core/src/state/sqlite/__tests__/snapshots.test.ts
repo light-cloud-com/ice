@@ -22,18 +22,18 @@
  *  - row_to_snapshot maps null description → undefined
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { create_memory_state_store } from '../../sqlite-state-store.js';
+import { create_memory_state_store } from '../../sqlite-state-store';
 import {
   snapshots_create,
   snapshots_get,
   snapshots_list,
   snapshots_restore,
   snapshots_delete,
-} from '../snapshots.js';
-import { resources_get, resources_get_all, resources_save } from '../resources.js';
-import { create_node_id } from '../../../types/graph.js';
-import type { StoredResourceState, StateChangeEvent } from '../../state-store.js';
-import type { SqliteContext } from '../types.js';
+} from '../snapshots';
+import { resources_get, resources_get_all, resources_save } from '../resources';
+import { create_node_id } from '../../../types/graph';
+import type { StoredResourceState, StateChangeEvent } from '../../state-store';
+import type { SqliteContext } from '../types';
 
 function getCtx(store: ReturnType<typeof create_memory_state_store>): SqliteContext {
   return (store as unknown as { ctx: SqliteContext }).ctx;

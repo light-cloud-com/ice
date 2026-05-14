@@ -23,8 +23,8 @@
  *  - Property keys are emitted as-is (NOT re-camelCased).
  */
 import { describe, expect, it } from 'vitest';
-import { format_ts_value, to_typescript } from '../typescript-formatter.js';
-import type { PulumiProgram } from '../types.js';
+import { format_ts_value, to_typescript } from '../typescript-formatter';
+import type { PulumiProgram } from '../types';
 
 describe('format_ts_value — primitives', () => {
   it('returns "undefined" for null', () => {

@@ -29,8 +29,8 @@ import {
   parse_object_expression,
   parse_for_expression,
   parse_reference,
-} from '../parser-primary.js';
-import { make_parser_state } from '../parser-state.js';
+} from '../parser-primary';
+import { make_parser_state } from '../parser-state';
 import type {
   ArrayExpression,
   BooleanLiteral,
@@ -42,8 +42,8 @@ import type {
   Reference,
   StringLiteral,
   TypeIdentifier,
-} from '../ast.js';
-import type { Token, TokenType, SourcePosition } from '../tokens.js';
+} from '../ast';
+import type { Token, TokenType, SourcePosition } from '../tokens';
 
 /** Build a minimal token at line/col 1 (with optional literal). */
 function tk(

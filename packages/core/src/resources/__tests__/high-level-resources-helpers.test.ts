@@ -15,8 +15,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import * as ShimModule from '../high-level-resources.js';
-import * as HelpersModule from '../high-level-resources/helpers.js';
+import * as ShimModule from '../high-level-resources';
+import * as HelpersModule from '../high-level-resources/helpers';
 import {
   HIGH_LEVEL_CATEGORIES,
   cloudAssetToHighLevelType,
@@ -26,7 +26,7 @@ import {
   getBehaviorLabel,
   getGCPCloudAssetTypes,
   getHighLevelResourcesForPalette,
-} from '../high-level-resources/helpers.js';
+} from '../high-level-resources/helpers';
 
 describe('helpers — public API surface', () => {
   it('exposes the 8 named runtime exports', () => {

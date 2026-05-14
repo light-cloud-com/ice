@@ -23,9 +23,9 @@ import {
   map_config_result,
   discover_with_resource_explorer,
   discover_with_config,
-} from '../discovery.js';
-import type { AWSSdk } from '../sdk-init.js';
-import type { AWSImportOptions } from '../types.js';
+} from '../discovery';
+import type { AWSSdk } from '../sdk-init';
+import type { AWSImportOptions } from '../types';
 
 const mock_sdk: AWSSdk = {
   STS: {},

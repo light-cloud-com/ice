@@ -18,10 +18,6 @@
  * independently without round-tripping through the full prompt.
  */
 
-import { generateAiConnectionPrompt } from '@ice/types';
-import { buildDeploymentContext } from './deployment-context';
-import { detectSkill, isQuestionIntent } from './skill-detection';
-import { buildSchemaContext } from '../ai-schema-context.service';
 import {
   buildHeaderPrompt,
   buildIntentRoutingPrompt,
@@ -30,8 +26,18 @@ import {
   buildOptimizationGuidelinesPrompt,
   buildCanvasContextPrompt,
   buildContainerNetworkingPrompt,
-} from './system-prompt-sections';
+  buildCloudArchitectPrompt as _buildCloudArchitectPrompt,
+} from '@ice/constants';
+import { generateAiConnectionPrompt } from '@ice/types';
+import { buildDeploymentContext } from './deployment-context';
+import { detectSkill, isQuestionIntent } from './skill-detection';
+import { buildSchemaContext } from '../ai-schema-context.service';
 import type { SerializedCanvas } from '@ice/types';
+
+// Re-export buildCloudArchitectPrompt so existing test imports
+// (`from '../system-prompt'`) keep working without changing the test
+// surface. The actual prose lives in `@ice/constants/ai`.
+export const buildCloudArchitectPrompt = _buildCloudArchitectPrompt;
 
 // =============================================================================
 // Pure canvas-summary helpers
@@ -87,67 +93,8 @@ export function detectDominantProvider(canvas: SerializedCanvas): string {
   return Object.entries(providerCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'aws';
 }
 
-// =============================================================================
-// Cloud Architect Skill Prompt
-// =============================================================================
-
-export function buildCloudArchitectPrompt(dominantProvider: string, iceTypes: string[]): string {
-  // Group available blocks by category — derived from iceType prefix (e.g., "Database.PostgreSQL" → "Database")
-  const categories: Record<string, string[]> = {};
-  for (const t of iceTypes) {
-    const category = t.split('.')[0] || 'Other';
-    (categories[category] ??= []).push(t);
-  }
-
-  const categoryList = Object.entries(categories)
-    .map(([cat, blocks]) => `  ${cat}: ${blocks.join(', ')}`)
-    .join('\n');
-
-  return `
-## ☁️ CLOUD ARCHITECT SKILL — ACTIVE
-
-You are now acting as a **senior cloud architect consultant** in addition to being the ICE canvas engine.
-The user is describing a platform, product, or service and wants a complete infrastructure design.
-
-### Your Approach:
-1. **Clarify first** (if the description is too vague): Ask 2–3 targeted questions via the "clarification" field. Focus on: expected scale, user type (B2B/B2C/internal), real-time requirements, and data sensitivity.
-2. **If the intent is clear enough, ACT immediately**: Build the FULL architecture on the canvas using only available blocks and operations.
-3. **Be opinionated**: Don't list options — make specific choices. Explain trade-offs in the explanation.
-4. **Flag risks**: In your explanation, call out what commonly causes production incidents for this type of platform.
-
-### CRITICAL CONSTRAINT — ONLY USE AVAILABLE BLOCKS
-You MUST only use blocks from the registry. You cannot invent resources that don't exist as blocks.
-Map every architectural concept to the closest available block:
-
-Available blocks by category:
-${categoryList}
-
-Provider-agnostic: github-repository, env-config
-
-If a concept has no matching block (e.g., "CDN" and no CDN block exists), mention it in the explanation as a future addition but do NOT create an operation for it.
-
-### Architecture Generation Rules:
-1. **Think in layers**: Build from network → compute → data → security → observability
-2. **Use VPC + Subnets for production architectures**: Create Network.VPC with public and private subnets. Place gateways/frontends in public, backends/databases in private.
-3. **Always wire connections**: Every resource must have at least one edge. Think about data flow: Frontend → Gateway → Backend → Database/Cache.
-4. **Pre-fill realistic properties**: Set instance sizes, replicas, storage, versions, ports. Match the user's scale intent (dev/small vs production/enterprise).
-5. **Add security by default for production**: Include auth, secrets, and gateway blocks. Set exposed:false on private resources.
-6. **Add observability**: Include a logs block connected to key services.
-7. **Include env-config**: Wire environment variables for database URLs, API keys, etc.
-
-### Explanation Structure:
-In your "explanation" field, provide a concise architecture summary covering:
-- **Architecture pattern** chosen (microservices, monolith, event-driven, serverless) and why
-- **Key decisions** and trade-offs
-- **Scaling strategy** (what auto-scales, what needs manual attention)
-- **Risks to watch** for this type of platform
-- **Estimated complexity**: Simple / Moderate / Complex
-- **What's NOT on canvas** (concepts that have no available block — recommend as future additions)
-
-### Suggestions:
-Only include suggestions when you BUILD something new on the canvas. Do NOT add suggestions when answering questions — just answer the question directly.
-`;
-}
+// `buildCloudArchitectPrompt` moved to `@ice/constants/ai` — see the
+// top-of-file import + re-export.
 
 // =============================================================================
 // System Prompt Builder

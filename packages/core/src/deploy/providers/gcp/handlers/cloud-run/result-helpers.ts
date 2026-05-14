@@ -11,7 +11,7 @@
  * the `type` parameter is required at every call site rather than
  * being a constant.
  */
-import type { ResourceDeployResult } from '../../../../types.js';
+import type { ResourceDeployResult } from '../../../../types';
 
 /** ICE resource type emitted by the Cloud Run handler when deploying a service. */
 export const TYPE_SERVICE = 'gcp.run.service';

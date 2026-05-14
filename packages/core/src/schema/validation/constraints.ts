@@ -17,8 +17,8 @@
  *  - Array length: only when Array.isArray(value). Inclusive. Uses the
  *    same min_length / max_length fields as strings.
  */
-import type { PropertyValidation } from '../schema-provider.js';
-import type { ValidationIssue } from '../resource-validator-types.js';
+import type { PropertyValidation } from '../schema-provider';
+import type { ValidationIssue } from '../resource-validator-types';
 
 /**
  * Run every constraint check applicable to the given value+validation.

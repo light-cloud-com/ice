@@ -51,7 +51,7 @@ vi.mock('google-auth-library', () => ({
   },
 }));
 
-import { cleanupOrphanedIceResources } from '../orphan-cleanup.service.js';
+import { cleanupOrphanedIceResources } from '../orphan-cleanup.service';
 // @ts-ignore — resolved at runtime via pnpm workspace; mocked above.
 import prismaModule from '@ice/db';
 // @ts-ignore — resolved at runtime via pnpm workspace; mocked above.

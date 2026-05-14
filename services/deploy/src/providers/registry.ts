@@ -5,9 +5,9 @@
  * blocks across the service layer.
  */
 
-import { awsCredentialResolver } from './aws/credential-resolver.js';
-import { gcpCredentialResolver } from './gcp/credential-resolver.js';
-import type { CredentialResolver, ResolveAuthOptions, ScopedDeployAuth } from './types.js';
+import { awsCredentialResolver } from './aws/credential-resolver';
+import { gcpCredentialResolver } from './gcp/credential-resolver';
+import type { CredentialResolver, ResolveAuthOptions, ScopedDeployAuth } from './types';
 
 export const CREDENTIAL_RESOLVERS: Record<string, CredentialResolver> = {
   gcp: gcpCredentialResolver,

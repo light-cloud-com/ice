@@ -7,7 +7,7 @@
  * Extracted from `ast/types.ts` in rf-asttyp-1.
  */
 
-import type { SourceSpan } from '../../tokens.js';
+import type { SourceSpan } from '../../tokens';
 
 // =============================================================================
 // Base AST Node

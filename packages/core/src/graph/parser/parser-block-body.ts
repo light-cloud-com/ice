@@ -32,7 +32,7 @@ import type {
   NestedBlock,
   ProviderBlock,
   ResourceBlock,
-} from './ast.js';
+} from './ast';
 import {
   type ParserState,
   ps_add_error,
@@ -43,13 +43,13 @@ import {
   ps_is_at_end,
   ps_previous,
   ps_synchronize,
-} from './parser-state.js';
+} from './parser-state';
 import {
   create_span,
   parse_identifier,
   parse_type_identifier,
-} from './parser-literals.js';
-import { parse_expression } from './parser-binary-exprs.js';
+} from './parser-literals';
+import { parse_expression } from './parser-binary-exprs';
 
 /**
  * `resource <Type> <name> { ... }` — the body recurses through

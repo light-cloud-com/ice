@@ -15,7 +15,7 @@ import {
   is_type_supported,
   get_supported_types,
   map_properties,
-} from '../index.js';
+} from '../index';
 
 describe('azure importer index', () => {
   it('exports the four importer entry points', () => {

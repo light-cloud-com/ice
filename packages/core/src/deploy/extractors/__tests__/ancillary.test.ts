@@ -36,7 +36,7 @@ import {
   extract_custom_domain_properties,
   extract_backend_bucket_properties,
   extract_firebase_hosting_properties,
-} from '../ancillary.js';
+} from '../ancillary';
 
 describe('extract_secret_manager_properties', () => {
   it('returns defaults for an empty data object', () => {

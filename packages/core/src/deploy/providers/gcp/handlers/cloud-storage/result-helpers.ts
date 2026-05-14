@@ -12,7 +12,7 @@
  * for a one-handler-per-file architecture).
  */
 
-import type { ResourceDeployResult } from '../../../../types.js';
+import type { ResourceDeployResult } from '../../../../types';
 
 /** ICE resource type emitted by the Cloud Storage handler. */
 export const TYPE = 'gcp.storage.bucket';

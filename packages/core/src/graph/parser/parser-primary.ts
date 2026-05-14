@@ -53,8 +53,8 @@ import type {
   Reference,
   StringLiteral,
   TypeIdentifier,
-} from './ast.js';
-import type { SourcePosition } from './tokens.js';
+} from './ast';
+import type { SourcePosition } from './tokens';
 import {
   type ParserState,
   ps_add_error,
@@ -64,18 +64,18 @@ import {
   ps_current,
   ps_match,
   ps_previous,
-} from './parser-state.js';
-import { describe_token } from './tokens.js';
+} from './parser-state';
+import { describe_token } from './tokens';
 import {
   create_null_literal,
   create_span,
   parse_identifier,
   parse_string_literal,
-} from './parser-literals.js';
+} from './parser-literals';
 // Circular import resolves at function-call time — `parse_expression`
 // is only referenced inside function bodies. See parser-binary-exprs.ts
 // for the matching back-edge. (rf-parse-3/4 atomic landing.)
-import { parse_expression } from './parser-binary-exprs.js';
+import { parse_expression } from './parser-binary-exprs';
 
 /**
  * Leaf-token dispatcher for primary expressions.

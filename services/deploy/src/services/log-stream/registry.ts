@@ -27,7 +27,7 @@
 
 import { getSocketServer } from '@ice/shared';
 
-import { SEEN_INSERT_ID_CAP, type ActiveStream } from './types.js';
+import { SEEN_INSERT_ID_CAP, type ActiveStream } from './types';
 
 /** terminalNodeId -> ActiveStream. */
 export const streams = new Map<string, ActiveStream>();

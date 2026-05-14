@@ -54,7 +54,7 @@
  *           comment never terminate (the lexer reports unterminated
  *           block comment).
  */
-import { get_keyword_type } from './tokens.js';
+import { get_keyword_type } from './tokens';
 import {
   type LexerState,
   ls_advance,
@@ -64,7 +64,7 @@ import {
   ls_is_at_end,
   ls_peek,
   ls_peek_next,
-} from './lexer-state.js';
+} from './lexer-state';
 
 // =============================================================================
 // Char Predicates (module-private)

@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { awsCredentialResolver } from '../credential-resolver.js';
+import { awsCredentialResolver } from '../credential-resolver';
 
 beforeEach(() => {
   vi.clearAllMocks();

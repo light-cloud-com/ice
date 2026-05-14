@@ -8,9 +8,9 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { wrap_on_progress_for_node_progress } from '../progress-wrapper.js';
-import type { ResourceChange } from '../../../diff/types.js';
-import type { DeployOptions, NodeProgressEvent } from '../../types.js';
+import { wrap_on_progress_for_node_progress } from '../progress-wrapper';
+import type { ResourceChange } from '../../../diff/types';
+import type { DeployOptions, NodeProgressEvent } from '../../types';
 
 function build_change(name: string, type: string): ResourceChange {
   return {

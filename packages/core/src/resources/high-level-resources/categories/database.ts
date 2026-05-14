@@ -14,7 +14,7 @@
  */
 
 // `NodeBehavior` is imported because the data literal uses `behavior: '...' as NodeBehavior` casts.
-import type { HighLevelCategory, NodeBehavior } from '../types.js';
+import type { HighLevelCategory, NodeBehavior } from '../types';
 export type { NodeBehavior };
 
 export const database: HighLevelCategory = 

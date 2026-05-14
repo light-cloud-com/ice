@@ -18,8 +18,8 @@
  * Prisma/credentials/SDK transitive imports.
  */
 
-import { streams } from './registry.js';
-import type { ActiveStream } from './types.js';
+import { streams } from './registry';
+import type { ActiveStream } from './types';
 
 /**
  * Cancel the polling timer + destroy/cancel the tail stream. Idempotent

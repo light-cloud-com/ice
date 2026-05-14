@@ -9,7 +9,7 @@
  * orchestrator and `../scale-presets-types.ts` for the shared types.
  */
 
-import type { ScaleTier, TierPreset } from '../scale-presets-types.js';
+import type { ScaleTier, TierPreset } from '../scale-presets-types';
 
 export const DATABASE_PRESETS: Record<string, Partial<Record<ScaleTier, TierPreset>>> = {
   'postgres-db': {

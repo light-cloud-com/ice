@@ -23,8 +23,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ensureFirebaseProject, ensureHostingSite } from '../site-provisioner.js';
-import type { GCPHandlerContext } from '../../../types.js';
+import { ensureFirebaseProject, ensureHostingSite } from '../site-provisioner';
+import type { GCPHandlerContext } from '../../../types';
 
 // Hoisted mocks: the `vi.mock` call below captures `mocks.restRequest`,
 // which would otherwise hit the real implementation (and fail without a
@@ -33,14 +33,14 @@ import type { GCPHandlerContext } from '../../../types.js';
 // have one mock target but the pattern keeps the test body readable.
 // Note: vitest hoists both `vi.hoisted` and `vi.mock` calls above any
 // import statements, so the module under test sees the mock when its
-// own `import { restRequest } from './rest-client.js'` runs.
+// own `import { restRequest } from './rest-client'` runs.
 const mocks = vi.hoisted(() => ({
   restRequest: vi.fn(),
   FIREBASE_HOSTING_API: 'https://firebasehosting.googleapis.com/v1beta1',
   FIREBASE_MGMT_API: 'https://firebase.googleapis.com/v1beta1',
 }));
 
-vi.mock('../rest-client.js', () => ({
+vi.mock('../rest-client', () => ({
   restRequest: mocks.restRequest,
   FIREBASE_HOSTING_API: mocks.FIREBASE_HOSTING_API,
   FIREBASE_MGMT_API: mocks.FIREBASE_MGMT_API,

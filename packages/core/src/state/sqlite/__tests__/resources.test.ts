@@ -25,7 +25,7 @@
  *    delivery to the next)
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { create_memory_state_store } from '../../sqlite-state-store.js';
+import { create_memory_state_store } from '../../sqlite-state-store';
 import {
   ensure_db,
   emit_event,
@@ -38,10 +38,10 @@ import {
   resources_save_many,
   resources_delete,
   resources_delete_all,
-} from '../resources.js';
-import { create_node_id } from '../../../types/graph.js';
-import type { SqliteContext, ResourceRow } from '../types.js';
-import type { StoredResourceState, StateChangeEvent } from '../../state-store.js';
+} from '../resources';
+import { create_node_id } from '../../../types/graph';
+import type { SqliteContext, ResourceRow } from '../types';
+import type { StoredResourceState, StateChangeEvent } from '../../state-store';
 
 // =============================================================================
 // Helpers

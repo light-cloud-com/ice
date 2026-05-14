@@ -41,20 +41,20 @@ vi.mock('@ice/db', () => ({
   },
 }));
 
-vi.mock('../resource-mapping.service.js', () => ({
+vi.mock('../resource-mapping.service', () => ({
   seedMappingsFromHistory: mocks.seedMappingsFromHistory,
   getExistingNameMap: mocks.getExistingNameMap,
 }));
 
-vi.mock('../../utils/project-context.js', () => ({
+vi.mock('../../utils/project-context', () => ({
   resolveProjectContext: mocks.resolveProjectContext,
 }));
 
-vi.mock('../deployer-factory.js', () => ({
+vi.mock('../deployer-factory', () => ({
   getCoreEngine: () => mocks.getCoreEngine(),
 }));
 
-import { planDeployment } from '../plan-deployment.js';
+import { planDeployment } from '../plan-deployment';
 
 const HAPPY_TRANSLATION = {
   graph: {

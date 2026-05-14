@@ -9,9 +9,9 @@
  * - Connection pairs follow CONNECTION_RULES
  */
 
-import { canConnect } from './classifiers.js';
-import { isKnownIceType } from './schema-bridge.js';
-import type { CanvasIssue } from './types.js';
+import { canConnect } from './classifiers';
+import { isKnownIceType } from './schema-bridge';
+import type { CanvasIssue } from './types';
 
 // Minimal template shape — avoids importing @ice/templates types
 interface TemplateBlock {

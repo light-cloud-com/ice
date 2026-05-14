@@ -22,15 +22,15 @@
 import {
   mapEntry,
   probeErrorMessage,
-} from './entry-mapping.js';
-import { emitToRoom, rememberInsertId } from './registry.js';
-import { stopUnderlyingStream } from './stream-lifecycle.js';
+} from './entry-mapping';
+import { emitToRoom, rememberInsertId } from './registry';
+import { stopUnderlyingStream } from './stream-lifecycle';
 import {
   MAX_CONSECUTIVE_ERRORS_POLLING,
   POLL_INTERVAL_MS,
   POLL_PAGE_SIZE,
   type ActiveStream,
-} from './types.js';
+} from './types';
 
 export function startPolling(stream: ActiveStream): void {
   // Tick immediately, then every POLL_INTERVAL_MS.

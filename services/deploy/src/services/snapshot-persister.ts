@@ -3,7 +3,7 @@ import {
   setSnapshotPersister,
   getDeploySnapshot,
   type DeployProgressSnapshot,
-} from './deploy-locks.js';
+} from './deploy-locks';
 
 // ── Snapshot persistence ─────────────────────────────────────────────────────
 //

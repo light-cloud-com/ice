@@ -16,7 +16,7 @@
 
 import { createHash } from 'crypto';
 import { describe, it, expect } from 'vitest';
-import { ENV_SHORT, generate_stable_name } from '../stable-name.js';
+import { ENV_SHORT, generate_stable_name } from '../stable-name';
 
 const MEMORYSTORE_MAX = 40;
 

@@ -51,8 +51,24 @@ vi.mock('react', async (orig) => {
 
 vi.mock('react-redux', () => ({
   useDispatch: () => mocks.dispatch,
-  useSelector: <T,>(sel: (s: { account: typeof mocks.useSelectorReturn }) => T) =>
-    sel({ account: mocks.useSelectorReturn }),
+  useSelector: <T,>(
+    sel: (s: {
+      account: typeof mocks.useSelectorReturn;
+      integrations: { integrations: Record<string, { status: string }> };
+    }) => T,
+  ) =>
+    sel({
+      account: mocks.useSelectorReturn,
+      integrations: {
+        integrations: {
+          github: { status: 'disconnected' },
+          anthropic: { status: 'disconnected' },
+          gcp: { status: 'disconnected' },
+          aws: { status: 'disconnected' },
+          azure: { status: 'disconnected' },
+        },
+      },
+    }),
 }));
 
 vi.mock('../../../../i18n', () => ({
@@ -66,6 +82,26 @@ vi.mock('../../../../shared/api/axios-instance', () => ({
 vi.mock('../../../../store/slices/account-slice', () => ({
   fetchProfile: mocks.fetchProfile,
 }));
+
+vi.mock('../../../../store/slices/integrations-slice', () => ({
+  checkGitHubConnection: vi.fn(() => ({ type: 'integrations/checkGitHubConnection' })),
+  checkAnthropicConnection: vi.fn(() => ({ type: 'integrations/checkAnthropicConnection' })),
+}));
+
+vi.mock('../../../../features/integrations/components/anthropic-connect-modal', () => ({
+  AnthropicConnectModal: vi.fn(() => null),
+}));
+vi.mock('../../../../features/integrations/components/github-connect-modal', () => ({
+  GitHubConnectModal: vi.fn(() => null),
+}));
+vi.mock('../../../../features/integrations/components/provider-connect-modal', () => ({
+  ProviderConnectModal: vi.fn(() => null),
+}));
+vi.mock('devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg', () => ({
+  default: 'aws.svg',
+}));
+vi.mock('devicon/icons/azure/azure-original.svg', () => ({ default: 'azure.svg' }));
+vi.mock('devicon/icons/googlecloud/googlecloud-original.svg', () => ({ default: 'gcp.svg' }));
 
 import { UserSettingsPage } from '../user-settings-page';
 

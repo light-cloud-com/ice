@@ -35,8 +35,8 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { AWSResource, AWSImportResult } from '../types.js';
-import type { MutableGraph } from '../../../graph/mutable-graph.js';
+import type { AWSResource, AWSImportResult } from '../types';
+import type { MutableGraph } from '../../../graph/mutable-graph';
 
 // =============================================================================
 // Hoisted mock bag — collaborators are stubbed at the boundary so the
@@ -53,22 +53,22 @@ const h = vi.hoisted(() => ({
   infer_relationships: vi.fn(),
 }));
 
-vi.mock('../sdk-init.js', () => ({
+vi.mock('../sdk-init', () => ({
   init_aws_sdk: h.init_aws_sdk,
   get_account_id: h.get_account_id,
 }));
 
-vi.mock('../discovery.js', () => ({
+vi.mock('../discovery', () => ({
   discover_with_resource_explorer: h.discover_with_resource_explorer,
   discover_with_config: h.discover_with_config,
 }));
 
-vi.mock('../type-mapper.js', () => ({
+vi.mock('../type-mapper', () => ({
   get_ice_type: h.get_ice_type,
   map_properties: h.map_properties,
 }));
 
-vi.mock('../graph-conversion.js', () => ({
+vi.mock('../graph-conversion', () => ({
   aws_result_to_graph: h.aws_result_to_graph,
   infer_relationships: h.infer_relationships,
 }));
@@ -111,7 +111,7 @@ beforeEach(() => {
 // =============================================================================
 describe('import_aws — happy path', () => {
   it('returns success: true with empty resources by default', async () => {
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     const result = await import_aws();
 
     expect(result.success).toBe(true);
@@ -121,14 +121,14 @@ describe('import_aws — happy path', () => {
   });
 
   it('initializes the SDK with the supplied profile', async () => {
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     await import_aws({ profile: 'my-profile' });
 
     expect(h.init_aws_sdk).toHaveBeenCalledWith('my-profile');
   });
 
   it('initializes the SDK with no profile when none supplied', async () => {
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     await import_aws();
 
     expect(h.init_aws_sdk).toHaveBeenCalledWith(undefined);
@@ -136,7 +136,7 @@ describe('import_aws — happy path', () => {
 
   it('populates account_id from get_account_id', async () => {
     h.get_account_id.mockResolvedValueOnce('999999');
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     const result = await import_aws();
 
     expect(result.metadata.account_id).toBe('999999');
@@ -144,14 +144,14 @@ describe('import_aws — happy path', () => {
 
   it('records resource-explorer in services_scanned on success', async () => {
     h.discover_with_resource_explorer.mockResolvedValueOnce([makeResource()]);
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     const result = await import_aws();
 
     expect(result.metadata.services_scanned).toContain('resource-explorer');
   });
 
   it('records imported_at as a valid ISO timestamp and a non-negative duration', async () => {
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     const result = await import_aws();
 
     expect(() => new Date(result.metadata.imported_at).toISOString()).not.toThrow();
@@ -159,7 +159,7 @@ describe('import_aws — happy path', () => {
   });
 
   it('skips Resource Explorer when services excludes "all"', async () => {
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     const result = await import_aws({ services: ['ec2'] });
 
     expect(h.discover_with_resource_explorer).not.toHaveBeenCalled();
@@ -174,7 +174,7 @@ describe('import_aws — Resource Explorer failure paths', () => {
     h.discover_with_resource_explorer.mockRejectedValueOnce(reErr);
     h.discover_with_config.mockResolvedValueOnce([makeResource()]);
 
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     const result = await import_aws();
 
     expect(h.discover_with_config).toHaveBeenCalled();
@@ -194,7 +194,7 @@ describe('import_aws — Resource Explorer failure paths', () => {
     );
     h.discover_with_config.mockResolvedValueOnce([]);
 
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     const result = await import_aws();
 
     expect(h.discover_with_config).toHaveBeenCalled();
@@ -209,7 +209,7 @@ describe('import_aws — Resource Explorer failure paths', () => {
     );
     h.discover_with_config.mockResolvedValueOnce([]);
 
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     const result = await import_aws();
 
     expect(h.discover_with_config).toHaveBeenCalled();
@@ -223,7 +223,7 @@ describe('import_aws — Resource Explorer failure paths', () => {
       Object.assign(new Error('throttle'), { code: 'Throttling' }),
     );
 
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     const result = await import_aws();
 
     expect(result.errors.length).toBeGreaterThanOrEqual(2);
@@ -239,7 +239,7 @@ describe('import_aws — Resource Explorer failure paths', () => {
       Object.assign(new Error('not found'), { code: 'ResourceNotFoundException' }),
     );
 
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     const result = await import_aws();
 
     const cfgErr = result.errors.find((e) => e.code === 'RESOURCE_NOT_FOUND');
@@ -251,7 +251,7 @@ describe('import_aws — Resource Explorer failure paths', () => {
     h.discover_with_resource_explorer.mockRejectedValueOnce(
       Object.assign(new Error('expired'), { code: 'ExpiredTokenException' }),
     );
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     const result = await import_aws();
 
     expect(h.discover_with_config).not.toHaveBeenCalled();
@@ -263,7 +263,7 @@ describe('import_aws — Resource Explorer failure paths', () => {
     h.discover_with_resource_explorer.mockRejectedValueOnce(
       Object.assign(new Error('bad creds'), { code: 'InvalidClientTokenId' }),
     );
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     const result = await import_aws();
 
     expect(h.discover_with_config).not.toHaveBeenCalled();
@@ -276,7 +276,7 @@ describe('import_aws — Resource Explorer failure paths', () => {
     h.discover_with_resource_explorer.mockRejectedValueOnce(
       Object.assign(new Error('mystery'), { code: 'ResourceNotFoundException' }),
     );
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     const result = await import_aws();
 
     expect(result.errors.some((e) => e.code === 'RESOURCE_NOT_FOUND')).toBe(true);
@@ -289,7 +289,7 @@ describe('import_aws — outer SDK init failure', () => {
       Object.assign(new Error('expired'), { code: 'ExpiredTokenException' }),
     );
 
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     const result = await import_aws();
 
     expect(result.success).toBe(false);
@@ -301,7 +301,7 @@ describe('import_aws — outer SDK init failure', () => {
       Object.assign(new Error('throttled'), { code: 'Throttling' }),
     );
 
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     const result = await import_aws();
 
     expect(result.success).toBe(false);
@@ -314,7 +314,7 @@ describe('import_aws — outer SDK init failure', () => {
       Object.assign(new Error('not found'), { code: 'ResourceNotFoundException' }),
     );
 
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     const result = await import_aws();
 
     const err = result.errors[0]!;
@@ -332,7 +332,7 @@ describe('import_aws — resource transform & filtering', () => {
       makeResource({ properties: { CidrBlock: '10.0.0.0/16' } }),
     ]);
 
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     const result = await import_aws();
 
     expect(result.resources).toHaveLength(1);
@@ -354,7 +354,7 @@ describe('import_aws — resource transform & filtering', () => {
       .mockReturnValueOnce('aws.ec2.vpc')
       .mockReturnValueOnce('aws.s3.bucket');
 
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     const result = await import_aws({ filter_types: ['aws.ec2.vpc'] });
 
     expect(result.resources).toHaveLength(1);
@@ -370,7 +370,7 @@ describe('import_aws — resource transform & filtering', () => {
       .mockReturnValueOnce('aws.ec2.vpc')
       .mockReturnValueOnce('aws.s3.bucket');
 
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     const result = await import_aws({ exclude_types: ['aws.s3.bucket'] });
 
     expect(result.resources).toHaveLength(1);
@@ -383,7 +383,7 @@ describe('import_aws — resource transform & filtering', () => {
       makeResource({ tags: { Env: 'dev' }, arn: 'arn:aws:s3:::b' }),
     ]);
 
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     const result = await import_aws({ filter_tags: { Env: 'prod' } });
 
     expect(result.resources).toHaveLength(1);
@@ -395,7 +395,7 @@ describe('import_aws — resource transform & filtering', () => {
       makeResource({ tags: undefined as unknown as Record<string, string> }),
     ]);
 
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     const result = await import_aws({ filter_tags: { Env: 'prod' } });
 
     expect(result.resources).toHaveLength(0);
@@ -406,7 +406,7 @@ describe('import_aws — resource transform & filtering', () => {
       makeResource({ tags: undefined as unknown as Record<string, string> }),
     ]);
 
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     const result = await import_aws();
 
     expect(result.resources[0]!.tags).toEqual({});
@@ -419,7 +419,7 @@ describe('import_aws — resource transform & filtering', () => {
       makeResource({ region: 'eu-west-1', arn: 'arn:aws:ec2:eu-west-1:123:vpc/c' }),
     ]);
 
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     const result = await import_aws();
 
     expect(result.metadata.regions).toEqual(['us-east-1', 'eu-west-1']);
@@ -428,7 +428,7 @@ describe('import_aws — resource transform & filtering', () => {
   it('infer_relationships is called when infer_dependencies is true (default)', async () => {
     h.discover_with_resource_explorer.mockResolvedValueOnce([makeResource()]);
 
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     await import_aws();
 
     expect(h.infer_relationships).toHaveBeenCalledTimes(1);
@@ -437,7 +437,7 @@ describe('import_aws — resource transform & filtering', () => {
   it('infer_relationships is NOT called when infer_dependencies is false', async () => {
     h.discover_with_resource_explorer.mockResolvedValueOnce([makeResource()]);
 
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     await import_aws({ infer_dependencies: false });
 
     expect(h.infer_relationships).not.toHaveBeenCalled();
@@ -449,7 +449,7 @@ describe('import_aws — resource transform & filtering', () => {
       makeResource({ arn: 'arn:aws:s3:::b' }),
     ]);
 
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     const result = await import_aws();
 
     expect(result.metadata.resource_count).toBe(2);
@@ -463,7 +463,7 @@ describe('import_aws — fatalErrors filter', () => {
     h.discover_with_resource_explorer.mockRejectedValueOnce(reErr);
     h.discover_with_config.mockResolvedValueOnce([makeResource()]);
 
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     const result = await import_aws();
 
     expect(result.errors.some((e) => e.code === 'RESOURCE_EXPLORER_NOT_ENABLED')).toBe(true);
@@ -475,7 +475,7 @@ describe('import_aws — fatalErrors filter', () => {
       Object.assign(new Error('expired'), { code: 'ExpiredTokenException' }),
     );
 
-    const { import_aws } = await import('../aws-importer.js');
+    const { import_aws } = await import('../aws-importer');
     const result = await import_aws();
 
     expect(result.success).toBe(false);
@@ -484,7 +484,7 @@ describe('import_aws — fatalErrors filter', () => {
 
 describe('import_aws_to_graph', () => {
   it('uses default graph_name "aws-import" when omitted', async () => {
-    const { import_aws_to_graph } = await import('../aws-importer.js');
+    const { import_aws_to_graph } = await import('../aws-importer');
     await import_aws_to_graph();
 
     expect(h.aws_result_to_graph).toHaveBeenCalledWith(
@@ -494,7 +494,7 @@ describe('import_aws_to_graph', () => {
   });
 
   it('passes a custom graph_name through to aws_result_to_graph', async () => {
-    const { import_aws_to_graph } = await import('../aws-importer.js');
+    const { import_aws_to_graph } = await import('../aws-importer');
     await import_aws_to_graph({}, 'my-aws');
 
     expect(h.aws_result_to_graph).toHaveBeenCalledWith(expect.any(Object), 'my-aws');
@@ -504,7 +504,7 @@ describe('import_aws_to_graph', () => {
     const fakeGraph = { name: 'fake' } as unknown as MutableGraph;
     h.aws_result_to_graph.mockReturnValueOnce(fakeGraph);
 
-    const { import_aws_to_graph } = await import('../aws-importer.js');
+    const { import_aws_to_graph } = await import('../aws-importer');
     const out = await import_aws_to_graph();
 
     expect(out.graph).toBe(fakeGraph);
@@ -518,7 +518,7 @@ describe('import_aws_to_graph', () => {
 
 describe('aws_result_to_graph re-export', () => {
   it('is re-exported from the orchestrator module', async () => {
-    const mod = await import('../aws-importer.js');
+    const mod = await import('../aws-importer');
     expect(mod.aws_result_to_graph).toBe(h.aws_result_to_graph);
   });
 });

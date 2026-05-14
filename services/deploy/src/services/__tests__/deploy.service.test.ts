@@ -44,12 +44,12 @@ vi.mock('@ice/db', () => ({
   },
 }));
 
-vi.mock('../deploy-locks.js', () => ({
+vi.mock('../deploy-locks', () => ({
   cancelDeploy: mocks.cancelDeploy,
   getDeploySnapshot: mocks.getDeploySnapshot,
 }));
 
-vi.mock('../snapshot-persister.js', () => ({
+vi.mock('../snapshot-persister', () => ({
   installSnapshotPersister: () => {
     mocks.loadFlags.installCalled = true;
     mocks.installSnapshotPersister();
@@ -59,35 +59,35 @@ vi.mock('../snapshot-persister.js', () => ({
 // The re-exports are pulled from sibling modules — stub each so the
 // import resolves without dragging in their dependency graphs. The
 // re-export *identity* is what we assert against.
-vi.mock('../plan-deployment.js', () => ({
+vi.mock('../plan-deployment', () => ({
   planDeployment: vi.fn(),
 }));
 
-vi.mock('../apply-deployment.js', () => ({
+vi.mock('../apply-deployment', () => ({
   applyDeployment: vi.fn(),
 }));
 
-vi.mock('../destroy-all-for-card.js', () => ({
+vi.mock('../destroy-all-for-card', () => ({
   destroyAllForCard: vi.fn(),
 }));
 
-vi.mock('../destroy-deployment.js', () => ({
+vi.mock('../destroy-deployment', () => ({
   destroyDeployment: vi.fn(),
 }));
 
-vi.mock('../rollback-deployment.js', () => ({
+vi.mock('../rollback-deployment', () => ({
   rollbackDeployment: vi.fn(),
 }));
 
-vi.mock('../canvas-overlay.js', () => ({
+vi.mock('../canvas-overlay', () => ({
   getNodeDeploymentOverlay: vi.fn(),
 }));
 
-vi.mock('../drift.service.js', () => ({
+vi.mock('../drift.service', () => ({
   checkDrift: vi.fn(),
 }));
 
-import * as deployService from '../deploy.service.js';
+import * as deployService from '../deploy.service';
 
 beforeEach(() => {
   vi.clearAllMocks();

@@ -5,7 +5,7 @@
  * Extracted from `embedded-schema-provider.ts` (rf-esp-1).
  */
 
-import type { SchemaQuery } from '../schema-provider.js';
+import type { SchemaQuery } from '../schema-provider';
 
 /**
  * SQLite schema registry interface (from @ice-engine/schemas/db).

@@ -22,21 +22,21 @@
  * `async get_resource(...args) { return resources_get(this.ctx, ...args); }`.
  */
 
-import { create_node_id } from '../../types/graph.js';
-import { InternalError } from '../../types/errors.js';
-import { success, failure } from '../../types/result.js';
-import type { IceError } from '../../types/errors.js';
-import type { NodeId } from '../../types/graph.js';
-import type { ResourceState } from '../../types/providers.js';
-import type { Result } from '../../types/result.js';
+import { create_node_id } from '../../types/graph';
+import { InternalError } from '../../types/errors';
+import { success, failure } from '../../types/result';
+import type { IceError } from '../../types/errors';
+import type { NodeId } from '../../types/graph';
+import type { ResourceState } from '../../types/providers';
+import type { Result } from '../../types/result';
 import type {
   StoredResourceState,
   ResourceQuery,
   StateChangeType,
   StateChangeEvent,
-} from '../state-store.js';
-import type { DeploymentId } from '../../types/deployment.js';
-import type { ResourceRow, SqliteContext } from './types.js';
+} from '../state-store';
+import type { DeploymentId } from '../../types/deployment';
+import type { ResourceRow, SqliteContext } from './types';
 import type { Database } from 'better-sqlite3';
 
 // =============================================================================

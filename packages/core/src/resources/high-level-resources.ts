@@ -32,7 +32,7 @@ export type {
   NodeBehavior,
   OptionDetail,
   ProviderImplementation,
-} from './high-level-resources/types.js';
+} from './high-level-resources/types';
 
 // ─── Runtime re-exports ─────────────────────────────────────────────────────
 export {
@@ -44,4 +44,4 @@ export {
   getBehaviorLabel,
   getGCPCloudAssetTypes,
   getHighLevelResourcesForPalette,
-} from './high-level-resources/helpers.js';
+} from './high-level-resources/helpers';

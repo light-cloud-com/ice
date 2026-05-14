@@ -13,8 +13,8 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { import_azure, import_azure_to_graph, azure_result_to_graph } from '../azure-importer.js';
-import type { AzureImportResult, AzureImportedResource } from '../types.js';
+import { import_azure, import_azure_to_graph, azure_result_to_graph } from '../azure-importer';
+import type { AzureImportResult, AzureImportedResource } from '../types';
 
 // =============================================================================
 // Function-constructor stub: intercepts `Function('m', 'return import(m)')`.

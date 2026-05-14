@@ -206,9 +206,10 @@ export const OnboardingPage: React.FC = () => {
               <button
                 id="ice-onboarding-nav-btn-back"
                 onClick={goBack}
+                aria-label={t('onboarding.nav.back')}
                 className="flex items-center gap-1 text-xs text-ice-text-2 hover:text-ice-text-1 px-3 py-1.5 rounded-md hover:bg-ice-hover transition-colors"
               >
-                <ChevronLeft className="w-3.5 h-3.5" />
+                <ChevronLeft className="w-3.5 h-3.5" aria-hidden="true" />
                 {t('onboarding.nav.back')}
               </button>
             ) : (
@@ -220,6 +221,7 @@ export const OnboardingPage: React.FC = () => {
                 <button
                   id="ice-onboarding-nav-btn-skip"
                   onClick={handleSkipStep}
+                  aria-label={t('onboarding.nav.skip')}
                   className="text-xs text-ice-text-3 hover:text-ice-text-1 px-3 py-1.5 rounded-md hover:bg-ice-hover transition-colors"
                 >
                   {t('onboarding.nav.skip')}
@@ -230,18 +232,20 @@ export const OnboardingPage: React.FC = () => {
                 <button
                   id="ice-onboarding-nav-btn-next"
                   onClick={goNext}
+                  aria-label={t('onboarding.nav.continue')}
                   className="flex items-center gap-1 text-xs font-medium px-4 py-1.5 rounded-md bg-ice-accent text-white hover:bg-ice-accent-hover transition-colors"
                 >
                   {t('onboarding.nav.continue')}
-                  <ChevronRight className="w-3.5 h-3.5" />
+                  <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
                 </button>
               ) : (
                 <button
                   id="ice-onboarding-nav-btn-next"
                   onClick={goNext}
+                  aria-label={t('onboarding.nav.createAndStart')}
                   className="flex items-center gap-1.5 text-xs font-medium px-4 py-1.5 rounded-md bg-ice-green text-white hover:bg-ice-green/90 transition-colors"
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
+                  <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
                   {t('onboarding.nav.createAndStart')}
                 </button>
               )}

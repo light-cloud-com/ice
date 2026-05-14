@@ -1,24 +1,24 @@
 /**
- * tour-12 — Tour config validation tests.
+ * Tour config validation tests.
  *
  * Pure data-shape tests under node-env. No React, no DOM, no slice —
- * we're asserting that the in-tree tour configs (`canvas-tour`,
- * `palette-tour`) satisfy the contracts the runner expects.
+ * we're asserting that the in-tree tour configs satisfy the contracts
+ * the runner expects.
  */
 import { describe, it, expect } from 'vitest';
 
 import { tours } from '../tours';
 import { canvasTour } from '../canvas-tour';
-import { paletteTour } from '../palette-tour';
+import { dashboardTour } from '../dashboard-tour';
 import type { Tour, TourStep } from '../../tour.types';
 
 const allConfigured: readonly Tour[] = tours;
 
 describe('tours config — registry surface', () => {
-  it('exports at least canvasTour and paletteTour', () => {
+  it('exports the dashboard and canvas tours', () => {
     const ids = allConfigured.map((t) => t.id);
+    expect(ids).toContain('dashboard-tour');
     expect(ids).toContain('canvas-tour');
-    expect(ids).toContain('palette-tour');
   });
 
   it('every tour has a non-empty steps array', () => {
@@ -82,47 +82,55 @@ describe('tours config — step-shape invariants', () => {
 });
 
 describe('canvas-tour — shape', () => {
-  it('has the 5 expected step ids in order', () => {
+  it('has the 10 expected step ids in top-to-bottom order', () => {
     expect(canvasTour.steps.map((s: TourStep) => s.id)).toEqual([
       'canvas-overview',
-      'palette-intro',
-      'palette-search',
-      'properties-intro',
-      'ai-intro',
+      'projects',
+      'blocks',
+      'templates',
+      'properties',
+      'ai',
+      'cost',
+      'integration-cloud',
+      'integration-github',
+      'deploy',
     ]);
   });
 
-  it('all steps target existing canonical anchors (id-prefixed)', () => {
-    // Anchors are validated against the live codebase in blueprint §1.2;
-    // here we just assert each canvas-tour step uses the documented
-    // selector form (a `#` id), not arbitrary CSS.
+  it('all steps target id-prefixed anchors', () => {
     for (const s of canvasTour.steps) {
       expect(typeof s.target).toBe('string');
       expect((s.target as string).startsWith('#')).toBe(true);
     }
   });
 
-  it('terminal step (ai-intro) hides skip and uses finish label', () => {
+  it('terminal step (deploy) hides skip and uses finish label', () => {
     const last = canvasTour.steps[canvasTour.steps.length - 1];
-    expect(last.id).toBe('ai-intro');
+    expect(last.id).toBe('deploy');
     expect(last.actions?.hideSkip).toBe(true);
     expect(last.actions?.nextLabel).toBe('tour.actions.finish');
   });
+
+  it('declares an autoStart predicate', () => {
+    expect(typeof canvasTour.autoStart).toBe('function');
+  });
 });
 
-describe('palette-tour — shape', () => {
-  it('has 3 steps demonstrating multi-anchor-source pattern', () => {
-    expect(paletteTour.steps).toHaveLength(3);
-    // First two: id selectors. Third: data-testid attribute selector.
-    const targets = paletteTour.steps.map((s) => s.target as string);
-    expect(targets[0]?.startsWith('#')).toBe(true);
-    expect(targets[1]?.startsWith('#')).toBe(true);
-    expect(targets[2]?.includes('data-testid')).toBe(true);
+describe('dashboard-tour — shape', () => {
+  it('has 2 steps in order', () => {
+    expect(dashboardTour.steps.map((s: TourStep) => s.id)).toEqual([
+      'dashboard-overview',
+      'create-project',
+    ]);
   });
 
-  it('has unique tour id distinct from canvas-tour', () => {
-    expect(paletteTour.id).toBe('palette-tour');
-    expect(paletteTour.id).not.toBe(canvasTour.id);
+  it('declares an autoStart predicate', () => {
+    expect(typeof dashboardTour.autoStart).toBe('function');
+  });
+
+  it('has unique tour id', () => {
+    expect(dashboardTour.id).toBe('dashboard-tour');
+    expect(dashboardTour.id).not.toBe(canvasTour.id);
   });
 });
 

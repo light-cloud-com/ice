@@ -29,8 +29,8 @@
  */
 
 import { useEffect, useRef, type MutableRefObject } from 'react';
-import { KEYBOARD_PAN_SPEED } from './state.js';
-import type { CanvasViewport, UseCanvasInteractionsOptions } from './types.js';
+import { KEYBOARD_PAN_SPEED } from './state';
+import type { CanvasViewport, UseCanvasInteractionsOptions } from './types';
 
 interface UseKeyboardHandlersDeps {
   // Refs owned by the orchestrator — read by the keyboard handlers.

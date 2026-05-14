@@ -10,7 +10,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import prisma from '@ice/db';
-import { resolveProjectContext } from '../project-context.js';
+import { resolveProjectContext } from '../project-context';
 
 vi.mock('@ice/db', () => ({
   default: {

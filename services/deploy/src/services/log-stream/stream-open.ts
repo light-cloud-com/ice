@@ -30,18 +30,18 @@ import * as providerService from '@ice/service-credentials';
 import {
   isPermissionDenied,
   probeErrorMessage,
-} from './entry-mapping.js';
-import { resolveLogFilter } from './filter-resolver.js';
-import { startPolling } from './polling.js';
-import { emitToRoom, streams, subscriptionIndex } from './registry.js';
-import { stopUnderlyingStream } from './stream-lifecycle.js';
-import { startTail } from './tail.js';
+} from './entry-mapping';
+import { resolveLogFilter } from './filter-resolver';
+import { startPolling } from './polling';
+import { emitToRoom, streams, subscriptionIndex } from './registry';
+import { stopUnderlyingStream } from './stream-lifecycle';
+import { startTail } from './tail';
 import type {
   ActiveStream,
   SourceResolution,
   StreamingMode,
   SubscribeArgs,
-} from './types.js';
+} from './types';
 
 /**
  * One-shot stream setup for a `resolved` source: re-derive the filter +

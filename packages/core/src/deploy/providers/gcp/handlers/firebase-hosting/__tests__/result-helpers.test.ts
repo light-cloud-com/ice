@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { TYPE, result, fail } from '../result-helpers.js';
+import { TYPE, result, fail } from '../result-helpers';
 
 describe('firebase-hosting/result-helpers', () => {
   describe('TYPE', () => {

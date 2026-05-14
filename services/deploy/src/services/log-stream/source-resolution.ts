@@ -30,8 +30,8 @@
 import prisma from '@ice/db';
 import * as providerService from '@ice/service-credentials';
 
-import { resolveLogFilter } from './filter-resolver.js';
-import type { SourceResolution, SubscribeArgs } from './types.js';
+import { resolveLogFilter } from './filter-resolver';
+import type { SourceResolution, SubscribeArgs } from './types';
 
 export async function resolveSource(args: SubscribeArgs): Promise<SourceResolution> {
   const { cardId, environmentId, terminalNodeId, sourceNodeIdOverride, organisationId, candidateSources } = args;

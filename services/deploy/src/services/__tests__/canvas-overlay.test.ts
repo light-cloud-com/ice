@@ -27,7 +27,7 @@ vi.mock('@ice/db', () => ({
   },
 }));
 
-import { getNodeDeploymentOverlay } from '../canvas-overlay.js';
+import { getNodeDeploymentOverlay } from '../canvas-overlay';
 // @ts-ignore — resolved at runtime via pnpm workspace; mocked above
 import prismaModule from '@ice/db';
 

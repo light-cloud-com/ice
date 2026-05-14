@@ -32,7 +32,7 @@
  *   Adding verify to create changes behavior.
  */
 
-import type { GCPHandlerContext } from '../../types.js';
+import type { GCPHandlerContext } from '../../types';
 
 export type PublicGrantStrategy = 'iam' | 'legacy-acl' | 'none';
 

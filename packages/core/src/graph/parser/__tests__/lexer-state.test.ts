@@ -32,7 +32,7 @@ import {
   ls_add_token,
   ls_add_token_with_literal,
   ls_add_error,
-} from '../lexer-state.js';
+} from '../lexer-state';
 
 describe('make_lexer_state', () => {
   it('seeds pos=0, line=1, column=1, empty tokens/errors', () => {

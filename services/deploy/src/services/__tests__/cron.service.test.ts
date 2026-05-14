@@ -55,7 +55,7 @@ vi.mock('@ice/db', () => ({
   },
 }));
 
-import { startCronJobs } from '../cron.service.js';
+import { startCronJobs } from '../cron.service';
 import prisma from '@ice/db';
 
 const refreshTokenDeleteMany = prisma.refreshToken.deleteMany as unknown as ReturnType<typeof vi.fn>;

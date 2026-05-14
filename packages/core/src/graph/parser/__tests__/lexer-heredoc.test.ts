@@ -29,9 +29,9 @@
  * relies on the dispatch site having consumed the leading `<<` first.
  */
 import { describe, it, expect } from 'vitest';
-import { Lexer, tokenize } from '../lexer.js';
-import { make_lexer_state } from '../lexer-state.js';
-import { scan_heredoc } from '../lexer-heredoc.js';
+import { Lexer, tokenize } from '../lexer';
+import { make_lexer_state } from '../lexer-state';
+import { scan_heredoc } from '../lexer-heredoc';
 
 describe('scan_heredoc — basic', () => {
   it('plain heredoc emits STRING with literal=content', () => {

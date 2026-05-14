@@ -19,8 +19,8 @@ import {
   isDomain,
   isContainer,
   isGateway,
-} from './classifiers.js';
-import type { CanvasIssue, ValidatableNode, ValidatableEdge, ValidationContext } from './types.js';
+} from './classifiers';
+import type { CanvasIssue, ValidatableNode, ValidatableEdge, ValidationContext } from './types';
 
 /**
  * Validate architectural patterns and best practices.

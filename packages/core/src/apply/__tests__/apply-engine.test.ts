@@ -13,26 +13,26 @@ import {
   apply_succeeded,
   get_failed_resources,
   get_successful_resources,
-} from '../apply-engine.js';
-import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph.js';
+} from '../apply-engine';
+import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph';
 import {
   create_deployment_id,
   type DeploymentPlan,
   type PlannedChange,
   type DeploymentAction,
-} from '../../types/deployment.js';
-import { create_node_id, type NodeId } from '../../types/graph.js';
+} from '../../types/deployment';
+import { create_node_id, type NodeId } from '../../types/graph';
 import type {
   ProviderClient,
   ResourceState,
   DeploymentResult,
   DestroyResult,
-} from '../../types/providers.js';
-import type { ApplyProgressEvent, ApplyResult } from '../types.js';
+} from '../../types/providers';
+import type { ApplyProgressEvent, ApplyResult } from '../types';
 
 // ─── Mock the mock-provider so apply_plan picks up our fake ──────────
 
-vi.mock('../../providers/mock-provider.js', () => ({
+vi.mock('../../providers/mock-provider', () => ({
   create_mock_provider: vi.fn(() => current_provider),
 }));
 

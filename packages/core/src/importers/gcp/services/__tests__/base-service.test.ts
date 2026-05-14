@@ -5,8 +5,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { BaseGCPService } from '../base-service.js';
-import type { ServiceDiscoveryResult, GCPServiceType } from '../../types.js';
+import { BaseGCPService } from '../base-service';
+import type { ServiceDiscoveryResult, GCPServiceType } from '../../types';
 
 class TestService extends BaseGCPService {
   get service_type(): GCPServiceType {

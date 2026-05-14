@@ -8,14 +8,14 @@ import {
   import_resource_instance,
   infer_dependencies,
   scan_for_references,
-} from '../resource-conversion.js';
+} from '../resource-conversion';
 import type {
   TerraformResource,
   TerraformResourceInstance,
   ImportedResource,
   ImportWarning,
-} from '../types.js';
-import type { TerraformImportOptions } from '../state-importer.js';
+} from '../types';
+import type { TerraformImportOptions } from '../state-importer';
 
 const default_opts: Required<Omit<TerraformImportOptions, 'target_graph'>> = {
   include_data_sources: false,

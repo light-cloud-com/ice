@@ -4,14 +4,14 @@
  * Handles: gcp.storage.bucket
  */
 
-import { SERVICE_NAMES, sdk_not_available, sdk_not_available_short } from '../messages.js';
-import { createOrAdoptBucket } from './cloud-storage/bucket-creator.js';
-import { applySimpleProperties, prepareForAclFallback } from './cloud-storage/bucket-updater.js';
-import { resolveOutputUrl } from './cloud-storage/bucket-utils.js';
-import { uploadPlaceholders } from './cloud-storage/placeholder-uploader.js';
-import { grantPublicAccess } from './cloud-storage/public-access-granter.js';
-import { result, fail } from './cloud-storage/result-helpers.js';
-import type { GCPResourceHandler } from '../types.js';
+import { SERVICE_NAMES, sdk_not_available, sdk_not_available_short } from '../messages';
+import { createOrAdoptBucket } from './cloud-storage/bucket-creator';
+import { applySimpleProperties, prepareForAclFallback } from './cloud-storage/bucket-updater';
+import { resolveOutputUrl } from './cloud-storage/bucket-utils';
+import { uploadPlaceholders } from './cloud-storage/placeholder-uploader';
+import { grantPublicAccess } from './cloud-storage/public-access-granter';
+import { result, fail } from './cloud-storage/result-helpers';
+import type { GCPResourceHandler } from '../types';
 
 export const cloud_storage_handler: GCPResourceHandler = {
   async create(name, properties, ctx) {

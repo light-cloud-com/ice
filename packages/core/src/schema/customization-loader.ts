@@ -8,37 +8,37 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { get_base_db_path as resolve_base_db_path } from './customization/base-db.js';
-import { create_example_files } from './customization/example-files.js';
+import { get_base_db_path as resolve_base_db_path } from './customization/base-db';
+import { create_example_files } from './customization/example-files';
 import {
   validate_custom_resource_file,
   validate_override_file,
   validate_provider_file,
   validate_relationships_file,
-} from './customization/file-validators.js';
+} from './customization/file-validators';
 import {
   CUSTOM_SUBDIR,
   DEFAULT_CUSTOMIZATION_DIR,
   OVERRIDES_SUBDIR,
   PROVIDERS_SUBDIR,
   RELATIONSHIPS_SUBDIR,
-} from './customization/paths.js';
-import { scan_directory } from './customization/scanner.js';
+} from './customization/paths';
+import { scan_directory } from './customization/scanner';
 
 // ============================================================================
 // Types (re-exported from customization/* so external consumers continue
 // importing them from this shim).
 // ============================================================================
 
-export type { CustomizationPaths } from './customization/paths.js';
-import type { CustomizationPaths } from './customization/paths.js';
-export type { CustomizationError, ValidationWarning } from './customization/file-validators.js';
+export type { CustomizationPaths } from './customization/paths';
+import type { CustomizationPaths } from './customization/paths';
+export type { CustomizationError, ValidationWarning } from './customization/file-validators';
 import type {
   CustomizationError,
   ValidationWarning,
-} from './customization/file-validators.js';
-export type { CustomizationFile } from './customization/scanner.js';
-import type { CustomizationFile } from './customization/scanner.js';
+} from './customization/file-validators';
+export type { CustomizationFile } from './customization/scanner';
+import type { CustomizationFile } from './customization/scanner';
 
 export interface CustomizationSummary {
   base_path: string;

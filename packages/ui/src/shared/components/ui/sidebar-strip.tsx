@@ -49,6 +49,8 @@ const SidebarStripButton: React.FC<{ tab: SidebarStripTab; side: SidebarSide }> 
     <button
       onClick={tab.onClick}
       title={tab.label}
+      aria-label={tab.label}
+      aria-pressed={tab.active}
       data-tour-id={`sidebar-strip-${tab.id}`}
       className={cn(
         'relative flex items-center justify-center w-[26px] py-1.5 rounded-sm transition-colors cursor-pointer',
@@ -60,13 +62,14 @@ const SidebarStripButton: React.FC<{ tab: SidebarStripTab; side: SidebarSide }> 
       {/* Active indicator bar */}
       {tab.active && (
         <div
+          aria-hidden="true"
           className="absolute top-0 bottom-0 w-[2px] bg-ice-accent"
           style={{ [side === 'left' ? 'left' : 'right']: 0 }}
         />
       )}
 
       <div className="flex flex-col items-center gap-1">
-        <Icon className="w-3.5 h-3.5 shrink-0" />
+        <Icon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
         <span
           className="text-ice-2xs font-medium leading-none whitespace-nowrap"
           style={{

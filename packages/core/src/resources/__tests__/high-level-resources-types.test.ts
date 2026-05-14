@@ -7,8 +7,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import * as ShimModule from '../high-level-resources.js';
-import * as TypesModule from '../high-level-resources/types.js';
+import * as ShimModule from '../high-level-resources';
+import * as TypesModule from '../high-level-resources/types';
 import type {
   HighLevelCategory,
   HighLevelProperty,
@@ -16,7 +16,7 @@ import type {
   NodeBehavior,
   OptionDetail,
   ProviderImplementation,
-} from '../high-level-resources/types.js';
+} from '../high-level-resources/types';
 
 describe('high-level-resources/types — direct module imports', () => {
   it('module is loadable as a namespace', () => {

@@ -217,14 +217,21 @@ describe('AiChatPanel — provider badge', () => {
     expect((header.props as { badge?: unknown }).badge).toBeUndefined();
   });
 
-  it('renders no badge when providerInfo.ok is false', () => {
+  it('renders a Not connected badge button when providerInfo.ok is false', () => {
     mocks.useStateOverrides = { 5: { ok: false, isLocal: false, provider: 'cloud', model: 'gpt' } };
     const tree = render();
     const header = findFirst(
       tree,
       (el) => typeof el.type === 'function' && (el.props as { title?: string }).title === '[t:ai.chat.title]',
     )!;
-    expect((header.props as { badge?: unknown }).badge).toBeUndefined();
+    const badge = (header.props as { badge?: unknown }).badge;
+    expect(badge).toBeTruthy();
+    // The badge is a button whose text uses the i18n key
+    // `ai.chat.disconnectedBadge` (the test's t() mock returns the key
+    // wrapped in `[t:…]`).
+    const btn = findFirst(badge, (el) => el.type === 'button');
+    expect(btn).toBeTruthy();
+    expect(JSON.stringify(btn?.props.children)).toContain('ai.chat.disconnectedBadge');
   });
 
   it('renders the local-provider badge with emerald styling and a Cpu icon', () => {

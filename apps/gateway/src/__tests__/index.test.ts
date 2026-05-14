@@ -215,6 +215,7 @@ const h = vi.hoisted(() => {
     setDesktopUser: vi.fn((userId: string, orgId: string) =>
       bag.setDesktopUserCalls.push({ userId, orgId }),
     ),
+    ensureLocalSecrets: vi.fn(() => ({ path: '/fake/secrets.json', generated: false })),
   };
   const aiMod = {
     startLocalAiServer: vi.fn(() => {

@@ -10,8 +10,8 @@
  * Repository format: accepts both "owner/repo" (GitHub full_name) and full URLs.
  */
 
-import { BUILD_MESSAGES } from '../messages.js';
-import type { GCPHandlerContext } from '../types.js';
+import { BUILD_MESSAGES } from '../messages';
+import type { GCPHandlerContext } from '../types';
 
 const ARTIFACT_REGISTRY_BASE = 'https://artifactregistry.googleapis.com/v1';
 const CLOUD_BUILD_BASE = 'https://cloudbuild.googleapis.com/v1';

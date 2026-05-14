@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { classifyAzureError } from '../azure.js';
-import { ImportErrorCode } from '../types.js';
+import { classifyAzureError } from '../azure';
+import { ImportErrorCode } from '../types';
 
 describe('classifyAzureError — authentication failed', () => {
   it.each([

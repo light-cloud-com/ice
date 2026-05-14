@@ -8,18 +8,18 @@ import {
   create_default_backend_service,
   create_serverless_backend,
   verify_backend_bucket_exists,
-} from './load-balancer/backend-creator.js';
-import { fetch_current_status, fetch_initial_status, fetch_ip_address } from './load-balancer/cert-fetcher.js';
-import { wait_for_compute_op } from './load-balancer/compute-ops.js';
+} from './load-balancer/backend-creator';
+import { fetch_current_status, fetch_initial_status, fetch_ip_address } from './load-balancer/cert-fetcher';
+import { wait_for_compute_op } from './load-balancer/compute-ops';
 import {
   create_forwarding_rule,
   create_redirect_chain,
   create_target_proxy,
   create_url_map,
-} from './load-balancer/lb-builder.js';
-import { BASE_URL, fail, result } from './load-balancer/result-helpers.js';
-import { backend_ref, compute_primary_url } from './load-balancer/url-builder.js';
-import type { GCPResourceHandler } from '../types.js';
+} from './load-balancer/lb-builder';
+import { BASE_URL, fail, result } from './load-balancer/result-helpers';
+import { backend_ref, compute_primary_url } from './load-balancer/url-builder';
+import type { GCPResourceHandler } from '../types';
 
 export const load_balancer_handler: GCPResourceHandler = {
   async create(name, properties, ctx) {

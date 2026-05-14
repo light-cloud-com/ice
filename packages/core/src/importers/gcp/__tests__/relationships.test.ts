@@ -6,8 +6,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { infer_relationships, get_relationship_type } from '../relationships.js';
-import type { GCPImportedResource, GCPImportWarning } from '../types.js';
+import { infer_relationships, get_relationship_type } from '../relationships';
+import type { GCPImportedResource, GCPImportWarning } from '../types';
 
 function res(partial: Partial<GCPImportedResource>): GCPImportedResource {
   return {

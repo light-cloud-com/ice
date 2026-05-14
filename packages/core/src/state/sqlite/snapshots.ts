@@ -29,12 +29,12 @@
  * to produce the public StateSnapshot.resources array.
  */
 
-import { success } from '../../types/result.js';
-import { ensure_db, emit_event, row_to_resource, wrap_error } from './resources.js';
-import type { IceError } from '../../types/errors.js';
-import type { Result } from '../../types/result.js';
-import type { StateSnapshot } from '../state-store.js';
-import type { ResourceRow, SnapshotRow, SqliteContext } from './types.js';
+import { success } from '../../types/result';
+import { ensure_db, emit_event, row_to_resource, wrap_error } from './resources';
+import type { IceError } from '../../types/errors';
+import type { Result } from '../../types/result';
+import type { StateSnapshot } from '../state-store';
+import type { ResourceRow, SnapshotRow, SqliteContext } from './types';
 
 // =============================================================================
 // Row translation

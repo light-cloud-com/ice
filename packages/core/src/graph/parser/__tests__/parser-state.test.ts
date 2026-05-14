@@ -36,8 +36,8 @@ import {
   ps_is_at_end,
   ps_add_error,
   ps_synchronize,
-} from '../parser-state.js';
-import type { Token, TokenType } from '../tokens.js';
+} from '../parser-state';
+import type { Token, TokenType } from '../tokens';
 
 /** Build a minimal token at line/col 1. */
 function tk(type: TokenType, value = '', literal?: unknown): Token {

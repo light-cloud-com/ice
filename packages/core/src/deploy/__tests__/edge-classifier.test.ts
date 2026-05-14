@@ -20,7 +20,7 @@ import {
   hasPrivateNetworkAncestor,
   isCustomDomainStandalone,
   map_edge_relationship,
-} from '../edge-classifier.js';
+} from '../edge-classifier';
 
 describe('UI_ONLY_TYPES', () => {
   it('contains exactly 3 entries', () => {

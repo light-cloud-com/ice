@@ -77,7 +77,7 @@ beforeEach(async () => {
   delete process.env.JWT_SECRET;
   vi.spyOn(console, 'error').mockImplementation(() => {});
 
-  const { default: authRouter } = await import('../auth.js');
+  const { default: authRouter } = await import('../auth');
   const app = express();
   app.use(express.json());
   app.use('/api/auth', authRouter);
@@ -297,7 +297,7 @@ describe('JWT_SECRET resolution', () => {
     process.env.NODE_ENV = 'test';
     vi.resetModules();
 
-    const { default: routerWithRealSecret } = await import('../auth.js');
+    const { default: routerWithRealSecret } = await import('../auth');
     const app = express();
     app.use(express.json());
     app.use('/api/auth', routerWithRealSecret);
@@ -331,7 +331,7 @@ describe('JWT_SECRET resolution', () => {
     delete process.env.VITEST;
     vi.resetModules();
 
-    await expect(import('../auth.js')).rejects.toThrow('JWT_SECRET is required');
+    await expect(import('../auth')).rejects.toThrow('JWT_SECRET is required');
 
     // Restore for subsequent tests in case the suite uses ordered execution.
     if (previousVitest !== undefined) process.env.VITEST = previousVitest;

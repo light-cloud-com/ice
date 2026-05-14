@@ -19,10 +19,10 @@ import {
   SqliteStateStore,
   create_sqlite_state_store,
   create_memory_state_store,
-} from '../sqlite-state-store.js';
-import { create_node_id } from '../../types/graph.js';
-import { create_deployment_id } from '../../types/deployment.js';
-import type { DeploymentRecord, StateChangeEvent, StoredResourceState } from '../state-store.js';
+} from '../sqlite-state-store';
+import { create_node_id } from '../../types/graph';
+import { create_deployment_id } from '../../types/deployment';
+import type { DeploymentRecord, StateChangeEvent, StoredResourceState } from '../state-store';
 
 function fixture_resource(overrides: Partial<StoredResourceState> = {}): StoredResourceState {
   return {

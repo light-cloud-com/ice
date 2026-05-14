@@ -30,8 +30,8 @@
  *    sees `null` and returns `null`. Same for nested objects.
  */
 
-import { to_camel_case } from './case-utils.js';
-import type { PulumiResourceOptions } from './types.js';
+import { to_camel_case } from './case-utils';
+import type { PulumiResourceOptions } from './types';
 
 /**
  * Build the resource-options block for a Pulumi resource.

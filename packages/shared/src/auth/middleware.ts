@@ -14,8 +14,6 @@ function getJwtSecret(): string {
   return secret || 'test-secret';
 }
 
-const JWT_SECRET = getJwtSecret();
-
 export interface AuthRequest extends Request {
   userId?: string;
   organisationId?: string;
@@ -60,7 +58,7 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
 
   const token = authHeader.slice(7);
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as {
+    const payload = jwt.verify(token, getJwtSecret()) as {
       userId: string;
       organisationId: string;
     };
@@ -191,11 +189,11 @@ export function requireOrgRole(...allowedRoles: string[]) {
 }
 
 export function generateToken(userId: string, organisationId: string): string {
-  return jwt.sign({ userId, organisationId }, JWT_SECRET, { expiresIn: '1h' });
+  return jwt.sign({ userId, organisationId }, getJwtSecret(), { expiresIn: '1h' });
 }
 
 export function generateRefreshToken(userId: string, organisationId: string): string {
-  return jwt.sign({ userId, organisationId, type: 'refresh', jti: crypto.randomUUID() }, JWT_SECRET, {
+  return jwt.sign({ userId, organisationId, type: 'refresh', jti: crypto.randomUUID() }, getJwtSecret(), {
     expiresIn: '30d',
   });
 }

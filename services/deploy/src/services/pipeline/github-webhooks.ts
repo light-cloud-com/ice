@@ -15,7 +15,7 @@
  */
 
 import prisma from '@ice/db';
-import { GITHUB_API, GITHUB_HEADERS, type WebhookRegistrationResult } from './types.js';
+import { GITHUB_API, GITHUB_HEADERS, type WebhookRegistrationResult } from './types';
 
 /**
  * Resolve the user's GitHub access token. Returns the decrypted token

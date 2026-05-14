@@ -24,6 +24,7 @@ const PROVIDER_LABELS: Record<string, string> = {
   gcp: 'GCP',
   aws: 'AWS',
   azure: 'Azure',
+  anthropic: 'Claude',
 };
 // Note: PROVIDER_LABELS remain hardcoded as product brand names
 

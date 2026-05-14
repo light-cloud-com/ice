@@ -93,7 +93,7 @@ function makeFakeIo(rooms: Map<string, Set<string>> = new Map()): {
 
 async function freshSocketService() {
   vi.resetModules();
-  return import('../service.js');
+  return import('../service');
 }
 
 afterEach(() => {
@@ -118,7 +118,7 @@ describe('setupSocketService — auth middleware', () => {
   it('community-edition (desktop) bypass: writes desktop user/org to socket.data and admits', async () => {
     const mod = await freshSocketService();
     // Reach into the auth/middleware module via the same fresh-modules cache.
-    const auth = await import('../../auth/middleware.js');
+    const auth = await import('../../auth/middleware');
     auth.setDesktopUser('desktop-u', 'desktop-o');
 
     const { io } = makeFakeIo();

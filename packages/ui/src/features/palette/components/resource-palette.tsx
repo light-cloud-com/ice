@@ -22,6 +22,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
+import { isCategoryEnabledForProvider, type CategoryId } from '@ice/constants';
 import { ENABLED_PROVIDER_IDS } from '../../../config/providers';
 import axiosInstance from '../../../shared/api/axios-instance';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../../../shared/components/ui/resizable';
@@ -95,19 +96,25 @@ export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
     });
   }, []);
 
-  // Filter components by search + provider
+  // Filter components by search + (category × provider) gate
   const filteredComponents = useMemo(
     () =>
       COMPONENTS.filter((c) => {
-        // Only show components that have at least one enabled provider
-        const hasEnabledProvider = c.providers.some((p: string) => ENABLED_PROVIDER_IDS.has(p));
-        if (!hasEnabledProvider) return false;
+        // A provider is effective for this concept only when it's globally
+        // enabled AND the concept's palette category is enabled for it.
+        const effectiveProviders = c.providers.filter(
+          (p: string) =>
+            ENABLED_PROVIDER_IDS.has(p) &&
+            isCategoryEnabledForProvider(c.category as CategoryId, p as Provider),
+        );
+        if (effectiveProviders.length === 0) return false;
 
         const matchesSearch =
           !localSearch.trim() ||
           c.name.toLowerCase().includes(localSearch.toLowerCase()) ||
           c.description.toLowerCase().includes(localSearch.toLowerCase());
-        const matchesProvider = selectedProvider === 'all' || c.providers.includes(selectedProvider as Provider);
+        const matchesProvider =
+          selectedProvider === 'all' || effectiveProviders.includes(selectedProvider as Provider);
         return matchesSearch && matchesProvider;
       }),
     [localSearch, selectedProvider],

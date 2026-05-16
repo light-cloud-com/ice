@@ -16,6 +16,17 @@ export {
 } from './providers';
 
 export {
+  type ProviderFlags,
+  PROVIDER_FLAGS,
+  isProviderEnabled,
+  isCategoryEnabledForProvider,
+  isIceTypeEnabledForProvider,
+  getEnabledProvidersForCategory,
+  ENABLED_PROVIDER_IDS,
+  ENABLED_PROVIDERS,
+} from './feature-flags';
+
+export {
   buildHeaderPrompt,
   buildIntentRoutingPrompt,
   buildOperationsPrompt,
@@ -103,4 +114,12 @@ export {
   GROUP_COLORS,
 } from './templates';
 
-export { LEVEL_VISIBLE_CATEGORIES, NETWORK_CONTAINER_TYPES, L1_VISIBLE_NETWORK_TYPES } from './categories';
+export {
+  LEVEL_VISIBLE_CATEGORIES,
+  NETWORK_CONTAINER_TYPES,
+  L1_VISIBLE_NETWORK_TYPES,
+  CATEGORY_IDS,
+  type CategoryId,
+  ICE_TYPE_TO_CATEGORY_ID,
+  getCategoryForIceType,
+} from './categories';

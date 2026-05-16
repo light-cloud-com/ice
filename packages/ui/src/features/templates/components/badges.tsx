@@ -16,6 +16,7 @@
  * always imported together by `TemplateCard` and `TemplateDetail`.
  */
 
+import { isProviderEnabled } from '@ice/constants';
 import React, { useMemo } from 'react';
 
 import { getBrandIcon } from '../../../assets/icons/brand-registry';
@@ -45,10 +46,11 @@ export interface ProviderBadgesProps {
 }
 
 export const ProviderBadges: React.FC<ProviderBadgesProps> = ({ providers }) => {
-  if (!providers || providers.length === 0) return null;
+  const enabled = providers?.filter(isProviderEnabled) ?? [];
+  if (enabled.length === 0) return null;
   return (
     <span className="flex items-center gap-0.5">
-      {providers.map((p) => (
+      {enabled.map((p) => (
         <span key={p} className="text-ice-2xs font-medium px-1 py-0 rounded bg-ice-raised text-ice-text-3 uppercase">
           {p}
         </span>

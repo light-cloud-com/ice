@@ -34,7 +34,14 @@ import {
   SNIPPET_LANGUAGE_LABELS,
   DEFAULT_ZOOM_THRESHOLDS,
 } from '../index';
-import { ALL_PROVIDERS } from '@ice/constants';
+import {
+  ALL_PROVIDERS,
+  CATEGORY_IDS,
+  ICE_TYPE_TO_CATEGORY_ID,
+  getCategoryForIceType,
+  isCategoryEnabledForProvider,
+  PROVIDER_FLAGS,
+} from '@ice/constants';
 
 describe('@ice/blocks barrel — re-exports', () => {
   it('exposes the expansion engine as a callable function', () => {
@@ -141,34 +148,116 @@ describe('getBlueprint — provider-agnostic lookup', () => {
   });
 });
 
-describe('getBlueprint — provider-keyed lookup', () => {
-  it('routes Compute.StaticSite + aws to a blueprint declaring aws as a provider', () => {
-    const bp = getBlueprint('Compute.StaticSite', 'aws');
-    expect(bp).toBeDefined();
-    expect(bp!.providers).toContain('aws');
-  });
+describe('getBlueprint — provider-keyed lookup respects live PROVIDER_FLAGS', () => {
+  // Tests below assert against the *live* config: a provider that's flagged
+  // off in feature-flags.ts must return undefined; a provider that's on must
+  // resolve to a blueprint declaring it. Flipping the flag flips the test.
+  it.each(['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean'] as const)(
+    'Compute.StaticSite + %s — matches PROVIDER_FLAGS',
+    (provider) => {
+      const bp = getBlueprint('Compute.StaticSite', provider);
+      if (isCategoryEnabledForProvider('Frontend', provider)) {
+        expect(bp).toBeDefined();
+        expect(bp!.providers).toContain(provider);
+      } else {
+        expect(bp).toBeUndefined();
+      }
+    },
+  );
 
-  it('routes Compute.StaticSite + gcp to a blueprint declaring gcp as a provider', () => {
-    const bp = getBlueprint('Compute.StaticSite', 'gcp');
-    expect(bp).toBeDefined();
-    expect(bp!.providers).toContain('gcp');
-  });
+  it.each(['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean'] as const)(
+    'Database.PostgreSQL + %s — matches PROVIDER_FLAGS',
+    (provider) => {
+      const bp = getBlueprint('Database.PostgreSQL', provider);
+      if (isCategoryEnabledForProvider('Database', provider)) {
+        // The PostgreSQL blueprint may not exist for some providers regardless
+        // of the flag (e.g. design-only stacks). A defined result must still
+        // declare the provider.
+        if (bp) expect(bp.providers).toContain(provider);
+      } else {
+        expect(bp).toBeUndefined();
+      }
+    },
+  );
 
-  it('routes Database.PostgreSQL + aws to the AWS PostgreSQL blueprint', () => {
-    const bp = getBlueprint('Database.PostgreSQL', 'aws');
-    expect(bp).toBeDefined();
-    expect(bp!.providers).toContain('aws');
+  it('returns undefined for an iceType the requested provider does not declare', () => {
+    // SQS is AWS-only. Independently of the flag, GCP/Kubernetes lookups
+    // for AWS-only iceTypes must miss.
+    const bp = getBlueprint('Messaging.SQS', 'kubernetes');
+    expect(bp).toBeUndefined();
   });
+});
 
-  it('returns undefined when the iceType exists but the requested provider does not', () => {
-    // SQS is AWS-only — asking for it on GCP must miss.
-    const bp = getBlueprint('Messaging.Queue', 'kubernetes');
-    // Either it's not registered at all for kubernetes, or it is — both are
-    // valid as long as the provider matches when defined.
-    if (bp) {
-      expect(bp.providers).toContain('kubernetes');
-    } else {
-      expect(bp).toBeUndefined();
+describe('iceType → CategoryId integrity', () => {
+  it('every visible (palette) blueprint iceType resolves to a CategoryId', () => {
+    const unmapped: string[] = [];
+    for (const bp of BLOCK_BLUEPRINTS) {
+      if (bp.hiddenFromPalette) continue;
+      const cat = getCategoryForIceType(bp.iceType);
+      if (!cat) unmapped.push(bp.iceType);
     }
+    expect(unmapped).toEqual([]);
+  });
+
+  it('every entry in ICE_TYPE_TO_CATEGORY_ID points at a known CategoryId', () => {
+    const knownCats = new Set(CATEGORY_IDS);
+    for (const [iceType, cat] of Object.entries(ICE_TYPE_TO_CATEGORY_ID)) {
+      expect(knownCats.has(cat as (typeof CATEGORY_IDS)[number])).toBe(true);
+      expect(iceType).toContain('.');
+    }
+  });
+});
+
+describe('getBlueprint respects category × provider feature flags', () => {
+  // Live-state assertions: every (iceType, provider) combo that the flags
+  // disable must return undefined; every combo they enable must resolve to
+  // a blueprint declaring that provider (when one exists).
+  it('every disabled (category, provider) returns undefined for its concept iceTypes', () => {
+    for (const provider of ALL_PROVIDERS) {
+      for (const [iceType, cat] of Object.entries(ICE_TYPE_TO_CATEGORY_ID)) {
+        if (isCategoryEnabledForProvider(cat, provider)) continue;
+        expect(getBlueprint(iceType, provider)).toBeUndefined();
+      }
+    }
+  });
+
+  it('every enabled (category, provider) that has a declared blueprint resolves to it', () => {
+    for (const provider of ALL_PROVIDERS) {
+      for (const [iceType, cat] of Object.entries(ICE_TYPE_TO_CATEGORY_ID)) {
+        if (!isCategoryEnabledForProvider(cat, provider)) continue;
+        const bp = getBlueprint(iceType, provider);
+        if (bp) expect(bp.providers).toContain(provider);
+      }
+    }
+  });
+
+  // Mechanism test: flipping a flag at runtime must change the gate's
+  // verdict. Run against whichever (category, provider) is currently on so
+  // the assertion is meaningful regardless of the shipped defaults.
+  it('flipping a category off causes getBlueprint to start returning undefined', () => {
+    const sample = ALL_PROVIDERS.flatMap((p) =>
+      CATEGORY_IDS.filter((c) => isCategoryEnabledForProvider(c, p)).map((c) => ({ p, c })),
+    )[0];
+    if (!sample) return; // every combo is already off — nothing to flip
+    // Find a concept iceType that lives in this category and is declared for
+    // this provider; if none exists the flip has nothing to bite on.
+    const iceType = Object.entries(ICE_TYPE_TO_CATEGORY_ID).find(
+      ([t, c]) => c === sample.c && getBlueprint(t, sample.p) !== undefined,
+    )?.[0];
+    if (!iceType) return;
+    const before = PROVIDER_FLAGS[sample.p].categories[sample.c];
+    try {
+      expect(getBlueprint(iceType, sample.p)).toBeDefined();
+      PROVIDER_FLAGS[sample.p].categories[sample.c] = false;
+      expect(getBlueprint(iceType, sample.p)).toBeUndefined();
+    } finally {
+      PROVIDER_FLAGS[sample.p].categories[sample.c] = before;
+    }
+  });
+
+  it('provider-agnostic lookup ignores the gate', () => {
+    // Pick any iceType; agnostic lookup must resolve regardless of flags.
+    const bp = getBlueprint('Compute.Container');
+    expect(bp).toBeDefined();
   });
 });

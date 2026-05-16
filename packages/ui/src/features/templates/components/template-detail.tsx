@@ -16,6 +16,7 @@
  *     authored.
  */
 
+import { getEnabledProvidersForTemplate } from '@ice/templates';
 import { Rocket, ArrowLeft, GitBranch, Box, Cable, Layers, Plus } from 'lucide-react';
 import React, { useMemo } from 'react';
 
@@ -116,24 +117,28 @@ export const TemplateDetail: React.FC<TemplateDetailProps> = ({ template, onBack
           </div>
         </div>
 
-        {/* Providers */}
-        {template.providers && template.providers.length > 0 && (
-          <div className="px-5 mb-4">
-            <div className="text-ice-2xs font-medium text-ice-text-3 uppercase tracking-wider mb-1.5">
-              {t('templates.gallery.provider')}
+        {/* Providers (filtered by feature flags) */}
+        {(() => {
+          const enabledProviders = getEnabledProvidersForTemplate(template);
+          if (enabledProviders.length === 0) return null;
+          return (
+            <div className="px-5 mb-4">
+              <div className="text-ice-2xs font-medium text-ice-text-3 uppercase tracking-wider mb-1.5">
+                {t('templates.gallery.provider')}
+              </div>
+              <div className="flex gap-1.5">
+                {enabledProviders.map((p) => (
+                  <span
+                    key={p}
+                    className="text-ice-xs font-medium px-2.5 py-1 rounded-md bg-ice-raised text-ice-text-2 uppercase"
+                  >
+                    {p}
+                  </span>
+                ))}
+              </div>
             </div>
-            <div className="flex gap-1.5">
-              {template.providers.map((p) => (
-                <span
-                  key={p}
-                  className="text-ice-xs font-medium px-2.5 py-1 rounded-md bg-ice-raised text-ice-text-2 uppercase"
-                >
-                  {p}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Provider Cost Comparison */}
         {providerComparison.length > 0 && (

@@ -1,12 +1,9 @@
 /**
- * Enabled Cloud Providers — single source of truth
+ * Enabled Cloud Providers — UI shim
  *
- * Only AWS, GCP, Azure for now. Add more here to enable them everywhere:
- * palette, wizard, provider settings, blocks.
+ * Single source of truth lives in `@ice/constants/feature-flags`
+ * (`PROVIDER_FLAGS`). Flip a provider there to hide it everywhere in
+ * the UI: palette, wizard, onboarding, app bar, settings, canvas menus.
  */
 
-import { CLOUD_PROVIDERS } from '@ice/core/resources';
-
-export const ENABLED_PROVIDER_IDS = new Set(['aws', 'gcp', 'azure']);
-
-export const ENABLED_PROVIDERS = CLOUD_PROVIDERS.filter((p) => ENABLED_PROVIDER_IDS.has(p.id));
+export { ENABLED_PROVIDERS, ENABLED_PROVIDER_IDS, isProviderEnabled } from '@ice/constants';

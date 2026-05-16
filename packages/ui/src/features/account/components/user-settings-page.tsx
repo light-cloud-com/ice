@@ -4,6 +4,7 @@
  * Profile name editing only. No password management (no auth in community).
  */
 
+import { isProviderEnabled } from '@ice/constants';
 import awsIcon from 'devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg';
 import azureIcon from 'devicon/icons/azure/azure-original.svg';
 import gcpIcon from 'devicon/icons/googlecloud/googlecloud-original.svg';
@@ -171,33 +172,39 @@ export function UserSettingsPage() {
             status={integrations.github?.status}
             onClick={() => setOpenIntegration('github')}
           />
-          <IntegrationRow
-            icon={<img src={gcpIcon} alt="" className="h-5 w-5" />}
-            label={t('integrations.settings.gcp.label')}
-            description={t('integrations.settings.gcp.description')}
-            connectedLabel={t('integrations.connected')}
-            disconnectedLabel={t('integrations.disconnected')}
-            status={integrations.gcp?.status}
-            onClick={() => setOpenIntegration('gcp')}
-          />
-          <IntegrationRow
-            icon={<img src={awsIcon} alt="" className="h-5 w-5" />}
-            label={t('integrations.settings.aws.label')}
-            description={t('integrations.settings.aws.description')}
-            connectedLabel={t('integrations.connected')}
-            disconnectedLabel={t('integrations.disconnected')}
-            status={integrations.aws?.status}
-            onClick={() => setOpenIntegration('aws')}
-          />
-          <IntegrationRow
-            icon={<img src={azureIcon} alt="" className="h-5 w-5" />}
-            label={t('integrations.settings.azure.label')}
-            description={t('integrations.settings.azure.description')}
-            connectedLabel={t('integrations.connected')}
-            disconnectedLabel={t('integrations.disconnected')}
-            status={integrations.azure?.status}
-            onClick={() => setOpenIntegration('azure')}
-          />
+          {isProviderEnabled('gcp') && (
+            <IntegrationRow
+              icon={<img src={gcpIcon} alt="" className="h-5 w-5" />}
+              label={t('integrations.settings.gcp.label')}
+              description={t('integrations.settings.gcp.description')}
+              connectedLabel={t('integrations.connected')}
+              disconnectedLabel={t('integrations.disconnected')}
+              status={integrations.gcp?.status}
+              onClick={() => setOpenIntegration('gcp')}
+            />
+          )}
+          {isProviderEnabled('aws') && (
+            <IntegrationRow
+              icon={<img src={awsIcon} alt="" className="h-5 w-5" />}
+              label={t('integrations.settings.aws.label')}
+              description={t('integrations.settings.aws.description')}
+              connectedLabel={t('integrations.connected')}
+              disconnectedLabel={t('integrations.disconnected')}
+              status={integrations.aws?.status}
+              onClick={() => setOpenIntegration('aws')}
+            />
+          )}
+          {isProviderEnabled('azure') && (
+            <IntegrationRow
+              icon={<img src={azureIcon} alt="" className="h-5 w-5" />}
+              label={t('integrations.settings.azure.label')}
+              description={t('integrations.settings.azure.description')}
+              connectedLabel={t('integrations.connected')}
+              disconnectedLabel={t('integrations.disconnected')}
+              status={integrations.azure?.status}
+              onClick={() => setOpenIntegration('azure')}
+            />
+          )}
         </ul>
       </section>
 
@@ -206,53 +213,59 @@ export function UserSettingsPage() {
         onClose={() => setOpenIntegration(null)}
       />
       <GitHubConnectModal isOpen={openIntegration === 'github'} onClose={() => setOpenIntegration(null)} />
-      <ProviderConnectModal
-        isOpen={openIntegration === 'gcp'}
-        onClose={() => setOpenIntegration(null)}
-        providerId="gcp"
-        providerName="Google Cloud Platform"
-        providerIcon={gcpIcon}
-        description="Service account key (JSON) or OAuth"
-        fields={[
-          {
-            name: 'service_account_key',
-            label: 'Service Account Key (JSON)',
-            type: 'textarea',
-            placeholder: '{ "type": "service_account", ... }',
-            required: false,
-            helpLink: {
-              url: 'https://console.cloud.google.com/iam-admin/serviceaccounts',
-              text: 'Create service account',
+      {isProviderEnabled('gcp') && (
+        <ProviderConnectModal
+          isOpen={openIntegration === 'gcp'}
+          onClose={() => setOpenIntegration(null)}
+          providerId="gcp"
+          providerName="Google Cloud Platform"
+          providerIcon={gcpIcon}
+          description="Service account key (JSON) or OAuth"
+          fields={[
+            {
+              name: 'service_account_key',
+              label: 'Service Account Key (JSON)',
+              type: 'textarea',
+              placeholder: '{ "type": "service_account", ... }',
+              required: false,
+              helpLink: {
+                url: 'https://console.cloud.google.com/iam-admin/serviceaccounts',
+                text: 'Create service account',
+              },
             },
-          },
-        ]}
-      />
-      <ProviderConnectModal
-        isOpen={openIntegration === 'aws'}
-        onClose={() => setOpenIntegration(null)}
-        providerId="aws"
-        providerName="Amazon Web Services"
-        providerIcon={awsIcon}
-        description="Access keys"
-        fields={[
-          { name: 'accessKeyId', label: 'Access Key ID', type: 'text', placeholder: 'AKIA...', required: true },
-          { name: 'secretAccessKey', label: 'Secret Access Key', type: 'password', placeholder: '********', required: true },
-        ]}
-      />
-      <ProviderConnectModal
-        isOpen={openIntegration === 'azure'}
-        onClose={() => setOpenIntegration(null)}
-        providerId="azure"
-        providerName="Microsoft Azure"
-        providerIcon={azureIcon}
-        description="Service principal"
-        fields={[
-          { name: 'subscriptionId', label: 'Subscription ID', type: 'text', placeholder: 'xxxxxxxx-xxxx-...', required: true },
-          { name: 'tenantId', label: 'Tenant ID', type: 'text', placeholder: 'xxxxxxxx-xxxx-...', required: true },
-          { name: 'clientId', label: 'Client ID', type: 'text', placeholder: 'xxxxxxxx-xxxx-...', required: true },
-          { name: 'clientSecret', label: 'Client Secret', type: 'password', placeholder: '********', required: true },
-        ]}
-      />
+          ]}
+        />
+      )}
+      {isProviderEnabled('aws') && (
+        <ProviderConnectModal
+          isOpen={openIntegration === 'aws'}
+          onClose={() => setOpenIntegration(null)}
+          providerId="aws"
+          providerName="Amazon Web Services"
+          providerIcon={awsIcon}
+          description="Access keys"
+          fields={[
+            { name: 'accessKeyId', label: 'Access Key ID', type: 'text', placeholder: 'AKIA...', required: true },
+            { name: 'secretAccessKey', label: 'Secret Access Key', type: 'password', placeholder: '********', required: true },
+          ]}
+        />
+      )}
+      {isProviderEnabled('azure') && (
+        <ProviderConnectModal
+          isOpen={openIntegration === 'azure'}
+          onClose={() => setOpenIntegration(null)}
+          providerId="azure"
+          providerName="Microsoft Azure"
+          providerIcon={azureIcon}
+          description="Service principal"
+          fields={[
+            { name: 'subscriptionId', label: 'Subscription ID', type: 'text', placeholder: 'xxxxxxxx-xxxx-...', required: true },
+            { name: 'tenantId', label: 'Tenant ID', type: 'text', placeholder: 'xxxxxxxx-xxxx-...', required: true },
+            { name: 'clientId', label: 'Client ID', type: 'text', placeholder: 'xxxxxxxx-xxxx-...', required: true },
+            { name: 'clientSecret', label: 'Client Secret', type: 'password', placeholder: '********', required: true },
+          ]}
+        />
+      )}
     </div>
   );
 }

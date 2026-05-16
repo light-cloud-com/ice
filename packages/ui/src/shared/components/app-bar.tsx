@@ -2,6 +2,7 @@
  * App Bar — shared between web and desktop
  */
 
+import { isProviderEnabled } from '@ice/constants';
 import awsIcon from 'devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg';
 import azureIcon from 'devicon/icons/azure/azure-original.svg';
 import gcpIcon from 'devicon/icons/googlecloud/googlecloud-original.svg';
@@ -87,25 +88,31 @@ export const AppBar: React.FC = memo(() => {
             className="flex items-center gap-0.5"
             style={isElectron ? ({ WebkitAppRegion: 'no-drag' } as any) : undefined}
           >
-            <BarImgBtn
-              id="ice-appbar-btn-gcp"
-              src={gcpIcon}
-              onClick={() => setShowGcp(true)}
-              tip={t('common.providers.gcp')}
-              connected={gcpStatus === 'connected'}
-            />
-            <BarImgBtn
-              id="ice-appbar-btn-aws"
-              src={awsIcon}
-              onClick={() => setShowAws(true)}
-              tip={t('common.providers.aws')}
-            />
-            <BarImgBtn
-              id="ice-appbar-btn-azure"
-              src={azureIcon}
-              onClick={() => setShowAzure(true)}
-              tip={t('common.providers.azure')}
-            />
+            {isProviderEnabled('gcp') && (
+              <BarImgBtn
+                id="ice-appbar-btn-gcp"
+                src={gcpIcon}
+                onClick={() => setShowGcp(true)}
+                tip={t('common.providers.gcp')}
+                connected={gcpStatus === 'connected'}
+              />
+            )}
+            {isProviderEnabled('aws') && (
+              <BarImgBtn
+                id="ice-appbar-btn-aws"
+                src={awsIcon}
+                onClick={() => setShowAws(true)}
+                tip={t('common.providers.aws')}
+              />
+            )}
+            {isProviderEnabled('azure') && (
+              <BarImgBtn
+                id="ice-appbar-btn-azure"
+                src={azureIcon}
+                onClick={() => setShowAzure(true)}
+                tip={t('common.providers.azure')}
+              />
+            )}
             <BarBtn
               id="ice-appbar-btn-github"
               icon={Github}
@@ -129,96 +136,102 @@ export const AppBar: React.FC = memo(() => {
 
       <AnthropicConnectModal isOpen={showAnthropic} onClose={() => setShowAnthropic(false)} />
       <GitHubConnectModal isOpen={showGitHub} onClose={() => setShowGitHub(false)} />
-      <ProviderConnectModal
-        isOpen={showGcp}
-        onClose={() => setShowGcp(false)}
-        providerId="gcp"
-        providerName={t('appBar.provider.gcp.name')}
-        providerIcon={gcpIcon}
-        description={t('appBar.provider.gcp.description')}
-        fields={[
-          {
-            name: 'service_account_key',
-            label: t('appBar.provider.gcp.fieldLabel'),
-            type: 'textarea',
-            placeholder: '{\n  "type": "service_account",\n  "project_id": "...",\n  ...\n}',
-            required: true,
-            helpLink: {
-              url: 'https://console.cloud.google.com/iam-admin/serviceaccounts',
-              text: t('appBar.provider.gcp.helpLink'),
+      {isProviderEnabled('gcp') && (
+        <ProviderConnectModal
+          isOpen={showGcp}
+          onClose={() => setShowGcp(false)}
+          providerId="gcp"
+          providerName={t('appBar.provider.gcp.name')}
+          providerIcon={gcpIcon}
+          description={t('appBar.provider.gcp.description')}
+          fields={[
+            {
+              name: 'service_account_key',
+              label: t('appBar.provider.gcp.fieldLabel'),
+              type: 'textarea',
+              placeholder: '{\n  "type": "service_account",\n  "project_id": "...",\n  ...\n}',
+              required: true,
+              helpLink: {
+                url: 'https://console.cloud.google.com/iam-admin/serviceaccounts',
+                text: t('appBar.provider.gcp.helpLink'),
+              },
             },
-          },
-        ]}
-      />
-      <ProviderConnectModal
-        isOpen={showAws}
-        onClose={() => setShowAws(false)}
-        providerId="aws"
-        providerName={t('appBar.provider.aws.name')}
-        providerIcon={awsIcon}
-        description={t('appBar.provider.aws.description')}
-        fields={[
-          {
-            name: 'accessKeyId',
-            label: t('appBar.provider.aws.accessKeyLabel'),
-            type: 'text',
-            placeholder: 'AKIA...',
-            required: true,
-          },
-          {
-            name: 'secretAccessKey',
-            label: t('appBar.provider.aws.secretKeyLabel'),
-            type: 'password',
-            placeholder: '********',
-            required: true,
-          },
-          {
-            name: 'region',
-            label: t('appBar.provider.aws.regionLabel'),
-            type: 'text',
-            placeholder: 'us-east-1',
-            required: true,
-          },
-        ]}
-      />
-      <ProviderConnectModal
-        isOpen={showAzure}
-        onClose={() => setShowAzure(false)}
-        providerId="azure"
-        providerName={t('appBar.provider.azure.name')}
-        providerIcon={azureIcon}
-        description={t('appBar.provider.azure.description')}
-        fields={[
-          {
-            name: 'subscriptionId',
-            label: t('appBar.provider.azure.subscriptionLabel'),
-            type: 'text',
-            placeholder: 'xxxxxxxx-xxxx-...',
-            required: true,
-          },
-          {
-            name: 'tenantId',
-            label: t('appBar.provider.azure.tenantLabel'),
-            type: 'text',
-            placeholder: 'xxxxxxxx-xxxx-...',
-            required: true,
-          },
-          {
-            name: 'clientId',
-            label: t('appBar.provider.azure.clientIdLabel'),
-            type: 'text',
-            placeholder: 'xxxxxxxx-xxxx-...',
-            required: true,
-          },
-          {
-            name: 'clientSecret',
-            label: t('appBar.provider.azure.clientSecretLabel'),
-            type: 'password',
-            placeholder: '********',
-            required: true,
-          },
-        ]}
-      />
+          ]}
+        />
+      )}
+      {isProviderEnabled('aws') && (
+        <ProviderConnectModal
+          isOpen={showAws}
+          onClose={() => setShowAws(false)}
+          providerId="aws"
+          providerName={t('appBar.provider.aws.name')}
+          providerIcon={awsIcon}
+          description={t('appBar.provider.aws.description')}
+          fields={[
+            {
+              name: 'accessKeyId',
+              label: t('appBar.provider.aws.accessKeyLabel'),
+              type: 'text',
+              placeholder: 'AKIA...',
+              required: true,
+            },
+            {
+              name: 'secretAccessKey',
+              label: t('appBar.provider.aws.secretKeyLabel'),
+              type: 'password',
+              placeholder: '********',
+              required: true,
+            },
+            {
+              name: 'region',
+              label: t('appBar.provider.aws.regionLabel'),
+              type: 'text',
+              placeholder: 'us-east-1',
+              required: true,
+            },
+          ]}
+        />
+      )}
+      {isProviderEnabled('azure') && (
+        <ProviderConnectModal
+          isOpen={showAzure}
+          onClose={() => setShowAzure(false)}
+          providerId="azure"
+          providerName={t('appBar.provider.azure.name')}
+          providerIcon={azureIcon}
+          description={t('appBar.provider.azure.description')}
+          fields={[
+            {
+              name: 'subscriptionId',
+              label: t('appBar.provider.azure.subscriptionLabel'),
+              type: 'text',
+              placeholder: 'xxxxxxxx-xxxx-...',
+              required: true,
+            },
+            {
+              name: 'tenantId',
+              label: t('appBar.provider.azure.tenantLabel'),
+              type: 'text',
+              placeholder: 'xxxxxxxx-xxxx-...',
+              required: true,
+            },
+            {
+              name: 'clientId',
+              label: t('appBar.provider.azure.clientIdLabel'),
+              type: 'text',
+              placeholder: 'xxxxxxxx-xxxx-...',
+              required: true,
+            },
+            {
+              name: 'clientSecret',
+              label: t('appBar.provider.azure.clientSecretLabel'),
+              type: 'password',
+              placeholder: '********',
+              required: true,
+            },
+          ]}
+        />
+      )}
 
       <PromoteModal />
     </>

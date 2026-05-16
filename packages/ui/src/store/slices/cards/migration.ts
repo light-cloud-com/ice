@@ -18,6 +18,7 @@
  *      migrator, not just the localStorage loader.
  */
 
+import { isIceTypeEnabledForProvider } from '@ice/constants';
 import type { CardNode } from './types';
 
 /**
@@ -69,6 +70,17 @@ export function migrateCardNode(node: CardNode): CardNode {
         data: { ...node.data, iceType: `Group.${suffix}` },
       };
     }
+  }
+
+  // Feature-flag gate: a node whose (category × provider) combo was disabled
+  // since the project was last saved gets tagged with `providerUnsupported`
+  // so the existing warning UI surfaces and deploy validation refuses to
+  // ship it. Idempotent — the tag is set, never unset (an admin re-enabling
+  // a combo will clear the tag on the next non-trivial edit).
+  const provider = (node.data?.provider as string) || '';
+  if (iceType && provider && !isIceTypeEnabledForProvider(iceType, provider)) {
+    if (node.data?.providerUnsupported === true) return node;
+    return { ...node, data: { ...node.data, providerUnsupported: true } };
   }
 
   return node;

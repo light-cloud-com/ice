@@ -81,6 +81,13 @@ export interface HighLevelProperty {
   optionDetails?: OptionDetail[];
   tooltip?: string;
   customInput?: CustomInputConfig;
+  /** When set, only render if `nodeData[field]` matches `equals` (string
+   *  equality, or array membership). Lets one property gate another —
+   *  e.g. only show the cron-expression input when frequency === 'Custom'. */
+  visibleWhen?: {
+    field: string;
+    equals: string | string[];
+  };
 }
 
 export interface ProviderImpl {
@@ -256,8 +263,20 @@ export const PropertyFields: React.FC<{
     return filtered.length > 0 ? { ...prop, optionDetails: filtered } : prop;
   };
 
-  // Show all properties (essential + detailed); advanced tier is intentionally hidden
-  const visible = properties.filter((p) => !p.tier || p.tier === 'essential' || p.tier === 'detailed');
+  // Show all properties (essential + detailed); advanced tier is intentionally hidden.
+  // Then apply visibleWhen gates so conditional fields stay hidden until their
+  // gating field has the right value (e.g. cron-expression input only when
+  // frequency === 'Custom').
+  const matchesVisibleWhen = (p: HighLevelProperty): boolean => {
+    if (!p.visibleWhen) return true;
+    const current = nodeData[p.visibleWhen.field];
+    const target = p.visibleWhen.equals;
+    if (Array.isArray(target)) return target.some((v) => v === current);
+    return current === target;
+  };
+  const visible = properties
+    .filter((p) => !p.tier || p.tier === 'essential' || p.tier === 'detailed')
+    .filter(matchesVisibleWhen);
 
   return (
     <>

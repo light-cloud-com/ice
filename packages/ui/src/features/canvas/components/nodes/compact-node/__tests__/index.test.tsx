@@ -513,11 +513,12 @@ describe('SvgCompactNode — rename focus effect', () => {
 describe('SvgCompactNode — dedupedRuntime', () => {
   const propsOf = (cmp: React.ReactElement): Record<string, unknown> => cmp.props as Record<string, unknown>;
 
-  it('returns runtimeLabel as-is when serviceName is empty', () => {
-    // Use unknown iceType / provider so getServiceName returns ''. runtime stays.
+  it('returns runtimeLabel + region suffix when serviceName is empty', () => {
+    // Use unknown iceType / provider so getServiceName returns ''. runtime
+    // stays, and the always-on region segment gets appended.
     const node = makeNode({ data: { iceType: 'NotARealType.Foo', runtime: 'go-1.21' } });
     const p = propsOf(renderSCN({ node }));
-    expect(p.serviceLineText).toBe('go-1.21');
+    expect(p.serviceLineText).toBe('go-1.21 · auto');
   });
 
   it('drops runtime when runtime exactly matches serviceName trailing word', () => {
@@ -527,8 +528,7 @@ describe('SvgCompactNode — dedupedRuntime', () => {
       data: { iceType: 'Compute.Function', provider: 'aws', runtime: 'Lambda' },
     });
     const p = propsOf(renderSCN({ node }));
-    // serviceLineText should be just 'AWS Lambda' (runtime dropped, no '·' separator).
-    expect(p.serviceLineText).toBe('AWS Lambda');
+    expect(p.serviceLineText).toBe('AWS Lambda · auto');
   });
 
   it('strips serviceName trailing word prefix from runtime when present', () => {
@@ -537,7 +537,7 @@ describe('SvgCompactNode — dedupedRuntime', () => {
       data: { iceType: 'Compute.Function', provider: 'aws', runtime: 'Lambda Node 18' },
     });
     const p = propsOf(renderSCN({ node }));
-    expect(p.serviceLineText).toBe('AWS Lambda · Node 18');
+    expect(p.serviceLineText).toBe('AWS Lambda · Node 18 · auto');
   });
 
   it('returns runtime untouched when no overlap with trailing word', () => {
@@ -545,13 +545,27 @@ describe('SvgCompactNode — dedupedRuntime', () => {
       data: { iceType: 'Compute.Function', provider: 'aws', runtime: 'go-1.21' },
     });
     const p = propsOf(renderSCN({ node }));
-    expect(p.serviceLineText).toBe('AWS Lambda · go-1.21');
+    expect(p.serviceLineText).toBe('AWS Lambda · go-1.21 · auto');
   });
 
   it('omits runtime when runtimeLabel is empty', () => {
     const node = makeNode({ data: { iceType: 'Compute.Function', provider: 'aws' } });
     const p = propsOf(renderSCN({ node }));
-    expect(p.serviceLineText).toBe('AWS Lambda');
+    expect(p.serviceLineText).toBe('AWS Lambda · auto');
+  });
+
+  it('uses explicit region instead of "auto" when data.region is set', () => {
+    const node = makeNode({
+      data: { iceType: 'Compute.Function', provider: 'aws', region: 'us-east-1' },
+    });
+    const p = propsOf(renderSCN({ node }));
+    expect(p.serviceLineText).toBe('AWS Lambda · us-east-1');
+  });
+
+  it('returns empty serviceLineText when no service and no runtime', () => {
+    const node = makeNode({ data: { iceType: 'NotARealType.Foo' } });
+    const p = propsOf(renderSCN({ node }));
+    expect(p.serviceLineText).toBe('');
   });
 });
 

@@ -5,7 +5,7 @@
  * Editing moves to the properties panel (canvas is display-only).
  */
 
-import { MQ_HEADER_HEIGHT, MQ_PADDING, MQ_ROW_GAP, MQ_ROW_HEIGHT } from '@ice/constants';
+import { CARD_FOOTER_HEIGHT, MQ_HEADER_HEIGHT, MQ_PADDING, MQ_ROW_GAP, MQ_ROW_HEIGHT } from '@ice/constants';
 import { List } from 'lucide-react';
 import React from 'react';
 import { Badge, CardShell, EmptyHint, Pill } from '../_shared';
@@ -18,7 +18,9 @@ export { MQ_HEADER_HEIGHT, MQ_ROW_HEIGHT, MQ_ROW_GAP, MQ_PADDING };
 export function computeMessageQueueHeight(data: Record<string, unknown>): number {
   const queues = (data?.queues as unknown[] | undefined) || [];
   const rowCount = Math.max(queues.length, 1);
-  return MQ_HEADER_HEIGHT + MQ_PADDING + rowCount * (MQ_ROW_HEIGHT + MQ_ROW_GAP) + MQ_PADDING;
+  return (
+    MQ_HEADER_HEIGHT + MQ_PADDING + rowCount * (MQ_ROW_HEIGHT + MQ_ROW_GAP) + MQ_PADDING + CARD_FOOTER_HEIGHT
+  );
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -55,9 +57,12 @@ export const SvgMessageQueueNode: React.FC<SvgCompactNodeProps> = ({
   isDragOver = false,
   onNodeHover,
   connectionDragState = null,
+  lod,
+  pipelineStatus,
 }) => {
   const queues: QueueView[] = ((node.data?.queues as unknown[] | undefined) || []).map(parseQueue);
-  const subtitle = queues.length > 0 ? `${queues.length} ${queues.length === 1 ? 'queue' : 'queues'}` : 'No queues yet';
+  const liveConfig =
+    queues.length > 0 ? `${queues.length} ${queues.length === 1 ? 'queue' : 'queues'}` : 'No queues yet';
 
   return (
     <CardShell
@@ -66,9 +71,11 @@ export const SvgMessageQueueNode: React.FC<SvgCompactNodeProps> = ({
       isDragOver={isDragOver}
       onNodeHover={onNodeHover}
       connectionDragState={connectionDragState}
+      lod={lod}
+      pipelineStatus={pipelineStatus}
       icon={List}
       title={node.label || 'Message Queue'}
-      subtitle={subtitle}
+      liveConfig={liveConfig}
       headerHeight={MQ_HEADER_HEIGHT}
     >
       {queues.length === 0 ? (

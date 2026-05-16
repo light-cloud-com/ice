@@ -62,6 +62,48 @@ export const ES_HEADER_HEIGHT = 48;
 export const ES_FIELD_HEIGHT = 30;
 export const ES_PADDING = 12;
 
+/** Compute.CronJob layout — clock face + cron summary body. */
+export const ST_HEADER_HEIGHT = 48;
+export const ST_BODY_HEIGHT = 60;
+export const ST_PADDING = 12;
+
+/**
+ * Database family layout — postgres / mysql / mongodb share the same
+ * card height. The body content (relational stripes vs. document pills)
+ * is what differentiates each renderer.
+ */
+export const DB_HEADER_HEIGHT = 48;
+export const DB_BODY_HEIGHT = 60;
+export const DB_PADDING = 12;
+
+/**
+ * Compute family layout — scalable-backend / ssr-site / worker /
+ * serverless-function / static-site. Body content differs per block
+ * (scale gauge, browser frame, cog with queue flow, bolt halo, globe
+ * with CDN edges), but the outer card height is unified.
+ */
+export const COMPUTE_HEADER_HEIGHT = 48;
+export const COMPUTE_BODY_HEIGHT = 64;
+export const COMPUTE_PADDING = 12;
+
+/** Storage.Bucket layout — bucket drawers body. */
+export const BUCKET_HEADER_HEIGHT = 48;
+export const BUCKET_BODY_HEIGHT = 64;
+export const BUCKET_PADDING = 12;
+
+/** Network.Gateway layout — stacked-route body. */
+export const AG_HEADER_HEIGHT = 48;
+export const AG_ROW_HEIGHT = 22;
+export const AG_ROW_GAP = 4;
+export const AG_PADDING = 12;
+
+/**
+ * Standard footer strip on every CardShell-based block — live-config text +
+ * health dot. Added to every per-block `compute*Height()` so the deploy
+ * status footer always has room.
+ */
+export const CARD_FOOTER_HEIGHT = 26;
+
 /** Compact-node block summary card (rendered at low LOD). */
 export const BLOCK_SUMMARY_W = 260;
 export const BLOCK_SUMMARY_H = 80;

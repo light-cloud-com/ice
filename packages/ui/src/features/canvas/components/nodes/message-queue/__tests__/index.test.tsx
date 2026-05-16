@@ -31,6 +31,7 @@ vi.mock('../../_shared', () => ({
   EmptyHint: mocks.EmptyHint,
 }));
 
+import { CARD_FOOTER_HEIGHT } from '@ice/constants';
 import {
   SvgMessageQueueNode,
   computeMessageQueueHeight,
@@ -91,13 +92,15 @@ const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
 });
 
 describe('computeMessageQueueHeight', () => {
-  it('returns header + 1 row when no queues', () => {
-    const expected = MQ_HEADER_HEIGHT + MQ_PADDING + 1 * (MQ_ROW_HEIGHT + MQ_ROW_GAP) + MQ_PADDING;
+  it('returns header + 1 row + footer when no queues', () => {
+    const expected =
+      MQ_HEADER_HEIGHT + MQ_PADDING + 1 * (MQ_ROW_HEIGHT + MQ_ROW_GAP) + MQ_PADDING + CARD_FOOTER_HEIGHT;
     expect(computeMessageQueueHeight({})).toBe(expected);
   });
 
-  it('returns header + N rows for N queues', () => {
-    const expected = MQ_HEADER_HEIGHT + MQ_PADDING + 3 * (MQ_ROW_HEIGHT + MQ_ROW_GAP) + MQ_PADDING;
+  it('returns header + N rows + footer for N queues', () => {
+    const expected =
+      MQ_HEADER_HEIGHT + MQ_PADDING + 3 * (MQ_ROW_HEIGHT + MQ_ROW_GAP) + MQ_PADDING + CARD_FOOTER_HEIGHT;
     expect(computeMessageQueueHeight({ queues: ['a', 'b', 'c'] })).toBe(expected);
   });
 });
@@ -112,25 +115,25 @@ describe('SvgMessageQueueNode', () => {
     expect(tree.type).toBe(mocks.CardShell);
   });
 
-  it('subtitle: "No queues yet" when empty', () => {
+  it('liveConfig: "No queues yet" when empty', () => {
     const tree = SvgMessageQueueNode({ node: makeNode(), isSelected: false }) as React.ReactElement;
-    expect((tree.props as { subtitle: string }).subtitle).toBe('No queues yet');
+    expect((tree.props as { liveConfig: string }).liveConfig).toBe('No queues yet');
   });
 
-  it('subtitle: singular "queue" for 1', () => {
+  it('liveConfig: singular "queue" for 1', () => {
     const tree = SvgMessageQueueNode({
       node: makeNode({ data: { queues: [{ name: 'X' }] } }),
       isSelected: false,
     }) as React.ReactElement;
-    expect((tree.props as { subtitle: string }).subtitle).toBe('1 queue');
+    expect((tree.props as { liveConfig: string }).liveConfig).toBe('1 queue');
   });
 
-  it('subtitle: plural "queues" for >=2', () => {
+  it('liveConfig: plural "queues" for >=2', () => {
     const tree = SvgMessageQueueNode({
       node: makeNode({ data: { queues: [{ name: 'X' }, { name: 'Y' }] } }),
       isSelected: false,
     }) as React.ReactElement;
-    expect((tree.props as { subtitle: string }).subtitle).toBe('2 queues');
+    expect((tree.props as { liveConfig: string }).liveConfig).toBe('2 queues');
   });
 
   it('falls back to "Message Queue" title when label empty', () => {

@@ -78,7 +78,7 @@ export const BlockSummaryCard: React.FC<BlockSummaryCardProps> = memo(
               label={label || ''}
               maxChars={22}
               onDoubleClickLabel={onDoubleClickLabel}
-              trailing={provider ? <ProviderPill provider={provider} /> : undefined}
+              trailing={<ProviderPill provider={provider} />}
               style={{ padding: `10px ${CARD_PX}px 0` }}
             />
 

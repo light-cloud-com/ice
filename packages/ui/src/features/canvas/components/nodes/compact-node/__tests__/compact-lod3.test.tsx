@@ -629,11 +629,13 @@ describe('CompactLod3 — folded layout', () => {
     expect((pills[0].props as { provider: string }).provider).toBe('aws');
   });
 
-  it('unfolded: trailing omits ProviderPill when provider is empty', () => {
+  it('unfolded: trailing still renders ProviderPill when provider is empty (pill handles AUTO fallback)', () => {
     const tree = renderLod3({ folded: false, provider: '' });
     const header = findByType(tree, MockNodeHeader)[0];
     const trailing = (header.props as { trailing: React.ReactNode }).trailing;
-    expect(findByType(trailing, MockProviderPill)).toHaveLength(0);
+    const pills = findByType(trailing, MockProviderPill);
+    expect(pills).toHaveLength(1);
+    expect((pills[0].props as { provider: string }).provider).toBe('');
   });
 
   it('unfolded: NodeHeader gets labelFontSize=13 and folded gets labelFontSize=12', () => {

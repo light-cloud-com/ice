@@ -29,6 +29,7 @@ vi.mock('../../_shared', () => ({
   EmptyHint: mocks.EmptyHint,
 }));
 
+import { CARD_FOOTER_HEIGHT } from '@ice/constants';
 import {
   SvgSecretStoreNode,
   computeSecretStoreHeight,
@@ -70,13 +71,13 @@ const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
 });
 
 describe('computeSecretStoreHeight', () => {
-  it('uses min 1 row for empty data', () => {
-    const expected = SS_HEADER_HEIGHT + SS_PADDING + 1 * SS_ROW_HEIGHT + SS_PADDING;
+  it('uses min 1 row + footer for empty data', () => {
+    const expected = SS_HEADER_HEIGHT + SS_PADDING + 1 * SS_ROW_HEIGHT + SS_PADDING + CARD_FOOTER_HEIGHT;
     expect(computeSecretStoreHeight({})).toBe(expected);
   });
 
-  it('uses N rows for N secrets', () => {
-    const expected = SS_HEADER_HEIGHT + SS_PADDING + 4 * SS_ROW_HEIGHT + SS_PADDING;
+  it('uses N rows + footer for N secrets', () => {
+    const expected = SS_HEADER_HEIGHT + SS_PADDING + 4 * SS_ROW_HEIGHT + SS_PADDING + CARD_FOOTER_HEIGHT;
     expect(computeSecretStoreHeight({ secrets: ['A', 'B', 'C', 'D'] })).toBe(expected);
   });
 });
@@ -91,25 +92,25 @@ describe('SvgSecretStoreNode', () => {
     expect(tree.type).toBe(mocks.CardShell);
   });
 
-  it('subtitle reads "No secrets yet" when none', () => {
+  it('liveConfig reads "No secrets yet" when none', () => {
     const tree = SvgSecretStoreNode({ node: makeNode(), isSelected: false }) as React.ReactElement;
-    expect((tree.props as { subtitle: string }).subtitle).toBe('No secrets yet');
+    expect((tree.props as { liveConfig: string }).liveConfig).toBe('No secrets yet');
   });
 
-  it('subtitle uses singular "secret" for one entry', () => {
+  it('liveConfig uses singular "secret" for one entry', () => {
     const tree = SvgSecretStoreNode({
       node: makeNode({ data: { secrets: ['ALPHA'] } }),
       isSelected: false,
     }) as React.ReactElement;
-    expect((tree.props as { subtitle: string }).subtitle).toBe('1 secret');
+    expect((tree.props as { liveConfig: string }).liveConfig).toBe('1 secret');
   });
 
-  it('subtitle uses plural "secrets" for >=2', () => {
+  it('liveConfig uses plural "secrets" for >=2', () => {
     const tree = SvgSecretStoreNode({
       node: makeNode({ data: { secrets: ['A', 'B', 'C'] } }),
       isSelected: false,
     }) as React.ReactElement;
-    expect((tree.props as { subtitle: string }).subtitle).toBe('3 secrets');
+    expect((tree.props as { liveConfig: string }).liveConfig).toBe('3 secrets');
   });
 
   it('appends "· auto-rotate" when data.auto_rotate is truthy', () => {
@@ -117,7 +118,7 @@ describe('SvgSecretStoreNode', () => {
       node: makeNode({ data: { secrets: ['X'], auto_rotate: true } }),
       isSelected: false,
     }) as React.ReactElement;
-    expect((tree.props as { subtitle: string }).subtitle).toBe('1 secret · auto-rotate');
+    expect((tree.props as { liveConfig: string }).liveConfig).toBe('1 secret · auto-rotate');
   });
 
   it('omits "· auto-rotate" when no secrets, even if flag set', () => {
@@ -125,7 +126,7 @@ describe('SvgSecretStoreNode', () => {
       node: makeNode({ data: { auto_rotate: true } }),
       isSelected: false,
     }) as React.ReactElement;
-    expect((tree.props as { subtitle: string }).subtitle).toBe('No secrets yet');
+    expect((tree.props as { liveConfig: string }).liveConfig).toBe('No secrets yet');
   });
 
   it('uses node.label as title when present, falls back to "Secret Store"', () => {

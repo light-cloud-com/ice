@@ -5,7 +5,7 @@
  * labeled lines. Editing moves to the properties panel.
  */
 
-import { ES_FIELD_HEIGHT, ES_HEADER_HEIGHT, ES_PADDING } from '@ice/constants';
+import { CARD_FOOTER_HEIGHT, ES_FIELD_HEIGHT, ES_HEADER_HEIGHT, ES_PADDING } from '@ice/constants';
 import { Mail } from 'lucide-react';
 import React from 'react';
 import { CardShell, LabelLine } from '../_shared';
@@ -14,7 +14,7 @@ import type { SvgCompactNodeProps } from '../compact-node/types';
 export { ES_HEADER_HEIGHT, ES_FIELD_HEIGHT, ES_PADDING };
 
 export function computeEmailServiceHeight(): number {
-  return ES_HEADER_HEIGHT + ES_PADDING + ES_FIELD_HEIGHT * 2 + 6 + ES_PADDING;
+  return ES_HEADER_HEIGHT + ES_PADDING + ES_FIELD_HEIGHT * 2 + 6 + ES_PADDING + CARD_FOOTER_HEIGHT;
 }
 
 export const SvgEmailServiceNode: React.FC<SvgCompactNodeProps> = ({
@@ -23,11 +23,13 @@ export const SvgEmailServiceNode: React.FC<SvgCompactNodeProps> = ({
   isDragOver = false,
   onNodeHover,
   connectionDragState = null,
+  lod,
+  pipelineStatus,
 }) => {
   const fromAddress = (node.data?.from_address as string) || '';
   const fromName = (node.data?.from_name as string) || '';
 
-  const subtitle = fromAddress || 'Transactional';
+  const liveConfig = fromAddress || 'Transactional';
 
   return (
     <CardShell
@@ -36,9 +38,11 @@ export const SvgEmailServiceNode: React.FC<SvgCompactNodeProps> = ({
       isDragOver={isDragOver}
       onNodeHover={onNodeHover}
       connectionDragState={connectionDragState}
+      lod={lod}
+      pipelineStatus={pipelineStatus}
       icon={Mail}
       title={node.label || 'Email Service'}
-      subtitle={subtitle}
+      liveConfig={liveConfig}
       headerHeight={ES_HEADER_HEIGHT}
     >
       <LabelLine label="FROM" value={fromAddress} placeholder="noreply@example.com" />

@@ -261,13 +261,18 @@ describe('BlockSummaryCard — header / provider', () => {
     const tree = renderBSC({ node: makeNode({ data: { provider: 'aws' } }) });
     const hdr = findByType(tree, MockNodeHeader)[0];
     const trailing = (hdr.props as { trailing?: React.ReactNode }).trailing;
-    expect(findByType(trailing, MockProviderPill)).toHaveLength(1);
+    const pills = findByType(trailing, MockProviderPill);
+    expect(pills).toHaveLength(1);
+    expect((pills[0].props as { provider: string }).provider).toBe('aws');
   });
 
-  it('omits ProviderPill (trailing=undefined) when provider empty', () => {
+  it('still renders ProviderPill when provider empty (pill handles AUTO fallback)', () => {
     const tree = renderBSC();
     const hdr = findByType(tree, MockNodeHeader)[0];
-    expect((hdr.props as { trailing?: React.ReactNode }).trailing).toBeUndefined();
+    const trailing = (hdr.props as { trailing?: React.ReactNode }).trailing;
+    const pills = findByType(trailing, MockProviderPill);
+    expect(pills).toHaveLength(1);
+    expect((pills[0].props as { provider: string }).provider).toBe('');
   });
 });
 

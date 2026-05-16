@@ -242,7 +242,7 @@ export const CompactLod3: React.FC<CompactLod3Props> = memo(
     ) : (
       <>
         {deployBadgeEl}
-        {provider ? <ProviderPill provider={provider} /> : null}
+        <ProviderPill provider={provider} />
         {infoTrigger}
       </>
     );

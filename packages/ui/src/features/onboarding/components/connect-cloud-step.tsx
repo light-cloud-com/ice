@@ -5,7 +5,7 @@
  * No OAuth — service account key / access keys only.
  */
 
-import { PROVIDER_READINESS, type Provider } from '@ice/constants';
+import { PROVIDER_READINESS, isProviderEnabled, type Provider } from '@ice/constants';
 import awsIcon from 'devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg';
 import azureIcon from 'devicon/icons/azure/azure-original.svg';
 import gcpIcon from 'devicon/icons/googlecloud/googlecloud-original.svg';
@@ -20,11 +20,13 @@ import type { RootState, AppDispatch } from '../../../store';
 
 // ── Provider / region data ──────────────────────────────────────────────────
 
-const PROVIDERS = [
+const ALL_ONBOARDING_PROVIDERS = [
   { id: 'gcp', name: 'Google Cloud', icon: gcpIcon },
   { id: 'aws', name: 'Amazon Web Services', icon: awsIcon },
   { id: 'azure', name: 'Microsoft Azure', icon: azureIcon },
 ] as const;
+
+const PROVIDERS = ALL_ONBOARDING_PROVIDERS.filter((p) => isProviderEnabled(p.id));
 
 const PROVIDER_REGIONS: Record<string, Array<{ value: string; label: string }>> = {
   gcp: [
@@ -174,7 +176,10 @@ export const ConnectCloudStep: React.FC = () => {
       {/* Provider selection */}
       <div>
         <label className="block text-sm font-medium text-ice-text-2 mb-2">{t('onboarding.cloud.providerLabel')}</label>
-        <div className="grid grid-cols-3 gap-3">
+        <div
+          className="grid gap-3"
+          style={{ gridTemplateColumns: `repeat(${Math.max(PROVIDERS.length, 1)}, minmax(0, 1fr))` }}
+        >
           {PROVIDERS.map((p) => {
             const isSelected = provider === p.id;
             const readiness = PROVIDER_READINESS[p.id as Provider];

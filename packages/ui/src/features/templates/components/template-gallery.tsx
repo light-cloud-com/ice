@@ -20,6 +20,7 @@
 import { Zap, LayoutTemplate, Sparkles } from 'lucide-react';
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { getEnabledProvidersForTemplate } from '@ice/templates';
 import {
   ALL_TEMPLATES,
   TEMPLATE_CATEGORIES,
@@ -69,7 +70,11 @@ export const TemplateGalleryDialog: React.FC = () => {
   }, [isOpen, initialCategory]);
 
   const filtered = useMemo(() => {
-    let pool = ALL_TEMPLATES;
+    // Hide templates whose every block is disabled by feature flags — these
+    // would land on the canvas as a sea of `providerUnsupported` stubs and
+    // confuse the user. Templates that retain at least one viable provider
+    // stay visible.
+    let pool = ALL_TEMPLATES.filter((tpl) => getEnabledProvidersForTemplate(tpl).length > 0);
     if (activeCategory !== 'all') {
       pool = pool.filter((tpl) => tpl.category === activeCategory);
     }

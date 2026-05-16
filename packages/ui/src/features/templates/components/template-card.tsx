@@ -15,6 +15,7 @@
  * tests (per react-memo-wrapper-must-be-unwrapped-via-dot-type-for-direct-fc-tree-walker).
  */
 
+import { getEnabledProvidersForTemplate } from '@ice/templates';
 import { Rocket, ChevronRight } from 'lucide-react';
 import React from 'react';
 
@@ -81,7 +82,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = React.memo(({ template,
             {template.connections.length} {t('templates.gallery.connections')}
           </span>
         )}
-        <ProviderBadges providers={template.providers} />
+        <ProviderBadges providers={getEnabledProvidersForTemplate(template)} />
       </div>
 
       {/* Tech stack icons */}

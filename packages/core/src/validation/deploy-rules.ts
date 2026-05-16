@@ -5,6 +5,7 @@
  * design-only provider detection, and environment-specific requirements.
  */
 
+import { getCategoryForIceType, isCategoryEnabledForProvider } from '@ice/constants';
 import { isContainer } from './classifiers';
 import { getSupportedProviders } from './schema-bridge';
 import type { CanvasIssue, ValidatableNode, ValidatableEdge, ValidationContext } from './types';
@@ -195,6 +196,20 @@ export function validateDeployability(
         category: 'deploy',
         code: 'DESIGN_ONLY_PROVIDER',
         message: `${label} uses ${nodeProvider} which is design-only — will be skipped`,
+        nodeId: node.id,
+      });
+      continue;
+    }
+
+    // ── Category × provider feature flag ──────────────────────────────
+    const blockCategory = getCategoryForIceType(iceType);
+    if (blockCategory && !isCategoryEnabledForProvider(blockCategory, nodeProvider as any)) {
+      issues.push({
+        id: `deploy:${node.id}:CATEGORY_DISABLED`,
+        severity: 'warning',
+        category: 'deploy',
+        code: 'CATEGORY_DISABLED',
+        message: `${label} (${blockCategory}) is disabled for ${nodeProvider} in this workspace — will be skipped`,
         nodeId: node.id,
       });
       continue;

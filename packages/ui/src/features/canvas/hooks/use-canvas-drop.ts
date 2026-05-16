@@ -65,6 +65,7 @@
 
 import React, { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { isIceTypeEnabledForProvider } from '@ice/constants';
 import { getBlueprint, expandBlueprint } from '../../../config/blocks';
 import { canContain } from '../../../config/containment-rules';
 import {
@@ -156,7 +157,12 @@ export function useCanvasDrop(args: UseCanvasDropArgs): UseCanvasDropResult {
         // Fall back to the active deploy provider when palette didn't pin one,
         // so deploy-panel doesn't filter the block as "skipped — non-<provider>".
         const effectiveProvider = paletteProvider !== 'all' ? paletteProvider : deployProvider;
-        const blueprint = getBlueprint(blockType, effectiveProvider);
+        // Feature-flag gate: a disabled (category, provider) combo falls
+        // through to the bare-resource fallback below, which tags the node
+        // `providerUnsupported` so the existing warning badge + deploy
+        // validator pick it up.
+        const gateBlocked = effectiveProvider && !isIceTypeEnabledForProvider(blockType, effectiveProvider);
+        const blueprint = gateBlocked ? undefined : getBlueprint(blockType, effectiveProvider);
         if (blueprint) {
           // Validate containment for the node's iceType
           const nodeIceType = (blueprint.nodeData.iceType as string) || '';
@@ -206,12 +212,20 @@ export function useCanvasDrop(args: UseCanvasDropArgs): UseCanvasDropResult {
       const targetIceType = targetContainer ? (targetContainer.data.iceType as string) : '';
       const canContainNode = targetContainer ? canContain(targetIceType, iceType) : true;
 
+      // If the drop fell through because of the (category × provider) gate,
+      // mark the node `providerUnsupported` so the existing warning badge
+      // surfaces and deploy validation refuses to ship it.
+      const gateBlockedAtFallback =
+        deployProvider && iceType !== 'Resource.Unknown'
+          ? !isIceTypeEnabledForProvider(iceType, deployProvider)
+          : false;
       const newNodeData = {
         label,
         iceType,
         behavior: 'singleton',
         folded: false,
         provider: deployProvider,
+        ...(gateBlockedAtFallback ? { providerUnsupported: true } : {}),
       };
       const newNode: CardNode = {
         id: `node-${Date.now()}`,

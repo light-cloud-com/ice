@@ -151,3 +151,19 @@ export function getProviderCompatibility(template: ComposedTemplate, provider: P
 export function filterByProvider(templates: ComposedTemplate[], provider: Provider): TemplateCompatibility[] {
   return templates.map((t) => getProviderCompatibility(t, provider));
 }
+
+/**
+ * Return the subset of a template's declared providers that still have at
+ * least one supported block under the active feature flags.
+ *
+ * Because `getBlueprint(iceType, provider)` honors `PROVIDER_FLAGS` and the
+ * (category × provider) gate, a provider whose blocks all fail to resolve
+ * naturally drops out of this list. Used by the gallery to hide badges /
+ * picker tiles for providers that can't actually run the template.
+ */
+export function getEnabledProvidersForTemplate(template: ComposedTemplate): Provider[] {
+  if (!template.providers) return [];
+  return template.providers.filter((p) =>
+    template.blocks.some((b) => getBlueprint(b.iceType, p) !== undefined),
+  );
+}

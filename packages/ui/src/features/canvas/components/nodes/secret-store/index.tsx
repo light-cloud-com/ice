@@ -6,7 +6,7 @@
  * onlookers. Editing moves to the properties panel.
  */
 
-import { SS_HEADER_HEIGHT, SS_PADDING, SS_ROW_HEIGHT } from '@ice/constants';
+import { CARD_FOOTER_HEIGHT, SS_HEADER_HEIGHT, SS_PADDING, SS_ROW_HEIGHT } from '@ice/constants';
 import { Lock } from 'lucide-react';
 import React from 'react';
 import { CardShell, EmptyHint, KvLine } from '../_shared';
@@ -17,7 +17,7 @@ export { SS_HEADER_HEIGHT, SS_ROW_HEIGHT, SS_PADDING };
 export function computeSecretStoreHeight(data: Record<string, unknown>): number {
   const rows = (data?.secrets as unknown[] | undefined) || [];
   const rowCount = Math.max(rows.length, 1);
-  return SS_HEADER_HEIGHT + SS_PADDING + rowCount * SS_ROW_HEIGHT + SS_PADDING;
+  return SS_HEADER_HEIGHT + SS_PADDING + rowCount * SS_ROW_HEIGHT + SS_PADDING + CARD_FOOTER_HEIGHT;
 }
 
 function parseSecretKey(raw: unknown): string {
@@ -34,11 +34,13 @@ export const SvgSecretStoreNode: React.FC<SvgCompactNodeProps> = ({
   isDragOver = false,
   onNodeHover,
   connectionDragState = null,
+  lod,
+  pipelineStatus,
 }) => {
   const keys = ((node.data?.secrets as unknown[] | undefined) || []).map(parseSecretKey).filter(Boolean);
 
   const autoRotate = !!node.data?.auto_rotate;
-  const subtitle =
+  const liveConfig =
     keys.length === 0
       ? 'No secrets yet'
       : `${keys.length} ${keys.length === 1 ? 'secret' : 'secrets'}${autoRotate ? ' · auto-rotate' : ''}`;
@@ -50,9 +52,11 @@ export const SvgSecretStoreNode: React.FC<SvgCompactNodeProps> = ({
       isDragOver={isDragOver}
       onNodeHover={onNodeHover}
       connectionDragState={connectionDragState}
+      lod={lod}
+      pipelineStatus={pipelineStatus}
       icon={Lock}
       title={node.label || 'Secret Store'}
-      subtitle={subtitle}
+      liveConfig={liveConfig}
       headerHeight={SS_HEADER_HEIGHT}
     >
       {keys.length === 0 ? (

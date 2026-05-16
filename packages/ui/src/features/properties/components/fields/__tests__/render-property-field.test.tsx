@@ -439,6 +439,100 @@ describe('PropertyFields', () => {
     expect(wrappers).toHaveLength(1);
   });
 
+  it('hides a property whose visibleWhen.equals does not match the gating field', () => {
+    const properties = [
+      mkProp({ name: 'frequency', type: 'select', options: ['Hourly', 'Custom'] }),
+      mkProp({
+        name: 'schedule_expression',
+        visibleWhen: { field: 'frequency', equals: 'Custom' },
+      }),
+    ];
+    const tree = (PropertyFields as React.FC<Parameters<typeof PropertyFields>[0]>)({
+      properties,
+      nodeData: { frequency: 'Hourly' },
+      onFieldChange: vi.fn(),
+    }) as React.ReactElement;
+    const wrappers = findByPredicate(
+      tree,
+      (el) => el.type === 'div' && typeof (el.props as { 'data-prop-key'?: string })['data-prop-key'] === 'string',
+    );
+    const keys = wrappers.map((el) => (el.props as { 'data-prop-key': string })['data-prop-key']);
+    expect(keys).toEqual(['frequency']);
+  });
+
+  it('shows the gated property once the gating field equals the target value', () => {
+    const properties = [
+      mkProp({ name: 'frequency', type: 'select', options: ['Hourly', 'Custom'] }),
+      mkProp({
+        name: 'schedule_expression',
+        visibleWhen: { field: 'frequency', equals: 'Custom' },
+      }),
+    ];
+    const tree = (PropertyFields as React.FC<Parameters<typeof PropertyFields>[0]>)({
+      properties,
+      nodeData: { frequency: 'Custom' },
+      onFieldChange: vi.fn(),
+    }) as React.ReactElement;
+    const wrappers = findByPredicate(
+      tree,
+      (el) => el.type === 'div' && typeof (el.props as { 'data-prop-key'?: string })['data-prop-key'] === 'string',
+    );
+    const keys = wrappers.map((el) => (el.props as { 'data-prop-key': string })['data-prop-key']);
+    expect(keys).toEqual(['frequency', 'schedule_expression']);
+  });
+
+  it('accepts an array of values for visibleWhen.equals (any-match)', () => {
+    const properties = [
+      mkProp({ name: 'mode', type: 'select', options: ['A', 'B', 'C'] }),
+      mkProp({
+        name: 'details',
+        visibleWhen: { field: 'mode', equals: ['B', 'C'] },
+      }),
+    ];
+    const onlyA = (PropertyFields as React.FC<Parameters<typeof PropertyFields>[0]>)({
+      properties,
+      nodeData: { mode: 'A' },
+      onFieldChange: vi.fn(),
+    }) as React.ReactElement;
+    const aKeys = findByPredicate(
+      onlyA,
+      (el) => el.type === 'div' && typeof (el.props as { 'data-prop-key'?: string })['data-prop-key'] === 'string',
+    ).map((el) => (el.props as { 'data-prop-key': string })['data-prop-key']);
+    expect(aKeys).toEqual(['mode']);
+
+    const onB = (PropertyFields as React.FC<Parameters<typeof PropertyFields>[0]>)({
+      properties,
+      nodeData: { mode: 'B' },
+      onFieldChange: vi.fn(),
+    }) as React.ReactElement;
+    const bKeys = findByPredicate(
+      onB,
+      (el) => el.type === 'div' && typeof (el.props as { 'data-prop-key'?: string })['data-prop-key'] === 'string',
+    ).map((el) => (el.props as { 'data-prop-key': string })['data-prop-key']);
+    expect(bKeys).toEqual(['mode', 'details']);
+  });
+
+  it('hides a gated property when the gating field is unset', () => {
+    const properties = [
+      mkProp({ name: 'frequency', type: 'select', options: ['Hourly', 'Custom'] }),
+      mkProp({
+        name: 'schedule_expression',
+        visibleWhen: { field: 'frequency', equals: 'Custom' },
+      }),
+    ];
+    const tree = (PropertyFields as React.FC<Parameters<typeof PropertyFields>[0]>)({
+      properties,
+      nodeData: {},
+      onFieldChange: vi.fn(),
+    }) as React.ReactElement;
+    const wrappers = findByPredicate(
+      tree,
+      (el) => el.type === 'div' && typeof (el.props as { 'data-prop-key'?: string })['data-prop-key'] === 'string',
+    );
+    const keys = wrappers.map((el) => (el.props as { 'data-prop-key': string })['data-prop-key']);
+    expect(keys).toEqual(['frequency']);
+  });
+
   it('includes tier === "essential" and tier === "detailed"', () => {
     const properties = [
       mkProp({ name: 'e', tier: 'essential' }),

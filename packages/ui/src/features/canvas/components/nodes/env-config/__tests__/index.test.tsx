@@ -9,7 +9,7 @@
  * Branches:
  *   - computeEnvConfigHeight: floor of 1 row when variables empty/missing.
  *   - parseVariable: object form, string with '=', string-only, neither.
- *   - subtitle: pluralization (0 → "No variables yet"; 1 → "1 variable"; N → "N variables").
+ *   - liveConfig: pluralization (0 → "No variables yet"; 1 → "1 variable"; N → "N variables").
  *   - empty state vs KvLine list rendering.
  *   - title fallback to "Env Config" when label empty.
  */
@@ -40,6 +40,7 @@ vi.mock('lucide-react', () => ({
   Cog: ((props: Record<string, unknown>) => null) as React.FC,
 }));
 
+import { CARD_FOOTER_HEIGHT } from '@ice/constants';
 import {
   SvgEnvConfigNode,
   computeEnvConfigHeight,
@@ -111,14 +112,14 @@ describe('Constants', () => {
 });
 
 describe('computeEnvConfigHeight', () => {
-  it('returns header + padding*2 + 1 row when variables empty', () => {
+  it('returns header + padding*2 + 1 row + footer when variables empty', () => {
     const h = computeEnvConfigHeight({});
-    expect(h).toBe(EC_HEADER_HEIGHT + EC_PADDING + 1 * EC_ROW_HEIGHT + EC_PADDING);
+    expect(h).toBe(EC_HEADER_HEIGHT + EC_PADDING + 1 * EC_ROW_HEIGHT + EC_PADDING + CARD_FOOTER_HEIGHT);
   });
 
-  it('returns header + padding*2 + N rows for N variables', () => {
+  it('returns header + padding*2 + N rows + footer for N variables', () => {
     const h = computeEnvConfigHeight({ variables: [1, 2, 3] });
-    expect(h).toBe(EC_HEADER_HEIGHT + EC_PADDING + 3 * EC_ROW_HEIGHT + EC_PADDING);
+    expect(h).toBe(EC_HEADER_HEIGHT + EC_PADDING + 3 * EC_ROW_HEIGHT + EC_PADDING + CARD_FOOTER_HEIGHT);
   });
 
   it('coerces missing variables key to empty list', () => {
@@ -131,15 +132,15 @@ describe('computeEnvConfigHeight', () => {
 
   it('handles null data input via optional chaining', () => {
     const h = computeEnvConfigHeight(null as unknown as Record<string, unknown>);
-    expect(h).toBe(EC_HEADER_HEIGHT + EC_PADDING + 1 * EC_ROW_HEIGHT + EC_PADDING);
+    expect(h).toBe(EC_HEADER_HEIGHT + EC_PADDING + 1 * EC_ROW_HEIGHT + EC_PADDING + CARD_FOOTER_HEIGHT);
   });
 });
 
 describe('SvgEnvConfigNode — empty state', () => {
-  it('renders "No variables yet" subtitle when variables empty', () => {
+  it('renders "No variables yet" liveConfig when variables empty', () => {
     const tree = renderEC({ node: makeNode({ data: { variables: [] } }) });
     const shell = findByType(tree, MockCardShell)[0];
-    expect((shell.props as { subtitle: string }).subtitle).toBe('No variables yet');
+    expect((shell.props as { liveConfig: string }).liveConfig).toBe('No variables yet');
   });
 
   it('renders <EmptyHint> in body when no variables', () => {
@@ -232,14 +233,14 @@ describe('SvgEnvConfigNode — populated state', () => {
     expect(findByType(tree, MockKvLine)).toHaveLength(0);
   });
 
-  it('subtitle: "1 variable" (singular)', () => {
+  it('liveConfig: "1 variable" (singular)', () => {
     const node = makeNode({ data: { variables: [{ key: 'A', value: '1' }] } });
     const tree = renderEC({ node });
     const shell = findByType(tree, MockCardShell)[0];
-    expect((shell.props as { subtitle: string }).subtitle).toBe('1 variable');
+    expect((shell.props as { liveConfig: string }).liveConfig).toBe('1 variable');
   });
 
-  it('subtitle: "N variables" (plural)', () => {
+  it('liveConfig: "N variables" (plural)', () => {
     const node = makeNode({
       data: {
         variables: [
@@ -251,7 +252,7 @@ describe('SvgEnvConfigNode — populated state', () => {
     });
     const tree = renderEC({ node });
     const shell = findByType(tree, MockCardShell)[0];
-    expect((shell.props as { subtitle: string }).subtitle).toBe('3 variables');
+    expect((shell.props as { liveConfig: string }).liveConfig).toBe('3 variables');
   });
 });
 

@@ -63,6 +63,7 @@ import { CustomDomainBanner } from './custom-domain-banner';
 import { DeployTabBody } from './deploy-tab-body';
 import { PropertiesTabBar } from './properties-tab-bar';
 import { CustomDomainPanel } from './custom-domain-panel';
+import { DeploymentTargetCard } from './deployment-target-card';
 import { PublicEndpointDomainSection } from './domain-section';
 import { EnvVarsEditor } from './env-vars-editor';
 import { GroupColorPicker } from './group-color-picker';
@@ -164,6 +165,18 @@ export const NodePropertiesSection: React.FC<{
         resourceDef={resourceDef}
         onUpdateName={(name) => updateNodeField('name', name)}
       />
+
+      {/* ── Deployment target (provider + region) ──
+          Hidden for symbolic block types that don't deploy to a cloud
+          (Source.Repository points at GitHub; Network.PublicTraffic is
+          a canvas-only Internet terminator). */}
+      {iceType !== 'Source.Repository' && iceType !== 'Network.PublicTraffic' && (
+        <DeploymentTargetCard
+          provider={provider}
+          region={(selectedNode.data?.region as string) || ''}
+          onUpdate={(field, value) => updateNodeField(field, value)}
+        />
+      )}
 
       {/* ── Design requirements (prototype: Postgres + PrivateNetwork) ──
           Surfaces missing connections, missing required props, and

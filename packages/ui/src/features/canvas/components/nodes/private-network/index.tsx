@@ -1,29 +1,34 @@
 /**
  * SvgPrivateNetworkNode — Canvas renderer for `Network.PrivateNetwork`
  *
- * A container block styled to match `Network.CustomDomain` visually:
- * card-like body via `foreignObject`, gradient header with rounded
- * icon container + title + subtitle, and a continuous border. The body
- * is a drop zone; nested children render on top via the standard
- * svg-canvas dispatcher loop (they're separate <g> elements).
- * Ingress state (set via properties panel) is surfaced through the
- * shield icon glyph + the live subtitle:
- *   - `'all'`       → Shield      — "Open · public reachable"
- *   - `'allowlist'` → ShieldAlert — "Restricted · allowlist"
- *   - `'none'`      → ShieldCheck — "Sealed · internal only"
+ * A container block that nests other blocks inside its body. The header
+ * matches the rest of the canvas — provider stamp top-right, info
+ * trigger, and a `{serviceName} · {region}` meta line — so the block
+ * doesn't read as a one-off chrome. A status footer at the bottom shows
+ * the ingress label (Open / Restricted / Sealed) plus a deploy-status
+ * dot, freeing the meta line from doubling as a state badge.
  *
- * Policy is purely data — the compiler emits ingress/egress firewall
- * rules from `data.ingress` / `data.egress` at deploy time.
+ * The shield icon tint and accent colour still encode the three ingress
+ * states (Open=red, Restricted=amber, Sealed=slate) — that's the
+ * load-bearing identity cue the validated block ships with.
+ *
+ * Behaviour preserved verbatim — body remains a drop zone, children
+ * still render on top via the standard dispatcher loop.
  */
 
 import {
+  CARD_FOOTER_HEIGHT,
   PN_HEADER_HEIGHT,
-  PRIVATE_NETWORK_MIN_WIDTH as PN_MIN_WIDTH,
   PRIVATE_NETWORK_MIN_HEIGHT as PN_MIN_HEIGHT,
+  PRIVATE_NETWORK_MIN_WIDTH as PN_MIN_WIDTH,
 } from '@ice/constants';
-import { Shield, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { Shield, ShieldAlert, ShieldCheck } from 'lucide-react';
 import React, { useCallback, useState } from 'react';
-import { CARD_PX, CATEGORY_STYLE, CORNER_RADIUS } from '../../../../../config/canvas-constants';
+import { ProviderPill } from '../_shared/provider-pill';
+import { StatusDot } from '../_shared/status-dot';
+import { CARD_PX, CATEGORY_STYLE, CORNER_RADIUS, STATUS_COLORS } from '../../../../../config/canvas-constants';
+import { ConceptInfoTrigger } from '../../../../concept-info';
+import { getServiceName } from '../../../../../assets/icons/service-names';
 import type { SvgCompactNodeProps } from '../compact-node';
 
 export { PN_HEADER_HEIGHT, PN_MIN_WIDTH, PN_MIN_HEIGHT };
@@ -62,11 +67,22 @@ export const SvgPrivateNetworkNode: React.FC<SvgCompactNodeProps> = ({
   const [isHovered, setIsHovered] = useState(false);
 
   const ingress = coerceIngress(data?.ingress);
+  const iceType = (data?.iceType as string) || 'Network.PrivateNetwork';
+  const provider = (data?.provider as string) || '';
+  const region = (data?.region as string) || '';
+  const deployStatus = (data?.deploy_status as string) || '';
+  const serviceName = getServiceName(iceType, provider || 'aws');
+  const metaLine = serviceName
+    ? `${serviceName} · ${region || 'auto'}`
+    : region
+      ? region
+      : '';
+  const statusColor = STATUS_COLORS[deployStatus] || STATUS_COLORS.idle;
+  const statusLabel = deployStatus ? deployStatus.charAt(0).toUpperCase() + deployStatus.slice(1) : '';
 
   // Reuse the Network category glow so Private Network feels like part
   // of the same family as Custom Domain / Public Endpoint. The shield
-  // icon tint is what differentiates the three ingress states — border
-  // and header stay consistent for a calm, unified look.
+  // icon tint differentiates the three ingress states.
   const cat = CATEGORY_STYLE.Network || CATEGORY_STYLE.default;
   const categoryGlow = cat.glow;
 
@@ -101,6 +117,7 @@ export const SvgPrivateNetworkNode: React.FC<SvgCompactNodeProps> = ({
   }, [onNodeHover]);
 
   const ShieldIcon = ingress === 'none' ? ShieldCheck : ingress === 'allowlist' ? ShieldAlert : Shield;
+  const liveConfig = ingressLabel(ingress);
 
   return (
     <g>
@@ -125,9 +142,10 @@ export const SvgPrivateNetworkNode: React.FC<SvgCompactNodeProps> = ({
                 ? '0 2px 8px -2px rgba(0,0,0,0.15)'
                 : '0 1px 3px rgba(0,0,0,0.06)',
             opacity: isSource ? 0.85 : 1,
+            transition: 'box-shadow 150ms ease, border-color 150ms ease',
           }}
         >
-          {/* ── Header: icon + title + live ingress subtitle ── */}
+          {/* ── Header: shield + title + meta · region + info + provider ── */}
           <div
             style={{
               display: 'flex',
@@ -170,19 +188,24 @@ export const SvgPrivateNetworkNode: React.FC<SvgCompactNodeProps> = ({
               >
                 {label || 'Private Network'}
               </div>
-              <div
-                style={{
-                  fontSize: 10,
-                  color: 'var(--ice-text-3)',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}
-                data-testid={`pn-subtitle-${node.id}`}
-              >
-                · {ingressLabel(ingress)}
-              </div>
+              {metaLine && (
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: 'var(--ice-text-3)',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    marginTop: 2,
+                  }}
+                  data-testid={`pn-subtitle-${node.id}`}
+                >
+                  {metaLine}
+                </div>
+              )}
             </div>
+            <ConceptInfoTrigger iceType={iceType} displayName={label || ''} opacity={isHovered ? 0.85 : 0.4} />
+            <ProviderPill provider={provider} />
           </div>
 
           {/* ── Drop zone body — transparent so children nest visually
@@ -214,6 +237,40 @@ export const SvgPrivateNetworkNode: React.FC<SvgCompactNodeProps> = ({
             >
               drop services here
             </div>
+          </div>
+
+          {/* ── Status footer: ingress label + StatusDot ── */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 8,
+              padding: `6px ${CARD_PX}px`,
+              borderTop: '1px solid var(--ice-border-subtle, var(--ice-border))',
+              flexShrink: 0,
+              minHeight: CARD_FOOTER_HEIGHT,
+              boxSizing: 'border-box',
+            }}
+            data-testid={`pn-footer-${node.id}`}
+          >
+            <span
+              style={{
+                fontSize: 10,
+                fontFamily: "ui-monospace, 'SFMono-Regular', monospace",
+                color: ACCENT,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                minWidth: 0,
+                flex: 1,
+                opacity: 0.9,
+              }}
+              data-testid={`pn-ingress-${node.id}`}
+            >
+              {liveConfig}
+            </span>
+            {deployStatus && <StatusDot color={statusColor} label={statusLabel.toLowerCase()} />}
           </div>
         </div>
       </foreignObject>

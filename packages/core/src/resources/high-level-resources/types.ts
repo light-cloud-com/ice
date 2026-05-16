@@ -101,6 +101,14 @@ export interface HighLevelProperty {
     /** Placeholder text for the input */
     placeholder?: string;
   };
+  /** Conditional rendering — only show this property when another field on
+   *  the same node matches a value (or one of a set of values). Used e.g.
+   *  to reveal a cron-expression input only when `frequency === 'Custom'`.
+   *  Compared against `nodeData[visibleWhen.field]` with string equality. */
+  visibleWhen?: {
+    field: string;
+    equals: string | string[];
+  };
 }
 
 export interface HighLevelCategory {

@@ -1,6 +1,6 @@
 /**
  * Tests for `SvgEmailServiceNode` — Messaging.Email read-only renderer.
- * Subtitle is `from_address` (or 'Transactional' fallback) and the body
+ * liveConfig is `from_address` (or 'Transactional' fallback) and the body
  * has two LabelLines for FROM and SENDER.
  */
 
@@ -27,6 +27,7 @@ vi.mock('../../_shared', () => ({
   LabelLine: mocks.LabelLine,
 }));
 
+import { CARD_FOOTER_HEIGHT } from '@ice/constants';
 import {
   SvgEmailServiceNode,
   computeEmailServiceHeight,
@@ -68,8 +69,8 @@ const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
 });
 
 describe('computeEmailServiceHeight', () => {
-  it('returns ES_HEADER_HEIGHT + padding*2 + 2*field + 6 (two-row layout)', () => {
-    const expected = ES_HEADER_HEIGHT + ES_PADDING + ES_FIELD_HEIGHT * 2 + 6 + ES_PADDING;
+  it('returns ES_HEADER_HEIGHT + padding*2 + 2*field + 6 + footer (two-row layout)', () => {
+    const expected = ES_HEADER_HEIGHT + ES_PADDING + ES_FIELD_HEIGHT * 2 + 6 + ES_PADDING + CARD_FOOTER_HEIGHT;
     expect(computeEmailServiceHeight()).toBe(expected);
   });
 });
@@ -84,17 +85,17 @@ describe('SvgEmailServiceNode', () => {
     expect(tree.type).toBe(mocks.CardShell);
   });
 
-  it('subtitle = from_address when set', () => {
+  it('liveConfig = from_address when set', () => {
     const tree = SvgEmailServiceNode({
       node: makeNode({ data: { from_address: 'noreply@example.com' } }),
       isSelected: false,
     }) as React.ReactElement;
-    expect((tree.props as { subtitle: string }).subtitle).toBe('noreply@example.com');
+    expect((tree.props as { liveConfig: string }).liveConfig).toBe('noreply@example.com');
   });
 
-  it('subtitle = "Transactional" fallback when from_address absent', () => {
+  it('liveConfig = "Transactional" fallback when from_address absent', () => {
     const tree = SvgEmailServiceNode({ node: makeNode(), isSelected: false }) as React.ReactElement;
-    expect((tree.props as { subtitle: string }).subtitle).toBe('Transactional');
+    expect((tree.props as { liveConfig: string }).liveConfig).toBe('Transactional');
   });
 
   it('falls back to "Email Service" title when label empty', () => {

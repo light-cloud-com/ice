@@ -71,6 +71,7 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
   const iceType = (data.iceType as string) || '';
   const category = iceType.split('.')[0] || 'default';
   const provider = (data.provider as string) || '';
+  const region = (data.region as string) || '';
   const runtime = (data.runtime as string) || '';
   const folded = (data.folded as boolean) || false;
   const repository = (data.repository as string) || (data.github as string) || (data.repo as string) || '';
@@ -107,7 +108,11 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
     if (runtimeLabel.startsWith(shortName + ' ')) return runtimeLabel.slice(shortName.length + 1);
     return runtimeLabel;
   })();
-  const serviceLineText = [serviceName, dedupedRuntime].filter(Boolean).join(' \u00B7 ');
+  // Service line: `{serviceName} \u00B7 {runtime} \u00B7 {region || 'auto'}`. The
+  // region segment is always appended when we have a service to display so
+  // every block surfaces *where* it will deploy without a separate row.
+  const serviceBaseText = [serviceName, dedupedRuntime].filter(Boolean).join(' \u00B7 ');
+  const serviceLineText = serviceBaseText ? `${serviceBaseText} \u00B7 ${region || 'auto'}` : '';
 
   // ── Context-aware metadata ──
   const { lines: metaLines, repoLineIndex } = getContextLines(data, iceType);

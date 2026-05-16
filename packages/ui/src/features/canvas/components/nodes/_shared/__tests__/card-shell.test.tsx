@@ -4,13 +4,18 @@
  *
  * Branches under test:
  *   - title fallback chain (title → label → '').
- *   - subtitle conditional render.
+ *   - meta line auto-compute from getServiceName(iceType, provider) + region.
+ *   - metaOverride bypasses auto-compute.
+ *   - liveConfig renders in the status footer.
+ *   - footer hides when no liveConfig and no deploy_status.
+ *   - provider stamp always renders (AUTO label fallback when empty).
+ *   - StatusDot renders when deploy_status is set.
  *   - accent override vs derived from CATEGORY_STYLE[category] (with fallback default).
  *   - border / boxShadow drift across (isSelected, isHovered, isSource).
  *   - hover state via mocked useState (controllable).
  *   - onEnter/onLeave fire onNodeHover with id / null.
  *   - headerHeight default 48 / custom.
- *   - headerTrailing rendered after the ConceptInfoTrigger.
+ *   - headerTrailing rendered before the ConceptInfoTrigger.
  */
 
 import React from 'react';
@@ -20,10 +25,15 @@ const mocks = vi.hoisted(() => ({
   ConceptInfoTrigger: vi.fn(() => null),
   hoverValue: false as boolean,
   setHoverSpy: vi.fn(),
+  getServiceName: vi.fn((_iceType: string, _provider: string) => null as string | null),
 }));
 
 vi.mock('../../../../../concept-info', () => ({
   ConceptInfoTrigger: mocks.ConceptInfoTrigger,
+}));
+
+vi.mock('../../../../../../assets/icons/service-names', () => ({
+  getServiceName: mocks.getServiceName,
 }));
 
 vi.mock('react', async (importOriginal) => {
@@ -96,6 +106,8 @@ beforeEach(() => {
   mocks.hoverValue = false;
   mocks.setHoverSpy.mockClear();
   mocks.ConceptInfoTrigger.mockClear();
+  mocks.getServiceName.mockReset();
+  mocks.getServiceName.mockReturnValue(null);
 });
 
 describe('CardShell', () => {
@@ -136,24 +148,88 @@ describe('CardShell', () => {
     expect(titleEl.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('renders the subtitle line when subtitle is provided', () => {
-    const tree = renderInner({ subtitle: 'a small caption' });
-    const sub = findByPredicate(
+  it('auto-computes the meta line as `{serviceName} · {region}` when service resolves', () => {
+    mocks.getServiceName.mockReturnValue('Amazon RDS');
+    const tree = renderInner({
+      node: makeNode({ data: { iceType: 'Database.PostgreSQL', provider: 'aws', region: 'us-east-1' } }),
+    });
+    const meta = findByPredicate(
       tree,
-      (el) => el.type === 'div' && (el.props as { children?: unknown }).children === 'a small caption',
+      (el) => el.type === 'div' && (el.props as { children?: unknown }).children === 'Amazon RDS · us-east-1',
     );
-    expect(sub).toHaveLength(1);
+    expect(meta).toHaveLength(1);
   });
 
-  it('omits the subtitle line when subtitle is not provided', () => {
-    const tree = renderInner();
-    const possibleSubs = findByPredicate(
+  it('uses "auto" for region when not set on the node', () => {
+    mocks.getServiceName.mockReturnValue('Amazon RDS');
+    const tree = renderInner({
+      node: makeNode({ data: { iceType: 'Database.PostgreSQL', provider: 'aws' } }),
+    });
+    const meta = findByPredicate(
+      tree,
+      (el) => el.type === 'div' && (el.props as { children?: unknown }).children === 'Amazon RDS · auto',
+    );
+    expect(meta).toHaveLength(1);
+  });
+
+  it('skips the meta line when neither service nor region are known', () => {
+    mocks.getServiceName.mockReturnValue(null);
+    const tree = renderInner({ node: makeNode({ data: {} }) });
+    const possibleMeta = findByPredicate(
       tree,
       (el) =>
         el.type === 'div' &&
-        (el.props as { style?: Record<string, string | number> }).style?.fontSize === 11,
+        typeof (el.props as { children?: unknown }).children === 'string' &&
+        ((el.props as { style?: Record<string, string | number> }).style?.fontSize === 11),
     );
-    expect(possibleSubs).toHaveLength(0);
+    expect(possibleMeta).toHaveLength(0);
+  });
+
+  it('metaOverride bypasses auto-compute', () => {
+    mocks.getServiceName.mockReturnValue('Amazon RDS');
+    const tree = renderInner({
+      node: makeNode({ data: { iceType: 'Database.PostgreSQL', provider: 'aws', region: 'us-east-1' } }),
+      metaOverride: 'forced subtitle',
+    });
+    const meta = findByPredicate(
+      tree,
+      (el) => el.type === 'div' && (el.props as { children?: unknown }).children === 'forced subtitle',
+    );
+    expect(meta).toHaveLength(1);
+  });
+
+  it('renders liveConfig in the status footer', () => {
+    const tree = renderInner({ liveConfig: '3 queues · 30s visibility' });
+    const text = findByPredicate(
+      tree,
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === '3 queues · 30s visibility',
+    );
+    expect(text).toHaveLength(1);
+  });
+
+  it('omits the status footer when neither liveConfig nor deploy_status is set', () => {
+    const tree = renderInner();
+    // Footer is a div with borderTop containing a span; no liveConfig & no
+    // deploy_status → showFooter is false.
+    const footerSpans = findByPredicate(
+      tree,
+      (el) =>
+        el.type === 'span' &&
+        typeof (el.props as { style?: Record<string, string | number> }).style?.fontSize === 'number' &&
+        (el.props as { style: { fontSize: number } }).style.fontSize === 10,
+    );
+    expect(footerSpans).toHaveLength(0);
+  });
+
+  it('renders the status footer when deploy_status is set even without liveConfig', () => {
+    const tree = renderInner({ node: makeNode({ data: { deploy_status: 'active' } }) });
+    const footerSpans = findByPredicate(
+      tree,
+      (el) =>
+        el.type === 'span' &&
+        (el.props as { style?: Record<string, string | number> }).style?.fontSize === 10,
+    );
+    expect(footerSpans.length).toBeGreaterThan(0);
   });
 
   it('renders the icon prop with size=16 + the accent color', () => {
@@ -192,9 +268,6 @@ describe('CardShell', () => {
   });
 
   it('falls back to CATEGORY_STYLE.default when iceType category is unknown', () => {
-    // iceType = 'NotARealCategory.X' → category = 'NotARealCategory'.
-    // CATEGORY_STYLE['NotARealCategory'] is undefined → || branch picks CATEGORY_STYLE.default
-    // whose glow is 'var(--ice-border-strong)'.
     const tree = renderInner({
       node: makeNode({ data: { iceType: 'NotARealCategory.X' } }),
     });
@@ -375,7 +448,7 @@ describe('CardShell', () => {
     expect((trigger.props as { displayName: string }).displayName).toBe('');
   });
 
-  it('renders the headerTrailing slot after the title block', () => {
+  it('renders the headerTrailing slot in the header', () => {
     const trailing = React.createElement('span', { 'data-stub': 'trailing' });
     const tree = renderInner({ headerTrailing: trailing });
     const hits = findByPredicate(

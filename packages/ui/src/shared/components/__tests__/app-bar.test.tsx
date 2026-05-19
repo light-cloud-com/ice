@@ -96,6 +96,18 @@ vi.mock('react-redux', () => ({
   useDispatch: () => mocks.dispatch,
 }));
 
+// AppBar gates its provider buttons + modals on `isProviderEnabled` from
+// `@ice/constants`, which respects live PROVIDER_FLAGS (GCP-only by default).
+// These tests assert on the full aws/azure/gcp surface — stub the gate to
+// true so the assertions exercise the rendering branches, not the flags.
+vi.mock('@ice/constants', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    isProviderEnabled: () => true,
+  };
+});
+
 vi.mock('react-router-dom', () => ({
   useNavigate: () => mocks.navigate,
 }));

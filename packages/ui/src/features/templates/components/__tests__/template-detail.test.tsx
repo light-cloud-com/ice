@@ -69,6 +69,18 @@ vi.mock('../../../../assets/icons/brand-registry', () => ({
   getBrandIcon: () => null,
 }));
 
+// `getEnabledProvidersForTemplate` calls `getBlueprint` per (block, provider)
+// against live PROVIDER_FLAGS, so disabled providers drop out (GCP-only by
+// default). These tests assert on the full aws/gcp section content — stub
+// the helper to return template.providers verbatim.
+vi.mock('@ice/templates', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    getEnabledProvidersForTemplate: (tpl: { providers?: string[] }) => tpl.providers ?? [],
+  };
+});
+
 import { TemplateDetail, type TemplateDetailProps } from '../template-detail';
 import type { ComposedTemplate } from '../../../../config/templates';
 

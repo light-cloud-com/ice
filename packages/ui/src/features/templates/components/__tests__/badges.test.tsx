@@ -29,6 +29,18 @@ vi.mock('../../../../i18n', () => ({
   useTranslation: () => ({ t: (k: string) => k }),
 }));
 
+// ProviderBadges filters its chip list via `isProviderEnabled` from
+// `@ice/constants`. Under live PROVIDER_FLAGS only GCP survives, but these
+// tests assert on the full aws/gcp/azure chip layout — stub the gate so all
+// three render.
+vi.mock('@ice/constants', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    isProviderEnabled: () => true,
+  };
+});
+
 vi.mock('../../../../assets/icons/brand-registry', () => ({
   getBrandIcon: (tag: string) => {
     const known: Record<string, { url: string; label: string }> = {

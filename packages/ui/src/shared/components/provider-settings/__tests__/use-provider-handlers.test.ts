@@ -174,11 +174,11 @@ describe('useProviderHandlers — output shape', () => {
     expect(mocks.capturedReload).toBeTypeOf('function');
   });
 
-  it('registers a useEffect for GCP OAuth error sync (deps: [gcpOAuth.error])', () => {
-    const { input } = buildInput();
+  it('registers a useEffect for GCP OAuth error sync (deps: [gcpOAuth.error, setError])', () => {
+    const { input, setError } = buildInput();
     runHook(input);
     expect(mocks.effects).toHaveLength(1);
-    expect(mocks.effects[0].deps).toEqual([null]);
+    expect(mocks.effects[0].deps).toEqual([null, setError]);
   });
 });
 

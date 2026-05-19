@@ -17,6 +17,18 @@ vi.mock('../schema-bridge', () => ({
   getResourceForIceType: () => undefined,
 }));
 
+// PROVIDER_FLAGS gates aws/azure off by default, which would cause every node
+// to short-circuit on CATEGORY_DISABLED before reaching the rules under test.
+// These tests target the deployability rules themselves — stub the gate to
+// true so the per-rule branches are exercised independently of live flags.
+vi.mock('@ice/constants', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    isCategoryEnabledForProvider: () => true,
+  };
+});
+
 import { validateDeployability } from '../deploy-rules';
 import type { ValidatableNode } from '../types';
 

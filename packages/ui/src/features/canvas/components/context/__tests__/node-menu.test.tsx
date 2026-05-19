@@ -76,11 +76,22 @@ vi.mock('../../../../../store/slices/ui-slice', () => ({
   toggleProperties: mocks.toggleProperties,
 }));
 
+// NodeMenu reads `ENABLED_PROVIDERS` + `getCategoryForIceType` +
+// `isCategoryEnabledForProvider` from `@ice/constants`. The test pins the
+// submenu surface to {aws, gcp} so it stays stable across live PROVIDER_FLAGS
+// changes — stub `ENABLED_PROVIDERS` to that fixture and stub the per-category
+// gate to true so all providers in the fixture survive the filter.
 vi.mock('@ice/constants', () => ({
   CLOUD_PROVIDERS: [
     { id: 'aws', name: 'AWS', shortName: 'AWS', description: '', icon: 'aws', color: '#fff' },
     { id: 'gcp', name: 'GCP', shortName: 'GCP', description: '', icon: 'gcp', color: '#fff' },
   ],
+  ENABLED_PROVIDERS: [
+    { id: 'aws', name: 'AWS', shortName: 'AWS', description: '', icon: 'aws', color: '#fff' },
+    { id: 'gcp', name: 'GCP', shortName: 'GCP', description: '', icon: 'gcp', color: '#fff' },
+  ],
+  getCategoryForIceType: () => undefined,
+  isCategoryEnabledForProvider: () => true,
 }));
 
 import { fireKey } from '../menu-primitives';

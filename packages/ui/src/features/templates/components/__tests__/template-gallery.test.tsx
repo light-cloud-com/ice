@@ -166,6 +166,20 @@ vi.mock('../../../../shared/api/axios-instance', () => ({
   default: { post: (...args: unknown[]) => mocks.axios.post(...args) },
 }));
 
+// `getEnabledProvidersForTemplate` calls `getBlueprint` per (block, provider)
+// against live PROVIDER_FLAGS, so the gallery's pre-filter
+// `getEnabledProvidersForTemplate(tpl).length > 0` drops every template when
+// only GCP is enabled (the fixture templates have empty `blocks` so the
+// helper returns []). Stub it to return template.providers verbatim so the
+// gallery surface is observable.
+vi.mock('@ice/templates', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    getEnabledProvidersForTemplate: (tpl: { providers?: string[] }) => tpl.providers ?? ['gcp'],
+  };
+});
+
 vi.mock('../../../../shared/components/ui/dialog', () => ({
   Dialog: ({
     children,

@@ -53,6 +53,27 @@ vi.mock('../../../../config/templates', () => ({
   ],
 }));
 
+// `getEnabledProvidersForTemplate` calls `getBlueprint` per (block, provider)
+// against live PROVIDER_FLAGS, so disabled providers (everything except gcp)
+// drop out. ProviderBadges also re-filters via `isProviderEnabled` from
+// `@ice/constants`. Both layers need stubs so these tests can assert on the
+// full aws/gcp chip surface.
+vi.mock('@ice/templates', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    getEnabledProvidersForTemplate: (tpl: { providers?: string[] }) => tpl.providers ?? [],
+  };
+});
+
+vi.mock('@ice/constants', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    isProviderEnabled: () => true,
+  };
+});
+
 import { TemplateCard, type TemplateCardProps } from '../template-card';
 import type { ComposedTemplate } from '../../../../config/templates';
 

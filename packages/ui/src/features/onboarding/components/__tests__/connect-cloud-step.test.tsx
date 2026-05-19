@@ -110,6 +110,17 @@ vi.mock('../../../../store/slices/onboarding-slice', () => ({
   setCloudConnected: (v: boolean) => mocks.thunks.setCloudConnected(v),
 }));
 
+// ConnectCloudStep filters its provider list via `isProviderEnabled`, which
+// respects live PROVIDER_FLAGS (GCP-only by default). These tests assert on
+// the gcp / aws / azure surface — stub the gate so all three render.
+vi.mock('@ice/constants', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    isProviderEnabled: () => true,
+  };
+});
+
 // Asset SVG imports — vitest can't load SVG; alias them
 vi.mock('devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg', () => ({
   default: 'aws.svg',

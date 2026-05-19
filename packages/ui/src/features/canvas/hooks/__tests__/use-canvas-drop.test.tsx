@@ -61,6 +61,19 @@ vi.mock('../../../../config/containment-rules', () => ({
   canContain: vi.fn(() => true),
 }));
 
+// The hook's blueprint path early-returns to the bare-resource fallback when
+// `isIceTypeEnabledForProvider` is false, which under live PROVIDER_FLAGS is
+// true for every non-GCP provider. These tests cover the provider override
+// + deploy-provider fallback wiring, NOT the gating — stub the gate to true
+// so getBlueprint stays on the hot path for aws/azure fixtures.
+vi.mock('@ice/constants', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    isIceTypeEnabledForProvider: () => true,
+  };
+});
+
 // Import AFTER the mocks are registered so the hook closes over them.
 import { canContain } from '../../../../config/containment-rules';
 import { useCanvasDrop, type UseCanvasDropResult } from '../use-canvas-drop';

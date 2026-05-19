@@ -20,13 +20,10 @@
  *    nested_properties schema to apply.
  *  - Recursion stops at depth >= max_depth (no nested checks beyond).
  */
-import type { PropertySchema } from '../schema-provider';
-import type {
-  ValidationIssue,
-  ValidationOptions,
-} from '../resource-validator-types';
 import { validate_constraints } from './constraints';
 import { validate_type } from './type-checker';
+import type { ValidationIssue, ValidationOptions } from '../resource-validator-types';
+import type { PropertySchema } from '../schema-provider';
 
 export function validate_property(
   path: string,

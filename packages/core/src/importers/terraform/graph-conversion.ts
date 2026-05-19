@@ -8,8 +8,8 @@
  * entry — the graph treats both the same way.
  */
 
-import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph';
 import { import_terraform_state } from './state-importer';
+import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph';
 import type { TerraformImportOptions } from './state-importer';
 import type { TerraformImportResult } from './types';
 import type { NodeInput, EdgeInput } from '../../types/graph';

@@ -8,9 +8,7 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-  cnSpy: vi.fn((...args: unknown[]) =>
-    args.filter((a) => typeof a === 'string' && a).join(' '),
-  ),
+  cnSpy: vi.fn((...args: unknown[]) => args.filter((a) => typeof a === 'string' && a).join(' ')),
 }));
 
 vi.mock('../../../../shared/utils/cn', () => ({
@@ -36,10 +34,7 @@ function* walk(node: unknown): Generator<ReactElementLike> {
   yield node;
   yield* walk(node.props.children);
 }
-function findByPredicate(
-  tree: unknown,
-  predicate: (el: ReactElementLike) => boolean,
-): ReactElementLike | undefined {
+function findByPredicate(tree: unknown, predicate: (el: ReactElementLike) => boolean): ReactElementLike | undefined {
   for (const el of walk(tree)) {
     if (predicate(el)) return el;
   }
@@ -91,8 +86,8 @@ describe('EnvironmentTabItem — rendering', () => {
     });
     expect(mocks.cnSpy).toHaveBeenCalled();
     // Inspect the second call (the button class). First call is the dot.
-    const btnClassArgs = mocks.cnSpy.mock.calls.find((args) =>
-      typeof args[0] === 'string' && (args[0] as string).includes('flex items-center gap-1'),
+    const btnClassArgs = mocks.cnSpy.mock.calls.find(
+      (args) => typeof args[0] === 'string' && (args[0] as string).includes('flex items-center gap-1'),
     );
     expect(btnClassArgs?.[1]).toBe('bg-ice-active text-ice-text-1');
   });
@@ -105,8 +100,8 @@ describe('EnvironmentTabItem — rendering', () => {
       onSwitch: vi.fn(),
       onContextMenu: vi.fn(),
     });
-    const btnClassArgs = mocks.cnSpy.mock.calls.find((args) =>
-      typeof args[0] === 'string' && (args[0] as string).includes('flex items-center gap-1'),
+    const btnClassArgs = mocks.cnSpy.mock.calls.find(
+      (args) => typeof args[0] === 'string' && (args[0] as string).includes('flex items-center gap-1'),
     );
     expect(btnClassArgs?.[1]).toBe('text-ice-text-3 hover:text-ice-text-2 hover:bg-ice-hover');
   });
@@ -175,8 +170,7 @@ describe('EnvironmentTabItem — rendering', () => {
     });
     const badge = findByPredicate(
       tree,
-      (el) =>
-        typeof el.props.className === 'string' && el.props.className.includes('text-purple-400'),
+      (el) => typeof el.props.className === 'string' && el.props.className.includes('text-purple-400'),
     );
     expect(badge).toBeDefined();
     const text = JSON.stringify(badge?.props.children);
@@ -193,8 +187,7 @@ describe('EnvironmentTabItem — rendering', () => {
     });
     const badge = findByPredicate(
       tree,
-      (el) =>
-        typeof el.props.className === 'string' && el.props.className.includes('text-purple-400'),
+      (el) => typeof el.props.className === 'string' && el.props.className.includes('text-purple-400'),
     );
     expect(badge).toBeUndefined();
   });

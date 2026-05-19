@@ -31,10 +31,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   if (children == null) return;
   yield* walk(children);
 }
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) if (el && predicate(el)) out.push(el);
   return out;
@@ -62,9 +59,11 @@ const renderPR = (
   reducedMotion = false,
   onClick: (e: React.MouseEvent) => void = () => {},
 ): React.ReactElement => {
-  const Inner = (PipelineRow as unknown as {
-    type: (p: React.ComponentProps<typeof PipelineRow>) => React.ReactElement;
-  }).type;
+  const Inner = (
+    PipelineRow as unknown as {
+      type: (p: React.ComponentProps<typeof PipelineRow>) => React.ReactElement;
+    }
+  ).type;
   return Inner({ status, reducedMotion, onClick });
 };
 

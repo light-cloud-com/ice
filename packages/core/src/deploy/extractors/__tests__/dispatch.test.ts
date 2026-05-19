@@ -18,27 +18,6 @@
  *     PROPERTY_EXTRACTORS …` error path instead of dropping config.
  */
 import { describe, it, expect } from 'vitest';
-import { PROPERTY_EXTRACTORS } from '../dispatch';
-import {
-  extract_cloud_run_properties,
-  extract_cloud_run_job_properties,
-  extract_cloud_functions_properties,
-  extract_cloud_scheduler_properties,
-} from '../compute';
-import {
-  extract_cloud_sql_properties,
-  extract_firestore_properties,
-  extract_memorystore_properties,
-} from '../database';
-import {
-  extract_storage_bucket_properties,
-  extract_pubsub_properties,
-  extract_api_gateway_properties,
-  extract_load_balancer_properties,
-  extract_vpc_properties,
-  extract_subnet_properties,
-  extract_cloud_armor_properties,
-} from '../network';
 import {
   extract_secret_manager_properties,
   extract_identity_platform_properties,
@@ -53,6 +32,27 @@ import {
   extract_backend_bucket_properties,
   extract_firebase_hosting_properties,
 } from '../ancillary';
+import {
+  extract_cloud_run_properties,
+  extract_cloud_run_job_properties,
+  extract_cloud_functions_properties,
+  extract_cloud_scheduler_properties,
+} from '../compute';
+import {
+  extract_cloud_sql_properties,
+  extract_firestore_properties,
+  extract_memorystore_properties,
+} from '../database';
+import { PROPERTY_EXTRACTORS } from '../dispatch';
+import {
+  extract_storage_bucket_properties,
+  extract_pubsub_properties,
+  extract_api_gateway_properties,
+  extract_load_balancer_properties,
+  extract_vpc_properties,
+  extract_subnet_properties,
+  extract_cloud_armor_properties,
+} from '../network';
 
 describe('PROPERTY_EXTRACTORS table shape', () => {
   it('has exactly 27 entries (matches the 27 resolved GCP types the deployer supports)', () => {
@@ -99,9 +99,7 @@ describe('PROPERTY_EXTRACTORS identity (reference equality)', () => {
   it('aliases BOTH gcp.aiplatform.endpoint AND gcp.aiplatform.index to extract_vertex_ai_properties (the only "two keys, same fn" case)', () => {
     expect(PROPERTY_EXTRACTORS['gcp.aiplatform.endpoint']).toBe(extract_vertex_ai_properties);
     expect(PROPERTY_EXTRACTORS['gcp.aiplatform.index']).toBe(extract_vertex_ai_properties);
-    expect(PROPERTY_EXTRACTORS['gcp.aiplatform.endpoint']).toBe(
-      PROPERTY_EXTRACTORS['gcp.aiplatform.index'],
-    );
+    expect(PROPERTY_EXTRACTORS['gcp.aiplatform.endpoint']).toBe(PROPERTY_EXTRACTORS['gcp.aiplatform.index']);
   });
 });
 

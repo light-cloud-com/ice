@@ -14,10 +14,10 @@
  *   - Render via Provider + Probe + renderToString (node-only Vitest).
  */
 
+import { configureStore } from '@reduxjs/toolkit';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // ─── Hoisted state ──────────────────────────────────────────────────────────
@@ -54,11 +54,7 @@ vi.mock('react', async (orig) => {
 
 // ─── Imports after mocks ────────────────────────────────────────────────────
 
-import cardsReducer, {
-  type Card,
-  type CardNode,
-  type CardEdge,
-} from '../../../store/slices/cards-slice';
+import cardsReducer, { type Card, type CardNode, type CardEdge } from '../../../store/slices/cards-slice';
 import selectionReducer from '../../../store/slices/selection-slice';
 import { useClipboard } from '../use-clipboard';
 
@@ -389,10 +385,7 @@ describe('useClipboard', () => {
       const types = dispatchSpy.mock.calls.map((c) => (c[0] as { type: string }).type);
       expect(types).not.toContain('cards/deleteCardNode');
       expect(types).not.toContain('selection/setSelectedNodes');
-      expect(errSpy).toHaveBeenCalledWith(
-        expect.stringMatching(/Cut aborted/),
-        expect.any(Error),
-      );
+      expect(errSpy).toHaveBeenCalledWith(expect.stringMatching(/Cut aborted/), expect.any(Error));
       errSpy.mockRestore();
     });
   });
@@ -433,9 +426,7 @@ describe('useClipboard', () => {
     it('reads clipboard, parses ice-clipboard JSON, dispatches add nodes/edges + select', async () => {
       const payload = {
         type: 'ice-clipboard',
-        nodes: [
-          { id: 'orig-1', type: 'block', position: { x: 10, y: 20 }, width: 100, height: 60, data: {} },
-        ],
+        nodes: [{ id: 'orig-1', type: 'block', position: { x: 10, y: 20 }, width: 100, height: 60, data: {} }],
         edges: [],
       };
       mocks.readText.mockResolvedValue(JSON.stringify(payload));
@@ -633,12 +624,8 @@ describe('useClipboard', () => {
     it('preserves edge endpoints by remapping with idMap', async () => {
       const payload = {
         type: 'ice-clipboard',
-        nodes: [
-          { id: 'a', type: 'block', position: { x: 0, y: 0 }, width: 100, height: 60, data: {} },
-        ],
-        edges: [
-          { id: 'e-1', source: 'a', target: 'orphan-not-in-nodes' },
-        ],
+        nodes: [{ id: 'a', type: 'block', position: { x: 0, y: 0 }, width: 100, height: 60, data: {} }],
+        edges: [{ id: 'e-1', source: 'a', target: 'orphan-not-in-nodes' }],
       };
       mocks.readText.mockResolvedValue(JSON.stringify(payload));
       const store = makeStore({});

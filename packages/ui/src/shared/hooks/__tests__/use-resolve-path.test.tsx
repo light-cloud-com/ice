@@ -22,10 +22,10 @@
  *   - cancellation — cleanup runs before resolve completes
  */
 
+import { configureStore, createSlice } from '@reduxjs/toolkit';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
-import { configureStore, createSlice } from '@reduxjs/toolkit';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const flushMicrotasks = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
@@ -60,16 +60,12 @@ vi.mock('react', async (orig) => {
       mocks.effects.push({ cb, cleanup });
     },
     useState: <T,>(initial: T | (() => T)) => {
-      const init = typeof initial === 'function'
-        ? (initial as () => T)()
-        : initial;
+      const init = typeof initial === 'function' ? (initial as () => T)() : initial;
       mocks.latestState.current = init;
       return [
         init,
         (next: T | ((prev: T) => T)) => {
-          const computed = typeof next === 'function'
-            ? (next as (prev: T) => T)(mocks.latestState.current as T)
-            : next;
+          const computed = typeof next === 'function' ? (next as (prev: T) => T)(mocks.latestState.current as T) : next;
           mocks.latestState.current = computed;
           mocks.setterCalls.push(computed);
         },
@@ -343,9 +339,12 @@ describe('useResolvePath — error handling', () => {
 describe('useResolvePath — cancellation', () => {
   it('cleanup sets cancelled=true so a pending resolve does not setResult', async () => {
     let resolver: ((v: { data: unknown[] }) => void) | undefined;
-    mocks.axiosPost.mockImplementation(() => new Promise((res) => {
-      resolver = res;
-    }));
+    mocks.axiosPost.mockImplementation(
+      () =>
+        new Promise((res) => {
+          resolver = res;
+        }),
+    );
     const store = makeStore({ user: null, selectedOrg: null });
     mountHook(['something'], store);
     // Cancel right away

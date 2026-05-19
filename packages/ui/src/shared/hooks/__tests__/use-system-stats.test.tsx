@@ -126,9 +126,10 @@ describe('useSystemStats', () => {
   it('does not set state after cleanup, even if a fetch resolves later', async () => {
     let resolver: ((v: { data: { ram: number; cpu: number } }) => void) | undefined;
     mocks.axiosGet.mockImplementation(
-      () => new Promise((res) => {
-        resolver = res;
-      }),
+      () =>
+        new Promise((res) => {
+          resolver = res;
+        }),
     );
     captureHook();
     const cleanup = mocks.effects[0].cleanup as () => void;

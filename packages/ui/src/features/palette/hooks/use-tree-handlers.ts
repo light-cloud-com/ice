@@ -35,12 +35,7 @@ import {
   type ProjectFolder,
   type Environment,
 } from '../../../store/slices/projects-slice';
-import {
-  openTabInPane,
-  setPaneCard,
-  setActivePane,
-  closeTabsByCardIds,
-} from '../../../store/slices/ui-slice';
+import { openTabInPane, setPaneCard, setActivePane, closeTabsByCardIds } from '../../../store/slices/ui-slice';
 import type { AppDispatch } from '../../../store';
 
 interface ContextMenuState {

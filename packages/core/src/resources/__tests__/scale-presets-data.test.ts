@@ -62,10 +62,7 @@ describe('SCALE_PRESETS — assembled dict', () => {
   });
 
   it('total resource key count equals the sum of category sizes', () => {
-    const totalCategoryKeys = CATEGORY_BUNDLES.reduce(
-      (acc, { record }) => acc + Object.keys(record).length,
-      0,
-    );
+    const totalCategoryKeys = CATEGORY_BUNDLES.reduce((acc, { record }) => acc + Object.keys(record).length, 0);
     expect(Object.keys(SCALE_PRESETS)).toHaveLength(totalCategoryKeys);
   });
 

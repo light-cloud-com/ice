@@ -113,12 +113,7 @@ import { DeployHistory } from '../deploy-history';
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -132,10 +127,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -326,7 +318,12 @@ describe('DeployHistory', () => {
       makeDeploy({
         id: 'd-EXP',
         error: 'permission denied',
-        results: { resources: [{ type: 'gcp_service', name: 'svc1', success: true }, { type: 'gcp_db', name: 'db1', success: false }] },
+        results: {
+          resources: [
+            { type: 'gcp_service', name: 'svc1', success: true },
+            { type: 'gcp_db', name: 'db1', success: false },
+          ],
+        },
       }),
     ];
     mocks.expandedRef.current = new Set(['d-EXP']);
@@ -696,9 +693,7 @@ describe('DeployHistory', () => {
 
   it('row key falls back to index when d.id is falsy (no crash, still renders)', () => {
     mocks.getDeploymentsSpy.mockResolvedValueOnce([]);
-    mocks.historyRef.current = [
-      makeDeploy({ id: '', provider: 'gcp', region: 'us', }),
-    ];
+    mocks.historyRef.current = [makeDeploy({ id: '', provider: 'gcp', region: 'us' })];
     // Set expanded-true with empty-string match so the footer-line `d.id.slice(0,8)`
     // is exercised; '' has slice → ''.
     mocks.expandedRef.current = new Set(['']);

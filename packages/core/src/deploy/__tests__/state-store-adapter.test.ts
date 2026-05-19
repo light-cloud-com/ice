@@ -20,12 +20,12 @@
  */
 import { describe, it, expect, vi } from 'vitest';
 import { create_deploy_state_adapter } from '../state-store-adapter';
-import type { StoredResourceEntry } from '../state-bridge';
 import type { SqliteStateStore } from '../../state/sqlite-state-store';
 import type { StoredResourceState } from '../../state/state-store';
+import type { IceError } from '../../types/errors';
 import type { NodeId } from '../../types/graph';
 import type { Result } from '../../types/result';
-import type { IceError } from '../../types/errors';
+import type { StoredResourceEntry } from '../state-bridge';
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
@@ -336,9 +336,7 @@ describe('create_deploy_state_adapter — get_resources', () => {
     store.get_resources.mockResolvedValue(failure('connection refused'));
     const adapter = create_deploy_state_adapter(store, 'graph-1');
 
-    await expect(adapter.get_resources('graph-1')).rejects.toThrow(
-      'Failed to get resources: connection refused',
-    );
+    await expect(adapter.get_resources('graph-1')).rejects.toThrow('Failed to get resources: connection refused');
   });
 });
 
@@ -409,9 +407,7 @@ describe('create_deploy_state_adapter — get_resource', () => {
     store.get_resource.mockResolvedValue(failure('row corrupt'));
     const adapter = create_deploy_state_adapter(store, 'graph-1');
 
-    await expect(adapter.get_resource('gcp.run.service:web')).rejects.toThrow(
-      'Failed to get resource: row corrupt',
-    );
+    await expect(adapter.get_resource('gcp.run.service:web')).rejects.toThrow('Failed to get resource: row corrupt');
   });
 
   it('also maps every status branch through the singular getter (parity with get_resources)', async () => {

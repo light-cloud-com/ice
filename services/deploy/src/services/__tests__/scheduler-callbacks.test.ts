@@ -27,9 +27,9 @@ vi.mock('../deploy-locks', () => ({
   updateDeploySnapshotNode: vi.fn(),
 }));
 
-import { makeSchedulerCallbacks } from '../scheduler-callbacks';
 import * as dispatcher from '../deploy-event-dispatcher';
 import * as deployLocks from '../deploy-locks';
+import { makeSchedulerCallbacks } from '../scheduler-callbacks';
 
 const emitDeployEventMock = (dispatcher as any).emitDeployEvent as ReturnType<typeof vi.fn>;
 const emitLogMock = (dispatcher as any).emitLog as ReturnType<typeof vi.fn>;
@@ -107,9 +107,7 @@ describe('scheduler-callbacks', () => {
       const map = new Map<string, string>();
       const callbacks = makeSchedulerCallbacks({ cardId: 'card-A', graphIdToCanvasId: map });
 
-      callbacks.on_node_status(
-        makeStatusEvent({ node_id: 'gcp.run.service:missing', resource_name: 'ice-x' }),
-      );
+      callbacks.on_node_status(makeStatusEvent({ node_id: 'gcp.run.service:missing', resource_name: 'ice-x' }));
 
       expect(warnSpy).toHaveBeenCalledTimes(1);
       const warnArg = String(warnSpy.mock.calls[0][0]);
@@ -145,9 +143,7 @@ describe('scheduler-callbacks', () => {
         warnOnMiss: true,
       });
 
-      callbacks.on_node_status(
-        makeStatusEvent({ status: 'succeeded', resource_name: 'ice-web-abc' }),
-      );
+      callbacks.on_node_status(makeStatusEvent({ status: 'succeeded', resource_name: 'ice-web-abc' }));
 
       expect(completed.count).toBe(1);
       // Per-node mirror still happens.
@@ -163,9 +159,7 @@ describe('scheduler-callbacks', () => {
         totals: { total: 2, completed },
       });
 
-      callbacks.on_node_status(
-        makeStatusEvent({ status: 'applying', resource_name: 'ice-applying' }),
-      );
+      callbacks.on_node_status(makeStatusEvent({ status: 'applying', resource_name: 'ice-applying' }));
 
       expect(completed.count).toBe(0);
       // Per-node mirror still happens.

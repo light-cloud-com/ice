@@ -6,10 +6,9 @@
  * the runner expects.
  */
 import { describe, it, expect } from 'vitest';
-
-import { tours } from '../tours';
 import { canvasTour } from '../canvas-tour';
 import { dashboardTour } from '../dashboard-tour';
+import { tours } from '../tours';
 import type { Tour, TourStep } from '../../tour.types';
 
 const allConfigured: readonly Tour[] = tours;
@@ -118,10 +117,7 @@ describe('canvas-tour — shape', () => {
 
 describe('dashboard-tour — shape', () => {
   it('has 2 steps in order', () => {
-    expect(dashboardTour.steps.map((s: TourStep) => s.id)).toEqual([
-      'dashboard-overview',
-      'create-project',
-    ]);
+    expect(dashboardTour.steps.map((s: TourStep) => s.id)).toEqual(['dashboard-overview', 'create-project']);
   });
 
   it('declares an autoStart predicate', () => {

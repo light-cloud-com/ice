@@ -23,9 +23,11 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
 }
 
 const renderInner = (props: React.ComponentProps<typeof ConnectionDragGlow>): React.ReactElement => {
-  const Inner = (ConnectionDragGlow as unknown as {
-    type: (p: React.ComponentProps<typeof ConnectionDragGlow>) => React.ReactElement;
-  }).type;
+  const Inner = (
+    ConnectionDragGlow as unknown as {
+      type: (p: React.ComponentProps<typeof ConnectionDragGlow>) => React.ReactElement;
+    }
+  ).type;
   return Inner(props);
 };
 

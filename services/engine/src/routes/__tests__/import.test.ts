@@ -7,9 +7,9 @@
  * `@ice/shared` auth middleware is mocked to a deterministic shim.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import express from 'express';
 import http from 'node:http';
+import express from 'express';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { AddressInfo } from 'node:net';
 
 const importTerraformMock = vi.fn();
@@ -71,7 +71,7 @@ async function post(path: string, body: unknown) {
     body: JSON.stringify(body),
   });
   const text = await res.text();
-  let json: any = null;
+  let json: any;
   try {
     json = text ? JSON.parse(text) : null;
   } catch {
@@ -108,7 +108,11 @@ describe('POST /api/engine/import/terraform — happy path', () => {
       warnings: ['orphan resource'],
     });
     expect(importTerraformMock).toHaveBeenCalledWith(tfStateJson);
-    expect(terraformResultToGraphMock).toHaveBeenCalledWith({ success: true, errors: [], warnings: ['orphan resource'] });
+    expect(terraformResultToGraphMock).toHaveBeenCalledWith({
+      success: true,
+      errors: [],
+      warnings: ['orphan resource'],
+    });
   });
 });
 

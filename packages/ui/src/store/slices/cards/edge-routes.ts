@@ -17,13 +17,13 @@
  *      the function declaration.
  */
 
-import type { CardEdge, CardNode } from './types';
 import {
   CONTAINER_PADDING,
   HEADER_HEIGHT,
   MIN_CONTAINER_WIDTH,
   MIN_CONTAINER_HEIGHT,
 } from '../../../config/canvas-constants';
+import type { CardEdge, CardNode } from './types';
 
 /**
  * Drop the cached `routePoints` on any edge incident to this node — once a
@@ -42,10 +42,7 @@ export function invalidateEdgeRoutesTouching(edges: CardEdge[], nodeId: string):
  * onto the edge's data so SvgConnectionPath can draw through it. Absent
  * routes clear the stored waypoints so stale paths don't linger.
  */
-export function applyEdgeRoutes(
-  edges: CardEdge[],
-  edgeRoutes: Map<string, Array<{ x: number; y: number }>>,
-): void {
+export function applyEdgeRoutes(edges: CardEdge[], edgeRoutes: Map<string, Array<{ x: number; y: number }>>): void {
   for (const edge of edges) {
     const route = edgeRoutes.get(`${edge.source}::${edge.target}`);
     if (!edge.data) edge.data = {};
@@ -65,7 +62,7 @@ export function applyEdgeRoutes(
  * comment block in the orchestrator at the L887 area). Kept for reference;
  * exported so any future re-wiring has the helper available.
  */
-// eslint-disable-next-line unused-imports/no-unused-vars
+
 export function cascadeContainerReflow(nodes: CardNode[]): void {
   const containers = nodes.filter((n) => n.type === 'container');
   if (containers.length === 0) return;

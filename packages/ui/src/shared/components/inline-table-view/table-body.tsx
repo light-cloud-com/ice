@@ -7,9 +7,9 @@
  * Extracted from `inline-table-view.tsx` (rf-itab-2).
  */
 import React from 'react';
+import { useTranslation } from '../../../i18n';
 import { InlineTableRow, type TableRowData } from '../inline-table-view-row';
 import type { Density, GroupBy } from './types';
-import { useTranslation } from '../../../i18n';
 
 export interface RowGroup {
   key: string;

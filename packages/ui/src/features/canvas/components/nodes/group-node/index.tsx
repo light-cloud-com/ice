@@ -14,6 +14,7 @@ import { GroupLod3 } from './group-lod3';
 import { hexToTint, hexToBorder } from './helpers';
 import { getIcon, type Provider } from '../../../../../assets/icons';
 import { BLOCK_ACCENT_COLORS, GROUP_TINT_COLORS, GROUP_BORDER_COLORS } from '../../../../../config/color-palette';
+import { t } from '../../../../../i18n';
 import type { SvgGroupNodeProps } from './types';
 
 export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
@@ -52,8 +53,11 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
 
     const maxChars = Math.max(Math.floor((nodeWidth - 80) / 7), 8);
     const displayLabel =
-      (label || (isBlock ? 'Block' : 'Group')).length > maxChars
-        ? (label || (isBlock ? 'Block' : 'Group')).substring(0, maxChars) + '\u2026'
+      (label || (isBlock ? t('canvas.blocks.titles.block') : t('canvas.blocks.titles.group'))).length > maxChars
+        ? (label || (isBlock ? t('canvas.blocks.titles.block') : t('canvas.blocks.titles.group'))).substring(
+            0,
+            maxChars,
+          ) + '\u2026'
         : label || (isBlock ? 'Block' : 'Group');
 
     const handleToggleFold = useCallback(

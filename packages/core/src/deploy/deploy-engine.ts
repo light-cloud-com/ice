@@ -5,8 +5,8 @@
  */
 
 import { DEPLOY_ERROR_CODES, DEPLOY_DISPLAY } from './messages';
-import { diff_graphs } from '../diff/diff';
 import { run_parallel_apply, wrap_on_progress_for_node_progress, type SchedulerPhase } from './scheduler';
+import { diff_graphs } from '../diff/diff';
 import type {
   DeployOptions,
   DeployResult,

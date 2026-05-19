@@ -14,11 +14,11 @@
  * shape — is what we actually exercise.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import express from 'express';
-import http from 'node:http';
-import type { AddressInfo } from 'node:net';
 import { createHmac } from 'node:crypto';
+import http from 'node:http';
+import express from 'express';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import type { AddressInfo } from 'node:net';
 
 // ── Mocks (must be hoisted before the router import) ──────────────────
 
@@ -139,11 +139,7 @@ function sign(rawBody: string, secret = SECRET): string {
   return 'sha256=' + createHmac('sha256', secret).update(rawBody).digest('hex');
 }
 
-async function postWebhook(
-  body: unknown,
-  headers: Record<string, string> = {},
-  rawOverride?: string,
-) {
+async function postWebhook(body: unknown, headers: Record<string, string> = {}, rawOverride?: string) {
   const rawBody = rawOverride ?? JSON.stringify(body);
   const res = await fetch(`${baseUrl}/api/webhooks/github`, {
     method: 'POST',
@@ -156,7 +152,7 @@ async function postWebhook(
     body: rawBody,
   });
   const text = await res.text();
-  let json: unknown = null;
+  let json: unknown;
   try {
     json = text ? JSON.parse(text) : null;
   } catch {

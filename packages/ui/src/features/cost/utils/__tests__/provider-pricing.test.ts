@@ -42,21 +42,12 @@ const node = (id: string, overrides: Partial<CardNode> = {}): CardNode =>
 
 describe('EGRESS_RATES + TRAFFIC_TIERS', () => {
   it('exposes one entry per supported provider', () => {
-    expect(Object.keys(EGRESS_RATES).sort()).toEqual(
-      ['alibaba', 'aws', 'azure', 'digitalocean', 'gcp', 'oci'],
-    );
+    expect(Object.keys(EGRESS_RATES).sort()).toEqual(['alibaba', 'aws', 'azure', 'digitalocean', 'gcp', 'oci']);
   });
 
   it('exposes 6 traffic tiers', () => {
     expect(TRAFFIC_TIERS).toHaveLength(6);
-    expect(TRAFFIC_TIERS.map((t) => t.tier)).toEqual([
-      'dev',
-      'low',
-      'moderate',
-      'medium',
-      'high',
-      'very-high',
-    ]);
+    expect(TRAFFIC_TIERS.map((t) => t.tier)).toEqual(['dev', 'low', 'moderate', 'medium', 'high', 'very-high']);
   });
 });
 
@@ -140,19 +131,13 @@ describe('buildOptionCostCache', () => {
 
 describe('compareProviderCosts', () => {
   it('returns one row per supported provider (aws/gcp/azure)', () => {
-    const out = compareProviderCosts(
-      [node('a', { data: { cost: 100, provider: 'aws' } })],
-      'aws',
-    );
+    const out = compareProviderCosts([node('a', { data: { cost: 100, provider: 'aws' } })], 'aws');
     expect(out.map((r) => r.provider)).toEqual(['aws', 'gcp', 'azure']);
     expect(out.map((r) => r.label)).toEqual(['AWS', 'GCP', 'Azure']);
   });
 
   it('returns the same total for the current provider with delta=0', () => {
-    const out = compareProviderCosts(
-      [node('a', { data: { cost: 100, provider: 'aws' } })],
-      'aws',
-    );
+    const out = compareProviderCosts([node('a', { data: { cost: 100, provider: 'aws' } })], 'aws');
     const aws = out.find((r) => r.provider === 'aws')!;
     expect(aws.totalMonthlyCost).toBe(100);
     expect(aws.delta).toBe(0);
@@ -160,10 +145,7 @@ describe('compareProviderCosts', () => {
   });
 
   it('applies the GCP=0.85 ratio when comparing aws→gcp', () => {
-    const out = compareProviderCosts(
-      [node('a', { data: { cost: 100, provider: 'aws' } })],
-      'aws',
-    );
+    const out = compareProviderCosts([node('a', { data: { cost: 100, provider: 'aws' } })], 'aws');
     const gcp = out.find((r) => r.provider === 'gcp')!;
     expect(gcp.totalMonthlyCost).toBeCloseTo(85, 4);
     expect(gcp.delta).toBeCloseTo(-15, 4);
@@ -172,10 +154,7 @@ describe('compareProviderCosts', () => {
 
   it('skips containers when computing totals', () => {
     const out = compareProviderCosts(
-      [
-        node('group', { type: 'container', data: { cost: 999 } }),
-        node('a', { data: { cost: 100, provider: 'aws' } }),
-      ],
+      [node('group', { type: 'container', data: { cost: 999 } }), node('a', { data: { cost: 100, provider: 'aws' } })],
       'aws',
     );
     expect(out.find((r) => r.provider === 'aws')!.totalMonthlyCost).toBe(100);
@@ -188,10 +167,7 @@ describe('compareProviderCosts', () => {
 
   it('uses ratio=1 (passthrough) when the from→to pair has no rule', () => {
     // Synthetic provider not in the ratios table → fallback to 1
-    const out = compareProviderCosts(
-      [node('a', { data: { cost: 100, provider: 'unknown' } })],
-      'unknown',
-    );
+    const out = compareProviderCosts([node('a', { data: { cost: 100, provider: 'unknown' } })], 'unknown');
     expect(out.find((r) => r.provider === 'aws')!.totalMonthlyCost).toBe(100);
   });
 });
@@ -211,10 +187,7 @@ describe('countTrafficConnections', () => {
   });
 
   it('defaults missing category to traffic', () => {
-    const counts = countTrafficConnections(
-      [],
-      [{ id: 'e1', source: 'a', target: 'b', data: {} } as CardEdge],
-    );
+    const counts = countTrafficConnections([], [{ id: 'e1', source: 'a', target: 'b', data: {} } as CardEdge]);
     expect(counts.get('a')).toBe(1);
   });
 

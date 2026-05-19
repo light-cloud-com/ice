@@ -18,8 +18,7 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('../../../i18n', () => ({
-  t: (k: string, params?: Record<string, unknown>) =>
-    params ? `${k}:${JSON.stringify(params)}` : k,
+  t: (k: string, params?: Record<string, unknown>) => (params ? `${k}:${JSON.stringify(params)}` : k),
 }));
 
 import { ErrorBoundary } from '../error-boundary';
@@ -166,9 +165,7 @@ describe('ErrorBoundary — componentDidCatch', () => {
 describe('ErrorBoundary — handleReset', () => {
   it('calls setState with the cleared shape', () => {
     const eb = new ErrorBoundary({ children: null });
-    const setStateSpy = vi
-      .spyOn(eb, 'setState')
-      .mockImplementation(() => {});
+    const setStateSpy = vi.spyOn(eb, 'setState').mockImplementation(() => {});
     eb.handleReset();
     expect(setStateSpy).toHaveBeenCalledWith({ hasError: false, error: null });
   });

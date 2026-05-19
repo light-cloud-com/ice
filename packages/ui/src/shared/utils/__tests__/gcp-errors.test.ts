@@ -11,12 +11,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  isApiNotEnabledError,
-  extractApiName,
-  extractApiEnableUrl,
-  buildApiEnableUrl,
-} from '../gcp-errors';
+import { isApiNotEnabledError, extractApiName, extractApiEnableUrl, buildApiEnableUrl } from '../gcp-errors';
 
 describe('isApiNotEnabledError', () => {
   it('matches the canonical "has not been used in project" phrase', () => {

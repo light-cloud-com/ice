@@ -26,8 +26,8 @@
 import { useCallback, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { moveProjectToFolder, moveFolder } from '../../../store/slices/projects-slice';
-import type { AppDispatch } from '../../../store';
 import { encodeDrag, decodeDrag, type DragItemType } from '../utils/drag-encoding';
+import type { AppDispatch } from '../../../store';
 
 export interface UseTreeDragOutput {
   dragOverId: string | null;

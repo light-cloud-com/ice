@@ -14,15 +14,14 @@
  */
 
 import { type NodeBehavior, BEHAVIOR_LABELS, BEHAVIOR_COLORS } from '@ice/constants';
-
-import type { HighLevelCategory, HighLevelResource } from './types';
 import { compute } from './categories/compute';
 import { database } from './categories/database';
-import { storage } from './categories/storage';
-import { networking } from './categories/networking';
 import { messaging } from './categories/messaging';
-import { security } from './categories/security';
 import { monitoring } from './categories/monitoring';
+import { networking } from './categories/networking';
+import { security } from './categories/security';
+import { storage } from './categories/storage';
+import type { HighLevelCategory, HighLevelResource } from './types';
 
 /**
  * High-level resource categories that make sense to developers.

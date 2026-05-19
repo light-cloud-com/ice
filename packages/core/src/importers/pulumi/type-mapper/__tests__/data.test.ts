@@ -59,9 +59,7 @@ describe('TYPE_MAP', () => {
   });
 
   it('contains Azure compute virtual machine (both classic and azure-native)', () => {
-    expect(TYPE_MAP['azure:compute/virtualMachine:VirtualMachine']).toBe(
-      'azure.compute.virtual_machine',
-    );
+    expect(TYPE_MAP['azure:compute/virtualMachine:VirtualMachine']).toBe('azure.compute.virtual_machine');
     expect(TYPE_MAP['azure-native:compute:VirtualMachine']).toBe('azure.compute.virtual_machine');
   });
 

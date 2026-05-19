@@ -446,12 +446,7 @@ describe('pdl-4 seq allocation', () => {
     // exact ordering is not guaranteed when reading from multiple
     // mocks in parallel.
     const allSeqs: number[] = [];
-    for (const fn of [
-      emitDeployNodeStatus,
-      emitDeployNodeProgress,
-      emitDeployLog,
-      emitDeployComplete,
-    ]) {
+    for (const fn of [emitDeployNodeStatus, emitDeployNodeProgress, emitDeployLog, emitDeployComplete]) {
       for (const call of fn.mock.calls) {
         const ev = call[1];
         if (typeof ev?.seq === 'number') allSeqs.push(ev.seq);
@@ -661,9 +656,7 @@ describe('pdl-4 computeCompleteTotals', () => {
 
   it('counts skip action as skipped', async () => {
     const { computeCompleteTotals } = await getOutcomeHelpers();
-    const totals = computeCompleteTotals([
-      { success: false, action: 'skip' },
-    ]);
+    const totals = computeCompleteTotals([{ success: false, action: 'skip' }]);
     expect(totals.skipped).toBe(1);
     expect(totals.failed).toBe(0);
   });
@@ -793,9 +786,7 @@ describe('pdl-10 destroy emits per-resource node_status events', () => {
     // The terminal `succeeded` event must carry duration_ms (wall-clock
     // elapsed since the `applying` emit) so the row UI can render the
     // "X.Ys" suffix for completed destroys.
-    const terminalA = destroyEmits.find(
-      (c) => c[1].node_id === 'canvas-id-A' && c[1].status === 'succeeded',
-    )?.[1];
+    const terminalA = destroyEmits.find((c) => c[1].node_id === 'canvas-id-A' && c[1].status === 'succeeded')?.[1];
     expect(typeof terminalA.duration_ms).toBe('number');
     expect(terminalA.duration_ms).toBeGreaterThanOrEqual(0);
 
@@ -867,9 +858,7 @@ describe('pdl-10 destroy emits per-resource node_status events', () => {
     // And both resources should have actually been deleted on the cloud
     // side — wire-emit gating must NOT affect the destroy mechanics.
     expect(recordedDeleteCalls.length).toBe(2);
-    expect(recordedDeleteCalls.map((c) => c.name).sort()).toEqual(
-      ['legacy-bucket', 'modern-bucket'].sort(),
-    );
+    expect(recordedDeleteCalls.map((c) => c.name).sort()).toEqual(['legacy-bucket', 'modern-bucket'].sort());
   });
 
   it('emits status=failed with error.message when deployer.delete throws', async () => {
@@ -997,9 +986,7 @@ describe('pdl-10 destroyAllForCard emits per-resource node_status events from ma
     expect(ids.has('canvas-id-mapped-B')).toBe(true);
 
     // resource_type + resource_name should match the mapping row.
-    const eventA = destroyEmits.find(
-      (c) => c[1].node_id === 'canvas-id-mapped-A' && c[1].status === 'succeeded',
-    )?.[1];
+    const eventA = destroyEmits.find((c) => c[1].node_id === 'canvas-id-mapped-A' && c[1].status === 'succeeded')?.[1];
     expect(eventA.resource_name).toBe('bucket-mapped-a');
     expect(eventA.resource_type).toBe('gcp.storage.bucket');
     expect(eventA.action).toBe('delete');

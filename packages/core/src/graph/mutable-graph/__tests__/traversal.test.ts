@@ -3,7 +3,6 @@
  */
 
 import { describe, expect, it } from 'vitest';
-
 import { create_node_id, type NodeInput } from '../../../types/graph';
 import { edges_add_edge } from '../edges';
 import { nodes_add_node } from '../nodes';
@@ -94,7 +93,11 @@ describe('traversal_get_all_dependents', () => {
 });
 
 describe('traversal_traverse', () => {
-  function collect(state: MutableGraphState, start: ReturnType<typeof nodes_add_node>['node'] & { id: string }, options: Parameters<typeof traversal_traverse>[2]) {
+  function collect(
+    state: MutableGraphState,
+    start: ReturnType<typeof nodes_add_node>['node'] & { id: string },
+    options: Parameters<typeof traversal_traverse>[2],
+  ) {
     const result: Array<{ name: string; depth: number }> = [];
     traversal_traverse(state, start.id as never, options, (n, d) => {
       result.push({ name: n.name, depth: d });

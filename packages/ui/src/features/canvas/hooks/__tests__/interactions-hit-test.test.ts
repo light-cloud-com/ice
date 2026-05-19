@@ -9,13 +9,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-
-import {
-  screenToCanvas,
-  isInItem,
-  isInResizeHandle,
-  findItemAtPosition,
-} from '../interactions/hit-test';
+import { screenToCanvas, isInItem, isInResizeHandle, findItemAtPosition } from '../interactions/hit-test';
 import type { CanvasItem, CanvasViewport } from '../interactions/types';
 
 const mkItem = (overrides: Partial<CanvasItem> & { id: string }): CanvasItem => ({

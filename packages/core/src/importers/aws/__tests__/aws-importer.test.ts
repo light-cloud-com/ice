@@ -35,8 +35,8 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { AWSResource, AWSImportResult } from '../types';
 import type { MutableGraph } from '../../../graph/mutable-graph';
+import type { AWSResource, AWSImportResult } from '../types';
 
 // =============================================================================
 // Hoisted mock bag — collaborators are stubbed at the boundary so the
@@ -180,33 +180,25 @@ describe('import_aws — Resource Explorer failure paths', () => {
     expect(h.discover_with_config).toHaveBeenCalled();
     expect(result.metadata.services_scanned).toContain('config');
     expect(result.warnings.find((w) => w.code === 'FALLBACK_TO_CONFIG')).toBeDefined();
-    expect(
-      result.errors.find((e) => e.code === 'RESOURCE_EXPLORER_NOT_ENABLED'),
-    ).toBeDefined();
+    expect(result.errors.find((e) => e.code === 'RESOURCE_EXPLORER_NOT_ENABLED')).toBeDefined();
     // Non-fatal: still imports config resources
     expect(result.success).toBe(true);
     expect(result.resources).toHaveLength(1);
   });
 
   it('falls back to Config when Resource Explorer error message contains "not enabled"', async () => {
-    h.discover_with_resource_explorer.mockRejectedValueOnce(
-      new Error('Service is not enabled in this region'),
-    );
+    h.discover_with_resource_explorer.mockRejectedValueOnce(new Error('Service is not enabled in this region'));
     h.discover_with_config.mockResolvedValueOnce([]);
 
     const { import_aws } = await import('../aws-importer');
     const result = await import_aws();
 
     expect(h.discover_with_config).toHaveBeenCalled();
-    expect(
-      result.errors.find((e) => e.code === 'RESOURCE_EXPLORER_NOT_ENABLED'),
-    ).toBeDefined();
+    expect(result.errors.find((e) => e.code === 'RESOURCE_EXPLORER_NOT_ENABLED')).toBeDefined();
   });
 
   it('falls back to Config when Resource Explorer error message includes "Resource Explorer"', async () => {
-    h.discover_with_resource_explorer.mockRejectedValueOnce(
-      new Error('Resource Explorer index missing'),
-    );
+    h.discover_with_resource_explorer.mockRejectedValueOnce(new Error('Resource Explorer index missing'));
     h.discover_with_config.mockResolvedValueOnce([]);
 
     const { import_aws } = await import('../aws-importer');
@@ -219,9 +211,7 @@ describe('import_aws — Resource Explorer failure paths', () => {
     const reErr: Error & { name?: string } = new Error('Resource Explorer not enabled');
     reErr.name = 'AccessDeniedException';
     h.discover_with_resource_explorer.mockRejectedValueOnce(reErr);
-    h.discover_with_config.mockRejectedValueOnce(
-      Object.assign(new Error('throttle'), { code: 'Throttling' }),
-    );
+    h.discover_with_config.mockRejectedValueOnce(Object.assign(new Error('throttle'), { code: 'Throttling' }));
 
     const { import_aws } = await import('../aws-importer');
     const result = await import_aws();
@@ -285,9 +275,7 @@ describe('import_aws — Resource Explorer failure paths', () => {
 
 describe('import_aws — outer SDK init failure', () => {
   it('records a classified error when init_aws_sdk throws', async () => {
-    h.init_aws_sdk.mockRejectedValueOnce(
-      Object.assign(new Error('expired'), { code: 'ExpiredTokenException' }),
-    );
+    h.init_aws_sdk.mockRejectedValueOnce(Object.assign(new Error('expired'), { code: 'ExpiredTokenException' }));
 
     const { import_aws } = await import('../aws-importer');
     const result = await import_aws();
@@ -297,9 +285,7 @@ describe('import_aws — outer SDK init failure', () => {
   });
 
   it('records a classified error when get_account_id throws', async () => {
-    h.get_account_id.mockRejectedValueOnce(
-      Object.assign(new Error('throttled'), { code: 'Throttling' }),
-    );
+    h.get_account_id.mockRejectedValueOnce(Object.assign(new Error('throttled'), { code: 'Throttling' }));
 
     const { import_aws } = await import('../aws-importer');
     const result = await import_aws();
@@ -310,9 +296,7 @@ describe('import_aws — outer SDK init failure', () => {
 
   it('outer catch omits action when classifier provides none', async () => {
     // 404 / RESOURCE_NOT_FOUND has no action in classifyAWSError
-    h.init_aws_sdk.mockRejectedValueOnce(
-      Object.assign(new Error('not found'), { code: 'ResourceNotFoundException' }),
-    );
+    h.init_aws_sdk.mockRejectedValueOnce(Object.assign(new Error('not found'), { code: 'ResourceNotFoundException' }));
 
     const { import_aws } = await import('../aws-importer');
     const result = await import_aws();
@@ -350,9 +334,7 @@ describe('import_aws — resource transform & filtering', () => {
       makeResource({ resource_type: 'AWS::EC2::VPC' }),
       makeResource({ resource_type: 'AWS::S3::Bucket', arn: 'arn:aws:s3:::b' }),
     ]);
-    h.get_ice_type
-      .mockReturnValueOnce('aws.ec2.vpc')
-      .mockReturnValueOnce('aws.s3.bucket');
+    h.get_ice_type.mockReturnValueOnce('aws.ec2.vpc').mockReturnValueOnce('aws.s3.bucket');
 
     const { import_aws } = await import('../aws-importer');
     const result = await import_aws({ filter_types: ['aws.ec2.vpc'] });
@@ -366,9 +348,7 @@ describe('import_aws — resource transform & filtering', () => {
       makeResource({ resource_type: 'AWS::EC2::VPC' }),
       makeResource({ resource_type: 'AWS::S3::Bucket', arn: 'arn:aws:s3:::b' }),
     ]);
-    h.get_ice_type
-      .mockReturnValueOnce('aws.ec2.vpc')
-      .mockReturnValueOnce('aws.s3.bucket');
+    h.get_ice_type.mockReturnValueOnce('aws.ec2.vpc').mockReturnValueOnce('aws.s3.bucket');
 
     const { import_aws } = await import('../aws-importer');
     const result = await import_aws({ exclude_types: ['aws.s3.bucket'] });
@@ -444,10 +424,7 @@ describe('import_aws — resource transform & filtering', () => {
   });
 
   it('resource_count reflects post-filter count', async () => {
-    h.discover_with_resource_explorer.mockResolvedValueOnce([
-      makeResource(),
-      makeResource({ arn: 'arn:aws:s3:::b' }),
-    ]);
+    h.discover_with_resource_explorer.mockResolvedValueOnce([makeResource(), makeResource({ arn: 'arn:aws:s3:::b' })]);
 
     const { import_aws } = await import('../aws-importer');
     const result = await import_aws();

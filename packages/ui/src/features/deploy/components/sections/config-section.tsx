@@ -34,11 +34,7 @@ import React from 'react';
 import { useTranslation } from '../../../../i18n';
 import { getApi } from '../../../../shared/api/api-adapter';
 import { IceSelect } from '../../../../shared/components/ui/ice-select';
-import {
-  PROVIDER_REGIONS,
-  PROVIDER_LABELS,
-  PROVIDER_PROJECT_LABELS,
-} from '../../utils/provider-regions';
+import { PROVIDER_REGIONS, PROVIDER_LABELS, PROVIDER_PROJECT_LABELS } from '../../utils/provider-regions';
 
 export const ConfigSection: React.FC<{
   provider: string;

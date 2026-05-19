@@ -71,11 +71,9 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-const findByType = (tree: React.ReactNode, type: unknown) =>
-  [...walk(tree)].filter((el) => el.type === type);
+const findByType = (tree: React.ReactNode, type: unknown) => [...walk(tree)].filter((el) => el.type === type);
 
-const findByPredicate = (tree: React.ReactNode, p: (el: React.ReactElement) => boolean) =>
-  [...walk(tree)].filter(p);
+const findByPredicate = (tree: React.ReactNode, p: (el: React.ReactElement) => boolean) => [...walk(tree)].filter(p);
 
 const collectText = (tree: React.ReactNode): string => {
   let out = '';
@@ -98,7 +96,14 @@ const collectText = (tree: React.ReactNode): string => {
 
 interface MockState {
   validation?: {
-    issues: Array<{ id: string; severity: string; message: string; nodeId?: string; suggestion?: string; category?: string }>;
+    issues: Array<{
+      id: string;
+      severity: string;
+      message: string;
+      nodeId?: string;
+      suggestion?: string;
+      category?: string;
+    }>;
     summary: { errors: number; warnings: number };
   };
   activeCard?: { nodes?: Array<{ id: string }> };
@@ -233,9 +238,7 @@ describe('ValidationStatusBar', () => {
     const tree = ValidationStatusBar({}) as React.ReactElement;
     const bar = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'div' &&
-        typeof (el.props as { onClick?: unknown }).onClick === 'function',
+      (el) => el.type === 'div' && typeof (el.props as { onClick?: unknown }).onClick === 'function',
     )[0];
     (bar.props as { onClick: () => void }).onClick();
     expect(stateMocks.setExpandedSpy).toHaveBeenCalledWith(true);
@@ -249,9 +252,7 @@ describe('ValidationStatusBar', () => {
     const tree = ValidationStatusBar({}) as React.ReactElement;
     const bar = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'div' &&
-        typeof (el.props as { onClick?: unknown }).onClick === 'function',
+      (el) => el.type === 'div' && typeof (el.props as { onClick?: unknown }).onClick === 'function',
     )[0];
     (bar.props as { onClick: () => void }).onClick();
     expect(stateMocks.setExpandedSpy).not.toHaveBeenCalled();

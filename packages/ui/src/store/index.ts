@@ -21,10 +21,10 @@ import pipelineReducer from './slices/pipeline-slice';
 import projectListReducer from './slices/project-list-slice';
 import projectsReducer from './slices/projects-slice';
 import selectionReducer from './slices/selection-slice';
-import tourReducer from '../features/tour/store/tour-slice';
 import uiReducer from './slices/ui-slice';
 import validationReducer from './slices/validation-slice';
 import viewReducer from './slices/view-slice';
+import tourReducer from '../features/tour/store/tour-slice';
 import { logStateChange } from '../shared/utils/action-logger';
 
 // Action logger middleware — logs significant Redux dispatches for E2E observability

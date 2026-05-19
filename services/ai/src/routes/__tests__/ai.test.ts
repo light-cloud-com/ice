@@ -9,9 +9,9 @@
  * test can dial in.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import express from 'express';
 import http from 'node:http';
+import express from 'express';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { AddressInfo } from 'node:net';
 
 // ── Service / Prisma mocks ────────────────────────────────────────────
@@ -79,14 +79,12 @@ vi.mock('@ice/shared', () => ({
     req.organisationId = currentAuth === 'no-org' ? undefined : currentOrgId;
     next();
   },
-  requireProjectAccess:
-    (_role: string) =>
-    (_req: any, res: any, next: any) => {
-      if (currentAuth === 'no-project-access') {
-        return res.status(403).json({ message: 'Insufficient project permissions' });
-      }
-      next();
-    },
+  requireProjectAccess: (_role: string) => (_req: any, res: any, next: any) => {
+    if (currentAuth === 'no-project-access') {
+      return res.status(403).json({ message: 'Insufficient project permissions' });
+    }
+    next();
+  },
 }));
 
 // `express-rate-limit` defaults to an in-memory store keyed off req.ip.
@@ -144,7 +142,7 @@ async function request(
   if (body !== undefined) init.body = JSON.stringify(body);
   const res = await fetch(`${baseUrl}${path}`, init);
   const raw = await res.text();
-  let parsed: any = null;
+  let parsed: any;
   try {
     parsed = raw ? JSON.parse(raw) : null;
   } catch {
@@ -229,7 +227,12 @@ describe('POST /api/ai/canvas-intent', () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual(result);
-    expect(processCanvasIntentMock).toHaveBeenCalledWith('add a redis', baseCanvasContext, 'card-1', expect.any(String));
+    expect(processCanvasIntentMock).toHaveBeenCalledWith(
+      'add a redis',
+      baseCanvasContext,
+      'card-1',
+      expect.any(String),
+    );
     expect(streamCanvasIntentMock).not.toHaveBeenCalled();
   });
 
@@ -443,11 +446,9 @@ describe('POST /api/ai/dryrun', () => {
       edges: [{ source: 'a', target: 'b' }],
       options: { region: 'us-central1' },
     });
-    expect(dryRunDeployMock).toHaveBeenCalledWith(
-      [{ id: 'n1' }],
-      [{ source: 'a', target: 'b' }],
-      { region: 'us-central1' },
-    );
+    expect(dryRunDeployMock).toHaveBeenCalledWith([{ id: 'n1' }], [{ source: 'a', target: 'b' }], {
+      region: 'us-central1',
+    });
   });
 
   it('defaults edges to [] when omitted', async () => {
@@ -604,9 +605,7 @@ describe('GET /api/ai/inspect/:cardId/summary', () => {
           data: { label: 'API', iceType: 'Compute.Container', provider: 'gcp' },
         },
       ],
-      edges: [
-        { source: 'n1', target: 'n2', data: { relationship: 'reads' } },
-      ],
+      edges: [{ source: 'n1', target: 'n2', data: { relationship: 'reads' } }],
     });
 
     const res = await request('GET', '/api/ai/inspect/card-1/summary');

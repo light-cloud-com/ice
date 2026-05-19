@@ -121,8 +121,7 @@ const baseProps = (over: Record<string, unknown> = {}): Record<string, unknown> 
   ...over,
 });
 
-const render = (props: Record<string, unknown>): ElLike =>
-  (Combobox as unknown as (p: unknown) => ElLike)(props);
+const render = (props: Record<string, unknown>): ElLike => (Combobox as unknown as (p: unknown) => ElLike)(props);
 
 beforeEach(() => {
   stateMocks.pinnedSlots = {};
@@ -550,10 +549,10 @@ describe('Combobox — useEffect bodies', () => {
     render(baseProps());
     // Effect 2: outside-click. We registered addEventListener.
     const cleanup = stateMocks.effects[2].cb() as (() => void) | undefined;
-    expect((globalThis.document.addEventListener as ReturnType<typeof vi.fn>)).toHaveBeenCalled();
+    expect(globalThis.document.addEventListener as ReturnType<typeof vi.fn>).toHaveBeenCalled();
     expect(cleanup).toBeTypeOf('function');
     cleanup?.();
-    expect((globalThis.document.removeEventListener as ReturnType<typeof vi.fn>)).toHaveBeenCalled();
+    expect(globalThis.document.removeEventListener as ReturnType<typeof vi.fn>).toHaveBeenCalled();
   });
 
   it('the outside-click effect early-returns when open is false (no listener attached)', () => {
@@ -562,7 +561,7 @@ describe('Combobox — useEffect bodies', () => {
     const out = stateMocks.effects[2].cb();
     // Should NOT register a listener and should return undefined.
     expect(out).toBeUndefined();
-    expect((globalThis.document.addEventListener as ReturnType<typeof vi.fn>)).not.toHaveBeenCalled();
+    expect(globalThis.document.addEventListener as ReturnType<typeof vi.fn>).not.toHaveBeenCalled();
   });
 
   it('outside-click handler closes when click outside container and outside portal', () => {
@@ -602,8 +601,8 @@ describe('Combobox — useEffect bodies', () => {
   it('outside-click handler skips closing when target is inside the portal', () => {
     stateMocks.pinnedSlots = { 0: true };
     const portalEl = { contains: () => true };
-    (globalThis.document.getElementById as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (id: string) => (id === 'ice-combobox-portal' ? portalEl : null),
+    (globalThis.document.getElementById as unknown as ReturnType<typeof vi.fn>).mockImplementation((id: string) =>
+      id === 'ice-combobox-portal' ? portalEl : null,
     );
     render(baseProps());
     let registeredHandler: undefined | ((e: MouseEvent) => void);
@@ -638,8 +637,12 @@ describe('Combobox — useEffect bodies', () => {
   it('the portal-creation effect creates the portal element when missing', () => {
     const append = vi.fn();
     const created = { id: '', appendChild: vi.fn() };
-    (globalThis.document as unknown as { createElement: (tag: string) => unknown }).createElement = vi.fn(() => created);
-    (globalThis.document as unknown as { body: { appendChild: (n: unknown) => void } }).body = { appendChild: append } as unknown as { appendChild: (n: unknown) => void };
+    (globalThis.document as unknown as { createElement: (tag: string) => unknown }).createElement = vi.fn(
+      () => created,
+    );
+    (globalThis.document as unknown as { body: { appendChild: (n: unknown) => void } }).body = {
+      appendChild: append,
+    } as unknown as { appendChild: (n: unknown) => void };
     (globalThis.document as unknown as { getElementById: (id: string) => null }).getElementById = vi.fn(() => null);
     render(baseProps());
     // Last effect is portal creation.
@@ -650,7 +653,9 @@ describe('Combobox — useEffect bodies', () => {
 
   it('the portal-creation effect skips when the portal already exists', () => {
     const append = vi.fn();
-    (globalThis.document as unknown as { body: { appendChild: (n: unknown) => void } }).body = { appendChild: append } as unknown as { appendChild: (n: unknown) => void };
+    (globalThis.document as unknown as { body: { appendChild: (n: unknown) => void } }).body = {
+      appendChild: append,
+    } as unknown as { appendChild: (n: unknown) => void };
     (globalThis.document as unknown as { getElementById: (id: string) => unknown }).getElementById = vi.fn(() => ({}));
     render(baseProps());
     stateMocks.effects[4].cb();

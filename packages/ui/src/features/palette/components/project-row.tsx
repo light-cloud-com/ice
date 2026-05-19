@@ -28,10 +28,10 @@
 
 import { ChevronDown, ChevronRight, Layers, MoreHorizontal } from 'lucide-react';
 import React from 'react';
+import { EnvironmentRow } from './environment-row';
 import { TREE_INDENT_PX, TREE_INDENT_BASE } from '../../../config/canvas-constants';
 import { cn } from '../../../shared/utils/cn';
 import type { Environment, Project } from '../../../store/slices/projects-slice';
-import { EnvironmentRow } from './environment-row';
 
 export interface ProjectRowProps {
   project: Project;

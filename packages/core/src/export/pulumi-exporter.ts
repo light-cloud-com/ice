@@ -45,13 +45,7 @@ import type {
 
 // Re-export the public type surface so external consumers keep their
 // `import { ... } from './pulumi-exporter'` imports.
-export type {
-  PulumiExportOptions,
-  PulumiExportResult,
-  PulumiProgram,
-  PulumiResource,
-  PulumiResourceOptions,
-};
+export type { PulumiExportOptions, PulumiExportResult, PulumiProgram, PulumiResource, PulumiResourceOptions };
 
 // =============================================================================
 // Pulumi Exporter
@@ -80,10 +74,7 @@ export class PulumiExporter {
   /**
    * Export an ICE graph to Pulumi program.
    */
-  async exportGraph(
-    graph: MutableGraph,
-    options: PulumiExportOptions,
-  ): Promise<PulumiExportResult> {
+  async exportGraph(graph: MutableGraph, options: PulumiExportOptions): Promise<PulumiExportResult> {
     await this.initialize();
     return export_graph(this.schema_provider, graph, options);
   }

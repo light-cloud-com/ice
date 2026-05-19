@@ -20,17 +20,11 @@
  * exercised by directly inserting a row with a past expires_at.
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { create_memory_state_store } from '../../sqlite-state-store';
-import {
-  locks_acquire,
-  locks_refresh,
-  locks_release,
-  locks_is_locked,
-  locks_get,
-} from '../locks';
 import { create_deployment_id } from '../../../types/deployment';
-import type { SqliteContext } from '../types';
+import { create_memory_state_store } from '../../sqlite-state-store';
+import { locks_acquire, locks_refresh, locks_release, locks_is_locked, locks_get } from '../locks';
 import type { StateChangeEvent } from '../../state-store';
+import type { SqliteContext } from '../types';
 
 function getCtx(store: ReturnType<typeof create_memory_state_store>): SqliteContext {
   return (store as unknown as { ctx: SqliteContext }).ctx;

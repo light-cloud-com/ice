@@ -15,14 +15,19 @@
      * Inspired by Linear, Notion, VS Code light themes.
      */
 
-    /* Backgrounds — clear zone separation */
-    --ice-bg-base: #ffffff;           /* Canvas — pure white */
-    --ice-bg-surface: #f4f5f7;        /* Sidebar — visible warm gray */
-    --ice-bg-raised: #ffffff;         /* Cards, modals */
+    /* Backgrounds — 4-level hierarchy mirroring dark mode.
+     * Canvas is now slightly tinted so pure-white cards visually pop
+     * against it instead of relying on the 1px border alone. Surface
+     * (sidebar) and toolbar stay tinted further; raised (cards) and
+     * overlay (popovers) stay pure white to read as "elevated."
+     */
+    --ice-bg-base: #f7f8fa;           /* Canvas — subtle warm gray */
+    --ice-bg-surface: #eef0f4;        /* Sidebar — clearly darker than canvas */
+    --ice-bg-raised: #ffffff;         /* Cards, modals — brightest, pops over canvas */
     --ice-bg-overlay: #ffffff;        /* Dropdowns, popovers */
     --ice-bg-hover: rgba(0, 0, 0, 0.04);
     --ice-bg-active: rgba(0, 0, 0, 0.08);
-    --ice-bg-toolbar: #ebedf1;        /* Toolbar — distinctly darker than canvas */
+    --ice-bg-toolbar: #e6e8ed;        /* Toolbar — most tinted */
 
     /* Borders — clearly visible */
     --ice-border: #dcdee3;

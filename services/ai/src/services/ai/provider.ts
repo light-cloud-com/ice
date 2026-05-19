@@ -11,8 +11,8 @@
  * the original singleton behavior so the existing tests stay green.
  */
 
-import prisma from '@ice/db';
 import { createProvider, createProviderAsync, getProvider, type AiProvider } from '@ice/ai';
+import prisma from '@ice/db';
 import { decryptCredentials } from '@ice/shared';
 
 let _providerReady: Promise<AiProvider> | null = null;

@@ -1,0 +1,21 @@
+# Run Prettier + ESLint --fix on staged TS/TSX/JS/JSON/MD/YAML files.
+# lint-staged re-stages anything it modified so the commit picks up the fixes.
+pnpm exec lint-staged
+
+# Auto-bump patch version on every commit.
+# Reads current version from package.json, increments patch, writes back, and stages it.
+PKG="$(git rev-parse --show-toplevel)/package.json"
+CURRENT=$(node -p "require('$PKG').version")
+MAJOR=$(echo "$CURRENT" | cut -d. -f1)
+MINOR=$(echo "$CURRENT" | cut -d. -f2)
+PATCH=$(echo "$CURRENT" | cut -d. -f3)
+PATCH=$((PATCH + 1))
+NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+node -e "
+const fs = require('fs');
+const pkg = JSON.parse(fs.readFileSync('$PKG', 'utf8'));
+pkg.version = '$NEW_VERSION';
+fs.writeFileSync('$PKG', JSON.stringify(pkg, null, 2) + '\n');
+"
+git add "$PKG"
+echo "Version bumped: $CURRENT → $NEW_VERSION"

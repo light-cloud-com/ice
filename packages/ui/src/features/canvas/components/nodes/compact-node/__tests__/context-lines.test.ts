@@ -64,15 +64,14 @@ describe('getContextLines — compute', () => {
 
   it('worker emits purpose + size only when set', () => {
     expect(getContextLines({ resourceId: 'worker' }, 'Compute.Worker').lines).toEqual([]);
-    expect(
-      getContextLines({ resourceId: 'worker', purpose: 'queue-consumer' }, 'Compute.Worker').lines,
-    ).toEqual(['queue-consumer']);
-    expect(
-      getContextLines({ resourceId: 'worker', size: '1GB' }, 'Compute.Worker').lines,
-    ).toEqual(['1GB']);
-    expect(
-      getContextLines({ resourceId: 'worker', purpose: 'p', size: '512MB' }, 'Compute.Worker').lines,
-    ).toEqual(['p', '512MB']);
+    expect(getContextLines({ resourceId: 'worker', purpose: 'queue-consumer' }, 'Compute.Worker').lines).toEqual([
+      'queue-consumer',
+    ]);
+    expect(getContextLines({ resourceId: 'worker', size: '1GB' }, 'Compute.Worker').lines).toEqual(['1GB']);
+    expect(getContextLines({ resourceId: 'worker', purpose: 'p', size: '512MB' }, 'Compute.Worker').lines).toEqual([
+      'p',
+      '512MB',
+    ]);
   });
 
   it('serverless-function/function-compute/oci-functions all share the purpose/size branch', () => {
@@ -87,15 +86,12 @@ describe('getContextLines — compute', () => {
   });
 
   it('do-app-platform emits purpose + size', () => {
-    expect(
-      getContextLines({ resourceId: 'do-app-platform', purpose: 'web' }, 'Compute').lines,
-    ).toEqual(['web']);
-    expect(
-      getContextLines({ resourceId: 'do-app-platform', size: '1GB' }, 'Compute').lines,
-    ).toEqual(['1GB']);
-    expect(
-      getContextLines({ resourceId: 'do-app-platform', purpose: 'web', size: '1GB' }, 'Compute').lines,
-    ).toEqual(['web', '1GB']);
+    expect(getContextLines({ resourceId: 'do-app-platform', purpose: 'web' }, 'Compute').lines).toEqual(['web']);
+    expect(getContextLines({ resourceId: 'do-app-platform', size: '1GB' }, 'Compute').lines).toEqual(['1GB']);
+    expect(getContextLines({ resourceId: 'do-app-platform', purpose: 'web', size: '1GB' }, 'Compute').lines).toEqual([
+      'web',
+      '1GB',
+    ]);
     expect(getContextLines({ resourceId: 'do-app-platform' }, 'Compute').lines).toEqual([]);
   });
 
@@ -125,15 +121,15 @@ describe('getContextLines — database', () => {
   });
 
   it('mongodb without size emits only the production/dev line', () => {
-    expect(
-      getContextLines({ resourceId: 'mongodb', production: true }, 'Database.NoSQL').lines,
-    ).toEqual(['Production-ready']);
+    expect(getContextLines({ resourceId: 'mongodb', production: true }, 'Database.NoSQL').lines).toEqual([
+      'Production-ready',
+    ]);
   });
 
   it('postgres-db without size emits only the production/dev line', () => {
-    expect(
-      getContextLines({ resourceId: 'postgres-db', production: true }, 'Database.SQL').lines,
-    ).toEqual(['Production-ready']);
+    expect(getContextLines({ resourceId: 'postgres-db', production: true }, 'Database.SQL').lines).toEqual([
+      'Production-ready',
+    ]);
   });
 
   it('mongodb shares production-mode pattern', () => {
@@ -144,9 +140,10 @@ describe('getContextLines — database', () => {
   });
 
   it('redis-cache emits purpose + size', () => {
-    expect(
-      getContextLines({ resourceId: 'redis-cache', purpose: 'session', size: 'small' }, 'Cache').lines,
-    ).toEqual(['session', 'small']);
+    expect(getContextLines({ resourceId: 'redis-cache', purpose: 'session', size: 'small' }, 'Cache').lines).toEqual([
+      'session',
+      'small',
+    ]);
     expect(getContextLines({ resourceId: 'redis-cache' }, 'Cache').lines).toEqual([]);
   });
 
@@ -177,18 +174,14 @@ describe('getContextLines — database', () => {
 
 describe('getContextLines — messaging', () => {
   it('message-queue uses queue count when array set', () => {
-    expect(
-      getContextLines({ resourceId: 'message-queue', queues: ['a'] }, 'Msg').lines,
-    ).toEqual(['1 queue']);
-    expect(
-      getContextLines({ resourceId: 'message-queue', queues: ['a', 'b'] }, 'Msg').lines,
-    ).toEqual(['2 queues']);
+    expect(getContextLines({ resourceId: 'message-queue', queues: ['a'] }, 'Msg').lines).toEqual(['1 queue']);
+    expect(getContextLines({ resourceId: 'message-queue', queues: ['a', 'b'] }, 'Msg').lines).toEqual(['2 queues']);
   });
 
   it('message-queue with no queues + order_matters yields FIFO line', () => {
-    expect(
-      getContextLines({ resourceId: 'message-queue', order_matters: true }, 'Msg').lines,
-    ).toEqual(['FIFO (ordered)']);
+    expect(getContextLines({ resourceId: 'message-queue', order_matters: true }, 'Msg').lines).toEqual([
+      'FIFO (ordered)',
+    ]);
   });
 
   it('message-queue with no queues and no order yields placeholder', () => {
@@ -199,10 +192,7 @@ describe('getContextLines — messaging', () => {
 
   it('event-bus prepends purpose then subscriber count', () => {
     expect(
-      getContextLines(
-        { resourceId: 'event-bus', purpose: 'orders', subscribers: ['a', 'b', 'c'] },
-        'Msg',
-      ).lines,
+      getContextLines({ resourceId: 'event-bus', purpose: 'orders', subscribers: ['a', 'b', 'c'] }, 'Msg').lines,
     ).toEqual(['orders', '3 subscribers']);
   });
 
@@ -213,24 +203,22 @@ describe('getContextLines — messaging', () => {
   });
 
   it('rabbitmq emits purpose + queues count when both set', () => {
-    expect(
-      getContextLines({ resourceId: 'rabbitmq', purpose: 'audio', queues: ['x'] }, 'Msg').lines,
-    ).toEqual(['audio', '1 queues']);
+    expect(getContextLines({ resourceId: 'rabbitmq', purpose: 'audio', queues: ['x'] }, 'Msg').lines).toEqual([
+      'audio',
+      '1 queues',
+    ]);
     expect(getContextLines({ resourceId: 'rabbitmq' }, 'Msg').lines).toEqual([]);
   });
 
   it('cloud-pubsub emits purpose + listeners when both set', () => {
-    expect(
-      getContextLines({ resourceId: 'cloud-pubsub', purpose: 'p', subscribers: ['a', 'b'] }, 'Msg').lines,
-    ).toEqual(['p', '2 listeners']);
+    expect(getContextLines({ resourceId: 'cloud-pubsub', purpose: 'p', subscribers: ['a', 'b'] }, 'Msg').lines).toEqual(
+      ['p', '2 listeners'],
+    );
     expect(getContextLines({ resourceId: 'cloud-pubsub' }, 'Msg').lines).toEqual([]);
   });
 
   it('service-bus emits purpose + queue/topic combination', () => {
-    const r = getContextLines(
-      { resourceId: 'service-bus', purpose: 'p', queues: ['q'], topics: ['t1', 't2'] },
-      'Msg',
-    );
+    const r = getContextLines({ resourceId: 'service-bus', purpose: 'p', queues: ['q'], topics: ['t1', 't2'] }, 'Msg');
     expect(r.lines).toEqual(['p', '1 queues · 2 topics']);
   });
 
@@ -249,18 +237,15 @@ describe('getContextLines — messaging', () => {
   });
 
   it('event-stream emits purpose + retain', () => {
-    const r = getContextLines(
-      { resourceId: 'event-stream', purpose: 'p', keep_data: '7d' },
-      'Msg',
-    );
+    const r = getContextLines({ resourceId: 'event-stream', purpose: 'p', keep_data: '7d' }, 'Msg');
     expect(r.lines).toEqual(['p', 'retain: 7d']);
     expect(getContextLines({ resourceId: 'event-stream' }, 'Msg').lines).toEqual([]);
   });
 
   it('email-service uses from_address when set, placeholder otherwise', () => {
-    expect(
-      getContextLines({ resourceId: 'email-service', from_address: 'noreply@x.com' }, 'Msg').lines,
-    ).toEqual(['noreply@x.com']);
+    expect(getContextLines({ resourceId: 'email-service', from_address: 'noreply@x.com' }, 'Msg').lines).toEqual([
+      'noreply@x.com',
+    ]);
     const ph = getContextLines({ resourceId: 'email-service' }, 'Msg');
     expect(ph.lines.length).toBe(1);
     expect(ph.lines[0].startsWith(' ')).toBe(true);
@@ -279,30 +264,26 @@ describe('getContextLines — storage', () => {
   });
 
   it('file-storage emits purpose + size', () => {
-    expect(
-      getContextLines({ resourceId: 'file-storage', purpose: 'shared', size: '500GB' }, 'Storage').lines,
-    ).toEqual(['shared', '500GB']);
+    expect(getContextLines({ resourceId: 'file-storage', purpose: 'shared', size: '500GB' }, 'Storage').lines).toEqual([
+      'shared',
+      '500GB',
+    ]);
     expect(getContextLines({ resourceId: 'file-storage' }, 'Storage').lines).toEqual([]);
   });
 });
 
 describe('getContextLines — network', () => {
   it('api-gateway emits purpose + routes count', () => {
-    expect(
-      getContextLines(
-        { resourceId: 'api-gateway', purpose: 'p', routes: ['a', 'b'] },
-        'Network',
-      ).lines,
-    ).toEqual(['p', '2 routes']);
+    expect(getContextLines({ resourceId: 'api-gateway', purpose: 'p', routes: ['a', 'b'] }, 'Network').lines).toEqual([
+      'p',
+      '2 routes',
+    ]);
     expect(getContextLines({ resourceId: 'api-gateway' }, 'Network').lines).toEqual([]);
   });
 
   it('dns-zone emits domain + subdomain count', () => {
     expect(
-      getContextLines(
-        { resourceId: 'dns-zone', domain: 'example.com', subdomains: ['a'] },
-        'Network',
-      ).lines,
+      getContextLines({ resourceId: 'dns-zone', domain: 'example.com', subdomains: ['a'] }, 'Network').lines,
     ).toEqual(['example.com', '1 subdomains']);
   });
 
@@ -313,9 +294,9 @@ describe('getContextLines — network', () => {
   });
 
   it('public-traffic uses domain when set, no line otherwise', () => {
-    expect(
-      getContextLines({ resourceId: 'public-traffic', domain: 'app.example.com' }, 'Network').lines,
-    ).toEqual(['app.example.com']);
+    expect(getContextLines({ resourceId: 'public-traffic', domain: 'app.example.com' }, 'Network').lines).toEqual([
+      'app.example.com',
+    ]);
     expect(getContextLines({ resourceId: 'public-traffic' }, 'Network').lines).toEqual([]);
   });
 
@@ -326,10 +307,7 @@ describe('getContextLines — network', () => {
 
   it('cdn emits purpose + domain', () => {
     expect(
-      getContextLines(
-        { resourceId: 'cdn', purpose: 'edge', domain: 'static.example.com' },
-        'Network',
-      ).lines,
+      getContextLines({ resourceId: 'cdn', purpose: 'edge', domain: 'static.example.com' }, 'Network').lines,
     ).toEqual(['edge', 'static.example.com']);
     expect(getContextLines({ resourceId: 'cdn' }, 'Network').lines).toEqual([]);
   });
@@ -338,10 +316,7 @@ describe('getContextLines — network', () => {
 describe('getContextLines — security', () => {
   it('secret-store emits purpose + count', () => {
     expect(
-      getContextLines(
-        { resourceId: 'secret-store', purpose: 'p', secrets: ['a', 'b'] },
-        'Security',
-      ).lines,
+      getContextLines({ resourceId: 'secret-store', purpose: 'p', secrets: ['a', 'b'] }, 'Security').lines,
     ).toEqual(['p', '2 secrets']);
   });
 
@@ -352,9 +327,9 @@ describe('getContextLines — security', () => {
   });
 
   it('ssl-certificate emits domain when set', () => {
-    expect(
-      getContextLines({ resourceId: 'ssl-certificate', domain: 'example.com' }, 'Security').lines,
-    ).toEqual(['example.com']);
+    expect(getContextLines({ resourceId: 'ssl-certificate', domain: 'example.com' }, 'Security').lines).toEqual([
+      'example.com',
+    ]);
     expect(getContextLines({ resourceId: 'ssl-certificate' }, 'Security').lines).toEqual([]);
   });
 
@@ -366,25 +341,21 @@ describe('getContextLines — security', () => {
 
 describe('getContextLines — AI', () => {
   it('llm-gateway emits purpose + size', () => {
-    expect(
-      getContextLines({ resourceId: 'llm-gateway', purpose: 'p', size: 'l' }, 'AI').lines,
-    ).toEqual(['p', 'l']);
+    expect(getContextLines({ resourceId: 'llm-gateway', purpose: 'p', size: 'l' }, 'AI').lines).toEqual(['p', 'l']);
     expect(getContextLines({ resourceId: 'llm-gateway' }, 'AI').lines).toEqual([]);
   });
 
   it('ml-model emits purpose + framework', () => {
-    expect(
-      getContextLines({ resourceId: 'ml-model', purpose: 'p', framework: 'pytorch' }, 'AI').lines,
-    ).toEqual(['p', 'pytorch']);
+    expect(getContextLines({ resourceId: 'ml-model', purpose: 'p', framework: 'pytorch' }, 'AI').lines).toEqual([
+      'p',
+      'pytorch',
+    ]);
     expect(getContextLines({ resourceId: 'ml-model' }, 'AI').lines).toEqual([]);
   });
 
   it('private-ai-service emits model + gpu_type', () => {
     expect(
-      getContextLines(
-        { resourceId: 'private-ai-service', model: 'mistral-7b', gpu_type: 'A100' },
-        'AI',
-      ).lines,
+      getContextLines({ resourceId: 'private-ai-service', model: 'mistral-7b', gpu_type: 'A100' }, 'AI').lines,
     ).toEqual(['mistral-7b', 'A100']);
     expect(getContextLines({ resourceId: 'private-ai-service' }, 'AI').lines).toEqual([]);
   });
@@ -392,10 +363,7 @@ describe('getContextLines — AI', () => {
 
 describe('getContextLines — default branch', () => {
   it('Source.Repository: emits repository line + branch line, sets repoLineIndex=0', () => {
-    const r = getContextLines(
-      { repository: 'github.com/octocat/hello.git', branch: 'main' },
-      'Source.Repository',
-    );
+    const r = getContextLines({ repository: 'github.com/octocat/hello.git', branch: 'main' }, 'Source.Repository');
     expect(r.repoLineIndex).toBe(0);
     expect(r.lines[0]).toBe('octocat/hello');
     expect(r.lines[1]).toBe('→ main');
@@ -410,18 +378,12 @@ describe('getContextLines — default branch', () => {
   });
 
   it('Source.Repository alternate field names: github / repo also resolve', () => {
-    expect(
-      getContextLines({ github: 'github.com/o/r' }, 'Source.Repository').lines[0],
-    ).toBe('o/r');
-    expect(
-      getContextLines({ repo: 'github.com/o/r' }, 'Source.Repository').lines[0],
-    ).toBe('o/r');
+    expect(getContextLines({ github: 'github.com/o/r' }, 'Source.Repository').lines[0]).toBe('o/r');
+    expect(getContextLines({ repo: 'github.com/o/r' }, 'Source.Repository').lines[0]).toBe('o/r');
   });
 
   it('Config.Environment with variables array emits count line', () => {
-    expect(
-      getContextLines({ variables: ['a', 'b'] }, 'Config.Environment').lines,
-    ).toEqual(['2 variables']);
+    expect(getContextLines({ variables: ['a', 'b'] }, 'Config.Environment').lines).toEqual(['2 variables']);
   });
 
   it('Config.Environment with no variables shows placeholder', () => {

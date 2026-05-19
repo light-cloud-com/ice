@@ -24,11 +24,12 @@ import {
 } from '@ice/constants';
 import { Shield, ShieldAlert, ShieldCheck } from 'lucide-react';
 import React, { useCallback, useState } from 'react';
+import { getServiceName } from '../../../../../assets/icons/service-names';
+import { CARD_PX, CATEGORY_STYLE, CORNER_RADIUS, STATUS_COLORS } from '../../../../../config/canvas-constants';
+import { t } from '../../../../../i18n';
+import { ConceptInfoTrigger } from '../../../../concept-info';
 import { ProviderPill } from '../_shared/provider-pill';
 import { StatusDot } from '../_shared/status-dot';
-import { CARD_PX, CATEGORY_STYLE, CORNER_RADIUS, STATUS_COLORS } from '../../../../../config/canvas-constants';
-import { ConceptInfoTrigger } from '../../../../concept-info';
-import { getServiceName } from '../../../../../assets/icons/service-names';
 import type { SvgCompactNodeProps } from '../compact-node';
 
 export { PN_HEADER_HEIGHT, PN_MIN_WIDTH, PN_MIN_HEIGHT };
@@ -49,9 +50,9 @@ function coerceIngress(value: unknown): Ingress {
 }
 
 function ingressLabel(ingress: Ingress): string {
-  if (ingress === 'none') return 'Sealed · internal only';
-  if (ingress === 'allowlist') return 'Restricted · allowlist';
-  return 'Open · public reachable';
+  if (ingress === 'none') return t('canvas.blocks.privateNetwork.sealed');
+  if (ingress === 'allowlist') return t('canvas.blocks.privateNetwork.restricted');
+  return t('canvas.blocks.privateNetwork.open');
 }
 
 export const SvgPrivateNetworkNode: React.FC<SvgCompactNodeProps> = ({
@@ -72,11 +73,7 @@ export const SvgPrivateNetworkNode: React.FC<SvgCompactNodeProps> = ({
   const region = (data?.region as string) || '';
   const deployStatus = (data?.deploy_status as string) || '';
   const serviceName = getServiceName(iceType, provider || 'aws');
-  const metaLine = serviceName
-    ? `${serviceName} · ${region || 'auto'}`
-    : region
-      ? region
-      : '';
+  const metaLine = serviceName ? `${serviceName} · ${region || 'auto'}` : region ? region : '';
   const statusColor = STATUS_COLORS[deployStatus] || STATUS_COLORS.idle;
   const statusLabel = deployStatus ? deployStatus.charAt(0).toUpperCase() + deployStatus.slice(1) : '';
 
@@ -186,7 +183,7 @@ export const SvgPrivateNetworkNode: React.FC<SvgCompactNodeProps> = ({
                 }}
                 data-testid={`pn-title-${node.id}`}
               >
-                {label || 'Private Network'}
+                {label || t('canvas.blocks.titles.privateNetwork')}
               </div>
               {metaLine && (
                 <div
@@ -235,7 +232,7 @@ export const SvgPrivateNetworkNode: React.FC<SvgCompactNodeProps> = ({
                 transition: 'opacity 150ms ease',
               }}
             >
-              drop services here
+              {t('canvas.blocks.privateNetwork.dropHere')}
             </div>
           </div>
 

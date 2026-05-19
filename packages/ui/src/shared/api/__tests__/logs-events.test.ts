@@ -6,8 +6,8 @@
  * spy.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DEPLOY_EVENT_CHANNEL } from '@ice/types';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 (globalThis as any).window = (globalThis as any).window || { location: { origin: 'http://localhost:3000' } };
 (globalThis as any).localStorage = (globalThis as any).localStorage || {
@@ -141,7 +141,14 @@ describe('http-api/events — onDeployEvent', () => {
     const wrapped = mockSocket.on.mock.calls.find((c: unknown[]) => c[0] === DEPLOY_EVENT_CHANNEL)![1] as (
       e: any,
     ) => void;
-    const event = { type: 'log' as const, card_id: 'c1', at: '2026-01-01T00:00:00Z', seq: 1, level: 'info', message: 'hi' };
+    const event = {
+      type: 'log' as const,
+      card_id: 'c1',
+      at: '2026-01-01T00:00:00Z',
+      seq: 1,
+      level: 'info',
+      message: 'hi',
+    };
     wrapped(event);
     expect(cb).toHaveBeenCalledWith(event);
   });
@@ -169,34 +176,18 @@ describe('http-api/events — onDeployEvent', () => {
     // branches of every `?.` and `??` operator.
     wrapped(null);
     expect(cb).toHaveBeenCalledWith(null);
-    expect(logSpy).toHaveBeenLastCalledWith(
-      `[ice-socket] ${DEPLOY_EVENT_CHANNEL}`,
-      '?',
-      '',
-    );
+    expect(logSpy).toHaveBeenLastCalledWith(`[ice-socket] ${DEPLOY_EVENT_CHANNEL}`, '?', '');
 
     wrapped({});
-    expect(logSpy).toHaveBeenLastCalledWith(
-      `[ice-socket] ${DEPLOY_EVENT_CHANNEL}`,
-      '?',
-      '',
-    );
+    expect(logSpy).toHaveBeenLastCalledWith(`[ice-socket] ${DEPLOY_EVENT_CHANNEL}`, '?', '');
 
     // node_id arm — present, resource_name absent
     wrapped({ type: 'node_status', node_id: 'n1' });
-    expect(logSpy).toHaveBeenLastCalledWith(
-      `[ice-socket] ${DEPLOY_EVENT_CHANNEL}`,
-      'node_status',
-      'n1',
-    );
+    expect(logSpy).toHaveBeenLastCalledWith(`[ice-socket] ${DEPLOY_EVENT_CHANNEL}`, 'node_status', 'n1');
 
     // resource_name arm — used when node_id is absent (?? falls through)
     wrapped({ type: 'resource_status', resource_name: 'redis' });
-    expect(logSpy).toHaveBeenLastCalledWith(
-      `[ice-socket] ${DEPLOY_EVENT_CHANNEL}`,
-      'resource_status',
-      'redis',
-    );
+    expect(logSpy).toHaveBeenLastCalledWith(`[ice-socket] ${DEPLOY_EVENT_CHANNEL}`, 'resource_status', 'redis');
 
     logSpy.mockRestore();
   });
@@ -248,10 +239,7 @@ describe('http-api/events — subscribePipeline / subscribeCardPipeline', () => 
   ] as const)(
     '%s emits %s on call and %s on cleanup, no reconnect-replay',
     async (factory, subscribeEvent, unsubscribeEvent) => {
-      const mod = (await import('../http-api/events')) as unknown as Record<
-        string,
-        () => (id: string) => () => void
-      >;
+      const mod = (await import('../http-api/events')) as unknown as Record<string, () => (id: string) => () => void>;
       const fn = mod[factory]!();
       const cleanup = fn('id1');
       expect(mockSocket.emit).toHaveBeenCalledWith(subscribeEvent, 'id1');

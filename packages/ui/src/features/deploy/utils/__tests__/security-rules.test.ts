@@ -24,11 +24,7 @@ import type { CardNode, CardEdge } from '../../../../store/slices/cards-slice';
 // ─── Test fixtures ──────────────────────────────────────────────────────────
 
 let _id = 0;
-function n(
-  iceType: string,
-  data: Record<string, unknown> = {},
-  parentId?: string,
-): CardNode {
+function n(iceType: string, data: Record<string, unknown> = {}, parentId?: string): CardNode {
   const id = `node-${++_id}`;
   return {
     id,
@@ -222,9 +218,7 @@ describe('Rule 2: missing secrets', () => {
     const secret = n('Security.Secret');
     const edge = e(svc.id, secret.id);
     expect(
-      analyzeSecurityWarnings([svc, secret], [edge]).find((x) =>
-        x.id.startsWith('sec-missing-secrets-'),
-      ),
+      analyzeSecurityWarnings([svc, secret], [edge]).find((x) => x.id.startsWith('sec-missing-secrets-')),
     ).toBeUndefined();
   });
 
@@ -233,9 +227,7 @@ describe('Rule 2: missing secrets', () => {
     const secret = n('Security.Secret');
     const edge = e(secret.id, svc.id);
     expect(
-      analyzeSecurityWarnings([svc, secret], [edge]).find((x) =>
-        x.id.startsWith('sec-missing-secrets-'),
-      ),
+      analyzeSecurityWarnings([svc, secret], [edge]).find((x) => x.id.startsWith('sec-missing-secrets-')),
     ).toBeUndefined();
   });
 
@@ -341,20 +333,14 @@ describe('Rule 4: gateway without auth', () => {
   it('flags a Gateway when Security.Identity exists but is not connected to it', () => {
     const gw = n('Network.Gateway');
     const auth = n('Security.Identity');
-    expect(
-      analyzeSecurityWarnings([gw, auth], []).find((x) =>
-        x.id.startsWith('sec-gateway-no-auth-'),
-      ),
-    ).toBeDefined();
+    expect(analyzeSecurityWarnings([gw, auth], []).find((x) => x.id.startsWith('sec-gateway-no-auth-'))).toBeDefined();
   });
 
   it('does NOT flag when Gateway is connected to Security.Identity (gw → auth)', () => {
     const gw = n('Network.Gateway');
     const auth = n('Security.Identity');
     expect(
-      analyzeSecurityWarnings([gw, auth], [e(gw.id, auth.id)]).find((x) =>
-        x.id.startsWith('sec-gateway-no-auth-'),
-      ),
+      analyzeSecurityWarnings([gw, auth], [e(gw.id, auth.id)]).find((x) => x.id.startsWith('sec-gateway-no-auth-')),
     ).toBeUndefined();
   });
 
@@ -362,9 +348,7 @@ describe('Rule 4: gateway without auth', () => {
     const gw = n('Network.Gateway');
     const auth = n('Security.Identity');
     expect(
-      analyzeSecurityWarnings([gw, auth], [e(auth.id, gw.id)]).find((x) =>
-        x.id.startsWith('sec-gateway-no-auth-'),
-      ),
+      analyzeSecurityWarnings([gw, auth], [e(auth.id, gw.id)]).find((x) => x.id.startsWith('sec-gateway-no-auth-')),
     ).toBeUndefined();
   });
 });
@@ -387,24 +371,18 @@ describe('Rule 5: missing monitoring', () => {
   it('does NOT emit when at least one Monitoring.* node is present', () => {
     const svc = n('Compute.Function');
     const log = n('Monitoring.Log');
-    expect(
-      analyzeSecurityWarnings([svc, log], []).find((x) => x.id === 'bp-missing-monitoring'),
-    ).toBeUndefined();
+    expect(analyzeSecurityWarnings([svc, log], []).find((x) => x.id === 'bp-missing-monitoring')).toBeUndefined();
   });
 
   it('does NOT emit when there are no services on the canvas', () => {
     const db = n('Database.Postgres', { private_ip: true });
-    expect(
-      analyzeSecurityWarnings([db], []).find((x) => x.id === 'bp-missing-monitoring'),
-    ).toBeUndefined();
+    expect(analyzeSecurityWarnings([db], []).find((x) => x.id === 'bp-missing-monitoring')).toBeUndefined();
   });
 
   it('counts other Monitoring.* subtypes as monitoring', () => {
     const svc = n('Compute.Function');
     const log = n('Monitoring.Dashboard');
-    expect(
-      analyzeSecurityWarnings([svc, log], []).find((x) => x.id === 'bp-missing-monitoring'),
-    ).toBeUndefined();
+    expect(analyzeSecurityWarnings([svc, log], []).find((x) => x.id === 'bp-missing-monitoring')).toBeUndefined();
   });
 });
 
@@ -428,9 +406,7 @@ describe('Rule 6: no private network with multiple services', () => {
   it('does NOT emit bp-no-vpc with only 1 service', () => {
     const a = n('Compute.Function');
     const log = n('Monitoring.Log');
-    expect(
-      analyzeSecurityWarnings([a, log], []).find((x) => x.id === 'bp-no-vpc'),
-    ).toBeUndefined();
+    expect(analyzeSecurityWarnings([a, log], []).find((x) => x.id === 'bp-no-vpc')).toBeUndefined();
   });
 
   it('does NOT emit bp-no-vpc when a Network.VPC node is present', () => {
@@ -438,9 +414,7 @@ describe('Rule 6: no private network with multiple services', () => {
     const a = n('Compute.Function', {}, vpc.id);
     const b = n('Compute.Function', {}, vpc.id);
     const log = n('Monitoring.Log');
-    expect(
-      analyzeSecurityWarnings([vpc, a, b, log], []).find((x) => x.id === 'bp-no-vpc'),
-    ).toBeUndefined();
+    expect(analyzeSecurityWarnings([vpc, a, b, log], []).find((x) => x.id === 'bp-no-vpc')).toBeUndefined();
   });
 
   it('does NOT emit bp-no-vpc when a Network.PrivateNetwork is present', () => {
@@ -448,9 +422,7 @@ describe('Rule 6: no private network with multiple services', () => {
     const a = n('Compute.Function');
     const b = n('Compute.Function');
     const log = n('Monitoring.Log');
-    expect(
-      analyzeSecurityWarnings([pn, a, b, log], []).find((x) => x.id === 'bp-no-vpc'),
-    ).toBeUndefined();
+    expect(analyzeSecurityWarnings([pn, a, b, log], []).find((x) => x.id === 'bp-no-vpc')).toBeUndefined();
   });
 
   it('STILL emits bp-no-vpc when only a Network.Subnet exists (Subnet alone is not a boundary)', () => {
@@ -460,9 +432,7 @@ describe('Rule 6: no private network with multiple services', () => {
     const a = n('Compute.Function');
     const b = n('Compute.Function');
     const log = n('Monitoring.Log');
-    expect(
-      analyzeSecurityWarnings([sn, a, b, log], []).find((x) => x.id === 'bp-no-vpc'),
-    ).toBeDefined();
+    expect(analyzeSecurityWarnings([sn, a, b, log], []).find((x) => x.id === 'bp-no-vpc')).toBeDefined();
   });
 });
 
@@ -476,10 +446,7 @@ describe('analyzeSecurityWarnings — multiple rules firing simultaneously', () 
     const bucket = n('Storage.Bucket', { label: 'bk', public: true }); // Rule 3
     const gw = n('Network.Gateway', { label: 'gw' }); // Rule 4
     // No monitoring → Rule 5
-    const w: PreDeployWarning[] = analyzeSecurityWarnings(
-      [db, svc1, svc2, bucket, gw],
-      [],
-    );
+    const w: PreDeployWarning[] = analyzeSecurityWarnings([db, svc1, svc2, bucket, gw], []);
 
     const ids = w.map((x) => x.id).sort();
     expect(ids).toContain(`sec-public-db-${db.id}`);

@@ -6,14 +6,7 @@
  * `../../types/graph.ts` and are not re-defined here.
  */
 
-import type {
-  Edge,
-  EdgeId,
-  GraphId,
-  GraphMetadata,
-  Node,
-  NodeId,
-} from '../../types/graph';
+import type { Edge, EdgeId, GraphId, GraphMetadata, Node, NodeId } from '../../types/graph';
 
 /**
  * Mutable bag of state shared by all helper functions.

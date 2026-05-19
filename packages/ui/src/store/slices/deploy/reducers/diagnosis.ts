@@ -16,10 +16,7 @@ export const diagnosisReducers = {
   startDiagnosis: (state: DeployState) => {
     state.diagnosis = { status: 'loading', result: null, error: null };
   },
-  setDiagnosis: (
-    state: DeployState,
-    action: PayloadAction<{ diagnosis: string; suggestedFixes: string[] }>,
-  ) => {
+  setDiagnosis: (state: DeployState, action: PayloadAction<{ diagnosis: string; suggestedFixes: string[] }>) => {
     state.diagnosis = { status: 'loaded', result: action.payload, error: null };
   },
   diagnosisError: (state: DeployState, action: PayloadAction<string>) => {

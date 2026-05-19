@@ -9,9 +9,9 @@
 
 import { describe, it, expect } from 'vitest';
 import { generateSuggestions, type CostSuggestion } from '../generate-suggestions';
-import type { CostSummary } from '../cost-calculator';
 import type { CardNode } from '../../../../store/slices/cards-slice';
 import type { Environment } from '../../../../store/slices/environments-slice';
+import type { CostSummary } from '../cost-calculator';
 
 // ─── Builders ─────────────────────────────────────────────────────────────
 
@@ -177,11 +177,7 @@ describe('generateSuggestions — rule 2 (scalable with fixed instances)', () =>
 
   it('uses min as a default for max when max is missing/falsy', () => {
     // min=2, max omitted → max defaults to min (2), so min==max==2>1 → fires.
-    const out = generateSuggestions(
-      buildSummary(),
-      [buildNode({ behavior: 'scalable', minInstances: 2 })],
-      [],
-    );
+    const out = generateSuggestions(buildSummary(), [buildNode({ behavior: 'scalable', minInstances: 2 })], []);
     expect(out).toHaveLength(1);
     expect(out[0].message).toContain('1 scalable service(s)');
   });
@@ -293,7 +289,10 @@ describe('generateSuggestions — multi-rule stacking', () => {
         scalingRange: { minCost: 0, currentCost: 100, maxCost: 500 }, // delta 400 → rule 3
       }),
       [
-        buildNode({ estimatedCost: '$100/mo', behavior: 'scalable', minInstances: 2, maxInstances: 2, maxInstances_alt: 2 }, 'a'),
+        buildNode(
+          { estimatedCost: '$100/mo', behavior: 'scalable', minInstances: 2, maxInstances: 2, maxInstances_alt: 2 },
+          'a',
+        ),
         buildNode({ maxInstances: 50 }, 'b'),
         buildNode({ iceType: 'Data.PostgreSQL' }, 'c'),
       ],

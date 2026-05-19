@@ -15,7 +15,6 @@
  */
 
 import { describe, expect, it } from 'vitest';
-
 import type {
   ProviderId,
   ConfigField,
@@ -39,12 +38,7 @@ describe('provider-settings types — import resolution', () => {
     const password: ConfigField = { name: 'p', label: 'P', type: 'password', required: true };
     const textarea: ConfigField = { name: 'a', label: 'A', type: 'textarea', required: false };
     const select: ConfigField = { name: 's', label: 'S', type: 'select', required: true, options: ['x'] };
-    expect([text.type, password.type, textarea.type, select.type]).toEqual([
-      'text',
-      'password',
-      'textarea',
-      'select',
-    ]);
+    expect([text.type, password.type, textarea.type, select.type]).toEqual(['text', 'password', 'textarea', 'select']);
   });
 
   it('ConfigField allows optional placeholder, options, and helpLink', () => {

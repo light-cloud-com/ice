@@ -11,10 +11,10 @@
  *     promises and listener-cleanup spies.
  */
 
+import { configureStore } from '@reduxjs/toolkit';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const flushMicrotasks = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
@@ -69,13 +69,10 @@ vi.mock('../../../store', async (orig) => {
 // ─── Imports after mocks ────────────────────────────────────────────────────
 
 import cardsReducer, { type Card, type CardNode, type CardEdge } from '../../../store/slices/cards-slice';
-import projectsReducer from '../../../store/slices/projects-slice';
 import environmentsReducer from '../../../store/slices/environments-slice';
 import logsReducer from '../../../store/slices/logs-slice';
-import {
-  useLogStream,
-  computeCandidateFingerprint,
-} from '../use-log-stream';
+import projectsReducer from '../../../store/slices/projects-slice';
+import { useLogStream, computeCandidateFingerprint } from '../use-log-stream';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -208,29 +205,17 @@ describe('computeCandidateFingerprint', () => {
   });
 
   it('skips edges whose source is not in the nodes list', () => {
-    const fp = computeCandidateFingerprint(
-      [{ source: 'missing', target: 'log-1' }],
-      [],
-      'log-1',
-    );
+    const fp = computeCandidateFingerprint([{ source: 'missing', target: 'log-1' }], [], 'log-1');
     expect(fp).toBe('');
   });
 
   it('uses empty strings when iceType / deploy_status are absent', () => {
-    const fp = computeCandidateFingerprint(
-      [{ source: 'a', target: 'log-1' }],
-      [{ id: 'a', data: {} }],
-      'log-1',
-    );
+    const fp = computeCandidateFingerprint([{ source: 'a', target: 'log-1' }], [{ id: 'a', data: {} }], 'log-1');
     expect(fp).toBe('a>>');
   });
 
   it('handles a node with no data field at all', () => {
-    const fp = computeCandidateFingerprint(
-      [{ source: 'a', target: 'log-1' }],
-      [{ id: 'a' }],
-      'log-1',
-    );
+    const fp = computeCandidateFingerprint([{ source: 'a', target: 'log-1' }], [{ id: 'a' }], 'log-1');
     expect(fp).toBe('a>>');
   });
 });
@@ -278,7 +263,10 @@ describe('useLogStream — subscribe + listeners', () => {
     const card = makeCard({
       nodes: [
         makeNode({ id: 'src-1', data: { iceType: 'Compute.Container', label: 'src' } }),
-        makeNode({ id: TERMINAL_ID, data: { iceType: 'Monitoring.Log', streamingMode: 'tail', sourceNodeIdOverride: 'src-1' } }),
+        makeNode({
+          id: TERMINAL_ID,
+          data: { iceType: 'Monitoring.Log', streamingMode: 'tail', sourceNodeIdOverride: 'src-1' },
+        }),
       ],
       edges: [{ id: 'e1', source: 'src-1', target: TERMINAL_ID } as CardEdge],
     });
@@ -746,9 +734,7 @@ describe('useLogStream — selector outputs', () => {
 
   it('drops sourceNodeIdOverride when value is non-string', () => {
     const card = makeCard({
-      nodes: [
-        makeNode({ id: TERMINAL_ID, data: { sourceNodeIdOverride: 42 as any } }),
-      ],
+      nodes: [makeNode({ id: TERMINAL_ID, data: { sourceNodeIdOverride: 42 as any } })],
     });
     mocks.api.subscribe.mockResolvedValueOnce({
       subscriptionId: 's',

@@ -132,7 +132,15 @@ describe('networking category (rf-hlres-5)', () => {
 
   it('contains the canonical resource ids in order', () => {
     const ids = networking.resources.map((r) => r.id);
-    expect(ids).toEqual(['public-endpoint', 'vpc-network', 'subnet', 'load-balancer', 'cdn', 'api-gateway', 'dns-zone']);
+    expect(ids).toEqual([
+      'public-endpoint',
+      'vpc-network',
+      'subnet',
+      'load-balancer',
+      'cdn',
+      'api-gateway',
+      'dns-zone',
+    ]);
   });
 
   it('public-endpoint exposes property catalogue', () => {

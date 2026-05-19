@@ -5,7 +5,7 @@
  */
 
 import { infer_relationships } from './relationships';
-import { ComputeService, StorageService, AssetInventoryService, BaseGCPService } from "./services";
+import { ComputeService, StorageService, AssetInventoryService, BaseGCPService } from './services';
 import { get_ice_type, get_behavior, map_properties } from './type-mapper';
 import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph';
 import type {
@@ -180,9 +180,7 @@ export async function import_gcp(options: GCPImportOptions): Promise<GCPImportRe
   //     success (caller treats warnings as "some scopes skipped")
   const hard_errors = errors.filter((e) => !e.code.includes('ACCESS_DENIED'));
   const access_denied_only = errors.length > 0 && hard_errors.length === 0;
-  const success =
-    hard_errors.length === 0 &&
-    !(access_denied_only && imported_resources.length === 0);
+  const success = hard_errors.length === 0 && !(access_denied_only && imported_resources.length === 0);
 
   return {
     success,

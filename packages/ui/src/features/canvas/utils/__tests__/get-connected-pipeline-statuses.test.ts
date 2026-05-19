@@ -52,9 +52,7 @@ describe('getConnectedPipelineStatuses', () => {
       id: 'repo',
       data: { iceType: 'Source.Repository' },
     });
-    const edges: CardEdge[] = [
-      { id: 'e1', source: 'repo', target: 'svc' },
-    ];
+    const edges: CardEdge[] = [{ id: 'e1', source: 'repo', target: 'svc' }];
     const card = makeCard({ edges });
     const pipeline: Record<string, NodePipelineStatus> = {
       svc: { status: 'building' },
@@ -69,9 +67,7 @@ describe('getConnectedPipelineStatuses', () => {
       id: 'repo',
       data: { iceType: 'Custom.Repo', behavior: 'source' },
     });
-    const edges: CardEdge[] = [
-      { id: 'e1', source: 'repo', target: 'svc' },
-    ];
+    const edges: CardEdge[] = [{ id: 'e1', source: 'repo', target: 'svc' }];
     const card = makeCard({ edges });
     const pipeline: Record<string, NodePipelineStatus> = {
       svc: { status: 'success' },

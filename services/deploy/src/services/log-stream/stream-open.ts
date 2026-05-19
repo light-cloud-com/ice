@@ -26,22 +26,13 @@
 
 import prisma from '@ice/db';
 import * as providerService from '@ice/service-credentials';
-
-import {
-  isPermissionDenied,
-  probeErrorMessage,
-} from './entry-mapping';
+import { isPermissionDenied, probeErrorMessage } from './entry-mapping';
 import { resolveLogFilter } from './filter-resolver';
 import { startPolling } from './polling';
 import { emitToRoom, streams, subscriptionIndex } from './registry';
 import { stopUnderlyingStream } from './stream-lifecycle';
 import { startTail } from './tail';
-import type {
-  ActiveStream,
-  SourceResolution,
-  StreamingMode,
-  SubscribeArgs,
-} from './types';
+import type { ActiveStream, SourceResolution, StreamingMode, SubscribeArgs } from './types';
 
 /**
  * One-shot stream setup for a `resolved` source: re-derive the filter +
@@ -217,10 +208,7 @@ export function registerPlaceholderStream(
  * `stream.mode`, and starts the new loop. Last-write-wins between
  * subscribers requesting different modes for the same room.
  */
-export async function restartStreamWithMode(
-  stream: ActiveStream,
-  newMode: StreamingMode,
-): Promise<void> {
+export async function restartStreamWithMode(stream: ActiveStream, newMode: StreamingMode): Promise<void> {
   stopUnderlyingStream(stream);
   stream.mode = newMode;
   if (newMode === 'polling') {

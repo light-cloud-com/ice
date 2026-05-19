@@ -66,7 +66,7 @@ vi.mock('react', async (orig) => {
   // memo(fc) returns the inner fc — sufficient for the walker because the
   // test always reaches for `.type` on the wrapper, which equals the inner.
   const memoStub = <T,>(fc: T): T => {
-    return Object.assign(((p: unknown) => (fc as unknown as (p: unknown) => unknown)(p)), {
+    return Object.assign((p: unknown) => (fc as unknown as (p: unknown) => unknown)(p), {
       type: fc,
     }) as unknown as T;
   };
@@ -96,6 +96,18 @@ vi.mock('react-redux', () => ({
   useDispatch: () => mocks.dispatch,
 }));
 
+// AppBar gates its provider buttons + modals on `isProviderEnabled` from
+// `@ice/constants`, which respects live PROVIDER_FLAGS (GCP-only by default).
+// These tests assert on the full aws/azure/gcp surface — stub the gate to
+// true so the assertions exercise the rendering branches, not the flags.
+vi.mock('@ice/constants', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    isProviderEnabled: () => true,
+  };
+});
+
 vi.mock('react-router-dom', () => ({
   useNavigate: () => mocks.navigate,
 }));
@@ -110,8 +122,7 @@ vi.mock('../../../store/slices/integrations-slice', () => ({
 }));
 
 vi.mock('../../utils/cn', () => ({
-  cn: (...args: unknown[]) =>
-    args.filter((a) => typeof a === 'string' && a).join(' '),
+  cn: (...args: unknown[]) => args.filter((a) => typeof a === 'string' && a).join(' '),
 }));
 
 vi.mock('../breadcrumbs', () => ({
@@ -269,9 +280,7 @@ describe('AppBar — top-level rendering', () => {
     const tree = callRender();
     const header = findFirst(
       tree,
-      (el) =>
-        typeof el.props['data-testid'] === 'string' &&
-        el.props['data-testid'] === 'toolbar',
+      (el) => typeof el.props['data-testid'] === 'string' && el.props['data-testid'] === 'toolbar',
     );
     expect(header).toBeDefined();
   });
@@ -331,9 +340,7 @@ describe('AppBar — provider/github icon buttons', () => {
     const tree = callRender();
     const btn = findFirst(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        (el.props as { id?: string }).id === 'ice-appbar-btn-gcp',
+      (el) => el.type === 'button' && (el.props as { id?: string }).id === 'ice-appbar-btn-gcp',
     );
     expect(btn).toBeDefined();
   });
@@ -342,9 +349,7 @@ describe('AppBar — provider/github icon buttons', () => {
     const tree = callRender();
     const btn = findFirst(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        (el.props as { id?: string }).id === 'ice-appbar-btn-aws',
+      (el) => el.type === 'button' && (el.props as { id?: string }).id === 'ice-appbar-btn-aws',
     );
     expect(btn).toBeDefined();
   });
@@ -353,9 +358,7 @@ describe('AppBar — provider/github icon buttons', () => {
     const tree = callRender();
     const btn = findFirst(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        (el.props as { id?: string }).id === 'ice-appbar-btn-azure',
+      (el) => el.type === 'button' && (el.props as { id?: string }).id === 'ice-appbar-btn-azure',
     );
     expect(btn).toBeDefined();
   });
@@ -364,9 +367,7 @@ describe('AppBar — provider/github icon buttons', () => {
     const tree = callRender();
     const btn = findFirst(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        (el.props as { id?: string }).id === 'ice-appbar-btn-github',
+      (el) => el.type === 'button' && (el.props as { id?: string }).id === 'ice-appbar-btn-github',
     );
     expect(btn).toBeDefined();
   });
@@ -403,8 +404,7 @@ describe('AppBar — provider/github icon buttons', () => {
     const tree = callRender();
     const btn = findFirst(
       tree,
-      (el) =>
-        el.type === 'button' && (el.props as { id?: string }).id === 'ice-appbar-btn-github',
+      (el) => el.type === 'button' && (el.props as { id?: string }).id === 'ice-appbar-btn-github',
     )!;
     (btn.props.onClick as () => void)();
   });
@@ -414,8 +414,7 @@ describe('AppBar — provider/github icon buttons', () => {
     const tree = callRender();
     const btn = findFirst(
       tree,
-      (el) =>
-        el.type === 'button' && (el.props as { id?: string }).id === 'ice-appbar-btn-github',
+      (el) => el.type === 'button' && (el.props as { id?: string }).id === 'ice-appbar-btn-github',
     )!;
     expect((btn.props.className as string).includes('emerald')).toBe(true);
   });
@@ -466,9 +465,7 @@ describe('AppBar — settings button', () => {
     const btns = findAll(tree, (el) => el.type === 'button');
     // Settings has no id; identify by aria-label or the t('Settings') tip.
     // Tooltip wraps with content "Settings".
-    const settingsBtn = btns.find(
-      (b) => (b.props as { 'aria-label'?: string })['aria-label'] === 'Settings',
-    );
+    const settingsBtn = btns.find((b) => (b.props as { 'aria-label'?: string })['aria-label'] === 'Settings');
     expect(settingsBtn).toBeDefined();
     (settingsBtn!.props.onClick as () => void)();
     expect(mocks.navigate).toHaveBeenCalledWith('/settings');
@@ -480,9 +477,7 @@ describe('AppBar — useElectronTitleBar', () => {
     const tree = callRender();
     const header = findFirst(
       tree,
-      (el) =>
-        typeof el.props['data-testid'] === 'string' &&
-        el.props['data-testid'] === 'toolbar',
+      (el) => typeof el.props['data-testid'] === 'string' && el.props['data-testid'] === 'toolbar',
     )!;
     expect((header.props.style as { paddingLeft?: string }).paddingLeft).toBeUndefined();
   });
@@ -500,9 +495,7 @@ describe('AppBar — useElectronTitleBar', () => {
     const tree = callRender();
     const header = findFirst(
       tree,
-      (el) =>
-        typeof el.props['data-testid'] === 'string' &&
-        el.props['data-testid'] === 'toolbar',
+      (el) => typeof el.props['data-testid'] === 'string' && el.props['data-testid'] === 'toolbar',
     )!;
     expect((header.props.style as { paddingLeft?: string }).paddingLeft).toBe('92px');
   });
@@ -520,9 +513,7 @@ describe('AppBar — useElectronTitleBar', () => {
     const tree = callRender();
     const header = findFirst(
       tree,
-      (el) =>
-        typeof el.props['data-testid'] === 'string' &&
-        el.props['data-testid'] === 'toolbar',
+      (el) => typeof el.props['data-testid'] === 'string' && el.props['data-testid'] === 'toolbar',
     )!;
     expect((header.props.style as { paddingLeft?: string }).paddingLeft).toBeUndefined();
   });
@@ -570,8 +561,7 @@ describe('AppBar — optional-chain branch coverage', () => {
     const tree = callRender();
     const btn = findFirst(
       tree,
-      (el) =>
-        el.type === 'button' && (el.props as { id?: string }).id === 'ice-appbar-btn-github',
+      (el) => el.type === 'button' && (el.props as { id?: string }).id === 'ice-appbar-btn-github',
     )!;
     expect(btn).toBeDefined();
   });
@@ -710,26 +700,18 @@ describe('AppBar — header style WebkitAppRegion branch', () => {
     const tree = callRender();
     const header = findFirst(
       tree,
-      (el) =>
-        typeof el.props['data-testid'] === 'string' &&
-        el.props['data-testid'] === 'toolbar',
+      (el) => typeof el.props['data-testid'] === 'string' && el.props['data-testid'] === 'toolbar',
     )!;
-    expect(
-      (header.props.style as { WebkitAppRegion?: string }).WebkitAppRegion,
-    ).toBe('drag');
+    expect((header.props.style as { WebkitAppRegion?: string }).WebkitAppRegion).toBe('drag');
   });
 
   it('omits WebkitAppRegion when not in Electron', () => {
     const tree = callRender();
     const header = findFirst(
       tree,
-      (el) =>
-        typeof el.props['data-testid'] === 'string' &&
-        el.props['data-testid'] === 'toolbar',
+      (el) => typeof el.props['data-testid'] === 'string' && el.props['data-testid'] === 'toolbar',
     )!;
-    expect(
-      (header.props.style as { WebkitAppRegion?: string }).WebkitAppRegion,
-    ).toBeUndefined();
+    expect((header.props.style as { WebkitAppRegion?: string }).WebkitAppRegion).toBeUndefined();
   });
 });
 
@@ -759,9 +741,7 @@ describe('AppBar — Help button', () => {
     const tree = callRender();
     const btn = findFirst(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        (el.props as { id?: string }).id === 'ice-appbar-btn-help',
+      (el) => el.type === 'button' && (el.props as { id?: string }).id === 'ice-appbar-btn-help',
     );
     expect(btn).toBeDefined();
     expect(typeof btn?.props.onClick).toBe('function');
@@ -771,9 +751,7 @@ describe('AppBar — Help button', () => {
     const tree = callRender();
     const btn = findFirst(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        (el.props as { id?: string }).id === 'ice-appbar-btn-help',
+      (el) => el.type === 'button' && (el.props as { id?: string }).id === 'ice-appbar-btn-help',
     )!;
     (btn.props.onClick as () => void)();
     expect(mocks.startTour).toHaveBeenCalledWith('canvas-tour');

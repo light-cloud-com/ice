@@ -40,16 +40,11 @@ import { fallback_type_mapping } from './type-mapping';
 import { to_typescript } from './typescript-formatter';
 import { build_options, map_properties } from './value-transform';
 import { to_yaml } from './yaml-formatter';
-import type { EmbeddedSchemaProvider } from '../../schema/embedded-schema-provider';
+import type { PulumiExportOptions, PulumiExportResult, PulumiProgram, PulumiResource } from './types';
 import type { MutableGraph } from '../../graph/mutable-graph';
+import type { EmbeddedSchemaProvider } from '../../schema/embedded-schema-provider';
 import type { IceType } from '../../schema/schema-provider';
 import type { Node } from '../../types/graph';
-import type {
-  PulumiExportOptions,
-  PulumiExportResult,
-  PulumiProgram,
-  PulumiResource,
-} from './types';
 
 /**
  * Build a `node.id -> node.id[]` dependency map from a graph's edges.
@@ -101,11 +96,7 @@ export async function node_to_resource(
   unmapped?: boolean;
 }> {
   // Look up Pulumi type from schema
-  const impl = schema_provider.get_implementation(
-    node.type as IceType,
-    'pulumi',
-    options.provider,
-  );
+  const impl = schema_provider.get_implementation(node.type as IceType, 'pulumi', options.provider);
 
   if (!impl) {
     // Try fallback mapping

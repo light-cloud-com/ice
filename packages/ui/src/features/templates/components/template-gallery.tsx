@@ -17,10 +17,12 @@
  *   - `./template-detail.tsx`             — full detail panel (rf-tgal-5)
  */
 
+import { getEnabledProvidersForTemplate } from '@ice/templates';
 import { Zap, LayoutTemplate, Sparkles } from 'lucide-react';
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getEnabledProvidersForTemplate } from '@ice/templates';
+import { TemplateCard } from './template-card';
+import { TemplateDetail } from './template-detail';
 import {
   ALL_TEMPLATES,
   TEMPLATE_CATEGORIES,
@@ -36,8 +38,6 @@ import { cn } from '../../../shared/utils/cn';
 import { toSlug } from '../../../shared/utils/slug';
 import { store } from '../../../store';
 import { closeTemplateGallery } from '../../../store/slices/ui-slice';
-import { TemplateCard } from './template-card';
-import { TemplateDetail } from './template-detail';
 import { ICON_MAP } from '../data/icon-map';
 import type { ComposedTemplate, TemplateCategory, TemplateCategoryMeta } from '../../../config/templates';
 import type { AppDispatch, RootState } from '../../../store';

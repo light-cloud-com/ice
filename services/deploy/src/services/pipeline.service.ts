@@ -19,24 +19,9 @@
  * subdirectory.
  */
 
-export {
-  ensureRulesForCanvas,
-  createRule,
-  updateRule,
-  deleteRule,
-  getRulesForNode,
-} from './pipeline/rule-management';
-export {
-  getEventsForNode,
-  createDeploymentEvent,
-  updateEventProgress,
-  failEvent,
-} from './pipeline/events';
-export {
-  matchRulesForPush,
-  matchRulesForMerge,
-  shouldSkipDuplicate,
-} from './pipeline/rule-matching';
+export { ensureRulesForCanvas, createRule, updateRule, deleteRule, getRulesForNode } from './pipeline/rule-management';
+export { getEventsForNode, createDeploymentEvent, updateEventProgress, failEvent } from './pipeline/events';
+export { matchRulesForPush, matchRulesForMerge, shouldSkipDuplicate } from './pipeline/rule-matching';
 export { detectFramework } from './pipeline/framework-detection';
 export { resolveEnvironmentCardId } from './pipeline/environment-resolution';
 export type { DeployStep, FrameworkDetection } from './pipeline/types';

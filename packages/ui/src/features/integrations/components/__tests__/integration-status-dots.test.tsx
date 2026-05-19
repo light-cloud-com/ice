@@ -2,7 +2,6 @@
  * IntegrationStatusDots — small status pills in the status bar.
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -21,6 +20,18 @@ const mocks = vi.hoisted(() => ({
 vi.mock('react-redux', () => ({
   useSelector: (sel: (s: unknown) => unknown) => sel(mocks.state),
 }));
+
+// The dots component gates each cloud provider entry on `isProviderEnabled`
+// from `@ice/constants` (GCP-only under live PROVIDER_FLAGS). These tests
+// drive the github + gcp + aws + azure status surface — stub the gate so
+// the dots component renders all of them as configured by mock state.
+vi.mock('@ice/constants', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    isProviderEnabled: () => true,
+  };
+});
 
 vi.mock('../../../../shared/utils/cn', () => ({
   cn: (...args: unknown[]) => args.filter(Boolean).join(' '),

@@ -31,10 +31,7 @@ function make_resource(overrides: Partial<AWSImportedResource> = {}): AWSImporte
   };
 }
 
-function make_result(
-  resources: AWSImportedResource[] = [],
-  overrides: Partial<AWSImportResult> = {},
-): AWSImportResult {
+function make_result(resources: AWSImportedResource[] = [], overrides: Partial<AWSImportResult> = {}): AWSImportResult {
   return {
     success: true,
     resources,
@@ -86,9 +83,7 @@ describe('aws_result_to_graph', () => {
   });
 
   it('spreads resource tags into labels', () => {
-    const graph = aws_result_to_graph(
-      make_result([make_resource({ tags: { Name: 'web', Env: 'prod' } })]),
-    );
+    const graph = aws_result_to_graph(make_result([make_resource({ tags: { Name: 'web', Env: 'prod' } })]));
     const node = Array.from(graph.nodes.values())[0]!;
     expect(node.metadata.labels.Name).toBe('web');
     expect(node.metadata.labels.Env).toBe('prod');
@@ -96,9 +91,7 @@ describe('aws_result_to_graph', () => {
 
   it('AWS-canonical labels are overwritten by tags with the same key', () => {
     // tags spread last in source code => tag values win on collision
-    const graph = aws_result_to_graph(
-      make_result([make_resource({ tags: { region: 'fake' } })]),
-    );
+    const graph = aws_result_to_graph(make_result([make_resource({ tags: { region: 'fake' } })]));
     const node = Array.from(graph.nodes.values())[0]!;
     expect(node.metadata.labels.region).toBe('fake');
   });
@@ -192,7 +185,7 @@ describe('aws_result_to_graph', () => {
 });
 
 describe('infer_relationships', () => {
-  it('infers a dep when a property contains another resource\'s ARN', () => {
+  it("infers a dep when a property contains another resource's ARN", () => {
     const a = make_resource({ aws_arn: 'arn:aws:ec2:us-east-1:123:vpc/a' });
     const b = make_resource({
       aws_arn: 'arn:aws:ec2:us-east-1:123:subnet/b',
@@ -222,7 +215,7 @@ describe('infer_relationships', () => {
     expect(b.dependencies).toContain('arn:aws:s3:::bucket');
   });
 
-  it('does not include the resource\'s own ARN in its deps', () => {
+  it("does not include the resource's own ARN in its deps", () => {
     const a = make_resource({
       aws_arn: 'arn:aws:s3:::bucket',
       properties: { ref: 'arn:aws:s3:::bucket' },

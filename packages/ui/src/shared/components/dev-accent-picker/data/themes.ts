@@ -22,9 +22,9 @@
  * Each theme has BOLD, visually distinct surface colors — not tints of gray.
  */
 
-import type { ColorTheme } from '../types';
 import { GROUP_1_THEMES } from './themes/group-1';
 import { GROUP_2_THEMES } from './themes/group-2';
 import { GROUP_3_THEMES } from './themes/group-3';
+import type { ColorTheme } from '../types';
 
 export const T: ColorTheme[] = [...GROUP_1_THEMES, ...GROUP_2_THEMES, ...GROUP_3_THEMES];

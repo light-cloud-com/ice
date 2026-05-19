@@ -73,10 +73,7 @@ describe('cloud-storage/bucket-creator', () => {
     it('retries with UBLA on and ACL bits removed, returns ublaForcedOn=true', async () => {
       const ublaErr = Object.assign(new Error('storage.uniformBucketLevelAccess constraint'), {});
       const storage = {
-        createBucket: vi
-          .fn()
-          .mockRejectedValueOnce(ublaErr)
-          .mockResolvedValueOnce(undefined),
+        createBucket: vi.fn().mockRejectedValueOnce(ublaErr).mockResolvedValueOnce(undefined),
       };
       const { ctx, logs } = makeCtx();
       const opts = baseOptions(true);
@@ -168,9 +165,7 @@ describe('cloud-storage/bucket-creator', () => {
           createBucket: vi.fn().mockRejectedValueOnce(ublaErr).mockRejectedValueOnce(retryErr),
         };
         const { ctx } = makeCtx();
-        await expect(createOrAdoptBucket(storage, 'b', baseOptions(true), true, ctx)).rejects.toThrow(
-          'quota exceeded',
-        );
+        await expect(createOrAdoptBucket(storage, 'b', baseOptions(true), true, ctx)).rejects.toThrow('quota exceeded');
       });
     });
   });
@@ -218,9 +213,9 @@ describe('cloud-storage/bucket-creator', () => {
     it('does not call setMetadata when adopted bucket has UBLA already disabled', async () => {
       const err = new Error('you already own it');
       const existingBucket = {
-        getMetadata: vi.fn().mockResolvedValue([
-          { iamConfiguration: { uniformBucketLevelAccess: { enabled: false } } },
-        ]),
+        getMetadata: vi
+          .fn()
+          .mockResolvedValue([{ iamConfiguration: { uniformBucketLevelAccess: { enabled: false } } }]),
         setMetadata: vi.fn(),
       };
       const storage = {
@@ -236,9 +231,7 @@ describe('cloud-storage/bucket-creator', () => {
     it('attempts UBLA-disable when adopted bucket has UBLA enabled', async () => {
       const err = new Error('you already own it');
       const existingBucket = {
-        getMetadata: vi.fn().mockResolvedValue([
-          { iamConfiguration: { uniformBucketLevelAccess: { enabled: true } } },
-        ]),
+        getMetadata: vi.fn().mockResolvedValue([{ iamConfiguration: { uniformBucketLevelAccess: { enabled: true } } }]),
         setMetadata: vi.fn().mockResolvedValue(undefined),
       };
       const storage = {
@@ -260,9 +253,7 @@ describe('cloud-storage/bucket-creator', () => {
       const err = new Error('you already own it');
       const disableErr = new Error('storage.uniformBucketLevelAccess constraint');
       const existingBucket = {
-        getMetadata: vi.fn().mockResolvedValue([
-          { iamConfiguration: { uniformBucketLevelAccess: { enabled: true } } },
-        ]),
+        getMetadata: vi.fn().mockResolvedValue([{ iamConfiguration: { uniformBucketLevelAccess: { enabled: true } } }]),
         setMetadata: vi.fn().mockRejectedValue(disableErr),
       };
       const storage = {
@@ -280,9 +271,7 @@ describe('cloud-storage/bucket-creator', () => {
       const err = new Error('you already own it');
       const disableErr = new Error('uniformBucketLevelAccess locked');
       const existingBucket = {
-        getMetadata: vi.fn().mockResolvedValue([
-          { iamConfiguration: { uniformBucketLevelAccess: { enabled: true } } },
-        ]),
+        getMetadata: vi.fn().mockResolvedValue([{ iamConfiguration: { uniformBucketLevelAccess: { enabled: true } } }]),
         setMetadata: vi.fn().mockRejectedValue(disableErr),
       };
       const storage = {
@@ -298,9 +287,7 @@ describe('cloud-storage/bucket-creator', () => {
       const err = new Error('you already own it');
       const disableErr = new Error('some other random failure');
       const existingBucket = {
-        getMetadata: vi.fn().mockResolvedValue([
-          { iamConfiguration: { uniformBucketLevelAccess: { enabled: true } } },
-        ]),
+        getMetadata: vi.fn().mockResolvedValue([{ iamConfiguration: { uniformBucketLevelAccess: { enabled: true } } }]),
         setMetadata: vi.fn().mockRejectedValue(disableErr),
       };
       const storage = {
@@ -355,9 +342,7 @@ describe('cloud-storage/bucket-creator', () => {
       const err = new Error('quota exceeded');
       const storage = { createBucket: vi.fn().mockRejectedValueOnce(err) };
       const { ctx } = makeCtx();
-      await expect(createOrAdoptBucket(storage, 'b', baseOptions(true), true, ctx)).rejects.toThrow(
-        'quota exceeded',
-      );
+      await expect(createOrAdoptBucket(storage, 'b', baseOptions(true), true, ctx)).rejects.toThrow('quota exceeded');
       expect(storage.createBucket).toHaveBeenCalledTimes(1);
     });
 
@@ -367,7 +352,7 @@ describe('cloud-storage/bucket-creator', () => {
       // than crashing on `.message` access.
       const storage = { createBucket: vi.fn().mockRejectedValueOnce('you already own it') };
       const existingBucket = { getMetadata: vi.fn().mockResolvedValue([{}]) };
-       
+
       (storage as any).bucket = vi.fn().mockReturnValue(existingBucket);
       const { ctx } = makeCtx();
       const out = await createOrAdoptBucket(storage, 'b', baseOptions(true), true, ctx);

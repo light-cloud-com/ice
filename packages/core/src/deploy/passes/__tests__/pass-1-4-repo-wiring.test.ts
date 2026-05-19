@@ -25,8 +25,8 @@
  */
 import { describe, it, expect } from 'vitest';
 import { create_mutable_graph } from '../../../graph/mutable-graph';
-import type { CardEdgeInput, CardNodeInput } from '../../card-translator';
 import { wire_source_repositories } from '../pass-1-4-repo-wiring';
+import type { CardEdgeInput, CardNodeInput } from '../../card-translator';
 
 /**
  * Build a fresh graph with one compute node already added. Returns the
@@ -209,9 +209,7 @@ describe('wire_source_repositories — skip conditions', () => {
     ];
     const edges: CardEdgeInput[] = [{ id: 'e7', source: 'repo-card', target: 'compute-card' }];
     // Map points to a non-existent graph node key
-    const card_id_to_name = new Map<string, string>([
-      ['compute-card', 'gcp.run.service:no-such-node'],
-    ]);
+    const card_id_to_name = new Map<string, string>([['compute-card', 'gcp.run.service:no-such-node']]);
 
     wire_source_repositories(edges, nodes, card_id_to_name, graph);
 
@@ -351,9 +349,7 @@ describe('wire_source_repositories — bugfix-1 regression: production-shape loo
       },
       { id: 'compute-card', type: 'block', data: { iceType: 'Compute.CloudRun' } },
     ];
-    const edges: CardEdgeInput[] = [
-      { id: 'e-prod', source: 'repo-card', target: 'compute-card' },
-    ];
+    const edges: CardEdgeInput[] = [{ id: 'e-prod', source: 'repo-card', target: 'compute-card' }];
     // CRITICAL: bare resource name, not the branded NodeId.
     const card_id_to_name = new Map<string, string>([['compute-card', 'svc-prod-shape']]);
 

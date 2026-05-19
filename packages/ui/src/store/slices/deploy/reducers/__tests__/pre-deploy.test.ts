@@ -82,12 +82,9 @@ describe('acknowledgeCritical', () => {
 
 describe('resetPreDeployWarnings', () => {
   it('clears both dismissedWarnings and criticalAcknowledged', () => {
-    const next = produce(
-      makeState({ dismissedWarnings: ['a', 'b'], criticalAcknowledged: true }),
-      (draft) => {
-        preDeployReducers.resetPreDeployWarnings(draft);
-      },
-    );
+    const next = produce(makeState({ dismissedWarnings: ['a', 'b'], criticalAcknowledged: true }), (draft) => {
+      preDeployReducers.resetPreDeployWarnings(draft);
+    });
     expect(next.dismissedWarnings).toEqual([]);
     expect(next.criticalAcknowledged).toBe(false);
   });

@@ -11,11 +11,11 @@ import gcpIcon from 'devicon/icons/googlecloud/googlecloud-original.svg';
 import { Save, Loader2, Github, Sparkles, Check } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useTranslation } from '../../../i18n';
-import axiosInstance from '../../../shared/api/axios-instance';
 import { AnthropicConnectModal } from '../../../features/integrations/components/anthropic-connect-modal';
 import { GitHubConnectModal } from '../../../features/integrations/components/github-connect-modal';
 import { ProviderConnectModal } from '../../../features/integrations/components/provider-connect-modal';
+import { useTranslation } from '../../../i18n';
+import axiosInstance from '../../../shared/api/axios-instance';
 import { fetchProfile } from '../../../store/slices/account-slice';
 import {
   checkAnthropicConnection,
@@ -35,9 +35,7 @@ export function UserSettingsPage() {
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileMessage, setProfileMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const [openIntegration, setOpenIntegration] = useState<
-    'github' | 'anthropic' | 'gcp' | 'aws' | 'azure' | null
-  >(null);
+  const [openIntegration, setOpenIntegration] = useState<'github' | 'anthropic' | 'gcp' | 'aws' | 'azure' | null>(null);
 
   useEffect(() => {
     if (user?.name) {
@@ -208,10 +206,7 @@ export function UserSettingsPage() {
         </ul>
       </section>
 
-      <AnthropicConnectModal
-        isOpen={openIntegration === 'anthropic'}
-        onClose={() => setOpenIntegration(null)}
-      />
+      <AnthropicConnectModal isOpen={openIntegration === 'anthropic'} onClose={() => setOpenIntegration(null)} />
       <GitHubConnectModal isOpen={openIntegration === 'github'} onClose={() => setOpenIntegration(null)} />
       {isProviderEnabled('gcp') && (
         <ProviderConnectModal
@@ -246,7 +241,13 @@ export function UserSettingsPage() {
           description="Access keys"
           fields={[
             { name: 'accessKeyId', label: 'Access Key ID', type: 'text', placeholder: 'AKIA...', required: true },
-            { name: 'secretAccessKey', label: 'Secret Access Key', type: 'password', placeholder: '********', required: true },
+            {
+              name: 'secretAccessKey',
+              label: 'Secret Access Key',
+              type: 'password',
+              placeholder: '********',
+              required: true,
+            },
           ]}
         />
       )}
@@ -259,7 +260,13 @@ export function UserSettingsPage() {
           providerIcon={azureIcon}
           description="Service principal"
           fields={[
-            { name: 'subscriptionId', label: 'Subscription ID', type: 'text', placeholder: 'xxxxxxxx-xxxx-...', required: true },
+            {
+              name: 'subscriptionId',
+              label: 'Subscription ID',
+              type: 'text',
+              placeholder: 'xxxxxxxx-xxxx-...',
+              required: true,
+            },
             { name: 'tenantId', label: 'Tenant ID', type: 'text', placeholder: 'xxxxxxxx-xxxx-...', required: true },
             { name: 'clientId', label: 'Client ID', type: 'text', placeholder: 'xxxxxxxx-xxxx-...', required: true },
             { name: 'clientSecret', label: 'Client Secret', type: 'password', placeholder: '********', required: true },

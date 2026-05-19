@@ -31,12 +31,7 @@ function makeNode(id: string, iceType: string, extra: Record<string, unknown> = 
   return { id, type: 'block', data: { iceType, ...extra } };
 }
 
-function makeEdge(
-  id: string,
-  source: string,
-  target: string,
-  data: PropagationEdge['data'] = {},
-): PropagationEdge {
+function makeEdge(id: string, source: string, target: string, data: PropagationEdge['data'] = {}): PropagationEdge {
   return { id, source, target, data };
 }
 
@@ -213,15 +208,8 @@ describe('computeDerived: synthetic propagation rules', () => {
       direction: 'source→target',
       compute: () => ({ shared: 'second', uniqueB: 2 }),
     };
-    const out = computeDerived(
-      [makeNode('a', 'A'), makeNode('b', 'B')],
-      [makeEdge('e1', 'a', 'b')],
-      [r1, r2],
-      [],
-    );
-    expect(out.nodePatches).toEqual([
-      { nodeId: 'b', data: { shared: 'second', uniqueA: 1, uniqueB: 2 } },
-    ]);
+    const out = computeDerived([makeNode('a', 'A'), makeNode('b', 'B')], [makeEdge('e1', 'a', 'b')], [r1, r2], []);
+    expect(out.nodePatches).toEqual([{ nodeId: 'b', data: { shared: 'second', uniqueA: 1, uniqueB: 2 } }]);
   });
 
   it('rule.compute returning null contributes no patch', () => {
@@ -232,12 +220,7 @@ describe('computeDerived: synthetic propagation rules', () => {
       direction: 'source→target',
       compute: () => null,
     };
-    const out = computeDerived(
-      [makeNode('a', 'A'), makeNode('b', 'B')],
-      [makeEdge('e1', 'a', 'b')],
-      [rule],
-      [],
-    );
+    const out = computeDerived([makeNode('a', 'A'), makeNode('b', 'B')], [makeEdge('e1', 'a', 'b')], [rule], []);
     expect(out.nodePatches).toEqual([]);
   });
 
@@ -250,12 +233,7 @@ describe('computeDerived: synthetic propagation rules', () => {
       compute: () => null,
     };
     // Edge laid out B→A so the swap branch fires
-    const out = computeDerived(
-      [makeNode('a', 'A'), makeNode('b', 'B')],
-      [makeEdge('e1', 'b', 'a')],
-      [rule],
-      [],
-    );
+    const out = computeDerived([makeNode('a', 'A'), makeNode('b', 'B')], [makeEdge('e1', 'b', 'a')], [rule], []);
     expect(out.nodePatches).toEqual([]);
   });
 
@@ -481,7 +459,10 @@ describe('computeDerived: backfillRouteIds', () => {
   it('preserves an edge whose routeId already matches a route', () => {
     const cd = makeNode('cd1', 'Network.CustomDomain', {
       domain: 'mysite.com',
-      routes: [{ id: 'r1', subdomain: 'app' }, { id: 'r2', subdomain: 'api' }],
+      routes: [
+        { id: 'r1', subdomain: 'app' },
+        { id: 'r2', subdomain: 'api' },
+      ],
     });
     const svc = makeNode('s1', 'Compute.Container');
     const edge = makeEdge('e1', 'cd1', 's1', { routeId: 'r2' });
@@ -492,7 +473,10 @@ describe('computeDerived: backfillRouteIds', () => {
   it('backfills with the first FREE route, skipping ones already claimed by other edges', () => {
     const cd = makeNode('cd1', 'Network.CustomDomain', {
       domain: 'mysite.com',
-      routes: [{ id: 'r1', subdomain: 'app' }, { id: 'r2', subdomain: 'api' }],
+      routes: [
+        { id: 'r1', subdomain: 'app' },
+        { id: 'r2', subdomain: 'api' },
+      ],
     });
     const svc1 = makeNode('s1', 'Compute.Container');
     const svc2 = makeNode('s2', 'Compute.Container');
@@ -662,78 +646,46 @@ describe('diffPatches', () => {
 
   it('keeps a node patch when at least one key differs', () => {
     const node = makeNode('a', 'A', { x: 1, y: 'old' });
-    const out = diffPatches(
-      patchSet({ nodePatches: [{ nodeId: 'a', data: { x: 1, y: 'new' } }] }),
-      [node],
-      [],
-    );
+    const out = diffPatches(patchSet({ nodePatches: [{ nodeId: 'a', data: { x: 1, y: 'new' } }] }), [node], []);
     expect(out.nodePatches).toEqual([{ nodeId: 'a', data: { x: 1, y: 'new' } }]);
   });
 
   it('drops a node patch when every key already matches', () => {
     const node = makeNode('a', 'A', { x: 1, y: 'same' });
-    const out = diffPatches(
-      patchSet({ nodePatches: [{ nodeId: 'a', data: { x: 1, y: 'same' } }] }),
-      [node],
-      [],
-    );
+    const out = diffPatches(patchSet({ nodePatches: [{ nodeId: 'a', data: { x: 1, y: 'same' } }] }), [node], []);
     expect(out.nodePatches).toEqual([]);
   });
 
   it('drops a node patch whose target node is no longer present', () => {
-    const out = diffPatches(
-      patchSet({ nodePatches: [{ nodeId: 'gone', data: { x: 1 } }] }),
-      [],
-      [],
-    );
+    const out = diffPatches(patchSet({ nodePatches: [{ nodeId: 'gone', data: { x: 1 } }] }), [], []);
     expect(out.nodePatches).toEqual([]);
   });
 
   it('keeps an edge patch when at least one key differs from current edge data', () => {
     const edge = makeEdge('e1', 'a', 'b', { routeId: 'old' });
-    const out = diffPatches(
-      patchSet({ edgePatches: [{ edgeId: 'e1', data: { routeId: 'new' } }] }),
-      [],
-      [edge],
-    );
+    const out = diffPatches(patchSet({ edgePatches: [{ edgeId: 'e1', data: { routeId: 'new' } }] }), [], [edge]);
     expect(out.edgePatches).toEqual([{ edgeId: 'e1', data: { routeId: 'new' } }]);
   });
 
   it('drops an edge patch when current data already matches', () => {
     const edge = makeEdge('e1', 'a', 'b', { routeId: 'r1' });
-    const out = diffPatches(
-      patchSet({ edgePatches: [{ edgeId: 'e1', data: { routeId: 'r1' } }] }),
-      [],
-      [edge],
-    );
+    const out = diffPatches(patchSet({ edgePatches: [{ edgeId: 'e1', data: { routeId: 'r1' } }] }), [], [edge]);
     expect(out.edgePatches).toEqual([]);
   });
 
   it('drops an edge patch whose target edge is no longer present', () => {
-    const out = diffPatches(
-      patchSet({ edgePatches: [{ edgeId: 'gone', data: { routeId: 'r1' } }] }),
-      [],
-      [],
-    );
+    const out = diffPatches(patchSet({ edgePatches: [{ edgeId: 'gone', data: { routeId: 'r1' } }] }), [], []);
     expect(out.edgePatches).toEqual([]);
   });
 
   it('treats an edge with no data field as having undefined values', () => {
     const edge: PropagationEdge = { id: 'e1', source: 'a', target: 'b' };
-    const out = diffPatches(
-      patchSet({ edgePatches: [{ edgeId: 'e1', data: { routeId: 'r1' } }] }),
-      [],
-      [edge],
-    );
+    const out = diffPatches(patchSet({ edgePatches: [{ edgeId: 'e1', data: { routeId: 'r1' } }] }), [], [edge]);
     expect(out.edgePatches).toEqual([{ edgeId: 'e1', data: { routeId: 'r1' } }]);
   });
 
   it('forwards edgeDeletions verbatim', () => {
-    const out = diffPatches(
-      patchSet({ edgeDeletions: [{ edgeId: 'e1' }] }),
-      [],
-      [],
-    );
+    const out = diffPatches(patchSet({ edgeDeletions: [{ edgeId: 'e1' }] }), [], []);
     expect(out.edgeDeletions).toEqual([{ edgeId: 'e1' }]);
   });
 
@@ -744,9 +696,7 @@ describe('diffPatches', () => {
     });
     const out = diffPatches(
       patchSet({
-        nodePatches: [
-          { nodeId: 'a', data: { list: [1, 2, 3], obj: { nested: 'same' } } },
-        ],
+        nodePatches: [{ nodeId: 'a', data: { list: [1, 2, 3], obj: { nested: 'same' } } }],
       }),
       [node],
       [],
@@ -770,27 +720,15 @@ describe('diffPatches', () => {
 
   it('treats null === null as equal but null !== 0', () => {
     const node = makeNode('a', 'A', { x: null });
-    const sameOut = diffPatches(
-      patchSet({ nodePatches: [{ nodeId: 'a', data: { x: null } }] }),
-      [node],
-      [],
-    );
+    const sameOut = diffPatches(patchSet({ nodePatches: [{ nodeId: 'a', data: { x: null } }] }), [node], []);
     expect(sameOut.nodePatches).toEqual([]);
-    const diffOut = diffPatches(
-      patchSet({ nodePatches: [{ nodeId: 'a', data: { x: 0 } }] }),
-      [node],
-      [],
-    );
+    const diffOut = diffPatches(patchSet({ nodePatches: [{ nodeId: 'a', data: { x: 0 } }] }), [node], []);
     expect(diffOut.nodePatches).toEqual([{ nodeId: 'a', data: { x: 0 } }]);
   });
 
   it('detects type mismatch (string vs number) as not-equal', () => {
     const node = makeNode('a', 'A', { x: '5' });
-    const out = diffPatches(
-      patchSet({ nodePatches: [{ nodeId: 'a', data: { x: 5 } }] }),
-      [node],
-      [],
-    );
+    const out = diffPatches(patchSet({ nodePatches: [{ nodeId: 'a', data: { x: 5 } }] }), [node], []);
     expect(out.nodePatches).toEqual([{ nodeId: 'a', data: { x: 5 } }]);
   });
 });
@@ -814,7 +752,7 @@ describe('computeDerived: default rules', () => {
 
 describe('compute/index barrel', () => {
   it('re-exports computeDerived, diffPatches, and the rule arrays', async () => {
-    const barrel = await import('../index');
+    const barrel = await import('..');
     expect(typeof barrel.computeDerived).toBe('function');
     expect(typeof barrel.diffPatches).toBe('function');
     expect(Array.isArray(barrel.PROPAGATION_RULES)).toBe(true);

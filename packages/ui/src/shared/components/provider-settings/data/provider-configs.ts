@@ -20,7 +20,6 @@
  */
 
 import { getCloudProvider } from '@ice/core/resources';
-
 import type { ProviderConfig } from '../types';
 
 export const PROVIDER_CONFIGS: ProviderConfig[] = [

@@ -25,9 +25,7 @@ export type { ResourceDef, ResourceCategory };
  * so downstream lookups can use either key. Behavior is verbatim from the
  * inline implementation that lived in `PropertiesPanel`.
  */
-export function buildResourceMap(
-  data: ResourceDef[] | ResourceCategory[],
-): Map<string, ResourceDef> {
+export function buildResourceMap(data: ResourceDef[] | ResourceCategory[]): Map<string, ResourceDef> {
   const map = new Map<string, ResourceDef>();
   // Handle both flat array (from /resources/all) and nested categories
   const resources =
@@ -101,11 +99,6 @@ export function useResourceMap(): Map<string, ResourceDef> {
 export function usePropertyIssues(
   selectedNodeId: string | null,
 ): Map<string, { severity: string; message: string }> | undefined {
-  const validationIssues = useSelector(
-    (state: RootState) => state.validation?.issues ?? [],
-  );
-  return useMemo(
-    () => buildPropertyIssuesMap(validationIssues, selectedNodeId),
-    [validationIssues, selectedNodeId],
-  );
+  const validationIssues = useSelector((state: RootState) => state.validation?.issues ?? []);
+  return useMemo(() => buildPropertyIssuesMap(validationIssues, selectedNodeId), [validationIssues, selectedNodeId]);
 }

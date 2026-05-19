@@ -17,8 +17,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { dagreTreeLayout } from '../dagre-tree';
 import { DEFAULT_OPTIONS, type LayoutEdge, type LayoutNode } from '../../types';
+import { dagreTreeLayout } from '../dagre-tree';
 
 const GRID_STEP = 40;
 
@@ -30,8 +30,7 @@ function mk(
 ): LayoutNode {
   return {
     id,
-    type:
-      iceType.startsWith('Group.') || iceType === 'Network.PrivateNetwork' ? 'container' : 'resource',
+    type: iceType.startsWith('Group.') || iceType === 'Network.PrivateNetwork' ? 'container' : 'resource',
     iceType,
     label: id,
     parentId,
@@ -187,11 +186,7 @@ describe('dagreTreeLayout — edge routes', () => {
   });
 
   it('container-internal edge route gets offset by the container absolute position', () => {
-    const nodes = [
-      mk('p', 'Group.Custom'),
-      mk('c1', 'Compute.Container', 'p'),
-      mk('c2', 'Compute.Container', 'p'),
-    ];
+    const nodes = [mk('p', 'Group.Custom'), mk('c1', 'Compute.Container', 'p'), mk('c2', 'Compute.Container', 'p')];
     const edges: LayoutEdge[] = [{ source: 'c1', target: 'c2', relationship: 'connects_to' }];
     const { nodes: out, edgeRoutes } = dagreTreeLayout(nodes, edges, DEFAULT_OPTIONS);
     const byId = new Map(out.map((n) => [n.id, n] as const));
@@ -221,9 +216,7 @@ describe('dagreTreeLayout — option threading', () => {
   it('nodeGap=0 falls back to NODE_SEP default (truthy guard)', () => {
     const nodes = [mk('a'), mk('b')];
     const edges: LayoutEdge[] = [{ source: 'a', target: 'b', relationship: 'connects_to' }];
-    expect(() =>
-      dagreTreeLayout(nodes, edges, { ...DEFAULT_OPTIONS, nodeGap: 0 }),
-    ).not.toThrow();
+    expect(() => dagreTreeLayout(nodes, edges, { ...DEFAULT_OPTIONS, nodeGap: 0 })).not.toThrow();
   });
 });
 

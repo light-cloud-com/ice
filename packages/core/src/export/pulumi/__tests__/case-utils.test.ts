@@ -15,12 +15,7 @@
  *  - `sanitize_var_name` prepends `_`.
  */
 import { describe, expect, it } from 'vitest';
-import {
-  sanitize_name,
-  sanitize_var_name,
-  to_camel_case,
-  to_pascal_case,
-} from '../case-utils';
+import { sanitize_name, sanitize_var_name, to_camel_case, to_pascal_case } from '../case-utils';
 
 describe('to_pascal_case', () => {
   it('TitleCases a single word', () => {

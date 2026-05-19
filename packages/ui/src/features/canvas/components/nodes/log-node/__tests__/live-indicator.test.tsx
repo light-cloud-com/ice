@@ -22,19 +22,18 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   if (children == null) return;
   yield* walk(children);
 }
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) if (el && predicate(el)) out.push(el);
   return out;
 }
 
 const renderLI = (status: LogStreamStatus): React.ReactElement => {
-  const Inner = (LiveIndicator as unknown as {
-    type: (p: { status: LogStreamStatus }) => React.ReactElement;
-  }).type;
+  const Inner = (
+    LiveIndicator as unknown as {
+      type: (p: { status: LogStreamStatus }) => React.ReactElement;
+    }
+  ).type;
   return Inner({ status });
 };
 
@@ -74,21 +73,21 @@ describe('LiveIndicator', () => {
     const dot = findDot(tree)!;
     expect((dot.props as { style: { background: string } }).style.background).toBe('#f59e0b');
     expect((dot.props as { style: { animation?: string } }).style.animation).toBeUndefined();
-    expect(((findLabel(tree)!).props as { children: string }).children).toBe('CONNECTING');
+    expect((findLabel(tree)!.props as { children: string }).children).toBe('CONNECTING');
   });
 
   it('error → red dot + ERROR label', () => {
     const tree = renderLI('error');
     const dot = findDot(tree)!;
     expect((dot.props as { style: { background: string } }).style.background).toBe('#ef4444');
-    expect(((findLabel(tree)!).props as { children: string }).children).toBe('ERROR');
+    expect((findLabel(tree)!.props as { children: string }).children).toBe('ERROR');
   });
 
   it('permission-denied → red dot + ERROR label', () => {
     const tree = renderLI('permission-denied');
     const dot = findDot(tree)!;
     expect((dot.props as { style: { background: string } }).style.background).toBe('#ef4444');
-    expect(((findLabel(tree)!).props as { children: string }).children).toBe('ERROR');
+    expect((findLabel(tree)!.props as { children: string }).children).toBe('ERROR');
   });
 
   it('grey + IDLE for pre-deploy / no-source / ambiguous / unsupported / idle', () => {
@@ -96,7 +95,7 @@ describe('LiveIndicator', () => {
       const tree = renderLI(s);
       const dot = findDot(tree)!;
       expect((dot.props as { style: { background: string } }).style.background).toBe('#94a3b8');
-      expect(((findLabel(tree)!).props as { children: string }).children).toBe('IDLE');
+      expect((findLabel(tree)!.props as { children: string }).children).toBe('IDLE');
     }
   });
 
@@ -104,7 +103,7 @@ describe('LiveIndicator', () => {
     const tree = renderLI('unknown' as LogStreamStatus);
     const dot = findDot(tree)!;
     expect((dot.props as { style: { background: string } }).style.background).toBe('#94a3b8');
-    expect(((findLabel(tree)!).props as { children: string }).children).toBe('IDLE');
+    expect((findLabel(tree)!.props as { children: string }).children).toBe('IDLE');
   });
 
   it('label color matches dot color', () => {

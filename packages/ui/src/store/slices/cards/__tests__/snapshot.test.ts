@@ -16,7 +16,6 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
-
 import { pushSnapshot } from '../snapshot';
 import type { CardEdge, CardNode, CardsState } from '../types';
 
@@ -40,10 +39,12 @@ function makeEdge(id: string, source: string, target: string): CardEdge {
   return { id, source, target };
 }
 
-function makeState(opts: {
-  activeCardId?: string | null;
-  cards?: Array<{ id: string; nodes?: CardNode[]; edges?: CardEdge[] }>;
-} = {}): CardsState {
+function makeState(
+  opts: {
+    activeCardId?: string | null;
+    cards?: Array<{ id: string; nodes?: CardNode[]; edges?: CardEdge[] }>;
+  } = {},
+): CardsState {
   const activeCardId = opts.activeCardId === undefined ? 'c1' : opts.activeCardId;
   const cards = (opts.cards ?? [{ id: 'c1', nodes: [makeNode('n1')], edges: [] }]).map((c) => ({
     id: c.id,

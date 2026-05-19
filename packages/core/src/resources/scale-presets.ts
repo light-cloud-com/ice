@@ -21,12 +21,7 @@ import { SCALE_TIERS, type ScaleTier } from './scale-presets-types';
 
 // Re-exports — public API consumers import from `./scale-presets.js`.
 export { SCALE_PRESETS } from './scale-presets-data';
-export {
-  SCALE_TIERS,
-  SCALE_TIER_INFO,
-  type ScaleTier,
-  type TierPreset,
-} from './scale-presets-types';
+export { SCALE_TIERS, SCALE_TIER_INFO, type ScaleTier, type TierPreset } from './scale-presets-types';
 
 // ─── Resolver ──────────────────────────────────────────────────────────────
 

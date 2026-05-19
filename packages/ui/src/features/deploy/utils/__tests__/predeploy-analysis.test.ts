@@ -6,13 +6,14 @@ import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('../security-rules', () => ({
   analyzeSecurityWarnings: vi.fn((nodes: any, edges: any) => {
-    void nodes; void edges;
+    void nodes;
+    void edges;
     return (analyzeSecurityWarnings as any)._return ?? [];
   }),
 }));
 
-import { analyzeSecurityWarnings } from '../security-rules';
 import { analyzePreDeploy } from '../predeploy-analysis';
+import { analyzeSecurityWarnings } from '../security-rules';
 import type { CardNode, CardEdge } from '../../../../store/slices/cards-slice';
 
 describe('analyzePreDeploy', () => {

@@ -9,11 +9,10 @@
  * router composition) by hitting the assembled app via in-process HTTP.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import express from 'express';
 import http from 'node:http';
+import express, { Router } from 'express';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { AddressInfo } from 'node:net';
-import { Router } from 'express';
 
 // Mock paths use the same specifier the SUT writes — `./routes/<name>.js`
 // from the SUT's perspective resolves to the same canonical path as
@@ -72,7 +71,7 @@ afterEach(async () => {
 
 describe('createEngineRouter', () => {
   it('mounts `/schemas`, `/resources`, and `/import` sub-routers', async () => {
-    const { createEngineRouter } = await import('../index');
+    const { createEngineRouter } = await import('..');
     const router = createEngineRouter();
     const app = express();
     app.use('/api/engine', router);
@@ -98,7 +97,7 @@ describe('createEngineRouter', () => {
   });
 
   it('returns 404 for paths outside the three mounts', async () => {
-    const { createEngineRouter } = await import('../index');
+    const { createEngineRouter } = await import('..');
     const router = createEngineRouter();
     const app = express();
     app.use('/api/engine', router);
@@ -116,7 +115,7 @@ describe('createEngineRouter', () => {
 
 describe('barrel re-exports', () => {
   it('re-exports the resource service slice with the renamed `getResourceCategories`', async () => {
-    const mod = (await import('../index')) as any;
+    const mod = (await import('..')) as any;
     // Resource service exports — explicitly named in the index barrel.
     expect(typeof mod.getAll).toBe('function');
     expect(typeof mod.getForPalette).toBe('function');
@@ -130,7 +129,7 @@ describe('barrel re-exports', () => {
   });
 
   it('re-exports the full schema service surface via `export *`', async () => {
-    const mod = (await import('../index')) as any;
+    const mod = (await import('..')) as any;
     expect(typeof mod.getCategories).toBe('function');
     expect(typeof mod.querySchemas).toBe('function');
     expect(typeof mod.getSchema).toBe('function');

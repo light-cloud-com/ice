@@ -20,9 +20,9 @@
  */
 
 import { getConnectedPipelineStatuses } from '../utils/get-connected-pipeline-statuses';
+import type { Card } from '../../../store/slices/cards-slice';
 import type { RenderCtx } from '../components/canvas-renderer/node-renderer-registry';
 import type { CanvasNode } from '../components/types';
-import type { Card } from '../../../store/slices/cards-slice';
 
 /** Args passed through to the inline RenderCtx fields, plus the
  *  orchestrator-level state (`card`, `viewport.zoom`) needed to bind

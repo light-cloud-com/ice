@@ -23,12 +23,7 @@ export {
   RESIZE_HEADER,
 } from './types';
 export { generateNodeId, generateEdgeId, resolveId, nodeExists } from './id-utils';
-export {
-  isHelperIceType,
-  findPosition,
-  findRootPosition,
-  findChildPosition,
-} from './position-finder';
+export { isHelperIceType, findPosition, findRootPosition, findChildPosition } from './position-finder';
 export { resolveBlueprint } from './blueprint-resolver';
 export { autoResizeContainers } from './auto-resize';
 export { pickNodeDefaults, type NodeDefaults } from './node-defaults';

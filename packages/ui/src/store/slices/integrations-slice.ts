@@ -318,9 +318,7 @@ const integrationsSlice = createSlice({
       })
       // ── Anthropic ─────────────────────────────────────────────────────────
       .addCase(checkAnthropicConnection.fulfilled, (state, action) => {
-        state.integrations.anthropic = action.payload
-          ? { status: 'connected' }
-          : { status: 'disconnected' };
+        state.integrations.anthropic = action.payload ? { status: 'connected' } : { status: 'disconnected' };
       })
       .addCase(connectAnthropic.pending, (state) => {
         state.integrations.anthropic = { status: 'connecting' };

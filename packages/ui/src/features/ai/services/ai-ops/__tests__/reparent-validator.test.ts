@@ -13,8 +13,8 @@ vi.mock('../../../../../config/containment-rules', () => ({
   canContain: vi.fn(),
 }));
 
-import { validateReparent } from '../reparent-validator';
 import { canContain } from '../../../../../config/containment-rules';
+import { validateReparent } from '../reparent-validator';
 import type { Card, CardNode } from '../../../../../store/slices/cards-slice';
 
 const mockCanContain = vi.mocked(canContain);

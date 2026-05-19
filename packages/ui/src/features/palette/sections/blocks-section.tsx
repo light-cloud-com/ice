@@ -15,14 +15,13 @@
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { Blocks, Check, ChevronDown, ChevronRight, Globe, Search } from 'lucide-react';
 import React from 'react';
-
 import { getBrandIcon } from '../../../assets/icons/brand-registry';
 import { useTranslation } from '../../../i18n';
 import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { cn } from '../../../shared/utils/cn';
 import { ComponentItem } from '../components/component-item';
 import { DraggableGroupItem } from '../components/draggable-group-item';
-import { PROVIDERS } from '../data/providers';
+import { getProviders } from '../data/providers';
 import type { CategoryDef, ComponentDef } from '../types';
 
 interface BlocksSectionProps {
@@ -59,6 +58,10 @@ export const BlocksSection: React.FC<BlocksSectionProps> = ({
   staggerIdx: initialStaggerIdx,
 }) => {
   const { t } = useTranslation();
+  // Locale-reactive provider list — re-derives "All" label when locale switches.
+  // Cheap to recompute each render (≤4 entries) and avoids the test-renderer
+  // pitfall where direct-FC walks bypass useMemo's fiber context.
+  const providers = getProviders(t);
   let staggerIdx = initialStaggerIdx;
 
   return (
@@ -110,7 +113,7 @@ export const BlocksSection: React.FC<BlocksSectionProps> = ({
                 )}
               >
                 <SelectPrimitive.Viewport className="p-0.5">
-                  {PROVIDERS.map((provider) => {
+                  {providers.map((provider) => {
                     const isLocked = !!projectProvider && provider.id !== 'all' && provider.id !== projectProvider;
                     const brand = provider.id !== 'all' ? getBrandIcon(provider.id) : null;
                     return (

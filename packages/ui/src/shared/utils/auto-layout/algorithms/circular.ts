@@ -16,14 +16,10 @@ import { LAYOUT_GRID_STEP as GRID_STEP } from '@ice/constants';
 import { MIN_CONTAINER_WIDTH, MIN_CONTAINER_HEIGHT } from '../../../../config/canvas-constants';
 import { buildHierarchy, collectRootIds, buildPostOrder } from '../hierarchy';
 import { absolutizeAll, snapToGrid } from '../transformers';
-import type { LayoutEdge, LayoutNode, LayoutOptions, LayoutResult } from '../types';
 import { resolveVisualSize } from '../visual-size';
+import type { LayoutEdge, LayoutNode, LayoutOptions, LayoutResult } from '../types';
 
-export function circularLayout(
-  nodes: LayoutNode[],
-  edges: LayoutEdge[],
-  opts: Required<LayoutOptions>,
-): LayoutResult {
+export function circularLayout(nodes: LayoutNode[], edges: LayoutEdge[], opts: Required<LayoutOptions>): LayoutResult {
   const { childrenOf } = buildHierarchy(nodes, edges);
 
   const nodeMap = new Map<string, LayoutNode>();

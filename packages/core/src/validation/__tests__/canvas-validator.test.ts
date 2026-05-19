@@ -38,29 +38,19 @@ describe('validateCanvas', () => {
   });
 
   it('runs structure + property + connection rules in design mode', () => {
-    const r = validateCanvas(
-      [node('a', 'Compute.Container'), node('a', 'Database.PostgreSQL')],
-      [],
-    );
+    const r = validateCanvas([node('a', 'Compute.Container'), node('a', 'Database.PostgreSQL')], []);
     expect(r.valid).toBe(false);
     expect(r.issues.some((i) => i.code === 'DUPLICATE_NODE_ID')).toBe(true);
   });
 
   it('skips deploy + architecture rules in design mode', () => {
-    const r = validateCanvas(
-      [node('a', 'Compute.Container')],
-      [],
-    );
+    const r = validateCanvas([node('a', 'Compute.Container')], []);
     expect(r.issues.some((i) => i.category === 'deploy')).toBe(false);
     expect(r.issues.some((i) => i.category === 'architecture')).toBe(false);
   });
 
   it('runs deploy + architecture rules in pre-deploy mode', () => {
-    const r = validateCanvas(
-      [node('fe', 'Compute.StaticSite')],
-      [],
-      { mode: 'pre-deploy', provider: 'aws' },
-    );
+    const r = validateCanvas([node('fe', 'Compute.StaticSite')], [], { mode: 'pre-deploy', provider: 'aws' });
     // Should not crash; architecture warns about no backend, deploy says nothing
     // because StaticSite IS deployable on AWS.
     expect(r.issues.some((i) => i.category === 'architecture')).toBe(true);
@@ -69,14 +59,10 @@ describe('validateCanvas', () => {
   it('flips both valid and deployable to false when any error is present', () => {
     // The result builder gates `deployable` on `errors.length === 0 && !hasDeployErrors`,
     // so a non-deploy error (duplicate id) still makes both flags false.
-    const r = validateCanvas(
-      [
-        node('a', 'Compute.Container'),
-        node('a', 'Database.PostgreSQL'),
-      ],
-      [],
-      { mode: 'pre-deploy', provider: 'aws' },
-    );
+    const r = validateCanvas([node('a', 'Compute.Container'), node('a', 'Database.PostgreSQL')], [], {
+      mode: 'pre-deploy',
+      provider: 'aws',
+    });
     expect(r.valid).toBe(false);
     expect(r.deployable).toBe(false);
   });
@@ -110,10 +96,7 @@ describe('validateCanvas', () => {
     // edge — but they have different codes. The dedup primarily protects
     // against future double-emission. We can verify by inspecting the result
     // shape — issue ids must be unique.
-    const r = validateCanvas(
-      [node('a', 'Compute.Container')],
-      [edge('e1', 'ghost', 'phantom')],
-    );
+    const r = validateCanvas([node('a', 'Compute.Container')], [edge('e1', 'ghost', 'phantom')]);
     const seen = new Set(r.issues.map((i) => i.id));
     expect(seen.size).toBe(r.issues.length);
   });

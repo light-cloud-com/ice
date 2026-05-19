@@ -8,9 +8,11 @@ import { describe, it, expect } from 'vitest';
 import { DragOverGlow } from '../drag-over-glow';
 
 const renderInner = (props: React.ComponentProps<typeof DragOverGlow>): React.ReactElement => {
-  const Inner = (DragOverGlow as unknown as {
-    type: (p: React.ComponentProps<typeof DragOverGlow>) => React.ReactElement;
-  }).type;
+  const Inner = (
+    DragOverGlow as unknown as {
+      type: (p: React.ComponentProps<typeof DragOverGlow>) => React.ReactElement;
+    }
+  ).type;
   return Inner(props);
 };
 

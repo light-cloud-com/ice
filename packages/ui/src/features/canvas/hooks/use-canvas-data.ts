@@ -44,17 +44,14 @@
 import { useCallback, useMemo } from 'react';
 import { isTypeVisibleAtLevel, type ViewLevel } from '../../../config/visualization-config';
 import { calculateZIndex } from '../../../shared/utils/auto-layout';
-import {
-  hasCollapsedAncestor as hasCollapsedAncestorUtil,
-  buildFoldedRemap,
-} from '../utils/folded-remap';
-import { computeNodeSizes, toLocalCanvasNode } from '../utils/canvas-node-sizing';
 import { buildVisibleConnections, computePortMap } from '../utils/canvas-connections';
+import { computeNodeSizes, toLocalCanvasNode } from '../utils/canvas-node-sizing';
+import { hasCollapsedAncestor as hasCollapsedAncestorUtil, buildFoldedRemap } from '../utils/folded-remap';
+import type { CanvasItem } from './use-canvas-interactions';
 import type { Card, CardNode, CardEdge } from '../../../store/slices/cards-slice';
 import type { NodePipelineStatus } from '../../../store/slices/pipeline-slice';
 import type { CanvasIssue } from '../../../store/slices/validation-slice';
 import type { CanvasNode, CanvasConnection } from '../components/types';
-import type { CanvasItem } from './use-canvas-interactions';
 
 export interface UseCanvasDataArgs {
   card: Card | undefined;
@@ -91,9 +88,7 @@ export function useCanvasData(args: UseCanvasDataArgs): UseCanvasDataResult {
   // so hit-testing, container expansion, and rendering all use consistent bounds.
   const canvasNodes: CanvasNode[] = useMemo(() => {
     return nodes.map((node) => {
-      const hasPipelineStatus = !!(
-        pipelineNodeStatus[node.id] && pipelineNodeStatus[node.id].status !== 'idle'
-      );
+      const hasPipelineStatus = !!(pipelineNodeStatus[node.id] && pipelineNodeStatus[node.id].status !== 'idle');
       const sizes = computeNodeSizes(node, hasPipelineStatus);
       return toLocalCanvasNode(node, hasPipelineStatus, sizes);
     });
@@ -128,10 +123,7 @@ export function useCanvasData(args: UseCanvasDataArgs): UseCanvasDataResult {
   );
 
   // (6) Build remap for folded children: hidden node ID → first visible ancestor ID.
-  const foldedRemap = useMemo(
-    () => buildFoldedRemap(canvasNodes, visibleNodes),
-    [canvasNodes, visibleNodes],
-  );
+  const foldedRemap = useMemo(() => buildFoldedRemap(canvasNodes, visibleNodes), [canvasNodes, visibleNodes]);
 
   // (7) Nodes as they appear visually — hidden children removed, folded groups at compact height.
   // Used for connection routing so paths match what's actually rendered.
@@ -200,9 +192,7 @@ export function useCanvasData(args: UseCanvasDataArgs): UseCanvasDataResult {
       const currentRank = existing ? severityRank[existing.severity] : 0;
       const issueRank = severityRank[issue.severity as keyof typeof severityRank] ?? 0;
       const severity =
-        issueRank > currentRank
-          ? (issue.severity as 'error' | 'warning' | 'info')
-          : (existing?.severity ?? 'info');
+        issueRank > currentRank ? (issue.severity as 'error' | 'warning' | 'info') : (existing?.severity ?? 'info');
       map.set(issue.nodeId, { severity, count });
     }
     return map;
@@ -250,10 +240,7 @@ export function useCanvasData(args: UseCanvasDataArgs): UseCanvasDataResult {
   // (13) Compute port map for connection distribution.
   // For each node+side, sort connections by the OTHER endpoint's position
   // so that ports fan out in natural order without crossings.
-  const portMap = useMemo(
-    () => computePortMap(canvasConnections, effectiveNodes),
-    [canvasConnections, effectiveNodes],
-  );
+  const portMap = useMemo(() => computePortMap(canvasConnections, effectiveNodes), [canvasConnections, effectiveNodes]);
 
   return {
     nodes,

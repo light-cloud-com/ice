@@ -13,8 +13,7 @@ import type { HighLevelProperty } from '../../resources/high-level-resources';
 const propertyMap = new Map<string, HighLevelProperty[]>();
 
 vi.mock('../schema-bridge', () => ({
-  getPropertiesForIceType: (iceType: string): HighLevelProperty[] =>
-    propertyMap.get(iceType) ?? [],
+  getPropertiesForIceType: (iceType: string): HighLevelProperty[] => propertyMap.get(iceType) ?? [],
   isKnownIceType: () => true,
   getResourceForIceType: () => undefined,
   getSupportedProviders: () => [],
@@ -64,33 +63,25 @@ describe('validateProperties', () => {
   });
 
   it('flags a missing required property', () => {
-    setProps('X.Service', [
-      { name: 'name', label: 'Name', type: 'string', required: true, description: '' },
-    ]);
+    setProps('X.Service', [{ name: 'name', label: 'Name', type: 'string', required: true, description: '' }]);
     const issues = validateProperties([node('a', 'X.Service')], ctx);
     expect(issues.find((i) => i.code === 'MISSING_REQUIRED')?.propertyPath).toBe('name');
   });
 
   it('treats a whitespace-only string as missing for required checks', () => {
-    setProps('X.Service', [
-      { name: 'name', label: 'Name', type: 'string', required: true, description: '' },
-    ]);
+    setProps('X.Service', [{ name: 'name', label: 'Name', type: 'string', required: true, description: '' }]);
     const issues = validateProperties([node('a', 'X.Service', { name: '  ' })], ctx);
     expect(issues.find((i) => i.code === 'MISSING_REQUIRED')).toBeTruthy();
   });
 
   it('skips further checks on a missing required property (only the MISSING_REQUIRED issue fires)', () => {
-    setProps('X.Service', [
-      { name: 'count', label: 'Count', type: 'number', required: true, description: '' },
-    ]);
+    setProps('X.Service', [{ name: 'count', label: 'Count', type: 'number', required: true, description: '' }]);
     const issues = validateProperties([node('a', 'X.Service', { count: undefined })], ctx);
     expect(issues.filter((i) => i.propertyPath === 'count')).toHaveLength(1);
   });
 
   it('skips further checks when a non-required value is undefined or null', () => {
-    setProps('X.Service', [
-      { name: 'count', label: 'Count', type: 'number', required: false, description: '' },
-    ]);
+    setProps('X.Service', [{ name: 'count', label: 'Count', type: 'number', required: false, description: '' }]);
     const issues = validateProperties(
       [node('a', 'X.Service', { count: null }), node('b', 'X.Service', { count: undefined })],
       ctx,
@@ -129,10 +120,7 @@ describe('validateProperties', () => {
       { name: 'b', label: 'B', type: 'boolean', required: false, description: '' },
       { name: 'l', label: 'L', type: 'list', required: false, description: '' },
     ]);
-    const issues = validateProperties(
-      [node('a', 'X.Service', { s: 'ok', n: 42, b: true, l: ['x'] })],
-      ctx,
-    );
+    const issues = validateProperties([node('a', 'X.Service', { s: 'ok', n: 42, b: true, l: ['x'] })], ctx);
     expect(issues.filter((i) => i.code === 'TYPE_MISMATCH')).toEqual([]);
   });
 
@@ -141,10 +129,7 @@ describe('validateProperties', () => {
       { name: 's', label: 'S', type: 'string', required: true, description: '' },
       { name: 'n', label: 'N', type: 'number', required: true, description: '' },
     ]);
-    const issues = validateProperties(
-      [node('a', 'X.Service', { s: 'value', n: 0 })],
-      ctx,
-    );
+    const issues = validateProperties([node('a', 'X.Service', { s: 'value', n: 0 })], ctx);
     expect(issues.filter((i) => i.code === 'MISSING_REQUIRED')).toEqual([]);
   });
 
@@ -252,10 +237,10 @@ describe('validateProperties', () => {
       },
     ]);
     // node.provider takes precedence over ctx.provider
-    const issues = validateProperties(
-      [node('a', 'X.Service', { size: 'small', provider: 'aws' })],
-      { mode: 'design', provider: 'gcp' },
-    );
+    const issues = validateProperties([node('a', 'X.Service', { size: 'small', provider: 'aws' })], {
+      mode: 'design',
+      provider: 'gcp',
+    });
     expect(issues.find((i) => i.code === 'INVALID_OPTION')).toBeUndefined();
   });
 
@@ -274,10 +259,7 @@ describe('validateProperties', () => {
       },
     ]);
     // gcp provider, value 'small' (which is aws-only) — should fail
-    const issues = validateProperties(
-      [node('a', 'X.Service', { size: 'small' })],
-      { mode: 'design', provider: 'gcp' },
-    );
+    const issues = validateProperties([node('a', 'X.Service', { size: 'small' })], { mode: 'design', provider: 'gcp' });
     const opt = issues.find((i) => i.code === 'INVALID_OPTION');
     expect(opt?.message).toContain('GCP');
   });
@@ -291,15 +273,10 @@ describe('validateProperties', () => {
         required: false,
         description: '',
         // Provider-agnostic option (no `provider` field) so validOptions is non-empty
-        optionDetails: [
-          { value: 'small', label: 'Small' },
-        ],
+        optionDetails: [{ value: 'small', label: 'Small' }],
       },
     ]);
-    const issues = validateProperties(
-      [node('a', 'X.Service', { size: 'whatever' })],
-      { mode: 'design' },
-    );
+    const issues = validateProperties([node('a', 'X.Service', { size: 'whatever' })], { mode: 'design' });
     expect(issues.find((i) => i.code === 'INVALID_OPTION')?.message).toContain('this provider');
   });
 
@@ -311,18 +288,15 @@ describe('validateProperties', () => {
         type: 'select',
         required: false,
         description: '',
-        optionDetails: [
-          { value: 'small', label: 'Small', provider: 'aws' },
-        ],
+        optionDetails: [{ value: 'small', label: 'Small', provider: 'aws' }],
       },
     ]);
     // Provider 'azure' filters out the only option, so validOptions is empty
     // and the INVALID_OPTION rule short-circuits. The contract: "if no options
     // are valid for this provider, don't accuse the user".
-    const issues = validateProperties(
-      [node('a', 'X.Service', { size: 'whatever', provider: 'azure' })],
-      { mode: 'design' },
-    );
+    const issues = validateProperties([node('a', 'X.Service', { size: 'whatever', provider: 'azure' })], {
+      mode: 'design',
+    });
     expect(issues.find((i) => i.code === 'INVALID_OPTION')).toBeUndefined();
   });
 
@@ -372,9 +346,7 @@ describe('validateProperties', () => {
   });
 
   it('does not run range checks for non-customInput number properties', () => {
-    setProps('X.Service', [
-      { name: 'storage', label: 'Storage', type: 'number', required: false, description: '' },
-    ]);
+    setProps('X.Service', [{ name: 'storage', label: 'Storage', type: 'number', required: false, description: '' }]);
     expect(validateProperties([node('a', 'X.Service', { storage: -100 })], ctx)).toEqual([]);
   });
 
@@ -393,10 +365,7 @@ describe('validateProperties', () => {
 
   it('flags minInstances > maxInstances cross-field violation', () => {
     setProps('X.Service', [trivial]);
-    const issues = validateProperties(
-      [node('a', 'X.Service', { minInstances: 5, maxInstances: 2 })],
-      ctx,
-    );
+    const issues = validateProperties([node('a', 'X.Service', { minInstances: 5, maxInstances: 2 })], ctx);
     const r = issues.find((i) => i.code === 'VALUE_OUT_OF_RANGE' && i.propertyPath === 'minInstances');
     expect(r?.message).toContain('5');
   });
@@ -404,10 +373,7 @@ describe('validateProperties', () => {
   it('does not flag the cross-field rule when both values are equal or undefined', () => {
     setProps('X.Service', [trivial]);
     const issues = validateProperties(
-      [
-        node('a', 'X.Service', { minInstances: 1, maxInstances: 1 }),
-        node('b', 'X.Service', { minInstances: 1 }),
-      ],
+      [node('a', 'X.Service', { minInstances: 1, maxInstances: 1 }), node('b', 'X.Service', { minInstances: 1 })],
       ctx,
     );
     expect(issues.find((i) => i.code === 'VALUE_OUT_OF_RANGE' && i.propertyPath === 'minInstances')).toBeUndefined();
@@ -430,10 +396,7 @@ describe('validateProperties', () => {
   it('falls back to label when name is absent and counts that for duplicate detection', () => {
     setProps('X.Service', [trivial]);
     const issues = validateProperties(
-      [
-        node('a', 'X.Service', { label: 'API' }),
-        node('b', 'X.Service', { label: 'api' }),
-      ],
+      [node('a', 'X.Service', { label: 'API' }), node('b', 'X.Service', { label: 'api' })],
       ctx,
     );
     expect(issues.find((i) => i.code === 'DUPLICATE_NAME')?.nodeId).toBe('b');
@@ -442,10 +405,7 @@ describe('validateProperties', () => {
   it('ignores empty / whitespace name strings for duplicate detection', () => {
     setProps('X.Service', [trivial]);
     const issues = validateProperties(
-      [
-        node('a', 'X.Service', { name: '   ' }),
-        node('b', 'X.Service', { name: '   ' }),
-      ],
+      [node('a', 'X.Service', { name: '   ' }), node('b', 'X.Service', { name: '   ' })],
       ctx,
     );
     expect(issues.find((i) => i.code === 'DUPLICATE_NAME')).toBeUndefined();
@@ -454,10 +414,7 @@ describe('validateProperties', () => {
   it('ignores non-string name values for duplicate detection', () => {
     setProps('X.Service', [trivial]);
     const issues = validateProperties(
-      [
-        node('a', 'X.Service', { name: 42 }),
-        node('b', 'X.Service', { name: 42 }),
-      ],
+      [node('a', 'X.Service', { name: 42 }), node('b', 'X.Service', { name: 42 })],
       ctx,
     );
     expect(issues.find((i) => i.code === 'DUPLICATE_NAME')).toBeUndefined();

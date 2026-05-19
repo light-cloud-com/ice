@@ -13,16 +13,9 @@
  *      here as a TS error before consumer files break.
  */
 
-import { describe, expect, it } from 'vitest';
 import { Server } from 'lucide-react';
-
-import type {
-  Provider,
-  CategoryDef,
-  RuntimeOption,
-  ComponentDef,
-  ResourcePaletteProps,
-} from '../types';
+import { describe, expect, it } from 'vitest';
+import type { Provider, CategoryDef, RuntimeOption, ComponentDef, ResourcePaletteProps } from '../types';
 
 describe('palette types — import resolution', () => {
   it('Provider resolves and accepts the three documented IDs', () => {
@@ -114,19 +107,9 @@ describe('palette types — field-shape regression', () => {
   });
 
   it('ComponentDef.providers accepts the documented union members', () => {
-    const wide: ComponentDef['providers'] = [
-      'aws',
-      'gcp',
-      'azure',
-      'kubernetes',
-      'alibaba',
-      'oci',
-      'digitalocean',
-    ];
+    const wide: ComponentDef['providers'] = ['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean'];
     expect(wide).toHaveLength(7);
-    expect(new Set(wide)).toEqual(
-      new Set(['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean']),
-    );
+    expect(new Set(wide)).toEqual(new Set(['aws', 'gcp', 'azure', 'kubernetes', 'alibaba', 'oci', 'digitalocean']));
   });
 
   it('ResourcePaletteProps fields are all optional and default to undefined', () => {

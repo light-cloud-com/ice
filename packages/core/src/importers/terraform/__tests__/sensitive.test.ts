@@ -13,18 +13,14 @@ describe('mask_sensitive_attributes', () => {
   });
 
   it('masks a nested attribute via dotted path', () => {
-    const result = mask_sensitive_attributes(
-      { connection: { user: 'a', password: 'secret' } },
-      ['connection.password'],
-    );
+    const result = mask_sensitive_attributes({ connection: { user: 'a', password: 'secret' } }, [
+      'connection.password',
+    ]);
     expect(result).toEqual({ connection: { user: 'a', password: '***SENSITIVE***' } });
   });
 
   it('masks an attribute referenced via bracket-array path', () => {
-    const result = mask_sensitive_attributes(
-      { tags: { '0': { value: 'v' } } },
-      ['tags[0].value'],
-    );
+    const result = mask_sensitive_attributes({ tags: { '0': { value: 'v' } } }, ['tags[0].value']);
     expect(result).toEqual({ tags: { '0': { value: '***SENSITIVE***' } } });
   });
 
@@ -46,10 +42,7 @@ describe('mask_sensitive_attributes', () => {
   });
 
   it('handles multiple paths', () => {
-    const result = mask_sensitive_attributes(
-      { p1: 'a', p2: 'b', p3: 'c' },
-      ['p1', 'p3'],
-    );
+    const result = mask_sensitive_attributes({ p1: 'a', p2: 'b', p3: 'c' }, ['p1', 'p3']);
     expect(result).toEqual({ p1: '***SENSITIVE***', p2: 'b', p3: '***SENSITIVE***' });
   });
 });

@@ -11,7 +11,6 @@ import type {
   ExtractionResult,
   PropertyDefinition,
   ProviderImplementation,
-  ProviderPropertyInfo,
   SchemaManifest,
   SourceManifest,
   UnifiedPropertyDefinition,
@@ -192,7 +191,7 @@ export class SchemaUnifier {
         // Merge implementations
         for (const impl of unified_type.implementations) {
           const exists = existing.implementations.some(
-            (e) => e.source === impl.source && e.resource_type === impl.resource_type
+            (e) => e.source === impl.source && e.resource_type === impl.resource_type,
           );
           if (!exists) {
             existing.implementations.push(impl);
@@ -205,9 +204,7 @@ export class SchemaUnifier {
 
     // Also include single-provider resources as unified types
     const all_resources = this.get_all_resources();
-    const in_equivalents = new Set(
-      equivalents.flatMap((e) => e.resources.map((r) => r.source_type))
-    );
+    const in_equivalents = new Set(equivalents.flatMap((e) => e.resources.map((r) => r.source_type)));
 
     for (const resource of all_resources) {
       if (!in_equivalents.has(resource.source_type)) {
@@ -219,7 +216,7 @@ export class SchemaUnifier {
           // Merge implementations
           for (const impl of single_unified.implementations) {
             const exists = existing.implementations.some(
-              (e) => e.source === impl.source && e.resource_type === impl.resource_type
+              (e) => e.source === impl.source && e.resource_type === impl.resource_type,
             );
             if (!exists) {
               existing.implementations.push(impl);
@@ -334,9 +331,7 @@ export class SchemaUnifier {
       terraform_providers: this.store.terraform.size,
       pulumi_providers: this.store.pulumi.size,
       categories: Array.from(this.store.categories),
-      category_counts: Object.fromEntries(
-        Array.from(by_category.entries()).map(([k, v]) => [k, v.length])
-      ),
+      category_counts: Object.fromEntries(Array.from(by_category.entries()).map(([k, v]) => [k, v.length])),
       cross_provider_equivalents: equivalents.length,
     };
   }
@@ -453,8 +448,7 @@ export class SchemaUnifier {
         if (terraform_impl) {
           // Check if we don't already have this implementation
           const exists = implementations.some(
-            (impl) =>
-              impl.source === 'terraform' && impl.resource_type === terraform_impl.resource_type
+            (impl) => impl.source === 'terraform' && impl.resource_type === terraform_impl.resource_type,
           );
           if (!exists) {
             implementations.push(terraform_impl);
@@ -493,9 +487,7 @@ export class SchemaUnifier {
   /**
    * Create unified type for single-provider resource.
    */
-  private create_single_provider_unified_type(
-    resource: ExtractedResourceSchema
-  ): UnifiedResourceType {
+  private create_single_provider_unified_type(resource: ExtractedResourceSchema): UnifiedResourceType {
     const normalized_name = this.normalize_resource_name(resource.source_type);
     const category = resource.category || 'uncategorized';
 
@@ -537,9 +529,7 @@ export class SchemaUnifier {
    * Infer Terraform implementation from Pulumi resource.
    * Pulumi providers like aws, gcp, azure wrap Terraform providers.
    */
-  private infer_terraform_implementation(
-    resource: ExtractedResourceSchema
-  ): ProviderImplementation | null {
+  private infer_terraform_implementation(resource: ExtractedResourceSchema): ProviderImplementation | null {
     // Mapping of Pulumi provider names to Terraform provider names
     const PULUMI_TO_TERRAFORM_PROVIDER: Record<string, string> = {
       aws: 'hashicorp/aws',
@@ -584,10 +574,7 @@ export class SchemaUnifier {
     // Convert Pulumi resource type to Terraform resource type
     // "aws:ec2/vpc:Vpc" -> "aws_vpc"
     // "aws:s3/bucket:Bucket" -> "aws_s3_bucket"
-    const terraform_resource_type = this.pulumi_to_terraform_resource_type(
-      resource.source_type,
-      pulumi_provider
-    );
+    const terraform_resource_type = this.pulumi_to_terraform_resource_type(resource.source_type, pulumi_provider);
 
     if (!terraform_resource_type) {
       return null;
@@ -614,10 +601,7 @@ export class SchemaUnifier {
    *   "aws:ec2/instance:Instance" -> "aws_instance"
    *   "gcp:compute/instance:Instance" -> "google_compute_instance"
    */
-  private pulumi_to_terraform_resource_type(
-    pulumi_type: string,
-    pulumi_provider: string
-  ): string | null {
+  private pulumi_to_terraform_resource_type(pulumi_type: string, pulumi_provider: string): string | null {
     // Parse Pulumi format: "provider:module/resource:ResourceName"
     const parts = pulumi_type.split(':');
     if (parts.length !== 3) return null;
@@ -721,9 +705,7 @@ export class SchemaUnifier {
   /**
    * Create property mappings across providers.
    */
-  private create_property_mappings(
-    resources: ExtractedResourceSchema[]
-  ): CrossProviderPropertyMap[] {
+  private create_property_mappings(resources: ExtractedResourceSchema[]): CrossProviderPropertyMap[] {
     const mappings: CrossProviderPropertyMap[] = [];
     const property_groups = new Map<
       string,
@@ -760,10 +742,7 @@ export class SchemaUnifier {
   /**
    * Convert property to unified property definition.
    */
-  private to_unified_property(
-    prop: PropertyDefinition,
-    resource: ExtractedResourceSchema
-  ): UnifiedPropertyDefinition {
+  private to_unified_property(prop: PropertyDefinition, resource: ExtractedResourceSchema): UnifiedPropertyDefinition {
     return {
       ...prop,
       available_in: [

@@ -35,8 +35,8 @@
 
 import { produce } from 'immer';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { nodePositionReducers } from '../node-position';
 import { pushSnapshot } from '../../snapshot';
+import { nodePositionReducers } from '../node-position';
 import type { Card, CardEdge, CardNode, CardsState } from '../../types';
 import type { PayloadAction } from '@reduxjs/toolkit';
 

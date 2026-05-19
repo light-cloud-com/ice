@@ -18,12 +18,12 @@ const node = (id: string, iceType: string, extra: Partial<ValidatableNode> = {})
   ...extra,
 });
 
-const edge = (
-  id: string,
-  source: string,
-  target: string,
-  data?: Record<string, unknown>,
-): ValidatableEdge => ({ id, source, target, data });
+const edge = (id: string, source: string, target: string, data?: Record<string, unknown>): ValidatableEdge => ({
+  id,
+  source,
+  target,
+  data,
+});
 
 describe('validateConnections', () => {
   it('returns no issues for valid edges', () => {
@@ -70,11 +70,7 @@ describe('validateConnections', () => {
   });
 
   it('flags self-connections', () => {
-    const issues = validateConnections(
-      [node('a', 'Compute.Container')],
-      [edge('e1', 'a', 'a')],
-      ctx,
-    );
+    const issues = validateConnections([node('a', 'Compute.Container')], [edge('e1', 'a', 'a')], ctx);
     const self = issues.find((i) => i.code === 'SELF_CONNECTION');
     expect(self?.severity).toBe('error');
     expect(self?.nodeId).toBe('a');
@@ -118,10 +114,7 @@ describe('validateConnections', () => {
 
   it('falls back to iceType suffix when label is missing on invalid pairs', () => {
     const issues = validateConnections(
-      [
-        node('db1', 'Database.PostgreSQL'),
-        node('db2', 'Database.PostgreSQL'),
-      ],
+      [node('db1', 'Database.PostgreSQL'), node('db2', 'Database.PostgreSQL')],
       [edge('e1', 'db1', 'db2')],
       ctx,
     );
@@ -130,22 +123,14 @@ describe('validateConnections', () => {
   });
 
   it('uses the generic "Source"/"Target" fallback when iceType has no dot', () => {
-    const issues = validateConnections(
-      [node('a', 'Weird'), node('b', 'Other')],
-      [edge('e1', 'a', 'b')],
-      ctx,
-    );
+    const issues = validateConnections([node('a', 'Weird'), node('b', 'Other')], [edge('e1', 'a', 'b')], ctx);
     const invalid = issues.find((i) => i.code === 'INVALID_CONNECTION');
     expect(invalid?.message).toContain('Weird');
     expect(invalid?.message).toContain('Other');
   });
 
   it('skips canConnect when src or tgt iceType is empty', () => {
-    const issues = validateConnections(
-      [node('a', ''), node('b', 'Database.PostgreSQL')],
-      [edge('e1', 'a', 'b')],
-      ctx,
-    );
+    const issues = validateConnections([node('a', ''), node('b', 'Database.PostgreSQL')], [edge('e1', 'a', 'b')], ctx);
     expect(issues.find((i) => i.code === 'INVALID_CONNECTION')).toBeUndefined();
   });
 
@@ -175,10 +160,7 @@ describe('validateConnections', () => {
 
   it('flags duplicate edges (any orientation)', () => {
     const issues = validateConnections(
-      [
-        node('a', 'Compute.Container'),
-        node('b', 'Database.PostgreSQL'),
-      ],
+      [node('a', 'Compute.Container'), node('b', 'Database.PostgreSQL')],
       [edge('e1', 'a', 'b'), edge('e2', 'b', 'a')],
       ctx,
     );
@@ -207,7 +189,10 @@ describe('validateConnections', () => {
 
   it('detects a simple cycle (a → b → a) and reports it once', () => {
     const issues = validateConnections(
-      [node('a', 'Compute.Container'), node('b', 'Compute.Container', { data: { iceType: 'Compute.Container', label: 'API B' } })],
+      [
+        node('a', 'Compute.Container'),
+        node('b', 'Compute.Container', { data: { iceType: 'Compute.Container', label: 'API B' } }),
+      ],
       [edge('e1', 'a', 'b'), edge('e2', 'b', 'a')],
       ctx,
     );
@@ -224,12 +209,7 @@ describe('validateConnections', () => {
         node('c', 'Compute.Container'),
         node('d', 'Compute.Container'),
       ],
-      [
-        edge('e1', 'a', 'b'),
-        edge('e2', 'b', 'c'),
-        edge('e3', 'c', 'a'),
-        edge('e4', 'd', 'c'),
-      ],
+      [edge('e1', 'a', 'b'), edge('e2', 'b', 'c'), edge('e3', 'c', 'a'), edge('e4', 'd', 'c')],
       ctx,
     );
     const cycles = issues.filter((i) => i.code === 'CYCLE_DETECTED');
@@ -247,12 +227,7 @@ describe('validateConnections', () => {
         node('c', 'Compute.Container', { data: { iceType: 'Compute.Container', label: 'C' } }),
         node('d', 'Compute.Container', { data: { iceType: 'Compute.Container', label: 'D' } }),
       ],
-      [
-        edge('e1', 'a', 'b'),
-        edge('e2', 'b', 'c'),
-        edge('e3', 'c', 'd'),
-        edge('e4', 'd', 'a'),
-      ],
+      [edge('e1', 'a', 'b'), edge('e2', 'b', 'c'), edge('e3', 'c', 'd'), edge('e4', 'd', 'a')],
       ctx,
     );
     const cycle = issues.find((i) => i.code === 'CYCLE_DETECTED');
@@ -264,11 +239,7 @@ describe('validateConnections', () => {
     // hits a node that is `visited` but NOT on the recursion stack — so the
     // DFS skips both inner branches without reporting a cycle.
     const issues = validateConnections(
-      [
-        node('a', 'Compute.Container'),
-        node('b', 'Compute.Container'),
-        node('c', 'Compute.Container'),
-      ],
+      [node('a', 'Compute.Container'), node('b', 'Compute.Container'), node('c', 'Compute.Container')],
       [edge('e1', 'a', 'b'), edge('e2', 'c', 'b')],
       ctx,
     );
@@ -280,11 +251,7 @@ describe('validateConnections', () => {
     // arrives at 'b' as a key in the adjacency map, `visited.has('b')` is
     // already true, so the body is skipped.
     const issues = validateConnections(
-      [
-        node('a', 'Compute.Container'),
-        node('b', 'Compute.Container'),
-        node('c', 'Database.PostgreSQL'),
-      ],
+      [node('a', 'Compute.Container'), node('b', 'Compute.Container'), node('c', 'Database.PostgreSQL')],
       [edge('e1', 'a', 'b'), edge('e2', 'b', 'c')],
       ctx,
     );
@@ -304,11 +271,11 @@ describe('validateConnections', () => {
 
   it('uses a node id slice as the cycle label when label data is missing', () => {
     const issues = validateConnections(
+      [node('aaaaaaaaaaaaaaaaaa1', 'Compute.Container'), node('bbbbbbbbbbbbbbbbbb1', 'Compute.Container')],
       [
-        node('aaaaaaaaaaaaaaaaaa1', 'Compute.Container'),
-        node('bbbbbbbbbbbbbbbbbb1', 'Compute.Container'),
+        edge('e1', 'aaaaaaaaaaaaaaaaaa1', 'bbbbbbbbbbbbbbbbbb1'),
+        edge('e2', 'bbbbbbbbbbbbbbbbbb1', 'aaaaaaaaaaaaaaaaaa1'),
       ],
-      [edge('e1', 'aaaaaaaaaaaaaaaaaa1', 'bbbbbbbbbbbbbbbbbb1'), edge('e2', 'bbbbbbbbbbbbbbbbbb1', 'aaaaaaaaaaaaaaaaaa1')],
       ctx,
     );
     const cycle = issues.find((i) => i.code === 'CYCLE_DETECTED');
@@ -319,10 +286,7 @@ describe('validateConnections', () => {
   it('does not flag a cycle when the only loop edges are containment', () => {
     const issues = validateConnections(
       [node('a', 'Compute.Container'), node('b', 'Compute.Container')],
-      [
-        edge('e1', 'a', 'b', { relationship: 'contains' }),
-        edge('e2', 'b', 'a', { relationship: 'contains' }),
-      ],
+      [edge('e1', 'a', 'b', { relationship: 'contains' }), edge('e2', 'b', 'a', { relationship: 'contains' })],
       ctx,
     );
     expect(issues.find((i) => i.code === 'CYCLE_DETECTED')).toBeUndefined();

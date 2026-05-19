@@ -228,13 +228,7 @@ describe('applyDeployment — lock acquisition', () => {
     mocks.acquireDeployLock.mockImplementationOnce(() => {
       throw new DeployLockError('card-A', 'apply');
     });
-    const out = await applyDeployment(
-      'card-A',
-      ONE_NODE,
-      [],
-      { provider: 'gcp', executeAsync: false },
-      'org-1',
-    );
+    const out = await applyDeployment('card-A', ONE_NODE, [], { provider: 'gcp', executeAsync: false }, 'org-1');
     expect(out).toEqual({
       success: false,
       error: expect.stringContaining('apply is already in progress'),
@@ -261,13 +255,7 @@ describe('applyDeployment — pre-translation validation', () => {
   });
 
   it('returns EMPTY_CANVAS without touching the DB when no non-container nodes are present', async () => {
-    const out = await applyDeployment(
-      'card-A',
-      [],
-      [],
-      { provider: 'gcp', executeAsync: false },
-      'org-1',
-    );
+    const out = await applyDeployment('card-A', [], [], { provider: 'gcp', executeAsync: false }, 'org-1');
     expect(out).toEqual({
       success: false,
       error: expect.stringContaining('Nothing to deploy'),
@@ -317,13 +305,7 @@ describe('applyDeployment — translation outcomes', () => {
         { nodeId: 'n2', reason: 'no label here' },
       ],
     });
-    const out = await applyDeployment(
-      'card-A',
-      ONE_NODE,
-      [],
-      { provider: 'gcp', executeAsync: false },
-      'org-1',
-    );
+    const out = await applyDeployment('card-A', ONE_NODE, [], { provider: 'gcp', executeAsync: false }, 'org-1');
     expect(out.success).toBe(false);
     expect(out.error).toMatch(/0 deployable resources/);
     expect(out.error).toMatch(/All 2 block/);
@@ -338,13 +320,7 @@ describe('applyDeployment — translation outcomes', () => {
       warnings: [],
       skipped: [],
     });
-    const out = await applyDeployment(
-      'card-A',
-      ONE_NODE,
-      [],
-      { provider: 'gcp', executeAsync: false },
-      'org-1',
-    );
+    const out = await applyDeployment('card-A', ONE_NODE, [], { provider: 'gcp', executeAsync: false }, 'org-1');
     expect(out.success).toBe(false);
     expect(out.error).toMatch(/0 deployable resources/);
   });
@@ -398,13 +374,7 @@ describe('applyDeployment — happy path persistence', () => {
       ],
       errors: [],
     });
-    const out = await applyDeployment(
-      'card-A',
-      ONE_NODE,
-      [],
-      { provider: 'gcp', executeAsync: false },
-      'org-1',
-    );
+    const out = await applyDeployment('card-A', ONE_NODE, [], { provider: 'gcp', executeAsync: false }, 'org-1');
     expect(out.success).toBe(false);
     const updateCall = mocks.cdUpdate.mock.calls.find((c: any) => c[0]?.where?.id === 'deploy-1');
     expect(updateCall![0].data.status).toBe('partial');
@@ -417,13 +387,7 @@ describe('applyDeployment — happy path persistence', () => {
       resources: [{ name: 'r1', success: false, action: 'create', error: 'boom' }],
       errors: [],
     });
-    const out = await applyDeployment(
-      'card-A',
-      ONE_NODE,
-      [],
-      { provider: 'gcp', executeAsync: false },
-      'org-1',
-    );
+    const out = await applyDeployment('card-A', ONE_NODE, [], { provider: 'gcp', executeAsync: false }, 'org-1');
     expect(out.success).toBe(false);
     const updateCall = mocks.cdUpdate.mock.calls.find((c: any) => c[0]?.where?.id === 'deploy-1');
     expect(updateCall![0].data.status).toBe('failed');
@@ -433,18 +397,10 @@ describe('applyDeployment — happy path persistence', () => {
   it('aggregates top-level + per-resource errors into the response error string', async () => {
     mocks.deployGraph.mockResolvedValueOnce({
       success: false,
-      resources: [
-        { name: 'r1', success: false, action: 'create', error: 'res-err' },
-      ],
+      resources: [{ name: 'r1', success: false, action: 'create', error: 'res-err' }],
       errors: [{ message: 'top-err-1' }, { error: 'top-err-2' }, 'top-err-3'],
     });
-    const out = await applyDeployment(
-      'card-A',
-      ONE_NODE,
-      [],
-      { provider: 'gcp', executeAsync: false },
-      'org-1',
-    );
+    const out = await applyDeployment('card-A', ONE_NODE, [], { provider: 'gcp', executeAsync: false }, 'org-1');
     expect(out.error).toContain('top-err-1');
     expect(out.error).toContain('top-err-2');
     expect(out.error).toContain('top-err-3');
@@ -457,13 +413,7 @@ describe('applyDeployment — happy path persistence', () => {
       resources: [],
       errors: [],
     });
-    const out = await applyDeployment(
-      'card-A',
-      ONE_NODE,
-      [],
-      { provider: 'gcp', executeAsync: false },
-      'org-1',
-    );
+    const out = await applyDeployment('card-A', ONE_NODE, [], { provider: 'gcp', executeAsync: false }, 'org-1');
     expect(out.error).toBe('Deployment failed — check resource configuration');
   });
 
@@ -473,25 +423,13 @@ describe('applyDeployment — happy path persistence', () => {
       resources: [],
       errors: [{ message: 'first' }, { message: 'second' }],
     });
-    await applyDeployment(
-      'card-A',
-      ONE_NODE,
-      [],
-      { provider: 'gcp', executeAsync: false },
-      'org-1',
-    );
+    await applyDeployment('card-A', ONE_NODE, [], { provider: 'gcp', executeAsync: false }, 'org-1');
     const updateCall = mocks.cdUpdate.mock.calls.find((c: any) => c[0]?.where?.id === 'deploy-1');
     expect(updateCall![0].data.error).toBe('first; second');
   });
 
   it('persists error=null when errors is empty', async () => {
-    await applyDeployment(
-      'card-A',
-      ONE_NODE,
-      [],
-      { provider: 'gcp', executeAsync: false },
-      'org-1',
-    );
+    await applyDeployment('card-A', ONE_NODE, [], { provider: 'gcp', executeAsync: false }, 'org-1');
     const updateCall = mocks.cdUpdate.mock.calls.find((c: any) => c[0]?.where?.id === 'deploy-1');
     expect(updateCall![0].data.error).toBeNull();
   });
@@ -591,13 +529,7 @@ describe('applyDeployment — engine catch path', () => {
   it('catches a thrown engine error, persists status=failed, emits failure complete', async () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     mocks.deployGraph.mockRejectedValueOnce(new Error('engine boom'));
-    const out = await applyDeployment(
-      'card-A',
-      ONE_NODE,
-      [],
-      { provider: 'gcp', executeAsync: false },
-      'org-1',
-    );
+    const out = await applyDeployment('card-A', ONE_NODE, [], { provider: 'gcp', executeAsync: false }, 'org-1');
     expect(out.success).toBe(false);
     expect(out.error).toBe('engine boom');
     const updateCall = mocks.cdUpdate.mock.calls.find((c: any) => c[0]?.where?.id === 'deploy-1');
@@ -674,9 +606,7 @@ describe('applyDeployment — async vs sync execution', () => {
     expect((out as { async?: boolean }).async).toBe(true);
     // Allow background body + .catch to run.
     await new Promise((r) => setTimeout(r, 10));
-    const wasLogged = errorSpy.mock.calls.some((c) =>
-      String(c[0] ?? '').includes('background uncaught'),
-    );
+    const wasLogged = errorSpy.mock.calls.some((c) => String(c[0] ?? '').includes('background uncaught'));
     expect(wasLogged).toBe(true);
     errorSpy.mockRestore();
   });
@@ -707,13 +637,7 @@ describe('applyDeployment — projectName fallback', () => {
       projectName: null,
       environmentType: 'development',
     });
-    await applyDeployment(
-      'card-A',
-      ONE_NODE,
-      [],
-      { provider: 'gcp', executeAsync: false },
-      'org-1',
-    );
+    await applyDeployment('card-A', ONE_NODE, [], { provider: 'gcp', executeAsync: false }, 'org-1');
     const arg = mocks.translateCardToGraph.mock.calls[0][0];
     expect(arg.projectName).toBe('pid-fallback');
   });

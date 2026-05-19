@@ -6,12 +6,7 @@
  */
 
 import { parse_urn, is_stack_resource } from './type-mapper';
-import type {
-  PulumiStackState,
-  PulumiStackExport,
-  PulumiDeployment,
-  PulumiImportMetadata,
-} from './types';
+import type { PulumiStackState, PulumiStackExport, PulumiDeployment, PulumiImportMetadata } from './types';
 
 /**
  * Get the deployment from state data.

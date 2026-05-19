@@ -17,16 +17,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  getDeployBadge,
-  truncate,
-  shortRepo,
-  shortDomain,
-  ph,
-  isPlaceholder,
-  listCount,
-} from '../helpers';
 import { STATUS_COLORS } from '../../../../../../config/canvas-constants';
+import { getDeployBadge, truncate, shortRepo, shortDomain, ph, isPlaceholder, listCount } from '../helpers';
 
 describe('getDeployBadge', () => {
   it('returns null for unknown / idle / empty status', () => {

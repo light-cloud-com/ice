@@ -10,13 +10,13 @@
  */
 
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { cloud_sql_handler } from '../cloud-sql';
-import { memorystore_handler } from '../memorystore';
-import { cloud_run_handler } from '../cloud-run';
-import { cloud_functions_handler } from '../cloud-functions';
 import { api_gateway_handler } from '../api-gateway';
-import { gke_handler } from '../gke';
 import { build_from_source, ensure_artifact_registry } from '../cloud-build-helper';
+import { cloud_functions_handler } from '../cloud-functions';
+import { cloud_run_handler } from '../cloud-run';
+import { cloud_sql_handler } from '../cloud-sql';
+import { gke_handler } from '../gke';
+import { memorystore_handler } from '../memorystore';
 import type { GCPHandlerContext } from '../../types';
 
 interface CapturedStep {
@@ -91,10 +91,7 @@ describe('cloud-sql handler — on_step milestones', () => {
 
     expect(result.success).toBe(true);
     assert_monotonic(steps, 2);
-    expect(steps.map((s) => s.label)).toEqual([
-      'Creating Cloud SQL instance',
-      'Waiting for instance to become ready',
-    ]);
+    expect(steps.map((s) => s.label)).toEqual(['Creating Cloud SQL instance', 'Waiting for instance to become ready']);
     expect(steps.every((s) => s.resource === 'my-db')).toBe(true);
   });
 });
@@ -106,17 +103,17 @@ describe('memorystore handler — on_step milestones', () => {
         'POST https://redis.googleapis.com/v1/projects/test-project/locations/us-central1/instances?instanceId=my-redis',
         { name: 'projects/test-project/locations/us-central1/operations/op-1' },
       ],
-      ['GET https://redis.googleapis.com/v1/projects/test-project/locations/us-central1/operations/op-1', { done: true }],
+      [
+        'GET https://redis.googleapis.com/v1/projects/test-project/locations/us-central1/operations/op-1',
+        { done: true },
+      ],
     ]);
     const { ctx, steps } = build_ctx(responses);
     const result = await memorystore_handler.create('my-redis', {}, ctx);
 
     expect(result.success).toBe(true);
     assert_monotonic(steps, 2);
-    expect(steps.map((s) => s.label)).toEqual([
-      'Creating Redis instance',
-      'Waiting for instance to become ready',
-    ]);
+    expect(steps.map((s) => s.label)).toEqual(['Creating Redis instance', 'Waiting for instance to become ready']);
   });
 });
 
@@ -140,10 +137,7 @@ describe('cloud-run handler — on_step milestones', () => {
         'POST https://cloudbuild.googleapis.com/v1/projects/test-project/builds',
         { metadata: { build: { id: 'build-1' } } },
       ],
-      [
-        'GET https://cloudbuild.googleapis.com/v1/projects/test-project/builds/build-1',
-        { status: 'SUCCESS' },
-      ],
+      ['GET https://cloudbuild.googleapis.com/v1/projects/test-project/builds/build-1', { status: 'SUCCESS' }],
     ]);
     const sdk_clients = new Map<string, unknown>([
       [
@@ -220,10 +214,7 @@ describe('cloud-functions handler — on_step milestones', () => {
 
     expect(result.success).toBe(true);
     assert_monotonic(steps, 2);
-    expect(steps.map((s) => s.label)).toEqual([
-      'Submitting function build',
-      'Waiting for function to be ready',
-    ]);
+    expect(steps.map((s) => s.label)).toEqual(['Submitting function build', 'Waiting for function to be ready']);
   });
 
   it('emits 2 milestones during create via REST fallback', async () => {
@@ -248,19 +239,11 @@ describe('cloud-functions handler — on_step milestones', () => {
 describe('api-gateway handler — on_step milestones', () => {
   it('emits 3 milestones with openapi_spec (api + config + gateway)', async () => {
     const { ctx, steps } = build_ctx(new Map());
-    const result = await api_gateway_handler.create(
-      'my-api',
-      { openapi_spec: 'openapi: 3.0' },
-      ctx,
-    );
+    const result = await api_gateway_handler.create('my-api', { openapi_spec: 'openapi: 3.0' }, ctx);
 
     expect(result.success).toBe(true);
     assert_monotonic(steps, 3);
-    expect(steps.map((s) => s.label)).toEqual([
-      'Creating API',
-      'Creating API config',
-      'Creating gateway',
-    ]);
+    expect(steps.map((s) => s.label)).toEqual(['Creating API', 'Creating API config', 'Creating gateway']);
   });
 
   it('emits 1 milestone without openapi_spec (api only)', async () => {
@@ -289,10 +272,7 @@ describe('gke handler — on_step milestones', () => {
 
     expect(result.success).toBe(true);
     assert_monotonic(steps, 2);
-    expect(steps.map((s) => s.label)).toEqual([
-      'Creating cluster',
-      'Waiting for cluster to become ready',
-    ]);
+    expect(steps.map((s) => s.label)).toEqual(['Creating cluster', 'Waiting for cluster to become ready']);
   });
 });
 

@@ -33,8 +33,7 @@ vi.mock('react', () => ({
 
 vi.mock('react-redux', () => ({
   useDispatch: () => mocks.dispatch,
-  useSelector: (sel: (s: { tour: typeof mocks.selectorState }) => unknown) =>
-    sel({ tour: mocks.selectorState }),
+  useSelector: (sel: (s: { tour: typeof mocks.selectorState }) => unknown) => sel({ tour: mocks.selectorState }),
 }));
 
 vi.mock('../../utils/tour-registry', () => ({
@@ -189,17 +188,9 @@ describe('useTour.advance', () => {
     mocks.selectorState.stepIdx = 2; // 0-based, last of 3
     const t = useTour();
     t.advance();
-    expect(dispatchedTypes()).toEqual([
-      'tour/recordAdvance',
-      'tour/markCompleted',
-      'tour/persistCompletedTour',
-    ]);
-    expect(
-      (mocks.dispatch.mock.calls[1][0] as MockAction).payload,
-    ).toBe('canvas-tour');
-    expect(
-      (mocks.dispatch.mock.calls[2][0] as MockAction).payload,
-    ).toBe('canvas-tour');
+    expect(dispatchedTypes()).toEqual(['tour/recordAdvance', 'tour/markCompleted', 'tour/persistCompletedTour']);
+    expect((mocks.dispatch.mock.calls[1][0] as MockAction).payload).toBe('canvas-tour');
+    expect((mocks.dispatch.mock.calls[2][0] as MockAction).payload).toBe('canvas-tour');
   });
 
   it('no active tour: no-op', () => {
@@ -243,11 +234,7 @@ describe('useTour.skip', () => {
     mocks.selectorState.stepIdx = 1;
     const t = useTour();
     t.skip();
-    expect(dispatchedTypes()).toEqual([
-      'tour/flagSkipped',
-      'tour/markCompleted',
-      'tour/persistCompletedTour',
-    ]);
+    expect(dispatchedTypes()).toEqual(['tour/flagSkipped', 'tour/markCompleted', 'tour/persistCompletedTour']);
   });
 
   it('no active tour → no-op', () => {
@@ -279,10 +266,7 @@ describe('useTour.stop', () => {
     mocks.selectorState.stepIdx = 2;
     const t = useTour();
     t.stop();
-    expect(dispatchedTypes()).toEqual([
-      'tour/markCompleted',
-      'tour/persistCompletedTour',
-    ]);
+    expect(dispatchedTypes()).toEqual(['tour/markCompleted', 'tour/persistCompletedTour']);
   });
 });
 

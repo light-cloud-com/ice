@@ -7,7 +7,6 @@
  */
 
 import { describe, it, expect } from 'vitest';
-
 import { getServiceName } from '../service-names';
 
 describe('getServiceName — happy path lookups', () => {

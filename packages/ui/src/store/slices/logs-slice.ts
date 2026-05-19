@@ -225,8 +225,17 @@ const logsSlice = createSlice({
   },
 });
 
-export const { setStatus, setSubscription, setSource, appendEntry, clearEntries, setMode, setError, resumed, teardown } =
-  logsSlice.actions;
+export const {
+  setStatus,
+  setSubscription,
+  setSource,
+  appendEntry,
+  clearEntries,
+  setMode,
+  setError,
+  resumed,
+  teardown,
+} = logsSlice.actions;
 
 export default logsSlice.reducer;
 

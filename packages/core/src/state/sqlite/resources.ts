@@ -22,20 +22,15 @@
  * `async get_resource(...args) { return resources_get(this.ctx, ...args); }`.
  */
 
-import { create_node_id } from '../../types/graph';
 import { InternalError } from '../../types/errors';
+import { create_node_id } from '../../types/graph';
 import { success, failure } from '../../types/result';
+import type { DeploymentId } from '../../types/deployment';
 import type { IceError } from '../../types/errors';
 import type { NodeId } from '../../types/graph';
 import type { ResourceState } from '../../types/providers';
 import type { Result } from '../../types/result';
-import type {
-  StoredResourceState,
-  ResourceQuery,
-  StateChangeType,
-  StateChangeEvent,
-} from '../state-store';
-import type { DeploymentId } from '../../types/deployment';
+import type { StoredResourceState, ResourceQuery, StateChangeType, StateChangeEvent } from '../state-store';
 import type { ResourceRow, SqliteContext } from './types';
 import type { Database } from 'better-sqlite3';
 
@@ -138,9 +133,9 @@ export async function resources_get(
   try {
     const db = ensure_db(ctx);
 
-    const row = db
-      .prepare('SELECT * FROM resources WHERE graph_id = ? AND node_id = ?')
-      .get(graph_id, node_id) as ResourceRow | undefined;
+    const row = db.prepare('SELECT * FROM resources WHERE graph_id = ? AND node_id = ?').get(graph_id, node_id) as
+      | ResourceRow
+      | undefined;
 
     if (!row) {
       return success(null);
@@ -295,10 +290,7 @@ export async function resources_delete(
   }
 }
 
-export async function resources_delete_all(
-  ctx: SqliteContext,
-  graph_id: string,
-): Promise<Result<number, IceError>> {
+export async function resources_delete_all(ctx: SqliteContext, graph_id: string): Promise<Result<number, IceError>> {
   try {
     const db = ensure_db(ctx);
 

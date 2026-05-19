@@ -1,8 +1,8 @@
 import { Sparkles, Loader2, AlertCircle, CheckCircle, KeyRound } from 'lucide-react';
 import React, { useCallback, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useTranslation } from '../../../i18n';
 import { AnthropicConnectModal } from '../../../features/integrations/components/anthropic-connect-modal';
+import { useTranslation } from '../../../i18n';
 import { getAccessToken } from '../../../shared/api/axios-instance';
 import { startDiagnosis, setDiagnosis, diagnosisError, clearDiagnosis } from '../../../store/slices/deploy-slice';
 import { serializeCanvas } from '../../ai/utils/serialize-canvas';

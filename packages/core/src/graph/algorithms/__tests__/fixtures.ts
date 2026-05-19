@@ -15,10 +15,7 @@ import type { MutableGraph } from '../../mutable-graph';
  * tuple-form `[source, target, 'contains']` to override the
  * relationship.
  */
-export function make_graph(
-  nodes: string[],
-  edges: Array<[string, string] | [string, string, string]>,
-): MutableGraph {
+export function make_graph(nodes: string[], edges: Array<[string, string] | [string, string, string]>): MutableGraph {
   const graph = create_mutable_graph('test');
   const node_ids = new Map<string, string>();
 

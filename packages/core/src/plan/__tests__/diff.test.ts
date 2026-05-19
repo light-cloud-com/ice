@@ -6,13 +6,7 @@
  * readable summaries.
  */
 import { describe, expect, it, beforeEach, vi } from 'vitest';
-import {
-  diff_properties,
-  deep_equal,
-  is_destructive_change,
-  summarize_changes,
-  format_property_change,
-} from '../diff';
+import { diff_properties, deep_equal, is_destructive_change, summarize_changes, format_property_change } from '../diff';
 import type { PropertyChange } from '../../types/deployment';
 
 beforeEach(() => {
@@ -67,10 +61,7 @@ describe('diff_properties', () => {
   });
 
   it('recurses into nested objects with dotted paths', () => {
-    const changes = diff_properties(
-      { config: { port: 8080, host: 'a' } },
-      { config: { port: 80, host: 'a' } },
-    );
+    const changes = diff_properties({ config: { port: 8080, host: 'a' } }, { config: { port: 80, host: 'a' } });
     expect(changes).toHaveLength(1);
     expect(changes[0]?.path).toBe('config.port');
     expect(changes[0]?.old_value).toBe(80);
@@ -122,11 +113,7 @@ describe('diff_properties', () => {
   });
 
   it('honors the explicit sensitive_keys override for keys that would not match patterns', () => {
-    const changes = diff_properties(
-      { custom_field: 'new' },
-      { custom_field: 'old' },
-      new Set(['custom_field']),
-    );
+    const changes = diff_properties({ custom_field: 'new' }, { custom_field: 'old' }, new Set(['custom_field']));
     expect(changes[0]?.sensitive).toBe(true);
     expect(changes[0]?.new_value).toBe('[SENSITIVE]');
   });
@@ -149,10 +136,7 @@ describe('diff_properties', () => {
   });
 
   it('produces multiple changes when several properties differ', () => {
-    const changes = diff_properties(
-      { a: 1, b: 2, c: 3 },
-      { a: 1, b: 99, d: 4 },
-    );
+    const changes = diff_properties({ a: 1, b: 2, c: 3 }, { a: 1, b: 99, d: 4 });
     expect(changes).toHaveLength(3); // b modified, c added, d removed
     const paths = changes.map((c) => c.path).sort();
     expect(paths).toEqual(['b', 'c', 'd']);
@@ -238,8 +222,30 @@ describe('deep_equal', () => {
   });
 
   it('recurses into nested arrays', () => {
-    expect(deep_equal([[1, 2], [3, 4]], [[1, 2], [3, 4]])).toBe(true);
-    expect(deep_equal([[1, 2], [3, 4]], [[1, 2], [3, 5]])).toBe(false);
+    expect(
+      deep_equal(
+        [
+          [1, 2],
+          [3, 4],
+        ],
+        [
+          [1, 2],
+          [3, 4],
+        ],
+      ),
+    ).toBe(true);
+    expect(
+      deep_equal(
+        [
+          [1, 2],
+          [3, 4],
+        ],
+        [
+          [1, 2],
+          [3, 5],
+        ],
+      ),
+    ).toBe(false);
   });
 
   it('returns true for equal objects', () => {
@@ -262,16 +268,12 @@ describe('deep_equal', () => {
 
 describe('is_destructive_change', () => {
   it('returns false for unknown resource types', () => {
-    const changes: PropertyChange[] = [
-      { path: 'whatever', old_value: 1, new_value: 2, sensitive: false },
-    ];
+    const changes: PropertyChange[] = [{ path: 'whatever', old_value: 1, new_value: 2, sensitive: false }];
     expect(is_destructive_change('unknown.something', changes)).toBe(false);
   });
 
   it('returns true when an AWS EC2 force-new property changes', () => {
-    const changes: PropertyChange[] = [
-      { path: 'ami', old_value: 'a', new_value: 'b', sensitive: false },
-    ];
+    const changes: PropertyChange[] = [{ path: 'ami', old_value: 'a', new_value: 'b', sensitive: false }];
     expect(is_destructive_change('aws.ec2.instance', changes)).toBe(true);
   });
 
@@ -288,9 +290,7 @@ describe('is_destructive_change', () => {
 
   it('considers only the top-level property when matching nested paths', () => {
     // The `cidr_block.foo` path's first segment matches force-new on aws.vpc.vpc.
-    const changes: PropertyChange[] = [
-      { path: 'cidr_block.subkey', old_value: 'a', new_value: 'b', sensitive: false },
-    ];
+    const changes: PropertyChange[] = [{ path: 'cidr_block.subkey', old_value: 'a', new_value: 'b', sensitive: false }];
     expect(is_destructive_change('aws.vpc.vpc', changes)).toBe(true);
   });
 
@@ -314,16 +314,12 @@ describe('is_destructive_change', () => {
     // force-new map. The 'instance_type' path's top segment is the literal
     // 'instance_type' (path.split('.') only splits on dots, not underscores)
     // and matches the entry in the force-new list.
-    const changes: PropertyChange[] = [
-      { path: 'instance_type', old_value: 'a', new_value: 'b', sensitive: false },
-    ];
+    const changes: PropertyChange[] = [{ path: 'instance_type', old_value: 'a', new_value: 'b', sensitive: false }];
     expect(is_destructive_change('aws_ec2_instance', changes)).toBe(true);
   });
 
   it('detects gcp.compute.instance machine_type as force-new', () => {
-    const changes: PropertyChange[] = [
-      { path: 'machine_type', old_value: 'n1', new_value: 'n2', sensitive: false },
-    ];
+    const changes: PropertyChange[] = [{ path: 'machine_type', old_value: 'n1', new_value: 'n2', sensitive: false }];
     expect(is_destructive_change('gcp.compute.instance', changes)).toBe(true);
   });
 
@@ -332,9 +328,7 @@ describe('is_destructive_change', () => {
     // to use `.` everywhere so they round-trip through
     // normalize_resource_type (which converts `_` → `.`). Both input
     // shapes now hit the rule.
-    const changes: PropertyChange[] = [
-      { path: 'vm_size', old_value: 'a', new_value: 'b', sensitive: false },
-    ];
+    const changes: PropertyChange[] = [{ path: 'vm_size', old_value: 'a', new_value: 'b', sensitive: false }];
     expect(is_destructive_change('azure.compute.virtual_machine', changes)).toBe(true);
     expect(is_destructive_change('azure.compute.virtual.machine', changes)).toBe(true);
   });
@@ -347,24 +341,18 @@ describe('is_destructive_change', () => {
   });
 
   it('detects azure.storage.storage_account name as force-new (also fixed via normalization)', () => {
-    const changes: PropertyChange[] = [
-      { path: 'name', old_value: 'old', new_value: 'new', sensitive: false },
-    ];
+    const changes: PropertyChange[] = [{ path: 'name', old_value: 'old', new_value: 'new', sensitive: false }];
     expect(is_destructive_change('azure.storage.storage_account', changes)).toBe(true);
   });
 
   it('detects kubernetes.apps.deployment namespace as force-new', () => {
-    const changes: PropertyChange[] = [
-      { path: 'namespace', old_value: 'a', new_value: 'b', sensitive: false },
-    ];
+    const changes: PropertyChange[] = [{ path: 'namespace', old_value: 'a', new_value: 'b', sensitive: false }];
     expect(is_destructive_change('kubernetes.apps.deployment', changes)).toBe(true);
   });
 
   it('handles empty path segments by falling back to empty top-level', () => {
     // path '' splits to [''], top-level is '' which is not in any force-new list.
-    const changes: PropertyChange[] = [
-      { path: '', old_value: 1, new_value: 2, sensitive: false },
-    ];
+    const changes: PropertyChange[] = [{ path: '', old_value: 1, new_value: 2, sensitive: false }];
     expect(is_destructive_change('aws.ec2.instance', changes)).toBe(false);
   });
 });
@@ -383,16 +371,12 @@ describe('summarize_changes', () => {
   });
 
   it('reports only modified when only existing properties change', () => {
-    const changes: PropertyChange[] = [
-      { path: 'a', old_value: 1, new_value: 2, sensitive: false },
-    ];
+    const changes: PropertyChange[] = [{ path: 'a', old_value: 1, new_value: 2, sensitive: false }];
     expect(summarize_changes(changes)).toBe('1 modified');
   });
 
   it('reports only removed when properties were dropped', () => {
-    const changes: PropertyChange[] = [
-      { path: 'a', old_value: 1, new_value: undefined, sensitive: false },
-    ];
+    const changes: PropertyChange[] = [{ path: 'a', old_value: 1, new_value: undefined, sensitive: false }];
     expect(summarize_changes(changes)).toBe('1 removed');
   });
 

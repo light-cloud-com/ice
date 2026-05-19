@@ -13,7 +13,6 @@
 
 import { Trash2, ArrowRight } from 'lucide-react';
 import React from 'react';
-
 import { useTranslation } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
 import type { DeploymentRule } from '../../../store/slices/pipeline-slice';

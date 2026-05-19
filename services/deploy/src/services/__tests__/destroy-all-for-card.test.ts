@@ -161,9 +161,7 @@ describe('destroyAllForCard — short-circuits and validation gates', () => {
 
   it('throws when the project id cannot be resolved', async () => {
     mocks.resolveDestroyAllProject.mockReturnValueOnce(null);
-    await expect(destroyAllForCard('card-A', 'org-1')).rejects.toThrow(
-      /Cannot resolve GCP project id/,
-    );
+    await expect(destroyAllForCard('card-A', 'org-1')).rejects.toThrow(/Cannot resolve GCP project id/);
   });
 
   it('rethrows when the lock wrapper rejects', async () => {
@@ -210,15 +208,9 @@ describe('destroyAllForCard — happy path', () => {
 
   it('emits queued + applying + succeeded for each target', async () => {
     await destroyAllForCard('card-A', 'org-1');
-    const queued = mocks.emitDestroyLifecycle.mock.calls.filter(
-      (c: any) => c[0]?.status === 'queued',
-    );
-    const applying = mocks.emitDestroyLifecycle.mock.calls.filter(
-      (c: any) => c[0]?.status === 'applying',
-    );
-    const succeeded = mocks.emitDestroyLifecycle.mock.calls.filter(
-      (c: any) => c[0]?.status === 'succeeded',
-    );
+    const queued = mocks.emitDestroyLifecycle.mock.calls.filter((c: any) => c[0]?.status === 'queued');
+    const applying = mocks.emitDestroyLifecycle.mock.calls.filter((c: any) => c[0]?.status === 'applying');
+    const succeeded = mocks.emitDestroyLifecycle.mock.calls.filter((c: any) => c[0]?.status === 'succeeded');
     expect(queued.length).toBe(2);
     expect(applying.length).toBe(2);
     expect(succeeded.length).toBe(2);
@@ -251,9 +243,7 @@ describe('destroyAllForCard — partial / failed outcomes', () => {
     const out = await destroyAllForCard('card-A', 'org-1');
     expect(out.success).toBe(false);
     expect(out.deleted.length).toBe(1);
-    expect(out.failed).toEqual([
-      { type: 'gcp.storage.bucket', name: 'bucket-b', error: 'BUCKET_NOT_EMPTY' },
-    ]);
+    expect(out.failed).toEqual([{ type: 'gcp.storage.bucket', name: 'bucket-b', error: 'BUCKET_NOT_EMPTY' }]);
     const evt = mocks.emitDeployEvent.mock.calls[0][1];
     expect(evt.outcome).toBe('partial');
     expect(evt.totals.failed).toBe(1);
@@ -261,9 +251,7 @@ describe('destroyAllForCard — partial / failed outcomes', () => {
   });
 
   it('uses the default error message when attemptDestroy returns success:false with no error', async () => {
-    mocks.attemptDestroy
-      .mockResolvedValueOnce({ success: true })
-      .mockResolvedValueOnce({ success: false });
+    mocks.attemptDestroy.mockResolvedValueOnce({ success: true }).mockResolvedValueOnce({ success: false });
     const out = await destroyAllForCard('card-A', 'org-1');
     expect(out.failed[0].error).toBe('delete returned non-success');
   });
@@ -274,9 +262,7 @@ describe('destroyAllForCard — engine catch path', () => {
     happyDeployer.initialize.mockRejectedValueOnce(new Error('init boom'));
     await expect(destroyAllForCard('card-A', 'org-1')).rejects.toThrow('init boom');
     expect(mocks.finishDeploySnapshot).toHaveBeenCalledWith('card-A', 'failed');
-    const updateCall = mocks.cdUpdate.mock.calls.find(
-      (c: any) => c[0]?.where?.id === 'destroy-all-record-1',
-    );
+    const updateCall = mocks.cdUpdate.mock.calls.find((c: any) => c[0]?.where?.id === 'destroy-all-record-1');
     expect(updateCall).toBeTruthy();
     expect(updateCall![0].data.status).toBe('failed');
     expect(updateCall![0].data.error).toBe('init boom');
@@ -293,9 +279,7 @@ describe('destroyAllForCard — engine catch path', () => {
       throw 'plain string';
     });
     await expect(destroyAllForCard('card-A', 'org-1')).rejects.toBe('plain string');
-    const updateCall = mocks.cdUpdate.mock.calls.find(
-      (c: any) => c[0]?.where?.id === 'destroy-all-record-1',
-    );
+    const updateCall = mocks.cdUpdate.mock.calls.find((c: any) => c[0]?.where?.id === 'destroy-all-record-1');
     expect(updateCall![0].data.error).toBe('plain string');
   });
 

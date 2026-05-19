@@ -40,9 +40,9 @@ import {
   deletePipelineRule,
   type DeployStep,
 } from '../../../../store/slices/pipeline-slice';
-import type { RootState, AppDispatch } from '../../../../store';
 import { formatAge } from '../../utils/format-age';
 import { Section } from '../fields';
+import type { RootState, AppDispatch } from '../../../../store';
 
 // ─── Pipeline Section (inline in Properties panel) ──────────────────────────
 

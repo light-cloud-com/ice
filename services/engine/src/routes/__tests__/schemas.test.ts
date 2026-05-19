@@ -6,9 +6,9 @@
  * exercise here.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import express from 'express';
 import http from 'node:http';
+import express from 'express';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { AddressInfo } from 'node:net';
 
 const getCategoriesMock = vi.fn();
@@ -48,7 +48,7 @@ afterEach(async () => {
 async function get(path: string) {
   const res = await fetch(`${baseUrl}${path}`);
   const text = await res.text();
-  let body: any = null;
+  let body: any;
   try {
     body = text ? JSON.parse(text) : null;
   } catch {

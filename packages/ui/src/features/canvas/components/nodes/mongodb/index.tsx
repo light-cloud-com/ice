@@ -1,16 +1,18 @@
 /**
  * SvgMongodbNode — Read-only canvas renderer for `Database.MongoDB`.
  *
- * Body is the `DocumentPills` SVG — rounded blobs laid out in a flow
- * grid, the visual counterpart to postgres/mysql's `TableStripes`.
- * The pill shape encodes "schemaless documents" the way the stripes
- * encode "rows and columns".
+ * Body shows engine + version big, storage callout, and hardening
+ * badges — same identity-body pattern as postgres/mysql. The block's
+ * mongodb identity comes from the brand-icon leaf in the header, not
+ * from decorative body artwork.
  */
 
 import { CARD_FOOTER_HEIGHT, DB_BODY_HEIGHT, DB_HEADER_HEIGHT, DB_PADDING } from '@ice/constants';
 import { Database } from 'lucide-react';
 import React from 'react';
-import { CardShell, DocumentPills } from '../_shared';
+import { t } from '../../../../../i18n';
+import { CardShell } from '../_shared';
+import { formatStorage, renderDbIdentityBody } from '../postgres';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
 export { DB_HEADER_HEIGHT, DB_BODY_HEIGHT, DB_PADDING };
@@ -21,27 +23,15 @@ export function computeMongodbHeight(): number {
 
 const MONGO_ACCENT = '#10b981';
 
-function formatStorage(raw: unknown): string | null {
-  if (raw == null || raw === '') return null;
-  if (raw === 'custom') return null;
-  const n = typeof raw === 'number' ? raw : Number(String(raw));
-  if (!Number.isFinite(n) || n <= 0) return null;
-  if (n >= 1000) {
-    const tb = n / 1000;
-    return Number.isInteger(tb) ? `${tb} TB` : `${tb.toFixed(1)} TB`;
-  }
-  return `${n} GB`;
-}
-
 function buildLiveConfig(data: Record<string, unknown> | undefined): string {
   const version = (data?.version as string) || '';
   const storage = formatStorage(data?.storage ?? data?.storageGb);
   const production = !!data?.production;
-  const shards = data?.shards != null ? `${data.shards} shards` : '';
+  const shards = data?.shards != null ? t('canvas.blocks.database.shardMany', { n: Number(data.shards) }) : '';
   const parts = [
-    version ? `MongoDB ${version}` : 'MongoDB',
+    version ? `${t('canvas.blocks.titles.mongodb')} ${version}` : t('canvas.blocks.titles.mongodb'),
     storage,
-    production ? 'HA' : '',
+    production ? t('canvas.blocks.common.ha') : '',
     shards,
   ].filter(Boolean) as string[];
   return parts.join(' · ');
@@ -56,6 +46,21 @@ export const SvgMongodbNode: React.FC<SvgCompactNodeProps> = ({
   lod,
   pipelineStatus,
 }) => {
+  const data = node.data || {};
+  const version = (data.version as string) || '';
+  const storage = formatStorage(data.storage ?? data.storageGb);
+  const production = !!data.production;
+  const shardCount = data.shards != null ? Number(data.shards) : null;
+  const badges: Array<{ label: string; color: string }> = [];
+  if (production) badges.push({ label: t('canvas.blocks.common.ha'), color: '#22c55e' });
+  if (shardCount && shardCount > 0)
+    badges.push({
+      label:
+        shardCount === 1
+          ? t('canvas.blocks.database.shardOne')
+          : t('canvas.blocks.database.shardMany', { n: shardCount }),
+      color: '#10b981',
+    });
   const liveConfig = buildLiveConfig(node.data);
 
   return (
@@ -69,13 +74,16 @@ export const SvgMongodbNode: React.FC<SvgCompactNodeProps> = ({
       pipelineStatus={pipelineStatus}
       icon={Database}
       accentColor={MONGO_ACCENT}
-      title={node.label || 'MongoDB'}
+      title={node.label || t('canvas.blocks.titles.mongodb')}
       liveConfig={liveConfig}
       headerHeight={DB_HEADER_HEIGHT}
     >
-      <div style={{ height: DB_BODY_HEIGHT, display: 'flex' }} data-testid={`mongo-body-${node.id}`}>
-        <DocumentPills color={MONGO_ACCENT} />
-      </div>
+      {renderDbIdentityBody({
+        engineLabel: version ? `${t('canvas.blocks.titles.mongodb')} ${version}` : t('canvas.blocks.titles.mongodb'),
+        storage,
+        badges,
+        testId: `mongo-body-${node.id}`,
+      })}
     </CardShell>
   );
 };

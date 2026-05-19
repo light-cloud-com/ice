@@ -19,8 +19,8 @@ vi.mock('../../../../../config/blocks', () => ({
   expandBlueprint: vi.fn(),
 }));
 
-import { resolveBlueprint } from '../blueprint-resolver';
 import { getBlueprint, expandBlueprint } from '../../../../../config/blocks';
+import { resolveBlueprint } from '../blueprint-resolver';
 import type { Card, CardNode } from '../../../../../store/slices/cards-slice';
 import type { AddBlueprintOp } from '@ice/types';
 

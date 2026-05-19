@@ -8,14 +8,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import graphReducer, {
-  undo,
-  redo,
-  initializeGraph,
-  loadGraph,
-  saveGraph,
-  type GraphState,
-} from '../graph-slice';
+import graphReducer, { undo, redo, initializeGraph, loadGraph, saveGraph, type GraphState } from '../graph-slice';
 
 interface IceNode {
   id: string;
@@ -216,13 +209,8 @@ describe('graph-slice', () => {
     });
 
     it('handles a simple flat graph (no containers, no edges)', () => {
-      const g = graph([
-        node({ id: 'n-1', type: 'Compute.Container', name: 'web', position: { x: 100, y: 200 } }),
-      ]);
-      const s = graphReducer(
-        init(),
-        loadGraph.fulfilled({ graph: g, filePath: '/p.json' }, 'req-1', '/p.json'),
-      );
+      const g = graph([node({ id: 'n-1', type: 'Compute.Container', name: 'web', position: { x: 100, y: 200 } })]);
+      const s = graphReducer(init(), loadGraph.fulfilled({ graph: g, filePath: '/p.json' }, 'req-1', '/p.json'));
       expect(s.isLoading).toBe(false);
       expect(s.iceGraph).toEqual(g);
       expect(s.filePath).toBe('/p.json');
@@ -292,9 +280,7 @@ describe('graph-slice', () => {
     it('falls back to root grid layout when no parent and no saved position', () => {
       // Five root nodes with no positions → should land in 3-col grid.
       const g = graph(
-        Array.from({ length: 5 }, (_, i) =>
-          node({ id: `r-${i}`, type: 'Compute.Container', name: `r${i}` }),
-        ),
+        Array.from({ length: 5 }, (_, i) => node({ id: `r-${i}`, type: 'Compute.Container', name: `r${i}` })),
       );
       const s = graphReducer(init(), loadGraph.fulfilled({ graph: g, filePath: '' }, 'req-1', ''));
       const r0 = s.nodes.find((n) => n.id === 'r-0')!;
@@ -324,9 +310,7 @@ describe('graph-slice', () => {
     });
 
     it('uses node.size when provided', () => {
-      const g = graph([
-        node({ id: 'n-1', type: 'X', name: 'x', size: { width: 999, height: 555 } }),
-      ]);
+      const g = graph([node({ id: 'n-1', type: 'X', name: 'x', size: { width: 999, height: 555 } })]);
       const s = graphReducer(init(), loadGraph.fulfilled({ graph: g, filePath: '' }, 'req-1', ''));
       expect(s.nodes[0].width).toBe(999);
       expect(s.nodes[0].height).toBe(555);
@@ -445,9 +429,7 @@ describe('graph-slice', () => {
     });
 
     it('reads node.position when provided for root nodes', () => {
-      const g = graph([
-        node({ id: 'r', type: 'Compute.Container', name: 'r', position: { x: 999, y: 888 } }),
-      ]);
+      const g = graph([node({ id: 'r', type: 'Compute.Container', name: 'r', position: { x: 999, y: 888 } })]);
       const s = graphReducer(init(), loadGraph.fulfilled({ graph: g, filePath: '' }, 'r', ''));
       expect(s.nodes[0].position).toEqual({ x: 999, y: 888 });
     });

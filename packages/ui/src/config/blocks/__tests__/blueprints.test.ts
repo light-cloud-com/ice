@@ -10,22 +10,21 @@
  */
 
 import { describe, it, expect } from 'vitest';
-
 import { envConfigBlueprint } from '../common/config/env-config';
 import { githubRepositoryBlueprint } from '../common/source/github-repository';
-import { kubernetesStaticSiteBlueprint } from '../kubernetes/frontend/static-site';
-import { kubernetesSsrSiteBlueprint } from '../kubernetes/frontend/ssr-site';
-import { kubernetesGatewayBlueprint } from '../kubernetes/networking/gateway';
+import { kubernetesLlmGatewayBlueprint } from '../kubernetes/ai/llm-gateway';
+import { kubernetesSearchBlueprint } from '../kubernetes/analytics/search';
 import { kubernetesScalableBackendBlueprint } from '../kubernetes/backend/scalable-backend';
 import { kubernetesScheduledTaskBlueprint } from '../kubernetes/backend/scheduled-task';
 import { kubernetesWorkerBlueprint } from '../kubernetes/backend/worker';
-import { kubernetesLogsBlueprint } from '../kubernetes/observability/logs';
-import { kubernetesStorageBlueprint } from '../kubernetes/storage/storage';
-import { kubernetesLlmGatewayBlueprint } from '../kubernetes/ai/llm-gateway';
 import { kubernetesRedisCacheBlueprint } from '../kubernetes/data/redis-cache';
+import { kubernetesSsrSiteBlueprint } from '../kubernetes/frontend/ssr-site';
+import { kubernetesStaticSiteBlueprint } from '../kubernetes/frontend/static-site';
 import { kubernetesEventStreamBlueprint } from '../kubernetes/messaging/event-stream';
 import { kubernetesRabbitmqBlueprint } from '../kubernetes/messaging/rabbitmq';
-import { kubernetesSearchBlueprint } from '../kubernetes/analytics/search';
+import { kubernetesGatewayBlueprint } from '../kubernetes/networking/gateway';
+import { kubernetesLogsBlueprint } from '../kubernetes/observability/logs';
+import { kubernetesStorageBlueprint } from '../kubernetes/storage/storage';
 import type { BlockBlueprint } from '../../types';
 
 const allBlueprints: Array<[string, BlockBlueprint]> = [

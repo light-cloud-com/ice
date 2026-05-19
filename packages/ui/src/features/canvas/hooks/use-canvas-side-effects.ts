@@ -64,9 +64,9 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { autoOrganizeCard, type Card, type CardNode, type CardEdge } from '../../../store/slices/cards-slice';
 import { logCanvasRender } from '../../../shared/utils/debug-logger';
 import { inspectLayout, updateInspectorState, installInspector } from '../../../shared/utils/layout-inspector';
+import { autoOrganizeCard, type Card, type CardNode, type CardEdge } from '../../../store/slices/cards-slice';
 import type { ViewLevel } from '../../../config/visualization-config';
 import type { AppDispatch } from '../../../store';
 import type { CanvasNode } from '../components/types';
@@ -95,18 +95,7 @@ export interface UseCanvasSideEffectsArgs {
 }
 
 export function useCanvasSideEffects(args: UseCanvasSideEffectsArgs): void {
-  const {
-    card,
-    nodes,
-    edges,
-    canvasNodes,
-    effectiveNodes,
-    viewport,
-    lod,
-    viewLevel,
-    aiCurrentIntent,
-    dispatch,
-  } = args;
+  const { card, nodes, edges, canvasNodes, effectiveNodes, viewport, lod, viewLevel, aiCurrentIntent, dispatch } = args;
 
   // ── Effect 1: install inspector once on mount ──────────────────────────
   useEffect(() => {

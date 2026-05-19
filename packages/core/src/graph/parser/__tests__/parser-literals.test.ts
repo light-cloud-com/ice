@@ -89,77 +89,43 @@ describe('parse_type_identifier', () => {
   });
 
   it('concatenates IDENTIFIER + DOT + IDENTIFIER with a literal `.`', () => {
-    const s = make_parser_state(
-      eof(
-        tk('IDENTIFIER', 'aws'),
-        tk('DOT', '.'),
-        tk('IDENTIFIER', 'instance'),
-      ),
-    );
+    const s = make_parser_state(eof(tk('IDENTIFIER', 'aws'), tk('DOT', '.'), tk('IDENTIFIER', 'instance')));
     const t = parse_type_identifier(s);
     expect(t.name).toBe('aws.instance');
   });
 
   it('concatenates IDENTIFIER + DOT + TYPE_IDENTIFIER (mixed-case path)', () => {
-    const s = make_parser_state(
-      eof(
-        tk('IDENTIFIER', 'aws'),
-        tk('DOT', '.'),
-        tk('TYPE_IDENTIFIER', 'Instance'),
-      ),
-    );
+    const s = make_parser_state(eof(tk('IDENTIFIER', 'aws'), tk('DOT', '.'), tk('TYPE_IDENTIFIER', 'Instance')));
     const t = parse_type_identifier(s);
     expect(t.name).toBe('aws.Instance');
   });
 
   it('handles a multi-segment chain (a.b.c)', () => {
     const s = make_parser_state(
-      eof(
-        tk('IDENTIFIER', 'a'),
-        tk('DOT', '.'),
-        tk('IDENTIFIER', 'b'),
-        tk('DOT', '.'),
-        tk('IDENTIFIER', 'c'),
-      ),
+      eof(tk('IDENTIFIER', 'a'), tk('DOT', '.'), tk('IDENTIFIER', 'b'), tk('DOT', '.'), tk('IDENTIFIER', 'c')),
     );
     const t = parse_type_identifier(s);
     expect(t.name).toBe('a.b.c');
   });
 
-  it(
-    'RISK #3 — IDENTIFIER + DOT + STRING leaves a trailing `.` and does ' +
-      'NOT add an error',
-    () => {
-      // The dot is consumed by `ps_match`; the inner check sees STRING
-      // (not IDENTIFIER/TYPE_IDENTIFIER), the if simply skips, the
-      // outer while re-checks for another DOT (false), and the loop
-      // exits with `name === 'foo.'`.
-      const s = make_parser_state(
-        eof(
-          tk('IDENTIFIER', 'foo'),
-          tk('DOT', '.'),
-          tk('STRING', '"x"', 'x'),
-        ),
-      );
-      const t = parse_type_identifier(s);
-      expect(t.name).toBe('foo.');
-      expect(s.errors).toEqual([]);
-      // Cursor is at the STRING token (DOT consumed, STRING not).
-      expect(s.pos).toBe(2);
-    },
-  );
+  it('RISK #3 — IDENTIFIER + DOT + STRING leaves a trailing `.` and does ' + 'NOT add an error', () => {
+    // The dot is consumed by `ps_match`; the inner check sees STRING
+    // (not IDENTIFIER/TYPE_IDENTIFIER), the if simply skips, the
+    // outer while re-checks for another DOT (false), and the loop
+    // exits with `name === 'foo.'`.
+    const s = make_parser_state(eof(tk('IDENTIFIER', 'foo'), tk('DOT', '.'), tk('STRING', '"x"', 'x')));
+    const t = parse_type_identifier(s);
+    expect(t.name).toBe('foo.');
+    expect(s.errors).toEqual([]);
+    // Cursor is at the STRING token (DOT consumed, STRING not).
+    expect(s.pos).toBe(2);
+  });
 
   it(
     'RISK #3 — IDENTIFIER + DOT + NUMBER also leaves a trailing `.` ' +
       'with no error (silent skip generalises beyond STRING)',
     () => {
-      const s = make_parser_state(
-        eof(
-          tk('IDENTIFIER', 'foo'),
-          tk('DOT', '.'),
-          tk('NUMBER', '42', 42),
-        ),
-      );
+      const s = make_parser_state(eof(tk('IDENTIFIER', 'foo'), tk('DOT', '.'), tk('NUMBER', '42', 42)));
       const t = parse_type_identifier(s);
       expect(t.name).toBe('foo.');
       expect(s.errors).toEqual([]);
@@ -275,10 +241,7 @@ describe('create_span', () => {
     // variant; this test pins that the function signature is exactly
     // (start, end) and not (state, start, end). If the signature
     // shifts, this test breaks at compile-time.
-    const fn: (
-      a: SourcePosition,
-      b: SourcePosition,
-    ) => { start: SourcePosition; end: SourcePosition } = create_span;
+    const fn: (a: SourcePosition, b: SourcePosition) => { start: SourcePosition; end: SourcePosition } = create_span;
     const a = { line: 1, column: 1, offset: 0, length: 0 };
     const b = { line: 1, column: 2, offset: 1, length: 0 };
     expect(fn(a, b)).toEqual({ start: a, end: b });

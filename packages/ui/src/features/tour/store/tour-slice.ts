@@ -34,13 +34,7 @@ declare const process: { env: { NODE_ENV?: string } };
 /** localStorage key for the completed-tours fast-path read. */
 export const COMPLETED_TOURS_STORAGE_KEY = 'ice-completed-tours';
 
-export type TourPhase =
-  | 'idle'
-  | 'navigating'
-  | 'resolving'
-  | 'entering'
-  | 'placed'
-  | 'missing';
+export type TourPhase = 'idle' | 'navigating' | 'resolving' | 'entering' | 'placed' | 'missing';
 
 export interface TourPerTourTelemetry {
   /** Number of `recordAdvance` dispatches for this tour. Reset on `start`. */
@@ -111,17 +105,13 @@ const initialState: TourState = {
  * onboarding router shape (PUT `/onboarding/...` on the same auth
  * middleware).
  */
-export const persistCompletedTour = createAsyncThunk<void, string>(
-  'tour/persistCompletedTour',
-  async (tourId) => {
-    try {
-      await axiosInstance.put(`/onboarding/completed-tours/${encodeURIComponent(tourId)}`);
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.warn(`[tour] failed to persist completion of "${tourId}":`, err);
-    }
-  },
-);
+export const persistCompletedTour = createAsyncThunk<void, string>('tour/persistCompletedTour', async (tourId) => {
+  try {
+    await axiosInstance.put(`/onboarding/completed-tours/${encodeURIComponent(tourId)}`);
+  } catch (err) {
+    console.warn(`[tour] failed to persist completion of "${tourId}":`, err);
+  }
+});
 
 const tourSlice = createSlice({
   name: 'tour',
@@ -138,7 +128,6 @@ const tourSlice = createSlice({
       const tour = getTour(tourId);
       if (!tour) {
         if (process.env.NODE_ENV !== 'production') {
-          // eslint-disable-next-line no-console
           console.warn(`[tour] startTour("${tourId}") — tour is not registered; ignoring.`);
         }
         return;
@@ -199,9 +188,7 @@ const tourSlice = createSlice({
      * localStorage so future fast-path reads see the latest set.
      */
     hydrateFromUser(state, action: PayloadAction<{ completedTours: string[] }>) {
-      const serverIds = (action.payload.completedTours ?? []).filter(
-        (x): x is string => typeof x === 'string',
-      );
+      const serverIds = (action.payload.completedTours ?? []).filter((x): x is string => typeof x === 'string');
       const merged: string[] = [...state.completedTours];
       const seen = new Set(merged);
       for (const id of serverIds) {
@@ -263,6 +250,8 @@ export const selectActiveTourId = (s: TourSliceRoot): string | null => s.tour.ac
 export const selectStepIdx = (s: TourSliceRoot): number => s.tour.stepIdx;
 export const selectPhase = (s: TourSliceRoot): TourPhase => s.tour.phase;
 export const selectCompletedTours = (s: TourSliceRoot): string[] => s.tour.completedTours;
-export const selectIsCompleted = (id: string) => (s: TourSliceRoot): boolean =>
-  s.tour.completedTours.includes(id);
+export const selectIsCompleted =
+  (id: string) =>
+  (s: TourSliceRoot): boolean =>
+    s.tour.completedTours.includes(id);
 export const selectHydrated = (s: TourSliceRoot): boolean => s.tour.hydrated;

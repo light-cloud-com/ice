@@ -9,12 +9,7 @@
  *    swallows listener errors silently.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  add_listener,
-  emit_event,
-  remove_listener,
-  type EventListenerMap,
-} from '../embedded/events';
+import { add_listener, emit_event, remove_listener, type EventListenerMap } from '../embedded/events';
 import type { IceType, SchemaEvent } from '../schema-provider';
 
 describe('add_listener', () => {

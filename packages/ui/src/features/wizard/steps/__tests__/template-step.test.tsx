@@ -91,9 +91,7 @@ const mocks = vi.hoisted(() => {
     searchSpy: vi.fn((q: string, pool: FixtureTemplate[]) =>
       q ? pool.filter((t) => t.name.toLowerCase().includes(q.toLowerCase())) : pool,
     ),
-    compatSpy: vi.fn(
-      (_t: FixtureTemplate, _p: string) => ({ supported: 1, total: 1, unsupported: [] as string[] }),
-    ),
+    compatSpy: vi.fn((_t: FixtureTemplate, _p: string) => ({ supported: 1, total: 1, unsupported: [] as string[] })),
   };
 });
 
@@ -148,9 +146,7 @@ vi.mock('../../../../i18n', () => ({
 }));
 
 vi.mock('../../../../shared/components/ui/badge', () => ({
-  Badge: ({ children }: { children?: React.ReactNode }) => (
-    <span data-stub="Badge">{children}</span>
-  ),
+  Badge: ({ children }: { children?: React.ReactNode }) => <span data-stub="Badge">{children}</span>,
 }));
 
 vi.mock('../../../../shared/components/ui/search-input', () => ({
@@ -198,10 +194,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -254,7 +247,11 @@ describe('TemplateStep', () => {
   describe('Category tabs', () => {
     it('renders an "all" tab plus one per category fixture', () => {
       const tree = render();
-      const tabs = findByPredicate(tree, (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('rounded-full') === true);
+      const tabs = findByPredicate(
+        tree,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('rounded-full') === true,
+      );
       expect(tabs.length).toBe(1 + mocks.fixtureCategories.length);
     });
 
@@ -262,7 +259,8 @@ describe('TemplateStep', () => {
       const tree = render();
       const tabs = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('rounded-full') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('rounded-full') === true,
       );
       expect((tabs[0].props as { className: string }).className).toContain('bg-ice-accent-muted');
     });
@@ -271,7 +269,8 @@ describe('TemplateStep', () => {
       const tree = render();
       const tabs = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('rounded-full') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('rounded-full') === true,
       );
       const backendTab = tabs[2];
       (backendTab.props as { onClick: () => void }).onClick();
@@ -282,7 +281,8 @@ describe('TemplateStep', () => {
       const tree = render();
       const tabs = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('rounded-full') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('rounded-full') === true,
       );
       // First switch off "all"
       (tabs[1].props as { onClick: () => void }).onClick();
@@ -297,7 +297,8 @@ describe('TemplateStep', () => {
       const tree = render();
       const tabs = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('rounded-full') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('rounded-full') === true,
       );
       // tabs[1] = frontend
       expect((tabs[1].props as { style?: object }).style).toBeDefined();
@@ -310,7 +311,8 @@ describe('TemplateStep', () => {
       const tree = render();
       const tabs = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('rounded-full') === true,
+        (el) =>
+          el.type === 'button' && (el.props as { className?: string }).className?.includes('rounded-full') === true,
       );
       // tabs[3] = data tab; its first child should be a function (lucide icon component)
       const tabChildren = (tabs[3].props as { children: React.ReactNode[] }).children;
@@ -468,8 +470,7 @@ describe('TemplateStep', () => {
       const checks = findByPredicate(
         tree,
         (el) =>
-          el.type === 'span' &&
-          (el.props as { className?: string }).className?.includes('text-emerald-400') === true,
+          el.type === 'span' && (el.props as { className?: string }).className?.includes('text-emerald-400') === true,
       );
       expect(checks.length).toBeGreaterThan(0);
     });
@@ -518,8 +519,7 @@ describe('TemplateStep', () => {
       const checks = findByPredicate(
         tree,
         (el) =>
-          el.type === 'span' &&
-          (el.props as { className?: string }).className?.includes('text-emerald-400') === true,
+          el.type === 'span' && (el.props as { className?: string }).className?.includes('text-emerald-400') === true,
       );
       const warns = findByPredicate(
         tree,
@@ -554,10 +554,7 @@ describe('TemplateStep', () => {
     it('renders only the first 2 tags from the template (slice(0,2))', () => {
       const tree = render();
       // FE template has 3 tags: react, tailwind, extra — only react+tailwind should render
-      const badges = findByPredicate(
-        tree,
-        (el) => (el.props as { ['data-stub']?: string })['data-stub'] === 'Badge',
-      );
+      const badges = findByPredicate(tree, (el) => (el.props as { ['data-stub']?: string })['data-stub'] === 'Badge');
       const tagTexts = badges
         .map((b) => (b.props as { children?: unknown }).children)
         .filter((c): c is string => typeof c === 'string');

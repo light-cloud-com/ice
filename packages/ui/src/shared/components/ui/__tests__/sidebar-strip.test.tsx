@@ -48,8 +48,7 @@ function findFirst(tree: unknown, pred: (el: ElLike) => boolean): ElLike | undef
 
 const FakeIcon = (props: Record<string, unknown>) => ({ type: 'fake-icon', props });
 
-const render = (props: Record<string, unknown>): unknown =>
-  (SidebarStrip as unknown as (p: unknown) => unknown)(props);
+const render = (props: Record<string, unknown>): unknown => (SidebarStrip as unknown as (p: unknown) => unknown)(props);
 
 describe('SidebarStrip — empty', () => {
   it('returns null when tabs is empty', () => {
@@ -120,13 +119,19 @@ describe('SidebarStrip — buttons', () => {
 
   it('active indicator bar is positioned on left when side=left', () => {
     const out = render({ side: 'left', tabs: [tab({ active: true })] });
-    const indicator = findFirst(out, (el) => el.type === 'div' && (el.props.className ?? '').includes('bg-ice-accent'))!;
+    const indicator = findFirst(
+      out,
+      (el) => el.type === 'div' && (el.props.className ?? '').includes('bg-ice-accent'),
+    )!;
     expect(indicator.props.style).toEqual({ left: 0 });
   });
 
   it('active indicator bar is positioned on right when side=right', () => {
     const out = render({ side: 'right', tabs: [tab({ active: true })] });
-    const indicator = findFirst(out, (el) => el.type === 'div' && (el.props.className ?? '').includes('bg-ice-accent'))!;
+    const indicator = findFirst(
+      out,
+      (el) => el.type === 'div' && (el.props.className ?? '').includes('bg-ice-accent'),
+    )!;
     expect(indicator.props.style).toEqual({ right: 0 });
   });
 

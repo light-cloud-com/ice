@@ -86,10 +86,7 @@ export const createEnvironment = createAsyncThunk(
 
 export const deleteEnvironment = createAsyncThunk(
   'environments/delete',
-  async (
-    { envId, projectId }: { envId: string; projectId: string },
-    { rejectWithValue, getState },
-  ) => {
+  async ({ envId, projectId }: { envId: string; projectId: string }, { rejectWithValue, getState }) => {
     // findings.md #29 — `is_protected` was only checked at UI render
     // (the trash button was hidden for protected envs). Any callsite
     // that dispatched the thunk directly bypassed the guard. The
@@ -161,9 +158,7 @@ const environmentsSlice = createSlice({
       // the project's bucket. The previous unconditional write let a
       // stale callsite point activeEnvId at a deleted env, and
       // downstream selectors quietly resolved to undefined.
-      const exists = state.byProject[action.payload.projectId]?.some(
-        (e) => e.id === action.payload.envId,
-      );
+      const exists = state.byProject[action.payload.projectId]?.some((e) => e.id === action.payload.envId);
       if (!exists) return;
       state.activeEnvId[action.payload.projectId] = action.payload.envId;
     },

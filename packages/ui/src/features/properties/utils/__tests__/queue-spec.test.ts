@@ -69,15 +69,11 @@ describe('stringifyQueue', () => {
   });
 
   it('preserves fifo:true on output', () => {
-    expect(stringifyQueue({ name: 'orders', fifo: true })).toBe(
-      '{"name":"orders","fifo":true}',
-    );
+    expect(stringifyQueue({ name: 'orders', fifo: true })).toBe('{"name":"orders","fifo":true}');
   });
 
   it('preserves fifo:false on output', () => {
-    expect(stringifyQueue({ name: 'orders', fifo: false })).toBe(
-      '{"name":"orders","fifo":false}',
-    );
+    expect(stringifyQueue({ name: 'orders', fifo: false })).toBe('{"name":"orders","fifo":false}');
   });
 
   it('coerces a truthy non-boolean fifo (e.g. 1) to true via !! truthiness', () => {

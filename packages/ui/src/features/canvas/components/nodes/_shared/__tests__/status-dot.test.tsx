@@ -24,9 +24,11 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
 }
 
 const renderInner = (props: React.ComponentProps<typeof StatusDot>): React.ReactElement => {
-  const Inner = (StatusDot as unknown as {
-    type: (p: React.ComponentProps<typeof StatusDot>) => React.ReactElement;
-  }).type;
+  const Inner = (
+    StatusDot as unknown as {
+      type: (p: React.ComponentProps<typeof StatusDot>) => React.ReactElement;
+    }
+  ).type;
   return Inner(props);
 };
 
@@ -36,8 +38,7 @@ describe('StatusDot', () => {
     const els = [...walk(tree)];
     const dot = els.find(
       (el) =>
-        el.type === 'span' &&
-        (el.props as { style?: Record<string, string | number> }).style?.borderRadius === '50%',
+        el.type === 'span' && (el.props as { style?: Record<string, string | number> }).style?.borderRadius === '50%',
     )!;
     const style = (dot.props as { style: Record<string, string | number> }).style;
     expect(style.background).toBe('#22c55e');
@@ -50,8 +51,7 @@ describe('StatusDot', () => {
     const els = [...walk(tree)];
     const dot = els.find(
       (el) =>
-        el.type === 'span' &&
-        (el.props as { style?: Record<string, string | number> }).style?.borderRadius === '50%',
+        el.type === 'span' && (el.props as { style?: Record<string, string | number> }).style?.borderRadius === '50%',
     )!;
     const style = (dot.props as { style: Record<string, string | number> }).style;
     expect(style.width).toBe(10);

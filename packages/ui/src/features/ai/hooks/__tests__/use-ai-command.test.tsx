@@ -12,10 +12,10 @@
  *   - serialize-canvas (defensive — not load-bearing here)
  */
 
+import { configureStore } from '@reduxjs/toolkit';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const flushMicrotasks = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
@@ -350,10 +350,7 @@ describe('sendIntent — JSON path', () => {
     const cap = captureHook(makeStore());
 
     await cap.sendIntent('do thing');
-    expect(warn).toHaveBeenCalledWith(
-      expect.stringContaining('No operations in response'),
-      expect.any(Object),
-    );
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('No operations in response'), expect.any(Object));
     warn.mockRestore();
   });
 
@@ -402,11 +399,7 @@ describe('sendIntent — SSE path', () => {
   });
 
   it('falls back to default messages for missing payload fields', async () => {
-    const chunks = [
-      'event: thinking\ndata: {}\n\n',
-      'event: explanation\ndata: {}\n\n',
-      'event: error\ndata: {}\n\n',
-    ];
+    const chunks = ['event: thinking\ndata: {}\n\n', 'event: explanation\ndata: {}\n\n', 'event: error\ndata: {}\n\n'];
     (globalThis.fetch as any).mockResolvedValueOnce(sseResponse(chunks));
     const store = makeStore();
     const cap = captureHook(store);
@@ -445,10 +438,7 @@ describe('sendIntent — SSE path', () => {
     // The parser keeps the last line in `buffer` across reads. Ship the
     // event lines split *before* the trailing blank line so the second
     // read's blank-line completion fires the dispatch.
-    const chunks = [
-      'event: operation\ndata: {"op":"autoOrganize"}\n\nev',
-      'ent: explanation\ndata: {"text":"x"}\n\n',
-    ];
+    const chunks = ['event: operation\ndata: {"op":"autoOrganize"}\n\nev', 'ent: explanation\ndata: {"text":"x"}\n\n'];
     (globalThis.fetch as any).mockResolvedValueOnce(sseResponse(chunks));
     const store = makeStore();
     const cap = captureHook(store);

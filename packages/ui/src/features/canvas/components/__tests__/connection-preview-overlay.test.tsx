@@ -19,7 +19,6 @@
 
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-
 import type { CanvasNode } from '../types';
 
 // ─── Mock the rf-canv-8 utils so we exercise only the JSX shell ──────────────
@@ -43,22 +42,14 @@ vi.mock('../../utils/connection-preview', () => ({
 }));
 
 // Import AFTER vi.mock so the mocked module is bound.
-import {
-  ConnectionPreviewOverlay,
-  type ConnectionPreviewOverlayProps,
-} from '../connection-preview-overlay';
+import { ConnectionPreviewOverlay, type ConnectionPreviewOverlayProps } from '../connection-preview-overlay';
 
 // ─── Tree-walker (same shape as rf-canv-10/11/12/13) ─────────────────────────
 
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -72,10 +63,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -89,9 +77,7 @@ function findByType(tree: React.ReactNode, type: unknown): React.ReactElement[] 
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const baseProps = (
-  overrides: Partial<ConnectionPreviewOverlayProps> = {},
-): ConnectionPreviewOverlayProps => ({
+const baseProps = (overrides: Partial<ConnectionPreviewOverlayProps> = {}): ConnectionPreviewOverlayProps => ({
   drawingConnection: {
     sourceId: 'src',
     sourcePoint: { x: 10, y: 20 },
@@ -122,9 +108,7 @@ describe('ConnectionPreviewOverlay — outer wrap', () => {
     const tree = render();
     const wraps = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'g' &&
-        (el.props as { className?: string }).className === 'connection-preview',
+      (el) => el.type === 'g' && (el.props as { className?: string }).className === 'connection-preview',
     );
     expect(wraps).toHaveLength(1);
     const style = (wraps[0].props as { style?: React.CSSProperties }).style;
@@ -146,10 +130,7 @@ describe('ConnectionPreviewOverlay — forwards args to rf-canv-8 utils', () => 
       },
     });
     expect(mocks.computeConnectionPreviewPath).toHaveBeenCalledTimes(1);
-    expect(mocks.computeConnectionPreviewPath).toHaveBeenCalledWith(
-      { x: 11, y: 22 },
-      { x: 111, y: 222 },
-    );
+    expect(mocks.computeConnectionPreviewPath).toHaveBeenCalledWith({ x: 11, y: 22 }, { x: 111, y: 222 });
   });
 
   it('calls pickPreviewColor with (currentPoint, effectiveNodes, sourceId, dragTargets)', () => {
@@ -176,12 +157,7 @@ describe('ConnectionPreviewOverlay — forwards args to rf-canv-8 utils', () => 
       connectionDragTargets: targets,
     });
     expect(mocks.pickPreviewColor).toHaveBeenCalledTimes(1);
-    expect(mocks.pickPreviewColor).toHaveBeenCalledWith(
-      { x: 333, y: 444 },
-      nodes,
-      'src-id',
-      targets,
-    );
+    expect(mocks.pickPreviewColor).toHaveBeenCalledWith({ x: 333, y: 444 }, nodes, 'src-id', targets);
   });
 
   it('threads a null dragTargets through verbatim (no defaulting in the shell)', () => {

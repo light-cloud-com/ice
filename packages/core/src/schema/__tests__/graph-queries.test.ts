@@ -9,15 +9,8 @@
  *  - get_equivalents takes no max_depth (signature parity).
  */
 import { describe, expect, it, vi } from 'vitest';
-import {
-  get_dependencies,
-  get_dependents,
-  get_equivalents,
-} from '../embedded/graph-queries';
-import type {
-  SqliteResourceType,
-  SqliteSchemaRegistry,
-} from '../embedded/sqlite-types';
+import { get_dependencies, get_dependents, get_equivalents } from '../embedded/graph-queries';
+import type { SqliteResourceType, SqliteSchemaRegistry } from '../embedded/sqlite-types';
 import type { IceType } from '../schema-provider';
 
 function baseResource(over: Partial<SqliteResourceType> = {}): SqliteResourceType {
@@ -98,9 +91,7 @@ describe('get_equivalents', () => {
   });
 
   it('returns the converted equivalents', async () => {
-    const get_eq = vi.fn(() => [
-      baseResource({ ice_type: 'gcp.compute.instance', display_name: 'GCE' }),
-    ]);
+    const get_eq = vi.fn(() => [baseResource({ ice_type: 'gcp.compute.instance', display_name: 'GCE' })]);
     const reg = makeRegistry({ get_equivalents: get_eq });
     const r = await get_equivalents(reg, 'aws.ec2.instance' as IceType);
     expect(get_eq).toHaveBeenCalledWith('aws.ec2.instance');

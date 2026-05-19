@@ -22,7 +22,6 @@
 
 import { Plus, RefreshCw } from 'lucide-react';
 import React from 'react';
-
 import { getApi } from '../../../api/api-adapter';
 import type { TranslatorFn } from '../hooks/use-provider-handlers';
 import type { ProviderConfig, ProviderRuntimeState, ProviderStatesMap } from '../types';
@@ -54,9 +53,7 @@ export const AddProjectForm: React.FC<AddProjectFormProps> = ({
 }) => {
   return (
     <div className="p-3 bg-muted/50 rounded-md space-y-2 border border-dashed border-border">
-      <div className="text-xs font-medium text-muted-foreground">
-        {t('providerSettings.projects.addAnother')}
-      </div>
+      <div className="text-xs font-medium text-muted-foreground">{t('providerSettings.projects.addAnother')}</div>
       {provider.configFields.map((field) => (
         <div key={field.name}>
           <label className="text-xs text-muted-foreground">{field.label}</label>
@@ -121,17 +118,10 @@ export const AddProjectForm: React.FC<AddProjectFormProps> = ({
           disabled={connecting === provider.id}
           className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-xs rounded bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
         >
-          {connecting === provider.id ? (
-            <RefreshCw className="w-3 h-3 animate-spin" />
-          ) : (
-            <Plus className="w-3 h-3" />
-          )}
+          {connecting === provider.id ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
           {t('providerSettings.projects.addButton')}
         </button>
-        <button
-          onClick={() => onShowAddProjectChange(null)}
-          className="px-3 py-1.5 text-xs rounded hover:bg-muted"
-        >
+        <button onClick={() => onShowAddProjectChange(null)} className="px-3 py-1.5 text-xs rounded hover:bg-muted">
           {t('providerSettings.projects.cancelButton')}
         </button>
       </div>

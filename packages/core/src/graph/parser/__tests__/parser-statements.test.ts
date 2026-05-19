@@ -30,6 +30,7 @@
  * test pins exactly the shape it cares about.
  */
 import { describe, it, expect } from 'vitest';
+import { make_parser_state } from '../parser-state';
 import {
   parse_import_statement,
   parse_locals_block,
@@ -37,13 +38,7 @@ import {
   parse_output_block,
   parse_variable_block,
 } from '../parser-statements';
-import { make_parser_state } from '../parser-state';
-import type {
-  Identifier,
-  NullLiteral,
-  NumberLiteral,
-  StringLiteral,
-} from '../ast';
+import type { NullLiteral, NumberLiteral, StringLiteral } from '../ast';
 import type { Token, TokenType, SourcePosition } from '../tokens';
 
 /** Build a minimal token at line/col 1 (with optional literal). */
@@ -84,12 +79,7 @@ function bool(value: boolean): Token {
 describe('parse_variable_block', () => {
   it('parses an empty variable block: `variable foo { }`', () => {
     const s = make_parser_state(
-      eof(
-        tk('VARIABLE', 'variable'),
-        id('foo'),
-        tk('LEFT_BRACE', '{'),
-        tk('RIGHT_BRACE', '}'),
-      ),
+      eof(tk('VARIABLE', 'variable'), id('foo'), tk('LEFT_BRACE', '{'), tk('RIGHT_BRACE', '}')),
     );
     const node = parse_variable_block(s);
     expect(node.kind).toBe('VariableBlock');
@@ -222,35 +212,29 @@ describe('parse_output_block', () => {
     },
   );
 
-  it(
-    'RISK #13 — missing `value`: BOTH error AND synthetic NullLiteral ' +
-      'are emitted',
-    () => {
-      // output foo { description = "x" }
-      const s = make_parser_state(
-        eof(
-          tk('OUTPUT', 'output'),
-          id('foo'),
-          tk('LEFT_BRACE', '{'),
-          id('description'),
-          tk('EQUALS', '='),
-          str('x'),
-          tk('RIGHT_BRACE', '}'),
-        ),
-      );
-      const node = parse_output_block(s);
-      // Error MUST be emitted.
-      expect(
-        s.errors.some((e) => e.message === "Output block requires 'value' attribute"),
-      ).toBe(true);
-      // BUT the value field is filled with a synthetic NullLiteral, not
-      // left undefined.
-      expect(node.value.kind).toBe('NullLiteral');
-      const nullLit = node.value as NullLiteral;
-      // Span at the start of the block (zero-width region at `output`).
-      expect(nullLit.span.start).toEqual(nullLit.span.end);
-    },
-  );
+  it('RISK #13 — missing `value`: BOTH error AND synthetic NullLiteral ' + 'are emitted', () => {
+    // output foo { description = "x" }
+    const s = make_parser_state(
+      eof(
+        tk('OUTPUT', 'output'),
+        id('foo'),
+        tk('LEFT_BRACE', '{'),
+        id('description'),
+        tk('EQUALS', '='),
+        str('x'),
+        tk('RIGHT_BRACE', '}'),
+      ),
+    );
+    const node = parse_output_block(s);
+    // Error MUST be emitted.
+    expect(s.errors.some((e) => e.message === "Output block requires 'value' attribute")).toBe(true);
+    // BUT the value field is filled with a synthetic NullLiteral, not
+    // left undefined.
+    expect(node.value.kind).toBe('NullLiteral');
+    const nullLit = node.value as NullLiteral;
+    // Span at the start of the block (zero-width region at `output`).
+    expect(nullLit.span.start).toEqual(nullLit.span.end);
+  });
 });
 
 describe('parse_module_block', () => {
@@ -303,41 +287,29 @@ describe('parse_module_block', () => {
     expect((node.body.attributes[0]!.value as NumberLiteral).value).toBe(42);
   });
 
-  it(
-    'missing `source`: error emitted AND synthetic empty StringLiteral ' +
-      'fills the slot',
-    () => {
-      // module foo { version = "1.0" }
-      const s = make_parser_state(
-        eof(
-          tk('MODULE', 'module'),
-          id('foo'),
-          tk('LEFT_BRACE', '{'),
-          id('version'),
-          tk('EQUALS', '='),
-          str('1.0'),
-          tk('RIGHT_BRACE', '}'),
-        ),
-      );
-      const node = parse_module_block(s);
-      expect(
-        s.errors.some((e) => e.message === "Module block requires 'source' attribute"),
-      ).toBe(true);
-      expect(node.source.kind).toBe('StringLiteral');
-      expect(node.source.value).toBe('');
-    },
-  );
+  it('missing `source`: error emitted AND synthetic empty StringLiteral ' + 'fills the slot', () => {
+    // module foo { version = "1.0" }
+    const s = make_parser_state(
+      eof(
+        tk('MODULE', 'module'),
+        id('foo'),
+        tk('LEFT_BRACE', '{'),
+        id('version'),
+        tk('EQUALS', '='),
+        str('1.0'),
+        tk('RIGHT_BRACE', '}'),
+      ),
+    );
+    const node = parse_module_block(s);
+    expect(s.errors.some((e) => e.message === "Module block requires 'source' attribute")).toBe(true);
+    expect(node.source.kind).toBe('StringLiteral');
+    expect(node.source.value).toBe('');
+  });
 });
 
 describe('parse_locals_block', () => {
   it('parses an empty locals block: `locals { }`', () => {
-    const s = make_parser_state(
-      eof(
-        tk('LOCALS', 'locals'),
-        tk('LEFT_BRACE', '{'),
-        tk('RIGHT_BRACE', '}'),
-      ),
-    );
+    const s = make_parser_state(eof(tk('LOCALS', 'locals'), tk('LEFT_BRACE', '{'), tk('RIGHT_BRACE', '}')));
     const node = parse_locals_block(s);
     expect(node.kind).toBe('LocalsBlock');
     expect(Object.keys(node.values)).toHaveLength(0);
@@ -385,9 +357,7 @@ describe('parse_locals_block', () => {
 
 describe('parse_import_statement', () => {
   it('parses a bare `import "<path>"` with no alias', () => {
-    const s = make_parser_state(
-      eof(tk('IMPORT', 'import'), str('foo')),
-    );
+    const s = make_parser_state(eof(tk('IMPORT', 'import'), str('foo')));
     const node = parse_import_statement(s);
     expect(node.kind).toBe('ImportStatement');
     expect(node.path.value).toBe('foo');
@@ -395,34 +365,26 @@ describe('parse_import_statement', () => {
   });
 
   it('parses `import "<path>" as <alias>` with alias', () => {
-    const s = make_parser_state(
-      eof(tk('IMPORT', 'import'), str('foo'), id('as'), id('bar')),
-    );
+    const s = make_parser_state(eof(tk('IMPORT', 'import'), str('foo'), id('as'), id('bar')));
     const node = parse_import_statement(s);
     expect(node.path.value).toBe('foo');
     expect(node.alias?.name).toBe('bar');
   });
 
-  it(
-    'RISK #14 — non-`as` identifier silently consumed and dropped, no ' +
-      'alias set, no error emitted',
-    () => {
-      // import "foo" notas
-      // `notas` is consumed by `ps_match(s, 'IDENTIFIER')` but the
-      // subsequent `previous().value === 'as'` check fails, so the
-      // identifier is silently dropped and `alias` stays undefined.
-      const cursor_pos_before_notas = 2; // after IMPORT + STRING
-      const s = make_parser_state(
-        eof(tk('IMPORT', 'import'), str('foo'), id('notas')),
-      );
-      const node = parse_import_statement(s);
-      // Alias must NOT be set.
-      expect(node.alias).toBeUndefined();
-      // No error must be emitted.
-      expect(s.errors).toHaveLength(0);
-      // Cursor must have advanced past `notas` — pos should be the slot
-      // AFTER the consumed identifier (3, the EOF index).
-      expect(s.pos).toBeGreaterThan(cursor_pos_before_notas);
-    },
-  );
+  it('RISK #14 — non-`as` identifier silently consumed and dropped, no ' + 'alias set, no error emitted', () => {
+    // import "foo" notas
+    // `notas` is consumed by `ps_match(s, 'IDENTIFIER')` but the
+    // subsequent `previous().value === 'as'` check fails, so the
+    // identifier is silently dropped and `alias` stays undefined.
+    const cursor_pos_before_notas = 2; // after IMPORT + STRING
+    const s = make_parser_state(eof(tk('IMPORT', 'import'), str('foo'), id('notas')));
+    const node = parse_import_statement(s);
+    // Alias must NOT be set.
+    expect(node.alias).toBeUndefined();
+    // No error must be emitted.
+    expect(s.errors).toHaveLength(0);
+    // Cursor must have advanced past `notas` — pos should be the slot
+    // AFTER the consumed identifier (3, the EOF index).
+    expect(s.pos).toBeGreaterThan(cursor_pos_before_notas);
+  });
 });

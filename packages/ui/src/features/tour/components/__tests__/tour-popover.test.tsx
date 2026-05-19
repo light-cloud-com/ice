@@ -23,8 +23,8 @@
  */
 
 import * as React from 'react';
-import { createRoot, type Root } from 'react-dom/client';
 import { act } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -86,17 +86,18 @@ function makeStep(overrides: Partial<TourStep> = {}): TourStep {
 
 function setAnchorRect(el: HTMLElement, rect: { left: number; top: number; width: number; height: number }): void {
   const { left, top, width, height } = rect;
-  el.getBoundingClientRect = () => ({
-    x: left,
-    y: top,
-    left,
-    top,
-    width,
-    height,
-    right: left + width,
-    bottom: top + height,
-    toJSON: () => ({}),
-  } as DOMRect);
+  el.getBoundingClientRect = () =>
+    ({
+      x: left,
+      y: top,
+      left,
+      top,
+      width,
+      height,
+      right: left + width,
+      bottom: top + height,
+      toJSON: () => ({}),
+    }) as DOMRect;
 }
 
 function render(ui: React.ReactElement): void {

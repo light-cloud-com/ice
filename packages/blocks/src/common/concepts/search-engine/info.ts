@@ -31,6 +31,29 @@ listens to a change feed and pushes documents to Search. The query path
 hits Search directly; the source-of-truth hits Postgres. This decouples
 indexing latency from request-path latency.
     `.trim(),
+    markdownZh: `
+# 搜索
+
+跨百万级文档的全文搜索、分面过滤、容错纠错与聚合 — 无需把 Elasticsearch 硬塞进您的 Postgres 实例。
+
+## 适用场景
+
+- 全站搜索框(商品、文章、知识库)
+- 分面筛选(类别 × 价格 × 评分 × 是否有货)
+- 日志搜索与聚合(安全事件、可观测性)
+- 地理空间搜索与排序
+
+## 不适用场景
+
+- 向量嵌入 / 语义相似度 → **Vector DB**
+- 精确匹配的键查找 → **Redis 缓存** 或您现有的 **Postgres**
+- 对历史事件的分析聚合 → **数据仓库**
+- 小规模语料(< 10 万文档,简单 LIKE 查询足够)→ 直接用 **Postgres** 配合 \`tsvector\` / \`pg_trgm\`
+
+## 索引模式
+
+大多数应用采用异步索引:应用写入 **Postgres**,**Worker** 监听变更流,将文档推送到搜索服务。查询路径直接打到搜索服务;真相源头仍是 Postgres。这样能将索引延迟与请求路径延迟解耦。
+    `.trim(),
   },
   compilesTo: {
     aws: [
@@ -70,5 +93,6 @@ res, _ := client.Search(client.Search.WithIndex("products"), client.Search.WithB
     { label: 'Vertex AI Search', url: 'https://cloud.google.com/vertex-ai-search/docs' },
     { label: 'Azure Cognitive Search', url: 'https://learn.microsoft.com/en-us/azure/search/' },
   ],
+  linksZh: ['AWS OpenSearch', 'Vertex AI Search', 'Azure Cognitive Search'],
   relatedConcepts: ['Database.PostgreSQL', 'AI.VectorDB', 'Compute.Worker'],
 };

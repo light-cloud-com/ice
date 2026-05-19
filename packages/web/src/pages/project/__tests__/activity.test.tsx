@@ -16,7 +16,7 @@
  */
 
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const mocks = vi.hoisted(() => {
   const stateSlots: unknown[] = [];
@@ -133,10 +133,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) if (el && predicate(el)) out.push(el);
   return out;
@@ -192,7 +189,9 @@ describe('ProjectActivity — empty state', () => {
 
 describe('ProjectActivity — audit fetch', () => {
   it('fetches /ai/audit/list on mount and seeds auditEntries', async () => {
-    mocks.axiosGet.mockResolvedValueOnce({ data: { entries: [{ id: 'a1', timestamp: '2024-01-01', intent: 'do thing' }] } });
+    mocks.axiosGet.mockResolvedValueOnce({
+      data: { entries: [{ id: 'a1', timestamp: '2024-01-01', intent: 'do thing' }] },
+    });
     render();
     await mocks.effects[0].cb();
     expect(mocks.axiosGet).toHaveBeenCalledWith('/ai/audit/list');
@@ -229,7 +228,18 @@ describe('ProjectActivity — infra fetch', () => {
     mocks.activeCard = { id: 'card-1', nodes: [] };
     // Only the infra effect is driven below — one mock is enough.
     mocks.axiosGet.mockResolvedValueOnce({
-      data: [{ id: 'd1', status: 'success', provider: 'aws', region: 'us-east-1', environment: 'prod', duration_ms: 5000, error: null, created_at: '2024-01-01' }],
+      data: [
+        {
+          id: 'd1',
+          status: 'success',
+          provider: 'aws',
+          region: 'us-east-1',
+          environment: 'prod',
+          duration_ms: 5000,
+          error: null,
+          created_at: '2024-01-01',
+        },
+      ],
     });
     render();
     await mocks.effects[1].cb();
@@ -284,9 +294,7 @@ describe('ProjectActivity — service nodes memo', () => {
   it('falls back to id-slice as label when node label is missing', () => {
     mocks.activeCard = {
       id: 'card-1',
-      nodes: [
-        { id: 'abcdef1234567890', type: 'resource', data: { iceType: 'Compute.Function' } },
-      ],
+      nodes: [{ id: 'abcdef1234567890', type: 'resource', data: { iceType: 'Compute.Function' } }],
     };
     mocks.pipelineHistory = {
       'card-1:abcdef1234567890': [
@@ -340,9 +348,12 @@ describe('ProjectActivity — filter tabs', () => {
       (el) =>
         typeof el.type === 'function' &&
         typeof (el.props as { label?: string }).label === 'string' &&
-        ['project.activity.filterAll', 'project.activity.filterAi', 'project.activity.filterInfra', 'project.activity.filterService'].includes(
-          (el.props as { label: string }).label,
-        ),
+        [
+          'project.activity.filterAll',
+          'project.activity.filterAi',
+          'project.activity.filterInfra',
+          'project.activity.filterService',
+        ].includes((el.props as { label: string }).label),
     );
     expect(tabs.length).toBe(4);
   });
@@ -352,9 +363,7 @@ describe('ProjectActivity — filter tabs', () => {
     const tree = render();
     const aiTab = findByPredicate(
       tree,
-      (el) =>
-        typeof el.type === 'function' &&
-        (el.props as { label?: string }).label === 'project.activity.filterAi',
+      (el) => typeof el.type === 'function' && (el.props as { label?: string }).label === 'project.activity.filterAi',
     )[0];
     (aiTab.props as { onClick: () => void }).onClick();
     expect(mocks.stateSlots[0]).toBe('ai');
@@ -365,9 +374,7 @@ describe('ProjectActivity — filter tabs', () => {
     const tree = render();
     const allTab = findByPredicate(
       tree,
-      (el) =>
-        typeof el.type === 'function' &&
-        (el.props as { label?: string }).label === 'project.activity.filterAll',
+      (el) => typeof el.type === 'function' && (el.props as { label?: string }).label === 'project.activity.filterAll',
     )[0];
     (allTab.props as { onClick: () => void }).onClick();
     expect(mocks.stateSlots[0]).toBe('all');
@@ -379,8 +386,7 @@ describe('ProjectActivity — filter tabs', () => {
     const infraTab = findByPredicate(
       tree,
       (el) =>
-        typeof el.type === 'function' &&
-        (el.props as { label?: string }).label === 'project.activity.filterInfra',
+        typeof el.type === 'function' && (el.props as { label?: string }).label === 'project.activity.filterInfra',
     )[0];
     (infraTab.props as { onClick: () => void }).onClick();
     expect(mocks.stateSlots[0]).toBe('infra');
@@ -392,8 +398,7 @@ describe('ProjectActivity — filter tabs', () => {
     const svcTab = findByPredicate(
       tree,
       (el) =>
-        typeof el.type === 'function' &&
-        (el.props as { label?: string }).label === 'project.activity.filterService',
+        typeof el.type === 'function' && (el.props as { label?: string }).label === 'project.activity.filterService',
     )[0];
     (svcTab.props as { onClick: () => void }).onClick();
     expect(mocks.stateSlots[0]).toBe('service');
@@ -403,16 +408,25 @@ describe('ProjectActivity — filter tabs', () => {
     mocks.stateSlots.push(
       'all',
       [{ id: 'a1', timestamp: '2024-01-02', intent: 'thing' }],
-      [{ id: 'd1', status: 'failed', provider: 'aws', region: 'us-east-1', environment: 'prod', duration_ms: 0, error: 'oops', created_at: '2024-01-01' }],
+      [
+        {
+          id: 'd1',
+          status: 'failed',
+          provider: 'aws',
+          region: 'us-east-1',
+          environment: 'prod',
+          duration_ms: 0,
+          error: 'oops',
+          created_at: '2024-01-01',
+        },
+      ],
       false,
       null,
     );
     const tree = render();
     const filterAi = findByPredicate(
       tree,
-      (el) =>
-        typeof el.type === 'function' &&
-        (el.props as { label?: string }).label === 'project.activity.filterAi',
+      (el) => typeof el.type === 'function' && (el.props as { label?: string }).label === 'project.activity.filterAi',
     )[0];
     expect((filterAi.props as { count: number }).count).toBe(1);
   });
@@ -421,7 +435,18 @@ describe('ProjectActivity — filter tabs', () => {
     mocks.stateSlots.push(
       'ai',
       [{ id: 'a1', timestamp: '2024-01-02', intent: 'do thing' }],
-      [{ id: 'd1', status: 'success', provider: 'aws', region: 'us-east-1', environment: 'prod', duration_ms: 0, error: null, created_at: '2024-01-01' }],
+      [
+        {
+          id: 'd1',
+          status: 'success',
+          provider: 'aws',
+          region: 'us-east-1',
+          environment: 'prod',
+          duration_ms: 0,
+          error: null,
+          created_at: '2024-01-01',
+        },
+      ],
       false,
       null,
     );
@@ -458,7 +483,18 @@ describe('ProjectActivity — infra status mapping', () => {
       mocks.stateSlots.push(
         'infra',
         [],
-        [{ id: 'd1', status: input, provider: 'aws', region: 'us-east-1', environment: 'prod', duration_ms: 0, error: null, created_at: '2024-01-01' }],
+        [
+          {
+            id: 'd1',
+            status: input,
+            provider: 'aws',
+            region: 'us-east-1',
+            environment: 'prod',
+            duration_ms: 0,
+            error: null,
+            created_at: '2024-01-01',
+          },
+        ],
         false,
         null,
       );
@@ -468,7 +504,8 @@ describe('ProjectActivity — infra status mapping', () => {
       // at all. Verify it renders.
       const items = findByPredicate(
         tree,
-        (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'project.activity.infrastructure',
+        (el) =>
+          el.type === 'span' && (el.props as { children?: unknown }).children === 'project.activity.infrastructure',
       );
       expect(items.length).toBe(1);
       // Sanity: the expected ActivityItem.status is mapped — we can read
@@ -545,7 +582,18 @@ describe('ProjectActivity — timeline expand', () => {
     mocks.stateSlots.push(
       'all',
       [],
-      [{ id: 'd1', status: 'failed', provider: 'aws', region: 'us-east-1', environment: 'prod', duration_ms: 5000, error: 'boom', created_at: '2024-01-01' }],
+      [
+        {
+          id: 'd1',
+          status: 'failed',
+          provider: 'aws',
+          region: 'us-east-1',
+          environment: 'prod',
+          duration_ms: 5000,
+          error: 'boom',
+          created_at: '2024-01-01',
+        },
+      ],
       false,
       'infra-d1', // expandedId matches
     );
@@ -565,7 +613,18 @@ describe('ProjectActivity — timeline expand', () => {
     mocks.stateSlots.push(
       'all',
       [],
-      [{ id: 'd1', status: 'success', provider: 'aws', region: 'us-east-1', environment: 'prod', duration_ms: 5000, error: null, created_at: '2024-01-01' }],
+      [
+        {
+          id: 'd1',
+          status: 'success',
+          provider: 'aws',
+          region: 'us-east-1',
+          environment: 'prod',
+          duration_ms: 5000,
+          error: null,
+          created_at: '2024-01-01',
+        },
+      ],
       false,
       null,
     );
@@ -587,7 +646,18 @@ describe('ProjectActivity — timeline expand', () => {
     mocks.stateSlots.push(
       'all',
       [],
-      [{ id: 'd1', status: 'success', provider: 'aws', region: 'us-east-1', environment: 'prod', duration_ms: 5000, error: null, created_at: '2024-01-01' }],
+      [
+        {
+          id: 'd1',
+          status: 'success',
+          provider: 'aws',
+          region: 'us-east-1',
+          environment: 'prod',
+          duration_ms: 5000,
+          error: null,
+          created_at: '2024-01-01',
+        },
+      ],
       false,
       'infra-d1', // already open
     );
@@ -817,6 +887,3 @@ describe('ProjectActivity — formatRelativeTime', () => {
     expect(ts.length).toBeGreaterThanOrEqual(1);
   });
 });
-
-// Re-import vitest's afterEach for the timer scope
-import { afterEach } from 'vitest';

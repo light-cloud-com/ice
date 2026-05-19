@@ -37,19 +37,16 @@
  * @see rf-cards-8
  */
 
-import type { PayloadAction } from '@reduxjs/toolkit';
-import type { CardsState } from '../types';
+import { CONTAINER_PADDING, HEADER_HEIGHT } from '../../../../config/canvas-constants';
 import { invalidateEdgeRoutesTouching } from '../edge-routes';
 import { pushSnapshot } from '../snapshot';
-import { CONTAINER_PADDING, HEADER_HEIGHT } from '../../../../config/canvas-constants';
+import type { CardsState } from '../types';
+import type { PayloadAction } from '@reduxjs/toolkit';
 
 export const nodePositionReducers = {
   // Update node position in active card (L2 / canonical position)
   // BND-2: Clamps child nodes to parent bounds as a safety net.
-  updateCardNodePosition: (
-    state: CardsState,
-    action: PayloadAction<{ nodeId: string; x: number; y: number }>,
-  ) => {
+  updateCardNodePosition: (state: CardsState, action: PayloadAction<{ nodeId: string; x: number; y: number }>) => {
     pushSnapshot(state, 'updateCardNodePosition');
     const card = state.cards.find((c) => c.id === state.activeCardId);
     if (card) {
@@ -130,10 +127,7 @@ export const nodePositionReducers = {
   // Resize node in active card.
   // Intentionally does NOT invalidate edge routes — keeps cached polylines
   // stable through corner-drag without flicker. See module JSDoc.
-  resizeCardNode: (
-    state: CardsState,
-    action: PayloadAction<{ id: string; width: number; height: number }>,
-  ) => {
+  resizeCardNode: (state: CardsState, action: PayloadAction<{ id: string; width: number; height: number }>) => {
     pushSnapshot(state, 'resizeCardNode');
     const card = state.cards.find((c) => c.id === state.activeCardId);
     if (card) {

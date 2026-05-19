@@ -38,10 +38,10 @@
  * @see rf-cards-10
  */
 
-import type { PayloadAction } from '@reduxjs/toolkit';
-import type { CardNode, CardEdge, CardsState } from '../types';
 import { migrateCardNodes } from '../migration';
 import { pushSnapshot } from '../snapshot';
+import type { CardNode, CardEdge, CardsState } from '../types';
+import type { PayloadAction } from '@reduxjs/toolkit';
 
 export const nodeDeleteMergeReducers = {
   // Delete node from active card. Also removes every incident edge in
@@ -72,10 +72,7 @@ export const nodeDeleteMergeReducers = {
   // the offset transform lands the nodes on the canvas (RISK #8). The
   // bounding-box scan reads existing nodes to derive the right-edge
   // offset; new nodes land at `maxX + 120`.
-  addToActiveCard: (
-    state: CardsState,
-    action: PayloadAction<{ nodes: CardNode[]; edges: CardEdge[] }>,
-  ) => {
+  addToActiveCard: (state: CardsState, action: PayloadAction<{ nodes: CardNode[]; edges: CardEdge[] }>) => {
     pushSnapshot(state);
     const card = state.cards.find((c) => c.id === state.activeCardId);
     if (card) {

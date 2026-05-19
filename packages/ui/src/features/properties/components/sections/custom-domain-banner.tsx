@@ -9,8 +9,9 @@
  */
 
 import React from 'react';
-import type { Card, CardNode } from '../../../../store/slices/cards-slice';
+import { t } from '../../../../i18n';
 import { findCustomDomainEdge } from '../../utils/node-properties-derivations';
+import type { Card, CardNode } from '../../../../store/slices/cards-slice';
 
 export const CustomDomainBanner: React.FC<{
   selectedNode: CardNode;
@@ -19,13 +20,13 @@ export const CustomDomainBanner: React.FC<{
   if (!activeCard || !selectedNode) return null;
   const cdResult = findCustomDomainEdge(activeCard, selectedNode);
   if (!cdResult) return null;
-  const cdLabel = (cdResult.cdNode.data?.label as string) || 'Custom Domain';
+  const cdLabel = (cdResult.cdNode.data?.label as string) || t('canvas.properties.customDomainBanner.fallbackLabel');
   const inheritedDomain = (selectedNode.data?.domain as string) || '';
   return (
     <div className="px-3 py-2 border-b border-ice-border bg-blue-500/5">
       <div className="flex items-center gap-1.5 text-ice-2xs text-blue-400">
         <span>🌐</span>
-        <span className="font-medium">Domain managed by</span>
+        <span className="font-medium">{t('canvas.properties.customDomainBanner.managedBy')}</span>
         <span className="font-mono">{cdLabel}</span>
       </div>
       {inheritedDomain && (
@@ -34,7 +35,7 @@ export const CustomDomainBanner: React.FC<{
         </div>
       )}
       <div className="mt-0.5 text-ice-2xs text-ice-text-3 leading-snug">
-        Edit the route on the Custom Domain block to change this. Disconnect the edge to set a domain manually.
+        {t('canvas.properties.customDomainBanner.disconnectHint')}
       </div>
     </div>
   );

@@ -64,10 +64,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   if (children == null) return;
   yield* walk(children);
 }
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) if (el && predicate(el)) out.push(el);
   return out;
@@ -76,12 +73,12 @@ function findByType(tree: React.ReactNode, type: unknown): React.ReactElement[] 
   return findByPredicate(tree, (el) => el.type === type);
 }
 
-const renderL3 = (
-  props: Partial<React.ComponentProps<typeof GroupLod3>> = {},
-): React.ReactElement => {
-  const Inner = (GroupLod3 as unknown as {
-    type: (p: React.ComponentProps<typeof GroupLod3>) => React.ReactElement;
-  }).type;
+const renderL3 = (props: Partial<React.ComponentProps<typeof GroupLod3>> = {}): React.ReactElement => {
+  const Inner = (
+    GroupLod3 as unknown as {
+      type: (p: React.ComponentProps<typeof GroupLod3>) => React.ReactElement;
+    }
+  ).type;
   const defaults: React.ComponentProps<typeof GroupLod3> = {
     nodeId: 'g-1',
     x: 0,
@@ -202,7 +199,9 @@ describe('GroupLod3 — rect stroke / fill', () => {
   });
 
   it('strokeDasharray undefined when dragOver, "4 4" otherwise', () => {
-    expect((findRect(renderL3({ isDragOver: true })).props as { strokeDasharray?: string }).strokeDasharray).toBeUndefined();
+    expect(
+      (findRect(renderL3({ isDragOver: true })).props as { strokeDasharray?: string }).strokeDasharray,
+    ).toBeUndefined();
     expect((findRect(renderL3({})).props as { strokeDasharray: string }).strokeDasharray).toBe('4 4');
   });
 
@@ -228,8 +227,10 @@ describe('GroupLod3 — label + fold + content', () => {
   });
 
   it('FoldButton: opacity 0.8 when hovered, 0.4 otherwise', () => {
-    expect(((findByType(renderL3({ isHovered: true }), MockFoldButton)[0]).props as { opacity: number }).opacity).toBe(0.8);
-    expect(((findByType(renderL3({}), MockFoldButton)[0]).props as { opacity: number }).opacity).toBe(0.4);
+    expect((findByType(renderL3({ isHovered: true }), MockFoldButton)[0].props as { opacity: number }).opacity).toBe(
+      0.8,
+    );
+    expect((findByType(renderL3({}), MockFoldButton)[0].props as { opacity: number }).opacity).toBe(0.4);
   });
 
   it('FoldButton onClick = onToggleFold', () => {
@@ -240,8 +241,10 @@ describe('GroupLod3 — label + fold + content', () => {
   });
 
   it('FoldButton folded={folded}', () => {
-    expect(((findByType(renderL3({ folded: true }), MockFoldButton)[0]).props as { folded: boolean }).folded).toBe(true);
-    expect(((findByType(renderL3({ folded: false }), MockFoldButton)[0]).props as { folded: boolean }).folded).toBe(false);
+    expect((findByType(renderL3({ folded: true }), MockFoldButton)[0].props as { folded: boolean }).folded).toBe(true);
+    expect((findByType(renderL3({ folded: false }), MockFoldButton)[0].props as { folded: boolean }).folded).toBe(
+      false,
+    );
   });
 
   it('EmptyStateText only when !folded + childCount === 0', () => {

@@ -327,10 +327,7 @@ describe('hydrateFromUser', () => {
   });
 
   it('filters non-string entries from the server payload', () => {
-    const s = tourReducer(
-      init(),
-      hydrateFromUser({ completedTours: ['ok', 42 as unknown as string, 'good'] }),
-    );
+    const s = tourReducer(init(), hydrateFromUser({ completedTours: ['ok', 42 as unknown as string, 'good'] }));
     expect(s.completedTours).toEqual(['ok', 'good']);
   });
 

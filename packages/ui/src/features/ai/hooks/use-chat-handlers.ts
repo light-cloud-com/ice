@@ -36,8 +36,8 @@ import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import axiosInstance from '../../../shared/api/axios-instance';
 import { clearAiState } from '../../../store/slices/ai-slice';
-import type { Card } from '../../../store/slices/cards-slice';
 import type { AppDispatch } from '../../../store';
+import type { Card } from '../../../store/slices/cards-slice';
 import type { AiCanvasOp } from '@ice/types';
 
 export interface ChatMessage {
@@ -195,14 +195,7 @@ export function useChatHandlers(args: UseChatHandlersArgs): UseChatHandlersRetur
         console.warn('Failed to persist AI messages:', err);
       }
     },
-    [
-      projectId,
-      activeCard?.id,
-      fetchConversations,
-      conversationIdRef,
-      persistLockRef,
-      setConversationId,
-    ],
+    [projectId, activeCard?.id, fetchConversations, conversationIdRef, persistLockRef, setConversationId],
   );
 
   // ── Submit handler ──────────────────────────────────────────────────────

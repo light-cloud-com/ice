@@ -5,10 +5,7 @@
  * `graph/algorithms.ts`.
  */
 import { describe, expect, it } from 'vitest';
-import {
-  find_connected_components,
-  find_strongly_connected_components,
-} from '../components';
+import { find_connected_components, find_strongly_connected_components } from '../components';
 import { make_graph } from './fixtures';
 
 describe('find_connected_components', () => {

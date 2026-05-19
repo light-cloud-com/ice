@@ -111,10 +111,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -187,9 +184,11 @@ const defaultProps = (overrides: Partial<Props> = {}): Props => ({
 });
 
 const renderEdge = (props: Partial<Props> = {}): React.ReactElement | null => {
-  const Inner = (SvgConnectionPath as unknown as {
-    type: (p: Props) => React.ReactElement | null;
-  }).type;
+  const Inner = (
+    SvgConnectionPath as unknown as {
+      type: (p: Props) => React.ReactElement | null;
+    }
+  ).type;
   return Inner(defaultProps(props));
 };
 
@@ -223,9 +222,7 @@ describe('SvgConnectionPath — React.memo boundary', () => {
   });
 
   it('carries displayName "SvgConnectionPath"', () => {
-    expect((SvgConnectionPath as unknown as { displayName: string }).displayName).toBe(
-      'SvgConnectionPath',
-    );
+    expect((SvgConnectionPath as unknown as { displayName: string }).displayName).toBe('SvgConnectionPath');
   });
 });
 
@@ -261,7 +258,7 @@ describe('SvgConnectionPath — null path / missing node degenerate cases', () =
       nodes: [node],
     });
     expect(mocks.computePath).toHaveBeenCalled();
-    const args = ((mocks.computePath as any).mock.calls[0][0]);
+    const args = (mocks.computePath as any).mock.calls[0][0];
     expect(args.fromNode).toBe(node);
     expect(args.toNode).toBe(node);
     // Default mock returns a non-null path so we still get a <g> back.
@@ -273,7 +270,7 @@ describe('SvgConnectionPath — null path / missing node degenerate cases', () =
       connection: makeConn({ from: 'missing-1', to: 'missing-2' }),
       nodes: [],
     });
-    const args = ((mocks.computePath as any).mock.calls[0][0]);
+    const args = (mocks.computePath as any).mock.calls[0][0];
     expect(args.fromNode).toBeUndefined();
     expect(args.toNode).toBeUndefined();
     // computePath default mock still returns a valid path so render is non-null.
@@ -293,7 +290,7 @@ describe('SvgConnectionPath — computePath argument forwarding', () => {
       targetPortIndex: 1,
       targetPortCount: 3,
     });
-    const args = ((mocks.computePath as any).mock.calls[0][0]);
+    const args = (mocks.computePath as any).mock.calls[0][0];
     expect(args.sourcePortIndex).toBe(2);
     expect(args.sourcePortCount).toBe(5);
     expect(args.targetPortIndex).toBe(1);
@@ -304,13 +301,13 @@ describe('SvgConnectionPath — computePath argument forwarding', () => {
     for (const edgeStyle of ['bezier', 'rectangular', 'straight'] as const) {
       mocks.computePath.mockClear();
       renderEdge({ edgeStyle });
-      expect(((mocks.computePath as any).mock.calls[0][0]).edgeStyle).toBe(edgeStyle);
+      expect((mocks.computePath as any).mock.calls[0][0].edgeStyle).toBe(edgeStyle);
     }
   });
 
   it('forwards lod / zoom verbatim', () => {
     renderEdge({ lod: 1, zoom: 0.4 });
-    const args = ((mocks.computePath as any).mock.calls[0][0]);
+    const args = (mocks.computePath as any).mock.calls[0][0];
     expect(args.lod).toBe(1);
     expect(args.zoom).toBe(0.4);
   });
@@ -591,9 +588,7 @@ describe('SvgConnectionPath — hover-target path', () => {
       return (el.props as { stroke?: string }).stroke === 'transparent';
     })[0];
     const onClick = (target.props as { onClick: (e: React.MouseEvent) => void }).onClick;
-    expect(() =>
-      onClick({ stopPropagation: () => {} } as unknown as React.MouseEvent),
-    ).not.toThrow();
+    expect(() => onClick({ stopPropagation: () => {} } as unknown as React.MouseEvent)).not.toThrow();
   });
 
   it('hover target onContextMenu is a no-op when onContextMenu prop is undefined', () => {
@@ -818,10 +813,7 @@ describe('SvgConnectionPath — tooltip / hover lifecycle', () => {
   it('onMouseMove fires onConnectionHover with built tooltip info (clientX/Y)', () => {
     const calls: Array<{ mouseX: number; mouseY: number; fromLabel: string; toLabel: string } | null> = [];
     const tree = renderEdge({
-      nodes: [
-        makeNode({ id: 'n1', label: 'origin' }),
-        makeNode({ id: 'n2', label: 'dest' }),
-      ],
+      nodes: [makeNode({ id: 'n1', label: 'origin' }), makeNode({ id: 'n2', label: 'dest' })],
       onConnectionHover: (info) => calls.push(info as never),
     });
     const props = (tree as React.ReactElement).props as { onMouseMove: (e: React.MouseEvent) => void };
@@ -876,10 +868,7 @@ describe('SvgConnectionPath — tooltip / hover lifecycle', () => {
     const tree = renderEdge({
       connection: makeConn({ from: 'left-id', to: 'right-id' }),
       // Use stripped nodes — empty label
-      nodes: [
-        makeNode({ id: 'left-id', label: '' }),
-        makeNode({ id: 'right-id', label: '' }),
-      ],
+      nodes: [makeNode({ id: 'left-id', label: '' }), makeNode({ id: 'right-id', label: '' })],
       onConnectionHover: (info) => calls.push(info as { fromLabel: string; toLabel: string }),
     });
     const props = (tree as React.ReactElement).props as { onMouseMove: (e: React.MouseEvent) => void };
@@ -913,9 +902,7 @@ describe('SvgConnectionPath — tooltip / hover lifecycle', () => {
   it('onMouseMove is a no-op when onConnectionHover is undefined', () => {
     const tree = renderEdge({ onConnectionHover: undefined });
     const props = (tree as React.ReactElement).props as { onMouseMove: (e: React.MouseEvent) => void };
-    expect(() =>
-      props.onMouseMove({ clientX: 0, clientY: 0 } as unknown as React.MouseEvent),
-    ).not.toThrow();
+    expect(() => props.onMouseMove({ clientX: 0, clientY: 0 } as unknown as React.MouseEvent)).not.toThrow();
   });
 });
 
@@ -988,9 +975,7 @@ describe('SvgConnectionPath — delete button', () => {
       return (el.props as { className?: string }).className === 'delete-button';
     })[0];
     const onClick = (deleteGroup.props as { onClick: (e: React.MouseEvent) => void }).onClick;
-    expect(() =>
-      onClick({ stopPropagation: () => {} } as unknown as React.MouseEvent),
-    ).not.toThrow();
+    expect(() => onClick({ stopPropagation: () => {} } as unknown as React.MouseEvent)).not.toThrow();
   });
 
   it('delete button hides when not hovered (isHover=false), even at LOD 3 with non-bundle connection', () => {

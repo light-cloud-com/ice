@@ -33,9 +33,7 @@ const mocks = vi.hoisted(() => ({
   // Redux state
   state: {
     account: {
-      selectedOrg: { id: 'org-1', name: 'Acme', role: 'admin' } as
-        | { id: string; name: string; role: string }
-        | null,
+      selectedOrg: { id: 'org-1', name: 'Acme', role: 'admin' } as { id: string; name: string; role: string } | null,
     },
   },
   // axios
@@ -383,10 +381,7 @@ describe('InviteUserModal — onClose handlers', () => {
     const tree = render({ onClose });
     const cancelBtn = findFirst(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        el.props.type === 'button' &&
-        el.props.children === 'account.invite.cancelButton',
+      (el) => el.type === 'button' && el.props.type === 'button' && el.props.children === 'account.invite.cancelButton',
     );
     expect(cancelBtn).toBeDefined();
     (cancelBtn!.props.onClick as () => void)();

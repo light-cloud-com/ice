@@ -136,13 +136,10 @@ export async function create_redirect_chain(
   if (redirectUrlMapOp?.name) await wait_for_compute_op(ctx, redirectUrlMapOp.name);
 
   const redirectProxyName = `${name}-redirect-proxy`;
-  const redirectProxyOp = (await ctx.rest_client.post(
-    `${BASE_URL}/projects/${ctx.project}/global/targetHttpProxies`,
-    {
-      name: redirectProxyName,
-      urlMap: `projects/${ctx.project}/global/urlMaps/${redirectUrlMapName}`,
-    },
-  )) as any;
+  const redirectProxyOp = (await ctx.rest_client.post(`${BASE_URL}/projects/${ctx.project}/global/targetHttpProxies`, {
+    name: redirectProxyName,
+    urlMap: `projects/${ctx.project}/global/urlMaps/${redirectUrlMapName}`,
+  })) as any;
   if (redirectProxyOp?.name) await wait_for_compute_op(ctx, redirectProxyOp.name);
 
   reportStep(6, 'Creating HTTP forwarding rule');

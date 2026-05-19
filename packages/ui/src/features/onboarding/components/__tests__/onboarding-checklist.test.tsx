@@ -2,7 +2,6 @@
  * OnboardingChecklist — small floating bottom-left checklist.
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -224,15 +223,15 @@ describe('OnboardingChecklist — expanded panel', () => {
     const tree = callRender();
     const buttons = findAll(tree, (el) => el.type === 'button');
     // 2nd button = X (dismiss); 1st = chevron-down (collapse toggle)
-    const dismiss = buttons.find((b) =>
-      typeof (b.props as { title?: string }).title === 'string' &&
-      ((b.props as { title: string }).title.includes('dismissTitle') ?? false),
+    const dismiss = buttons.find(
+      (b) =>
+        typeof (b.props as { title?: string }).title === 'string' &&
+        ((b.props as { title: string }).title.includes('dismissTitle') ?? false),
     );
     (dismiss?.props.onClick as () => void)?.();
     expect(mocks.storage.get('ice-onboarding-checklist-dismissed')).toBe('true');
   });
 });
-
 
 describe('OnboardingChecklist — tour entry points', () => {
   it('renders a "Show me how" button next to the canvas-tour item when not completed', () => {
@@ -248,7 +247,7 @@ describe('OnboardingChecklist — tour entry points', () => {
         el.type === 'button' &&
         Array.isArray((el.props as { children?: unknown }).children) === false &&
         typeof (el.props as { children?: unknown }).children === 'string' &&
-        ((el.props as { children: string }).children).includes('showMeHow'),
+        (el.props as { children: string }).children.includes('showMeHow'),
     );
     expect(showMeHowBtn).toBeDefined();
     expect(typeof showMeHowBtn?.props.onClick).toBe('function');
@@ -272,7 +271,7 @@ describe('OnboardingChecklist — tour entry points', () => {
         (el) =>
           el.type === 'button' &&
           typeof (el.props as { children?: unknown }).children === 'string' &&
-          ((el.props as { children: string }).children).includes('showMeHow'),
+          (el.props as { children: string }).children.includes('showMeHow'),
       );
       expect(showMeHowBtn).toBeDefined();
       (showMeHowBtn?.props.onClick as () => void)?.();
@@ -298,7 +297,7 @@ describe('OnboardingChecklist — tour entry points', () => {
         (el) =>
           el.type === 'button' &&
           typeof (el.props as { children?: unknown }).children === 'string' &&
-          ((el.props as { children: string }).children).includes('showMeHow'),
+          (el.props as { children: string }).children.includes('showMeHow'),
       );
       (showMeHowBtn?.props.onClick as () => void)?.();
       // No tour fired — the runner would silently auto-skip every step
@@ -326,7 +325,7 @@ describe('OnboardingChecklist — tour entry points', () => {
       (el) =>
         el.type === 'button' &&
         typeof (el.props as { children?: unknown }).children === 'string' &&
-        ((el.props as { children: string }).children).includes('showMeHow'),
+        (el.props as { children: string }).children.includes('showMeHow'),
     );
     expect(showMeHowButtons).toHaveLength(1);
   });

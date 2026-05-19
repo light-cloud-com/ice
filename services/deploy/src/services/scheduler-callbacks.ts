@@ -15,10 +15,10 @@
  * carry the two behavior axes that previously lived inline.
  */
 
-import type { NodeStatusEvent, NodeProgressEvent } from '@ice/core';
 import { emitDeployEvent, emitLog } from './deploy-event-dispatcher';
 import { updateDeploySnapshotNode } from './deploy-locks';
 import { mapStatusToOverlay } from '../utils/deploy-event-formatter';
+import type { NodeStatusEvent, NodeProgressEvent } from '@ice/core';
 
 export interface SchedulerCallbacksArgs {
   /** Card id used for every wire emit + snapshot mutation. */
@@ -83,8 +83,11 @@ export function makeSchedulerCallbacks(args: SchedulerCallbacksArgs): SchedulerC
       if (!canvasId) {
         if (warnOnMiss) {
           console.warn(
-            '[deploy] on_node_status: no canvas id for graph_node_id=' + event.node_id +
-              ' (resource_name=' + event.resource_name + '). Dropping wire emit.',
+            '[deploy] on_node_status: no canvas id for graph_node_id=' +
+              event.node_id +
+              ' (resource_name=' +
+              event.resource_name +
+              '). Dropping wire emit.',
           );
         }
         return;

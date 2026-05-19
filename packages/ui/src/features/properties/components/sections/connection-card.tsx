@@ -19,11 +19,7 @@
 import React from 'react';
 import { getIcon } from '../../../../assets/icons';
 import { t } from '../../../../i18n';
-import {
-  deleteCardEdge,
-  type CardEdge,
-  type CardNode,
-} from '../../../../store/slices/cards-slice';
+import { deleteCardEdge, type CardEdge, type CardNode } from '../../../../store/slices/cards-slice';
 import type { AppDispatch } from '../../../../store';
 
 // ─── Visual Connection Card ─────────────────────────────────────────────────

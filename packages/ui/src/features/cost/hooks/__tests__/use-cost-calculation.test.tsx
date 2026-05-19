@@ -178,7 +178,10 @@ describe('useCostCalculation — primaryProvider derivation', () => {
 
   it('returns "aws" when all node providers are empty', async () => {
     mocks.activeCard = {
-      nodes: [{ id: 'n1', data: {} }, { id: 'n2', data: {} }],
+      nodes: [
+        { id: 'n1', data: {} },
+        { id: 'n2', data: {} },
+      ],
       edges: [],
     };
     const result = await callHook(2);
@@ -198,7 +201,13 @@ describe('useCostCalculation — primaryProvider derivation', () => {
 
 describe('useCostCalculation — trafficConnectionCount sum', () => {
   it('sums values across the connection map', async () => {
-    mocks.countTrafficConnections.mockReturnValue(new Map([['a', 1], ['b', 2], ['c', 3]]));
+    mocks.countTrafficConnections.mockReturnValue(
+      new Map([
+        ['a', 1],
+        ['b', 2],
+        ['c', 3],
+      ]),
+    );
     mocks.activeCard = { nodes: [{ id: 'n1', data: { provider: 'aws' } }], edges: [] };
     const result = await callHook(2);
     expect(result.trafficConnectionCount).toBe(6);
@@ -222,10 +231,7 @@ describe('useCostCalculation — resource fetch effect', () => {
   });
 
   it('builds a resource map keyed by id and ice_type, calling setResourceMap', async () => {
-    mocks.getAll.mockResolvedValue([
-      { id: 'r1', ice_type: 'Compute' },
-      { ice_type: 'Database' },
-    ]);
+    mocks.getAll.mockResolvedValue([{ id: 'r1', ice_type: 'Compute' }, { ice_type: 'Database' }]);
     await callHook(2);
     mocks.effectCallbacks[0]();
     await new Promise((r) => setTimeout(r, 0));

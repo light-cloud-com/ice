@@ -55,9 +55,7 @@ describe('buildSchemaContext — empty / fall-through cases', () => {
   it('returns "" when sections come up empty (no iceTypes match, no provider matches)', async () => {
     // Resources exist but none match the dominant provider AND maxExtra is 0.
     mockCore({
-      getAllHighLevelResources: () => [
-        { id: 'r1', name: 'R1', implementations: [{ provider: 'aws' }] },
-      ],
+      getAllHighLevelResources: () => [{ id: 'r1', name: 'R1', implementations: [{ provider: 'aws' }] }],
     });
     const { buildSchemaContext } = await load();
     const out = await buildSchemaContext({
@@ -136,8 +134,7 @@ describe('buildSchemaContext — provider filter / maxExtra', () => {
 
   it('honours maxExtra — stops after that many additional resources', async () => {
     mockCore({
-      getAllHighLevelResources: () =>
-        Array.from({ length: 5 }, (_, i) => ({ id: `r${i}`, name: `R${i}` })),
+      getAllHighLevelResources: () => Array.from({ length: 5 }, (_, i) => ({ id: `r${i}`, name: `R${i}` })),
     });
     const { buildSchemaContext } = await load();
     const out = await buildSchemaContext({
@@ -152,8 +149,7 @@ describe('buildSchemaContext — provider filter / maxExtra', () => {
 
   it('defaults maxExtra to 10 when omitted', async () => {
     mockCore({
-      getAllHighLevelResources: () =>
-        Array.from({ length: 15 }, (_, i) => ({ id: `r${i}`, name: `R${i}` })),
+      getAllHighLevelResources: () => Array.from({ length: 15 }, (_, i) => ({ id: `r${i}`, name: `R${i}` })),
     });
     const { buildSchemaContext } = await load();
     const out = await buildSchemaContext({ existingIceTypes: [], dominantProvider: 'gcp' });
@@ -188,7 +184,12 @@ describe('buildSchemaContext — categories supplement allResources', () => {
     mockCore({
       getAllHighLevelResources: () => [{ id: 'a', name: 'A' }],
       HIGH_LEVEL_CATEGORIES: [
-        { resources: [{ id: 'a', name: 'A-from-cat' }, { id: 'b', name: 'B' }] },
+        {
+          resources: [
+            { id: 'a', name: 'A-from-cat' },
+            { id: 'b', name: 'B' },
+          ],
+        },
       ],
     });
     const { buildSchemaContext } = await load();
@@ -305,9 +306,7 @@ describe('buildSchemaContext — formatResource', () => {
 
   it('falls back to "string" when neither type nor inputType is present', async () => {
     mockCore({
-      getAllHighLevelResources: () => [
-        { id: 'r', name: 'R', properties: [{ id: 'naked' /* no type */ }] },
-      ],
+      getAllHighLevelResources: () => [{ id: 'r', name: 'R', properties: [{ id: 'naked' /* no type */ }] }],
     });
     const { buildSchemaContext } = await load();
     const out = await buildSchemaContext({

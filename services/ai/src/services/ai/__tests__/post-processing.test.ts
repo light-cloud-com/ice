@@ -125,13 +125,7 @@ describe('runPostProcessing', () => {
     mocks.validateCanvas.mockResolvedValue({ valid: true, errors: [] });
     mocks.dryRunDeploy.mockResolvedValue({ success: true, deployableCount: 0 });
 
-    await runPostProcessing(
-      sentinelAudit,
-      { explanation: '', operations: [] },
-      baseCanvas,
-      'r',
-      0,
-    );
+    await runPostProcessing(sentinelAudit, { explanation: '', operations: [] }, baseCanvas, 'r', 0);
 
     expect(mocks.finalizeAuditEntry.mock.calls[0][1].parseSuccess).toBe(false);
   });
@@ -140,13 +134,7 @@ describe('runPostProcessing', () => {
     mocks.validateCanvas.mockResolvedValue({ valid: true, errors: [] });
     mocks.dryRunDeploy.mockResolvedValue({ success: true, deployableCount: 0 });
 
-    await runPostProcessing(
-      sentinelAudit,
-      { explanation: 'hi', operations: [] },
-      baseCanvas,
-      'r',
-      0,
-    );
+    await runPostProcessing(sentinelAudit, { explanation: 'hi', operations: [] }, baseCanvas, 'r', 0);
 
     expect(mocks.finalizeAuditEntry.mock.calls[0][1].parseSuccess).toBe(true);
   });

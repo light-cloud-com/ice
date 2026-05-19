@@ -25,8 +25,8 @@
  * Preserve verbatim; the orchestrator's hit logic depends on it.
  */
 
-import type { CanvasNode } from '../components/types';
 import { calculateZIndex } from '../../../shared/utils/auto-layout';
+import type { CanvasNode } from '../components/types';
 
 /** Inclusive-edge axis-aligned bounding box test. */
 function pointInNode(node: CanvasNode, x: number, y: number): boolean {

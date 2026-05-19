@@ -37,8 +37,8 @@
 
 import { produce } from 'immer';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { nodeDeleteMergeReducers } from '../node-delete-merge';
 import { pushSnapshot } from '../../snapshot';
+import { nodeDeleteMergeReducers } from '../node-delete-merge';
 import type { Card, CardEdge, CardNode, CardsState } from '../../types';
 import type { PayloadAction } from '@reduxjs/toolkit';
 

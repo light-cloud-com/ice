@@ -16,10 +16,10 @@ import {
   emitDeployNodeStatus,
   emitDeployRequirementVerified,
 } from '@ice/shared';
-import type { DeployEvent, DeployLogEvent } from '@ice/types';
 import { nextDeploySeq, recordDeployEvent } from './deploy-event-log';
 import { updateDeploySnapshotNode } from './deploy-locks';
 import { describeEventForLog, mapStatusToOverlay } from '../utils/deploy-event-formatter';
+import type { DeployEvent, DeployLogEvent } from '@ice/types';
 
 /**
  * Emit a typed {@link DeployEvent} over the socket and persist a row to

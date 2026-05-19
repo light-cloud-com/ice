@@ -17,23 +17,15 @@
  * `autoResizeContainers` later expands them around their children.
  */
 
-import {
-  NODE_WIDTH,
-  NODE_HEIGHT,
-  HELPER_NODE_WIDTH,
-  HELPER_NODE_HEIGHT,
-} from './types';
 import { isHelperIceType } from './position-finder';
+import { NODE_WIDTH, NODE_HEIGHT, HELPER_NODE_WIDTH, HELPER_NODE_HEIGHT } from './types';
 
 export interface NodeDefaults {
   width: number;
   height: number;
 }
 
-export function pickNodeDefaults(
-  nodeType: string,
-  iceType: string,
-): NodeDefaults {
+export function pickNodeDefaults(nodeType: string, iceType: string): NodeDefaults {
   const isGroup = nodeType === 'container';
   const isVpc = iceType === 'Network.VPC';
   const isSubnet = iceType === 'Network.Subnet';

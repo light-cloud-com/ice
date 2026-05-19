@@ -234,10 +234,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -840,7 +837,8 @@ describe('CostPanel — tour anchors', () => {
     expect(roots).toHaveLength(1);
     const sliders = findByPredicate(
       tree,
-      (el) => el.type === 'input' && (el.props as { ['data-tour-id']?: string })['data-tour-id'] === 'cost-panel-tier-slider',
+      (el) =>
+        el.type === 'input' && (el.props as { ['data-tour-id']?: string })['data-tour-id'] === 'cost-panel-tier-slider',
     );
     expect(sliders).toHaveLength(1);
   });

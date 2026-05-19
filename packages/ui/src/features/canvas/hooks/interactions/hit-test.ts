@@ -69,9 +69,7 @@ export function isInResizeHandle(
  * box? Inclusive on all four sides — matches the verbatim original.
  */
 export function isInItem(item: CanvasItem, canvasX: number, canvasY: number): boolean {
-  return (
-    canvasX >= item.x && canvasX <= item.x + item.width && canvasY >= item.y && canvasY <= item.y + item.height
-  );
+  return canvasX >= item.x && canvasX <= item.x + item.width && canvasY >= item.y && canvasY <= item.y + item.height;
 }
 
 /**

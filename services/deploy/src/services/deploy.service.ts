@@ -104,4 +104,3 @@ export async function getDeploymentHistory(
     take: Math.min(Math.max(limit, 1), 500),
   });
 }
-

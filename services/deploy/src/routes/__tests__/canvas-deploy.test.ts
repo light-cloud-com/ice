@@ -9,9 +9,9 @@
  * sources.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import express from 'express';
 import http from 'node:http';
+import express from 'express';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { AddressInfo } from 'node:net';
 
 // ── Mocks (must be hoisted before the router import) ──────────────────
@@ -81,14 +81,12 @@ vi.mock('@ice/shared', () => ({
     req.organisationId = currentOrgId;
     next();
   },
-  requireProjectAccess:
-    (_role: string) =>
-    (_req: any, res: any, next: any) => {
-      if (currentAuth === 'no-project-access') {
-        return res.status(403).json({ message: 'Insufficient project permissions' });
-      }
-      next();
-    },
+  requireProjectAccess: (_role: string) => (_req: any, res: any, next: any) => {
+    if (currentAuth === 'no-project-access') {
+      return res.status(403).json({ message: 'Insufficient project permissions' });
+    }
+    next();
+  },
 }));
 
 // ── Test harness ──────────────────────────────────────────────────────
@@ -133,7 +131,7 @@ async function request(
   }
   const res = await fetch(`${baseUrl}${path}`, init);
   const text = await res.text();
-  let json: any = null;
+  let json: any;
   try {
     json = text ? JSON.parse(text) : null;
   } catch {
@@ -662,10 +660,10 @@ describe('GET /api/canvas/deploy/stream/:cardId', () => {
 
 describe('GET /api/canvas/deploy/node-outputs/:cardId', () => {
   it('returns 200 with the overlay, defaulting environment to "development"', async () => {
-    getNodeDeploymentOverlayMock.mockResolvedValue({ 'n1': { url: 'https://x' } });
+    getNodeDeploymentOverlayMock.mockResolvedValue({ n1: { url: 'https://x' } });
     const res = await request('GET', '/api/canvas/deploy/node-outputs/c1');
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ success: true, overlay: { 'n1': { url: 'https://x' } } });
+    expect(res.body).toEqual({ success: true, overlay: { n1: { url: 'https://x' } } });
     expect(getNodeDeploymentOverlayMock).toHaveBeenCalledWith('c1', 'development');
   });
 
@@ -708,42 +706,27 @@ describe('GET /api/canvas/deploy/history/:cardId', () => {
     });
   });
 
-  it.each([['plan'], ['destroy'], ['rollback']])(
-    'forwards action_type=%s',
-    async (actionType) => {
-      getDeploymentHistoryMock.mockResolvedValue([]);
-      await request('GET', `/api/canvas/deploy/history/c1?action_type=${actionType}`);
-      expect(getDeploymentHistoryMock).toHaveBeenCalledWith(
-        'c1',
-        expect.objectContaining({ actionType }),
-      );
-    },
-  );
+  it.each([['plan'], ['destroy'], ['rollback']])('forwards action_type=%s', async (actionType) => {
+    getDeploymentHistoryMock.mockResolvedValue([]);
+    await request('GET', `/api/canvas/deploy/history/c1?action_type=${actionType}`);
+    expect(getDeploymentHistoryMock).toHaveBeenCalledWith('c1', expect.objectContaining({ actionType }));
+  });
 
   it('drops an unrecognised action_type rather than forwarding it', async () => {
     getDeploymentHistoryMock.mockResolvedValue([]);
     await request('GET', '/api/canvas/deploy/history/c1?action_type=garbage');
-    expect(getDeploymentHistoryMock).toHaveBeenCalledWith(
-      'c1',
-      expect.objectContaining({ actionType: undefined }),
-    );
+    expect(getDeploymentHistoryMock).toHaveBeenCalledWith('c1', expect.objectContaining({ actionType: undefined }));
   });
 
   it('forwards the environment query param', async () => {
     getDeploymentHistoryMock.mockResolvedValue([]);
     await request('GET', '/api/canvas/deploy/history/c1?environment=staging');
-    expect(getDeploymentHistoryMock).toHaveBeenCalledWith(
-      'c1',
-      expect.objectContaining({ environment: 'staging' }),
-    );
+    expect(getDeploymentHistoryMock).toHaveBeenCalledWith('c1', expect.objectContaining({ environment: 'staging' }));
   });
 
   it('parses the limit query param as a number', async () => {
     getDeploymentHistoryMock.mockResolvedValue([]);
     await request('GET', '/api/canvas/deploy/history/c1?limit=25');
-    expect(getDeploymentHistoryMock).toHaveBeenCalledWith(
-      'c1',
-      expect.objectContaining({ limit: 25 }),
-    );
+    expect(getDeploymentHistoryMock).toHaveBeenCalledWith('c1', expect.objectContaining({ limit: 25 }));
   });
 });

@@ -8,7 +8,6 @@
 
 import React from 'react';
 import { describe, it, expect } from 'vitest';
-
 import { ProjectionRow, type ProjectionRowProps } from '../projection-row';
 
 // ─── Tree-walker helpers ──────────────────────────────────────────────────
@@ -41,10 +40,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);

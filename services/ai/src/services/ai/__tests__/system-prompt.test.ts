@@ -64,20 +64,13 @@ describe('formatNodesSummary', () => {
         { id: 'n2', iceType: 'Compute.Container', label: 'API' } as any,
       ],
     });
-    expect(out).toBe(
-      [
-        '  - n1: Database.PostgreSQL "Users DB"',
-        '  - n2: Compute.Container "API"',
-      ].join('\n'),
-    );
+    expect(out).toBe(['  - n1: Database.PostgreSQL "Users DB"', '  - n2: Compute.Container "API"'].join('\n'));
   });
 
   it('appends "(in <parentId>)" for nested nodes', () => {
     const out = formatNodesSummary({
       ...emptyCanvas,
-      nodes: [
-        { id: 'subnet-1', iceType: 'Network.Subnet', label: 'Private', parentId: 'vpc-1' } as any,
-      ],
+      nodes: [{ id: 'subnet-1', iceType: 'Network.Subnet', label: 'Private', parentId: 'vpc-1' } as any],
     });
     expect(out).toContain('(in vpc-1)');
   });

@@ -168,11 +168,7 @@ describe('http-api/deploy', () => {
     const { createDeployAdapter } = await import('../http-api/deploy');
     const a = createDeployAdapter();
     a.openExternal('http://example.com');
-    expect((globalThis as any).window.open).toHaveBeenCalledWith(
-      'http://example.com',
-      '_blank',
-      'noopener,noreferrer',
-    );
+    expect((globalThis as any).window.open).toHaveBeenCalledWith('http://example.com', '_blank', 'noopener,noreferrer');
   });
 });
 

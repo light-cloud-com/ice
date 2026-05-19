@@ -152,13 +152,7 @@ describe('planDeployment — core-engine happy path', () => {
   it('passes the existing-name map through to the translator so resource names stay stable', async () => {
     const names = new Map([['gcp.sql.databaseInstance:Postgres', 'ice-pg-pinned']]);
     mocks.getExistingNameMap.mockResolvedValueOnce(names);
-    await planDeployment(
-      'card-A',
-      [{ id: 'n1', type: 'block', data: {} }],
-      [],
-      { provider: 'gcp' },
-      'u1',
-    );
+    await planDeployment('card-A', [{ id: 'n1', type: 'block', data: {} }], [], { provider: 'gcp' }, 'u1');
     expect(mocks.translateCardToGraph).toHaveBeenCalled();
     const arg = mocks.translateCardToGraph.mock.calls[0]![0];
     expect(arg.existing_names).toBe(names);
@@ -180,9 +174,7 @@ describe('planDeployment — core-engine happy path', () => {
       { id: 'n1', type: 'block', data: {} },
       { id: 'n2', type: 'resource', data: { iceType: 'X' } },
     ]);
-    expect(arg.edges).toEqual([
-      { id: 'e1', source: 'n1', target: 'n2', data: { kind: 'control' } },
-    ]);
+    expect(arg.edges).toEqual([{ id: 'e1', source: 'n1', target: 'n2', data: { kind: 'control' } }]);
   });
 
   it('uses options.projectName when project context returns null projectName', async () => {
@@ -251,13 +243,7 @@ describe('planDeployment — core-engine happy path', () => {
       warnings: [],
       skipped: [],
     });
-    const out = await planDeployment(
-      'card-A',
-      [{ id: 'n1', type: 'block', data: {} }],
-      [],
-      {},
-      'u1',
-    );
+    const out = await planDeployment('card-A', [{ id: 'n1', type: 'block', data: {} }], [], {}, 'u1');
     expect(out.plan.creates).toEqual([]);
     expect(out.plan.deployable_count).toBe(0);
   });
@@ -268,13 +254,7 @@ describe('planDeployment — core-engine happy path', () => {
       deployable_count: 0,
       // no deployables / skipped / warnings keys
     } as any);
-    const out = await planDeployment(
-      'card-A',
-      [{ id: 'n1', type: 'block', data: {} }],
-      [],
-      {},
-      'u1',
-    );
+    const out = await planDeployment('card-A', [{ id: 'n1', type: 'block', data: {} }], [], {}, 'u1');
     expect(out.plan.creates).toEqual([]);
     expect(out.plan.skipped).toEqual([]);
     expect(out.plan.warnings).toEqual([]);
@@ -340,10 +320,7 @@ describe('planDeployment — fallback when core engine throws', () => {
     );
     expect(out.success).toBe(true);
     expect(out.plan.creates).toHaveLength(1);
-    expect(errorSpy).toHaveBeenCalledWith(
-      'Core engine plan error, falling back:',
-      'core unavailable',
-    );
+    expect(errorSpy).toHaveBeenCalledWith('Core engine plan error, falling back:', 'core unavailable');
     errorSpy.mockRestore();
   });
 
@@ -416,9 +393,7 @@ describe('fallbackPlan (via core-engine throw path)', () => {
       { provider: 'gcp' },
       'u1',
     );
-    expect(out.plan.skipped).toEqual([
-      { nodeId: 'n2', label: 'S3', reason: 'Non-matching provider' },
-    ]);
+    expect(out.plan.skipped).toEqual([{ nodeId: 'n2', label: 'S3', reason: 'Non-matching provider' }]);
   });
 
   it('falls back to node.id for the skipped label when data.label is absent', async () => {
@@ -497,13 +472,7 @@ describe('fallbackPlan (via core-engine throw path)', () => {
   });
 
   it('treats nodes as [] when the caller passed undefined', async () => {
-    const out = await planDeployment(
-      'card-A',
-      undefined as any,
-      [],
-      { provider: 'gcp' },
-      'u1',
-    );
+    const out = await planDeployment('card-A', undefined as any, [], { provider: 'gcp' }, 'u1');
     expect(out.plan.creates).toEqual([]);
     expect(out.plan.skipped).toEqual([]);
   });
@@ -540,13 +509,7 @@ describe('fallbackPlan (via core-engine throw path)', () => {
   });
 
   it('defaults region/environment in the fallback path when options omits them', async () => {
-    await planDeployment(
-      'card-A',
-      [{ id: 'n1', type: 'resource', data: { provider: 'gcp' } }],
-      [],
-      {},
-      'u1',
-    );
+    await planDeployment('card-A', [{ id: 'n1', type: 'resource', data: { provider: 'gcp' } }], [], {}, 'u1');
     const data = mocks.cdCreate.mock.calls[0]![0].data;
     expect(data.region).toBe('us-central1');
     expect(data.environment).toBe('development');

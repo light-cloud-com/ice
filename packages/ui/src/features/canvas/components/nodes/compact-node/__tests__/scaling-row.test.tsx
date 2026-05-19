@@ -17,7 +17,7 @@ import { describe, it, expect, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   StepperButton: Object.assign(
     ({ label, onClick }: { label: string; onClick: (e: React.MouseEvent) => void }) =>
-      ({ type: 'button', props: { 'data-test': 'stepper', label, onClick }, key: null } as React.ReactElement),
+      ({ type: 'button', props: { 'data-test': 'stepper', label, onClick }, key: null }) as React.ReactElement,
     { displayName: 'MockStepperButton' },
   ),
 }));
@@ -43,10 +43,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   if (children == null) return;
   yield* walk(children);
 }
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) if (el && predicate(el)) out.push(el);
   return out;
@@ -72,12 +69,12 @@ function collectText(tree: React.ReactNode): string {
   return parts.join('');
 }
 
-const renderRow = (
-  props: Partial<React.ComponentProps<typeof ScalingRow>> = {},
-): React.ReactElement => {
-  const Inner = (ScalingRow as unknown as {
-    type: (p: React.ComponentProps<typeof ScalingRow>) => React.ReactElement;
-  }).type;
+const renderRow = (props: Partial<React.ComponentProps<typeof ScalingRow>> = {}): React.ReactElement => {
+  const Inner = (
+    ScalingRow as unknown as {
+      type: (p: React.ComponentProps<typeof ScalingRow>) => React.ReactElement;
+    }
+  ).type;
   const defaults: React.ComponentProps<typeof ScalingRow> = {
     nodeId: 'node-1',
     minInstances: null,
@@ -137,7 +134,9 @@ describe('ScalingRow — min stepper', () => {
     const buttons = findByType(tree, MockStepperButton).filter((b) => (b.props as { label: string }).label === '−');
     // First minus is the min decrement
     const minMinus = buttons[0];
-    (minMinus.props as { onClick: (e: React.MouseEvent) => void }).onClick({ stopPropagation: () => {} } as React.MouseEvent);
+    (minMinus.props as { onClick: (e: React.MouseEvent) => void }).onClick({
+      stopPropagation: () => {},
+    } as React.MouseEvent);
     expect(fn).toHaveBeenCalledWith('node-1', { minInstances: 0 });
   });
 
@@ -145,7 +144,9 @@ describe('ScalingRow — min stepper', () => {
     const fn = vi.fn();
     const tree = renderRow({ minInstances: 5, onUpdateData: fn });
     const buttons = findByType(tree, MockStepperButton).filter((b) => (b.props as { label: string }).label === '−');
-    (buttons[0].props as { onClick: (e: React.MouseEvent) => void }).onClick({ stopPropagation: () => {} } as React.MouseEvent);
+    (buttons[0].props as { onClick: (e: React.MouseEvent) => void }).onClick({
+      stopPropagation: () => {},
+    } as React.MouseEvent);
     expect(fn).toHaveBeenCalledWith('node-1', { minInstances: 4 });
   });
 
@@ -153,7 +154,9 @@ describe('ScalingRow — min stepper', () => {
     const fn = vi.fn();
     const tree = renderRow({ minInstances: null, onUpdateData: fn });
     const buttons = findByType(tree, MockStepperButton).filter((b) => (b.props as { label: string }).label === '−');
-    (buttons[0].props as { onClick: (e: React.MouseEvent) => void }).onClick({ stopPropagation: () => {} } as React.MouseEvent);
+    (buttons[0].props as { onClick: (e: React.MouseEvent) => void }).onClick({
+      stopPropagation: () => {},
+    } as React.MouseEvent);
     expect(fn).toHaveBeenCalledWith('node-1', { minInstances: 0 });
   });
 
@@ -161,7 +164,9 @@ describe('ScalingRow — min stepper', () => {
     const fn = vi.fn();
     const tree = renderRow({ minInstances: 5, maxInstances: 5, onUpdateData: fn });
     const buttons = findByType(tree, MockStepperButton).filter((b) => (b.props as { label: string }).label === '+');
-    (buttons[0].props as { onClick: (e: React.MouseEvent) => void }).onClick({ stopPropagation: () => {} } as React.MouseEvent);
+    (buttons[0].props as { onClick: (e: React.MouseEvent) => void }).onClick({
+      stopPropagation: () => {},
+    } as React.MouseEvent);
     expect(fn).toHaveBeenCalledWith('node-1', { minInstances: 5 });
   });
 
@@ -169,7 +174,9 @@ describe('ScalingRow — min stepper', () => {
     const fn = vi.fn();
     const tree = renderRow({ minInstances: 50, maxInstances: null, onUpdateData: fn });
     const buttons = findByType(tree, MockStepperButton).filter((b) => (b.props as { label: string }).label === '+');
-    (buttons[0].props as { onClick: (e: React.MouseEvent) => void }).onClick({ stopPropagation: () => {} } as React.MouseEvent);
+    (buttons[0].props as { onClick: (e: React.MouseEvent) => void }).onClick({
+      stopPropagation: () => {},
+    } as React.MouseEvent);
     expect(fn).toHaveBeenCalledWith('node-1', { minInstances: 51 });
   });
 
@@ -177,7 +184,9 @@ describe('ScalingRow — min stepper', () => {
     const fn = vi.fn();
     const tree = renderRow({ minInstances: null, onUpdateData: fn });
     const buttons = findByType(tree, MockStepperButton).filter((b) => (b.props as { label: string }).label === '+');
-    (buttons[0].props as { onClick: (e: React.MouseEvent) => void }).onClick({ stopPropagation: () => {} } as React.MouseEvent);
+    (buttons[0].props as { onClick: (e: React.MouseEvent) => void }).onClick({
+      stopPropagation: () => {},
+    } as React.MouseEvent);
     expect(fn).toHaveBeenCalledWith('node-1', { minInstances: 2 });
   });
 
@@ -193,7 +202,9 @@ describe('ScalingRow — max stepper', () => {
     const tree = renderRow({ minInstances: 3, maxInstances: 3, onUpdateData: fn });
     const buttons = findByType(tree, MockStepperButton).filter((b) => (b.props as { label: string }).label === '−');
     // Second minus is the max decrement.
-    (buttons[1].props as { onClick: (e: React.MouseEvent) => void }).onClick({ stopPropagation: () => {} } as React.MouseEvent);
+    (buttons[1].props as { onClick: (e: React.MouseEvent) => void }).onClick({
+      stopPropagation: () => {},
+    } as React.MouseEvent);
     expect(fn).toHaveBeenCalledWith('node-1', { maxInstances: 3 });
   });
 
@@ -201,7 +212,9 @@ describe('ScalingRow — max stepper', () => {
     const fn = vi.fn();
     const tree = renderRow({ minInstances: 1, maxInstances: 5, onUpdateData: fn });
     const buttons = findByType(tree, MockStepperButton).filter((b) => (b.props as { label: string }).label === '−');
-    (buttons[1].props as { onClick: (e: React.MouseEvent) => void }).onClick({ stopPropagation: () => {} } as React.MouseEvent);
+    (buttons[1].props as { onClick: (e: React.MouseEvent) => void }).onClick({
+      stopPropagation: () => {},
+    } as React.MouseEvent);
     expect(fn).toHaveBeenCalledWith('node-1', { maxInstances: 4 });
   });
 
@@ -209,7 +222,9 @@ describe('ScalingRow — max stepper', () => {
     const fn = vi.fn();
     const tree = renderRow({ minInstances: null, maxInstances: 3, onUpdateData: fn });
     const buttons = findByType(tree, MockStepperButton).filter((b) => (b.props as { label: string }).label === '−');
-    (buttons[1].props as { onClick: (e: React.MouseEvent) => void }).onClick({ stopPropagation: () => {} } as React.MouseEvent);
+    (buttons[1].props as { onClick: (e: React.MouseEvent) => void }).onClick({
+      stopPropagation: () => {},
+    } as React.MouseEvent);
     expect(fn).toHaveBeenCalledWith('node-1', { maxInstances: 2 });
   });
 
@@ -217,7 +232,9 @@ describe('ScalingRow — max stepper', () => {
     const fn = vi.fn();
     const tree = renderRow({ minInstances: 1, maxInstances: null, onUpdateData: fn });
     const buttons = findByType(tree, MockStepperButton).filter((b) => (b.props as { label: string }).label === '−');
-    (buttons[1].props as { onClick: (e: React.MouseEvent) => void }).onClick({ stopPropagation: () => {} } as React.MouseEvent);
+    (buttons[1].props as { onClick: (e: React.MouseEvent) => void }).onClick({
+      stopPropagation: () => {},
+    } as React.MouseEvent);
     expect(fn).toHaveBeenCalledWith('node-1', { maxInstances: 2 });
   });
 
@@ -225,7 +242,9 @@ describe('ScalingRow — max stepper', () => {
     const fn = vi.fn();
     const tree = renderRow({ maxInstances: 7, onUpdateData: fn });
     const buttons = findByType(tree, MockStepperButton).filter((b) => (b.props as { label: string }).label === '+');
-    (buttons[1].props as { onClick: (e: React.MouseEvent) => void }).onClick({ stopPropagation: () => {} } as React.MouseEvent);
+    (buttons[1].props as { onClick: (e: React.MouseEvent) => void }).onClick({
+      stopPropagation: () => {},
+    } as React.MouseEvent);
     expect(fn).toHaveBeenCalledWith('node-1', { maxInstances: 8 });
   });
 
@@ -233,7 +252,9 @@ describe('ScalingRow — max stepper', () => {
     const fn = vi.fn();
     const tree = renderRow({ maxInstances: null, onUpdateData: fn });
     const buttons = findByType(tree, MockStepperButton).filter((b) => (b.props as { label: string }).label === '+');
-    (buttons[1].props as { onClick: (e: React.MouseEvent) => void }).onClick({ stopPropagation: () => {} } as React.MouseEvent);
+    (buttons[1].props as { onClick: (e: React.MouseEvent) => void }).onClick({
+      stopPropagation: () => {},
+    } as React.MouseEvent);
     expect(fn).toHaveBeenCalledWith('node-1', { maxInstances: 4 });
   });
 
@@ -249,7 +270,9 @@ describe('ScalingRow — onUpdateData undefined', () => {
     const buttons = findByType(tree, MockStepperButton);
     for (const b of buttons) {
       expect(() =>
-        (b.props as { onClick: (e: React.MouseEvent) => void }).onClick({ stopPropagation: () => {} } as React.MouseEvent),
+        (b.props as { onClick: (e: React.MouseEvent) => void }).onClick({
+          stopPropagation: () => {},
+        } as React.MouseEvent),
       ).not.toThrow();
     }
   });

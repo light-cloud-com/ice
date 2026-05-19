@@ -39,8 +39,8 @@
 
 import { find_connected_components } from './components';
 import { has_cycle, topological_sort } from './topo-cycle';
-import type { MutableGraph } from '../mutable-graph';
 import type { NodeId } from '../../types/graph';
+import type { MutableGraph } from '../mutable-graph';
 
 // =============================================================================
 // Dependency Analysis

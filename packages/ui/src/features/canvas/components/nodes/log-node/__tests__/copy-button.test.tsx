@@ -8,12 +8,12 @@ import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { CopyButton } from '../copy-button';
 
-const renderCB = (
-  onClick: (e: React.MouseEvent) => void = () => {},
-): React.ReactElement => {
-  const Inner = (CopyButton as unknown as {
-    type: (p: { onClick: (e: React.MouseEvent) => void }) => React.ReactElement;
-  }).type;
+const renderCB = (onClick: (e: React.MouseEvent) => void = () => {}): React.ReactElement => {
+  const Inner = (
+    CopyButton as unknown as {
+      type: (p: { onClick: (e: React.MouseEvent) => void }) => React.ReactElement;
+    }
+  ).type;
   return Inner({ onClick });
 };
 

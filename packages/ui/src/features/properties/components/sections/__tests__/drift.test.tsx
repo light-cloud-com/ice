@@ -17,10 +17,11 @@
  * each test.
  */
 
-import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
-import { Provider } from 'react-redux';
 import { configureStore, createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import React from 'react';
+import { renderToString } from 'react-dom/server';
+import { Provider } from 'react-redux';
+import { describe, it, expect, vi } from 'vitest';
 
 // Mock useDriftCheck — the test sits at `components/sections/__tests__/`,
 // so `../../..` lands at `properties/`, and `../../../hooks/use-drift-check`
@@ -31,20 +32,15 @@ vi.mock('../../../hooks/use-drift-check', () => ({
   useDriftCheck: vi.fn(() => ({ isLoading: false, checkDrift: driftCheckSpy })),
 }));
 
-import { DriftIndicator, DriftCheckButton } from '../drift';
 import { useDriftCheck } from '../../../hooks/use-drift-check';
+import { DriftIndicator, DriftCheckButton } from '../drift';
 
 // ─── Tree-walker (same shape as rf-props-6/9) ───────────────────────────────
 
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -58,10 +54,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -158,20 +151,14 @@ function makeStore(deploy: Partial<MiniDeployState> = {}) {
 // through `renderToString` + an HTML-substring assertion. DriftCheckButton's
 // hook is mocked to a known shape, so we can invoke it directly.
 
-import { renderToString } from 'react-dom/server';
-
 // React SSR injects `<!-- -->` markers between adjacent text expressions so it
 // can rehydrate them on the client. They split substrings like `1 change`
 // into `1<!-- --> <!-- -->change` in the raw output. Strip the markers (and
 // any pure whitespace they leave behind) before substring assertions so tests
 // match the visual text the user sees, not the SSR transport encoding.
-const stripSsrMarkers = (html: string): string =>
-  html.replace(/<!-- -->/g, '');
+const stripSsrMarkers = (html: string): string => html.replace(/<!-- -->/g, '');
 
-const renderIndicator = (
-  store: ReturnType<typeof makeStore>,
-  nodeId: string,
-): string =>
+const renderIndicator = (store: ReturnType<typeof makeStore>, nodeId: string): string =>
   stripSsrMarkers(
     renderToString(
       <Provider store={store}>
@@ -298,7 +285,7 @@ describe('DriftCheckButton', () => {
       (el) =>
         el.type === 'div' &&
         typeof (el.props as { className?: string }).className === 'string' &&
-        ((el.props as { className: string }).className.includes('animate-spin')),
+        (el.props as { className: string }).className.includes('animate-spin'),
     );
     expect(spinners).toHaveLength(0);
   });
@@ -312,7 +299,7 @@ describe('DriftCheckButton', () => {
       (el) =>
         el.type === 'div' &&
         typeof (el.props as { className?: string }).className === 'string' &&
-        ((el.props as { className: string }).className.includes('animate-spin')),
+        (el.props as { className: string }).className.includes('animate-spin'),
     );
     expect(spinners).toHaveLength(1);
   });

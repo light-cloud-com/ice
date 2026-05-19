@@ -15,9 +15,9 @@
 
 import React from 'react';
 import { cn } from '../../../shared/utils/cn';
+import { type NodeDeployState } from '../../../store/slices/deploy-slice';
 import { getDeployBadge } from '../../canvas/components/nodes/compact-node/helpers';
 import { mapWireStatusToOverlay } from '../hooks/use-deploy-subscription';
-import { type NodeDeployState } from '../../../store/slices/deploy-slice';
 
 export const DeployNodeRow: React.FC<{ node: NodeDeployState }> = React.memo(({ node }) => {
   // Translate wire status to the same overlay key the canvas uses, so the
@@ -38,12 +38,7 @@ export const DeployNodeRow: React.FC<{ node: NodeDeployState }> = React.memo(({ 
   const badge = (() => {
     if (!baseBadge) return null;
     if (node.action !== 'delete') return baseBadge;
-    const destroyLabel =
-      node.status === 'applying'
-        ? 'DESTROY'
-        : node.status === 'succeeded'
-          ? 'GONE'
-          : null;
+    const destroyLabel = node.status === 'applying' ? 'DESTROY' : node.status === 'succeeded' ? 'GONE' : null;
     return destroyLabel ? { ...baseBadge, label: destroyLabel } : baseBadge;
   })();
   const isTerminal =
@@ -55,10 +50,7 @@ export const DeployNodeRow: React.FC<{ node: NodeDeployState }> = React.memo(({ 
 
   return (
     <li
-      className={cn(
-        'px-3 py-2 text-xs flex items-start gap-2',
-        muted && 'opacity-60',
-      )}
+      className={cn('px-3 py-2 text-xs flex items-start gap-2', muted && 'opacity-60')}
       data-testid="ice-deploy-node-row"
       data-node-id={node.node_id}
       data-node-status={node.status}
@@ -77,14 +69,10 @@ export const DeployNodeRow: React.FC<{ node: NodeDeployState }> = React.memo(({ 
             {node.resource_name || node.node_id}
           </span>
           {node.resource_type && (
-            <span className="text-muted-foreground font-mono text-[10px] truncate">
-              {node.resource_type}
-            </span>
+            <span className="text-muted-foreground font-mono text-[10px] truncate">{node.resource_type}</span>
           )}
           {isTerminal && typeof node.duration_ms === 'number' && (
-            <span className="ml-auto text-muted-foreground tabular-nums">
-              {(node.duration_ms / 1000).toFixed(1)}s
-            </span>
+            <span className="ml-auto text-muted-foreground tabular-nums">{(node.duration_ms / 1000).toFixed(1)}s</span>
           )}
         </div>
         {node.status === 'applying' && node.step && (
@@ -93,9 +81,7 @@ export const DeployNodeRow: React.FC<{ node: NodeDeployState }> = React.memo(({ 
           </div>
         )}
         {node.status === 'failed' && node.error?.message && (
-          <div className="text-red-600 dark:text-red-400 mt-0.5 break-words">
-            {node.error.message}
-          </div>
+          <div className="text-red-600 dark:text-red-400 mt-0.5 break-words">{node.error.message}</div>
         )}
       </div>
     </li>

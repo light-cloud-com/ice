@@ -2,9 +2,10 @@
  * rf-rpal-4 — `data/providers.ts` invariant tests.
  *
  * Pin the four module exports:
- *   - PROVIDERS — the provider filter dropdown options. Order is observable
- *     ('all' first, then cloud providers in ENABLED_PROVIDERS declaration
- *     order). The 'all' label resolves through translate() at module load.
+ *   - `getProviders(t)` — builds the provider filter dropdown options.
+ *     Order is observable ('all' first, then cloud providers in
+ *     ENABLED_PROVIDERS declaration order). The 'all' label resolves
+ *     through the passed-in translator at call time (locale-reactive).
  *   - STORAGE_KEY — load-bearing localStorage key 'ice-palette-collapsed'.
  *     User-observable in DevTools, do NOT change without migration.
  *   - loadCollapsed / saveCollapsed — error-swallowing localStorage R/W
@@ -13,14 +14,10 @@
  *   - PALETTE_STYLES — CSS keyframes string. Pin the keyframe names so a
  *     future "tidy up" doesn't break running animations on consumers.
  *
- * `translate()` mocked to identity for deterministic label assertions.
+ * Identity `t` is passed for deterministic label assertions.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-
-vi.mock('../../../i18n', () => ({
-  t: (key: string) => key,
-}));
 
 vi.mock('../../../config/providers', () => ({
   ENABLED_PROVIDERS: [
@@ -31,16 +28,13 @@ vi.mock('../../../config/providers', () => ({
   ENABLED_PROVIDER_IDS: new Set(['aws', 'gcp', 'azure']),
 }));
 
-import {
-  PROVIDERS,
-  STORAGE_KEY,
-  PALETTE_STYLES,
-  loadCollapsed,
-  saveCollapsed,
-} from '../data/providers';
+import { getProviders, STORAGE_KEY, PALETTE_STYLES, loadCollapsed, saveCollapsed } from '../data/providers';
 
-describe('PROVIDERS', () => {
-  it("starts with the 'all' option whose label resolves through translate()", () => {
+const t = (k: string) => k;
+const PROVIDERS = getProviders(t);
+
+describe('getProviders', () => {
+  it("starts with the 'all' option whose label resolves through the passed-in translator", () => {
     expect(PROVIDERS[0].id).toBe('all');
     expect(PROVIDERS[0].label).toBe('palette.providerAll');
     expect(PROVIDERS[0].color).toBeUndefined();
@@ -78,6 +72,13 @@ describe('PROVIDERS', () => {
 
   it('has length 4 (1 all + 3 enabled cloud providers)', () => {
     expect(PROVIDERS).toHaveLength(4);
+  });
+
+  it('uses the latest translator each call (locale-reactive)', () => {
+    const en = getProviders(() => 'All');
+    const zh = getProviders(() => '全部');
+    expect(en[0].label).toBe('All');
+    expect(zh[0].label).toBe('全部');
   });
 });
 

@@ -12,7 +12,6 @@
  */
 
 import { describe, expect, it } from 'vitest';
-
 import type { ColorTheme, ThemePalette } from '../types';
 
 describe('dev-accent-picker types — import resolution', () => {

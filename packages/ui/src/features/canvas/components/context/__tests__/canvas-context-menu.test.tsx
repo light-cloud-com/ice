@@ -7,7 +7,6 @@
  * a project-provider lookup via axios.
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -61,7 +60,7 @@ const mocks = vi.hoisted(() => ({
     { id: 'mobile', label: 'Mobile' },
   ],
   BLOCK_CATEGORY_ORDER: ['compute', 'storage', 'network'],
-  getBlockCategoryLabel: vi.fn((c: string) => c.toUpperCase()),
+  getBlockCategoryLabel: vi.fn((_t: (k: string) => string, c: string) => c.toUpperCase()),
   getBlueprint: vi.fn(() => ({ iceType: 'Compute.EC2' })),
   expandBlueprint: vi.fn(() => ({ nodes: [{ id: 'n1' }], edges: [] })),
   expandComposedTemplate: vi.fn(() => ({
@@ -90,6 +89,14 @@ vi.mock('react', async (orig) => {
     mocks.refs.push(ref as unknown as { current: unknown });
     return ref;
   };
+  // CanvasContextMenu pulls t() via useTranslation()→useContext(LocaleContext).
+  // Return an identity-translator context so the menu builds labels without
+  // crashing on the real createContext default value.
+  const useContextStub = vi.fn(() => ({
+    t: (k: string) => k,
+    locale: 'en' as const,
+    setLocale: () => {},
+  }));
   const actualDefault = (actual as unknown as { default?: typeof actual }).default ?? actual;
   return {
     ...actual,
@@ -100,12 +107,14 @@ vi.mock('react', async (orig) => {
       useMemo: useMemoStub,
       useCallback: useCallbackStub,
       useRef: useRefStub,
+      useContext: useContextStub,
     },
     useState: useStateStub,
     useEffect: useEffectStub,
     useMemo: useMemoStub,
     useCallback: useCallbackStub,
     useRef: useRefStub,
+    useContext: useContextStub,
   };
 });
 
@@ -185,8 +194,7 @@ function findFirst(tree: unknown, pred: (el: ElLike) => boolean): ElLike | undef
   return undefined;
 }
 
-const callRender = (): unknown =>
-  (CanvasContextMenu as unknown as (p: unknown) => unknown)({});
+const callRender = (): unknown => (CanvasContextMenu as unknown as (p: unknown) => unknown)({});
 
 beforeEach(() => {
   // Reset state to defaults
@@ -309,9 +317,11 @@ describe('CanvasContextMenu — type=canvas', () => {
     mocks.useStateOverrides = { 0: 'aws' };
     const tree = callRender();
     const menu = findFirst(tree, (el) => el.type === mocks.CanvasMenu)!;
-    const cats = (menu.props as {
-      blockCategories: Array<{ label: string; items: unknown[] }>;
-    }).blockCategories;
+    const cats = (
+      menu.props as {
+        blockCategories: Array<{ label: string; items: unknown[] }>;
+      }
+    ).blockCategories;
     // Only blueprints with 'aws' in providers — EC2 + S3 (Foo is gcp-only).
     const labels = cats.flatMap((c) => c.items.map((i) => (i as { label: string }).label));
     expect(labels.sort()).toEqual(['EC2', 'S3']);
@@ -322,9 +332,11 @@ describe('CanvasContextMenu — type=canvas', () => {
     mocks.useStateOverrides = { 0: null };
     const tree = callRender();
     const menu = findFirst(tree, (el) => el.type === mocks.CanvasMenu)!;
-    const cats = (menu.props as {
-      blockCategories: Array<{ label: string; items: unknown[] }>;
-    }).blockCategories;
+    const cats = (
+      menu.props as {
+        blockCategories: Array<{ label: string; items: unknown[] }>;
+      }
+    ).blockCategories;
     const labels = cats.flatMap((c) => c.items.map((i) => (i as { label: string }).label));
     expect(labels.sort()).toEqual(['EC2', 'Foo', 'S3']);
   });
@@ -332,9 +344,11 @@ describe('CanvasContextMenu — type=canvas', () => {
   it('block categories sort known categories in BLOCK_CATEGORY_ORDER and unknown last', () => {
     const tree = callRender();
     const menu = findFirst(tree, (el) => el.type === mocks.CanvasMenu)!;
-    const cats = (menu.props as {
-      blockCategories: Array<{ label: string }>;
-    }).blockCategories;
+    const cats = (
+      menu.props as {
+        blockCategories: Array<{ label: string }>;
+      }
+    ).blockCategories;
     // categories in source: Compute, Storage, Other (Foo) — order maps:
     // compute=0, storage=1, other=999. Labels are upper-cased by mock.
     const labels = cats.map((c) => c.label);
@@ -346,9 +360,11 @@ describe('CanvasContextMenu — type=canvas', () => {
   it('clicking a block item dispatches expandBlueprintToCard + closeContextMenu', () => {
     const tree = callRender();
     const menu = findFirst(tree, (el) => el.type === mocks.CanvasMenu)!;
-    const ec2 = (menu.props as {
-      blockCategories: Array<{ label: string; items: Array<{ label: string; onClick: () => void }> }>;
-    }).blockCategories
+    const ec2 = (
+      menu.props as {
+        blockCategories: Array<{ label: string; items: Array<{ label: string; onClick: () => void }> }>;
+      }
+    ).blockCategories
       .flatMap((c) => c.items)
       .find((i) => i.label === 'EC2')!;
     ec2.onClick();
@@ -362,9 +378,11 @@ describe('CanvasContextMenu — type=canvas', () => {
     mocks.getBlueprint.mockReturnValueOnce(null as unknown as { iceType: string });
     const tree = callRender();
     const menu = findFirst(tree, (el) => el.type === mocks.CanvasMenu)!;
-    const ec2 = (menu.props as {
-      blockCategories: Array<{ items: Array<{ label: string; onClick: () => void }> }>;
-    }).blockCategories
+    const ec2 = (
+      menu.props as {
+        blockCategories: Array<{ items: Array<{ label: string; onClick: () => void }> }>;
+      }
+    ).blockCategories
       .flatMap((c) => c.items)
       .find((i) => i.label === 'EC2')!;
     ec2.onClick();
@@ -375,9 +393,11 @@ describe('CanvasContextMenu — type=canvas', () => {
   it('template categories sort alphabetically by label', () => {
     const tree = callRender();
     const menu = findFirst(tree, (el) => el.type === mocks.CanvasMenu)!;
-    const cats = (menu.props as {
-      templateCategories: Array<{ label: string }>;
-    }).templateCategories;
+    const cats = (
+      menu.props as {
+        templateCategories: Array<{ label: string }>;
+      }
+    ).templateCategories;
     const labels = cats.map((c) => c.label);
     const sorted = [...labels].sort((a, b) => a.localeCompare(b));
     expect(labels).toEqual(sorted);
@@ -386,9 +406,11 @@ describe('CanvasContextMenu — type=canvas', () => {
   it('templates with unknown category fall through to the raw category id (or "Other")', () => {
     const tree = callRender();
     const menu = findFirst(tree, (el) => el.type === mocks.CanvasMenu)!;
-    const cats = (menu.props as {
-      templateCategories: Array<{ label: string; items: Array<{ label: string }> }>;
-    }).templateCategories;
+    const cats = (
+      menu.props as {
+        templateCategories: Array<{ label: string; items: Array<{ label: string }> }>;
+      }
+    ).templateCategories;
     // Tpl D has category undefined → falls through to 'Other'.
     const otherCat = cats.find((c) => c.label === 'Other');
     expect(otherCat).toBeDefined();
@@ -398,9 +420,11 @@ describe('CanvasContextMenu — type=canvas', () => {
   it('clicking a template dispatches importToActiveCard with offset positions', () => {
     const tree = callRender();
     const menu = findFirst(tree, (el) => el.type === mocks.CanvasMenu)!;
-    const tplA = (menu.props as {
-      templateCategories: Array<{ items: Array<{ label: string; onClick: () => void }> }>;
-    }).templateCategories
+    const tplA = (
+      menu.props as {
+        templateCategories: Array<{ items: Array<{ label: string; onClick: () => void }> }>;
+      }
+    ).templateCategories
       .flatMap((c) => c.items)
       .find((i) => i.label === 'Tpl A')!;
     tplA.onClick();

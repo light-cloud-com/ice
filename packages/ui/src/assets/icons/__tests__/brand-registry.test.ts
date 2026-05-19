@@ -7,7 +7,6 @@
  */
 
 import { describe, it, expect } from 'vitest';
-
 import { getBrandIcon, getProviderBrandIcon } from '../brand-registry';
 
 describe('getBrandIcon — exact match', () => {

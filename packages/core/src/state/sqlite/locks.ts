@@ -27,10 +27,10 @@
  *    returns expired locks.
  */
 
+import { ensure_db, emit_event, wrap_error } from './resources';
 import { create_deployment_id } from '../../types/deployment';
 import { InternalError } from '../../types/errors';
 import { failure, success } from '../../types/result';
-import { ensure_db, emit_event, wrap_error } from './resources';
 import type { DeploymentId } from '../../types/deployment';
 import type { IceError } from '../../types/errors';
 import type { Result } from '../../types/result';
@@ -136,9 +136,7 @@ export async function locks_release(ctx: SqliteContext, lock_id: string): Promis
   try {
     const db = ensure_db(ctx);
 
-    const lock = db.prepare('SELECT graph_id FROM locks WHERE id = ?').get(lock_id) as
-      | { graph_id: string }
-      | undefined;
+    const lock = db.prepare('SELECT graph_id FROM locks WHERE id = ?').get(lock_id) as { graph_id: string } | undefined;
 
     db.prepare('DELETE FROM locks WHERE id = ?').run(lock_id);
 

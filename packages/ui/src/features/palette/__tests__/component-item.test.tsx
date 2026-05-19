@@ -114,10 +114,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -245,11 +242,7 @@ describe('ComponentItem — drag row', () => {
     });
     const rows = findByPredicate(tree, (el) => {
       const props = el.props as Record<string, unknown>;
-      return (
-        el.type === 'div' &&
-        props.draggable === true &&
-        typeof props['data-block-type'] === 'string'
-      );
+      return el.type === 'div' && props.draggable === true && typeof props['data-block-type'] === 'string';
     });
     expect(rows).toHaveLength(1);
     const props = rows[0].props as Record<string, unknown>;
@@ -494,10 +487,13 @@ describe('ComponentItem — handleDragStart', () => {
         }),
       },
     });
-    vi.stubGlobal('setTimeout', vi.fn((fn: () => void) => {
-      fn();
-      return 0;
-    }));
+    vi.stubGlobal(
+      'setTimeout',
+      vi.fn((fn: () => void) => {
+        fn();
+        return 0;
+      }),
+    );
     return { created, appended, removed };
   }
 

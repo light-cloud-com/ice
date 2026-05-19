@@ -10,14 +10,10 @@
  * (legacy blueprint default).
  */
 
-import {
-  CARD_FOOTER_HEIGHT,
-  COMPUTE_BODY_HEIGHT,
-  COMPUTE_HEADER_HEIGHT,
-  COMPUTE_PADDING,
-} from '@ice/constants';
+import { CARD_FOOTER_HEIGHT, COMPUTE_BODY_HEIGHT, COMPUTE_HEADER_HEIGHT, COMPUTE_PADDING } from '@ice/constants';
 import { Brain } from 'lucide-react';
 import React from 'react';
+import { t } from '../../../../../i18n';
 import { CardShell } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
@@ -38,31 +34,32 @@ interface ModelRow {
 function resolveModelRows(data: Record<string, unknown> | undefined): ModelRow[] {
   const rows: ModelRow[] = [];
   const primary = (data?.model as string) || (data?.primaryModel as string) || '';
-  if (primary) rows.push({ label: 'primary', model: primary, primary: true });
+  if (primary) rows.push({ label: t('canvas.blocks.llm.primary'), model: primary, primary: true });
 
   const fallbacks = data?.fallbackModels;
   if (Array.isArray(fallbacks)) {
     for (const fb of fallbacks.slice(0, 2)) {
       if (typeof fb === 'string' && fb) {
-        rows.push({ label: 'fallback', model: fb, primary: false });
+        rows.push({ label: t('canvas.blocks.llm.fallback'), model: fb, primary: false });
       } else if (fb && typeof fb === 'object') {
         const m = (fb as { model?: string }).model;
-        if (m) rows.push({ label: 'fallback', model: m, primary: false });
+        if (m) rows.push({ label: t('canvas.blocks.llm.fallback'), model: m, primary: false });
       }
     }
   } else if (typeof data?.fallbackModel === 'string' && data.fallbackModel) {
-    rows.push({ label: 'fallback', model: data.fallbackModel as string, primary: false });
+    rows.push({ label: t('canvas.blocks.llm.fallback'), model: data.fallbackModel as string, primary: false });
   }
 
   return rows;
 }
 
 function buildLiveConfig(data: Record<string, unknown> | undefined): string {
-  const rate = data?.rateLimitPerMin != null ? `${data.rateLimitPerMin} rpm` : '';
+  const rate =
+    data?.rateLimitPerMin != null ? t('canvas.blocks.llm.rpm', { n: data.rateLimitPerMin as string | number }) : '';
   const quota = (data?.quotas as string) || '';
   const fallbacksOn = !!(data?.fallbackModel || (Array.isArray(data?.fallbackModels) && data.fallbackModels.length));
-  const parts = [rate, quota, fallbacksOn ? 'fallback on' : ''].filter(Boolean) as string[];
-  return parts.join(' · ') || 'no rate limits';
+  const parts = [rate, quota, fallbacksOn ? t('canvas.blocks.llm.fallbackOn') : ''].filter(Boolean) as string[];
+  return parts.join(' · ') || t('canvas.blocks.llm.noRateLimits');
 }
 
 const ModelRowView: React.FC<{ row: ModelRow; color: string }> = ({ row, color }) => (
@@ -138,7 +135,7 @@ export const SvgLlmGatewayNode: React.FC<SvgCompactNodeProps> = ({
       pipelineStatus={pipelineStatus}
       icon={Brain}
       accentColor={LLM_ACCENT}
-      title={node.label || 'LLM Gateway'}
+      title={node.label || t('canvas.blocks.titles.llmGateway')}
       liveConfig={liveConfig}
       headerHeight={COMPUTE_HEADER_HEIGHT}
     >
@@ -164,7 +161,7 @@ export const SvgLlmGatewayNode: React.FC<SvgCompactNodeProps> = ({
               textAlign: 'center',
             }}
           >
-            no model selected
+            {t('canvas.blocks.llm.noModelSelected')}
           </span>
         )}
       </div>

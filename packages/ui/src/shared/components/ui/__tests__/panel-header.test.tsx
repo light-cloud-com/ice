@@ -32,8 +32,7 @@ vi.mock('react', async (importOriginal) => {
       const setter = vi.fn();
       stateMocks.setters.push(setter);
       // Only one boolean useState call — searchOpen.
-      const value =
-        typeof initial === 'boolean' ? (stateMocks.searchOpenOverride as unknown as T) : initial;
+      const value = typeof initial === 'boolean' ? (stateMocks.searchOpenOverride as unknown as T) : initial;
       return [value, setter];
     }),
     useRef: vi.fn(<T,>(init: T): { current: T } => ({ current: init })),

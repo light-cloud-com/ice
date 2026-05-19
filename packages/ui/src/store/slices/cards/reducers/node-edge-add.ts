@@ -33,10 +33,10 @@
  * @see rf-cards-7
  */
 
-import type { PayloadAction } from '@reduxjs/toolkit';
-import type { CardNode, CardEdge, CardsState } from '../types';
 import { migrateCardNode } from '../migration';
 import { pushSnapshot } from '../snapshot';
+import type { CardNode, CardEdge, CardsState } from '../types';
+import type { PayloadAction } from '@reduxjs/toolkit';
 
 export const nodeEdgeAddReducers = {
   // Add node to active card
@@ -112,10 +112,7 @@ export const nodeEdgeAddReducers = {
   },
 
   // Update edge data in active card
-  updateCardEdgeData: (
-    state: CardsState,
-    action: PayloadAction<{ edgeId: string; data: Record<string, unknown> }>,
-  ) => {
+  updateCardEdgeData: (state: CardsState, action: PayloadAction<{ edgeId: string; data: Record<string, unknown> }>) => {
     pushSnapshot(state);
     const card = state.cards.find((c) => c.id === state.activeCardId);
     if (card) {

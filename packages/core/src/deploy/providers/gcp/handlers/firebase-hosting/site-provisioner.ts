@@ -25,9 +25,7 @@ import type { GCPHandlerContext } from '../../types';
  * idempotent — returns 409 ALREADY_EXISTS if it's already a Firebase
  * project, which we treat as success.
  */
-export async function ensureFirebaseProject(
-  ctx: GCPHandlerContext,
-): Promise<{ ok: boolean; error?: string }> {
+export async function ensureFirebaseProject(ctx: GCPHandlerContext): Promise<{ ok: boolean; error?: string }> {
   const url = `${FIREBASE_MGMT_API}/projects/${ctx.project}:addFirebase`;
   const res = await restRequest(ctx, 'POST', url, {}, { acceptStatuses: [409, 400] });
   if (res.ok) return { ok: true };
@@ -71,11 +69,7 @@ export async function ensureHostingSite(
   if (createRes.ok) {
     if (createRes.status === 409) {
       // Race / already exists — re-fetch.
-      const refetch = await restRequest(
-        ctx,
-        'GET',
-        `${FIREBASE_HOSTING_API}/projects/${ctx.project}/sites/${siteId}`,
-      );
+      const refetch = await restRequest(ctx, 'GET', `${FIREBASE_HOSTING_API}/projects/${ctx.project}/sites/${siteId}`);
       return refetch.ok
         ? { ok: true, data: refetch.data }
         : { ok: false, error: 'Site exists but could not be fetched.' };

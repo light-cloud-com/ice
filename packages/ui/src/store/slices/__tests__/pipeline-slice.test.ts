@@ -250,32 +250,20 @@ describe('pipeline-slice', () => {
     });
 
     it('seeds an idle entry for an unknown node', () => {
-      const s = pipelineReducer(
-        init(),
-        receiveCardPipelineUpdate({ nodeId: 'fresh', status: 'queued' }),
-      );
+      const s = pipelineReducer(init(), receiveCardPipelineUpdate({ nodeId: 'fresh', status: 'queued' }));
       expect(s.nodeStatus['fresh'].status).toBe('queued');
     });
 
     it('preserves prior progress when the new update omits it (?? operator)', () => {
-      let s = pipelineReducer(
-        init(),
-        receiveCardPipelineUpdate({ nodeId: 'n-1', status: 'idle', progress: 80 }),
-      );
-      s = pipelineReducer(
-        s,
-        receiveCardPipelineUpdate({ nodeId: 'n-1', status: 'building' }),
-      );
+      let s = pipelineReducer(init(), receiveCardPipelineUpdate({ nodeId: 'n-1', status: 'idle', progress: 80 }));
+      s = pipelineReducer(s, receiveCardPipelineUpdate({ nodeId: 'n-1', status: 'building' }));
       expect(s.nodeStatus['n-1'].progress).toBe(80);
     });
   });
 
   describe('clearNodeStatus', () => {
     it('removes the entry for a node', () => {
-      let s = pipelineReducer(
-        init(),
-        receiveCardPipelineUpdate({ nodeId: 'n-1', status: 'idle' }),
-      );
+      let s = pipelineReducer(init(), receiveCardPipelineUpdate({ nodeId: 'n-1', status: 'idle' }));
       expect(s.nodeStatus['n-1']).toBeDefined();
       s = pipelineReducer(s, clearNodeStatus('n-1'));
       expect(s.nodeStatus['n-1']).toBeUndefined();
@@ -313,10 +301,7 @@ describe('pipeline-slice', () => {
         init(),
         fetchRulesForNode.fulfilled({ key: 'c-1:n-1', rules: [r] }, 'req-1', { cardId: 'c-1', nodeId: 'n-1' }),
       );
-      s = pipelineReducer(
-        s,
-        fetchRulesForNode.rejected(null, 'req-2', { cardId: 'c-1', nodeId: 'n-1' }, 'fail'),
-      );
+      s = pipelineReducer(s, fetchRulesForNode.rejected(null, 'req-2', { cardId: 'c-1', nodeId: 'n-1' }, 'fail'));
       expect(s.rules['c-1:n-1']).toEqual([r]);
     });
 
@@ -400,7 +385,10 @@ describe('pipeline-slice', () => {
 
     it('is a no-op when the key has not been seeded', () => {
       const updated = rule({ id: 'r-99', card_id: 'cc', node_id: 'nn' });
-      const s = pipelineReducer(init(), updatePipelineRule.fulfilled(updated, 'req-1', { ruleId: 'r-99', updates: {} }));
+      const s = pipelineReducer(
+        init(),
+        updatePipelineRule.fulfilled(updated, 'req-1', { ruleId: 'r-99', updates: {} }),
+      );
       expect(s.rules).toEqual({});
     });
 

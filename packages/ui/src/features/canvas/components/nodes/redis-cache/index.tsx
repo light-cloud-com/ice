@@ -7,14 +7,10 @@
  * live-config footer.
  */
 
-import {
-  CARD_FOOTER_HEIGHT,
-  DB_BODY_HEIGHT,
-  DB_HEADER_HEIGHT,
-  DB_PADDING,
-} from '@ice/constants';
+import { CARD_FOOTER_HEIGHT, DB_BODY_HEIGHT, DB_HEADER_HEIGHT, DB_PADDING } from '@ice/constants';
 import { Zap } from 'lucide-react';
 import React from 'react';
+import { t } from '../../../../../i18n';
 import { CardShell } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
@@ -32,9 +28,9 @@ function formatMemory(raw: unknown): string | null {
   if (!Number.isFinite(n) || n <= 0) return null;
   if (n >= 1024) {
     const gb = n / 1024;
-    return Number.isInteger(gb) ? `${gb} GB` : `${gb.toFixed(1)} GB`;
+    return t('canvas.blocks.redis.memoryGb', { n: Number.isInteger(gb) ? gb : Number(gb.toFixed(1)) });
   }
-  return `${n} MB`;
+  return t('canvas.blocks.redis.memoryMb', { n });
 }
 
 function buildLiveConfig(data: Record<string, unknown> | undefined): string {
@@ -43,10 +39,10 @@ function buildLiveConfig(data: Record<string, unknown> | undefined): string {
   const eviction = (data?.eviction as string) || '';
   const persistence = data?.persistence;
   const parts = [
-    version ? `Redis ${version}` : 'Redis',
+    version ? `${t('canvas.blocks.titles.redis')} ${version}` : t('canvas.blocks.titles.redis'),
     memory,
     eviction,
-    persistence === true ? 'persistent' : '',
+    persistence === true ? t('canvas.blocks.redis.persistent') : '',
   ].filter(Boolean) as string[];
   return parts.join(' · ');
 }
@@ -109,7 +105,7 @@ export const SvgRedisCacheNode: React.FC<SvgCompactNodeProps> = ({
       pipelineStatus={pipelineStatus}
       icon={Zap}
       accentColor={REDIS_ACCENT}
-      title={node.label || 'Redis'}
+      title={node.label || t('canvas.blocks.titles.redis')}
       liveConfig={liveConfig}
       headerHeight={DB_HEADER_HEIGHT}
     >

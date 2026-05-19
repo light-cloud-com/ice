@@ -62,7 +62,11 @@ export function useTableRows(input: UseTableRowsInput): UseTableRowsResult {
   } = input;
 
   const statusCtx: StatusContext = useMemo(
-    () => ({ nodePipelineStatus: nodePipelineStatus as any, driftByNode: driftByNode as any, deployedResources: deployedResources as any }),
+    () => ({
+      nodePipelineStatus: nodePipelineStatus as any,
+      driftByNode: driftByNode as any,
+      deployedResources: deployedResources as any,
+    }),
     [nodePipelineStatus, driftByNode, deployedResources],
   );
 

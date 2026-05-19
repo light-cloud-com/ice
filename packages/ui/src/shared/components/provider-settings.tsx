@@ -28,10 +28,8 @@
 import { Cloud, X, AlertCircle, CheckCircle, HelpCircle } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-
 import { useTranslation } from '../../i18n';
 import { getApi } from '../api/api-adapter';
-
 import { PROVIDER_CONFIGS } from './provider-settings/data/provider-configs';
 import { useProviderHandlers } from './provider-settings/hooks/use-provider-handlers';
 import { ProviderCard } from './provider-settings/sections/provider-card';
@@ -84,24 +82,18 @@ export const ProviderSettings: React.FC<ProviderSettingsProps> = ({ isOpen, onCl
     }
   }, [isOpen]);
 
-  const {
-    handleGCPOAuth,
-    handleConnect,
-    handleDisconnect,
-    handleRemoveProject,
-    handleImport,
-    gcpOAuth,
-  } = useProviderHandlers({
-    t,
-    providerStates,
-    setProviderStates,
-    setError,
-    setSuccess,
-    setConnecting,
-    setImporting,
-    onClose,
-    onImportComplete,
-  });
+  const { handleGCPOAuth, handleConnect, handleDisconnect, handleRemoveProject, handleImport, gcpOAuth } =
+    useProviderHandlers({
+      t,
+      providerStates,
+      setProviderStates,
+      setError,
+      setSuccess,
+      setConnecting,
+      setImporting,
+      onClose,
+      onImportComplete,
+    });
 
   // Toggle provider expansion
   const toggleProvider = (providerId: string) => {

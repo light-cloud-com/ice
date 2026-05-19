@@ -29,12 +29,6 @@ import {
   DEFAULT_PORTS,
   DEFAULT_ENV_VARS,
 } from '@ice/constants';
-import type {
-  ConnectionMeta,
-  ConnectionWarning,
-  ConnectionRule,
-  NodeForConnectionCheck,
-} from './connection-rules/types';
 import {
   isDatabase,
   isCache,
@@ -58,6 +52,12 @@ import {
   isContainer,
 } from './connection-rules/predicates';
 import { CONNECTION_RULES, generateAiConnectionPrompt } from './connection-rules/rules-data';
+import type {
+  ConnectionMeta,
+  ConnectionWarning,
+  ConnectionRule,
+  NodeForConnectionCheck,
+} from './connection-rules/types';
 
 // ─── Public re-exports ──────────────────────────────────────────────────────
 

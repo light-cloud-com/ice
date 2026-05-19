@@ -9,10 +9,10 @@
  * covered by direct reducer tests.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { configureStore } from '@reduxjs/toolkit';
-import graphReducer, { initializeGraph, loadGraph, saveGraph } from '../graph-slice';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { setApiAdapter } from '../../../shared/api/api-adapter';
+import graphReducer, { initializeGraph, loadGraph, saveGraph } from '../graph-slice';
 
 let api: { graph: { load: ReturnType<typeof vi.fn>; save: ReturnType<typeof vi.fn> } };
 

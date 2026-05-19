@@ -108,9 +108,7 @@ describe('hasPrivateNetworkAncestor', () => {
   });
 
   it('returns true when direct parent has iceType Network.PrivateNetwork', () => {
-    const allNodes = [
-      { id: 'vpc-1', parentId: null, data: { iceType: 'Network.PrivateNetwork' } },
-    ];
+    const allNodes = [{ id: 'vpc-1', parentId: null, data: { iceType: 'Network.PrivateNetwork' } }];
     const node = { id: 'svc-1', parentId: 'vpc-1' };
     expect(hasPrivateNetworkAncestor(node, allNodes)).toBe(true);
   });
@@ -143,9 +141,7 @@ describe('hasPrivateNetworkAncestor', () => {
   });
 
   it('returns false when parentId points to a non-existent node', () => {
-    const allNodes = [
-      { id: 'unrelated', parentId: null, data: { iceType: 'Layout.Group' } },
-    ];
+    const allNodes = [{ id: 'unrelated', parentId: null, data: { iceType: 'Layout.Group' } }];
     const node = { id: 'svc-1', parentId: 'missing' };
     expect(hasPrivateNetworkAncestor(node, allNodes)).toBe(false);
   });
@@ -171,9 +167,7 @@ describe('isCustomDomainStandalone', () => {
   });
 
   it('returns false for a non-CustomDomain even when parent exists', () => {
-    const allNodes = [
-      { id: 'p', data: { iceType: 'Layout.Group' } },
-    ];
+    const allNodes = [{ id: 'p', data: { iceType: 'Layout.Group' } }];
     const node = {
       data: { iceType: 'Compute.Container' },
       parentId: 'p',
@@ -197,9 +191,7 @@ describe('isCustomDomainStandalone', () => {
   });
 
   it('returns false for a CustomDomain whose parent is a Network.PrivateNetwork (nested mode)', () => {
-    const allNodes = [
-      { id: 'vpc-1', data: { iceType: 'Network.PrivateNetwork' } },
-    ];
+    const allNodes = [{ id: 'vpc-1', data: { iceType: 'Network.PrivateNetwork' } }];
     const node = {
       data: { iceType: 'Network.CustomDomain' },
       parentId: 'vpc-1',
@@ -208,9 +200,7 @@ describe('isCustomDomainStandalone', () => {
   });
 
   it('returns true for a CustomDomain whose parent is a generic group (standalone mode)', () => {
-    const allNodes = [
-      { id: 'group-1', data: { iceType: 'Layout.Group' } },
-    ];
+    const allNodes = [{ id: 'group-1', data: { iceType: 'Layout.Group' } }];
     const node = {
       data: { iceType: 'Network.CustomDomain' },
       parentId: 'group-1',

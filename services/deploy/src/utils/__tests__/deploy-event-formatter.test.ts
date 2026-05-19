@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { describeEventForLog, mapStatusToOverlay } from '../deploy-event-formatter';
 import type {
   DeployCompleteEvent,
   DeployLogEvent,
@@ -6,7 +7,6 @@ import type {
   DeployNodeStatusEvent,
   DeployRequirementVerifiedEvent,
 } from '@ice/types';
-import { describeEventForLog, mapStatusToOverlay } from '../deploy-event-formatter';
 
 describe('mapStatusToOverlay', () => {
   // Mapping aligned with the frontend's `mapWireStatusToOverlay` in

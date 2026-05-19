@@ -23,17 +23,11 @@ vi.mock('../../../components/nodes/compact-node', async (importOriginal) => {
   };
 });
 
-import {
-  resolveToggleFoldDecision,
-  runUnfoldExpansion,
-} from '../toggle-fold-runner';
-import {
-  CONTAINER_HEADER_H,
-  CONTAINER_PAD,
-} from '../../../utils/container-bounds';
 import { MIN_CONTAINER_HEIGHT } from '../../../../../config/canvas-constants';
-import type { CanvasNode } from '../../../components/types';
+import { CONTAINER_HEADER_H, CONTAINER_PAD } from '../../../utils/container-bounds';
+import { resolveToggleFoldDecision, runUnfoldExpansion } from '../toggle-fold-runner';
 import type { CardNode } from '../../../../../store/slices/cards-slice';
+import type { CanvasNode } from '../../../components/types';
 
 const PAD = CONTAINER_PAD;
 const HEADER = CONTAINER_HEADER_H;
@@ -50,7 +44,7 @@ const mkNode = (overrides: Partial<CanvasNode> = {}): CanvasNode =>
     data: overrides.data ?? {},
     parentId: overrides.parentId ?? null,
     ...overrides,
-  } as CanvasNode);
+  }) as CanvasNode;
 
 // ─── resolveToggleFoldDecision ───────────────────────────────────────────────
 
@@ -84,9 +78,7 @@ describe('resolveToggleFoldDecision', () => {
 describe('runUnfoldExpansion — no children fallback', () => {
   it('uses Math.max(reduxHeight, computeCompactNodeHeight, MIN)', () => {
     const node = mkNode({ id: 'a', x: 0, y: 0, width: 300, height: 38, data: { folded: true } });
-    const nodes: CardNode[] = [
-      { id: 'a', height: 200 } as unknown as CardNode,
-    ];
+    const nodes: CardNode[] = [{ id: 'a', height: 200 } as unknown as CardNode];
     mocks.computeCompactNodeHeightSpy.mockReturnValue(80);
 
     const result = runUnfoldExpansion({

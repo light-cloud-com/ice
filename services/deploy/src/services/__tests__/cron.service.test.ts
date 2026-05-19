@@ -187,13 +187,9 @@ describe('startCronJobs', () => {
     it('iterates buckets, keeps top 50 ids, and logs per-bucket prune count', async () => {
       canvasDeploymentDeleteMany.mockResolvedValueOnce({ count: 0 }); // rule 4
       canvasDeploymentDeleteMany.mockResolvedValueOnce({ count: 0 }); // rule 5
-      canvasDeploymentGroupBy.mockResolvedValueOnce([
-        { card_id: 'card-1', environment: 'prod', _count: 60 },
-      ]);
+      canvasDeploymentGroupBy.mockResolvedValueOnce([{ card_id: 'card-1', environment: 'prod', _count: 60 }]);
       // findMany returns the 50 keep candidates
-      canvasDeploymentFindMany.mockResolvedValueOnce(
-        Array.from({ length: 50 }, (_, i) => ({ id: `keep-${i}` })),
-      );
+      canvasDeploymentFindMany.mockResolvedValueOnce(Array.from({ length: 50 }, (_, i) => ({ id: `keep-${i}` })));
       // deleteMany for the bucket
       canvasDeploymentDeleteMany.mockResolvedValueOnce({ count: 12 });
       deployEventDeleteMany.mockResolvedValueOnce({ count: 0 });
@@ -220,17 +216,13 @@ describe('startCronJobs', () => {
           id: { notIn: expect.any(Array) },
         },
       });
-      expect(logSpy).toHaveBeenCalledWith(
-        'Pruned 12 successful deployments for card card-1 env prod',
-      );
+      expect(logSpy).toHaveBeenCalledWith('Pruned 12 successful deployments for card card-1 env prod');
     });
 
     it('does not log per-bucket count when bucket prune count is zero', async () => {
       canvasDeploymentDeleteMany.mockResolvedValueOnce({ count: 0 });
       canvasDeploymentDeleteMany.mockResolvedValueOnce({ count: 0 });
-      canvasDeploymentGroupBy.mockResolvedValueOnce([
-        { card_id: 'card-2', environment: 'staging', _count: 51 },
-      ]);
+      canvasDeploymentGroupBy.mockResolvedValueOnce([{ card_id: 'card-2', environment: 'staging', _count: 51 }]);
       canvasDeploymentFindMany.mockResolvedValueOnce([{ id: 'keep-1' }]);
       canvasDeploymentDeleteMany.mockResolvedValueOnce({ count: 0 });
       deployEventDeleteMany.mockResolvedValueOnce({ count: 0 });
@@ -293,9 +285,7 @@ describe('startCronJobs', () => {
 
       await getHandler()();
 
-      expect(logSpy).toHaveBeenCalledWith(
-        'Pruned 9 deployed_resource_mapping rows for deleted cards',
-      );
+      expect(logSpy).toHaveBeenCalledWith('Pruned 9 deployed_resource_mapping rows for deleted cards');
     });
 
     it('does not log DR-O2 message when raw delete returns 0', async () => {
@@ -317,10 +307,7 @@ describe('startCronJobs', () => {
 
       await expect(getHandler()()).resolves.toBeUndefined();
 
-      expect(errorSpy).toHaveBeenCalledWith(
-        'Cron: deployed_resource_mapping prune error:',
-        'raw failed',
-      );
+      expect(errorSpy).toHaveBeenCalledWith('Cron: deployed_resource_mapping prune error:', 'raw failed');
     });
   });
 
@@ -447,8 +434,16 @@ describe('startCronJobs', () => {
       // Mix of payload shapes: message, resource+status, result.error, empty (filtered out)
       deployEventFindMany.mockResolvedValueOnce([
         { type: 'log', payload: { message: 'Building image' }, created_at: new Date(now - 30 * 60 * 1000) },
-        { type: 'progress', payload: { resource: 'gcp.run.service:web', status: 'started' }, created_at: new Date(now - 31 * 60 * 1000) },
-        { type: 'resource_result', payload: { result: { error: 'image build failed' } }, created_at: new Date(now - 32 * 60 * 1000) },
+        {
+          type: 'progress',
+          payload: { resource: 'gcp.run.service:web', status: 'started' },
+          created_at: new Date(now - 31 * 60 * 1000),
+        },
+        {
+          type: 'resource_result',
+          payload: { result: { error: 'image build failed' } },
+          created_at: new Date(now - 32 * 60 * 1000),
+        },
         { type: 'log', payload: null, created_at: new Date(now - 33 * 60 * 1000) }, // filtered
       ]);
       canvasDeploymentUpdate.mockResolvedValueOnce({});
@@ -510,10 +505,7 @@ describe('startCronJobs', () => {
 
       await expect(getHandler()()).resolves.toBeUndefined();
 
-      expect(errorSpy).toHaveBeenCalledWith(
-        'Cron: stuck canvas deployment detection error:',
-        'canvas down',
-      );
+      expect(errorSpy).toHaveBeenCalledWith('Cron: stuck canvas deployment detection error:', 'canvas down');
     });
   });
 
@@ -539,9 +531,7 @@ describe('startCronJobs', () => {
 
       await getHandler()();
 
-      expect(logSpy).not.toHaveBeenCalledWith(
-        expect.stringContaining('old webhook delivery records'),
-      );
+      expect(logSpy).not.toHaveBeenCalledWith(expect.stringContaining('old webhook delivery records'));
     });
 
     it('logs error and does not throw when prisma rejects', async () => {
@@ -549,10 +539,7 @@ describe('startCronJobs', () => {
 
       await expect(getHandler()()).resolves.toBeUndefined();
 
-      expect(errorSpy).toHaveBeenCalledWith(
-        'Cron: webhook delivery prune error:',
-        'webhook down',
-      );
+      expect(errorSpy).toHaveBeenCalledWith('Cron: webhook delivery prune error:', 'webhook down');
     });
   });
 });

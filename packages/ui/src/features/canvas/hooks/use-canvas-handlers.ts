@@ -46,18 +46,11 @@
 
 import { useCallback, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import {
-  deleteCardNode,
-  deleteCardEdge,
-  updateCardNodeData,
-} from '../../../store/slices/cards-slice';
-import {
-  setSelectedNodes,
-  setSelectedEdges,
-} from '../../../store/slices/selection-slice';
+import { deleteCardNode, deleteCardEdge, updateCardNodeData } from '../../../store/slices/cards-slice';
+import { setSelectedNodes, setSelectedEdges } from '../../../store/slices/selection-slice';
 import { openContextMenu } from '../../../store/slices/ui-slice';
-import type { ConnectionTooltipInfo } from '../components/svg-connection-path';
 import type { AppDispatch } from '../../../store';
+import type { ConnectionTooltipInfo } from '../components/svg-connection-path';
 
 /**
  * The orchestrator's local viewport shape (NOT the `ViewState` exported
@@ -94,11 +87,7 @@ export interface UseCanvasHandlersResult {
   handleEdgeSelect: (connectionId: string) => void;
   handleUpdateNodeData: (nodeId: string, data: Record<string, unknown>) => void;
   handlePipelineClick: (nodeId: string) => void;
-  handleContextMenu: (
-    position: { x: number; y: number },
-    type: 'canvas' | 'node' | 'edge',
-    targetId?: string,
-  ) => void;
+  handleContextMenu: (position: { x: number; y: number }, type: 'canvas' | 'node' | 'edge', targetId?: string) => void;
   handleCanvasClick: () => void;
 }
 
@@ -163,11 +152,7 @@ export function useCanvasHandlers(args: UseCanvasHandlersArgs): UseCanvasHandler
 
   // Handle context menu
   const handleContextMenu = useCallback(
-    (
-      position: { x: number; y: number },
-      type: 'canvas' | 'node' | 'edge',
-      targetId?: string,
-    ) => {
+    (position: { x: number; y: number }, type: 'canvas' | 'node' | 'edge', targetId?: string) => {
       // Compute canvas position from viewport (avoids dependency on screenToCanvas)
       const rect = svgRef.current?.getBoundingClientRect();
       const canvasPos = rect

@@ -23,9 +23,6 @@ import { DeployedResourcesList } from './sections/deployed-resources-list';
 import { DnsRecordsSection } from './sections/dns-records-section';
 import { LogPanel } from './sections/log-panel';
 import { StatusBadge } from './status-badge';
-import { useDeployActions } from '../hooks/use-deploy-actions';
-import { useDeployEffects } from '../hooks/use-deploy-effects';
-import { useDestroyAction } from '../hooks/use-destroy-action';
 import { useTranslation } from '../../../i18n';
 import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { selectActiveCard } from '../../../store/slices/cards-slice';
@@ -37,6 +34,9 @@ import {
   resetDeploy,
   appendLog,
 } from '../../../store/slices/deploy-slice';
+import { useDeployActions } from '../hooks/use-deploy-actions';
+import { useDeployEffects } from '../hooks/use-deploy-effects';
+import { useDestroyAction } from '../hooks/use-destroy-action';
 import { analyzePreDeploy } from '../utils/predeploy-analysis';
 import { PROVIDER_REGIONS, PROVIDER_LABELS } from '../utils/provider-regions';
 import type { RootState, AppDispatch } from '../../../store';
@@ -71,13 +71,11 @@ export const DeployPanel: React.FC = () => {
   // handleClose live in `useDeployActions`. The hook returns them as an
   // object with the same dispatch ordering and retry-after-auth re-dispatch
   // semantics as the inline source.
-  const {
-    fetchRequirements,
-    handleVerifyRequirement,
-    handlePlan,
-    handleDeploy,
-    handleClose,
-  } = useDeployActions({ activeCard: activeCard ?? null, deploy, pendingRetryRef });
+  const { fetchRequirements, handleVerifyRequirement, handlePlan, handleDeploy, handleClose } = useDeployActions({
+    activeCard: activeCard ?? null,
+    deploy,
+    pendingRetryRef,
+  });
 
   // ─── Side-effects ─────────────────────────────────────────────────────
   //
@@ -259,4 +257,3 @@ export const DeployPanel: React.FC = () => {
     </div>
   );
 };
-

@@ -189,10 +189,7 @@ describe('integrations-slice', () => {
   describe('fetchGitHubRepos', () => {
     it('starts loading and clears any prior error on pending', () => {
       let state = init();
-      state = integrationsReducer(
-        state,
-        fetchGitHubRepos.rejected(null, 'req-prev', undefined, 'previous error'),
-      );
+      state = integrationsReducer(state, fetchGitHubRepos.rejected(null, 'req-prev', undefined, 'previous error'));
       expect(state.github.reposError).toBe('previous error');
 
       state = integrationsReducer(state, fetchGitHubRepos.pending('req-1', undefined));
@@ -211,10 +208,7 @@ describe('integrations-slice', () => {
     });
 
     it('stores the rejected payload as reposError', () => {
-      const state = integrationsReducer(
-        init(),
-        fetchGitHubRepos.rejected(null, 'req-1', undefined, 'bad pat'),
-      );
+      const state = integrationsReducer(init(), fetchGitHubRepos.rejected(null, 'req-1', undefined, 'bad pat'));
       expect(state.github.loading).toBe(false);
       expect(state.github.reposError).toBe('bad pat');
     });

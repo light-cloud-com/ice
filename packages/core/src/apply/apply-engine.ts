@@ -496,7 +496,10 @@ function build_result(context: ApplyContext): ApplyResult {
 function record_cancellation(context: ApplyContext, remaining_layers: ExecutionLayer[]): void {
   context.cancelled = true;
   for (const layer of remaining_layers) {
-    record_cancelled_changes(context, layer.changes.filter((c) => c.action !== 'no_op'));
+    record_cancelled_changes(
+      context,
+      layer.changes.filter((c) => c.action !== 'no_op'),
+    );
   }
 }
 

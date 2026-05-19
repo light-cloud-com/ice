@@ -71,10 +71,7 @@ function* walk(node: unknown): Generator<ReactElementLike> {
   yield node;
   yield* walk(node.props.children);
 }
-function findByPredicate(
-  tree: unknown,
-  predicate: (el: ReactElementLike) => boolean,
-): ReactElementLike | undefined {
+function findByPredicate(tree: unknown, predicate: (el: ReactElementLike) => boolean): ReactElementLike | undefined {
   for (const el of walk(tree)) {
     if (predicate(el)) return el;
   }
@@ -173,7 +170,10 @@ describe('CreateEnvironmentModal — handlers', () => {
     const tree = callRender({ projectId: 'p1', onClose: vi.fn() });
     const create = findByPredicate(
       tree,
-      (el) => el.type === 'button' && typeof el.props.onClick === 'function' && el.props.children === 't:environments.createModal.createButton',
+      (el) =>
+        el.type === 'button' &&
+        typeof el.props.onClick === 'function' &&
+        el.props.children === 't:environments.createModal.createButton',
     );
     expect(create?.props.disabled).toBe(true);
   });

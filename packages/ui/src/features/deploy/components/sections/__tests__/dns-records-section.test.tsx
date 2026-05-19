@@ -64,12 +64,7 @@ import type { DeployResourceResult } from '../../../../../store/slices/deploy-sl
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -89,10 +84,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -321,9 +313,7 @@ describe('DnsRecordsSection — outer structure', () => {
     const cn = (cards[0].props as { className: string }).className;
     // Lock the entire card-class string verbatim — it carries the blue palette
     // and the inner spacing.
-    expect(cn).toBe(
-      'rounded-md border border-blue-500/30 bg-blue-50 dark:bg-blue-950/20 p-3 space-y-3',
-    );
+    expect(cn).toBe('rounded-md border border-blue-500/30 bg-blue-50 dark:bg-blue-950/20 p-3 space-y-3');
   });
 
   it('uses `${r.name}-${idx}` as the per-card key', () => {
@@ -399,9 +389,7 @@ describe('DnsRecordsSection — add-records block (blue palette, required_action
     const subheaders = findAddSubheader(tree);
     expect(subheaders).toHaveLength(1);
     const text = collectText(subheaders[0]);
-    expect(text).toBe(
-      'Add the records below at your DNS provider to verify that you own example.com',
-    );
+    expect(text).toBe('Add the records below at your DNS provider to verify that you own example.com');
   });
 
   it('renders the column-header bar with "Type", "Domain name", and "Value" labels', () => {
@@ -415,9 +403,7 @@ describe('DnsRecordsSection — add-records block (blue palette, required_action
     // The column header has 4 spans: Type / Domain name / Value / spacer.
     const children = (colHeaders[0].props as { children: React.ReactNode[] }).children;
     expect(Array.isArray(children)).toBe(true);
-    const labels = (children as React.ReactElement[]).map(
-      (el) => (el.props as { children?: string }).children ?? null,
-    );
+    const labels = (children as React.ReactElement[]).map((el) => (el.props as { children?: string }).children ?? null);
     // The 4th span is a spacer (no children), so its label is null/undefined.
     expect(labels[0]).toBe('Type');
     expect(labels[1]).toBe('Domain name');
@@ -449,11 +435,7 @@ describe('DnsRecordsSection — add-records block (blue palette, required_action
     expect((valueSpan.props as { children: string }).children).toBe('1.2.3.4');
 
     const secondChildren = (rows[1].props as { children: React.ReactNode[] }).children;
-    const [t2, d2, v2] = secondChildren as [
-      React.ReactElement,
-      React.ReactElement,
-      React.ReactElement,
-    ];
+    const [t2, d2, v2] = secondChildren as [React.ReactElement, React.ReactElement, React.ReactElement];
     expect((t2.props as { children: string }).children).toBe('TXT');
     expect((d2.props as { children: string }).children).toBe('example.com');
     expect((v2.props as { children: string }).children).toBe('firebase=abc123');
@@ -506,9 +488,7 @@ describe('DnsRecordsSection — add-records block (blue palette, required_action
   it('treats records with required_action === "add" as add-records (explicit add)', () => {
     const tree = renderSection([
       makeResult({
-        custom_domain_dns_records: [
-          { type: 'A', domain: 'a.com', value: '1.1.1.1', required_action: 'add' },
-        ],
+        custom_domain_dns_records: [{ type: 'A', domain: 'a.com', value: '1.1.1.1', required_action: 'add' }],
       }),
     ]);
     expect(findAddSubheader(tree)).toHaveLength(1);
@@ -519,9 +499,7 @@ describe('DnsRecordsSection — add-records block (blue palette, required_action
     // The OR-default in splitDnsByAction: any non-"remove" string → addRecords.
     const tree = renderSection([
       makeResult({
-        custom_domain_dns_records: [
-          { type: 'A', domain: 'a.com', value: '1.1.1.1', required_action: 'verify' },
-        ],
+        custom_domain_dns_records: [{ type: 'A', domain: 'a.com', value: '1.1.1.1', required_action: 'verify' }],
       }),
     ]);
     expect(findAddSubheader(tree)).toHaveLength(1);
@@ -533,9 +511,7 @@ describe('DnsRecordsSection — remove-records block (amber palette, required_ac
   it('renders the amber-palette remove-records subheader with the verbatim instruction string (em-dash preserved)', () => {
     const tree = renderSection([
       makeResult({
-        custom_domain_dns_records: [
-          { type: 'A', domain: 'old.com', value: '9.9.9.9', required_action: 'remove' },
-        ],
+        custom_domain_dns_records: [{ type: 'A', domain: 'old.com', value: '9.9.9.9', required_action: 'remove' }],
       }),
     ]);
     const subheaders = findRemoveSubheader(tree);
@@ -553,9 +529,7 @@ describe('DnsRecordsSection — remove-records block (amber palette, required_ac
   it('does NOT render the add subheader when only remove-records are present', () => {
     const tree = renderSection([
       makeResult({
-        custom_domain_dns_records: [
-          { type: 'A', domain: 'old.com', value: '9.9.9.9', required_action: 'remove' },
-        ],
+        custom_domain_dns_records: [{ type: 'A', domain: 'old.com', value: '9.9.9.9', required_action: 'remove' }],
       }),
     ]);
     expect(findAddSubheader(tree)).toHaveLength(0);
@@ -564,9 +538,7 @@ describe('DnsRecordsSection — remove-records block (amber palette, required_ac
   it('applies the amber palette to remove-records rows (bg, type color, chip color)', () => {
     const tree = renderSection([
       makeResult({
-        custom_domain_dns_records: [
-          { type: 'A', domain: 'old.com', value: '9.9.9.9', required_action: 'remove' },
-        ],
+        custom_domain_dns_records: [{ type: 'A', domain: 'old.com', value: '9.9.9.9', required_action: 'remove' }],
       }),
     ]);
     const rows = findRecordRows(tree);
@@ -670,9 +642,7 @@ describe('DnsRecordsSection — Copy button click', () => {
   it('calls navigator.clipboard.writeText with the record value when clicked', () => {
     const tree = renderSection([
       makeResult({
-        custom_domain_dns_records: [
-          { type: 'A', domain: 'example.com', value: '203.0.113.42' },
-        ],
+        custom_domain_dns_records: [{ type: 'A', domain: 'example.com', value: '203.0.113.42' }],
       }),
     ]);
     const buttons = findCopyButtons(tree);
@@ -707,9 +677,7 @@ describe('DnsRecordsSection — Copy button click', () => {
   it('passes the remove-record value when an amber-palette copy button is clicked', () => {
     const tree = renderSection([
       makeResult({
-        custom_domain_dns_records: [
-          { type: 'A', domain: 'old.com', value: 'remove-me', required_action: 'remove' },
-        ],
+        custom_domain_dns_records: [{ type: 'A', domain: 'old.com', value: 'remove-me', required_action: 'remove' }],
       }),
     ]);
     const buttons = findCopyButtons(tree);
@@ -722,9 +690,7 @@ describe('DnsRecordsSection — Copy button click', () => {
     mocks.writeTextResult.mode = 'reject';
     const tree = renderSection([
       makeResult({
-        custom_domain_dns_records: [
-          { type: 'A', domain: 'a.com', value: 'will-be-rejected' },
-        ],
+        custom_domain_dns_records: [{ type: 'A', domain: 'a.com', value: 'will-be-rejected' }],
       }),
     ]);
     const buttons = findCopyButtons(tree);
@@ -781,9 +747,7 @@ describe('DnsRecordsSection — verbatim hardcoded English strings (not in i18n 
   it('renders the literal Remove instruction with the U+2014 em-dash verbatim', () => {
     const tree = renderSection([
       makeResult({
-        custom_domain_dns_records: [
-          { type: 'A', domain: 'old.com', value: '9.9.9.9', required_action: 'remove' },
-        ],
+        custom_domain_dns_records: [{ type: 'A', domain: 'old.com', value: '9.9.9.9', required_action: 'remove' }],
       }),
     ]);
     const text = collectText(tree);

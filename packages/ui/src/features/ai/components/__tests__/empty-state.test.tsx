@@ -48,10 +48,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -87,9 +84,7 @@ const EMPTY_CARD: Card = {
 const POPULATED_CARD: Card = {
   ...EMPTY_CARD,
   id: 'card-populated',
-  nodes: [
-    { id: 'n1', type: 'resource', position: { x: 0, y: 0 }, width: 1, height: 1, data: {} },
-  ],
+  nodes: [{ id: 'n1', type: 'resource', position: { x: 0, y: 0 }, width: 1, height: 1, data: {} }],
 };
 
 function render(props: Partial<EmptyStateProps> & { activeCard: EmptyStateProps['activeCard'] }) {
@@ -130,10 +125,7 @@ describe('EmptyState — prompt selection', () => {
 describe('EmptyState — suggestion buttons', () => {
   it('renders one button per suggested pattern', () => {
     const tree = render({ activeCard: EMPTY_CARD });
-    const buttons = findByPredicate(
-      tree,
-      (el) => el.type === 'button',
-    );
+    const buttons = findByPredicate(tree, (el) => el.type === 'button');
     expect(buttons).toHaveLength(2);
     const text = collectText(tree);
     expect(text).toContain('Web app');

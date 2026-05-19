@@ -12,7 +12,10 @@
 
 import { createHash } from 'crypto';
 
-export function extract_storage_bucket_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
+export function extract_storage_bucket_properties(
+  data: Record<string, unknown>,
+  region: string,
+): Record<string, unknown> {
   // Phase 8 — when the bucket backs a Compute.StaticSite block we need the
   // handler to make it publicly readable and enable static website hosting
   // (index.html / 404.html) so the load balancer's backend bucket can serve
@@ -46,7 +49,10 @@ export function extract_api_gateway_properties(data: Record<string, unknown>, re
   };
 }
 
-export function extract_load_balancer_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
+export function extract_load_balancer_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
   const ssl_certificate = (data.sslCertificate as string | undefined) || (data.ssl_certificate as string | undefined);
   const explicit_protocol = (data.protocol as string | undefined)?.toUpperCase();
   const has_cert = Boolean(ssl_certificate);
@@ -119,7 +125,10 @@ export function extract_subnet_properties(
   };
 }
 
-export function extract_cloud_armor_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
+export function extract_cloud_armor_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
   // Pass user-defined rules through verbatim; the handler injects the
   // mandatory default (priority 2147483647) when the user hasn't supplied one.
   return {

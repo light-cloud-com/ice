@@ -58,9 +58,7 @@ export function build_options(deps: string[]): PulumiResourceOptions | undefined
  * `_provider_alias`). Non-internal keys are camelCased; values
  * are recursively transformed via `transform_value`.
  */
-export function map_properties(
-  properties: Record<string, unknown>,
-): Record<string, unknown> {
+export function map_properties(properties: Record<string, unknown>): Record<string, unknown> {
   const result: Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(properties)) {

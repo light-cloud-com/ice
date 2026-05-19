@@ -40,6 +40,19 @@
  *            no path" (undefined) from "empty path" (would be `[]`)
  *            and would mis-match if this regresses.
  */
+import { parse_expression } from './parser-binary-exprs';
+import { create_null_literal, create_span, parse_identifier, parse_string_literal } from './parser-literals';
+import {
+  type ParserState,
+  ps_add_error,
+  ps_advance,
+  ps_check,
+  ps_consume,
+  ps_current,
+  ps_match,
+  ps_previous,
+} from './parser-state';
+import { describe_token } from './tokens';
 import type {
   ArrayExpression,
   BooleanLiteral,
@@ -55,27 +68,9 @@ import type {
   TypeIdentifier,
 } from './ast';
 import type { SourcePosition } from './tokens';
-import {
-  type ParserState,
-  ps_add_error,
-  ps_advance,
-  ps_check,
-  ps_consume,
-  ps_current,
-  ps_match,
-  ps_previous,
-} from './parser-state';
-import { describe_token } from './tokens';
-import {
-  create_null_literal,
-  create_span,
-  parse_identifier,
-  parse_string_literal,
-} from './parser-literals';
 // Circular import resolves at function-call time — `parse_expression`
 // is only referenced inside function bodies. See parser-binary-exprs.ts
 // for the matching back-edge. (rf-parse-3/4 atomic landing.)
-import { parse_expression } from './parser-binary-exprs';
 
 /**
  * Leaf-token dispatcher for primary expressions.

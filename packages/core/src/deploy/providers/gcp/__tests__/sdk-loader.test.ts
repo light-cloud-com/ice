@@ -41,12 +41,7 @@ const original_function = globalThis.Function;
 
 function install_dynamic_import_stub(registry: Record<string, unknown>): void {
   const stub = function (...args: unknown[]) {
-    if (
-      args.length === 2 &&
-      args[0] === 'm' &&
-      typeof args[1] === 'string' &&
-      args[1].includes('return import')
-    ) {
+    if (args.length === 2 && args[0] === 'm' && typeof args[1] === 'string' && args[1].includes('return import')) {
       return (module_name: string) => {
         if (!(module_name in registry)) {
           return Promise.reject(new Error(`Mocked module not registered: ${module_name}`));
@@ -131,13 +126,10 @@ function makeFunctionsModule(opts: { underV2?: boolean; underTopLevel?: boolean;
 function makeFirestoreModule() {
   return { Firestore: tagged('Firestore') };
 }
-function makeAiPlatformModule(
-  opts: { withIndex?: boolean; withIndexEndpoint?: boolean } = {},
-) {
+function makeAiPlatformModule(opts: { withIndex?: boolean; withIndexEndpoint?: boolean } = {}) {
   const mod: any = { EndpointServiceClient: tagged('EndpointServiceClient') };
   if (opts.withIndex !== false) mod.IndexServiceClient = tagged('IndexServiceClient');
-  if (opts.withIndexEndpoint !== false)
-    mod.IndexEndpointServiceClient = tagged('IndexEndpointServiceClient');
+  if (opts.withIndexEndpoint !== false) mod.IndexEndpointServiceClient = tagged('IndexEndpointServiceClient');
   return mod;
 }
 function makeContainerModule() {
@@ -450,12 +442,14 @@ describe('initialize_gcp_clients', () => {
 // verify_gcp_auth
 // =============================================================================
 
-function makeAuthLib(opts: {
-  getClient?: any;
-  getAccessToken?: any;
-  getClientThrows?: Error | string;
-  authClientOverride?: any;
-} = {}) {
+function makeAuthLib(
+  opts: {
+    getClient?: any;
+    getAccessToken?: any;
+    getClientThrows?: Error | string;
+    authClientOverride?: any;
+  } = {},
+) {
   const defaultClient = {
     getAccessToken: opts.getAccessToken ?? vi.fn().mockResolvedValue({ token: 'access-token' }),
     request: vi.fn().mockResolvedValue({ data: {} }),
@@ -740,9 +734,7 @@ describe('create_rest_client', () => {
   });
 
   it('rethrows permanent (non-transient) errors immediately without retrying', async () => {
-    const request = vi
-      .fn()
-      .mockRejectedValueOnce(Object.assign(new Error('forbidden'), { response: { status: 403 } }));
+    const request = vi.fn().mockRejectedValueOnce(Object.assign(new Error('forbidden'), { response: { status: 403 } }));
     const externalAuth = {
       getAccessToken: vi.fn().mockResolvedValue({ token: 't' }),
       request,
@@ -802,10 +794,7 @@ describe('create_rest_client withRetry behaviour', () => {
 
   it('retries on a 429 rate-limit error', async () => {
     const transient = Object.assign(new Error('rate'), { response: { status: 429 } });
-    const request = vi
-      .fn()
-      .mockRejectedValueOnce(transient)
-      .mockResolvedValueOnce({ data: 'ok' });
+    const request = vi.fn().mockRejectedValueOnce(transient).mockResolvedValueOnce({ data: 'ok' });
     const externalAuth = {
       getAccessToken: vi.fn().mockResolvedValue({ token: 't' }),
       request,
@@ -827,10 +816,7 @@ describe('create_rest_client withRetry behaviour', () => {
 
   it('retries on ECONNRESET errors', async () => {
     const transient = Object.assign(new Error('reset'), { code: 'ECONNRESET' });
-    const request = vi
-      .fn()
-      .mockRejectedValueOnce(transient)
-      .mockResolvedValueOnce({ data: 'after' });
+    const request = vi.fn().mockRejectedValueOnce(transient).mockResolvedValueOnce({ data: 'after' });
     const externalAuth = {
       getAccessToken: vi.fn().mockResolvedValue({ token: 't' }),
       request,
@@ -851,10 +837,7 @@ describe('create_rest_client withRetry behaviour', () => {
 
   it('retries on errors with deadline_exceeded in the message', async () => {
     const transient = new Error('UPSTREAM DEADLINE_EXCEEDED');
-    const request = vi
-      .fn()
-      .mockRejectedValueOnce(transient)
-      .mockResolvedValueOnce({ data: 1 });
+    const request = vi.fn().mockRejectedValueOnce(transient).mockResolvedValueOnce({ data: 1 });
     const externalAuth = {
       getAccessToken: vi.fn().mockResolvedValue({ token: 't' }),
       request,
@@ -875,10 +858,7 @@ describe('create_rest_client withRetry behaviour', () => {
 
   it('retries on errors whose message contains both "retry" and "later"', async () => {
     const transient = new Error('please retry later');
-    const request = vi
-      .fn()
-      .mockRejectedValueOnce(transient)
-      .mockResolvedValueOnce({ data: 'ok' });
+    const request = vi.fn().mockRejectedValueOnce(transient).mockResolvedValueOnce({ data: 'ok' });
     const externalAuth = {
       getAccessToken: vi.fn().mockResolvedValue({ token: 't' }),
       request,
@@ -901,10 +881,7 @@ describe('create_rest_client withRetry behaviour', () => {
     // The isTransientError helper falls back to `err.cause?.code`.
     const transient: any = new Error('timed out');
     transient.cause = { code: 'ETIMEDOUT' };
-    const request = vi
-      .fn()
-      .mockRejectedValueOnce(transient)
-      .mockResolvedValueOnce({ data: 'fine' });
+    const request = vi.fn().mockRejectedValueOnce(transient).mockResolvedValueOnce({ data: 'fine' });
     const externalAuth = {
       getAccessToken: vi.fn().mockResolvedValue({ token: 't' }),
       request,

@@ -10,8 +10,8 @@
 import { GitPullRequest, Lock } from 'lucide-react';
 import React from 'react';
 import { cn } from '../../../shared/utils/cn';
-import type { Environment } from '../../../store/slices/environments-slice';
 import { getDeployStatusDotColor } from '../utils/deploy-status-color';
+import type { Environment } from '../../../store/slices/environments-slice';
 
 export interface EnvironmentDeployStatus {
   status: string;
@@ -42,9 +42,7 @@ export const EnvironmentTabItem: React.FC<EnvironmentTabItemProps> = ({
       title={deployStatus?.url || env.name}
       className={cn(
         'flex items-center gap-1 px-2.5 py-1 text-ice-xs font-medium rounded transition-colors',
-        isActive
-          ? 'bg-ice-active text-ice-text-1'
-          : 'text-ice-text-3 hover:text-ice-text-2 hover:bg-ice-hover',
+        isActive ? 'bg-ice-active text-ice-text-1' : 'text-ice-text-3 hover:text-ice-text-2 hover:bg-ice-hover',
       )}
     >
       {/* Status dot — reflects real deploy status */}

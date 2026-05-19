@@ -95,8 +95,7 @@ function collectText(tree: unknown): string {
   return s;
 }
 
-const renderBC = (): React.ReactElement =>
-  (Breadcrumbs as unknown as () => React.ReactElement)();
+const renderBC = (): React.ReactElement => (Breadcrumbs as unknown as () => React.ReactElement)();
 
 beforeEach(() => {
   mocks.pathname = '/';
@@ -184,9 +183,7 @@ describe('Breadcrumbs — resolved breadcrumbs', () => {
     const tree = renderBC();
     const lastCrumb = findFirst(
       tree,
-      (el) =>
-        el.type === 'span' &&
-        (el.props as { children?: unknown }).children === 'Last Crumb',
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'Last Crumb',
     );
     expect(lastCrumb).toBeDefined();
   });
@@ -200,9 +197,7 @@ describe('Breadcrumbs — resolved breadcrumbs', () => {
     const tree = renderBC();
     const intermediateLink = findFirst(
       tree,
-      (el) =>
-        el.type === 'a' &&
-        (el.props as { href?: string }).href === '/folder',
+      (el) => el.type === 'a' && (el.props as { href?: string }).href === '/folder',
     );
     expect(intermediateLink).toBeDefined();
   });

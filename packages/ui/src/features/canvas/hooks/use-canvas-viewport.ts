@@ -31,6 +31,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { LOD_THRESHOLD_L3, LOD_THRESHOLD_L2, ZOOM_STEP } from '../../../config/canvas-constants';
 import {
   scaleLayoutForZoom,
   selectActiveCard,
@@ -38,11 +39,6 @@ import {
   setCardViewportById,
 } from '../../../store/slices/cards-slice';
 import { setPaneViewport } from '../../../store/slices/ui-slice';
-import {
-  LOD_THRESHOLD_L3,
-  LOD_THRESHOLD_L2,
-  ZOOM_STEP,
-} from '../../../config/canvas-constants';
 import type { RootState, AppDispatch } from '../../../store';
 
 export interface UseCanvasViewportArgs {
@@ -57,9 +53,7 @@ export interface UseCanvasViewportResult {
   persistViewport: (vp: { x: number; y: number; zoom: number }) => void;
 }
 
-export function useCanvasViewport(
-  args: UseCanvasViewportArgs,
-): UseCanvasViewportResult {
+export function useCanvasViewport(args: UseCanvasViewportArgs): UseCanvasViewportResult {
   const { cardId, paneId } = args;
   const dispatch = useDispatch<AppDispatch>();
 
@@ -91,17 +85,14 @@ export function useCanvasViewport(
   // L3 (full): > 95% — default experience, all details visible
   // L2 (compact): 50-95% — bigger icon + label + status only, no metadata
   // L1 (iconic): < 50% — large centered icon + bold label + status dot
-  const lod: 1 | 2 | 3 =
-    viewport.zoom > LOD_THRESHOLD_L3 ? 3 : viewport.zoom > LOD_THRESHOLD_L2 ? 2 : 1;
+  const lod: 1 | 2 | 3 = viewport.zoom > LOD_THRESHOLD_L3 ? 3 : viewport.zoom > LOD_THRESHOLD_L2 ? 2 : 1;
 
   // Proportional zoom scaling: when autoOrganizeOnZoom is enabled, scale
   // positions and sizes proportionally instead of re-running the full layout.
   // This keeps the relative arrangement identical — blocks just grow/shrink
   // in place around the diagram centroid. No topology rearrangement = no jumps.
   // Full re-layout only happens on manual organize button clicks.
-  const autoOrganizeOnZoom = useSelector(
-    (state: RootState) => state.ui.autoOrganizeOnZoom,
-  );
+  const autoOrganizeOnZoom = useSelector((state: RootState) => state.ui.autoOrganizeOnZoom);
   const prevAutoZoomRef = useRef(viewport.zoom);
 
   useEffect(() => {

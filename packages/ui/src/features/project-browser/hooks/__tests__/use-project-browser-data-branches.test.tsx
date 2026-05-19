@@ -116,7 +116,7 @@ beforeEach(() => {
   });
 });
 
-const callHook = (orgId: string | undefined) => useProjectBrowserData(orgId);
+const useCallHook = (orgId: string | undefined) => useProjectBrowserData(orgId);
 
 describe('useProjectBrowserData — expanded localStorage seed', () => {
   it('seeds expanded from localStorage when JSON is valid', () => {
@@ -124,14 +124,14 @@ describe('useProjectBrowserData — expanded localStorage seed', () => {
       'ice-project-expanded',
       JSON.stringify(['foo', 'bar']),
     );
-    callHook('o1');
+    useCallHook('o1');
     expect(mocks.expandedInitializer).not.toBeNull();
     const seeded = mocks.expandedInitializer!();
     expect([...seeded]).toEqual(['foo', 'bar']);
   });
 
   it('seeds an empty Set when localStorage is empty', () => {
-    callHook('o1');
+    useCallHook('o1');
     const seeded = mocks.expandedInitializer!();
     expect(seeded.size).toBe(0);
   });
@@ -141,7 +141,7 @@ describe('useProjectBrowserData — expanded localStorage seed', () => {
       'ice-project-expanded',
       'not-valid-json',
     );
-    callHook('o1');
+    useCallHook('o1');
     const seeded = mocks.expandedInitializer!();
     expect(seeded.size).toBe(0);
   });
@@ -153,7 +153,7 @@ describe('useProjectBrowserData — expanded localStorage seed', () => {
       }),
       setItem: vi.fn(),
     });
-    callHook('o1');
+    useCallHook('o1');
     const seeded = mocks.expandedInitializer!();
     expect(seeded.size).toBe(0);
   });
@@ -162,7 +162,7 @@ describe('useProjectBrowserData — expanded localStorage seed', () => {
 describe('useProjectBrowserData — persistence useEffect', () => {
   it('writes the expanded set to localStorage when the effect fires', () => {
     mocks.expandedRef.current = new Set(['x', 'y']);
-    callHook('o1');
+    useCallHook('o1');
     // The first useEffect is the persistence effect (deps: [expanded]).
     expect(mocks.effectCallbacks[0]).toBeDefined();
     mocks.effectCallbacks[0]();
@@ -175,7 +175,7 @@ describe('useProjectBrowserData — persistence useEffect', () => {
 
 describe('useProjectBrowserData — fetchProjects', () => {
   it('returns early without an axios call when orgId is undefined', async () => {
-    callHook(undefined);
+    useCallHook(undefined);
     const fetchProjects = mocks.callbackFns[0] as () => Promise<void>;
     await fetchProjects();
     expect(mocks.axiosPost).not.toHaveBeenCalled();
@@ -189,7 +189,7 @@ describe('useProjectBrowserData — fetchProjects', () => {
       { id: 'c', name: 'Child', type: 'project', parent_id: 'r', cards: [] },
     ];
     mocks.axiosPost.mockResolvedValueOnce({ data: flat });
-    callHook('o1');
+    useCallHook('o1');
     const fetchProjects = mocks.callbackFns[0] as () => Promise<void>;
     await fetchProjects();
     expect(mocks.axiosPost).toHaveBeenCalledWith('/canvas/projects', { organisationId: 'o1' });
@@ -205,7 +205,7 @@ describe('useProjectBrowserData — fetchProjects', () => {
   it('includes search in the post body when present', async () => {
     mocks.searchRef.current = 'foo';
     mocks.axiosPost.mockResolvedValueOnce({ data: [] });
-    callHook('o1');
+    useCallHook('o1');
     const fetchProjects = mocks.callbackFns[0] as () => Promise<void>;
     await fetchProjects();
     expect(mocks.axiosPost).toHaveBeenCalledWith('/canvas/projects', {
@@ -216,7 +216,7 @@ describe('useProjectBrowserData — fetchProjects', () => {
 
   it('coerces undefined res.data to an empty array (the `|| []` arm)', async () => {
     mocks.axiosPost.mockResolvedValueOnce({});
-    callHook('o1');
+    useCallHook('o1');
     const fetchProjects = mocks.callbackFns[0] as () => Promise<void>;
     await fetchProjects();
     expect(mocks.setFlatSpy).toHaveBeenCalledWith([]);
@@ -224,7 +224,7 @@ describe('useProjectBrowserData — fetchProjects', () => {
 
   it('clears items to [] when the request rejects', async () => {
     mocks.axiosPost.mockRejectedValueOnce(new Error('boom'));
-    callHook('o1');
+    useCallHook('o1');
     const fetchProjects = mocks.callbackFns[0] as () => Promise<void>;
     await fetchProjects();
     expect(mocks.setItemsSpy).toHaveBeenCalledWith([]);
@@ -233,7 +233,7 @@ describe('useProjectBrowserData — fetchProjects', () => {
 
   it('autoreruns fetchProjects via the [fetchProjects] useEffect', async () => {
     mocks.axiosPost.mockResolvedValue({ data: [] });
-    callHook('o1');
+    useCallHook('o1');
     // Second useEffect is fetchProjects auto-rerun
     expect(mocks.effectCallbacks[1]).toBeDefined();
     mocks.effectCallbacks[1]();
@@ -245,7 +245,7 @@ describe('useProjectBrowserData — fetchProjects', () => {
 
 describe('useProjectBrowserData — toggleExpand', () => {
   it('add arm: invoking the updater on a missing id yields a new Set with that id', () => {
-    callHook('o1');
+    useCallHook('o1');
     const toggleExpand = mocks.callbackFns[1] as (id: string) => void;
     toggleExpand('foo');
     // setExpanded is called with a function — the updater
@@ -256,7 +256,7 @@ describe('useProjectBrowserData — toggleExpand', () => {
   });
 
   it('remove arm: invoking the updater on a present id yields a new Set without it', () => {
-    callHook('o1');
+    useCallHook('o1');
     const toggleExpand = mocks.callbackFns[1] as (id: string) => void;
     toggleExpand('foo');
     const updater = mocks.setExpandedSpy.mock.calls[0][0] as (prev: Set<string>) => Set<string>;
@@ -265,7 +265,7 @@ describe('useProjectBrowserData — toggleExpand', () => {
   });
 
   it('returns a NEW Set, not the same reference', () => {
-    callHook('o1');
+    useCallHook('o1');
     const toggleExpand = mocks.callbackFns[1] as (id: string) => void;
     toggleExpand('foo');
     const updater = mocks.setExpandedSpy.mock.calls[0][0] as (prev: Set<string>) => Set<string>;

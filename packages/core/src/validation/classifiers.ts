@@ -88,10 +88,7 @@ export function isDomain(t: string): boolean {
 
 export function isContainer(iceType: string, nodeType?: string): boolean {
   if (nodeType === 'container' || nodeType === 'group') return true;
-  return (
-    (NETWORK_CONTAINER_TYPES as readonly string[]).includes(iceType) ||
-    iceType.startsWith('Group.')
-  );
+  return (NETWORK_CONTAINER_TYPES as readonly string[]).includes(iceType) || iceType.startsWith('Group.');
 }
 
 function isService(t: string): boolean {

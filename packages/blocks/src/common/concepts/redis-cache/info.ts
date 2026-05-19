@@ -16,6 +16,19 @@ lists, sorted sets, streams.
 - Job queue backend (BullMQ, Celery, Sidekiq)
 - Leaderboards, realtime presence
     `.trim(),
+    markdownZh: `
+# Redis 缓存
+
+托管的 Redis — 业界首选的内存缓存。亚毫秒级读取、pub/sub、列表、有序集合、streams。
+
+## 适用场景
+
+- 缓存昂贵的数据库查询
+- 会话存储
+- 速率限制计数器
+- 作业队列后端(BullMQ、Celery、Sidekiq)
+- 排行榜、实时在线状态
+    `.trim(),
   },
   compilesTo: {
     aws: [{ name: 'ElastiCache Redis', type: 'aws_elasticache_cluster' }],

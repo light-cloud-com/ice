@@ -63,10 +63,7 @@ export function infer_relationships(resources: AWSImportedResource[]): void {
  * Edge labels: `inferred: true` + `source: aws`. Self-dependencies are
  * skipped, missing-target edges are silently dropped.
  */
-export function aws_result_to_graph(
-  result: AWSImportResult,
-  graph_name: string = 'aws-import',
-): MutableGraph {
+export function aws_result_to_graph(result: AWSImportResult, graph_name: string = 'aws-import'): MutableGraph {
   const graph = create_mutable_graph(graph_name, {
     description: `Imported from AWS account ${result.metadata.account_id}`,
     labels: {

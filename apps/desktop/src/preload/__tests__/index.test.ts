@@ -26,9 +26,7 @@ type ElectronAPI = {
   onMenuAction: (cb: (action: string) => void) => () => void;
   onFullscreenChange: (cb: (isFullscreen: boolean) => void) => () => void;
   getFullscreenState: () => Promise<boolean>;
-  onUpdateStatus: (
-    cb: (status: { status: string; version?: string; percent?: number }) => void,
-  ) => () => void;
+  onUpdateStatus: (cb: (status: { status: string; version?: string; percent?: number }) => void) => () => void;
   checkForUpdates: () => Promise<unknown>;
 };
 

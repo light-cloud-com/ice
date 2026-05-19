@@ -57,12 +57,7 @@ import type { CardNode } from '../../../../../store/slices/cards-slice';
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -76,10 +71,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -194,13 +186,7 @@ describe('ScalingSection', () => {
   it('scale-on selector exposes the five canonical options', () => {
     const { tree } = renderSection();
     const [selector] = findSelects(tree);
-    expect((selector.props as SelectProps).options).toEqual([
-      'cpu',
-      'memory',
-      'requests',
-      'queue_depth',
-      'custom',
-    ]);
+    expect((selector.props as SelectProps).options).toEqual(['cpu', 'memory', 'requests', 'queue_depth', 'custom']);
     expect((selector.props as SelectProps).label).toBe('t:properties.scaling.scaleOn');
   });
 

@@ -222,10 +222,7 @@ describe('collectApiEnableUrls', () => {
 
   it('deduplicates across api_enable_url and the URL extracted from r.error', () => {
     const url = 'https://console.cloud.google.com/apis/api/foo.googleapis.com/overview';
-    const results: ResultLike[] = [
-      { api_enable_url: url },
-      { error: `API has not been enabled. ${url}` },
-    ];
+    const results: ResultLike[] = [{ api_enable_url: url }, { error: `API has not been enabled. ${url}` }];
     expect(collectApiEnableUrls('', results)).toEqual(new Set([url]));
   });
 
@@ -297,8 +294,7 @@ describe('classifyDeployError', () => {
   });
 
   it('returns "api" when only the top-level error carries the API-not-enabled pattern + URL', () => {
-    const error =
-      'API has not been enabled. https://console.cloud.google.com/apis/api/compute.googleapis.com/overview';
+    const error = 'API has not been enabled. https://console.cloud.google.com/apis/api/compute.googleapis.com/overview';
     expect(classifyDeployError(error, [])).toBe<DeployErrorKind>('api');
   });
 

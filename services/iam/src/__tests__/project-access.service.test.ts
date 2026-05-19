@@ -273,9 +273,7 @@ describe('project-access.service', () => {
 
       const { removeProjectMember } = await import('../services/project-access.service');
 
-      await expect(removeProjectMember('p-1', 'u-1')).rejects.toThrow(
-        /Cannot remove the last project owner/,
-      );
+      await expect(removeProjectMember('p-1', 'u-1')).rejects.toThrow(/Cannot remove the last project owner/);
       expect(prisma.projectMember.delete).not.toHaveBeenCalled();
     });
 

@@ -7,8 +7,8 @@
  * (the ICE graph treats labels as denormalised state).
  */
 
-import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph';
 import { import_pulumi_state } from './state-importer';
+import { create_mutable_graph, type MutableGraph } from '../../graph/mutable-graph';
 import type { PulumiImportOptions } from './state-importer';
 import type { PulumiImportResult } from './types';
 import type { NodeInput, EdgeInput } from '../../types/graph';
@@ -26,10 +26,7 @@ import type { NodeInput, EdgeInput } from '../../types/graph';
  *   - `external: 'true'` label when `resource.external`
  *   - `id` property when present
  */
-export function import_result_to_graph(
-  result: PulumiImportResult,
-  graph_name: string = 'pulumi-import',
-): MutableGraph {
+export function import_result_to_graph(result: PulumiImportResult, graph_name: string = 'pulumi-import'): MutableGraph {
   const graph = create_mutable_graph(graph_name, {
     description: `Imported from Pulumi stack ${result.metadata.stack}`,
     labels: {

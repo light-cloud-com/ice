@@ -58,7 +58,10 @@ describe('AssetInventoryService.discover — happy paths', () => {
   it('skips assets with no resource.data', async () => {
     const svc = makeService(
       makeAssetClient([
-        { name: '//compute.googleapis.com/projects/p/zones/us-central1-a/instances/i', assetType: 'compute.googleapis.com/Instance' },
+        {
+          name: '//compute.googleapis.com/projects/p/zones/us-central1-a/instances/i',
+          assetType: 'compute.googleapis.com/Instance',
+        },
       ]),
     );
     const result = await svc.discover();
@@ -250,7 +253,10 @@ describe('AssetInventoryService.discover — happy paths', () => {
           aNumber: { kind: 'numberValue', numberValue: 42 },
           aBool: { kind: 'boolValue', boolValue: true },
           aNull: { kind: 'nullValue' },
-          aStruct: { kind: 'structValue', structValue: { fields: { inner: { kind: 'stringValue', stringValue: 'val' } } } },
+          aStruct: {
+            kind: 'structValue',
+            structValue: { fields: { inner: { kind: 'stringValue', stringValue: 'val' } } },
+          },
           aList: {
             kind: 'listValue',
             listValue: { values: [{ kind: 'stringValue', stringValue: 'a' }] },
@@ -475,7 +481,6 @@ describe('AssetInventoryService — init_client failure paths', () => {
     class WeirdInitAsset extends AssetInventoryService {
       // @ts-expect-error overriding private
       private async init_client(): Promise<void> {
-        // eslint-disable-next-line no-throw-literal
         throw 'plain-string-init-fail';
       }
     }
@@ -489,7 +494,6 @@ describe('AssetInventoryService — init_client failure paths', () => {
     (globalThis as any).Function = function (...args: any[]): any {
       if (args.length === 2 && args[0] === 'moduleName' && args[1] === 'return import(moduleName)') {
         return async (_: string) => {
-          // eslint-disable-next-line no-throw-literal
           throw 'plain-non-error';
         };
       }
@@ -606,8 +610,7 @@ describe('AssetInventoryService — init_client success (Function ctor monkey-pa
 
     vi.doMock('fs', () => ({
       default: {
-        readFileSync: () =>
-          JSON.stringify({ client_email: 'sa@x.iam', private_key: 'PRIVATE' }),
+        readFileSync: () => JSON.stringify({ client_email: 'sa@x.iam', private_key: 'PRIVATE' }),
       },
       readFileSync: () => JSON.stringify({ client_email: 'sa@x.iam', private_key: 'PRIVATE' }),
     }));

@@ -31,12 +31,9 @@ import { scan_directory } from './customization/scanner';
 // ============================================================================
 
 export type { CustomizationPaths } from './customization/paths';
+import type { CustomizationError, ValidationWarning } from './customization/file-validators';
 import type { CustomizationPaths } from './customization/paths';
 export type { CustomizationError, ValidationWarning } from './customization/file-validators';
-import type {
-  CustomizationError,
-  ValidationWarning,
-} from './customization/file-validators';
 export type { CustomizationFile } from './customization/scanner';
 import type { CustomizationFile } from './customization/scanner';
 
@@ -178,7 +175,6 @@ export class CustomizationLoader {
   has_project_db(): boolean {
     return fs.existsSync(this.get_project_db_path());
   }
-
 }
 
 // ============================================================================

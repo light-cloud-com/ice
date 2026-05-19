@@ -38,12 +38,7 @@ import { EnvVarsEditor } from '../env-vars-editor';
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -57,10 +52,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -102,10 +94,8 @@ const renderEditor = (
   return { tree, onChange };
 };
 
-const findInputs = (tree: React.ReactNode): React.ReactElement[] =>
-  findByType(tree, 'input');
-const findButtons = (tree: React.ReactNode): React.ReactElement[] =>
-  findByType(tree, 'button');
+const findInputs = (tree: React.ReactNode): React.ReactElement[] => findByType(tree, 'input');
+const findButtons = (tree: React.ReactNode): React.ReactElement[] => findByType(tree, 'button');
 
 // The "row" buttons are the lock/unlock toggle + the remove button. The "add"
 // button has the addVariable t-key as a string child.
@@ -178,29 +168,21 @@ describe('EnvVarsEditor', () => {
   });
 
   it('secret-toggle click → fires onChange with isSecret flipped', () => {
-    const { tree, onChange } = renderEditor([
-      { name: 'FOO', value: 'bar', isSecret: false },
-    ]);
+    const { tree, onChange } = renderEditor([{ name: 'FOO', value: 'bar', isSecret: false }]);
     const buttons = findButtons(tree);
     // Order in the row: secret-toggle (index 0), remove (index 1). Add is last (index 2).
     const toggleBtn = buttons[0];
     (toggleBtn.props as ButtonProps).onClick();
     expect(onChange).toHaveBeenCalledTimes(1);
-    expect(onChange).toHaveBeenCalledWith([
-      { name: 'FOO', value: 'bar', isSecret: true },
-    ]);
+    expect(onChange).toHaveBeenCalledWith([{ name: 'FOO', value: 'bar', isSecret: true }]);
   });
 
   it('secret-toggle click on already-secret row → flips back to false', () => {
-    const { tree, onChange } = renderEditor([
-      { name: 'FOO', value: 'bar', isSecret: true },
-    ]);
+    const { tree, onChange } = renderEditor([{ name: 'FOO', value: 'bar', isSecret: true }]);
     const buttons = findButtons(tree);
     const toggleBtn = buttons[0];
     (toggleBtn.props as ButtonProps).onClick();
-    expect(onChange).toHaveBeenCalledWith([
-      { name: 'FOO', value: 'bar', isSecret: false },
-    ]);
+    expect(onChange).toHaveBeenCalledWith([{ name: 'FOO', value: 'bar', isSecret: false }]);
   });
 
   it('remove button click → fires onChange with the variable filtered out', () => {
@@ -219,18 +201,14 @@ describe('EnvVarsEditor', () => {
   });
 
   it('isSecret: true → value input is type="password" and displays "••••••"', () => {
-    const { tree } = renderEditor([
-      { name: 'FOO', value: 'super-secret', isSecret: true },
-    ]);
+    const { tree } = renderEditor([{ name: 'FOO', value: 'super-secret', isSecret: true }]);
     const [, valueInput] = findInputs(tree);
     expect((valueInput.props as InputProps).type).toBe('password');
     expect((valueInput.props as InputProps).value).toBe('••••••');
   });
 
   it('isSecret: false → value input is type="text" and displays the raw value', () => {
-    const { tree } = renderEditor([
-      { name: 'FOO', value: 'plain-text', isSecret: false },
-    ]);
+    const { tree } = renderEditor([{ name: 'FOO', value: 'plain-text', isSecret: false }]);
     const [, valueInput] = findInputs(tree);
     expect((valueInput.props as InputProps).type).toBe('text');
     expect((valueInput.props as InputProps).value).toBe('plain-text');

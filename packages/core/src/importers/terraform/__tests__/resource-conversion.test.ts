@@ -4,18 +4,9 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  import_resource_instance,
-  infer_dependencies,
-  scan_for_references,
-} from '../resource-conversion';
-import type {
-  TerraformResource,
-  TerraformResourceInstance,
-  ImportedResource,
-  ImportWarning,
-} from '../types';
+import { import_resource_instance, infer_dependencies, scan_for_references } from '../resource-conversion';
 import type { TerraformImportOptions } from '../state-importer';
+import type { TerraformResource, TerraformResourceInstance, ImportedResource, ImportWarning } from '../types';
 
 const default_opts: Required<Omit<TerraformImportOptions, 'target_graph'>> = {
   include_data_sources: false,
@@ -66,23 +57,13 @@ describe('import_resource_instance', () => {
 
   it('appends the JSON-encoded index_key to the address', () => {
     const warnings: ImportWarning[] = [];
-    const result = import_resource_instance(
-      make_resource(),
-      make_instance({ index_key: 0 }),
-      default_opts,
-      warnings,
-    );
+    const result = import_resource_instance(make_resource(), make_instance({ index_key: 0 }), default_opts, warnings);
     expect(result.terraform_address).toBe('aws_vpc.main[0]');
   });
 
   it('JSON-encodes a string index_key in the address', () => {
     const warnings: ImportWarning[] = [];
-    const result = import_resource_instance(
-      make_resource(),
-      make_instance({ index_key: 'a' }),
-      default_opts,
-      warnings,
-    );
+    const result = import_resource_instance(make_resource(), make_instance({ index_key: 'a' }), default_opts, warnings);
     expect(result.terraform_address).toBe('aws_vpc.main["a"]');
   });
 
@@ -99,12 +80,7 @@ describe('import_resource_instance', () => {
 
   it('appends index_key to the ICE name when present', () => {
     const warnings: ImportWarning[] = [];
-    const result = import_resource_instance(
-      make_resource(),
-      make_instance({ index_key: 0 }),
-      default_opts,
-      warnings,
-    );
+    const result = import_resource_instance(make_resource(), make_instance({ index_key: 0 }), default_opts, warnings);
     expect(result.name).toBe('main_0');
   });
 

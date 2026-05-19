@@ -19,11 +19,7 @@ import type { ProjectNode } from '../types/project-node';
  *
  * `selectedOrgName`: undefined → no org prefix (legacy fallback path).
  */
-export function buildPath(
-  node: ProjectNode,
-  allItems: ProjectNode[],
-  selectedOrgName: string | undefined,
-): string {
+export function buildPath(node: ProjectNode, allItems: ProjectNode[], selectedOrgName: string | undefined): string {
   const parts: string[] = [];
   let current: ProjectNode | undefined = node;
 

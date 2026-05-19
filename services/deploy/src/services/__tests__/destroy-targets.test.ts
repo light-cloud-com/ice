@@ -42,12 +42,8 @@ import {
 // @ts-ignore — resolved at runtime via pnpm workspace; mocked above
 import prismaModule from '@ice/db';
 
-const mappingFindMany = (prismaModule as any).deployedResourceMapping.findMany as ReturnType<
-  typeof vi.fn
->;
-const deploymentFindMany = (prismaModule as any).canvasDeployment.findMany as ReturnType<
-  typeof vi.fn
->;
+const mappingFindMany = (prismaModule as any).deployedResourceMapping.findMany as ReturnType<typeof vi.fn>;
+const deploymentFindMany = (prismaModule as any).canvasDeployment.findMany as ReturnType<typeof vi.fn>;
 
 describe('collectDestroyAllTargets', () => {
   beforeEach(() => {
@@ -373,10 +369,7 @@ describe('orderTargetsForDelete', () => {
   });
 
   it('does not mutate the input array', () => {
-    const input = [
-      { type: 'gcp.storage.bucket' },
-      { type: 'globalForwardingRule' },
-    ];
+    const input = [{ type: 'gcp.storage.bucket' }, { type: 'globalForwardingRule' }];
     const inputCopy = input.slice();
 
     orderTargetsForDelete(input);
@@ -419,10 +412,7 @@ describe('orderTargetsForDelete', () => {
   });
 
   it('priority 7 covers BOTH managedSslCertificate AND sslCertificate (the substring includes-match means managedSslCertificate also matches sslCertificate, but both share the same priority)', () => {
-    const targets = [
-      { type: 'sslCertificate' },
-      { type: 'managedSslCertificate' },
-    ];
+    const targets = [{ type: 'sslCertificate' }, { type: 'managedSslCertificate' }];
     const ordered = orderTargetsForDelete(targets);
     // Both end up at priority 7 — relative order preserved by Array.prototype.sort
     // when comparator returns 0.
@@ -430,10 +420,7 @@ describe('orderTargetsForDelete', () => {
   });
 
   it('priority 2 covers BOTH targetHttpsProxy AND targetHttpProxy', () => {
-    const targets = [
-      { type: 'targetHttpProxy' },
-      { type: 'targetHttpsProxy' },
-    ];
+    const targets = [{ type: 'targetHttpProxy' }, { type: 'targetHttpsProxy' }];
     const ordered = orderTargetsForDelete(targets);
     expect(ordered.map((t) => t.type)).toEqual(['targetHttpProxy', 'targetHttpsProxy']);
   });
@@ -444,9 +431,7 @@ describe('resolveDestroyAllProject', () => {
     const result = resolveDestroyAllProject({
       options: { gcpProject: 'project-from-options' },
       credentials: { project_id: 'project-from-credentials' },
-      targets: [
-        { type: 't', name: 'n', providerId: 'projects/project-from-target/global/foo/bar' },
-      ],
+      targets: [{ type: 't', name: 'n', providerId: 'projects/project-from-target/global/foo/bar' }],
     });
     expect(result).toBe('project-from-options');
   });
@@ -455,9 +440,7 @@ describe('resolveDestroyAllProject', () => {
     const result = resolveDestroyAllProject({
       options: {},
       credentials: { project_id: 'project-from-credentials' },
-      targets: [
-        { type: 't', name: 'n', providerId: 'projects/project-from-target/global/foo/bar' },
-      ],
+      targets: [{ type: 't', name: 'n', providerId: 'projects/project-from-target/global/foo/bar' }],
     });
     expect(result).toBe('project-from-credentials');
   });
@@ -466,9 +449,7 @@ describe('resolveDestroyAllProject', () => {
     const result = resolveDestroyAllProject({
       options: {},
       credentials: { project_id: '' },
-      targets: [
-        { type: 't', name: 'n', providerId: 'projects/project-from-target/global/foo/bar' },
-      ],
+      targets: [{ type: 't', name: 'n', providerId: 'projects/project-from-target/global/foo/bar' }],
     });
     expect(result).toBe('project-from-target');
   });
@@ -532,9 +513,7 @@ describe('resolveDestroyAllProject', () => {
     const result = resolveDestroyAllProject({
       options: {},
       credentials: { project_id: '' },
-      targets: [
-        { type: 't1', name: 'n1', providerId: 'gs://foo/projects/inside/bar' },
-      ],
+      targets: [{ type: 't1', name: 'n1', providerId: 'gs://foo/projects/inside/bar' }],
     });
     expect(result).toBeNull();
   });

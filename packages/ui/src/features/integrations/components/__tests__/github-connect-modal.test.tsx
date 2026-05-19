@@ -42,7 +42,7 @@ vi.mock('react', async (orig) => {
   const actual = (await orig()) as typeof import('react');
   const useState = vi.fn(<T,>(init: T): [T, (v: T) => void] => {
     const next = mocks.useStateQueue.shift();
-    return [(next === undefined ? init : (next as T)), vi.fn()];
+    return [next === undefined ? init : (next as T), vi.fn()];
   });
   const def = (actual as unknown as { default?: typeof actual }).default ?? actual;
   return { ...actual, useState, default: { ...def, useState } };
@@ -54,7 +54,9 @@ vi.mock('react-redux', () => ({
 }));
 
 vi.mock('../../../../i18n', () => ({
-  useTranslation: () => ({ t: (k: string, opts?: Record<string, unknown>) => `t:${k}${opts ? `:${JSON.stringify(opts)}` : ''}` }),
+  useTranslation: () => ({
+    t: (k: string, opts?: Record<string, unknown>) => `t:${k}${opts ? `:${JSON.stringify(opts)}` : ''}`,
+  }),
 }));
 
 vi.mock('../../../../store/slices/integrations-slice', () => ({
@@ -216,9 +218,10 @@ describe('GitHubConnectModal — disconnected state, PAT tab', () => {
     const tree = callRender({ isOpen: true, onClose: vi.fn() });
     const buttons = findAll(tree, (el) => el.type === 'button');
     // PAT connect button is the one with className containing ice-btn-primary
-    const patBtn = buttons.find((b) =>
-      typeof (b.props as { className?: string }).className === 'string' &&
-      ((b.props as { className: string }).className.includes('ice-btn-primary') ?? false),
+    const patBtn = buttons.find(
+      (b) =>
+        typeof (b.props as { className?: string }).className === 'string' &&
+        ((b.props as { className: string }).className.includes('ice-btn-primary') ?? false),
     );
     expect(patBtn?.props.disabled).toBe(true);
   });
@@ -263,9 +266,10 @@ describe('GitHubConnectModal — handlers', () => {
     mocks.useStateQueue.push('  my-token  '); // patToken
     const tree = callRender({ isOpen: true, onClose: vi.fn() });
     const buttons = findAll(tree, (el) => el.type === 'button');
-    const patBtn = buttons.find((b) =>
-      typeof (b.props as { className?: string }).className === 'string' &&
-      ((b.props as { className: string }).className.includes('ice-btn-primary') ?? false),
+    const patBtn = buttons.find(
+      (b) =>
+        typeof (b.props as { className?: string }).className === 'string' &&
+        ((b.props as { className: string }).className.includes('ice-btn-primary') ?? false),
     );
     (patBtn?.props.onClick as () => void)?.();
     expect(mocks.connectPATSpy).toHaveBeenCalledWith('my-token');
@@ -275,9 +279,10 @@ describe('GitHubConnectModal — handlers', () => {
     const tree = callRender({ isOpen: true, onClose: vi.fn() });
     const buttons = findAll(tree, (el) => el.type === 'button');
     // Find the second ice-btn-primary (in the device tab)
-    const primaryBtns = buttons.filter((b) =>
-      typeof (b.props as { className?: string }).className === 'string' &&
-      ((b.props as { className: string }).className.includes('ice-btn-primary') ?? false),
+    const primaryBtns = buttons.filter(
+      (b) =>
+        typeof (b.props as { className?: string }).className === 'string' &&
+        ((b.props as { className: string }).className.includes('ice-btn-primary') ?? false),
     );
     expect(primaryBtns.length).toBeGreaterThanOrEqual(2);
     (primaryBtns[1].props.onClick as () => void)?.();
@@ -306,9 +311,10 @@ describe('GitHubConnectModal — handlers', () => {
     };
     const tree = callRender({ isOpen: true, onClose: vi.fn() });
     const buttons = findAll(tree, (el) => el.type === 'button');
-    const copyBtn = buttons.find((b) =>
-      typeof (b.props as { title?: string }).title === 'string' &&
-      ((b.props as { title: string }).title.includes('deviceFlowCopy') ?? false),
+    const copyBtn = buttons.find(
+      (b) =>
+        typeof (b.props as { title?: string }).title === 'string' &&
+        ((b.props as { title: string }).title.includes('deviceFlowCopy') ?? false),
     );
     (copyBtn?.props.onClick as () => void)?.();
     expect(writeText).toHaveBeenCalledWith('COPYME');
@@ -329,11 +335,7 @@ describe('GitHubConnectModal — Dialog open/close', () => {
     const onClose = vi.fn();
     const tree = callRender({ isOpen: true, onClose });
     // Dialog stub passthroughs onOpenChange via props
-    const dialogs = findAll(
-      tree,
-      (el) =>
-        typeof (el.props as { onOpenChange?: unknown }).onOpenChange === 'function',
-    );
+    const dialogs = findAll(tree, (el) => typeof (el.props as { onOpenChange?: unknown }).onOpenChange === 'function');
     (dialogs[0].props.onOpenChange as (open: boolean) => void)?.(false);
     expect(onClose).toHaveBeenCalled();
   });
@@ -341,11 +343,7 @@ describe('GitHubConnectModal — Dialog open/close', () => {
   it('Dialog onOpenChange(true) does NOT call onClose', () => {
     const onClose = vi.fn();
     const tree = callRender({ isOpen: true, onClose });
-    const dialogs = findAll(
-      tree,
-      (el) =>
-        typeof (el.props as { onOpenChange?: unknown }).onOpenChange === 'function',
-    );
+    const dialogs = findAll(tree, (el) => typeof (el.props as { onOpenChange?: unknown }).onOpenChange === 'function');
     (dialogs[0].props.onOpenChange as (open: boolean) => void)?.(true);
     expect(onClose).not.toHaveBeenCalled();
   });

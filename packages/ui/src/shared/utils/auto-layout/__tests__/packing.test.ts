@@ -75,9 +75,7 @@ describe('gridPackKids', () => {
     const owner = mk('pn', 'Network.PrivateNetwork');
     const a = mk('a', 'Compute.Container', 50, 50);
     const b = mk('b', 'Compute.Container', 50, 50);
-    const nodeMap = new Map<string, LayoutNode>(
-      [owner, a, b].map((n) => [n.id, n] as const),
-    );
+    const nodeMap = new Map<string, LayoutNode>([owner, a, b].map((n) => [n.id, n] as const));
     const containerSize = new Map<string, { width: number; height: number }>();
     const relPos = new Map<string, { x: number; y: number }>();
 
@@ -95,12 +93,8 @@ describe('gridPackKids', () => {
     const owner = mk('owner', 'Group.Custom');
     const inner = mk('inner', 'Group.Custom');
     const sib = mk('sib');
-    const nodeMap = new Map<string, LayoutNode>(
-      [owner, inner, sib].map((n) => [n.id, n] as const),
-    );
-    const containerSize = new Map<string, { width: number; height: number }>([
-      ['inner', { width: 600, height: 400 }],
-    ]);
+    const nodeMap = new Map<string, LayoutNode>([owner, inner, sib].map((n) => [n.id, n] as const));
+    const containerSize = new Map<string, { width: number; height: number }>([['inner', { width: 600, height: 400 }]]);
     const relPos = new Map<string, { x: number; y: number }>();
 
     gridPackKids(['inner', 'sib'], 'owner', nodeMap, containerSize, relPos);
@@ -242,16 +236,7 @@ describe('repackIsolatedTopLevel', () => {
       ['b', { x: 0, y: 200 }],
     ]);
 
-    repackIsolatedTopLevel(
-      ['a', 'b', 'tiny', 'tall'],
-      [ce('a', 'b')],
-      new Map(),
-      nodeMap,
-      new Map(),
-      relPos,
-      'TB',
-      40,
-    );
+    repackIsolatedTopLevel(['a', 'b', 'tiny', 'tall'], [ce('a', 'b')], new Map(), nodeMap, new Map(), relPos, 'TB', 40);
 
     // tall should be placed before tiny (sort puts taller first).
     // Both isolated nodes start at the same y (one row), but different x.
@@ -272,16 +257,7 @@ describe('repackIsolatedTopLevel', () => {
       ['b', { x: 300, y: 0 }],
     ]);
 
-    repackIsolatedTopLevel(
-      ['a', 'b', 'slim', 'wide'],
-      [ce('a', 'b')],
-      new Map(),
-      nodeMap,
-      new Map(),
-      relPos,
-      'LR',
-      40,
-    );
+    repackIsolatedTopLevel(['a', 'b', 'slim', 'wide'], [ce('a', 'b')], new Map(), nodeMap, new Map(), relPos, 'LR', 40);
 
     // wide placed first (cursorY = 0), slim placed second (cursorY = 0+100+40).
     const xStart = 540 + RANK_SEP;
@@ -298,16 +274,7 @@ describe('repackIsolatedTopLevel', () => {
     const relPos = new Map<string, { x: number; y: number }>([['b', { x: 0, y: 100 }]]);
     // a is a flow root but has no relPos entry; bbox is built from b only.
 
-    repackIsolatedTopLevel(
-      ['a', 'b', 'i1'],
-      [ce('a', 'b')],
-      new Map(),
-      nodeMap,
-      new Map(),
-      relPos,
-      'TB',
-      40,
-    );
+    repackIsolatedTopLevel(['a', 'b', 'i1'], [ce('a', 'b')], new Map(), nodeMap, new Map(), relPos, 'TB', 40);
 
     // i1 was placed; bbox derived from b: maxY = 100+160 = 260; i1.y = 260 + RANK_SEP = 340.
     expect(relPos.get('i1')!.y).toBe(260 + RANK_SEP);
@@ -354,24 +321,13 @@ describe('repackIsolatedTopLevel', () => {
     const b = mk('b');
     const pn = mk('pn', 'Network.PrivateNetwork', 560, 706);
     const nodeMap = new Map<string, LayoutNode>([a, b, pn].map((n) => [n.id, n] as const));
-    const containerSize = new Map<string, { width: number; height: number }>([
-      ['pn', { width: 560, height: 320 }],
-    ]);
+    const containerSize = new Map<string, { width: number; height: number }>([['pn', { width: 560, height: 320 }]]);
     const relPos = new Map<string, { x: number; y: number }>([
       ['a', { x: 0, y: 0 }],
       ['b', { x: 0, y: 200 }],
     ]);
 
-    repackIsolatedTopLevel(
-      ['a', 'b', 'pn'],
-      [ce('a', 'b')],
-      new Map(),
-      nodeMap,
-      containerSize,
-      relPos,
-      'TB',
-      40,
-    );
+    repackIsolatedTopLevel(['a', 'b', 'pn'], [ce('a', 'b')], new Map(), nodeMap, containerSize, relPos, 'TB', 40);
 
     // Just verify pn was placed (no NaN, no skip).
     expect(relPos.get('pn')).toBeDefined();
@@ -387,9 +343,7 @@ describe('repackIsolatedTopLevel', () => {
     const k2 = mk('k2', 'Compute.Container', 100, 100);
     const k3 = mk('k3', 'Compute.Container', 100, 100);
     const k4 = mk('k4', 'Compute.Container', 100, 100);
-    const nodeMap = new Map<string, LayoutNode>(
-      [a, b, k1, k2, k3, k4].map((n) => [n.id, n] as const),
-    );
+    const nodeMap = new Map<string, LayoutNode>([a, b, k1, k2, k3, k4].map((n) => [n.id, n] as const));
     const relPos = new Map<string, { x: number; y: number }>([
       ['a', { x: 0, y: 0 }],
       ['b', { x: 0, y: 100 }],
@@ -424,9 +378,7 @@ describe('repackIsolatedTopLevel', () => {
     const k2 = mk('k2', 'Compute.Container', 100, 100);
     const k3 = mk('k3', 'Compute.Container', 100, 100);
     const k4 = mk('k4', 'Compute.Container', 100, 100);
-    const nodeMap = new Map<string, LayoutNode>(
-      [a, b, k1, k2, k3, k4].map((n) => [n.id, n] as const),
-    );
+    const nodeMap = new Map<string, LayoutNode>([a, b, k1, k2, k3, k4].map((n) => [n.id, n] as const));
     const relPos = new Map<string, { x: number; y: number }>([
       ['a', { x: 0, y: 0 }],
       ['b', { x: 100, y: 0 }],
@@ -458,9 +410,7 @@ describe('repackIsolatedTopLevel', () => {
     const p2 = mk('p2');
     const shared = mk('shared');
     const q = mk('q');
-    const nodeMap = new Map<string, LayoutNode>(
-      [p1, p2, shared, q].map((n) => [n.id, n] as const),
-    );
+    const nodeMap = new Map<string, LayoutNode>([p1, p2, shared, q].map((n) => [n.id, n] as const));
     const childrenOf = new Map<string, string[]>([
       ['p1', ['shared']],
       ['p2', ['shared']],
@@ -471,16 +421,7 @@ describe('repackIsolatedTopLevel', () => {
     ]);
 
     // p1 has flow (via the shared edge to q).
-    repackIsolatedTopLevel(
-      ['p1', 'p2', 'q'],
-      [ce('shared', 'q')],
-      childrenOf,
-      nodeMap,
-      new Map(),
-      relPos,
-      'TB',
-      40,
-    );
+    repackIsolatedTopLevel(['p1', 'p2', 'q'], [ce('shared', 'q')], childrenOf, nodeMap, new Map(), relPos, 'TB', 40);
     // p2 is processed AFTER p1; when checkFlow walks p2's subtree, it hits
     // shared which is already cached as true — both p1 and p2 classified as
     // flow roots, so no isolated → early return.

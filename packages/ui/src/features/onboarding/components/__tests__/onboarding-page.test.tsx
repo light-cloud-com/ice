@@ -51,7 +51,11 @@ const mocks = vi.hoisted(() => ({
   }),
   navigate: vi.fn(),
   axios: {
-    post: vi.fn(async (_url: string, _body: unknown): Promise<{ data: any }> => ({ data: { id: 'new-project-1', slug: 'my-project' } })),
+    post: vi.fn(
+      async (_url: string, _body: unknown): Promise<{ data: any }> => ({
+        data: { id: 'new-project-1', slug: 'my-project' },
+      }),
+    ),
   },
   thunks: {
     setStep: vi.fn((s: number) => ({ type: 'onboarding/setStep', payload: s })),
@@ -118,13 +122,16 @@ vi.mock('../../../../shared/api/axios-instance', () => ({
 }));
 
 vi.mock('../../../../shared/components/step-indicator', () => ({
-  StepIndicator: ({ currentStep, totalSteps, labels }: { currentStep: number; totalSteps: number; labels: string[] }) => (
-    <div
-      data-stub="StepIndicator"
-      data-current={currentStep}
-      data-total={totalSteps}
-      data-labels={labels.join(',')}
-    />
+  StepIndicator: ({
+    currentStep,
+    totalSteps,
+    labels,
+  }: {
+    currentStep: number;
+    totalSteps: number;
+    labels: string[];
+  }) => (
+    <div data-stub="StepIndicator" data-current={currentStep} data-total={totalSteps} data-labels={labels.join(',')} />
   ),
 }));
 
@@ -191,10 +198,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   if (children == null) return;
   yield* walk(children);
 }
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -205,10 +209,7 @@ function findById(tree: React.ReactNode, id: string): React.ReactElement | undef
   return findByPredicate(tree, (el) => (el.props as { id?: string }).id === id)[0];
 }
 function findByStub(tree: React.ReactNode, stub: string): React.ReactElement[] {
-  return findByPredicate(
-    tree,
-    (el) => (el.props as { ['data-stub']?: string })['data-stub'] === stub,
-  );
+  return findByPredicate(tree, (el) => (el.props as { ['data-stub']?: string })['data-stub'] === stub);
 }
 
 function render(): React.ReactElement {
@@ -441,7 +442,9 @@ describe('OnboardingPage', () => {
       const tree = render();
       const headerSkip = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('skipSetup') === false &&
+        (el) =>
+          el.type === 'button' &&
+          (el.props as { className?: string }).className?.includes('skipSetup') === false &&
           (el.props as { className?: string }).className?.includes('text-ice-text-3') === true,
       )[0];
       await (headerSkip.props as { onClick: () => Promise<void> }).onClick();
@@ -454,7 +457,9 @@ describe('OnboardingPage', () => {
       const tree = render();
       const headerSkip = findByPredicate(
         tree,
-        (el) => el.type === 'button' && (el.props as { className?: string }).className?.includes('skipSetup') === false &&
+        (el) =>
+          el.type === 'button' &&
+          (el.props as { className?: string }).className?.includes('skipSetup') === false &&
           (el.props as { className?: string }).className?.includes('text-ice-text-3') === true,
       )[0];
       await (headerSkip.props as { onClick: () => Promise<void> }).onClick();
@@ -539,9 +544,7 @@ describe('OnboardingPage', () => {
       const tree = render();
       const next = findById(tree, 'ice-onboarding-nav-btn-next')!;
       await (next.props as { onClick: () => Promise<void> }).onClick();
-      const updateCalls = mocks.axios.post.mock.calls.filter(
-        (c) => c[0] === '/canvas/projects/update',
-      );
+      const updateCalls = mocks.axios.post.mock.calls.filter((c) => c[0] === '/canvas/projects/update');
       expect(updateCalls).toHaveLength(0);
     });
 
@@ -557,10 +560,7 @@ describe('OnboardingPage', () => {
       const tree = render();
       const next = findById(tree, 'ice-onboarding-nav-btn-next')!;
       await (next.props as { onClick: () => Promise<void> }).onClick();
-      expect(mocks.expandSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ id: 'tmpl-1' }),
-        'aws',
-      );
+      expect(mocks.expandSpy).toHaveBeenCalledWith(expect.objectContaining({ id: 'tmpl-1' }), 'aws');
       expect(mocks.axios.post).toHaveBeenCalledWith('/canvas/cards/create', expect.any(Object));
       expect(mocks.axios.post).toHaveBeenCalledWith('/canvas/cards/update', expect.any(Object));
     });

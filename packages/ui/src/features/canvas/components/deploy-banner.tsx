@@ -48,7 +48,7 @@
 
 import React, { useMemo } from 'react';
 import { useSelector, shallowEqual } from 'react-redux';
-
+import { useTranslation } from '../../../i18n';
 import { deriveRollup, deriveRollupPercentage, type NodeDeployState } from '../../../store/slices/deploy-slice';
 import type { RootState } from '../../../store';
 
@@ -61,20 +61,15 @@ export interface CanvasDeployBannerProps {
 }
 
 export const CanvasDeployBanner: React.FC<CanvasDeployBannerProps> = ({ cardId }) => {
+  const { t } = useTranslation();
   // Live deploy state. The terminal/total count + active-node line both
   // derive from `nodesById`; a fresh map reference per wire event would
   // re-render the canvas on every node_progress tick without `shallowEqual`,
   // so we keep structural equality on the selector.
   const deployStatus = useSelector((state: RootState) => state.deploy.status);
   const deployingCardId = useSelector((state: RootState) => state.deploy.currentDeployCardId);
-  const deployNodesById = useSelector(
-    (state: RootState) => state.deploy.nodesById,
-    shallowEqual,
-  );
-  const deployRollup = useMemo<ReturnType<typeof deriveRollup>>(
-    () => deriveRollup(deployNodesById),
-    [deployNodesById],
-  );
+  const deployNodesById = useSelector((state: RootState) => state.deploy.nodesById, shallowEqual);
+  const deployRollup = useMemo<ReturnType<typeof deriveRollup>>(() => deriveRollup(deployNodesById), [deployNodesById]);
   // Pick the most recently-updated applying node to display as the
   // "what's happening right now" line. `last_at` is ISO-8601 so lex sort
   // is fine; ties resolve to insertion order which is stable enough.
@@ -133,13 +128,16 @@ export const CanvasDeployBanner: React.FC<CanvasDeployBannerProps> = ({ cardId }
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontWeight: 600, color: '#dbeafe' }}>
             {deployStatus === 'planning'
-              ? 'Planning deployment…'
+              ? t('canvas.deploy.planning')
               : deployStatus === 'destroying'
-                ? 'Destroying…'
-                : 'Deploying…'}
+                ? t('canvas.deploy.destroying')
+                : t('canvas.deploy.deploying')}
             {deployStatus !== 'planning' && deployRollup.total > 0 && (
               <span style={{ marginLeft: 8, color: '#93c5fd', fontVariantNumeric: 'tabular-nums' }}>
-                {deployRollup.terminal} of {deployRollup.total}
+                {t('canvas.deploy.progress', {
+                  terminal: deployRollup.terminal,
+                  total: deployRollup.total,
+                })}
               </span>
             )}
           </div>

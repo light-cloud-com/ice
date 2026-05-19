@@ -1,3 +1,5 @@
+import { t } from '../../../../../i18n';
+
 /** Truncate text with ellipsis */
 export function truncate(t: string, n: number) {
   return !t ? '' : t.length <= n ? t : t.slice(0, n) + '\u2026';
@@ -64,17 +66,17 @@ export interface DeployBadgeConfig {
 export function getDeployBadge(deployStatus: string): DeployBadgeConfig | null {
   switch (deployStatus) {
     case 'active':
-      return { color: '#22c55e', label: 'LIVE' };
+      return { color: '#22c55e', label: t('canvas.deployBadge.live') };
     case 'deploying':
-      return { color: '#3b82f6', label: 'DEPLOY' };
+      return { color: '#3b82f6', label: t('canvas.deployBadge.deploy') };
     case 'error':
-      return { color: '#ef4444', label: 'ERR' };
+      return { color: '#ef4444', label: t('canvas.deployBadge.err') };
     case 'queued':
-      return { color: '#f59e0b', label: 'QUEUED' };
+      return { color: '#f59e0b', label: t('canvas.deployBadge.queued') };
     case 'cancelled':
-      return { color: '#94a3b8', label: 'CANCEL' };
+      return { color: '#94a3b8', label: t('canvas.deployBadge.cancel') };
     case 'skipped':
-      return { color: '#94a3b8', label: 'SKIPPED' };
+      return { color: '#94a3b8', label: t('canvas.deployBadge.skipped') };
     default:
       return null;
   }

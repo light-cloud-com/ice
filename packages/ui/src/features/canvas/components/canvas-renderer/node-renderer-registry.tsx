@@ -73,27 +73,25 @@
  */
 
 import React from 'react';
-import type { CanvasNode } from '../types';
 import { isLogIceType, isContainerNode } from '../../utils/node-classification';
-import { SvgLogNode } from '../nodes/log-node';
-import { SvgCustomDomainNode } from '../nodes/custom-domain';
-import { SvgGroupNode } from '../nodes/group-node';
-import { SvgPrivateNetworkNode } from '../nodes/private-network';
-import { SvgCompactNode } from '../nodes/compact-node';
-import type { SvgCompactNodeProps, NodePipelineStatus } from '../nodes/compact-node/types';
 // ─── Concept block canvas nodes (one folder per block, individually customizable) ───
 import { SvgApiGatewayNode } from '../nodes/api-gateway';
+import { SvgCompactNode } from '../nodes/compact-node';
+import { SvgCustomDomainNode } from '../nodes/custom-domain';
 import { SvgEmailServiceNode } from '../nodes/email-service';
 import { SvgEnvConfigNode } from '../nodes/env-config';
 import { SvgEventStreamNode } from '../nodes/event-stream';
 import { SvgGithubRepoNode } from '../nodes/github-repo';
+import { SvgGroupNode } from '../nodes/group-node';
 import { SvgLlmGatewayNode } from '../nodes/llm-gateway';
+import { SvgLogNode } from '../nodes/log-node';
 import { SvgMessageQueueNode } from '../nodes/message-queue';
 import { SvgMongodbNode } from '../nodes/mongodb';
 import { SvgMysqlNode } from '../nodes/mysql';
 import { SvgObjectStorageNode } from '../nodes/object-storage';
 import { SvgPostgresNode } from '../nodes/postgres';
 import { SvgPrivateAiServiceNode } from '../nodes/private-ai-service';
+import { SvgPrivateNetworkNode } from '../nodes/private-network';
 import { SvgPublicTrafficNode } from '../nodes/public-traffic';
 import { SvgRedisCacheNode } from '../nodes/redis-cache';
 import { SvgScalableBackendNode } from '../nodes/scalable-backend';
@@ -104,6 +102,8 @@ import { SvgSsrSiteNode } from '../nodes/ssr-site';
 import { SvgStaticSiteNode } from '../nodes/static-site';
 import { SvgVectorDbNode } from '../nodes/vector-db';
 import { SvgWorkerNode } from '../nodes/worker';
+import type { SvgCompactNodeProps, NodePipelineStatus } from '../nodes/compact-node/types';
+import type { CanvasNode } from '../types';
 
 // =============================================================================
 // Per-concept block renderer table
@@ -211,10 +211,7 @@ export interface RenderCtx {
  * names (`ConceptRenderer` / `ConceptFallbackRenderer`) so future per-type
  * divergence is a one-line edit. Tests cover both arms for the same iceType.
  */
-export function renderCanvasNode(
-  node: CanvasNode,
-  ctx: RenderCtx,
-): { element: React.ReactNode; innerKey: string } {
+export function renderCanvasNode(node: CanvasNode, ctx: RenderCtx): { element: React.ReactNode; innerKey: string } {
   const {
     sortedNodes,
     selectedNodes,
@@ -252,6 +249,7 @@ export function renderCanvasNode(
           node={node}
           isSelected={selectedNodes.includes(node.id)}
           onToggleFold={handleToggleFold}
+          connectionDragState={connectionDragTargets?.get(node.id) ?? null}
         />
       ),
     };

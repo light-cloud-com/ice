@@ -24,13 +24,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-
+import { buildVisibleConnections, computePortMap, type RawCanvasEdge } from '../canvas-connections';
 import type { CanvasNode, CanvasConnection } from '../../components/types';
-import {
-  buildVisibleConnections,
-  computePortMap,
-  type RawCanvasEdge,
-} from '../canvas-connections';
 
 // ── Factories ────────────────────────────────────────────────────────────
 
@@ -57,12 +52,7 @@ function node(
 }
 
 /** Minimal RawCanvasEdge factory. */
-function edge(
-  id: string,
-  source: string,
-  target: string,
-  data?: RawCanvasEdge['data'],
-): RawCanvasEdge {
+function edge(id: string, source: string, target: string, data?: RawCanvasEdge['data']): RawCanvasEdge {
   return { id, source, target, data };
 }
 
@@ -160,7 +150,7 @@ describe('buildVisibleConnections', () => {
     expect(result.map((c) => c.id)).toEqual(['e4']);
   });
 
-  it("at viewLevel 1, drops edges hidden by isEdgeVisibleAtLevel (containment relationships)", () => {
+  it('at viewLevel 1, drops edges hidden by isEdgeVisibleAtLevel (containment relationships)', () => {
     // At level 1 the config drops `'contains'`; the outer `'contains'`
     // short-circuit also catches it, but the level filter is the second
     // gate, so this just confirms both gates compose without mistakes.
@@ -243,9 +233,7 @@ describe('buildVisibleConnections', () => {
 
   it('returns the verbatim shape: { id, from, to, data: { ...edge.data, bundleCount } }', () => {
     const result = buildVisibleConnections({
-      edges: [
-        edge('e1', 'a', 'b', { relationship: 'connects_to', label: 'hi', custom: 7 }),
-      ],
+      edges: [edge('e1', 'a', 'b', { relationship: 'connects_to', label: 'hi', custom: 7 })],
       effectiveNodes: [node('a', 0, 0, 100, 100), node('b', 200, 0, 100, 100)],
       foldedRemap: new Map(),
       viewLevel: 2,
@@ -293,11 +281,7 @@ describe('computePortMap', () => {
   it('assigns increasing indices and shared count to two connections leaving the same node-side', () => {
     // a → b and a → c, both exit a's right side. The sort is by other-Y;
     // b is at y=0, c is at y=200 → b first (index 0), c second (index 1).
-    const nodes = [
-      node('a', 0, 0, 100, 100),
-      node('b', 300, 0, 100, 100),
-      node('c', 300, 200, 100, 100),
-    ];
+    const nodes = [node('a', 0, 0, 100, 100), node('b', 300, 0, 100, 100), node('c', 300, 200, 100, 100)];
     const conns = [conn('c1', 'a', 'b'), conn('c2', 'a', 'c')];
     const result = computePortMap(conns, nodes);
     expect(result.get('c1:source')).toEqual({ index: 0, count: 2 });
@@ -310,11 +294,7 @@ describe('computePortMap', () => {
   it('horizontal-dominant exits right (dx > 0) and left (dx < 0)', () => {
     // a → b: a at (0,0), b at (200,0) — exit right, entry left.
     // a → c: a at (0,0), c at (-200,0) — exit left, entry right.
-    const nodes = [
-      node('a', 0, 0, 100, 100),
-      node('b', 200, 0, 100, 100),
-      node('c', -200, 0, 100, 100),
-    ];
+    const nodes = [node('a', 0, 0, 100, 100), node('b', 200, 0, 100, 100), node('c', -200, 0, 100, 100)];
     const conns = [conn('c1', 'a', 'b'), conn('c2', 'a', 'c')];
     const result = computePortMap(conns, nodes);
     // Different sides → each is alone in its side group, both index 0 count 1.
@@ -328,11 +308,7 @@ describe('computePortMap', () => {
     // a → b: a at (0,0), b at (0,200) — dx=0, dy=200 — vertical-dominant,
     // exit bottom, entry top.
     // a → c: a at (0,0), c at (0,-200) — dy=-200 — exit top, entry bottom.
-    const nodes = [
-      node('a', 0, 0, 100, 100),
-      node('b', 0, 200, 100, 100),
-      node('c', 0, -200, 100, 100),
-    ];
+    const nodes = [node('a', 0, 0, 100, 100), node('b', 0, 200, 100, 100), node('c', 0, -200, 100, 100)];
     const conns = [conn('c1', 'a', 'b'), conn('c2', 'a', 'c')];
     const result = computePortMap(conns, nodes);
     expect(result.get('c1:source')).toEqual({ index: 0, count: 1 });
@@ -341,7 +317,7 @@ describe('computePortMap', () => {
     expect(result.get('c2:target')).toEqual({ index: 0, count: 1 });
   });
 
-  it("ties (|dx| === |dy|) go to the vertical branch (the strict `>` semantics, NOT `>=`)", () => {
+  it('ties (|dx| === |dy|) go to the vertical branch (the strict `>` semantics, NOT `>=`)', () => {
     // c1: a → tie at (200,200) — dx=200, dy=200 → tie, falls to vertical → exit bottom.
     // c2: a → vert at (0, 400) — dx=0, dy=400 → vertical → exit bottom.
     // Both must share the SAME source-side group; if the tie went to
@@ -430,11 +406,7 @@ describe('computePortMap', () => {
     // c1's source is missing; c2's target is missing; c3 is fully present.
     // Only c3 contributes to the map.
     const nodes = [node('a', 0, 0, 100, 100), node('b', 200, 0, 100, 100)];
-    const conns = [
-      conn('c1', 'ghost', 'a'),
-      conn('c2', 'a', 'ghost'),
-      conn('c3', 'a', 'b'),
-    ];
+    const conns = [conn('c1', 'ghost', 'a'), conn('c2', 'a', 'ghost'), conn('c3', 'a', 'b')];
     const result = computePortMap(conns, nodes);
     expect(result.size).toBe(2); // only c3:source and c3:target
     expect(result.get('c3:source')).toEqual({ index: 0, count: 1 });

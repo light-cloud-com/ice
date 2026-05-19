@@ -7,13 +7,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  selectActiveCard,
-  selectCanUndo,
-  selectCanRedo,
-  type CardsState,
-  type Card,
-} from '../cards-slice';
+import { selectActiveCard, selectCanUndo, selectCanRedo, type CardsState, type Card } from '../cards-slice';
 
 function emptyState(activeId: string | null = null, cards: Card[] = []): CardsState {
   return {

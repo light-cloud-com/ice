@@ -8,11 +8,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { CONTAINER_HEADER_H, CONTAINER_PAD } from '../../../utils/container-bounds';
 import { runNodeMove } from '../move-runner';
-import {
-  CONTAINER_HEADER_H,
-  CONTAINER_PAD,
-} from '../../../utils/container-bounds';
 import type { CanvasNode } from '../../../components/types';
 
 const PAD = CONTAINER_PAD;
@@ -30,7 +27,7 @@ const mkNode = (overrides: Partial<CanvasNode> = {}): CanvasNode =>
     data: overrides.data ?? {},
     parentId: overrides.parentId ?? null,
     ...overrides,
-  } as CanvasNode);
+  }) as CanvasNode;
 
 describe('runNodeMove — early returns', () => {
   it('unknown node id → returns null', () => {
@@ -226,10 +223,7 @@ describe('runNodeMove — skipClamp opt-in matrix', () => {
 
   it('node with descendants, no shift → skipClamp=true', () => {
     const visibleNodes = [mkNode({ id: 'a' })];
-    const canvasNodes = [
-      ...visibleNodes,
-      mkNode({ id: 'b', parentId: 'a' }),
-    ];
+    const canvasNodes = [...visibleNodes, mkNode({ id: 'b', parentId: 'a' })];
     const result = runNodeMove({
       id: 'a',
       newX: 50,
@@ -301,10 +295,7 @@ describe('runNodeMove — descendant translation + clamp interaction', () => {
       mkNode({ id: 'p', x: 100, y: 100, width: 200, height: 200 }),
       mkNode({ id: 'c', x: 150, y: 150, width: 50, height: 30, parentId: 'p' }),
     ];
-    const canvasNodes = [
-      ...visibleNodes,
-      mkNode({ id: 'gc', x: 160, y: 160, width: 20, height: 20, parentId: 'c' }),
-    ];
+    const canvasNodes = [...visibleNodes, mkNode({ id: 'gc', x: 160, y: 160, width: 20, height: 20, parentId: 'c' })];
 
     const result = runNodeMove({
       id: 'c',

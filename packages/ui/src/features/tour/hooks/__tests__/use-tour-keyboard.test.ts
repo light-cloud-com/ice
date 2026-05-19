@@ -34,9 +34,7 @@ const mocks = vi.hoisted(() => ({
   // Single ref slot — the hook only uses one.
   refSlot: { current: null as unknown },
   // Test-controlled active element. Tests overwrite via `setActiveTag`.
-  activeElement: null as
-    | (Element & { isContentEditable?: boolean })
-    | null,
+  activeElement: null as (Element & { isContentEditable?: boolean }) | null,
 }));
 
 vi.mock('react', async (orig) => {
@@ -75,12 +73,7 @@ class StubKeyboardEvent {
   }
 }
 
-function setActiveElement(
-  spec:
-    | null
-    | { tagName: string; isContentEditable?: boolean }
-    | Element,
-): void {
+function setActiveElement(spec: null | { tagName: string; isContentEditable?: boolean } | Element): void {
   if (spec === null) {
     mocks.activeElement = null;
     return;
@@ -88,8 +81,7 @@ function setActiveElement(
   if ('tagName' in spec && typeof spec.tagName === 'string') {
     mocks.activeElement = {
       tagName: spec.tagName.toUpperCase(),
-      isContentEditable:
-        'isContentEditable' in spec ? spec.isContentEditable : false,
+      isContentEditable: 'isContentEditable' in spec ? spec.isContentEditable : false,
     } as unknown as Element & { isContentEditable?: boolean };
     return;
   }
@@ -120,13 +112,8 @@ beforeEach(() => {
 
   vi.stubGlobal('window', {
     addEventListener: vi.fn(
-      (
-        type: string,
-        cb: (e: KeyboardEvent) => void,
-        opts?: boolean | AddEventListenerOptions,
-      ) => {
-        const capture =
-          typeof opts === 'boolean' ? opts : opts?.capture === true;
+      (type: string, cb: (e: KeyboardEvent) => void, opts?: boolean | AddEventListenerOptions) => {
+        const capture = typeof opts === 'boolean' ? opts : opts?.capture === true;
         if (!mocks.listeners.has(type)) mocks.listeners.set(type, []);
         mocks.listeners.get(type)!.push({ cb, capture });
       },
@@ -179,6 +166,9 @@ function freshSpies(): CallSpies {
 }
 
 function mount(active: boolean, spies: CallSpies): void {
+  // Test harness — `mount` is a deliberate name for the per-test
+  // "render once with these args" pattern, not a custom hook.
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   useTourKeyboard({
     active,
     onAdvance: spies.onAdvance,

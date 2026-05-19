@@ -155,9 +155,7 @@ beforeEach(() => {
   });
   mocks.deployGraph.mockResolvedValue({
     success: true,
-    resources: [
-      { name: 'bucket-a', type: 'gcp.storage.bucket', success: true, action: 'create' },
-    ],
+    resources: [{ name: 'bucket-a', type: 'gcp.storage.bucket', success: true, action: 'create' }],
     errors: [],
     summary: { total: 1, created: 1, updated: 0, deleted: 0, skipped: 0, failed: 0 },
   });
@@ -168,23 +166,17 @@ describe('rollbackDeployment — validation gates', () => {
     mocks.acquireWriteLock.mockImplementationOnce(() => {
       throw new Error('A rollback is already in progress for card card-A');
     });
-    await expect(rollbackDeployment('deploy-1', 'card-A', 'org-1')).rejects.toThrow(
-      /already in progress/,
-    );
+    await expect(rollbackDeployment('deploy-1', 'card-A', 'org-1')).rejects.toThrow(/already in progress/);
   });
 
   it('throws "Target deployment not found" when findUnique returns null', async () => {
     mocks.cdFindUnique.mockResolvedValueOnce(null);
-    await expect(rollbackDeployment('deploy-x', 'card-A', 'org-1')).rejects.toThrow(
-      'Target deployment not found',
-    );
+    await expect(rollbackDeployment('deploy-x', 'card-A', 'org-1')).rejects.toThrow('Target deployment not found');
   });
 
   it('throws "Deployment does not belong to this card" when card_id mismatches', async () => {
     mocks.cdFindUnique.mockResolvedValueOnce({ ...SUCCESSFUL_TARGET, card_id: 'card-OTHER' });
-    await expect(rollbackDeployment('deploy-1', 'card-A', 'org-1')).rejects.toThrow(
-      'does not belong to this card',
-    );
+    await expect(rollbackDeployment('deploy-1', 'card-A', 'org-1')).rejects.toThrow('does not belong to this card');
   });
 
   it('throws when the target deployment was not successful', async () => {
@@ -196,16 +188,12 @@ describe('rollbackDeployment — validation gates', () => {
 
   it('throws when the target deployment has no results.resources data', async () => {
     mocks.cdFindUnique.mockResolvedValueOnce({ ...SUCCESSFUL_TARGET, results: null });
-    await expect(rollbackDeployment('deploy-1', 'card-A', 'org-1')).rejects.toThrow(
-      'has no resource data',
-    );
+    await expect(rollbackDeployment('deploy-1', 'card-A', 'org-1')).rejects.toThrow('has no resource data');
   });
 
   it('throws when no provider credentials are connected', async () => {
     mocks.getDecryptedCredentials.mockResolvedValueOnce(null);
-    await expect(rollbackDeployment('deploy-1', 'card-A', 'org-1')).rejects.toThrow(
-      'Provider not connected',
-    );
+    await expect(rollbackDeployment('deploy-1', 'card-A', 'org-1')).rejects.toThrow('Provider not connected');
   });
 
   it('release is called on every validation gate', async () => {
@@ -242,9 +230,7 @@ describe('rollbackDeployment — successful happy path', () => {
 
   it('persists status=success on the rollback record when the deploy succeeds', async () => {
     await rollbackDeployment('deploy-target-1', 'card-A', 'org-1');
-    const updateCall = mocks.cdUpdate.mock.calls.find(
-      (c: any) => c[0]?.where?.id === 'rollback-record-1',
-    );
+    const updateCall = mocks.cdUpdate.mock.calls.find((c: any) => c[0]?.where?.id === 'rollback-record-1');
     expect(updateCall).toBeTruthy();
     expect(updateCall![0].data.status).toBe('success');
     expect(updateCall![0].data.error).toBeNull();
@@ -363,9 +349,7 @@ describe('rollbackDeployment — failed deploy path', () => {
       errors: [{ message: 'first error' }, { message: 'second error' }],
     });
     await rollbackDeployment('deploy-target-1', 'card-A', 'org-1');
-    const updateCall = mocks.cdUpdate.mock.calls.find(
-      (c: any) => c[0]?.where?.id === 'rollback-record-1',
-    );
+    const updateCall = mocks.cdUpdate.mock.calls.find((c: any) => c[0]?.where?.id === 'rollback-record-1');
     expect(updateCall![0].data.error).toBe('first error; second error');
     expect(updateCall![0].data.status).toBe('failed');
   });
@@ -377,9 +361,7 @@ describe('rollbackDeployment — failed deploy path', () => {
       errors: [],
     });
     await rollbackDeployment('deploy-target-1', 'card-A', 'org-1');
-    const updateCall = mocks.cdUpdate.mock.calls.find(
-      (c: any) => c[0]?.where?.id === 'rollback-record-1',
-    );
+    const updateCall = mocks.cdUpdate.mock.calls.find((c: any) => c[0]?.where?.id === 'rollback-record-1');
     expect(updateCall![0].data.error).toBeNull();
   });
 
@@ -389,9 +371,7 @@ describe('rollbackDeployment — failed deploy path', () => {
       resources: [],
     });
     await rollbackDeployment('deploy-target-1', 'card-A', 'org-1');
-    const updateCall = mocks.cdUpdate.mock.calls.find(
-      (c: any) => c[0]?.where?.id === 'rollback-record-1',
-    );
+    const updateCall = mocks.cdUpdate.mock.calls.find((c: any) => c[0]?.where?.id === 'rollback-record-1');
     expect(updateCall![0].data.error).toBeNull();
   });
 });
@@ -403,9 +383,7 @@ describe('rollbackDeployment — engine throw path', () => {
     const out = await rollbackDeployment('deploy-target-1', 'card-A', 'org-1');
     expect(out.success).toBe(false);
     expect(out.error).toBe('engine exploded');
-    const updateCall = mocks.cdUpdate.mock.calls.find(
-      (c: any) => c[0]?.where?.id === 'rollback-record-1',
-    );
+    const updateCall = mocks.cdUpdate.mock.calls.find((c: any) => c[0]?.where?.id === 'rollback-record-1');
     expect(updateCall![0].data.status).toBe('failed');
     expect(updateCall![0].data.error).toBe('engine exploded');
     const evt = mocks.emitDeployEvent.mock.calls[0][1];

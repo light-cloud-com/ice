@@ -8,21 +8,19 @@
 import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('../../../../config/blocks', () => ({
-  BLOCK_BLUEPRINTS: [
-    { iceType: 'Compute.Function' },
-    { iceType: 'Database.PostgreSQL' },
-    { iceType: 'Network.VPC' },
-  ],
+  BLOCK_BLUEPRINTS: [{ iceType: 'Compute.Function' }, { iceType: 'Database.PostgreSQL' }, { iceType: 'Network.VPC' }],
 }));
 
 import { serializeCanvas } from '../serialize-canvas';
 import type { RootState } from '../../../../store';
 
-function makeState(partial: Partial<{
-  activeCardId: string | null;
-  cards: Array<any>;
-  selectedNodes: string[];
-}> = {}): RootState {
+function makeState(
+  partial: Partial<{
+    activeCardId: string | null;
+    cards: Array<any>;
+    selectedNodes: string[];
+  }> = {},
+): RootState {
   return {
     cards: {
       activeCardId: partial.activeCardId ?? 'c1',
@@ -41,11 +39,7 @@ describe('serializeCanvas — empty / no active card', () => {
     expect(out.nodes).toEqual([]);
     expect(out.edges).toEqual([]);
     expect(out.selectedNodeIds).toEqual([]);
-    expect(out.availableBlockTypes).toEqual([
-      'Compute.Function',
-      'Database.PostgreSQL',
-      'Network.VPC',
-    ]);
+    expect(out.availableBlockTypes).toEqual(['Compute.Function', 'Database.PostgreSQL', 'Network.VPC']);
   });
 
   it('returns empty topology when activeCardId does not match any card', () => {
@@ -146,9 +140,7 @@ describe('serializeCanvas — node serialization', () => {
       cards: [
         {
           id: 'c1',
-          nodes: [
-            { id: 'n1', type: 'block', data: { iceType: 'Compute.Function', provider: 'gcp' } },
-          ],
+          nodes: [{ id: 'n1', type: 'block', data: { iceType: 'Compute.Function', provider: 'gcp' } }],
           edges: [],
         },
       ],
@@ -228,9 +220,7 @@ describe('serializeCanvas — edge serialization', () => {
         {
           id: 'c1',
           nodes: [],
-          edges: [
-            { id: 'e1', source: 'a', target: 'b', data: { relationship: 'connects_to' } },
-          ],
+          edges: [{ id: 'e1', source: 'a', target: 'b', data: { relationship: 'connects_to' } }],
         },
       ],
     });

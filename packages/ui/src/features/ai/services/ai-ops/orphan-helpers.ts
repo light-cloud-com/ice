@@ -27,10 +27,10 @@
  *   - Edge data: `{ relationship: 'depends_on' }`.
  */
 
+import { generateEdgeId } from './id-utils';
 import { addEdgeToCard } from '../../../../store/slices/cards-slice';
 import type { AppDispatch } from '../../../../store';
 import type { Card } from '../../../../store/slices/cards-slice';
-import { generateEdgeId } from './id-utils';
 
 export function connectOrphanHelpers(dispatch: AppDispatch, card: Card): number {
   const connectedIds = new Set<string>();

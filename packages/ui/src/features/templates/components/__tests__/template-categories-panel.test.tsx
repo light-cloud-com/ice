@@ -40,7 +40,7 @@ vi.mock('react', async (orig) => {
   const actual = (await orig()) as typeof import('react');
   const useState = vi.fn(<T,>(init: T): [T, (v: T) => void] => {
     const next = mocks.useStateQueue.shift();
-    return [(next === undefined ? init : (next as T)), vi.fn()];
+    return [next === undefined ? init : (next as T), vi.fn()];
   });
   const useMemo = vi.fn(<T,>(fn: () => T): T => fn());
   const def = (actual as unknown as { default?: typeof actual }).default ?? actual;
@@ -56,7 +56,9 @@ vi.mock('react-router-dom', () => ({
 }));
 
 vi.mock('../../../../i18n', () => ({
-  useTranslation: () => ({ t: (k: string, opts?: Record<string, unknown>) => `t:${k}${opts ? `:${JSON.stringify(opts)}` : ''}` }),
+  useTranslation: () => ({
+    t: (k: string, opts?: Record<string, unknown>) => `t:${k}${opts ? `:${JSON.stringify(opts)}` : ''}`,
+  }),
 }));
 
 vi.mock('../../../../config/templates', () => ({

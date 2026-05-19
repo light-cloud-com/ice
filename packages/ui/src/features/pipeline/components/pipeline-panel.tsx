@@ -20,7 +20,10 @@ import { X, Zap, GitBranch, Plus, Loader2, Clock, Rocket } from 'lucide-react';
 import React, { useEffect, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSelector, useDispatch } from 'react-redux';
-
+import { BuildRow } from './build-row';
+import { EventRow } from './event-row';
+import { Section } from './section';
+import { StatusPill } from './status-pill';
 import { useTranslation } from '../../../i18n';
 import { getApi } from '../../../shared/api/api-adapter';
 import { selectActiveCard } from '../../../store/slices/cards-slice';
@@ -37,14 +40,10 @@ import {
   receivePipelineUpdate,
   receiveCardPipelineUpdate,
 } from '../../../store/slices/pipeline-slice';
-import type { RootState, AppDispatch } from '../../../store';
 import { ActiveDeployment } from '../sections/active-deployment';
 import { TriggerRow } from '../sections/trigger-row';
 import { formatFramework } from '../utils/format';
-import { BuildRow } from './build-row';
-import { EventRow } from './event-row';
-import { Section } from './section';
-import { StatusPill } from './status-pill';
+import type { RootState, AppDispatch } from '../../../store';
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
@@ -438,5 +437,3 @@ export const PipelinePanel: React.FC = () => {
     document.body,
   );
 };
-
-

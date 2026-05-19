@@ -7,13 +7,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import * as barrel from '../index';
-import {
-  ValidationContext,
-  GraphValidator,
-  create_graph_validator,
-  create_validator,
-} from '../base-validator';
+import * as barrel from '..';
+import { ValidationContext, GraphValidator, create_graph_validator, create_validator } from '../base-validator';
 import {
   CycleValidator,
   ReferenceValidator,

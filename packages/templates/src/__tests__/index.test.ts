@@ -23,7 +23,7 @@ import {
   searchTemplates,
   getProviderCompatibility,
   filterByProvider,
-} from '../index';
+} from '..';
 import type { ComposedTemplate } from '../types';
 
 describe('template registry', () => {
@@ -173,9 +173,7 @@ describe('getProviderCompatibility', () => {
       tags: [],
       securityLevel: 'basic',
       environmentPresets: [{ type: 'production', name: 'p', region: 'r', securityLevel: 'basic' }],
-      blocks: [
-        { iceType: 'NoSuch.Block', label: 'Nope', position: { x: 0, y: 0 } },
-      ],
+      blocks: [{ iceType: 'NoSuch.Block', label: 'Nope', position: { x: 0, y: 0 } }],
       connections: [],
     };
     const compat = getProviderCompatibility(badTemplate, 'gcp');

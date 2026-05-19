@@ -14,10 +14,10 @@
  * roundtrip (`as unknown as { payload: ... }`) to satisfy TS2352.
  */
 
+import { configureStore } from '@reduxjs/toolkit';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ─── Hoisted mocks ──────────────────────────────────────────────────────────
@@ -65,11 +65,10 @@ import type { ConnectionTooltipInfo } from '../../components/svg-connection-path
 // ─── Store builder ──────────────────────────────────────────────────────────
 
 const makeStore = () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const initialCards = cardsReducer(undefined as any, { type: '@@INIT' });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const initialSelection = selectionReducer(undefined as any, { type: '@@INIT' });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const initialUi = uiReducer(undefined as any, { type: '@@INIT' });
   return configureStore({
     reducer: {
@@ -82,8 +81,7 @@ const makeStore = () => {
       selection: initialSelection,
       ui: initialUi,
     },
-    middleware: (getDefault) =>
-      getDefault({ serializableCheck: false, immutableCheck: false }),
+    middleware: (getDefault) => getDefault({ serializableCheck: false, immutableCheck: false }),
   });
 };
 
@@ -98,10 +96,7 @@ interface CaptureArgs {
   onFocus?: () => void;
 }
 
-const captureHook = (
-  store: TestStore,
-  args: CaptureArgs = {},
-): UseCanvasHandlersResult => {
+const captureHook = (store: TestStore, args: CaptureArgs = {}): UseCanvasHandlersResult => {
   const captured: { current?: UseCanvasHandlersResult } = {};
   const Probe: React.FC = () => {
     captured.current = useCanvasHandlers({

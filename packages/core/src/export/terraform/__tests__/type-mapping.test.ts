@@ -25,9 +25,7 @@ describe('fallback_type_mapping', () => {
     });
 
     it('handles deeper module paths', () => {
-      expect(fallback_type_mapping('gcp.compute.network.peering', 'gcp')).toBe(
-        'google_compute_network_peering',
-      );
+      expect(fallback_type_mapping('gcp.compute.network.peering', 'gcp')).toBe('google_compute_network_peering');
     });
   });
 
@@ -48,9 +46,7 @@ describe('fallback_type_mapping', () => {
 
   describe('azure prefix', () => {
     it('converts azure.compute.virtual_machine to azurerm_compute_virtual_machine', () => {
-      expect(fallback_type_mapping('azure.compute.virtual_machine', 'azure')).toBe(
-        'azurerm_compute_virtual_machine',
-      );
+      expect(fallback_type_mapping('azure.compute.virtual_machine', 'azure')).toBe('azurerm_compute_virtual_machine');
     });
 
     it('uses azurerm prefix with provider azurerm', () => {
@@ -68,9 +64,7 @@ describe('fallback_type_mapping', () => {
     });
 
     it('falls through provider_prefix_map for direct provider', () => {
-      expect(fallback_type_mapping('custom.resource.type', 'unknown')).toBe(
-        'unknown_custom_resource_type',
-      );
+      expect(fallback_type_mapping('custom.resource.type', 'unknown')).toBe('unknown_custom_resource_type');
     });
 
     it('preserves dots-as-underscores in fallback', () => {

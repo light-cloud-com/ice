@@ -131,10 +131,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) if (el && predicate(el)) out.push(el);
   return out;
@@ -223,9 +220,7 @@ describe('AppSettings — tab navigation', () => {
     const tree = render();
     const tabs = findByPredicate(
       tree,
-      (el) =>
-        typeof el.type === 'function' &&
-        (el.props as { label?: string }).label === 'appSettings.tabs.ai',
+      (el) => typeof el.type === 'function' && (el.props as { label?: string }).label === 'appSettings.tabs.ai',
     );
     expect(tabs).toHaveLength(1);
     (tabs[0].props as { onClick: () => void }).onClick();
@@ -236,9 +231,7 @@ describe('AppSettings — tab navigation', () => {
     const tree = render();
     const tabs = findByPredicate(
       tree,
-      (el) =>
-        typeof el.type === 'function' &&
-        (el.props as { label?: string }).label === 'appSettings.tabs.appearance',
+      (el) => typeof el.type === 'function' && (el.props as { label?: string }).label === 'appSettings.tabs.appearance',
     );
     expect(tabs).toHaveLength(1);
     (tabs[0].props as { onClick: () => void }).onClick();
@@ -249,9 +242,7 @@ describe('AppSettings — tab navigation', () => {
     const tree = render();
     const tabs = findByPredicate(
       tree,
-      (el) =>
-        typeof el.type === 'function' &&
-        (el.props as { label?: string }).label === 'appSettings.tabs.language',
+      (el) => typeof el.type === 'function' && (el.props as { label?: string }).label === 'appSettings.tabs.language',
     );
     expect(tabs).toHaveLength(1);
     (tabs[0].props as { onClick: () => void }).onClick();
@@ -366,7 +357,10 @@ describe('AppSettings — AI inputs', () => {
   it('updates aiUrl on the second input', () => {
     mocks.stateSlots.push('ai', '', '', 'idle', false, null);
     const tree = render();
-    const inputs = findByPredicate(tree, (el) => el.type === 'input' && (el.props as { type?: string }).type === 'text');
+    const inputs = findByPredicate(
+      tree,
+      (el) => el.type === 'input' && (el.props as { type?: string }).type === 'text',
+    );
     const urlInput = inputs[0];
     (urlInput.props as { onChange: (e: { target: { value: string } }) => void }).onChange({
       target: { value: 'http://localhost:11434' },
@@ -387,9 +381,7 @@ describe('AppSettings — handleSaveAi', () => {
       (el) =>
         el.type === 'button' &&
         Array.isArray((el.props as { children?: unknown }).children) &&
-        ((el.props as { children: unknown[] }).children as unknown[]).some(
-          (c) => c === 'common.buttons.save',
-        ),
+        ((el.props as { children: unknown[] }).children as unknown[]).some((c) => c === 'common.buttons.save'),
     )[0];
     await (saveBtn.props as { onClick: () => Promise<void> }).onClick();
     expect(mocks.axiosPost).toHaveBeenCalledWith('/ai/config', {
@@ -407,9 +399,7 @@ describe('AppSettings — handleSaveAi', () => {
       (el) =>
         el.type === 'button' &&
         Array.isArray((el.props as { children?: unknown }).children) &&
-        ((el.props as { children: unknown[] }).children as unknown[]).some(
-          (c) => c === 'common.buttons.save',
-        ),
+        ((el.props as { children: unknown[] }).children as unknown[]).some((c) => c === 'common.buttons.save'),
     )[0];
     await (saveBtn.props as { onClick: () => Promise<void> }).onClick();
     expect(mocks.axiosPost).toHaveBeenCalledWith('/ai/config', { aiUrl: 'http://x' });
@@ -424,9 +414,7 @@ describe('AppSettings — handleSaveAi', () => {
       (el) =>
         el.type === 'button' &&
         Array.isArray((el.props as { children?: unknown }).children) &&
-        ((el.props as { children: unknown[] }).children as unknown[]).some(
-          (c) => c === 'common.buttons.save',
-        ),
+        ((el.props as { children: unknown[] }).children as unknown[]).some((c) => c === 'common.buttons.save'),
     )[0];
     await (saveBtn.props as { onClick: () => Promise<void> }).onClick();
     expect(mocks.axiosPost).toHaveBeenCalledWith('/ai/config', { anthropicKey: 'sk-ant-NEW' });
@@ -441,9 +429,7 @@ describe('AppSettings — handleSaveAi', () => {
       (el) =>
         el.type === 'button' &&
         Array.isArray((el.props as { children?: unknown }).children) &&
-        ((el.props as { children: unknown[] }).children as unknown[]).some(
-          (c) => c === 'common.buttons.save',
-        ),
+        ((el.props as { children: unknown[] }).children as unknown[]).some((c) => c === 'common.buttons.save'),
     )[0];
     await (saveBtn.props as { onClick: () => Promise<void> }).onClick();
     // slot 5 = message
@@ -460,9 +446,7 @@ describe('AppSettings — handleSaveAi', () => {
       (el) =>
         el.type === 'button' &&
         Array.isArray((el.props as { children?: unknown }).children) &&
-        ((el.props as { children: unknown[] }).children as unknown[]).some(
-          (c) => c === 'common.buttons.save',
-        ),
+        ((el.props as { children: unknown[] }).children as unknown[]).some((c) => c === 'common.buttons.save'),
     )[0];
     await (saveBtn.props as { onClick: () => Promise<void> }).onClick();
     expect(mocks.stateSlots[5]).toEqual({ type: 'error', text: 'appSettings.ai.saveFailed' });
@@ -523,8 +507,7 @@ describe('AppSettings — Appearance tab', () => {
         el.type === 'button' &&
         Array.isArray((el.props as { children?: unknown }).children) &&
         ((el.props as { children: unknown[] }).children as unknown[]).some(
-          (c) =>
-            (c as React.ReactElement)?.props?.children === 'appSettings.appearance.light',
+          (c) => (c as React.ReactElement)?.props?.children === 'appSettings.appearance.light',
         ),
     );
     expect(themeButtons).toHaveLength(1);
@@ -537,9 +520,7 @@ describe('AppSettings — Appearance tab', () => {
     const tree = render();
     const sizeButtons = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        (el.props as { children?: unknown }).children === 'appSettings.appearance.large',
+      (el) => el.type === 'button' && (el.props as { children?: unknown }).children === 'appSettings.appearance.large',
     );
     expect(sizeButtons).toHaveLength(1);
     (sizeButtons[0].props as { onClick: () => void }).onClick();
@@ -556,8 +537,7 @@ describe('AppSettings — Appearance tab', () => {
         el.type === 'button' &&
         Array.isArray((el.props as { children?: unknown }).children) &&
         ((el.props as { children: unknown[] }).children as unknown[]).some(
-          (c) =>
-            (c as React.ReactElement)?.props?.children === 'appSettings.appearance.light',
+          (c) => (c as React.ReactElement)?.props?.children === 'appSettings.appearance.light',
         ),
     )[0];
     expect((lightBtn.props as { className: string }).className).toContain('border-ice-accent');
@@ -569,8 +549,7 @@ describe('AppSettings — Appearance tab', () => {
     const tree = render();
     const smallBtn = findByPredicate(
       tree,
-      (el) =>
-        el.type === 'button' && (el.props as { children?: unknown }).children === 'appSettings.appearance.small',
+      (el) => el.type === 'button' && (el.props as { children?: unknown }).children === 'appSettings.appearance.small',
     )[0];
     expect((smallBtn.props as { className: string }).className).toContain('border-ice-accent');
   });
@@ -584,8 +563,7 @@ describe('AppSettings — Appearance tab', () => {
         el.type === 'button' &&
         Array.isArray((el.props as { children?: unknown }).children) &&
         ((el.props as { children: unknown[] }).children as unknown[]).some(
-          (c) =>
-            (c as React.ReactElement)?.props?.children === 'appSettings.appearance.openThemePicker',
+          (c) => (c as React.ReactElement)?.props?.children === 'appSettings.appearance.openThemePicker',
         ),
     )[0];
     (pickerBtn.props as { onClick: () => void }).onClick();
@@ -606,9 +584,8 @@ describe('AppSettings — Language tab', () => {
         typeof (el.props as { className?: string }).className === 'string' &&
         (el.props as { className: string }).className.includes('rounded-lg') &&
         Array.isArray((el.props as { children?: unknown }).children) &&
-        ((el.props as { children: unknown[] }).children as unknown[]).some(
-          (c) =>
-            (c as React.ReactElement)?.props?.className?.includes?.('uppercase'),
+        ((el.props as { children: unknown[] }).children as unknown[]).some((c) =>
+          (c as React.ReactElement)?.props?.className?.includes?.('uppercase'),
         ),
     );
     expect(buttons).toHaveLength(2);
@@ -624,9 +601,8 @@ describe('AppSettings — Language tab', () => {
         typeof (el.props as { className?: string }).className === 'string' &&
         (el.props as { className: string }).className.includes('rounded-lg') &&
         Array.isArray((el.props as { children?: unknown }).children) &&
-        ((el.props as { children: unknown[] }).children as unknown[]).some(
-          (c) =>
-            (c as React.ReactElement)?.props?.className?.includes?.('uppercase'),
+        ((el.props as { children: unknown[] }).children as unknown[]).some((c) =>
+          (c as React.ReactElement)?.props?.className?.includes?.('uppercase'),
         ),
     );
     // first is en
@@ -648,9 +624,8 @@ describe('AppSettings — Language tab', () => {
         typeof (el.props as { className?: string }).className === 'string' &&
         (el.props as { className: string }).className.includes('rounded-lg') &&
         Array.isArray((el.props as { children?: unknown }).children) &&
-        ((el.props as { children: unknown[] }).children as unknown[]).some(
-          (c) =>
-            (c as React.ReactElement)?.props?.className?.includes?.('uppercase'),
+        ((el.props as { children: unknown[] }).children as unknown[]).some((c) =>
+          (c as React.ReactElement)?.props?.className?.includes?.('uppercase'),
         ),
     );
     expect((buttons[1].props as { className: string }).className).toContain('border-ice-accent');
@@ -666,15 +641,13 @@ describe('AppSettings — tour anchors', () => {
     const aiTabButton = findByPredicate(
       tree,
       (el) =>
-        el.type === 'button' &&
-        (el.props as { ['data-tour-id']?: string })['data-tour-id'] === 'app-settings-tab-ai',
+        el.type === 'button' && (el.props as { ['data-tour-id']?: string })['data-tour-id'] === 'app-settings-tab-ai',
     );
     expect(aiTabButton).toHaveLength(1);
     const saveButton = findByPredicate(
       tree,
       (el) =>
-        el.type === 'button' &&
-        (el.props as { ['data-tour-id']?: string })['data-tour-id'] === 'app-settings-btn-save',
+        el.type === 'button' && (el.props as { ['data-tour-id']?: string })['data-tour-id'] === 'app-settings-btn-save',
     );
     expect(saveButton).toHaveLength(1);
   });

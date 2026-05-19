@@ -22,9 +22,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-
-import type { ThemePalette } from '../types';
 import { applyPalette, clearOverrides, ALL_PROPS } from '../utils/apply-palette';
+import type { ThemePalette } from '../types';
 
 const SAMPLE: ThemePalette = {
   base: '#ffffff',

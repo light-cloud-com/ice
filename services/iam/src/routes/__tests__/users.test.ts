@@ -10,9 +10,9 @@
  * read whatever it returns from the response.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import express from 'express';
 import http from 'node:http';
+import express from 'express';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { AddressInfo } from 'node:net';
 
 // ── Mocks ─────────────────────────────────────────────────────────────
@@ -116,11 +116,7 @@ afterEach(async () => {
   vi.restoreAllMocks();
 });
 
-async function request(
-  method: string,
-  path: string,
-  body?: unknown,
-) {
+async function request(method: string, path: string, body?: unknown) {
   const init: RequestInit = {
     method,
     headers: { 'Content-Type': 'application/json' },
@@ -128,7 +124,7 @@ async function request(
   if (body !== undefined) init.body = JSON.stringify(body);
   const res = await fetch(`${baseUrl}${path}`, init);
   const text = await res.text();
-  let json: any = null;
+  let json: any;
   try {
     json = text ? JSON.parse(text) : null;
   } catch {
@@ -712,9 +708,7 @@ describe('POST /api/users/invite/accept', () => {
     });
     memberUpsertMock.mockResolvedValue({});
     inviteUpdateMock.mockResolvedValue({});
-    userFindUniqueMock
-      .mockResolvedValueOnce({ email: 'admin@x.com' })
-      .mockResolvedValueOnce(null);
+    userFindUniqueMock.mockResolvedValueOnce({ email: 'admin@x.com' }).mockResolvedValueOnce(null);
     userUpdateMock.mockResolvedValue({});
     orgFindUniqueMock.mockResolvedValueOnce(null);
 
@@ -929,9 +923,7 @@ describe('POST /api/users/update-role', () => {
     });
 
     expect(res.status).toBe(200);
-    expect(memberUpdateMock).toHaveBeenCalledWith(
-      expect.objectContaining({ data: { role: 'admin' } }),
-    );
+    expect(memberUpdateMock).toHaveBeenCalledWith(expect.objectContaining({ data: { role: 'admin' } }));
   });
 
   it('allows owner to promote to owner', async () => {
@@ -944,9 +936,7 @@ describe('POST /api/users/update-role', () => {
     });
 
     expect(res.status).toBe(200);
-    expect(memberUpdateMock).toHaveBeenCalledWith(
-      expect.objectContaining({ data: { role: 'owner' } }),
-    );
+    expect(memberUpdateMock).toHaveBeenCalledWith(expect.objectContaining({ data: { role: 'owner' } }));
   });
 
   it('uses targetOrganisationId from body when provided', async () => {

@@ -14,7 +14,6 @@
 
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-
 import { EnvironmentRow, type EnvironmentRowProps } from '../environment-row';
 import type { Environment, Project } from '../../../../store/slices/projects-slice';
 
@@ -78,9 +77,7 @@ function findAll(
   return out;
 }
 
-const collectText = (
-  el: React.ReactElement | string | number | boolean | null | undefined,
-): string => {
+const collectText = (el: React.ReactElement | string | number | boolean | null | undefined): string => {
   if (el == null || typeof el === 'boolean') return '';
   if (typeof el === 'string' || typeof el === 'number') return String(el);
   const children = (el as React.ReactElement).props?.children;
@@ -88,8 +85,7 @@ const collectText = (
   return arr.map((c) => collectText(c)).join('');
 };
 
-const classOf = (el: React.ReactElement): string =>
-  (el.props?.className as string | undefined) ?? '';
+const classOf = (el: React.ReactElement): string => (el.props?.className as string | undefined) ?? '';
 
 // ────────────────────────────────────────────────────────────────────────────
 

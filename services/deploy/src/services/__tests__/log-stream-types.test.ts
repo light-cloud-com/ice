@@ -9,16 +9,6 @@
  */
 
 import { describe, it, expect } from 'vitest';
-
-import type {
-  ActiveStream,
-  LogEntry,
-  SourceResolution,
-  StreamingMode,
-  SubscribeArgs,
-  SubscribeResult,
-  SubscriberRef,
-} from '../log-stream/types';
 import {
   IDLE_TEARDOWN_MS,
   MAX_CONSECUTIVE_ERRORS_POLLING,
@@ -27,6 +17,15 @@ import {
   RECONNECT_BASE_MS,
   RECONNECT_MAX_MS,
   SEEN_INSERT_ID_CAP,
+} from '../log-stream/types';
+import type {
+  ActiveStream,
+  LogEntry,
+  SourceResolution,
+  StreamingMode,
+  SubscribeArgs,
+  SubscribeResult,
+  SubscriberRef,
 } from '../log-stream/types';
 
 describe('log-stream/types — constants', () => {

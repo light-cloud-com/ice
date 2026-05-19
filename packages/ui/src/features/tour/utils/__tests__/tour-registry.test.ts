@@ -17,9 +17,8 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
-import type { Tour, TourStep } from '../../tour.types';
 import { allTours, clearRegistry, getTour, registerTour, unregisterTour } from '../tour-registry';
+import type { Tour, TourStep } from '../../tour.types';
 
 const stubStep = (id: string, overrides: Partial<TourStep> = {}): TourStep => ({
   id,
@@ -125,33 +124,25 @@ describe('tour-registry', () => {
     it('throws when two steps share the same id (development)', () => {
       vi.stubEnv('NODE_ENV', 'development');
 
-      expect(() => registerTour(stubTour('bad', ['s1', 's1']))).toThrow(
-        /duplicate step id/i,
-      );
+      expect(() => registerTour(stubTour('bad', ['s1', 's1']))).toThrow(/duplicate step id/i);
     });
 
     it('throws on duplicate step ids in PRODUCTION too — this is a structural bug, not env-conditional', () => {
       vi.stubEnv('NODE_ENV', 'production');
 
-      expect(() => registerTour(stubTour('bad-prod', ['s1', 's2', 's1']))).toThrow(
-        /duplicate step id/i,
-      );
+      expect(() => registerTour(stubTour('bad-prod', ['s1', 's2', 's1']))).toThrow(/duplicate step id/i);
     });
 
     it('rejects an empty steps array (development)', () => {
       vi.stubEnv('NODE_ENV', 'development');
 
-      expect(() => registerTour({ id: 'empty', title: 't', steps: [] })).toThrow(
-        /no steps/i,
-      );
+      expect(() => registerTour({ id: 'empty', title: 't', steps: [] })).toThrow(/no steps/i);
     });
 
     it('rejects an empty steps array in production too — empty tours are always a bug', () => {
       vi.stubEnv('NODE_ENV', 'production');
 
-      expect(() => registerTour({ id: 'empty-prod', title: 't', steps: [] })).toThrow(
-        /no steps/i,
-      );
+      expect(() => registerTour({ id: 'empty-prod', title: 't', steps: [] })).toThrow(/no steps/i);
     });
   });
 

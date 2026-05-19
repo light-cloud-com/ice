@@ -23,8 +23,8 @@
  * `socket-deploy-events.test.ts`.
  */
 
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import jwt from 'jsonwebtoken';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 beforeAll(() => {
   process.env.NODE_ENV = 'test';

@@ -62,7 +62,12 @@ export function deriveCompleteOutcome(
   // before the abort is still 'partial' — the user has a real artifact
   // they need to clean up.
   if (opts.cancelled && successes.length === 0) return 'cancelled';
-  if (list.length > 0 && nonSuccess.length === cancelledLike.length && cancelledLike.length > 0 && successes.length === 0) {
+  if (
+    list.length > 0 &&
+    nonSuccess.length === cancelledLike.length &&
+    cancelledLike.length > 0 &&
+    successes.length === 0
+  ) {
     return 'cancelled';
   }
 

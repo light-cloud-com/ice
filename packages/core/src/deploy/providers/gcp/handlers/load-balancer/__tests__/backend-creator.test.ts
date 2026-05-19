@@ -7,13 +7,13 @@ vi.mock('../compute-ops', () => ({
   wait_for_compute_op: vi.fn().mockResolvedValue(undefined),
 }));
 
-import { wait_for_compute_op } from '../compute-ops';
 import {
   ignore_conflict,
   verify_backend_bucket_exists,
   create_serverless_backend,
   create_default_backend_service,
 } from '../backend-creator';
+import { wait_for_compute_op } from '../compute-ops';
 import type { GCPHandlerContext } from '../../../types';
 
 function makeCtx(rest: { get?: any; post?: any } = {}): GCPHandlerContext {
@@ -99,7 +99,7 @@ describe('load-balancer/backend-creator', () => {
       const ctx = makeCtx();
       const reportStep = vi.fn();
       const err = await create_serverless_backend(ctx, { backendName: 'foo' }, {}, reportStep);
-      expect(err).toContain("missing sourceServiceName");
+      expect(err).toContain('missing sourceServiceName');
     });
 
     it('issues NEG + backend service POSTs and returns null on success', async () => {

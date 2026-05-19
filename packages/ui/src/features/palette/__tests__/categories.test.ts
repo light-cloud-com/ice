@@ -2,19 +2,14 @@
  * rf-rpal-2 — `data/categories.ts` invariant tests.
  *
  * Pin the 14 category metadata entries (id + color + icon family) plus the
- * derived constants `CATEGORY_ORDER` and `CATEGORY_MAP`. The visual section
- * order in the palette is observable to users — this file catches an
- * accidental re-order or rename.
+ * derived `CATEGORY_ORDER`. The visual section order in the palette is
+ * observable to users — this file catches an accidental re-order or rename.
  *
- * `t()` is mocked to identity so labels/tooltips equal the source key, which
- * means assertions don't depend on the en.json translation strings.
+ * The locale-dependent fields (label/tooltip) now come from
+ * `getCategoryDefs(t)` / `getCategoryMap(t)` so locale switches re-derive
+ * the labels. The tests pass an identity `t` so assertions equal the i18n
+ * key (independent of en.json strings).
  */
-
-import { describe, it, expect, vi } from 'vitest';
-
-vi.mock('../../../i18n', () => ({
-  t: (key: string) => key,
-}));
 
 import {
   Server,
@@ -31,16 +26,20 @@ import {
   FileText,
   Cog,
 } from 'lucide-react';
+import { describe, it, expect } from 'vitest';
+import { getCategoryDefs, getCategoryMap, CATEGORY_ORDER } from '../data/categories';
 
-import { CATEGORY_DEFS, CATEGORY_ORDER, CATEGORY_MAP } from '../data/categories';
+const identityT = (key: string) => key;
+const categoryDefs = () => getCategoryDefs(identityT);
+const categoryMap = () => getCategoryMap(identityT);
 
-describe('CATEGORY_DEFS', () => {
+describe('getCategoryDefs', () => {
   it('declares 14 categories', () => {
-    expect(CATEGORY_DEFS).toHaveLength(14);
+    expect(categoryDefs()).toHaveLength(14);
   });
 
   it('preserves the visual ordering Compute → Config', () => {
-    expect(CATEGORY_DEFS.map((c) => c.id)).toEqual([
+    expect(categoryDefs().map((c) => c.id)).toEqual([
       'Compute',
       'Scheduler',
       'Frontend',
@@ -59,7 +58,7 @@ describe('CATEGORY_DEFS', () => {
   });
 
   it('every category carries id/label/icon/color/tooltip', () => {
-    for (const cat of CATEGORY_DEFS) {
+    for (const cat of categoryDefs()) {
       expect(typeof cat.id).toBe('string');
       expect(typeof cat.label).toBe('string');
       expect(typeof cat.color).toBe('string');
@@ -69,7 +68,7 @@ describe('CATEGORY_DEFS', () => {
   });
 
   it('pins each category color verbatim', () => {
-    const colorByID = Object.fromEntries(CATEGORY_DEFS.map((c) => [c.id, c.color]));
+    const colorByID = Object.fromEntries(categoryDefs().map((c) => [c.id, c.color]));
     expect(colorByID).toEqual({
       Compute: '#22c55e',
       Scheduler: '#eab308',
@@ -89,7 +88,7 @@ describe('CATEGORY_DEFS', () => {
   });
 
   it('pins each category icon to the documented lucide component', () => {
-    const iconByID = Object.fromEntries(CATEGORY_DEFS.map((c) => [c.id, c.icon]));
+    const iconByID = Object.fromEntries(categoryDefs().map((c) => [c.id, c.icon]));
     expect(iconByID.Compute).toBe(Server);
     expect(iconByID.Scheduler).toBe(Clock);
     expect(iconByID.Frontend).toBe(Globe);
@@ -106,30 +105,38 @@ describe('CATEGORY_DEFS', () => {
     expect(iconByID.Config).toBe(Cog);
   });
 
-  it('label and tooltip resolve through t() — identity mock yields the i18n key', () => {
-    const compute = CATEGORY_DEFS.find((c) => c.id === 'Compute');
+  it('label and tooltip resolve through the passed-in `t` — identity yields the i18n key', () => {
+    const compute = categoryDefs().find((c) => c.id === 'Compute');
     expect(compute?.label).toBe('blocks.categories.compute.label');
     expect(compute?.tooltip).toBe('blocks.categories.compute.tooltip');
-    const cfg = CATEGORY_DEFS.find((c) => c.id === 'Config');
+    const cfg = categoryDefs().find((c) => c.id === 'Config');
     expect(cfg?.label).toBe('blocks.categories.config.label');
     expect(cfg?.tooltip).toBe('blocks.categories.config.tooltip');
   });
 
   it('Network and Source share the GitBranch icon (verbatim from source)', () => {
-    const network = CATEGORY_DEFS.find((c) => c.id === 'Network');
-    const source = CATEGORY_DEFS.find((c) => c.id === 'Source');
+    const defs = categoryDefs();
+    const network = defs.find((c) => c.id === 'Network');
+    const source = defs.find((c) => c.id === 'Source');
     expect(network?.icon).toBe(GitBranch);
     expect(source?.icon).toBe(GitBranch);
+  });
+
+  it('re-derives labels when called with a different translator (locale reactivity)', () => {
+    const en = getCategoryDefs((k) => `EN:${k}`);
+    const zh = getCategoryDefs((k) => `ZH:${k}`);
+    expect(en[0].label).toBe('EN:blocks.categories.compute.label');
+    expect(zh[0].label).toBe('ZH:blocks.categories.compute.label');
   });
 });
 
 describe('CATEGORY_ORDER', () => {
-  it('is the same length as CATEGORY_DEFS', () => {
-    expect(CATEGORY_ORDER).toHaveLength(CATEGORY_DEFS.length);
+  it('is the same length as the category definitions', () => {
+    expect(CATEGORY_ORDER).toHaveLength(categoryDefs().length);
   });
 
-  it('matches the declaration order of CATEGORY_DEFS', () => {
-    expect(CATEGORY_ORDER).toEqual(CATEGORY_DEFS.map((c) => c.id));
+  it('matches the declaration order of the category definitions', () => {
+    expect(CATEGORY_ORDER).toEqual(categoryDefs().map((c) => c.id));
   });
 
   it('begins with Compute and ends with Config', () => {
@@ -138,20 +145,23 @@ describe('CATEGORY_ORDER', () => {
   });
 });
 
-describe('CATEGORY_MAP', () => {
+describe('getCategoryMap', () => {
   it('is a Map keyed by category id', () => {
-    expect(CATEGORY_MAP).toBeInstanceOf(Map);
-    expect(CATEGORY_MAP.size).toBe(CATEGORY_DEFS.length);
+    const map = categoryMap();
+    expect(map).toBeInstanceOf(Map);
+    expect(map.size).toBe(categoryDefs().length);
   });
 
-  it('maps each id back to its CategoryDef instance', () => {
-    for (const cat of CATEGORY_DEFS) {
-      expect(CATEGORY_MAP.get(cat.id)).toBe(cat);
+  it('maps each id back to a CategoryDef with matching id', () => {
+    const map = categoryMap();
+    for (const cat of categoryDefs()) {
+      expect(map.get(cat.id)?.id).toBe(cat.id);
     }
   });
 
   it('returns undefined for unknown ids', () => {
-    expect(CATEGORY_MAP.get('Unknown')).toBeUndefined();
-    expect(CATEGORY_MAP.get('')).toBeUndefined();
+    const map = categoryMap();
+    expect(map.get('Unknown')).toBeUndefined();
+    expect(map.get('')).toBeUndefined();
   });
 });

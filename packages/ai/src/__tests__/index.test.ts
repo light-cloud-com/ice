@@ -7,7 +7,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import * as ai from '../index';
+import * as ai from '..';
 
 describe('@ice/ai barrel exports', () => {
   it('re-exports the provider factory functions', () => {
@@ -64,19 +64,13 @@ describe('startLocalAiServer / stopLocalAiServer', () => {
     process.env.ICE_AI_PROVIDER = 'openai-compat';
     process.env.ICE_AI_URL = 'http://example.com:9999';
     expect(await ai.startLocalAiServer()).toBe('http://example.com:9999');
-    expect(logSpy).toHaveBeenCalledWith(
-      '[ICE AI] Using external AI server at',
-      'http://example.com:9999',
-    );
+    expect(logSpy).toHaveBeenCalledWith('[ICE AI] Using external AI server at', 'http://example.com:9999');
   });
 
   it('falls back to null url but still logs default fallback for openai-compat without ICE_AI_URL', async () => {
     process.env.ICE_AI_PROVIDER = 'openai-compat';
     expect(await ai.startLocalAiServer()).toBeNull();
-    expect(logSpy).toHaveBeenCalledWith(
-      '[ICE AI] Using external AI server at',
-      'http://localhost:8000',
-    );
+    expect(logSpy).toHaveBeenCalledWith('[ICE AI] Using external AI server at', 'http://localhost:8000');
   });
 
   it('stopLocalAiServer is a resolved no-op', async () => {

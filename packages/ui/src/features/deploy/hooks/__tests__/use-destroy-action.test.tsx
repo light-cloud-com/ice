@@ -16,10 +16,10 @@
  * happening BEFORE the first dispatch.
  */
 
+import { configureStore } from '@reduxjs/toolkit';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // Helper to inspect dispatched actions. Redux Toolkit types its dispatch
@@ -631,7 +631,9 @@ describe('handleDestroyConfirm — catch path', () => {
     const store = makeStore();
     // Reject with an object that has no `.message` field — the source uses
     // `err.message || 'Destroy failed'`.
-    mockDeployApi.destroyAll.mockRejectedValueOnce({ /* no .message */ });
+    mockDeployApi.destroyAll.mockRejectedValueOnce({
+      /* no .message */
+    });
     const dispatchSpy = vi.spyOn(store, 'dispatch');
     const { actions } = captureHook({ activeCard: ACTIVE_CARD, store });
     dispatchSpy.mockClear();
@@ -665,7 +667,7 @@ describe('handleDestroyConfirm — modal-close-before-dispatch ordering', () => 
     const origDispatch = store.dispatch.bind(store);
     vi.spyOn(store, 'dispatch').mockImplementation((action: unknown) => {
       trace.push({ kind: 'dispatch', detail: asAction(action).type });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       return origDispatch(action as any);
     });
 

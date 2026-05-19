@@ -29,8 +29,8 @@
  * to produce the public StateSnapshot.resources array.
  */
 
-import { success } from '../../types/result';
 import { ensure_db, emit_event, row_to_resource, wrap_error } from './resources';
+import { success } from '../../types/result';
 import type { IceError } from '../../types/errors';
 import type { Result } from '../../types/result';
 import type { StateSnapshot } from '../state-store';
@@ -95,10 +95,7 @@ export async function snapshots_create(
   }
 }
 
-export async function snapshots_get(
-  ctx: SqliteContext,
-  id: string,
-): Promise<Result<StateSnapshot | null, IceError>> {
+export async function snapshots_get(ctx: SqliteContext, id: string): Promise<Result<StateSnapshot | null, IceError>> {
   try {
     const db = ensure_db(ctx);
 
@@ -114,10 +111,7 @@ export async function snapshots_get(
   }
 }
 
-export async function snapshots_list(
-  ctx: SqliteContext,
-  graph_id: string,
-): Promise<Result<StateSnapshot[], IceError>> {
+export async function snapshots_list(ctx: SqliteContext, graph_id: string): Promise<Result<StateSnapshot[], IceError>> {
   try {
     const db = ensure_db(ctx);
 

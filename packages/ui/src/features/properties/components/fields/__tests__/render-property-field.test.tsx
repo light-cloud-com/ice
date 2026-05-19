@@ -47,23 +47,14 @@ vi.mock('../../../../../shared/components/ui/ice-select', () => ({
     ),
 }));
 
-import {
-  renderPropertyField,
-  PropertyFields,
-  type HighLevelProperty,
-} from '../render-property-field';
+import { renderPropertyField, PropertyFields, type HighLevelProperty } from '../render-property-field';
 
 // ─── Tree-walker helpers (same shape as rf-props-6 — see learning anchor) ──
 
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -88,10 +79,7 @@ function findByPredicate(
   return out;
 }
 
-function findByDisplayName(
-  tree: React.ReactElement | React.ReactNode,
-  name: string,
-): React.ReactElement[] {
+function findByDisplayName(tree: React.ReactElement | React.ReactNode, name: string): React.ReactElement[] {
   return findByPredicate(tree, (el) => {
     const t = el.type as { displayName?: string; name?: string } | string;
     if (typeof t === 'string') return t === name;
@@ -126,7 +114,9 @@ describe('renderPropertyField', () => {
     // element where IceSelect's component-fn is the type).
     const selects = findByPredicate(
       tree,
-      (el) => typeof (el.props as { width?: string }).width === 'string' && Array.isArray((el.props as { options?: unknown }).options),
+      (el) =>
+        typeof (el.props as { width?: string }).width === 'string' &&
+        Array.isArray((el.props as { options?: unknown }).options),
     );
     expect(selects).toHaveLength(1);
     expect((selects[0].props as { width: string }).width).toBe('160px');
@@ -237,7 +227,9 @@ describe('renderPropertyField', () => {
     const tree = renderPropertyField(prop, 'gold', onChange) as React.ReactElement;
     const select = findByPredicate(
       tree,
-      (el) => typeof (el.props as { width?: string }).width === 'string' && Array.isArray((el.props as { options?: unknown }).options),
+      (el) =>
+        typeof (el.props as { width?: string }).width === 'string' &&
+        Array.isArray((el.props as { options?: unknown }).options),
     )[0];
     // Invoke the onChange the factory wired into IceSelect — it should dispatch
     // both the field name and the *_display companion field.
@@ -350,7 +342,9 @@ describe('renderPropertyField', () => {
     const tree = renderPropertyField(prop, 'a', onChange) as React.ReactElement;
     const select = findByPredicate(
       tree,
-      (el) => typeof (el.props as { width?: string }).width === 'string' && Array.isArray((el.props as { options?: unknown }).options),
+      (el) =>
+        typeof (el.props as { width?: string }).width === 'string' &&
+        Array.isArray((el.props as { options?: unknown }).options),
     )[0];
     (select.props as { onChange: (v: string) => void }).onChange('not-in-details');
     expect(onChange).toHaveBeenCalledWith('tier', 'not-in-details');
@@ -392,10 +386,7 @@ describe('PropertyFields', () => {
 
   it('renders no Section when all properties are filtered out by tier', () => {
     // All are advanced — hidden tier.
-    const properties = [
-      mkProp({ name: 'a', tier: 'advanced' }),
-      mkProp({ name: 'b', tier: 'advanced' }),
-    ];
+    const properties = [mkProp({ name: 'a', tier: 'advanced' }), mkProp({ name: 'b', tier: 'advanced' })];
     const tree = (PropertyFields as React.FC<Parameters<typeof PropertyFields>[0]>)({
       properties,
       nodeData: {},
@@ -534,10 +525,7 @@ describe('PropertyFields', () => {
   });
 
   it('includes tier === "essential" and tier === "detailed"', () => {
-    const properties = [
-      mkProp({ name: 'e', tier: 'essential' }),
-      mkProp({ name: 'd', tier: 'detailed' }),
-    ];
+    const properties = [mkProp({ name: 'e', tier: 'essential' }), mkProp({ name: 'd', tier: 'detailed' })];
     const tree = (PropertyFields as React.FC<Parameters<typeof PropertyFields>[0]>)({
       properties,
       nodeData: {},
@@ -570,7 +558,9 @@ describe('PropertyFields', () => {
     // executed at walk time — we see the unrendered element).
     const select = findByPredicate(
       tree,
-      (el) => typeof (el.props as { width?: string }).width === 'string' && Array.isArray((el.props as { options?: unknown }).options),
+      (el) =>
+        typeof (el.props as { width?: string }).width === 'string' &&
+        Array.isArray((el.props as { options?: unknown }).options),
     )[0];
     // Read the `options` prop that the factory passed to IceSelect — that's
     // the post-filter shape.
@@ -597,7 +587,9 @@ describe('PropertyFields', () => {
     }) as React.ReactElement;
     const select = findByPredicate(
       tree,
-      (el) => typeof (el.props as { width?: string }).width === 'string' && Array.isArray((el.props as { options?: unknown }).options),
+      (el) =>
+        typeof (el.props as { width?: string }).width === 'string' &&
+        Array.isArray((el.props as { options?: unknown }).options),
     )[0];
     const options = (select.props as { options: Array<{ value: string }> }).options;
     // Both options retained
@@ -605,11 +597,7 @@ describe('PropertyFields', () => {
   });
 
   it('preserves data-prop-key={prop.name} on each rendered wrapper (E2E selector)', () => {
-    const properties = [
-      mkProp({ name: 'region' }),
-      mkProp({ name: 'tier' }),
-      mkProp({ name: 'replicas' }),
-    ];
+    const properties = [mkProp({ name: 'region' }), mkProp({ name: 'tier' }), mkProp({ name: 'replicas' })];
     const tree = (PropertyFields as React.FC<Parameters<typeof PropertyFields>[0]>)({
       properties,
       nodeData: {},
@@ -625,9 +613,7 @@ describe('PropertyFields', () => {
 
   it('renders propertyIssues message in red when severity === "error"', () => {
     const properties = [mkProp({ name: 'region' })];
-    const propertyIssues = new Map([
-      ['region', { severity: 'error', message: 'invalid region' }],
-    ]);
+    const propertyIssues = new Map([['region', { severity: 'error', message: 'invalid region' }]]);
     const tree = (PropertyFields as React.FC<Parameters<typeof PropertyFields>[0]>)({
       properties,
       nodeData: {},
@@ -648,9 +634,7 @@ describe('PropertyFields', () => {
 
   it('renders propertyIssues message in amber for non-error severities (e.g. warning)', () => {
     const properties = [mkProp({ name: 'region' })];
-    const propertyIssues = new Map([
-      ['region', { severity: 'warning', message: 'deprecated region' }],
-    ]);
+    const propertyIssues = new Map([['region', { severity: 'warning', message: 'deprecated region' }]]);
     const tree = (PropertyFields as React.FC<Parameters<typeof PropertyFields>[0]>)({
       properties,
       nodeData: {},
@@ -669,9 +653,7 @@ describe('PropertyFields', () => {
 
   it('does not render any inline message when propertyIssues lacks the prop name', () => {
     const properties = [mkProp({ name: 'region' })];
-    const propertyIssues = new Map([
-      ['some-other-prop', { severity: 'error', message: 'unrelated' }],
-    ]);
+    const propertyIssues = new Map([['some-other-prop', { severity: 'error', message: 'unrelated' }]]);
     const tree = (PropertyFields as React.FC<Parameters<typeof PropertyFields>[0]>)({
       properties,
       nodeData: {},

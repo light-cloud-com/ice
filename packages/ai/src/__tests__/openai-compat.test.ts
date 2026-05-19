@@ -10,9 +10,9 @@
  */
 
 import http from 'node:http';
-import type { AddressInfo } from 'node:net';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { OpenAICompatProvider } from '../providers/openai-compat';
+import type { AddressInfo } from 'node:net';
 
 interface RouteHandler {
   (req: http.IncomingMessage, res: http.ServerResponse, body: string): void | Promise<void>;
@@ -441,9 +441,9 @@ describe('OpenAICompatProvider — streamChat', () => {
       },
     });
     const p = new OpenAICompatProvider({ baseUrl: server.baseUrl, name: 'localmodel' });
-    await expect(
-      p.chat({ systemPrompt: '', messages: [], maxTokens: 1 }),
-    ).rejects.toThrow(/localmodel API error 401:.*unauthorized/);
+    await expect(p.chat({ systemPrompt: '', messages: [], maxTokens: 1 })).rejects.toThrow(
+      /localmodel API error 401:.*unauthorized/,
+    );
   });
 
   it('rejects with a typed error when the upstream returns 5xx', async () => {
@@ -454,9 +454,7 @@ describe('OpenAICompatProvider — streamChat', () => {
       },
     });
     const p = new OpenAICompatProvider({ baseUrl: server.baseUrl });
-    await expect(
-      p.chat({ systemPrompt: '', messages: [], maxTokens: 1 }),
-    ).rejects.toThrow(/API error 500/);
+    await expect(p.chat({ systemPrompt: '', messages: [], maxTokens: 1 })).rejects.toThrow(/API error 500/);
   });
 
   it('rejects when the connection cannot be established', async () => {
@@ -464,9 +462,7 @@ describe('OpenAICompatProvider — streamChat', () => {
     const url = probe.baseUrl;
     await probe.close();
     const p = new OpenAICompatProvider({ baseUrl: url });
-    await expect(
-      p.chat({ systemPrompt: '', messages: [], maxTokens: 1 }),
-    ).rejects.toBeInstanceOf(Error);
+    await expect(p.chat({ systemPrompt: '', messages: [], maxTokens: 1 })).rejects.toBeInstanceOf(Error);
   });
 
   it('truncates upstream error bodies to 200 characters', async () => {
@@ -489,4 +485,3 @@ describe('OpenAICompatProvider — streamChat', () => {
     }
   });
 });
-

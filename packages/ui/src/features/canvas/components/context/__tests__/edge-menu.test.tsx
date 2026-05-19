@@ -9,7 +9,6 @@
  * Separator between them.
  */
 
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -71,10 +70,7 @@ function findFirst(tree: unknown, pred: (el: ElLike) => boolean): ElLike | undef
 }
 
 const findFCByLabel = (tree: unknown, label: string): ElLike | undefined =>
-  findFirst(
-    tree,
-    (el) => typeof el.type === 'function' && (el.props as { label?: unknown }).label === label,
-  );
+  findFirst(tree, (el) => typeof el.type === 'function' && (el.props as { label?: unknown }).label === label);
 
 const baseProps = (overrides: Partial<Parameters<typeof EdgeMenu>[0]> = {}): Parameters<typeof EdgeMenu>[0] => ({
   menuRef: { current: null },
@@ -86,8 +82,7 @@ const baseProps = (overrides: Partial<Parameters<typeof EdgeMenu>[0]> = {}): Par
   ...overrides,
 });
 
-const render = (props: Parameters<typeof EdgeMenu>[0]) =>
-  (EdgeMenu as unknown as (p: unknown) => unknown)(props);
+const render = (props: Parameters<typeof EdgeMenu>[0]) => (EdgeMenu as unknown as (p: unknown) => unknown)(props);
 
 beforeEach(() => {
   mocks.deleteCardEdge.mockClear();
@@ -159,10 +154,7 @@ describe('EdgeMenu — structure', () => {
 
   it('positions the root at left=position.x / top=position.y', () => {
     const tree = render(baseProps({ position: { x: 12, y: 34 } }));
-    const root = findFirst(
-      tree,
-      (el) => el.type === 'div' && (el.props.style as { left?: number })?.left === 12,
-    )!;
+    const root = findFirst(tree, (el) => el.type === 'div' && (el.props.style as { left?: number })?.left === 12)!;
     expect((root.props.style as { top: number }).top).toBe(34);
   });
 

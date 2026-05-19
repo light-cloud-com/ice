@@ -186,6 +186,10 @@ function renderHook(
   target: string | (() => Element | null) | null,
   options?: { budget?: number; enabled?: boolean },
 ): ResolverResult {
+  // ESLint can't tell that this is a test harness for a hook — the
+  // function name doesn't start with `use` because it's the conventional
+  // "renderHook" pattern from @testing-library, not a hook itself.
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   return useTargetResolver(target, options);
 }
 

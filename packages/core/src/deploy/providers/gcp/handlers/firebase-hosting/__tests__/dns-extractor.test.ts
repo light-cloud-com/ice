@@ -28,10 +28,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  extractDnsRecords,
-  type FirebaseHostingDnsRecord,
-} from '../dns-extractor';
+import { extractDnsRecords, type FirebaseHostingDnsRecord } from '../dns-extractor';
 
 describe('firebase-hosting/dns-extractor', () => {
   describe('extractDnsRecords()', () => {
@@ -481,7 +478,11 @@ describe('firebase-hosting/dns-extractor', () => {
       const data = {
         domain: 'example.com',
         provisioning: {
-          dnsStatus: [{ /* neither field set */ }],
+          dnsStatus: [
+            {
+              /* neither field set */
+            },
+          ],
         },
       };
       expect(extractDnsRecords(data)).toEqual<FirebaseHostingDnsRecord[]>([]);

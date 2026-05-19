@@ -10,6 +10,7 @@ import { hasConceptInfo } from '@ice/blocks';
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ConceptInfoModal } from './concept-info-modal';
+import { useTranslation } from '../../i18n';
 import type { Provider } from '@ice/blocks';
 
 interface ConceptInfoTriggerProps {
@@ -28,8 +29,11 @@ export const ConceptInfoTrigger: React.FC<ConceptInfoTriggerProps> = ({
   opacity = 0.6,
 }) => {
   const [open, setOpen] = useState(false);
+  const { t } = useTranslation();
 
   if (!hasConceptInfo(iceType)) return null;
+
+  const aboutLabel = t('canvas.infoModal.triggerTitle');
 
   return (
     <>
@@ -40,8 +44,8 @@ export const ConceptInfoTrigger: React.FC<ConceptInfoTriggerProps> = ({
         }}
         onMouseDown={(e) => e.stopPropagation()}
         className="flex items-center justify-center rounded-full"
-        title="About this block"
-        aria-label="About this block"
+        title={aboutLabel}
+        aria-label={aboutLabel}
         style={{
           width: size,
           height: size,

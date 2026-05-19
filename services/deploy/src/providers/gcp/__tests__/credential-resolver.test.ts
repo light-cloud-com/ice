@@ -104,15 +104,15 @@ describe('gcpCredentialResolver shape', () => {
 
 describe('gcpCredentialResolver.resolve — missing credentials', () => {
   it('throws a connect-prompt error when credentials are missing', async () => {
-    await expect(
-      gcpCredentialResolver.resolve({ orgId: 'org-1', credentials: undefined as any }),
-    ).rejects.toThrow(/Provider not connected/);
+    await expect(gcpCredentialResolver.resolve({ orgId: 'org-1', credentials: undefined as any })).rejects.toThrow(
+      /Provider not connected/,
+    );
   });
 
   it('throws a connect-prompt error when credentials are explicitly null', async () => {
-    await expect(
-      gcpCredentialResolver.resolve({ orgId: 'org-1', credentials: null }),
-    ).rejects.toThrow(/Provider not connected/);
+    await expect(gcpCredentialResolver.resolve({ orgId: 'org-1', credentials: null })).rejects.toThrow(
+      /Provider not connected/,
+    );
   });
 });
 
@@ -347,9 +347,9 @@ describe('gcpCredentialResolver.resolve — OAuth branch', () => {
 
 describe('gcpCredentialResolver.resolve — Service Account Key branch', () => {
   it('throws when neither service_account_key nor key is present', async () => {
-    await expect(
-      gcpCredentialResolver.resolve({ orgId: 'org-1', credentials: {} }),
-    ).rejects.toThrow(/No GCP credentials available/);
+    await expect(gcpCredentialResolver.resolve({ orgId: 'org-1', credentials: {} })).rejects.toThrow(
+      /No GCP credentials available/,
+    );
   });
 
   it('throws Invalid service account key when JSON parse fails', async () => {

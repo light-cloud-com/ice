@@ -14,7 +14,6 @@
  */
 
 import { PRIVATE_NETWORK_MIN_WIDTH as PN_MIN_WIDTH, PRIVATE_NETWORK_MIN_HEIGHT as PN_MIN_HEIGHT } from '@ice/constants';
-import { MIN_CONTAINER_WIDTH, MIN_CONTAINER_HEIGHT, CARD_WIDTH, CARD_HEIGHT } from '../../../config/canvas-constants';
 import {
   CD_EXTRA_WIDTH,
   CD_HEADER_HEIGHT,
@@ -38,6 +37,7 @@ import {
   ES_PADDING,
   type LayoutNode,
 } from './types';
+import { MIN_CONTAINER_WIDTH, MIN_CONTAINER_HEIGHT, CARD_WIDTH, CARD_HEIGHT } from '../../../config/canvas-constants';
 
 /**
  * Intrinsic minimum bounds for a container iceType — the smallest size the

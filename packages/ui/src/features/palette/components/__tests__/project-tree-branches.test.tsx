@@ -172,9 +172,9 @@ vi.mock('../tree-context-menu', () => ({
   TreeContextMenu: mocks.MockTreeContextMenu,
 }));
 
-import { ProjectTree } from '../project-tree';
 import { FolderRow } from '../folder-row';
 import { ProjectRow } from '../project-row';
+import { ProjectTree } from '../project-tree';
 import { TreeContextMenu } from '../tree-context-menu';
 
 interface ElLike {
@@ -273,9 +273,7 @@ describe('ProjectTree — populated tree', () => {
       { id: 'p1', folderId: null, order: 0, name: 'Project 1' },
       { id: 'p2', folderId: 'f1', order: 1, name: 'Project 2' },
     ];
-    mocks.folders = [
-      { id: 'f1', parentFolderId: null, order: 0, name: 'Folder 1' },
-    ];
+    mocks.folders = [{ id: 'f1', parentFolderId: null, order: 0, name: 'Folder 1' }];
   });
 
   it('renders one FolderRow per top-level folder', () => {
@@ -319,10 +317,7 @@ describe('ProjectTree — populated tree', () => {
       project: { id: string; folderId: string | null; order: number; name: string },
       depth: number,
     ) => unknown;
-    const projectEl = renderProject(
-      { id: 'p2', folderId: 'f1', order: 1, name: 'Project 2' },
-      1,
-    );
+    const projectEl = renderProject({ id: 'p2', folderId: 'f1', order: 1, name: 'Project 2' }, 1);
     expect(projectEl).toBeDefined();
     expect((projectEl as ElLike).type).toBe(ProjectRow);
     expect((projectEl as ElLike).props.depth).toBe(1);

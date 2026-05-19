@@ -29,7 +29,6 @@
 
 import prisma from '@ice/db';
 import * as providerService from '@ice/service-credentials';
-
 import { resolveLogFilter } from './filter-resolver';
 import type { SourceResolution, SubscribeArgs } from './types';
 
@@ -53,7 +52,7 @@ export async function resolveSource(args: SubscribeArgs): Promise<SourceResoluti
   // surface `unsupported-source` by finding the override in raw nodes;
   // the client-candidates path doesn't have raw nodes, so a missing
   // override falls through to `none`.
-  let supportedCandidates: Array<{ nodeId: string; iceType: string; label?: string }> = [];
+  const supportedCandidates: Array<{ nodeId: string; iceType: string; label?: string }> = [];
   let rawNodesForOverrideLookup: any[] | null = null;
 
   if (Array.isArray(candidateSources) && candidateSources.length > 0) {

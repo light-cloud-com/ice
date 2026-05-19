@@ -17,8 +17,8 @@
  * The `ParserError` and `ParserOptions` types are imported type-only
  * from `./parser.js` to avoid a runtime cycle.
  */
-import type { Token, TokenType } from './tokens';
 import type { ParserError, ParserOptions } from './parser';
+import type { Token, TokenType } from './tokens';
 
 /**
  * Default options for the parser. Mirrors `DEFAULT_OPTIONS` in
@@ -53,10 +53,7 @@ export interface ParserState {
  * fields are filled from `DEFAULT_PARSER_OPTIONS`. `pos` starts at 0
  * and `errors` starts as a fresh empty array.
  */
-export function make_parser_state(
-  tokens: readonly Token[],
-  options: Partial<ParserOptions> = {},
-): ParserState {
+export function make_parser_state(tokens: readonly Token[], options: Partial<ParserOptions> = {}): ParserState {
   return {
     tokens,
     pos: 0,
@@ -128,11 +125,7 @@ export function ps_match(s: ParserState, ...types: TokenType[]): boolean {
  * it). Pre-extraction parser depended on this no-advance shape; do
  * not change it.
  */
-export function ps_consume(
-  s: ParserState,
-  type: TokenType,
-  message: string,
-): Token {
+export function ps_consume(s: ParserState, type: TokenType, message: string): Token {
   if (ps_check(s, type)) {
     return ps_advance(s);
   }
@@ -178,19 +171,7 @@ export function ps_synchronize(s: ParserState): void {
   ps_advance(s);
 
   while (!ps_is_at_end(s)) {
-    if (
-      ps_check(
-        s,
-        'RESOURCE',
-        'DATA',
-        'VARIABLE',
-        'OUTPUT',
-        'PROVIDER',
-        'MODULE',
-        'LOCALS',
-        'IMPORT',
-      )
-    ) {
+    if (ps_check(s, 'RESOURCE', 'DATA', 'VARIABLE', 'OUTPUT', 'PROVIDER', 'MODULE', 'LOCALS', 'IMPORT')) {
       return;
     }
 

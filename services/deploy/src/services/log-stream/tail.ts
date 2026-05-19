@@ -24,19 +24,10 @@
  * happens immediately". The polling loop never sets it to -1.
  */
 
-import {
-  isPermissionDenied,
-  mapEntry,
-  probeErrorMessage,
-} from './entry-mapping';
+import { isPermissionDenied, mapEntry, probeErrorMessage } from './entry-mapping';
 import { emitToRoom, rememberInsertId } from './registry';
 import { stopUnderlyingStream } from './stream-lifecycle';
-import {
-  RECONNECT_BASE_MS,
-  RECONNECT_MAX_MS,
-  type ActiveStream,
-  type SourceResolution,
-} from './types';
+import { RECONNECT_BASE_MS, RECONNECT_MAX_MS, type ActiveStream, type SourceResolution } from './types';
 
 export function startTail(stream: ActiveStream): void {
   if (stream.stopped) return;
@@ -116,10 +107,7 @@ export function startTail(stream: ActiveStream): void {
 
 export function scheduleTailReconnect(stream: ActiveStream): void {
   stream.consecutiveErrors = Math.max(0, stream.consecutiveErrors) + 1;
-  const delay = Math.min(
-    RECONNECT_BASE_MS * 2 ** (stream.consecutiveErrors - 1),
-    RECONNECT_MAX_MS,
-  );
+  const delay = Math.min(RECONNECT_BASE_MS * 2 ** (stream.consecutiveErrors - 1), RECONNECT_MAX_MS);
   stopUnderlyingStream(stream);
   setTimeout(() => {
     if (stream.stopped) return;

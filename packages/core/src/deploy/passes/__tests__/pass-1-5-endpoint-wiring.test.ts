@@ -47,9 +47,9 @@
  */
 import { describe, it, expect } from 'vitest';
 import { create_mutable_graph } from '../../../graph/mutable-graph';
-import type { CardEdgeInput, CardNodeInput, DeployableNodeInfo } from '../../card-translator';
 import { sanitize_name } from '../../utils/name-utils';
 import { wire_public_endpoints } from '../pass-1-5-endpoint-wiring';
+import type { CardEdgeInput, CardNodeInput, DeployableNodeInfo } from '../../card-translator';
 
 /**
  * Build a fixture: a graph populated with a forwarding-rule node for the
@@ -306,7 +306,15 @@ describe('wire_public_endpoints — empty / no-op cases', () => {
 
 describe('wire_public_endpoints — single-subdomain endpoint', () => {
   it('attaches host_rules + hosts + redirect_http onto the forwarding rule node', () => {
-    const { graph, card_id_to_name, deployables, endpointNodeKey, endpointNodeName, computeNodeKeys, computeNodeNames } = setup_fixture({
+    const {
+      graph,
+      card_id_to_name,
+      deployables,
+      endpointNodeKey,
+      endpointNodeName,
+      computeNodeKeys,
+      computeNodeNames,
+    } = setup_fixture({
       endpoint: { cardId: 'ep-card', resourceName: 'fr-1' },
       computes: [{ cardId: 'svc-card', resourceName: 'svc-1' }],
     });
@@ -323,9 +331,7 @@ describe('wire_public_endpoints — single-subdomain endpoint', () => {
       },
       { id: 'svc-card', type: 'block', data: { iceType: 'Compute.Container' } },
     ];
-    const edges: CardEdgeInput[] = [
-      { id: 'e1', source: 'ep-card', target: 'svc-card', data: { subdomain: 'api' } },
-    ];
+    const edges: CardEdgeInput[] = [{ id: 'e1', source: 'ep-card', target: 'svc-card', data: { subdomain: 'api' } }];
 
     const result = wire_public_endpoints({
       edges,
@@ -364,7 +370,15 @@ describe('wire_public_endpoints — single-subdomain endpoint', () => {
   });
 
   it('uses bare rootDomain as host when subdomain is blank', () => {
-    const { graph, card_id_to_name, deployables, endpointNodeKey, endpointNodeName, computeNodeKeys, computeNodeNames } = setup_fixture({
+    const {
+      graph,
+      card_id_to_name,
+      deployables,
+      endpointNodeKey,
+      endpointNodeName,
+      computeNodeKeys,
+      computeNodeNames,
+    } = setup_fixture({
       endpoint: { cardId: 'ep-card', resourceName: 'fr-1' },
       computes: [{ cardId: 'svc-card', resourceName: 'svc-1' }],
     });
@@ -414,9 +428,7 @@ describe('wire_public_endpoints — single-subdomain endpoint', () => {
         data: { iceType: 'Network.PublicEndpoint', domain: 'rev.io', enableHttps: false },
       },
     ];
-    const edges: CardEdgeInput[] = [
-      { id: 'e1', source: 'svc-card', target: 'ep-card', data: { subdomain: 'web' } },
-    ];
+    const edges: CardEdgeInput[] = [{ id: 'e1', source: 'svc-card', target: 'ep-card', data: { subdomain: 'web' } }];
 
     wire_public_endpoints({
       edges,
@@ -471,11 +483,7 @@ describe('wire_public_endpoints — multi-subdomain endpoint', () => {
 
     const frProps = graph.nodes.get(endpointNodeKey as any)!.properties as any;
     expect(frProps.host_rules.length).toBe(3);
-    expect(frProps.host_rules.map((r: any) => r.host).sort()).toEqual([
-      'admin.multi.io',
-      'api.multi.io',
-      'multi.io',
-    ]);
+    expect(frProps.host_rules.map((r: any) => r.host).sort()).toEqual(['admin.multi.io', 'api.multi.io', 'multi.io']);
     expect(new Set(frProps.hosts)).toEqual(new Set(['multi.io', 'api.multi.io', 'admin.multi.io']));
   });
 });
@@ -487,7 +495,15 @@ describe('wire_public_endpoints — RISK #8 BackendEntry sourceServiceName mutat
     // be.targetResourceName via the `sourceServiceName` field on the
     // pushed object. The host rule in turn carries the
     // sourceServiceName the LB handler will use for the NEG lookup.
-    const { graph, card_id_to_name, deployables, endpointNodeKey, endpointNodeName, computeNodeKeys, computeNodeNames } = setup_fixture({
+    const {
+      graph,
+      card_id_to_name,
+      deployables,
+      endpointNodeKey,
+      endpointNodeName,
+      computeNodeKeys,
+      computeNodeNames,
+    } = setup_fixture({
       endpoint: { cardId: 'ep-card', resourceName: 'fr-1' },
       computes: [
         { cardId: 'svc-1', resourceName: 'cloud-run-svc-1' },
@@ -549,9 +565,7 @@ describe('wire_public_endpoints — RISK #7 atomic forwarding-rule removal', () 
       },
       { id: 'site-card', type: 'block', data: { iceType: 'Compute.StaticSite' } },
     ];
-    const edges: CardEdgeInput[] = [
-      { id: 'e1', source: 'ep-card', target: 'site-card', data: { subdomain: 'web' } },
-    ];
+    const edges: CardEdgeInput[] = [{ id: 'e1', source: 'ep-card', target: 'site-card', data: { subdomain: 'web' } }];
 
     expect(deployables.length).toBe(1);
     expect(graph.node_count).toBe(2);
@@ -634,7 +648,13 @@ describe('wire_public_endpoints — RISK #7 atomic forwarding-rule removal', () 
     const edges: CardEdgeInput[] = [{ id: 'e1', source: 'ep-card', target: 'site-card' }];
 
     const r1 = wire_public_endpoints({
-      edges, nodes, card_id_to_name, graph, deployables, warnings: [], projectName: 'p',
+      edges,
+      nodes,
+      card_id_to_name,
+      graph,
+      deployables,
+      warnings: [],
+      projectName: 'p',
     });
     expect(r1.deployable_count_delta).toBe(-1);
 
@@ -646,7 +666,13 @@ describe('wire_public_endpoints — RISK #7 atomic forwarding-rule removal', () 
     // because it's already gone. The deployables.splice block is
     // gated on `removed`, so no second splice / decrement.
     const r2 = wire_public_endpoints({
-      edges, nodes, card_id_to_name, graph, deployables, warnings: [], projectName: 'p',
+      edges,
+      nodes,
+      card_id_to_name,
+      graph,
+      deployables,
+      warnings: [],
+      projectName: 'p',
     });
     expect(r2.deployable_count_delta).toBe(0);
   });
@@ -671,9 +697,7 @@ describe('wire_public_endpoints — SSL cert synthetic node injection', () => {
       },
       { id: 'svc-card', type: 'block', data: { iceType: 'Compute.Container' } },
     ];
-    const edges: CardEdgeInput[] = [
-      { id: 'e1', source: 'ep-card', target: 'svc-card', data: { subdomain: 'api' } },
-    ];
+    const edges: CardEdgeInput[] = [{ id: 'e1', source: 'ep-card', target: 'svc-card', data: { subdomain: 'api' } }];
 
     const result = wire_public_endpoints({
       edges,
@@ -727,7 +751,13 @@ describe('wire_public_endpoints — SSL cert synthetic node injection', () => {
     const edges: CardEdgeInput[] = [{ id: 'e1', source: 'ep-card', target: 'svc-card' }];
 
     const result = wire_public_endpoints({
-      edges, nodes, card_id_to_name, graph, deployables, warnings: [], projectName: 'p',
+      edges,
+      nodes,
+      card_id_to_name,
+      graph,
+      deployables,
+      warnings: [],
+      projectName: 'p',
     });
 
     const expectedCertName = sanitize_name(`${endpointNodeName}-cert`);
@@ -755,7 +785,13 @@ describe('wire_public_endpoints — SSL cert synthetic node injection', () => {
     const edges: CardEdgeInput[] = [{ id: 'e1', source: 'ep-card', target: 'svc-card' }];
 
     wire_public_endpoints({
-      edges, nodes, card_id_to_name, graph, deployables, warnings: [], projectName: 'p',
+      edges,
+      nodes,
+      card_id_to_name,
+      graph,
+      deployables,
+      warnings: [],
+      projectName: 'p',
     });
 
     const expectedCertName = sanitize_name(`${endpointNodeName}-cert`);
@@ -783,7 +819,13 @@ describe('wire_public_endpoints — SSL cert synthetic node injection', () => {
     const edges: CardEdgeInput[] = [{ id: 'e1', source: 'ep-card', target: 'svc-card' }];
 
     const result = wire_public_endpoints({
-      edges, nodes, card_id_to_name, graph, deployables, warnings: [], projectName: 'p',
+      edges,
+      nodes,
+      card_id_to_name,
+      graph,
+      deployables,
+      warnings: [],
+      projectName: 'p',
     });
 
     const expectedCertName = sanitize_name(`${endpointNodeName}-cert`);
@@ -800,7 +842,7 @@ describe('wire_public_endpoints — SSL cert synthetic node injection', () => {
 });
 
 describe('wire_public_endpoints — 3-tier subdomain priority (RISK #6 mirror)', () => {
-  it('routeId set + matching route → uses ROUTE\'S subdomain, NOT edge.subdomain', () => {
+  it("routeId set + matching route → uses ROUTE'S subdomain, NOT edge.subdomain", () => {
     const { graph, card_id_to_name, deployables, endpointNodeKey, endpointNodeName } = setup_fixture({
       endpoint: { cardId: 'ep-card', resourceName: 'fr-1' },
       computes: [{ cardId: 'svc-card', resourceName: 'svc-1' }],
@@ -831,7 +873,13 @@ describe('wire_public_endpoints — 3-tier subdomain priority (RISK #6 mirror)',
     ];
 
     wire_public_endpoints({
-      edges, nodes, card_id_to_name, graph, deployables, warnings: [], projectName: 'p',
+      edges,
+      nodes,
+      card_id_to_name,
+      graph,
+      deployables,
+      warnings: [],
+      projectName: 'p',
     });
 
     const frProps = graph.nodes.get(endpointNodeKey as any)!.properties as any;
@@ -868,7 +916,13 @@ describe('wire_public_endpoints — 3-tier subdomain priority (RISK #6 mirror)',
     ];
 
     wire_public_endpoints({
-      edges, nodes, card_id_to_name, graph, deployables, warnings: [], projectName: 'p',
+      edges,
+      nodes,
+      card_id_to_name,
+      graph,
+      deployables,
+      warnings: [],
+      projectName: 'p',
     });
 
     const frProps = graph.nodes.get(endpointNodeKey as any)!.properties as any;
@@ -894,7 +948,13 @@ describe('wire_public_endpoints — 3-tier subdomain priority (RISK #6 mirror)',
     ];
 
     wire_public_endpoints({
-      edges, nodes, card_id_to_name, graph, deployables, warnings: [], projectName: 'p',
+      edges,
+      nodes,
+      card_id_to_name,
+      graph,
+      deployables,
+      warnings: [],
+      projectName: 'p',
     });
 
     const frProps = graph.nodes.get(endpointNodeKey as any)!.properties as any;
@@ -917,7 +977,13 @@ describe('wire_public_endpoints — 3-tier subdomain priority (RISK #6 mirror)',
     const edges: CardEdgeInput[] = [{ id: 'e1', source: 'ep-card', target: 'svc-card' }];
 
     wire_public_endpoints({
-      edges, nodes, card_id_to_name, graph, deployables, warnings: [], projectName: 'p',
+      edges,
+      nodes,
+      card_id_to_name,
+      graph,
+      deployables,
+      warnings: [],
+      projectName: 'p',
     });
 
     const frProps = graph.nodes.get(endpointNodeKey as any)!.properties as any;
@@ -952,7 +1018,13 @@ describe('wire_public_endpoints — 3-tier subdomain priority (RISK #6 mirror)',
     ];
 
     wire_public_endpoints({
-      edges, nodes, card_id_to_name, graph, deployables, warnings: [], projectName: 'p',
+      edges,
+      nodes,
+      card_id_to_name,
+      graph,
+      deployables,
+      warnings: [],
+      projectName: 'p',
     });
 
     const frProps = graph.nodes.get(endpointNodeKey as any)!.properties as any;
@@ -977,12 +1049,16 @@ describe('wire_public_endpoints — CustomDomain nested in PrivateNetwork acts a
       },
       { id: 'svc-card', type: 'block', data: { iceType: 'Compute.Container' } },
     ];
-    const edges: CardEdgeInput[] = [
-      { id: 'e1', source: 'cd-card', target: 'svc-card', data: { subdomain: 'app' } },
-    ];
+    const edges: CardEdgeInput[] = [{ id: 'e1', source: 'cd-card', target: 'svc-card', data: { subdomain: 'app' } }];
 
     wire_public_endpoints({
-      edges, nodes, card_id_to_name, graph, deployables, warnings: [], projectName: 'p',
+      edges,
+      nodes,
+      card_id_to_name,
+      graph,
+      deployables,
+      warnings: [],
+      projectName: 'p',
     });
 
     const frProps = graph.nodes.get(endpointNodeKey as any)!.properties as any;
@@ -1003,12 +1079,16 @@ describe('wire_public_endpoints — CustomDomain nested in PrivateNetwork acts a
       },
       { id: 'svc-card', type: 'block', data: { iceType: 'Compute.Container' } },
     ];
-    const edges: CardEdgeInput[] = [
-      { id: 'e1', source: 'cd-card', target: 'svc-card', data: { subdomain: 'api' } },
-    ];
+    const edges: CardEdgeInput[] = [{ id: 'e1', source: 'cd-card', target: 'svc-card', data: { subdomain: 'api' } }];
 
     const result = wire_public_endpoints({
-      edges, nodes, card_id_to_name, graph, deployables, warnings: [], projectName: 'p',
+      edges,
+      nodes,
+      card_id_to_name,
+      graph,
+      deployables,
+      warnings: [],
+      projectName: 'p',
     });
 
     expect(result.deployable_count_delta).toBe(0);
@@ -1032,12 +1112,16 @@ describe('wire_public_endpoints — CustomDomain nested in PrivateNetwork acts a
       },
       { id: 'svc-card', type: 'block', data: { iceType: 'Compute.Container' } },
     ];
-    const edges: CardEdgeInput[] = [
-      { id: 'e1', source: 'cd-card', target: 'svc-card', data: { subdomain: 'api' } },
-    ];
+    const edges: CardEdgeInput[] = [{ id: 'e1', source: 'cd-card', target: 'svc-card', data: { subdomain: 'api' } }];
 
     const result = wire_public_endpoints({
-      edges, nodes, card_id_to_name, graph, deployables, warnings: [], projectName: 'p',
+      edges,
+      nodes,
+      card_id_to_name,
+      graph,
+      deployables,
+      warnings: [],
+      projectName: 'p',
     });
 
     expect(result.deployable_count_delta).toBe(0);
@@ -1062,13 +1146,17 @@ describe('wire_public_endpoints — warnings + unsupported backend types', () =>
       // service set and not Compute.StaticSite — falls into warning path.
       { id: 'svc-card', type: 'block', data: { iceType: 'Compute.SomeNewType' } },
     ];
-    const edges: CardEdgeInput[] = [
-      { id: 'e1', source: 'ep-card', target: 'svc-card', data: { subdomain: 'api' } },
-    ];
+    const edges: CardEdgeInput[] = [{ id: 'e1', source: 'ep-card', target: 'svc-card', data: { subdomain: 'api' } }];
     const warnings: string[] = [];
 
     const result = wire_public_endpoints({
-      edges, nodes, card_id_to_name, graph, deployables, warnings, projectName: 'p',
+      edges,
+      nodes,
+      card_id_to_name,
+      graph,
+      deployables,
+      warnings,
+      projectName: 'p',
     });
 
     expect(warnings.length).toBe(1);
@@ -1097,7 +1185,13 @@ describe('wire_public_endpoints — redirect_http flag', () => {
     const edges: CardEdgeInput[] = [{ id: 'e1', source: 'ep-card', target: 'svc-card' }];
 
     wire_public_endpoints({
-      edges, nodes, card_id_to_name, graph, deployables, warnings: [], projectName: 'p',
+      edges,
+      nodes,
+      card_id_to_name,
+      graph,
+      deployables,
+      warnings: [],
+      projectName: 'p',
     });
 
     const frProps = graph.nodes.get(endpointNodeKey as any)!.properties as any;
@@ -1125,7 +1219,13 @@ describe('wire_public_endpoints — redirect_http flag', () => {
     const edges: CardEdgeInput[] = [{ id: 'e1', source: 'ep-card', target: 'svc-card' }];
 
     wire_public_endpoints({
-      edges, nodes, card_id_to_name, graph, deployables, warnings: [], projectName: 'p',
+      edges,
+      nodes,
+      card_id_to_name,
+      graph,
+      deployables,
+      warnings: [],
+      projectName: 'p',
     });
 
     const frProps = graph.nodes.get(endpointNodeKey as any)!.properties as any;
@@ -1147,12 +1247,16 @@ describe('wire_public_endpoints — domain trimming', () => {
       },
       { id: 'svc-card', type: 'block', data: { iceType: 'Compute.Container' } },
     ];
-    const edges: CardEdgeInput[] = [
-      { id: 'e1', source: 'ep-card', target: 'svc-card', data: { subdomain: 'api' } },
-    ];
+    const edges: CardEdgeInput[] = [{ id: 'e1', source: 'ep-card', target: 'svc-card', data: { subdomain: 'api' } }];
 
     wire_public_endpoints({
-      edges, nodes, card_id_to_name, graph, deployables, warnings: [], projectName: 'p',
+      edges,
+      nodes,
+      card_id_to_name,
+      graph,
+      deployables,
+      warnings: [],
+      projectName: 'p',
     });
 
     const frProps = graph.nodes.get(endpointNodeKey as any)!.properties as any;
@@ -1184,7 +1288,13 @@ describe('wire_public_endpoints — service-type backend with empty rootDomain',
     const edges: CardEdgeInput[] = [{ id: 'e1', source: 'ep-card', target: 'svc-card' }];
 
     const result = wire_public_endpoints({
-      edges, nodes, card_id_to_name, graph, deployables, warnings: [], projectName: 'p',
+      edges,
+      nodes,
+      card_id_to_name,
+      graph,
+      deployables,
+      warnings: [],
+      projectName: 'p',
     });
 
     expect(result.deployable_count_delta).toBe(0); // not removed, no cert
@@ -1234,9 +1344,7 @@ describe('wire_public_endpoints — bugfix-1 regression: production-shape lookup
       },
       { id: 'svc-card', type: 'block', data: { iceType: 'Compute.Container' } },
     ];
-    const edges: CardEdgeInput[] = [
-      { id: 'e1', source: 'ep-card', target: 'svc-card', data: { subdomain: 'api' } },
-    ];
+    const edges: CardEdgeInput[] = [{ id: 'e1', source: 'ep-card', target: 'svc-card', data: { subdomain: 'api' } }];
     // CRITICAL: bare resource names, not branded NodeIds.
     const card_id_to_name = new Map<string, string>([
       ['ep-card', 'fr-prod'],
@@ -1321,9 +1429,7 @@ describe('wire_public_endpoints — bugfix-1 regression: production-shape lookup
       },
       { id: 'site-card', type: 'block', data: { iceType: 'Compute.StaticSite' } },
     ];
-    const edges: CardEdgeInput[] = [
-      { id: 'e1', source: 'ep-card', target: 'site-card', data: { subdomain: 'web' } },
-    ];
+    const edges: CardEdgeInput[] = [{ id: 'e1', source: 'ep-card', target: 'site-card', data: { subdomain: 'web' } }];
     const card_id_to_name = new Map<string, string>([
       ['ep-card', 'fr-static'],
       ['site-card', 'static-site-prod'],

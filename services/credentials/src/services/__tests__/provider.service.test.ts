@@ -214,9 +214,9 @@ describe('getDecryptedCredentials', () => {
 
 describe('connectProvider', () => {
   it('rejects GCP service-account flow when key has no client_email', async () => {
-    await expect(
-      connectProvider('org', 'gcp', { service_account_key: '{"private_key":"k"}' }),
-    ).rejects.toThrow('Service account key must contain client_email and private_key');
+    await expect(connectProvider('org', 'gcp', { service_account_key: '{"private_key":"k"}' })).rejects.toThrow(
+      'Service account key must contain client_email and private_key',
+    );
   });
 
   it('rejects GCP service-account flow when key has no private_key', async () => {
@@ -228,15 +228,13 @@ describe('connectProvider', () => {
   });
 
   it('rejects GCP service-account flow when key string is unparseable JSON', async () => {
-    await expect(
-      connectProvider('org', 'gcp', { service_account_key: 'not-json' }),
-    ).rejects.toThrow('Invalid JSON in service account key');
+    await expect(connectProvider('org', 'gcp', { service_account_key: 'not-json' })).rejects.toThrow(
+      'Invalid JSON in service account key',
+    );
   });
 
   it('rejects GCP service-account flow when no key is provided at all', async () => {
-    await expect(connectProvider('org', 'gcp', {})).rejects.toThrow(
-      'No service account key provided',
-    );
+    await expect(connectProvider('org', 'gcp', {})).rejects.toThrow('No service account key provided');
   });
 
   it('connects GCP successfully when a well-formed service account key is provided (live auth ok)', async () => {
@@ -373,7 +371,7 @@ describe('connectProvider', () => {
       {
         get() {
           // Empty-message error so `err.message` is '' (falsy).
-          // eslint-disable-next-line no-throw-literal
+
           throw new Error('');
         },
       },
@@ -477,9 +475,7 @@ describe('listGCPProjects', () => {
       project_id: 'thrown-fallback',
     });
     (globalThis as any).fetch = vi.fn().mockRejectedValue(new Error('net'));
-    expect(await listGCPProjects('org')).toEqual([
-      { id: 'thrown-fallback', name: 'thrown-fallback' },
-    ]);
+    expect(await listGCPProjects('org')).toEqual([{ id: 'thrown-fallback', name: 'thrown-fallback' }]);
   });
 
   it('OAuth: returns [] when access token cannot be obtained and no static project_id exists', async () => {
@@ -549,7 +545,9 @@ describe('listGCPProjects', () => {
 
   it('returns [] when neither auth_type nor a key is present', async () => {
     findUniqueMock.mockResolvedValue({ is_connected: true, credentials: 'blob' });
-    decryptCredsMock.mockReturnValue({ /* nothing useful */ });
+    decryptCredsMock.mockReturnValue({
+      /* nothing useful */
+    });
     expect(await listGCPProjects('org')).toEqual([]);
   });
 });
@@ -564,7 +562,9 @@ describe('getValidGCPAccessToken', () => {
 
   it('returns null for non-OAuth credentials', async () => {
     findUniqueMock.mockResolvedValue({ is_connected: true, credentials: 'blob' });
-    decryptCredsMock.mockReturnValue({ /* no _auth_type */ });
+    decryptCredsMock.mockReturnValue({
+      /* no _auth_type */
+    });
     expect(await getValidGCPAccessToken('org')).toBeNull();
   });
 
@@ -706,7 +706,9 @@ describe('updateGCPOAuthTokens', () => {
 
   it('does nothing when current credentials are not OAuth', async () => {
     findUniqueMock.mockResolvedValue({ is_connected: true, credentials: 'blob' });
-    decryptCredsMock.mockReturnValue({ /* no _auth_type */ });
+    decryptCredsMock.mockReturnValue({
+      /* no _auth_type */
+    });
     await updateGCPOAuthTokens('org', { access_token: 'new' });
     expect(updateManyMock).not.toHaveBeenCalled();
   });

@@ -10,7 +10,6 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import * as React from 'react';
 
 vi.mock('@radix-ui/react-slot', () => {
   const Slot = (_props: unknown) => null;

@@ -18,10 +18,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import {
-  initialize_registry,
-  resolve_db_path,
-} from '../embedded/initialization';
+import { initialize_registry, resolve_db_path } from '../embedded/initialization';
 
 /**
  * resolve_db_path inspects `<cwd>/.ice/schemas.db`. Rather than mock fs

@@ -98,9 +98,7 @@ export async function createOrAdoptBucket(
               disableMsg.includes('uniformBucketLevelAccess')
             ) {
               ublaForcedOn = true;
-              ctx.on_log?.(
-                `[cloud-storage] Adopted bucket ${name} has UBLA locked on by org policy — IAM-only path.`,
-              );
+              ctx.on_log?.(`[cloud-storage] Adopted bucket ${name} has UBLA locked on by org policy — IAM-only path.`);
             }
           }
         }

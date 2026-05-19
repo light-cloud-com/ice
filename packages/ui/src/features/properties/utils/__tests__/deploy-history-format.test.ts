@@ -15,11 +15,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  ACTION_COLORS,
-  ACTION_LABELS,
-  formatDeployRow,
-} from '../deploy-history-format';
+import { ACTION_COLORS, ACTION_LABELS, formatDeployRow } from '../deploy-history-format';
 
 const FIXED_DATE = '2026-04-29T12:34:00Z';
 
@@ -36,9 +32,7 @@ describe('ACTION_LABELS', () => {
 
 describe('ACTION_COLORS', () => {
   it('exposes the same four keys as ACTION_LABELS with verbatim color classes', () => {
-    expect(Object.keys(ACTION_COLORS).sort()).toEqual(
-      Object.keys(ACTION_LABELS).sort(),
-    );
+    expect(Object.keys(ACTION_COLORS).sort()).toEqual(Object.keys(ACTION_LABELS).sort());
     expect(ACTION_COLORS).toEqual({
       plan: 'text-slate-400 bg-slate-950/30',
       apply: 'text-blue-400 bg-blue-950/30',
@@ -91,13 +85,23 @@ describe('formatDeployRow', () => {
       expect(formatDeployRow({ created_at: FIXED_DATE, status: 'success' }).isSuccess).toBe(true);
     });
 
-    it("is false for any other status", () => {
-      for (const status of ['failed', 'cancelled', 'partial', 'deploying', 'planning', 'planned', 'queued', 'unknown', '']) {
+    it('is false for any other status', () => {
+      for (const status of [
+        'failed',
+        'cancelled',
+        'partial',
+        'deploying',
+        'planning',
+        'planned',
+        'queued',
+        'unknown',
+        '',
+      ]) {
         expect(formatDeployRow({ created_at: FIXED_DATE, status }).isSuccess).toBe(false);
       }
     });
 
-    it("is false when status is missing", () => {
+    it('is false when status is missing', () => {
       expect(formatDeployRow({ created_at: FIXED_DATE }).isSuccess).toBe(false);
     });
   });
@@ -111,7 +115,7 @@ describe('formatDeployRow', () => {
       expect(formatDeployRow({ created_at: FIXED_DATE, status: 'cancelled' }).isFailed).toBe(true);
     });
 
-    it("is false for non-failed statuses", () => {
+    it('is false for non-failed statuses', () => {
       for (const status of ['success', 'partial', 'deploying', 'planning', 'planned', '']) {
         expect(formatDeployRow({ created_at: FIXED_DATE, status }).isFailed).toBe(false);
       }
@@ -123,7 +127,7 @@ describe('formatDeployRow', () => {
       expect(formatDeployRow({ created_at: FIXED_DATE, status: 'partial' }).isPartial).toBe(true);
     });
 
-    it("is false for non-partial statuses", () => {
+    it('is false for non-partial statuses', () => {
       for (const status of ['success', 'failed', 'cancelled', 'deploying', 'planning', 'planned', '']) {
         expect(formatDeployRow({ created_at: FIXED_DATE, status }).isPartial).toBe(false);
       }
@@ -143,7 +147,7 @@ describe('formatDeployRow', () => {
       expect(formatDeployRow({ created_at: FIXED_DATE, status: 'planned' }).isPending).toBe(true);
     });
 
-    it("is false for non-pending statuses", () => {
+    it('is false for non-pending statuses', () => {
       for (const status of ['success', 'failed', 'cancelled', 'partial', '']) {
         expect(formatDeployRow({ created_at: FIXED_DATE, status }).isPending).toBe(false);
       }
@@ -181,30 +185,40 @@ describe('formatDeployRow', () => {
       expect(formatDeployRow({ created_at: FIXED_DATE, action_type: 'rollback' }).actionLabel).toBe('Rollback');
     });
 
-    it("returns the raw action_type when unknown (no label mapping)", () => {
+    it('returns the raw action_type when unknown (no label mapping)', () => {
       expect(formatDeployRow({ created_at: FIXED_DATE, action_type: 'mystery' }).actionLabel).toBe('mystery');
     });
   });
 
   describe('actionColor', () => {
     it("maps 'plan' to the slate color class", () => {
-      expect(formatDeployRow({ created_at: FIXED_DATE, action_type: 'plan' }).actionColor).toBe('text-slate-400 bg-slate-950/30');
+      expect(formatDeployRow({ created_at: FIXED_DATE, action_type: 'plan' }).actionColor).toBe(
+        'text-slate-400 bg-slate-950/30',
+      );
     });
 
     it("maps 'apply' to the blue color class", () => {
-      expect(formatDeployRow({ created_at: FIXED_DATE, action_type: 'apply' }).actionColor).toBe('text-blue-400 bg-blue-950/30');
+      expect(formatDeployRow({ created_at: FIXED_DATE, action_type: 'apply' }).actionColor).toBe(
+        'text-blue-400 bg-blue-950/30',
+      );
     });
 
     it("maps 'destroy' to the orange color class", () => {
-      expect(formatDeployRow({ created_at: FIXED_DATE, action_type: 'destroy' }).actionColor).toBe('text-orange-400 bg-orange-950/30');
+      expect(formatDeployRow({ created_at: FIXED_DATE, action_type: 'destroy' }).actionColor).toBe(
+        'text-orange-400 bg-orange-950/30',
+      );
     });
 
     it("maps 'rollback' to the purple color class", () => {
-      expect(formatDeployRow({ created_at: FIXED_DATE, action_type: 'rollback' }).actionColor).toBe('text-purple-400 bg-purple-950/30');
+      expect(formatDeployRow({ created_at: FIXED_DATE, action_type: 'rollback' }).actionColor).toBe(
+        'text-purple-400 bg-purple-950/30',
+      );
     });
 
     it("falls back to the slate color class for unknown action types (matches 'plan')", () => {
-      expect(formatDeployRow({ created_at: FIXED_DATE, action_type: 'mystery' }).actionColor).toBe('text-slate-400 bg-slate-950/30');
+      expect(formatDeployRow({ created_at: FIXED_DATE, action_type: 'mystery' }).actionColor).toBe(
+        'text-slate-400 bg-slate-950/30',
+      );
     });
   });
 

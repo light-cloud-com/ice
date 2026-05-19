@@ -15,11 +15,7 @@ import { useSelector } from 'react-redux';
 import { EdgePropertiesSection } from './sections/edge-properties-section';
 import { NodePropertiesSection } from './sections/node-properties-section';
 import { ProjectOverview } from './sections/project-overview';
-import {
-  selectActiveCard,
-  type CardNode,
-  type CardEdge,
-} from '../../../store/slices/cards-slice';
+import { selectActiveCard, type CardNode, type CardEdge } from '../../../store/slices/cards-slice';
 import { useResourceMap, usePropertyIssues } from '../hooks/use-resource-map';
 import type { RootState } from '../../../store';
 
@@ -91,4 +87,3 @@ export const PropertiesPanel: React.FC = () => {
   // ═══ NOTHING SELECTED — Project Overview ═══
   return <ProjectOverview activeCard={activeCard} />;
 };
-

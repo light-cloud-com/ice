@@ -23,14 +23,10 @@ import dagre from 'dagre';
 import { buildHierarchy, collectRootIds, buildPostOrder } from '../hierarchy';
 import { gridPackKids, repackIsolatedTopLevel } from '../packing';
 import { absolutizeAll, absolutizeEdgeRoutes, snapToGrid } from '../transformers';
-import type { LayoutEdge, LayoutNode, LayoutOptions, LayoutResult, Point } from '../types';
 import { intrinsicContainerMin, resolveVisualSize } from '../visual-size';
+import type { LayoutEdge, LayoutNode, LayoutOptions, LayoutResult, Point } from '../types';
 
-export function dagreTreeLayout(
-  nodes: LayoutNode[],
-  edges: LayoutEdge[],
-  opts: Required<LayoutOptions>,
-): LayoutResult {
+export function dagreTreeLayout(nodes: LayoutNode[], edges: LayoutEdge[], opts: Required<LayoutOptions>): LayoutResult {
   const rankdir = opts.direction === 'horizontal' ? 'LR' : 'TB';
   const nodeGap = opts.nodeGap || NODE_SEP;
 

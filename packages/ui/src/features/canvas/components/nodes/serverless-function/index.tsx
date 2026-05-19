@@ -9,14 +9,10 @@
  * rather than identity-defining.
  */
 
-import {
-  CARD_FOOTER_HEIGHT,
-  COMPUTE_BODY_HEIGHT,
-  COMPUTE_HEADER_HEIGHT,
-  COMPUTE_PADDING,
-} from '@ice/constants';
+import { CARD_FOOTER_HEIGHT, COMPUTE_BODY_HEIGHT, COMPUTE_HEADER_HEIGHT, COMPUTE_PADDING } from '@ice/constants';
 import { Zap } from 'lucide-react';
 import React from 'react';
+import { t } from '../../../../../i18n';
 import { CardShell } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
@@ -28,21 +24,36 @@ export function computeServerlessFunctionHeight(): number {
 
 const FN_ACCENT = '#eab308';
 
-const TRIGGER_LABELS: Record<string, string> = {
-  http: 'HTTP',
-  schedule: 'Schedule',
-  pubsub: 'Pub/Sub',
-  'pub-sub': 'Pub/Sub',
-  storage: 'Storage',
-  queue: 'Queue',
-};
+function getTriggerLabel(key: string): string | undefined {
+  switch (key) {
+    case 'http':
+      return t('canvas.blocks.function.triggerHttp');
+    case 'schedule':
+      return t('canvas.blocks.function.triggerSchedule');
+    case 'pubsub':
+    case 'pub-sub':
+      return t('canvas.blocks.function.triggerPubsub');
+    case 'storage':
+      return t('canvas.blocks.function.triggerStorage');
+    case 'queue':
+      return t('canvas.blocks.function.triggerQueue');
+    default:
+      return undefined;
+  }
+}
 
 function buildLiveConfig(data: Record<string, unknown> | undefined): string {
-  const memory = data?.memory != null && data.memory !== '' ? `${data.memory} MB` : '';
-  const timeout = data?.timeout != null && data.timeout !== '' ? `${data.timeout}s` : '';
+  const memory =
+    data?.memory != null && data.memory !== ''
+      ? t('canvas.blocks.function.memoryMb', { n: data.memory as string | number })
+      : '';
+  const timeout =
+    data?.timeout != null && data.timeout !== ''
+      ? t('canvas.blocks.function.timeoutSeconds', { n: data.timeout as string | number })
+      : '';
   const runtime = (data?.runtime as string) || '';
   const parts = [memory, timeout, runtime].filter(Boolean);
-  return parts.join(' · ') || 'unconfigured';
+  return parts.join(' · ') || t('canvas.blocks.common.unconfigured');
 }
 
 const BoltHalo: React.FC<{ color: string }> = ({ color }) => {
@@ -82,7 +93,7 @@ export const SvgServerlessFunctionNode: React.FC<SvgCompactNodeProps> = ({
   pipelineStatus,
 }) => {
   const rawTrigger = (node.data?.trigger as string) || 'http';
-  const triggerLabel = TRIGGER_LABELS[rawTrigger.toLowerCase()] || rawTrigger;
+  const triggerLabel = getTriggerLabel(rawTrigger.toLowerCase()) || rawTrigger;
   const liveConfig = buildLiveConfig(node.data);
 
   return (
@@ -96,7 +107,7 @@ export const SvgServerlessFunctionNode: React.FC<SvgCompactNodeProps> = ({
       pipelineStatus={pipelineStatus}
       icon={Zap}
       accentColor={FN_ACCENT}
-      title={node.label || 'Serverless Function'}
+      title={node.label || t('canvas.blocks.titles.serverlessFunction')}
       liveConfig={liveConfig}
       headerHeight={COMPUTE_HEADER_HEIGHT}
     >
@@ -122,7 +133,7 @@ export const SvgServerlessFunctionNode: React.FC<SvgCompactNodeProps> = ({
               letterSpacing: '0.08em',
             }}
           >
-            trigger
+            {t('canvas.blocks.function.trigger')}
           </span>
           <span
             style={{
@@ -142,7 +153,7 @@ export const SvgServerlessFunctionNode: React.FC<SvgCompactNodeProps> = ({
               opacity: 0.6,
             }}
           >
-            scales to zero
+            {t('canvas.blocks.function.scalesToZero')}
           </span>
         </div>
       </div>

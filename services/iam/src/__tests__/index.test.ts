@@ -8,15 +8,12 @@ vi.mock('@ice/db', () => ({
   default: {},
 }));
 
-import * as Iam from '../index';
+import * as Iam from '..';
 
 describe('services/iam barrel', () => {
   it('exposes createIamRouter as a function (or default export)', () => {
     // Look for any router-creator function in the barrel.
-    const routerCreator =
-      (Iam as any).createIamRouter ||
-      (Iam as any).createIAMRouter ||
-      (Iam as any).default;
+    const routerCreator = (Iam as any).createIamRouter || (Iam as any).createIAMRouter || (Iam as any).default;
     expect(typeof routerCreator).toBe('function');
   });
 

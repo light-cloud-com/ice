@@ -60,7 +60,9 @@ describe('TerraformExporter — construction', () => {
   });
 
   it('uses the supplied schema provider verbatim and does NOT instantiate a default', () => {
-    const externalProvider = new mocks.FakeProvider('external') as unknown as ConstructorParameters<typeof TerraformExporter>[0];
+    const externalProvider = new mocks.FakeProvider('external') as unknown as ConstructorParameters<
+      typeof TerraformExporter
+    >[0];
     mocks.ProviderConstructorCalls.length = 0;
     new TerraformExporter(externalProvider);
     expect(mocks.ProviderConstructorCalls).toHaveLength(0);
@@ -106,10 +108,7 @@ describe('TerraformExporter.exportGraph', () => {
       unmapped_types: ['Foo'],
     });
     const exp = new TerraformExporter();
-    const result = await exp.exportGraph(
-      {} as unknown as MutableGraph,
-      { provider: 'aws' } as TerraformExportOptions,
-    );
+    const result = await exp.exportGraph({} as unknown as MutableGraph, { provider: 'aws' } as TerraformExportOptions);
     expect(result.success).toBe(false);
     expect(result.errors).toEqual(['err']);
   });
@@ -130,7 +129,9 @@ describe('create_terraform_exporter', () => {
   });
 
   it('threads the supplied provider through to the new instance', () => {
-    const externalProvider = new mocks.FakeProvider('shared') as unknown as ConstructorParameters<typeof TerraformExporter>[0];
+    const externalProvider = new mocks.FakeProvider('shared') as unknown as ConstructorParameters<
+      typeof TerraformExporter
+    >[0];
     mocks.ProviderConstructorCalls.length = 0;
     const exp = create_terraform_exporter(externalProvider);
     expect(mocks.ProviderConstructorCalls).toHaveLength(0);

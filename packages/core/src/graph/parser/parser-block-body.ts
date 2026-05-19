@@ -25,14 +25,8 @@
  *            nested block down the "Unexpected token" branch and
  *            synchronize past it.
  */
-import type {
-  Attribute,
-  Block,
-  DataBlock,
-  NestedBlock,
-  ProviderBlock,
-  ResourceBlock,
-} from './ast';
+import { parse_expression } from './parser-binary-exprs';
+import { create_span, parse_identifier, parse_type_identifier } from './parser-literals';
 import {
   type ParserState,
   ps_add_error,
@@ -44,12 +38,7 @@ import {
   ps_previous,
   ps_synchronize,
 } from './parser-state';
-import {
-  create_span,
-  parse_identifier,
-  parse_type_identifier,
-} from './parser-literals';
-import { parse_expression } from './parser-binary-exprs';
+import type { Attribute, Block, DataBlock, NestedBlock, ProviderBlock, ResourceBlock } from './ast';
 
 /**
  * `resource <Type> <name> { ... }` — the body recurses through
@@ -162,11 +151,7 @@ export function parse_block(s: ParserState): Block {
         value,
         span: create_span(name.span.start, ps_previous(s).position),
       });
-    } else if (
-      ps_check(s, 'LEFT_BRACE') ||
-      ps_check(s, 'STRING') ||
-      ps_check(s, 'IDENTIFIER')
-    ) {
+    } else if (ps_check(s, 'LEFT_BRACE') || ps_check(s, 'STRING') || ps_check(s, 'IDENTIFIER')) {
       // Nested block
       const labels: string[] = [];
       while (ps_check(s, 'STRING') || ps_check(s, 'IDENTIFIER')) {

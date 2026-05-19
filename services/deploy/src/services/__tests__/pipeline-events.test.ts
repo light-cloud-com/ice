@@ -41,12 +41,7 @@ vi.mock('@ice/shared', () => ({
 
 import prisma from '@ice/db';
 import * as shared from '@ice/shared';
-import {
-  getEventsForNode,
-  createDeploymentEvent,
-  updateEventProgress,
-  failEvent,
-} from '../pipeline/events';
+import { getEventsForNode, createDeploymentEvent, updateEventProgress, failEvent } from '../pipeline/events';
 
 const cardFindUnique = (prisma as any).canvasCard.findUnique as ReturnType<typeof vi.fn>;
 const cardFindMany = (prisma as any).canvasCard.findMany as ReturnType<typeof vi.fn>;

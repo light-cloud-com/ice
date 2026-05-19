@@ -11,41 +11,43 @@
  * - Scroll wheel: zoom in/out
  */
 
-import React, { useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 // Note: Graph actions no longer used - all node operations go through cardsSlice
 // Viewport is now stored per-pane in uiSlice (for split view support)
-import { CanvasContextMenu } from './context/canvas-context-menu';
-import { ControlsHelpModal } from './controls-help-modal';
+import { CanvasContent } from './canvas-renderer/canvas-content';
 // ConnectionTypePopover removed — connections are fully auto-configured
 import { ConnectionTooltip } from './connection-tooltip';
+import { CanvasContextMenu } from './context/canvas-context-menu';
+import { ControlsHelpModal } from './controls-help-modal';
 import { CanvasDeployBanner } from './deploy-banner';
-import { CanvasContent } from './canvas-renderer/canvas-content';
 // Bespoke-from-day-one nodes with inline editing
 import { useClipboard } from '../../../shared/hooks/use-clipboard';
 import { useExposedServices } from '../../../shared/hooks/use-exposed-services';
 import { useUndoRedo } from '../../../shared/hooks/use-undo-redo';
+import { useCanvasData } from '../hooks/use-canvas-data';
+import { useCanvasDrop } from '../hooks/use-canvas-drop';
+import { useCanvasEffects } from '../hooks/use-canvas-effects';
+import { useCanvasHandlers } from '../hooks/use-canvas-handlers';
 import { useCanvasInteractionsBindings } from '../hooks/use-canvas-interactions-bindings';
 import { useCanvasMouseRouting } from '../hooks/use-canvas-mouse-routing';
-import { useRenderCtx } from '../hooks/use-render-ctx';
-import { useCanvasValidation } from '../hooks/use-canvas-validation';
-import { useComputingFlows } from '../hooks/use-computing-flows';
 import { useCanvasDimensions } from '../hooks/use-canvas-resize';
+import { useCanvasSelectors } from '../hooks/use-canvas-selectors';
+import { useCanvasSideEffects } from '../hooks/use-canvas-side-effects';
+import { useCanvasTraversal } from '../hooks/use-canvas-traversal';
+import { useCanvasValidation } from '../hooks/use-canvas-validation';
 import { useCanvasViewport } from '../hooks/use-canvas-viewport';
+import { useComputingFlows } from '../hooks/use-computing-flows';
+import { useConnectionDrawing } from '../hooks/use-connection-drawing';
+import { useContainerMove } from '../hooks/use-container-move';
+import { useContainerResize } from '../hooks/use-container-resize';
+import { useDragTargetHighlight } from '../hooks/use-drag-target-highlight';
+import { useGhostMode } from '../hooks/use-ghost-mode';
 import { usePinnedUserNode } from '../hooks/use-pinned-user-node';
 import { useRenameState } from '../hooks/use-rename-state';
-import { useCanvasSideEffects } from '../hooks/use-canvas-side-effects';
-import { useGhostMode } from '../hooks/use-ghost-mode';
-import { useCanvasDrop } from '../hooks/use-canvas-drop';
-import { useContainerResize } from '../hooks/use-container-resize';
-import { useContainerMove } from '../hooks/use-container-move';
-import { useDragTargetHighlight } from '../hooks/use-drag-target-highlight';
-import { useConnectionDrawing } from '../hooks/use-connection-drawing';
-import { useCanvasData } from '../hooks/use-canvas-data';
-import { useCanvasTraversal } from '../hooks/use-canvas-traversal';
-import { useCanvasHandlers } from '../hooks/use-canvas-handlers';
-import { useCanvasEffects } from '../hooks/use-canvas-effects';
-import { useCanvasSelectors } from '../hooks/use-canvas-selectors';
+import { useRenderCtx } from '../hooks/use-render-ctx';
+import { isContainerNode } from '../utils/node-classification';
+import { OrphanNodesProvider } from './nodes/_shared/orphan-context';
 import type { AppDispatch } from '../../../store';
 
 // rf-canv-1: re-export shim — the canonical home for these three types is
@@ -156,12 +158,12 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     edges,
     canvasNodes,
     visibleNodes,
-    foldedRemap,
+    foldedRemap: _foldedRemap,
     effectiveNodes,
     canvasConnections,
     canvasItems,
     nodeValidationMap,
-    nodeDepthMap,
+    nodeDepthMap: _nodeDepthMap,
     sortedNodes,
     portMap,
   } = useCanvasData({
@@ -175,8 +177,10 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   // rf-canv2-2: the three external traversal callbacks
   // (getDescendantIds, getAllDescendantIds, findContainerAtPosition) live in
   // `useCanvasTraversal`. Each consumer below threads them in as deps.
-  const { getDescendantIds, getAllDescendantIds, findContainerAtPosition } =
-    useCanvasTraversal({ visibleNodes, canvasNodes });
+  const { getDescendantIds, getAllDescendantIds, findContainerAtPosition } = useCanvasTraversal({
+    visibleNodes,
+    canvasNodes,
+  });
 
   // rf-canv-22: bundled side-effects — install inspector once,
   // updateInspectorState + inspectLayout on viewport/lod/nodes/edges,
@@ -212,8 +216,10 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   // (`setUserNodePos`) flows through to `<UserTrafficOverlay>` (rf-canv-15)
   // so SvgUserNode's drag handler can write the user-dragged top-left back
   // into local state without resetting the pinned center.
-  const { pinnedUserPos, setUserNodePos, userConnections, nodesWithUserNode } =
-    usePinnedUserNode(effectiveNodes, exposedServices);
+  const { pinnedUserPos, setUserNodePos, userConnections, nodesWithUserNode } = usePinnedUserNode(
+    effectiveNodes,
+    exposedServices,
+  );
 
   // rf-canv-25a: container-resize machinery — `recalculateAncestorBounds`,
   // `calculateMinimumContainerSize`, and `handleNodeResize` are owned by
@@ -254,8 +260,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   });
 
   // Inline rename state — extracted to useRenameState (rf-canv-20).
-  const { renamingNodeId, handleNodeDoubleClick, handleRenameCommit, handleRenameCancel } =
-    useRenameState();
+  const { renamingNodeId, handleNodeDoubleClick, handleRenameCommit, handleRenameCancel } = useRenameState();
 
   // rf-canv2-3: the nine event-handler callbacks plus the two pieces of
   // orchestrator-private state (`hoveredNodeId`, `connTooltip`) live in
@@ -332,6 +337,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   const {
     drawingConnection,
     connectionDragTargets,
+    rejection: connectionRejection,
     handleConnectionPortDown,
     handleConnectionMove,
     handleConnectionEnd,
@@ -378,6 +384,28 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     card,
   });
 
+  // Precompute the set of "orphan" block ids — non-container, non-log
+  // blocks with zero edges connected to them. Broadcast via
+  // OrphanNodesProvider so CardShell does an O(1) Set.has() lookup
+  // instead of every block taking its own Redux subscription.
+  const orphanNodeIds = useMemo(() => {
+    const connected = new Set<string>();
+    for (const e of edges) {
+      connected.add(e.source);
+      connected.add(e.target);
+    }
+    const result = new Set<string>();
+    for (const n of effectiveNodes) {
+      if (connected.has(n.id)) continue;
+      // Log / observability blocks ARE meant to be connected to a
+      // service — they're not display-only — so they belong in the
+      // orphan signal too. Only containers are excluded.
+      if (isContainerNode(n)) continue;
+      result.add(n.id);
+    }
+    return result;
+  }, [edges, effectiveNodes]);
+
   return (
     <div
       ref={containerRef}
@@ -404,40 +432,43 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             highlighted ConnectionLayer + GhostOverlay — lives in
             `./canvas-renderer/canvas-content`. Visual draw order, prop
             flow, and dep arrays are preserved verbatim. */}
-        <CanvasContent
-          viewport={viewport}
-          dimensions={dimensions}
-          canvasConnections={canvasConnections}
-          effectiveNodes={effectiveNodes}
-          portMap={portMap}
-          animatingEdges={animatingEdges}
-          pipelineNodeStatus={pipelineNodeStatus}
-          selectedNodes={selectedNodes}
-          selectedEdges={selectedEdges}
-          hoveredNodeId={hoveredNodeId}
-          lod={lod}
-          edgeStyle={edgeStyle}
-          handleConnectionHover={handleConnectionHover}
-          handleEdgeDelete={handleEdgeDelete}
-          handleEdgeSelect={handleEdgeSelect}
-          handleContextMenu={handleContextMenu}
-          sortedNodes={sortedNodes}
-          animatingNodes={animatingNodes}
-          shiftDraggingNodeIds={shiftDraggingNodeIds}
-          dragOverGroupId={dragOverGroupId}
-          renderCtx={renderCtx}
-          drawingConnection={drawingConnection}
-          connectionDragTargets={connectionDragTargets}
-          showVirtualUserNode={showVirtualUserNode}
-          userConnections={userConnections}
-          nodesWithUserNode={nodesWithUserNode}
-          pinnedUserPos={pinnedUserPos}
-          setUserNodePos={setUserNodePos}
-          ghosts={ghosts}
-          nodes={nodes}
-          onAcceptGhost={handleAcceptGhost}
-          onDismissGhost={handleDismissGhost}
-        />
+        <OrphanNodesProvider value={orphanNodeIds}>
+          <CanvasContent
+            viewport={viewport}
+            dimensions={dimensions}
+            canvasConnections={canvasConnections}
+            effectiveNodes={effectiveNodes}
+            portMap={portMap}
+            animatingEdges={animatingEdges}
+            pipelineNodeStatus={pipelineNodeStatus}
+            selectedNodes={selectedNodes}
+            selectedEdges={selectedEdges}
+            hoveredNodeId={hoveredNodeId}
+            lod={lod}
+            edgeStyle={edgeStyle}
+            handleConnectionHover={handleConnectionHover}
+            handleEdgeDelete={handleEdgeDelete}
+            handleEdgeSelect={handleEdgeSelect}
+            handleContextMenu={handleContextMenu}
+            sortedNodes={sortedNodes}
+            animatingNodes={animatingNodes}
+            shiftDraggingNodeIds={shiftDraggingNodeIds}
+            dragOverGroupId={dragOverGroupId}
+            renderCtx={renderCtx}
+            drawingConnection={drawingConnection}
+            connectionDragTargets={connectionDragTargets}
+            connectionRejection={connectionRejection}
+            showVirtualUserNode={showVirtualUserNode}
+            userConnections={userConnections}
+            nodesWithUserNode={nodesWithUserNode}
+            pinnedUserPos={pinnedUserPos}
+            setUserNodePos={setUserNodePos}
+            ghosts={ghosts}
+            nodes={nodes}
+            onAcceptGhost={handleAcceptGhost}
+            onDismissGhost={handleDismissGhost}
+          />
+        </OrphanNodesProvider>
       </svg>
 
       {/* Connection tooltip — follows mouse, rendered as HTML overlay */}

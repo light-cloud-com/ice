@@ -27,14 +27,10 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { t } from '../../../../i18n';
-import {
-  fetchEventsForNode,
-  type DeploymentEvent,
-  type DeployStep,
-} from '../../../../store/slices/pipeline-slice';
-import type { AppDispatch } from '../../../../store';
+import { fetchEventsForNode, type DeploymentEvent, type DeployStep } from '../../../../store/slices/pipeline-slice';
 import { formatAge } from '../../utils/format-age';
 import { Section } from '../fields';
+import type { AppDispatch } from '../../../../store';
 
 // ─── Repo Deploy List (grouped by service, expandable logs) ─────────────────
 

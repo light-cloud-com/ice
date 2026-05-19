@@ -154,11 +154,7 @@ describe('primaryOutput — gcp.cloudfunctions.function', () => {
 describe('primaryOutput — gcp.compute.globalForwardingRule', () => {
   it('uses Domain label when outputs.url AND outputs.domain are set', () => {
     expect(
-      primaryOutput(
-        'gcp.compute.globalForwardingRule',
-        { url: 'https://app', domain: 'app.example.com' },
-        'pid',
-      ),
+      primaryOutput('gcp.compute.globalForwardingRule', { url: 'https://app', domain: 'app.example.com' }, 'pid'),
     ).toEqual({
       label: 'Domain',
       value: 'https://app',
@@ -167,9 +163,7 @@ describe('primaryOutput — gcp.compute.globalForwardingRule', () => {
   });
 
   it('uses URL label when outputs.url is set but domain is empty', () => {
-    expect(
-      primaryOutput('gcp.compute.globalForwardingRule', { url: 'https://app' }, 'pid'),
-    ).toEqual({
+    expect(primaryOutput('gcp.compute.globalForwardingRule', { url: 'https://app' }, 'pid')).toEqual({
       label: 'URL',
       value: 'https://app',
       url: 'https://app',
@@ -177,9 +171,7 @@ describe('primaryOutput — gcp.compute.globalForwardingRule', () => {
   });
 
   it('uses IP label when only outputs.ip_address is set', () => {
-    expect(
-      primaryOutput('gcp.compute.globalForwardingRule', { ip_address: '1.2.3.4' }, 'pid'),
-    ).toEqual({
+    expect(primaryOutput('gcp.compute.globalForwardingRule', { ip_address: '1.2.3.4' }, 'pid')).toEqual({
       label: 'IP',
       value: '1.2.3.4',
       url: 'http://1.2.3.4',
@@ -187,9 +179,7 @@ describe('primaryOutput — gcp.compute.globalForwardingRule', () => {
   });
 
   it('falls back to IPAddress (capital A) when ip_address is absent', () => {
-    expect(
-      primaryOutput('gcp.compute.globalForwardingRule', { IPAddress: '5.6.7.8' }, 'pid'),
-    ).toEqual({
+    expect(primaryOutput('gcp.compute.globalForwardingRule', { IPAddress: '5.6.7.8' }, 'pid')).toEqual({
       label: 'IP',
       value: '5.6.7.8',
       url: 'http://5.6.7.8',
@@ -236,35 +226,29 @@ describe('primaryOutput — gcp.compute.backendBucket', () => {
 
 describe('primaryOutput — gcp.compute.managedSslCertificate', () => {
   it('prefixes label with status when outputs.status is set', () => {
-    expect(
-      primaryOutput(
-        'gcp.compute.managedSslCertificate',
-        { status: 'ACTIVE', domains: ['a.com'] },
-        'pid',
-      ),
-    ).toEqual({ label: 'Cert · ACTIVE', value: 'a.com' });
+    expect(primaryOutput('gcp.compute.managedSslCertificate', { status: 'ACTIVE', domains: ['a.com'] }, 'pid')).toEqual(
+      { label: 'Cert · ACTIVE', value: 'a.com' },
+    );
   });
 
   it('falls back to outputs.cert_status when status is missing', () => {
     expect(
-      primaryOutput(
-        'gcp.compute.managedSslCertificate',
-        { cert_status: 'PROVISIONING', domains: ['a.com'] },
-        'pid',
-      ),
+      primaryOutput('gcp.compute.managedSslCertificate', { cert_status: 'PROVISIONING', domains: ['a.com'] }, 'pid'),
     ).toEqual({ label: 'Cert · PROVISIONING', value: 'a.com' });
   });
 
   it('uses bare "Cert" label when neither status field is present', () => {
-    expect(
-      primaryOutput('gcp.compute.managedSslCertificate', { domains: ['x.com'] }, 'pid'),
-    ).toEqual({ label: 'Cert', value: 'x.com' });
+    expect(primaryOutput('gcp.compute.managedSslCertificate', { domains: ['x.com'] }, 'pid')).toEqual({
+      label: 'Cert',
+      value: 'x.com',
+    });
   });
 
   it('uses providerId when domains array is empty', () => {
-    expect(
-      primaryOutput('gcp.compute.managedSslCertificate', { domains: [] }, 'pid-fallback'),
-    ).toEqual({ label: 'Cert', value: 'pid-fallback' });
+    expect(primaryOutput('gcp.compute.managedSslCertificate', { domains: [] }, 'pid-fallback')).toEqual({
+      label: 'Cert',
+      value: 'pid-fallback',
+    });
   });
 
   it('uses "Managed SSL" string when no domain and no providerId', () => {
@@ -275,13 +259,9 @@ describe('primaryOutput — gcp.compute.managedSslCertificate', () => {
   });
 
   it('uses domains[0] verbatim when present', () => {
-    expect(
-      primaryOutput(
-        'gcp.compute.managedSslCertificate',
-        { domains: ['first.com', 'second.com'] },
-        'pid',
-      ),
-    ).toEqual({ label: 'Cert', value: 'first.com' });
+    expect(primaryOutput('gcp.compute.managedSslCertificate', { domains: ['first.com', 'second.com'] }, 'pid')).toEqual(
+      { label: 'Cert', value: 'first.com' },
+    );
   });
 });
 
@@ -339,15 +319,17 @@ describe('primaryOutput — gcp.compute.urlMap', () => {
 
 describe('primaryOutput — targetHttp(s)?Proxy', () => {
   it('returns the Proxy row for targetHttpsProxy with outputs.name', () => {
-    expect(
-      primaryOutput('gcp.compute.targetHttpsProxy', { name: 'p-https' }, 'pid'),
-    ).toEqual({ label: 'Proxy', value: 'p-https' });
+    expect(primaryOutput('gcp.compute.targetHttpsProxy', { name: 'p-https' }, 'pid')).toEqual({
+      label: 'Proxy',
+      value: 'p-https',
+    });
   });
 
   it('returns the Proxy row for targetHttpProxy with outputs.name', () => {
-    expect(
-      primaryOutput('gcp.compute.targetHttpProxy', { name: 'p-http' }, 'pid'),
-    ).toEqual({ label: 'Proxy', value: 'p-http' });
+    expect(primaryOutput('gcp.compute.targetHttpProxy', { name: 'p-http' }, 'pid')).toEqual({
+      label: 'Proxy',
+      value: 'p-http',
+    });
   });
 
   it('falls back to providerId for targetHttpProxy', () => {
@@ -370,11 +352,7 @@ describe('primaryOutput — targetHttp(s)?Proxy', () => {
 describe('primaryOutput — gcp.sql.databaseInstance', () => {
   it('prefers outputs.connection_name', () => {
     expect(
-      primaryOutput(
-        'gcp.sql.databaseInstance',
-        { connection_name: 'c-name', ip_address: '1.1.1.1' },
-        'pid',
-      ),
+      primaryOutput('gcp.sql.databaseInstance', { connection_name: 'c-name', ip_address: '1.1.1.1' }, 'pid'),
     ).toEqual({ label: 'Host', value: 'c-name' });
   });
 
@@ -427,9 +405,10 @@ describe('primaryOutput — gcp.firestore.database', () => {
 
 describe('primaryOutput — gcp.redis.instance', () => {
   it('returns host:port when port is present', () => {
-    expect(
-      primaryOutput('gcp.redis.instance', { host: '10.0.0.1', port: 6379 }, 'pid'),
-    ).toEqual({ label: 'Redis', value: '10.0.0.1:6379' });
+    expect(primaryOutput('gcp.redis.instance', { host: '10.0.0.1', port: 6379 }, 'pid')).toEqual({
+      label: 'Redis',
+      value: '10.0.0.1:6379',
+    });
   });
 
   it('returns host alone when port is missing or empty', () => {
@@ -451,9 +430,10 @@ describe('primaryOutput — gcp.redis.instance', () => {
   });
 
   it('accepts string port', () => {
-    expect(
-      primaryOutput('gcp.redis.instance', { host: '10.0.0.3', port: '6380' }, 'pid'),
-    ).toEqual({ label: 'Redis', value: '10.0.0.3:6380' });
+    expect(primaryOutput('gcp.redis.instance', { host: '10.0.0.3', port: '6380' }, 'pid')).toEqual({
+      label: 'Redis',
+      value: '10.0.0.3:6380',
+    });
   });
 });
 
@@ -500,9 +480,7 @@ describe('primaryOutput — gcp.secretmanager.secret', () => {
 
 describe('primaryOutput — gcp.apigateway.api', () => {
   it('uses outputs.default_hostname when present and prefixes https://', () => {
-    expect(
-      primaryOutput('gcp.apigateway.api', { default_hostname: 'gw.example.com' }, 'pid'),
-    ).toEqual({
+    expect(primaryOutput('gcp.apigateway.api', { default_hostname: 'gw.example.com' }, 'pid')).toEqual({
       label: 'API',
       value: 'gw.example.com',
       url: 'https://gw.example.com',
@@ -510,9 +488,7 @@ describe('primaryOutput — gcp.apigateway.api', () => {
   });
 
   it('falls back to outputs.url and preserves the http(s) prefix', () => {
-    expect(
-      primaryOutput('gcp.apigateway.api', { url: 'http://gw.example.com' }, 'pid'),
-    ).toEqual({
+    expect(primaryOutput('gcp.apigateway.api', { url: 'http://gw.example.com' }, 'pid')).toEqual({
       label: 'API',
       value: 'http://gw.example.com',
       url: 'http://gw.example.com',
@@ -520,9 +496,7 @@ describe('primaryOutput — gcp.apigateway.api', () => {
   });
 
   it('preserves a fully-qualified https:// url', () => {
-    expect(
-      primaryOutput('gcp.apigateway.api', { url: 'https://gw.example.com' }, 'pid'),
-    ).toEqual({
+    expect(primaryOutput('gcp.apigateway.api', { url: 'https://gw.example.com' }, 'pid')).toEqual({
       label: 'API',
       value: 'https://gw.example.com',
       url: 'https://gw.example.com',
@@ -567,13 +541,7 @@ describe('primaryOutput — gcp.firebase.hosting', () => {
   });
 
   it('falls back to default_url when no custom domain', () => {
-    expect(
-      primaryOutput(
-        'gcp.firebase.hosting',
-        { default_url: 'https://y.web.app' },
-        'pid',
-      ),
-    ).toEqual({
+    expect(primaryOutput('gcp.firebase.hosting', { default_url: 'https://y.web.app' }, 'pid')).toEqual({
       label: 'URL',
       value: 'https://y.web.app',
       url: 'https://y.web.app',
@@ -623,56 +591,20 @@ describe('gcpConsoleUrl (early returns)', () => {
 
 describe('gcpConsoleUrl — per-resource deep-link mapping', () => {
   it.each<[string, string]>([
-    [
-      'gcp.storage.bucket',
-      'https://console.cloud.google.com/storage/browser/the-id?project=the-prj',
-    ],
+    ['gcp.storage.bucket', 'https://console.cloud.google.com/storage/browser/the-id?project=the-prj'],
     ['gcp.run.service', 'https://console.cloud.google.com/run?project=the-prj'],
     ['gcp.run.job', 'https://console.cloud.google.com/run/jobs?project=the-prj'],
-    [
-      'gcp.cloudfunctions.function',
-      'https://console.cloud.google.com/functions/list?project=the-prj',
-    ],
-    [
-      'gcp.sql.databaseInstance',
-      'https://console.cloud.google.com/sql/instances?project=the-prj',
-    ],
-    [
-      'gcp.firestore.database',
-      'https://console.cloud.google.com/firestore/data?project=the-prj',
-    ],
-    [
-      'gcp.redis.instance',
-      'https://console.cloud.google.com/memorystore/redis/instances?project=the-prj',
-    ],
-    [
-      'gcp.pubsub.topic',
-      'https://console.cloud.google.com/cloudpubsub/topic/list?project=the-prj',
-    ],
-    [
-      'gcp.pubsub.subscription',
-      'https://console.cloud.google.com/cloudpubsub/subscription/list?project=the-prj',
-    ],
-    [
-      'gcp.secretmanager.secret',
-      'https://console.cloud.google.com/security/secret-manager?project=the-prj',
-    ],
-    [
-      'gcp.apigateway.api',
-      'https://console.cloud.google.com/api-gateway/apis?project=the-prj',
-    ],
-    [
-      'gcp.container.cluster',
-      'https://console.cloud.google.com/kubernetes/list/overview?project=the-prj',
-    ],
-    [
-      'gcp.bigquery.dataset',
-      'https://console.cloud.google.com/bigquery?project=the-prj',
-    ],
-    [
-      'gcp.logging.sink',
-      'https://console.cloud.google.com/logs/router?project=the-prj',
-    ],
+    ['gcp.cloudfunctions.function', 'https://console.cloud.google.com/functions/list?project=the-prj'],
+    ['gcp.sql.databaseInstance', 'https://console.cloud.google.com/sql/instances?project=the-prj'],
+    ['gcp.firestore.database', 'https://console.cloud.google.com/firestore/data?project=the-prj'],
+    ['gcp.redis.instance', 'https://console.cloud.google.com/memorystore/redis/instances?project=the-prj'],
+    ['gcp.pubsub.topic', 'https://console.cloud.google.com/cloudpubsub/topic/list?project=the-prj'],
+    ['gcp.pubsub.subscription', 'https://console.cloud.google.com/cloudpubsub/subscription/list?project=the-prj'],
+    ['gcp.secretmanager.secret', 'https://console.cloud.google.com/security/secret-manager?project=the-prj'],
+    ['gcp.apigateway.api', 'https://console.cloud.google.com/api-gateway/apis?project=the-prj'],
+    ['gcp.container.cluster', 'https://console.cloud.google.com/kubernetes/list/overview?project=the-prj'],
+    ['gcp.bigquery.dataset', 'https://console.cloud.google.com/bigquery?project=the-prj'],
+    ['gcp.logging.sink', 'https://console.cloud.google.com/logs/router?project=the-prj'],
   ])('returns the canonical URL for %s', (resourceType, expected) => {
     expect(gcpConsoleUrl(resourceType, 'the-id', 'the-prj')).toBe(expected);
   });

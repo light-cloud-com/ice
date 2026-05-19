@@ -290,9 +290,9 @@ describe('ComputeService.discover — error vs warning classification', () => {
     // subnetworks ACCESS_DENIED-no-message
     const c4 = makeClients();
     c4.subnetworks.list.mockRejectedValue({ code: 403 });
-    expect((await makeService(c4).discover()).warnings.find((w) => w.message.includes('subnetworks'))!.message).toContain(
-      'Access denied',
-    );
+    expect(
+      (await makeService(c4).discover()).warnings.find((w) => w.message.includes('subnetworks'))!.message,
+    ).toContain('Access denied');
     // subnetworks API_ERROR no message → String(err)
     const c5 = makeClients();
     c5.subnetworks.list.mockRejectedValue({});
@@ -482,7 +482,6 @@ describe('ComputeService — init_clients failure path', () => {
     class WeirdInitCompute extends ComputeService {
       // @ts-expect-error overriding private
       private async init_clients(): Promise<void> {
-        // eslint-disable-next-line no-throw-literal
         throw 'plain-string-thrown';
       }
     }
@@ -500,7 +499,6 @@ describe('ComputeService — init_clients failure path', () => {
     (globalThis as any).Function = function (...args: any[]): any {
       if (args.length === 2 && args[0] === 'moduleName' && args[1] === 'return import(moduleName)') {
         return async (_: string) => {
-          // eslint-disable-next-line no-throw-literal
           throw 'plain-thrown-non-error';
         };
       }

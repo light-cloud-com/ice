@@ -20,9 +20,8 @@
 
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-
-import { ProjectRow, type ProjectRowProps } from '../project-row';
 import { EnvironmentRow } from '../environment-row';
+import { ProjectRow, type ProjectRowProps } from '../project-row';
 import type { Environment, Project } from '../../../../store/slices/projects-slice';
 
 const ENV_PROD: Environment = {
@@ -96,9 +95,7 @@ function findAll(
   return out;
 }
 
-const collectText = (
-  el: React.ReactElement | string | number | boolean | null | undefined,
-): string => {
+const collectText = (el: React.ReactElement | string | number | boolean | null | undefined): string => {
   if (el == null || typeof el === 'boolean') return '';
   if (typeof el === 'string' || typeof el === 'number') return String(el);
   const children = (el as React.ReactElement).props?.children;
@@ -106,16 +103,14 @@ const collectText = (
   return arr.map((c) => collectText(c)).join('');
 };
 
-const classOf = (el: React.ReactElement): string =>
-  (el.props?.className as string | undefined) ?? '';
+const classOf = (el: React.ReactElement): string => (el.props?.className as string | undefined) ?? '';
 
 // The header-row div is the FIRST div child of the wrapper.
 const getHeaderRow = (tree: React.ReactElement): React.ReactElement => {
   const children = tree.props?.children;
   const arr = Array.isArray(children) ? children : [children];
   const div = arr.find(
-    (c): c is React.ReactElement =>
-      c != null && typeof c === 'object' && (c as React.ReactElement).type === 'div',
+    (c): c is React.ReactElement => c != null && typeof c === 'object' && (c as React.ReactElement).type === 'div',
   );
   if (!div) throw new Error('header div not found');
   return div;
@@ -198,9 +193,7 @@ describe('ProjectRow — expand chevron', () => {
     const tree = render({ onToggleExpanded });
     const button = findAll(tree, (el) => el.type === 'button' && classOf(el).includes('shrink-0 p-0'))[0];
     const stopPropagation = vi.fn();
-    (button.props.onClick as (e: React.MouseEvent) => void)(
-      { stopPropagation } as unknown as React.MouseEvent,
-    );
+    (button.props.onClick as (e: React.MouseEvent) => void)({ stopPropagation } as unknown as React.MouseEvent);
     expect(stopPropagation).toHaveBeenCalledTimes(1);
     expect(onToggleExpanded).toHaveBeenCalledWith('p1');
   });
@@ -271,8 +264,9 @@ describe('ProjectRow — edit mode', () => {
 
   it('hides the More button while editing', () => {
     const tree = render({ editingId: 'p1' });
-    const moreButtons = findAll(tree, (el) =>
-      el.type === 'button' && classOf(el).includes('opacity-0 group-hover:opacity-100'),
+    const moreButtons = findAll(
+      tree,
+      (el) => el.type === 'button' && classOf(el).includes('opacity-0 group-hover:opacity-100'),
     );
     expect(moreButtons).toHaveLength(0);
   });
@@ -375,8 +369,9 @@ describe('ProjectRow — header event wiring', () => {
   it('More button click calls onContextMenu and stopPropagation', () => {
     const onContextMenu = vi.fn();
     const tree = render({ onContextMenu });
-    const moreButton = findAll(tree, (el) =>
-      el.type === 'button' && classOf(el).includes('opacity-0 group-hover:opacity-100'),
+    const moreButton = findAll(
+      tree,
+      (el) => el.type === 'button' && classOf(el).includes('opacity-0 group-hover:opacity-100'),
     )[0];
     expect(moreButton).toBeDefined();
     const stopPropagation = vi.fn();

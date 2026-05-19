@@ -7,13 +7,13 @@
 
 import prisma from '@ice/db';
 import { emitDeployLog, emitPipelineUpdate } from '@ice/shared';
-import type { DeployLogEvent } from '@ice/types';
 import { Queue, Worker, type Job } from 'bullmq';
 import IORedis from 'ioredis';
 import { buildFromSource, cleanupBuild } from './build.service';
 import { applyDeployment } from './deploy.service';
 import { InMemoryQueue, InMemoryWorker } from './memory-queue';
 import { updateEventProgress, failEvent, type DeployStep } from './pipeline.service';
+import type { DeployLogEvent } from '@ice/types';
 
 /**
  * Emit a one-off log line on the deploy wire from outside an active deploy
@@ -268,10 +268,7 @@ async function processPipelineJob(data: any) {
         // deploy events, not only for manual apply. Without this the deploy
         // panel sits silent until `applyDeployment` starts minutes later.
         try {
-          emitBuildPhaseLog(
-            cardId,
-            `[build:${step}:${status}] ${stageLabel}${message ? ` — ${message}` : ''}`,
-          );
+          emitBuildPhaseLog(cardId, `[build:${step}:${status}] ${stageLabel}${message ? ` — ${message}` : ''}`);
         } catch {
           // Non-fatal — unified feed is a UX nicety.
         }

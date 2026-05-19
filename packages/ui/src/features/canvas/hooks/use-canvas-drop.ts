@@ -63,21 +63,16 @@
  * rf-canv-24.
  */
 
+import { isIceTypeEnabledForProvider } from '@ice/constants';
 import React, { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { isIceTypeEnabledForProvider } from '@ice/constants';
 import { getBlueprint, expandBlueprint } from '../../../config/blocks';
 import { canContain } from '../../../config/containment-rules';
-import {
-  addNodeToCard,
-  expandBlueprintToCard,
-  type CardNode,
-  type CardEdge,
-} from '../../../store/slices/cards-slice';
-import { setGhosts } from '../../../store/slices/ghost-slice';
-import { generateGhostSuggestions } from '../utils/ghost-suggestions';
-import { computeCompactNodeHeight, computeCompactNodeWidth } from '../components/nodes/compact-node';
 import { logDrop, logBlueprint } from '../../../shared/utils/debug-logger';
+import { addNodeToCard, expandBlueprintToCard, type CardNode, type CardEdge } from '../../../store/slices/cards-slice';
+import { setGhosts } from '../../../store/slices/ghost-slice';
+import { computeCompactNodeHeight, computeCompactNodeWidth } from '../components/nodes/compact-node';
+import { generateGhostSuggestions } from '../utils/ghost-suggestions';
 import type { AppDispatch, RootState } from '../../../store';
 import type { CanvasNode } from '../components/types';
 

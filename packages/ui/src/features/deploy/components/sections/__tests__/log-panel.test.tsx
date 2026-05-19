@@ -21,7 +21,6 @@
 
 import React from 'react';
 import { describe, it, expect } from 'vitest';
-
 import { LogPanel } from '../log-panel';
 
 // ─── Tree-walker (rf-pdpl-7/-8/-9 style) ────────────────────────────────────
@@ -33,12 +32,7 @@ import { LogPanel } from '../log-panel';
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -58,10 +52,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -79,15 +70,9 @@ const elementRef = (el: React.ReactElement): React.Ref<unknown> | null =>
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-const renderPanel = (
-  logs: string[],
-  logEndRef: React.RefObject<HTMLDivElement>,
-): React.ReactElement =>
+const renderPanel = (logs: string[], logEndRef: React.RefObject<HTMLDivElement>): React.ReactElement =>
   (
-    LogPanel as unknown as (props: {
-      logs: string[];
-      logEndRef: React.RefObject<HTMLDivElement>;
-    }) => React.ReactElement
+    LogPanel as unknown as (props: { logs: string[]; logEndRef: React.RefObject<HTMLDivElement> }) => React.ReactElement
   )({ logs, logEndRef });
 
 // Extract the outer `<div id="ice-deploy-log">` (the LogPanel root).
@@ -323,7 +308,7 @@ describe('LogPanel — trailing ref-div (auto-scroll anchor)', () => {
     expect(trailing.type).toBe('div');
   });
 
-  it('passes the logEndRef prop through to the trailing <div>\'s ref field', () => {
+  it("passes the logEndRef prop through to the trailing <div>'s ref field", () => {
     const ref = React.createRef<HTMLDivElement>();
     const tree = renderPanel(['solo'], ref);
     const flat = flattenChildren(findOuter(tree));
@@ -364,13 +349,9 @@ describe('LogPanel — trailing ref-div (auto-scroll anchor)', () => {
     expect(flat).toHaveLength(3);
     // First two are the log rows ("flex gap-2" className).
     expect((flat[0] as React.ReactElement).type).toBe('div');
-    expect(((flat[0] as React.ReactElement).props as { className: string }).className).toBe(
-      'flex gap-2',
-    );
+    expect(((flat[0] as React.ReactElement).props as { className: string }).className).toBe('flex gap-2');
     expect((flat[1] as React.ReactElement).type).toBe('div');
-    expect(((flat[1] as React.ReactElement).props as { className: string }).className).toBe(
-      'flex gap-2',
-    );
+    expect(((flat[1] as React.ReactElement).props as { className: string }).className).toBe('flex gap-2');
     // Last is the ref-div with no className.
     const trailing = flat[2] as React.ReactElement;
     expect(trailing.type).toBe('div');

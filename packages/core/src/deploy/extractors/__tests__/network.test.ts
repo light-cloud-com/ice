@@ -18,8 +18,8 @@
  *     here so any future arithmetic change shifts allocations on existing
  *     deployments and trips the test.
  */
-import { describe, it, expect } from 'vitest';
 import { createHash } from 'crypto';
+import { describe, it, expect } from 'vitest';
 import {
   extract_storage_bucket_properties,
   extract_pubsub_properties,
@@ -56,10 +56,7 @@ describe('extract_storage_bucket_properties', () => {
   });
 
   it('passes storageClass through and uses ?? on versioning so explicit false stays', () => {
-    const result = extract_storage_bucket_properties(
-      { storageClass: 'NEARLINE', versioning: false },
-      'us-central1',
-    );
+    const result = extract_storage_bucket_properties({ storageClass: 'NEARLINE', versioning: false }, 'us-central1');
     expect(result.storage_class).toBe('NEARLINE');
     expect(result.versioning).toBe(false);
   });
@@ -70,29 +67,20 @@ describe('extract_storage_bucket_properties', () => {
   });
 
   it('flips public_access and website_hosting when iceType is Compute.StaticSite', () => {
-    const result = extract_storage_bucket_properties(
-      { iceType: 'Compute.StaticSite' },
-      'us-central1',
-    );
+    const result = extract_storage_bucket_properties({ iceType: 'Compute.StaticSite' }, 'us-central1');
     expect(result.public_access).toBe(true);
     expect(result.website_hosting).toBe(true);
   });
 
   it('passes explicit public_access / website_hosting === true even when not StaticSite', () => {
-    const result = extract_storage_bucket_properties(
-      { public_access: true, website_hosting: true },
-      'us-central1',
-    );
+    const result = extract_storage_bucket_properties({ public_access: true, website_hosting: true }, 'us-central1');
     expect(result.public_access).toBe(true);
     expect(result.website_hosting).toBe(true);
   });
 
   it('keeps public_access false when only "truthy-but-not-true" is supplied', () => {
     // The check is === true, not just truthy.
-    const result = extract_storage_bucket_properties(
-      { public_access: 'yes' as unknown as boolean },
-      'us-central1',
-    );
+    const result = extract_storage_bucket_properties({ public_access: 'yes' as unknown as boolean }, 'us-central1');
     expect(result.public_access).toBe(false);
   });
 
@@ -106,10 +94,7 @@ describe('extract_storage_bucket_properties', () => {
   });
 
   it('always returns labels: {}', () => {
-    const result = extract_storage_bucket_properties(
-      { labels: { keep: 'me' } },
-      'us-central1',
-    );
+    const result = extract_storage_bucket_properties({ labels: { keep: 'me' } }, 'us-central1');
     expect(result.labels).toEqual({});
   });
 });
@@ -178,20 +163,14 @@ describe('extract_load_balancer_properties', () => {
   });
 
   it('honors an explicit HTTP protocol even when an SSL cert is present', () => {
-    const result = extract_load_balancer_properties(
-      { protocol: 'http', sslCertificate: 'cert-x' },
-      'us-central1',
-    );
+    const result = extract_load_balancer_properties({ protocol: 'http', sslCertificate: 'cert-x' }, 'us-central1');
     expect(result.protocol).toBe('HTTP');
     expect(result.port_range).toBe('80');
     expect(result.ssl_certificate).toBe('cert-x');
   });
 
   it('falls back to HTTPS when explicit protocol is unrecognized but cert is present', () => {
-    const result = extract_load_balancer_properties(
-      { protocol: 'tcp', sslCertificate: 'cert-y' },
-      'us-central1',
-    );
+    const result = extract_load_balancer_properties({ protocol: 'tcp', sslCertificate: 'cert-y' }, 'us-central1');
     expect(result.protocol).toBe('HTTPS');
     expect(result.port_range).toBe('443');
   });
@@ -232,38 +211,25 @@ describe('extract_vpc_properties', () => {
   });
 
   it('passes routing_mode and description through when strings', () => {
-    const result = extract_vpc_properties(
-      { routing_mode: 'REGIONAL', description: 'my vpc' },
-      'us-central1',
-    );
+    const result = extract_vpc_properties({ routing_mode: 'REGIONAL', description: 'my vpc' }, 'us-central1');
     expect(result.routing_mode).toBe('REGIONAL');
     expect(result.description).toBe('my vpc');
   });
 
   it('falls back to GLOBAL routing when routing_mode is not a string', () => {
-    const result = extract_vpc_properties(
-      { routing_mode: 42 as unknown as string },
-      'us-central1',
-    );
+    const result = extract_vpc_properties({ routing_mode: 42 as unknown as string }, 'us-central1');
     expect(result.routing_mode).toBe('GLOBAL');
   });
 
   it('drops description when not a string', () => {
-    const result = extract_vpc_properties(
-      { description: 99 as unknown as string },
-      'us-central1',
-    );
+    const result = extract_vpc_properties({ description: 99 as unknown as string }, 'us-central1');
     expect(result.description).toBeUndefined();
   });
 });
 
 describe('extract_subnet_properties (RISK #4 — hash-CIDR pin)', () => {
   it('returns the explicit ip_cidr_range when supplied (no hashing)', () => {
-    const result = extract_subnet_properties(
-      { ip_cidr_range: '10.50.0.0/24' },
-      'us-central1',
-      'node-1',
-    );
+    const result = extract_subnet_properties({ ip_cidr_range: '10.50.0.0/24' }, 'us-central1', 'node-1');
     expect(result.ip_cidr_range).toBe('10.50.0.0/24');
   });
 
@@ -318,20 +284,12 @@ describe('extract_subnet_properties (RISK #4 — hash-CIDR pin)', () => {
   });
 
   it('passes parent VPC name through when network is a string', () => {
-    const result = extract_subnet_properties(
-      { network: 'my-vpc' },
-      'us-central1',
-      'node-1',
-    );
+    const result = extract_subnet_properties({ network: 'my-vpc' }, 'us-central1', 'node-1');
     expect(result.network).toBe('my-vpc');
   });
 
   it('falls back to "default" when network is not a string', () => {
-    const result = extract_subnet_properties(
-      { network: 123 as unknown as string },
-      'us-central1',
-      'node-1',
-    );
+    const result = extract_subnet_properties({ network: 123 as unknown as string }, 'us-central1', 'node-1');
     expect(result.network).toBe('default');
   });
 
@@ -348,36 +306,20 @@ describe('extract_subnet_properties (RISK #4 — hash-CIDR pin)', () => {
     );
     expect(off.private_ip_google_access).toBe(false);
 
-    const on = extract_subnet_properties(
-      { private_ip_google_access: true },
-      'us-central1',
-      'node-1',
-    );
+    const on = extract_subnet_properties({ private_ip_google_access: true }, 'us-central1', 'node-1');
     expect(on.private_ip_google_access).toBe(true);
   });
 
   it('description passes through when string, drops otherwise', () => {
-    const yes = extract_subnet_properties(
-      { description: 'private subnet' },
-      'us-central1',
-      'node-1',
-    );
+    const yes = extract_subnet_properties({ description: 'private subnet' }, 'us-central1', 'node-1');
     expect(yes.description).toBe('private subnet');
 
-    const no = extract_subnet_properties(
-      { description: 42 as unknown as string },
-      'us-central1',
-      'node-1',
-    );
+    const no = extract_subnet_properties({ description: 42 as unknown as string }, 'us-central1', 'node-1');
     expect(no.description).toBeUndefined();
   });
 
   it('always returns labels: {}', () => {
-    const result = extract_subnet_properties(
-      { labels: { keep: 'me' } },
-      'us-central1',
-      'node-1',
-    );
+    const result = extract_subnet_properties({ labels: { keep: 'me' } }, 'us-central1', 'node-1');
     expect(result.labels).toEqual({});
   });
 });
@@ -399,32 +341,20 @@ describe('extract_cloud_armor_properties', () => {
   });
 
   it('falls back to [] when rules is not an array', () => {
-    const result = extract_cloud_armor_properties(
-      { rules: 'not-an-array' as unknown as unknown[] },
-      'us-central1',
-    );
+    const result = extract_cloud_armor_properties({ rules: 'not-an-array' as unknown as unknown[] }, 'us-central1');
     expect(result.rules).toEqual([]);
   });
 
   it('passes description through when a string, drops otherwise', () => {
-    const yes = extract_cloud_armor_properties(
-      { description: 'block bad bots' },
-      'us-central1',
-    );
+    const yes = extract_cloud_armor_properties({ description: 'block bad bots' }, 'us-central1');
     expect(yes.description).toBe('block bad bots');
 
-    const no = extract_cloud_armor_properties(
-      { description: 1 as unknown as string },
-      'us-central1',
-    );
+    const no = extract_cloud_armor_properties({ description: 1 as unknown as string }, 'us-central1');
     expect(no.description).toBeUndefined();
   });
 
   it('always returns labels: {}', () => {
-    const result = extract_cloud_armor_properties(
-      { labels: { keep: 'me' } },
-      'us-central1',
-    );
+    const result = extract_cloud_armor_properties({ labels: { keep: 'me' } }, 'us-central1');
     expect(result.labels).toEqual({});
   });
 });

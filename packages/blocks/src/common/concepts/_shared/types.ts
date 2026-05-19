@@ -106,7 +106,11 @@ export interface ExternalLink {
 export interface InfoContent {
   /** Overview tab — markdown string */
   overview: {
+    /** English markdown (default) */
     markdown: string;
+    /** Chinese markdown (optional). The info modal picks this when the
+     *  active locale is `zh`; falls back to `markdown` when omitted. */
+    markdownZh?: string;
   };
   /**
    * Compiles To tab — per-provider raw primitive breakdown.
@@ -120,6 +124,9 @@ export interface InfoContent {
   snippets?: Partial<Record<SnippetLanguage, string>>;
   /** External reference links (AWS/GCP/Azure docs, etc.) */
   links?: ExternalLink[];
+  /** Chinese-translated link labels, parallel to `links` by index. Modal
+   *  picks these when locale is `zh`; falls back to `links[i].label`. */
+  linksZh?: string[];
   /** Related concepts (iceTypes) to cross-link from the info modal */
   relatedConcepts?: string[];
 }

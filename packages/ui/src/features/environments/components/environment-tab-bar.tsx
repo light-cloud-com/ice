@@ -9,6 +9,10 @@
 import { Plus, Loader2, ArrowUpRight, Rocket } from 'lucide-react';
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { CreateEnvironmentModal } from './create-environment-modal';
+import { EnvironmentContextMenu } from './environment-context-menu';
+import { EnvironmentTabItem } from './environment-tab-item';
+import { RenameEnvironmentModal } from './rename-environment-modal';
 import { useTranslation } from '../../../i18n';
 import { getApi } from '../../../shared/api/api-adapter';
 import { setActiveCard, importToActiveCard, createCard } from '../../../store/slices/cards-slice';
@@ -21,10 +25,6 @@ import {
   type Environment,
 } from '../../../store/slices/environments-slice';
 import type { RootState, AppDispatch } from '../../../store';
-import { CreateEnvironmentModal } from './create-environment-modal';
-import { EnvironmentContextMenu } from './environment-context-menu';
-import { EnvironmentTabItem } from './environment-tab-item';
-import { RenameEnvironmentModal } from './rename-environment-modal';
 
 interface EnvironmentTabBarProps {
   projectId: string;
@@ -265,4 +265,3 @@ export const EnvironmentTabBar: React.FC<EnvironmentTabBarProps> = ({ projectId,
     </>
   );
 };
-

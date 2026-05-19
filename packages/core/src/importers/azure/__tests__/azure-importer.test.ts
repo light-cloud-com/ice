@@ -31,12 +31,7 @@ function install_dynamic_import_stub(registry: FakeImportRegistry): void {
   // The source builds a *new* Function on every call, so we can identify
   // the dynamic-import call by matching the body text.
   const stub = function (...args: unknown[]) {
-    if (
-      args.length === 2 &&
-      args[0] === 'm' &&
-      typeof args[1] === 'string' &&
-      args[1].includes('return import')
-    ) {
+    if (args.length === 2 && args[0] === 'm' && typeof args[1] === 'string' && args[1].includes('return import')) {
       // Return a function that resolves modules from the registry.
       return (module_name: string) => {
         const mod = (registry as Record<string, unknown>)[module_name];
@@ -47,10 +42,7 @@ function install_dynamic_import_stub(registry: FakeImportRegistry): void {
       };
     }
     // Fall through to the real Function constructor.
-    return (original_function as unknown as (...a: unknown[]) => unknown).apply(
-      original_function,
-      args,
-    );
+    return (original_function as unknown as (...a: unknown[]) => unknown).apply(original_function, args);
   };
   // The arms-length cast is needed because Function has both a constructor
   // and a callable signature.
@@ -64,9 +56,7 @@ function restore_dynamic_import_stub(): void {
 // Standard fake SDK: a credential class + a graph client whose `resources`
 // method returns a single page of fake data, callable enough times to
 // terminate pagination.
-function build_default_fake_sdk(
-  resources_response: { data?: unknown[]; skipToken?: string },
-): FakeImportRegistry {
+function build_default_fake_sdk(resources_response: { data?: unknown[]; skipToken?: string }): FakeImportRegistry {
   return {
     '@azure/identity': {
       DefaultAzureCredential: class {
@@ -471,18 +461,10 @@ describe('import_azure (init_azure_sdk error variants)', () => {
     // message inherits it — and classifyAzureError then returns a reauth
     // action. This exercises the action-truthy branch in the outer catch.
     const stub = function (...args: unknown[]) {
-      if (
-        args.length === 2 &&
-        args[0] === 'm' &&
-        typeof args[1] === 'string' &&
-        args[1].includes('return import')
-      ) {
+      if (args.length === 2 && args[0] === 'm' && typeof args[1] === 'string' && args[1].includes('return import')) {
         return () => Promise.reject(new Error('AADSTS50076: token has expired'));
       }
-      return (original_function as unknown as (...a: unknown[]) => unknown).apply(
-        original_function,
-        args,
-      );
+      return (original_function as unknown as (...a: unknown[]) => unknown).apply(original_function, args);
     };
     (globalThis as { Function: unknown }).Function = stub;
 
@@ -495,22 +477,14 @@ describe('import_azure (init_azure_sdk error variants)', () => {
   it('serializes a non-Error throw via String() in the SDK init error message', async () => {
     // Throw a non-Error literal to exercise the String(error) branch on line 264.
     const stub = function (...args: unknown[]) {
-      if (
-        args.length === 2 &&
-        args[0] === 'm' &&
-        typeof args[1] === 'string' &&
-        args[1].includes('return import')
-      ) {
+      if (args.length === 2 && args[0] === 'm' && typeof args[1] === 'string' && args[1].includes('return import')) {
         // The init code awaits the function we return — throw a string here so the
         // thrown value is `'opaque-sdk-failure'` rather than an Error instance.
         return () => {
           throw 'opaque-sdk-failure';
         };
       }
-      return (original_function as unknown as (...a: unknown[]) => unknown).apply(
-        original_function,
-        args,
-      );
+      return (original_function as unknown as (...a: unknown[]) => unknown).apply(original_function, args);
     };
     (globalThis as { Function: unknown }).Function = stub;
 
@@ -835,9 +809,7 @@ describe('import_azure (dependency inference)', () => {
 // azure_result_to_graph: pure conversion
 // =============================================================================
 
-function make_imported_resource(
-  overrides: Partial<AzureImportedResource> = {},
-): AzureImportedResource {
+function make_imported_resource(overrides: Partial<AzureImportedResource> = {}): AzureImportedResource {
   return {
     azure_id: '/subscriptions/sub-1/resourceGroups/rg/providers/Microsoft.Web/sites/r',
     azure_type: 'Microsoft.Web/sites',
@@ -886,9 +858,7 @@ describe('azure_result_to_graph', () => {
   });
 
   it('encodes scanned subscriptions in the graph description', () => {
-    const graph = azure_result_to_graph(
-      make_result([], { subscriptions: ['sub-1', 'sub-2'] }),
-    );
+    const graph = azure_result_to_graph(make_result([], { subscriptions: ['sub-1', 'sub-2'] }));
     expect(graph.metadata.description).toContain('sub-1, sub-2');
   });
 
@@ -902,9 +872,7 @@ describe('azure_result_to_graph', () => {
     expect(graph.nodes.size).toBe(1);
     const node = Array.from(graph.nodes.values())[0]!;
     expect(node.type).toBe('azure.web.app');
-    expect(node.properties._azure_id).toBe(
-      '/subscriptions/sub-1/resourceGroups/rg/providers/Microsoft.Web/sites/r',
-    );
+    expect(node.properties._azure_id).toBe('/subscriptions/sub-1/resourceGroups/rg/providers/Microsoft.Web/sites/r');
     expect(node.properties._azure_type).toBe('Microsoft.Web/sites');
   });
 
@@ -931,9 +899,7 @@ describe('azure_result_to_graph', () => {
 
   it('Azure-canonical labels are overwritten by tags with the same key', () => {
     // tags spread last in the source — tag wins on collision
-    const graph = azure_result_to_graph(
-      make_result([make_imported_resource({ tags: { location: 'fake-region' } })]),
-    );
+    const graph = azure_result_to_graph(make_result([make_imported_resource({ tags: { location: 'fake-region' } })]));
     const node = Array.from(graph.nodes.values())[0]!;
     expect(node.metadata.labels.location).toBe('fake-region');
   });

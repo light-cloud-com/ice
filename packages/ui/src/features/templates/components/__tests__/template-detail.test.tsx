@@ -69,6 +69,18 @@ vi.mock('../../../../assets/icons/brand-registry', () => ({
   getBrandIcon: () => null,
 }));
 
+// `getEnabledProvidersForTemplate` calls `getBlueprint` per (block, provider)
+// against live PROVIDER_FLAGS, so disabled providers drop out (GCP-only by
+// default). These tests assert on the full aws/gcp section content — stub
+// the helper to return template.providers verbatim.
+vi.mock('@ice/templates', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    getEnabledProvidersForTemplate: (tpl: { providers?: string[] }) => tpl.providers ?? [],
+  };
+});
+
 import { TemplateDetail, type TemplateDetailProps } from '../template-detail';
 import type { ComposedTemplate } from '../../../../config/templates';
 
@@ -100,10 +112,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -446,7 +455,7 @@ describe('TemplateDetail — provider cost comparison', () => {
     expect(text).toContain('current');
   });
 
-  it("renders +/- delta% with emerald palette for negative delta and red for positive", () => {
+  it('renders +/- delta% with emerald palette for negative delta and red for positive', () => {
     mocks.compareProviderCosts.mockReturnValue([
       { provider: 'aws', label: 'AWS', totalMonthlyCost: 100, delta: 0, deltaPercent: 0 },
       { provider: 'gcp', label: 'GCP', totalMonthlyCost: 80, delta: -20, deltaPercent: -20 },
@@ -500,7 +509,7 @@ describe('TemplateDetail — provider cost comparison', () => {
     expect(fontMonoDeltas.length).toBe(0);
   });
 
-  it("falls back to [] when expandComposedTemplate throws (try/catch path)", () => {
+  it('falls back to [] when expandComposedTemplate throws (try/catch path)', () => {
     mocks.expandComposedTemplate.mockImplementation(() => {
       throw new Error('boom');
     });
@@ -615,7 +624,14 @@ describe('TemplateDetail — resources', () => {
     const tree = render({
       template: makeTemplate({
         groups: [
-          { subtype: 'Frontend', label: 'Frontend', position: { x: 0, y: 0 }, width: 100, height: 100, blockIndices: [0] },
+          {
+            subtype: 'Frontend',
+            label: 'Frontend',
+            position: { x: 0, y: 0 },
+            width: 100,
+            height: 100,
+            blockIndices: [0],
+          },
         ],
       }),
       onBack: vi.fn(),
@@ -639,8 +655,18 @@ describe('TemplateDetail — environments', () => {
     const tree = render({
       template: makeTemplate({
         environmentPresets: [
-          { type: 'production', name: 'prod', region: 'us-east-1', securityLevel: 'standard' as ComposedTemplate['securityLevel'] },
-          { type: 'staging', name: 'stage', region: 'us-west-2', securityLevel: 'standard' as ComposedTemplate['securityLevel'] },
+          {
+            type: 'production',
+            name: 'prod',
+            region: 'us-east-1',
+            securityLevel: 'standard' as ComposedTemplate['securityLevel'],
+          },
+          {
+            type: 'staging',
+            name: 'stage',
+            region: 'us-west-2',
+            securityLevel: 'standard' as ComposedTemplate['securityLevel'],
+          },
         ],
       }),
       onBack: vi.fn(),
@@ -728,7 +754,7 @@ describe('TemplateDetail — Use Template CTA', () => {
     expect(text).toContain('wizard.createButton');
   });
 
-  it("renders the Plus icon next to the CTA label", () => {
+  it('renders the Plus icon next to the CTA label', () => {
     const tree = render({ template: makeTemplate(), onBack: vi.fn(), onUse: vi.fn() });
     const fns = (n: React.ReactNode) => {
       const out: string[] = [];
@@ -741,7 +767,7 @@ describe('TemplateDetail — Use Template CTA', () => {
     expect(fns(tree)).toContain('Plus');
   });
 
-  it("CTA button onClick fires onUse(template)", () => {
+  it('CTA button onClick fires onUse(template)', () => {
     const onUse = vi.fn();
     const tpl = makeTemplate();
     const tree = render({ template: tpl, onBack: vi.fn(), onUse });

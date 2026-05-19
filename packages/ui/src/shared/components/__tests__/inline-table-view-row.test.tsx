@@ -139,7 +139,10 @@ const baseRow = (overrides: Partial<TableRowData> = {}): TableRowData => ({
   ...overrides,
 });
 
-const baseProps = (data: Partial<TableRowData> = {}, opts: Partial<{ density: 'compact' | 'comfortable'; isSelected: boolean; isExpanded: boolean }> = {}) => ({
+const baseProps = (
+  data: Partial<TableRowData> = {},
+  opts: Partial<{ density: 'compact' | 'comfortable'; isSelected: boolean; isExpanded: boolean }> = {},
+) => ({
   row: baseRow(data),
   density: opts.density ?? 'compact',
   isSelected: opts.isSelected ?? false,
@@ -153,8 +156,7 @@ const baseProps = (data: Partial<TableRowData> = {}, opts: Partial<{ density: 'c
   onDelete: vi.fn(),
 });
 
-const render = (props: ReturnType<typeof baseProps>) =>
-  (InlineTableRow as (p: unknown) => unknown)(props);
+const render = (props: ReturnType<typeof baseProps>) => (InlineTableRow as (p: unknown) => unknown)(props);
 
 beforeEach(() => {
   mocks.brandIcon = null;
@@ -320,10 +322,7 @@ describe('InlineTableRow — provider cell', () => {
   it('shows the brand icon image when getBrandIcon returns a url', () => {
     mocks.brandIcon = { url: 'https://example/gcp.svg' };
     const tree = render(baseProps({ provider: 'gcp' }));
-    const img = findFirst(
-      tree,
-      (el) => el.type === 'img' && el.props.src === 'https://example/gcp.svg',
-    );
+    const img = findFirst(tree, (el) => el.type === 'img' && el.props.src === 'https://example/gcp.svg');
     expect(img).toBeDefined();
   });
 
@@ -338,10 +337,7 @@ describe('InlineTableRow — provider cell', () => {
 describe('InlineTableRow — id cell', () => {
   it('renders a copy button when providerId is non-empty', () => {
     const tree = render(baseProps({ providerId: 'svc-XYZ' }));
-    const copyTxt = findFirst(
-      tree,
-      (el) => el.type === 'span' && el.props.children === 'svc-XYZ',
-    );
+    const copyTxt = findFirst(tree, (el) => el.type === 'span' && el.props.children === 'svc-XYZ');
     expect(copyTxt).toBeDefined();
   });
 
@@ -369,15 +365,13 @@ describe('InlineTableRow — id cell', () => {
     const idBtn = findFirst(
       tree,
       (el) =>
-        el.type === 'button' &&
-        typeof el.props.title === 'string' &&
-        (el.props.title as string).startsWith('svc-9 '),
+        el.type === 'button' && typeof el.props.title === 'string' && (el.props.title as string).startsWith('svc-9 '),
     )!;
     const fakeEvent = { stopPropagation: vi.fn() };
     await (idBtn.props.onClick as (e: { stopPropagation: () => void }) => Promise<void>)(fakeEvent);
     expect(fakeEvent.stopPropagation).toHaveBeenCalled();
-    const writeText = (navigator as unknown as { clipboard: { writeText: ReturnType<typeof vi.fn> } })
-      .clipboard.writeText;
+    const writeText = (navigator as unknown as { clipboard: { writeText: ReturnType<typeof vi.fn> } }).clipboard
+      .writeText;
     expect(writeText).toHaveBeenCalledWith('svc-9');
   });
 });
@@ -415,9 +409,7 @@ describe('InlineTableRow — endpoint buttons', () => {
     const tree = render(baseProps({ endpoints: [ep('live', 'https://app/')] }));
     const openBtn = findFirst(
       tree,
-      (el) =>
-        el.type === 'button' &&
-        el.props['aria-label'] === 'Open live: live label',
+      (el) => el.type === 'button' && el.props['aria-label'] === 'Open live: live label',
     )!;
     const fakeEvent = { stopPropagation: vi.fn() };
     (openBtn.props.onClick as (e: { stopPropagation: () => void }) => void)(fakeEvent);
@@ -428,14 +420,11 @@ describe('InlineTableRow — endpoint buttons', () => {
 
   it('copies the endpoint url to the clipboard when the copy sub-button is clicked', async () => {
     const tree = render(baseProps({ endpoints: [ep('repo', 'git://x')] }));
-    const copyBtn = findFirst(
-      tree,
-      (el) => el.type === 'button' && el.props['aria-label'] === 'Copy repo URL',
-    )!;
+    const copyBtn = findFirst(tree, (el) => el.type === 'button' && el.props['aria-label'] === 'Copy repo URL')!;
     const fakeEvent = { stopPropagation: vi.fn() };
     await (copyBtn.props.onClick as (e: { stopPropagation: () => void }) => Promise<void>)(fakeEvent);
-    const writeText = (navigator as unknown as { clipboard: { writeText: ReturnType<typeof vi.fn> } })
-      .clipboard.writeText;
+    const writeText = (navigator as unknown as { clipboard: { writeText: ReturnType<typeof vi.fn> } }).clipboard
+      .writeText;
     expect(writeText).toHaveBeenCalledWith('git://x');
   });
 });
@@ -473,19 +462,13 @@ describe('InlineTableRow — status pill', () => {
 describe('InlineTableRow — actions menu', () => {
   it('renders a "menu" button labelled with the i18n key', () => {
     const tree = render(baseProps());
-    const menuBtn = findFirst(
-      tree,
-      (el) => el.type === 'button' && el.props['aria-label'] === 'table.actions.menu',
-    );
+    const menuBtn = findFirst(tree, (el) => el.type === 'button' && el.props['aria-label'] === 'table.actions.menu');
     expect(menuBtn).toBeDefined();
   });
 
   it('toggles the open state when the menu button is clicked (stopPropagation)', () => {
     const tree = render(baseProps());
-    const menuBtn = findFirst(
-      tree,
-      (el) => el.type === 'button' && el.props['aria-label'] === 'table.actions.menu',
-    )!;
+    const menuBtn = findFirst(tree, (el) => el.type === 'button' && el.props['aria-label'] === 'table.actions.menu')!;
     const fakeEvent = { stopPropagation: vi.fn() };
     (menuBtn.props.onClick as (e: { stopPropagation: () => void }) => void)(fakeEvent);
     expect(fakeEvent.stopPropagation).toHaveBeenCalled();
@@ -514,22 +497,10 @@ describe('InlineTableRow — actions menu', () => {
       tree,
       (el) => el.type === 'button' && hasChildText(el, 'table.actions.openProperties'),
     );
-    const reveal = findFirst(
-      tree,
-      (el) => el.type === 'button' && hasChildText(el, 'table.actions.revealOnCanvas'),
-    );
-    const copyId = findFirst(
-      tree,
-      (el) => el.type === 'button' && hasChildText(el, 'table.actions.copyId'),
-    );
-    const copyName = findFirst(
-      tree,
-      (el) => el.type === 'button' && hasChildText(el, 'table.actions.copyName'),
-    );
-    const del = findFirst(
-      tree,
-      (el) => el.type === 'button' && hasChildText(el, 'table.actions.delete'),
-    );
+    const reveal = findFirst(tree, (el) => el.type === 'button' && hasChildText(el, 'table.actions.revealOnCanvas'));
+    const copyId = findFirst(tree, (el) => el.type === 'button' && hasChildText(el, 'table.actions.copyId'));
+    const copyName = findFirst(tree, (el) => el.type === 'button' && hasChildText(el, 'table.actions.copyName'));
+    const del = findFirst(tree, (el) => el.type === 'button' && hasChildText(el, 'table.actions.delete'));
     expect(openProperties).toBeDefined();
     expect(reveal).toBeDefined();
     expect(copyId).toBeDefined();
@@ -559,9 +530,7 @@ describe('InlineTableRow — actions menu', () => {
   });
 
   it('treats domain endpoint as live for the openInBrowser item', () => {
-    const tree = renderWithMenuOpen(
-      baseProps({ endpoints: [{ kind: 'domain', url: 'https://app/', label: 'd' }] }),
-    );
+    const tree = renderWithMenuOpen(baseProps({ endpoints: [{ kind: 'domain', url: 'https://app/', label: 'd' }] }));
     expect(
       findFirst(tree, (el) => el.type === 'button' && hasChildText(el, 'table.actions.openInBrowser')),
     ).toBeDefined();
@@ -583,10 +552,7 @@ describe('InlineTableRow — actions menu', () => {
   it('clicking the openProperties item invokes the prop and stops propagation', () => {
     const props = baseProps();
     const tree = renderWithMenuOpen(props);
-    const item = findFirst(
-      tree,
-      (el) => el.type === 'button' && hasChildText(el, 'table.actions.openProperties'),
-    )!;
+    const item = findFirst(tree, (el) => el.type === 'button' && hasChildText(el, 'table.actions.openProperties'))!;
     const fakeEvent = { stopPropagation: vi.fn() };
     (item.props.onClick as (e: { stopPropagation: () => void }) => void)(fakeEvent);
     expect(fakeEvent.stopPropagation).toHaveBeenCalled();
@@ -596,10 +562,7 @@ describe('InlineTableRow — actions menu', () => {
   it('clicking the revealOnCanvas item invokes the prop', () => {
     const props = baseProps();
     const tree = renderWithMenuOpen(props);
-    const item = findFirst(
-      tree,
-      (el) => el.type === 'button' && hasChildText(el, 'table.actions.revealOnCanvas'),
-    )!;
+    const item = findFirst(tree, (el) => el.type === 'button' && hasChildText(el, 'table.actions.revealOnCanvas'))!;
     (item.props.onClick as (e: { stopPropagation: () => void }) => void)({ stopPropagation: vi.fn() });
     expect(props.onRevealOnCanvas).toHaveBeenCalled();
   });
@@ -607,10 +570,7 @@ describe('InlineTableRow — actions menu', () => {
   it('clicking the copyId item invokes the prop', () => {
     const props = baseProps();
     const tree = renderWithMenuOpen(props);
-    const item = findFirst(
-      tree,
-      (el) => el.type === 'button' && hasChildText(el, 'table.actions.copyId'),
-    )!;
+    const item = findFirst(tree, (el) => el.type === 'button' && hasChildText(el, 'table.actions.copyId'))!;
     (item.props.onClick as (e: { stopPropagation: () => void }) => void)({ stopPropagation: vi.fn() });
     expect(props.onCopyId).toHaveBeenCalled();
   });
@@ -618,10 +578,7 @@ describe('InlineTableRow — actions menu', () => {
   it('clicking the copyName item invokes the prop', () => {
     const props = baseProps();
     const tree = renderWithMenuOpen(props);
-    const item = findFirst(
-      tree,
-      (el) => el.type === 'button' && hasChildText(el, 'table.actions.copyName'),
-    )!;
+    const item = findFirst(tree, (el) => el.type === 'button' && hasChildText(el, 'table.actions.copyName'))!;
     (item.props.onClick as (e: { stopPropagation: () => void }) => void)({ stopPropagation: vi.fn() });
     expect(props.onCopyName).toHaveBeenCalled();
   });
@@ -629,35 +586,22 @@ describe('InlineTableRow — actions menu', () => {
   it('clicking the delete item invokes the prop', () => {
     const props = baseProps();
     const tree = renderWithMenuOpen(props);
-    const item = findFirst(
-      tree,
-      (el) => el.type === 'button' && hasChildText(el, 'table.actions.delete'),
-    )!;
+    const item = findFirst(tree, (el) => el.type === 'button' && hasChildText(el, 'table.actions.delete'))!;
     (item.props.onClick as (e: { stopPropagation: () => void }) => void)({ stopPropagation: vi.fn() });
     expect(props.onDelete).toHaveBeenCalled();
   });
 
   it('clicking the openInBrowser item opens the live url', () => {
-    const tree = renderWithMenuOpen(
-      baseProps({ endpoints: [{ kind: 'live', url: 'https://live/', label: 'l' }] }),
-    );
-    const item = findFirst(
-      tree,
-      (el) => el.type === 'button' && hasChildText(el, 'table.actions.openInBrowser'),
-    )!;
+    const tree = renderWithMenuOpen(baseProps({ endpoints: [{ kind: 'live', url: 'https://live/', label: 'l' }] }));
+    const item = findFirst(tree, (el) => el.type === 'button' && hasChildText(el, 'table.actions.openInBrowser'))!;
     (item.props.onClick as (e: { stopPropagation: () => void }) => void)({ stopPropagation: vi.fn() });
     const open = (window as unknown as { open: ReturnType<typeof vi.fn> }).open;
     expect(open).toHaveBeenCalledWith('https://live/', '_blank', 'noopener,noreferrer');
   });
 
   it('clicking the openInGithub item opens the repo url', () => {
-    const tree = renderWithMenuOpen(
-      baseProps({ endpoints: [{ kind: 'repo', url: 'https://repo/', label: 'r' }] }),
-    );
-    const item = findFirst(
-      tree,
-      (el) => el.type === 'button' && hasChildText(el, 'table.actions.openInGithub'),
-    )!;
+    const tree = renderWithMenuOpen(baseProps({ endpoints: [{ kind: 'repo', url: 'https://repo/', label: 'r' }] }));
+    const item = findFirst(tree, (el) => el.type === 'button' && hasChildText(el, 'table.actions.openInGithub'))!;
     (item.props.onClick as (e: { stopPropagation: () => void }) => void)({ stopPropagation: vi.fn() });
     const open = (window as unknown as { open: ReturnType<typeof vi.fn> }).open;
     expect(open).toHaveBeenCalledWith('https://repo/', '_blank', 'noopener,noreferrer');
@@ -667,10 +611,7 @@ describe('InlineTableRow — actions menu', () => {
     const tree = renderWithMenuOpen(
       baseProps({ endpoints: [{ kind: 'console', url: 'https://console/', label: 'c' }] }),
     );
-    const item = findFirst(
-      tree,
-      (el) => el.type === 'button' && hasChildText(el, 'table.actions.openInConsole'),
-    )!;
+    const item = findFirst(tree, (el) => el.type === 'button' && hasChildText(el, 'table.actions.openInConsole'))!;
     (item.props.onClick as (e: { stopPropagation: () => void }) => void)({ stopPropagation: vi.fn() });
     const open = (window as unknown as { open: ReturnType<typeof vi.fn> }).open;
     expect(open).toHaveBeenCalledWith('https://console/', '_blank', 'noopener,noreferrer');
@@ -682,8 +623,7 @@ describe('InlineTableRow — actions menu', () => {
     mocks.effects = [];
     for (const _ of walk(tree)) void _;
     for (const fx of mocks.effects) fx();
-    const addEvt = (document as unknown as { addEventListener: ReturnType<typeof vi.fn> })
-      .addEventListener;
+    const addEvt = (document as unknown as { addEventListener: ReturnType<typeof vi.fn> }).addEventListener;
     expect(addEvt).toHaveBeenCalledWith('click', expect.any(Function));
   });
 
@@ -693,8 +633,7 @@ describe('InlineTableRow — actions menu', () => {
     for (const _ of walk(tree)) void _;
     let cleanup: unknown = undefined;
     for (const fx of mocks.effects) cleanup = fx();
-    const addEvt = (document as unknown as { addEventListener: ReturnType<typeof vi.fn> })
-      .addEventListener;
+    const addEvt = (document as unknown as { addEventListener: ReturnType<typeof vi.fn> }).addEventListener;
     expect(addEvt).not.toHaveBeenCalled();
     expect(cleanup).toBeUndefined();
   });
@@ -710,8 +649,7 @@ describe('InlineTableRow — actions menu', () => {
     }
     expect(typeof cleanup).toBe('function');
     cleanup!();
-    const removeEvt = (document as unknown as { removeEventListener: ReturnType<typeof vi.fn> })
-      .removeEventListener;
+    const removeEvt = (document as unknown as { removeEventListener: ReturnType<typeof vi.fn> }).removeEventListener;
     expect(removeEvt).toHaveBeenCalledWith('click', expect.any(Function));
   });
 
@@ -720,9 +658,11 @@ describe('InlineTableRow — actions menu', () => {
     mocks.effects = [];
     for (const _ of walk(tree)) void _;
     let docHandler: (() => void) | undefined;
-    const addEvt = (document as unknown as {
-      addEventListener: (evt: string, h: () => void) => void;
-    }).addEventListener as unknown as ReturnType<typeof vi.fn>;
+    const addEvt = (
+      document as unknown as {
+        addEventListener: (evt: string, h: () => void) => void;
+      }
+    ).addEventListener as unknown as ReturnType<typeof vi.fn>;
     for (const fx of mocks.effects) fx();
     // Inspect call args
     for (const call of addEvt.mock.calls) {
@@ -751,10 +691,7 @@ describe('InlineTableRow — copied feedback', () => {
         endpoints: [{ kind: 'live', url: 'https://x/', label: 'live' }],
       }),
     );
-    const tip = findFirst(
-      tree,
-      (el) => el.type === 'span' && el.props.children === 'table.endpoints.copied',
-    );
+    const tip = findFirst(tree, (el) => el.type === 'span' && el.props.children === 'table.endpoints.copied');
     expect(tip).toBeDefined();
   });
 
@@ -763,10 +700,7 @@ describe('InlineTableRow — copied feedback', () => {
     mocks.cycleLen = 2;
     mocks.useStateOverrides = { 0: true };
     const tree = render(baseProps({ endpoints: [], providerId: 'svc-X' }));
-    const txt = findFirst(
-      tree,
-      (el) => el.type === 'span' && el.props.children === 'table.endpoints.copied',
-    );
+    const txt = findFirst(tree, (el) => el.type === 'span' && el.props.children === 'table.endpoints.copied');
     expect(txt).toBeDefined();
   });
 });
@@ -786,13 +720,8 @@ describe('InlineTableRow — expanded detail', () => {
   });
 
   it('shows the empty-settings copy when expanded with no chips and no endpoints', () => {
-    const tree = render(
-      baseProps({ endpoints: [] }, { isExpanded: true }),
-    );
-    const empty = findFirst(
-      tree,
-      (el) => el.type === 'span' && el.props.children === 'table.expand.noSettings',
-    );
+    const tree = render(baseProps({ endpoints: [] }, { isExpanded: true }));
+    const empty = findFirst(tree, (el) => el.type === 'span' && el.props.children === 'table.expand.noSettings');
     expect(empty).toBeDefined();
   });
 
@@ -815,10 +744,7 @@ describe('InlineTableRow — expanded detail', () => {
       ),
     );
     // Chip key = 'framework', value = 'next'.
-    const chipKey = findFirst(
-      tree,
-      (el) => el.type === 'span' && el.props.children === 'framework',
-    );
+    const chipKey = findFirst(tree, (el) => el.type === 'span' && el.props.children === 'framework');
     expect(chipKey).toBeDefined();
   });
 
@@ -849,10 +775,7 @@ describe('InlineTableRow — expanded detail', () => {
 
   it('opens the endpoint url when an expanded chip is clicked', () => {
     const tree = render(
-      baseProps(
-        { endpoints: [{ kind: 'live', url: 'https://x/', label: 'l' }] },
-        { isExpanded: true },
-      ),
+      baseProps({ endpoints: [{ kind: 'live', url: 'https://x/', label: 'l' }] }, { isExpanded: true }),
     );
     const chip = findFirst(tree, (el) => el.type === 'button' && el.props.title === 'https://x/')!;
     const fakeEvent = { stopPropagation: vi.fn() };

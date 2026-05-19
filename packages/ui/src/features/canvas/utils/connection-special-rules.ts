@@ -32,6 +32,43 @@ export interface SpecialConnectionResult {
   conflict: boolean;
 }
 
+export interface LogSourceConflictResult {
+  /** True when this drag would attach a 2nd inbound edge to a log terminal. */
+  conflict: boolean;
+}
+
+function isLogTerminal(node: CanvasNode): boolean {
+  const iceType = (node.data?.iceType as string) || '';
+  return iceType === 'Monitoring.Log' || iceType === 'Observability.Logs' || iceType.startsWith('Log.');
+}
+
+/**
+ * Enforces "one source per log terminal" at drag time.
+ *
+ * A log terminal subscribes to a single Cloud Logging sink — multiplexing
+ * sources in one terminal would scramble timestamps and obscure which
+ * service emitted each line. So a terminal accepts exactly one inbound
+ * service edge; subsequent drags toward (or away from, after the
+ * canonical Service→Log flip) the terminal are rejected. Users who want
+ * to watch multiple services drop a Log block per service.
+ *
+ * Pure function — the caller in `use-connection-drawing.ts` reads
+ * `conflict` and surfaces the rejection tooltip. The check ignores
+ * direction (defensive against legacy non-canonical edges).
+ */
+export function findExistingLogSource(
+  sourceNode: CanvasNode,
+  targetNode: CanvasNode,
+  edges: ReadonlyArray<SpecialRuleEdge>,
+): LogSourceConflictResult {
+  const sourceIsLog = isLogTerminal(sourceNode);
+  const targetIsLog = isLogTerminal(targetNode);
+  if (!sourceIsLog && !targetIsLog) return { conflict: false };
+  const logId = sourceIsLog ? sourceNode.id : targetNode.id;
+  const existing = edges.some((e) => e.source === logId || e.target === logId);
+  return { conflict: existing };
+}
+
 export function findExistingSpecialConnection(
   sourceNode: CanvasNode,
   targetNode: CanvasNode,

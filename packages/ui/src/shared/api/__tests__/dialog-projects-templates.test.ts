@@ -5,7 +5,7 @@
  * adapter's behavior doesn't apply to the web build.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 // ─── Browser globals ────────────────────────────────────────────────────────
 //

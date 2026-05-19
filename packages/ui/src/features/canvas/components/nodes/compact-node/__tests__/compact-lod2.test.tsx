@@ -29,8 +29,8 @@ vi.mock('../../_shared/node-header', () => ({ NodeHeader: mocks.NodeHeader }));
 vi.mock('../../_shared/status-dot', () => ({ StatusDot: mocks.StatusDot }));
 
 import { CompactLod2 } from '../compact-lod2';
-import type { NodePipelineStatus } from '../types';
 import type { BrandIcon } from '../../../../../../assets/icons/brand-registry';
+import type { NodePipelineStatus } from '../types';
 
 const MockConnectionDragGlow = mocks.ConnectionDragGlow;
 const MockConnectionPorts = mocks.ConnectionPorts;
@@ -52,10 +52,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   if (children == null) return;
   yield* walk(children);
 }
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) if (el && predicate(el)) out.push(el);
   return out;
@@ -64,12 +61,12 @@ function findByType(tree: React.ReactNode, type: unknown): React.ReactElement[] 
   return findByPredicate(tree, (el) => el.type === type);
 }
 
-const renderLod2 = (
-  props: Partial<React.ComponentProps<typeof CompactLod2>> = {},
-): React.ReactElement => {
-  const Inner = (CompactLod2 as unknown as {
-    type: (p: React.ComponentProps<typeof CompactLod2>) => React.ReactElement;
-  }).type;
+const renderLod2 = (props: Partial<React.ComponentProps<typeof CompactLod2>> = {}): React.ReactElement => {
+  const Inner = (
+    CompactLod2 as unknown as {
+      type: (p: React.ComponentProps<typeof CompactLod2>) => React.ReactElement;
+    }
+  ).type;
   const defaults: React.ComponentProps<typeof CompactLod2> = {
     nodeId: 'node-1',
     x: 100,
@@ -113,13 +110,17 @@ describe('CompactLod2 — outer <g> attributes', () => {
   });
 
   it('cursor: crosshair on valid-target, move otherwise', () => {
-    expect(((renderLod2({ connectionDragState: 'valid-target' })).props as { style: { cursor: string } }).style.cursor).toBe('crosshair');
-    expect(((renderLod2({ connectionDragState: null })).props as { style: { cursor: string } }).style.cursor).toBe('move');
+    expect(
+      (renderLod2({ connectionDragState: 'valid-target' }).props as { style: { cursor: string } }).style.cursor,
+    ).toBe('crosshair');
+    expect((renderLod2({ connectionDragState: null }).props as { style: { cursor: string } }).style.cursor).toBe(
+      'move',
+    );
   });
 
   it('opacity 0.3 on invalid-target, 1 otherwise', () => {
-    expect(((renderLod2({ connectionDragState: 'invalid-target' })).props as { opacity: number }).opacity).toBe(0.3);
-    expect(((renderLod2({ connectionDragState: null })).props as { opacity: number }).opacity).toBe(1);
+    expect((renderLod2({ connectionDragState: 'invalid-target' }).props as { opacity: number }).opacity).toBe(0.3);
+    expect((renderLod2({ connectionDragState: null }).props as { opacity: number }).opacity).toBe(1);
   });
 
   it('forwards onMouseEnter/onMouseLeave', () => {
@@ -149,7 +150,9 @@ describe('CompactLod2 — ConnectionDragGlow + ConnectionPorts', () => {
   it('renders ConnectionPorts on hover or valid-target only', () => {
     expect(findByType(renderLod2({ isHovered: true }), MockConnectionPorts)).toHaveLength(1);
     expect(findByType(renderLod2({ connectionDragState: 'valid-target' }), MockConnectionPorts)).toHaveLength(1);
-    expect(findByType(renderLod2({ isHovered: false, connectionDragState: null }), MockConnectionPorts)).toHaveLength(0);
+    expect(findByType(renderLod2({ isHovered: false, connectionDragState: null }), MockConnectionPorts)).toHaveLength(
+      0,
+    );
   });
 
   it('forwards isValidTarget into ConnectionPorts', () => {
@@ -239,7 +242,10 @@ describe('CompactLod2 — header / service-line composition', () => {
 
   it('renders untruncated serviceLineText (≤24 chars)', () => {
     const tree = renderLod2({ serviceLineText: 'short' });
-    const span = findByPredicate(tree, (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'short');
+    const span = findByPredicate(
+      tree,
+      (el) => el.type === 'span' && (el.props as { children?: unknown }).children === 'short',
+    );
     expect(span.length).toBe(1);
   });
 
@@ -285,7 +291,10 @@ describe('CompactLod2 — StatusDot gating + color', () => {
   });
 
   it('falls back to statusColor when no pipeline status', () => {
-    const dot = findByType(renderLod2({ statusLabel: 'X', statusColor: '#cafe22', effectivePipelineStatus: null }), MockStatusDot)[0];
+    const dot = findByType(
+      renderLod2({ statusLabel: 'X', statusColor: '#cafe22', effectivePipelineStatus: null }),
+      MockStatusDot,
+    )[0];
     expect((dot.props as { color: string }).color).toBe('#cafe22');
   });
 

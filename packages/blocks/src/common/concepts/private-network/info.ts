@@ -29,6 +29,26 @@ A VPC + subnet on each provider, plus firewall rules derived from your
 ingress/egress policies. Nested services get deployed into the subnet
 automatically.
     `.trim(),
+    markdownZh: `
+# 私有网络
+
+一个带围墙的 VPC 气泡。把计算类块拖进去，即可将它们放入一个私有网络 —— 内部通过私有 IP 通信，公共互联网无法直接到达。
+
+## 入站 / 出站策略
+
+- **入站**（ingress）：\`all\`（开放）、\`allowlist\`（仅放行所列网段）、\`none\`（封闭）。
+- **出站**（egress）：\`all\`、\`allowlist\`、\`none\`（完全隔离）。
+
+在属性面板中设置。封闭网络仍可以拥有出站访问，开放网络也可以限制出站 —— 两者相互独立。
+
+## 公网入口
+
+如果需要将内嵌的服务对外暴露，请在私有网络内放置一个 **自定义域名**。它将成为该封闭网络中唯一的公共入口；其余部分保持私有。
+
+## 编译结果
+
+在每个云厂商上对应一个 VPC + 子网，外加根据入/出站策略推导出的防火墙规则。内嵌服务会被自动部署到该子网。
+    `.trim(),
   },
   compilesTo: {
     aws: [

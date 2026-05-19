@@ -14,13 +14,7 @@ import { validateConnections } from './connection-rules';
 import { validateDeployability } from './deploy-rules';
 import { validateProperties } from './property-rules';
 import { validateStructure } from './structure-rules';
-import type {
-  CanvasIssue,
-  CanvasValidationResult,
-  ValidatableNode,
-  ValidatableEdge,
-  ValidationContext,
-} from './types';
+import type { CanvasIssue, CanvasValidationResult, ValidatableNode, ValidatableEdge, ValidationContext } from './types';
 
 /**
  * Validate an entire canvas (nodes + edges).

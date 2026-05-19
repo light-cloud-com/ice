@@ -83,12 +83,8 @@ vi.mock('react', async (importOriginal) => {
 
 // Import AFTER the react mock is registered so the hook closes over the
 // mocked useState/useRef.
+import { USER_NODE_WIDTH, USER_NODE_HEIGHT, USER_NODE_ID } from '../../../../shared/components/svg-user-node';
 import { usePinnedUserNode, type UsePinnedUserNodeResult } from '../use-pinned-user-node';
-import {
-  USER_NODE_WIDTH,
-  USER_NODE_HEIGHT,
-  USER_NODE_ID,
-} from '../../../../shared/components/svg-user-node';
 import type { CanvasNode } from '../../components/types';
 
 // ─── Probe / harness ────────────────────────────────────────────────────────

@@ -24,7 +24,7 @@
 
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getApi } from '../api/api-adapter';
+import { store, type AppDispatch, type RootState } from '../../store';
 import {
   appendEntry,
   resumed,
@@ -39,7 +39,7 @@ import {
   type LogsState,
   type SourceResolution,
 } from '../../store/slices/logs-slice';
-import { store, type AppDispatch, type RootState } from '../../store';
+import { getApi } from '../api/api-adapter';
 
 interface UseLogStreamReturn {
   status: LogStreamStatus;

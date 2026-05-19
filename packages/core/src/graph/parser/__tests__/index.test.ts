@@ -7,8 +7,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-
-import * as parserBarrel from '../index';
+import * as parserBarrel from '..';
 
 describe('graph/parser/index — re-exports', () => {
   it('re-exports the token helpers', () => {

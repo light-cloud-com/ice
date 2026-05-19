@@ -296,10 +296,7 @@ const uiSlice = createSlice({
      * its persisted local width. The override is intentionally NOT
      * persisted — it's a transient state used by the tour engine.
      */
-    setSidebarOverride: (
-      state,
-      action: PayloadAction<{ side: 'left' | 'right'; width: number | null }>,
-    ) => {
+    setSidebarOverride: (state, action: PayloadAction<{ side: 'left' | 'right'; width: number | null }>) => {
       state.sidebarOverride[action.payload.side] = action.payload.width;
     },
     toggleValidation: (state) => {

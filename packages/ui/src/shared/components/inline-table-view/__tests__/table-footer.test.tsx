@@ -5,7 +5,9 @@ import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('../../../../i18n', () => ({
-  useTranslation: () => ({ t: (k: string, vars?: Record<string, unknown>) => (vars ? `${k}:${JSON.stringify(vars)}` : k) }),
+  useTranslation: () => ({
+    t: (k: string, vars?: Record<string, unknown>) => (vars ? `${k}:${JSON.stringify(vars)}` : k),
+  }),
 }));
 
 import { TableFooter, type TableFooterProps } from '../table-footer';
@@ -31,7 +33,10 @@ const baseProps: TableFooterProps = {
   sortedCount: 5,
   totalCount: 5,
   selectedCount: 0,
-  counts: { live: 3, drifted: 0, deploying: 0, building: 0, queued: 0, failed: 2, idle: 0 } as Record<RowStatus, number>,
+  counts: { live: 3, drifted: 0, deploying: 0, building: 0, queued: 0, failed: 2, idle: 0 } as Record<
+    RowStatus,
+    number
+  >,
   statusFilter: new Set<RowStatus>(),
   onToggleStatus: vi.fn(),
 };

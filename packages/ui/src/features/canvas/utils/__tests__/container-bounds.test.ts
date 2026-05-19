@@ -13,14 +13,12 @@
  */
 
 import { describe, it, expect } from 'vitest';
-
 import {
   CONTAINER_PADDING,
   HEADER_HEIGHT,
   MIN_CONTAINER_HEIGHT,
   MIN_CONTAINER_WIDTH,
 } from '../../../../config/canvas-constants';
-import type { CanvasNode } from '../../components/types';
 import {
   calculateContainerBounds,
   clampNodeToParent,
@@ -29,6 +27,7 @@ import {
   expandToFitChildren,
   recalculateAncestorBounds,
 } from '../container-bounds';
+import type { CanvasNode } from '../../components/types';
 
 /** Minimal CanvasNode factory — only the fields these utils read. */
 function node(overrides: Partial<CanvasNode> & Pick<CanvasNode, 'id'>): CanvasNode {
@@ -139,9 +138,7 @@ describe('calculateContainerBounds', () => {
       node({ id: 'parent', x: 0, y: 0, width: 300, height: 200 }),
       node({ id: 'child', parentId: 'parent', x: 50, y: 80, width: 40, height: 30 }),
     ];
-    const pending = new Map([
-      ['child', { x: 500, y: 80, width: 40, height: 30 }],
-    ]);
+    const pending = new Map([['child', { x: 500, y: 80, width: 40, height: 30 }]]);
     const result = calculateContainerBounds(nodes, 'parent', pending);
     expect(result).not.toBeNull();
     expect(result!.width).toBe(540 + CONTAINER_PAD);
@@ -163,9 +160,7 @@ describe('calculateContainerBounds', () => {
         height: 20,
       }),
     ];
-    const pending = new Map([
-      ['parent', { x: 0, y: 0, width: 800, height: 600 }],
-    ]);
+    const pending = new Map([['parent', { x: 0, y: 0, width: 800, height: 600 }]]);
     const result = calculateContainerBounds(nodes, 'parent', pending);
     expect(result).not.toBeNull();
     expect(result!.width).toBe(800);
@@ -397,63 +392,49 @@ describe('clampNodeToParent', () => {
   const parent = { x: 100, y: 100, width: 400, height: 300 };
 
   it('returns the position unchanged when the child fully fits inside', () => {
-    const result = clampNodeToParent(
-      { x: 200, y: 200 },
-      { width: 50, height: 50 },
-      parent,
-      { headerH: HDR, padding: PAD },
-    );
+    const result = clampNodeToParent({ x: 200, y: 200 }, { width: 50, height: 50 }, parent, {
+      headerH: HDR,
+      padding: PAD,
+    });
     expect(result).toEqual({ x: 200, y: 200 });
   });
 
   it('clamps to parent.x + padding when the child is too far left', () => {
-    const result = clampNodeToParent(
-      { x: 50, y: 200 },
-      { width: 50, height: 50 },
-      parent,
-      { headerH: HDR, padding: PAD },
-    );
+    const result = clampNodeToParent({ x: 50, y: 200 }, { width: 50, height: 50 }, parent, {
+      headerH: HDR,
+      padding: PAD,
+    });
     expect(result.x).toBe(110); // parent.x (100) + padding (10)
   });
 
   it('clamps below the header when the child is too far up', () => {
-    const result = clampNodeToParent(
-      { x: 200, y: 50 },
-      { width: 50, height: 50 },
-      parent,
-      { headerH: HDR, padding: PAD },
-    );
+    const result = clampNodeToParent({ x: 200, y: 50 }, { width: 50, height: 50 }, parent, {
+      headerH: HDR,
+      padding: PAD,
+    });
     expect(result.y).toBe(140); // parent.y (100) + padding (10) + header (30)
   });
 
   it('clamps so the right edge sits at parent.x + parent.width - padding', () => {
-    const result = clampNodeToParent(
-      { x: 9999, y: 200 },
-      { width: 50, height: 50 },
-      parent,
-      { headerH: HDR, padding: PAD },
-    );
+    const result = clampNodeToParent({ x: 9999, y: 200 }, { width: 50, height: 50 }, parent, {
+      headerH: HDR,
+      padding: PAD,
+    });
     // maxX = 100 + 400 - 10 - 50 = 440
     expect(result.x).toBe(440);
   });
 
   it('clamps so the bottom edge sits at parent.y + parent.height - padding', () => {
-    const result = clampNodeToParent(
-      { x: 200, y: 9999 },
-      { width: 50, height: 50 },
-      parent,
-      { headerH: HDR, padding: PAD },
-    );
+    const result = clampNodeToParent({ x: 200, y: 9999 }, { width: 50, height: 50 }, parent, {
+      headerH: HDR,
+      padding: PAD,
+    });
     // maxY = 100 + 300 - 10 - 50 = 340
     expect(result.y).toBe(340);
   });
 
   it('uses CONTAINER_HEADER_H / CONTAINER_PAD as defaults when opts is omitted', () => {
-    const result = clampNodeToParent(
-      { x: 0, y: 0 },
-      { width: 50, height: 50 },
-      parent,
-    );
+    const result = clampNodeToParent({ x: 0, y: 0 }, { width: 50, height: 50 }, parent);
     expect(result.x).toBe(parent.x + CONTAINER_PAD);
     expect(result.y).toBe(parent.y + CONTAINER_PAD + CONTAINER_HEADER_H);
   });

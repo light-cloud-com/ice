@@ -8,11 +8,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  ARCHITECT_TRIGGERS,
-  detectSkill,
-  isQuestionIntent,
-} from '../skill-detection';
+import { ARCHITECT_TRIGGERS, detectSkill, isQuestionIntent } from '../skill-detection';
 
 describe('ARCHITECT_TRIGGERS', () => {
   it('exports a non-empty array of RegExp instances', () => {

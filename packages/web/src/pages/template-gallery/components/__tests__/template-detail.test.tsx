@@ -83,10 +83,7 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -383,10 +380,7 @@ describe('TemplateDetail — providers', () => {
     });
     const text = collectText(tree);
     expect(text).toContain('templates.gallery.providers');
-    const imgs = findByPredicate(
-      tree,
-      (el) => el.type === 'img' && (el.props as { width?: number }).width === 16,
-    );
+    const imgs = findByPredicate(tree, (el) => el.type === 'img' && (el.props as { width?: number }).width === 16);
     expect(imgs).toHaveLength(1);
     expect((imgs[0].props as { src: string }).src).toBe('/icons/aws.svg');
   });
@@ -397,10 +391,7 @@ describe('TemplateDetail — providers', () => {
       onClose: vi.fn(),
       onUse: vi.fn(),
     });
-    const imgs = findByPredicate(
-      tree,
-      (el) => el.type === 'img' && (el.props as { width?: number }).width === 16,
-    );
+    const imgs = findByPredicate(tree, (el) => el.type === 'img' && (el.props as { width?: number }).width === 16);
     expect(imgs).toHaveLength(0);
     const text = collectText(tree);
     expect(text).toContain('azure');
@@ -609,10 +600,7 @@ describe('TemplateDetail — tech stack', () => {
     expect(text).toContain('templates.gallery.techStack');
     expect(text).toContain('react');
     expect(text).toContain('typescript');
-    const imgs = findByPredicate(
-      tree,
-      (el) => el.type === 'img' && (el.props as { width?: number }).width === 12,
-    );
+    const imgs = findByPredicate(tree, (el) => el.type === 'img' && (el.props as { width?: number }).width === 12);
     expect(imgs).toHaveLength(2);
     expect((imgs[0].props as { src: string }).src).toBe('/icons/react.svg');
   });
@@ -623,10 +611,7 @@ describe('TemplateDetail — tech stack', () => {
       onClose: vi.fn(),
       onUse: vi.fn(),
     });
-    const imgs = findByPredicate(
-      tree,
-      (el) => el.type === 'img' && (el.props as { width?: number }).width === 12,
-    );
+    const imgs = findByPredicate(tree, (el) => el.type === 'img' && (el.props as { width?: number }).width === 12);
     expect(imgs).toHaveLength(0);
     const text = collectText(tree);
     expect(text).toContain('rust');

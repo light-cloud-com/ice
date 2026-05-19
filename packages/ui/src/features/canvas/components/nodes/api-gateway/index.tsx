@@ -13,15 +13,10 @@
  * "no routes yet" hint so the block reads as "needs setup".
  */
 
-import {
-  AG_HEADER_HEIGHT,
-  AG_PADDING,
-  AG_ROW_GAP,
-  AG_ROW_HEIGHT,
-  CARD_FOOTER_HEIGHT,
-} from '@ice/constants';
+import { AG_HEADER_HEIGHT, AG_PADDING, AG_ROW_GAP, AG_ROW_HEIGHT, CARD_FOOTER_HEIGHT } from '@ice/constants';
 import { Router } from 'lucide-react';
 import React from 'react';
+import { t } from '../../../../../i18n';
 import { CardShell } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
@@ -48,20 +43,34 @@ export function computeApiGatewayHeight(data: Record<string, unknown>): number {
 
 const GATEWAY_ACCENT = '#0ea5e9';
 
-const PROTOCOL_LABELS: Record<string, string> = {
-  http: 'HTTP API',
-  rest: 'REST',
-  websocket: 'WebSocket',
-  'gcp-api-gw': 'Cloud API Gateway',
-  'azure-consumption': 'API Management (Consumption)',
-  'azure-standard': 'API Management (Standard v2)',
-};
+function getProtocolLabel(k: string): string | undefined {
+  switch (k) {
+    case 'http':
+      return t('canvas.blocks.gateway.protoHttpApi');
+    case 'rest':
+      return t('canvas.blocks.gateway.protoRest');
+    case 'websocket':
+      return t('canvas.blocks.gateway.protoWebsocket');
+    case 'gcp-api-gw':
+      return t('canvas.blocks.gateway.protoCloudApi');
+    case 'azure-consumption':
+      return t('canvas.blocks.gateway.protoAzureConsumption');
+    case 'azure-standard':
+      return t('canvas.blocks.gateway.protoAzureStandard');
+    default:
+      return undefined;
+  }
+}
 
 function buildLiveConfig(data: Record<string, unknown> | undefined, routeCount: number): string {
   const auth = data?.login_required;
   const parts = [
-    routeCount > 0 ? `${routeCount} ${routeCount === 1 ? 'route' : 'routes'}` : 'no routes',
-    auth ? 'auth required' : 'public',
+    routeCount > 0
+      ? routeCount === 1
+        ? t('canvas.blocks.gateway.routeOne')
+        : t('canvas.blocks.gateway.routeMany', { n: routeCount })
+      : t('canvas.blocks.gateway.noRoutes'),
+    auth ? t('canvas.blocks.gateway.authRequired') : t('canvas.blocks.gateway.publicAccess'),
   ].filter(Boolean);
   return parts.join(' · ');
 }
@@ -85,7 +94,7 @@ export const SvgApiGatewayNode: React.FC<SvgCompactNodeProps> = ({
   pipelineStatus,
 }) => {
   const protocolRaw = ((node.data?.protocol as string) || '').toLowerCase();
-  const protocolLabel = protocolRaw ? PROTOCOL_LABELS[protocolRaw] || protocolRaw : 'no protocol';
+  const protocolLabel = protocolRaw ? getProtocolLabel(protocolRaw) || protocolRaw : 'no protocol';
   const routes = ((node.data?.routes as unknown[] | undefined) || []).map(parseRoute).filter(Boolean);
   const visibleRoutes = routes.slice(0, VISIBLE_ROUTES);
   const hiddenCount = Math.max(routes.length - VISIBLE_ROUTES, 0);
@@ -102,7 +111,7 @@ export const SvgApiGatewayNode: React.FC<SvgCompactNodeProps> = ({
       pipelineStatus={pipelineStatus}
       icon={Router}
       accentColor={GATEWAY_ACCENT}
-      title={node.label || 'API Gateway'}
+      title={node.label || t('canvas.blocks.titles.apiGateway')}
       liveConfig={liveConfig}
       headerHeight={AG_HEADER_HEIGHT}
     >
@@ -145,7 +154,7 @@ export const SvgApiGatewayNode: React.FC<SvgCompactNodeProps> = ({
             }}
             data-testid={`gateway-empty-${node.id}`}
           >
-            no routes yet — add them in properties
+            {t('canvas.blocks.gateway.noRoutesYet')}
           </span>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: AG_ROW_GAP }}>
@@ -193,7 +202,7 @@ export const SvgApiGatewayNode: React.FC<SvgCompactNodeProps> = ({
                 }}
                 data-testid={`gateway-more-${node.id}`}
               >
-                {`+${hiddenCount} more`}
+                {t('canvas.blocks.common.moreCount', { n: hiddenCount })}
               </span>
             )}
           </div>

@@ -9,29 +9,29 @@
  *
  * Section / leaf splits (rf-rpal series):
  *   - `../types.ts` — CategoryDef, ComponentDef, Provider, props (rf-rpal-1)
- *   - `../data/categories.ts` — CATEGORY_DEFS / ORDER / MAP (rf-rpal-2)
- *   - `../data/components.ts` — COMPONENTS, blockKey, def (rf-rpal-3)
- *   - `../data/providers.ts` — PROVIDERS, STORAGE_KEY, load/saveCollapsed,
- *     PALETTE_STYLES (rf-rpal-4)
+ *   - `../data/categories.ts` — `getCategoryDefs(t)` / `getCategoryMap(t)` / `CATEGORY_ORDER` (rf-rpal-2; locale-reactive)
+ *   - `../data/components.ts` — `getComponents(t)`, blockKey, def (rf-rpal-3; locale-reactive)
+ *   - `../data/providers.ts` — `getProviders(t)`, STORAGE_KEY, load/saveCollapsed,
+ *     PALETTE_STYLES (rf-rpal-4; locale-reactive)
  *   - `./component-item.tsx` — ComponentItem (rf-rpal-5)
  *   - `./draggable-group-item.tsx` — DraggableGroupItem + nextGroupColor
  *     (rf-rpal-6)
  *   - `../sections/blocks-section.tsx` — BlocksSection (rf-rpal-7)
  */
 
+import { isCategoryEnabledForProvider, type CategoryId } from '@ice/constants';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-
-import { isCategoryEnabledForProvider, type CategoryId } from '@ice/constants';
 import { ENABLED_PROVIDER_IDS } from '../../../config/providers';
+import { useTranslation } from '../../../i18n';
 import axiosInstance from '../../../shared/api/axios-instance';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../../../shared/components/ui/resizable';
 import { TooltipProvider } from '../../../shared/components/ui/tooltip';
 import { useResolvePath } from '../../../shared/hooks/use-resolve-path';
 import { ProjectBrowser } from '../../project-browser';
 import { TemplateCategoriesPanel } from '../../templates/components/template-categories-panel';
-import { CATEGORY_MAP, CATEGORY_ORDER } from '../data/categories';
-import { COMPONENTS } from '../data/components';
+import { getCategoryMap, CATEGORY_ORDER } from '../data/categories';
+import { getComponents } from '../data/components';
 import { PALETTE_STYLES, loadCollapsed, saveCollapsed } from '../data/providers';
 import { BlocksSection } from '../sections/blocks-section';
 import type { CategoryDef, ComponentDef, Provider, ResourcePaletteProps } from '../types';
@@ -44,8 +44,15 @@ export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
   showTemplatesSection = false,
 }) => {
   const { pathname } = useLocation();
+  const { t } = useTranslation();
   // Show blocks only on canvas/table views (not settings/deployments)
   const isCanvasView = !pathname.endsWith('/settings') && !pathname.endsWith('/deployments');
+
+  // Localized lookup of category labels/tooltips — re-derives when the
+  // user switches locale because `t` is a fresh closure per locale.
+  const categoryMap = useMemo(() => getCategoryMap(t), [t]);
+  // Localized concept blocks — same locale-reactivity contract.
+  const components = useMemo(() => getComponents(t), [t]);
 
   // Get the current project's locked provider (if set)
   const segments = pathname.split('/').filter(Boolean);
@@ -99,13 +106,12 @@ export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
   // Filter components by search + (category × provider) gate
   const filteredComponents = useMemo(
     () =>
-      COMPONENTS.filter((c) => {
+      components.filter((c) => {
         // A provider is effective for this concept only when it's globally
         // enabled AND the concept's palette category is enabled for it.
         const effectiveProviders = c.providers.filter(
           (p: string) =>
-            ENABLED_PROVIDER_IDS.has(p) &&
-            isCategoryEnabledForProvider(c.category as CategoryId, p as Provider),
+            ENABLED_PROVIDER_IDS.has(p) && isCategoryEnabledForProvider(c.category as CategoryId, p as Provider),
         );
         if (effectiveProviders.length === 0) return false;
 
@@ -113,11 +119,10 @@ export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
           !localSearch.trim() ||
           c.name.toLowerCase().includes(localSearch.toLowerCase()) ||
           c.description.toLowerCase().includes(localSearch.toLowerCase());
-        const matchesProvider =
-          selectedProvider === 'all' || effectiveProviders.includes(selectedProvider as Provider);
+        const matchesProvider = selectedProvider === 'all' || effectiveProviders.includes(selectedProvider as Provider);
         return matchesSearch && matchesProvider;
       }),
-    [localSearch, selectedProvider],
+    [components, localSearch, selectedProvider],
   );
 
   // Group filtered items by category, preserving order
@@ -126,12 +131,12 @@ export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
     for (const catId of CATEGORY_ORDER) {
       const items = filteredComponents.filter((c) => c.category === catId);
       if (items.length > 0) {
-        const catDef = CATEGORY_MAP.get(catId)!;
+        const catDef = categoryMap.get(catId)!;
         groups.push({ category: catDef, items });
       }
     }
     return groups;
-  }, [filteredComponents]);
+  }, [filteredComponents, categoryMap]);
 
   const isSearching = localSearch.trim().length > 0;
   const showGroup = !localSearch.trim() || 'group organize'.includes(localSearch.toLowerCase());
@@ -224,4 +229,3 @@ export const ResourcePalette: React.FC<ResourcePaletteProps> = ({
     </TooltipProvider>
   );
 };
-

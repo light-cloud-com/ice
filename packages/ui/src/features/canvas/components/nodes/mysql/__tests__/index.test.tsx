@@ -10,14 +10,11 @@ const mocks = vi.hoisted(() => {
   const passthrough: React.FC<Record<string, unknown>> = (props) =>
     React.createElement('div', null, (props as { children?: React.ReactNode }).children);
   passthrough.displayName = 'MockCardShell';
-  const StripesMock: React.FC<{ color: string }> = () => null;
-  StripesMock.displayName = 'MockTableStripes';
-  return { CardShell: passthrough, TableStripes: StripesMock };
+  return { CardShell: passthrough };
 });
 
 vi.mock('../../_shared', () => ({
   CardShell: mocks.CardShell,
-  TableStripes: mocks.TableStripes,
 }));
 
 vi.mock('lucide-react', () => ({
@@ -41,10 +38,13 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   if (children == null) return;
   yield* walk(children);
 }
-function findByType(tree: React.ReactNode, type: unknown): React.ReactElement[] {
-  const out: React.ReactElement[] = [];
-  for (const el of walk(tree)) if (el && el.type === type) out.push(el);
-  return out;
+function findTextEqual(tree: React.ReactNode, value: string): React.ReactElement | undefined {
+  for (const el of walk(tree)) {
+    const c = (el.props as { children?: unknown }).children;
+    if (c === value) return el;
+    if (Array.isArray(c) && c.some((x) => x === value)) return el;
+  }
+  return undefined;
 }
 
 const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
@@ -59,9 +59,7 @@ const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
   ...overrides,
 });
 
-const renderInner = (
-  props: Partial<React.ComponentProps<typeof SvgMysqlNode>> = {},
-): React.ReactElement => {
+const renderInner = (props: Partial<React.ComponentProps<typeof SvgMysqlNode>> = {}): React.ReactElement => {
   const defaults: React.ComponentProps<typeof SvgMysqlNode> = {
     node: makeNode(),
     isSelected: false,
@@ -96,21 +94,28 @@ describe('SvgMysqlNode', () => {
     expect((tree.props as { title: string }).title).toBe('MySQL');
   });
 
-  it('renders TableStripes in the body slot', () => {
-    const tree = renderInner();
-    const stripes = findByType(tree, mocks.TableStripes);
-    expect(stripes).toHaveLength(1);
+  it('renders the engine + version big in the body', () => {
+    const tree = renderInner({ node: makeNode({ data: { iceType: 'Database.MySQL', version: '8.0' } }) });
+    expect(findTextEqual(tree, 'MySQL 8.0')).toBeDefined();
   });
 
-  it('passes the mysql cyan accent to TableStripes', () => {
-    const tree = renderInner();
-    const stripes = findByType(tree, mocks.TableStripes)[0];
-    expect((stripes.props as { color: string }).color).toBe('#06b6d4');
-  });
-
-  it('uses a different accent from postgres', () => {
+  it('uses the cyan dolphin accent (different from postgres)', () => {
     const tree = renderInner();
     expect((tree.props as { accentColor: string }).accentColor).toBe('#06b6d4');
+  });
+
+  it('shows HA badge when production is true', () => {
+    const tree = renderInner({
+      node: makeNode({ data: { iceType: 'Database.MySQL', version: '8.0', production: true } }),
+    });
+    expect(findTextEqual(tree, 'HA')).toBeDefined();
+  });
+
+  it('shows HA badge when legacy `backups: true` is set', () => {
+    const tree = renderInner({
+      node: makeNode({ data: { iceType: 'Database.MySQL', version: '8.0', backups: true } }),
+    });
+    expect(findTextEqual(tree, 'HA')).toBeDefined();
   });
 
   it('builds liveConfig from version + storage + production + backup_retention', () => {

@@ -6,12 +6,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  sanitize_name,
-  sanitize_label_value,
-  parse_storage_gb,
-  normalize_runtime,
-} from '../name-utils';
+import { sanitize_name, sanitize_label_value, parse_storage_gb, normalize_runtime } from '../name-utils';
 
 describe('sanitize_name', () => {
   it('returns empty string when given empty input', () => {

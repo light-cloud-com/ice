@@ -3,8 +3,7 @@
  */
 
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
-
+import { describe, it, expect } from 'vitest';
 import { CustomDomainBanner } from '../custom-domain-banner';
 import type { Card, CardNode } from '../../../../../store/slices/cards-slice';
 
@@ -24,10 +23,7 @@ function* walk(node: unknown): Generator<ReactElementLike> {
   yield node;
   yield* walk(node.props.children);
 }
-function findByPredicate(
-  tree: unknown,
-  predicate: (el: ReactElementLike) => boolean,
-): ReactElementLike | undefined {
+function findByPredicate(tree: unknown, predicate: (el: ReactElementLike) => boolean): ReactElementLike | undefined {
   for (const el of walk(tree)) {
     if (predicate(el)) return el;
   }

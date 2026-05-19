@@ -11,11 +11,7 @@
  * is processed earlier in topo order, so the chain propagates.
  */
 import { describe, expect, it } from 'vitest';
-import {
-  calculate_metrics,
-  get_critical_path,
-  get_execution_layers,
-} from '../analysis';
+import { calculate_metrics, get_critical_path, get_execution_layers } from '../analysis';
 import { make_graph, id_of } from './fixtures';
 
 describe('get_execution_layers', () => {
@@ -122,12 +118,7 @@ describe('get_critical_path', () => {
     );
     const path = get_critical_path(graph);
     expect(path.length).toBe(4);
-    expect(path).toEqual([
-      id_of(graph, 'd'),
-      id_of(graph, 'c'),
-      id_of(graph, 'b'),
-      id_of(graph, 'a'),
-    ]);
+    expect(path).toEqual([id_of(graph, 'd'), id_of(graph, 'c'), id_of(graph, 'b'), id_of(graph, 'a')]);
   });
 
   it('picks one of the longest paths in a diamond DAG', () => {
@@ -174,10 +165,7 @@ describe('get_critical_path', () => {
   it('handles disconnected components: returns the longest of all chains', () => {
     // Two components: chain a→b (length 2) and isolated c (length 1).
     // The longest chain is a→b → 2 nodes.
-    const graph = make_graph(
-      ['a', 'b', 'c'],
-      [['a', 'b']],
-    );
+    const graph = make_graph(['a', 'b', 'c'], [['a', 'b']]);
     const path = get_critical_path(graph);
     expect(path.length).toBe(2);
     expect(path).toEqual([id_of(graph, 'b'), id_of(graph, 'a')]);

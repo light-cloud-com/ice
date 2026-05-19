@@ -48,33 +48,28 @@ const mocks = vi.hoisted(() => ({
       byTerminalNodeId: {} as Record<string, unknown>,
     },
   },
-  updateCardNodeDataSpy: vi.fn(
-    (arg: { nodeId: string; data: Record<string, unknown> }) => ({
-      type: 'cards/updateCardNodeData',
-      payload: arg,
-    }),
-  ),
+  updateCardNodeDataSpy: vi.fn((arg: { nodeId: string; data: Record<string, unknown> }) => ({
+    type: 'cards/updateCardNodeData',
+    payload: arg,
+  })),
 }));
 
 vi.mock('react-redux', () => ({
   useDispatch: () => mocks.dispatchSpy,
-  useSelector: (selector: (s: typeof mocks.state) => unknown) =>
-    selector(mocks.state),
+  useSelector: (selector: (s: typeof mocks.state) => unknown) => selector(mocks.state),
 }));
 
 // The component uses `selectActiveCard` and `updateCardNodeData` from cards-slice.
 // We re-export the real selector signature; updateCardNodeData is a tagged-action spy
 // so dispatch arguments are verifiable.
 vi.mock('../../../../../store/slices/cards-slice', () => ({
-  selectActiveCard: (state: typeof mocks.state) =>
-    state.cards.cards.find((c) => c.id === state.cards.activeCardId),
+  selectActiveCard: (state: typeof mocks.state) => state.cards.cards.find((c) => c.id === state.cards.activeCardId),
   updateCardNodeData: mocks.updateCardNodeDataSpy,
 }));
 
 // `selectLogStream` looks up by terminalNodeId on the byTerminalNodeId map.
 vi.mock('../../../../../store/slices/logs-slice', () => ({
-  selectLogStream: (state: typeof mocks.state, terminalNodeId: string) =>
-    state.logs.byTerminalNodeId[terminalNodeId],
+  selectLogStream: (state: typeof mocks.state, terminalNodeId: string) => state.logs.byTerminalNodeId[terminalNodeId],
 }));
 
 import { MonitoringLogSection } from '../monitoring-log-section';
@@ -84,12 +79,7 @@ import { MonitoringLogSection } from '../monitoring-log-section';
 type ReactNodeLike = React.ReactNode;
 
 function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
-  if (
-    node == null ||
-    typeof node === 'boolean' ||
-    typeof node === 'string' ||
-    typeof node === 'number'
-  ) {
+  if (node == null || typeof node === 'boolean' || typeof node === 'string' || typeof node === 'number') {
     return;
   }
   if (Array.isArray(node)) {
@@ -98,16 +88,12 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   }
   const el = node as React.ReactElement;
   yield el;
-  const children = (el.props as { children?: React.ReactNode } | undefined)
-    ?.children;
+  const children = (el.props as { children?: React.ReactNode } | undefined)?.children;
   if (children == null) return;
   yield* walk(children);
 }
 
-function findByPredicate(
-  tree: React.ReactNode,
-  predicate: (el: React.ReactElement) => boolean,
-): React.ReactElement[] {
+function findByPredicate(tree: React.ReactNode, predicate: (el: React.ReactElement) => boolean): React.ReactElement[] {
   const out: React.ReactElement[] = [];
   for (const el of walk(tree)) {
     if (el && predicate(el)) out.push(el);
@@ -115,24 +101,12 @@ function findByPredicate(
   return out;
 }
 
-function findByTestid(
-  tree: React.ReactNode,
-  testid: string,
-): React.ReactElement | undefined {
-  return findByPredicate(
-    tree,
-    (el) => (el.props as { ['data-testid']?: string })?.['data-testid'] === testid,
-  )[0];
+function findByTestid(tree: React.ReactNode, testid: string): React.ReactElement | undefined {
+  return findByPredicate(tree, (el) => (el.props as { ['data-testid']?: string })?.['data-testid'] === testid)[0];
 }
 
-function findAllByTestid(
-  tree: React.ReactNode,
-  testid: string,
-): React.ReactElement[] {
-  return findByPredicate(
-    tree,
-    (el) => (el.props as { ['data-testid']?: string })?.['data-testid'] === testid,
-  );
+function findAllByTestid(tree: React.ReactNode, testid: string): React.ReactElement[] {
+  return findByPredicate(tree, (el) => (el.props as { ['data-testid']?: string })?.['data-testid'] === testid);
 }
 
 // ─── Props/rendering helpers ────────────────────────────────────────────────
@@ -155,9 +129,7 @@ interface OptionProps {
   children?: React.ReactNode;
 }
 
-const renderSection = (
-  nodeId: string = 'log-1',
-): React.ReactElement | null => {
+const renderSection = (nodeId: string = 'log-1'): React.ReactElement | null => {
   mocks.dispatchSpy.mockClear();
   mocks.updateCardNodeDataSpy.mockClear();
   return MonitoringLogSection({ nodeId }) as React.ReactElement | null;
@@ -176,10 +148,7 @@ const seedLogNode = (
   mocks.state.cards.cards = [
     {
       id: 'card-1',
-      nodes: [
-        { id: 'log-1', type: 'resource', data: { iceType: 'Monitoring.Log', ...data } },
-        ...extraNodes,
-      ],
+      nodes: [{ id: 'log-1', type: 'resource', data: { iceType: 'Monitoring.Log', ...data } }, ...extraNodes],
       edges,
     },
   ];
@@ -222,11 +191,7 @@ describe('MonitoringLogSection', () => {
   // ── Status pill mapping ──────────────────────────────────────────────────
 
   describe('status pill mapping', () => {
-    const cases: Array<[
-      string | undefined,
-      string,
-      string,
-    ]> = [
+    const cases: Array<[string | undefined, string, string]> = [
       ['streaming', 'green', 'Live'],
       ['connecting', 'amber', 'Connecting'],
       ['pre-deploy', 'grey', 'Pre-deploy'],
@@ -251,9 +216,7 @@ describe('MonitoringLogSection', () => {
         const tree = renderSection('log-1');
         const pill = findByTestid(tree, 'monitoring-log-status-pill');
         expect(pill).toBeDefined();
-        expect(
-          (pill!.props as { ['data-pill-tone']?: string })['data-pill-tone'],
-        ).toBe(expectedTone);
+        expect((pill!.props as { ['data-pill-tone']?: string })['data-pill-tone']).toBe(expectedTone);
         // The label is the second child after the dot indicator span — search
         // for any direct text node equal to expectedLabel inside the pill.
         const texts: string[] = [];
@@ -268,10 +231,7 @@ describe('MonitoringLogSection', () => {
             return;
           }
           const el = n as React.ReactElement;
-          visit(
-            (el.props as { children?: React.ReactNode } | undefined)
-              ?.children ?? null,
-          );
+          visit((el.props as { children?: React.ReactNode } | undefined)?.children ?? null);
         };
         visit(pill!);
         expect(texts.join(' ')).toContain(expectedLabel);
@@ -284,9 +244,7 @@ describe('MonitoringLogSection', () => {
       const tree = renderSection('log-1');
       const pill = findByTestid(tree, 'monitoring-log-status-pill');
       expect(pill).toBeDefined();
-      expect(
-        (pill!.props as { ['data-pill-tone']?: string })['data-pill-tone'],
-      ).toBe('grey');
+      expect((pill!.props as { ['data-pill-tone']?: string })['data-pill-tone']).toBe('grey');
     });
 
     it('falls back to grey when status is an unknown value (default branch)', () => {
@@ -300,9 +258,7 @@ describe('MonitoringLogSection', () => {
       };
       const tree = renderSection('log-1');
       const pill = findByTestid(tree, 'monitoring-log-status-pill');
-      expect(
-        (pill!.props as { ['data-pill-tone']?: string })['data-pill-tone'],
-      ).toBe('grey');
+      expect((pill!.props as { ['data-pill-tone']?: string })['data-pill-tone']).toBe('grey');
     });
   });
 
@@ -409,9 +365,7 @@ describe('MonitoringLogSection', () => {
       const tree = renderSection('log-1');
       const caveats = findAllByTestid(tree, 'monitoring-log-caveat');
       expect(caveats).toHaveLength(2);
-      const texts = caveats.map(
-        (p) => (p.props as { children?: string }).children ?? '',
-      );
+      const texts = caveats.map((p) => (p.props as { children?: string }).children ?? '');
       expect(texts).toEqual(['First caveat', 'Second caveat']);
     });
 
@@ -498,9 +452,7 @@ describe('MonitoringLogSection', () => {
       const tree = renderSection('log-1');
       const err = findByTestid(tree, 'monitoring-log-error');
       expect(err).toBeDefined();
-      expect((err!.props as { children?: string }).children).toBe(
-        'connection refused',
-      );
+      expect((err!.props as { children?: string }).children).toBe('connection refused');
     });
 
     it('renders the error message on status=permission-denied with a non-empty lastError', () => {
@@ -515,9 +467,7 @@ describe('MonitoringLogSection', () => {
       const tree = renderSection('log-1');
       const err = findByTestid(tree, 'monitoring-log-error');
       expect(err).toBeDefined();
-      expect((err!.props as { children?: string }).children).toBe(
-        'logging.entries.list denied',
-      );
+      expect((err!.props as { children?: string }).children).toBe('logging.entries.list denied');
     });
 
     it('does NOT render the error message on status=streaming', () => {
@@ -567,10 +517,7 @@ describe('MonitoringLogSection', () => {
       seedLogNode();
       const tree = renderSection('log-1');
       const polling = findByTestid(tree, 'monitoring-log-mode-polling');
-      const pollingInput = findByPredicate(
-        polling!,
-        (el) => el.type === 'input',
-      )[0];
+      const pollingInput = findByPredicate(polling!, (el) => el.type === 'input')[0];
       const tail = findByTestid(tree, 'monitoring-log-mode-tail');
       const tailInput = findByPredicate(tail!, (el) => el.type === 'input')[0];
       expect((pollingInput.props as RadioProps).checked).toBe(true);
@@ -581,10 +528,7 @@ describe('MonitoringLogSection', () => {
       seedLogNode({ streamingMode: 'tail' });
       const tree = renderSection('log-1');
       const polling = findByTestid(tree, 'monitoring-log-mode-polling');
-      const pollingInput = findByPredicate(
-        polling!,
-        (el) => el.type === 'input',
-      )[0];
+      const pollingInput = findByPredicate(polling!, (el) => el.type === 'input')[0];
       const tail = findByTestid(tree, 'monitoring-log-mode-tail');
       const tailInput = findByPredicate(tail!, (el) => el.type === 'input')[0];
       expect((pollingInput.props as RadioProps).checked).toBe(false);
@@ -595,10 +539,7 @@ describe('MonitoringLogSection', () => {
       seedLogNode({ streamingMode: 'tail' });
       const tree = renderSection('log-1');
       const polling = findByTestid(tree, 'monitoring-log-mode-polling');
-      const pollingInput = findByPredicate(
-        polling!,
-        (el) => el.type === 'input',
-      )[0];
+      const pollingInput = findByPredicate(polling!, (el) => el.type === 'input')[0];
       (pollingInput.props as RadioProps).onChange();
       expect(mocks.updateCardNodeDataSpy).toHaveBeenCalledTimes(1);
       expect(mocks.updateCardNodeDataSpy).toHaveBeenCalledWith({
@@ -626,26 +567,17 @@ describe('MonitoringLogSection', () => {
       mocks.state.cards.cards = [
         {
           id: 'card-1',
-          nodes: [
-            { id: 'log-XYZ', type: 'resource', data: { iceType: 'Monitoring.Log' } },
-          ],
+          nodes: [{ id: 'log-XYZ', type: 'resource', data: { iceType: 'Monitoring.Log' } }],
           edges: [],
         },
       ];
       const tree2 = renderSection('log-XYZ');
       const polling = findByTestid(tree2, 'monitoring-log-mode-polling');
       const tail = findByTestid(tree2, 'monitoring-log-mode-tail');
-      const pollingInput = findByPredicate(
-        polling!,
-        (el) => el.type === 'input',
-      )[0];
+      const pollingInput = findByPredicate(polling!, (el) => el.type === 'input')[0];
       const tailInput = findByPredicate(tail!, (el) => el.type === 'input')[0];
-      expect((pollingInput.props as RadioProps).name).toBe(
-        'monitoring-log-mode-log-XYZ',
-      );
-      expect((tailInput.props as RadioProps).name).toBe(
-        'monitoring-log-mode-log-XYZ',
-      );
+      expect((pollingInput.props as RadioProps).name).toBe('monitoring-log-mode-log-XYZ');
+      expect((tailInput.props as RadioProps).name).toBe('monitoring-log-mode-log-XYZ');
       expect(tree).toBeDefined();
     });
   });
@@ -747,56 +679,42 @@ describe('MonitoringLogSection', () => {
       expect(values).toContain('svc-B');
     });
 
-    it("uses candidate.label when present in option text", () => {
+    it('uses candidate.label when present in option text', () => {
       seedLogNode();
       mocks.state.logs.byTerminalNodeId['log-1'] = {
         status: 'ambiguous',
         mode: 'polling',
         source: {
           state: 'ambiguous',
-          candidates: [
-            { nodeId: 'svc-A', iceType: 'Compute.Container', label: 'My API' },
-          ],
+          candidates: [{ nodeId: 'svc-A', iceType: 'Compute.Container', label: 'My API' }],
         },
         entries: [],
         lastError: null,
       };
       const tree = renderSection('log-1');
-      const opt = findByPredicate(
-        tree,
-        (el) =>
-          el.type === 'option' && (el.props as OptionProps).value === 'svc-A',
-      )[0];
+      const opt = findByPredicate(tree, (el) => el.type === 'option' && (el.props as OptionProps).value === 'svc-A')[0];
       expect((opt.props as OptionProps).children).toContain('My API');
       expect((opt.props as OptionProps).children).toContain('Container');
     });
 
-    it("falls back to activeCard node.data.label when candidate.label is empty", () => {
-      seedLogNode({}, [
-        { id: 'svc-A', type: 'resource', data: { iceType: 'Compute.Container', label: 'From Card' } },
-      ]);
+    it('falls back to activeCard node.data.label when candidate.label is empty', () => {
+      seedLogNode({}, [{ id: 'svc-A', type: 'resource', data: { iceType: 'Compute.Container', label: 'From Card' } }]);
       mocks.state.logs.byTerminalNodeId['log-1'] = {
         status: 'ambiguous',
         mode: 'polling',
         source: {
           state: 'ambiguous',
-          candidates: [
-            { nodeId: 'svc-A', iceType: 'Compute.Container', label: '' },
-          ],
+          candidates: [{ nodeId: 'svc-A', iceType: 'Compute.Container', label: '' }],
         },
         entries: [],
         lastError: null,
       };
       const tree = renderSection('log-1');
-      const opt = findByPredicate(
-        tree,
-        (el) =>
-          el.type === 'option' && (el.props as OptionProps).value === 'svc-A',
-      )[0];
+      const opt = findByPredicate(tree, (el) => el.type === 'option' && (el.props as OptionProps).value === 'svc-A')[0];
       expect((opt.props as OptionProps).children).toContain('From Card');
     });
 
-    it("falls back to nodeId.slice(0,8) when both candidate.label and node.data.label are absent", () => {
+    it('falls back to nodeId.slice(0,8) when both candidate.label and node.data.label are absent', () => {
       seedLogNode();
       mocks.state.logs.byTerminalNodeId['log-1'] = {
         status: 'ambiguous',
@@ -814,9 +732,7 @@ describe('MonitoringLogSection', () => {
       const tree = renderSection('log-1');
       const opt = findByPredicate(
         tree,
-        (el) =>
-          el.type === 'option' &&
-          (el.props as OptionProps).value === 'abcdefgh-rest-of-uuid',
+        (el) => el.type === 'option' && (el.props as OptionProps).value === 'abcdefgh-rest-of-uuid',
       )[0];
       expect((opt.props as OptionProps).children).toContain('abcdefgh');
     });
@@ -828,9 +744,7 @@ describe('MonitoringLogSection', () => {
         mode: 'polling',
         source: {
           state: 'ambiguous',
-          candidates: [
-            { nodeId: 'unknown1', iceType: 'Compute.Container', label: '' },
-          ],
+          candidates: [{ nodeId: 'unknown1', iceType: 'Compute.Container', label: '' }],
         },
         entries: [],
         lastError: null,
@@ -838,8 +752,7 @@ describe('MonitoringLogSection', () => {
       const tree = renderSection('log-1');
       const opt = findByPredicate(
         tree,
-        (el) =>
-          el.type === 'option' && (el.props as OptionProps).value === 'unknown1',
+        (el) => el.type === 'option' && (el.props as OptionProps).value === 'unknown1',
       )[0];
       expect((opt.props as OptionProps).children).toContain('unknown1');
     });
@@ -862,9 +775,7 @@ describe('MonitoringLogSection', () => {
         (el) =>
           el.type === 'p' &&
           typeof (el.props as { children?: unknown }).children === 'string' &&
-          ((el.props as { children: string }).children as string).includes(
-            'No supported source connected',
-          ),
+          ((el.props as { children: string }).children as string).includes('No supported source connected'),
       );
       expect(para.length).toBe(1);
     });
@@ -933,9 +844,7 @@ describe('MonitoringLogSection', () => {
     it('excludes inbound edges whose source node does not exist in activeCard.nodes', () => {
       seedLogNode(
         {},
-        [
-          { id: 'svc-good', type: 'resource', data: { iceType: 'Compute.Container' } },
-        ],
+        [{ id: 'svc-good', type: 'resource', data: { iceType: 'Compute.Container' } }],
         [
           { source: 'svc-good', target: 'log-1' },
           { source: 'ghost-id', target: 'log-1' }, // no matching node
@@ -955,12 +864,10 @@ describe('MonitoringLogSection', () => {
       expect(values).not.toContain('ghost-id');
     });
 
-    it("uses node.data.label when present in option text for none-state candidates", () => {
+    it('uses node.data.label when present in option text for none-state candidates', () => {
       seedLogNode(
         {},
-        [
-          { id: 'svc-A', type: 'resource', data: { iceType: 'Compute.Container', label: 'My Worker' } },
-        ],
+        [{ id: 'svc-A', type: 'resource', data: { iceType: 'Compute.Container', label: 'My Worker' } }],
         [{ source: 'svc-A', target: 'log-1' }],
       );
       mocks.state.logs.byTerminalNodeId['log-1'] = {
@@ -971,15 +878,11 @@ describe('MonitoringLogSection', () => {
         lastError: null,
       };
       const tree = renderSection('log-1');
-      const opt = findByPredicate(
-        tree,
-        (el) =>
-          el.type === 'option' && (el.props as OptionProps).value === 'svc-A',
-      )[0];
+      const opt = findByPredicate(tree, (el) => el.type === 'option' && (el.props as OptionProps).value === 'svc-A')[0];
       expect((opt.props as OptionProps).children).toContain('My Worker');
     });
 
-    it("falls back to nodeId.slice(0,8) for none-state candidates without data.label", () => {
+    it('falls back to nodeId.slice(0,8) for none-state candidates without data.label', () => {
       seedLogNode(
         {},
         [
@@ -1001,9 +904,7 @@ describe('MonitoringLogSection', () => {
       const tree = renderSection('log-1');
       const opt = findByPredicate(
         tree,
-        (el) =>
-          el.type === 'option' &&
-          (el.props as OptionProps).value === 'longidentifier-rest',
+        (el) => el.type === 'option' && (el.props as OptionProps).value === 'longidentifier-rest',
       )[0];
       // 'longidentifier-rest'.slice(0, 8) === 'longiden'
       expect((opt.props as OptionProps).children).toContain('longiden');
@@ -1015,9 +916,7 @@ describe('MonitoringLogSection', () => {
       // empty string, so this node is excluded — pinning the falsy-data path.
       seedLogNode(
         {},
-        [
-          { id: 'svc-empty', type: 'resource' /* no data */ },
-        ],
+        [{ id: 'svc-empty', type: 'resource' /* no data */ }],
         [{ source: 'svc-empty', target: 'log-1' }],
       );
       mocks.state.logs.byTerminalNodeId['log-1'] = {
@@ -1050,9 +949,7 @@ describe('MonitoringLogSection', () => {
         (el) =>
           el.type === 'p' &&
           typeof (el.props as { children?: unknown }).children === 'string' &&
-          ((el.props as { children: string }).children as string).includes(
-            'No supported source connected',
-          ),
+          ((el.props as { children: string }).children as string).includes('No supported source connected'),
       );
       expect(para.length).toBe(1);
     });
@@ -1074,9 +971,7 @@ describe('MonitoringLogSection', () => {
       mode: 'polling' as const,
       source: {
         state: 'ambiguous' as const,
-        candidates: [
-          { nodeId: 'svc-A', iceType: 'Compute.Container', label: 'A' },
-        ],
+        candidates: [{ nodeId: 'svc-A', iceType: 'Compute.Container', label: 'A' }],
       },
       entries: [],
       lastError: null,
@@ -1087,13 +982,8 @@ describe('MonitoringLogSection', () => {
       mocks.state.logs.byTerminalNodeId['log-1'] = baseAmbiguous;
       const tree = renderSection('log-1');
       const select = findByTestid(tree, 'monitoring-log-source-select');
-      const placeholderOpt = findByPredicate(
-        select!,
-        (el) => el.type === 'option',
-      )[0];
-      expect((placeholderOpt.props as OptionProps).children).toBe(
-        '— Select a source —',
-      );
+      const placeholderOpt = findByPredicate(select!, (el) => el.type === 'option')[0];
+      expect((placeholderOpt.props as OptionProps).children).toBe('— Select a source —');
     });
 
     it("placeholder option shows 'Clear override' when an override is set", () => {
@@ -1101,10 +991,7 @@ describe('MonitoringLogSection', () => {
       mocks.state.logs.byTerminalNodeId['log-1'] = baseAmbiguous;
       const tree = renderSection('log-1');
       const select = findByTestid(tree, 'monitoring-log-source-select');
-      const placeholderOpt = findByPredicate(
-        select!,
-        (el) => el.type === 'option',
-      )[0];
+      const placeholderOpt = findByPredicate(select!, (el) => el.type === 'option')[0];
       expect((placeholderOpt.props as OptionProps).children).toBe('Clear override');
     });
 
@@ -1120,9 +1007,7 @@ describe('MonitoringLogSection', () => {
       const tree2 = renderSection('log-1');
       const select2 = findByTestid(tree2, 'monitoring-log-source-select');
       // Sentinel value — not a real nodeId.
-      expect((select2!.props as SelectProps).value).toBe(
-        '__ice_log_clear_override__',
-      );
+      expect((select2!.props as SelectProps).value).toBe('__ice_log_clear_override__');
     });
 
     it('selecting a real candidate dispatches updateCardNodeData with the override', () => {
@@ -1157,17 +1042,11 @@ describe('MonitoringLogSection', () => {
         ...baseAmbiguous,
         source: {
           state: 'ambiguous',
-          candidates: [
-            { nodeId: 'svc-A', iceType: 'Database.MongoDB', label: 'mongo' },
-          ],
+          candidates: [{ nodeId: 'svc-A', iceType: 'Database.MongoDB', label: 'mongo' }],
         },
       };
       const tree = renderSection('log-1');
-      const opt = findByPredicate(
-        tree,
-        (el) =>
-          el.type === 'option' && (el.props as OptionProps).value === 'svc-A',
-      )[0];
+      const opt = findByPredicate(tree, (el) => el.type === 'option' && (el.props as OptionProps).value === 'svc-A')[0];
       expect((opt.props as OptionProps).children).toBe('mongo · MongoDB');
     });
 
@@ -1177,17 +1056,11 @@ describe('MonitoringLogSection', () => {
         ...baseAmbiguous,
         source: {
           state: 'ambiguous',
-          candidates: [
-            { nodeId: 'svc-A', iceType: 'NoDotIceType', label: 'svc' },
-          ],
+          candidates: [{ nodeId: 'svc-A', iceType: 'NoDotIceType', label: 'svc' }],
         },
       };
       const tree = renderSection('log-1');
-      const opt = findByPredicate(
-        tree,
-        (el) =>
-          el.type === 'option' && (el.props as OptionProps).value === 'svc-A',
-      )[0];
+      const opt = findByPredicate(tree, (el) => el.type === 'option' && (el.props as OptionProps).value === 'svc-A')[0];
       expect((opt.props as OptionProps).children).toBe('svc · NoDotIceType');
     });
   });

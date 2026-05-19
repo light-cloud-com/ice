@@ -10,14 +10,11 @@ const mocks = vi.hoisted(() => {
   const passthrough: React.FC<Record<string, unknown>> = (props) =>
     React.createElement('div', null, (props as { children?: React.ReactNode }).children);
   passthrough.displayName = 'MockCardShell';
-  const PillsMock: React.FC<{ color: string }> = () => null;
-  PillsMock.displayName = 'MockDocumentPills';
-  return { CardShell: passthrough, DocumentPills: PillsMock };
+  return { CardShell: passthrough };
 });
 
 vi.mock('../../_shared', () => ({
   CardShell: mocks.CardShell,
-  DocumentPills: mocks.DocumentPills,
 }));
 
 vi.mock('lucide-react', () => ({
@@ -41,10 +38,13 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   if (children == null) return;
   yield* walk(children);
 }
-function findByType(tree: React.ReactNode, type: unknown): React.ReactElement[] {
-  const out: React.ReactElement[] = [];
-  for (const el of walk(tree)) if (el && el.type === type) out.push(el);
-  return out;
+function findTextEqual(tree: React.ReactNode, value: string): React.ReactElement | undefined {
+  for (const el of walk(tree)) {
+    const c = (el.props as { children?: unknown }).children;
+    if (c === value) return el;
+    if (Array.isArray(c) && c.some((x) => x === value)) return el;
+  }
+  return undefined;
 }
 
 const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
@@ -59,9 +59,7 @@ const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
   ...overrides,
 });
 
-const renderInner = (
-  props: Partial<React.ComponentProps<typeof SvgMongodbNode>> = {},
-): React.ReactElement => {
+const renderInner = (props: Partial<React.ComponentProps<typeof SvgMongodbNode>> = {}): React.ReactElement => {
   const defaults: React.ComponentProps<typeof SvgMongodbNode> = {
     node: makeNode(),
     isSelected: false,
@@ -96,16 +94,32 @@ describe('SvgMongodbNode', () => {
     expect((tree.props as { title: string }).title).toBe('MongoDB');
   });
 
-  it('renders DocumentPills (NOT TableStripes) in the body slot', () => {
-    const tree = renderInner();
-    const pills = findByType(tree, mocks.DocumentPills);
-    expect(pills).toHaveLength(1);
+  it('renders the engine + version big in the body', () => {
+    const tree = renderInner({ node: makeNode({ data: { iceType: 'Database.MongoDB', version: '7.0' } }) });
+    expect(findTextEqual(tree, 'MongoDB 7.0')).toBeDefined();
   });
 
-  it('passes the mongodb green accent to DocumentPills', () => {
+  it('uses the mongodb green accent', () => {
     const tree = renderInner();
-    const pills = findByType(tree, mocks.DocumentPills)[0];
-    expect((pills.props as { color: string }).color).toBe('#10b981');
+    expect((tree.props as { accentColor: string }).accentColor).toBe('#10b981');
+  });
+
+  it('shows the HA badge when production is true', () => {
+    const tree = renderInner({
+      node: makeNode({ data: { iceType: 'Database.MongoDB', version: '7.0', production: true } }),
+    });
+    expect(findTextEqual(tree, 'HA')).toBeDefined();
+  });
+
+  it('shows the shard-count badge with singular/plural label', () => {
+    const single = renderInner({
+      node: makeNode({ data: { iceType: 'Database.MongoDB', version: '7.0', shards: 1 } }),
+    });
+    expect(findTextEqual(single, '1 shard')).toBeDefined();
+    const multi = renderInner({
+      node: makeNode({ data: { iceType: 'Database.MongoDB', version: '7.0', shards: 3 } }),
+    });
+    expect(findTextEqual(multi, '3 shards')).toBeDefined();
   });
 
   it('builds liveConfig from version + storage + production + shards', () => {

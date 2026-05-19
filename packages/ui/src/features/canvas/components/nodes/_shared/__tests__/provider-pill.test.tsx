@@ -32,9 +32,11 @@ vi.mock('../../../../../../assets/icons/brand-registry', () => ({
 import { ProviderPill } from '../provider-pill';
 
 const renderInner = (props: React.ComponentProps<typeof ProviderPill>): React.ReactElement => {
-  const Inner = (ProviderPill as unknown as {
-    type: (p: React.ComponentProps<typeof ProviderPill>) => React.ReactElement;
-  }).type;
+  const Inner = (
+    ProviderPill as unknown as {
+      type: (p: React.ComponentProps<typeof ProviderPill>) => React.ReactElement;
+    }
+  ).type;
   return Inner(props);
 };
 

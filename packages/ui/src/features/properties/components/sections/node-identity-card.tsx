@@ -60,9 +60,7 @@ export const NodeIdentityCard: React.FC<NodeIdentityCardProps> = ({
           </span>
         )}
         {iceType && !resourceDef && (
-          <span className="text-ice-2xs bg-ice-raised text-ice-text-2 px-1.5 py-0.5 rounded font-mono">
-            {iceType}
-          </span>
+          <span className="text-ice-2xs bg-ice-raised text-ice-text-2 px-1.5 py-0.5 rounded font-mono">{iceType}</span>
         )}
         {provider && (
           <span className="text-ice-2xs bg-blue-950/50 text-blue-400 px-1.5 py-0.5 rounded font-mono uppercase">

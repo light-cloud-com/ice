@@ -30,20 +30,12 @@
  * (rf-canv-5). Pure — no React, no Redux, no module state.
  */
 
-import {
-  computeCompactNodeHeight,
-  computeCompactNodeWidth,
-} from '../components/nodes/compact-node';
-import {
-  computeCustomDomainHeight,
-  computeCustomDomainWidth,
-} from '../components/nodes/custom-domain';
-import {
-  computePrivateNetworkHeight,
-  computePrivateNetworkWidth,
-} from '../components/nodes/private-network';
-import type { CanvasNode } from '../components/types';
 import { isGroupContainer, isPrivateNetwork as isPrivateNetworkIce } from './node-classification';
+import { computeCompactNodeHeight, computeCompactNodeWidth } from '../components/nodes/compact-node';
+import { computeCustomDomainHeight, computeCustomDomainWidth } from '../components/nodes/custom-domain';
+import { computePrivateNetworkHeight, computePrivateNetworkWidth } from '../components/nodes/private-network';
+import { computeCronJobHeight, computeCronJobWidth } from '../components/nodes/scheduled-task';
+import type { CanvasNode } from '../components/types';
 
 /** Minimal Redux-shape input — `nodes` from the cards slice. */
 export interface SizingInputNode {
@@ -74,6 +66,7 @@ export function computeNodeSizes(node: SizingInputNode, hasPipelineStatus: boole
   const iceType = (node.data?.iceType as string) || 'Resource.Unknown';
   const isCustomDomain = iceType === 'Network.CustomDomain';
   const isPrivateNetwork = isPrivateNetworkIce(iceType);
+  const isCronJob = iceType === 'Compute.CronJob';
   const isGroup = isGroupContainer(node);
   const isBlock = node.type === 'block';
   const folded = !!node.data?.folded;
@@ -83,16 +76,24 @@ export function computeNodeSizes(node: SizingInputNode, hasPipelineStatus: boole
     ? computeCustomDomainWidth()
     : isPrivateNetwork
       ? computePrivateNetworkWidth(node.width || 0)
-      : computeCompactNodeWidth(isBlock || isGroup);
+      : isCronJob
+        ? computeCronJobWidth()
+        : computeCompactNodeWidth(isBlock || isGroup);
   const defaultHeight = isCustomDomain
     ? computeCustomDomainHeight(nodeData)
     : isPrivateNetwork
       ? computePrivateNetworkHeight(node.height || 0)
-      : computeCompactNodeHeight(nodeData, isBlock || isGroup, hasPipelineStatus);
+      : isCronJob
+        ? computeCronJobHeight(nodeData)
+        : computeCompactNodeHeight(nodeData, isBlock || isGroup, hasPipelineStatus);
 
+  // Cron, like custom-domain, has dynamic height tied to its task count.
+  // We never let folding collapse it to a 38px pill — folding hides the
+  // per-task port circles, which are the entire point of the block.
   const expandedHeight =
-    isCustomDomain || isPrivateNetwork ? defaultHeight : Math.max(node.height || 0, defaultHeight);
-  const visualHeight = folded && !isCustomDomain && !isPrivateNetwork ? (isGroup ? 36 : 38) : expandedHeight;
+    isCustomDomain || isPrivateNetwork || isCronJob ? defaultHeight : Math.max(node.height || 0, defaultHeight);
+  const visualHeight =
+    folded && !isCustomDomain && !isPrivateNetwork && !isCronJob ? (isGroup ? 36 : 38) : expandedHeight;
 
   return { defaultWidth, defaultHeight, expandedHeight, visualHeight };
 }
@@ -102,11 +103,7 @@ export function computeNodeSizes(node: SizingInputNode, hasPipelineStatus: boole
  * `CanvasNode` shape. Verbatim port of the return-object at L461–471 of
  * the inline reducer.
  */
-export function toLocalCanvasNode(
-  node: SizingInputNode,
-  _hasPipelineStatus: boolean,
-  sizes: NodeSizes,
-): CanvasNode {
+export function toLocalCanvasNode(node: SizingInputNode, _hasPipelineStatus: boolean, sizes: NodeSizes): CanvasNode {
   const iceType = (node.data?.iceType as string) || 'Resource.Unknown';
   return {
     id: node.id,

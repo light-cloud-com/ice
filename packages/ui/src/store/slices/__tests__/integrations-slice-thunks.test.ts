@@ -7,8 +7,9 @@
  * body get measured.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { configureStore } from '@reduxjs/toolkit';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { setApiAdapter } from '../../../shared/api/api-adapter';
 import integrationsReducer, {
   checkGitHubConnection,
   connectGitHubPAT,
@@ -17,7 +18,6 @@ import integrationsReducer, {
   fetchGitHubRepos,
   fetchGitHubBranches,
 } from '../integrations-slice';
-import { setApiAdapter } from '../../../shared/api/api-adapter';
 
 interface GhStub {
   isConnected: ReturnType<typeof vi.fn>;

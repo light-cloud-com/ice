@@ -38,9 +38,9 @@
  * @see rf-cards-14
  */
 
-import type { PayloadAction } from '@reduxjs/toolkit';
 import { pushSnapshot } from '../snapshot';
 import type { CardNode, CardsState } from '../types';
+import type { PayloadAction } from '@reduxjs/toolkit';
 
 export const undoRedoGroupReducers = {
   // Undo last change on active card

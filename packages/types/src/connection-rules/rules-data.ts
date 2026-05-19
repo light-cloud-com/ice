@@ -16,7 +16,6 @@
  */
 
 import { type ConnectionCategory, DEFAULT_PORTS, DEFAULT_ENV_VARS } from '@ice/constants';
-import type { ConnectionRule } from './types';
 import {
   isAuth,
   isBackend,
@@ -39,6 +38,7 @@ import {
   isStorage,
   isVectorDb,
 } from './predicates';
+import type { ConnectionRule } from './types';
 
 // ─── Declarative Connection Rules ───────────────────────────────────────────
 // Each rule defines: "blocks matching source() CAN connect to blocks matching
@@ -296,6 +296,18 @@ export const CONNECTION_RULES: ConnectionRule[] = [
     category: 'traffic',
     trafficType: 'stream',
     lineStyle: 'thin',
+  },
+  // Reverse: user drags monitoring→service (e.g. drags from a Log block
+  // toward the Backend it should observe), we flip back to the canonical
+  // Service → Monitoring orientation.
+  {
+    label: 'Monitoring → Service (flip)',
+    source: isMonitoring,
+    target: (t) => !isMonitoring(t) && !isContainer(t),
+    category: 'traffic',
+    trafficType: 'stream',
+    lineStyle: 'thin',
+    reverse: true,
   },
 
   // ── PIPELINE ───────────────────────────────────────────────────────────

@@ -49,16 +49,15 @@ describe('classifyGCPError — UNAUTHENTICATED', () => {
 });
 
 describe('classifyGCPError — PERMISSION_DENIED', () => {
-  it.each([
-    'PERMISSION_DENIED: x',
-    'caller does not have access',
-    'permission required',
-  ])('classifies %s as AUTH_INSUFFICIENT_PERMISSIONS', (msg) => {
-    const result = classifyGCPError({ message: msg });
-    expect(result.code).toBe(ImportErrorCode.AUTH_INSUFFICIENT_PERMISSIONS);
-    expect(result.recoverable).toBe(false);
-    expect(result.action?.type).toBe('grant_permission');
-  });
+  it.each(['PERMISSION_DENIED: x', 'caller does not have access', 'permission required'])(
+    'classifies %s as AUTH_INSUFFICIENT_PERMISSIONS',
+    (msg) => {
+      const result = classifyGCPError({ message: msg });
+      expect(result.code).toBe(ImportErrorCode.AUTH_INSUFFICIENT_PERMISSIONS);
+      expect(result.recoverable).toBe(false);
+      expect(result.action?.type).toBe('grant_permission');
+    },
+  );
 
   it('classifies error.code=403 as AUTH_INSUFFICIENT_PERMISSIONS', () => {
     const result = classifyGCPError({ code: 403, message: 'unrelated' });
@@ -80,15 +79,14 @@ describe('classifyGCPError — API not enabled', () => {
 });
 
 describe('classifyGCPError — quota exceeded', () => {
-  it.each([
-    'QUOTA_EXCEEDED',
-    'quota exceeded for project',
-    'rate limit reached',
-  ])('classifies %s as API_RATE_LIMITED', (msg) => {
-    const result = classifyGCPError({ message: msg });
-    expect(result.code).toBe(ImportErrorCode.API_RATE_LIMITED);
-    expect(result.action?.type).toBe('retry');
-  });
+  it.each(['QUOTA_EXCEEDED', 'quota exceeded for project', 'rate limit reached'])(
+    'classifies %s as API_RATE_LIMITED',
+    (msg) => {
+      const result = classifyGCPError({ message: msg });
+      expect(result.code).toBe(ImportErrorCode.API_RATE_LIMITED);
+      expect(result.action?.type).toBe('retry');
+    },
+  );
 
   it('classifies error.code=429 as API_RATE_LIMITED', () => {
     const result = classifyGCPError({ code: 429, message: 'unrelated' });

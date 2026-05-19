@@ -13,13 +13,13 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { TRAFFIC_TIERS } from '../provider-pricing';
 import {
   TRAFFIC_TIER_KEY,
   DEFAULT_TRAFFIC_TIER_INDEX,
   loadTrafficTier,
   saveTrafficTier,
 } from '../traffic-tier-storage';
-import { TRAFFIC_TIERS } from '../provider-pricing';
 
 // ─── Storage harness ──────────────────────────────────────────────────────
 

@@ -6,15 +6,10 @@
  * cross-resource dependencies from in-property ID/ARN strings.
  */
 
-import { get_ice_type, get_ice_provider, map_properties } from './type-mapper';
 import { mask_sensitive_attributes } from './sensitive';
+import { get_ice_type, get_ice_provider, map_properties } from './type-mapper';
 import type { TerraformImportOptions } from './state-importer';
-import type {
-  TerraformResource,
-  TerraformResourceInstance,
-  ImportedResource,
-  ImportWarning,
-} from './types';
+import type { TerraformResource, TerraformResourceInstance, ImportedResource, ImportWarning } from './types';
 
 type ResolvedOptions = Required<Omit<TerraformImportOptions, 'target_graph'>>;
 

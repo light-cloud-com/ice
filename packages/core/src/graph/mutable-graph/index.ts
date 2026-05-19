@@ -46,9 +46,4 @@ export {
   traversal_traverse,
 } from './traversal';
 
-export {
-  create_mutable_graph_state,
-  type GraphStats,
-  type MutableGraphState,
-  type SerializedGraph,
-} from './types';
+export { create_mutable_graph_state, type GraphStats, type MutableGraphState, type SerializedGraph } from './types';

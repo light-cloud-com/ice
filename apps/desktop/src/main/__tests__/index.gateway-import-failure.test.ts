@@ -22,10 +22,16 @@ const h = vi.hoisted(() => {
       send: vi.fn(),
       setWindowOpenHandler: vi.fn(),
       on: vi.fn((channel: string, listener: Listener) => {
-        ((this.webContents as any)._listeners ??= {} as Listeners);
+        (this.webContents as any)._listeners ??= {} as Listeners;
         (((this.webContents as any)._listeners as Listeners)[channel] ??= []).push(listener);
         return this.webContents;
       }),
+      once: vi.fn((channel: string, listener: Listener) => {
+        (this.webContents as any)._listeners ??= {} as Listeners;
+        (((this.webContents as any)._listeners as Listeners)[channel] ??= []).push(listener);
+        return this.webContents;
+      }),
+      executeJavaScript: vi.fn(() => Promise.resolve()),
       _listeners: {} as Listeners,
       getURL: vi.fn(() => 'http://localhost:15173/'),
     } as any;
@@ -70,6 +76,7 @@ const h = vi.hoisted(() => {
       quit: vi.fn(),
       getPath: vi.fn((kind: string) => `/fake/${kind}`),
       getAppPath: vi.fn(() => '/fake/asar'),
+      getVersion: vi.fn(() => '0.0.0-test'),
       dock: { setIcon: vi.fn() } as any,
     },
     BrowserWindow: Object.assign(FakeBrowserWindow, {

@@ -69,12 +69,12 @@ const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
   ...overrides,
 });
 
-const renderGN = (
-  props: Partial<React.ComponentProps<typeof SvgGroupNode>> = {},
-): React.ReactElement => {
-  const Inner = (SvgGroupNode as unknown as {
-    type: (p: React.ComponentProps<typeof SvgGroupNode>) => React.ReactElement;
-  }).type;
+const renderGN = (props: Partial<React.ComponentProps<typeof SvgGroupNode>> = {}): React.ReactElement => {
+  const Inner = (
+    SvgGroupNode as unknown as {
+      type: (p: React.ComponentProps<typeof SvgGroupNode>) => React.ReactElement;
+    }
+  ).type;
   const defaults: React.ComponentProps<typeof SvgGroupNode> = {
     node: makeNode(),
     isSelected: false,
@@ -200,7 +200,22 @@ describe('SvgGroupNode — displayLabel truncation with isBlock fallback', () =>
   it('truncates "Block" fallback when label empty + maxChars too small', () => {
     // Width 100 → maxChars = max(floor((100-80)/7), 8) = max(2, 8) = 8.
     // Fallback "Block" length 5 < 8 → no truncation.
-    const tree = renderGN({ lod: 3, isBlock: true, node: { ...({} as Parameters<typeof renderGN>[0]['node']), id: 'b', type: 'block', x: 0, y: 0, width: 100, height: 120, label: '', data: {}, parentId: undefined } as Parameters<typeof renderGN>[0]['node'] });
+    const tree = renderGN({
+      lod: 3,
+      isBlock: true,
+      node: {
+        ...({} as Parameters<typeof renderGN>[0]['node']),
+        id: 'b',
+        type: 'block',
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 120,
+        label: '',
+        data: {},
+        parentId: undefined,
+      } as Parameters<typeof renderGN>[0]['node'],
+    });
     expect((tree.props as { displayLabel: string }).displayLabel).toBe('Block');
   });
 
@@ -218,7 +233,17 @@ describe('SvgGroupNode — displayLabel truncation with isBlock fallback', () =>
   it('label undefined coerces to fallback in displayLabel', () => {
     const tree = renderGN({
       lod: 1,
-      node: { id: 'g', type: 'block', x: 0, y: 0, width: 280, height: 120, label: undefined as unknown as string, data: {}, parentId: undefined },
+      node: {
+        id: 'g',
+        type: 'block',
+        x: 0,
+        y: 0,
+        width: 280,
+        height: 120,
+        label: undefined as unknown as string,
+        data: {},
+        parentId: undefined,
+      },
     });
     expect((tree.props as { displayLabel: string }).displayLabel).toBe('Group');
   });
@@ -226,7 +251,10 @@ describe('SvgGroupNode — displayLabel truncation with isBlock fallback', () =>
 
 describe('SvgGroupNode — GroupLod2 label fallback', () => {
   it('forwards empty label to GroupLod2 when label undefined', () => {
-    const tree = renderGN({ lod: 2, node: { id: 'g', type: 'block', x: 0, y: 0, width: 280, height: 120, label: '', data: {}, parentId: undefined } });
+    const tree = renderGN({
+      lod: 2,
+      node: { id: 'g', type: 'block', x: 0, y: 0, width: 280, height: 120, label: '', data: {}, parentId: undefined },
+    });
     expect((tree.props as { label: string }).label).toBe('');
   });
 });

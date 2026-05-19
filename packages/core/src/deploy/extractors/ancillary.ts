@@ -9,14 +9,20 @@
  * are intentional — handlers further down the pipeline coerce per-resource.
  */
 
-export function extract_secret_manager_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
+export function extract_secret_manager_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
   return {
     replication_type: data.replicationType || 'automatic',
     labels: {},
   };
 }
 
-export function extract_identity_platform_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
+export function extract_identity_platform_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
   return {
     sign_in_providers: data.signInProviders || ['email', 'google'],
     mfa_enabled: data.mfaEnabled ?? false,
@@ -55,7 +61,10 @@ export function extract_dataflow_properties(data: Record<string, unknown>, regio
   };
 }
 
-export function extract_discovery_engine_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
+export function extract_discovery_engine_properties(
+  data: Record<string, unknown>,
+  region: string,
+): Record<string, unknown> {
   return {
     location: region,
     solution_type: 'SOLUTION_TYPE_SEARCH',
@@ -72,7 +81,10 @@ export function extract_gke_properties(data: Record<string, unknown>, region: st
   };
 }
 
-export function extract_domain_mapping_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
+export function extract_domain_mapping_properties(
+  data: Record<string, unknown>,
+  region: string,
+): Record<string, unknown> {
   return {
     domain: [data.subdomain, data.hostname].filter(Boolean).join('.') || (data.hostname as string) || '',
     hostname: (data.hostname as string) || '',
@@ -83,7 +95,10 @@ export function extract_domain_mapping_properties(data: Record<string, unknown>,
   };
 }
 
-export function extract_custom_domain_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
+export function extract_custom_domain_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
   const domain = String(data.domain || '').trim();
   const auto_provision = data.autoProvisionCert !== false;
   return {
@@ -99,7 +114,10 @@ export function extract_custom_domain_properties(data: Record<string, unknown>, 
   };
 }
 
-export function extract_backend_bucket_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
+export function extract_backend_bucket_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
   return {
     bucket_name: (data.bucket_name as string) || (data.name as string) || '',
     enable_cdn: data.enable_cdn !== false,
@@ -107,7 +125,10 @@ export function extract_backend_bucket_properties(data: Record<string, unknown>,
   };
 }
 
-export function extract_firebase_hosting_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
+export function extract_firebase_hosting_properties(
+  data: Record<string, unknown>,
+  _region: string,
+): Record<string, unknown> {
   // Firebase Hosting only needs a few fields:
   //   - domain (optional): user's custom domain. Registered with
   //     Firebase Hosting which provisions a managed SSL cert.

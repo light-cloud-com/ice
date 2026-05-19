@@ -18,7 +18,6 @@
  */
 
 import React from 'react';
-
 import { computeConnectionPreviewPath, pickPreviewColor } from '../utils/connection-preview';
 import type { CanvasNode } from './types';
 
@@ -47,14 +46,7 @@ export const ConnectionPreviewOverlay: React.FC<ConnectionPreviewOverlayProps> =
   );
   return (
     <g className="connection-preview" style={{ pointerEvents: 'none' }}>
-      <path
-        d={pathD}
-        stroke={previewColor}
-        strokeWidth={2}
-        fill="none"
-        strokeDasharray="8 4"
-        opacity={0.7}
-      />
+      <path d={pathD} stroke={previewColor} strokeWidth={2} fill="none" strokeDasharray="8 4" opacity={0.7} />
       <circle cx={sourcePoint.x} cy={sourcePoint.y} r={4} fill={previewColor} opacity={0.9} />
       <circle cx={currentPoint.x} cy={currentPoint.y} r={4} fill={previewColor} opacity={0.6} />
     </g>

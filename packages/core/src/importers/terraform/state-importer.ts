@@ -6,9 +6,8 @@
 
 import { existsSync } from 'fs';
 import { readFile } from 'fs/promises';
-import { create_empty_metadata } from './sensitive';
 import { import_resource_instance, infer_dependencies } from './resource-conversion';
-import type { MutableGraph } from '../../graph/mutable-graph';
+import { create_empty_metadata } from './sensitive';
 import type {
   TerraformState,
   TerraformImportResult,
@@ -18,6 +17,7 @@ import type {
   ImportWarning,
   ImportMetadata,
 } from './types';
+import type { MutableGraph } from '../../graph/mutable-graph';
 
 // =============================================================================
 // Import Options

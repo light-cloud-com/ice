@@ -10,6 +10,7 @@ import { Mail } from 'lucide-react';
 import React from 'react';
 import { CardShell, LabelLine } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
+import { t } from '../../../../../i18n';
 
 export { ES_HEADER_HEIGHT, ES_FIELD_HEIGHT, ES_PADDING };
 
@@ -29,7 +30,7 @@ export const SvgEmailServiceNode: React.FC<SvgCompactNodeProps> = ({
   const fromAddress = (node.data?.from_address as string) || '';
   const fromName = (node.data?.from_name as string) || '';
 
-  const liveConfig = fromAddress || 'Transactional';
+  const liveConfig = fromAddress || t('canvas.blocks.email.transactional');
 
   return (
     <CardShell
@@ -41,12 +42,12 @@ export const SvgEmailServiceNode: React.FC<SvgCompactNodeProps> = ({
       lod={lod}
       pipelineStatus={pipelineStatus}
       icon={Mail}
-      title={node.label || 'Email Service'}
+      title={node.label || t('canvas.blocks.titles.emailService')}
       liveConfig={liveConfig}
       headerHeight={ES_HEADER_HEIGHT}
     >
-      <LabelLine label="FROM" value={fromAddress} placeholder="noreply@example.com" />
-      <LabelLine label="SENDER" value={fromName} placeholder="My App" mono={false} />
+      <LabelLine label={t('canvas.blocks.email.from')} value={fromAddress} placeholder="noreply@example.com" />
+      <LabelLine label={t('canvas.blocks.email.sender')} value={fromName} placeholder="My App" mono={false} />
     </CardShell>
   );
 };

@@ -17,6 +17,7 @@ import {
 import { Server } from 'lucide-react';
 import React from 'react';
 import { CardShell, ScaleGauge } from '../_shared';
+import { t } from '../../../../../i18n';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
 export { COMPUTE_HEADER_HEIGHT, COMPUTE_BODY_HEIGHT, COMPUTE_PADDING };
@@ -40,9 +41,9 @@ function buildLiveConfig(data: Record<string, unknown> | undefined): string {
   const max = data?.maxInstances != null ? Number(data.maxInstances) : null;
   const runtime = (data?.runtime as string) || '';
   const size = (data?.size as string) || '';
-  const range = min != null && max != null ? `${min}–${max} instances` : '';
+  const range = min != null && max != null ? `${min}–${max} ${t('canvas.blocks.scalableBackend.instancesRange')}` : '';
   const parts = [range, size, runtime].filter(Boolean);
-  return parts.join(' · ') || 'unconfigured';
+  return parts.join(' · ') || t('canvas.blocks.common.unconfigured');
 }
 
 export const SvgScalableBackendNode: React.FC<SvgCompactNodeProps> = ({
@@ -70,7 +71,7 @@ export const SvgScalableBackendNode: React.FC<SvgCompactNodeProps> = ({
       pipelineStatus={pipelineStatus}
       icon={Server}
       accentColor={BACKEND_ACCENT}
-      title={node.label || 'Scalable Backend'}
+      title={node.label || t('canvas.blocks.titles.scalableBackend')}
       liveConfig={liveConfig}
       headerHeight={COMPUTE_HEADER_HEIGHT}
     >

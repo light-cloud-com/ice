@@ -17,6 +17,7 @@
 
 import { AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, Info } from 'lucide-react';
 import React from 'react';
+import { t } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
 import type { CardNode, CardEdge } from '../../../store/slices/cards-slice';
 
@@ -60,8 +61,8 @@ export function collectDesignRequirements(
       out.push({
         id: 'pg-no-service',
         level: 'error',
-        title: 'No service connected',
-        hint: 'Drag an edge from a Compute block (Container, BackendAPI, SSRSite, ServerlessFunction) to this database. Without one, the database deploys but nothing reads or writes to it.',
+        title: t('canvas.properties.requirements.pgNoServiceTitle'),
+        hint: t('canvas.properties.requirements.pgNoServiceHint'),
       });
     }
 
@@ -77,11 +78,14 @@ export function collectDesignRequirements(
       out.push({
         id: 'pg-edition-implicit',
         level: 'info',
-        title: `Will deploy as ${inferred}, tier ${inferred_tier}`,
+        title: t('canvas.properties.requirements.pgEditionTitle', {
+          edition: inferred,
+          tier: inferred_tier,
+        }),
         hint:
           inferred === 'ENTERPRISE'
-            ? 'Edition is auto-picked because shared-core tiers (db-f1-micro, db-g1-small) only work on ENTERPRISE. Set the `edition` field in Config to override.'
-            : 'Edition is auto-picked because the chosen tier is performance-optimized (ENTERPRISE_PLUS only). Set the `edition` field in Config to override.',
+            ? t('canvas.properties.requirements.pgEditionEnterpriseHint')
+            : t('canvas.properties.requirements.pgEditionEnterprisePlusHint'),
       });
     }
   }
@@ -92,8 +96,8 @@ export function collectDesignRequirements(
       out.push({
         id: 'pn-empty',
         level: 'warning',
-        title: 'Private network is empty',
-        hint: 'Drag compute or database blocks inside this network to put them on a private VPC. An empty private network deploys a VPC but no resources use it.',
+        title: t('canvas.properties.requirements.pnEmptyTitle'),
+        hint: t('canvas.properties.requirements.pnEmptyHint'),
       });
     }
 
@@ -102,8 +106,8 @@ export function collectDesignRequirements(
       out.push({
         id: 'pn-open-ingress',
         level: 'info',
-        title: 'Inbound traffic is unrestricted',
-        hint: 'ingress = "all" — anything on the public internet can reach services inside (subject to per-block ingress rules). Set ingress to "allowlist" to limit source IPs, or "none" to seal the network entirely.',
+        title: t('canvas.properties.requirements.pnOpenIngressTitle'),
+        hint: t('canvas.properties.requirements.pnOpenIngressHint'),
       });
     }
   }
@@ -180,12 +184,26 @@ export const DesignRequirements: React.FC<{
           ) : (
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
           )}
-          <span className="font-medium text-ice-text-1">Requirements</span>
+          <span className="font-medium text-ice-text-1">{t('canvas.properties.requirements.header')}</span>
           <span className="text-ice-text-3">
             {[
-              errorCount > 0 ? `${errorCount} blocking` : null,
-              warnCount > 0 ? `${warnCount} warning${warnCount === 1 ? '' : 's'}` : null,
-              infoCount > 0 ? `${infoCount} note${infoCount === 1 ? '' : 's'}` : null,
+              errorCount > 0 ? t('canvas.properties.requirements.blocking', { count: errorCount }) : null,
+              warnCount > 0
+                ? t(
+                    warnCount === 1
+                      ? 'canvas.properties.requirements.warning'
+                      : 'canvas.properties.requirements.warnings',
+                    { count: warnCount },
+                  )
+                : null,
+              infoCount > 0
+                ? t(
+                    infoCount === 1
+                      ? 'canvas.properties.requirements.note'
+                      : 'canvas.properties.requirements.notes',
+                    { count: infoCount },
+                  )
+                : null,
             ]
               .filter(Boolean)
               .join(' · ')}

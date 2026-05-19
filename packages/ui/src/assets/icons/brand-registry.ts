@@ -85,6 +85,10 @@ import nextjs from 'devicon/icons/nextjs/nextjs-original.svg';
 import nginx from 'devicon/icons/nginx/nginx-original.svg';
 import nodejs from 'devicon/icons/nodejs/nodejs-original.svg';
 import nuxtjs from 'devicon/icons/nuxtjs/nuxtjs-original.svg';
+import html5 from 'devicon/icons/html5/html5-original.svg';
+import hugo from 'devicon/icons/hugo/hugo-original.svg';
+import jekyll from 'devicon/icons/jekyll/jekyll-original.svg';
+import qwik from 'devicon/icons/qwik/qwik-original.svg';
 import packer from 'devicon/icons/packer/packer-original.svg';
 import perl from 'devicon/icons/perl/perl-original.svg';
 import php from 'devicon/icons/php/php-original.svg';
@@ -241,6 +245,10 @@ reg(['tailwind', 'tailwindcss'], tailwindcss, 'Tailwind CSS');
 reg(['bootstrap'], bootstrap, 'Bootstrap');
 reg(['vite', 'vitejs'], vite, 'Vite');
 reg(['webpack'], webpack, 'webpack');
+reg(['html', 'html5'], html5, 'HTML5');
+reg(['hugo'], hugo, 'Hugo');
+reg(['jekyll'], jekyll, 'Jekyll');
+reg(['qwik', 'qwikjs'], qwik, 'Qwik');
 
 // ─── Infrastructure & DevOps ────────────────────────────────────────────────
 reg(['docker'], docker, 'Docker');

@@ -20,6 +20,7 @@ import { Target } from 'lucide-react';
 import React from 'react';
 import { CardShell } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
+import { t } from '../../../../../i18n';
 
 export { COMPUTE_HEADER_HEIGHT, COMPUTE_BODY_HEIGHT, COMPUTE_PADDING };
 
@@ -29,20 +30,29 @@ export function computeVectorDbHeight(): number {
 
 const VECTOR_ACCENT = '#a855f7';
 
-const METRIC_LABELS: Record<string, string> = {
-  cosine: 'cosine',
-  euclidean: 'euclidean',
-  l2: 'L2',
-  dot: 'dot product',
-  ip: 'inner product',
-};
+function getMetricLabel(k: string): string | undefined {
+  switch (k) {
+    case 'cosine':
+      return t('canvas.blocks.vector.metricCosine');
+    case 'euclidean':
+      return t('canvas.blocks.vector.metricEuclidean');
+    case 'l2':
+      return t('canvas.blocks.vector.metricL2');
+    case 'dot':
+      return t('canvas.blocks.vector.metricDot');
+    case 'ip':
+      return t('canvas.blocks.vector.metricInner');
+    default:
+      return undefined;
+  }
+}
 
 function buildLiveConfig(data: Record<string, unknown> | undefined): string {
-  const dimensions = data?.dimensions != null ? `${data.dimensions}-d` : '';
+  const dimensions = data?.dimensions != null ? `${data.dimensions}${t('canvas.blocks.vector.dimSuffix')}` : '';
   const metricRaw = ((data?.metric as string) || '').toLowerCase();
-  const metric = metricRaw ? METRIC_LABELS[metricRaw] || metricRaw : '';
+  const metric = metricRaw ? getMetricLabel(metricRaw) || metricRaw : '';
   const parts = [dimensions, metric].filter(Boolean);
-  return parts.join(' · ') || 'unconfigured';
+  return parts.join(' · ') || t('canvas.blocks.common.unconfigured');
 }
 
 // Deterministic seed → 24 (x, y) dots in [4, 96]². The seed is a
@@ -102,7 +112,7 @@ export const SvgVectorDbNode: React.FC<SvgCompactNodeProps> = ({
       pipelineStatus={pipelineStatus}
       icon={Target}
       accentColor={VECTOR_ACCENT}
-      title={node.label || 'Vector DB'}
+      title={node.label || t('canvas.blocks.titles.vectorDb')}
       liveConfig={liveConfig}
       headerHeight={COMPUTE_HEADER_HEIGHT}
     >

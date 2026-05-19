@@ -17,7 +17,7 @@
  *     descriptor or null.
  *   - `useTranslation` — identity `t(key) => key` for label assertions.
  *   - `cn` — space-joined truthy concat.
- *   - `PROVIDERS` — deterministic three-entry list.
+ *   - `getProviders` — deterministic three-entry list.
  */
 
 import React from 'react';
@@ -64,7 +64,7 @@ vi.mock('../../../shared/utils/cn', () => ({
 }));
 
 vi.mock('../data/providers', () => ({
-  PROVIDERS: [
+  getProviders: () => [
     { id: 'all', label: 'palette.providerAll' },
     { id: 'aws', label: 'AWS', color: '#FF9900' },
     { id: 'gcp', label: 'GCP', color: '#4285F4' },

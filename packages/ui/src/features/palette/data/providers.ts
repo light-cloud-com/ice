@@ -4,10 +4,16 @@
  *
  * Extracted verbatim from `components/resource-palette.tsx` (rf-rpal-4).
  *
- * `PROVIDERS` is the list of options in the section header's provider
- * dropdown. The 'all' entry resolves its label through `translate()` at
- * module-load time; cloud providers come from the enabled list (`aws`,
- * `gcp`, `azure`).
+ * `getProviders(t)` returns the list of options for the section header's
+ * provider dropdown. The 'all' entry resolves its label through the
+ * passed-in `t` translator at call time; cloud providers come from the
+ * enabled list (`aws`, `gcp`, `azure`).
+ *
+ * **Locale-reactivity:** the previous module-level `PROVIDERS` constant
+ * called `translate('palette.providerAll')` at import time, freezing the
+ * "All" label to whichever locale was active on first import. Now the
+ * getter is called from inside the React component each render so
+ * locale changes re-derive the label.
  *
  * `STORAGE_KEY` is the localStorage key under which the user's
  * collapsed-section preference is persisted. UX-observable: do NOT change
@@ -21,13 +27,24 @@
  */
 
 import { ENABLED_PROVIDERS as ENABLED_CLOUD_PROVIDERS } from '../../../config/providers';
-import { t as translate } from '../../../i18n';
 
-/** Provider filter options shown in the BlocksSection header dropdown. */
-export const PROVIDERS: { id: string; label: string; color?: string }[] = [
-  { id: 'all', label: translate('palette.providerAll') },
-  ...ENABLED_CLOUD_PROVIDERS.map((p) => ({ id: p.id, label: p.shortName, color: p.color })),
-];
+type Translator = (key: string) => string;
+
+export interface ProviderOption {
+  id: string;
+  label: string;
+  color?: string;
+}
+
+/** Provider filter options shown in the BlocksSection header dropdown.
+ *  Call from inside a React component (with `t` from `useTranslation()`)
+ *  so the "All" label re-derives when the user switches locale. */
+export function getProviders(t: Translator): ProviderOption[] {
+  return [
+    { id: 'all', label: t('palette.providerAll') },
+    ...ENABLED_CLOUD_PROVIDERS.map((p) => ({ id: p.id, label: p.shortName, color: p.color })),
+  ];
+}
 
 /** localStorage key for the user's collapsed-section preference.
  *  Observable in DevTools → Application → Local Storage. */

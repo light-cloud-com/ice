@@ -71,6 +71,11 @@ vi.mock('react', async (importOriginal) => {
     }),
     useMemo: vi.fn(<T,>(factory: () => T) => factory()),
     useCallback: vi.fn(<T,>(fn: T) => fn),
+    // SvgLogNode now reads the orphan-nodes context via `useIsNodeOrphan`.
+    // The test invokes the component as a plain function (no renderer),
+    // so the real useContext blows up — stub to an empty Set so the
+    // orphan branch is inert.
+    useContext: vi.fn(() => new Set<string>()),
   };
 });
 

@@ -64,6 +64,7 @@ const baseProps: CanvasContentProps = {
   renderCtx: {} as never,
   drawingConnection: null,
   connectionDragTargets: null,
+  connectionRejection: null,
   showVirtualUserNode: true,
   userConnections: [],
   nodesWithUserNode: [],

@@ -29,7 +29,7 @@
 import { describe, it, expect } from 'vitest';
 
 import type { CanvasNode } from '../../components/types';
-import { findExistingSpecialConnection } from '../connection-special-rules';
+import { findExistingLogSource, findExistingSpecialConnection } from '../connection-special-rules';
 
 /** Minimal CanvasNode factory — only the fields the rule reads. */
 function node(id: string, iceType: string, extraData: Record<string, unknown> = {}): CanvasNode {
@@ -204,5 +204,52 @@ describe('findExistingSpecialConnection', () => {
     const edges = [{ source: 'mal-other', target: 'svc-a' }];
     const result = findExistingSpecialConnection(repoNew, svc, edges, [repoNew, svc, malformedOther]);
     expect(result).toEqual({ specialType: 'source', conflict: false });
+  });
+});
+
+describe('findExistingLogSource', () => {
+  it('returns conflict:false when neither endpoint is a log terminal', () => {
+    const a = node('svc-a', 'Compute.Service');
+    const b = node('db-a', 'Database.PostgreSQL');
+    expect(findExistingLogSource(a, b, [])).toEqual({ conflict: false });
+  });
+
+  it('returns conflict:false on the first inbound edge to a log terminal', () => {
+    const svc = node('svc-a', 'Compute.Service');
+    const log = node('log-a', 'Monitoring.Log');
+    expect(findExistingLogSource(svc, log, [])).toEqual({ conflict: false });
+  });
+
+  it('returns conflict:true on a second inbound edge to a log terminal', () => {
+    const svcA = node('svc-a', 'Compute.Service');
+    const svcB = node('svc-b', 'Compute.Service');
+    const log = node('log-a', 'Monitoring.Log');
+    expect(
+      findExistingLogSource(svcB, log, [{ source: 'svc-a', target: 'log-a' }]),
+    ).toEqual({ conflict: true });
+  });
+
+  it('detects conflict in either drag direction (log → service or service → log)', () => {
+    const svc = node('svc-b', 'Compute.Service');
+    const log = node('log-a', 'Monitoring.Log');
+    expect(
+      findExistingLogSource(log, svc, [{ source: 'svc-a', target: 'log-a' }]),
+    ).toEqual({ conflict: true });
+  });
+
+  it('matches the Observability.Logs iceType as a log terminal', () => {
+    const svc = node('svc-a', 'Compute.Service');
+    const log = node('log-a', 'Observability.Logs');
+    expect(
+      findExistingLogSource(svc, log, [{ source: 'svc-b', target: 'log-a' }]),
+    ).toEqual({ conflict: true });
+  });
+
+  it('matches any Log.* iceType as a log terminal', () => {
+    const svc = node('svc-a', 'Compute.Service');
+    const log = node('log-a', 'Log.Stream');
+    expect(
+      findExistingLogSource(svc, log, [{ source: 'svc-b', target: 'log-a' }]),
+    ).toEqual({ conflict: true });
   });
 });

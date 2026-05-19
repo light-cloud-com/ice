@@ -48,6 +48,11 @@ vi.mock('react', async (importOriginal) => {
       return [initial, vi.fn()];
     }),
     useCallback: vi.fn(<T,>(fn: T, _deps: unknown[]) => fn),
+    // `CardShell` reads the orphan-nodes context via `useIsNodeOrphan`.
+    // Because the test invokes the component as a plain function (not
+    // through a React renderer), the real `useContext` blows up — return
+    // a fresh empty Set so the orphan branch is inert in these tests.
+    useContext: vi.fn(() => new Set<string>()),
   };
 });
 

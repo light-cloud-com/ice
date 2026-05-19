@@ -42,6 +42,7 @@ import {
   SelectField,
   ListField,
   QueueListField,
+  TaskListField,
   StepperField,
   PropertyLabel,
   CustomValueInput,
@@ -70,7 +71,7 @@ export interface CustomInputConfig {
 export interface HighLevelProperty {
   name: string;
   label: string;
-  type: 'string' | 'number' | 'boolean' | 'select' | 'list' | 'queue_list';
+  type: 'string' | 'number' | 'boolean' | 'select' | 'list' | 'queue_list' | 'task_list';
   required: boolean;
   description: string;
   options?: string[];
@@ -121,6 +122,9 @@ export function renderPropertyField(
   value: unknown,
   onChange: (field: string, value: unknown) => void,
   nodeData?: Record<string, unknown>,
+  /** Id of the node being edited — threaded into TaskListField so the
+   *  cron block's "Triggers" dropdown can exclude itself from options. */
+  selfNodeId?: string,
 ): React.ReactNode {
   // Select with optionDetails — use IceSelect dropdown
   if (prop.type === 'select' && prop.optionDetails && prop.optionDetails.length > 0) {
@@ -155,7 +159,13 @@ export function renderPropertyField(
             value={customVal}
             onChange={(v) => {
               onChange(`${prop.name}_custom`, v);
-              onChange(`${prop.name}_display`, `Custom: ${v} ${prop.customInput!.unit}`);
+              onChange(
+                `${prop.name}_display`,
+                t('canvas.properties.fields.customValuePrefix', {
+                  value: String(v),
+                  unit: prop.customInput!.unit,
+                }),
+              );
             }}
           />
         )}
@@ -185,6 +195,19 @@ export function renderPropertyField(
         onChange={(v) => onChange(prop.name, v)}
         placeholder={prop.placeholder}
         addLabel={prop.addLabel}
+      />
+    );
+  }
+  if (prop.type === 'task_list') {
+    const listVal = Array.isArray(value) ? (value as string[]) : [];
+    return (
+      <TaskListField
+        key={prop.name}
+        label={prop.label}
+        value={listVal}
+        onChange={(v) => onChange(prop.name, v)}
+        addLabel={prop.addLabel}
+        selfNodeId={selfNodeId}
       />
     );
   }
@@ -253,7 +276,11 @@ export const PropertyFields: React.FC<{
   onFieldChange: (field: string, value: unknown) => void;
   /** Validation issues mapped by propertyPath */
   propertyIssues?: Map<string, { severity: string; message: string }>;
-}> = ({ properties, nodeData, onFieldChange, propertyIssues }) => {
+  /** Id of the node being edited — passed down to fields that need to
+   *  know which node this is (e.g. cron's TaskListField excludes the
+   *  block itself from the "Triggers" dropdown). */
+  selfNodeId?: string;
+}> = ({ properties, nodeData, onFieldChange, propertyIssues, selfNodeId }) => {
   const provider = ((nodeData.provider as string) || '').toLowerCase();
 
   // Filter optionDetails by the node's cloud provider
@@ -284,7 +311,7 @@ export const PropertyFields: React.FC<{
         <Section title={t('properties.config.title')}>
           {visible.map((prop) => (
             <div key={prop.name} data-prop-key={prop.name}>
-              {renderPropertyField(filterByProvider(prop), nodeData[prop.name], onFieldChange, nodeData)}
+              {renderPropertyField(filterByProvider(prop), nodeData[prop.name], onFieldChange, nodeData, selfNodeId)}
               {propertyIssues?.has(prop.name) && (
                 <div
                   className={`px-3 pb-1 text-ice-2xs ${

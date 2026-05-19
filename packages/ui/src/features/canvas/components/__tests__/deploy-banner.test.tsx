@@ -71,11 +71,17 @@ vi.mock('react-redux', () => ({
 
 // useMemo runs the factory eagerly — memoization is moot for assertions.
 // Cite `use-memo-must-be-mocked-too-when-the-extracted-component-uses-it`.
+// useContext returns the LocaleContext value the banner reads via
+// `useTranslation()` — without it the bare invocation pattern blows up.
+// Returning the standalone `t` keeps the assertions on English literals
+// intact (the i18n module defaults to `en`).
+import { t as activeT } from '../../../../i18n';
 vi.mock('react', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react')>();
   return {
     ...actual,
     useMemo: vi.fn((factory: () => unknown, _deps: unknown[]) => factory()),
+    useContext: vi.fn(() => ({ t: activeT, locale: 'en' as const, setLocale: () => {} })),
   };
 });
 

@@ -297,6 +297,18 @@ export const CONNECTION_RULES: ConnectionRule[] = [
     trafficType: 'stream',
     lineStyle: 'thin',
   },
+  // Reverse: user drags monitoring→service (e.g. drags from a Log block
+  // toward the Backend it should observe), we flip back to the canonical
+  // Service → Monitoring orientation.
+  {
+    label: 'Monitoring → Service (flip)',
+    source: isMonitoring,
+    target: (t) => !isMonitoring(t) && !isContainer(t),
+    category: 'traffic',
+    trafficType: 'stream',
+    lineStyle: 'thin',
+    reverse: true,
+  },
 
   // ── PIPELINE ───────────────────────────────────────────────────────────
   { label: 'Repo → Service', source: isRepo, target: isService, category: 'pipeline', lineStyle: 'dashed' },

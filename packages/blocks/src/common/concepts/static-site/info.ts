@@ -35,6 +35,30 @@ handles HTTPS, caching, and global distribution.
 - Wire it to a **Scalable Backend** or **API Gateway** if the frontend calls
   your own API.
     `.trim(),
+    markdownZh: `
+# 静态站点
+
+一个由对象存储托管、CDN 加速的前端应用。无需运行服务器，无需管理容器 —— 你只需上传构建目录，云服务商即可处理 HTTPS、缓存和全球分发。
+
+## 适用场景
+
+- 单页应用（React、Vue、Svelte、Solid）
+- 静态站点生成器（Astro、Hugo、Jekyll、Eleventy）
+- 预渲染的 Next.js / Nuxt / SvelteKit 输出
+- 营销网站、文档站、落地页、作品集
+
+## 不适用场景
+
+- 每个请求都需要服务端渲染 → 改用 **SSR 站点**
+- 需要 API 端点 → 改用 **可扩展后端** 或 **无服务器函数**
+- 内容随用户在请求时动态变化 → 改用 **SSR 站点**
+
+## 连接方式
+
+- 挂接 **自定义域名** 即可用自己的主机名 + HTTPS 对外暴露该站点。
+- 在画布上放置 **公网流量** 节点并指向此块，让"用户从互联网到达"的入口路径在架构图中一目了然。
+- 如果前端调用自己的 API，将其连接到 **可扩展后端** 或 **API Gateway**。
+    `.trim(),
   },
   compilesTo: {
     aws: [
@@ -83,5 +107,6 @@ Command::new("trunk").arg("build").arg("--release").status().unwrap();`,
     { label: 'GCP — Firebase Hosting', url: 'https://firebase.google.com/docs/hosting' },
     { label: 'Azure — Static Web Apps', url: 'https://learn.microsoft.com/azure/static-web-apps/' },
   ],
+  linksZh: ['AWS — S3 静态网站托管', 'GCP — Firebase Hosting', 'Azure — Static Web Apps'],
   relatedConcepts: ['Compute.SSRSite', 'Network.CustomDomain', 'Network.PublicTraffic', 'Compute.BackendAPI'],
 };

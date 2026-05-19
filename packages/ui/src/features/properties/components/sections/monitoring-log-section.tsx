@@ -23,6 +23,7 @@
 
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { t } from '../../../../i18n';
 import {
   selectActiveCard,
   updateCardNodeData,
@@ -75,24 +76,24 @@ interface PillSpec {
 function pillFor(status: LogStreamStatus | undefined): PillSpec {
   switch (status) {
     case 'streaming':
-      return { tone: 'green', label: 'Live' };
+      return { tone: 'green', label: t('canvas.properties.log.pillLive') };
     case 'connecting':
-      return { tone: 'amber', label: 'Connecting' };
+      return { tone: 'amber', label: t('canvas.properties.log.pillConnecting') };
     case 'pre-deploy':
-      return { tone: 'grey', label: 'Pre-deploy' };
+      return { tone: 'grey', label: t('canvas.properties.log.pillPreDeploy') };
     case 'no-source':
-      return { tone: 'grey', label: 'No source' };
+      return { tone: 'grey', label: t('canvas.properties.log.pillNoSource') };
     case 'ambiguous':
-      return { tone: 'grey', label: 'Ambiguous source' };
+      return { tone: 'grey', label: t('canvas.properties.log.pillAmbiguous') };
     case 'unsupported':
-      return { tone: 'grey', label: 'Unsupported source' };
+      return { tone: 'grey', label: t('canvas.properties.log.pillUnsupported') };
     case 'permission-denied':
-      return { tone: 'red', label: 'Access denied' };
+      return { tone: 'red', label: t('canvas.properties.log.pillAccessDenied') };
     case 'error':
-      return { tone: 'red', label: 'Error' };
+      return { tone: 'red', label: t('canvas.properties.log.pillError') };
     case 'idle':
     default:
-      return { tone: 'grey', label: 'Idle' };
+      return { tone: 'grey', label: t('canvas.properties.log.pillIdle') };
   }
 }
 
@@ -192,7 +193,7 @@ export function MonitoringLogSection({ nodeId }: Props): React.ReactElement | nu
 
   return (
     <div className="pt-3 pb-2 px-3" data-testid="monitoring-log-section">
-      <div className="text-ice-2xs font-medium tracking-wide text-ice-text-3/50 mb-2">Logs</div>
+      <div className="text-ice-2xs font-medium tracking-wide text-ice-text-3/50 mb-2">{t('canvas.properties.log.sectionTitle')}</div>
 
       {/* Connection status pill */}
       <div className="flex items-center gap-2 mb-2">
@@ -250,8 +251,8 @@ export function MonitoringLogSection({ nodeId }: Props): React.ReactElement | nu
             className="mt-0.5 accent-emerald-500"
           />
           <div className="flex-1 min-w-0">
-            <div className="text-ice-xs text-ice-text-1">Polling</div>
-            <div className="text-ice-2xs text-ice-text-3 leading-snug">Refreshes every 2 seconds (recommended).</div>
+            <div className="text-ice-xs text-ice-text-1">{t('canvas.properties.log.modePolling')}</div>
+            <div className="text-ice-2xs text-ice-text-3 leading-snug">{t('canvas.properties.log.modePollingHint')}</div>
           </div>
         </label>
         <label
@@ -267,8 +268,8 @@ export function MonitoringLogSection({ nodeId }: Props): React.ReactElement | nu
             className="mt-0.5 accent-emerald-500"
           />
           <div className="flex-1 min-w-0">
-            <div className="text-ice-xs text-ice-text-1">Tail</div>
-            <div className="text-ice-2xs text-ice-text-3 leading-snug">Sub-second streaming via gRPC.</div>
+            <div className="text-ice-xs text-ice-text-1">{t('canvas.properties.log.modeTail')}</div>
+            <div className="text-ice-2xs text-ice-text-3 leading-snug">{t('canvas.properties.log.modeTailHint')}</div>
           </div>
         </label>
       </div>
@@ -276,10 +277,10 @@ export function MonitoringLogSection({ nodeId }: Props): React.ReactElement | nu
       {/* Source override — only when the resolution is ambiguous or none. */}
       {showOverride && (
         <div className="px-2 pt-1 space-y-1" data-testid="monitoring-log-source-override">
-          <div className="text-ice-2xs text-ice-text-3">Source override</div>
+          <div className="text-ice-2xs text-ice-text-3">{t('canvas.properties.log.sourceOverride')}</div>
           {candidates.length === 0 ? (
             <p className="text-ice-2xs text-ice-text-3/70 italic leading-snug">
-              No supported source connected. Connect a compute or database block to this Log terminal.
+              {t('canvas.properties.log.noSupportedSource')}
             </p>
           ) : (
             <select
@@ -291,7 +292,7 @@ export function MonitoringLogSection({ nodeId }: Props): React.ReactElement | nu
               className="w-full px-1.5 py-1 text-ice-xs rounded border border-ice-border bg-ice-base text-ice-text-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value={CLEAR_OVERRIDE_SENTINEL}>
-                {sourceNodeIdOverride ? 'Clear override' : '— Select a source —'}
+                {sourceNodeIdOverride ? t('canvas.properties.log.clearOverride') : t('canvas.properties.log.selectSource')}
               </option>
               {candidates.map((c) => (
                 <option key={c.nodeId} value={c.nodeId}>

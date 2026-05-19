@@ -49,6 +49,7 @@
 import React, { useMemo } from 'react';
 import { useSelector, shallowEqual } from 'react-redux';
 
+import { useTranslation } from '../../../i18n';
 import { deriveRollup, deriveRollupPercentage, type NodeDeployState } from '../../../store/slices/deploy-slice';
 import type { RootState } from '../../../store';
 
@@ -61,6 +62,7 @@ export interface CanvasDeployBannerProps {
 }
 
 export const CanvasDeployBanner: React.FC<CanvasDeployBannerProps> = ({ cardId }) => {
+  const { t } = useTranslation();
   // Live deploy state. The terminal/total count + active-node line both
   // derive from `nodesById`; a fresh map reference per wire event would
   // re-render the canvas on every node_progress tick without `shallowEqual`,
@@ -133,13 +135,16 @@ export const CanvasDeployBanner: React.FC<CanvasDeployBannerProps> = ({ cardId }
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontWeight: 600, color: '#dbeafe' }}>
             {deployStatus === 'planning'
-              ? 'Planning deployment…'
+              ? t('canvas.deploy.planning')
               : deployStatus === 'destroying'
-                ? 'Destroying…'
-                : 'Deploying…'}
+                ? t('canvas.deploy.destroying')
+                : t('canvas.deploy.deploying')}
             {deployStatus !== 'planning' && deployRollup.total > 0 && (
               <span style={{ marginLeft: 8, color: '#93c5fd', fontVariantNumeric: 'tabular-nums' }}>
-                {deployRollup.terminal} of {deployRollup.total}
+                {t('canvas.deploy.progress', {
+                  terminal: deployRollup.terminal,
+                  total: deployRollup.total,
+                })}
               </span>
             )}
           </div>

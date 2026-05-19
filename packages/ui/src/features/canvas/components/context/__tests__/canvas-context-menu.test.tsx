@@ -61,7 +61,7 @@ const mocks = vi.hoisted(() => ({
     { id: 'mobile', label: 'Mobile' },
   ],
   BLOCK_CATEGORY_ORDER: ['compute', 'storage', 'network'],
-  getBlockCategoryLabel: vi.fn((c: string) => c.toUpperCase()),
+  getBlockCategoryLabel: vi.fn((_t: (k: string) => string, c: string) => c.toUpperCase()),
   getBlueprint: vi.fn(() => ({ iceType: 'Compute.EC2' })),
   expandBlueprint: vi.fn(() => ({ nodes: [{ id: 'n1' }], edges: [] })),
   expandComposedTemplate: vi.fn(() => ({
@@ -90,6 +90,14 @@ vi.mock('react', async (orig) => {
     mocks.refs.push(ref as unknown as { current: unknown });
     return ref;
   };
+  // CanvasContextMenu pulls t() via useTranslation()→useContext(LocaleContext).
+  // Return an identity-translator context so the menu builds labels without
+  // crashing on the real createContext default value.
+  const useContextStub = vi.fn(() => ({
+    t: (k: string) => k,
+    locale: 'en' as const,
+    setLocale: () => {},
+  }));
   const actualDefault = (actual as unknown as { default?: typeof actual }).default ?? actual;
   return {
     ...actual,
@@ -100,12 +108,14 @@ vi.mock('react', async (orig) => {
       useMemo: useMemoStub,
       useCallback: useCallbackStub,
       useRef: useRefStub,
+      useContext: useContextStub,
     },
     useState: useStateStub,
     useEffect: useEffectStub,
     useMemo: useMemoStub,
     useCallback: useCallbackStub,
     useRef: useRefStub,
+    useContext: useContextStub,
   };
 });
 

@@ -343,6 +343,7 @@ export const NodePropertiesSection: React.FC<{
                     nodeData={selectedNode.data || {}}
                     onFieldChange={updateNodeField}
                     propertyIssues={propertyIssuesMap}
+                    selfNodeId={selectedNode.id}
                   />
                 )}
 

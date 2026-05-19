@@ -11,7 +11,7 @@
  * - Scroll wheel: zoom in/out
  */
 
-import React, { useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 // Note: Graph actions no longer used - all node operations go through cardsSlice
 // Viewport is now stored per-pane in uiSlice (for split view support)
@@ -21,6 +21,8 @@ import { ControlsHelpModal } from './controls-help-modal';
 import { ConnectionTooltip } from './connection-tooltip';
 import { CanvasDeployBanner } from './deploy-banner';
 import { CanvasContent } from './canvas-renderer/canvas-content';
+import { OrphanNodesProvider } from './nodes/_shared/orphan-context';
+import { isContainerNode } from '../utils/node-classification';
 // Bespoke-from-day-one nodes with inline editing
 import { useClipboard } from '../../../shared/hooks/use-clipboard';
 import { useExposedServices } from '../../../shared/hooks/use-exposed-services';
@@ -332,6 +334,7 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
   const {
     drawingConnection,
     connectionDragTargets,
+    rejection: connectionRejection,
     handleConnectionPortDown,
     handleConnectionMove,
     handleConnectionEnd,
@@ -378,6 +381,28 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
     card,
   });
 
+  // Precompute the set of "orphan" block ids — non-container, non-log
+  // blocks with zero edges connected to them. Broadcast via
+  // OrphanNodesProvider so CardShell does an O(1) Set.has() lookup
+  // instead of every block taking its own Redux subscription.
+  const orphanNodeIds = useMemo(() => {
+    const connected = new Set<string>();
+    for (const e of edges) {
+      connected.add(e.source);
+      connected.add(e.target);
+    }
+    const result = new Set<string>();
+    for (const n of effectiveNodes) {
+      if (connected.has(n.id)) continue;
+      // Log / observability blocks ARE meant to be connected to a
+      // service — they're not display-only — so they belong in the
+      // orphan signal too. Only containers are excluded.
+      if (isContainerNode(n)) continue;
+      result.add(n.id);
+    }
+    return result;
+  }, [edges, effectiveNodes]);
+
   return (
     <div
       ref={containerRef}
@@ -404,40 +429,43 @@ export const SvgCanvas: React.FC<SvgCanvasProps> = ({ cardId, paneId, onFocus })
             highlighted ConnectionLayer + GhostOverlay — lives in
             `./canvas-renderer/canvas-content`. Visual draw order, prop
             flow, and dep arrays are preserved verbatim. */}
-        <CanvasContent
-          viewport={viewport}
-          dimensions={dimensions}
-          canvasConnections={canvasConnections}
-          effectiveNodes={effectiveNodes}
-          portMap={portMap}
-          animatingEdges={animatingEdges}
-          pipelineNodeStatus={pipelineNodeStatus}
-          selectedNodes={selectedNodes}
-          selectedEdges={selectedEdges}
-          hoveredNodeId={hoveredNodeId}
-          lod={lod}
-          edgeStyle={edgeStyle}
-          handleConnectionHover={handleConnectionHover}
-          handleEdgeDelete={handleEdgeDelete}
-          handleEdgeSelect={handleEdgeSelect}
-          handleContextMenu={handleContextMenu}
-          sortedNodes={sortedNodes}
-          animatingNodes={animatingNodes}
-          shiftDraggingNodeIds={shiftDraggingNodeIds}
-          dragOverGroupId={dragOverGroupId}
-          renderCtx={renderCtx}
-          drawingConnection={drawingConnection}
-          connectionDragTargets={connectionDragTargets}
-          showVirtualUserNode={showVirtualUserNode}
-          userConnections={userConnections}
-          nodesWithUserNode={nodesWithUserNode}
-          pinnedUserPos={pinnedUserPos}
-          setUserNodePos={setUserNodePos}
-          ghosts={ghosts}
-          nodes={nodes}
-          onAcceptGhost={handleAcceptGhost}
-          onDismissGhost={handleDismissGhost}
-        />
+        <OrphanNodesProvider value={orphanNodeIds}>
+          <CanvasContent
+            viewport={viewport}
+            dimensions={dimensions}
+            canvasConnections={canvasConnections}
+            effectiveNodes={effectiveNodes}
+            portMap={portMap}
+            animatingEdges={animatingEdges}
+            pipelineNodeStatus={pipelineNodeStatus}
+            selectedNodes={selectedNodes}
+            selectedEdges={selectedEdges}
+            hoveredNodeId={hoveredNodeId}
+            lod={lod}
+            edgeStyle={edgeStyle}
+            handleConnectionHover={handleConnectionHover}
+            handleEdgeDelete={handleEdgeDelete}
+            handleEdgeSelect={handleEdgeSelect}
+            handleContextMenu={handleContextMenu}
+            sortedNodes={sortedNodes}
+            animatingNodes={animatingNodes}
+            shiftDraggingNodeIds={shiftDraggingNodeIds}
+            dragOverGroupId={dragOverGroupId}
+            renderCtx={renderCtx}
+            drawingConnection={drawingConnection}
+            connectionDragTargets={connectionDragTargets}
+            connectionRejection={connectionRejection}
+            showVirtualUserNode={showVirtualUserNode}
+            userConnections={userConnections}
+            nodesWithUserNode={nodesWithUserNode}
+            pinnedUserPos={pinnedUserPos}
+            setUserNodePos={setUserNodePos}
+            ghosts={ghosts}
+            nodes={nodes}
+            onAcceptGhost={handleAcceptGhost}
+            onDismissGhost={handleDismissGhost}
+          />
+        </OrphanNodesProvider>
       </svg>
 
       {/* Connection tooltip — follows mouse, rendered as HTML overlay */}

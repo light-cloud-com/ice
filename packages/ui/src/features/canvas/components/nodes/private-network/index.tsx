@@ -30,6 +30,7 @@ import { CARD_PX, CATEGORY_STYLE, CORNER_RADIUS, STATUS_COLORS } from '../../../
 import { ConceptInfoTrigger } from '../../../../concept-info';
 import { getServiceName } from '../../../../../assets/icons/service-names';
 import type { SvgCompactNodeProps } from '../compact-node';
+import { t } from '../../../../../i18n';
 
 export { PN_HEADER_HEIGHT, PN_MIN_WIDTH, PN_MIN_HEIGHT };
 
@@ -49,9 +50,9 @@ function coerceIngress(value: unknown): Ingress {
 }
 
 function ingressLabel(ingress: Ingress): string {
-  if (ingress === 'none') return 'Sealed · internal only';
-  if (ingress === 'allowlist') return 'Restricted · allowlist';
-  return 'Open · public reachable';
+  if (ingress === 'none') return t('canvas.blocks.privateNetwork.sealed');
+  if (ingress === 'allowlist') return t('canvas.blocks.privateNetwork.restricted');
+  return t('canvas.blocks.privateNetwork.open');
 }
 
 export const SvgPrivateNetworkNode: React.FC<SvgCompactNodeProps> = ({
@@ -186,7 +187,7 @@ export const SvgPrivateNetworkNode: React.FC<SvgCompactNodeProps> = ({
                 }}
                 data-testid={`pn-title-${node.id}`}
               >
-                {label || 'Private Network'}
+                {label || t('canvas.blocks.titles.privateNetwork')}
               </div>
               {metaLine && (
                 <div
@@ -235,7 +236,7 @@ export const SvgPrivateNetworkNode: React.FC<SvgCompactNodeProps> = ({
                 transition: 'opacity 150ms ease',
               }}
             >
-              drop services here
+              {t('canvas.blocks.privateNetwork.dropHere')}
             </div>
           </div>
 

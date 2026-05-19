@@ -73,10 +73,12 @@
  * rf-canv-27 (RISK #3, RISK #5).
  */
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { addEdgeToCard, type Card, type CardEdge } from '../../../store/slices/cards-slice';
-import { findExistingSpecialConnection } from '../utils/connection-special-rules';
+import { findExistingLogSource, findExistingSpecialConnection } from '../utils/connection-special-rules';
+import { buildRejectionMessage } from '../utils/connection-rejection';
+import { t } from '../../../i18n';
 import {
   inferConnectionMeta,
   validateConnection,
@@ -86,6 +88,7 @@ import {
 } from '../utils/connection-rules';
 import type { AppDispatch } from '../../../store';
 import type { CanvasNode } from '../components/types';
+import type { ConnectionRejection } from '../components/connection-rejection-overlay';
 
 /** Drag descriptor stored in state while a port drag is in progress. */
 export interface DrawingConnectionState {
@@ -115,6 +118,12 @@ export interface UseConnectionDrawingResult {
    */
   connectionDragTargets: Map<string, 'valid-target' | 'invalid-target' | 'source'> | null;
   /**
+   * Floating rejection tooltip — set when a drop is rejected, cleared
+   * after `REJECTION_TIMEOUT_MS` or when a new drag starts. The canvas
+   * renders it as a sibling of the connection preview overlay.
+   */
+  rejection: ConnectionRejection | null;
+  /**
    * onMouseDown handler for connection-port drags. The orchestrator
    * pre-gates this on `target.classList.contains('connection-port')`
    * (RISK #5); the handler also re-checks the predicate verbatim and
@@ -131,11 +140,37 @@ export interface UseConnectionDrawingResult {
   handleConnectionEnd: (e: React.MouseEvent) => void;
 }
 
+/** How long the rejection tooltip stays on-screen after a failed drop. */
+const REJECTION_TIMEOUT_MS = 2500;
+
 export function useConnectionDrawing(args: UseConnectionDrawingArgs): UseConnectionDrawingResult {
   const { effectiveNodes, card, screenToCanvas } = args;
   const dispatch = useDispatch<AppDispatch>();
 
   const [drawingConnection, setDrawingConnection] = useState<DrawingConnectionState | null>(null);
+  const [rejection, setRejection] = useState<ConnectionRejection | null>(null);
+  const rejectionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearRejectionTimer = useCallback(() => {
+    if (rejectionTimerRef.current !== null) {
+      clearTimeout(rejectionTimerRef.current);
+      rejectionTimerRef.current = null;
+    }
+  }, []);
+
+  const showRejection = useCallback(
+    (next: ConnectionRejection) => {
+      clearRejectionTimer();
+      setRejection(next);
+      rejectionTimerRef.current = setTimeout(() => {
+        setRejection(null);
+        rejectionTimerRef.current = null;
+      }, REJECTION_TIMEOUT_MS);
+    },
+    [clearRejectionTimer],
+  );
+
+  useEffect(() => () => clearRejectionTimer(), [clearRejectionTimer]);
 
   /** Compute valid/invalid target states for all nodes during connection drag */
   const connectionDragTargets = useMemo(() => {
@@ -181,6 +216,12 @@ export function useConnectionDrawing(args: UseConnectionDrawingArgs): UseConnect
 
       const canvasPos = screenToCanvas(e.clientX, e.clientY);
 
+      // A fresh drag invalidates any prior rejection tooltip — drop it
+      // immediately so the new gesture isn't visually overlapped by the
+      // last failure.
+      clearRejectionTimer();
+      setRejection(null);
+
       setDrawingConnection({
         sourceId: nodeId,
         sourceRouteId: routeId,
@@ -188,7 +229,7 @@ export function useConnectionDrawing(args: UseConnectionDrawingArgs): UseConnect
         currentPoint: canvasPos,
       });
     },
-    [screenToCanvas],
+    [screenToCanvas, clearRejectionTimer],
   );
 
   /** Track mouse during connection drawing */
@@ -254,6 +295,11 @@ export function useConnectionDrawing(args: UseConnectionDrawingArgs): UseConnect
             allNodes: effectiveNodes,
           })
         ) {
+          showRejection({
+            x: canvasPos.x,
+            y: canvasPos.y,
+            message: buildRejectionMessage(srcIceTypeCheck, tgtIceTypeCheck, { kind: 'no-rule' }),
+          });
           setDrawingConnection(null);
           return;
         }
@@ -267,8 +313,46 @@ export function useConnectionDrawing(args: UseConnectionDrawingArgs): UseConnect
             effectiveNodes,
           );
           if (specialType && conflict) {
-            const label = specialType === 'source' ? 'GitHub Repo' : 'Env Variables';
+            const label =
+              specialType === 'source'
+                ? t('canvas.rejection.githubRepoLabel')
+                : t('canvas.rejection.envVarsLabel');
+            // Keep the console.warn alongside showRejection — devs
+            // inspecting the console still see what was rejected; users
+            // see the inline tooltip near the cursor.
             console.warn(`[Canvas] Only one ${label} block can be connected to a service`);
+            showRejection({
+              x: canvasPos.x,
+              y: canvasPos.y,
+              message: buildRejectionMessage(srcIceTypeCheck, tgtIceTypeCheck, {
+                kind: 'special-conflict',
+                label,
+              }),
+            });
+            setDrawingConnection(null);
+            return;
+          }
+
+          // ── Log terminal cardinality: one source per terminal ──
+          // A log block streams a single Cloud Logging sink — wiring a
+          // second source would scramble timestamps, so block the drag
+          // and tell the user to drop another Log block instead.
+          const { conflict: logConflict } = findExistingLogSource(
+            sourceNode,
+            targetNode,
+            card.edges as CardEdge[],
+          );
+          if (logConflict) {
+            const message = t('canvas.rejection.logHasSource');
+            console.warn(`[Canvas] ${message}`);
+            showRejection({
+              x: canvasPos.x,
+              y: canvasPos.y,
+              message: buildRejectionMessage(srcIceTypeCheck, tgtIceTypeCheck, {
+                kind: 'validation-error',
+                message,
+              }),
+            });
             setDrawingConnection(null);
             return;
           }
@@ -292,13 +376,19 @@ export function useConnectionDrawing(args: UseConnectionDrawingArgs): UseConnect
 
         // Block hard errors (self-connection)
         if (warnings.some((w) => w.level === 'error')) {
-          console.warn(
-            '[Canvas] Connection blocked:',
-            warnings
-              .filter((w) => w.level === 'error')
-              .map((w) => w.message)
-              .join('; '),
-          );
+          const errorMessage = warnings
+            .filter((w) => w.level === 'error')
+            .map((w) => w.message)
+            .join('; ');
+          console.warn('[Canvas] Connection blocked:', errorMessage);
+          showRejection({
+            x: canvasPos.x,
+            y: canvasPos.y,
+            message: buildRejectionMessage(srcIceType, tgtIceType, {
+              kind: 'validation-error',
+              message: errorMessage,
+            }),
+          });
           setDrawingConnection(null);
           return;
         }
@@ -367,12 +457,13 @@ export function useConnectionDrawing(args: UseConnectionDrawingArgs): UseConnect
     // The handler reads `card.edges` through three validation gates and a
     // stale ref would let consecutive drops in the same render cycle
     // either double-create the same special-rule edge or miss a cycle.
-    [drawingConnection, screenToCanvas, effectiveNodes, card, dispatch],
+    [drawingConnection, screenToCanvas, effectiveNodes, card, dispatch, showRejection],
   );
 
   return {
     drawingConnection,
     connectionDragTargets,
+    rejection,
     handleConnectionPortDown,
     handleConnectionMove,
     handleConnectionEnd,

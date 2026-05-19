@@ -69,7 +69,7 @@ export interface HighLevelProperty {
    * - `queue_list`: bespoke queue renderer — each item shows as a queue pill
    *   with a distinct icon, FIFO badge, and queue-semantic affordances
    */
-  type: 'string' | 'number' | 'boolean' | 'select' | 'list' | 'queue_list';
+  type: 'string' | 'number' | 'boolean' | 'select' | 'list' | 'queue_list' | 'task_list';
   required: boolean;
   description: string;
   options?: string[];

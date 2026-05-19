@@ -252,6 +252,7 @@ export function renderCanvasNode(
           node={node}
           isSelected={selectedNodes.includes(node.id)}
           onToggleFold={handleToggleFold}
+          connectionDragState={connectionDragTargets?.get(node.id) ?? null}
         />
       ),
     };

@@ -29,6 +29,30 @@ Standard cron: \`minute hour day month weekday\`. Examples:
 Wire to **Postgres** / **Object Storage** / **Secret Store** for data access.
 Often used with a **Worker** or **Serverless Function** as the actual job body.
     `.trim(),
+    markdownZh: `
+# 定时任务
+
+cron 作业。按计划运行代码后退出。不是常驻服务 —— 每次计划触发时，服务商才会启动一次执行。
+
+## 适用场景
+
+- 每夜数据库备份
+- 每小时数据导入
+- 每周报表和摘要
+- 清理脚本（删除旧上传、过期会话）
+
+## 调度格式
+
+标准 cron：\`分 时 日 月 周\`。示例：
+- \`0 * * * *\` —— 每小时
+- \`0 3 * * *\` —— 每天凌晨 3 点
+- \`0 9 * * 1\` —— 每周一上午 9 点
+- \`*/15 * * * *\` —— 每 15 分钟
+
+## 连接方式
+
+连接到 **Postgres** / **对象存储** / **密钥库** 以访问数据。通常以 **Worker** 或 **无服务器函数** 作为实际的作业主体。
+    `.trim(),
   },
   compilesTo: {
     aws: [

@@ -55,11 +55,40 @@ vi.mock('react', async (importOriginal) => {
     useStateIdx = 0;
   };
   const actualDefault = (actual as unknown as { default?: typeof actual }).default ?? actual;
+  // `useTranslation()` reads LocaleContext via useContext. We can't
+  // require the real i18n module from inside a hoisted vi.mock factory
+  // (vitest hoists this above module imports), so we inline a small map
+  // of the keys the modal asks for, returning the English values that
+  // existing tests assert on.
+  const I18N_FAKE: Record<string, string> = {
+    'canvas.infoModal.tabOverview': 'Overview',
+    'canvas.infoModal.tabCompiles': 'Compiles To',
+    'canvas.infoModal.tabCode': 'Code',
+    'canvas.infoModal.tabLinks': 'Links',
+    'canvas.infoModal.close': 'Close',
+    'canvas.infoModal.providerLabel': 'Provider:',
+    'canvas.infoModal.optional': 'optional',
+    'canvas.infoModal.noInfrastructure': 'No infrastructure — this is a canvas-only block.',
+    'canvas.infoModal.noSnippets': 'No code snippets available yet.',
+    'canvas.infoModal.triggerTitle': 'About this block',
+  };
+  const fakeT = (k: string) => I18N_FAKE[k] ?? k;
+  const patchedUseContext = vi.fn(() => ({
+    t: fakeT,
+    locale: 'en' as const,
+    setLocale: () => {},
+  }));
   return {
     ...actual,
     useState: patchedUseState,
     useMemo: patchedUseMemo,
-    default: { ...actualDefault, useState: patchedUseState, useMemo: patchedUseMemo },
+    useContext: patchedUseContext,
+    default: {
+      ...actualDefault,
+      useState: patchedUseState,
+      useMemo: patchedUseMemo,
+      useContext: patchedUseContext,
+    },
   };
 });
 

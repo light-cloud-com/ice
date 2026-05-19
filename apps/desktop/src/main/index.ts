@@ -159,8 +159,8 @@ const MINIMUM_SPLASH_DURATION = 3000;
 
 function createSplashWindow(): void {
   splashWindow = new BrowserWindow({
-    width: 600,
-    height: 400,
+    width: 640,
+    height: 520,
     frame: false,
     transparent: true,
     alwaysOnTop: true,
@@ -171,10 +171,30 @@ function createSplashWindow(): void {
     webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true },
   });
 
+  // Open external links (e.g. light-cloud.com on the splash) in the default browser.
+  splashWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('http://') || url.startsWith('https://')) shell.openExternal(url);
+    return { action: 'deny' };
+  });
+  splashWindow.webContents.on('will-navigate', (event, url) => {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      event.preventDefault();
+      shell.openExternal(url);
+    }
+  });
+
   const splashPath = is.dev ? join(__dirname, '../../src/main/splash.html') : join(__dirname, 'splash.html');
 
   if (existsSync(splashPath)) {
     splashWindow.loadFile(splashPath);
+    // Inject the app version after the page loads. The splash is sandboxed
+    // with no preload, so executeJavaScript is the simplest reliable bridge.
+    splashWindow.webContents.once('did-finish-load', () => {
+      const v = JSON.stringify(app.getVersion());
+      splashWindow?.webContents.executeJavaScript(
+        `(() => { const el = document.getElementById('version'); if (el) el.textContent = 'v' + ${v}; })()`,
+      );
+    });
     splashWindow.once('ready-to-show', () => {
       splashShownAt = Date.now();
       splashWindow?.show();

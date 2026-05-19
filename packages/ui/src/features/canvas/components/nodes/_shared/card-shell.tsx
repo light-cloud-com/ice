@@ -29,12 +29,16 @@
 
 import { CARD_FOOTER_HEIGHT } from '@ice/constants';
 import React, { useCallback, useState, type ReactNode } from 'react';
+import { ConnectionDragGlow } from './connection-drag-glow';
+import { ConnectionPorts } from './connection-ports';
+import { useIsNodeOrphan } from './orphan-context';
 import { ProviderPill } from './provider-pill';
 import { StatusDot } from './status-dot';
 import { CATEGORY_STYLE, CORNER_RADIUS, STATUS_COLORS } from '../../../../../config/canvas-constants';
 import { ConceptInfoTrigger } from '../../../../concept-info';
 import { getBrandIcon } from '../../../../../assets/icons/brand-registry';
 import { getServiceName } from '../../../../../assets/icons/service-names';
+import { t } from '../../../../../i18n';
 import type { NodePipelineStatus, SvgCompactNodeProps } from '../compact-node/types';
 import type { LucideIcon } from 'lucide-react';
 
@@ -63,6 +67,15 @@ interface CardShellProps {
   lod?: number;
   /** Live pipeline state for this node — drives commit SHA in the deploy info row. */
   pipelineStatus?: NodePipelineStatus;
+  /** Opt out of the default 4-sided connection ports. Blocks with custom
+   *  port layouts (e.g. cron with per-task ports) suppress CardShell's
+   *  ports and draw their own as siblings to the CardShell `<g>`. */
+  customPorts?: boolean;
+  /** Override the header brand-icon lookup with this brand key (e.g. a
+   *  framework name like "react" or "nextjs"). When set, takes priority
+   *  over the iceType-driven lookup; when no match in the brand
+   *  registry, falls through to the iceType and then the lucide `icon`. */
+  brandOverride?: string;
   /** Card body content. */
   children: ReactNode;
 }
@@ -97,13 +110,13 @@ function shortenAddress(addr: string): string {
 
 function formatRelativeAge(ms: number): string {
   const sec = Math.floor(ms / 1000);
-  if (sec < 60) return `${sec}s ago`;
+  if (sec < 60) return t('canvas.time.secondsAgo', { n: sec });
   const min = Math.floor(sec / 60);
-  if (min < 60) return `${min}m ago`;
+  if (min < 60) return t('canvas.time.minutesAgo', { n: min });
   const hr = Math.floor(min / 60);
-  if (hr < 48) return `${hr}h ago`;
+  if (hr < 48) return t('canvas.time.hoursAgo', { n: hr });
   const day = Math.floor(hr / 24);
-  return `${day}d ago`;
+  return t('canvas.time.daysAgo', { n: day });
 }
 
 export const CardShell: React.FC<CardShellProps> = ({
@@ -121,6 +134,8 @@ export const CardShell: React.FC<CardShellProps> = ({
   headerHeight = 48,
   lod,
   pipelineStatus,
+  customPorts = false,
+  brandOverride,
   children,
 }) => {
   const { x, y, data, label } = node;
@@ -137,7 +152,10 @@ export const CardShell: React.FC<CardShellProps> = ({
   const region = (data?.region as string) || '';
   const deployStatus = (data?.deploy_status as string) || '';
 
-  const brand = getBrandIcon(iceType);
+  // brandOverride wins (e.g. frontend blocks pass `framework` so React /
+  // Next.js / Vue render in the header). Fall through to the iceType
+  // lookup so existing per-block brand mappings keep working.
+  const brand = (brandOverride && getBrandIcon(brandOverride)) || getBrandIcon(iceType);
 
   const serviceName = getServiceName(iceType, provider || 'aws');
   const metaLine =
@@ -153,6 +171,24 @@ export const CardShell: React.FC<CardShellProps> = ({
   const statusLabel = deployStatus ? deployStatus.charAt(0).toUpperCase() + deployStatus.slice(1) : '';
 
   const isSource = connectionDragState === 'source';
+  const isValidTarget = connectionDragState === 'valid-target';
+  const isInvalidTarget = connectionDragState === 'invalid-target';
+  // Orphan signal — the canvas orchestrator populates the OrphanNodes
+  // context with the set of blocks that have zero edges. We only show
+  // the indicator while no drag is active, so the orphan warning
+  // doesn't compete with the valid/invalid border during a connect.
+  const isOrphan = useIsNodeOrphan(node.id) && connectionDragState === null;
+  // Ports are always rendered (so users can SEE the connection
+  // affordance on a fresh block instead of having to discover it via
+  // hover). Opacity carries the state: faint at idle, full on
+  // hover/selection/source/valid-target, faded out when this block is
+  // an invalid drop target during an active drag.
+  const renderPorts = !customPorts;
+  const portOpacity = isInvalidTarget
+    ? 0.12
+    : isHovered || isSelected || isValidTarget || isSource
+      ? 1
+      : 0.35;
 
   const onEnter = useCallback(() => {
     setIsHovered(true);
@@ -280,6 +316,49 @@ export const CardShell: React.FC<CardShellProps> = ({
             </div>
           </div>
         </foreignObject>
+        {isValidTarget && <ConnectionDragGlow x={x} y={y} width={W} height={H} />}
+        {isInvalidTarget && (
+          <rect
+            x={x - 3}
+            y={y - 3}
+            width={W + 6}
+            height={H + 6}
+            rx={CORNER_RADIUS + 3}
+            fill="none"
+            stroke="#ef4444"
+            strokeWidth={2}
+            strokeDasharray="4 3"
+            opacity={0.85}
+            pointerEvents="none"
+          />
+        )}
+        {isOrphan && (
+          <rect
+            x={x - 2}
+            y={y - 2}
+            width={W + 4}
+            height={H + 4}
+            rx={CORNER_RADIUS + 2}
+            fill="none"
+            stroke="#d97706"
+            strokeWidth={1.5}
+            strokeDasharray="5 4"
+            opacity={0.6}
+            pointerEvents="none"
+          />
+        )}
+        {renderPorts && (
+          <ConnectionPorts
+            nodeId={node.id}
+            x={x}
+            y={y}
+            width={W}
+            height={H}
+            color={ACCENT}
+            isValidTarget={isValidTarget}
+            opacity={portOpacity}
+          />
+        )}
       </g>
     );
   }
@@ -476,6 +555,49 @@ export const CardShell: React.FC<CardShellProps> = ({
           )}
         </div>
       </foreignObject>
+      {isValidTarget && <ConnectionDragGlow x={x} y={y} width={W} height={H} />}
+      {isInvalidTarget && (
+        <rect
+          x={x - 3}
+          y={y - 3}
+          width={W + 6}
+          height={H + 6}
+          rx={CORNER_RADIUS + 3}
+          fill="none"
+          stroke="#ef4444"
+          strokeWidth={2}
+          strokeDasharray="4 3"
+          opacity={0.85}
+          pointerEvents="none"
+        />
+      )}
+      {isOrphan && (
+        <rect
+          x={x - 2}
+          y={y - 2}
+          width={W + 4}
+          height={H + 4}
+          rx={CORNER_RADIUS + 2}
+          fill="none"
+          stroke="#d97706"
+          strokeWidth={1.5}
+          strokeDasharray="5 4"
+          opacity={0.6}
+          pointerEvents="none"
+        />
+      )}
+      {renderPorts && (
+        <ConnectionPorts
+          nodeId={node.id}
+          x={x}
+          y={y}
+          width={W}
+          height={H}
+          color={ACCENT}
+          isValidTarget={isValidTarget}
+          opacity={portOpacity}
+        />
+      )}
     </g>
   );
 };

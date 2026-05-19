@@ -31,6 +31,7 @@
  */
 
 import React from 'react';
+import { t } from '../../../../i18n';
 import { Section } from '../fields';
 
 type PrivateNetworkPolicy = 'all' | 'allowlist' | 'none';
@@ -105,10 +106,12 @@ const PrivateNetworkPolicySection: React.FC<PolicySectionProps> = ({
       {value === 'allowlist' && (
         <div className="mt-2 px-2 space-y-1">
           <div className="text-ice-2xs text-ice-text-3">
-            {direction === 'inbound' ? 'Allowed sources' : 'Allowed destinations'}
+            {direction === 'inbound'
+              ? t('canvas.properties.privateNetwork.allowedSources')
+              : t('canvas.properties.privateNetwork.allowedDestinations')}
           </div>
           {allowlist.length === 0 && (
-            <div className="text-ice-2xs text-ice-text-3/50 italic py-1">No entries yet. Click + below to add one.</div>
+            <div className="text-ice-2xs text-ice-text-3/50 italic py-1">{t('canvas.properties.privateNetwork.noEntries')}</div>
           )}
           {allowlist.map((entry, i) => (
             <div key={i} className="flex items-center gap-1">
@@ -123,7 +126,11 @@ const PrivateNetworkPolicySection: React.FC<PolicySectionProps> = ({
               <button
                 onClick={() => removeEntry(i)}
                 className="p-0.5 text-ice-text-3/40 hover:text-red-400 transition-colors text-ice-xs"
-                aria-label={direction === 'inbound' ? 'Remove source' : 'Remove destination'}
+                aria-label={
+                  direction === 'inbound'
+                    ? t('canvas.properties.privateNetwork.removeSource')
+                    : t('canvas.properties.privateNetwork.removeDestination')
+                }
               >
                 &times;
               </button>
@@ -134,7 +141,9 @@ const PrivateNetworkPolicySection: React.FC<PolicySectionProps> = ({
             data-testid={`pn-${direction}-allowlist-add`}
             className="mt-1 text-ice-2xs text-ice-text-3/60 hover:text-ice-accent transition-colors"
           >
-            + Add {direction === 'inbound' ? 'source' : 'destination'}
+            {direction === 'inbound'
+              ? t('canvas.properties.privateNetwork.addSource')
+              : t('canvas.properties.privateNetwork.addDestination')}
           </button>
         </div>
       )}
@@ -154,47 +163,59 @@ export const PrivateNetworkPanel: React.FC<{
   return (
     <div className="space-y-3">
       <PrivateNetworkPolicySection
-        title="Inbound internet"
-        hint="Controls who on the public internet can reach services inside this network. Independent from the outbound policy below."
+        title={t('canvas.properties.privateNetwork.inboundTitle')}
+        hint={t('canvas.properties.privateNetwork.inboundHint')}
         direction="inbound"
         policyField="ingress"
         allowlistField="ingressAllowlist"
         value={ingress}
         allowlist={ingressAllowlist}
-        entryPlaceholder="203.0.113.0/24 or 1.2.3.4"
+        entryPlaceholder={t('canvas.properties.privateNetwork.inboundEntryPlaceholder')}
         options={[
-          { value: 'all', label: 'Allow all inbound (Open)', hint: 'Public reachable. Default.' },
+          {
+            value: 'all',
+            label: t('canvas.properties.privateNetwork.inboundAllLabel'),
+            hint: t('canvas.properties.privateNetwork.inboundAllHint'),
+          },
           {
             value: 'allowlist',
-            label: 'Allowlist specific sources (Restricted)',
-            hint: 'Only listed source ranges or IPs can reach in.',
+            label: t('canvas.properties.privateNetwork.inboundAllowlistLabel'),
+            hint: t('canvas.properties.privateNetwork.inboundAllowlistHint'),
           },
           {
             value: 'none',
-            label: 'Block all inbound (Sealed)',
-            hint: 'Internal only. Services inside talk east-west.',
+            label: t('canvas.properties.privateNetwork.inboundNoneLabel'),
+            hint: t('canvas.properties.privateNetwork.inboundNoneHint'),
           },
         ]}
         updateNodeField={updateNodeField}
       />
 
       <PrivateNetworkPolicySection
-        title="Outbound internet"
-        hint="Controls whether services inside this network can reach the public internet. Independent from the inbound policy above."
+        title={t('canvas.properties.privateNetwork.outboundTitle')}
+        hint={t('canvas.properties.privateNetwork.outboundHint')}
         direction="outbound"
         policyField="egress"
         allowlistField="egressAllowlist"
         value={egress}
         allowlist={egressAllowlist}
-        entryPlaceholder="api.stripe.com or 10.0.0.0/8"
+        entryPlaceholder={t('canvas.properties.privateNetwork.outboundEntryPlaceholder')}
         options={[
-          { value: 'all', label: 'Allow all outbound', hint: 'Services can call any public URL. Default.' },
+          {
+            value: 'all',
+            label: t('canvas.properties.privateNetwork.outboundAllLabel'),
+            hint: t('canvas.properties.privateNetwork.outboundAllHint'),
+          },
           {
             value: 'allowlist',
-            label: 'Allowlist specific destinations',
-            hint: 'Only listed hostnames or IP ranges are reachable.',
+            label: t('canvas.properties.privateNetwork.outboundAllowlistLabel'),
+            hint: t('canvas.properties.privateNetwork.outboundAllowlistHint'),
           },
-          { value: 'none', label: 'Block all outbound', hint: 'Air-gapped. No public internet access.' },
+          {
+            value: 'none',
+            label: t('canvas.properties.privateNetwork.outboundNoneLabel'),
+            hint: t('canvas.properties.privateNetwork.outboundNoneHint'),
+          },
         ]}
         updateNodeField={updateNodeField}
       />

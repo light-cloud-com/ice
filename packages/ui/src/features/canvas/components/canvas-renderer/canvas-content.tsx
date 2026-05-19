@@ -32,6 +32,7 @@ import { CanvasGrid } from '../canvas-grid';
 import { SelectionFrame } from '../selection-frame';
 import { ConnectionLayer, type ConnectionLayerProps } from '../connection-layer';
 import { ConnectionPreviewOverlay, type ConnectionPreviewOverlayProps } from '../connection-preview-overlay';
+import { ConnectionRejectionOverlay, type ConnectionRejection } from '../connection-rejection-overlay';
 import { UserTrafficOverlay, type UserTrafficOverlayProps } from '../user-traffic-overlay';
 import { GhostOverlay, type GhostOverlayProps } from '../ghost/ghost-overlay';
 import { ParentClipDefs } from './parent-clip-defs';
@@ -70,6 +71,8 @@ export interface CanvasContentProps {
   // Connection drawing preview
   drawingConnection: ConnectionPreviewOverlayProps['drawingConnection'] | null;
   connectionDragTargets: ConnectionPreviewOverlayProps['connectionDragTargets'];
+  /** Floating rejection tooltip, set when a drop is rejected. */
+  connectionRejection: ConnectionRejection | null;
 
   // User-traffic overlay
   showVirtualUserNode: boolean;
@@ -109,6 +112,7 @@ export const CanvasContent: React.FC<CanvasContentProps> = ({
   renderCtx,
   drawingConnection,
   connectionDragTargets,
+  connectionRejection,
   showVirtualUserNode,
   userConnections,
   nodesWithUserNode,
@@ -185,6 +189,11 @@ export const CanvasContent: React.FC<CanvasContentProps> = ({
           connectionDragTargets={connectionDragTargets}
         />
       )}
+
+      {/* Floating rejection tooltip — shown for ~2.5s after a failed
+          drop (invalid pair, special-rule conflict, or hard validation
+          error). State lives in `useConnectionDrawing`. */}
+      {connectionRejection && <ConnectionRejectionOverlay rejection={connectionRejection} />}
 
       {/* User traffic icon + outbound connections to exposed services —
           extracted to UserTrafficOverlay (rf-canv-15). Both render only

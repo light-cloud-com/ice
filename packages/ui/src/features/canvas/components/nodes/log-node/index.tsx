@@ -17,6 +17,10 @@ import { LogHeader } from './log-header';
 import { useLogStream } from '../../../../../shared/hooks/use-log-stream';
 import type { LogStreamStatus, LogEntry as StreamLogEntry } from '../../../../../store/slices/logs-slice';
 import { CORNER_RADIUS } from '../../../../../config/canvas-constants';
+import { t } from '../../../../../i18n';
+import { ConnectionDragGlow } from '../_shared/connection-drag-glow';
+import { ConnectionPorts } from '../_shared/connection-ports';
+import { useIsNodeOrphan } from '../_shared/orphan-context';
 import type { SvgLogNodeProps, LogEntry } from './types';
 
 // Map a Cloud Logging level onto the row component's level. Cloud Logging
@@ -42,29 +46,32 @@ function formatTs(ts: string): string {
 function placeholderText(status: LogStreamStatus, lastError: string | null): string {
   switch (status) {
     case 'pre-deploy':
-      return 'Deploy this environment to start streaming logs.';
+      return t('canvas.logNode.preDeploy');
     case 'no-source':
-      return 'Connect a compute or database block to start streaming logs.';
+      return t('canvas.logNode.noSource');
     case 'ambiguous':
-      return 'Multiple inbound connections — choose a source in the properties panel.';
+      return t('canvas.logNode.ambiguous');
     case 'unsupported':
-      return "This source type doesn't emit Cloud Logging output.";
+      return t('canvas.logNode.unsupported');
     case 'permission-denied':
-      return (
-        lastError || 'Cloud Logging access denied. Grant roles/logging.viewer to the deploy service account.'
-      );
+      return lastError || t('canvas.logNode.permissionDenied');
     case 'error':
-      return lastError || 'Connection error. Retrying.';
+      return lastError || t('canvas.logNode.error');
     case 'connecting':
-      return 'Connecting…';
+      return t('canvas.logNode.connecting');
     case 'idle':
-      return 'Waiting for environment.';
+      return t('canvas.logNode.idle');
     default:
       return '';
   }
 }
 
-export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, onToggleFold }) => {
+export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({
+  node,
+  isSelected,
+  onToggleFold,
+  connectionDragState = null,
+}) => {
   const { x, y, width, height, data, label } = node;
   const [isHovered, setIsHovered] = useState(false);
   const [folded, setFolded] = useState(false);
@@ -72,6 +79,18 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, o
   const [isAutoScroll, setIsAutoScroll] = useState(true);
   const [copiedLine, setCopiedLine] = useState<string | null>(null);
   const lastEntryCountRef = useRef(0);
+
+  const isSource = connectionDragState === 'source';
+  const isValidTarget = connectionDragState === 'valid-target';
+  const isInvalidTarget = connectionDragState === 'invalid-target';
+  // Hide the orphan border while any drag is in progress so the
+  // amber dashed ring doesn't compete with the green/red drop signal.
+  const isOrphan = useIsNodeOrphan(node.id) && connectionDragState === null;
+  const portOpacity = isInvalidTarget
+    ? 0.12
+    : isHovered || isSelected || isValidTarget || isSource
+      ? 1
+      : 0.35;
 
   // ── Live data via the LT-5 hook ─────────────────────────────────────
   // The hook manages subscribe → room-join → unsubscribe and dispatches
@@ -242,6 +261,47 @@ export const SvgLogNode: React.FC<SvgLogNodeProps> = memo(({ node, isSelected, o
           )}
         </div>
       </foreignObject>
+      {isValidTarget && <ConnectionDragGlow x={x} y={y} width={nodeWidth} height={nodeHeight} />}
+      {isInvalidTarget && (
+        <rect
+          x={x - 3}
+          y={y - 3}
+          width={nodeWidth + 6}
+          height={nodeHeight + 6}
+          rx={CORNER_RADIUS + 3}
+          fill="none"
+          stroke="#ef4444"
+          strokeWidth={2}
+          strokeDasharray="4 3"
+          opacity={0.85}
+          pointerEvents="none"
+        />
+      )}
+      {isOrphan && (
+        <rect
+          x={x - 2}
+          y={y - 2}
+          width={nodeWidth + 4}
+          height={nodeHeight + 4}
+          rx={CORNER_RADIUS + 2}
+          fill="none"
+          stroke="#d97706"
+          strokeWidth={1.5}
+          strokeDasharray="5 4"
+          opacity={0.6}
+          pointerEvents="none"
+        />
+      )}
+      <ConnectionPorts
+        nodeId={node.id}
+        x={x}
+        y={y}
+        width={nodeWidth}
+        height={nodeHeight}
+        color="#22c55e"
+        isValidTarget={isValidTarget}
+        opacity={portOpacity}
+      />
     </g>
   );
 });

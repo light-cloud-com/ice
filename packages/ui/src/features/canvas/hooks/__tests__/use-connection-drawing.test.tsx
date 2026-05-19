@@ -61,6 +61,7 @@ const mocks = vi.hoisted(() => ({
   wouldCreateCycleSpy: vi.fn(),
   inferConnectionMetaSpy: vi.fn(),
   findExistingSpecialConnectionSpy: vi.fn(),
+  findExistingLogSourceSpy: vi.fn(),
 }));
 
 // Mock React's `useState` so the slot survives across `renderToString`
@@ -114,6 +115,7 @@ vi.mock('../../utils/connection-rules', () => ({
 // Mock the special-rule helper.
 vi.mock('../../utils/connection-special-rules', () => ({
   findExistingSpecialConnection: mocks.findExistingSpecialConnectionSpy,
+  findExistingLogSource: mocks.findExistingLogSourceSpy,
 }));
 
 // Import AFTER the mocks are registered so the hook closes over them.
@@ -255,6 +257,7 @@ beforeEach(() => {
     color: undefined,
   });
   mocks.findExistingSpecialConnectionSpy.mockReturnValue({ specialType: null, conflict: false });
+  mocks.findExistingLogSourceSpy.mockReturnValue({ conflict: false });
 });
 
 afterEach(() => {

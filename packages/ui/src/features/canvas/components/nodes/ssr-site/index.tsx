@@ -19,6 +19,7 @@ import { LayoutTemplate } from 'lucide-react';
 import React from 'react';
 import { CardShell } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
+import { t } from '../../../../../i18n';
 
 export { COMPUTE_HEADER_HEIGHT, COMPUTE_BODY_HEIGHT, COMPUTE_PADDING };
 
@@ -44,7 +45,7 @@ function buildLiveConfig(data: Record<string, unknown> | undefined): string {
   const customDomain = (data?.custom_domain as string) || '';
   const range = min != null && max != null ? `${min}–${max} instances` : '';
   const parts = [range, customDomain].filter(Boolean);
-  return parts.join(' · ') || 'unconfigured';
+  return parts.join(' · ') || t('canvas.blocks.common.unconfigured');
 }
 
 const BrowserFrame: React.FC<{ framework: string; color: string }> = ({ framework, color }) => (
@@ -119,9 +120,10 @@ export const SvgSsrSiteNode: React.FC<SvgCompactNodeProps> = ({
       pipelineStatus={pipelineStatus}
       icon={LayoutTemplate}
       accentColor={SSR_ACCENT}
-      title={node.label || 'SSR Site'}
+      title={node.label || t('canvas.blocks.titles.ssrSite')}
       liveConfig={liveConfig}
       headerHeight={COMPUTE_HEADER_HEIGHT}
+      brandOverride={rawFramework}
     >
       <div style={{ height: COMPUTE_BODY_HEIGHT, display: 'flex' }} data-testid={`ssr-body-${node.id}`}>
         <BrowserFrame framework={framework} color={SSR_ACCENT} />

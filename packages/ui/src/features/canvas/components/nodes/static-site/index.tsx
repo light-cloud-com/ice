@@ -18,6 +18,7 @@ import { Globe } from 'lucide-react';
 import React from 'react';
 import { CardShell } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
+import { t } from '../../../../../i18n';
 
 export { COMPUTE_HEADER_HEIGHT, COMPUTE_BODY_HEIGHT, COMPUTE_PADDING };
 
@@ -42,8 +43,12 @@ function buildLiveConfig(data: Record<string, unknown> | undefined): string {
   const size = (data?.size as string) || '';
   const customDomain = (data?.custom_domain as string) || (data?.domain as string) || '';
   const fastWw = data?.fast_worldwide;
-  const parts = [size, customDomain, fastWw === false ? 'no CDN' : 'global CDN'].filter(Boolean);
-  return parts.join(' · ') || 'unconfigured';
+  const parts = [
+    size,
+    customDomain,
+    fastWw === false ? t('canvas.blocks.site.noCdn') : t('canvas.blocks.site.globalCdn'),
+  ].filter(Boolean);
+  return parts.join(' · ') || t('canvas.blocks.common.unconfigured');
 }
 
 const GlobeWithEdges: React.FC<{ color: string }> = ({ color }) => {
@@ -106,9 +111,10 @@ export const SvgStaticSiteNode: React.FC<SvgCompactNodeProps> = ({
       pipelineStatus={pipelineStatus}
       icon={Globe}
       accentColor={STATIC_ACCENT}
-      title={node.label || 'Static Site'}
+      title={node.label || t('canvas.blocks.titles.staticSite')}
       liveConfig={liveConfig}
       headerHeight={COMPUTE_HEADER_HEIGHT}
+      brandOverride={rawFramework}
     >
       <div
         style={{
@@ -132,7 +138,7 @@ export const SvgStaticSiteNode: React.FC<SvgCompactNodeProps> = ({
               letterSpacing: '0.08em',
             }}
           >
-            framework
+            {t('canvas.blocks.site.framework')}
           </span>
           <span
             style={{
@@ -152,7 +158,7 @@ export const SvgStaticSiteNode: React.FC<SvgCompactNodeProps> = ({
               opacity: 0.6,
             }}
           >
-            served from edge
+            {t('canvas.blocks.site.servedFromEdge')}
           </span>
         </div>
       </div>

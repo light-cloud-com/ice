@@ -81,6 +81,14 @@ vi.mock('react', async (importOriginal) => {
     return fn;
   });
   const patchedUseRef = vi.fn(<T,>(initial: T) => ({ current: initial }));
+  // ResourcePalette now calls `useTranslation()` to fetch the localized
+  // category labels. The hook reads LocaleContext via useContext —
+  // return an identity translator so the test stays locale-independent.
+  const patchedUseContext = vi.fn(() => ({
+    t: (key: string) => key,
+    locale: 'en' as const,
+    setLocale: () => {},
+  }));
   const actualDefault = (actual as unknown as { default?: typeof actual }).default ?? actual;
   return {
     ...actual,
@@ -89,6 +97,7 @@ vi.mock('react', async (importOriginal) => {
     useMemo: patchedUseMemo,
     useCallback: patchedUseCallback,
     useRef: patchedUseRef,
+    useContext: patchedUseContext,
     default: {
       ...actualDefault,
       useState: patchedUseState,
@@ -96,6 +105,7 @@ vi.mock('react', async (importOriginal) => {
       useMemo: patchedUseMemo,
       useCallback: patchedUseCallback,
       useRef: patchedUseRef,
+      useContext: patchedUseContext,
     },
   };
 });
@@ -117,6 +127,19 @@ vi.mock('../../../shared/api/axios-instance', () => ({
 vi.mock('../../../config/providers', () => ({
   ENABLED_PROVIDER_IDS: new Set(['aws', 'gcp', 'azure']),
 }));
+
+// `resource-palette.tsx`'s filter calls `isCategoryEnabledForProvider`
+// against live PROVIDER_FLAGS, which currently gates most providers off.
+// These tests are about the filter wiring (ENABLED_PROVIDER_IDS +
+// search + provider-pick), NOT about the per-category provider flags —
+// stub the gate to true so test fixtures stay locale-/flag-independent.
+vi.mock('@ice/constants', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    isCategoryEnabledForProvider: () => true,
+  };
+});
 
 vi.mock('../../../shared/components/ui/tooltip', () => ({
   TooltipProvider: ({ children, delayDuration }: { children: React.ReactNode; delayDuration?: number }) =>
@@ -199,14 +222,15 @@ vi.mock('../sections/blocks-section', () => ({
 
 vi.mock('../data/categories', () => ({
   CATEGORY_ORDER: ['Compute', 'Network'],
-  CATEGORY_MAP: new Map([
-    ['Compute', { id: 'Compute', label: 'Compute', icon: () => null, color: '#22c55e', tooltip: 'tt' }],
-    ['Network', { id: 'Network', label: 'Network', icon: () => null, color: '#06b6d4', tooltip: 'tt' }],
-  ]),
+  getCategoryMap: () =>
+    new Map([
+      ['Compute', { id: 'Compute', label: 'Compute', icon: () => null, color: '#22c55e', tooltip: 'tt' }],
+      ['Network', { id: 'Network', label: 'Network', icon: () => null, color: '#06b6d4', tooltip: 'tt' }],
+    ]),
 }));
 
 vi.mock('../data/components', () => ({
-  COMPONENTS: [
+  getComponents: () => [
     {
       type: 'Compute.A',
       name: 'Alpha',
@@ -241,6 +265,7 @@ vi.mock('../data/providers', () => ({
   PALETTE_STYLES: '/* styles */',
   loadCollapsed: vi.fn(() => new Set<string>()),
   saveCollapsed: vi.fn(),
+  getProviders: () => [],
 }));
 
 import { ResourcePalette } from '../components/resource-palette';

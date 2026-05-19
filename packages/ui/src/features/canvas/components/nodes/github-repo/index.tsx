@@ -19,6 +19,7 @@ import { GitBranch } from 'lucide-react';
 import React from 'react';
 import { CardShell } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
+import { t } from '../../../../../i18n';
 
 export { COMPUTE_HEADER_HEIGHT, COMPUTE_BODY_HEIGHT, COMPUTE_PADDING };
 
@@ -47,8 +48,8 @@ function buildLiveConfig(data: Record<string, unknown> | undefined): string {
   const buildCmd = (data?.buildCommand as string) || '';
   const autoDeploy = data?.autoDeploy;
   const parts = [
-    autoDeploy === false ? 'manual deploys' : 'auto-deploy',
-    buildCmd ? `build: ${buildCmd}` : '',
+    autoDeploy === false ? t('canvas.blocks.github.manualDeploys') : t('canvas.blocks.github.autoDeploy'),
+    buildCmd ? `${t('canvas.blocks.github.buildPrefix')}${buildCmd}` : '',
   ].filter(Boolean);
   return parts.join(' · ');
 }
@@ -103,7 +104,7 @@ export const SvgGithubRepoNode: React.FC<SvgCompactNodeProps> = ({
 
   // Title is the user-friendly label. The repo address lives in the
   // body where there's room for the full `github.com/owner/repo` form.
-  const title = node.label || 'GitHub Repository';
+  const title = node.label || t('canvas.blocks.titles.githubRepo');
 
   return (
     <CardShell
@@ -161,7 +162,7 @@ export const SvgGithubRepoNode: React.FC<SvgCompactNodeProps> = ({
             }}
             data-testid={`repo-empty-${node.id}`}
           >
-            no repository connected — pick one in the properties panel
+            {t('canvas.blocks.github.noRepoConnected')}
           </span>
         )}
         {/* Branch + path row */}

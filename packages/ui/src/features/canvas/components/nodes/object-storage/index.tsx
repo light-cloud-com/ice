@@ -16,6 +16,7 @@ import {
 import { Folder, Globe, Lock } from 'lucide-react';
 import React from 'react';
 import { CardShell } from '../_shared';
+import { t } from '../../../../../i18n';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
 export { BUCKET_HEADER_HEIGHT, BUCKET_BODY_HEIGHT, BUCKET_PADDING };
@@ -26,24 +27,41 @@ export function computeObjectStorageHeight(): number {
 
 const BUCKET_ACCENT = '#84cc16';
 
-const STORAGE_CLASS_LABELS: Record<string, string> = {
-  standard: 'Standard',
-  nearline: 'Nearline',
-  coldline: 'Coldline',
-  archive: 'Archive',
-  ia: 'Infrequent Access',
-  glacier: 'Glacier',
-  glacier_deep_archive: 'Glacier Deep Archive',
-  hot: 'Hot',
-  cool: 'Cool',
-};
+function getStorageClassLabel(k: string): string {
+  switch (k) {
+    case 'standard':
+      return t('canvas.blocks.storage.classStandard');
+    case 'nearline':
+      return t('canvas.blocks.storage.classNearline');
+    case 'coldline':
+      return t('canvas.blocks.storage.classColdline');
+    case 'archive':
+      return t('canvas.blocks.storage.classArchive');
+    case 'ia':
+      return t('canvas.blocks.storage.classInfrequent');
+    case 'glacier':
+      return t('canvas.blocks.storage.classGlacier');
+    case 'glacier_deep_archive':
+      return t('canvas.blocks.storage.classGlacierDeep');
+    case 'hot':
+      return t('canvas.blocks.storage.classHot');
+    case 'cool':
+      return t('canvas.blocks.storage.classCool');
+    default:
+      return k;
+  }
+}
 
 function buildLiveConfig(data: Record<string, unknown> | undefined): string {
   const cls = ((data?.storage_class as string) || '').toLowerCase();
-  const classLabel = cls ? STORAGE_CLASS_LABELS[cls] || cls : '';
+  const classLabel = cls ? getStorageClassLabel(cls) : '';
   const isPublic = !!(data?.public ?? data?.publicRead);
   const versioning = !!data?.versioning;
-  const parts = [isPublic ? 'public' : 'private', classLabel, versioning ? 'versioned' : ''].filter(Boolean);
+  const parts = [
+    isPublic ? t('canvas.blocks.storage.public') : t('canvas.blocks.storage.private'),
+    classLabel,
+    versioning ? t('canvas.blocks.storage.versioned') : '',
+  ].filter(Boolean);
   return parts.join(' · ');
 }
 
@@ -98,7 +116,7 @@ const BucketDrawers: React.FC<DrawersProps> = ({ color, isPublic }) => {
           color: statusColor,
           flexShrink: 0,
         }}
-        title={isPublic ? 'Public bucket' : 'Private bucket'}
+        title={isPublic ? t('canvas.blocks.storage.publicBucket') : t('canvas.blocks.storage.privateBucket')}
       >
         <StatusIcon size={14} />
       </div>
@@ -116,7 +134,7 @@ export const SvgObjectStorageNode: React.FC<SvgCompactNodeProps> = ({
   pipelineStatus,
 }) => {
   const isPublic = !!(node.data?.public ?? node.data?.publicRead);
-  const liveConfig = buildLiveConfig(node.data) || 'private';
+  const liveConfig = buildLiveConfig(node.data) || t('canvas.blocks.storage.private');
 
   return (
     <CardShell
@@ -129,7 +147,7 @@ export const SvgObjectStorageNode: React.FC<SvgCompactNodeProps> = ({
       pipelineStatus={pipelineStatus}
       icon={Folder}
       accentColor={BUCKET_ACCENT}
-      title={node.label || 'Object Storage'}
+      title={node.label || t('canvas.blocks.titles.objectStorage')}
       liveConfig={liveConfig}
       headerHeight={BUCKET_HEADER_HEIGHT}
     >

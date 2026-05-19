@@ -146,11 +146,17 @@ const dispatchSpy = vi.fn();
 vi.mock('react', async (orig) => {
   const actual = (await orig()) as typeof import('react');
   const useRefStub = <T,>(init: T) => ({ current: init });
+  // svg-canvas now calls `useMemo` directly to precompute the orphan
+  // node set. The test invokes svg-canvas as a plain function (no
+  // renderer), so the real useMemo blows up — stub it to invoke its
+  // factory once and return the result, same shape as React's contract.
+  const useMemoStub = <T,>(factory: () => T, _deps: unknown[]): T => factory();
   const actualDefault = (actual as unknown as { default?: typeof actual }).default ?? actual;
   return {
     ...actual,
-    default: { ...actualDefault, useRef: useRefStub },
+    default: { ...actualDefault, useRef: useRefStub, useMemo: useMemoStub },
     useRef: useRefStub,
+    useMemo: useMemoStub,
   };
 });
 

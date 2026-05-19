@@ -35,6 +35,33 @@ Each provider exposes one of two billing shapes:
 
 The compute size dropdown picks one or the other per provider.
     `.trim(),
+    markdownZh: `
+# 数据仓库
+
+针对大规模数据聚合而优化的列式分析数据库。基于同一份存储跑 BI 仪表盘、做用户队列分析、训练 ML 模型 — 而您的应用在请求路径上不会查询它。
+
+## 适用场景
+
+- 在百万到十亿级行数上的慢速分析查询
+- BI / 仪表盘(Looker、Metabase、Mode、Tableau)
+- 集中式 data lakehouse — 来自应用的事件流,与 CRM / 计费 / 产品分析数据连接
+
+## 不适用场景
+
+- OLTP 请求路径流量 → 使用 **Postgres** / **MySQL**
+- 缓存层点查 → 使用 **Redis 缓存**
+- 文档存储 / 灵活模式 → 使用 **MongoDB**
+- 向量嵌入 / 相似度搜索 → 使用 **Vector DB**
+
+## 计费模型
+
+每家服务商提供以下两种计费形式之一:
+
+- **按需 / 按扫描 TB 计费**(BigQuery、Athena 模式的 Redshift):起步便宜,规模一大就贵。适合零散的分析查询。
+- **预置集群 / 包年包月**(Redshift、Synapse、BigQuery editions):月度成本可预测,在持续负载下效率更高。
+
+计算规模下拉框会按服务商选择其中一种。
+    `.trim(),
   },
   compilesTo: {
     aws: [
@@ -77,5 +104,6 @@ for {
     { label: 'Google BigQuery', url: 'https://cloud.google.com/bigquery/docs' },
     { label: 'Azure Synapse', url: 'https://learn.microsoft.com/en-us/azure/synapse-analytics/' },
   ],
+  linksZh: ['AWS Redshift', 'Google BigQuery', 'Azure Synapse'],
   relatedConcepts: ['Database.PostgreSQL', 'Storage.ObjectStorage', 'Compute.Container'],
 };

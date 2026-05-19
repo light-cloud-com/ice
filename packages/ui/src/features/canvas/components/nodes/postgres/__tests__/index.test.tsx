@@ -1,6 +1,6 @@
 /**
- * Tests for `SvgPostgresNode` — bespoke renderer with the relational
- * `TableStripes` body visual and a postgres-flavoured live-config line.
+ * Tests for `SvgPostgresNode` — bespoke renderer with engine/version/
+ * storage identity body and hardening badges.
  */
 
 import React from 'react';
@@ -10,14 +10,11 @@ const mocks = vi.hoisted(() => {
   const passthrough: React.FC<Record<string, unknown>> = (props) =>
     React.createElement('div', null, (props as { children?: React.ReactNode }).children);
   passthrough.displayName = 'MockCardShell';
-  const StripesMock: React.FC<{ color: string }> = () => null;
-  StripesMock.displayName = 'MockTableStripes';
-  return { CardShell: passthrough, TableStripes: StripesMock };
+  return { CardShell: passthrough };
 });
 
 vi.mock('../../_shared', () => ({
   CardShell: mocks.CardShell,
-  TableStripes: mocks.TableStripes,
 }));
 
 vi.mock('lucide-react', () => ({
@@ -41,10 +38,19 @@ function* walk(node: ReactNodeLike): Generator<React.ReactElement> {
   if (children == null) return;
   yield* walk(children);
 }
-function findByType(tree: React.ReactNode, type: unknown): React.ReactElement[] {
-  const out: React.ReactElement[] = [];
-  for (const el of walk(tree)) if (el && el.type === type) out.push(el);
-  return out;
+function findByTestId(tree: React.ReactNode, id: string): React.ReactElement | undefined {
+  for (const el of walk(tree)) {
+    if ((el.props as { 'data-testid'?: string })['data-testid'] === id) return el;
+  }
+  return undefined;
+}
+function findTextEqual(tree: React.ReactNode, value: string): React.ReactElement | undefined {
+  for (const el of walk(tree)) {
+    const c = (el.props as { children?: unknown }).children;
+    if (c === value) return el;
+    if (Array.isArray(c) && c.some((x) => x === value)) return el;
+  }
+  return undefined;
 }
 
 const makeNode = (overrides: Partial<CanvasNode> = {}): CanvasNode => ({
@@ -102,16 +108,41 @@ describe('SvgPostgresNode', () => {
     expect((tree.props as { title: string }).title).toBe('Postgres');
   });
 
-  it('renders TableStripes in the body slot', () => {
-    const tree = renderInner();
-    const stripes = findByType(tree, mocks.TableStripes);
-    expect(stripes).toHaveLength(1);
+  it('renders the engine + version big in the body (no decorative stripes)', () => {
+    const tree = renderInner({
+      node: makeNode({ data: { iceType: 'Database.PostgreSQL', version: '16' } }),
+    });
+    expect(findByTestId(tree, 'pg-body-pg-1')).toBeDefined();
+    expect(findTextEqual(tree, 'PostgreSQL 16')).toBeDefined();
   });
 
-  it('passes the postgres accent colour to TableStripes', () => {
-    const tree = renderInner();
-    const stripes = findByType(tree, mocks.TableStripes)[0];
-    expect((stripes.props as { color: string }).color).toBe('#3b82f6');
+  it('renders the storage callout in the body', () => {
+    const tree = renderInner({
+      node: makeNode({ data: { iceType: 'Database.PostgreSQL', version: '16', storage: '100' } }),
+    });
+    expect(findTextEqual(tree, '100 GB')).toBeDefined();
+  });
+
+  it('shows the HA badge when production is true', () => {
+    const tree = renderInner({
+      node: makeNode({ data: { iceType: 'Database.PostgreSQL', version: '16', production: true } }),
+    });
+    expect(findTextEqual(tree, 'HA')).toBeDefined();
+  });
+
+  it('shows the backup-retention badge when set', () => {
+    const tree = renderInner({
+      node: makeNode({ data: { iceType: 'Database.PostgreSQL', version: '16', backup_retention: 7 } }),
+    });
+    expect(findTextEqual(tree, '7d backups')).toBeDefined();
+  });
+
+  it('shows no badges when neither production nor backup_retention is set', () => {
+    const tree = renderInner({
+      node: makeNode({ data: { iceType: 'Database.PostgreSQL', version: '16' } }),
+    });
+    expect(findTextEqual(tree, 'HA')).toBeUndefined();
+    expect(findTextEqual(tree, '7d backups')).toBeUndefined();
   });
 
   it('builds liveConfig from version + storage + production + backup_retention', () => {

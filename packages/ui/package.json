@@ -67,7 +67,7 @@
     "react-router-dom": "^6.30.3",
     "socket.io-client": "^4.8.3",
     "tailwind-merge": "^3.5.0",
-    "zod": "^3.25.76"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/dagre": "^0.7.52",

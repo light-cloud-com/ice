@@ -132,7 +132,6 @@ export const BlockNode: React.FC<BlockNodeProps> = memo(
               />
               <FoldButton folded={folded} onClick={onToggleFold} opacity={isHovered ? 0.8 : 0.4} />
             </div>
-
             {/* Body */}
             {!folded && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}>

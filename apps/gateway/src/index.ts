@@ -22,13 +22,18 @@ import {
 } from '@ice/service-deploy';
 import { createEngineRouter } from '@ice/service-engine';
 import { createIamRouter } from '@ice/service-iam';
-import { setupSocketService, setDesktopUser } from '@ice/shared';
+import { setupSocketService, setDesktopUser, ensureLocalSecrets } from '@ice/shared';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 import { rateLimit } from 'express-rate-limit';
 import helmet from 'helmet';
 import { Server as SocketServer } from 'socket.io';
+
+// Bootstrap local secrets (JWT_SECRET, CREDENTIAL_ENCRYPTION_KEY) before
+// anything else touches them. In Community Edition users never set these;
+// the helper persists generated values per-user so they survive restarts.
+ensureLocalSecrets();
 
 const app = express();
 const httpServer = createServer(app);
@@ -53,6 +58,13 @@ setupSocketService(io);
 
 // ─── Middleware ──────────────────────────────────────────────────────────────
 
+const isDevOrTest = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
+
+const connectSrc = ["'self'"];
+if (isDevOrTest) {
+  connectSrc.push('ws://localhost:*', 'http://localhost:*');
+}
+
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -62,7 +74,7 @@ app.use(
         styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", 'data:', 'blob:'],
         fontSrc: ["'self'", 'data:'],
-        connectSrc: ["'self'", 'ws://localhost:*', 'http://localhost:*'],
+        connectSrc,
         frameAncestors: ["'none'"],
       },
     },
@@ -81,7 +93,6 @@ app.use('/api/webhooks/github', express.raw({ type: 'application/json' }));
 
 app.use(express.json({ limit: '10mb' }));
 
-const isDevOrTest = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
 const limiter = rateLimit({
   windowMs: 60 * 1000,
   max: isDevOrTest ? 1000 : 200,

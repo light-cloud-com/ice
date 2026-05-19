@@ -4,7 +4,7 @@
  * Deploys resources to Microsoft Azure using direct API calls.
  */
 
-import type { DeployOptions, ResourceDeployResult, ProviderDeployer } from '../types.js';
+import type { DeployOptions, ResourceDeployResult, ProviderDeployer } from '../types';
 
 /**
  * Azure resource deployer.

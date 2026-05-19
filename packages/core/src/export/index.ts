@@ -16,9 +16,9 @@ export type {
   TerraformVariable,
   TerraformOutput,
   TerraformExportResult,
-} from './terraform-exporter.js';
+} from './terraform-exporter';
 
-export { TerraformExporter, create_terraform_exporter } from './terraform-exporter.js';
+export { TerraformExporter, create_terraform_exporter } from './terraform-exporter';
 
 // Pulumi exporter
 export type {
@@ -27,6 +27,6 @@ export type {
   PulumiResourceOptions,
   PulumiProgram,
   PulumiExportResult,
-} from './pulumi-exporter.js';
+} from './pulumi-exporter';
 
-export { PulumiExporter, create_pulumi_exporter } from './pulumi-exporter.js';
+export { PulumiExporter, create_pulumi_exporter } from './pulumi-exporter';

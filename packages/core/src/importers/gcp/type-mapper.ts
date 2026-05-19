@@ -6,7 +6,7 @@
  *   Network.VPC, Database.PostgreSQL, Application.Container, etc.
  */
 
-import type { NodeBehavior } from '../../resources/high-level-resources.js';
+import type { NodeBehavior } from '../../resources/high-level-resources';
 
 // =============================================================================
 // Kind to High-Level ICE Type Mapping
@@ -294,13 +294,18 @@ const CLEAN_PROPERTY_EXTRACTORS: Record<string, (props: Record<string, unknown>)
 
   // Pub/Sub Topic
   'pubsub#topic': (props) => ({
-    name: props.name || extractName(props.name as string),
+    // findings.md #26 — `props.name || extractName(props.name)` was a
+    // dead-eyed fallback: pubsub returns `name` as the fully-qualified
+    // path `projects/<proj>/topics/<topic>`, so the OR-arm always took
+    // the path verbatim. Always extract the bare name; works for both
+    // shapes since `extractName('mytopic')` is itself 'mytopic'.
+    name: extractName(props.name as string | undefined),
     message_retention: props.messageRetentionDuration,
   }),
 
   // Pub/Sub Subscription
   'pubsub#subscription': (props) => ({
-    name: props.name || extractName(props.name as string),
+    name: extractName(props.name as string | undefined),
     topic: extractName((props.topic as string) || ''),
     ack_deadline: props.ackDeadlineSeconds,
     message_retention: props.messageRetentionDuration,
@@ -309,7 +314,7 @@ const CLEAN_PROPERTY_EXTRACTORS: Record<string, (props: Record<string, unknown>)
 
   // Secret Manager
   'secretmanager#secret': (props) => ({
-    name: props.name || extractName((props.name as string) || ''),
+    name: extractName(props.name as string | undefined),
     replication: (props.replication as any)?.automatic ? 'automatic' : 'manual',
   }),
 

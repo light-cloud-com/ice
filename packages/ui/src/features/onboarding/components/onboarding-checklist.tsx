@@ -7,27 +7,27 @@
  */
 
 import { Check, X, ChevronUp, ChevronDown, ListChecks } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { useTour } from '../../tour';
 import { useTranslation } from '../../../i18n';
 import { cn } from '../../../shared/utils/cn';
-import { checkGitHubConnection } from '../../../store/slices/integrations-slice';
-import type { RootState, AppDispatch } from '../../../store';
+import type { RootState } from '../../../store';
 
 interface ChecklistItem {
   id: string;
   label: string;
   done: boolean;
+  /** Optional tour id — when present a "Show me how" link starts the tour. */
+  tourId?: string;
 }
 
 const STORAGE_KEY = 'ice-onboarding-checklist-dismissed';
 
 export const OnboardingChecklist: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
   const { t } = useTranslation();
+  const { start: startTour, isCompleted: isTourCompleted } = useTour();
   const user = useSelector((s: RootState) => s.account.user);
-  const githubStatus = useSelector((s: RootState) => s.integrations.integrations.github);
-  const gcpStatus = useSelector((s: RootState) => s.integrations.integrations.gcp);
 
   const [dismissed, setDismissed] = useState(() => {
     try {
@@ -37,19 +37,36 @@ export const OnboardingChecklist: React.FC = () => {
     }
   });
   const [collapsed, setCollapsed] = useState(true);
+  const [tourHint, setTourHint] = useState<string | null>(null);
 
-  useEffect(() => {
-    dispatch(checkGitHubConnection());
-  }, [dispatch]);
+  // The canvas-tour highlights elements that only render on a project
+  // canvas (#ice-canvas-svg, palette panel, properties panel, AI panel).
+  // Folder view (the "dashboard" at /) doesn't render any of those, so
+  // firing the tour from there would auto-skip every step silently and
+  // "complete" without showing anything. Refuse the launch and surface
+  // a hint instead.
+  const handleStartTour = (tourId: string) => {
+    if (typeof document !== 'undefined' && document.getElementById('ice-canvas-svg')) {
+      setTourHint(null);
+      startTour(tourId);
+      return;
+    }
+    setTourHint(t('onboarding.checklist.openProjectForTour'));
+  };
 
   // Don't show if user hasn't completed onboarding or if dismissed
   if (!user?.onboardingCompleted || dismissed) return null;
 
+  // Cloud-provider + GitHub setup used to be checklist items here, but
+  // the canvas tour now covers those surfaces (steps 8-9), so the
+  // checklist collapses to "take the tour."
   const items: ChecklistItem[] = [
-    { id: 'account', label: t('onboarding.checklist.createAccount'), done: true },
-    { id: 'provider', label: t('onboarding.checklist.chooseProvider'), done: !!user.defaultProvider },
-    { id: 'cloud', label: t('onboarding.checklist.connectCloud'), done: gcpStatus?.status === 'connected' },
-    { id: 'github', label: t('onboarding.checklist.connectGithub'), done: githubStatus?.status === 'connected' },
+    {
+      id: 'canvas-tour',
+      label: t('onboarding.checklist.takeCanvasTour'),
+      done: isTourCompleted('canvas-tour'),
+      tourId: 'canvas-tour',
+    },
   ];
 
   const doneCount = items.filter((i) => i.done).length;
@@ -112,9 +129,27 @@ export const OnboardingChecklist: React.FC = () => {
                 >
                   {item.done && <Check className="w-2.5 h-2.5 text-white" />}
                 </div>
-                <span className={cn(item.done ? 'text-ice-text-2 line-through' : 'text-ice-text-1')}>{item.label}</span>
+                <span
+                  className={cn('flex-1', item.done ? 'text-ice-text-2 line-through' : 'text-ice-text-1')}
+                >
+                  {item.label}
+                </span>
+                {item.tourId && !item.done && (
+                  <button
+                    type="button"
+                    onClick={() => handleStartTour(item.tourId!)}
+                    className="text-xs text-ice-accent hover:underline shrink-0"
+                  >
+                    {t('tour.actions.showMeHow')}
+                  </button>
+                )}
               </div>
             ))}
+            {tourHint && (
+              <p className="px-2 pt-1 text-[11px] text-ice-text-3 italic">
+                {tourHint}
+              </p>
+            )}
           </div>
         </div>
       )}

@@ -267,7 +267,7 @@ export interface ExtractorConfig {
 }
 
 export const DEFAULT_CONFIG: ExtractorConfig = {
-  output_dir: './packages/schemas/src/generated',
+  output_dir: './packages/core/src/schemas/generated',
   cache_dir: './.schema-cache',
   include_deprecated: false,
   terraform_registry_url: 'https://registry.terraform.io/v1',

@@ -25,8 +25,8 @@ import type {
   ObjectProperty,
   Attribute,
   Reference,
-} from './ast.js';
-import type { SourcePosition, SourceSpan } from './tokens.js';
+} from './ast';
+import type { SourcePosition, SourceSpan } from './tokens';
 
 // =============================================================================
 // Types

@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import canvasRoutes from './routes/canvas.js';
-import environmentRoutes from './routes/environment.js';
-import projectMemberRoutes from './routes/project-members.js';
-export * from './services/canvas.service.js';
-export * from './services/canvas-validation.service.js';
-export * from './services/environment.service.js';
+import canvasRoutes from './routes/canvas';
+import environmentRoutes from './routes/environment';
+import projectMemberRoutes from './routes/project-members';
+export * from './services/canvas.service';
+export * from './services/canvas-validation.service';
+export * from './services/environment.service';
 
 export function createCanvasRouter(): Router {
   const router = Router();

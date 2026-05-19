@@ -5,24 +5,11 @@
  * Sends a focused diagnostic prompt to the configured AI provider.
  */
 
+import { DIAGNOSE_DEPLOY_SYSTEM_PROMPT } from '@ice/constants';
 import { getAiProvider } from './ai.service';
 import type { DiagnoseDeployRequest, DiagnoseDeployResponse } from '@ice/types';
 
-const SYSTEM_PROMPT = `You are a senior cloud deployment engineer. A deployment just failed.
-Your job: help the user understand what went wrong and how to fix it, in plain English.
-
-Respond ONLY with a JSON object, no markdown or prose outside:
-{
-  "diagnosis": "Short plain-English explanation (2-4 sentences, no jargon).",
-  "suggestedFixes": ["specific step 1", "specific step 2", ...],
-  "operations": []
-}
-
-Rules:
-1. "diagnosis" must be concrete — name the resource, the cause, the impact.
-2. "suggestedFixes" is a bulleted checklist of specific actions. 2-5 items. No fluff.
-3. "operations" is optional. Only include if the fix is a concrete canvas change (e.g. add a missing Secret block). Leave [] otherwise.
-4. Never invent details not in the input. If you don't know, say "The error doesn't show enough to pinpoint the cause — try X."`;
+const SYSTEM_PROMPT = DIAGNOSE_DEPLOY_SYSTEM_PROMPT;
 
 function buildUserPrompt(req: DiagnoseDeployRequest): string {
   const parts: string[] = [];
@@ -89,8 +76,8 @@ function parseResponse(raw: string): DiagnoseDeployResponse {
   };
 }
 
-export async function diagnoseDeploy(req: DiagnoseDeployRequest): Promise<DiagnoseDeployResponse> {
-  const provider = await getAiProvider();
+export async function diagnoseDeploy(req: DiagnoseDeployRequest, orgId?: string): Promise<DiagnoseDeployResponse> {
+  const provider = await getAiProvider(orgId);
   const userPrompt = buildUserPrompt(req);
   const response = await provider.chat({
     systemPrompt: SYSTEM_PROMPT,

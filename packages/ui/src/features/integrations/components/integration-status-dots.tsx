@@ -5,12 +5,15 @@
  * for each configured provider (GitHub, GCP, AWS, Azure).
  */
 
+import { ALL_PROVIDERS, isProviderEnabled, type Provider } from '@ice/constants';
 import { Loader2 } from 'lucide-react';
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { cn } from '../../../shared/utils/cn';
 import type { RootState } from '../../../store';
 import type { IntegrationStatus } from '../../../store/slices/integrations-slice';
+
+const CLOUD_PROVIDER_IDS = new Set<string>(ALL_PROVIDERS as readonly Provider[]);
 
 const DOT_COLORS: Record<IntegrationStatus, string> = {
   connected: 'bg-emerald-500',
@@ -24,14 +27,18 @@ const PROVIDER_LABELS: Record<string, string> = {
   gcp: 'GCP',
   aws: 'AWS',
   azure: 'Azure',
+  anthropic: 'Claude',
 };
 // Note: PROVIDER_LABELS remain hardcoded as product brand names
 
 export const IntegrationStatusDots: React.FC = () => {
   const integrations = useSelector((state: RootState) => state.integrations.integrations);
 
-  // Only show providers that have ever been connected or are in non-default state
-  const visibleProviders = Object.entries(integrations).filter(([, info]) => info.status !== 'disconnected');
+  // Only show providers that have ever been connected or are in non-default state.
+  // Cloud providers gated off via PROVIDER_FLAGS never appear, even if state lingers.
+  const visibleProviders = Object.entries(integrations).filter(
+    ([id, info]) => info.status !== 'disconnected' && (!CLOUD_PROVIDER_IDS.has(id) || isProviderEnabled(id)),
+  );
 
   if (visibleProviders.length === 0) return null;
 

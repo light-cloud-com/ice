@@ -13,8 +13,8 @@ import type {
   DiffError,
   DiffWarning,
   ChangeType,
-} from './types.js';
-import type { Graph, Node } from '../types/graph.js';
+} from './types';
+import type { Graph, Node } from '../types/graph';
 
 /**
  * Default diff options.
@@ -190,6 +190,10 @@ function matches_pattern(value: string, pattern: string): boolean {
 
 /**
  * Compare two property objects and return changes.
+ *
+ * Internal `_`-prefixed keys are skipped at every level of nesting
+ * (findings.md #48). They carry provider-internal metadata (cloud ids,
+ * self-links) that should never appear in a drift report.
  */
 function compare_properties(
   current: Record<string, unknown>,
@@ -242,6 +246,13 @@ function compare_nested(
   const all_keys = new Set([...Object.keys(current), ...Object.keys(desired)]);
 
   for (const key of all_keys) {
+    // findings.md #48 — propagate the `_`-prefix internal-skip to
+    // every nesting level. Without this, a provider that nests
+    // `_internal.foo` under a real property surfaced as a drift
+    // record even though the rest of the engine treated `_`-prefixed
+    // keys as opaque metadata.
+    if (key.startsWith('_')) continue;
+
     const path = `${prefix}.${key}`;
     const old_value = current[key];
     const new_value = desired[key];
@@ -271,10 +282,50 @@ function is_object(value: unknown): boolean {
 }
 
 /**
+ * Treat null/undefined as equivalent to an empty array or empty
+ * object (findings.md #47). Cloud provider responses commonly omit
+ * empty list/object fields entirely (returning null after a JSON
+ * round-trip) while the desired-state generator produces `[]` / `{}`
+ * — the literal-different-but-semantically-equal pair was the most
+ * common false-positive vector in drift reports.
+ *
+ * Returns true if a is null/undefined and b is an empty array, or
+ * an empty object, or null/undefined itself (and vice versa).
+ */
+function null_equivalent(a: unknown, b: unknown): boolean {
+  const a_nullish = a === null || a === undefined;
+  const b_nullish = b === null || b === undefined;
+  if (a_nullish && b_nullish) return true;
+  const a_empty_array = Array.isArray(a) && a.length === 0;
+  const b_empty_array = Array.isArray(b) && b.length === 0;
+  if (a_nullish && b_empty_array) return true;
+  if (b_nullish && a_empty_array) return true;
+  const a_empty_object =
+    is_object(a) && Object.keys(a as Record<string, unknown>).length === 0;
+  const b_empty_object =
+    is_object(b) && Object.keys(b as Record<string, unknown>).length === 0;
+  if (a_nullish && b_empty_object) return true;
+  if (b_nullish && a_empty_object) return true;
+  return false;
+}
+
+/**
  * Deep equality check.
+ *
+ * findings.md #49 — array-of-objects is compared positionally. A
+ * reorder of semantically-identical items therefore produces a
+ * single drift record at the parent path (not item-level paths).
+ * This is intentional: detecting "the same set, different order"
+ * requires a stable identifier (id / name / key), and not every
+ * array-of-objects in our schemas has one. Engines that do care
+ * about ordering (IAM policy rules, route tables) get correct
+ * diffs from this contract; sets get reported on reorder, which is
+ * a tolerable false positive — the per-resource update batch
+ * collapses idempotent re-applies.
  */
 function deep_equal(a: unknown, b: unknown): boolean {
   if (a === b) return true;
+  if (null_equivalent(a, b)) return true;
   if (a === null || b === null) return false;
   if (typeof a !== typeof b) return false;
 

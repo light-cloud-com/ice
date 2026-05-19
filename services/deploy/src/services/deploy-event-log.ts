@@ -13,7 +13,7 @@
  */
 
 import prisma from '@ice/db';
-import { getDeploySnapshot } from './deploy-locks.js';
+import { getDeploySnapshot } from './deploy-locks';
 
 interface QueuedEvent {
   deploymentId: string;

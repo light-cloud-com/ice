@@ -10,7 +10,7 @@ import type {
   GCPServiceType,
   GCPImportError,
   GCPImportWarning,
-} from '../types.js';
+} from '../types';
 
 /**
  * Abstract base class for GCP service resource discovery.

@@ -2,7 +2,7 @@
  * Node Menu — context menu shown when right-clicking on a node.
  */
 
-import { CLOUD_PROVIDERS } from '@ice/constants';
+import { ENABLED_PROVIDERS, getCategoryForIceType, isCategoryEnabledForProvider } from '@ice/constants';
 import React, { useState, useRef } from 'react';
 import { MenuItem, Separator, SubMenu, modKey, fireKey } from './menu-primitives';
 import { useTranslation } from '../../../../i18n';
@@ -62,7 +62,13 @@ export const NodeMenu: React.FC<NodeMenuProps> = ({
     },
   });
 
-  const providerItems = CLOUD_PROVIDERS.map((p) => ({
+  // Hide providers whose feature flag is off for this node's palette category
+  // — flipping a Compute node to Azure when Compute.azure is disabled would
+  // produce a `providerUnsupported` node, which is worse than no option.
+  const nodeCategory = getCategoryForIceType(nodeIceType);
+  const providerItems = ENABLED_PROVIDERS.filter(
+    (p) => !nodeCategory || isCategoryEnabledForProvider(nodeCategory, p.id),
+  ).map((p) => ({
     label: p.shortName,
     onClick: () => {
       dispatch(updateCardNodeData({ nodeId: targetId, data: { provider: p.id } }));

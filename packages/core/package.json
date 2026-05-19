@@ -1,6 +1,7 @@
 {
   "name": "@ice/core",
   "version": "0.1.0",
+  "private": true,
   "description": "ICE Engine core - Graph processing, validation, deployment, schema registry, and CLI",
   "type": "module",
   "main": "./dist/index.js",

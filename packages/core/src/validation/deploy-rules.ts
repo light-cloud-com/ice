@@ -5,9 +5,10 @@
  * design-only provider detection, and environment-specific requirements.
  */
 
-import { isContainer } from './classifiers.js';
-import { getSupportedProviders } from './schema-bridge.js';
-import type { CanvasIssue, ValidatableNode, ValidatableEdge, ValidationContext } from './types.js';
+import { getCategoryForIceType, isCategoryEnabledForProvider } from '@ice/constants';
+import { isContainer } from './classifiers';
+import { getSupportedProviders } from './schema-bridge';
+import type { CanvasIssue, ValidatableNode, ValidatableEdge, ValidationContext } from './types';
 
 // ── Deploy type maps (mirrored from card-translator.ts) ─────────────────────
 // These record which iceTypes have actual deployer implementations.
@@ -170,9 +171,12 @@ export function validateDeployability(
     const iceType = node.data.iceType as string | undefined;
     if (!iceType) continue;
 
-    // Skip containers, groups, and special types
+    // Skip containers, groups, and special types.
+    // findings.md #36 — isContainer already returns true when
+    // nodeType is 'container' / 'group' (see classifiers.ts:90),
+    // so the dedicated nodeType check that used to follow was
+    // redundant.
     if (isContainer(iceType, node.type)) continue;
-    if (node.type === 'container' || node.type === 'group') continue;
     if (iceType === 'Source.Repository' || iceType === 'Config.Environment') continue;
 
     const label = (node.data.label as string) || iceType.split('.').pop() || 'Resource';
@@ -197,6 +201,20 @@ export function validateDeployability(
       continue;
     }
 
+    // ── Category × provider feature flag ──────────────────────────────
+    const blockCategory = getCategoryForIceType(iceType);
+    if (blockCategory && !isCategoryEnabledForProvider(blockCategory, nodeProvider as any)) {
+      issues.push({
+        id: `deploy:${node.id}:CATEGORY_DISABLED`,
+        severity: 'warning',
+        category: 'deploy',
+        code: 'CATEGORY_DISABLED',
+        message: `${label} (${blockCategory}) is disabled for ${nodeProvider} in this workspace — will be skipped`,
+        nodeId: node.id,
+      });
+      continue;
+    }
+
     // ── Provider unsupported flag (from template expansion) ───────────
     if (node.data.providerUnsupported) {
       issues.push({
@@ -215,6 +233,9 @@ export function validateDeployability(
       // Check if any provider supports this iceType
       const supportedProviders = getSupportedProviders(iceType);
       if (supportedProviders.length > 0) {
+        // findings.md #37 — the suggestion ternary was a tautology:
+        // we're already inside `if (supportedProviders.length > 0)`,
+        // so the false arm was unreachable.
         issues.push({
           id: `deploy:${node.id}:NO_TYPE_MAPPING`,
           severity: 'warning',
@@ -222,7 +243,7 @@ export function validateDeployability(
           code: 'NO_TYPE_MAPPING',
           message: `${label} (${iceType}) has no ${provider.toUpperCase()} deployer — will be skipped`,
           nodeId: node.id,
-          suggestion: supportedProviders.length > 0 ? `Supported on: ${supportedProviders.join(', ')}` : undefined,
+          suggestion: `Supported on: ${supportedProviders.join(', ')}`,
         });
       }
     }

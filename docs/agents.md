@@ -1,8 +1,8 @@
 # Agents
 
-ICE uses a four-agent workflow for non-trivial changes: a planner, an implementer, a critic, and a UX tester. The agents share state through three markdown files under `.claude/state/`, so decisions, in-flight progress, and learnings persist across sessions.
+ICE uses a four-agent workflow for non-trivial changes: a planner, an implementer, a critic, and a UX tester. The agents share state through three markdown files under `state/`, so decisions, in-flight progress, and learnings persist across sessions.
 
-This page is the human entry point. The live state files are under [`.claude/state/`](../.claude/state/); the agent definitions are under [`.claude/agents/`](../.claude/agents/).
+This page is the human entry point. The live state files are under [`state/`](../state/); the agent definitions are under [`.claude/agents/`](../.claude/agents/).
 
 ## The four agents
 
@@ -17,13 +17,13 @@ The orchestrator (the main Claude session) routes work to these agents and is th
 
 ## Persistent state
 
-State lives under [`.claude/state/`](../.claude/state/) — agent-managed operational state, distinct from human-authored documentation. Three files:
+State lives under [`state/`](../state/) - agent-managed operational state, distinct from human-authored documentation. Three files:
 
 | File | Owner | Lifecycle |
 |---|---|---|
-| [`decisions.md`](../.claude/state/decisions.md) | any agent (usually planner) | Append-only. Each entry: `## YYYY-MM-DD — title` with Context, Decision, Alternatives considered, Consequences, Related. |
-| [`progress.md`](../.claude/state/progress.md) | orchestrator only | Living document. Sections: In flight / Done this week / Blocked / Archive. Subagents never write to it. |
-| [`learnings.md`](../.claude/state/learnings.md) | any agent | Append-only. Each entry has a kebab-case `##` anchor and a `_Discovered: YYYY-MM-DD by <agent> in <unit-id>_` line. |
+| [`decisions.md`](../state/decisions.md) | any agent (usually planner) | Append-only. Each entry: `## YYYY-MM-DD - title` with Context, Decision, Alternatives considered, Consequences, Related. |
+| [`progress.md`](../state/progress.md) | orchestrator only | Living document. Sections: In flight / Done this week / Blocked / Archive. Subagents never write to it. |
+| [`learnings.md`](../state/learnings.md) | any agent | Append-only. Each entry has a kebab-case `##` anchor and a `_Discovered: YYYY-MM-DD by <agent> in <unit-id>_` line. |
 
 The append-only rule has one exception: once a learning is promoted to `/docs`, append a `_Promoted to: /docs/<path>_` line to the original entry. Don't edit anything else.
 
@@ -35,21 +35,21 @@ A learning that's been **cited 3+ times** or that **clearly generalizes beyond o
 2. Add a row to the [Reference](README.md#reference) or [Where to start](README.md#where-to-start) table of `/docs/README.md`, whichever fits better.
 3. Append `_Promoted to: /docs/<file>.md_` to the original `learnings.md` entry. This is the only allowed edit to a past learning.
 
-The original entry stays in `learnings.md` for traceability — the back-reference makes the canonical home obvious.
+The original entry stays in `learnings.md` for traceability - the back-reference makes the canonical home obvious.
 
 ## Quarterly compaction
 
 `learnings.md` grows monotonically. Once per quarter, fork a session that:
 
 1. Clusters duplicate or near-duplicate entries.
-2. Archives the pre-compaction file as `.claude/state/archive/learnings-YYYY-Qn.md`.
+2. Archives the pre-compaction file as `state/archive/learnings-YYYY-Qn.md`.
 3. Writes a compacted version back to `learnings.md`, preserving anchors that are referenced from `/docs` or from `decisions.md`.
 
-The archive directory is under [`.claude/state/archive/`](../.claude/state/archive/).
+The archive directory is under [`state/archive/`](../state/archive/).
 
 ## See also
 
-- [`.claude/state/decisions.md`](../.claude/state/decisions.md) — live decisions log.
-- [`.claude/state/learnings.md`](../.claude/state/learnings.md) — live learnings log.
-- [`../CLAUDE.md`](../CLAUDE.md) — the dispatch rules and the state-system rules in normative form.
-- [contributing.md](contributing.md) — for writing pages once a learning is promoted.
+- [`state/decisions.md`](../state/decisions.md) - live decisions log.
+- [`state/learnings.md`](../state/learnings.md) - live learnings log.
+- [`.claude/agents/`](../.claude/agents/) - the agent definitions (planner, implementer, critic, ux-tester).
+- [contributing.md](contributing.md) - for writing pages once a learning is promoted.

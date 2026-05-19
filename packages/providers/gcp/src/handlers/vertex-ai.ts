@@ -4,8 +4,8 @@
  * Handles: gcp.aiplatform.endpoint, gcp.aiplatform.index, gcp.aiplatform.indexEndpoint
  */
 
-import { SERVICE_NAMES, operation_failed, operation_timed_out } from '../messages.js';
-import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
+import { SERVICE_NAMES, operation_failed, operation_timed_out } from '../messages';
+import type { GCPResourceHandler, GCPHandlerContext } from '../types';
 import type { ResourceDeployResult } from '@ice/core';
 
 function result(

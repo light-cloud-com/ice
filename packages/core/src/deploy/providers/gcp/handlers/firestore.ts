@@ -5,8 +5,8 @@
  * Uses REST API for database-level operations.
  */
 
-import type { ResourceDeployResult } from '../../../types.js';
-import type { GCPResourceHandler } from '../types.js';
+import type { ResourceDeployResult } from '../../../types';
+import type { GCPResourceHandler } from '../types';
 
 const TYPE = 'gcp.firestore.database';
 const BASE_URL = 'https://firestore.googleapis.com/v1';

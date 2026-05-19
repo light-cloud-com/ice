@@ -6,9 +6,10 @@ export {
   generateRefreshToken,
   setDesktopUser,
   isDesktopMode,
-} from './auth/middleware.js';
-export type { AuthRequest } from './auth/middleware.js';
+} from './auth/middleware';
+export type { AuthRequest } from './auth/middleware';
 export { encryptCredentials, decryptCredentials, encryptString, decryptString } from './crypto';
+export { ensureLocalSecrets } from './local-secrets/index';
 export {
   setupSocketService,
   getSocketServer,
@@ -20,5 +21,5 @@ export {
   emitCanvasUpdate,
   emitPipelineUpdate,
   emitCardPipelineUpdate,
-} from './socket/service.js';
-export type { PipelineStatusUpdate, CardPipelineUpdate } from './socket/service.js';
+} from './socket/service';
+export type { PipelineStatusUpdate, CardPipelineUpdate } from './socket/service';

@@ -4,9 +4,9 @@
  * Handles: gcp.cloudscheduler.job
  */
 
-import { SERVICE_NAMES, sdk_not_available, sdk_not_available_short } from '../messages.js';
-import type { ResourceDeployResult } from '../../../types.js';
-import type { GCPResourceHandler } from '../types.js';
+import { SERVICE_NAMES, sdk_not_available, sdk_not_available_short } from '../messages';
+import type { ResourceDeployResult } from '../../../types';
+import type { GCPResourceHandler } from '../types';
 
 const TYPE = 'gcp.cloudscheduler.job';
 

@@ -10,7 +10,7 @@
  * in `providers/registry.ts` has an entry for AWS from day one.
  */
 
-import type { CredentialResolver, ResolveAuthOptions, ScopedDeployAuth } from '../types.js';
+import type { CredentialResolver, ResolveAuthOptions, ScopedDeployAuth } from '../types';
 
 export const awsCredentialResolver: CredentialResolver = {
   provider: 'aws',

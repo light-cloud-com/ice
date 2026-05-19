@@ -30,68 +30,26 @@
  * `on_progress` callback before the deployer is initialized.
  */
 
-import type { ResourceChange } from '../diff/types.js';
-import type { Graph } from '../types/graph.js';
-import type {
-  DeployOptions,
-  NodeProgressEvent,
-  NodeStatusEvent,
-  NodeTerminalStatus,
-  ProviderDeployer,
-  ResourceDeployResult,
-} from './types.js';
+import { build_dag } from './scheduler/dag';
+import {
+  cancel_remaining_not_in_flight,
+  dispatch,
+  emit_status,
+  wait_for_settle,
+  wake,
+} from './scheduler/dispatch';
+import { collect_ready, is_unfinished } from './scheduler/predicates';
+import {
+  DEFAULT_PER_HANDLER_CAPS,
+  DEFAULT_POOL_SIZE,
+  type SchedulerContext,
+  type SchedulerRunInput,
+} from './scheduler/types';
+import type { ResourceDeployResult } from './types';
 
-/**
- * Default per-handler concurrency caps. Cloud SQL and Memorystore Redis
- * have GCP-side quotas that race-condition when two creates start
- * concurrently; cap them at 1 by default. Other handlers default to the
- * global `pool_size`.
- */
-export const DEFAULT_PER_HANDLER_CAPS: Readonly<Record<string, number>> = Object.freeze({
-  'gcp.sql.': 1,
-  'gcp.redis.': 1,
-});
-
-/**
- * Default pool size when neither `pool_size` nor `parallelism` is set.
- */
-export const DEFAULT_POOL_SIZE = 6;
-
-/**
- * Phase identifier — one DAG per phase, run end-to-end.
- */
-export type SchedulerPhase = 'create' | 'update' | 'delete';
-
-/**
- * Inputs for one scheduler run (one phase).
- */
-export interface SchedulerRunInput {
-  /** Changes to apply in this phase. Filtered + same `change_type` for all. */
-  changes: ResourceChange[];
-  /** Phase being run — used for handler dispatch and event payloads. */
-  phase: SchedulerPhase;
-  /** Engine graph — provides edges for DAG construction and node lookup. */
-  graph: Graph;
-  /** Provider deployer — `create`/`update`/`delete` are dispatched here. */
-  deployer: ProviderDeployer;
-  /** Caller-resolved deploy options (already merged with defaults). */
-  options: DeployOptions;
-}
-
-/** Internal per-node bookkeeping. */
-interface NodeRecord {
-  change: ResourceChange;
-  /** Direct dependencies (incoming edges in deploy order). */
-  deps: Set<string>;
-  /** Direct dependents (used to cancel descendants on failure). */
-  dependents: Set<string>;
-  /** Terminal state (undefined while not terminal). */
-  terminal?: NodeTerminalStatus;
-  /** Fired-at timestamp for `applying` so we can compute duration. */
-  applying_at?: number;
-  /** Has the `queued` event been fired? */
-  queued_emitted: boolean;
-}
+export { DEFAULT_PER_HANDLER_CAPS, DEFAULT_POOL_SIZE } from './scheduler/types';
+export type { SchedulerPhase, SchedulerRunInput } from './scheduler/types';
+export { wrap_on_progress_for_node_progress } from './scheduler/progress-wrapper';
 
 /**
  * Run one phase of the parallel scheduler. Returns the per-node
@@ -105,147 +63,44 @@ export async function run_parallel_apply(input: SchedulerRunInput): Promise<Reso
 /**
  * Encapsulates one phase's worth of scheduling state. Exported for
  * testability — production callers should prefer `run_parallel_apply`.
+ *
+ * Implementation: every method body delegates to a standalone helper
+ * in `./scheduler/<module>.ts`. The class is a thin shell that owns
+ * the `ctx: SchedulerContext` mutable handle. Mirrors the rf-sqlite
+ * decomposition (`SqliteStateStore` + `SqliteContext`).
  */
 export class ParallelChangeScheduler {
-  private readonly changes: ResourceChange[];
-  private readonly phase: SchedulerPhase;
-  private readonly graph: Graph;
-  private readonly deployer: ProviderDeployer;
-  private readonly options: DeployOptions;
-
-  private readonly pool_size: number;
-  private readonly per_handler_caps: Record<string, number>;
-  private readonly handler_cap_prefixes: string[];
-
-  private readonly records: Map<string, NodeRecord>;
-  private readonly results: ResourceDeployResult[] = [];
-  private readonly in_flight = new Set<string>();
-  private readonly handler_in_flight = new Map<string, number>();
-
-  /** Resolves when at least one in-flight node has settled. */
-  private settle_waker?: { promise: Promise<void>; resolve: () => void };
-
-  /** True after first failure when `continue_on_error: false`. */
-  private hard_failed = false;
-  /** True after `abort_signal` fires (we observe but don't abort handlers). */
-  private aborted = false;
+  private readonly ctx: SchedulerContext;
 
   constructor(input: SchedulerRunInput) {
-    this.changes = input.changes;
-    this.phase = input.phase;
-    this.graph = input.graph;
-    this.deployer = input.deployer;
-    this.options = input.options;
-
     // pool_size resolution: explicit pool_size wins; fall back to the
     // legacy `parallelism` for one revision; finally default to 6.
-    this.pool_size = input.options.pool_size ?? input.options.parallelism ?? DEFAULT_POOL_SIZE;
+    const pool_size = input.options.pool_size ?? input.options.parallelism ?? DEFAULT_POOL_SIZE;
 
-    this.per_handler_caps = {
+    const per_handler_caps: Record<string, number> = {
       ...DEFAULT_PER_HANDLER_CAPS,
       ...(input.options.per_handler_caps ?? {}),
     };
     // Longer prefixes first so `gcp.sql.instance` beats `gcp.sql.` when
     // the user has overridden a sub-tree.
-    this.handler_cap_prefixes = Object.keys(this.per_handler_caps).sort((a, b) => b.length - a.length);
+    const handler_cap_prefixes = Object.keys(per_handler_caps).sort((a, b) => b.length - a.length);
 
-    this.records = this.build_dag();
-  }
-
-  /**
-   * Build the per-node DAG from the input changes and engine graph.
-   *
-   * Iterates `graph.edges.values()` and links source → target as a
-   * dependency between two changes when both endpoints are in this
-   * phase's change set. Mirrors the existing `order_by_dependencies`
-   * behavior (all edge relationships count as dependencies, not just
-   * `depends_on`) — keeping the behavior change scoped to "parallel vs
-   * sequential" only.
-   *
-   * Cycle detection is fail-loud (matches existing engine).
-   */
-  private build_dag(): Map<string, NodeRecord> {
-    // Fast-lookup: change.id → change.
-    const change_by_id = new Map<string, ResourceChange>();
-    // The engine graph keys nodes by `${type}:${name}`; we also need a
-    // name→id index because the graph's `Edge` carries `source: NodeId`,
-    // which equals `${type}:${name}` for nodes added via `add_node`.
-    // ResourceChange.id is set from `desired_node.id` in diff.ts so the
-    // ids align — no name lookup needed.
-    for (const c of this.changes) change_by_id.set(c.id, c);
-
-    const records = new Map<string, NodeRecord>();
-    for (const c of this.changes) {
-      records.set(c.id, {
-        change: c,
-        deps: new Set(),
-        dependents: new Set(),
-        queued_emitted: false,
-      });
-    }
-
-    // For deletes the order reverses: a delete should run AFTER its
-    // dependents are gone. Keep the convention that the existing
-    // `order_by_dependencies` used for the reverse direction — flip the
-    // edge when the phase is `delete`.
-    const reverse = this.phase === 'delete';
-
-    for (const edge of this.graph.edges.values()) {
-      // Edge source/target are NodeIds (`${type}:${name}`). Some changes
-      // may not be in this phase (e.g. an unrelated `update` while we're
-      // scheduling `create`); skip edges that don't connect two changes.
-      const src_change = change_by_id.get(edge.source);
-      const tgt_change = change_by_id.get(edge.target);
-      if (!src_change || !tgt_change) continue;
-      if (src_change === tgt_change) continue;
-
-      const dep_node_id = reverse ? src_change.id : tgt_change.id;
-      const dependent_node_id = reverse ? tgt_change.id : src_change.id;
-
-      const dependent_record = records.get(dependent_node_id);
-      const dep_record = records.get(dep_node_id);
-      if (!dependent_record || !dep_record) continue;
-
-      dependent_record.deps.add(dep_node_id);
-      dep_record.dependents.add(dependent_node_id);
-    }
-
-    this.assert_no_cycle(records);
-    return records;
-  }
-
-  /**
-   * Cycle detection via Kahn's algorithm — same fail-loud message as
-   * the legacy `order_by_dependencies` so users see consistent text.
-   */
-  private assert_no_cycle(records: Map<string, NodeRecord>): void {
-    const in_degree = new Map<string, number>();
-    for (const [id, rec] of records) in_degree.set(id, rec.deps.size);
-
-    const queue: string[] = [];
-    for (const [id, deg] of in_degree) if (deg === 0) queue.push(id);
-
-    let visited = 0;
-    while (queue.length > 0) {
-      const id = queue.shift()!;
-      visited++;
-      const rec = records.get(id)!;
-      for (const dep_id of rec.dependents) {
-        const next = (in_degree.get(dep_id) ?? 0) - 1;
-        in_degree.set(dep_id, next);
-        if (next === 0) queue.push(dep_id);
-      }
-    }
-
-    if (visited !== records.size) {
-      const stranded = [...in_degree.entries()]
-        .filter(([, deg]) => deg > 0)
-        .map(([id]) => records.get(id)!.change.name);
-      throw new Error(
-        `Cycle detected in deployment graph. ${stranded.length} node(s) participate in a cycle: ` +
-          `${stranded.join(', ')}. Review the canvas edges to break the loop before deploying.`,
-      );
-    }
+    this.ctx = {
+      changes: input.changes,
+      phase: input.phase,
+      graph: input.graph,
+      deployer: input.deployer,
+      options: input.options,
+      pool_size,
+      per_handler_caps,
+      handler_cap_prefixes,
+      records: build_dag(input.changes, input.phase, input.graph),
+      results: [],
+      in_flight: new Set(),
+      handler_in_flight: new Map(),
+      hard_failed: false,
+      aborted: false,
+    };
   }
 
   /**
@@ -253,42 +108,43 @@ export class ParallelChangeScheduler {
    * (insertion) order.
    */
   async run(): Promise<ResourceDeployResult[]> {
-    if (this.records.size === 0) return [];
+    const { ctx } = this;
+    if (ctx.records.size === 0) return [];
 
     // Pre-emit `queued` for every node so the host (pdl-4) can bulk-init
     // `nodesById` before any `applying` arrives.
-    for (const rec of this.records.values()) {
-      this.emit_status(rec, 'queued');
+    for (const rec of ctx.records.values()) {
+      emit_status(ctx, rec, 'queued');
     }
 
     // Wire abort_signal observation. Once aborted, we stop scheduling
     // new work; in-flight handlers see the same signal via their
     // existing `GCPHandlerContext.abort_signal` plumbing and may finish
     // naturally or short-circuit.
-    const signal = this.options.abort_signal;
+    const signal = ctx.options.abort_signal;
     const on_abort = () => {
-      this.aborted = true;
-      this.wake();
+      ctx.aborted = true;
+      wake(ctx);
     };
     if (signal) {
-      if (signal.aborted) this.aborted = true;
+      if (signal.aborted) ctx.aborted = true;
       else signal.addEventListener('abort', on_abort, { once: true });
     }
 
     try {
-      while (this.is_unfinished()) {
+      while (is_unfinished(ctx)) {
         // Cancel all not-yet-applying nodes when aborted or hard-failed
         // (continue_on_error: false). In-flight nodes are left alone —
         // handlers' existing abort_signal plumbing handles graceful
         // cancellation.
-        if (this.aborted || this.hard_failed) {
-          this.cancel_remaining_not_in_flight();
+        if (ctx.aborted || ctx.hard_failed) {
+          cancel_remaining_not_in_flight(ctx);
         }
 
-        const ready = this.collect_ready();
-        for (const id of ready) this.dispatch(id);
+        const ready = collect_ready(ctx);
+        for (const id of ready) dispatch(ctx, id);
 
-        if (this.in_flight.size === 0) {
+        if (ctx.in_flight.size === 0) {
           // No one in flight and nothing newly ready — done. The
           // is_unfinished check above will exit on next iteration.
           if (ready.length === 0) break;
@@ -296,399 +152,13 @@ export class ParallelChangeScheduler {
         }
 
         // Wait for any in-flight to settle before re-evaluating ready.
-        await this.wait_for_settle();
+        await wait_for_settle(ctx);
       }
     } finally {
       if (signal) signal.removeEventListener('abort', on_abort);
     }
 
-    return this.results;
-  }
-
-  /** Has every node either succeeded, failed, skipped, or been cancelled? */
-  private is_unfinished(): boolean {
-    for (const rec of this.records.values()) {
-      if (!rec.terminal) return true;
-    }
-    return false;
-  }
-
-  /**
-   * Find all nodes whose deps are satisfied AND a slot is available
-   * AND we're allowed to dispatch (not aborted/hard-failed/already in
-   * flight). Order is insertion order over `records` (Map iteration).
-   *
-   * Reservations are tracked locally inside this loop so that the
-   * second SQL node can't slip past the per-handler cap before the
-   * first one's dispatch landed: we count both `in_flight` and a
-   * within-loop reservation map.
-   */
-  private collect_ready(): string[] {
-    if (this.aborted || this.hard_failed) return [];
-    const ready: string[] = [];
-    let pool_reserved = 0;
-    const handler_reserved = new Map<string, number>();
-    for (const [id, rec] of this.records) {
-      if (rec.terminal) continue;
-      if (this.in_flight.has(id)) continue;
-      if (!this.deps_satisfied(rec)) continue;
-      // Pool cap (combine in-flight with already-reserved-this-tick).
-      if (this.in_flight.size + pool_reserved >= this.pool_size) break;
-      // Per-handler cap (same combination).
-      const prefix = this.match_handler_prefix(rec.change.type);
-      if (prefix !== null) {
-        const cap = this.per_handler_caps[prefix] ?? this.pool_size;
-        const used = (this.handler_in_flight.get(prefix) ?? 0) + (handler_reserved.get(prefix) ?? 0);
-        if (used >= cap) continue;
-      }
-      ready.push(id);
-      pool_reserved++;
-      if (prefix !== null) {
-        handler_reserved.set(prefix, (handler_reserved.get(prefix) ?? 0) + 1);
-      }
-    }
-    return ready;
-  }
-
-  /** All deps must be in `succeeded` state. */
-  private deps_satisfied(rec: NodeRecord): boolean {
-    for (const dep_id of rec.deps) {
-      const dep_rec = this.records.get(dep_id);
-      if (!dep_rec || dep_rec.terminal !== 'succeeded') return false;
-    }
-    return true;
-  }
-
-  private match_handler_prefix(resource_type: string): string | null {
-    for (const prefix of this.handler_cap_prefixes) {
-      if (resource_type.startsWith(prefix)) return prefix;
-    }
-    return null;
-  }
-
-  /**
-   * Begin applying a node. Marks `in_flight`, emits `applying`, then
-   * fires off the async handler call. The handler's resolution drives
-   * the settle wake.
-   */
-  private dispatch(node_id: string): void {
-    const rec = this.records.get(node_id);
-    if (!rec) return;
-    if (rec.terminal) return;
-
-    this.in_flight.add(node_id);
-    const prefix = this.match_handler_prefix(rec.change.type);
-    if (prefix !== null) {
-      this.handler_in_flight.set(prefix, (this.handler_in_flight.get(prefix) ?? 0) + 1);
-    }
-
-    rec.applying_at = Date.now();
-    this.emit_status(rec, 'applying');
-    // Legacy on_progress bridge — keeps the deploy.service.ts:757-821
-    // 'running' tracker working without changes to the service layer.
-    try {
-      this.options.on_progress?.(rec.change.name, this.phase, 'running');
-    } catch {
-      // Host callback bugs must not break the deploy.
-    }
-
-    // Kick off async — settle is wired in the .then handler.
-    this.invoke_handler(rec)
-      .then((result) => this.on_settled(rec, result, undefined))
-      .catch((err) => this.on_settled(rec, undefined, err));
-  }
-
-  /**
-   * Translate a `ResourceChange` into the right `ProviderDeployer`
-   * call. Mirrors the legacy engine's call shape exactly so handler
-   * behavior is unchanged.
-   *
-   * Note on milestone forwarding: the existing path is
-   * `handler → ctx.on_step → deployer.on_progress(resource, 'create',
-   * 'step', { step })`. The scheduler bridges this in
-   * `deploy-engine.ts` by wrapping `options.on_progress` before
-   * `deployer.initialize` runs — so by the time we land here, sub-step
-   * events flow through the wrapper and reach `on_node_progress`. We
-   * don't intercept inside the scheduler dispatch path itself.
-   */
-  private invoke_handler(rec: NodeRecord): Promise<ResourceDeployResult> {
-    const change = rec.change;
-    const node = this.lookup_node(change);
-    const dispatch_options: Record<string, unknown> = node ? { node } : {};
-
-    if (this.options.dry_run) {
-      const action = this.phase;
-      const result: ResourceDeployResult = {
-        resource_id: change.id,
-        name: change.name,
-        type: change.type,
-        action,
-        success: true,
-        duration_ms: 0,
-      };
-      return Promise.resolve(result);
-    }
-
-    if (this.phase === 'create') {
-      return this.deployer.create(change.type, change.name, change.desired_properties || {}, dispatch_options);
-    }
-    if (this.phase === 'update') {
-      return this.deployer.update(
-        change.type,
-        change.name,
-        change.provider_id || '',
-        change.desired_properties || {},
-        change.current_properties || {},
-        dispatch_options,
-      );
-    }
-    return this.deployer.delete(change.type, change.name, change.provider_id || '', dispatch_options);
-  }
-
-  /** Find the engine graph node for a change, by name. */
-  private lookup_node(change: ResourceChange): unknown {
-    for (const node of this.graph.nodes.values()) {
-      if (node.name === change.name) return node;
-    }
-    return undefined;
-  }
-
-  /**
-   * Handler resolution — convert the result/error into a terminal
-   * state, emit events, decrement bookkeeping, and wake the loop.
-   */
-  private on_settled(rec: NodeRecord, result: ResourceDeployResult | undefined, err: unknown): void {
-    this.in_flight.delete(rec.change.id);
-    const prefix = this.match_handler_prefix(rec.change.type);
-    if (prefix !== null) {
-      const used = (this.handler_in_flight.get(prefix) ?? 1) - 1;
-      if (used <= 0) this.handler_in_flight.delete(prefix);
-      else this.handler_in_flight.set(prefix, used);
-    }
-
-    let final_result: ResourceDeployResult;
-    if (result) {
-      final_result = result;
-    } else {
-      const message = err instanceof Error ? err.message : String(err);
-      final_result = {
-        resource_id: rec.change.id,
-        name: rec.change.name,
-        type: rec.change.type,
-        action: this.phase,
-        success: false,
-        error: message,
-        duration_ms: rec.applying_at ? Date.now() - rec.applying_at : 0,
-      };
-    }
-
-    this.results.push(final_result);
-    try {
-      this.options.on_resource_result?.(final_result);
-    } catch {
-      // Host callback bugs must not break the schedule loop.
-    }
-
-    // Legacy on_progress bridge — re-emit a `completed`/`failed` event
-    // with the historical extra payload so deploy.service.ts can
-    // surface outputs/URLs/provider_ids without changes.
-    try {
-      this.options.on_progress?.(
-        final_result.name,
-        final_result.action === 'skip' ? this.phase : final_result.action,
-        final_result.success ? 'completed' : 'failed',
-        {
-          outputs: final_result.outputs,
-          error: final_result.success ? undefined : final_result.error,
-          provider_id: final_result.provider_id,
-        },
-      );
-    } catch {
-      // Host callback bugs must not break the schedule loop.
-    }
-
-    const succeeded = final_result.success !== false;
-    if (succeeded) {
-      this.set_terminal(rec, 'succeeded', undefined);
-    } else {
-      this.set_terminal(rec, 'failed', {
-        code: this.error_code_for(this.phase),
-        message: final_result.error || 'unknown error',
-        recoverable: this.phase !== 'create',
-      });
-
-      // Cancel descendants. With continue_on_error: true (default),
-      // only descendants of THIS node are cancelled — siblings keep
-      // running. With continue_on_error: false, the next loop tick
-      // flips every other not-yet-applying node to cancelled.
-      this.cancel_descendants(rec);
-      if (this.options.continue_on_error === false) this.hard_failed = true;
-    }
-
-    this.wake();
-  }
-
-  /**
-   * Mark a node as terminal, fire `on_node_status`, return without
-   * any further state mutation.
-   */
-  private set_terminal(rec: NodeRecord, status: NodeTerminalStatus, error?: NodeStatusEvent['error']): void {
-    if (rec.terminal) return;
-    rec.terminal = status;
-    this.emit_status(rec, status, error);
-  }
-
-  /**
-   * Recursively flip all transitive dependents of `rec` to
-   * `cancelled-due-to-dep`. In-flight descendants are left alone (they
-   * finish naturally and emit their own terminal status).
-   */
-  private cancel_descendants(rec: NodeRecord): void {
-    const queue: string[] = Array.from(rec.dependents);
-    while (queue.length > 0) {
-      const id = queue.shift()!;
-      const dependent = this.records.get(id);
-      if (!dependent) continue;
-      if (dependent.terminal) continue;
-      if (this.in_flight.has(id)) continue;
-      this.set_terminal(dependent, 'cancelled-due-to-dep');
-      // Also push synthetic results so the caller sees them in the
-      // returned array — matches the shape callers built before.
-      this.push_cancelled_result(dependent);
-      for (const sub of dependent.dependents) queue.push(sub);
-    }
-  }
-
-  /**
-   * On hard-fail or abort, flip every not-yet-applying node to
-   * `cancelled-due-to-dep`.
-   */
-  private cancel_remaining_not_in_flight(): void {
-    for (const [id, rec] of this.records) {
-      if (rec.terminal) continue;
-      if (this.in_flight.has(id)) continue;
-      this.set_terminal(rec, 'cancelled-due-to-dep');
-      this.push_cancelled_result(rec);
-    }
-  }
-
-  /**
-   * Synthesize a `ResourceDeployResult` for a cancelled node so the
-   * caller's downstream summary stays accurate.
-   */
-  private push_cancelled_result(rec: NodeRecord): void {
-    const result: ResourceDeployResult = {
-      resource_id: rec.change.id,
-      name: rec.change.name,
-      type: rec.change.type,
-      action: this.phase,
-      success: false,
-      error: 'cancelled — dependency failed or deploy aborted',
-      duration_ms: 0,
-    };
-    this.results.push(result);
-    this.options.on_resource_result?.(result);
-  }
-
-  private error_code_for(phase: SchedulerPhase): string {
-    if (phase === 'create') return 'CREATE_FAILED';
-    if (phase === 'update') return 'UPDATE_FAILED';
-    return 'DELETE_FAILED';
-  }
-
-  /**
-   * Emit one `on_node_status` event. Intentionally tolerant — a
-   * thrown handler must not abort the scheduler loop.
-   */
-  private emit_status(rec: NodeRecord, status: NodeStatusEvent['status'], error?: NodeStatusEvent['error']): void {
-    if (status === 'queued' && rec.queued_emitted) return;
-    if (status === 'queued') rec.queued_emitted = true;
-
-    const cb = this.options.on_node_status;
-    if (!cb) return;
-    const event: NodeStatusEvent = {
-      node_id: rec.change.id,
-      resource_name: rec.change.name,
-      resource_type: rec.change.type,
-      action: this.phase,
-      status,
-      at: new Date().toISOString(),
-    };
-    if (error) event.error = error;
-    if (status !== 'queued' && status !== 'applying' && rec.applying_at) {
-      event.duration_ms = Date.now() - rec.applying_at;
-    }
-    try {
-      cb(event);
-    } catch {
-      // Host callback bugs must not break the schedule loop.
-    }
-  }
-
-  /**
-   * Wait for at least one in-flight node to settle. Implemented as a
-   * one-shot promise that the resolution paths complete.
-   */
-  private wait_for_settle(): Promise<void> {
-    if (!this.settle_waker) {
-      let resolve!: () => void;
-      const promise = new Promise<void>((r) => (resolve = r));
-      this.settle_waker = { promise, resolve };
-    }
-    return this.settle_waker.promise;
-  }
-
-  /** Wake any current `wait_for_settle` waiters. */
-  private wake(): void {
-    if (this.settle_waker) {
-      const { resolve } = this.settle_waker;
-      this.settle_waker = undefined;
-      resolve();
-    }
+    return ctx.results;
   }
 }
 
-/**
- * Wrap the host-supplied `on_progress` callback so that handler-level
- * `on_step` milestones (which arrive as `on_progress(resource, action,
- * 'step', { step })` from the GCPDeployer's step bridge) are forwarded
- * to the new `on_node_progress` channel. Pass-through for every other
- * status so existing service-layer behavior is preserved.
- *
- * The mapping `resource_name → node_id` is built from the changes
- * passed to the scheduler so the new channel carries the stable graph
- * id alongside the resource name.
- */
-export function wrap_on_progress_for_node_progress(
-  options: DeployOptions,
-  changes_by_resource_name: Map<string, ResourceChange>,
-): DeployOptions {
-  const original_progress = options.on_progress;
-  const node_progress = options.on_node_progress;
-  if (!node_progress && !original_progress) return options;
-
-  const wrapped: DeployOptions = {
-    ...options,
-    on_progress: (resource, action, status, extra) => {
-      // Forward step events to the new channel (in addition to
-      // delegating to the original callback for back-compat).
-      if (status === 'step' && extra?.step && node_progress) {
-        const change = changes_by_resource_name.get(resource);
-        if (change) {
-          try {
-            node_progress({
-              node_id: change.id,
-              resource_name: change.name,
-              step: extra.step,
-              at: new Date().toISOString(),
-            });
-          } catch {
-            // Host callback bugs must not break the deploy.
-          }
-        }
-      }
-      original_progress?.(resource, action, status, extra);
-    },
-  };
-  return wrapped;
-}

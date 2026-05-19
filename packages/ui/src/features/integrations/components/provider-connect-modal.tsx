@@ -4,7 +4,8 @@
  * Shows connection status, credential form, and connected state.
  */
 
-import { Check, Loader2, LogOut, ExternalLink } from 'lucide-react';
+import { PROVIDER_READINESS, type Provider } from '@ice/constants';
+import { AlertTriangle, Check, Loader2, LogOut, ExternalLink } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../../../i18n';
 import { getApi } from '../../../shared/api/api-adapter';
@@ -134,6 +135,8 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
     }
   };
 
+  const readiness = PROVIDER_READINESS[providerId as Provider];
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md">
@@ -141,9 +144,28 @@ export const ProviderConnectModal: React.FC<ProviderConnectModalProps> = ({
           <DialogTitle className="flex items-center gap-2">
             <img src={providerIcon} alt={providerName} className="w-5 h-5" />
             {providerName}
+            {readiness && readiness !== 'stable' && (
+              <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 font-medium">
+                {readiness === 'experimental' ? 'Experimental' : 'Preview'}
+              </span>
+            )}
           </DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
+
+        {readiness && readiness !== 'stable' && (
+          <div
+            role="note"
+            className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-300"
+          >
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />
+            <p>
+              {readiness === 'experimental'
+                ? `${providerName} support is experimental — major primitives work but parity with GCP is in progress. See docs/provider-status.md.`
+                : `${providerName} blocks render on the canvas but the deployer is a stub. See docs/provider-status.md.`}
+            </p>
+          </div>
+        )}
 
         {loading ? (
           <div className="flex items-center justify-center py-8">

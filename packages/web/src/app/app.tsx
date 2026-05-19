@@ -1,7 +1,15 @@
 /**
  * Main Application Component — Community Edition
  *
- * No login/signup — app loads straight to content.
+ * Trust model (findings.md #4):
+ *   This shell intentionally has NO client-side auth gate. The
+ *   community edition is single-user / local-first; every route here
+ *   renders unconditionally. Authorization is enforced server-side on
+ *   each API request (see services/iam, packages/shared/src/auth).
+ *   The only client-side redirect lives in `DynamicContent` and is a
+ *   UX hint to send users into onboarding — it is NOT a security
+ *   boundary. Cloud / multi-tenant editions ship a different shell
+ *   that wraps this one with a token gate.
  *
  * Route-based project navigation:
  *   /                         → Home (root folder view)
@@ -17,6 +25,7 @@
 import { DebugOverlay } from '@ui/features/debug/components/debug-overlay';
 import { useDeploySubscription } from '@ui/features/deploy/hooks/use-deploy-subscription';
 import { OnboardingPage, OnboardingChecklist } from '@ui/features/onboarding';
+import { TourRunner } from '@ui/features/tour/components/tour-runner';
 import { ProjectWizard } from '@ui/features/wizard';
 import { useTranslation, LocaleProvider } from '@ui/i18n';
 import { AppBar } from '@ui/shared/components/app-bar';
@@ -245,6 +254,12 @@ const App: React.FC = () => (
     <ErrorBoundary name="App">
       <DevAccentPicker>
         <BrowserRouter>
+          {/* TourRunner: mounted as a sibling of Routes so the popover/overlay
+              portals at document.body regardless of which route is active.
+              Inside BrowserRouter (needs useNavigate / useLocation), inside
+              LocaleProvider (popover uses i18n), inside Provider (slice
+              dispatch). See blueprint §2.1. */}
+          <TourRunner />
           <Routes>
             <Route path="/onboarding" element={<OnboardingPage />} />
             <Route

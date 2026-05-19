@@ -14,8 +14,6 @@ function getJwtSecret(): string {
   return secret || 'test-secret';
 }
 
-const JWT_SECRET = getJwtSecret();
-
 export interface AuthRequest extends Request {
   userId?: string;
   organisationId?: string;
@@ -60,7 +58,7 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
 
   const token = authHeader.slice(7);
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as {
+    const payload = jwt.verify(token, getJwtSecret()) as {
       userId: string;
       organisationId: string;
     };
@@ -72,11 +70,30 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
   }
 }
 
+// Role rank used by `requireProjectAccess`. Hoisted to module scope so the
+// fail-fast check at handler-build time and the per-request comparison
+// share the same source of truth — see findings #2 in `state/findings.md`.
+const ROLE_LEVEL: Record<string, number> = { viewer: 1, editor: 2, owner: 3 };
+const ORG_ADMIN_ROLES = new Set(['owner', 'admin']);
+
 /**
  * Project-level access middleware.
  * Reads projectId/cardId from req.body, req.params, or req.query (supports both POST and GET routes).
  */
 export function requireProjectAccess(minRole: 'viewer' | 'editor' | 'owner') {
+  // Fail fast if a caller passed a `minRole` that's not in the ROLE_LEVEL
+  // table — without this, an unknown minRole collapsed to `0` via the
+  // `|| 0` fallback and the per-request comparison `(... < 0)` was always
+  // false, so the gate effectively became "auth-required-only". TS narrows
+  // the parameter to the three known values, but a callsite using `as
+  // string`, a JSON-loaded config, or a future loosened signature could
+  // still slip an unknown value through.
+  if (!(minRole in ROLE_LEVEL)) {
+    throw new Error(
+      `requireProjectAccess: unknown minRole '${minRole}'. Expected one of ${Object.keys(ROLE_LEVEL).join(', ')}.`,
+    );
+  }
+
   return async (req: AuthRequest, res: Response, next: NextFunction) => {
     // Lazy-import to avoid circular deps at startup
     const prisma = (await import('@ice/db')).default;
@@ -99,10 +116,11 @@ export function requireProjectAccess(minRole: 'viewer' | 'editor' | 'owner') {
       return res.status(400).json({ message: 'projectId is required' });
     }
 
-    const ROLE_LEVEL: Record<string, number> = { viewer: 1, editor: 2, owner: 3 };
-    const ORG_ADMIN_ROLES = new Set(['owner', 'admin']);
-
-    // BE-10: Single query — fetch project with org membership and project membership in one round trip
+    // findings.md #46 — single query for real this time. The previous
+    // "BE-10: Single query" comment was aspirational: the org-member
+    // lookup ran as a separate `findUnique` round-trip. Nesting it
+    // under `organisation.members` collapses the auth check to one
+    // DB call per gated request.
     const project = await prisma.canvasProject.findUnique({
       where: { id: projectId },
       select: {
@@ -112,6 +130,15 @@ export function requireProjectAccess(minRole: 'viewer' | 'editor' | 'owner') {
           select: { role: true },
           take: 1,
         },
+        organisation: {
+          select: {
+            members: {
+              where: { user_id: req.userId! },
+              select: { role: true },
+              take: 1,
+            },
+          },
+        },
       },
     });
     if (!project) {
@@ -119,16 +146,17 @@ export function requireProjectAccess(minRole: 'viewer' | 'editor' | 'owner') {
     }
 
     // Check org-level role (admins/owners bypass project-level check)
-    const orgMember = await prisma.organisationMember.findUnique({
-      where: { user_id_organisation_id: { user_id: req.userId!, organisation_id: project.organisation_id } },
-    });
+    const orgMember = project.organisation.members[0];
     if (orgMember?.role && ORG_ADMIN_ROLES.has(orgMember.role)) {
       return next();
     }
 
-    // Check project-level membership (already fetched with the project query)
+    // Check project-level membership (already fetched with the project query).
+    // ROLE_LEVEL[minRole] is guaranteed truthy by the handler-build-time check
+    // above; the OR-fallback on pm.role only kicks in for an unknown
+    // role string in the DB row (treated as "no access").
     const pm = project.members[0];
-    if (!pm?.role || (ROLE_LEVEL[pm.role] || 0) < (ROLE_LEVEL[minRole] || 0)) {
+    if (!pm?.role || (ROLE_LEVEL[pm.role] || 0) < ROLE_LEVEL[minRole]!) {
       return res.status(403).json({ message: 'Insufficient project permissions' });
     }
     next();
@@ -161,11 +189,11 @@ export function requireOrgRole(...allowedRoles: string[]) {
 }
 
 export function generateToken(userId: string, organisationId: string): string {
-  return jwt.sign({ userId, organisationId }, JWT_SECRET, { expiresIn: '1h' });
+  return jwt.sign({ userId, organisationId }, getJwtSecret(), { expiresIn: '1h' });
 }
 
 export function generateRefreshToken(userId: string, organisationId: string): string {
-  return jwt.sign({ userId, organisationId, type: 'refresh', jti: crypto.randomUUID() }, JWT_SECRET, {
+  return jwt.sign({ userId, organisationId, type: 'refresh', jti: crypto.randomUUID() }, getJwtSecret(), {
     expiresIn: '30d',
   });
 }

@@ -6,9 +6,9 @@
  * numeric ranges, provider-specific options, cross-field constraints.
  */
 
-import { getPropertiesForIceType } from './schema-bridge.js';
-import type { CanvasIssue, ValidatableNode, ValidationContext } from './types.js';
-import type { HighLevelProperty } from '../resources/high-level-resources.js';
+import { getPropertiesForIceType } from './schema-bridge';
+import type { CanvasIssue, ValidatableNode, ValidationContext } from './types';
+import type { HighLevelProperty } from '../resources/high-level-resources';
 
 /**
  * Validate all node properties against their schemas.
@@ -233,8 +233,10 @@ function checkSelectValue(
 }
 
 function checkRange(nodeId: string, prop: HighLevelProperty, value: number): CanvasIssue | null {
-  const ci = prop.customInput;
-  if (!ci) return null;
+  // findings.md #39 — the caller (line 67) already gates the call
+  // on `prop.customInput` being truthy, so the previous
+  // `if (!ci) return null;` guard was unreachable.
+  const ci = prop.customInput!;
 
   if (ci.min !== undefined && value < ci.min) {
     return {

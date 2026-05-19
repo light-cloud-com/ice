@@ -7,17 +7,17 @@ GCP is the most mature cloud provider in ICE today. AWS and Azure also work for 
 ## Prerequisites
 
 - A **GCP project** you can admin.
-- **Billing enabled** on that project. Most of the services ICE deploys (Cloud Run, Cloud SQL, Pub/Sub, BigQuery, Vertex AI) require a billing account attached — even at zero usage, the project has to be in "billing on" state.
+- **Billing enabled** on that project. Most of the services ICE deploys (Cloud Run, Cloud SQL, Pub/Sub, BigQuery, Vertex AI) require a billing account attached - even at zero usage, the project has to be in "billing on" state.
 - **gcloud CLI** installed locally is helpful but not required.
 
-Expected first-deploy cost: near zero for a minimal canvas that stays within free tiers. A full Static Site + Custom Domain canvas costs cents/month. Running services (Cloud Run, Cloud SQL) cost real money — the canvas shows estimates before you deploy.
+Expected first-deploy cost: near zero for a minimal canvas that stays within free tiers. A full Static Site + Custom Domain canvas costs cents/month. Running services (Cloud Run, Cloud SQL) cost real money - the canvas shows estimates before you deploy.
 
-## Step 1 — Create a service account
+## Step 1 - Create a service account
 
 ICE authenticates to GCP as a service account. You need one with enough permissions to create the resources in your canvas. For full lifecycle management across the 20 supported services, grant these roles on the project:
 
 - **Project IAM Admin** (`roles/resourcemanager.projectIamAdmin`)
-- **Editor** (`roles/editor`) — broad, but simplest to start. Narrow later.
+- **Editor** (`roles/editor`) - broad, but simplest to start. Narrow later.
 - **Service Account User** (`roles/iam.serviceAccountUser`)
 
 To narrow the permissions, the specific roles that cover ICE's current GCP handlers are: Cloud Run Admin, Cloud SQL Admin, Storage Admin, Pub/Sub Admin, Firestore Admin, BigQuery Admin, Vertex AI Admin, Artifact Registry Admin, Secret Manager Admin, and Service Usage Consumer. Grant only what your canvas needs.
@@ -27,11 +27,11 @@ In the GCP Console:
 1. **IAM & Admin → Service Accounts → Create Service Account**.
 2. Give it a name (e.g. `ice-deployer`).
 3. Grant the roles above.
-4. Under **Keys**, create a new **JSON** key. Save the file somewhere safe — ICE will read it but never store it on disk unencrypted.
+4. Under **Keys**, create a new **JSON** key. Save the file somewhere safe - ICE will read it but never store it on disk unencrypted.
 
 **Do not commit the key file to git.** ICE's `.gitignore` covers patterns like `*service-account*.json` and `*-sa-key*.json`; respect them.
 
-## Step 2 — Connect GCP in ICE
+## Step 2 - Connect GCP in ICE
 
 1. Open ICE (`pnpm dev:all`, [http://localhost:5173](http://localhost:5173)).
 2. Top-right: **Settings → Providers**.
@@ -41,12 +41,12 @@ In the GCP Console:
 
 ICE runs a read-only validation pass (`validate_gcp_credentials` in `packages/core/src/deploy/providers/gcp/auth.ts`). If it fails, the error tells you which role is missing.
 
-## Step 3 — Build a canvas
+## Step 3 - Build a canvas
 
 For your first deploy, keep it minimal. A good starting shape:
 
-- **Static Site** block — your frontend (GitHub repo that builds into a static bundle).
-- **Custom Domain** block — the DNS name you want to point at it.
+- **Static Site** block - your frontend (GitHub repo that builds into a static bundle).
+- **Custom Domain** block - the DNS name you want to point at it.
 - An edge from Static Site to Custom Domain.
 
 On GCP, this canvas maps to:
@@ -58,22 +58,22 @@ On GCP, this canvas maps to:
 
 All of that is translated from "two blocks and an edge" by `translate_card_to_graph` (see [core-engine.md](core-engine.md)).
 
-For bigger shapes, try one of the built-in templates — **Templates → Gallery** in the toolbar. The SaaS Starter, Budget Web App, and Full-Stack templates are good early targets.
+For bigger shapes, try one of the built-in templates - **Templates → Gallery** in the toolbar. The SaaS Starter, Budget Web App, and Full-Stack templates are good early targets.
 
-## Step 4 — Plan
+## Step 4 - Plan
 
-Click **Deploy** in the toolbar. ICE runs a **plan** — a read-only pass that:
+Click **Deploy** in the toolbar. ICE runs a **plan** - a read-only pass that:
 
 1. Validates the canvas (types, required properties, edge legality).
 2. Translates cards → graph.
 3. Diffs the graph against whatever's currently running in GCP (or against the last applied state).
 4. Produces a list: `CREATE`, `UPDATE`, `DELETE`, `NO_OP` per resource.
 
-The plan is displayed in a modal. Review it carefully — especially any `DELETE` operations on a first deploy (should be zero; a non-zero count means the state store thinks it deployed something it shouldn't have).
+The plan is displayed in a modal. Review it carefully - especially any `DELETE` operations on a first deploy (should be zero; a non-zero count means the state store thinks it deployed something it shouldn't have).
 
 The plan also shows an **estimated cost per month** based on the block configurations. This is an estimate, not a bill.
 
-## Step 5 — Apply
+## Step 5 - Apply
 
 If the plan looks right, click **Apply**. The deploy engine:
 
@@ -84,7 +84,7 @@ If the plan looks right, click **Apply**. The deploy engine:
 
 On the canvas, each block shows a live status pip: pending, running, success, error. Clicking a block surfaces its per-resource log.
 
-## Step 6 — Verify
+## Step 6 - Verify
 
 Once apply completes:
 
@@ -92,7 +92,7 @@ Once apply completes:
 - **ICE canvas**: the blocks show "deployed" with relevant outputs (URLs, IPs, connection strings).
 - **Custom domain**: DNS may take a few minutes to propagate and the managed SSL certificate can take up to an hour on first provision. The block status reflects this.
 
-## Step 7 — Iterate
+## Step 7 - Iterate
 
 Change a block property and click Deploy again. ICE runs a new plan, shows only what changed, and applies incrementally. This is the normal dev loop.
 
@@ -141,11 +141,11 @@ All of these support create, update, and delete with real-time progress streamin
 | "Quota exceeded" | Your GCP project quota | Request a quota increase in GCP Console |
 | Custom domain stays "pending SSL" | Managed cert provisioning | Can take up to 60 minutes first time; verify your domain's DNS points at the load balancer |
 
-For anything not in this table, look at the deploy event log on the canvas (bottom panel) — it streams real GCP API responses.
+For anything not in this table, look at the deploy event log on the canvas (bottom panel) - it streams real GCP API responses.
 
 ## See also
 
-- [architecture.md](architecture.md) — the flow this tutorial walks through.
-- [core-engine.md](core-engine.md) — how translate / plan / apply actually work.
-- [`packages/core/src/deploy/`](../packages/core/src/deploy/) — deploy engine source.
-- [`packages/providers/gcp/src/handlers/`](../packages/providers/gcp/src/handlers/) — per-service handlers.
+- [architecture.md](architecture.md) - the flow this tutorial walks through.
+- [core-engine.md](core-engine.md) - how translate / plan / apply actually work.
+- [`packages/core/src/deploy/`](../packages/core/src/deploy/) - deploy engine source.
+- [`packages/providers/gcp/src/handlers/`](../packages/providers/gcp/src/handlers/) - per-service handlers.

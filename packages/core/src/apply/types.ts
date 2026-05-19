@@ -4,9 +4,9 @@
  * Types for deployment apply operations.
  */
 
-import type { DeploymentId, DeploymentPlan, PlannedChange } from '../types/deployment.js';
-import type { NodeId } from '../types/graph.js';
-import type { DeploymentError, ResourceState } from '../types/providers.js';
+import type { DeploymentId, DeploymentPlan, PlannedChange } from '../types/deployment';
+import type { NodeId } from '../types/graph';
+import type { DeploymentError, ResourceState } from '../types/providers';
 
 // =============================================================================
 // Apply Options
@@ -49,6 +49,16 @@ export interface ApplyOptions {
   /** Cloud provider to use (e.g. 'gcp', 'aws', 'mock') */
   provider?: string;
 
+  /**
+   * Cancellation signal. When aborted between layers (or between
+   * batches within a layer), the engine stops scheduling new
+   * changes, records remaining work as CANCELLED, and returns a
+   * non-successful result with `cancelled: true`. In-flight
+   * provider operations are NOT interrupted — they complete first.
+   * findings.md #23.
+   */
+  signal?: AbortSignal;
+
   /** Callback for progress updates */
   on_progress?: ApplyProgressCallback;
 }
@@ -63,6 +73,15 @@ export interface ApplyOptions {
 export interface ApplyResult {
   /** Overall success status */
   success: boolean;
+
+  /**
+   * True when the run was aborted via `options.signal`. Set
+   * regardless of how many changes had completed — callers can
+   * distinguish "stopped early" from "ran to completion with
+   * failures" by checking this flag together with success.
+   * findings.md #23.
+   */
+  cancelled?: boolean;
 
   /** Deployment ID for tracking */
   deployment_id: DeploymentId;
@@ -188,12 +207,14 @@ export type ApplyProgressCallback = (event: ApplyProgressEvent) => void;
 export interface ApplyContext {
   deployment_id: DeploymentId;
   plan: DeploymentPlan;
-  options: Required<Omit<ApplyOptions, 'plan' | 'plan_file' | 'graph_file' | 'on_progress'>> & {
+  options: Required<Omit<ApplyOptions, 'plan' | 'plan_file' | 'graph_file' | 'on_progress' | 'signal'>> & {
     on_progress?: ApplyProgressCallback;
+    signal?: AbortSignal;
   };
   results: ResourceApplyResult[];
   errors: ApplyError[];
   start_time: number;
+  cancelled: boolean;
 }
 
 // =============================================================================

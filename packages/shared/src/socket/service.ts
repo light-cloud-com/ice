@@ -40,7 +40,7 @@ import {
   type DeployNodeStatusEvent,
   type DeployRequirementVerifiedEvent,
 } from '@ice/types';
-import { isDesktopMode } from '../auth/middleware.js';
+import { isDesktopMode } from '../auth/middleware';
 
 let _io: SocketServer;
 

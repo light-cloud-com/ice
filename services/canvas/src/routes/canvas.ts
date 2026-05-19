@@ -22,9 +22,15 @@ const router: RouterType = Router();
 router.use(requireAuth);
 
 function getOrgId(req: AuthRequest): string {
-  // Prefer JWT-derived organisationId; fall back to client-supplied value
-  // (needed when JWT hasn't been refreshed yet after org switch)
-  return req.organisationId || req.body?.organisationId || '';
+  // findings.md #7 — JWT-derived organisationId only. The previous
+  // `req.body?.organisationId` fallback was a UX shortcut for stale
+  // JWTs after an org switch, but it let any authenticated caller
+  // scope `/projects` (list/create) to ANY org id by passing it in
+  // the body. The hardened path: refresh the JWT after an org switch
+  // before issuing canvas writes; if the JWT carries no org, the
+  // route returns an empty list rather than reading another org's
+  // data.
+  return req.organisationId || '';
 }
 
 // ── Projects & Folders ──────────────────────────────────────────────────────
@@ -92,9 +98,18 @@ router.post('/projects/move', requireProjectAccess('owner'), async (req: AuthReq
 // ── Cards ───────────────────────────────────────────────────────────────────
 
 router.post('/cards/create', requireProjectAccess('editor'), async (req: AuthRequest, res: Response) => {
-  const { name, projectId } = req.body;
-  const card = await canvasService.createCard(projectId, getOrgId(req), req.userId!, name);
-  res.json(card);
+  // findings.md #43 — wrap in try/catch matching the pattern used
+  // by /cards/update and /cards/get. Without it, an unhandled
+  // service rejection becomes Express's default error envelope
+  // (or a hung request, depending on middleware) instead of the
+  // 5xx + JSON shape the rest of the file uses.
+  try {
+    const { name, projectId } = req.body;
+    const card = await canvasService.createCard(projectId, getOrgId(req), req.userId!, name);
+    res.json(card);
+  } catch (err: any) {
+    res.status(500).json({ message: err?.message || 'Failed to create card' });
+  }
 });
 
 router.post('/cards/get', requireProjectAccess('viewer'), async (req: AuthRequest, res: Response) => {
@@ -121,8 +136,18 @@ router.post('/cards/update', requireProjectAccess('editor'), async (req: AuthReq
 });
 
 router.post('/cards/delete', requireProjectAccess('owner'), async (req: AuthRequest, res: Response) => {
-  await canvasService.deleteCard(req.body.cardId);
-  res.json({ success: true });
+  // findings.md #43 — wrap in try/catch matching the pattern used
+  // by sibling handlers. P2025 = Prisma "row not found" → 404.
+  try {
+    await canvasService.deleteCard(req.body.cardId);
+    res.json({ success: true });
+  } catch (err: any) {
+    if (err?.code === 'P2025') {
+      res.status(404).json({ message: 'Card not found' });
+      return;
+    }
+    res.status(500).json({ message: err?.message || 'Failed to delete card' });
+  }
 });
 
 export default router;

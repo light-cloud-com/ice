@@ -181,6 +181,20 @@ router.post('/invite/accept', async (req: AuthRequest, res: Response) => {
     if (invitation.accepted_at) return res.status(400).json({ message: 'Invitation already accepted' });
     if (invitation.expires_at < new Date()) return res.status(400).json({ message: 'Invitation expired' });
 
+    // findings.md #5 — bind the invitation to the recipient. Without
+    // this check anyone who learns a token (forwarded email, server
+    // log, share URL) could log in as themselves and accept the
+    // invitation, joining a team they were never invited to. The
+    // Invitation row already carries the recipient's email, so we
+    // require the authenticated user to match it (case-insensitive).
+    const callerUser = await prisma.user.findUnique({
+      where: { id: req.userId! },
+      select: { email: true },
+    });
+    if (!callerUser || callerUser.email.toLowerCase() !== invitation.email.toLowerCase()) {
+      return res.status(403).json({ message: 'This invitation was sent to a different email address' });
+    }
+
     // Add the current user to the org
     await prisma.organisationMember.upsert({
       where: {
@@ -281,6 +295,22 @@ router.post('/update-role', async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ message: 'Only owners can promote to admin or owner' });
     }
 
+    // findings.md #6 — refuse to demote the last owner. Without this
+    // guard an org could end up with zero owners and become
+    // unmanageable: only owners can promote, so no one would be able
+    // to restore an owner.
+    if (normalizedRole !== 'owner') {
+      const targetCurrentRole = await getCallerRole(userId, orgId);
+      if (targetCurrentRole === 'owner') {
+        const remainingOwners = await prisma.organisationMember.count({
+          where: { organisation_id: orgId, role: 'owner' },
+        });
+        if (remainingOwners <= 1) {
+          return res.status(400).json({ message: 'Cannot demote the last owner' });
+        }
+      }
+    }
+
     await prisma.organisationMember.update({
       where: { user_id_organisation_id: { user_id: userId, organisation_id: orgId } },
       data: { role: normalizedRole },
@@ -317,6 +347,20 @@ router.post('/remove', async (req: AuthRequest, res: Response) => {
     const targetRole = await getCallerRole(userId, orgId);
     if (targetRole === 'owner' && callerRole !== 'owner') {
       return res.status(403).json({ message: 'Cannot remove an owner' });
+    }
+
+    // findings.md #6 — block removal of the last owner. The guard
+    // above stops non-owners from removing owners; this one stops
+    // an owner from removing the only remaining owner (themselves
+    // is already blocked separately, but a co-owner reassigned then
+    // removed could otherwise produce an ownerless org).
+    if (targetRole === 'owner') {
+      const remainingOwners = await prisma.organisationMember.count({
+        where: { organisation_id: orgId, role: 'owner' },
+      });
+      if (remainingOwners <= 1) {
+        return res.status(400).json({ message: 'Cannot remove the last owner' });
+      }
     }
 
     // Remove membership

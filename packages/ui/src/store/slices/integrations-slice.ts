@@ -5,6 +5,7 @@
  * and generic integration status for GCP/AWS/Azure/etc.
  */
 
+import { type IntegrationStatus } from '@ice/constants';
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import { getApi } from '../../shared/api/api-adapter';
 
@@ -12,7 +13,7 @@ import { getApi } from '../../shared/api/api-adapter';
 // Types
 // =============================================================================
 
-export type IntegrationStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
+export type { IntegrationStatus };
 
 interface IntegrationInfo {
   status: IntegrationStatus;
@@ -68,6 +69,7 @@ const initialState: IntegrationsState = {
     gcp: { status: 'disconnected' },
     aws: { status: 'disconnected' },
     azure: { status: 'disconnected' },
+    anthropic: { status: 'disconnected' },
   },
   github: {
     repos: [],
@@ -160,6 +162,34 @@ const pollGitHubDeviceFlow = createAsyncThunk(
 export const disconnectGitHub = createAsyncThunk('integrations/disconnectGitHub', async () => {
   const api = getApi();
   await api.github.disconnect();
+});
+
+// ── Anthropic / Claude (BYOK) ───────────────────────────────────────────────
+
+export const checkAnthropicConnection = createAsyncThunk('integrations/checkAnthropicConnection', async () => {
+  const api = getApi();
+  return api.provider.isConnected('anthropic');
+});
+
+export const connectAnthropic = createAsyncThunk(
+  'integrations/connectAnthropic',
+  async (apiKey: string, { rejectWithValue }) => {
+    const api = getApi();
+    try {
+      const result = await api.provider.connect('anthropic', { api_key: apiKey });
+      if (!result.success) {
+        return rejectWithValue(result.error || 'Failed to connect');
+      }
+      return true;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.error || err.message || 'Failed to connect');
+    }
+  },
+);
+
+export const disconnectAnthropic = createAsyncThunk('integrations/disconnectAnthropic', async () => {
+  const api = getApi();
+  await api.provider.disconnect('anthropic');
 });
 
 export const fetchGitHubRepos = createAsyncThunk(
@@ -285,6 +315,27 @@ const integrationsSlice = createSlice({
       })
       .addCase(fetchGitHubBranches.fulfilled, (state, action) => {
         state.github.branches[action.payload.repository] = action.payload.branches;
+      })
+      // ── Anthropic ─────────────────────────────────────────────────────────
+      .addCase(checkAnthropicConnection.fulfilled, (state, action) => {
+        state.integrations.anthropic = action.payload
+          ? { status: 'connected' }
+          : { status: 'disconnected' };
+      })
+      .addCase(connectAnthropic.pending, (state) => {
+        state.integrations.anthropic = { status: 'connecting' };
+      })
+      .addCase(connectAnthropic.fulfilled, (state) => {
+        state.integrations.anthropic = { status: 'connected' };
+      })
+      .addCase(connectAnthropic.rejected, (state, action) => {
+        state.integrations.anthropic = {
+          status: 'error',
+          error: (action.payload as string) || 'Failed to connect',
+        };
+      })
+      .addCase(disconnectAnthropic.fulfilled, (state) => {
+        state.integrations.anthropic = { status: 'disconnected' };
       });
   },
 });

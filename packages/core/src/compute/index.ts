@@ -7,8 +7,8 @@
  *   PROPAGATION_RULES / AGGREGATE_RULES — the declarative rule arrays
  */
 
-export { computeDerived, diffPatches } from './compute-derived.js';
-export { PROPAGATION_RULES, AGGREGATE_RULES } from './propagation-rules.js';
+export { computeDerived, diffPatches } from './compute-derived';
+export { PROPAGATION_RULES, AGGREGATE_RULES } from './propagation-rules';
 export type {
   PropagationNode,
   PropagationEdge,
@@ -20,4 +20,4 @@ export type {
   EdgePatch,
   EdgeDeletion,
   PropagationDirection,
-} from './types.js';
+} from './types';

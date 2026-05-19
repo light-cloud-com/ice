@@ -5,7 +5,7 @@
  */
 
 // Token types
-export type { TokenType, Token, SourcePosition, SourceSpan } from './tokens.js';
+export type { TokenType, Token, SourcePosition, SourceSpan } from './tokens';
 
 export {
   KEYWORDS,
@@ -16,7 +16,7 @@ export {
   is_token_type,
   is_one_of,
   describe_token,
-} from './tokens.js';
+} from './tokens';
 
 // AST types
 export type {
@@ -60,34 +60,34 @@ export type {
   LifecycleConfig,
   ValidationRule,
   TypeExpression,
-} from './ast.js';
+} from './ast';
 
-export { is_node_kind, create_span, visit_ast } from './ast.js';
+export { is_node_kind, create_span, visit_ast } from './ast';
 
 // Lexer
-export type { LexerError, LexerResult, LexerOptions } from './lexer.js';
+export type { LexerError, LexerResult, LexerOptions } from './lexer';
 
-export { Lexer, tokenize } from './lexer.js';
+export { Lexer, tokenize } from './lexer';
 
 // Parser
-export type { ParserError, ParserResult, ParserOptions } from './parser.js';
+export type { ParserError, ParserResult, ParserOptions } from './parser';
 
-export { Parser, parse } from './parser.js';
+export { Parser, parse } from './parser';
 
 // Format parsers (YAML, JSON)
-export type { FormatParserError, FormatParserResult, IceYamlSchema } from './format-parser.js';
+export type { FormatParserError, FormatParserResult, IceYamlSchema } from './format-parser';
 
-export { parse_json, parse_yaml, parse_auto } from './format-parser.js';
+export { parse_json, parse_yaml, parse_auto } from './format-parser';
 
 // =============================================================================
 // Convenience Functions
 // =============================================================================
 
-import { Lexer } from './lexer.js';
-import { Parser } from './parser.js';
-import type { Program } from './ast.js';
-import type { LexerError, LexerOptions } from './lexer.js';
-import type { ParserError, ParserOptions } from './parser.js';
+import { Lexer } from './lexer';
+import { Parser } from './parser';
+import type { Program } from './ast';
+import type { LexerError, LexerOptions } from './lexer';
+import type { ParserError, ParserOptions } from './parser';
 
 /**
  * Combined result from lexing and parsing.

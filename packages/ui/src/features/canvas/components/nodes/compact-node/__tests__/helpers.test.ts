@@ -17,7 +17,15 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { getDeployBadge } from '../helpers';
+import {
+  getDeployBadge,
+  truncate,
+  shortRepo,
+  shortDomain,
+  ph,
+  isPlaceholder,
+  listCount,
+} from '../helpers';
 import { STATUS_COLORS } from '../../../../../../config/canvas-constants';
 
 describe('getDeployBadge', () => {
@@ -82,5 +90,81 @@ describe('getDeployBadge', () => {
     for (const status of overlayStrings) {
       expect(getDeployBadge(status)).not.toBeNull();
     }
+  });
+});
+
+describe('truncate', () => {
+  it('returns empty string for empty input', () => {
+    expect(truncate('', 5)).toBe('');
+  });
+  it('returns the string unchanged when shorter than the cap', () => {
+    expect(truncate('hi', 5)).toBe('hi');
+  });
+  it('returns the string unchanged when exactly the cap', () => {
+    expect(truncate('hello', 5)).toBe('hello');
+  });
+  it('appends a Unicode ellipsis when over the cap', () => {
+    expect(truncate('hello world', 5)).toBe('hello…');
+  });
+});
+
+describe('shortRepo', () => {
+  it('returns empty for empty input', () => {
+    expect(shortRepo('')).toBe('');
+  });
+  it('extracts owner/repo from a github.com URL with .git suffix', () => {
+    expect(shortRepo('https://github.com/anthropics/claude.git')).toBe('anthropics/claude');
+  });
+  it('extracts owner/repo from a github.com URL without .git', () => {
+    expect(shortRepo('https://github.com/foo/bar')).toBe('foo/bar');
+  });
+  it('also matches gitlab.com URLs', () => {
+    expect(shortRepo('https://gitlab.com/foo/bar')).toBe('foo/bar');
+  });
+  it('returns owner/repo shorthand when given without protocol', () => {
+    expect(shortRepo('anthropics/claude')).toBe('anthropics/claude');
+  });
+  it('returns the input unchanged when neither URL nor shorthand', () => {
+    expect(shortRepo('just-a-name')).toBe('just-a-name');
+  });
+});
+
+describe('shortDomain', () => {
+  it('returns empty for empty input', () => {
+    expect(shortDomain('')).toBe('');
+  });
+  it('extracts hostname from a URL', () => {
+    expect(shortDomain('https://app.example.com/path')).toBe('app.example.com');
+  });
+  it('returns the input unchanged when not a URL', () => {
+    expect(shortDomain('app.example.com')).toBe('app.example.com');
+  });
+  it('returns the input unchanged when URL parsing throws', () => {
+    expect(shortDomain('://malformed')).toBe('://malformed');
+  });
+});
+
+describe('ph + isPlaceholder', () => {
+  it('ph prepends a no-break space marker', () => {
+    expect(ph('foo')).toBe(' foo');
+  });
+  it('isPlaceholder detects ph-prefixed strings', () => {
+    expect(isPlaceholder(ph('foo'))).toBe(true);
+  });
+  it('isPlaceholder is false for plain strings', () => {
+    expect(isPlaceholder('foo')).toBe(false);
+  });
+});
+
+describe('listCount', () => {
+  it('returns 0 for non-arrays', () => {
+    expect(listCount(undefined)).toBe(0);
+    expect(listCount(null)).toBe(0);
+    expect(listCount('hi')).toBe(0);
+    expect(listCount({})).toBe(0);
+  });
+  it('returns the array length', () => {
+    expect(listCount([])).toBe(0);
+    expect(listCount([1, 2, 3])).toBe(3);
   });
 });

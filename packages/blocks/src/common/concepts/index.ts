@@ -8,11 +8,13 @@
 
 export * from './_shared';
 
-// Frontend / Compute (6) · Data (6) · Messaging (3) · Edge / Network (3) ·
-// AI (2) · Ops (4) · Canvas-only viewers (2 — Group is a UI-level primitive,
-// registered separately).
+// Frontend / Compute (6) · Data (6) · Analytics (2) · Messaging (3) ·
+// Edge / Network (3) · AI (2) · Ops (5 incl. Auth) · Canvas-only viewers
+// (1 — Group is a UI-level primitive, registered separately).
 import { apiGatewayConceptBlueprint } from './api-gateway';
+import { authConceptBlueprint } from './auth';
 import { customDomainConceptBlueprint } from './custom-domain';
+import { dataWarehouseConceptBlueprint } from './data-warehouse';
 import { emailServiceConceptBlueprint } from './email-service';
 import { envConfigConceptBlueprint } from './env-config';
 import { eventStreamConceptBlueprint } from './event-stream';
@@ -30,6 +32,7 @@ import { publicTrafficConceptBlueprint } from './public-traffic';
 import { redisCacheConceptBlueprint } from './redis-cache';
 import { scalableBackendConceptBlueprint } from './scalable-backend';
 import { scheduledTaskConceptBlueprint } from './scheduled-task';
+import { searchEngineConceptBlueprint } from './search-engine';
 import { secretStoreConceptBlueprint } from './secret-store';
 import { serverlessFunctionConceptBlueprint } from './serverless-function';
 import { ssrSiteConceptBlueprint } from './ssr-site';
@@ -39,9 +42,15 @@ import { workerConceptBlueprint } from './worker';
 import type { ConceptBlueprint } from './_shared/types';
 
 /**
- * All Concept blueprints. 25 so far (Group is a UI-level primitive handled
+ * All Concept blueprints. 28 so far (Group is a UI-level primitive handled
  * at the canvas layer, not a blueprint). Order here determines palette
  * ordering when the palette becomes data-driven in Slice 5.
+ *
+ * Auth + Data Warehouse + Search were originally deferred from the 23-block
+ * cut (see `state/learnings.md` and the project memory for context). Added
+ * back when the deferral hit "users explicitly ask for it" — Auth ships as
+ * managed identity (Cognito / Firebase Auth / Entra ID); the SaaS-key path
+ * (Clerk / Auth0 in Secret Store) still works the same.
  */
 export const CONCEPT_BLUEPRINTS: ConceptBlueprint[] = [
   // Frontend / Compute
@@ -58,6 +67,9 @@ export const CONCEPT_BLUEPRINTS: ConceptBlueprint[] = [
   redisCacheConceptBlueprint,
   objectStorageConceptBlueprint,
   vectorDbConceptBlueprint,
+  // Analytics
+  dataWarehouseConceptBlueprint,
+  searchEngineConceptBlueprint,
   // Messaging
   messageQueueConceptBlueprint,
   eventStreamConceptBlueprint,
@@ -69,8 +81,9 @@ export const CONCEPT_BLUEPRINTS: ConceptBlueprint[] = [
   // AI
   llmGatewayConceptBlueprint,
   privateAiServiceConceptBlueprint,
-  // Ops
+  // Ops / Security
   observabilityConceptBlueprint,
+  authConceptBlueprint,
   secretStoreConceptBlueprint,
   githubRepoConceptBlueprint,
   envConfigConceptBlueprint,

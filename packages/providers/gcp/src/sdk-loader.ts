@@ -7,7 +7,7 @@
  */
 
 import { isAuthMissingError, isAuthExpiredError, AUTH_MESSAGES } from '@ice/core';
-import type { GCPRestClient } from './types.js';
+import type { GCPRestClient } from './types';
 
 /**
  * Dynamically import a GCP SDK package.

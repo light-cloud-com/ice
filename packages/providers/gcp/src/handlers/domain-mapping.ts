@@ -7,7 +7,7 @@
  * Domain mappings cannot be updated in-place — update deletes and recreates.
  */
 
-import type { GCPResourceHandler } from '../types.js';
+import type { GCPResourceHandler } from '../types';
 import type { ResourceDeployResult } from '@ice/core';
 
 const TYPE = 'gcp.run.domainMapping';

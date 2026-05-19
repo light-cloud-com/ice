@@ -9,8 +9,8 @@
  * - Orphan detection
  */
 
-import { isContainer } from './classifiers.js';
-import type { CanvasIssue, ValidatableNode, ValidatableEdge } from './types.js';
+import { isContainer } from './classifiers';
+import type { CanvasIssue, ValidatableNode, ValidatableEdge } from './types';
 
 /**
  * Validate structural integrity of the canvas.
@@ -123,9 +123,11 @@ export function validateStructure(nodes: readonly ValidatableNode[], edges: read
 
   for (const node of nodes) {
     const iceType = (node.data.iceType as string) ?? '';
-    // Skip containers, groups, monitoring (often standalone), domain, env config
+    // Skip containers, groups, monitoring (often standalone), domain, env config.
+    // findings.md #36 — isContainer already returns true when
+    // nodeType is 'container' / 'group'; the dedicated check after
+    // it was redundant.
     if (isContainer(iceType, node.type)) continue;
-    if (node.type === 'container' || node.type === 'group') continue;
     if (iceType === 'Config.Environment' || iceType === 'Network.PublicEndpoint') continue;
     if (iceType.startsWith('Monitoring.')) continue;
 

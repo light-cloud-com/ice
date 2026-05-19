@@ -143,9 +143,6 @@ export function _getRegisteredTempDirs(): string[] {
 export interface DeployProgressSnapshot {
   cardId: string;
   status: 'planning' | 'deploying' | 'success' | 'partial' | 'failed' | 'cancelled';
-  progress: number; // 0-100
-  currentResource?: string;
-  currentStep?: { label: string; index: number; total: number };
   deploymentId?: string;
   startedAt: string;
   updatedAt: string;
@@ -181,7 +178,6 @@ export function startDeploySnapshot(cardId: string, deploymentId?: string): void
   const snapshot: DeployProgressSnapshot = {
     cardId,
     status: 'deploying',
-    progress: 0,
     deploymentId,
     startedAt: now,
     updatedAt: now,
@@ -189,13 +185,6 @@ export function startDeploySnapshot(cardId: string, deploymentId?: string): void
   };
   progressSnapshots.set(cardId, snapshot);
   persist(snapshot);
-}
-
-export function updateDeploySnapshot(cardId: string, patch: Partial<DeployProgressSnapshot>): void {
-  const current = progressSnapshots.get(cardId);
-  if (!current) return;
-  Object.assign(current, patch, { updatedAt: new Date().toISOString() });
-  persist(current);
 }
 
 export function updateDeploySnapshotNode(
@@ -215,7 +204,6 @@ export function finishDeploySnapshot(cardId: string, status: 'success' | 'partia
   const current = progressSnapshots.get(cardId);
   if (!current) return;
   current.status = status;
-  current.progress = 100;
   current.updatedAt = new Date().toISOString();
   persist(current);
   // Keep the snapshot for a short grace period so late-joining clients

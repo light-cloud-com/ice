@@ -4,8 +4,8 @@
  * Re-exports the modular GCP deployer and types.
  */
 
-export { GCPDeployer, create_gcp_deployer } from './gcp-deployer.js';
-export type { GCPResourceHandler, GCPHandlerContext, GCPRestClient } from './types.js';
+export { GCPDeployer, create_gcp_deployer } from './gcp-deployer';
+export type { GCPResourceHandler, GCPHandlerContext, GCPRestClient } from './types';
 export {
   get_gcp_credentials,
   validate_gcp_credentials,
@@ -14,4 +14,4 @@ export {
   type GCPAuthMethod,
   type GCPAuthResult,
   type GCPProject,
-} from './auth.js';
+} from './auth';

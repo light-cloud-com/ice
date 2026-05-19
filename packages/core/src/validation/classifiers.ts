@@ -7,7 +7,15 @@
  *
  * These are trivially small and change rarely. If they diverge,
  * the connection validation tests will catch it.
+ *
+ * The network-container set is the one piece that IS shared via
+ * `@ice/constants:NETWORK_CONTAINER_TYPES` — so a new container type
+ * (e.g. a future Network.PrivateLink) flips both `isContainer` predicates
+ * in lockstep without touching this file. The non-network predicate
+ * regexes still need a sync pass when changed.
  */
+
+import { NETWORK_CONTAINER_TYPES } from '@ice/constants';
 
 export function isDatabase(t: string): boolean {
   return (
@@ -81,9 +89,7 @@ export function isDomain(t: string): boolean {
 export function isContainer(iceType: string, nodeType?: string): boolean {
   if (nodeType === 'container' || nodeType === 'group') return true;
   return (
-    iceType === 'Network.VPC' ||
-    iceType === 'Network.Subnet' ||
-    iceType === 'Network.PrivateNetwork' ||
+    (NETWORK_CONTAINER_TYPES as readonly string[]).includes(iceType) ||
     iceType.startsWith('Group.')
   );
 }

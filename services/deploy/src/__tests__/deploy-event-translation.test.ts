@@ -178,7 +178,7 @@ vi.mock('@ice/core', () => {
   };
 });
 
-vi.mock('../providers/registry.js', () => ({
+vi.mock('../providers/registry', () => ({
   resolveProviderAuth: vi.fn().mockResolvedValue({
     authClient: {},
     scope: { project: 'gcp-test-project' },
@@ -190,7 +190,7 @@ vi.mock('../providers/registry.js', () => ({
   cleanupProviderAuth: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock('../services/resource-mapping.service.js', () => ({
+vi.mock('../services/resource-mapping.service', () => ({
   getExistingNameMap: vi.fn().mockResolvedValue(new Map()),
   getResourceMap: vi.fn().mockResolvedValue(new Map()),
   seedMappingsFromHistory: vi.fn().mockResolvedValue(undefined),
@@ -201,7 +201,7 @@ vi.mock('../services/resource-mapping.service.js', () => ({
 // ── helpers ────────────────────────────────────────────────────────────────
 
 async function getApplyDeployment() {
-  const mod = await import('../services/deploy.service.js');
+  const mod = await import('../services/deploy.service');
   return mod.applyDeployment;
 }
 
@@ -209,21 +209,27 @@ async function getApplyDeployment() {
 // `destroyAllForCard`. Both walk persisted deployment data and emit
 // per-resource node_status events with `action: 'delete'`.
 async function getDestroyDeployment() {
-  const mod = await import('../services/deploy.service.js');
+  const mod = await import('../services/deploy.service');
   return mod.destroyDeployment;
 }
 
 async function getDestroyAllForCard() {
-  const mod = await import('../services/deploy.service.js');
+  const mod = await import('../services/deploy.service');
   return mod.destroyAllForCard;
 }
 
 async function getOutcomeHelpers() {
-  const mod = await import('../services/deploy.service.js');
+  // rf-deploy-2 — `computeCompleteTotals` and `deriveCompleteOutcome` now
+  // live in `../utils/deploy-outcome.js` (still re-exported from
+  // deploy.service.ts for the public API). Tests bind to the canonical
+  // home so they exercise the new module directly. `mapStatusToOverlay`
+  // is in `../utils/deploy-event-formatter.js` (rf-deploy-1).
+  const outcome = await import('../utils/deploy-outcome');
+  const formatter = await import('../utils/deploy-event-formatter');
   return {
-    deriveCompleteOutcome: mod.deriveCompleteOutcome,
-    computeCompleteTotals: mod.computeCompleteTotals,
-    mapStatusToOverlay: mod.mapStatusToOverlay,
+    deriveCompleteOutcome: outcome.deriveCompleteOutcome,
+    computeCompleteTotals: outcome.computeCompleteTotals,
+    mapStatusToOverlay: formatter.mapStatusToOverlay,
   };
 }
 

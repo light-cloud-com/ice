@@ -12,7 +12,7 @@ describe('Build Command Validation', () => {
   // We test the ALLOWED_COMMANDS and validation by checking what spawn receives
 
   it('should allow standard package managers', async () => {
-    const _mod = await import('../services/build.service.js');
+    const _mod = await import('../services/build.service');
     // buildFromSource is the entry point — we test that valid commands don't throw
     // by verifying the allowlist concept
     const allowedCommands = [

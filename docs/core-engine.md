@@ -4,12 +4,12 @@ The core engine (`packages/core/`) is the provider-agnostic brain: everything ab
 
 ## Concepts in one page
 
-- **Graph** — a typed set of nodes (resources) and edges (relationships). This is ICE's internal representation; every cloud shape maps to a graph.
-- **Schema** — what properties a given ICE resource type can have, which are required, what types they accept. Stored as a SQLite database generated from Terraform and Pulumi provider schemas (tens of thousands of resource types).
-- **ICE type** — a provider-neutral resource identifier like `compute.run.service` or `storage.bucket`. Each ICE type has one or more provider implementations (GCP Cloud Run, AWS Lambda, etc.).
-- **Plan** — a list of create/update/delete operations computed by diffing a desired graph against last-applied state.
-- **Apply** — execute the plan, streaming progress, writing the new state.
-- **Handler** — provider-specific code that knows how to create, update, delete, and diff one resource type.
+- **Graph** - a typed set of nodes (resources) and edges (relationships). This is ICE's internal representation; every cloud shape maps to a graph.
+- **Schema** - what properties a given ICE resource type can have, which are required, what types they accept. Stored as a SQLite database generated from Terraform and Pulumi provider schemas (tens of thousands of resource types).
+- **ICE type** - a provider-neutral resource identifier like `compute.run.service` or `storage.bucket`. Each ICE type has one or more provider implementations (GCP Cloud Run, AWS Lambda, etc.).
+- **Plan** - a list of create/update/delete operations computed by diffing a desired graph against last-applied state.
+- **Apply** - execute the plan, streaming progress, writing the new state.
+- **Handler** - provider-specific code that knows how to create, update, delete, and diff one resource type.
 
 ## What's in the package
 
@@ -21,7 +21,7 @@ packages/core/src/
 ├── schemas/                  SQLite DBs (base + per-provider) and the loader
 ├── graph/                    Parser, MutableGraph, algorithms, validator, classifier, inference
 ├── state/                    Deploy state persistence (last-applied graph)
-├── plan/                     Plan computation — desired vs current, topological order
+├── plan/                     Plan computation - desired vs current, topological order
 ├── apply/                    Execute a plan
 ├── diff/                     Property-level diff helpers
 ├── compute/                  Derived / aggregate / propagation rules for blocks
@@ -35,7 +35,7 @@ packages/core/src/
 └── cli/                      The `ice` CLI binary
 ```
 
-Nothing here imports from `services/`, `apps/`, or the UI packages. The engine is usable standalone — you could import it in a script and run a deploy programmatically. The CLI (`ice` in `packages/core/src/cli/`) does exactly this.
+Nothing here imports from `services/`, `apps/`, or the UI packages. The engine is usable standalone - you could import it in a script and run a deploy programmatically. The CLI (`ice` in `packages/core/src/cli/`) does exactly this.
 
 ## Graph model
 
@@ -96,15 +96,15 @@ flowchart LR
 
 **Plan** (`packages/core/src/plan/`) diffs the desired graph against the current state; each diff entry is `{ op: 'create' | 'update' | 'delete' | 'noop', node_id, changed_properties }`.
 
-**Apply** (`packages/core/src/deploy/deploy-engine.ts` driving `packages/core/src/deploy/scheduler.ts`) is a bounded worker-pool scheduler over the per-node DAG. Pool size defaults to 6; per-handler caps reserve `gcp.sql.* = 1` and `gcp.redis.* = 1` so multi-instance fan-outs don't trip GCP's create-rate quotas. Failure isolates to descendants only — siblings and unrelated branches keep running, which means a 12-resource card that loses one Cloud SQL instance still surfaces the partial-success rollup of the rest. Each node moves through `queued → applying → (succeeded | failed | skipped | cancelled-due-to-dep)`, and the engine streams those transitions to the caller via `on_node_status` plus mid-apply milestones via `on_node_progress`.
+**Apply** (`packages/core/src/deploy/deploy-engine.ts` driving `packages/core/src/deploy/scheduler.ts`) is a bounded worker-pool scheduler over the per-node DAG. Pool size defaults to 6; per-handler caps reserve `gcp.sql.* = 1` and `gcp.redis.* = 1` so multi-instance fan-outs don't trip GCP's create-rate quotas. Failure isolates to descendants only - siblings and unrelated branches keep running, which means a 12-resource card that loses one Cloud SQL instance still surfaces the partial-success rollup of the rest. Each node moves through `queued → applying → (succeeded | failed | skipped | cancelled-due-to-dep)`, and the engine streams those transitions to the caller via `on_node_status` plus mid-apply milestones via `on_node_progress`.
 
-Handlers report sub-step progress via `GCPHandlerContext.on_step(name, { label, index, total })` — a Cloud SQL instance create surfaces "Creating instance" → "Waiting for instance to become ready" rather than going dark for ten minutes. The build-helper extension lets cloud-run pin every Cloud Build sub-state (Submitting / queued / running) to its outer step index, so the bar holds steady while labels refresh.
+Handlers report sub-step progress via `GCPHandlerContext.on_step(name, { label, index, total })` - a Cloud SQL instance create surfaces "Creating instance" → "Waiting for instance to become ready" rather than going dark for ten minutes. The build-helper extension lets cloud-run pin every Cloud Build sub-state (Submitting / queued / running) to its outer step index, so the bar holds steady while labels refresh.
 
-The legacy `apply-engine.ts` and the per-resource percentage that reset between nodes are gone — see decisions entry "2026-04-28 — Parallel deploy scheduler with per-node live status" for the alternatives considered (layer-batched `Promise.all` rejected because it waits for the slowest node in each layer; new socket room rejected because the existing `deploy:<cardId>` is what the canvas hydration is shaped around).
+The legacy `apply-engine.ts` and the per-resource percentage that reset between nodes are gone - see decisions entry "2026-04-28 - Parallel deploy scheduler with per-node live status" for the alternatives considered (layer-batched `Promise.all` rejected because it waits for the slowest node in each layer; new socket room rejected because the existing `deploy:<cardId>` is what the canvas hydration is shaped around).
 
 ## Live event wire contract
 
-The deploy service publishes one Socket.IO event name (`DEPLOY_EVENT_CHANNEL = 'deploy:event'`) carrying a discriminated `DeployEvent` union — types in `packages/types/src/deploy-events.ts`, emitter helpers in `packages/shared/src/socket/service.ts`. Five variants:
+The deploy service publishes one Socket.IO event name (`DEPLOY_EVENT_CHANNEL = 'deploy:event'`) carrying a discriminated `DeployEvent` union - types in `packages/types/src/deploy-events.ts`, emitter helpers in `packages/shared/src/socket/service.ts`. Five variants:
 
 | `event.type` | Fired when |
 |---|---|
@@ -115,15 +115,15 @@ The deploy service publishes one Socket.IO event name (`DEPLOY_EVENT_CHANNEL = '
 | `requirement_verified` | Post-deploy poller fires when a `BlockRequirementStatus` row flips. Carries the full unique key `(card_id, node_id, environment, requirement)` plus an optional `details` blob. |
 
 Three identifier spaces travel through the deploy stack and are NOT interchangeable:
-- **Canvas node id** — user-facing block id from `cards-slice.nodes[i].id`. The wire's `node_id` is always this.
-- **Graph node id** — engine-internal `${type}:${name}`, e.g. `gcp.sql.databaseInstance:ice-foo-prod-instance-abc123`. Lives only inside the scheduler and `MutableGraph`.
-- **Resource name** — sanitized hash-suffixed cloud resource name (e.g. `ice-foo-prod-instance-abc123`). Carried in `resource_name` for log readability.
+- **Canvas node id** - user-facing block id from `cards-slice.nodes[i].id`. The wire's `node_id` is always this.
+- **Graph node id** - engine-internal `${type}:${name}`, e.g. `gcp.sql.databaseInstance:ice-foo-prod-instance-abc123`. Lives only inside the scheduler and `MutableGraph`.
+- **Resource name** - sanitized hash-suffixed cloud resource name (e.g. `ice-foo-prod-instance-abc123`). Carried in `resource_name` for log readability.
 
 The service layer translates graph node id → canvas node id via `translation.deployables[]` before emitting on the wire (`services/deploy/src/services/deploy.service.ts`'s `graphIdToCanvasId` map). Frontend reducers key everything by canvas node id.
 
 ## Schemas
 
-Resource schemas live in `packages/core/src/schemas/` as SQLite DBs — one "base" DB bundled with the package and per-provider extension DBs. They're generated from Terraform and Pulumi provider schemas (a one-off build step, committed).
+Resource schemas live in `packages/core/src/schemas/` as SQLite DBs - one "base" DB bundled with the package and per-provider extension DBs. They're generated from Terraform and Pulumi provider schemas (a one-off build step, committed).
 
 The schema provider (`EmbeddedSchemaProvider` in `packages/core/src/schema/embedded-schema-provider.ts`) queries these DBs at runtime to answer "what properties does `compute.run.service` have on GCP?" and drives validation, autocomplete, and the properties panel.
 
@@ -145,8 +145,8 @@ GCP import has dedicated service modules (`importers/gcp/services/compute.ts`, `
 
 Two independent layers:
 
-1. **Graph validation** (`graph/validator/`) — cycle detection, reference resolution, type compatibility, connectivity rules. Producer-agnostic; every graph must pass these.
-2. **Canvas validation** (`validation/`) — higher-level UX rules: *"a static-site block with a custom-domain edge must have a github-repo configured"*. Runs on UI interactions and before plan.
+1. **Graph validation** (`graph/validator/`) - cycle detection, reference resolution, type compatibility, connectivity rules. Producer-agnostic; every graph must pass these.
+2. **Canvas validation** (`validation/`) - higher-level UX rules: *"a static-site block with a custom-domain edge must have a github-repo configured"*. Runs on UI interactions and before plan.
 
 Both emit `{ severity, code, message, node_id }` issues that the UI renders inline.
 
@@ -162,16 +162,16 @@ Some block properties are derived from others (`derived`), aggregated across con
 
 ## Entry points worth reading
 
-- [`packages/core/src/index.ts`](../packages/core/src/index.ts) — the export surface.
-- [`packages/core/src/deploy/card-translator.ts`](../packages/core/src/deploy/card-translator.ts) — UI → graph.
-- [`packages/core/src/deploy/deploy-engine.ts`](../packages/core/src/deploy/deploy-engine.ts) — apply driver.
-- [`packages/core/src/deploy/scheduler.ts`](../packages/core/src/deploy/scheduler.ts) — bounded worker-pool DAG scheduler with per-handler caps.
-- [`packages/types/src/deploy-events.ts`](../packages/types/src/deploy-events.ts) — wire-event discriminated union (locked contract).
-- [`packages/core/src/graph/mutable-graph.ts`](../packages/core/src/graph/mutable-graph.ts) — the data structure.
-- [`packages/core/src/graph/algorithms.ts`](../packages/core/src/graph/algorithms.ts) — topological sort, cycles, paths.
+- [`packages/core/src/index.ts`](../packages/core/src/index.ts) - the export surface.
+- [`packages/core/src/deploy/card-translator.ts`](../packages/core/src/deploy/card-translator.ts) - UI → graph.
+- [`packages/core/src/deploy/deploy-engine.ts`](../packages/core/src/deploy/deploy-engine.ts) - apply driver.
+- [`packages/core/src/deploy/scheduler.ts`](../packages/core/src/deploy/scheduler.ts) - bounded worker-pool DAG scheduler with per-handler caps.
+- [`packages/types/src/deploy-events.ts`](../packages/types/src/deploy-events.ts) - wire-event discriminated union (locked contract).
+- [`packages/core/src/graph/mutable-graph.ts`](../packages/core/src/graph/mutable-graph.ts) - the data structure.
+- [`packages/core/src/graph/algorithms.ts`](../packages/core/src/graph/algorithms.ts) - topological sort, cycles, paths.
 
 ## See also
 
 - [architecture.md](architecture.md) for the bird's-eye view.
-- [services.md](services.md) — how the `deploy` service uses this package.
-- [blocks-reference.md](blocks-reference.md) — where the UI cards that feed the translator come from.
+- [services.md](services.md) - how the `deploy` service uses this package.
+- [blocks-reference.md](blocks-reference.md) - where the UI cards that feed the translator come from.

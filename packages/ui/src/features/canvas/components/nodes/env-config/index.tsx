@@ -6,19 +6,18 @@
  * Store). Editing moves to the properties panel.
  */
 
+import { CARD_FOOTER_HEIGHT, EC_HEADER_HEIGHT, EC_PADDING, EC_ROW_HEIGHT } from '@ice/constants';
 import { Cog } from 'lucide-react';
 import React from 'react';
 import { CardShell, EmptyHint, KvLine } from '../_shared';
 import type { SvgCompactNodeProps } from '../compact-node/types';
 
-export const EC_HEADER_HEIGHT = 48;
-export const EC_ROW_HEIGHT = 20;
-export const EC_PADDING = 12;
+export { EC_HEADER_HEIGHT, EC_ROW_HEIGHT, EC_PADDING };
 
 export function computeEnvConfigHeight(data: Record<string, unknown>): number {
   const rows = (data?.variables as unknown[] | undefined) || [];
   const rowCount = Math.max(rows.length, 1);
-  return EC_HEADER_HEIGHT + EC_PADDING + rowCount * EC_ROW_HEIGHT + EC_PADDING;
+  return EC_HEADER_HEIGHT + EC_PADDING + rowCount * EC_ROW_HEIGHT + EC_PADDING + CARD_FOOTER_HEIGHT;
 }
 
 interface EnvVar {
@@ -45,12 +44,14 @@ export const SvgEnvConfigNode: React.FC<SvgCompactNodeProps> = ({
   isDragOver = false,
   onNodeHover,
   connectionDragState = null,
+  lod,
+  pipelineStatus,
 }) => {
   const variables: EnvVar[] = ((node.data?.variables as unknown[] | undefined) || [])
     .map(parseVariable)
     .filter((v) => v.key);
 
-  const subtitle =
+  const liveConfig =
     variables.length > 0
       ? `${variables.length} ${variables.length === 1 ? 'variable' : 'variables'}`
       : 'No variables yet';
@@ -62,9 +63,11 @@ export const SvgEnvConfigNode: React.FC<SvgCompactNodeProps> = ({
       isDragOver={isDragOver}
       onNodeHover={onNodeHover}
       connectionDragState={connectionDragState}
+      lod={lod}
+      pipelineStatus={pipelineStatus}
       icon={Cog}
       title={node.label || 'Env Config'}
-      subtitle={subtitle}
+      liveConfig={liveConfig}
       headerHeight={EC_HEADER_HEIGHT}
     >
       {variables.length === 0 ? (

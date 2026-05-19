@@ -54,7 +54,12 @@ router.post('/github', async (req: Request, res: Response) => {
     if (err.code === 'P2002') {
       return res.status(200).json({ message: 'Already processed' });
     }
-    throw err;
+    // Express 4 has no default async-error handler. Re-throwing here
+    // would leave the request hanging until the client times out (see
+    // findings.md #8). Convert to a 500 response in the same shape as
+    // the lower catch arm.
+    console.error(`Webhook idempotency-write error (${event}):`, err);
+    return res.status(500).json({ error: err.message ?? 'Idempotency check failed' });
   }
 
   // ── Route by event type ──

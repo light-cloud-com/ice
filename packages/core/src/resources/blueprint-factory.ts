@@ -8,7 +8,7 @@
  * (iceType, category, nodeDataDefaults).
  */
 
-import { getAllHighLevelResources } from './high-level-resources.js';
+import { getAllHighLevelResources } from './high-level-resources';
 
 // =============================================================================
 // Types

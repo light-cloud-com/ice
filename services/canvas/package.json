@@ -1,5 +1,6 @@
 {
   "name": "@ice/service-canvas",
+  "license": "Apache-2.0",
   "version": "0.1.0",
   "description": "Canvas service - canvas CRUD, environments, project-members",
   "private": true,
@@ -14,6 +15,7 @@
   },
   "dependencies": {
     "@ice/db": "workspace:*",
+    "@ice/service-deploy": "workspace:*",
     "@ice/service-iam": "workspace:*",
     "@ice/shared": "workspace:*",
     "@ice/types": "workspace:*",

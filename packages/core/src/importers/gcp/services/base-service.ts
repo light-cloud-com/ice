@@ -4,13 +4,7 @@
  * Abstract base class for GCP service importers.
  */
 
-import type {
-  GCPResource,
-  ServiceDiscoveryResult,
-  GCPServiceType,
-  GCPImportError,
-  GCPImportWarning,
-} from '../types.js';
+import type { GCPResource, ServiceDiscoveryResult, GCPServiceType, GCPImportError, GCPImportWarning } from '../types';
 
 /**
  * Abstract base class for GCP service resource discovery.

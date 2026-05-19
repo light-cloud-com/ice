@@ -86,6 +86,61 @@ export interface DeployWarning {
 }
 
 /**
+ * Terminal status for a node in the parallel scheduler.
+ *
+ * `cancelled-due-to-dep` covers two cases:
+ *   1. A dependency failed (and `continue_on_error` was false, OR the
+ *      cancelled node is a transitive descendant of the failure).
+ *   2. The deploy was aborted via `abort_signal` before this node was
+ *      dispatched.
+ */
+export type NodeTerminalStatus = 'succeeded' | 'failed' | 'skipped' | 'cancelled-due-to-dep';
+
+/**
+ * Lifecycle event for a single node in the parallel scheduler.
+ * Fired exactly once per `(node_id, status)` pair.
+ */
+export interface NodeStatusEvent {
+  /**
+   * Graph node id (`${type}:${name}`) — the engine-internal id built by
+   * `MutableGraph.add_node`. The scheduler emits `change.id` directly,
+   * which is the graph id, NOT the canvas node id. The service layer
+   * (pdl-4 `deploy.service.ts`) translates this to the canvas node id
+   * via `translation.deployables[]` before emitting on the wire — see
+   * the learning anchor `scheduler-resource-name-vs-graph-node-id-vs-canvas-node-id`
+   * for why these three identifier spaces don't share an id.
+   */
+  node_id: string;
+  /** Generated resource name (e.g. ice-foo-…). May not equal node_id. */
+  resource_name: string;
+  /** ICE resource type (e.g. gcp.run.service). */
+  resource_type: string;
+  action: 'create' | 'update' | 'delete';
+  status: 'queued' | 'applying' | NodeTerminalStatus;
+  /** Set on terminal status when status === 'failed'. */
+  error?: { code: string; message: string; recoverable?: boolean };
+  /** ISO timestamp. */
+  at: string;
+  /** Set on terminal status. Wall-clock duration since 'applying'. */
+  duration_ms?: number;
+}
+
+/**
+ * Sub-step milestone fired by handlers during long-running operations.
+ * Carried through from the existing `GCPHandlerContext.on_step` channel.
+ *
+ * `node_id` is the graph node id (`${type}:${name}`) — same caveat as
+ * {@link NodeStatusEvent}; the service layer translates it to the canvas
+ * node id before emitting on the wire.
+ */
+export interface NodeProgressEvent {
+  node_id: string;
+  resource_name: string;
+  step: { label: string; index: number; total: number };
+  at: string;
+}
+
+/**
  * Options for deployment.
  */
 export interface DeployOptions {
@@ -103,20 +158,88 @@ export interface DeployOptions {
   target?: string[];
   /** Exclude resources by name/type pattern */
   exclude?: string[];
-  /** Maximum parallel operations */
+  /**
+   * Maximum parallel operations.
+   * @deprecated Use `pool_size` instead. When `pool_size` is omitted, the
+   *   scheduler falls back to `parallelism` for one revision. Will be
+   *   removed in a future cleanup.
+   */
   parallelism?: number;
+  /**
+   * Bounded worker pool size for the parallel scheduler. Default 6.
+   * Replaces (deprecates) `parallelism`. The scheduler dispatches up to
+   * `pool_size` nodes concurrently across one phase (creates, updates,
+   * or deletes) of the deploy plan.
+   */
+  pool_size?: number;
+  /**
+   * Per-handler-prefix concurrency cap. Map keys are resource_type
+   * prefixes (e.g. `gcp.sql.`, `gcp.redis.`) — longest match wins —
+   * values are the maximum number of in-flight nodes for that prefix.
+   * Defaults: `gcp.sql.* = 1`, `gcp.redis.* = 1` (Cloud SQL has a
+   * 1-create-per-project-per-minute soft quota and Memorystore Redis
+   * IP-range allocation fails when two creates race). Other prefixes
+   * default to `pool_size`.
+   */
+  per_handler_caps?: Record<string, number>;
   /** Continue on errors */
   continue_on_error?: boolean;
   /** Dry run - show what would be deployed */
   dry_run?: boolean;
   /** Auto-approve without confirmation */
   auto_approve?: boolean;
-  /** Progress callback */
-  on_progress?: (resource: string, action: string, status: string) => void;
+  /** Progress callback. `extra.step` carries sub-step info when available,
+   *  `extra.outputs` / `extra.error` are populated on completed/failed so the
+   *  host can surface per-resource URLs or error text live instead of waiting
+   *  for the post-deploy batch of resource_result events. */
+  on_progress?: (
+    resource: string,
+    action: string,
+    status: string,
+    extra?: {
+      step?: { label: string; index: number; total: number };
+      outputs?: Record<string, unknown>;
+      error?: string;
+      provider_id?: string;
+    },
+  ) => void;
+  /**
+   * Per-node lifecycle hook. Fired exactly once per node on each
+   * lifecycle transition: queued → applying → (succeeded | failed |
+   * skipped | cancelled-due-to-dep).
+   */
+  on_node_status?: (event: NodeStatusEvent) => void;
+  /**
+   * Per-node milestone hook. Fired 0..N times per node by handlers
+   * reporting sub-step progress (e.g. Cloud Build phases, SQL operation
+   * polls). Bridged through the existing `GCPHandlerContext.on_step`
+   * channel — handler signatures are unchanged.
+   */
+  on_node_progress?: (event: NodeProgressEvent) => void;
+  /**
+   * Fired exactly once per node, after `on_node_status` reaches a
+   * terminal state, with the full `ResourceDeployResult`. The current
+   * service-layer callsite (`deploy.service.ts:825`) passes this in but
+   * the previous engine dropped it — now formalized.
+   */
+  on_resource_result?: (result: ResourceDeployResult) => void;
   /** Log callback for informational messages during deployment */
   on_log?: (message: string) => void;
   /** Pre-authenticated client (passed from host environment, e.g. Electron main process) */
   auth_client?: unknown;
+  /** Phase 0 regression fix — absolute path to the temp SA key file the
+   *  service already wrote with 0600 perms. When present, SDK clients are
+   *  initialized with `{ keyFilename }` instead of falling back to ADC. */
+  auth_key_file?: string;
+  /** Alternative to auth_key_file: raw parsed SA key object. */
+  auth_credentials?: Record<string, unknown>;
+  /**
+   * Abort signal from the per-card deploy lock. When fired, long-running
+   * GCP operations (Cloud Build polls, operation waits, etc.) should stop
+   * polling and — where the cloud API allows — actively cancel the
+   * remote work so the user isn't billed for a deploy they cancelled.
+   */
+  abort_signal?: AbortSignal;
 }
 
 /**

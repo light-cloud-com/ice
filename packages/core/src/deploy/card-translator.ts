@@ -5,8 +5,23 @@
  * with GCP-typed nodes that the deploy pipeline understands.
  */
 
-import { create_mutable_graph } from '../graph/mutable-graph.js';
-import type { Graph, EdgeRelationship } from '../types/graph.js';
+import {
+  UI_ONLY_TYPES,
+  SERVICE_BACKEND_ICE_TYPES_FOR_INGRESS,
+  EXTERNAL_TYPES,
+  hasPrivateNetworkAncestor,
+  isCustomDomainStandalone,
+  map_edge_relationship,
+} from './edge-classifier';
+import { create_mutable_graph } from '../graph/mutable-graph';
+import { PROPERTY_EXTRACTORS } from './extractors/dispatch';
+import { wire_source_repositories } from './passes/pass-1-4-repo-wiring';
+import { propagate_custom_domain_hosts } from './passes/pass-1-45-domain-propagation';
+import { wire_public_endpoints } from './passes/pass-1-5-endpoint-wiring';
+import { DESIGN_ONLY_PROVIDERS, get_type_map } from './type-maps';
+import { sanitize_name, sanitize_label_value } from './utils/name-utils';
+import { generate_stable_name } from './utils/stable-name';
+import type { Graph } from '../types/graph';
 
 // =============================================================================
 // Types
@@ -30,12 +45,28 @@ export interface CardTranslationInput {
   gcpProject?: string;
   /** Default region */
   region?: string;
+  /**
+   * Phase 1 — optional map of `canvas node id → existing resource name`.
+   *
+   * When provided, nodes with an existing name reuse it verbatim instead of
+   * generating a new one. This is what survives label renames and canvas
+   * moves: the deploy service loads the mapping from `DeployedResourceMapping`
+   * and hands it in here, so the translator produces the same graph shape
+   * across runs.
+   *
+   * Novel nodes (not in the map) get a deterministic hash-based name that
+   * is independent of the user-facing label.
+   */
+  existing_names?: Map<string, string>;
+  /** Phase 1 — source card id, used for standard GCP resource labels. */
+  cardId?: string;
 }
 
 export interface CardNodeInput {
   id: string;
   type: 'block' | 'resource' | 'group';
   data: Record<string, unknown>;
+  parentId?: string | null;
 }
 
 export interface CardEdgeInput {
@@ -43,6 +74,19 @@ export interface CardEdgeInput {
   source: string;
   target: string;
   data?: { relationship?: string; protocol?: string; port?: number; [key: string]: unknown };
+}
+
+export interface DeployableNodeInfo {
+  /** Source canvas node id */
+  node_id: string;
+  /** Source canvas label (what the user sees) */
+  label: string;
+  /** iceType from the canvas node */
+  ice_type: string;
+  /** Concrete provider resource type (e.g. gcp.storage.bucket) */
+  resource_type: string;
+  /** Generated, sanitized resource name (matches what the deployer creates) */
+  resource_name: string;
 }
 
 export interface CardTranslationResult {
@@ -54,6 +98,9 @@ export interface CardTranslationResult {
   warnings: string[];
   /** Number of deployable nodes */
   deployable_count: number;
+  /** One entry per deployable node — used by the service to build a plan and to
+   *  reliably map deploy results back to canvas nodes. */
+  deployables: DeployableNodeInfo[];
 }
 
 export interface SkippedNode {
@@ -61,358 +108,6 @@ export interface SkippedNode {
   label: string;
   reason: string;
 }
-
-// =============================================================================
-// GCP iceType → deployer type mapping
-// =============================================================================
-
-const GCP_TYPE_MAP: Record<string, string> = {
-  'Compute.StaticSite': 'gcp.storage.bucket',
-  'Compute.SSRSite': 'gcp.run.service',
-  'Compute.Container': 'gcp.run.service',
-  'Compute.BackendAPI': 'gcp.run.service',
-  'Compute.Worker': 'gcp.run.job',
-  'Compute.CronJob': 'gcp.cloudscheduler.job',
-  'Compute.ServerlessFunction': 'gcp.cloudfunctions.function',
-  'Database.PostgreSQL': 'gcp.sql.databaseInstance',
-  'Database.MySQL': 'gcp.sql.databaseInstance',
-  'Database.Firestore': 'gcp.firestore.database',
-  'Database.Redis': 'gcp.redis.instance',
-  'Storage.Bucket': 'gcp.storage.bucket',
-  'Storage.ObjectStorage': 'gcp.storage.bucket',
-  'Network.Gateway': 'gcp.apigateway.api',
-  'Network.Internet': 'gcp.compute.globalForwardingRule',
-  'Network.LoadBalancer': 'gcp.compute.globalForwardingRule',
-  'Messaging.CloudPubSub': 'gcp.pubsub.topic',
-  'Messaging.Queue': 'gcp.pubsub.topic',
-  'Messaging.Topic': 'gcp.pubsub.topic',
-  'Messaging.RabbitMQ': 'gcp.container.cluster',
-  'Security.Identity': 'gcp.identityplatform.config',
-  'Security.Secret': 'gcp.secretmanager.secret',
-  'Monitoring.Log': 'gcp.logging.sink',
-  'AI.VectorDB': 'gcp.aiplatform.index',
-  'AI.LLMGateway': 'gcp.aiplatform.endpoint',
-  'AI.ModelServing': 'gcp.aiplatform.endpoint',
-  'Analytics.DataWarehouse': 'gcp.bigquery.dataset',
-  'Analytics.Search': 'gcp.discoveryengine.searchEngine',
-  'Network.Domain': 'gcp.run.domainMapping',
-};
-
-// =============================================================================
-// AWS iceType → deployer type mapping
-// =============================================================================
-
-const AWS_TYPE_MAP: Record<string, string> = {
-  'Compute.StaticSite': 'aws.s3.bucket',
-  'Compute.SSRSite': 'aws.ecs.service',
-  'Compute.Container': 'aws.ecs.service',
-  'Compute.BackendAPI': 'aws.ecs.service',
-  'Compute.Worker': 'aws.ecs.service',
-  'Compute.CronJob': 'aws.events.rule',
-  'Compute.ServerlessFunction': 'aws.lambda.function',
-  'Database.PostgreSQL': 'aws.rds.dbInstance',
-  'Database.MySQL': 'aws.rds.dbInstance',
-  'Database.DynamoDB': 'aws.dynamodb.table',
-  'Database.Redis': 'aws.elasticache.cluster',
-  'Database.MongoDB': 'aws.docdb.cluster',
-  'Storage.Bucket': 'aws.s3.bucket',
-  'Storage.ObjectStorage': 'aws.s3.bucket',
-  'Network.Gateway': 'aws.apigateway.restApi',
-  'Network.Internet': 'aws.cloudfront.distribution',
-  'Network.LoadBalancer': 'aws.elbv2.loadBalancer',
-  'Messaging.Queue': 'aws.sqs.queue',
-  'Messaging.Topic': 'aws.sns.topic',
-  'Messaging.CloudPubSub': 'aws.sns.topic',
-  'Security.Identity': 'aws.cognito.userPool',
-  'Security.Secret': 'aws.secretsmanager.secret',
-  'Monitoring.Log': 'aws.cloudwatch.logGroup',
-  'AI.VectorDB': 'aws.opensearch.domain',
-  'AI.LLMGateway': 'aws.bedrock.endpoint',
-  'AI.ModelServing': 'aws.sagemaker.endpoint',
-  'Analytics.DataWarehouse': 'aws.redshift.cluster',
-};
-
-// =============================================================================
-// Azure iceType → deployer type mapping
-// =============================================================================
-
-const AZURE_TYPE_MAP: Record<string, string> = {
-  'Compute.StaticSite': 'azure.storage.staticSite',
-  'Compute.SSRSite': 'azure.appservice.webApp',
-  'Compute.Container': 'azure.containerapp.containerApp',
-  'Compute.BackendAPI': 'azure.appservice.webApp',
-  'Compute.Worker': 'azure.containerapp.containerApp',
-  'Compute.CronJob': 'azure.logicapp.workflow',
-  'Compute.ServerlessFunction': 'azure.functions.functionApp',
-  'Database.PostgreSQL': 'azure.dbforpostgresql.server',
-  'Database.MySQL': 'azure.dbformysql.server',
-  'Database.CosmosDB': 'azure.cosmosdb.account',
-  'Database.Redis': 'azure.cache.redis',
-  'Database.MongoDB': 'azure.cosmosdb.account',
-  'Storage.Bucket': 'azure.storage.storageAccount',
-  'Storage.ObjectStorage': 'azure.storage.storageAccount',
-  'Network.Gateway': 'azure.apimanagement.service',
-  'Network.Internet': 'azure.cdn.profile',
-  'Network.LoadBalancer': 'azure.network.loadBalancer',
-  'Messaging.Queue': 'azure.servicebus.queue',
-  'Messaging.Topic': 'azure.servicebus.topic',
-  'Security.Identity': 'azure.activedirectory.application',
-  'Security.Secret': 'azure.keyvault.vault',
-  'Monitoring.Log': 'azure.monitor.logAnalyticsWorkspace',
-  'AI.VectorDB': 'azure.search.searchService',
-  'AI.LLMGateway': 'azure.openai.deployment',
-  'AI.ModelServing': 'azure.machinelearning.endpoint',
-  'Analytics.DataWarehouse': 'azure.synapse.workspace',
-};
-
-// iceTypes that are UI-only and should not be deployed
-const UI_ONLY_TYPES = new Set(['Monitoring.Terminal']);
-
-// iceTypes that are external services (not GCP-managed)
-const EXTERNAL_TYPES = new Set(['Database.MongoDB']);
-
-// Providers that have no deployer support — blocks are design-only
-const DESIGN_ONLY_PROVIDERS = new Set(['alibaba', 'digitalocean', 'kubernetes']);
-
-// =============================================================================
-// Property extractors per GCP service type
-// =============================================================================
-
-function extract_cloud_run_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
-  return {
-    region,
-    image: (data.image as string) || '',
-    repository: (data.repository as string) || '',
-    branch: (data.branch as string) || 'main',
-    port: data.port || 8080,
-    min_instances: data.minInstances ?? 0,
-    max_instances: data.maxInstances ?? 3,
-    cpu: data.cpu || '1',
-    memory: data.memory || '512Mi',
-    allow_unauthenticated: data.allowUnauthenticated ?? true,
-    env_vars: data.envVars || {},
-    labels: {},
-  };
-}
-
-function extract_cloud_run_job_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
-  return {
-    region,
-    image: (data.image as string) || '',
-    repository: (data.repository as string) || '',
-    branch: (data.branch as string) || 'main',
-    cpu: data.cpu || '1',
-    memory: data.memory || '512Mi',
-    max_retries: data.maxRetries ?? 3,
-    timeout: data.timeout || '600s',
-    env_vars: data.envVars || {},
-    labels: {},
-  };
-}
-
-function extract_cloud_sql_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
-  const ice_type = data.iceType as string;
-  const is_postgres = ice_type === 'Database.PostgreSQL';
-  const runtime = (data.runtime as string) || (is_postgres ? 'PostgreSQL 16' : 'MySQL 8.0');
-  const version_match = runtime.match(/(\d+(\.\d+)?)/);
-  const version_num = version_match?.[1] ?? (is_postgres ? '16' : '8.0');
-
-  return {
-    region,
-    tier: data.size || 'db-f1-micro',
-    database_version: is_postgres ? `POSTGRES_${version_num}` : `MYSQL_${version_num.replace('.', '_')}`,
-    storage_size_gb: parse_storage_gb(data.storage as string) || 20,
-    backup_enabled: true,
-    port: data.port || (is_postgres ? 5432 : 3306),
-    labels: {},
-  };
-}
-
-function extract_cloud_functions_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
-  return {
-    region,
-    runtime: normalize_runtime(data.runtime as string) || 'nodejs20',
-    memory_mb: data.memory || 256,
-    timeout_seconds: data.timeout || 30,
-    entry_point: data.entryPoint || 'handler',
-    trigger_type: data.triggerType || 'http',
-    env_vars: data.envVars || {},
-    labels: {},
-  };
-}
-
-function extract_cloud_scheduler_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
-  const schedule_map: Record<string, string> = {
-    daily: '0 0 * * *',
-    hourly: '0 * * * *',
-    weekly: '0 0 * * 0',
-    monthly: '0 0 1 * *',
-  };
-  const schedule = (data.schedule as string) || 'daily';
-
-  return {
-    region,
-    schedule: schedule_map[schedule] || schedule,
-    timezone: data.timezone || 'UTC',
-    target_type: data.targetType || 'http',
-    target_uri: data.targetUri || '',
-    labels: {},
-  };
-}
-
-function extract_storage_bucket_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
-  return {
-    location: region.toUpperCase().split('-').slice(0, 1).join('') || 'US',
-    storage_class: data.storageClass || 'STANDARD',
-    versioning: data.versioning ?? false,
-    labels: {},
-  };
-}
-
-function extract_pubsub_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
-  return {
-    message_retention_duration: data.retentionDuration || '604800s',
-    labels: {},
-  };
-}
-
-function extract_firestore_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
-  return {
-    location_id: region,
-    type: data.databaseType || 'FIRESTORE_NATIVE',
-    labels: {},
-  };
-}
-
-function extract_memorystore_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
-  return {
-    region,
-    tier: data.tier || 'BASIC',
-    memory_size_gb: data.memorySizeGb || 1,
-    redis_version: data.redisVersion || 'REDIS_7_0',
-    port: data.port || 6379,
-    labels: {},
-  };
-}
-
-function extract_secret_manager_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
-  return {
-    replication_type: data.replicationType || 'automatic',
-    labels: {},
-  };
-}
-
-function extract_identity_platform_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
-  return {
-    sign_in_providers: data.signInProviders || ['email', 'google'],
-    mfa_enabled: data.mfaEnabled ?? false,
-  };
-}
-
-function extract_bigquery_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
-  return {
-    location: region,
-    default_table_expiration_ms: data.tableExpirationMs,
-    labels: {},
-  };
-}
-
-function extract_api_gateway_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
-  return {
-    region,
-    labels: {},
-  };
-}
-
-function extract_load_balancer_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
-  return {
-    scheme: 'EXTERNAL',
-    port_range: data.port || '443',
-    protocol: data.protocol || 'HTTPS',
-    labels: {},
-  };
-}
-
-function extract_logging_properties(data: Record<string, unknown>, _region: string): Record<string, unknown> {
-  return {
-    filter: data.filter || '',
-    destination_type: data.destinationType || 'logging.googleapis.com',
-    labels: {},
-  };
-}
-
-function extract_vertex_ai_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
-  return {
-    region,
-    display_name: data.label || 'vertex-endpoint',
-    labels: {},
-  };
-}
-
-function extract_dataflow_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
-  return {
-    region,
-    template_type: data.templateType || 'streaming',
-    labels: {},
-  };
-}
-
-function extract_discovery_engine_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
-  return {
-    location: region,
-    solution_type: 'SOLUTION_TYPE_SEARCH',
-    labels: {},
-  };
-}
-
-function extract_gke_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
-  return {
-    location: region,
-    initial_node_count: data.nodeCount || 3,
-    machine_type: data.machineType || 'e2-standard-2',
-    labels: {},
-  };
-}
-
-function extract_domain_mapping_properties(data: Record<string, unknown>, region: string): Record<string, unknown> {
-  return {
-    domain: [data.subdomain, data.hostname].filter(Boolean).join('.') || (data.hostname as string) || '',
-    hostname: (data.hostname as string) || '',
-    subdomain: (data.subdomain as string) || '',
-    ssl_mode: (data.sslMode as string) || 'auto',
-    region,
-    labels: {},
-  };
-}
-
-// =============================================================================
-// Property extraction dispatcher
-// =============================================================================
-
-const PROPERTY_EXTRACTORS: Record<string, (data: Record<string, unknown>, region: string) => Record<string, unknown>> =
-  {
-    'gcp.run.service': extract_cloud_run_properties,
-    'gcp.run.job': extract_cloud_run_job_properties,
-    'gcp.sql.databaseInstance': extract_cloud_sql_properties,
-    'gcp.cloudfunctions.function': extract_cloud_functions_properties,
-    'gcp.cloudscheduler.job': extract_cloud_scheduler_properties,
-    'gcp.storage.bucket': extract_storage_bucket_properties,
-    'gcp.pubsub.topic': extract_pubsub_properties,
-    'gcp.firestore.database': extract_firestore_properties,
-    'gcp.redis.instance': extract_memorystore_properties,
-    'gcp.secretmanager.secret': extract_secret_manager_properties,
-    'gcp.identityplatform.config': extract_identity_platform_properties,
-    'gcp.bigquery.dataset': extract_bigquery_properties,
-    'gcp.apigateway.api': extract_api_gateway_properties,
-    'gcp.compute.globalForwardingRule': extract_load_balancer_properties,
-    'gcp.logging.sink': extract_logging_properties,
-    'gcp.aiplatform.endpoint': extract_vertex_ai_properties,
-    'gcp.aiplatform.index': extract_vertex_ai_properties,
-    'gcp.dataflow.job': extract_dataflow_properties,
-    'gcp.discoveryengine.searchEngine': extract_discovery_engine_properties,
-    'gcp.container.cluster': extract_gke_properties,
-    'gcp.run.domainMapping': extract_domain_mapping_properties,
-  };
 
 // =============================================================================
 // Main translation function
@@ -426,7 +121,7 @@ const PROPERTY_EXTRACTORS: Record<string, (data: Record<string, unknown>, region
  * for dependency ordering.
  */
 export function translate_card_to_graph(input: CardTranslationInput): CardTranslationResult {
-  const { nodes, edges, provider, projectName, region = 'us-central1' } = input;
+  const { nodes, edges, provider, projectName, region = 'us-central1', existing_names, cardId } = input;
 
   const warnings: string[] = [];
   const skipped: SkippedNode[] = [];
@@ -451,6 +146,7 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
 
   // Track card node ID → graph node name mapping for edge translation
   const card_id_to_name = new Map<string, string>();
+  const deployables: DeployableNodeInfo[] = [];
   let deployable_count = 0;
 
   // Pass 1: Add deployable nodes
@@ -475,12 +171,36 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
       continue;
     }
 
+    // Skip groups — purely visual canvas grouping, never a real resource.
+    // The group's `subtype` produces iceTypes like Group.Frontend / Group.
+    // Monitoring; both are diagram-only and have no provider mapping.
+    if (ice_type.startsWith('Group.')) {
+      skipped.push({
+        nodeId: node.id,
+        label: (node.data.label as string) || node.id,
+        reason: `Visual group: ${ice_type}`,
+      });
+      continue;
+    }
+
     // Skip UI-only types
     if (UI_ONLY_TYPES.has(ice_type)) {
       skipped.push({
         nodeId: node.id,
         label: (node.data.label as string) || node.id,
         reason: `UI-only type: ${ice_type}`,
+      });
+      continue;
+    }
+
+    // Standalone Network.CustomDomain is UI-only (metadata for Pass 1.6
+    // propagation). Nested inside a PrivateNetwork it becomes deployable
+    // — see isCustomDomainStandalone + the dynamic type lookup below.
+    if (isCustomDomainStandalone(node, nodes)) {
+      skipped.push({
+        nodeId: node.id,
+        label: (node.data.label as string) || node.id,
+        reason: 'Standalone Network.CustomDomain is metadata-only (handled by Pass 1.6)',
       });
       continue;
     }
@@ -495,8 +215,11 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
       continue;
     }
 
-    // Look up the deployer type
-    const gcp_type = type_map[ice_type];
+    // Look up the deployer type. Nested Network.CustomDomain inside a
+    // PrivateNetwork compiles to the global forwarding rule (same as
+    // Network.PublicEndpoint) — the nested case isn't in the type map
+    // because standalone CDs are UI-only, so we resolve it inline here.
+    const gcp_type = ice_type === 'Network.CustomDomain' ? 'gcp.compute.globalForwardingRule' : type_map[ice_type];
     if (!gcp_type) {
       warnings.push(`No ${provider} mapping for iceType "${ice_type}" (node: ${node.data.label || node.id}). Skipped.`);
       skipped.push({
@@ -507,50 +230,145 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
       continue;
     }
 
-    // Extract deployment properties
+    // Extract deployment properties. A missing extractor used to silently
+    // fall back to `{ region, labels: {} }`, which meant all block-level
+    // config (cpu/memory/minInstances/env/image…) was dropped and the
+    // deploy reported success on a misconfigured resource. Fail loudly
+    // instead: if a type is in the map it MUST have an extractor.
     const extractor = PROPERTY_EXTRACTORS[gcp_type];
-    const properties = extractor ? extractor(node.data, region) : { region, labels: {} };
+    if (!extractor) {
+      const msg =
+        `No property extractor registered for ${gcp_type} (iceType "${ice_type}", node: ${node.data.label || node.id}). ` +
+        `All block-level config would be dropped — refusing to deploy. ` +
+        `Register an extractor in PROPERTY_EXTRACTORS before adding a type to the deployer map.`;
+      console.error('[card-translator]', msg);
+      warnings.push(msg);
+      skipped.push({
+        nodeId: node.id,
+        label: (node.data.label as string) || node.id,
+        reason: `Missing property extractor for ${gcp_type}`,
+      });
+      continue;
+    }
+    const properties = extractor(node.data, region, node.id);
 
-    // Generate a unique, sanitized name
+    // Private Network ingress override.
+    //
+    // When a service backend (Scalable Backend / SSR Site / Worker /
+    // Serverless Function) is nested inside a Network.PrivateNetwork,
+    // emit the internal-only variant of the underlying compute resource.
+    // A nested Custom Domain (if present) remains the sole external
+    // entry point via its own LB chain; see isCustomDomainStandalone +
+    // the backend-wiring at ~line 1100.
+    if (SERVICE_BACKEND_ICE_TYPES_FOR_INGRESS.has(ice_type) && hasPrivateNetworkAncestor(node, nodes)) {
+      const props = properties as Record<string, unknown>;
+      if (gcp_type === 'gcp.run.service') {
+        // Internal Cloud Run — only reachable via VPC or internal LB.
+        props.allow_unauthenticated = false;
+        props.ingress = 'internal-and-cloud-load-balancing';
+      } else if (gcp_type === 'aws.ecs.service') {
+        props.assign_public_ip = false;
+        props.internal = true;
+      } else if (gcp_type === 'azure.containerapp.containerApp') {
+        props.ingress_external = false;
+      }
+    }
+
+    // Phase 1 — stable resource identity.
+    //
+    // Priority order:
+    //   1. An existing name from the DeployedResourceMapping table (survives
+    //      label renames + canvas moves).
+    //   2. A fresh deterministic hash-based name for novel nodes.
+    //
+    // The old `sanitize_name(`${label}-${node.id.slice(-6)}`)` scheme was
+    // replaced entirely: it leaked the user-facing label into the resource
+    // name, so renaming a block produced a new name and triggered a
+    // destroy-recreate cycle.
     const label = (node.data.label as string) || ice_type.split('.').pop() || 'resource';
-    const name = sanitize_name(`${label}-${node.id.slice(-6)}`);
+    const existing = existing_names?.get(node.id);
+    const name = existing ?? generate_stable_name(gcp_type, node.id, projectName, input.environment || 'dev');
+
+    // Standard labels for every resource so deployed state is discoverable
+    // in the GCP console via `gcloud ... --filter="labels.ice-managed=true"`.
+    const baseLabels: Record<string, string> = {
+      'ice-managed': 'true',
+      'ice-source-id': sanitize_label_value(node.id),
+      'ice-type': sanitize_label_value(ice_type),
+      'ice-project': sanitize_label_value(projectName),
+    };
+    if (input.environment) baseLabels['ice-environment'] = sanitize_label_value(input.environment);
+    if (cardId) baseLabels['ice-card-id'] = sanitize_label_value(cardId);
+
+    // Merge with any user-provided labels from the property extractor.
+    const existingPropLabels =
+      properties && typeof properties === 'object' && 'labels' in (properties as any)
+        ? ((properties as any).labels as Record<string, unknown>) || {}
+        : {};
+    (properties as any).labels = { ...baseLabels, ...existingPropLabels };
 
     // Add node to graph
     const result = graph.add_node({
       type: gcp_type,
       name,
       properties,
-      labels: {
-        'ice-source-id': node.id,
-        'ice-type': ice_type,
-        'ice-project': projectName,
-      },
+      labels: baseLabels,
     });
 
     if (result.success) {
       card_id_to_name.set(node.id, name);
+      deployables.push({
+        node_id: node.id,
+        label,
+        ice_type,
+        resource_type: gcp_type,
+        resource_name: name,
+      });
       deployable_count++;
     } else {
-      // Name collision — try with full ID suffix
-      const alt_name = sanitize_name(`${label}-${node.id.slice(-12)}`);
+      // Name collision (only possible for pre-existing names or hash
+      // collisions — realistically never for new deploys). Append a short
+      // secondary salt and retry.
+      const alt_name = sanitize_name(`${name}-alt`);
       const alt_result = graph.add_node({
         type: gcp_type,
         name: alt_name,
         properties,
-        labels: {
-          'ice-source-id': node.id,
-          'ice-type': ice_type,
-          'ice-project': projectName,
-        },
+        labels: baseLabels,
       });
       if (alt_result.success) {
         card_id_to_name.set(node.id, alt_name);
+        deployables.push({
+          node_id: node.id,
+          label,
+          ice_type,
+          resource_type: gcp_type,
+          resource_name: alt_name,
+        });
         deployable_count++;
       } else {
         warnings.push(`Failed to add node "${label}": ${alt_result.errors?.join(', ')}`);
       }
     }
   }
+
+  // ─── Pass 1.4 — Source.Repository → compute block wiring ───────────────
+  wire_source_repositories(edges, nodes, card_id_to_name, graph);
+
+  // ─── Pass 1.45 — Network.CustomDomain → target host propagation ────────
+  propagate_custom_domain_hosts(edges, nodes, card_id_to_name, graph);
+
+  // ─── Pass 1.5 — PublicEndpoint semantic wiring ─────────────────────────
+  const { deployable_count_delta } = wire_public_endpoints({
+    edges,
+    nodes,
+    card_id_to_name,
+    graph,
+    deployables,
+    warnings,
+    projectName,
+  });
+  deployable_count += deployable_count_delta;
 
   // Pass 2: Add edges between deployed nodes
   for (const edge of edges) {
@@ -574,91 +392,6 @@ export function translate_card_to_graph(input: CardTranslationInput): CardTransl
     skipped,
     warnings,
     deployable_count,
+    deployables,
   };
-}
-
-// =============================================================================
-// Helpers
-// =============================================================================
-
-function get_type_map(provider: DeployProvider): Record<string, string> {
-  switch (provider) {
-    case 'gcp':
-      return GCP_TYPE_MAP;
-    case 'aws':
-      return AWS_TYPE_MAP;
-    case 'azure':
-      return AZURE_TYPE_MAP;
-    default:
-      return {};
-  }
-}
-
-function map_edge_relationship(relationship?: string): EdgeRelationship {
-  switch (relationship) {
-    case 'depends_on':
-      return 'depends_on';
-    case 'contains':
-      return 'contains';
-    case 'references':
-      return 'references';
-    case 'connects_to':
-      return 'connects_to';
-    case 'talks_to':
-      return 'talks_to';
-    default:
-      return 'connects_to';
-  }
-}
-
-/**
- * Sanitize a name to be a valid GCP resource name.
- * GCP names: lowercase letters, digits, hyphens. Max 63 chars.
- */
-function sanitize_name(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9-]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 63);
-}
-
-/**
- * Parse a storage size string like "50 GB" to a number of GB.
- */
-function parse_storage_gb(storage?: string): number | undefined {
-  if (!storage) return undefined;
-  const match = storage.match(/(\d+)\s*(GB|TB|MB)/i);
-  if (!match || !match[1] || !match[2]) return undefined;
-  const value = parseInt(match[1], 10);
-  const unit = match[2].toUpperCase();
-  if (unit === 'TB') return value * 1024;
-  if (unit === 'MB') return Math.max(1, Math.round(value / 1024));
-  return value;
-}
-
-/**
- * Normalize a runtime string like "Node.js 20" → "nodejs20".
- */
-function normalize_runtime(runtime?: string): string | undefined {
-  if (!runtime) return undefined;
-  const lower = runtime.toLowerCase();
-  if (lower.includes('node')) {
-    const ver = lower.match(/(\d+)/)?.[1] ?? '20';
-    return `nodejs${ver}`;
-  }
-  if (lower.includes('python')) {
-    const ver = lower.match(/(\d+\.?\d*)/)?.[1] ?? '3.12';
-    return `python${ver.replace('.', '')}`;
-  }
-  if (lower.includes('go')) {
-    const ver = lower.match(/(\d+\.?\d*)/)?.[1] ?? '1.21';
-    return `go${ver.replace('.', '')}`;
-  }
-  if (lower.includes('java')) {
-    const ver = lower.match(/(\d+)/)?.[1] ?? '17';
-    return `java${ver}`;
-  }
-  return runtime.toLowerCase().replace(/[^a-z0-9]/g, '');
 }

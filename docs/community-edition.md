@@ -1,110 +1,44 @@
-# Community Edition — What's Different
+# Community Edition
 
-This is the open-source Community edition of ICE. Fully functional infrastructure design and deployment — no login, no billing, no OAuth.
+> [!IMPORTANT]
+> **Single-user, trusted-machine deployment.** No multi-tenant isolation, no RBAC enforcement, no audit log. Run on your laptop, your own VM, or your own VPC - not as a shared hosted service. Multi-user / RBAC live in the Cloud edition (see ["What ICE Cloud adds"](#what-ice-cloud-hosted-adds) below). Full threat model in [SECURITY.md](../SECURITY.md).
 
-## Key Differences from SaaS
+The software in this repository **is** ICE. The whole thing - canvas, engine, deploy providers, AI, templates, desktop app - is released under Apache 2.0 and is the same code-base that powers ICE Cloud (see below).
 
-### No authentication
+There is no separate "community" fork with features stripped out. "Community Edition" here just refers to the self-hosted deployment mode of the open-source code, as distinct from the managed hosted service.
 
-- No login, signup, or OAuth pages
-- A local user + organisation are auto-created on first startup
-- All API requests use the auto-seeded user (no JWT validation)
-- The app loads straight to the canvas
+## What you get self-hosting (this repo)
 
-### No billing
+Everything:
 
-- No billing service, no Stripe, no usage tracking, no pricing
+- Visual canvas, properties panel, graph engine.
+- 20+ GCP deploy handlers (Cloud Run, Cloud SQL, Cloud Storage, Pub/Sub, Firestore, BigQuery, Vertex AI, etc.) plus AWS/Azure deployers.
+- 45+ GCP importers.
+- Pipelines + GitHub webhooks + environment presets.
+- AI assistant (if you supply an `ANTHROPIC_API_KEY`).
+- All templates.
+- Electron desktop app with embedded backend + SQLite.
+- i18n (English, Mandarin).
 
-### No team management
+## What ICE Cloud (hosted) adds
 
-- Single user — no invite system, no member roles, no team page
-- Multiple organisations are supported (for organising projects)
-- "Create organisation" replaces "Create team" throughout the UI
+ICE Cloud is a separate, commercial hosted service operated by the project maintainers. It runs the same open-source code as this repository, plus operational layers that only make sense in a hosted context:
 
-### No user profile settings
+- Always-on gateway + managed Postgres.
+- Shared team state (multi-user, RBAC, audit logs - some of which live in a proprietary module).
+- Zero-config AI (no Anthropic key needed).
+- SSO / SAML for paid tiers.
+- Managed deploy plane with drift monitoring.
+- Compliance packaging (SOC 2 / HIPAA) for enterprise tiers.
 
-- No avatar dropdown in the app bar
-- No settings page (no password change, no profile editing)
-- No logout button
+Cloud is optional. If you want to self-host forever, that path is and will remain first-class.
 
-### Simplified onboarding
+## Current single-user assumption
 
-4-step flow (vs 5 in SaaS):
-1. **Welcome** — introduction
-2. **Connect Cloud** — provider selection + service account key (no Google OAuth)
-3. **Connect GitHub** — PAT token (default) or Device Flow
-4. **First Project** — name + template selection
+Self-hosted deploys are currently designed for a single primary user (or a small trusted team). Where you see things like _"community edition is single-user - RBAC skipped here"_ in the backlog, that's what it refers to: the open-source self-hosted mode doesn't currently enforce multi-user authorisation boundaries, because there aren't any to enforce. If you run ICE exposed to multiple users, treat it as you would any pre-auth-hardened internal tool - behind a VPN or reverse proxy with its own auth.
 
-### Simplified gateway
+Multi-user and full RBAC are Cloud-first features; once they're ready there, the self-hostable subset will be upstreamed into this repository.
 
-`apps/gateway/src/index.ts`:
-- Mounts 6 services (no billing, no Passport)
-- Auto-seeds local user + org on startup
-- Serves the web app as static files
-- No Stripe/OAuth webhook handlers
+## Getting started
 
-### Simplified auth middleware
-
-`packages/shared/src/auth/middleware.ts`:
-- `requireAuth` always uses the auto-seeded local user
-- No JWT token validation needed
-
-### Simplified frontend
-
-- `packages/ui/src/shared/api/auth.ts` — `isAuthenticated()` always returns `true`
-- `packages/ui/src/shared/api/axios-instance.ts` — no JWT handling, no token refresh, no logout redirect
-- `packages/web/src/app/app.tsx` — no auth routes, no `ProtectedRoute` wrapper
-
-## Files Removed (vs SaaS)
-
-```
-services/billing/                              # Entire billing service
-services/iam/src/configs/passport-oauth.ts     # OAuth Passport strategies
-services/iam/src/routes/oauth.ts               # OAuth routes
-services/iam/src/routes/users.ts               # Team member management (mount removed)
-packages/web/src/pages/login.tsx               # Login page
-packages/web/src/pages/signup.tsx              # Signup page
-packages/web/src/pages/auth-callback.tsx       # OAuth callback page
-packages/web/src/pages/invite-accept.tsx       # Invite accept page (route removed)
-packages/ui/src/shared/components/oauth-buttons.tsx  # Google/GitHub OAuth buttons
-packages/block-registry/                       # Unused registry package
-packages/provider-registry/                    # Unused registry package
-packages/template-registry/                    # Unused registry package
-```
-
-## Files Modified (vs SaaS)
-
-```
-apps/gateway/src/index.ts                      # No billing, no Passport, auto-user
-apps/gateway/package.json                      # No billing/passport deps
-apps/desktop/src/main/index.ts                 # No DevTools, clean logs, auto-updater
-packages/shared/src/auth/middleware.ts          # Always use local user
-packages/ui/src/shared/api/auth.ts             # isAuthenticated() = true, stubs
-packages/ui/src/shared/api/axios-instance.ts   # No JWT handling
-packages/ui/src/shared/components/app-bar.tsx   # No ProfileAvatar
-packages/ui/src/features/account/components/profile-avatar.tsx  # No logout, no settings link
-packages/ui/src/features/account/components/user-settings-page.tsx  # Profile name only, no password
-packages/ui/src/features/onboarding/components/onboarding-page.tsx  # 4 steps (no team step)
-packages/ui/src/features/onboarding/components/connect-cloud-step.tsx  # No Google OAuth
-packages/ui/src/features/onboarding/components/connect-github-step.tsx  # PAT default tab
-packages/ui/src/i18n/en.json                   # "team" → "organisation"
-packages/ui/src/i18n/zh.json                   # "团队" → "组织"
-packages/web/src/app/app.tsx                   # No auth/team/settings routes
-packages/web/src/packages/web/vite.config.ts   # Proxy to port 5002
-packages/web/src/packages/web/package.json     # Dev port 5174
-services/iam/src/index.ts                      # No OAuth/user routes
-services/iam/src/routes/auth.ts                # Only /me + /switch-org
-services/iam/src/routes/profile.ts             # Only /name (no password)
-docker-compose.yml                             # Different ports, no gateway container
-.env                                           # Community-specific config
-.env.example                                   # Simplified
-.gitignore                                     # Ignores compiled output in src/
-```
-
-## Running
-
-```bash
-pnpm dev:all    # starts postgres:5557 + redis:6380, gateway:5002, web:5174
-```
-
-Open `http://localhost:5174` — straight to canvas.
+See the repo root [README.md](../README.md) for install and run instructions.

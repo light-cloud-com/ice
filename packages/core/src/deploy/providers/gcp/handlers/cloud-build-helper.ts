@@ -10,11 +10,20 @@
  * Repository format: accepts both "owner/repo" (GitHub full_name) and full URLs.
  */
 
-import { BUILD_MESSAGES } from '../messages.js';
-import type { GCPHandlerContext } from '../types.js';
+import { BUILD_MESSAGES } from '../messages';
+import type { GCPHandlerContext } from '../types';
 
 const ARTIFACT_REGISTRY_BASE = 'https://artifactregistry.googleapis.com/v1';
 const CLOUD_BUILD_BASE = 'https://cloudbuild.googleapis.com/v1';
+const CLOUD_LOGGING_BASE = 'https://logging.googleapis.com/v2';
+
+/** Max log lines we surface in error messages. Beyond this the user is
+ *  better off opening the Cloud Build console URL anyway. */
+const MAX_LOG_LINES_IN_ERROR = 80;
+/** Max characters per log line we surface — Cloud Build sometimes emits
+ *  giant single-line stack traces; we trim each so the error message stays
+ *  readable in the deploy panel. */
+const MAX_LOG_LINE_CHARS = 500;
 
 /** Default poll interval for build status (10s) */
 const BUILD_POLL_INTERVAL_MS = 10_000;
@@ -79,6 +88,16 @@ export async function ensure_artifact_registry(
  * Works with any public GitHub repo — no Cloud Source Repositories mirroring needed.
  *
  * Returns the fully-qualified image URI on success.
+ *
+ * Milestone reporting model: this helper is called only by the cloud-run
+ * handler. The caller passes
+ * `reportStep(index, label)`; the helper invokes it at fixed indices using
+ * the caller's index space. Pre-bound at the call site (see load-balancer.ts
+ * for the same pattern) so the helper never needs to know `total` or the
+ * resource name. Callers typically reserve ONE outer step for "Building
+ * from source" and forward each inner sub-state at THAT same index — the
+ * monotonic-up-to-total contract for ctx.on_step is preserved because the
+ * label refreshes in place rather than the index advancing.
  */
 export async function build_from_source(
   ctx: GCPHandlerContext,
@@ -87,6 +106,7 @@ export async function build_from_source(
   branch: string,
   imageUri: string,
   onLog?: (message: string) => void,
+  reportStep?: (index: number, label: string) => void,
 ): Promise<string> {
   const buildsUrl = `${CLOUD_BUILD_BASE}/projects/${ctx.project}/builds`;
 
@@ -98,6 +118,13 @@ export async function build_from_source(
   const repoUrl = `https://github.com/${parsed.owner}/${parsed.repo}.git`;
 
   onLog?.(BUILD_MESSAGES.SUBMITTING_BUILD(parsed.owner, parsed.repo, branch));
+
+  // Caller passes a single index (the build-step slot in their schedule);
+  // we keep all sub-states at that same index so the consumer's progress
+  // bar doesn't lurch backward. The label refreshes as the build moves
+  // through QUEUED → WORKING → SUCCESS.
+  const BUILD_STEP_INDEX = 1;
+  reportStep?.(BUILD_STEP_INDEX, 'Submitting Cloud Build');
 
   // Build config: clone repo via git, then build Docker image
   // This avoids needing Cloud Source Repositories mirroring or GitHub connections.
@@ -132,13 +159,51 @@ export async function build_from_source(
 
   // Poll until complete
   const statusUrl = `${buildsUrl}/${buildId}`;
+  const cancelUrl = `${statusUrl}:cancel`;
   const startTime = Date.now();
+  const signal = ctx.abort_signal;
 
+  // Active remote-cancel: when the user hits Cancel on the deploy panel,
+  // call Cloud Build's cancel API so the remote build actually stops
+  // (and stops accruing billing) instead of only aborting our local poll
+  // loop. Fire-and-forget — we still break out via the signal check below.
+  if (signal) {
+    const onAbort = () => {
+      ctx.rest_client
+        .post(cancelUrl, {})
+        .then(() => onLog?.('Cloud Build cancel requested.'))
+        .catch((err: any) => {
+          onLog?.(`Cloud Build cancel failed (may have already finished): ${err?.message || err}`);
+        });
+    };
+    if (signal.aborted) onAbort();
+    else signal.addEventListener('abort', onAbort, { once: true });
+  }
+
+  let last_reported_status: string | undefined;
   while (Date.now() - startTime < BUILD_TIMEOUT_MS) {
-    await sleep(BUILD_POLL_INTERVAL_MS);
+    if (signal?.aborted) {
+      throw new Error('Cloud Build cancelled by user');
+    }
+    await sleep(BUILD_POLL_INTERVAL_MS, signal);
+    if (signal?.aborted) {
+      throw new Error('Cloud Build cancelled by user');
+    }
 
     const build = (await ctx.rest_client.get(statusUrl)) as any;
     const status = build?.status;
+
+    // Forward a sub-state milestone the first time we see each terminal-ish
+    // build status (QUEUED, WORKING). The consumer holds index in place;
+    // only the label refreshes — see the BUILD_STEP_INDEX comment above.
+    if (status && status !== last_reported_status) {
+      if (status === 'QUEUED') {
+        reportStep?.(BUILD_STEP_INDEX, 'Cloud Build queued');
+      } else if (status === 'WORKING') {
+        reportStep?.(BUILD_STEP_INDEX, 'Cloud Build running');
+      }
+      last_reported_status = status;
+    }
 
     if (status === 'SUCCESS') {
       onLog?.(BUILD_MESSAGES.BUILD_SUCCEEDED(imageUri));
@@ -153,7 +218,12 @@ export async function build_from_source(
       status === 'EXPIRED'
     ) {
       const logUrl = build?.logUrl || '';
-      throw new Error(BUILD_MESSAGES.BUILD_FAILED(status, logUrl));
+      // Pull the log tail from Cloud Logging so the user gets the actual
+      // failure reason (npm error, Dockerfile error, etc.) without having
+      // to open the Cloud Build console. We also stream each line via
+      // onLog so it shows up live in the deploy panel's log section.
+      const logLines = await fetch_build_logs(ctx, buildId, onLog).catch(() => [] as string[]);
+      throw new Error(BUILD_MESSAGES.BUILD_FAILED(status, logUrl, logLines));
     }
 
     // Still in progress (QUEUED, WORKING, etc.)
@@ -163,6 +233,72 @@ export async function build_from_source(
   throw new Error(BUILD_MESSAGES.BUILD_TIMED_OUT);
 }
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+/**
+ * Fetch the Cloud Build log tail from Cloud Logging.
+ *
+ * The build helper sets `logging: 'CLOUD_LOGGING_ONLY'` so each build's
+ * stdout/stderr lands in Cloud Logging under
+ * `resource.type="build" resource.labels.build_id=<id>`. We pull the last
+ * MAX_LOG_LINES_IN_ERROR entries so the deploy panel's error message
+ * shows the actual failure (npm error, Dockerfile error, etc.) instead
+ * of just a "go open the console" URL.
+ *
+ * Best-effort: any failure here (missing API enable, IAM, network) is
+ * swallowed by the caller — the build is already failed; missing logs
+ * just means the user falls back to the console URL like before.
+ */
+async function fetch_build_logs(
+  ctx: GCPHandlerContext,
+  buildId: string,
+  onLog?: (msg: string) => void,
+): Promise<string[]> {
+  const filter = `resource.type="build" AND resource.labels.build_id="${buildId}"`;
+  const body = {
+    resourceNames: [`projects/${ctx.project}`],
+    filter,
+    orderBy: 'timestamp asc',
+    pageSize: MAX_LOG_LINES_IN_ERROR,
+  };
+
+  const res = (await ctx.rest_client.post(`${CLOUD_LOGGING_BASE}/entries:list`, body)) as any;
+  const entries: any[] = Array.isArray(res?.entries) ? res.entries : [];
+  if (entries.length === 0) return [];
+
+  const lines: string[] = [];
+  for (const entry of entries) {
+    const text =
+      typeof entry?.textPayload === 'string'
+        ? entry.textPayload
+        : entry?.jsonPayload?.message
+          ? String(entry.jsonPayload.message)
+          : '';
+    if (!text) continue;
+    // Cloud Logging entries can have embedded newlines in textPayload —
+    // split so each visual line is its own log entry, then trim each.
+    for (const raw of text.split('\n')) {
+      const trimmed = raw.replace(/\s+$/, '');
+      if (!trimmed) continue;
+      const clipped = trimmed.length > MAX_LOG_LINE_CHARS ? `${trimmed.slice(0, MAX_LOG_LINE_CHARS)}…` : trimmed;
+      lines.push(clipped);
+      onLog?.(`[cloud-build] ${clipped}`);
+    }
+  }
+
+  return lines.slice(-MAX_LOG_LINES_IN_ERROR);
+}
+
+function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve) => {
+    if (signal?.aborted) return resolve();
+    const timer = setTimeout(resolve, ms);
+    timer.unref?.();
+    signal?.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(timer);
+        resolve();
+      },
+      { once: true },
+    );
+  });
 }

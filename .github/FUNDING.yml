@@ -1,0 +1,15 @@
+# Sponsor button shown on the repo homepage and on every issue/PR.
+# Uncomment and fill in the channels you actually have set up. Removing
+# this file (or leaving everything commented) hides the Sponsor button.
+
+# github: [light-cloud-com]                   # GitHub Sponsors username or org
+# patreon:                                    # patreon.com/<username>
+# open_collective:                            # opencollective.com/<slug>
+# ko_fi:                                      # ko-fi.com/<username>
+# tidelift:                                   # platform-name/package-name
+# community_bridge:                           # CommunityBridge project name
+# liberapay:                                  # liberapay.com/<username>
+# issuehunt:                                  # issuehunt.io/r/<owner>/<repo>
+# otechie:                                    # otechie.com/<username>
+# lfx_crowdfunding:                           # LFX Crowdfunding project name
+custom: ['https://light-cloud.com']

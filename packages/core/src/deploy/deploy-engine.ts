@@ -4,8 +4,9 @@
  * Orchestrates deployment of infrastructure changes to cloud providers.
  */
 
-import { DEPLOY_ERROR_CODES, DEPLOY_DISPLAY } from './messages.js';
-import { diff_graphs } from '../diff/diff.js';
+import { DEPLOY_ERROR_CODES, DEPLOY_DISPLAY } from './messages';
+import { run_parallel_apply, wrap_on_progress_for_node_progress, type SchedulerPhase } from './scheduler';
+import { diff_graphs } from '../diff/diff';
 import type {
   DeployOptions,
   DeployResult,
@@ -14,12 +15,16 @@ import type {
   DeployWarning,
   ResourceDeployResult,
   ProviderDeployer,
-} from './types.js';
-import type { DiffResult, ResourceChange } from '../diff/types.js';
-import type { Graph, Node } from '../types/graph.js';
+} from './types';
+import type { DiffResult, ResourceChange } from '../diff/types';
+import type { Graph } from '../types/graph';
 
 /**
  * Default deployment options.
+ *
+ * `parallelism: 10` is preserved as a deprecated alias — the new
+ * scheduler reads `pool_size` first and falls back to `parallelism`
+ * for one revision before the field is removed.
  */
 const DEFAULT_OPTIONS: Partial<DeployOptions> = {
   parallelism: 10,
@@ -30,6 +35,17 @@ const DEFAULT_OPTIONS: Partial<DeployOptions> = {
 
 /**
  * Deploy infrastructure changes from a diff result.
+ *
+ * Phase 1 (pdl-1): the apply walk is now a bounded worker-pool
+ * scheduler over the per-node DAG (creates → updates → deletes, one
+ * phase end-to-end before the next). The legacy three sequential
+ * `for...of` loops are gone; the scheduler emits the same
+ * `on_progress`/`on_resource_result` events plus the new per-node
+ * `on_node_status`/`on_node_progress` channels.
+ *
+ * The phase boundary stays serial (creates settle before updates
+ * start, etc.) because mixing phases in one DAG would let an update
+ * schedule before its create finishes — out of scope for this unit.
  */
 export async function deploy_changes(
   diff: DiffResult,
@@ -45,115 +61,77 @@ export async function deploy_changes(
   const results: ResourceDeployResult[] = [];
 
   try {
-    // Initialize the deployer
-    await deployer.initialize(opts);
-
     // Filter changes based on target/exclude patterns
     const filtered_changes = filter_changes(diff.changes, opts);
 
-    // Separate changes by action type
+    // Build the resource_name → ResourceChange index used by the
+    // on_progress wrapper to translate `step` events to
+    // `on_node_progress` with the correct `node_id` payload.
+    const changes_by_resource_name = new Map<string, ResourceChange>();
+    for (const c of filtered_changes) changes_by_resource_name.set(c.name, c);
+
+    // Wrap on_progress before deployer.initialize captures it. The
+    // wrapper forwards `step` events from handler `on_step` calls to
+    // the new `on_node_progress` channel; everything else is
+    // pass-through.
+    const opts_with_wrapped_progress = wrap_on_progress_for_node_progress(opts, changes_by_resource_name);
+
+    // Initialize the deployer (captures opts.on_progress etc.)
+    await deployer.initialize(opts_with_wrapped_progress);
+
+    // Separate changes by action type. Each phase is its own DAG.
     const creates = filtered_changes.filter((c) => c.change_type === 'create');
     const updates = filtered_changes.filter((c) => c.change_type === 'update');
     const deletes = filtered_changes.filter((c) => c.change_type === 'delete');
 
-    // Order changes for safe deployment:
-    // 1. Create in dependency order (parents first)
-    // 2. Update in any order
-    // 3. Delete in reverse dependency order (children first)
-    const ordered_creates = order_by_dependencies(creates, desired, 'forward');
-    const ordered_deletes = order_by_dependencies(deletes, desired, 'reverse');
+    const phase_buckets: Array<{ phase: SchedulerPhase; changes: ResourceChange[] }> = [
+      { phase: 'create', changes: creates },
+      { phase: 'update', changes: updates },
+      { phase: 'delete', changes: deletes },
+    ];
 
-    // Execute creates
-    for (const change of ordered_creates) {
-      if (opts.dry_run) {
-        results.push(dry_run_result(change, 'create'));
-        continue;
-      }
+    for (const { phase, changes } of phase_buckets) {
+      if (changes.length === 0) continue;
 
-      try {
-        opts.on_progress?.(change.name, 'create', 'running');
-        const node = get_node_by_name(desired, change.name);
-        const result = await deployer.create(change.type, change.name, change.desired_properties || {}, { node });
-        results.push(result);
-        opts.on_progress?.(change.name, 'create', result.success ? 'completed' : 'failed');
+      const phase_results = await run_parallel_apply({
+        changes,
+        phase,
+        graph: desired,
+        deployer,
+        options: opts_with_wrapped_progress,
+      });
 
-        if (!result.success && !opts.continue_on_error) {
-          throw new Error(`Failed to create ${change.name}: ${result.error}`);
-        }
-      } catch (error) {
-        const err_msg = error instanceof Error ? error.message : String(error);
+      results.push(...phase_results);
+
+      // Capture per-resource errors on the legacy errors[] surface so
+      // DeployResult.errors stays populated. With continue_on_error
+      // (current default true at the service callsite), the scheduler
+      // already cancels descendants — the loop continues to the next
+      // phase regardless. With continue_on_error: false, the scheduler
+      // already flipped not-yet-applying nodes to cancelled-due-to-dep
+      // before returning, so the failed/cancelled results are present
+      // in phase_results.
+      for (const r of phase_results) {
+        if (r.success) continue;
+        const error_code =
+          phase === 'create'
+            ? DEPLOY_ERROR_CODES.CREATE_FAILED
+            : phase === 'update'
+              ? DEPLOY_ERROR_CODES.UPDATE_FAILED
+              : DEPLOY_ERROR_CODES.DELETE_FAILED;
         errors.push({
-          code: DEPLOY_ERROR_CODES.CREATE_FAILED,
-          message: err_msg,
-          resource_id: change.id,
-          recoverable: false,
+          code: error_code,
+          message: r.error || 'unknown error',
+          resource_id: r.resource_id,
+          recoverable: phase !== 'create',
         });
-        if (!opts.continue_on_error) break;
-      }
-    }
-
-    // Execute updates
-    for (const change of updates) {
-      if (opts.dry_run) {
-        results.push(dry_run_result(change, 'update'));
-        continue;
       }
 
-      try {
-        opts.on_progress?.(change.name, 'update', 'running');
-        const node = get_node_by_name(desired, change.name);
-        const result = await deployer.update(
-          change.type,
-          change.name,
-          change.provider_id || '',
-          change.desired_properties || {},
-          change.current_properties || {},
-          { node },
-        );
-        results.push(result);
-        opts.on_progress?.(change.name, 'update', result.success ? 'completed' : 'failed');
-
-        if (!result.success && !opts.continue_on_error) {
-          throw new Error(`Failed to update ${change.name}: ${result.error}`);
-        }
-      } catch (error) {
-        const err_msg = error instanceof Error ? error.message : String(error);
-        errors.push({
-          code: DEPLOY_ERROR_CODES.UPDATE_FAILED,
-          message: err_msg,
-          resource_id: change.id,
-          recoverable: true,
-        });
-        if (!opts.continue_on_error) break;
-      }
-    }
-
-    // Execute deletes
-    for (const change of ordered_deletes) {
-      if (opts.dry_run) {
-        results.push(dry_run_result(change, 'delete'));
-        continue;
-      }
-
-      try {
-        opts.on_progress?.(change.name, 'delete', 'running');
-        const result = await deployer.delete(change.type, change.name, change.provider_id || '', {});
-        results.push(result);
-        opts.on_progress?.(change.name, 'delete', result.success ? 'completed' : 'failed');
-
-        if (!result.success && !opts.continue_on_error) {
-          throw new Error(`Failed to delete ${change.name}: ${result.error}`);
-        }
-      } catch (error) {
-        const err_msg = error instanceof Error ? error.message : String(error);
-        errors.push({
-          code: DEPLOY_ERROR_CODES.DELETE_FAILED,
-          message: err_msg,
-          resource_id: change.id,
-          recoverable: true,
-        });
-        if (!opts.continue_on_error) break;
-      }
+      // Honour continue_on_error: false at the phase boundary. The
+      // scheduler within a phase already cancels descendants and (in
+      // the strict mode) flips remaining nodes to cancelled. We must
+      // also stop entering the next phase.
+      if (!opts.continue_on_error && errors.length > 0) break;
     }
   } finally {
     await deployer.cleanup();
@@ -223,95 +201,6 @@ function matches_pattern(value: string, pattern: string): boolean {
     return regex.test(value);
   }
   return value === pattern;
-}
-
-/**
- * Order changes by dependencies.
- */
-function order_by_dependencies(
-  changes: ResourceChange[],
-  graph: Graph,
-  direction: 'forward' | 'reverse',
-): ResourceChange[] {
-  // Build dependency map from graph edges
-  const deps = new Map<string, Set<string>>();
-  for (const edge of graph.edges.values()) {
-    const source_node = graph.nodes.get(edge.source);
-    const target_node = graph.nodes.get(edge.target);
-    if (source_node && target_node) {
-      if (!deps.has(source_node.name)) {
-        deps.set(source_node.name, new Set());
-      }
-      deps.get(source_node.name)!.add(target_node.name);
-    }
-  }
-
-  // Topological sort using Kahn's algorithm
-  const change_names = new Set(changes.map((c) => c.name));
-  const in_degree = new Map<string, number>();
-  const adj = new Map<string, string[]>();
-
-  for (const change of changes) {
-    in_degree.set(change.name, 0);
-    adj.set(change.name, []);
-  }
-
-  for (const change of changes) {
-    const change_deps = deps.get(change.name) || new Set();
-    for (const dep of change_deps) {
-      if (change_names.has(dep)) {
-        adj.get(dep)!.push(change.name);
-        in_degree.set(change.name, (in_degree.get(change.name) || 0) + 1);
-      }
-    }
-  }
-
-  const queue: string[] = [];
-  for (const [name, degree] of in_degree) {
-    if (degree === 0) queue.push(name);
-  }
-
-  const sorted: string[] = [];
-  while (queue.length > 0) {
-    const name = queue.shift()!;
-    sorted.push(name);
-    for (const neighbor of adj.get(name) || []) {
-      in_degree.set(neighbor, (in_degree.get(neighbor) || 0) - 1);
-      if (in_degree.get(neighbor) === 0) {
-        queue.push(neighbor);
-      }
-    }
-  }
-
-  // Map sorted names back to changes
-  const name_to_change = new Map(changes.map((c) => [c.name, c]));
-  const ordered = sorted.map((name) => name_to_change.get(name)!).filter(Boolean);
-
-  return direction === 'reverse' ? ordered.reverse() : ordered;
-}
-
-/**
- * Get a node from the graph by name.
- */
-function get_node_by_name(graph: Graph, name: string): Node | undefined {
-  for (const node of graph.nodes.values()) {
-    if (node.name === name) return node;
-  }
-  return undefined;
-}
-
-/**
- * Create a dry-run result for a change.
- */
-function dry_run_result(change: ResourceChange, action: 'create' | 'update' | 'delete'): ResourceDeployResult {
-  return {
-    resource_id: change.id,
-    name: change.name,
-    type: change.type,
-    action,
-    success: true,
-    duration_ms: 0,
-  };
 }
 
 /**

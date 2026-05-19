@@ -4,14 +4,8 @@
  * Discovers Compute Engine resources: instances, disks, networks, subnetworks, firewall rules.
  */
 
-import { BaseGCPService } from './base-service.js';
-import type {
-  ServiceDiscoveryResult,
-  GCPServiceType,
-  GCPResource,
-  GCPImportError,
-  GCPImportWarning,
-} from '../types.js';
+import { BaseGCPService } from './base-service';
+import type { ServiceDiscoveryResult, GCPServiceType, GCPResource, GCPImportError, GCPImportWarning } from '../types';
 
 /**
  * Compute Engine resource discovery service.

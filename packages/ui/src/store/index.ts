@@ -12,8 +12,10 @@ import cardsReducer from './slices/cards-slice';
 import debugReducer from './slices/debug-slice';
 import deployReducer from './slices/deploy-slice';
 import environmentsReducer from './slices/environments-slice';
+import ghostsReducer from './slices/ghost-slice';
 import graphReducer from './slices/graph-slice';
 import integrationsReducer from './slices/integrations-slice';
+import logsReducer from './slices/logs-slice';
 import onboardingReducer from './slices/onboarding-slice';
 import pipelineReducer from './slices/pipeline-slice';
 import projectListReducer from './slices/project-list-slice';
@@ -22,6 +24,7 @@ import selectionReducer from './slices/selection-slice';
 import uiReducer from './slices/ui-slice';
 import validationReducer from './slices/validation-slice';
 import viewReducer from './slices/view-slice';
+import tourReducer from '../features/tour/store/tour-slice';
 import { logStateChange } from '../shared/utils/action-logger';
 
 // Action logger middleware — logs significant Redux dispatches for E2E observability
@@ -34,6 +37,7 @@ const LOGGED_ACTION_PREFIXES = [
   'onboarding/',
   'ai/',
   'projects/',
+  'tour/',
 ];
 const actionLoggerMiddleware: Middleware = () => (next) => (action: any) => {
   const type = action?.type || '';
@@ -59,7 +63,10 @@ export const store = configureStore({
     ai: aiReducer,
     pipeline: pipelineReducer,
     environments: environmentsReducer,
+    ghosts: ghostsReducer,
+    logs: logsReducer,
     onboarding: onboardingReducer,
+    tour: tourReducer,
     validation: validationReducer,
   },
   middleware: (getDefaultMiddleware) =>
@@ -75,11 +82,23 @@ let _lastSavedHash = '';
 let _backendSaveInFlight = false;
 
 function cardHash(card: any): string {
-  // Quick hash: node count + edge count + first/last node ID
+  // Quick hash: node count + edge count + first/last node ID + a stable
+  // serialization of every node's `data` blob. The data fingerprint is
+  // critical: per-node settings (streamingMode, sourceNodeIdOverride, and
+  // anything else that lives entirely under `node.data`) only mutate
+  // `node.data` — none of the structural fields above change, so without
+  // hashing data we'd skip the persistence write and lose the value on
+  // reload. JSON.stringify is good enough; immer keeps key insertion
+  // order stable for unchanged subtrees.
   if (!card) return '';
   const n = card.nodes || [];
   const e = card.edges || [];
-  return `${card.id}:${n.length}:${e.length}:${n[0]?.id || ''}:${n[n.length - 1]?.id || ''}:${n[n.length - 1]?.position?.x || 0}`;
+  let dataFp = '';
+  for (let i = 0; i < n.length; i++) {
+    dataFp += JSON.stringify(n[i]?.data ?? {});
+    dataFp += '|';
+  }
+  return `${card.id}:${n.length}:${e.length}:${n[0]?.id || ''}:${n[n.length - 1]?.id || ''}:${n[n.length - 1]?.position?.x || 0}:${dataFp}`;
 }
 
 store.subscribe(() => {

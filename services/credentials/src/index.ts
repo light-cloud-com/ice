@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import githubRoutes from './routes/github.js';
-import providerRoutes from './routes/providers.js';
-export * from './services/provider.service.js';
-export * from './services/github.service.js';
+import githubRoutes from './routes/github';
+import providerRoutes from './routes/providers';
+export * from './services/provider.service';
+export * from './services/github.service';
 
 export function createCredentialsRouter(): Router {
   const router = Router();

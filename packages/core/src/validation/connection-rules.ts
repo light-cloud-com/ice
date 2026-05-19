@@ -6,8 +6,8 @@
  * self-connections, cycles, missing critical connections.
  */
 
-import { canConnect, isContainer, isFrontend, isDatabase, isQueue } from './classifiers.js';
-import type { CanvasIssue, ValidatableNode, ValidatableEdge, ValidationContext } from './types.js';
+import { canConnect, isContainer, isFrontend, isDatabase, isQueue } from './classifiers';
+import type { CanvasIssue, ValidatableNode, ValidatableEdge, ValidationContext } from './types';
 
 /**
  * Validate all edges and connection patterns.
@@ -15,7 +15,7 @@ import type { CanvasIssue, ValidatableNode, ValidatableEdge, ValidationContext }
 export function validateConnections(
   nodes: readonly ValidatableNode[],
   edges: readonly ValidatableEdge[],
-  ctx: ValidationContext,
+  _ctx: ValidationContext,
 ): CanvasIssue[] {
   const issues: CanvasIssue[] = [];
   const nodeMap = new Map<string, ValidatableNode>();
@@ -67,8 +67,13 @@ export function validateConnections(
 
     // ── Invalid connection pair ───────────────────────────────────────
     if (srcIceType && tgtIceType && !canConnect(srcIceType, tgtIceType, srcNode.type, tgtNode.type)) {
-      const srcLabel = (srcNode.data.label as string) || srcIceType.split('.').pop() || 'Source';
-      const tgtLabel = (tgtNode.data.label as string) || tgtIceType.split('.').pop() || 'Target';
+      // findings.md #38 — the `'Source'` / `'Target'` literal
+      // fallbacks were unreachable: the branch is already gated on
+      // both iceTypes being truthy, and `split('.').pop()` on a
+      // non-empty string always returns a non-empty segment unless
+      // the iceType is exactly `'.'` (not a real iceType). Dropped.
+      const srcLabel = (srcNode.data.label as string) || srcIceType.split('.').pop()!;
+      const tgtLabel = (tgtNode.data.label as string) || tgtIceType.split('.').pop()!;
       issues.push({
         id: `conn:${edge.id}:INVALID_CONNECTION`,
         severity: 'error',
@@ -122,8 +127,15 @@ export function validateConnections(
 
   // ── Cycle detection ───────────────────────────────────────────────────
   // Only check non-containment edges
+  // Only consider edges where both endpoints exist in the node map.
+  // Without this filter, a dangling target (typically a half-deleted
+  // node or stale edge) produced phantom-cycle reports like
+  // `a → ghost → a` once an unrelated edge happened to point back at
+  // `a`. The per-edge validation loop above already short-circuits on
+  // missing endpoints; aligning the cycle detector with that contract
+  // closes findings.md #20.
   const dataEdges = edges
-    .filter((e) => e.data?.relationship !== 'contains')
+    .filter((e) => e.data?.relationship !== 'contains' && nodeMap.has(e.source) && nodeMap.has(e.target))
     .map((e) => ({ source: e.source, target: e.target }));
 
   // Check each edge for cycle creation potential

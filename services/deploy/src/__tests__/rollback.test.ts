@@ -25,9 +25,17 @@ vi.mock('@ice/service-credentials', () => ({
   getValidGCPAccessToken: vi.fn(),
 }));
 
-// Mock shared
+// Mock shared — pdl-4 split the legacy `emitDeployProgress` into five
+// per-type emitters. The rollback validation tests below only assert
+// that emits HAPPEN (none of them inspect what was emitted), so all
+// five are simple `vi.fn()` stubs.
 vi.mock('@ice/shared', () => ({
-  emitDeployProgress: vi.fn(),
+  emitDeployNodeStatus: vi.fn(),
+  emitDeployNodeProgress: vi.fn(),
+  emitDeployComplete: vi.fn(),
+  emitDeployLog: vi.fn(),
+  emitDeployRequirementVerified: vi.fn(),
+  emitPipelineUpdate: vi.fn(),
   requireAuth: vi.fn(),
   requireProjectAccess: vi.fn(),
 }));
@@ -38,7 +46,7 @@ describe('Rollback Deployment — Validation', () => {
   });
 
   async function getRollbackDeployment() {
-    const mod = await import('../services/deploy.service.js');
+    const mod = await import('../services/deploy.service');
     return mod.rollbackDeployment;
   }
 

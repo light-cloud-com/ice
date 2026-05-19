@@ -35,7 +35,7 @@ export interface ValidationSummary {
 
 // ─── Slice State ────────────────────────────────────────────────────────────
 
-interface ValidationState {
+export interface ValidationState {
   /** All issues from the last validation run */
   issues: CanvasIssue[];
   /** Whether validation passed (no errors) */

@@ -1,161 +1,177 @@
-# Core Engine (`@ice/core`)
+# Core Engine
 
-The core engine is the computational heart of ICE. It handles graph processing, infrastructure diffing, deploy orchestration, and multi-cloud resource importing.
+The core engine (`packages/core/`) is the provider-agnostic brain: everything about *how* infrastructure is modelled, validated, diffed, planned, applied, and imported, with no UI and no network dependencies. Everything else in ICE is either a consumer of core or a translator into it.
 
-**Location:** `packages/core/`
+## Concepts in one page
 
-## Module Structure
+- **Graph** - a typed set of nodes (resources) and edges (relationships). This is ICE's internal representation; every cloud shape maps to a graph.
+- **Schema** - what properties a given ICE resource type can have, which are required, what types they accept. Stored as a SQLite database generated from Terraform and Pulumi provider schemas (tens of thousands of resource types).
+- **ICE type** - a provider-neutral resource identifier like `compute.run.service` or `storage.bucket`. Each ICE type has one or more provider implementations (GCP Cloud Run, AWS Lambda, etc.).
+- **Plan** - a list of create/update/delete operations computed by diffing a desired graph against last-applied state.
+- **Apply** - execute the plan, streaming progress, writing the new state.
+- **Handler** - provider-specific code that knows how to create, update, delete, and diff one resource type.
+
+## What's in the package
 
 ```
 packages/core/src/
-├── graph/           Graph data structures + processing
-│   ├── mutable-graph.ts        Core graph implementation
-│   ├── algorithms.ts           Graph algorithms (traversal, ordering)
-│   ├── parser/                 Graph DSL parser
-│   │   ├── lexer.ts
-│   │   ├── ast.ts
-│   │   ├── tokens.ts
-│   │   ├── parser.ts
-│   │   └── format-parser.ts
-│   ├── validator/              Graph validation rules
-│   └── classifier/             Node categorization
-│       └── inference/          Relationship inference engine
-│
-├── plan/            Infrastructure planning
-│   ├── plan-engine.ts          Computes desired → actual diff
-│   └── diff.ts                 Structural diff algorithm
-│
-├── apply/           Plan execution
-│   ├── apply-engine.ts         Executes planned changes
-│   └── types.ts
-│
-├── deploy/          Cloud deployment
-│   ├── deploy-engine.ts        Orchestrates multi-resource deploys
-│   ├── state-bridge.ts         Maps canvas state to deploy state
-│   ├── state-store-adapter.ts  Persistent deploy state
-│   ├── environment-config.ts   Environment-specific config
-│   ├── messages.ts             Deploy message types
-│   └── gcp/                    GCP deployer
-│       ├── gcp-deployer.ts     Main GCP deploy orchestrator
-│       ├── auth.ts             Google auth helpers
-│       ├── sdk-loader.ts       Dynamic SDK loading
-│       └── handlers/           15+ resource handlers
-│           ├── cloud-run.ts
-│           ├── cloud-functions.ts
-│           ├── cloud-storage.ts
-│           ├── cloud-sql.ts
-│           ├── firestore.ts
-│           ├── pubsub.ts
-│           ├── bigquery.ts
-│           ├── gke.ts
-│           ├── memorystore.ts
-│           ├── secret-manager.ts
-│           ├── cloud-scheduler.ts
-│           ├── api-gateway.ts
-│           ├── vertex-ai.ts
-│           ├── dataflow.ts
-│           └── ...
-│
-├── importers/       Import existing infrastructure
-│   ├── gcp/         GCP importer (compute, storage, asset-inventory)
-│   ├── aws/         AWS importer
-│   ├── azure/       Azure importer
-│   ├── terraform/   Terraform state importer
-│   └── pulumi/      Pulumi state importer
-│
-├── providers/       Provider abstraction
-│   ├── provider-registry.ts
-│   └── mock-provider.ts
-│
-├── resources/       Resource definitions
-│   ├── cloud-blocks.ts
-│   ├── cloud-providers.ts
-│   ├── blueprint-factory.ts
-│   └── high-level-resources.ts
-│
-├── schemas/         Schema registry
-│   ├── db/          SQLite-backed schema DB
-│   └── embedded/    Embedded schema registry
-│
-├── diff/            Diff engine
-│
-└── cli/             ICE CLI (`ice` binary)
+├── index.ts                  Top-level re-export surface
+├── types/                    Shared types: Result, errors, IDs
+├── schema/                   SchemaProvider interface + SQLite implementation
+├── schemas/                  SQLite DBs (base + per-provider) and the loader
+├── graph/                    Parser, MutableGraph, algorithms, validator, classifier, inference
+├── state/                    Deploy state persistence (last-applied graph)
+├── plan/                     Plan computation - desired vs current, topological order
+├── apply/                    Execute a plan
+├── diff/                     Property-level diff helpers
+├── compute/                  Derived / aggregate / propagation rules for blocks
+├── deploy/                   Deploy engine: card translator, deploy service, provider index
+├── providers/                Provider registry + mock provider for tests
+├── resources/                High-level resources, blueprint factory, cloud provider registry
+├── importers/                Terraform, Pulumi, GCP, AWS, Azure importers
+├── validation/               Canvas-level validation (separate from graph validation)
+├── export/                   Terraform / Pulumi export from a graph
+├── errors/                   Domain-specific error types
+└── cli/                      The `ice` CLI binary
 ```
 
-## Graph Engine
+Nothing here imports from `services/`, `apps/`, or the UI packages. The engine is usable standalone - you could import it in a script and run a deploy programmatically. The CLI (`ice` in `packages/core/src/cli/`) does exactly this.
 
-The `MutableGraph` is the core data structure representing infrastructure as a directed graph:
+## Graph model
 
-- **Nodes** = cloud resources (compute instances, databases, storage, etc.)
-- **Edges** = connections/dependencies between resources
-- **Algorithms** support topological sort, cycle detection, dependency resolution
-- **Validator** enforces connection rules (e.g., which resource types can connect)
-- **Classifier** categorizes nodes and infers relationships
-
-## Plan / Apply Lifecycle
+A graph is nodes + edges with provider-neutral types and property bags.
 
 ```mermaid
-graph LR
-    Canvas["Canvas State"] --> Plan["Plan Engine"] --> Diff["Diff"] --> Exec["Execution Plan"]
-    Exec --> Apply["Apply Engine"]
-    Apply --> GCP["GCP Deployer"]
-    Apply --> AWS["AWS Deployer"]
-    Apply --> More["..."]
-    GCP --> Handlers["Resource Handlers<br/>(Cloud Run, SQL, etc.)"]
+classDiagram
+    class MutableGraph {
+        +string name
+        +Map~string,Node~ nodes
+        +Map~string,Edge~ edges
+        +add_node(NodeInput)
+        +add_edge(EdgeInput)
+        +validate()
+        +serialize()
+    }
+    class Node {
+        +string id
+        +string type         "ice type"
+        +string name
+        +Record properties
+        +Record labels
+    }
+    class Edge {
+        +string id
+        +string source
+        +string target
+        +string type
+    }
+    MutableGraph --> "many" Node
+    MutableGraph --> "many" Edge
 ```
 
-1. **Plan:** Compares desired state (canvas) against actual state (cloud) → produces a diff
-2. **Diff:** Identifies resources to create, update, or delete
-3. **Apply:** Executes the plan by calling cloud provider APIs through resource handlers
+Key file: `packages/core/src/graph/mutable-graph.ts`. Algorithms (topological sort, cycle detection, path finding, execution layers) live in `packages/core/src/graph/algorithms.ts`.
 
-## GCP Deployer
+## From a canvas to a deploy
 
-The most mature deployer, handling 15+ GCP resource types:
+```mermaid
+flowchart LR
+    ui[UI cards + edges]
+    graph[Graph]
+    state[(Last-applied state)]
+    plan[Plan]
+    apply[Apply]
+    cloud[(Cloud)]
+    newstate[(New state)]
 
-| Handler | GCP Service |
+    ui -->|card-translator| graph
+    graph --> plan
+    state --> plan
+    plan -->|topological order| apply
+    apply -->|handler calls| cloud
+    apply --> newstate
+    newstate -.->|persist| state
+```
+
+**`translate_card_to_graph`** (`packages/core/src/deploy/card-translator.ts`) is the only place that knows about UI shapes. It converts cards (drag-drop-able visual blocks) into graph nodes, materializing their provider implementation based on the card's selected provider.
+
+**Plan** (`packages/core/src/plan/`) diffs the desired graph against the current state; each diff entry is `{ op: 'create' | 'update' | 'delete' | 'noop', node_id, changed_properties }`.
+
+**Apply** (`packages/core/src/deploy/deploy-engine.ts` driving `packages/core/src/deploy/scheduler.ts`) is a bounded worker-pool scheduler over the per-node DAG. Pool size defaults to 6; per-handler caps reserve `gcp.sql.* = 1` and `gcp.redis.* = 1` so multi-instance fan-outs don't trip GCP's create-rate quotas. Failure isolates to descendants only - siblings and unrelated branches keep running, which means a 12-resource card that loses one Cloud SQL instance still surfaces the partial-success rollup of the rest. Each node moves through `queued → applying → (succeeded | failed | skipped | cancelled-due-to-dep)`, and the engine streams those transitions to the caller via `on_node_status` plus mid-apply milestones via `on_node_progress`.
+
+Handlers report sub-step progress via `GCPHandlerContext.on_step(name, { label, index, total })` - a Cloud SQL instance create surfaces "Creating instance" → "Waiting for instance to become ready" rather than going dark for ten minutes. The build-helper extension lets cloud-run pin every Cloud Build sub-state (Submitting / queued / running) to its outer step index, so the bar holds steady while labels refresh.
+
+The legacy `apply-engine.ts` and the per-resource percentage that reset between nodes are gone - see decisions entry "2026-04-28 - Parallel deploy scheduler with per-node live status" for the alternatives considered (layer-batched `Promise.all` rejected because it waits for the slowest node in each layer; new socket room rejected because the existing `deploy:<cardId>` is what the canvas hydration is shaped around).
+
+## Live event wire contract
+
+The deploy service publishes one Socket.IO event name (`DEPLOY_EVENT_CHANNEL = 'deploy:event'`) carrying a discriminated `DeployEvent` union - types in `packages/types/src/deploy-events.ts`, emitter helpers in `packages/shared/src/socket/service.ts`. Five variants:
+
+| `event.type` | Fired when |
 |---|---|
-| `cloud-run.ts` | Cloud Run services |
-| `cloud-functions.ts` | Cloud Functions (2nd gen) |
-| `cloud-storage.ts` | Cloud Storage buckets |
-| `cloud-sql.ts` | Cloud SQL instances |
-| `firestore.ts` | Firestore databases |
-| `pubsub.ts` | Pub/Sub topics + subscriptions |
-| `bigquery.ts` | BigQuery datasets + tables |
-| `gke.ts` | GKE clusters |
-| `memorystore.ts` | Memorystore (Redis) |
-| `secret-manager.ts` | Secret Manager secrets |
-| `cloud-scheduler.ts` | Cloud Scheduler jobs |
-| `api-gateway.ts` | API Gateway configs |
-| `vertex-ai.ts` | Vertex AI endpoints |
-| `dataflow.ts` | Dataflow jobs |
-| `identity-platform.ts` | Identity Platform |
+| `node_status` | Per-node lifecycle transition (`queued` / `applying` / `succeeded` / `failed` / `skipped` / `cancelled-due-to-dep`). Carries `card_id`, `node_id` (canvas id), `resource_name`, `resource_type`, `action: 'create' \| 'update' \| 'delete'`, optional `error: { code, message, recoverable? }`, optional `duration_ms` on terminal states. |
+| `node_progress` | Mid-apply milestone from a handler's `ctx.on_step`. Carries `step: { label, index, total }`. |
+| `log` | Free-text deploy log line, optionally `node_id`-scoped. |
+| `complete` | One-shot terminal for the whole deploy. Carries `outcome: 'success' \| 'partial' \| 'failure' \| 'cancelled'` and `totals: { queued, applying, succeeded, failed, skipped, cancelled }`. The frontend computes its rollup from `nodesById` rather than relying on `totals` for live progress; `totals` is just the post-deploy summary. |
+| `requirement_verified` | Post-deploy poller fires when a `BlockRequirementStatus` row flips. Carries the full unique key `(card_id, node_id, environment, requirement)` plus an optional `details` blob. |
+
+Three identifier spaces travel through the deploy stack and are NOT interchangeable:
+- **Canvas node id** - user-facing block id from `cards-slice.nodes[i].id`. The wire's `node_id` is always this.
+- **Graph node id** - engine-internal `${type}:${name}`, e.g. `gcp.sql.databaseInstance:ice-foo-prod-instance-abc123`. Lives only inside the scheduler and `MutableGraph`.
+- **Resource name** - sanitized hash-suffixed cloud resource name (e.g. `ice-foo-prod-instance-abc123`). Carried in `resource_name` for log readability.
+
+The service layer translates graph node id → canvas node id via `translation.deployables[]` before emitting on the wire (`services/deploy/src/services/deploy.service.ts`'s `graphIdToCanvasId` map). Frontend reducers key everything by canvas node id.
+
+## Schemas
+
+Resource schemas live in `packages/core/src/schemas/` as SQLite DBs - one "base" DB bundled with the package and per-provider extension DBs. They're generated from Terraform and Pulumi provider schemas (a one-off build step, committed).
+
+The schema provider (`EmbeddedSchemaProvider` in `packages/core/src/schema/embedded-schema-provider.ts`) queries these DBs at runtime to answer "what properties does `compute.run.service` have on GCP?" and drives validation, autocomplete, and the properties panel.
 
 ## Importers
 
-Import existing infrastructure into the canvas:
+Each importer converts an external representation into an ICE graph:
 
-- **GCP Importer:** Uses Asset Inventory API to scan compute, storage, and other resources
-- **AWS Importer:** Scans AWS resources via SDK
-- **Azure Importer:** Scans Azure resources
-- **Terraform Importer:** Parses `.tfstate` files
-- **Pulumi Importer:** Parses Pulumi state
+| Importer | Source | Status |
+|---|---|---|
+| `importers/terraform/` | Terraform state JSON | Works |
+| `importers/pulumi/` | Pulumi checkpoint JSON | Works |
+| `importers/gcp/` | Live GCP via Cloud Asset Inventory + service-specific APIs | Works, maps 45+ resource kinds |
+| `importers/aws/` | AWS | Partial |
+| `importers/azure/` | Azure | Partial |
 
-Each importer has a **type-mapper** that converts cloud-specific resource types into ICE canvas node types.
+GCP import has dedicated service modules (`importers/gcp/services/compute.ts`, `storage.ts`, `asset-inventory.ts`) that the top-level importer dispatches to.
 
-## Sub-path Exports
+## Validation
 
-```typescript
-import { MutableGraph } from '@ice/core/graph'
-import { MockProvider } from '@ice/core/providers'
-import { GraphNode, GraphEdge } from '@ice/core/types'
-import { CloudBlocks } from '@ice/core/resources'
-import { SchemaRegistry } from '@ice/core/schemas'
-```
+Two independent layers:
 
-## Key Dependencies
+1. **Graph validation** (`graph/validator/`) - cycle detection, reference resolution, type compatibility, connectivity rules. Producer-agnostic; every graph must pass these.
+2. **Canvas validation** (`validation/`) - higher-level UX rules: *"a static-site block with a custom-domain edge must have a github-repo configured"*. Runs on UI interactions and before plan.
 
-- `@google-cloud/*` SDKs (Cloud Run, Storage, SQL, Pub/Sub, etc.)
-- `google-auth-library` for GCP authentication
-- `better-sqlite3` for embedded schema database
-- `@viz-js/viz` for graph visualization
-- `commander` + `chalk` + `ora` for CLI
+Both emit `{ severity, code, message, node_id }` issues that the UI renders inline.
+
+## Deploy state
+
+The last-applied graph is persisted in the Prisma DB. `state/` contains the interface; the adapter (`packages/core/src/deploy/state-store-adapter.ts`) bridges to the concrete Prisma-backed SQLite/Postgres store used by the deploy service.
+
+A clean clone of ICE with no deploys has an empty state store; every node in the first plan is a `create`.
+
+## Computing flows
+
+Some block properties are derived from others (`derived`), aggregated across connected nodes (`aggregate`), or propagated along edges (`propagation`). Rules live in `packages/core/src/compute/propagation-rules.ts` and similar. The UI applies these live so that, e.g., a Static Site's "CDN" toggle automatically suggests a Custom Domain requirement.
+
+## Entry points worth reading
+
+- [`packages/core/src/index.ts`](../packages/core/src/index.ts) - the export surface.
+- [`packages/core/src/deploy/card-translator.ts`](../packages/core/src/deploy/card-translator.ts) - UI → graph.
+- [`packages/core/src/deploy/deploy-engine.ts`](../packages/core/src/deploy/deploy-engine.ts) - apply driver.
+- [`packages/core/src/deploy/scheduler.ts`](../packages/core/src/deploy/scheduler.ts) - bounded worker-pool DAG scheduler with per-handler caps.
+- [`packages/types/src/deploy-events.ts`](../packages/types/src/deploy-events.ts) - wire-event discriminated union (locked contract).
+- [`packages/core/src/graph/mutable-graph.ts`](../packages/core/src/graph/mutable-graph.ts) - the data structure.
+- [`packages/core/src/graph/algorithms.ts`](../packages/core/src/graph/algorithms.ts) - topological sort, cycles, paths.
+
+## See also
+
+- [architecture.md](architecture.md) for the bird's-eye view.
+- [services.md](services.md) - how the `deploy` service uses this package.
+- [blocks-reference.md](blocks-reference.md) - where the UI cards that feed the translator come from.

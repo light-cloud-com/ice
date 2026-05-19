@@ -11,9 +11,15 @@
  *
  * Containers (VPC, Subnet, Group) CANNOT have connections.
  *
- * Architecture: A declarative CONNECTION_RULES array defines every valid
- * source→target pair. All functions (canConnect, inferConnectionMeta,
- * validateConnection) derive from this single array.
+ * Architecture: a declarative `CONNECTION_RULES` array (in
+ * `./connection-rules/rules-data.ts`) defines every valid source→target
+ * pair. The classifier predicates live in `./connection-rules/predicates`,
+ * the type surface in `./connection-rules/types`. This file is the
+ * orchestrator: it re-exports the public API (`isX`, types,
+ * `CONNECTION_RULES`, `generateAiConnectionPrompt`) AND owns the
+ * derived helpers (`canConnect`, `validateConnection`, `wouldCreateCycle`,
+ * `inferConnectionMeta`, ...) — the small set of functions that compose
+ * the rules + predicates into the call surface every consumer touches.
  */
 
 import {
@@ -23,107 +29,73 @@ import {
   DEFAULT_PORTS,
   DEFAULT_ENV_VARS,
 } from '@ice/constants';
+import {
+  isDatabase,
+  isCache,
+  isQueue,
+  isStorage,
+  isBackend,
+  isFrontend,
+  isGateway,
+  isAuth,
+  isSecrets,
+  isMonitoring,
+  isSearch,
+  isDataWarehouse,
+  isVectorDb,
+  isLLM,
+  isRepo,
+  isEnvConfig,
+  isDomain,
+  isCustomDomain,
+  isPrivateNetwork,
+  isContainer,
+} from './connection-rules/predicates';
+import { CONNECTION_RULES, generateAiConnectionPrompt } from './connection-rules/rules-data';
+import type {
+  ConnectionMeta,
+  ConnectionWarning,
+  ConnectionRule,
+  NodeForConnectionCheck,
+} from './connection-rules/types';
+
+// ─── Public re-exports ──────────────────────────────────────────────────────
 
 export { type ConnectionCategory, CATEGORY_COLORS, CATEGORY_TO_RELATIONSHIP };
 
-// ─── Core Types ──────────────────────────────────────────────────────────────
+export type {
+  TrafficType,
+  LineStyle,
+  ConnectionMeta,
+  ConnectionWarning,
+  ConnectionRule,
+  NodeForConnectionCheck,
+} from './connection-rules/types';
 
-export type TrafficType = 'request' | 'data' | 'publish' | 'subscribe' | 'stream';
-export type LineStyle = 'solid' | 'dashed' | 'dotted' | 'thin';
+export {
+  isDatabase,
+  isCache,
+  isQueue,
+  isStorage,
+  isBackend,
+  isFrontend,
+  isGateway,
+  isAuth,
+  isSecrets,
+  isMonitoring,
+  isSearch,
+  isDataWarehouse,
+  isVectorDb,
+  isLLM,
+  isRepo,
+  isEnvConfig,
+  isDomain,
+  isCustomDomain,
+  isPrivateNetwork,
+  isContainer,
+};
 
-export interface ConnectionMeta {
-  category: ConnectionCategory;
-  trafficType?: TrafficType;
-  lineStyle: LineStyle;
-  color: string;
-  port?: number;
-  envVarName?: string;
-  flip?: boolean;
-  label?: string;
-}
-
-export interface ConnectionWarning {
-  level: 'error' | 'warning' | 'info';
-  message: string;
-  suggestion?: string;
-}
-
-// ─── Block Type Classification ───────────────────────────────────────────────
-// These functions classify iceType strings into logical groups.
-// Used by the CONNECTION_RULES array and exported for external consumers.
-
-export function isDatabase(t: string): boolean {
-  return (
-    t.startsWith('Database.') ||
-    /PostgreSQL|MySQL|MongoDB|DynamoDB|Firestore|CosmosDB|AutonomousDB|Tablestore|ManagedDB/i.test(t)
-  );
-}
-export function isCache(t: string): boolean {
-  return /Redis|Cache|Memcache/i.test(t);
-}
-export function isQueue(t: string): boolean {
-  return t.startsWith('Messaging.') || /Queue|SQS|SNS|PubSub|ServiceBus|RabbitMQ|Kafka|Event/i.test(t);
-}
-export function isStorage(t: string): boolean {
-  return t.startsWith('Storage.') || /Bucket|S3|GCS|Blob|ObjectStorage|Spaces/i.test(t);
-}
-export function isBackend(t: string): boolean {
-  return (
-    /Backend|Container|Worker|Function|CronJob|Scheduled|AppPlatform|OCIFunctions/i.test(t) ||
-    t.startsWith('Compute.') ||
-    t.startsWith('Compute.')
-  );
-}
-export function isFrontend(t: string): boolean {
-  return /StaticSite|SSRSite|Frontend/i.test(t);
-}
-export function isGateway(t: string): boolean {
-  return /Gateway|LoadBalancer|Internet|WAF/i.test(t) || t === 'Network.Gateway';
-}
-export function isAuth(t: string): boolean {
-  return /Auth|Identity|IAM/i.test(t) || t === 'Security.Identity';
-}
-export function isSecrets(t: string): boolean {
-  return /Secret|Vault|Certificate/i.test(t) || t === 'Security.Secret';
-}
-export function isMonitoring(t: string): boolean {
-  return /Log|Monitor|Observability|Terminal/i.test(t) || t.startsWith('Monitoring.') || t.startsWith('Log.');
-}
-export function isSearch(t: string): boolean {
-  return /Search|Elasticsearch/i.test(t) || t === 'Analytics.Search';
-}
-export function isDataWarehouse(t: string): boolean {
-  return /Warehouse|BigQuery|Redshift|Synapse/i.test(t) || t === 'Analytics.DataWarehouse';
-}
-export function isVectorDb(t: string): boolean {
-  return /VectorDB|Vector/i.test(t) || t === 'AI.VectorDB';
-}
-export function isLLM(t: string): boolean {
-  return /LLM|ModelServing/i.test(t) || t === 'AI.LLMGateway' || t === 'AI.ModelServing';
-}
-export function isRepo(t: string): boolean {
-  return t === 'Source.Repository';
-}
-export function isEnvConfig(t: string): boolean {
-  return t === 'Config.Environment';
-}
-export function isDomain(t: string): boolean {
-  return t === 'Network.Domain' || /Domain|DNS/i.test(t);
-}
-export function isContainer(iceType: string, nodeType?: string): boolean {
-  if (nodeType === 'container' || nodeType === 'group') return true;
-  return iceType === 'Network.VPC' || iceType === 'Network.Subnet' || iceType.startsWith('Group.');
-}
-
-/** Composite: anything deployable (backend + frontend) */
-function isService(t: string): boolean {
-  return isBackend(t) || isFrontend(t);
-}
-
-/** Composite: anything that can receive DNS traffic */
-function isRoutable(t: string): boolean {
-  return isBackend(t) || isFrontend(t) || isGateway(t);
-}
+export { CONNECTION_RULES, generateAiConnectionPrompt };
 
 // ─── Default Port / Env Var Lookup ──────────────────────────────────────────
 
@@ -135,341 +107,82 @@ export function getEnvVarName(iceType: string): string | undefined {
   return DEFAULT_ENV_VARS[iceType];
 }
 
-// ─── Declarative Connection Rules ───────────────────────────────────────────
-// Each rule defines: "blocks matching source() CAN connect to blocks matching
-// target()". First matching rule wins. This array is the single source of
-// truth for canConnect(), inferConnectionMeta(), and the AI prompt generator.
-
-export interface ConnectionRule {
-  /** Human-readable label for debugging / AI prompt generation */
-  label: string;
-  /** Source block classifier */
-  source: (iceType: string) => boolean;
-  /** Target block classifier */
-  target: (iceType: string) => boolean;
-  /** Connection category */
-  category: ConnectionCategory;
-  /** Traffic sub-type (only for traffic category) */
-  trafficType?: TrafficType;
-  /** Visual line style */
-  lineStyle: LineStyle;
-  /** If true, direction should be flipped (target becomes source) */
-  reverse?: boolean;
-}
-
-export const CONNECTION_RULES: ConnectionRule[] = [
-  // ── TRAFFIC: request ────────────────────────────────────────────────────
-  {
-    label: 'Frontend → Backend',
-    source: isFrontend,
-    target: isBackend,
-    category: 'traffic',
-    trafficType: 'request',
-    lineStyle: 'solid',
-  },
-  {
-    label: 'Gateway → Gateway',
-    source: isGateway,
-    target: isGateway,
-    category: 'traffic',
-    trafficType: 'request',
-    lineStyle: 'solid',
-  },
-  {
-    label: 'Gateway → Backend',
-    source: isGateway,
-    target: isBackend,
-    category: 'traffic',
-    trafficType: 'request',
-    lineStyle: 'solid',
-  },
-  {
-    label: 'Gateway → Frontend',
-    source: isGateway,
-    target: isFrontend,
-    category: 'traffic',
-    trafficType: 'request',
-    lineStyle: 'solid',
-  },
-  {
-    label: 'Backend → Backend',
-    source: isBackend,
-    target: isBackend,
-    category: 'traffic',
-    trafficType: 'request',
-    lineStyle: 'solid',
-  },
-  {
-    label: 'Backend → Auth',
-    source: isBackend,
-    target: isAuth,
-    category: 'traffic',
-    trafficType: 'request',
-    lineStyle: 'solid',
-  },
-  {
-    label: 'Frontend → Auth',
-    source: isFrontend,
-    target: isAuth,
-    category: 'traffic',
-    trafficType: 'request',
-    lineStyle: 'solid',
-  },
-  {
-    label: 'Frontend → Gateway',
-    source: isFrontend,
-    target: isGateway,
-    category: 'traffic',
-    trafficType: 'request',
-    lineStyle: 'solid',
-  },
-
-  // ── TRAFFIC: data ──────────────────────────────────────────────────────
-  {
-    label: 'Backend → Database',
-    source: isBackend,
-    target: isDatabase,
-    category: 'traffic',
-    trafficType: 'data',
-    lineStyle: 'solid',
-  },
-  {
-    label: 'Backend → Cache',
-    source: isBackend,
-    target: isCache,
-    category: 'traffic',
-    trafficType: 'data',
-    lineStyle: 'solid',
-  },
-  {
-    label: 'Backend → Storage',
-    source: isBackend,
-    target: isStorage,
-    category: 'traffic',
-    trafficType: 'data',
-    lineStyle: 'solid',
-  },
-  {
-    label: 'Backend → Search',
-    source: isBackend,
-    target: isSearch,
-    category: 'traffic',
-    trafficType: 'data',
-    lineStyle: 'solid',
-  },
-  {
-    label: 'Backend → VectorDB',
-    source: isBackend,
-    target: isVectorDb,
-    category: 'traffic',
-    trafficType: 'data',
-    lineStyle: 'solid',
-  },
-  {
-    label: 'Backend → LLM',
-    source: isBackend,
-    target: isLLM,
-    category: 'traffic',
-    trafficType: 'data',
-    lineStyle: 'solid',
-  },
-  {
-    label: 'Frontend → Storage',
-    source: isFrontend,
-    target: isStorage,
-    category: 'traffic',
-    trafficType: 'data',
-    lineStyle: 'solid',
-  },
-
-  // ── TRAFFIC: data (reverse — drag from data store to service) ──────────
-  {
-    label: 'Database → Backend (flip)',
-    source: isDatabase,
-    target: isBackend,
-    category: 'traffic',
-    trafficType: 'data',
-    lineStyle: 'solid',
-    reverse: true,
-  },
-  {
-    label: 'Cache → Backend (flip)',
-    source: isCache,
-    target: isBackend,
-    category: 'traffic',
-    trafficType: 'data',
-    lineStyle: 'solid',
-    reverse: true,
-  },
-  {
-    label: 'Storage → Backend (flip)',
-    source: isStorage,
-    target: isBackend,
-    category: 'traffic',
-    trafficType: 'data',
-    lineStyle: 'solid',
-    reverse: true,
-  },
-  {
-    label: 'Storage → Frontend (flip)',
-    source: isStorage,
-    target: isFrontend,
-    category: 'traffic',
-    trafficType: 'data',
-    lineStyle: 'solid',
-    reverse: true,
-  },
-  {
-    label: 'Search → Backend (flip)',
-    source: isSearch,
-    target: isBackend,
-    category: 'traffic',
-    trafficType: 'data',
-    lineStyle: 'solid',
-    reverse: true,
-  },
-  {
-    label: 'VectorDB → Backend (flip)',
-    source: isVectorDb,
-    target: isBackend,
-    category: 'traffic',
-    trafficType: 'data',
-    lineStyle: 'solid',
-    reverse: true,
-  },
-  {
-    label: 'LLM → Backend (flip)',
-    source: isLLM,
-    target: isBackend,
-    category: 'traffic',
-    trafficType: 'data',
-    lineStyle: 'solid',
-    reverse: true,
-  },
-  {
-    label: 'Auth → Backend (flip)',
-    source: isAuth,
-    target: isBackend,
-    category: 'traffic',
-    trafficType: 'data',
-    lineStyle: 'solid',
-    reverse: true,
-  },
-  {
-    label: 'Auth → Frontend (flip)',
-    source: isAuth,
-    target: isFrontend,
-    category: 'traffic',
-    trafficType: 'data',
-    lineStyle: 'solid',
-    reverse: true,
-  },
-
-  // ── TRAFFIC: publish / subscribe ───────────────────────────────────────
-  {
-    label: 'Backend → Queue (publish)',
-    source: isBackend,
-    target: isQueue,
-    category: 'traffic',
-    trafficType: 'publish',
-    lineStyle: 'dashed',
-  },
-  {
-    label: 'Queue → Backend (subscribe)',
-    source: isQueue,
-    target: isBackend,
-    category: 'traffic',
-    trafficType: 'subscribe',
-    lineStyle: 'dotted',
-  },
-  {
-    label: 'Backend → Warehouse',
-    source: isBackend,
-    target: isDataWarehouse,
-    category: 'traffic',
-    trafficType: 'publish',
-    lineStyle: 'dashed',
-  },
-  {
-    label: 'Warehouse → Backend (flip)',
-    source: isDataWarehouse,
-    target: isBackend,
-    category: 'traffic',
-    trafficType: 'publish',
-    lineStyle: 'dashed',
-    reverse: true,
-  },
-
-  // ── TRAFFIC: stream ────────────────────────────────────────────────────
-  {
-    label: 'Service → Monitoring',
-    source: (t) => !isMonitoring(t) && !isContainer(t),
-    target: isMonitoring,
-    category: 'traffic',
-    trafficType: 'stream',
-    lineStyle: 'thin',
-  },
-
-  // ── PIPELINE ───────────────────────────────────────────────────────────
-  { label: 'Repo → Service', source: isRepo, target: isService, category: 'pipeline', lineStyle: 'dashed' },
-  // Reverse: user drags service→repo, we flip it to repo→service
-  {
-    label: 'Service → Repo (flip)',
-    source: isService,
-    target: isRepo,
-    category: 'pipeline',
-    lineStyle: 'dashed',
-    reverse: true,
-  },
-
-  // ── CONFIG ─────────────────────────────────────────────────────────────
-  { label: 'Service → EnvVars', source: isService, target: isEnvConfig, category: 'config', lineStyle: 'dotted' },
-  { label: 'Service → Secrets', source: isService, target: isSecrets, category: 'config', lineStyle: 'dotted' },
-  // Reverse: user drags envvars/secrets→service, we flip
-  {
-    label: 'EnvVars → Service (flip)',
-    source: isEnvConfig,
-    target: isService,
-    category: 'config',
-    lineStyle: 'dotted',
-    reverse: true,
-  },
-  {
-    label: 'Secrets → Service (flip)',
-    source: isSecrets,
-    target: isService,
-    category: 'config',
-    lineStyle: 'dotted',
-    reverse: true,
-  },
-
-  // ── DNS ────────────────────────────────────────────────────────────────
-  { label: 'Domain → Routable', source: isDomain, target: isRoutable, category: 'dns', lineStyle: 'solid' },
-  // Reverse: user drags service→domain, we flip
-  {
-    label: 'Routable → Domain (flip)',
-    source: isRoutable,
-    target: isDomain,
-    category: 'dns',
-    lineStyle: 'solid',
-    reverse: true,
-  },
-];
-
 // ─── Derived Functions ──────────────────────────────────────────────────────
+
+/**
+ * Walk a node's parent chain looking for a container iceType (VPC,
+ * Subnet, or any Group.*). Returns true if any ancestor is a container.
+ * Used by parent-aware rules like "Public Traffic can only target
+ * non-VPC services."
+ */
+export function isInsideContainer(nodeId: string, allNodes: NodeForConnectionCheck[]): boolean {
+  const byId = new Map(allNodes.map((n) => [n.id, n]));
+  let cur = byId.get(nodeId);
+  let depth = 0;
+  while (cur?.parentId && depth < 20) {
+    const parent = byId.get(cur.parentId);
+    if (!parent) return false;
+    const pIce = (parent.data?.iceType as string) || '';
+    if (isContainer(pIce, parent.type)) return true;
+    cur = parent;
+    depth++;
+  }
+  return false;
+}
 
 /**
  * Check if two block types can be connected.
  * Returns true if any CONNECTION_RULE matches (in either direction).
+ *
+ * The optional `context` parameter unlocks parent-aware rules. Without
+ * it, only iceType-level checks run (which is fine for the AI assistant,
+ * type discovery, etc. that don't have a canvas to inspect). The svg
+ * canvas drag-handler passes context so it can enforce "Public Traffic
+ * blocks can only connect to publicly-facing services" — i.e. targets
+ * NOT inside a VPC subnet.
  */
 export function canConnect(
   srcIceType: string,
   tgtIceType: string,
   srcNodeType?: string,
   tgtNodeType?: string,
+  context?: {
+    srcNode?: NodeForConnectionCheck;
+    tgtNode?: NodeForConnectionCheck;
+    allNodes?: NodeForConnectionCheck[];
+  },
 ): boolean {
-  // Containers can never have edges
+  // Containers can never have edges (VPC, Subnet, PrivateNetwork, Group.*).
   if (isContainer(srcIceType, srcNodeType) || isContainer(tgtIceType, tgtNodeType)) return false;
+
+  // Custom Domain blocks are pure DNS at the top level — they can't
+  // penetrate a VPC. Reject Custom Domain → VPC-internal targets in
+  // both directions, UNLESS the CD is nested inside the same container
+  // as the target (e.g. CD inside a PrivateNetwork targeting sibling
+  // services — the compiler synthesizes the LB in that case).
+  //
+  // Skipped if context isn't provided (callers without canvas state are
+  // non-authoritative on parent topology).
+  if (context?.allNodes && context.allNodes.length > 0) {
+    if (isCustomDomain(srcIceType) && context.srcNode && context.tgtNode) {
+      const srcParent = context.srcNode.parentId || null;
+      const tgtParent = context.tgtNode.parentId || null;
+      // Allow nested CD → sibling inside the same PrivateNetwork.
+      const sameParentNetwork = !!srcParent && srcParent === tgtParent;
+      if (!sameParentNetwork && isInsideContainer(context.tgtNode.id, context.allNodes)) {
+        return false;
+      }
+    }
+    if (isCustomDomain(tgtIceType) && context.srcNode && context.tgtNode) {
+      const srcParent = context.srcNode.parentId || null;
+      const tgtParent = context.tgtNode.parentId || null;
+      const sameParentNetwork = !!tgtParent && srcParent === tgtParent;
+      if (!sameParentNetwork && isInsideContainer(context.srcNode.id, context.allNodes)) {
+        return false;
+      }
+    }
+  }
+
   // Self-connection is never valid (checked at type level — same iceType is fine, same instance is caught elsewhere)
   return CONNECTION_RULES.some((r) => r.source(srcIceType) && r.target(tgtIceType));
 }
@@ -593,67 +306,4 @@ export function wouldCreateCycle(
     }
   }
   return false;
-}
-
-// ─── AI Prompt Generator ─────────────────────────────────────────────────────
-// Generates the connection rules section for the AI system prompt
-// from the same rules used by the UI. Single source of truth.
-
-export function generateAiConnectionPrompt(): string {
-  // Group rules by category for readable output
-  const grouped: Record<ConnectionCategory, ConnectionRule[]> = {
-    traffic: [],
-    pipeline: [],
-    config: [],
-    dns: [],
-  };
-  for (const rule of CONNECTION_RULES) {
-    if (!rule.reverse) grouped[rule.category].push(rule);
-  }
-
-  return `## CONNECTION CATEGORIES
-
-Every connection falls into one of 4 categories. The category is auto-determined from block types — set the correct "relationship" value in addEdge.
-
-### TRAFFIC (green) — runtime network flow between services
-relationship: "connects_to"
-Valid connections:
-${grouped.traffic.map((r) => `- ${r.label} (${r.trafficType || 'request'}, ${r.lineStyle} line)`).join('\n')}
-
-### PIPELINE (purple) — code deployment
-relationship: "connects_to"
-${grouped.pipeline.map((r) => `- ${r.label}`).join('\n')}
-Direction: ALWAYS repo → service (never service → repo)
-
-### CONFIG (amber) — deploy-time configuration
-relationship: "depends_on"
-${grouped.config.map((r) => `- ${r.label}`).join('\n')}
-Direction: ALWAYS service → config block (never config → service)
-
-### DNS (cyan) — domain routing
-relationship: "connects_to"
-${grouped.dns.map((r) => `- ${r.label}`).join('\n')}
-Direction: ALWAYS domain → service (never service → domain)
-
-### CONTAINERS CANNOT HAVE EDGES
-VPC, Subnet, and Group nodes are CONTAINERS. They hold resources via parentId.
-NEVER create addEdge with source or target pointing to a VPC, Subnet, or Group.
-
-### Auto-generated env vars
-When a service connects to a data store, an env var is auto-injected:
-${Object.entries(DEFAULT_ENV_VARS)
-  .map(([k, v]) => `- ${k} → ${v}`)
-  .join('\n')}
-
-### Auto-detected ports
-${Object.entries(DEFAULT_PORTS)
-  .map(([k, v]) => `- ${k} → ${v}`)
-  .join('\n')}
-
-### Direction normalization
-The arrow shows "who initiates." Auto-flip ensures:
-- Repo is always SOURCE (repo → service)
-- EnvVars/Secrets is always TARGET (service → config)
-- Domain is always SOURCE (domain → service)
-- Monitoring is always TARGET (service → logs)`;
 }

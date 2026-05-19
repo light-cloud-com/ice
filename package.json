@@ -1,6 +1,7 @@
 {
   "name": "ice",
-  "version": "0.1.23",
+  "license": "Apache-2.0",
+  "version": "0.1.710",
   "description": "ICE - Integrated Cloud Environment (Web + Backend)",
   "private": true,
   "type": "module",
@@ -8,9 +9,12 @@
   "scripts": {
     "dev:web": "pnpm --filter @ice/web dev",
     "dev:gateway": "pnpm --filter @ice/gateway dev",
-    "dev:desktop": "ICE_DESKTOP=true JWT_SECRET=desktop-dev CREDENTIAL_ENCRYPTION_KEY=desktop-dev-key-32chars! PORT=15173 FRONTEND_URL=http://localhost:5173 concurrently -n gw,web,app -c blue,green,magenta \"pnpm dev:gateway\" \"pnpm dev:web\" \"sleep 5 && ELECTRON_RENDERER_URL=http://localhost:5173 pnpm --filter @ice/desktop dev\"",
-    "dev:saas": "concurrently \"pnpm dev:gateway\" \"pnpm dev:web\"",
-    "dev:all": "docker compose up -d redis postgres && concurrently -n gw,web -c blue,green \"pnpm dev:gateway\" \"pnpm dev:web\"",
+    "dev:setup": "pnpm --filter @ice/db generate && DATABASE_URL=\"file:$(pwd)/.desktop-dev.db\" pnpm --filter @ice/db exec prisma db push --accept-data-loss",
+    "schemas:build": "tsx tools/build-schemas.ts",
+    "schemas:build:db": "pnpm --filter @ice/core build:db",
+    "prepare": "husky",
+    "dev:desktop": "pnpm dev:setup && ICE_DESKTOP=true DATABASE_URL=\"file:$(pwd)/.desktop-dev.db\" REDIS_URL= JWT_SECRET=desktop-dev CREDENTIAL_ENCRYPTION_KEY=desktop-dev-key-32chars! PORT=15173 FRONTEND_URL=http://localhost:5174 concurrently -n gw,web,app -c blue,green,magenta \"pnpm dev:gateway\" \"pnpm dev:web\" \"sleep 5 && ELECTRON_RENDERER_URL=http://localhost:5174 pnpm --filter @ice/desktop dev\"",
+    "dev:all": "pnpm dev:setup && DATABASE_URL=\"file:$(pwd)/.desktop-dev.db\" REDIS_URL= PORT=15173 FRONTEND_URL=http://localhost:5174 concurrently -n gw,web -c blue,green \"pnpm dev:gateway\" \"pnpm dev:web\"",
     "build": "pnpm -r --workspace-concurrency=1 build",
     "build:web": "pnpm --filter @ice/web build",
     "build:core": "pnpm --filter @ice/core build",
@@ -21,31 +25,47 @@
     "dist:desktop:win": "pnpm --filter @ice/desktop dist:win",
     "dist:desktop:linux": "pnpm --filter @ice/desktop dist:linux",
     "test:unit": "vitest run --root .",
-    "test:e2e": "playwright test --config e2e/playwright.config.ts",
+    "test:coverage": "vitest run --root . --coverage",
+    "test:int": "vitest run --root . --include '**/*.int.test.{ts,tsx}'",
     "test:build": "pnpm --filter @ice/web exec vite build",
     "typecheck": "pnpm -r typecheck",
-    "lint": "eslint packages/*/src services/*/src apps/*/src --fix",
-    "lint:check": "eslint packages/*/src services/*/src apps/*/src",
-    "format": "prettier --write \"packages/**/*.{ts,tsx}\" \"services/**/*.{ts,tsx}\" \"apps/**/*.{ts,tsx}\" \"e2e/**/*.ts\"",
+    "lint": "node tools/lint-packages.mjs --fix",
+    "lint:check": "node tools/lint-packages.mjs",
+    "format": "prettier --write \"packages/**/*.{ts,tsx}\" \"services/**/*.{ts,tsx}\" \"apps/**/*.{ts,tsx}\"",
     "format:check": "prettier --check \"packages/**/*.{ts,tsx}\" \"services/**/*.{ts,tsx}\" \"apps/**/*.{ts,tsx}\"",
     "clean": "pnpm -r clean && rm -rf node_modules"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "^1.58.2",
+    "@types/js-yaml": "^4.0.9",
+    "@vitest/coverage-v8": "^4.1.0",
     "concurrently": "^9.2.1",
     "eslint": "^10.1.0",
     "eslint-plugin-import-x": "^4.16.2",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-unused-imports": "^4.4.1",
+    "husky": "^9.1.7",
+    "js-yaml": "^4.1.1",
+    "jsdom": "^29.1.1",
+    "lint-staged": "^16.4.0",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.57.1",
-    "vitest": "^4.1.0"
+    "vitest": "^4.1.0",
+    "zod": "^3.25.76"
   },
   "engines": {
     "node": ">=22.0.0",
     "pnpm": ">=10.0.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "prettier --write",
+      "sh -c 'eslint --fix --no-error-on-unmatched-pattern \"$@\" || true' --"
+    ],
+    "*.{js,jsx,json,md,yml,yaml}": [
+      "prettier --write"
+    ]
   },
   "pnpm": {
     "onlyBuiltDependencies": [

@@ -147,7 +147,12 @@ export const saasMultiTenantTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    {
+      iceType: 'Network.PublicEndpoint',
+      label: 'Public Traffic',
+      position: { x: 50, y: 86 },
+      data: { domain: 'app.saas.io', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true },
+    },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
     // 2: App Dashboard (SSR)
@@ -217,8 +222,6 @@ export const saasMultiTenantTemplate: ComposedTemplate = {
     { iceType: 'Security.Identity', label: 'Auth', position: { x: 50, y: 1080 }, data: {} },
     // 12: Secrets
     { iceType: 'Security.Secret', label: 'App Secrets', position: { x: 306, y: 1080 }, data: {} },
-    // 13: Domain
-    { iceType: 'Network.Domain', label: 'Domain', position: { x: 50, y: 1256 }, data: { hostname: 'app.saas.io' } },
     // 14: Repo
     {
       iceType: 'Source.Repository',
@@ -260,11 +263,10 @@ export const saasMultiTenantTemplate: ComposedTemplate = {
     // Background Jobs → Platform Logs (Service→Monitoring rule)
     { fromBlock: 9, toBlock: 10, relationship: 'connects_to' },
     // Domain → App Dashboard (Domain→Routable rule)
-    { fromBlock: 13, toBlock: 2, relationship: 'connects_to' },
     // Repo → Tenant API (Repo→Service pipeline rule)
-    { fromBlock: 14, toBlock: 4, relationship: 'connects_to' },
+    { fromBlock: 13, toBlock: 4, relationship: 'connects_to' },
     // Tenant API → Env (Service→EnvConfig config rule)
-    { fromBlock: 4, toBlock: 15, relationship: 'depends_on' },
+    { fromBlock: 4, toBlock: 14, relationship: 'depends_on' },
   ],
 };
 
@@ -349,7 +351,12 @@ export const saasAnalyticsDashboardTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    {
+      iceType: 'Network.PublicEndpoint',
+      label: 'Public Traffic',
+      position: { x: 50, y: 86 },
+      data: { domain: 'analytics.acme.io', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true },
+    },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
     // 2: Dashboard UI (Static)
@@ -417,13 +424,6 @@ export const saasAnalyticsDashboardTemplate: ComposedTemplate = {
     // ── Ungrouped (control plane) ─────────────────────────────────────────
     // 11: Secrets
     { iceType: 'Security.Secret', label: 'App Secrets', position: { x: 50, y: 1080 }, data: {} },
-    // 12: Domain
-    {
-      iceType: 'Network.Domain',
-      label: 'Domain',
-      position: { x: 306, y: 1080 },
-      data: { hostname: 'analytics.acme.io' },
-    },
     // 13: Repo
     {
       iceType: 'Source.Repository',
@@ -439,8 +439,10 @@ export const saasAnalyticsDashboardTemplate: ComposedTemplate = {
     // Internet → WAF → Gateway (Internet→WAF, WAF→Gateway rules)
     { fromBlock: 0, toBlock: 1, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
     { fromBlock: 1, toBlock: 3, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
-    // Internet → Dashboard UI (Internet→Frontend rule)
-    { fromBlock: 0, toBlock: 2, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
+    // Dashboard UI is publicly reachable on its own — Firebase Hosting
+    // (GCP), AWS Amplify, and Azure Static Web Apps include HTTPS, CDN,
+    // and custom domain. The `domain` field on the StaticSite block
+    // does the wiring; no Public Endpoint edge needed.
     // Gateway → Analytics API (Gateway→Backend rule)
     { fromBlock: 3, toBlock: 4, relationship: 'connects_to', protocol: 'HTTP', port: 8080 },
     // Analytics API → data stores (Backend→Database, Backend→Cache rules)
@@ -459,10 +461,9 @@ export const saasAnalyticsDashboardTemplate: ComposedTemplate = {
     // ETL Worker → Logs (Service→Monitoring rule)
     { fromBlock: 8, toBlock: 10, relationship: 'connects_to' },
     // Domain → Dashboard UI (Domain→Routable rule)
-    { fromBlock: 12, toBlock: 2, relationship: 'connects_to' },
     // Repo → Analytics API (Repo→Service pipeline rule)
-    { fromBlock: 13, toBlock: 4, relationship: 'connects_to' },
+    { fromBlock: 12, toBlock: 4, relationship: 'connects_to' },
     // Analytics API → Env (Service→EnvConfig config rule)
-    { fromBlock: 4, toBlock: 14, relationship: 'depends_on' },
+    { fromBlock: 4, toBlock: 13, relationship: 'depends_on' },
   ],
 };

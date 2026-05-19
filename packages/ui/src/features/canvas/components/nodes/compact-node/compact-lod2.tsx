@@ -1,15 +1,9 @@
 import React, { memo } from 'react';
-import {
-  CARD_WIDTH,
-  CARD_HEIGHT,
-  CORNER_RADIUS,
-  BRAND_ICON_SIZE,
-} from '../../../../../config/canvas-constants';
+import { CARD_WIDTH, CARD_HEIGHT, CORNER_RADIUS, BRAND_ICON_SIZE } from '../../../../../config/canvas-constants';
 import { ConnectionDragGlow } from '../_shared/connection-drag-glow';
 import { ConnectionPorts } from '../_shared/connection-ports';
 import { FONT_MONO } from '../_shared/fonts';
 import { NodeHeader } from '../_shared/node-header';
-import { SelectionRing } from '../_shared/selection-ring';
 import { StatusDot } from '../_shared/status-dot';
 import type { NodePipelineStatus } from './types';
 import type { BrandIcon } from '../../../../../assets/icons/brand-registry';
@@ -38,9 +32,25 @@ interface CompactLod2Props {
 
 export const CompactLod2: React.FC<CompactLod2Props> = memo(
   ({
-    nodeId, x, y, label, category, categoryGlow, brandIcon, providerUrl,
-    serviceLineText, statusLabel, statusColor, border, isSelected, isHovered,
-    effectivePipelineStatus, connectionDragState, reducedMotion, onMouseEnter, onMouseLeave,
+    nodeId,
+    x,
+    y,
+    label,
+    category,
+    categoryGlow,
+    brandIcon,
+    providerUrl,
+    serviceLineText,
+    statusLabel,
+    statusColor,
+    border,
+    isSelected,
+    isHovered,
+    effectivePipelineStatus,
+    connectionDragState,
+    reducedMotion,
+    onMouseEnter,
+    onMouseLeave,
   }) => {
     const W = CARD_WIDTH;
     const H = CARD_HEIGHT;
@@ -48,13 +58,12 @@ export const CompactLod2: React.FC<CompactLod2Props> = memo(
     const truncated = (s: string, n: number) => (s.length > n ? s.slice(0, n) + '\u2026' : s);
 
     const pipeColor = effectivePipelineStatus
-      ? effectivePipelineStatus.status === 'success' ? '#22c55e'
-        : effectivePipelineStatus.status === 'failed' ? '#ef4444' : '#3b82f6'
+      ? effectivePipelineStatus.status === 'success'
+        ? '#22c55e'
+        : effectivePipelineStatus.status === 'failed'
+          ? '#ef4444'
+          : '#3b82f6'
       : null;
-
-    const dotAnimate = !!pipeColor && !reducedMotion
-      && effectivePipelineStatus?.status !== 'success'
-      && effectivePipelineStatus?.status !== 'failed';
 
     return (
       <g
@@ -65,19 +74,26 @@ export const CompactLod2: React.FC<CompactLod2Props> = memo(
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >
-        {isSelected && <SelectionRing x={x} y={y} width={W} height={H} stroke={categoryGlow} />}
         {isValidTarget && <ConnectionDragGlow x={x} y={y} width={W} height={H} reducedMotion={reducedMotion} />}
 
         <foreignObject x={x} y={y} width={W} height={H}>
           <div
             style={{
-              width: W, height: H,
-              background: 'var(--ice-bg-surface)',
-              border: `${isSelected ? 1.5 : 1}px solid ${isValidTarget ? '#22c55e' : border}`,
+              width: W,
+              height: H,
+              background: 'var(--ice-bg-raised)',
+              border: `1px solid ${isValidTarget ? '#22c55e' : border}`,
               borderRadius: CORNER_RADIUS,
-              display: 'flex', flexDirection: 'column',
+              display: 'flex',
+              flexDirection: 'column',
               padding: '10px 12px',
-              boxSizing: 'border-box', overflow: 'hidden',
+              boxSizing: 'border-box',
+              overflow: 'hidden',
+              boxShadow: isSelected
+                ? `0 0 0 1.5px ${categoryGlow}, 0 4px 14px -4px ${categoryGlow}33`
+                : isHovered
+                  ? '0 2px 8px -2px rgba(0,0,0,0.15)'
+                  : '0 1px 3px rgba(0,0,0,0.06)',
             }}
           >
             {/* Header: category icon + label */}
@@ -87,14 +103,25 @@ export const CompactLod2: React.FC<CompactLod2Props> = memo(
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
               {(brandIcon || providerUrl) && (
                 <img
-                  src={brandIcon?.url || providerUrl} alt=""
-                  width={BRAND_ICON_SIZE} height={BRAND_ICON_SIZE}
+                  src={brandIcon?.url || providerUrl}
+                  alt=""
+                  width={BRAND_ICON_SIZE}
+                  height={BRAND_ICON_SIZE}
                   style={{ objectFit: 'contain', flexShrink: 0 }}
                   draggable={false}
                 />
               )}
               {serviceLineText && (
-                <span style={{ color: 'var(--ice-text-secondary)', fontSize: 10, fontFamily: FONT_MONO, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span
+                  style={{
+                    color: 'var(--ice-text-secondary)',
+                    fontSize: 10,
+                    fontFamily: FONT_MONO,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
                   {truncated(serviceLineText, 24)}
                 </span>
               )}
@@ -103,14 +130,20 @@ export const CompactLod2: React.FC<CompactLod2Props> = memo(
             <div style={{ flex: 1 }} />
 
             {/* Status dot + label */}
-            {statusLabel && (
-              <StatusDot color={pipeColor || statusColor} label={statusLabel} radius={4} />
-            )}
+            {statusLabel && <StatusDot color={pipeColor || statusColor} label={statusLabel} radius={4} />}
           </div>
         </foreignObject>
 
         {(isHovered || isValidTarget) && (
-          <ConnectionPorts nodeId={nodeId} x={x} y={y} width={W} height={H} color={categoryGlow} isValidTarget={isValidTarget} />
+          <ConnectionPorts
+            nodeId={nodeId}
+            x={x}
+            y={y}
+            width={W}
+            height={H}
+            color={categoryGlow}
+            isValidTarget={isValidTarget}
+          />
         )}
       </g>
     );

@@ -7,8 +7,8 @@
 import { useTranslation, LOCALES, type Locale } from '@ui/i18n';
 import axiosInstance from '@ui/shared/api/axios-instance';
 import { useThemePicker } from '@ui/shared/components/dev-accent-picker';
-import { cn } from '@ui/shared/utils/cn';
 import { useTheme } from '@ui/shared/hooks/use-theme';
+import { cn } from '@ui/shared/utils/cn';
 import {
   Brain,
   Palette,
@@ -33,13 +33,15 @@ const TabButton: React.FC<{
   icon: React.ElementType;
   label: string;
   onClick: () => void;
-}> = ({ active, icon: Icon, label, onClick }) => (
+  'data-tour-id'?: string;
+}> = ({ active, icon: Icon, label, onClick, ...rest }) => (
   <button
     onClick={onClick}
     className={cn(
       'flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 transition-colors -mb-px',
       active ? 'border-blue-500 text-ice-text-1' : 'border-transparent text-ice-text-3 hover:text-ice-text-2',
     )}
+    {...rest}
   >
     <Icon className="w-3.5 h-3.5" />
     {label}
@@ -50,7 +52,7 @@ const TabButton: React.FC<{
 
 export const AppSettings: React.FC = () => {
   const { t, locale, setLocale } = useTranslation();
-  const { theme, setTheme, isDark, fontSize, setFontSize } = useTheme();
+  const { theme, setTheme, fontSize, setFontSize } = useTheme();
   const { toggle: toggleThemePicker } = useThemePicker();
   const [tab, setTab] = useState<SettingsTab>('ai');
 
@@ -95,9 +97,25 @@ export const AppSettings: React.FC = () => {
 
       {/* Tabs */}
       <div className="flex items-center gap-1 mb-6 border-b border-ice-border">
-        <TabButton active={tab === 'ai'} icon={Brain} label={t('appSettings.tabs.ai')} onClick={() => setTab('ai')} />
-        <TabButton active={tab === 'appearance'} icon={Palette} label={t('appSettings.tabs.appearance')} onClick={() => setTab('appearance')} />
-        <TabButton active={tab === 'language'} icon={Languages} label={t('appSettings.tabs.language')} onClick={() => setTab('language')} />
+        <TabButton
+          active={tab === 'ai'}
+          icon={Brain}
+          label={t('appSettings.tabs.ai')}
+          onClick={() => setTab('ai')}
+          data-tour-id="app-settings-tab-ai"
+        />
+        <TabButton
+          active={tab === 'appearance'}
+          icon={Palette}
+          label={t('appSettings.tabs.appearance')}
+          onClick={() => setTab('appearance')}
+        />
+        <TabButton
+          active={tab === 'language'}
+          icon={Languages}
+          label={t('appSettings.tabs.language')}
+          onClick={() => setTab('language')}
+        />
       </div>
 
       {/* ── AI Tab ───────────────────────────────────────────────────────── */}
@@ -106,9 +124,7 @@ export const AppSettings: React.FC = () => {
           <div className="ice-card">
             <div className="ice-card-header">
               <h2 className="text-ice-md font-semibold text-ice-text-1">{t('appSettings.ai.providerTitle')}</h2>
-              <p className="text-ice-sm text-ice-text-3 mt-1">
-                {t('appSettings.ai.providerDescription')}
-              </p>
+              <p className="text-ice-sm text-ice-text-3 mt-1">{t('appSettings.ai.providerDescription')}</p>
             </div>
             <div className="ice-card-body space-y-4">
               {/* Status */}
@@ -136,13 +152,20 @@ export const AppSettings: React.FC = () => {
                   type="password"
                   value={anthropicKey}
                   onChange={(e) => setAnthropicKey(e.target.value)}
-                  onFocus={() => { if (anthropicKey.startsWith('••')) setAnthropicKey(''); }}
+                  onFocus={() => {
+                    if (anthropicKey.startsWith('••')) setAnthropicKey('');
+                  }}
                   placeholder="sk-ant-..."
                   className="ice-input w-full"
                 />
                 <p className="text-ice-xs text-ice-text-3 mt-1">
                   {t('appSettings.ai.anthropicKeyHint')}{' '}
-                  <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">
+                  <a
+                    href="https://console.anthropic.com/settings/keys"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-400 hover:text-blue-300"
+                  >
                     console.anthropic.com
                   </a>
                 </p>
@@ -160,9 +183,7 @@ export const AppSettings: React.FC = () => {
                   placeholder="http://localhost:11434/v1 (Ollama, LM Studio, etc.)"
                   className="ice-input w-full"
                 />
-                <p className="text-ice-xs text-ice-text-3 mt-1">
-                  {t('appSettings.ai.customEndpointHint')}
-                </p>
+                <p className="text-ice-xs text-ice-text-3 mt-1">{t('appSettings.ai.customEndpointHint')}</p>
               </label>
             </div>
           </div>
@@ -174,7 +195,12 @@ export const AppSettings: React.FC = () => {
           )}
 
           <div className="flex justify-end">
-            <button onClick={handleSaveAi} disabled={saving} className="ice-btn ice-btn-primary">
+            <button
+              onClick={handleSaveAi}
+              disabled={saving}
+              className="ice-btn ice-btn-primary"
+              data-tour-id="app-settings-btn-save"
+            >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               {t('common.buttons.save')}
             </button>
@@ -192,11 +218,13 @@ export const AppSettings: React.FC = () => {
             </div>
             <div className="ice-card-body">
               <div className="flex gap-2">
-                {([
-                  { id: 'light', label: t('appSettings.appearance.light'), icon: Sun },
-                  { id: 'dark', label: t('appSettings.appearance.dark'), icon: Moon },
-                  { id: 'system', label: t('appSettings.appearance.system'), icon: Monitor },
-                ] as const).map((opt) => (
+                {(
+                  [
+                    { id: 'light', label: t('appSettings.appearance.light'), icon: Sun },
+                    { id: 'dark', label: t('appSettings.appearance.dark'), icon: Moon },
+                    { id: 'system', label: t('appSettings.appearance.system'), icon: Monitor },
+                  ] as const
+                ).map((opt) => (
                   <button
                     key={opt.id}
                     onClick={() => setTheme(opt.id)}
@@ -239,11 +267,13 @@ export const AppSettings: React.FC = () => {
             </div>
             <div className="ice-card-body">
               <div className="flex gap-2">
-                {([
-                  { id: 'small', label: t('appSettings.appearance.small') },
-                  { id: 'default', label: t('appSettings.appearance.default') },
-                  { id: 'large', label: t('appSettings.appearance.large') },
-                ] as const).map((opt) => (
+                {(
+                  [
+                    { id: 'small', label: t('appSettings.appearance.small') },
+                    { id: 'default', label: t('appSettings.appearance.default') },
+                    { id: 'large', label: t('appSettings.appearance.large') },
+                  ] as const
+                ).map((opt) => (
                   <button
                     key={opt.id}
                     onClick={() => setFontSize(opt.id)}

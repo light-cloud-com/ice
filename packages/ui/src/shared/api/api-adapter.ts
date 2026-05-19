@@ -55,6 +55,7 @@ export interface IceAPI {
     getProjects: (providerId: string) => Promise<any[]>;
     import: (providerId: string, projectId: string) => Promise<any>;
     exchangeGCPCode: (code: string) => Promise<any>;
+    connectGCPOAuth: (accessToken: string, expiresIn: number) => Promise<any>;
   };
 
   templates: {
@@ -76,10 +77,21 @@ export interface IceAPI {
     plan: (cardId: string, nodes: any[], edges: any[], options: any) => Promise<any>;
     apply: (cardId: string, nodes: any[], edges: any[], options: any) => Promise<any>;
     destroy: (cardId: string, options: any) => Promise<any>;
+    /** Destroy every ICE-managed resource ever deployed for this card. */
+    destroyAll: (cardId: string, options?: { gcpProject?: string }) => Promise<any>;
     getStatus: (deploymentId: string) => Promise<any>;
     authenticate: () => Promise<any>;
     getResources: (cardId: string) => Promise<any>;
     getDeployments: (cardId: string) => Promise<any>;
+    requirements: (cardId: string, nodes: any[], options: any) => Promise<any>;
+    /** In-flight deploy snapshot — used for cross-tab hydration. */
+    getCurrentDeploy: (cardId: string) => Promise<any>;
+    /** Replay tape for a deploy — events with seq > `since`. Used to hydrate logs + progress on page reload. */
+    getDeployStream: (cardId: string, since?: number, deploymentId?: string) => Promise<any>;
+    /** Per-node deploy overlay — used on card mount. */
+    getNodeOutputs: (cardId: string, environment?: string) => Promise<any>;
+    /** Scan + delete orphaned ICE resources in the GCP project. */
+    cleanupOrphans: (args?: { gcpProject?: string; dryRun?: boolean }) => Promise<any>;
     openExternal: (url: string) => void;
   };
 
@@ -105,8 +117,46 @@ export interface IceAPI {
     togglePrPreviews: (projectId: string, enabled: boolean) => Promise<any>;
   };
 
+  /**
+   * Canvas Log Terminal block — see services/deploy/src/routes/logs.ts.
+   * `subscribe` opens an HTTP-side stream and returns the room id;
+   * `joinRoom` joins the Socket.IO room (must be called for events to arrive)
+   * and returns the unjoin cleanup. Per-event `on...` registrars register
+   * a listener and return its `off` cleanup.
+   */
+  logs: {
+    subscribe: (args: {
+      cardId: string;
+      environmentId: string;
+      terminalNodeId: string;
+      mode: 'polling' | 'tail';
+      sourceNodeIdOverride?: string;
+      /**
+       * Client-derived inbound supported sources from live Redux state.
+       * The backend uses these instead of re-reading nodes/edges from
+       * Prisma — the canvas's persistence subscriber debounces saves by
+       * 2s, so the DB row is stale when the user wires an edge then
+       * immediately subscribes. Omit (or pass `[]`) to fall back to the
+       * server's Prisma read for older clients.
+       */
+      candidateSources?: Array<{ nodeId: string; iceType: string; label?: string }>;
+    }) => Promise<{ subscriptionId: string; resolution: any }>;
+    unsubscribe: (subscriptionId: string, cardId: string) => Promise<void>;
+    joinRoom: (terminalNodeId: string) => () => void;
+    onEntry: (callback: (entry: any) => void) => () => void;
+    onError: (callback: (event: { message: string; recoverable: boolean }) => void) => () => void;
+    onResumed: (callback: (event: { at: string }) => void) => () => void;
+    onSourceResolved: (callback: (resolution: any) => void) => () => void;
+  };
+
   onMenuAction: (callback: (action: string) => void) => () => void;
-  onDeployProgress: (callback: (event: any) => void) => () => void;
+  /**
+   * Subscribe to typed deploy lifecycle events on the `deploy:event` socket
+   * channel (pdl-2 contract). Returns an unsubscribe function. Replaces
+   * the legacy `onDeployProgress` listener that watched `deploy:progress`
+   * with ad-hoc event shapes.
+   */
+  onDeployEvent: (callback: (event: import('@ice/types').DeployEvent) => void) => () => void;
   onPipelineUpdate: (callback: (event: any) => void) => () => void;
   onCardPipelineUpdate: (callback: (event: any) => void) => () => void;
   subscribeDeployProgress?: (cardId: string) => () => void;

@@ -1,14 +1,13 @@
+import { BLOCK_SUMMARY_H, BLOCK_SUMMARY_W } from '@ice/constants';
 import React, { memo } from 'react';
 import { CORNER_RADIUS, CARD_PX, CATEGORY_STYLE } from '../../../../../config/canvas-constants';
 import { CostLabel } from '../_shared/cost-label';
 import { FONT_MONO } from '../_shared/fonts';
 import { NodeHeader } from '../_shared/node-header';
 import { ProviderPill } from '../_shared/provider-pill';
-import { SelectionRing } from '../_shared/selection-ring';
 import type { CanvasNode } from '../../svg-canvas';
 
-export const BLOCK_SUMMARY_H = 80;
-export const BLOCK_SUMMARY_W = 260;
+export { BLOCK_SUMMARY_H, BLOCK_SUMMARY_W };
 
 interface BlockSummaryCardProps {
   node: CanvasNode;
@@ -32,8 +31,7 @@ export const BlockSummaryCard: React.FC<BlockSummaryCardProps> = memo(
     const SW = Math.max(width || BLOCK_SUMMARY_W, BLOCK_SUMMARY_W);
     const SH = BLOCK_SUMMARY_H;
     const bcat = CATEGORY_STYLE[category] || CATEGORY_STYLE.Block || CATEGORY_STYLE.default;
-    const bBorder = isSelected || isHovered ? bcat.glow : 'var(--ice-border)';
-    const truncated = (s: string, n: number) => (s.length > n ? s.slice(0, n) + '\u2026' : s);
+    const bBorder = isSelected || isHovered ? bcat.glow : bcat.glow + '55';
 
     return (
       <g
@@ -43,34 +41,33 @@ export const BlockSummaryCard: React.FC<BlockSummaryCardProps> = memo(
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >
-        {isSelected && <SelectionRing x={x} y={y} width={SW} height={SH} stroke={bcat.glow} />}
-
         <foreignObject x={x} y={y} width={SW} height={SH}>
           <div
             style={{
               width: SW,
               height: SH,
-              background: 'var(--ice-bg-surface)',
-              border: `${isSelected ? 1.5 : 1}px solid ${bBorder}`,
+              background: 'var(--ice-bg-raised)',
+              border: `1px solid ${bBorder}`,
               borderRadius: CORNER_RADIUS,
               display: 'flex',
               flexDirection: 'column',
               boxSizing: 'border-box',
               overflow: 'hidden',
               position: 'relative',
+              boxShadow: isSelected
+                ? `0 0 0 1.5px ${bcat.glow}, 0 4px 14px -4px ${bcat.glow}33`
+                : isHovered
+                  ? '0 2px 8px -2px rgba(0,0,0,0.15)'
+                  : '0 1px 3px rgba(0,0,0,0.06)',
             }}
           >
-            {/* Left accent stripe */}
+            {/* Top accent line */}
             <div
               style={{
-                position: 'absolute',
-                left: 0,
-                top: 0,
-                width: 4,
-                height: '100%',
-                borderRadius: '2px 0 0 2px',
+                height: 2,
+                flexShrink: 0,
                 background: bcat.glow,
-                opacity: 0.8,
+                opacity: isSelected || isHovered ? 0.9 : 0.55,
               }}
             />
 
@@ -81,8 +78,8 @@ export const BlockSummaryCard: React.FC<BlockSummaryCardProps> = memo(
               label={label || ''}
               maxChars={22}
               onDoubleClickLabel={onDoubleClickLabel}
-              trailing={provider ? <ProviderPill provider={provider} /> : undefined}
-              style={{ padding: `12px ${CARD_PX}px 0 18px` }}
+              trailing={<ProviderPill provider={provider} />}
+              style={{ padding: `10px ${CARD_PX}px 0` }}
             />
 
             {/* Resource count + cost */}
@@ -91,7 +88,7 @@ export const BlockSummaryCard: React.FC<BlockSummaryCardProps> = memo(
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: `4px ${CARD_PX}px 0 18px`,
+                padding: `4px ${CARD_PX}px 0`,
                 flex: 1,
               }}
             >

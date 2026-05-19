@@ -19,6 +19,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('fullscreen-change', handler);
     return () => ipcRenderer.removeListener('fullscreen-change', handler);
   },
+  getFullscreenState: (): Promise<boolean> => ipcRenderer.invoke('get-fullscreen-state'),
   // Auto-update
   onUpdateStatus: (callback: (status: { status: string; version?: string; percent?: number }) => void) => {
     const handler = (_event: any, status: any) => callback(status);

@@ -72,8 +72,6 @@ export const TREE = {
         envVar: 'STORAGE_BUCKET',
         required: ['storage_class'],
       },
-      Spaces: { id: 'do-spaces', envVar: 'STORAGE_BUCKET' },
-      OSS: { id: 'oss-storage', envVar: 'STORAGE_BUCKET' },
     },
   },
   Messaging: {
@@ -90,16 +88,38 @@ export const TREE = {
       },
       ServiceBus: { id: 'service-bus', envVar: 'SERVICE_BUS_CONNECTION' },
       Topic: { id: 'sns' },
+      // Concepts Palette — provider-agnostic message queue (compiles per provider)
+      Queue: { id: 'message-queue', envVar: 'QUEUE_URL' },
+      // Concepts Palette — provider-agnostic pub/sub event stream
+      EventStream: { id: 'event-stream', envVar: 'EVENT_STREAM_URL' },
+      // Concepts Palette — transactional email service
+      Email: { id: 'email-service', envVar: 'EMAIL_SERVICE_URL' },
     },
   },
   Network: {
     category: Cat.Network,
     resources: {
       Gateway: { id: 'api-gateway', required: ['protocol'] },
-      Internet: { id: 'public-traffic', aliases: ['LoadBalancer'] },
+      // `PublicEndpoint` is the load-balancer entry point for
+      // VPC-private services that need to be exposed to the internet.
+      // Distinct from `CustomDomain` (which is just DNS routing for
+      // services that already have their own public URL).
+      PublicEndpoint: { id: 'public-endpoint', aliases: ['LoadBalancer'] },
+      // `CustomDomain` carries a root domain + per-edge subdomains and
+      // routes to publicly-facing services (Firebase Hosting, AWS
+      // Amplify, public Cloud Run, etc.). UI/translator-only — does
+      // not compile to a deployable resource.
+      CustomDomain: { id: 'custom-domain' },
+      // `PrivateNetwork` is a walled VPC container. Children deployed
+      // inside land on the synthesized subnet and are reachable only
+      // by siblings. A nested Custom Domain (auto-spawned when Open)
+      // provides the public ingress via an LB chain.
+      PrivateNetwork: { id: 'private-network' },
       VPC: { id: 'vpc-network' },
       Subnet: { id: 'subnet' },
-      Domain: { id: 'domain', required: ['hostname'] },
+      // Concepts Palette — symbolic source node representing the internet / outside users.
+      // Canvas-only (no infrastructure emitted).
+      PublicTraffic: { id: 'public-traffic' },
     },
   },
   Security: {
@@ -115,7 +135,6 @@ export const TREE = {
     category: Cat.Observability,
     resources: {
       Log: { id: 'log-group', required: ['keep_logs'] },
-      Terminal: { id: 'log-terminal' },
     },
   },
   AI: {
@@ -124,6 +143,8 @@ export const TREE = {
       VectorDB: { id: 'vector-db', envVar: 'VECTOR_DB_URL' },
       LLMGateway: { id: 'llm-gateway', envVar: 'LLM_API_URL' },
       ModelServing: { id: 'ml-model' },
+      // Concepts Palette — self-hosted LLM preset (GPU compute + vector DB + model server).
+      PrivateAIService: { id: 'private-ai-service', envVar: 'PRIVATE_AI_URL' },
     },
   },
   Analytics: {
@@ -180,8 +201,6 @@ export const ICE = {
   },
   Storage: {
     Bucket: 'Storage.Bucket',
-    Spaces: 'Storage.Spaces',
-    OSS: 'Storage.OSS',
   },
   Messaging: {
     SQS: 'Messaging.SQS',
@@ -190,13 +209,18 @@ export const ICE = {
     CloudPubSub: 'Messaging.CloudPubSub',
     ServiceBus: 'Messaging.ServiceBus',
     Topic: 'Messaging.Topic',
+    Queue: 'Messaging.Queue',
+    EventStream: 'Messaging.EventStream',
+    Email: 'Messaging.Email',
   },
   Network: {
     Gateway: 'Network.Gateway',
-    Internet: 'Network.Internet',
+    PublicEndpoint: 'Network.PublicEndpoint',
+    CustomDomain: 'Network.CustomDomain',
+    PrivateNetwork: 'Network.PrivateNetwork',
     VPC: 'Network.VPC',
     Subnet: 'Network.Subnet',
-    Domain: 'Network.Domain',
+    PublicTraffic: 'Network.PublicTraffic',
   },
   Security: {
     Identity: 'Security.Identity',
@@ -206,12 +230,12 @@ export const ICE = {
   },
   Monitoring: {
     Log: 'Monitoring.Log',
-    Terminal: 'Monitoring.Terminal',
   },
   AI: {
     VectorDB: 'AI.VectorDB',
     LLMGateway: 'AI.LLMGateway',
     ModelServing: 'AI.ModelServing',
+    PrivateAIService: 'AI.PrivateAIService',
   },
   Analytics: {
     Search: 'Analytics.Search',

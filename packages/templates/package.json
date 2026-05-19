@@ -1,5 +1,6 @@
 {
   "name": "@ice/templates",
+  "license": "Apache-2.0",
   "version": "0.1.0",
   "description": "Infrastructure template compositions using defineTemplate pattern",
   "private": true,

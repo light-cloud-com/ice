@@ -50,7 +50,18 @@ export async function bootstrapProductionEnvironment(
   const existing = await prisma.environment.findFirst({
     where: { project_id: projectId, type: 'production' },
   });
-  if (existing) return existing;
+  if (existing) {
+    // findings.md #15 — the previous unconditional return masked
+    // stale callsites: a caller that thought it was seeding a fresh
+    // env with their `existingCardId` got back the OLD env unchanged
+    // and never noticed. The loud failure mode is preferable.
+    if (existingCardId && existing.card_id !== existingCardId) {
+      throw new Error(
+        `Production environment already exists for project ${projectId} with card_id=${existing.card_id}; refused to attach to a different card_id=${existingCardId}.`,
+      );
+    }
+    return existing;
+  }
 
   return prisma.$transaction(async (tx) => {
     let cardId = existingCardId;
@@ -144,23 +155,31 @@ export async function createEnvironment(
   });
 
   // Auto-create trigger rules for the new environment by cloning production rules
-  try {
-    const prodRules = await prisma.deploymentRule.findMany({
-      where: { card_id: prodEnv.card_id },
-    });
+  // findings.md #14 — the previous implementation wrapped EVERY step
+  // (find-prod-rules + the per-rule create loop) in a single
+  // try/catch and downgraded all errors to a console.warn. A
+  // permission error or FK violation looked the same as "no prod
+  // rules to clone", so users got a "created" status with zero rules
+  // cloned. The reshape below scopes the catch to known
+  // best-effort failures (P2002 unique-constraint on the per-rule
+  // create) and lets everything else bubble to the route handler so
+  // the caller sees a real 500 instead of a silent green path.
+  const prodRules = await prisma.deploymentRule.findMany({
+    where: { card_id: prodEnv.card_id },
+  });
 
-    // Pick a default branch for this environment
-    const defaultBranch =
-      envName === 'staging'
-        ? 'staging'
-        : envName === 'develop' || envName === 'development'
-          ? 'develop'
-          : type === 'pr' && prBranch
-            ? prBranch
-            : envName;
+  const defaultBranch =
+    envName === 'staging'
+      ? 'staging'
+      : envName === 'develop' || envName === 'development'
+        ? 'develop'
+        : type === 'pr' && prBranch
+          ? prBranch
+          : envName;
 
-    for (const prodRule of prodRules) {
-      const webhookSecret = (await import('crypto')).randomBytes(32).toString('hex');
+  for (const prodRule of prodRules) {
+    const webhookSecret = (await import('crypto')).randomBytes(32).toString('hex');
+    try {
       await prisma.deploymentRule.create({
         data: {
           card_id: result.card.id,
@@ -179,9 +198,19 @@ export async function createEnvironment(
           created_by: userId,
         },
       });
+    } catch (err: any) {
+      // P2002 = unique constraint violation. That means a rule with
+      // the same (card_id, node_id, repository, branch_pattern) tuple
+      // already exists — expected when this codepath retries after a
+      // partial failure. Anything else (FK violation, RLS deny,
+      // permission error from the DB user, network) is a real failure
+      // and should bubble.
+      if (err?.code === 'P2002') {
+        console.warn(`Trigger rule for node ${prodRule.node_id} already exists on env ${envName}; skipping clone.`);
+        continue;
+      }
+      throw err;
     }
-  } catch (err) {
-    console.warn('Failed to auto-create trigger rules for new environment:', err);
   }
 
   return result;
@@ -209,10 +238,34 @@ export async function updateEnvironment(envId: string, data: { name?: string; re
 
 // ─── Delete ─────────────────────────────────────────────────────────────────
 
+// findings.md #13 — CanvasDeployment statuses that mean "in flight".
+// Anything outside this set is terminal (success / partial / failed /
+// cancelled) and safe to leave behind when the parent card is deleted.
+const ACTIVE_DEPLOYMENT_STATUSES = ['planning', 'planned', 'deploying'] as const;
+
 export async function deleteEnvironment(envId: string) {
   const env = await prisma.environment.findUnique({ where: { id: envId } });
   if (!env) throw new Error('Environment not found');
   if (env.is_protected) throw new Error('Production environment cannot be deleted');
+
+  // findings.md #13 — refuse to delete while a deployment is still in
+  // flight. Without this check the canvasCard.delete cascades through
+  // CanvasDeployment.card_id and the worker tearing down resources
+  // either races against the cascade or finds its parent row gone.
+  // Deploys that already finished (success/partial/failed/cancelled)
+  // are not blocking — they're history rows.
+  const activeDeploy = await prisma.canvasDeployment.findFirst({
+    where: {
+      card_id: env.card_id,
+      status: { in: [...ACTIVE_DEPLOYMENT_STATUSES] },
+    },
+    select: { id: true, status: true },
+  });
+  if (activeDeploy) {
+    throw new Error(
+      `Cannot delete environment while a deployment is in flight (id=${activeDeploy.id}, status=${activeDeploy.status}). Wait for it to finish or cancel it first.`,
+    );
+  }
 
   // Delete card (cascades to environment via the 1:1 relation)
   await prisma.canvasCard.delete({ where: { id: env.card_id } });
@@ -259,8 +312,7 @@ export async function promoteEnvironment(sourceEnvId: string, targetEnvId: strin
       where: { card_id: targetEnv.card_id, enabled: true },
     });
     if (rules.length > 0) {
-      const { createDeploymentEvent } = await import('./pipeline.service');
-      const { getDeployQueue } = await import('./queue.service');
+      const { createDeploymentEvent, getDeployQueue } = await import('@ice/service-deploy');
       const queue = getDeployQueue();
 
       for (const rule of rules) {

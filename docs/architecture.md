@@ -1,202 +1,188 @@
-# Architecture Overview
+# Architecture
 
-ICE is structured as a pnpm monorepo with three distinct layers: **shared packages**, **backend services**, and **runnable apps**.
+This page describes ICE as a whole: what the major pieces are, how they talk to each other, and where the interesting seams are. Individual subsystems are covered in their own reference pages; links throughout.
 
-## System Diagram
-
-```mermaid
-graph TD
-    subgraph Clients
-        Web["Web SaaS<br/>@ice/web"]
-        Desktop["Desktop Electron<br/>@ice/desktop"]
-    end
-
-    Web -->|"HTTP + Socket.IO"| Gateway
-    Desktop -->|"Embedded HTTP"| Gateway2["Embedded Gateway<br/>(same code)"]
-
-    subgraph Gateway["API Gateway — apps/gateway"]
-        IAM[service-iam]
-        Canvas[service-canvas]
-        Deploy[service-deploy]
-        AI[service-ai]
-        Engine[service-engine]
-        Creds[service-credentials]
-        Billing[service-billing]
-    end
-
-    subgraph Gateway2["Embedded Gateway — desktop"]
-        IAM2[service-iam]
-        Canvas2[service-canvas]
-        Deploy2[service-deploy]
-        Engine2[service-engine]
-        Creds2[service-credentials]
-    end
-
-    Gateway --> PostgreSQL["PostgreSQL"]
-    Gateway --> Redis["Redis"]
-    Gateway2 --> SQLite["SQLite<br/>(local file)"]
-    Gateway2 --> MemQueue["In-Memory Queue"]
-```
-
-## Desktop = Embedded Web App
-
-The desktop app runs the **exact same code** as the web app — zero duplication:
+## One-minute model
 
 ```mermaid
-graph TB
-    subgraph Electron["Electron App"]
-        subgraph Renderer["Renderer — Chromium"]
-            UI["@ice/ui — same components as web"]
-            HTTP["HTTP Adapter — axios to localhost"]
-        end
-        subgraph Main["Main Process"]
-            GW["@ice/gateway — Express server"]
-            Services["All backend services"]
-            DB["SQLite via Prisma"]
-            Queue["In-memory queue"]
-            Win["Window management + menus"]
-        end
-        Renderer -->|"HTTP localhost:15173"| Main
+flowchart LR
+    user([User])
+    web[Web app<br/>React + SVG Canvas]
+    gw[Gateway<br/>Express + Socket.IO]
+    subgraph svc [Backend services]
+        canvas[canvas]
+        deploy[deploy]
+        ai[ai]
+        iam[iam]
+        creds[credentials]
+        engine[engine]
     end
+    db[(Prisma DB<br/>SQLite / Postgres)]
+    queue[(BullMQ<br/>Redis, prod only)]
+    cloud[(GCP / AWS / Azure)]
+    claude[Anthropic Claude]
+
+    user -->|HTTP + WebSocket| web
+    web -->|REST / SSE| gw
+    gw --> canvas
+    gw --> deploy
+    gw --> ai
+    gw --> iam
+    gw --> creds
+    gw --> engine
+    canvas & deploy & iam & creds & engine -->|Prisma| db
+    deploy -->|jobs| queue
+    deploy -->|Cloud SDK calls| cloud
+    ai -->|SSE| claude
 ```
 
-## Shared UI Architecture
+The **web app** is the only UI surface in development mode. The **Electron desktop app** re-uses the same web bundle with an embedded gateway inside the Electron main process - see [desktop.md](desktop.md).
 
-Both apps share `@ice/ui`. The web and desktop apps are thin shells:
+## Monorepo layout
 
-```mermaid
-graph TD
-    UI["@ice/ui<br/>Features, Store, Shared Components,<br/>Hooks, Utils, Config, Assets"]
-
-    UI --> Web["@ice/web<br/>thin shell: routing + pages + styles"]
-    UI --> Desktop["@ice/desktop<br/>thin shell: Electron window + embedded gateway"]
-
-    Web -->|"Vite @ alias → ui/src"| UI
-    Desktop -->|"loads web from localhost"| UI
+```
+ice/
+├── apps/
+│   ├── gateway/          Express composition of all services; routes, CORS, auth middleware
+│   └── desktop/          Electron main process, IPC, window management, auto-update
+├── packages/
+│   ├── core/             Graph engine, schemas, deploy planner, importers - no UI, no network
+│   ├── ui/               Shared React components (canvas, palette, panels, AI chat)
+│   ├── web/              Vite shell that boots the UI as a web app
+│   ├── blocks/           Cloud resource block definitions (concepts + provider-specific variants)
+│   ├── templates/        Pre-built infrastructure compositions (SaaS starter, RAG chatbot, …)
+│   ├── providers/aws/    AWS deployer implementation
+│   ├── providers/azure/  Azure deployer implementation
+│   ├── providers/gcp/    GCP deployer (20 service handlers)
+│   ├── db/               Prisma schema + client singleton
+│   ├── shared/           Auth middleware, crypto, Socket.IO helpers
+│   ├── constants/        Shared constants used across packages
+│   ├── ai/               AI provider abstraction (Anthropic + OpenAI-compatible)
+│   └── types/            Shared TypeScript interfaces - API contracts, DTOs, events
+└── services/
+    ├── canvas/           CanvasProject + environments CRUD
+    ├── deploy/           Plan, apply, pipelines, GitHub webhooks, queue workers
+    ├── ai/               Claude integration, SSE streaming, diagnose-deploy service
+    ├── iam/              User/org/auth endpoints, onboarding, profile
+    ├── credentials/      Encrypted cloud-provider credential storage
+    └── engine/           Schema + resource metadata API
 ```
 
-## Dependency Graph
+Nothing in `packages/` depends on anything in `services/` or `apps/`. Services depend on packages; apps depend on everything.
 
-```mermaid
-graph TD
-    types["@ice/types"]
-    types --> db["@ice/db — Prisma"]
-    types --> blockreg["@ice/block-registry"]
-    types --> provreg["@ice/provider-registry"]
-    types --> tmplreg["@ice/template-registry"]
-
-    core["@ice/core — engine"]
-    core --> blocks["@ice/blocks"]
-    blockreg --> blocks
-    blocks --> templates["@ice/templates"]
-    tmplreg --> templates
-
-    db --> shared["@ice/shared — auth, crypto, socket"]
-    shared --> iam[service-iam]
-    shared --> canvas[service-canvas]
-    shared --> deploy[service-deploy]
-    shared --> ai[service-ai]
-    shared --> creds[service-credentials]
-    shared --> billing[service-billing]
-    shared --> engine[service-engine]
-    engine --> gateway["@ice/gateway"]
-
-    ui["@ice/ui — all React code"]
-    ui --> web["@ice/web"]
-    gateway --> desktop["@ice/desktop"]
-    ui --> desktop
-```
-
-## Data Flow: Canvas to Deploy
+## Request flow: building and deploying a canvas
 
 ```mermaid
 sequenceDiagram
-    participant User
-    participant Canvas as Canvas UI
-    participant Redux
-    participant API as Gateway API
-    participant Deploy as Deploy Service
-    participant Cloud as Cloud Provider
+    participant U as User (browser)
+    participant W as Web app (React)
+    participant G as Gateway
+    participant C as canvas service
+    participant D as deploy service
+    participant Core as core engine
+    participant GCP as GCP SDK
 
-    User->>Canvas: Drag blocks, connect edges
-    Canvas->>Redux: Update nodes/edges
-    Redux-->>API: Auto-save (debounced 2s)
-    User->>Canvas: Click Deploy
-    Canvas->>API: POST /deploy/plan
-    API->>Deploy: translate_card_to_graph()
-    Deploy-->>Canvas: Plan diff (create/update/delete)
-    User->>Canvas: Confirm
-    Canvas->>API: POST /deploy/apply
-    API->>Deploy: Queue job
-    Deploy->>Cloud: Provision resources
-    Deploy-->>Canvas: Progress via Socket.IO
-    Deploy-->>API: Save to CanvasDeployment
+    U->>W: Drag blocks, draw edges
+    W->>W: Update Redux `cards-slice`, `graph-slice`
+    W->>G: POST /canvas/projects/:id (save)
+    G->>C: canvas.service.save()
+    C->>C: Persist via Prisma
+    U->>W: Click "Deploy"
+    W->>G: POST /deploy/plan
+    G->>D: deploy.service.plan()
+    D->>Core: translate_card_to_graph()
+    Core->>Core: Validate graph, compute plan
+    D-->>W: Plan (nodes to create/update/delete)
+    U->>W: Approve plan
+    W->>G: POST /deploy/apply
+    G->>D: deploy.service.apply()
+    D->>GCP: Per-handler create/update/delete
+    D-->>W: SSE progress stream
+    W-->>U: Live updates on canvas
 ```
 
-## Data Flow: AI Intent
+The two interesting boundary crossings:
+
+1. **`translate_card_to_graph`** (`packages/core/src/deploy/card-translator.ts`) - converts the UI's "cards" (visual blocks with properties) into the core engine's provider-agnostic graph. This is where the visual representation and the deploy model actually meet.
+2. **Per-handler apply** (`packages/providers/gcp/src/handlers/*`, `packages/core/src/deploy/providers/gcp/handlers/*`) - one handler per cloud service (Cloud Run, Cloud SQL, Pub/Sub, Firestore, BigQuery, Vertex AI, …). Each handler knows how to create, update, delete, and diff one resource type.
+
+## Data flow: canvas → graph → cloud
 
 ```mermaid
-sequenceDiagram
-    participant User
-    participant Chat as AI Chat Panel
-    participant API as Gateway API
-    participant Claude as Claude API
-    participant Canvas as Canvas Redux
+flowchart TD
+    canvas[Canvas state<br/>Redux slices]
+    cards[Cards + edges<br/>UI-shaped]
+    graph[Typed graph<br/>nodes + edges + properties]
+    plan[Deploy plan<br/>create/update/delete list]
+    apply[Per-handler apply<br/>real cloud SDK calls]
+    cloud[(Cloud resources)]
 
-    User->>Chat: Type intent
-    Chat->>API: POST /ai/intent (SSE)
-    API->>Claude: Stream with schema context
-    Claude-->>API: AiCanvasOp[] chunks
-    API-->>Chat: SSE events
-    Chat->>Canvas: Execute ops (addNode, addEdge...)
-    Canvas-->>User: Canvas updates in real-time
-    API-->>API: Save to AiConversation + AiAuditLog
+    canvas -->|serialize| cards
+    cards -->|translate_card_to_graph| graph
+    graph -->|validate + diff vs state| plan
+    plan -->|topological apply| apply
+    apply --> cloud
+    cloud -->|observed state| graph
 ```
 
-## Real-time Communication
+State for the "last-applied" graph is persisted in the DB; the deploy engine diffs the desired graph against the last-applied graph to compute the plan. See [core-engine.md](core-engine.md).
 
-Socket.IO manages four room types (authenticated via JWT in handshake):
+## Realtime
 
-| Room | Pattern | Purpose |
-|---|---|---|
-| Deploy | `deploy:{cardId}` | Deploy progress events |
-| Canvas | `canvas:{projectId}` | Canvas collaboration (future) |
-| Pipeline | `pipeline:{nodeId}` | CI/CD logs for specific node |
-| Card Pipeline | `card-pipeline:{cardId}` | Lightweight status badges on canvas |
+Long-running operations (deploys, imports, AI streams) push live updates over a Socket.IO connection from the gateway. The web app subscribes per-project and renders progress on the canvas as it arrives. The desktop app uses the same transport; the Socket.IO server is hosted inside the embedded gateway.
 
-## Multi-tenancy
+- Server: `packages/shared/src/socket.ts`, `services/deploy/src/services/deploy-event-log.ts`.
+- Client: `packages/ui/src/shared/hooks/use-socket.ts` and slice-specific listeners.
 
-- **Organisation** is the tenant boundary
-- Users belong to orgs via `OrganisationMember` (roles: owner, admin, member, viewer)
-- Projects belong to an org; provider credentials are scoped per org
-- Project-level access via `ProjectMember`
-- **Desktop mode:** single local user, auth bypassed (`ICE_DESKTOP=true`)
+## Authentication model (honest description)
 
-## Environments
+Today ICE Community Edition is **single-user by design**. The gateway auto-seeds a local user on startup and stamps all data with their ID. There is no login screen. This is deliberate - the self-hosted Community Edition is not a multi-tenant system.
 
-Each project can have multiple environments (production, staging, development, PR):
+For a multi-user setup you would run ICE Cloud (managed) or adapt the gateway's auth middleware (`packages/shared/src/auth`) to your organisation's needs. Multi-user RBAC is tracked on the [roadmap](../ROADMAP.md).
 
-- Each `Environment` maps 1:1 to a `CanvasCard` (separate canvas per environment)
-- Production is protected (cannot be deleted)
-- PR environments are ephemeral — auto-created on GitHub webhook
-- Environment promotion copies canvas state between environments
+## Storage
 
-## Database Strategy
+| Data | Where |
+|---|---|
+| Canvas projects, environments, pipelines | Prisma DB (SQLite in dev, Postgres in prod) |
+| Cloud credentials | Prisma DB, encrypted at rest with AES-256-GCM |
+| Deploy event log | Prisma DB |
+| Job queue (prod) | Redis via BullMQ |
+| Session | Stateless JWT cookies |
+| File uploads | Local filesystem for dev; object storage for prod |
 
-```mermaid
-graph LR
-    subgraph Web["Web — Production"]
-        PG["PostgreSQL"]
-        RD["Redis + BullMQ"]
-    end
-    subgraph Desktop["Desktop — Local"]
-        SQ["SQLite file"]
-        MQ["In-Memory Queue"]
-    end
-    Prisma["Prisma ORM<br/>same schema, two providers"] --> PG
-    Prisma --> SQ
-```
+See [database.md](database.md) for the schema walkthrough.
 
-- **Same Prisma schema** — `schema.prisma` (PostgreSQL) and `schema.sqlite.prisma` (SQLite)
-- Zero raw SQL — all queries through Prisma, portable across providers
-- Desktop data: `~/Library/Application Support/@ice/desktop/ice-desktop.db`
+## Deploy engine overview
+
+The deploy engine is provider-agnostic at the top level. Each supported cloud has a deployer (`packages/providers/<cloud>/`) that registers handlers for resource types. The core engine:
+
+1. Receives a desired graph.
+2. Loads the last-applied graph from state.
+3. Computes a diff (create, update, delete, no-op).
+4. Topologically orders the operations.
+5. Calls handlers for each operation, in order, streaming progress.
+6. Writes the new state back on success; rolls forward to the last good state on partial failure.
+
+GCP coverage is the most complete (20 service handlers, full lifecycle). AWS and Azure are intentionally partial - they exist, they compile, many handlers work, but GCP is the only provider where we claim "production-ready" at this stage. See [core-engine.md](core-engine.md) for the plan/apply implementation and [ROADMAP.md](../ROADMAP.md) for provider coverage plans.
+
+## AI assistant
+
+An optional Anthropic Claude integration can modify the canvas via natural language. The server side (`services/ai`) streams responses over Server-Sent Events; tool use lets the model emit canvas-mutation events that the client applies. Requires `ANTHROPIC_API_KEY` to be set. See [ai-assistant.md](ai-assistant.md).
+
+## Security notes
+
+- All cloud credentials are encrypted at rest (AES-256-GCM) before Prisma writes them; the encryption key lives in `CREDENTIAL_ENCRYPTION_KEY`.
+- GitHub webhook payloads are HMAC-verified in `services/deploy/src/routes/webhooks.ts`.
+- CORS is restricted to `FRONTEND_URL`.
+- Helmet.js sets standard security headers.
+- Rate limits sit in front of every API route in `apps/gateway/src/index.ts`.
+- The desktop app uses Electron with `nodeIntegration: false`, `contextIsolation: true`, `sandbox: true`. Renderer → main IPC is typed and deliberate.
+
+See [`../SECURITY.md`](../SECURITY.md) for the disclosure process.
+
+## See also
+
+- [core-engine.md](core-engine.md), [frontend.md](frontend.md), [services.md](services.md), [database.md](database.md), [desktop.md](desktop.md).
+- [deploying-to-gcp.md](deploying-to-gcp.md) - the end-to-end flow as a tutorial.
+- [`packages/core/src/`](../packages/core/src/) - the canonical implementation of everything on this page.

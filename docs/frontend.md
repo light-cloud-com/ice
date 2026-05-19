@@ -1,140 +1,134 @@
 # Frontend
 
-The web frontend is a React SPA built with Vite, using Redux Toolkit for state management and a custom SVG-based canvas for infrastructure design.
+ICE's frontend is a React 18 single-page app hosted by Vite (in dev) or served statically from the gateway (in production). The Electron desktop app wraps the same bundle. There are no framework-level surprises - the interesting parts are the custom SVG canvas and the Redux state shape.
 
-## Web App (`@ice/web`) {#web-app}
+## Packages involved
 
-**Location:** `packages/web/`
-**Dev:** `pnpm dev:web` (Vite, port 5173)
-**Entry:** `src/app/index.tsx`
+| Package | Responsibility |
+|---|---|
+| `packages/ui` | Shared React components. Canvas, palette, properties, AI chat, context menus, toolbars. Imported by `web` and `desktop`. |
+| `packages/web` | Vite shell. Routing, entry point (`main.tsx`), top-level pages (template gallery, settings, project view). |
+| `packages/ui/src/store/` | Redux store: 17 slices covering cards, graph, selection, environments, AI, ghost-mode, etc. |
 
-### Routing
+## Canvas
 
-| Route | Component | Auth |
-|---|---|---|
-| `/login` | `LoginPage` | Public |
-| `/signup` | `SignupPage` | Public |
-| `/auth/callback` | `AuthCallbackPage` | Public |
-| `/onboarding` | `OnboardingPage` | Protected |
-| `/invite/:token` | `InviteAcceptPage` | Public |
-| `/settings` | `UserSettingsPage` | Protected |
-| `/team` | `TeamPage` | Protected |
-| `/*` | `DynamicContent` | Protected |
+The canvas is a custom SVG renderer, not React-Flow or a third-party library. The decision was deliberate: panning/zooming a 1000-node graph at 60fps required more control than the off-the-shelf options gave.
 
-`DynamicContent` resolves path-based navigation to:
-- **Folder view** — project browser
-- **Project canvas** — `MainLayout` with palette + canvas + properties panels
-- **Project table** — tabular resource view
-- **Project settings** / **Deployment history**
+```
+packages/ui/src/features/canvas/
+├── components/
+│   ├── svg-canvas.tsx             Top-level SVG host
+│   ├── nodes/                     Per-block-type node components
+│   ├── context/                   Right-click menus (canvas, node, edge)
+│   ├── ghost/                     "Ghost" mode: AI-suggested additions before they're real
+│   └── …
+├── hooks/                         use-computing-flows, selection, drag, zoom
+└── utils/                         Ghost suggestions, auto-layout, etc.
+```
 
-### Layout
+Nodes are drawn as SVG groups; edges are SVG paths. Zoom + pan use native SVG viewBox math, not CSS transforms - predictable semantics at any zoom.
+
+## Redux state
+
+Seventeen slices under `packages/ui/src/store/slices/`:
+
+| Slice | What lives here |
+|---|---|
+| `account-slice` | Current user, org |
+| `ai-slice` | Chat history, streaming state |
+| `cards-slice` | The UI-shaped block model - what the canvas renders |
+| `debug-slice` | Feature flags, dev-only toggles |
+| `deploy-slice` | Deploy progress (per-node `nodesById` keyed by canvas node id, populated from the typed `deploy:event` socket channel), last plan, environment status |
+| `environments-slice` | Production / staging / preview selection |
+| `ghost-slice` | AI's proposed additions before commit |
+| `graph-slice` | Derived, provider-neutral graph (sync with cards) |
+| `integrations-slice` | GitHub, Anthropic, cloud provider status |
+| `onboarding-slice` | First-run wizard state |
+| `pipeline-slice` | CI/CD wiring per project |
+| `project-list-slice` | The projects list in the project browser |
+| `projects-slice` | Current project detail |
+| `selection-slice` | Which blocks/edges are selected |
+| `ui-slice` | Modals, panels, sidebar collapsed/expanded |
+| `validation-slice` | Live validation issues |
+| `view-slice` | Zoom level, pan offset, LOD (level of detail) |
+
+Slice boundaries are drawn to match feature boundaries: a feature folder under `packages/ui/src/features/` usually owns one or two slices. The split between `cards-slice` (UI-shaped) and `graph-slice` (provider-neutral) reflects the translator boundary described in [core-engine.md](core-engine.md).
+
+## Feature folders
+
+Each folder under `packages/ui/src/features/` encapsulates one user-facing feature:
+
+```
+packages/ui/src/features/
+├── account            User menu, org switcher, settings
+├── ai                 Claude chat panel, SSE stream client
+├── canvas             The canvas itself
+├── concept-info       Hover-over explanations for concepts
+├── cost               Per-block and per-canvas cost estimation
+├── debug              Dev-only inspector panel
+├── deploy             Deploy button, progress panel
+├── environments       Env tabs and switching
+├── integrations       GitHub + cloud provider credential UI
+├── onboarding         First-run wizard
+├── palette            Left sidebar: drag source for blocks
+├── pipeline           CI/CD config UI
+├── project-browser    Projects list
+├── properties         Right sidebar: block property editor
+├── templates          Template gallery + detail
+├── toolbar            Top toolbar
+├── validation         Inline validation badges
+└── wizard             Add-anything wizard
+```
+
+Each folder is self-contained: components, hooks, and the occasional sub-slice all colocated. Imports across folders go through clear public entry points (barrel exports).
+
+## Styling
+
+- **Tailwind CSS** for layout and one-off styling.
+- **Radix UI** for primitives that need accessibility care (popover, dropdown, dialog).
+- **Custom design tokens** named `ice-*` (e.g. `text-ice-text-2`, `bg-ice-raised`). Defined in the Tailwind config.
+
+There is no component library abstraction over Tailwind; components compose raw Tailwind classes. That's a deliberate simplicity choice - the design system lives in tokens and conventions, not in a wrapper library.
+
+## Data flow in the UI
 
 ```mermaid
-block-beta
-    columns 3
-    AppBar["AppBar (project name, view toggle, user menu)"]:3
-    Palette["Resource Palette<br/>(blocks, projects tree)"]:1
-    block:center:1
-        Canvas["SVG Canvas<br/>(drag, connect, deploy blocks)"]
-        EnvBar["Environment Tab Bar"]
-        AiChat["AI Chat Panel (collapsible)"]
-    end
-    Properties["Properties Panel<br/>(config, pipeline, deploy)"]:1
+flowchart LR
+    user[User action]
+    action[Redux action]
+    slice[Slice reducer]
+    selector[Selector]
+    component[Component re-render]
+    gateway[Gateway<br/>REST / SSE / Socket.IO]
+
+    user --> action
+    action --> slice
+    slice --> selector
+    selector --> component
+    component -.->|side effect| gateway
+    gateway -.->|response| action
 ```
 
-### Feature Modules
+Async work lives in thunks (`createAsyncThunk`) colocated with the slice that owns the state they mutate. Side effects are explicit at the thunk boundary; reducers are pure.
 
-| Feature | Directory | Contents |
-|---|---|---|
-| Canvas | `features/canvas/` | SVG canvas, node renderers, canvas controls |
-| AI | `features/ai/` | AI chat panel, operation executor |
-| Deploy | `features/deploy/` | Deploy panel (plan + apply) |
-| Pipeline | `features/pipeline/` | CI/CD rule config, deployment events |
-| Environments | `features/environments/` | Environment tabs, promote modal |
-| Palette | `features/palette/` | Block drag source, project tree |
-| Properties | `features/properties/` | Node config panel, pipeline config |
-| Templates | `features/templates/` | Template picker |
-| Onboarding | `features/onboarding/` | 4-step wizard (welcome, team, cloud, project) |
-| Wizard | `features/wizard/` | Project creation wizard |
-| Account | `features/account/` | Settings, team, profile, org switcher |
-| Integrations | `features/integrations/` | GitHub/provider connect modals |
-| Toolbar | `features/toolbar/` | View level toggle (LOD) |
-| Debug | `features/debug/` | Debug overlay |
+Real-time updates (deploy progress, AI stream, graph events) arrive via Socket.IO and are dispatched into the relevant slice. See `packages/ui/src/shared/hooks/use-socket.ts`.
 
-### State Management (Redux)
+## Internationalisation
 
-| Slice | Manages |
-|---|---|
-| `cards` | Canvas nodes, edges, viewport, undo/redo stacks |
-| `graph` | `@ice/core` graph instance |
-| `ui` | Palette visibility, split pane layout |
-| `selection` | Selected node/edge IDs |
-| `view` | View level (LOD) toggle |
-| `projectList` | Flat project list for sidebar |
-| `projects` | Active project + org context |
-| `deploy` | Deploy panel state, deploy status |
-| `integrations` | GitHub/GCP/AWS/Azure connection status |
-| `account` | User profile |
-| `ai` | AI chat state, streaming ops |
-| `pipeline` | CI/CD pipeline status per node |
-| `environments` | Environment list, active environment |
-| `onboarding` | Onboarding step state |
-| `debug` | Debug overlay data |
+`packages/ui/src/i18n/` - hand-rolled, not a framework. Two locales: English and Mandarin, both complete for the current UI surface. Adding a locale means adding a new JSON file and listing it in `i18n/index.ts`.
 
-### Auto-Save
+Usage: `const { t } = useTranslation(); t('templates.gallery.title')`.
 
-The store subscriber watches for canvas changes, debounces 2 seconds, then:
-1. Saves to `localStorage` (offline resilience)
-2. Saves to backend via `api.canvas.save(cardId, data)`
+## Entry points worth reading
 
-A dirty check via quick hash prevents unnecessary saves.
+- [`packages/ui/src/features/canvas/components/svg-canvas.tsx`](../packages/ui/src/features/canvas/components/svg-canvas.tsx) - the canvas container.
+- [`packages/ui/src/store/slices/cards-slice.ts`](../packages/ui/src/store/slices/cards-slice.ts) - the UI model.
+- [`packages/ui/src/features/palette/`](../packages/ui/src/features/palette/) - left sidebar drag source.
+- [`packages/ui/src/features/properties/`](../packages/ui/src/features/properties/) - right sidebar editor.
+- [`packages/web/src/app/app.tsx`](../packages/web/src/app/app.tsx) - routing + top-level layout.
 
-### Canvas
+## See also
 
-The canvas is a **custom SVG implementation** — not React Flow. Key components:
-
-- `SvgCanvas` — main canvas container with pan/zoom
-- `SvgUnifiedNode` — standard resource node renderer
-- `SvgGroupNode` — group/region container
-- `SvgCompactNode` — compact view (LOD)
-- `SvgConnectionPath` — edge renderer
-- `SelectionFrame` — multi-select drag
-- `CanvasMinimap` — overview minimap
-- `CanvasContextMenu` — right-click context menu
-
----
-
-## UI Library (`@ice/ui`) {#ui-library}
-
-**Location:** `packages/ui/`
-
-Shared React component library consumed by both web and desktop apps. Contains all major application panels and a primitive design system.
-
-### Sub-path Exports
-
-```typescript
-import { SvgCanvas, SvgUnifiedNode } from '@ice/ui/canvas'
-import { DeployPanel } from '@ice/ui/deploy'
-import { PropertiesPanel } from '@ice/ui/properties'
-import { ResourcePalette } from '@ice/ui/palette'
-import { PipelinePanel } from '@ice/ui/pipeline'
-import { TemplatePicker } from '@ice/ui/templates'
-import { EnvironmentTabBar } from '@ice/ui/environments'
-import { AiChatPanel } from '@ice/ui/ai'
-import { Button, Input, Dialog } from '@ice/ui/primitives/button'
-```
-
-### Design System
-
-- **Primitives:** Radix UI components styled with Tailwind CSS
-- **Styling:** `class-variance-authority` for variant management, `tailwind-merge` for class merging
-- **Icons:** Lucide React
-- **Layout:** `react-resizable-panels` for split pane layouts
-
-### Primitive Components
-
-`button`, `input`, `textarea`, `select`, `dialog`, `dropdown-menu`, `badge`, `separator`, `tooltip`, `label`, `switch`, `scroll-area`, `resizable`, `tabs`, `card`, `combobox`, `context-menu`
-
-### Tech Stack
-
-React 18, Redux Toolkit, Immer, React Hook Form, Zod, Radix UI, Tailwind CSS, Lucide
+- [core-engine.md](core-engine.md) - where the `graph-slice` data ultimately goes.
+- [ai-assistant.md](ai-assistant.md) - the AI chat panel.
+- [desktop.md](desktop.md) - how this bundle runs inside Electron.

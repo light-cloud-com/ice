@@ -124,7 +124,12 @@ export const ragChatbotTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    {
+      iceType: 'Network.PublicEndpoint',
+      label: 'Public Traffic',
+      position: { x: 50, y: 86 },
+      data: { domain: 'chat.acme.io', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true },
+    },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
     // 2: Chat UI
@@ -198,8 +203,6 @@ export const ragChatbotTemplate: ComposedTemplate = {
     // ── Ungrouped (control plane) ─────────────────────────────────────────
     // 13: Secret
     { iceType: 'Security.Secret', label: 'API Keys', position: { x: 50, y: 1080 }, data: {} },
-    // 14: Domain
-    { iceType: 'Network.Domain', label: 'Domain', position: { x: 306, y: 1080 }, data: { hostname: 'chat.acme.io' } },
     // 15: Repo
     {
       iceType: 'Source.Repository',
@@ -240,10 +243,9 @@ export const ragChatbotTemplate: ComposedTemplate = {
     { fromBlock: 4, toBlock: 12, relationship: 'connects_to' },
     { fromBlock: 11, toBlock: 12, relationship: 'connects_to' },
     // Domain → Chat UI (Domain→Routable rule)
-    { fromBlock: 14, toBlock: 2, relationship: 'connects_to' },
     // Repo → Service (Repo→Service pipeline rule)
-    { fromBlock: 15, toBlock: 4, relationship: 'connects_to' },
+    { fromBlock: 14, toBlock: 4, relationship: 'connects_to' },
     // Service → Env (Service→EnvConfig config rule)
-    { fromBlock: 4, toBlock: 16, relationship: 'depends_on' },
+    { fromBlock: 4, toBlock: 15, relationship: 'depends_on' },
   ],
 };

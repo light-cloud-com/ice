@@ -18,7 +18,8 @@ import { listAuditEntries, getAuditEntry } from '../services/ai-audit.service';
 import { processCanvasIntent, streamCanvasIntent, getAiProvider } from '../services/ai.service';
 import { validateCanvas } from '../services/canvas-validation.service';
 import { dryRunDeploy } from '../services/deploy-dryrun.service';
-import type { AiCanvasIntentRequest } from '@ice/types';
+import { diagnoseDeploy } from '../services/diagnose-deploy.service';
+import type { AiCanvasIntentRequest, DiagnoseDeployRequest } from '@ice/types';
 
 const router: RouterType = Router();
 
@@ -34,9 +35,9 @@ router.use(requireAuth);
 
 // ── Health (no rate limit) ──────────────────────────────────────────────────
 
-router.get('/health', async (_req: AuthRequest, res: Response) => {
+router.get('/health', async (req: AuthRequest, res: Response) => {
   try {
-    const provider = await getAiProvider();
+    const provider = await getAiProvider(req.organisationId);
     const health = await provider.healthCheck();
     res.json(health);
   } catch (err: any) {
@@ -47,7 +48,7 @@ router.get('/health', async (_req: AuthRequest, res: Response) => {
 // ── Canvas Intent ────────────────────────────────────────────────────────────
 
 router.post('/canvas-intent', aiLimiter, async (req: AuthRequest, res: Response) => {
-  const { intent, canvasContext } = req.body as AiCanvasIntentRequest;
+  const { intent, canvasContext, cardId } = req.body as AiCanvasIntentRequest;
 
   if (!intent || typeof intent !== 'string') {
     return res.status(400).json({ message: 'Missing intent' });
@@ -62,14 +63,50 @@ router.post('/canvas-intent', aiLimiter, async (req: AuthRequest, res: Response)
     const wantsStream = req.headers.accept?.includes('text/event-stream');
 
     if (wantsStream) {
-      await streamCanvasIntent(intent, canvasContext, res);
+      await streamCanvasIntent(intent, canvasContext, res, cardId, req.organisationId);
     } else {
-      const result = await processCanvasIntent(intent, canvasContext);
+      const result = await processCanvasIntent(intent, canvasContext, cardId, req.organisationId);
       res.json(result);
     }
   } catch (err: any) {
     console.error('AI canvas-intent error:', err);
+    // findings.md #22 — once streamCanvasIntent has flushed SSE
+    // headers any attempt to res.status(500).json(...) throws
+    // ERR_HTTP_HEADERS_SENT and crashes the request handler. The
+    // SSE channel is the only place left to surface the failure;
+    // try to ship one last `event: error` frame before tearing
+    // the connection down. Best-effort — if even the write throws
+    // (socket already closed), drop it.
+    if (res.headersSent) {
+      try {
+        res.write(`event: error\ndata: ${JSON.stringify({ message: err.message || 'AI processing failed' })}\n\n`);
+      } catch {
+        // socket already closed
+      }
+      try {
+        res.end();
+      } catch {
+        // already ended
+      }
+      return;
+    }
     res.status(500).json({ message: err.message || 'AI processing failed' });
+  }
+});
+
+// ── Diagnose Deploy (AI-Native #2) ───────────────────────────────────────────
+
+router.post('/diagnose-deploy', aiLimiter, async (req: AuthRequest, res: Response) => {
+  const body = req.body as DiagnoseDeployRequest;
+  if (!body?.error || !body?.canvasContext) {
+    return res.status(400).json({ message: 'Missing error or canvasContext' });
+  }
+  try {
+    const result = await diagnoseDeploy(body, req.organisationId);
+    res.json(result);
+  } catch (err: any) {
+    console.error('AI diagnose-deploy error:', err);
+    res.status(500).json({ message: err.message || 'Diagnosis failed' });
   }
 });
 

@@ -1,7 +1,7 @@
 /**
  * Onboarding Page — Community Edition
  *
- * 4-step flow: Welcome → Cloud → GitHub → First Project
+ * 3-step flow: Cloud → GitHub → First Project
  * No team step (single user, org auto-created by gateway).
  */
 
@@ -12,13 +12,11 @@ import { useNavigate } from 'react-router-dom';
 import { ConnectCloudStep } from './connect-cloud-step';
 import { ConnectGithubStep } from './connect-github-step';
 import { FirstProjectStep } from './first-project-step';
-import { WelcomeStep } from './welcome-step';
 import { Logo } from '../../../assets/logo';
 import { COMPOSED_TEMPLATES, QUICK_STARTS, expandComposedTemplate } from '../../../config/templates';
 import { useTranslation } from '../../../i18n';
 import axiosInstance from '../../../shared/api/axios-instance';
 import { StepIndicator } from '../../../shared/components/step-indicator';
-import { useTheme } from '../../../shared/hooks/use-theme';
 import { toSlug } from '../../../shared/utils/slug';
 import { fetchProfile } from '../../../store/slices/account-slice';
 import {
@@ -31,20 +29,14 @@ import {
 import type { Provider } from '../../../config/blocks/types';
 import type { RootState, AppDispatch } from '../../../store';
 
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 3;
 
 export const OnboardingPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { isDark } = useTheme();
   const { t } = useTranslation();
 
-  const STEP_LABELS = [
-    t('onboarding.nav.stepWelcome'),
-    t('onboarding.nav.stepCloud'),
-    t('onboarding.nav.stepGitHub'),
-    t('onboarding.nav.stepProject'),
-  ];
+  const STEP_LABELS = [t('onboarding.nav.stepCloud'), t('onboarding.nav.stepGitHub'), t('onboarding.nav.stepProject')];
 
   const currentStep = useSelector((s: RootState) => s.onboarding.currentStep);
   const completed = useSelector((s: RootState) => s.onboarding.completed);
@@ -107,7 +99,13 @@ export const OnboardingPage: React.FC = () => {
 
       const orgSlug = selectedOrg ? toSlug(selectedOrg.name) : '';
       const projectSlug = project.slug || toSlug(name);
-      navigate(`/${orgSlug}/${projectSlug}`, { replace: true });
+      // Append `?tour=canvas-tour` so first-launch users get the canvas
+      // tour automatically (consumed by use-tour-autostart). Use
+      // URLSearchParams so any future params on the redirect URL are
+      // preserved rather than smashed.
+      const search = new URLSearchParams();
+      search.set('tour', 'canvas-tour');
+      navigate(`/${orgSlug}/${projectSlug}?${search.toString()}`, { replace: true });
     } catch (err) {
       console.error('Failed to create project:', err);
       await dispatch(completeOnboarding());
@@ -120,21 +118,17 @@ export const OnboardingPage: React.FC = () => {
 
   const goNext = useCallback(async () => {
     if (currentStep === 1) {
-      await dispatch(saveOnboardingStep({ step: 2 }));
-    }
-
-    if (currentStep === 2) {
       await dispatch(
         saveOnboardingStep({
-          step: 3,
+          step: 2,
           defaultProvider: provider || undefined,
           defaultRegion: region || undefined,
         }),
       );
     }
 
-    if (currentStep === 3) {
-      await dispatch(saveOnboardingStep({ step: 4 }));
+    if (currentStep === 2) {
+      await dispatch(saveOnboardingStep({ step: 3 }));
     }
 
     if (currentStep === TOTAL_STEPS) {
@@ -166,19 +160,16 @@ export const OnboardingPage: React.FC = () => {
 
   // ── Render ───────────────────────────────────────────────────────────────────
 
-  // Map step number to component (no team step)
   const stepContent = () => {
     switch (currentStep) {
       case 1:
-        return <WelcomeStep />;
-      case 2:
         return <ConnectCloudStep />;
-      case 3:
+      case 2:
         return <ConnectGithubStep />;
-      case 4:
+      case 3:
         return <FirstProjectStep />;
       default:
-        return <WelcomeStep />;
+        return <ConnectCloudStep />;
     }
   };
 
@@ -215,9 +206,10 @@ export const OnboardingPage: React.FC = () => {
               <button
                 id="ice-onboarding-nav-btn-back"
                 onClick={goBack}
+                aria-label={t('onboarding.nav.back')}
                 className="flex items-center gap-1 text-xs text-ice-text-2 hover:text-ice-text-1 px-3 py-1.5 rounded-md hover:bg-ice-hover transition-colors"
               >
-                <ChevronLeft className="w-3.5 h-3.5" />
+                <ChevronLeft className="w-3.5 h-3.5" aria-hidden="true" />
                 {t('onboarding.nav.back')}
               </button>
             ) : (
@@ -229,6 +221,7 @@ export const OnboardingPage: React.FC = () => {
                 <button
                   id="ice-onboarding-nav-btn-skip"
                   onClick={handleSkipStep}
+                  aria-label={t('onboarding.nav.skip')}
                   className="text-xs text-ice-text-3 hover:text-ice-text-1 px-3 py-1.5 rounded-md hover:bg-ice-hover transition-colors"
                 >
                   {t('onboarding.nav.skip')}
@@ -239,18 +232,20 @@ export const OnboardingPage: React.FC = () => {
                 <button
                   id="ice-onboarding-nav-btn-next"
                   onClick={goNext}
+                  aria-label={t('onboarding.nav.continue')}
                   className="flex items-center gap-1 text-xs font-medium px-4 py-1.5 rounded-md bg-ice-accent text-white hover:bg-ice-accent-hover transition-colors"
                 >
                   {t('onboarding.nav.continue')}
-                  <ChevronRight className="w-3.5 h-3.5" />
+                  <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
                 </button>
               ) : (
                 <button
                   id="ice-onboarding-nav-btn-next"
                   onClick={goNext}
+                  aria-label={t('onboarding.nav.createAndStart')}
                   className="flex items-center gap-1.5 text-xs font-medium px-4 py-1.5 rounded-md bg-ice-green text-white hover:bg-ice-green/90 transition-colors"
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
+                  <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
                   {t('onboarding.nav.createAndStart')}
                 </button>
               )}

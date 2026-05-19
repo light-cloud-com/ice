@@ -137,9 +137,9 @@ describe('updateCardNodeParent — reparent single node', () => {
 
   it('should push undo snapshot on reparent', () => {
     const state = setupState([makeGroup('g1'), makeNode('n1')]);
-    const historyBefore = state.history[state.activeCardId]?.past.length || 0;
+    const historyBefore = state.history[state.activeCardId!]?.past.length || 0;
     const result = cardsReducer(state, updateCardNodeParent({ nodeId: 'n1', parentId: 'g1' }));
-    const historyAfter = result.history[result.activeCardId]?.past.length || 0;
+    const historyAfter = result.history[result.activeCardId!]?.past.length || 0;
     expect(historyAfter).toBeGreaterThan(historyBefore);
   });
 });

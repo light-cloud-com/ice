@@ -1,5 +1,6 @@
 {
   "name": "@ice/service-ai",
+  "license": "Apache-2.0",
   "version": "0.1.0",
   "description": "AI assistant service",
   "private": true,
@@ -14,6 +15,7 @@
   },
   "dependencies": {
     "@ice/ai": "workspace:*",
+    "@ice/constants": "workspace:*",
     "@ice/db": "workspace:*",
     "@ice/shared": "workspace:*",
     "@ice/types": "workspace:*",

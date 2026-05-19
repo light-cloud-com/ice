@@ -1,17 +1,26 @@
 import React, { memo } from 'react';
 import { CARD_PX } from '../../../../../config/canvas-constants';
+import { t } from '../../../../../i18n';
 import type { NodePipelineStatus } from './types';
 
 const FONT_MONO = "ui-monospace, 'SFMono-Regular', monospace";
 
-const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
-  success: { color: '#22c55e', label: 'Live' },
-  failed: { color: '#ef4444', label: 'Failed' },
-  building: { color: '#3b82f6', label: 'Building' },
-  deploying: { color: '#3b82f6', label: 'Deploying' },
-  queued: { color: '#f59e0b', label: 'Queued' },
-  idle: { color: '#64748b', label: '' },
+// Labels are computed on each render via `statusConfigFor` so a locale
+// change updates the chip text without a re-mount. Colors are
+// theme-static, so the table only holds the color/label-key pair.
+const STATUS_COLORS: Record<string, { color: string; labelKey: string | null }> = {
+  success: { color: '#22c55e', labelKey: 'canvas.status.pipelineLive' },
+  failed: { color: '#ef4444', labelKey: 'canvas.status.pipelineFailed' },
+  building: { color: '#3b82f6', labelKey: 'canvas.status.pipelineBuilding' },
+  deploying: { color: '#3b82f6', labelKey: 'canvas.status.pipelineDeploying' },
+  queued: { color: '#f59e0b', labelKey: 'canvas.status.pipelineQueued' },
+  idle: { color: '#64748b', labelKey: null },
 };
+
+function statusConfigFor(status: string): { color: string; label: string } {
+  const spec = STATUS_COLORS[status] ?? STATUS_COLORS.idle;
+  return { color: spec.color, label: spec.labelKey ? t(spec.labelKey) : '' };
+}
 
 interface PipelineRowProps {
   status: NodePipelineStatus;
@@ -20,7 +29,7 @@ interface PipelineRowProps {
 }
 
 export const PipelineRow: React.FC<PipelineRowProps> = memo(({ status, reducedMotion, onClick }) => {
-  const config = STATUS_CONFIG[status.status] || STATUS_CONFIG.idle;
+  const config = statusConfigFor(status.status);
   const isActive = status.status === 'building' || status.status === 'deploying' || status.status === 'queued';
   const isComplete = status.status === 'success' || status.status === 'failed';
   const iconColor = status.status === 'success' ? '#22c55e' : status.status === 'failed' ? '#ef4444' : '#f59e0b';

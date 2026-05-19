@@ -4,9 +4,9 @@ import type { BlockBlueprint } from '../../types';
 export const azureLogsBlueprint: BlockBlueprint = createBlueprintFromResource('log-group', {
   iceType: 'Monitoring.Log',
   category: 'observability',
-  name: 'Azure Logs',
-  description: 'Azure Monitor. Errors, performance, alerts.',
+  name: 'Logs',
+  description: 'Azure Monitor. Live tail logs on the canvas; errors, performance, alerts.',
   icon: 'FileText',
   providers: ['azure'],
-  nodeDataDefaults: {},
+  nodeDataDefaults: { streamingMode: 'polling' },
 });

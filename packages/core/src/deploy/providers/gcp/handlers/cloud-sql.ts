@@ -5,9 +5,9 @@
  * Uses REST API (Cloud SQL Admin v1beta4) since there's no official Node.js SDK.
  */
 
-import { SERVICE_NAMES, operation_failed, operation_timed_out } from '../messages.js';
-import type { ResourceDeployResult } from '../../../types.js';
-import type { GCPResourceHandler, GCPHandlerContext } from '../types.js';
+import { SERVICE_NAMES, operation_failed, operation_timed_out } from '../messages';
+import type { ResourceDeployResult } from '../../../types';
+import type { GCPResourceHandler, GCPHandlerContext } from '../types';
 
 const BASE_URL = 'https://sqladmin.googleapis.com/v1';
 
@@ -45,19 +45,81 @@ function fail(
   };
 }
 
+/**
+ * Resolve the (edition, tier) pair to send to the Cloud SQL Admin API.
+ *
+ * The two are coupled: ENTERPRISE accepts shared-core tiers
+ * (`db-f1-micro`, `db-g1-small`) and `db-custom-CPU-MEM`; ENTERPRISE_PLUS
+ * only accepts `db-perf-optimized-N-*`. Picking one without the other
+ * yields HTTP 400 "Invalid Tier (X) for (Y) Edition" — which is the bug
+ * we hit on projects whose default edition is ENTERPRISE_PLUS.
+ *
+ * Strategy:
+ *   1. If the user supplied an explicit edition, trust it and validate
+ *      that the tier matches; auto-fix mismatches with a sensible default.
+ *   2. If only a tier was supplied, infer edition from the tier prefix.
+ *   3. If neither was supplied, default to ENTERPRISE + db-f1-micro
+ *      (the cheapest dev-friendly combination).
+ *
+ * This makes the handler self-correcting on projects whose default
+ * edition is ENTERPRISE_PLUS — the user no longer has to know that
+ * `db-f1-micro` doesn't exist on that edition.
+ */
+function resolve_edition_and_tier(properties: Record<string, unknown>): { edition: string; tier: string } {
+  const requested_edition = ((properties.edition as string) || '').toUpperCase();
+  const requested_tier = (properties.tier as string) || '';
+
+  const tier_is_perf_optimized = /^db-perf-optimized/i.test(requested_tier);
+  const tier_is_shared_or_custom = /^(db-f1-micro|db-g1-small|db-custom-)/i.test(requested_tier);
+
+  if (requested_edition === 'ENTERPRISE_PLUS') {
+    return {
+      edition: 'ENTERPRISE_PLUS',
+      tier: tier_is_perf_optimized ? requested_tier : 'db-perf-optimized-N-2',
+    };
+  }
+  if (requested_edition === 'ENTERPRISE') {
+    return {
+      edition: 'ENTERPRISE',
+      tier: tier_is_perf_optimized || !requested_tier ? 'db-f1-micro' : requested_tier,
+    };
+  }
+  // No edition specified — infer from tier shape.
+  if (tier_is_perf_optimized) {
+    return { edition: 'ENTERPRISE_PLUS', tier: requested_tier };
+  }
+  return {
+    edition: 'ENTERPRISE',
+    tier: tier_is_shared_or_custom ? requested_tier : 'db-f1-micro',
+  };
+}
+
 export const cloud_sql_handler: GCPResourceHandler = {
   async create(name, properties, ctx) {
     const start = Date.now();
     const region = (properties.region as string) || ctx.region;
 
+    // Two coarse milestones: the submit and the long async wait. Cloud SQL's
+    // instance create returns a long-running operation immediately and then
+    // takes 5-10+ minutes to actually become RUNNABLE — the wait is the
+    // user-visible slow part, so it gets its own step.
+    const TOTAL_STEPS = 2;
+    const reportStep = (index: number, label: string) => {
+      ctx.on_step?.(name, { label, index, total: TOTAL_STEPS });
+    };
+
     try {
+      const { edition, tier } = resolve_edition_and_tier(properties);
+      ctx.on_log?.(`[cloud-sql] Creating ${name} (edition=${edition}, tier=${tier})`);
+
       const instance_body = {
         name,
         project: ctx.project,
         region,
         databaseVersion: properties.database_version || 'POSTGRES_16',
         settings: {
-          tier: properties.tier || 'db-f1-micro',
+          tier,
+          edition,
           dataDiskSizeGb: String(properties.storage_size_gb || 20),
           dataDiskType: 'PD_SSD',
           backupConfiguration: {
@@ -74,10 +136,12 @@ export const cloud_sql_handler: GCPResourceHandler = {
       };
 
       // Create the instance
+      reportStep(1, 'Creating Cloud SQL instance');
       const op = (await ctx.rest_client.post(`${BASE_URL}/projects/${ctx.project}/instances`, instance_body)) as any;
 
       // Wait for the operation to complete
       if (op?.name) {
+        reportStep(2, 'Waiting for instance to become ready');
         await wait_for_operation(ctx, op.name);
       }
 
@@ -143,6 +207,18 @@ export const cloud_sql_handler: GCPResourceHandler = {
       if (op?.name) {
         await wait_for_operation(ctx, op.name);
       }
+
+      // Cloud SQL automated backups persist for the project's backup
+      // retention window (default 7 days) after the instance is deleted.
+      // We deliberately do NOT auto-delete these — they're the last line
+      // of defense against "oh no I destroyed the wrong instance" — but
+      // we tell the user where to find them in case they want a manual
+      // cleanup.
+      ctx.on_log?.(
+        `[cloud-sql] Instance ${name} deleted. Automated backups persist for the configured retention window ` +
+          `(default 7 days). If you need to delete them manually, go to ` +
+          `https://console.cloud.google.com/sql/instances and use the Backups tab before the retention window expires.`,
+      );
 
       return result(name, 'delete', start);
     } catch (error) {

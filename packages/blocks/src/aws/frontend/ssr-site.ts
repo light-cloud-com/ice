@@ -11,5 +11,7 @@ export const awsSsrSiteBlueprint: BlockBlueprint = createBlueprintFromResource('
   nodeDataDefaults: {
     runtime: 'Next.js 14',
     port: 3000,
+    image: '<accountId>.dkr.ecr.<region>.amazonaws.com/ssr-app:latest',
+    repository: 'myorg/ssr-app',
   },
 });

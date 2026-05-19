@@ -72,7 +72,7 @@ interface SerializedGraph {
   metadata: Record<string, unknown>;
 }
 
-interface GraphState {
+export interface GraphState {
   iceGraph: SerializedGraph | null;
   nodes: CanvasNode[];
   edges: CanvasEdge[];
@@ -172,7 +172,15 @@ function iceToCanvas(
     }
   });
 
-  // Handle empty containers
+  // Handle empty containers.
+  // findings.md #50 — the inner delete() is dormant under the
+  // current call sites. They all pass DEFAULT_OPTIONS (viewLevel 2,
+  // emptyContainerMode 'hide'), and viewLevel 2 has
+  // showEmptyContainers: true, so `!viewConfig.showEmptyContainers`
+  // is always false. The branch is preserved (not deleted) because
+  // a future caller targeting viewLevel 1 — Basic view, where
+  // showEmptyContainers is false — relies on this exact gate to
+  // collapse empty VPCs / Subnets / Groups out of the canvas.
   if (emptyContainerMode === 'hide') {
     graph.nodes.forEach((node) => {
       if (node.behavior === 'container') {

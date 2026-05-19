@@ -46,7 +46,7 @@ export interface ProjectFolder {
   order: number;
 }
 
-interface ProjectsState {
+export interface ProjectsState {
   projects: Project[];
   folders: ProjectFolder[];
   activeProjectId: string | null;
@@ -208,12 +208,15 @@ const projectsSlice = createSlice({
     // ── Active selection ────────────────────────────────────────────────────
 
     setActiveProject: (state, action: PayloadAction<string>) => {
-      state.activeProjectId = action.payload;
+      // findings.md #30 — gate on existence so a stale callsite (or
+      // a deep-link before fetchProjects has resolved) can't pin a
+      // non-existent id into activeProjectId. Sister-slice
+      // `setActiveEnvironment` already does this; aligning behavior.
       const project = state.projects.find((p) => p.id === action.payload);
-      if (project) {
-        state.activeEnvironmentId = project.environments[0]?.id || null;
-        project.expanded = true;
-      }
+      if (!project) return;
+      state.activeProjectId = action.payload;
+      state.activeEnvironmentId = project.environments[0]?.id || null;
+      project.expanded = true;
     },
 
     setActiveEnvironment: (state, action: PayloadAction<string>) => {

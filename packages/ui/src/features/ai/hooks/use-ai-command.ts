@@ -305,6 +305,14 @@ async function processSSEStream(response: Response, dispatch: AppDispatch) {
 
   const decoder = new TextDecoder();
   let buffer = '';
+  // findings.md #12 — parser state lives OUTSIDE the read() loop. The
+  // previous implementation reset eventType/eventData on every chunk,
+  // so an SSE event split across two TCP packets (event: line in
+  // chunk N, data: line + blank line in chunk N+1) silently dropped:
+  // the second chunk processed `data:` without knowing the event
+  // type and the dispatch never fired.
+  let eventType = '';
+  let eventData = '';
 
   try {
     while (true) {
@@ -316,9 +324,6 @@ async function processSSEStream(response: Response, dispatch: AppDispatch) {
       // Parse SSE events from the buffer
       const lines = buffer.split('\n');
       buffer = lines.pop() || ''; // Keep the last incomplete line
-
-      let eventType = '';
-      let eventData = '';
 
       for (const line of lines) {
         if (line.startsWith('event: ')) {

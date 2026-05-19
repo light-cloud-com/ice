@@ -4,9 +4,9 @@
  * Handles: gcp.logging.sink
  */
 
-import { SERVICE_NAMES, sdk_not_available, sdk_not_available_short } from '../messages.js';
-import type { ResourceDeployResult } from '../../../types.js';
-import type { GCPResourceHandler } from '../types.js';
+import { SERVICE_NAMES, sdk_not_available, sdk_not_available_short } from '../messages';
+import type { ResourceDeployResult } from '../../../types';
+import type { GCPResourceHandler } from '../types';
 
 const TYPE = 'gcp.logging.sink';
 
@@ -52,9 +52,21 @@ export const logging_handler: GCPResourceHandler = {
       const logging = ctx.clients.get('logging') as any;
       if (!logging) return fail(name, 'create', start, sdk_not_available(SERVICE_NAMES.LOGGING, 'logging'));
 
+      // Sink destinations must be a bucket / topic / dataset / logging
+      // bucket — `/logs/<name>` is NOT a valid form and the API rejects
+      // it with "Expected a resource of the form projects/[PROJECT_ID]".
+      // Default to the always-present _Default logging bucket so a basic
+      // template deploys cleanly without the user wiring up storage.
+      if (!ctx.project) {
+        return fail(name, 'create', start, 'Logging sink: ctx.project is empty');
+      }
+      const destination =
+        (typeof properties.destination === 'string' && properties.destination) ||
+        `logging.googleapis.com/projects/${ctx.project}/locations/global/buckets/_Default`;
+
       const sink = logging.sink(name);
       await sink.create({
-        destination: properties.destination || `logging.googleapis.com/projects/${ctx.project}/logs/${name}`,
+        destination,
         filter: properties.filter || '',
       });
 

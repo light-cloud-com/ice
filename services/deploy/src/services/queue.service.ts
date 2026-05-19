@@ -6,12 +6,34 @@
  */
 
 import prisma from '@ice/db';
-import { Queue, Worker } from 'bullmq';
+import { emitDeployLog, emitPipelineUpdate } from '@ice/shared';
+import { Queue, Worker, type Job } from 'bullmq';
 import IORedis from 'ioredis';
 import { buildFromSource, cleanupBuild } from './build.service';
 import { applyDeployment } from './deploy.service';
 import { InMemoryQueue, InMemoryWorker } from './memory-queue';
 import { updateEventProgress, failEvent, type DeployStep } from './pipeline.service';
+import type { DeployLogEvent } from '@ice/types';
+
+/**
+ * Emit a one-off log line on the deploy wire from outside an active deploy
+ * (the build/pipeline phase fires before `applyDeployment` runs, so there's
+ * no `deploymentId` snapshot for `nextDeploySeq` to allocate against). Use
+ * `Date.now()` as a monotonic-ish fallback seq — these events are rare,
+ * idempotent, and the contract's reconnect-dedup semantic isn't load-bearing
+ * for build-phase log lines.
+ */
+function emitBuildPhaseLog(cardId: string, message: string): void {
+  const event: DeployLogEvent = {
+    type: 'log',
+    card_id: cardId,
+    level: 'info',
+    message,
+    at: new Date().toISOString(),
+    seq: Date.now(),
+  };
+  emitDeployLog(cardId, event);
+}
 
 const REDIS_URL = process.env.REDIS_URL;
 const USE_MEMORY_QUEUE = !REDIS_URL || process.env.ICE_DESKTOP === 'true';
@@ -123,8 +145,11 @@ export function startDeployWorker() {
         data: { status: 'deploying' },
       });
 
-      // Run the actual deployment
-      await applyDeployment(cardId, nodes, edges, options, orgId, userId);
+      // Run the actual deployment. Queue jobs run sequentially per worker;
+      // we pass `executeAsync: false` so the job promise resolves only when
+      // the deploy actually finishes (preserving serial processing — the
+      // HTTP path defaults to async).
+      await applyDeployment(cardId, nodes, edges, { ...options, executeAsync: false }, orgId, userId);
     };
 
     let worker: any;
@@ -238,10 +263,18 @@ async function processPipelineJob(data: any) {
                 ? 'Building application...'
                 : 'Building...';
         await updateEventProgress(eventId, phase, stageLabel, mkStep(step, status, message));
+        // Mirror stage transitions into the unified deploy feed so the main
+        // deploy panel shows "cloning / installing / building" for push-to-
+        // deploy events, not only for manual apply. Without this the deploy
+        // panel sits silent until `applyDeployment` starts minutes later.
+        try {
+          emitBuildPhaseLog(cardId, `[build:${step}:${status}] ${stageLabel}${message ? ` — ${message}` : ''}`);
+        } catch {
+          // Non-fatal — unified feed is a UX nicety.
+        }
       },
       // Stream individual build lines via Socket.IO + persist to DB
       async (line: string) => {
-        const { emitPipelineUpdate } = await import('@ice/shared');
         emitPipelineUpdate(nodeId, {
           nodeId,
           cardId,
@@ -249,6 +282,11 @@ async function processPipelineJob(data: any) {
           deployment_stage: line,
           progress: 33,
         });
+        // Also surface the raw build line in the unified deploy panel.
+        // Prefixing with [build] makes it visually distinct from infra
+        // logs (which the apply phase emits unprefixed) so the user can
+        // tell at a glance which phase a line came from.
+        emitBuildPhaseLog(cardId, `[build] ${line}`);
         // Persist build line as a log step (throttled — batch every 10 lines)
         buildLogBuffer.push(line);
         if (buildLogBuffer.length >= 10) {
@@ -307,7 +345,7 @@ async function processPipelineJob(data: any) {
     for (const edge of connectedEdges) {
       const otherId = edge.source === nodeId ? edge.target : edge.source;
       const otherNode = nodes.find((n: any) => n.id === otherId);
-      if (otherNode?.data?.iceType === 'Network.Domain') {
+      if (otherNode?.data?.iceType === 'Network.PublicEndpoint') {
         const hostname = otherNode.data.hostname || otherNode.data.subdomain;
         if (hostname) customDomain = hostname as string;
       }
@@ -323,6 +361,7 @@ async function processPipelineJob(data: any) {
         environment,
         envVars: Object.keys(envVars).length > 0 ? envVars : undefined,
         customDomain,
+        executeAsync: false,
       },
       project.organisation_id,
       project.created_by,

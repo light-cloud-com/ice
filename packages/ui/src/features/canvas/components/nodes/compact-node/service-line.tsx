@@ -1,5 +1,4 @@
 import React, { memo } from 'react';
-import { BRAND_ICON_SIZE } from '../../../../../config/canvas-constants';
 import { FONT_MONO } from '../_shared/fonts';
 import type { BrandIcon } from '../../../../../assets/icons/brand-registry';
 
@@ -13,17 +12,18 @@ interface ServiceLineProps {
 export const ServiceLine: React.FC<ServiceLineProps> = memo(
   ({ brandIcon, providerUrl, serviceLineText, maxChars = 28 }) => {
     if (!brandIcon && !providerUrl && !serviceLineText) return null;
-    const truncated = serviceLineText.length > maxChars ? serviceLineText.slice(0, maxChars) + '\u2026' : serviceLineText;
+    const truncated =
+      serviceLineText.length > maxChars ? serviceLineText.slice(0, maxChars) + '\u2026' : serviceLineText;
 
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
         {(brandIcon || providerUrl) && (
           <img
             src={brandIcon?.url || providerUrl}
             alt=""
-            width={BRAND_ICON_SIZE}
-            height={BRAND_ICON_SIZE}
-            style={{ objectFit: 'contain', flexShrink: 0 }}
+            width={14}
+            height={14}
+            style={{ objectFit: 'contain', flexShrink: 0, opacity: 0.8 }}
             draggable={false}
           />
         )}
@@ -31,8 +31,9 @@ export const ServiceLine: React.FC<ServiceLineProps> = memo(
           <span
             style={{
               color: 'var(--ice-text-secondary)',
-              fontSize: 10,
+              fontSize: 11,
               fontFamily: FONT_MONO,
+              opacity: 0.7,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',

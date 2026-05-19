@@ -5,7 +5,7 @@ export const gcpEventStreamBlueprint: BlockBlueprint = createBlueprintFromResour
   iceType: 'Messaging.Topic',
   category: 'messaging',
   name: 'GCP Event Stream',
-  description: 'Google Cloud Dataflow. Real-time events to multiple services.',
+  description: 'Google Cloud Pub/Sub. Real-time events to multiple services.',
   icon: 'Activity',
   providers: ['gcp'],
   nodeDataDefaults: {

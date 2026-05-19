@@ -247,3 +247,24 @@ export async function getGCPAuthType(orgId: string): Promise<'oauth' | 'service_
   if (!creds) return null;
   return creds._auth_type === 'oauth' ? 'oauth' : 'service_account';
 }
+
+/**
+ * Persist a refreshed GCP OAuth access token (and, optionally, its new
+ * expiry) back to the credential store. Used by the mid-deploy auth
+ * client wrapper so long-running deploys don't hit a 403 when the
+ * original token expires past its 60-minute TTL.
+ */
+export async function updateGCPOAuthTokens(
+  orgId: string,
+  tokens: { access_token: string; token_expiry?: string },
+): Promise<void> {
+  const current = await getDecryptedCredentials(orgId, 'gcp');
+  if (!current || current._auth_type !== 'oauth') return;
+  const next: Record<string, string> = { ...current, access_token: tokens.access_token };
+  if (tokens.token_expiry) next.token_expiry = tokens.token_expiry;
+  const encrypted = encryptCredentials(next);
+  await prisma.providerCredential.updateMany({
+    where: { organisation_id: orgId, provider: 'gcp' },
+    data: { credentials: encrypted },
+  });
+}

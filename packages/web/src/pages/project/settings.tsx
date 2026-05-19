@@ -14,8 +14,8 @@ import { Save, Loader2, Trash2, AlertTriangle, Settings, Globe, AlertOctagon } f
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import type { RootState } from '@ui/store';
 import { ProjectEnvironments } from './environments';
+import type { RootState } from '@ui/store';
 
 const PROVIDERS = [
   {
@@ -23,8 +23,14 @@ const PROVIDERS = [
     name: 'Google Cloud',
     icon: gcpIcon,
     regions: [
-      'us-central1', 'us-east1', 'us-west1', 'europe-west1',
-      'europe-west2', 'asia-east1', 'asia-southeast1', 'australia-southeast1',
+      'us-central1',
+      'us-east1',
+      'us-west1',
+      'europe-west1',
+      'europe-west2',
+      'asia-east1',
+      'asia-southeast1',
+      'australia-southeast1',
     ],
   },
   {
@@ -133,9 +139,25 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
 
       {/* Tabs */}
       <div className="flex items-center gap-1 mb-6 border-b border-ice-border">
-        <TabButton active={tab === 'general'} icon={Settings} label={t('project.settings.tabGeneral')} onClick={() => setTab('general')} />
-        <TabButton active={tab === 'environments'} icon={Globe} label={t('project.settings.tabEnvironments')} onClick={() => setTab('environments')} />
-        <TabButton active={tab === 'danger'} icon={AlertOctagon} label={t('project.settings.tabDangerZone')} onClick={() => setTab('danger')} className={tab === 'danger' ? 'border-red-500 text-red-400' : undefined} />
+        <TabButton
+          active={tab === 'general'}
+          icon={Settings}
+          label={t('project.settings.tabGeneral')}
+          onClick={() => setTab('general')}
+        />
+        <TabButton
+          active={tab === 'environments'}
+          icon={Globe}
+          label={t('project.settings.tabEnvironments')}
+          onClick={() => setTab('environments')}
+        />
+        <TabButton
+          active={tab === 'danger'}
+          icon={AlertOctagon}
+          label={t('project.settings.tabDangerZone')}
+          onClick={() => setTab('danger')}
+          className={tab === 'danger' ? 'border-red-500 text-red-400' : undefined}
+        />
       </div>
 
       {/* ── General Tab ─────────────────────────────────────────────────── */}
@@ -150,13 +172,25 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
                 <span className="block text-ice-sm font-medium text-ice-text-2 mb-1.5">
                   {t('project.settings.nameLabel')}
                 </span>
-                <input type="text" name="name" value={name} onChange={(e) => setName(e.target.value)} className="ice-input" />
+                <input
+                  type="text"
+                  name="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="ice-input"
+                />
               </label>
               <label className="block">
                 <span className="block text-ice-sm font-medium text-ice-text-2 mb-1.5">
                   {t('project.settings.descriptionLabel')}
                 </span>
-                <textarea name="description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="ice-input resize-none" />
+                <textarea
+                  name="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={3}
+                  className="ice-input resize-none"
+                />
               </label>
             </div>
           </div>
@@ -166,7 +200,9 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
             <div className="ice-card-header">
               <h2 className="text-ice-md font-semibold text-ice-text-1">{t('project.settings.providerHeading')}</h2>
               <p className="text-ice-sm text-ice-text-3 mt-1">
-                {provider && region ? t('project.settings.providerLockedDesc') : t('project.settings.providerUnlockedDesc')}
+                {provider && region
+                  ? t('project.settings.providerLockedDesc')
+                  : t('project.settings.providerUnlockedDesc')}
               </p>
             </div>
             <div className="ice-card-body space-y-4">
@@ -182,13 +218,20 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
                       <button
                         key={p.id}
                         type="button"
-                        onClick={() => { if (!isLocked) { setProvider(p.id); setRegion(''); } }}
+                        onClick={() => {
+                          if (!isLocked) {
+                            setProvider(p.id);
+                            setRegion('');
+                          }
+                        }}
                         disabled={isLocked && !isSelected}
                         className={cn(
                           'flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-[border-color,background-color]',
-                          isSelected ? 'border-ice-accent bg-ice-accent-muted'
-                            : isLocked ? 'border-ice-border opacity-30 cursor-not-allowed'
-                            : 'border-ice-border hover:border-ice-border-strong hover:bg-ice-hover',
+                          isSelected
+                            ? 'border-ice-accent bg-ice-accent-muted'
+                            : isLocked
+                              ? 'border-ice-border opacity-30 cursor-not-allowed'
+                              : 'border-ice-border hover:border-ice-border-strong hover:bg-ice-hover',
                         )}
                       >
                         <img src={p.icon} alt={p.name} width={20} height={20} className="w-5 h-5" />
@@ -203,15 +246,23 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
                 <label className="block">
                   <span className="block text-ice-sm font-medium text-ice-text-2 mb-1.5">
                     {t('project.settings.regionLabel')}{' '}
-                    {provider && region && <span className="text-ice-text-3 font-normal">🔒 {t('project.settings.regionLocked')}</span>}
+                    {provider && region && (
+                      <span className="text-ice-text-3 font-normal">🔒 {t('project.settings.regionLocked')}</span>
+                    )}
                   </span>
                   <select
-                    name="region" value={region} onChange={(e) => setRegion(e.target.value)}
+                    name="region"
+                    value={region}
+                    onChange={(e) => setRegion(e.target.value)}
                     disabled={!!provider && !!region}
                     className={cn('ice-input', provider && region && 'opacity-70 cursor-not-allowed')}
                   >
                     <option value="">{t('project.settings.selectRegion')}</option>
-                    {regions.map((r) => <option key={r} value={r}>{r}</option>)}
+                    {regions.map((r) => (
+                      <option key={r} value={r}>
+                        {r}
+                      </option>
+                    ))}
                   </select>
                 </label>
               )}
@@ -220,7 +271,11 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
           </div>
 
           {message && (
-            <p role="alert" aria-live="polite" className={`text-sm ${message.type === 'success' ? 'text-ice-green' : 'text-ice-red'}`}>
+            <p
+              role="alert"
+              aria-live="polite"
+              className={`text-sm ${message.type === 'success' ? 'text-ice-green' : 'text-ice-red'}`}
+            >
               {message.text}
             </p>
           )}
@@ -255,8 +310,11 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
                 {t('project.settings.deleteConfirmLabel', { name })}
               </label>
               <input
-                type="text" value={confirmDelete} onChange={(e) => setConfirmDelete(e.target.value)}
-                placeholder={name} className="ice-input w-full max-w-xs"
+                type="text"
+                value={confirmDelete}
+                onChange={(e) => setConfirmDelete(e.target.value)}
+                placeholder={name}
+                className="ice-input w-full max-w-xs"
               />
             </div>
             <button
@@ -274,7 +332,9 @@ export const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) =
               disabled={confirmDelete !== name || deleting}
               className={cn(
                 'flex items-center gap-2 px-4 py-2 text-ice-sm font-medium rounded-md transition-colors',
-                confirmDelete === name ? 'bg-ice-red text-white hover:bg-ice-red/90' : 'bg-ice-raised text-ice-text-3 cursor-not-allowed',
+                confirmDelete === name
+                  ? 'bg-ice-red text-white hover:bg-ice-red/90'
+                  : 'bg-ice-raised text-ice-text-3 cursor-not-allowed',
               )}
             >
               {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}

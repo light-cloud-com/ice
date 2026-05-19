@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import aiConversationRoutes from './routes/ai-conversations.js';
-import aiRoutes from './routes/ai.js';
-export * from './services/ai.service.js';
+import aiRoutes from './routes/ai';
+import aiConversationRoutes from './routes/ai-conversations';
+export * from './services/ai.service';
 
 export function createAiRouter(): Router {
   const router = Router();

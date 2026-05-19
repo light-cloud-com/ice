@@ -5,10 +5,10 @@ export const gcpStaticSiteBlueprint: BlockBlueprint = createBlueprintFromResourc
   iceType: 'Compute.StaticSite',
   category: 'frontend',
   name: 'GCP Static Site',
-  description: 'Google Cloud Storage + CDN. React/Vue/Next.js app.',
+  description: 'Firebase Hosting. Free HTTPS, global CDN, custom domain. React/Vue/Next.js.',
   icon: 'Globe',
   providers: ['gcp'],
   nodeDataDefaults: {
-    domain: 'example.com',
+    domain: '',
   },
 });

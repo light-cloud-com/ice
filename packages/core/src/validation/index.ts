@@ -6,25 +6,20 @@
  */
 
 // Main entry points
-export { validateCanvas, validateNode } from './canvas-validator.js';
+export { validateCanvas, validateNode } from './canvas-validator';
 
 // Individual rule modules (for selective use)
-export { validateProperties } from './property-rules.js';
-export { validateConnections } from './connection-rules.js';
-export { validateStructure } from './structure-rules.js';
-export { validateDeployability } from './deploy-rules.js';
-export { validateArchitecture } from './architecture-rules.js';
+export { validateProperties } from './property-rules';
+export { validateConnections } from './connection-rules';
+export { validateStructure } from './structure-rules';
+export { validateDeployability } from './deploy-rules';
+export { validateArchitecture } from './architecture-rules';
 
 // Schema bridge utilities
-export {
-  getResourceForIceType,
-  getPropertiesForIceType,
-  getSupportedProviders,
-  isKnownIceType,
-} from './schema-bridge.js';
+export { getResourceForIceType, getPropertiesForIceType, getSupportedProviders, isKnownIceType } from './schema-bridge';
 
 // Template validation
-export { validateTemplate } from './template-validator.js';
+export { validateTemplate } from './template-validator';
 
 // Types
 export type {
@@ -36,4 +31,4 @@ export type {
   IssueSeverity,
   IssueCategory,
   IssueCode,
-} from './types.js';
+} from './types';

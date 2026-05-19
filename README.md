@@ -1,148 +1,99 @@
-# ICE — Integrated Cloud Environment
+<h1 align="center">
+  <img src="docs/assets/light-cloud-logo.png" alt="" height="40" align="absmiddle" />
+  &nbsp;Integrated Cloud Environment
+</h1>
 
-Design cloud infrastructure visually. Deploy to GCP with one click.
+<p align="center"><strong>A <a href="https://light-cloud.com">Light Cloud</a> project · Figma for cloud infrastructure, with a deploy button.</strong></p>
 
-ICE is an open-source visual infrastructure platform. Drag blocks onto a canvas, connect them, configure properties, and deploy real cloud resources. An optional AI assistant (Claude) can modify the canvas via natural language.
+<p align="center">
+  <a href="https://github.com/light-cloud-com/ice/actions/workflows/ci.yml"><img src="https://github.com/light-cloud-com/ice/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI" /></a>
+  <a href="https://github.com/light-cloud-com/ice/releases/latest"><img src="https://img.shields.io/github/v/release/light-cloud-com/ice?include_prereleases&label=release" alt="Latest release" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License: Apache 2.0" /></a>
+  <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D22-brightgreen" alt="Node >= 22" /></a>
+  <a href="package.json"><img src="https://img.shields.io/github/package-json/v/light-cloud-com/ice?label=version&color=5b21b6" alt="Version" /></a>
+</p>
 
-Ships as a **self-hosted web app** and a **standalone Electron desktop app**.
+<p align="center">
+  <a href="docs/provider-status.md"><img src="docs/assets/cloud-providers.svg" alt="Cloud provider support - AWS experimental, Azure experimental, GCP stable, DigitalOcean / Oracle / Kubernetes design-only, GitHub integration" /></a>
+</p>
+
+<p align="center">
+  <img src="docs/assets/placeholder.png" alt="ICE canvas: drag blocks, connect them, deploy" style="max-height: 720px; object-fit: cover; border-radius: 8px;" />
+</p>
+
+## The loop
+
+```mermaid
+flowchart LR
+    A([🎨 Design<br/>on canvas]) --> B([📋 Plan<br/>+ cost preview])
+    B --> C([🚀 Apply])
+    C --> D[(☁️ Your cloud<br/>GCP · AWS · Azure)]
+    D --> E([📊 Live metrics<br/>on the canvas])
+    E -.iterate.-> A
+
+    AI{{🤖 AI assistant}}
+    AI -. edits .-> A
+    AI -. diagnoses failures .-> C
+
+    style A  fill:#dbeafe,stroke:#3b82f6,stroke-width:2px,color:#1e3a8a
+    style B  fill:#fef3c7,stroke:#f59e0b,stroke-width:2px,color:#78350f
+    style C  fill:#dcfce7,stroke:#22c55e,stroke-width:2px,color:#14532d
+    style D  fill:#f4f4f5,stroke:#6b7280,stroke-width:2px,color:#1f2937
+    style E  fill:#e0e7ff,stroke:#6366f1,stroke-width:2px,color:#312e81
+    style AI fill:#fde68a,stroke:#f59e0b,stroke-width:2px,color:#78350f
+```
 
 ## Getting Started
 
 ```bash
-# Prerequisites: Node >= 22, pnpm >= 10, Docker
-
-# 1. Clone and install
-git clone https://github.com/light-cloud-com/ice.git
-cd ice
+# Node 22+, pnpm 10+
+git clone https://github.com/light-cloud-com/ice.git && cd ice
 pnpm install
-
-# 2. Start infrastructure + app
-pnpm dev:all
+pnpm schemas:build      # one-time, ~10-15 min, cached after
+pnpm dev:all            # then open http://localhost:5173
 ```
 
-That's it. Open **http://localhost:5174** — no login required, you're straight on the canvas.
+Full guide: [docs/getting-started.md](docs/getting-started.md).
 
-`dev:all` starts PostgreSQL, Redis (via Docker), the API gateway on port 5002, and the web app on port 5174.
+## Main features
 
-### Desktop App (Electron)
+<p align="center">
+  <img src="docs/assets/main-features.svg" alt="ICE main features - nine capabilities bundled into one Integrated Cloud Environment" />
+</p>
 
-```bash
-pnpm dev:desktop
-```
+## Providers at a glance
 
-The desktop app is fully self-contained — it embeds the backend, uses a local SQLite database, and works offline. No Docker required.
-
-### Configuration
-
-Copy `.env.example` to `.env`. Only three variables are required:
-
-| Variable | Required | Description |
+| Provider | Readiness | Details |
 |---|---|---|
-| `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `JWT_SECRET` | Yes | Any random string |
-| `CREDENTIAL_ENCRYPTION_KEY` | Yes | Any 32-character string |
-| `ANTHROPIC_API_KEY` | Optional | Enables AI assistant ([get a key](https://console.anthropic.com)) |
+| 🟢 **Google Cloud** | **stable** | 20 service handlers, 45+ importers, full create / update / destroy |
+| 🟡 **AWS** | experimental | Major primitives deploy; parity with GCP in progress |
+| 🟡 **Azure** | experimental | Major primitives deploy; parity with GCP in progress |
+| ⚪ Kubernetes, Alibaba, Oracle, DigitalOcean, Tencent | design-only | Blocks render; deployers next |
+| 🟢 **GitHub** | integration | PAT or device flow - drives the pipeline triggers |
 
-Everything else works out of the box.
+Source of truth: [docs/provider-status.md](docs/provider-status.md) (mirrors `PROVIDER_READINESS` in [`packages/constants/src/providers.ts`](packages/constants/src/providers.ts)).
 
-## What Can It Do
+## Docs
 
-- **Visual canvas** — drag cloud resource blocks, connect them, configure via properties panel
-- **Deploy to GCP** — 20 service handlers: Cloud Run, Cloud SQL, Cloud Storage, Pub/Sub, Firestore, BigQuery, Vertex AI, GKE, and more
-- **Import existing infra** — scan your GCP project and import 45+ resource types onto the canvas
-- **CI/CD pipelines** — connect GitHub repos to canvas nodes, auto-deploy on push
-- **Environments** — production, staging, development, PR previews
-- **AI assistant** — describe what you want in natural language, Claude modifies the canvas
-- **Templates** — pre-built infrastructure patterns (SaaS starter, RAG chatbot, full-stack, etc.)
-- **Multiple organisations** — organise projects into separate workspaces
-- **i18n** — English and Mandarin
-
-## Architecture
-
-```
-ice/
-├── packages/           Shared libraries
-│   ├── core            Infrastructure engine (graph, deploy, import, schemas)
-│   ├── ui              React components (canvas, panels, palette, AI chat)
-│   ├── web             Web app shell (Vite + React)
-│   ├── blocks          Cloud resource block definitions
-│   ├── templates       Pre-built infrastructure templates
-│   ├── providers/gcp   GCP deployer (20 service handlers)
-│   ├── providers/aws   AWS deployer
-│   ├── providers/azure  Azure deployer
-│   ├── db              Prisma ORM (PostgreSQL + SQLite)
-│   ├── shared          Auth middleware, encryption, Socket.IO
-│   └── types           Shared TypeScript interfaces
-├── services/           Backend services
-│   ├── canvas          Project & environment CRUD
-│   ├── deploy          Deploy engine, CI/CD pipelines, GitHub webhooks
-│   ├── ai              Claude AI assistant (SSE streaming)
-│   ├── engine          Schema & resource metadata API
-│   ├── credentials     Encrypted cloud provider credential storage
-│   └── iam             User profile, organisations
-├── apps/
-│   ├── gateway         Express API gateway (composes all services)
-│   └── desktop         Electron desktop app (embedded backend)
-└── docs/               Documentation
-```
-
-## GCP Resources Supported
-
-| Category | Services |
+|   |   |
 |---|---|
-| Compute | Cloud Run (services + jobs), Cloud Functions, GKE |
-| Database | Cloud SQL (PostgreSQL, MySQL), Firestore, Memorystore Redis |
-| Storage | Cloud Storage |
-| Messaging | Pub/Sub, Cloud Scheduler |
-| AI/ML | Vertex AI (LLM endpoints, Vector Search, ML models) |
-| Analytics | BigQuery, Discovery Engine |
-| Security | Secret Manager, Identity Platform |
-| Networking | API Gateway, Load Balancer, Domain Mapping |
-| Observability | Cloud Logging |
+| 🚀 [Getting Started](docs/getting-started.md) | Install, first run, troubleshooting |
+| 🏗 [Architecture](docs/architecture.md) | How the pieces fit |
+| ☁️ [Deploying to GCP](docs/deploying-to-gcp.md) | End-to-end tutorial · [AWS](docs/deploying-to-aws.md) · [Azure](docs/deploying-to-azure.md) |
+| 📊 [Provider status](docs/provider-status.md) | Per-provider readiness matrix |
+| 🤖 [AI assistant](docs/ai-assistant.md) | Claude integration, OpenAI-compat backends |
+| 🔌 [Extending providers](docs/extending-providers.md) | Add a new cloud |
+| 🧪 [Testing](docs/testing.md) | Unit · integration · GCP scenario dashboard |
+| 🆘 [Troubleshooting](docs/troubleshooting.md) | Common issues |
+| 📖 [Glossary](docs/glossary.md) | Block, blueprint, handler, importer, … |
+| 🗺 [Roadmap](ROADMAP.md) | What's shipped, in progress, planned |
 
-All services support create, update, and delete with real-time progress streaming.
+## Help
 
-## Scripts
-
-```bash
-pnpm dev:all            # Start everything (Docker + gateway + web)
-pnpm dev:gateway        # API gateway only (port 5002)
-pnpm dev:web            # Web app only (Vite, port 5174)
-pnpm dev:desktop        # Electron desktop app
-pnpm build              # Build all packages
-pnpm dist:desktop       # Package Electron for distribution
-pnpm test:e2e           # Playwright E2E tests
-pnpm typecheck          # TypeScript check all packages
-pnpm lint               # Lint all packages
-```
-
-## Tech Stack
-
-| Layer | Technologies |
+| | |
 |---|---|
-| Frontend | React 18, Vite, Redux Toolkit, Tailwind CSS, Radix UI, Custom SVG Canvas |
-| Backend | Express, Prisma 6, PostgreSQL 16, Redis, BullMQ, Socket.IO |
-| AI | Anthropic Claude API (streaming SSE) |
-| Desktop | Electron, electron-vite, embedded gateway |
-| Cloud | Google Cloud SDK (20 services), AWS SDK, Azure SDK |
-| Testing | Playwright, Vitest |
-
-## Documentation
-
-See the [`docs/`](docs/) folder:
-
-- [Architecture](docs/architecture.md) — system design, data flow
-- [Core Engine](docs/core-engine.md) — graph processing, deploy, importers
-- [Frontend](docs/frontend.md) — web app, state management, canvas
-- [Desktop](docs/desktop.md) — Electron architecture
-- [Database](docs/database.md) — Prisma schema
-- [AI System](docs/ai-system.md) — Claude integration
-- [Community Edition](docs/community-edition.md) — what differs from SaaS
-
-## Contributing
-
-ICE is source-available. We welcome issues, feature requests, and pull requests.
-
-## License
-
-**ICE Source Available License v1.0** — you may view, modify, and redistribute for non-production purposes. Production use requires a commercial license, except for qualifying non-profit organisations. See [LICENSE](LICENSE).
+| 🐞 Bug or feature | [Open an issue](https://github.com/light-cloud-com/ice/issues/new/choose) |
+| 💬 Question | [GitHub Discussions](https://github.com/light-cloud-com/ice/discussions) |
+| 🔐 Security | [SECURITY.md](SECURITY.md) - please don't open a public issue |
+| 🤝 Contributing | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| 📜 License | [Apache 2.0](LICENSE) · [NOTICE](NOTICE) |

@@ -1,5 +1,6 @@
 {
   "name": "@ice/provider-aws",
+  "license": "Apache-2.0",
   "version": "0.1.0",
   "description": "AWS deployer + handlers",
   "private": true,

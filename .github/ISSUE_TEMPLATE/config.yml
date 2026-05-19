@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/light-cloud-com/ice/security/advisories/new
+    about: Report a security issue privately. Do not open a public issue — see SECURITY.md.
+  - name: Question or discussion
+    url: https://github.com/light-cloud-com/ice/discussions
+    about: Ask a question or start a discussion instead of filing a bug.

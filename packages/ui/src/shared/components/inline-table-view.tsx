@@ -1,168 +1,210 @@
 /**
  * Inline Table View — reads nodes/edges from Redux (same as canvas)
  *
- * Shows the exact same elements as the canvas in a sortable table.
- * Clicking a row selects the node (same selection as canvas).
+ * Sortable, searchable, filterable table over the active card's nodes.
+ * Click a row to select + open properties (matches the canvas).
+ *
+ * Editing lives in the properties panel — every cell here is read-only.
  */
 
-import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
-import React, { useMemo, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { ColumnHeader } from './inline-table-view/column-header';
+import { TableBody } from './inline-table-view/table-body';
+import { TableFooter } from './inline-table-view/table-footer';
+import { Toolbar } from './inline-table-view/toolbar';
+import { type Density, type GroupBy, type SortCol, type SortDir } from './inline-table-view/types';
+import { useTableRows } from './inline-table-view/use-table-rows';
+import { type RowStatus } from './inline-table-view-helpers';
 import { useTranslation } from '../../i18n';
-import { selectActiveCard } from '../../store/slices/cards-slice';
+import { selectActiveCard, deleteCardNode } from '../../store/slices/cards-slice';
 import { setSelectedNodes } from '../../store/slices/selection-slice';
 import { toggleProperties } from '../../store/slices/ui-slice';
-import type { RootState, AppDispatch } from '../../store';
+import type { AppDispatch, RootState } from '../../store';
 
-type SortCol = 'label' | 'iceType' | 'category' | 'provider' | 'behavior';
-type SortDir = 'asc' | 'desc';
-
-interface Row {
-  id: string;
-  nodeType: string;
-  label: string;
-  iceType: string;
-  category: string;
-  provider: string;
-  behavior: string;
-  parentId?: string;
-  x: number;
-  y: number;
-}
+// ─── Component ──────────────────────────────────────────────────────────────
 
 export const InlineTableView: React.FC = () => {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+
   const activeCard = useSelector(selectActiveCard);
   const selectedNodes = useSelector((s: RootState) => s.selection.selectedNodes);
+  const showProperties = useSelector((s: RootState) => s.ui.showProperties);
+
+  const deployedResources = useSelector((s: RootState) => s.deploy.deployedResources);
+  const driftByNode = useSelector((s: RootState) => s.deploy.driftByNode);
+  const nodePipelineStatus = useSelector((s: RootState) => s.pipeline.nodeStatus);
+
+  // ─── Local UI state ─────────────────────────────────────────────────────
+  const [search, setSearch] = useState('');
   const [sortCol, setSortCol] = useState<SortCol>('label');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const [statusFilter, setStatusFilter] = useState<Set<RowStatus>>(new Set());
+  const [providerFilter, setProviderFilter] = useState<Set<string>>(new Set());
+  const [groupBy, setGroupBy] = useState<GroupBy>('none');
+  const [density, setDensity] = useState<Density>('comfortable');
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
-  const rows = useMemo<Row[]>(() => {
-    if (!activeCard?.nodes) return [];
-    return activeCard.nodes.map((n: any) => ({
-      id: n.id,
-      nodeType: n.type || 'resource',
-      label: n.data?.label || n.id,
-      iceType: n.data?.iceType || n.type || '',
-      category: n.data?.iceType?.split('.')[0] || '',
-      provider: n.data?.provider || '',
-      behavior: n.data?.behavior || 'singleton',
-      parentId: n.parentId,
-      x: Math.round(n.position?.x || 0),
-      y: Math.round(n.position?.y || 0),
-    }));
-  }, [activeCard?.nodes]);
+  // ─── Data pipeline (rows / sorted / grouped / counts / providers) ──────
 
-  const sorted = useMemo(() => {
-    return [...rows].sort((a, b) => {
-      const av = (a[sortCol] || '').toLowerCase();
-      const bv = (b[sortCol] || '').toLowerCase();
-      return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
-    });
-  }, [rows, sortCol, sortDir]);
+  const { rows, sorted, grouped, counts, availableProviders } = useTableRows({
+    activeCard,
+    deployedResources,
+    driftByNode,
+    nodePipelineStatus,
+    search,
+    sortCol,
+    sortDir,
+    statusFilter,
+    providerFilter,
+    groupBy,
+    t,
+  });
 
-  const handleSort = (col: SortCol) => {
-    if (sortCol === col) {
-      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
-    } else {
+  // ─── Handlers ───────────────────────────────────────────────────────────
+
+  const toggleSort = (col: SortCol) => {
+    if (sortCol === col) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    else {
       setSortCol(col);
       setSortDir('asc');
     }
   };
 
-  const showProperties = useSelector((s: RootState) => s.ui.showProperties);
+  const toggleStatus = (s: RowStatus) =>
+    setStatusFilter((prev) => {
+      const next = new Set(prev);
+      if (next.has(s)) next.delete(s);
+      else next.add(s);
+      return next;
+    });
 
-  const handleRowClick = (id: string, e: React.MouseEvent) => {
-    if (e.metaKey || e.ctrlKey) {
-      const next = selectedNodes.includes(id) ? selectedNodes.filter((n) => n !== id) : [...selectedNodes, id];
-      dispatch(setSelectedNodes(next));
-    } else {
+  const toggleProvider = (p: string) =>
+    setProviderFilter((prev) => {
+      const next = new Set(prev);
+      if (next.has(p)) next.delete(p);
+      else next.add(p);
+      return next;
+    });
+
+  const clearFilters = () => {
+    setSearch('');
+    setStatusFilter(new Set());
+    setProviderFilter(new Set());
+  };
+
+  const selectRow = useCallback(
+    (id: string, e: React.MouseEvent) => {
+      if (e.metaKey || e.ctrlKey) {
+        const next = selectedNodes.includes(id) ? selectedNodes.filter((n) => n !== id) : [...selectedNodes, id];
+        dispatch(setSelectedNodes(next));
+      } else {
+        dispatch(setSelectedNodes([id]));
+      }
+      if (!showProperties) dispatch(toggleProperties());
+    },
+    [dispatch, selectedNodes, showProperties],
+  );
+
+  const toggleExpand = (id: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const revealOnCanvas = useCallback(
+    (id: string) => {
       dispatch(setSelectedNodes([id]));
-    }
-    // Auto-open properties panel
-    if (!showProperties) {
-      dispatch(toggleProperties());
-    }
-  };
+      // strip "/table" suffix to land on the canvas view of the same project
+      const canvasPath = pathname.endsWith('/table') ? pathname.slice(0, -'/table'.length) : pathname;
+      navigate(canvasPath);
+    },
+    [dispatch, navigate, pathname],
+  );
 
-  const SortHeader: React.FC<{ col: SortCol; label: string; className?: string }> = ({ col, label, className }) => {
-    const isActive = sortCol === col;
-    return (
-      <button
-        onClick={() => handleSort(col)}
-        className={`flex items-center gap-1 text-left text-ice-sm font-medium uppercase tracking-wider transition-colors ${
-          isActive ? 'text-ice-text-1' : 'text-ice-text-3 hover:text-ice-text-2'
-        } ${className || ''}`}
-      >
-        {label}
-        {isActive ? (
-          sortDir === 'asc' ? (
-            <ArrowUp className="w-3 h-3" />
-          ) : (
-            <ArrowDown className="w-3 h-3" />
-          )
-        ) : (
-          <ArrowUpDown className="w-3 h-3 opacity-40" />
-        )}
-      </button>
-    );
-  };
+  const openProperties = useCallback(
+    (id: string) => {
+      dispatch(setSelectedNodes([id]));
+      if (!showProperties) dispatch(toggleProperties());
+    },
+    [dispatch, showProperties],
+  );
+
+  const deleteRow = useCallback(
+    (id: string) => {
+      dispatch(deleteCardNode(id));
+    },
+    [dispatch],
+  );
+
+  const hasActiveFilter = search.length > 0 || statusFilter.size > 0 || providerFilter.size > 0;
+
+  // Close any expanded rows when underlying nodes disappear
+  useEffect(() => {
+    const ids = new Set((activeCard?.nodes || []).map((n) => n.id));
+    setExpanded((prev) => {
+      let changed = false;
+      const next = new Set<string>();
+      for (const id of prev) {
+        if (ids.has(id)) next.add(id);
+        else changed = true;
+      }
+      return changed ? next : prev;
+    });
+  }, [activeCard?.nodes]);
 
   return (
     <div className="h-full flex flex-col bg-ice-base">
-      {/* Header */}
-      <div className="grid grid-cols-[1fr_140px_100px_90px_80px_60px_60px] gap-2 px-4 py-2 border-b border-ice-border bg-ice-raised shrink-0">
-        <SortHeader col="label" label={t('table.name')} />
-        <SortHeader col="iceType" label={t('table.type')} />
-        <SortHeader col="category" label={t('table.category')} />
-        <SortHeader col="provider" label={t('table.provider')} />
-        <SortHeader col="behavior" label={t('table.behavior')} />
-        <span className="text-ice-sm font-medium text-ice-text-3 uppercase tracking-wider">X</span>
-        <span className="text-ice-sm font-medium text-ice-text-3 uppercase tracking-wider">Y</span>
-      </div>
+      <Toolbar
+        search={search}
+        onSearchChange={setSearch}
+        statusFilter={statusFilter}
+        providerFilter={providerFilter}
+        counts={counts}
+        availableProviders={availableProviders}
+        hasActiveFilter={hasActiveFilter}
+        groupBy={groupBy}
+        density={density}
+        onToggleStatus={toggleStatus}
+        onToggleProvider={toggleProvider}
+        onClearFilters={clearFilters}
+        onGroupByChange={setGroupBy}
+        onDensityChange={setDensity}
+      />
 
-      {/* Rows */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
-        {sorted.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-ice-text-3 text-sm">{t('table.noResources')}</p>
-            <p className="text-ice-text-3 text-xs mt-1">{t('table.noResourcesHint')}</p>
-          </div>
-        ) : (
-          sorted.map((row) => {
-            const isSelected = selectedNodes.includes(row.id);
-            return (
-              <div
-                key={row.id}
-                onClick={(e) => handleRowClick(row.id, e)}
-                className={`grid grid-cols-[1fr_140px_100px_90px_80px_60px_60px] gap-2 px-4 py-1.5 border-b border-ice-border cursor-pointer transition-colors ${
-                  isSelected ? 'bg-ice-accent-muted' : 'hover:bg-ice-hover'
-                }`}
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  {row.parentId && <span className="text-ice-text-3 text-ice-xs">↳</span>}
-                  <span className="text-ice-md text-ice-text-1 truncate">{row.label}</span>
-                </div>
-                <span className="text-ice-sm text-ice-text-2 font-mono truncate">{row.iceType}</span>
-                <span className="text-ice-sm text-ice-text-3 capitalize">{row.category}</span>
-                <span className="text-ice-sm text-ice-text-3 uppercase">{row.provider || '—'}</span>
-                <span className="text-ice-sm text-ice-text-3">{row.behavior}</span>
-                <span className="text-ice-sm text-ice-text-3 tabular-nums">{row.x}</span>
-                <span className="text-ice-sm text-ice-text-3 tabular-nums">{row.y}</span>
-              </div>
-            );
-          })
-        )}
-      </div>
+      <ColumnHeader sortCol={sortCol} sortDir={sortDir} onToggleSort={toggleSort} />
 
-      {/* Footer */}
-      <div className="flex items-center gap-3 px-4 py-1.5 border-t border-ice-border bg-ice-raised shrink-0">
-        <span className="text-ice-xs text-ice-text-3 tabular-nums">{rows.length} resources</span>
-        {selectedNodes.length > 0 && (
-          <span className="text-ice-xs text-ice-accent tabular-nums">{selectedNodes.length} selected</span>
-        )}
-      </div>
+      <TableBody
+        sorted={sorted}
+        rows={rows}
+        grouped={grouped}
+        density={density}
+        groupBy={groupBy}
+        selectedNodes={selectedNodes}
+        expanded={expanded}
+        onToggleExpand={toggleExpand}
+        onSelectRow={selectRow}
+        onCopyId={(row) => navigator.clipboard.writeText(row.providerId || row.node.id)}
+        onCopyName={(row) => navigator.clipboard.writeText(row.label)}
+        onRevealOnCanvas={revealOnCanvas}
+        onOpenProperties={openProperties}
+        onDeleteRow={deleteRow}
+      />
+
+      <TableFooter
+        sortedCount={sorted.length}
+        totalCount={rows.length}
+        selectedCount={selectedNodes.length}
+        counts={counts}
+        statusFilter={statusFilter}
+        onToggleStatus={toggleStatus}
+      />
     </div>
   );
 };

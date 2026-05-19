@@ -1,0 +1,32 @@
+# CODEOWNERS for ICE
+#
+# Every PR auto-requests review from the listed owners for the matching paths.
+# The LAST matching pattern wins, so put the most specific patterns at the bottom.
+#
+# Replace @light-cloud-com/maintainers with your GitHub handle (e.g. @JuliaKafarska)
+# if you'd rather route reviews through a single account instead of a team.
+
+# Default — every file in the repo
+*                                       @light-cloud-com/maintainers
+
+# Workflows, CI, release infrastructure — usually the most sensitive
+/.github/                               @light-cloud-com/maintainers
+/scripts/                               @light-cloud-com/maintainers
+/run-e2e.sh                             @light-cloud-com/maintainers
+
+# Licensing and policy docs — only maintainers should edit
+/LICENSE                                @light-cloud-com/maintainers
+/NOTICE                                 @light-cloud-com/maintainers
+/SECURITY.md                            @light-cloud-com/maintainers
+/CODE_OF_CONDUCT.md                     @light-cloud-com/maintainers
+/COMMUNITY_PLEDGE.md                    @light-cloud-com/maintainers
+
+# Deploy plane and cloud providers — high-blast-radius code
+/packages/providers/                    @light-cloud-com/maintainers
+/services/deploy/                       @light-cloud-com/maintainers
+/services/credentials/                  @light-cloud-com/maintainers
+
+# Auth + crypto + Electron security model
+/packages/shared/src/auth/              @light-cloud-com/maintainers
+/packages/shared/src/crypto.ts          @light-cloud-com/maintainers
+/apps/desktop/                          @light-cloud-com/maintainers

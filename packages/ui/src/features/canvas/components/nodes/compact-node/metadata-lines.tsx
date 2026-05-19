@@ -21,7 +21,7 @@ export const MetadataLines: React.FC<MetadataLinesProps> = memo(
     const [repoSelectorOpen, setRepoSelectorOpen] = useState(false);
 
     return (
-      <div style={{ marginTop: 6, flex: 1, minHeight: 0 }}>
+      <div style={{ marginTop: 2, flex: 1, minHeight: 0 }}>
         {metaLines.map((line, i) => {
           const isRepoLine = i === repoLineIndex;
           const isPh = isPlaceholder(line);
@@ -32,9 +32,9 @@ export const MetadataLines: React.FC<MetadataLinesProps> = memo(
                 <span
                   style={{
                     color: 'var(--ice-text-secondary)',
-                    fontSize: 10,
+                    fontSize: 11,
                     fontFamily: FONT_MONO,
-                    opacity: isHovered ? 0.9 : 0.6,
+                    opacity: isHovered ? 0.85 : 0.7,
                     cursor: 'pointer',
                   }}
                   onClick={(e) => {
@@ -64,11 +64,11 @@ export const MetadataLines: React.FC<MetadataLinesProps> = memo(
               key={i}
               style={{
                 color: isPh ? 'var(--ice-text-tertiary)' : 'var(--ice-text-secondary)',
-                fontSize: 10,
+                fontSize: 11,
                 fontFamily: FONT_MONO,
                 fontStyle: isPh ? 'italic' : 'normal',
-                opacity: isPh ? 0.4 : isHovered ? 0.9 : 0.6,
-                lineHeight: '16px',
+                opacity: isPh ? 0.45 : 0.75,
+                lineHeight: '17px',
               }}
             >
               {isPh ? line.slice(1) : line}

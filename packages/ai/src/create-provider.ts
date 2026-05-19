@@ -17,8 +17,26 @@ import type { AiProvider, ProviderConfig } from './types';
 let _cachedProvider: AiProvider | null = null;
 
 /**
- * Create an AI provider. Caches the result for subsequent calls.
- * Pass `config` to override auto-detection (resets the cache).
+ * Create an AI provider synchronously. Caches the result for
+ * subsequent calls. Pass `config` to override auto-detection (resets
+ * the cache).
+ *
+ * findings.md #53 — sync vs async divergence:
+ *   - `createProvider` (this function) returns immediately. The
+ *     "auto" path picks Anthropic if ANTHROPIC_API_KEY is set, then
+ *     OpenAI-compat if ICE_AI_URL is set, then NullProvider. It does
+ *     NOT probe the OpenAI-compat endpoint, so a configured-but-
+ *     unreachable server still returns an OpenAICompatProvider here
+ *     — chat calls fail at first request rather than at construction.
+ *   - `createProviderAsync` runs `compat.healthCheck()` on the
+ *     OpenAI-compat path; on health failure it falls through to
+ *     NullProvider.
+ *
+ * Same explicit `provider` value (anthropic / openai-compat / null)
+ * yields the same provider in both functions. The divergence only
+ * matters for "auto" with ICE_AI_URL set against an unreachable
+ * server. Callers that can afford the round-trip should prefer
+ * `createProviderAsync`.
  */
 export function createProvider(config?: Partial<ProviderConfig>): AiProvider {
   if (config) {
@@ -34,7 +52,11 @@ export function createProvider(config?: Partial<ProviderConfig>): AiProvider {
 
 /**
  * Create a provider with async auto-detection.
- * Probes OpenAI-compat health before falling back.
+ *
+ * Same shape as `createProvider` (above) but probes
+ * OpenAI-compat health before falling through. See the JSDoc on
+ * `createProvider` for the precise sync/async divergence —
+ * findings.md #53.
  */
 export async function createProviderAsync(config?: Partial<ProviderConfig>): Promise<AiProvider> {
   const envProvider = config?.provider || process.env.ICE_AI_PROVIDER;

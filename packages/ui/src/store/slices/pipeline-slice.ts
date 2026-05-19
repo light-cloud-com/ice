@@ -84,7 +84,7 @@ export interface FrameworkDetection {
   detectedFiles: string[];
 }
 
-interface PipelineState {
+export interface PipelineState {
   // Per-node pipeline status (for canvas badges)
   nodeStatus: Record<string, NodePipelineStatus>;
 
@@ -341,7 +341,17 @@ const pipelineSlice = createSlice({
       .addCase(createPipelineRule.fulfilled, (state, action) => {
         const { key, rule } = action.payload;
         if (!state.rules[key]) state.rules[key] = [];
-        state.rules[key].push(rule);
+        // Dedupe by id — `createRule` is idempotent on the backend and
+        // returns the existing row on duplicate (card_id, node_id,
+        // branch_pattern). Without this filter, React StrictMode double-
+        // mount or concurrent auto-create effects would push the same
+        // rule twice and trigger "duplicate key" render warnings.
+        const existingIdx = state.rules[key].findIndex((r) => r.id === rule.id);
+        if (existingIdx >= 0) {
+          state.rules[key][existingIdx] = rule;
+        } else {
+          state.rules[key].push(rule);
+        }
       })
 
       .addCase(deletePipelineRule.fulfilled, (state, action) => {

@@ -5,11 +5,11 @@
  * State includes resource states, deployment history, and locks.
  */
 
-import type { DeploymentId, DeploymentStatus } from '../types/deployment.js';
-import type { IceError } from '../types/errors.js';
-import type { NodeId } from '../types/graph.js';
-import type { ResourceState, ResourceStatus } from '../types/providers.js';
-import type { Result } from '../types/result.js';
+import type { DeploymentId, DeploymentStatus } from '../types/deployment';
+import type { IceError } from '../types/errors';
+import type { NodeId } from '../types/graph';
+import type { ResourceState, ResourceStatus } from '../types/providers';
+import type { Result } from '../types/result';
 
 // =============================================================================
 // State Types

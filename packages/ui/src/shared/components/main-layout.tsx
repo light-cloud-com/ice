@@ -8,24 +8,35 @@
  * Collapsed sidebars show a WebStorm-style narrow strip with icons + vertical text.
  */
 
-import { FolderOpen, Blocks, PanelRight, MessageSquare, DollarSign, LayoutTemplate, ShieldCheck } from 'lucide-react';
-import { ProjectToolbar } from './project-toolbar';
+import {
+  FolderOpen,
+  Blocks,
+  PanelRight,
+  MessageSquare,
+  DollarSign,
+  LayoutTemplate,
+  ShieldCheck,
+  Rocket,
+} from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { InlineTableView } from './inline-table-view';
+import { ProjectToolbar } from './project-toolbar';
 import { StatusBar } from './status-bar';
 import { useTranslation } from '../../i18n';
-import { ResizeBar } from './ui/resize-bar';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './ui/resizable';
+import { ResizeBar } from './ui/resize-bar';
 import { SidebarPanel } from './ui/sidebar-panel';
 import { SidebarStrip } from './ui/sidebar-strip';
 import { AiChatPanel } from '../../features/ai/components/ai-chat-panel';
 import { SvgCanvas } from '../../features/canvas/components/svg-canvas';
 import { CostPanel } from '../../features/cost/components/cost-panel';
+import { DeployPanel } from '../../features/deploy/components/deploy-panel';
 import { ResourcePalette } from '../../features/palette/components/resource-palette';
 import { PropertiesPanel } from '../../features/properties/components/properties-panel';
 import { ValidationPanel } from '../../features/validation/components/validation-panel';
 import { createCard, importToActiveCard, setActiveCard } from '../../store/slices/cards-slice';
+import { openDeployPanel, closeDeployPanel } from '../../store/slices/deploy-slice';
 import {
   togglePalette,
   toggleBlocks,
@@ -83,6 +94,11 @@ const DragResizePanel: React.FC<DragResizePanelProps> = ({
     const saved = localStorage.getItem(storageKey);
     return saved ? Math.max(minWidth, Math.min(maxWidth, parseInt(saved, 10))) : defaultWidth;
   });
+  // Tour engine can force a width via Redux. When set, we render at
+  // that width without touching the persisted local value, so the
+  // user's preferred sidebar width comes back when the tour ends.
+  const overrideWidth = useSelector((s: RootState) => s.ui?.sidebarOverride?.[side] ?? null);
+  const effectiveWidth = overrideWidth ?? width;
   const dragging = React.useRef(false);
   const startX = React.useRef(0);
   const startW = React.useRef(0);
@@ -124,7 +140,7 @@ const DragResizePanel: React.FC<DragResizePanelProps> = ({
   );
 
   return (
-    <div className="h-full flex shrink-0" style={{ width }}>
+    <div className="h-full flex shrink-0" style={{ width: effectiveWidth }}>
       {side === 'right' && handle}
       <div className={`flex-1 min-w-0 overflow-hidden bg-ice-surface ${side === 'left' ? 'ice-sidebar-shadow' : ''}`}>
         {children}
@@ -148,6 +164,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   const dispatch = useDispatch<AppDispatch>();
   const { showPalette, showBlocks, showProperties, showAiChat, showCostPanel, showTemplates, showValidation } =
     useSelector((state: RootState) => state.ui);
+  const showDeployPanel = useSelector((state: RootState) => state.deploy.isOpen);
   const isPortrait = useIsPortrait();
   const isCanvasView = view === 'canvas' && !children;
 
@@ -237,7 +254,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         onClick: () => dispatch(toggleTemplates()),
       },
     ],
-    [showPalette, showBlocks, showTemplates, dispatch],
+    [showPalette, showBlocks, showTemplates, dispatch, t],
   );
 
   const rightStripTabs: SidebarStripTab[] = useMemo(() => {
@@ -265,6 +282,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         onClick: () => dispatch(toggleCostPanel()),
       });
       tabs.push({
+        id: 'deploy',
+        label: t('deploy.title'),
+        icon: Rocket,
+        active: showDeployPanel,
+        onClick: () => dispatch(showDeployPanel ? closeDeployPanel() : openDeployPanel()),
+      });
+      tabs.push({
         id: 'ai',
         label: t('layout.sidebar.aiChat'),
         icon: MessageSquare,
@@ -273,7 +297,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
       });
     }
     return tabs;
-  }, [showProperties, showCostPanel, showAiChat, showValidation, isCanvasView, dispatch]);
+  }, [showProperties, showCostPanel, showDeployPanel, showAiChat, showValidation, isCanvasView, dispatch, t]);
 
   // ── Content ─────────────────────────────────────────────────────────────
 
@@ -293,6 +317,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
     showProperties ||
     (isCanvasView && showAiChat) ||
     (isCanvasView && showCostPanel) ||
+    (isCanvasView && showDeployPanel) ||
     (isCanvasView && showValidation);
 
   // Render right panel content — panels are rendered conditionally but in stable
@@ -302,6 +327,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   if (isCanvasView && showValidation) rightPanels.push({ key: 'validation', node: <ValidationPanel /> });
   if (isCanvasView && showAiChat) rightPanels.push({ key: 'ai', node: <AiChatPanel /> });
   if (isCanvasView && showCostPanel) rightPanels.push({ key: 'cost', node: <CostPanel /> });
+  if (isCanvasView && showDeployPanel) rightPanels.push({ key: 'deploy', node: <DeployPanel /> });
   if (showProperties) rightPanels.push({ key: 'props', node: <PropertiesPanel /> });
 
   const rightPanelContent =
@@ -338,7 +364,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
               maxSize={35}
               className="bg-ice-surface ice-sidebar-shadow"
             >
-              <ResourcePalette showProjectSection={showPalette} showBlocksSection={showBlocks} showTemplatesSection={showTemplates} />
+              <ResourcePalette
+                showProjectSection={showPalette}
+                showBlocksSection={showBlocks}
+                showTemplatesSection={showTemplates}
+              />
             </SidebarPanel>
 
             <ResizablePanel defaultSize={75}>
@@ -399,7 +429,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         {/* Left sidebar with its own resize handle */}
         {showLeftPanel && (
           <DragResizePanel side="left" storageKey="ice-left-w" defaultWidth={260} minWidth={180} maxWidth={400}>
-            <ResourcePalette showProjectSection={showPalette} showBlocksSection={showBlocks} showTemplatesSection={showTemplates} />
+            <ResourcePalette
+              showProjectSection={showPalette}
+              showBlocksSection={showBlocks}
+              showTemplatesSection={showTemplates}
+            />
           </DragResizePanel>
         )}
 

@@ -14,7 +14,7 @@ interface SelectionRect {
   height: number;
 }
 
-interface SelectionState {
+export interface SelectionState {
   selectedNodes: string[];
   selectedEdges: string[];
   lastSelectedNode: string | null;

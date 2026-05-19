@@ -27,9 +27,10 @@ describe('calculateZIndex', () => {
       expect(calculateZIndex('Block.ScalableBackend', 0)).toBeGreaterThan(calculateZIndex('Group.Custom', 0));
     });
 
-    it('Resources should be above everything else', () => {
+    it('Resources should be above containers', () => {
       const resourceZ = calculateZIndex('Compute.Container', 0);
-      expect(resourceZ).toBeGreaterThan(calculateZIndex('Block.ScalableBackend', 0));
+      // Blocks and leaf resources share the top layer in the current model
+      expect(resourceZ).toBe(calculateZIndex('Block.ScalableBackend', 0));
       expect(resourceZ).toBeGreaterThan(calculateZIndex('Group.Custom', 0));
       expect(resourceZ).toBeGreaterThan(calculateZIndex('Network.VPC', 0));
     });

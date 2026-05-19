@@ -9,8 +9,8 @@
  * - Orphan detection
  */
 
-import { isContainer } from './classifiers.js';
-import type { CanvasIssue, ValidatableNode, ValidatableEdge } from './types.js';
+import { isContainer } from './classifiers';
+import type { CanvasIssue, ValidatableNode, ValidatableEdge } from './types';
 
 /**
  * Validate structural integrity of the canvas.
@@ -77,7 +77,7 @@ export function validateStructure(nodes: readonly ValidatableNode[], edges: read
         code: 'PARENT_NOT_CONTAINER',
         message: `Parent "${(parent.data.label as string) || parent.id}" is not a container`,
         nodeId: node.id,
-        suggestion: 'Resources can only be placed inside VPC, Subnet, or Group containers',
+        suggestion: 'Resources can only be placed inside VPC, Subnet, Private Network, or Group containers',
       });
     }
   }
@@ -123,10 +123,12 @@ export function validateStructure(nodes: readonly ValidatableNode[], edges: read
 
   for (const node of nodes) {
     const iceType = (node.data.iceType as string) ?? '';
-    // Skip containers, groups, monitoring (often standalone), domain, env config
+    // Skip containers, groups, monitoring (often standalone), domain, env config.
+    // findings.md #36 — isContainer already returns true when
+    // nodeType is 'container' / 'group'; the dedicated check after
+    // it was redundant.
     if (isContainer(iceType, node.type)) continue;
-    if (node.type === 'container' || node.type === 'group') continue;
-    if (iceType === 'Config.Environment' || iceType === 'Network.Domain') continue;
+    if (iceType === 'Config.Environment' || iceType === 'Network.PublicEndpoint') continue;
     if (iceType.startsWith('Monitoring.')) continue;
 
     if (!connectedNodes.has(node.id)) {

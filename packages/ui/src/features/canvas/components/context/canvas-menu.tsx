@@ -11,7 +11,7 @@ import { setEdgeStyle, toggleCanvasLocked, type EdgeStyle } from '../../../../st
 import type { AppDispatch } from '../../../../store';
 
 interface CanvasMenuProps {
-  menuRef: React.RefObject<HTMLDivElement | null>;
+  menuRef: React.Ref<HTMLDivElement>;
   position: { x: number; y: number };
   blockCategories: Array<{ label: string; items: Array<{ label: string; onClick: () => void }> }>;
   templateCategories: Array<{ label: string; items: Array<{ label: string; onClick: () => void }> }>;

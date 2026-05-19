@@ -20,7 +20,7 @@ interface AiHistoryEntry {
   timestamp: number;
 }
 
-interface AiState {
+export interface AiState {
   /** Whether an AI request is currently in flight */
   isProcessing: boolean;
   /** The current user intent being processed */

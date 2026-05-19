@@ -61,7 +61,7 @@ export function is_category_visible_at_level(category: NodeCategory, level: 1 | 
  */
 export function is_resource_visible_at_level(resourceType: string, level: 1 | 2 | 3): boolean {
   // L1 special handling: show certain network types (gateways, load balancers)
-  if (level === 1 && L1_VISIBLE_NETWORK_TYPES.includes(resourceType)) {
+  if (level === 1 && (L1_VISIBLE_NETWORK_TYPES as readonly string[]).includes(resourceType)) {
     return true;
   }
 
@@ -77,7 +77,7 @@ export function is_resource_visible_at_level(resourceType: string, level: 1 | 2 
  * @returns true if it's a container type
  */
 export function is_container_type(resourceType: string): boolean {
-  return NETWORK_CONTAINER_TYPES.includes(resourceType);
+  return (NETWORK_CONTAINER_TYPES as readonly string[]).includes(resourceType);
 }
 
 /**

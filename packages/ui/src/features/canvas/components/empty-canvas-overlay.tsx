@@ -8,6 +8,7 @@
 import { Globe, Rocket, Server, Activity, Zap, X, LayoutTemplate } from 'lucide-react';
 import React, { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { ARCHETYPE_COLORS } from '../../../config/color-palette';
 import { getTemplatesByCategory, expandComposedTemplate } from '../../../config/templates';
 import { useTranslation } from '../../../i18n';
@@ -30,6 +31,7 @@ interface EmptyCanvasOverlayProps {
 export const EmptyCanvasOverlay: React.FC<EmptyCanvasOverlayProps> = ({ onDismiss }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
 
   const handleSelect = useCallback(
     (template: ComposedTemplate) => {
@@ -70,9 +72,7 @@ export const EmptyCanvasOverlay: React.FC<EmptyCanvasOverlayProps> = ({ onDismis
             );
           })}
           <button
-            onClick={() => {
-              window.location.href = '/templates';
-            }}
+            onClick={() => navigate('/templates')}
             className="flex flex-col items-center gap-1 px-2.5 py-2 rounded-lg border border-ice-border hover:border-ice-border-strong hover:bg-ice-hover transition-all text-center min-w-[72px]"
           >
             <LayoutTemplate style={{ width: 14, height: 14 }} className="text-ice-text-3" />

@@ -1,0 +1,56 @@
+name: Feature request
+description: Propose a new feature, block, or behaviour
+title: "[feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before writing code, open this issue so we can align on approach. A short problem statement beats a long design — see [CONTRIBUTING.md](../../CONTRIBUTING.md) for what we will and won't merge.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to do that ICE doesn't support today? Focus on the use case, not the implementation.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: A short sketch of what you have in mind. Optional — we're happy to help shape it.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Workarounds you tried, other tools that do this, why they don't fit.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which area does this touch?
+      multiple: true
+      options:
+        - Canvas / frontend
+        - Blocks / concepts
+        - Deploy engine
+        - GCP provider
+        - AWS provider
+        - Azure provider
+        - AI assistant
+        - Templates
+        - Desktop app
+        - Docs
+        - Other
+
+  - type: checkboxes
+    id: roadmap
+    attributes:
+      label: Roadmap check
+      description: Please skim [ROADMAP.md](../../ROADMAP.md) before filing.
+      options:
+        - label: I've checked the roadmap and this is not already tracked
+          required: true

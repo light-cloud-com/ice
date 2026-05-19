@@ -108,7 +108,12 @@ export const serverlessApiTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    {
+      iceType: 'Network.PublicEndpoint',
+      label: 'Public Traffic',
+      position: { x: 50, y: 86 },
+      data: { domain: 'api.myapp.com', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true },
+    },
     // 1: API Gateway
     { iceType: 'Network.Gateway', label: 'API Gateway', position: { x: 306, y: 86 }, data: { protocol: 'http' } },
 
@@ -147,8 +152,6 @@ export const serverlessApiTemplate: ComposedTemplate = {
     // ── Ungrouped (control plane) ─────────────────────────────────────────
     // 6: Secret
     { iceType: 'Security.Secret', label: 'API Secrets', position: { x: 50, y: 814 }, data: {} },
-    // 7: Domain
-    { iceType: 'Network.Domain', label: 'Domain', position: { x: 306, y: 814 }, data: { hostname: 'api.myapp.com' } },
     // 8: Env
     { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 562, y: 814 }, data: {} },
   ],
@@ -167,9 +170,8 @@ export const serverlessApiTemplate: ComposedTemplate = {
     { fromBlock: 2, toBlock: 6, relationship: 'depends_on' },
     { fromBlock: 3, toBlock: 6, relationship: 'depends_on' },
     // Domain → Gateway (Domain→Routable rule)
-    { fromBlock: 7, toBlock: 1, relationship: 'connects_to' },
     // Function → Env (Service→EnvConfig config rule)
-    { fromBlock: 2, toBlock: 8, relationship: 'depends_on' },
+    { fromBlock: 2, toBlock: 7, relationship: 'depends_on' },
   ],
 };
 

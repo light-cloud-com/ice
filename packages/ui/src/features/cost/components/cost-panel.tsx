@@ -1,19 +1,22 @@
 /**
- * Cost Estimation Panel — Right Sidebar
+ * Cost Estimation Panel — Orchestrator
  *
- * Full cost analysis for the active card/environment:
- * - Category breakdown with bar chart
- * - Time projections (monthly/quarterly/annual)
- * - Scaling cost range (min → current → max)
- * - Environment comparison
- * - Data transfer estimates
- * - Provider comparison (AWS vs GCP vs Azure)
- * - AI-powered optimization suggestions
- * - Session cost delta tracking
+ * Full cost analysis for the active card/environment. The orchestrator
+ * pulls cost data from Redux + the cost-calculation hook, then composes
+ * the seven sections below.
+ *
+ * Sub-component splits (rf-cost series):
+ *   - `../utils/traffic-tier-storage.ts` — tier persistence (rf-cost-1)
+ *   - `../utils/generate-suggestions.ts` — optimization rules (rf-cost-2)
+ *   - `../data/category-meta.tsx`        — icon/color lookups (rf-cost-3)
+ *   - `./section.tsx`                    — collapsible wrapper (rf-cost-4)
+ *   - `./projection-row.tsx`             — monthly/quarterly/annual row (rf-cost-5)
+ *   - `./scaling-range-bar.tsx`          — three-stop range bar (rf-cost-6)
+ *   - `./category-row.tsx`               — single category breakdown row (rf-cost-7)
+ *   - `../sections/environment-comparison.tsx` — env-vs-prod table (rf-cost-8)
  */
 
 import {
-  ChevronRight,
   DollarSign,
   TrendingDown,
   TrendingUp,
@@ -22,113 +25,27 @@ import {
   Zap,
   ArrowRightLeft,
   Globe,
-  Server,
-  Database,
-  MessageSquare,
-  Shield,
-  Activity,
-  BrainCircuit,
   Package,
 } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { CategoryRow } from './category-row';
+import { ProjectionRow } from './projection-row';
+import { ScalingRangeBar } from './scaling-range-bar';
+import { Section } from './section';
 import { t } from '../../../i18n';
 import { PanelHeader } from '../../../shared/components/ui/panel-header';
 import { cn } from '../../../shared/utils/cn';
-import { selectActiveCard, type CardNode } from '../../../store/slices/cards-slice';
+import { selectActiveCard } from '../../../store/slices/cards-slice';
 import { toggleCostPanel } from '../../../store/slices/ui-slice';
 import { useCostCalculation } from '../hooks/use-cost-calculation';
-import {
-  formatCost,
-  formatCostRaw,
-  parseCostRange,
-  computeCostSummary,
-  type CostSummary,
-  type CategoryCost,
-  type ResourceMap,
-} from '../utils/cost-calculator';
+import { EnvironmentComparison } from '../sections/environment-comparison';
+import { formatCostRaw } from '../utils/cost-calculator';
+import { generateSuggestions } from '../utils/generate-suggestions';
 import { TRAFFIC_TIERS, EGRESS_RATES } from '../utils/provider-pricing';
+import { loadTrafficTier, saveTrafficTier } from '../utils/traffic-tier-storage';
 import type { RootState, AppDispatch } from '../../../store';
 import type { Environment } from '../../../store/slices/environments-slice';
-
-// ─── Section component ──────────────────────────────────────────────────────
-
-const Section: React.FC<{
-  title: string;
-  icon?: React.ReactNode;
-  defaultOpen?: boolean;
-  children: React.ReactNode;
-}> = ({ title, icon, defaultOpen = true, children }) => {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div className="border-b border-ice-border">
-      <button
-        className="w-full flex items-center gap-2 px-3 py-2 text-ice-xs uppercase tracking-wider text-ice-text-3 hover:bg-ice-hover transition-colors"
-        onClick={() => setOpen(!open)}
-      >
-        <ChevronRight className={cn('w-3 h-3 transition-transform', open && 'rotate-90')} />
-        {icon}
-        <span className="flex-1 text-left">{title}</span>
-      </button>
-      {open && <div className="px-3 pb-3">{children}</div>}
-    </div>
-  );
-};
-
-// ─── Category icon lookup ───────────────────────────────────────────────────
-
-const CATEGORY_ICONS: Record<string, React.ReactNode> = {
-  Compute: <Server className="w-3.5 h-3.5" />,
-  Data: <Database className="w-3.5 h-3.5" />,
-  'Data Storage': <Database className="w-3.5 h-3.5" />,
-  Messaging: <MessageSquare className="w-3.5 h-3.5" />,
-  Networking: <Globe className="w-3.5 h-3.5" />,
-  Security: <Shield className="w-3.5 h-3.5" />,
-  Observability: <Activity className="w-3.5 h-3.5" />,
-  Analytics: <Activity className="w-3.5 h-3.5" />,
-  'AI / ML': <BrainCircuit className="w-3.5 h-3.5" />,
-  Config: <Package className="w-3.5 h-3.5" />,
-  Source: <Package className="w-3.5 h-3.5" />,
-  Other: <Package className="w-3.5 h-3.5" />,
-};
-
-// ─── Category bar colors ────────────────────────────────────────────────────
-
-const CATEGORY_COLORS: Record<string, string> = {
-  Compute: 'bg-blue-500',
-  Data: 'bg-emerald-500',
-  'Data Storage': 'bg-emerald-500',
-  Messaging: 'bg-purple-500',
-  Networking: 'bg-cyan-500',
-  Security: 'bg-amber-500',
-  Observability: 'bg-pink-500',
-  Analytics: 'bg-orange-500',
-  'AI / ML': 'bg-violet-500',
-  Config: 'bg-slate-500',
-  Source: 'bg-slate-400',
-  Other: 'bg-gray-500',
-};
-
-const TRAFFIC_TIER_KEY = 'ice-cost-traffic-tier';
-
-function loadTrafficTier(): number {
-  try {
-    const v = localStorage.getItem(TRAFFIC_TIER_KEY);
-    if (!v) return 2;
-    const parsed = parseInt(v, 10);
-    return Math.max(0, Math.min(TRAFFIC_TIERS.length - 1, parsed));
-  } catch {
-    return 2;
-  }
-}
-
-function saveTrafficTier(value: number) {
-  try {
-    localStorage.setItem(TRAFFIC_TIER_KEY, String(value));
-  } catch {
-    /* ignore */
-  }
-}
 
 // Stable empty-array fallback (avoids creating new [] references in selectors)
 const EMPTY_ENVIRONMENTS: Environment[] = [];
@@ -174,7 +91,11 @@ export const CostPanel: React.FC = () => {
 
   if (!activeCard || !hasNodes) {
     return (
-      <div className="h-full flex flex-col bg-inherit border-l border-ice-border">
+      <div
+        id="ice-cost-panel"
+        className="h-full flex flex-col bg-inherit border-l border-ice-border"
+        data-tour-id="cost-panel-root"
+      >
         <PanelHeader
           icon={<DollarSign aria-hidden="true" className="w-3.5 h-3.5 text-emerald-400" />}
           title={t('cost.title')}
@@ -199,7 +120,7 @@ export const CostPanel: React.FC = () => {
   const suggestions = generateSuggestions(summary, activeCard.nodes, environments);
 
   return (
-    <div className="h-full flex flex-col bg-inherit border-l border-ice-border">
+    <div className="h-full flex flex-col bg-inherit border-l border-ice-border" data-tour-id="cost-panel-root">
       {/* Header */}
       <PanelHeader
         icon={<DollarSign aria-hidden="true" className="w-3.5 h-3.5 text-emerald-400" />}
@@ -317,6 +238,7 @@ export const CostPanel: React.FC = () => {
               value={trafficTierIndex}
               onChange={(e) => handleTrafficTierChange(parseInt(e.target.value))}
               className="w-full h-1.5 bg-ice-border rounded-full appearance-none cursor-pointer accent-emerald-500"
+              data-tour-id="cost-panel-tier-slider"
             />
             <div className="flex justify-between text-ice-xs text-ice-text-3">
               <span>{t('cost.dev')}</span>
@@ -428,251 +350,3 @@ export const CostPanel: React.FC = () => {
     </div>
   );
 };
-
-// ═════════════════════════════════════════════════════════════════════════════
-// Sub-components
-// ═════════════════════════════════════════════════════════════════════════════
-
-// ── Category Row ────────────────────────────────────────────────────────────
-
-const CategoryRow: React.FC<{
-  category: CategoryCost;
-  totalCost: number;
-}> = ({ category, totalCost }) => {
-  const [expanded, setExpanded] = useState(false);
-  const percent = totalCost > 0 ? (category.totalCost / totalCost) * 100 : 0;
-
-  return (
-    <div>
-      <button
-        className="w-full flex items-center gap-2 py-0.5 hover:bg-ice-hover/50 rounded transition-colors"
-        onClick={() => setExpanded(!expanded)}
-      >
-        {CATEGORY_ICONS[category.label] || CATEGORY_ICONS[category.category] || <Package className="w-3.5 h-3.5" />}
-        <span className="text-ice-xs text-ice-text-2 flex-1 text-left">{category.label}</span>
-        <span className="text-ice-xs text-ice-text-1 font-mono">{formatCost(category.totalCost)}</span>
-        <span className="text-ice-xs text-ice-text-3 font-mono w-8 text-right">{Math.round(percent)}%</span>
-      </button>
-      {/* Bar */}
-      <div className="h-1 bg-ice-border/50 rounded-full overflow-hidden mt-0.5 ml-6">
-        <div
-          className={cn(
-            'h-full rounded-full transition-all',
-            CATEGORY_COLORS[category.label] || CATEGORY_COLORS[category.category] || 'bg-gray-500',
-          )}
-          style={{ width: `${percent}%` }}
-        />
-      </div>
-      {/* Expanded node list */}
-      {expanded && (
-        <div className="ml-6 mt-1 space-y-0.5">
-          {category.nodes.map((n) => (
-            <div key={n.nodeId} className="flex items-center justify-between text-ice-xs py-0.5">
-              <span className="text-ice-text-3 truncate mr-2">{n.label}</span>
-              <span className="text-ice-text-2 font-mono shrink-0">{formatCost(n.monthlyCost)}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-// ── Projection Row ──────────────────────────────────────────────────────────
-
-const ProjectionRow: React.FC<{ label: string; value: number }> = ({ label, value }) => (
-  <div className="flex items-center justify-between py-0.5">
-    <span className="text-ice-xs text-ice-text-2">{label}</span>
-    <span className="text-ice-sm text-ice-text-1 font-mono">
-      {formatCostRaw(value)}
-      {label === 'Monthly' ? '/mo' : label === 'Quarterly' ? '/qtr' : '/yr'}
-    </span>
-  </div>
-);
-
-// ── Scaling Range Bar ───────────────────────────────────────────────────────
-
-const ScalingRangeBar: React.FC<{ range: { minCost: number; currentCost: number; maxCost: number } }> = ({ range }) => {
-  const { minCost, currentCost, maxCost } = range;
-  const totalRange = maxCost - minCost;
-  const currentPos = totalRange > 0 ? ((currentCost - minCost) / totalRange) * 100 : 50;
-
-  return (
-    <div>
-      <div className="flex items-center justify-between text-ice-xs text-ice-text-3 mb-1">
-        <span>{t('cost.minInstances')}</span>
-        <span>{t('cost.maxInstances')}</span>
-      </div>
-      <div className="relative h-3 bg-ice-border rounded-full overflow-hidden">
-        {/* Gradient from green to red */}
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/40 via-amber-500/40 to-red-500/40 rounded-full" />
-        {/* Current position marker */}
-        <div
-          className="absolute top-0 h-full w-0.5 bg-white shadow-sm shadow-black/30"
-          style={{ left: `${currentPos}%` }}
-        />
-        <div
-          className="absolute -top-0.5 w-3 h-4 bg-white rounded-sm border border-ice-border shadow-sm"
-          style={{ left: `calc(${currentPos}% - 6px)` }}
-        />
-      </div>
-      <div className="flex items-center justify-between mt-1">
-        <span className="text-ice-xs text-emerald-400 font-mono">{formatCost(minCost)}</span>
-        <span className="text-ice-xs text-ice-text-1 font-mono font-semibold">Current: {formatCost(currentCost)}</span>
-        <span className="text-ice-xs text-red-400 font-mono">{formatCost(maxCost)}</span>
-      </div>
-    </div>
-  );
-};
-
-// ── Environment Comparison ──────────────────────────────────────────────────
-
-const EnvironmentComparison: React.FC<{
-  environments: Environment[];
-  allCards: Array<{ id: string; name: string; nodes: CardNode[] }>;
-  activeCardId: string;
-  currentCost: number;
-  resourceMap: ResourceMap | null;
-}> = ({ environments, allCards, activeCardId, currentCost, resourceMap }) => {
-  // Compute production baseline once
-  const prodEnv = environments.find((e) => e.type === 'production');
-  const prodCard = prodEnv ? allCards.find((c) => c.id === prodEnv.card_id) : null;
-  const prodCost = prodCard ? computeCostSummary(prodCard.nodes, resourceMap).totalMonthlyCost : 0;
-
-  return (
-    <div className="space-y-1.5">
-      {environments.map((env) => {
-        const card = allCards.find((c) => c.id === env.card_id);
-        const envCost = card ? computeCostSummary(card.nodes, resourceMap).totalMonthlyCost : 0;
-        const delta = env.type !== 'production' ? envCost - prodCost : 0;
-        const isActive = card?.id === activeCardId;
-
-        return (
-          <div
-            key={env.id}
-            className={cn(
-              'flex items-center justify-between py-1.5 px-2 rounded',
-              isActive && 'bg-emerald-500/10 border border-emerald-500/20',
-            )}
-          >
-            <div className="flex items-center gap-2">
-              <span
-                className={cn(
-                  'w-2 h-2 rounded-full',
-                  env.type === 'production'
-                    ? 'bg-emerald-500'
-                    : env.type === 'staging'
-                      ? 'bg-amber-500'
-                      : env.type === 'development'
-                        ? 'bg-blue-500'
-                        : 'bg-purple-500',
-                )}
-              />
-              <span className="text-ice-xs text-ice-text-1">{env.name}</span>
-              {env.is_protected && <span className="text-ice-xs text-ice-text-3">🔒</span>}
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-ice-xs text-ice-text-1 font-mono">{envCost > 0 ? formatCost(envCost) : '—'}</span>
-              {env.type !== 'production' && delta !== 0 && (
-                <span
-                  className={cn(
-                    'text-ice-xs font-mono',
-                    delta < 0 ? 'text-emerald-400' : delta > 0 ? 'text-red-400' : 'text-ice-text-3',
-                  )}
-                >
-                  {delta > 0 ? '+' : ''}
-                  {formatCostRaw(delta)}
-                </span>
-              )}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
-
-// ═════════════════════════════════════════════════════════════════════════════
-// Optimization suggestion engine
-// ═════════════════════════════════════════════════════════════════════════════
-
-interface CostSuggestion {
-  message: string;
-  savings?: string;
-  severity: 'high' | 'medium' | 'low';
-}
-
-function generateSuggestions(summary: CostSummary, nodes: CardNode[], environments: Environment[]): CostSuggestion[] {
-  const suggestions: CostSuggestion[] = [];
-
-  // Check for dev environments using production-tier instances
-  const devEnvs = environments.filter((e) => e.type === 'development' || e.type === 'pr');
-  if (devEnvs.length > 0 && summary.totalMonthlyCost > 50) {
-    // Look for nodes with large instance sizes in what might be dev cards
-    const expensiveNodes = nodes.filter((n) => {
-      const cost = parseCostRange((n.data?.estimatedCost as string) || '');
-      return cost > 50;
-    });
-    if (expensiveNodes.length > 0) {
-      suggestions.push({
-        message: `${expensiveNodes.length} resource(s) cost >$50/mo. Consider using "dev" scale preset for non-production environments.`,
-        savings: `~${formatCostRaw(expensiveNodes.reduce((s, n) => s + parseCostRange((n.data?.estimatedCost as string) || '') * 0.6, 0))}/mo`,
-        severity: 'medium',
-      });
-    }
-  }
-
-  // Check for scalable services not using autoscaling
-  const scalableWithFixedInstances = nodes.filter((n) => {
-    const behavior = (n.data?.behavior as string) || '';
-    const min = (n.data?.minInstances as number) || 1;
-    const max = (n.data?.maxInstances as number) || min;
-    return behavior === 'scalable' && min === max && max > 1;
-  });
-  if (scalableWithFixedInstances.length > 0) {
-    suggestions.push({
-      message: `${scalableWithFixedInstances.length} scalable service(s) have min = max instances. Enable autoscaling to save during low-traffic periods.`,
-      severity: 'medium',
-    });
-  }
-
-  // Check for high max instance counts
-  const highMaxInstances = nodes.filter((n) => {
-    const max = (n.data?.maxInstances as number) || 0;
-    return max > 10;
-  });
-  if (highMaxInstances.length > 0) {
-    const maxCostDelta = summary.scalingRange.maxCost - summary.scalingRange.currentCost;
-    if (maxCostDelta > 100) {
-      suggestions.push({
-        message: `At maximum scale, costs could reach ${formatCost(summary.scalingRange.maxCost)}. Set scaling caps to limit unexpected spend.`,
-        savings: `Cap at ${formatCostRaw(maxCostDelta)}/mo max overage`,
-        severity: 'high',
-      });
-    }
-  }
-
-  // Reserved instance savings hint
-  if (summary.totalMonthlyCost > 200) {
-    suggestions.push({
-      message: 'For stable workloads, 1-year reserved instances or committed use discounts can save 25–40%.',
-      savings: `~${formatCostRaw(summary.totalMonthlyCost * 0.3)}/mo`,
-      severity: 'low',
-    });
-  }
-
-  // Single availability zone warning
-  const dbNodes = nodes.filter((n) => {
-    const iceType = (n.data?.iceType as string) || '';
-    return iceType.startsWith('Data.');
-  });
-  const nonHaDb = dbNodes.filter((n) => !(n.data?.multi_az as boolean));
-  if (nonHaDb.length > 0 && summary.totalMonthlyCost > 100) {
-    suggestions.push({
-      message: `${nonHaDb.length} database(s) not using multi-AZ. Production workloads should enable HA — costs ~2x but prevents outages.`,
-      severity: 'medium',
-    });
-  }
-
-  return suggestions;
-}

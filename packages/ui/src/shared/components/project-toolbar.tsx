@@ -21,9 +21,10 @@ import {
   Grid3X3,
 } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../../i18n';
+import { IceSelect } from './ui/ice-select';
 import {
   autoOrganizeCard,
   undoCardChange,
@@ -35,7 +36,6 @@ import {
   importToActiveCard,
   createCard,
 } from '../../store/slices/cards-slice';
-import { openDeployPanel } from '../../store/slices/deploy-slice';
 import { fetchEnvironments, setActiveEnvironment } from '../../store/slices/environments-slice';
 import {
   setEdgeStyle,
@@ -46,7 +46,6 @@ import {
 } from '../../store/slices/ui-slice';
 import { getApi } from '../api/api-adapter';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './ui/tooltip';
-import { IceSelect } from './ui/ice-select';
 import { cn } from '../utils/cn';
 import type { RootState, AppDispatch } from '../../store';
 
@@ -65,14 +64,16 @@ const SUB_PAGES = [
 // ── Small helpers ──────────────────────────────────────────────────────────
 
 const TBtn: React.FC<{
+  id?: string;
   icon: React.ElementType;
   onClick: () => void;
   tip?: string;
   className?: string;
   disabled?: boolean;
-}> = ({ icon: I, onClick, tip, className, disabled }) => {
+}> = ({ id, icon: I, onClick, tip, className, disabled }) => {
   const btn = (
     <button
+      id={id}
       onClick={onClick}
       aria-label={tip}
       disabled={disabled}
@@ -89,7 +90,9 @@ const TBtn: React.FC<{
   return (
     <Tooltip>
       <TooltipTrigger asChild>{btn}</TooltipTrigger>
-      <TooltipContent side="bottom" className="text-ice-xs">{tip}</TooltipContent>
+      <TooltipContent side="bottom" className="text-ice-xs">
+        {tip}
+      </TooltipContent>
     </Tooltip>
   );
 };
@@ -184,7 +187,10 @@ export const ProjectToolbar: React.FC<ProjectToolbarProps> = ({ basePath, active
   const handleFitView = useCallback(() => {
     if (!activeCard?.nodes?.length) return;
     const nodes = activeCard.nodes;
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
     for (const n of nodes) {
       minX = Math.min(minX, n.position.x);
       minY = Math.min(minY, n.position.y);
@@ -244,16 +250,22 @@ export const ProjectToolbar: React.FC<ProjectToolbarProps> = ({ basePath, active
             <TBtn
               icon={Rows3}
               onClick={() => {
-                dispatch(autoOrganizeCard({ direction: 'vertical', containerId: selectedContainerId, zoom: currentZoom }));
+                dispatch(
+                  autoOrganizeCard({ direction: 'vertical', containerId: selectedContainerId, zoom: currentZoom }),
+                );
                 dispatch(setAutoOrganizeStyle('vertical'));
+                dispatch(setEdgeStyle('rectangular'));
               }}
               tip={selectedContainerId ? 'Organize group (vertical)' : 'Auto-organize all (vertical)'}
             />
             <TBtn
               icon={Columns3}
               onClick={() => {
-                dispatch(autoOrganizeCard({ direction: 'horizontal', containerId: selectedContainerId, zoom: currentZoom }));
+                dispatch(
+                  autoOrganizeCard({ direction: 'horizontal', containerId: selectedContainerId, zoom: currentZoom }),
+                );
                 dispatch(setAutoOrganizeStyle('horizontal'));
+                dispatch(setEdgeStyle('rectangular'));
               }}
               tip={selectedContainerId ? 'Organize group (horizontal)' : 'Auto-organize all (horizontal)'}
             />
@@ -304,6 +316,7 @@ export const ProjectToolbar: React.FC<ProjectToolbarProps> = ({ basePath, active
         )}
         <TSep />
         <TBtn
+          id="ice-btn-deploy"
           icon={Rocket}
           onClick={() => handleNavigate('deploy')}
           tip={t('appBar.deploy')}

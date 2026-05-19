@@ -150,14 +150,37 @@ export function useClipboard() {
       if (isCtrl && e.key === 'x') {
         const data = copySelectedNodes();
         if (data) {
-          navigator.clipboard.writeText(JSON.stringify(data)).catch(() => {
-            sessionStorage.setItem('ice-clipboard', JSON.stringify(data));
-          });
-          // Delete selected
-          for (const nodeId of selectedNodesRef.current) {
-            dispatch(deleteCardNode(nodeId));
-          }
-          dispatch(setSelectedNodes([]));
+          // findings.md #28 — gate the delete on a confirmed write to
+          // either clipboard backend. Previously the delete fired
+          // synchronously while writeText was still in flight, so a
+          // failed clipboard AND a failing sessionStorage fallback
+          // (e.g., storage quota exceeded) deleted the nodes with
+          // nowhere to paste them back from.
+          const payload = JSON.stringify(data);
+          const idsToDelete = [...selectedNodesRef.current];
+          const completeCut = () => {
+            for (const nodeId of idsToDelete) {
+              dispatch(deleteCardNode(nodeId));
+            }
+            dispatch(setSelectedNodes([]));
+          };
+          navigator.clipboard
+            .writeText(payload)
+            .then(completeCut)
+            .catch(() => {
+              try {
+                sessionStorage.setItem('ice-clipboard', payload);
+                completeCut();
+              } catch (storageErr) {
+                // Both backends failed — keep the nodes on the canvas
+                // and surface the error so the user knows the cut
+                // didn't happen.
+                console.error(
+                  '[clipboard] Cut aborted: could not store payload in clipboard or sessionStorage',
+                  storageErr,
+                );
+              }
+            });
         }
         return;
       }

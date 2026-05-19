@@ -23,21 +23,15 @@ import {
   XCircle,
 } from 'lucide-react';
 import React, { useMemo } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector, useDispatch, shallowEqual } from 'react-redux';
+import { parseCostRange } from '../../features/cost/utils/cost-calculator';
 import { IntegrationStatusDots } from '../../features/integrations';
 import { useTranslation } from '../../i18n';
 import { selectActiveCard } from '../../store/slices/cards-slice';
+import { deriveRollup, deriveRollupPercentage } from '../../store/slices/deploy-slice';
 import { openValidation } from '../../store/slices/ui-slice';
 import { useSystemStats } from '../hooks/use-system-stats';
 import type { RootState } from '../../store';
-
-function parseCostRange(cost: string): number {
-  const matches = cost.match(/\$(\d+)(?:[–-](\d+))?/);
-  if (!matches) return 0;
-  const low = parseInt(matches[1]);
-  const high = matches[2] ? parseInt(matches[2]) : low;
-  return (low + high) / 2;
-}
 
 export const StatusBar: React.FC = () => {
   const { t } = useTranslation();
@@ -110,7 +104,10 @@ export const StatusBar: React.FC = () => {
           <StatusDivider />
           <div className="flex items-center gap-1 text-ice-green">
             <DollarSign className="w-3 h-3" />
-            <span>~${Math.round(totalCost)}{t('statusBar.moEst')}</span>
+            <span>
+              ~${Math.round(totalCost)}
+              {t('statusBar.moEst')}
+            </span>
           </div>
         </>
       )}
@@ -125,7 +122,8 @@ export const StatusBar: React.FC = () => {
             <span>
               {selectedNodes.length > 0 && t('statusBar.selectedCount', { count: selectedNodes.length })}
               {selectedNodes.length > 0 && selectedEdges.length > 0 && ', '}
-              {selectedEdges.length > 0 && `${selectedEdges.length} ${selectedEdges.length !== 1 ? t('statusBar.edges') : t('statusBar.edge')}`}
+              {selectedEdges.length > 0 &&
+                `${selectedEdges.length} ${selectedEdges.length !== 1 ? t('statusBar.edges') : t('statusBar.edge')}`}
             </span>
           </div>
           <StatusDivider />
@@ -174,9 +172,12 @@ export const StatusBar: React.FC = () => {
         <>
           <div className="flex items-center gap-3 text-ice-text-3">
             <span>
-              {t('statusBar.ram')}: {systemStats.ram >= 1024 ? `${(systemStats.ram / 1024).toFixed(1)}GB` : `${systemStats.ram}MB`}
+              {t('statusBar.ram')}:{' '}
+              {systemStats.ram >= 1024 ? `${(systemStats.ram / 1024).toFixed(1)}GB` : `${systemStats.ram}MB`}
             </span>
-            <span>{t('statusBar.cpu')}: {systemStats.cpu}%</span>
+            <span>
+              {t('statusBar.cpu')}: {systemStats.cpu}%
+            </span>
           </div>
           <StatusDivider />
         </>
@@ -198,7 +199,13 @@ export const StatusBar: React.FC = () => {
 const DeployStatusIndicator: React.FC = () => {
   const { t } = useTranslation();
   const deployStatus = useSelector((state: RootState) => state.deploy.status);
-  const deployProgress = useSelector((state: RootState) => state.deploy.progress);
+  // pdl-5 — derive the deploying-pill percentage from the same `nodesById`
+  // rollup the deploy panel uses, so the status bar and the panel agree
+  // on what "X%" means. `shallowEqual` keeps re-renders cheap during the
+  // event-stream burst.
+  const deployNodesById = useSelector((state: RootState) => state.deploy.nodesById, shallowEqual);
+  const rollup = useMemo(() => deriveRollup(deployNodesById), [deployNodesById]);
+  const deployProgress = deriveRollupPercentage(rollup);
 
   if (deployStatus === 'idle') return null;
 

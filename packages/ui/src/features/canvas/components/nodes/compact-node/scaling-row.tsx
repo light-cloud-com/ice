@@ -27,20 +27,62 @@ export const ScalingRow: React.FC<ScalingRowProps> = memo(
       </span>
 
       {/* Min stepper */}
-      <StepperButton label="−" onClick={(e) => { e.stopPropagation(); onUpdateData?.(nodeId, { minInstances: Math.max(0, (minInstances ?? 1) - 1) }); }} />
-      <span style={{ color: 'var(--ice-text-primary)', fontSize: 11, fontWeight: 600, fontFamily: FONT_MONO, minWidth: 14, textAlign: 'center' }}>
+      <StepperButton
+        label="−"
+        onClick={(e) => {
+          e.stopPropagation();
+          onUpdateData?.(nodeId, { minInstances: Math.max(0, (minInstances ?? 1) - 1) });
+        }}
+      />
+      <span
+        style={{
+          color: 'var(--ice-text-primary)',
+          fontSize: 11,
+          fontWeight: 600,
+          fontFamily: FONT_MONO,
+          minWidth: 14,
+          textAlign: 'center',
+        }}
+      >
         {minInstances ?? 1}
       </span>
-      <StepperButton label="+" onClick={(e) => { e.stopPropagation(); onUpdateData?.(nodeId, { minInstances: Math.min((minInstances ?? 1) + 1, maxInstances ?? 99) }); }} />
+      <StepperButton
+        label="+"
+        onClick={(e) => {
+          e.stopPropagation();
+          onUpdateData?.(nodeId, { minInstances: Math.min((minInstances ?? 1) + 1, maxInstances ?? 99) });
+        }}
+      />
 
       <span style={{ color: 'var(--ice-border-strong)', fontSize: 10, margin: '0 2px' }}>–</span>
 
       {/* Max stepper */}
-      <StepperButton label="−" onClick={(e) => { e.stopPropagation(); onUpdateData?.(nodeId, { maxInstances: Math.max(minInstances ?? 1, (maxInstances ?? 3) - 1) }); }} />
-      <span style={{ color: 'var(--ice-text-primary)', fontSize: 11, fontWeight: 600, fontFamily: FONT_MONO, minWidth: 14, textAlign: 'center' }}>
+      <StepperButton
+        label="−"
+        onClick={(e) => {
+          e.stopPropagation();
+          onUpdateData?.(nodeId, { maxInstances: Math.max(minInstances ?? 1, (maxInstances ?? 3) - 1) });
+        }}
+      />
+      <span
+        style={{
+          color: 'var(--ice-text-primary)',
+          fontSize: 11,
+          fontWeight: 600,
+          fontFamily: FONT_MONO,
+          minWidth: 14,
+          textAlign: 'center',
+        }}
+      >
         {maxInstances ?? 3}
       </span>
-      <StepperButton label="+" onClick={(e) => { e.stopPropagation(); onUpdateData?.(nodeId, { maxInstances: (maxInstances ?? 3) + 1 }); }} />
+      <StepperButton
+        label="+"
+        onClick={(e) => {
+          e.stopPropagation();
+          onUpdateData?.(nodeId, { maxInstances: (maxInstances ?? 3) + 1 });
+        }}
+      />
     </div>
   ),
 );

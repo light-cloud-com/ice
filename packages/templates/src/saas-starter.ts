@@ -126,7 +126,12 @@ export const saasStarterTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    {
+      iceType: 'Network.PublicEndpoint',
+      label: 'Public Traffic',
+      position: { x: 50, y: 86 },
+      data: { domain: 'app.saas.io', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true },
+    },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
     // 2: SSR Site
@@ -219,10 +224,6 @@ export const saasStarterTemplate: ComposedTemplate = {
       position: { x: 872, y: 1046 },
       data: { keep_logs: '30 days' },
     },
-
-    // ── Ungrouped (control plane) ─────────────────────────────────────────
-    // 16: Domain
-    { iceType: 'Network.Domain', label: 'Domain', position: { x: 50, y: 1256 }, data: { hostname: 'app.saas.io' } },
     // 17: Repo
     {
       iceType: 'Source.Repository',
@@ -264,10 +265,9 @@ export const saasStarterTemplate: ComposedTemplate = {
     { fromBlock: 6, toBlock: 15, relationship: 'connects_to' },
     { fromBlock: 11, toBlock: 15, relationship: 'connects_to' },
     // Domain → SSR Site (Domain→Routable rule)
-    { fromBlock: 16, toBlock: 2, relationship: 'connects_to' },
     // Repo → Service (Repo→Service pipeline rule)
-    { fromBlock: 17, toBlock: 4, relationship: 'connects_to' },
+    { fromBlock: 16, toBlock: 4, relationship: 'connects_to' },
     // Service → Env (Service→EnvConfig config rule)
-    { fromBlock: 4, toBlock: 18, relationship: 'depends_on' },
+    { fromBlock: 4, toBlock: 17, relationship: 'depends_on' },
   ],
 };

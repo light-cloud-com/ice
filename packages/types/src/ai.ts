@@ -184,3 +184,31 @@ export type AiStreamEvent =
   | { type: 'clarification'; clarification: AiClarification }
   | { type: 'error'; message: string }
   | { type: 'done' };
+
+// =============================================================================
+// Deploy Diagnosis (AI-Native #2)
+// =============================================================================
+
+export interface DiagnoseDeployResource {
+  name: string;
+  type: string;
+  action: string;
+  error?: string;
+}
+
+export interface DiagnoseDeployRequest {
+  error: string;
+  resourceResults: DiagnoseDeployResource[];
+  canvasContext: SerializedCanvas;
+  provider: string;
+  region: string;
+}
+
+export interface DiagnoseDeployResponse {
+  /** Plain-English explanation of what went wrong */
+  diagnosis: string;
+  /** Bulleted list of specific fix steps */
+  suggestedFixes: string[];
+  /** Optional canvas operations to apply the fix */
+  operations?: AiCanvasOp[];
+}

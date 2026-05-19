@@ -21,8 +21,22 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = memo(({ isHovered = fal
     }}
   >
     <svg width={10} height={10} viewBox="0 0 10 10">
-      <line x1={10} y1={4} x2={4} y2={10} stroke={isHovered ? 'var(--ice-border-strong)' : 'var(--ice-border)'} strokeWidth={1} />
-      <line x1={10} y1={8} x2={8} y2={10} stroke={isHovered ? 'var(--ice-border-strong)' : 'var(--ice-border)'} strokeWidth={1} />
+      <line
+        x1={10}
+        y1={4}
+        x2={4}
+        y2={10}
+        stroke={isHovered ? 'var(--ice-border-strong)' : 'var(--ice-border)'}
+        strokeWidth={1}
+      />
+      <line
+        x1={10}
+        y1={8}
+        x2={8}
+        y2={10}
+        stroke={isHovered ? 'var(--ice-border-strong)' : 'var(--ice-border)'}
+        strokeWidth={1}
+      />
     </svg>
   </div>
 ));

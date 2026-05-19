@@ -11,6 +11,7 @@ export const awsScalableBackendBlueprint: BlockBlueprint = createBlueprintFromRe
   nodeDataDefaults: {
     runtime: 'Node.js 20',
     port: 8080,
+    size: '0.25-512',
     minInstances: 1,
     maxInstances: 3,
     activeInstances: 1,

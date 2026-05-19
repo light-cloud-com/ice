@@ -5,6 +5,7 @@
  * No OAuth — service account key / access keys only.
  */
 
+import { PROVIDER_READINESS, isProviderEnabled, type Provider } from '@ice/constants';
 import awsIcon from 'devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg';
 import azureIcon from 'devicon/icons/azure/azure-original.svg';
 import gcpIcon from 'devicon/icons/googlecloud/googlecloud-original.svg';
@@ -19,11 +20,13 @@ import type { RootState, AppDispatch } from '../../../store';
 
 // ── Provider / region data ──────────────────────────────────────────────────
 
-const PROVIDERS = [
+const ALL_ONBOARDING_PROVIDERS = [
   { id: 'gcp', name: 'Google Cloud', icon: gcpIcon },
   { id: 'aws', name: 'Amazon Web Services', icon: awsIcon },
   { id: 'azure', name: 'Microsoft Azure', icon: azureIcon },
 ] as const;
+
+const PROVIDERS = ALL_ONBOARDING_PROVIDERS.filter((p) => isProviderEnabled(p.id));
 
 const PROVIDER_REGIONS: Record<string, Array<{ value: string; label: string }>> = {
   gcp: [
@@ -173,9 +176,13 @@ export const ConnectCloudStep: React.FC = () => {
       {/* Provider selection */}
       <div>
         <label className="block text-sm font-medium text-ice-text-2 mb-2">{t('onboarding.cloud.providerLabel')}</label>
-        <div className="grid grid-cols-3 gap-3">
+        <div
+          className="grid gap-3"
+          style={{ gridTemplateColumns: `repeat(${Math.max(PROVIDERS.length, 1)}, minmax(0, 1fr))` }}
+        >
           {PROVIDERS.map((p) => {
             const isSelected = provider === p.id;
+            const readiness = PROVIDER_READINESS[p.id as Provider];
             return (
               <button
                 key={p.id}
@@ -196,6 +203,14 @@ export const ConnectCloudStep: React.FC = () => {
               >
                 <img src={p.icon} alt={p.name} className="w-7 h-7" />
                 <span className="text-xs font-medium text-ice-text-1">{p.name}</span>
+                {readiness !== 'stable' && (
+                  <span
+                    className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 font-medium"
+                    title="See docs/provider-status.md for what's supported"
+                  >
+                    {readiness === 'experimental' ? 'Experimental' : 'Preview'}
+                  </span>
+                )}
                 {isSelected && (
                   <div className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-ice-accent flex items-center justify-center">
                     <Check className="w-2 h-2 text-white" />

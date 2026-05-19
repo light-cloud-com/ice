@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
-import { t } from '../../../../../i18n';
 import { GroupLabelRow } from './group-label-row';
 import { CORNER_RADIUS } from '../../../../../config/canvas-constants';
+import { t } from '../../../../../i18n';
 import { ChildExitingIndicator } from '../_shared/child-exiting-indicator';
 import { DragOverGlow } from '../_shared/drag-over-glow';
 import { EmptyStateText } from '../_shared/empty-state-text';

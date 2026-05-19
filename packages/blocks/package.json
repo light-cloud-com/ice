@@ -1,5 +1,6 @@
 {
   "name": "@ice/blocks",
+  "license": "Apache-2.0",
   "version": "0.1.0",
   "description": "All block definitions across 7 providers + common",
   "private": true,
@@ -7,7 +8,8 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./requirements": "./src/requirements/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
@@ -18,6 +20,7 @@
     "@ice/types": "workspace:*"
   },
   "devDependencies": {
+    "@types/node": "^24.10.1",
     "typescript": "^5.9.3"
   }
 }

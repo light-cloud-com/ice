@@ -8,120 +8,52 @@
  * - Deploy history
  */
 
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { t } from '../../i18n';
+import { createSlice } from '@reduxjs/toolkit';
+import { setActiveCard } from './cards-slice';
+// Reducer groups (rf-dslice-3 through rf-dslice-13) live under
+// `./deploy/reducers/`. The runtime imports bring each group's case-reducer
+// object into THIS module's lexical scope so the `createSlice` `reducers:`
+// block can spread them. RTK still owns the action type strings
+// (`'deploy/openDeployPanel'` etc.) because action types are derived from
+// the keys of the spread object inside `createSlice`.
+import { authReducers } from './deploy/reducers/auth';
+import { deployPhasesReducers } from './deploy/reducers/deploy-phases';
+import { diagnosisReducers } from './deploy/reducers/diagnosis';
+import { hydrateReducers } from './deploy/reducers/hydrate';
+import { logsResourcesDriftReducers } from './deploy/reducers/logs-resources-drift';
+import { outcomeReducers } from './deploy/reducers/outcome';
+import { panelConfigReducers } from './deploy/reducers/panel-config';
+import { planningReducers } from './deploy/reducers/planning';
+import { preDeployReducers } from './deploy/reducers/pre-deploy';
+import { requirementsReducers } from './deploy/reducers/requirements';
+import { wireEventsReducers } from './deploy/reducers/wire-events';
+import type { DeployState } from './deploy/types';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
+//
+// Public types live in `./deploy/types` (rf-dslice-1). The re-export
+// preserves the public import path for external consumers.
 
-interface DeployResourceChange {
-  name: string;
-  type: string;
-  action: 'create' | 'update' | 'delete';
-  properties?: Record<string, unknown>;
-}
+export type {
+  DeployPlan,
+  DeployResourceResult,
+  DeployedResource,
+  NodeDriftInfo,
+  DeployStatus,
+  NodeDeployState,
+  DeployRollup,
+  DeployState,
+  DiagnosisState,
+  ResolvedRequirementState,
+} from './deploy/types';
 
-export interface DeployPlan {
-  creates: DeployResourceChange[];
-  updates: DeployResourceChange[];
-  deletes: DeployResourceChange[];
-  skipped: Array<{ name: string; reason: string }>;
-  warnings: string[];
-}
+// ─── Derived view helpers ──────────────────────────────────────────────────
+//
+// `deriveRollup` and `orderNodesForPanel` live in `./deploy/derive`
+// (rf-dslice-2). The re-export preserves the public import path for external
+// consumers (deploy-banner, deploy-in-flight-panel, etc.).
 
-interface DeployResourceResult {
-  name: string;
-  type: string;
-  action: 'create' | 'update' | 'delete';
-  success: boolean;
-  error?: string;
-  api_enable_url?: string;
-  provider_id?: string;
-  outputs?: Record<string, unknown>;
-  duration_ms?: number;
-  source_node_id?: string;
-}
-
-export interface DeployedResource {
-  node_id: string;
-  name: string;
-  type: string;
-  provider_id: string;
-  status: string;
-  outputs?: Record<string, unknown>;
-  deployed_at: string;
-}
-
-interface DriftChange {
-  path: string;
-  desired: unknown;
-  actual: unknown;
-}
-
-type DriftStatus = 'in_sync' | 'drifted' | 'missing' | 'extra' | 'unknown';
-
-export interface NodeDriftInfo {
-  nodeId: string;
-  status: DriftStatus;
-  changes: DriftChange[];
-}
-
-interface DeployRecord {
-  id: string;
-  timestamp: number;
-  environment: string;
-  provider: string;
-  project: string;
-  region: string;
-  results: DeployResourceResult[];
-  success: boolean;
-  duration_ms: number;
-}
-
-export type DeployStatus =
-  | 'idle'
-  | 'authenticating'
-  | 'planning'
-  | 'planned'
-  | 'deploying'
-  | 'success'
-  | 'error'
-  | 'cancelled';
-
-export interface DeployState {
-  // Panel
-  isOpen: boolean;
-
-  // Configuration
-  provider: string;
-  gcpProject: string;
-  region: string;
-  environment: 'development' | 'staging' | 'production';
-
-  // Status
-  status: DeployStatus;
-  error: string | null;
-
-  // Plan
-  plan: DeployPlan | null;
-
-  // Progress
-  progress: number; // 0-100
-  currentResource: string;
-  logs: string[];
-
-  // Results
-  results: DeployResourceResult[];
-
-  // History
-  history: DeployRecord[];
-
-  // Deployed resources (for monitoring)
-  deployedResources: DeployedResource[];
-
-  // Drift detection
-  driftByNode: Record<string, NodeDriftInfo>;
-  driftCheckLoading: boolean;
-}
+export { deriveRollup, deriveRollupPercentage, orderNodesForPanel } from './deploy/derive';
 
 const initialState: DeployState = {
   isOpen: false,
@@ -132,14 +64,18 @@ const initialState: DeployState = {
   status: 'idle',
   error: null,
   plan: null,
-  progress: 0,
-  currentResource: '',
   logs: [],
   results: [],
+  nodesById: {},
   history: [],
   deployedResources: [],
   driftByNode: {},
   driftCheckLoading: false,
+  requirements: [],
+  requirementsLoading: false,
+  diagnosis: { status: 'idle', result: null, error: null },
+  dismissedWarnings: [],
+  criticalAcknowledged: false,
 };
 
 // ─── Slice ──────────────────────────────────────────────────────────────────
@@ -148,147 +84,66 @@ const deploySlice = createSlice({
   name: 'deploy',
   initialState,
   reducers: {
-    openDeployPanel(state) {
-      state.isOpen = true;
-    },
-    closeDeployPanel(state) {
-      state.isOpen = false;
-    },
-
-    // Configuration
-    setProvider(state, action: PayloadAction<string>) {
-      state.provider = action.payload;
-    },
-    setGcpProject(state, action: PayloadAction<string>) {
-      state.gcpProject = action.payload;
-    },
-    setRegion(state, action: PayloadAction<string>) {
-      state.region = action.payload;
-    },
-    setEnvironment(state, action: PayloadAction<'development' | 'staging' | 'production'>) {
-      state.environment = action.payload;
-    },
-
-    // Authentication
-    startAuthenticating(state) {
-      state.status = 'authenticating';
-      state.error = null;
-      state.logs = [t('deploy.slice.connecting')];
-    },
-    authSuccess(state) {
-      state.status = 'idle';
-      state.logs.push(t('deploy.slice.authSuccess'));
-    },
-    authFailed(state, action: PayloadAction<string>) {
-      state.status = 'error';
-      state.error = action.payload;
-      state.logs.push(t('deploy.slice.authFailed', { error: action.payload }));
-    },
-
-    // Planning
-    startPlanning(state) {
-      state.status = 'planning';
-      state.error = null;
-      state.plan = null;
-      state.logs = [t('deploy.slice.planning')];
-    },
-    setPlan(state, action: PayloadAction<DeployPlan>) {
-      state.status = 'planned';
-      state.plan = action.payload;
-      state.logs.push(
-        t('deploy.slice.planReady', {
-          creates: action.payload.creates.length,
-          updates: action.payload.updates.length,
-          deletes: action.payload.deletes.length,
-        }),
-      );
-    },
-
-    // Deploy execution
-    startDeploying(state) {
-      state.status = 'deploying';
-      state.progress = 0;
-      state.currentResource = '';
-      state.results = [];
-      state.error = null;
-      state.logs.push(t('deploy.slice.deploying'));
-    },
-    setDeployProgress(state, action: PayloadAction<{ progress: number; resource: string; message: string }>) {
-      state.progress = action.payload.progress;
-      state.currentResource = action.payload.resource;
-      state.logs.push(action.payload.message);
-    },
-    addResourceResult(state, action: PayloadAction<DeployResourceResult>) {
-      state.results.push(action.payload);
-    },
-
-    // Completion
-    deploySuccess(state, action: PayloadAction<{ duration_ms: number }>) {
-      state.status = 'success';
-      state.progress = 100;
-      state.currentResource = '';
-      state.logs.push(t('deploy.slice.completed', { seconds: (action.payload.duration_ms / 1000).toFixed(1) }));
-
-      // Add to history (capped at 50 entries)
-      state.history.unshift({
-        id: `deploy-${Date.now()}`,
-        timestamp: Date.now(),
-        environment: state.environment,
-        provider: state.provider,
-        project: state.gcpProject,
-        region: state.region,
-        results: state.results,
-        success: true,
-        duration_ms: action.payload.duration_ms,
-      });
-      if (state.history.length > 50) {
-        state.history = state.history.slice(0, 50);
-      }
-    },
-    deployError(state, action: PayloadAction<string>) {
-      state.status = 'error';
-      state.error = action.payload;
-      state.logs.push(t('deploy.slice.error', { error: action.payload }));
-    },
-
-    // Reset
-    resetDeploy(state) {
+    ...panelConfigReducers,
+    ...authReducers,
+    ...planningReducers,
+    ...deployPhasesReducers,
+    ...wireEventsReducers,
+    ...outcomeReducers,
+    ...logsResourcesDriftReducers,
+    ...requirementsReducers,
+    ...diagnosisReducers,
+    ...preDeployReducers,
+    ...hydrateReducers,
+  },
+  extraReducers: (builder) => {
+    // Reset per-project deploy state when the active card actually
+    // changes. setActiveCard can fire repeatedly with the same id (route
+    // re-renders, environment refreshes, etc.); resetting unconditionally
+    // would wipe a freshly-completed deploy's results section the moment
+    // the sidebar refreshed. Track the last seen card id in
+    // currentDeployCardId so we only reset on a true switch.
+    //
+    // We deliberately preserve user prefs that are not project-scoped
+    // (provider, gcpProject, region, environment, dismissedWarnings)
+    // so the user doesn't have to re-pick them every project switch.
+    builder.addCase(setActiveCard, (state, action) => {
+      const newCardId = action.payload;
+      // No-op when re-selecting the same card. setActiveCard fires
+      // repeatedly with the same id during route re-renders / sidebar
+      // refreshes; resetting unconditionally would wipe a freshly-
+      // completed deploy's results section the moment the layout
+      // re-rendered.
+      if (state.lastResetCardId === newCardId) return;
+      // Also no-op while a deploy is mid-flight on this card — flipping
+      // status to 'idle' under it would hide the running progress UI.
+      if (state.status === 'deploying' || state.status === 'destroying' || state.status === 'planning') return;
       state.status = 'idle';
       state.error = null;
       state.plan = null;
-      state.progress = 0;
-      state.currentResource = '';
       state.logs = [];
       state.results = [];
-    },
-
-    appendLog(state, action: PayloadAction<string>) {
-      state.logs.push(action.payload);
-    },
-
-    // Deployed resources (for monitoring)
-    setDeployedResources(state, action: PayloadAction<DeployedResource[]>) {
-      state.deployedResources = action.payload;
-    },
-
-    // Drift detection
-    setDriftCheckLoading(state, action: PayloadAction<boolean>) {
-      state.driftCheckLoading = action.payload;
-    },
-    setDriftResults(state, action: PayloadAction<NodeDriftInfo[]>) {
-      state.driftByNode = {};
-      for (const info of action.payload) {
-        state.driftByNode[info.nodeId] = info;
-      }
-      state.driftCheckLoading = false;
-    },
-    clearDrift(state) {
+      state.nodesById = {};
+      state.deployedResources = [];
       state.driftByNode = {};
       state.driftCheckLoading = false;
-    },
+      state.requirements = [];
+      state.requirementsLoading = false;
+      state.requirementsFetchedAt = undefined;
+      state.diagnosis = { status: 'idle', result: null, error: null };
+      state.criticalAcknowledged = false;
+      state.currentDeployCardId = undefined;
+      state.lastResetCardId = newCardId;
+    });
   },
 });
 
+// pdl-7 — typed deploy:event reducers (`applyNodeStatusEvent`,
+// `applyNodeProgressEvent`, `applyDeployCompleteEvent`) replace the legacy
+// `setDeployProgress` / `addResourceResult` / `type:'progress'` /
+// `type:'resource_result'` branches. pdl-5 retired `setDeployProgress` —
+// the snapshot-pull path now drives `nodesById` directly via
+// `applyNodeStatusEvent` calls reconstructed from `snapshot.nodeStatuses`.
 export const {
   openDeployPanel,
   closeDeployPanel,
@@ -302,16 +157,30 @@ export const {
   startPlanning,
   setPlan,
   startDeploying,
-  setDeployProgress,
-  addResourceResult,
+  startDestroying,
+  applyNodeStatusEvent,
+  applyNodeProgressEvent,
+  applyDeployCompleteEvent,
   deploySuccess,
   deployError,
+  hydrateDeployFromHistory,
   resetDeploy,
   appendLog,
   setDeployedResources,
   setDriftCheckLoading,
   setDriftResults,
   clearDrift,
+  startRequirementsFetch,
+  setRequirements,
+  updateRequirement,
+  clearRequirements,
+  startDiagnosis,
+  setDiagnosis,
+  diagnosisError,
+  clearDiagnosis,
+  dismissPreDeployWarning,
+  acknowledgeCritical,
+  resetPreDeployWarnings,
 } = deploySlice.actions;
 
 export default deploySlice.reducer;

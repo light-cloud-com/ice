@@ -19,7 +19,7 @@ export const ValidationStatusBar: React.FC = () => {
   const [expanded, setExpanded] = useState(false);
   const dispatch = useDispatch();
 
-  const { issues, valid, summary, validatedAt } = useSelector((state: RootState) => state.validation);
+  const { issues, summary } = useSelector((state: RootState) => state.validation);
   const activeCard = useSelector(selectActiveCard);
   const nodeCount = activeCard?.nodes?.length ?? 0;
 
@@ -44,7 +44,9 @@ export const ValidationStatusBar: React.FC = () => {
       {expanded && visibleIssues.length > 0 && (
         <div className="bg-ice-bg-surface/95 backdrop-blur-md border-t border-ice-border max-h-48 overflow-y-auto">
           <div className="flex items-center justify-between px-3 py-1.5 border-b border-ice-border/50">
-            <span className="text-ice-2xs font-medium text-ice-text-2">{t('validation.issues')} ({visibleIssues.length})</span>
+            <span className="text-ice-2xs font-medium text-ice-text-2">
+              {t('validation.issues')} ({visibleIssues.length})
+            </span>
             <button onClick={() => setExpanded(false)} className="p-0.5 hover:bg-ice-bg-raised rounded">
               <X className="w-3 h-3 text-ice-text-3" />
             </button>

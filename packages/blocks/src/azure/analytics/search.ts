@@ -5,11 +5,11 @@ export const azureSearchBlueprint: BlockBlueprint = createBlueprintFromResource(
   iceType: 'Analytics.Search',
   category: 'analytics',
   name: 'Azure Search',
-  description: 'Azure Cognitive Search. Full-text search.',
+  description: 'Azure AI Search. Full-text search.',
   icon: 'Search',
   providers: ['azure'],
   nodeDataDefaults: {
-    runtime: 'Azure Cognitive Search',
-    port: 9200,
+    runtime: 'Azure AI Search',
+    port: 443,
   },
 });

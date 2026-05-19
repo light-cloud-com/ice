@@ -1,93 +1,39 @@
 /**
- * Deploy Messages — Centralized error messages, detection patterns, and strings
+ * Deploy Messages — Provider-agnostic error codes, deploy progress strings,
+ * and IPC error messages.
  *
- * All error detection patterns, deploy error codes, auth messages, and progress
- * messages are defined here once and imported everywhere.
+ * **Provider-specific error patterns and detection helpers have moved.**
+ * They live in each provider's own messages module — for GCP that's
+ * `providers/gcp/messages.ts`. This file re-exports them for backwards
+ * compat with existing imports, but new code should import directly
+ * from the provider module so the dependency direction stays clean
+ * (core/deploy doesn't depend on GCP).
+ *
+ * When AWS / Azure / Kubernetes deployers land, each ships its own
+ * `providers/<name>/messages.ts` with provider-shaped patterns. The
+ * dispatcher uses the locally-imported one, never these re-exports.
  */
 
 // =============================================================================
-// API Not Enabled — Detection Patterns
+// Provider-specific error patterns (re-exported from providers/gcp/messages.ts
+// for backwards compat — DEPRECATED, import from the provider module directly)
 // =============================================================================
 
-export const API_NOT_ENABLED_PATTERNS = [
-  'has not been used in project',
-  'it is disabled',
-  'API has not been enabled',
-] as const;
-
-export const AUTH_MISSING_PATTERNS = ['Could not load the default credentials', 'default credentials'] as const;
-
-export const AUTH_EXPIRED_PATTERNS = ['refresh token', 'expired', 'invalid_grant'] as const;
-
-// =============================================================================
-// Detection Functions
-// =============================================================================
-
-/**
- * Detect if an error is a "API not enabled" error.
- * GCP returns these as PERMISSION_DENIED with a specific message pattern.
- */
-export function isApiNotEnabledError(error?: string): boolean {
-  if (!error) return false;
-  return (
-    API_NOT_ENABLED_PATTERNS.some((p) => error.includes(p)) ||
-    (error.includes('PERMISSION_DENIED') && error.includes('googleapis.com'))
-  );
-}
-
-/**
- * Detect if an error is an auth-missing error.
- */
-export function isAuthMissingError(error?: string): boolean {
-  if (!error) return false;
-  return AUTH_MISSING_PATTERNS.some((p) => error.includes(p));
-}
-
-/**
- * Detect if an error is an auth-expired error.
- */
-export function isAuthExpiredError(error?: string): boolean {
-  if (!error) return false;
-  return AUTH_EXPIRED_PATTERNS.some((p) => error.includes(p));
-}
-
-/**
- * Detect if an error is any kind of auth issue (missing or expired).
- */
-export function isAuthError(error?: string): boolean {
-  return isAuthMissingError(error) || isAuthExpiredError(error);
-}
-
-/**
- * Extract the API service name from a GCP "not enabled" error message.
- * E.g., "Enable it by visiting .../apis/api/run.googleapis.com/..." → "run.googleapis.com"
- */
-export function extractApiName(error?: string): string | null {
-  if (!error) return null;
-  // Pattern: "apis/api/<service>/overview" in the console URL
-  const url_match = error.match(/apis\/api\/([a-z0-9.-]+\.googleapis\.com)\//);
-  if (url_match?.[1]) return url_match[1];
-  // Pattern: "<service> API has not been used"
-  const name_match = error.match(/([a-z0-9.-]+\.googleapis\.com)/);
-  if (name_match?.[1]) return name_match[1];
-  return null;
-}
-
-/**
- * Extract a console URL from an error message.
- */
-export function extractApiEnableUrl(error?: string): string | null {
-  if (!error) return null;
-  const urlMatch = error.match(/(https:\/\/console\.developers\.google\.com\/[^\s]+)/);
-  return urlMatch?.[1] ?? null;
-}
-
-/**
- * Build a GCP Console URL for enabling an API.
- */
-export function buildApiEnableUrl(apiName: string, project: string): string {
-  return `https://console.developers.google.com/apis/api/${apiName}/overview?project=${project}`;
-}
+/** @deprecated Import from `providers/gcp/messages.js` directly. */
+export {
+  API_NOT_ENABLED_PATTERNS,
+  AUTH_MISSING_PATTERNS,
+  AUTH_EXPIRED_PATTERNS,
+  RESOURCE_NOT_FOUND_PATTERNS,
+  isApiNotEnabledError,
+  isAuthMissingError,
+  isAuthExpiredError,
+  isAuthError,
+  isResourceNotFoundError,
+  extractApiName,
+  extractApiEnableUrl,
+  buildApiEnableUrl,
+} from './providers/gcp/messages';
 
 // =============================================================================
 // Deploy Error Codes

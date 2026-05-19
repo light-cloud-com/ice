@@ -1,9 +1,8 @@
 import React, { memo } from 'react';
-import { t } from '../../../../../i18n';
 import { CARD_WIDTH, CARD_HEIGHT, CORNER_RADIUS } from '../../../../../config/canvas-constants';
+import { t } from '../../../../../i18n';
 import { ConnectionDragGlow } from '../_shared/connection-drag-glow';
 import { ConnectionPorts } from '../_shared/connection-ports';
-import { SelectionRing } from '../_shared/selection-ring';
 import type { NodePipelineStatus } from './types';
 
 interface CompactLod1Props {
@@ -72,7 +71,6 @@ export const CompactLod1: React.FC<CompactLod1Props> = memo(
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >
-        {isSelected && <SelectionRing x={x} y={y} width={W} height={H} stroke={categoryGlow} />}
         {isValidTarget && <ConnectionDragGlow x={x} y={y} width={W} height={H} reducedMotion={reducedMotion} />}
 
         <foreignObject x={x} y={y} width={W} height={H}>
@@ -80,8 +78,8 @@ export const CompactLod1: React.FC<CompactLod1Props> = memo(
             style={{
               width: W,
               height: H,
-              background: 'var(--ice-bg-surface)',
-              border: `${isSelected ? 2 : 1}px solid ${isValidTarget ? '#22c55e' : border}`,
+              background: 'var(--ice-bg-raised)',
+              border: `1px solid ${isValidTarget ? '#22c55e' : border}`,
               borderRadius: CORNER_RADIUS,
               display: 'flex',
               flexDirection: 'column',
@@ -90,6 +88,12 @@ export const CompactLod1: React.FC<CompactLod1Props> = memo(
               gap: 8,
               boxSizing: 'border-box',
               overflow: 'hidden',
+              boxShadow: isSelected
+                ? `0 0 0 1.5px ${categoryGlow}, 0 4px 14px -4px ${categoryGlow}33`
+                : isHovered
+                  ? '0 2px 8px -2px rgba(0,0,0,0.15)'
+                  : '0 1px 3px rgba(0,0,0,0.06)',
+              transition: 'box-shadow 150ms ease',
             }}
           >
             {/* Large centered icon */}

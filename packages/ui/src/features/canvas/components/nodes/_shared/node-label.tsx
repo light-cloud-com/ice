@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 
-const FONT = "'JetBrains Mono Variable', monospace";
+const FONT = "'JetBrains Mono Variable', ui-monospace, 'SFMono-Regular', monospace";
 
 interface NodeLabelProps {
   label: string;
@@ -11,7 +11,7 @@ interface NodeLabelProps {
 }
 
 export const NodeLabel: React.FC<NodeLabelProps> = memo(
-  ({ label, maxChars = 18, fontSize = 12, interactive = false, onDoubleClick }) => {
+  ({ label, maxChars = 22, fontSize = 13, interactive = false, onDoubleClick }) => {
     const truncated = label.length > maxChars ? label.slice(0, maxChars) + '\u2026' : label;
 
     return (
@@ -20,6 +20,7 @@ export const NodeLabel: React.FC<NodeLabelProps> = memo(
           color: 'var(--ice-text-primary)',
           fontSize,
           fontWeight: 600,
+          letterSpacing: '-0.005em',
           fontFamily: FONT,
           flex: 1,
           overflow: 'hidden',

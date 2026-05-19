@@ -66,13 +66,20 @@ export const RESOURCE_CATEGORIES = {
   ],
 
   // Architecture-level networking (how traffic flows between services)
-  gateway: ['Network.Gateway', 'Network.CDN', 'Network.LoadBalancer', 'Network.Internet'],
+  gateway: [
+    'Network.Gateway',
+    'Network.CDN',
+    'Network.LoadBalancer',
+    'Network.PublicEndpoint',
+    'Network.CustomDomain',
+    'Network.PrivateNetwork',
+  ],
 
   // Auth & secrets (architecture-level — every app needs these)
   auth: ['Security.Identity', 'Security.Secret'],
 
   // Observability (architecture-level — logs, monitoring)
-  observability: ['Monitoring.Log', 'Monitoring.Alert', 'Monitoring.Dashboard', 'Monitoring.Terminal'],
+  observability: ['Monitoring.Log', 'Monitoring.Alert', 'Monitoring.Dashboard'],
 
   // AI/ML
   ai: ['AI.LLMGateway', 'AI.VectorDB', 'AI.ModelServing'],

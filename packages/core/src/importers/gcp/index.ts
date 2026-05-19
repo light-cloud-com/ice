@@ -17,10 +17,10 @@ export type {
   GCPImportMetadata,
   GCPImportOptions,
   GCPAuthConfig,
-} from './types.js';
+} from './types';
 
 // Main importer functions
-export { import_gcp, import_gcp_to_graph, gcp_result_to_graph } from './gcp-importer.js';
+export { import_gcp, import_gcp_to_graph, gcp_result_to_graph } from './gcp-importer';
 
 // Type mapper
 export {
@@ -30,10 +30,10 @@ export {
   is_kind_supported,
   get_supported_kinds,
   map_properties,
-} from './type-mapper.js';
+} from './type-mapper';
 
 // Relationships
-export { infer_relationships, get_relationship_type } from './relationships.js';
+export { infer_relationships, get_relationship_type } from './relationships';
 
 // Services
 export { BaseGCPService, ComputeService, StorageService } from './services';

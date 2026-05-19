@@ -17,9 +17,9 @@ export type {
   StateChangeEvent,
   StateChangeListener,
   ObservableStateStore,
-} from './state-store.js';
+} from './state-store';
 
 // SQLite state store
-export type { SqliteStateStoreOptions } from './sqlite-state-store.js';
+export type { SqliteStateStoreOptions } from './sqlite-state-store';
 
-export { SqliteStateStore, create_sqlite_state_store, create_memory_state_store } from './sqlite-state-store.js';
+export { SqliteStateStore, create_sqlite_state_store, create_memory_state_store } from './sqlite-state-store';

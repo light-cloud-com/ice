@@ -37,8 +37,8 @@ export function useCostCalculation(trafficTierIndex: number): CostCalculationRes
   const activeCard = useSelector((state: RootState) => selectActiveCard(state));
   const [resourceMap, setResourceMap] = useState<ResourceMap | null>(_cachedResourceMap);
 
-  const nodes: CardNode[] = activeCard?.nodes || [];
-  const edges: CardEdge[] = activeCard?.edges || [];
+  const nodes: CardNode[] = useMemo(() => activeCard?.nodes || [], [activeCard?.nodes]);
+  const edges: CardEdge[] = useMemo(() => activeCard?.edges || [], [activeCard?.edges]);
 
   // Load resource definitions once (for cost lookups)
   useEffect(() => {

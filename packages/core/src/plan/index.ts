@@ -5,13 +5,7 @@
  */
 
 // Export diff utilities
-export {
-  diff_properties,
-  deep_equal,
-  is_destructive_change,
-  summarize_changes,
-  format_property_change,
-} from './diff.js';
+export { diff_properties, deep_equal, is_destructive_change, summarize_changes, format_property_change } from './diff';
 
 // Export plan engine
 export {
@@ -23,4 +17,4 @@ export {
   serialize_plan,
   deserialize_plan,
   type CreatePlanOptions,
-} from './plan-engine.js';
+} from './plan-engine';

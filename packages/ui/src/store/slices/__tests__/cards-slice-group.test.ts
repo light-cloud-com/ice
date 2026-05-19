@@ -118,7 +118,7 @@ describe('groupSelectedNodes', () => {
     const state = setupStateWithNodes(nodes);
     const result = cardsReducer(state, groupSelectedNodes(['n1', 'n2']));
 
-    const history = result.history[result.activeCardId];
+    const history = result.history[result.activeCardId!];
     expect(history.past.length).toBeGreaterThan(0);
   });
 });

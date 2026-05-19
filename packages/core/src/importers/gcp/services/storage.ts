@@ -4,14 +4,8 @@
  * Discovers Cloud Storage buckets.
  */
 
-import { BaseGCPService } from './base-service.js';
-import type {
-  ServiceDiscoveryResult,
-  GCPServiceType,
-  GCPResource,
-  GCPImportError,
-  GCPImportWarning,
-} from '../types.js';
+import { BaseGCPService } from './base-service';
+import type { ServiceDiscoveryResult, GCPServiceType, GCPResource, GCPImportError, GCPImportWarning } from '../types';
 
 /**
  * Cloud Storage resource discovery service.

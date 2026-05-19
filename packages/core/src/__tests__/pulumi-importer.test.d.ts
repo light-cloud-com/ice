@@ -1,0 +1,4 @@
+/**
+ * Pulumi Importer Tests
+ */
+export {};

@@ -43,14 +43,14 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
   isBlockSummary = false,
   isRenaming = false,
   onDoubleClickLabel,
-  onRenameCommit,
-  onRenameCancel,
+  onRenameCommit: _onRenameCommit,
+  onRenameCancel: _onRenameCancel,
   onUpdateData,
   pipelineStatus,
   onPipelineClick,
   connectedPipelineStatuses = [],
   lod = 3,
-  zoom = 1,
+  zoom: _zoom = 1,
   connectionDragState = null,
   validationSeverity = null,
   validationCount = 0,
@@ -71,12 +71,19 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
   const iceType = (data.iceType as string) || '';
   const category = iceType.split('.')[0] || 'default';
   const provider = (data.provider as string) || '';
+  const region = (data.region as string) || '';
   const runtime = (data.runtime as string) || '';
   const folded = (data.folded as boolean) || false;
   const repository = (data.repository as string) || (data.github as string) || (data.repo as string) || '';
   const version = (data.version as string) || '';
   const estimatedCost = (data.estimatedCost as string) || '';
-  const status = (data.status as string) || '';
+  // `deploy_status` is the single source of truth for the deploy pill.
+  // The legacy `data.status` fallback was dropped per the
+  // `one-status-source-deploy-status` learning — every node-creation site
+  // (waf blocks, expand-blueprint, expand-template, drop handlers,
+  // group/undo-redo, drift-check writes) now writes to `deploy_status`
+  // when applicable, or stays empty when the block hasn't been deployed.
+  const status = (data.deploy_status as string) || '';
 
   const isSourceRepo = (data.iceType as string) === 'Source.Repository' || data.behavior === 'source';
 
@@ -101,7 +108,11 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
     if (runtimeLabel.startsWith(shortName + ' ')) return runtimeLabel.slice(shortName.length + 1);
     return runtimeLabel;
   })();
-  const serviceLineText = [serviceName, dedupedRuntime].filter(Boolean).join(' \u00B7 ');
+  // Service line: `{serviceName} \u00B7 {runtime} \u00B7 {region || 'auto'}`. The
+  // region segment is always appended when we have a service to display so
+  // every block surfaces *where* it will deploy without a separate row.
+  const serviceBaseText = [serviceName, dedupedRuntime].filter(Boolean).join(' \u00B7 ');
+  const serviceLineText = serviceBaseText ? `${serviceBaseText} \u00B7 ${region || 'auto'}` : '';
 
   // ── Context-aware metadata ──
   const { lines: metaLines, repoLineIndex } = getContextLines(data, iceType);
@@ -128,7 +139,7 @@ export const SvgCompactNode: React.FC<SvgCompactNodeProps> = ({
 
   // ── Colors ──
   const cat = CATEGORY_STYLE[category] || CATEGORY_STYLE.default;
-  const border = isDragOver ? '#22d3ee' : isSelected || isHovered ? cat.glow : 'var(--ice-border)';
+  const border = isDragOver ? '#22d3ee' : isSelected || isHovered ? cat.glow : cat.glow + '55';
 
   // ── Callbacks ──
   const handleFold = useCallback(

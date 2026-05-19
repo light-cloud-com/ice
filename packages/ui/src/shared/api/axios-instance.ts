@@ -30,7 +30,9 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-// Response interceptor — logging only
+// Response interceptor — logs every response AND extracts the server's
+// error body into the axios error message so the UI shows something
+// useful instead of the generic "Request failed with status code 400".
 axiosInstance.interceptors.response.use(
   (response) => {
     const method = response.config.method || 'GET';
@@ -39,7 +41,43 @@ axiosInstance.interceptors.response.use(
     logApiResponse(method, path, response.status, response.data, duration);
     return response;
   },
-  (error) => Promise.reject(error),
+  (error) => {
+    // Extract the most specific server-provided message we can find:
+    //   1. response body { error: "..." } / { message: "..." }
+    //   2. Raw response body (string)
+    //   3. axios default message
+    const status = error?.response?.status;
+    const data = error?.response?.data;
+    const method = (error?.config?.method || 'request').toUpperCase();
+    const path = error?.config?.url || '';
+    let serverMsg = '';
+    if (data && typeof data === 'object') {
+      serverMsg = data.error || data.message || JSON.stringify(data).slice(0, 400);
+    } else if (typeof data === 'string' && data) {
+      serverMsg = data.slice(0, 400);
+    }
+    const prefix = status ? `${method} ${path} → ${status}` : `${method} ${path}`;
+    const enriched = serverMsg ? `${prefix}: ${serverMsg}` : prefix;
+    try {
+      error.message = enriched;
+      if (error.response) {
+        error.response.extractedMessage = serverMsg || error.message;
+      }
+    } catch {
+      // Read-only error object — leave as-is.
+    }
+    // Also log the full details to the console so developers can see the
+    // request body / stack immediately.
+
+    console.error(`[api] ${enriched}`, {
+      status,
+      path,
+      method,
+      data,
+      requestBody: error?.config?.data,
+    });
+    return Promise.reject(error);
+  },
 );
 
 // Stubs for backwards compatibility with imports

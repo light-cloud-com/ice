@@ -4,7 +4,7 @@
  * Infers dependencies between GCP resources based on property references.
  */
 
-import type { GCPImportedResource, GCPImportWarning } from './types.js';
+import type { GCPImportedResource, GCPImportWarning } from './types';
 
 // =============================================================================
 // Relationship Inference

@@ -56,9 +56,15 @@ export const ValidationPanel: React.FC = () => {
           </div>
         ) : (
           <>
-            {errorIssues.length > 0 && <IssueGroup label={t('validation.errors')} issues={errorIssues} onClick={handleClick} />}
-            {warningIssues.length > 0 && <IssueGroup label={t('validation.warnings')} issues={warningIssues} onClick={handleClick} />}
-            {infoIssues.length > 0 && <IssueGroup label={t('validation.info')} issues={infoIssues} onClick={handleClick} />}
+            {errorIssues.length > 0 && (
+              <IssueGroup label={t('validation.errors')} issues={errorIssues} onClick={handleClick} />
+            )}
+            {warningIssues.length > 0 && (
+              <IssueGroup label={t('validation.warnings')} issues={warningIssues} onClick={handleClick} />
+            )}
+            {infoIssues.length > 0 && (
+              <IssueGroup label={t('validation.info')} issues={infoIssues} onClick={handleClick} />
+            )}
           </>
         )}
       </div>

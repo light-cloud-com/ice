@@ -4,15 +4,19 @@
  * Clean bezier curves between nodes:
  * - Default: very subtle thin lines (1px, low opacity)
  * - Hover: brighter line, no animated dots
- * - Arrow markers (small)
  * - Edge labels for protocol/port info
  * - Delete button on hover
+ *
+ * Arrow markers were removed (findings #31) — direction is implied by
+ * the data model and line style (dashed / dotted / thin) carries the
+ * connection type.
  */
 
 import React, { memo, useMemo, useState, useCallback, useRef } from 'react';
 import { EDGE_COLORS } from '../../../config/color-palette';
 import { useReducedMotion } from '../../../shared/hooks/use-reduced-motion';
 import { inferConnectionMeta, type ConnectionCategory } from '../utils/connection-rules';
+import { computePath } from './path/compute-path';
 import type { CanvasNode, CanvasConnection } from './svg-canvas';
 import type { EdgeStyle } from '../../../store/slices/ui-slice';
 
@@ -66,148 +70,6 @@ interface SvgConnectionPathProps {
 export { EDGE_COLORS } from '../../../config/color-palette';
 
 // =============================================================================
-// Bezier Curve Routing
-// =============================================================================
-
-type Side = 'left' | 'right' | 'top' | 'bottom';
-interface Point {
-  x: number;
-  y: number;
-}
-interface Bounds {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-/**
- * Returns the visual bounds of a node at the current LOD/zoom.
- */
-function getEffectiveBounds(node: CanvasNode, _lod: number, _zoom: number): Bounds {
-  return { x: node.x, y: node.y, width: node.width, height: node.height };
-}
-
-function chooseSides(from: Bounds, to: Bounds): { exitSide: Side; entrySide: Side } {
-  const dx = to.x + to.width / 2 - (from.x + from.width / 2);
-  const dy = to.y + to.height / 2 - (from.y + from.height / 2);
-  if (Math.abs(dx) > Math.abs(dy)) {
-    return dx > 0 ? { exitSide: 'right', entrySide: 'left' } : { exitSide: 'left', entrySide: 'right' };
-  }
-  return dy > 0 ? { exitSide: 'bottom', entrySide: 'top' } : { exitSide: 'top', entrySide: 'bottom' };
-}
-
-function getEdgePoint(bounds: Bounds, side: Side, portIndex = 0, portCount = 1): Point {
-  const r = (portIndex + 1) / (portCount + 1);
-  switch (side) {
-    case 'left':
-      return { x: bounds.x, y: bounds.y + bounds.height * r };
-    case 'right':
-      return { x: bounds.x + bounds.width, y: bounds.y + bounds.height * r };
-    case 'top':
-      return { x: bounds.x + bounds.width * r, y: bounds.y };
-    case 'bottom':
-      return { x: bounds.x + bounds.width * r, y: bounds.y + bounds.height };
-  }
-}
-
-function buildBezierPath(
-  start: Point,
-  end: Point,
-  exitSide: Side,
-  entrySide: Side,
-): { pathD: string; midX: number; midY: number } {
-  const dx = end.x - start.x;
-  const dy = end.y - start.y;
-  const dist = Math.sqrt(dx * dx + dy * dy);
-  const offset = Math.min(Math.max(dist * 0.35, 40), 200);
-
-  const cp1 = getControlPoint(start, exitSide, offset);
-  const cp2 = getControlPoint(end, entrySide, offset);
-
-  const pathD = `M ${start.x} ${start.y} C ${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${end.x} ${end.y}`;
-
-  const midX = 0.125 * start.x + 0.375 * cp1.x + 0.375 * cp2.x + 0.125 * end.x;
-  const midY = 0.125 * start.y + 0.375 * cp1.y + 0.375 * cp2.y + 0.125 * end.y;
-
-  return { pathD, midX, midY };
-}
-
-function getControlPoint(point: Point, side: Side, offset: number): Point {
-  switch (side) {
-    case 'left':
-      return { x: point.x - offset, y: point.y };
-    case 'right':
-      return { x: point.x + offset, y: point.y };
-    case 'top':
-      return { x: point.x, y: point.y - offset };
-    case 'bottom':
-      return { x: point.x, y: point.y + offset };
-  }
-}
-
-function buildStraightPath(start: Point, end: Point): { pathD: string; midX: number; midY: number } {
-  const pathD = `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
-  return { pathD, midX: (start.x + end.x) / 2, midY: (start.y + end.y) / 2 };
-}
-
-function buildRectangularPath(
-  start: Point,
-  end: Point,
-  exitSide: Side,
-  entrySide: Side,
-): { pathD: string; midX: number; midY: number } {
-  const GAP = 20; // offset before first turn
-  const points: Point[] = [start];
-
-  // Build orthogonal waypoints based on exit/entry sides
-  if ((exitSide === 'right' && entrySide === 'left') || (exitSide === 'left' && entrySide === 'right')) {
-    const midX = (start.x + end.x) / 2;
-    points.push({ x: midX, y: start.y }, { x: midX, y: end.y });
-  } else if ((exitSide === 'bottom' && entrySide === 'top') || (exitSide === 'top' && entrySide === 'bottom')) {
-    const midY = (start.y + end.y) / 2;
-    points.push({ x: start.x, y: midY }, { x: end.x, y: midY });
-  } else if ((exitSide === 'right' || exitSide === 'left') && (entrySide === 'top' || entrySide === 'bottom')) {
-    const outX = exitSide === 'right' ? start.x + GAP : start.x - GAP;
-    points.push({ x: outX, y: start.y }, { x: outX, y: end.y });
-  } else {
-    const outY = exitSide === 'bottom' ? start.y + GAP : start.y - GAP;
-    points.push({ x: start.x, y: outY }, { x: end.x, y: outY });
-  }
-  points.push(end);
-
-  // Build rounded-corner polyline using small arc segments
-  const R = 8; // corner radius
-  let d = `M ${points[0].x} ${points[0].y}`;
-  for (let i = 1; i < points.length - 1; i++) {
-    const prev = points[i - 1];
-    const cur = points[i];
-    const next = points[i + 1];
-    // Direction vectors
-    const dxIn = cur.x - prev.x,
-      dyIn = cur.y - prev.y;
-    const dxOut = next.x - cur.x,
-      dyOut = next.y - cur.y;
-    const lenIn = Math.sqrt(dxIn * dxIn + dyIn * dyIn);
-    const lenOut = Math.sqrt(dxOut * dxOut + dyOut * dyOut);
-    const r = Math.min(R, lenIn / 2, lenOut / 2);
-    if (r < 1 || lenIn < 1 || lenOut < 1) {
-      d += ` L ${cur.x} ${cur.y}`;
-      continue;
-    }
-    const beforeX = cur.x - (dxIn / lenIn) * r;
-    const beforeY = cur.y - (dyIn / lenIn) * r;
-    const afterX = cur.x + (dxOut / lenOut) * r;
-    const afterY = cur.y + (dyOut / lenOut) * r;
-    d += ` L ${beforeX} ${beforeY} Q ${cur.x} ${cur.y} ${afterX} ${afterY}`;
-  }
-  d += ` L ${points[points.length - 1].x} ${points[points.length - 1].y}`;
-
-  const mid = points[Math.floor(points.length / 2)];
-  return { pathD: d, midX: mid.x, midY: mid.y };
-}
-
-// =============================================================================
 // Component
 // =============================================================================
 
@@ -234,7 +96,7 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
   }) => {
     const [isHover, setIsHover] = useState(false);
     const reducedMotion = useReducedMotion();
-    const isActive = isSelected || isHighlighted;
+    const _isActive = isSelected || isHighlighted;
     const gRef = useRef<SVGGElement>(null);
 
     const relationship = useMemo(() => {
@@ -263,7 +125,6 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
     const isDashedEdge = lineStyle === 'dashed' || isLogEdge;
     const isDottedEdge = lineStyle === 'dotted';
     const isThinEdge = lineStyle === 'thin';
-    const hasArrow = false; // Arrows removed — line style communicates connection type
     const bundleCount = (connection.data?.bundleCount as number) || 0;
 
     const buildTooltip = useCallback(
@@ -327,18 +188,36 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
       [onConnectionHover, buildTooltip, clearTooltipTimer, scheduleTooltipDismiss],
     );
 
-    // Calculate path — symmetric port distribution with sorted order
-    const pathData = useMemo(() => {
-      if (!fromNode || !toNode) return null;
-      const effFrom = getEffectiveBounds(fromNode, lod, zoom);
-      const effTo = getEffectiveBounds(toNode, lod, zoom);
-      const { exitSide, entrySide } = chooseSides(effFrom, effTo);
-      const start = getEdgePoint(effFrom, exitSide, sourcePortIndex, sourcePortCount);
-      const end = getEdgePoint(effTo, entrySide, targetPortIndex, targetPortCount);
-      if (edgeStyle === 'straight') return buildStraightPath(start, end);
-      if (edgeStyle === 'rectangular') return buildRectangularPath(start, end, exitSide, entrySide);
-      return buildBezierPath(start, end, exitSide, entrySide);
-    }, [fromNode, toNode, sourcePortIndex, sourcePortCount, targetPortIndex, targetPortCount, edgeStyle, lod, zoom]);
+    // Calculate path — see `./path/compute-path.ts` for the full
+    // dispatch table (CustomDomain row-port override, dagre-routed
+    // polylines, edge-style switch, etc).
+    const pathData = useMemo(
+      () =>
+        computePath({
+          connection,
+          fromNode,
+          toNode,
+          sourcePortIndex,
+          sourcePortCount,
+          targetPortIndex,
+          targetPortCount,
+          edgeStyle,
+          lod,
+          zoom,
+        }),
+      [
+        connection,
+        fromNode,
+        toNode,
+        sourcePortIndex,
+        sourcePortCount,
+        targetPortIndex,
+        targetPortCount,
+        edgeStyle,
+        lod,
+        zoom,
+      ],
+    );
 
     if (!pathData) return null;
 
@@ -384,9 +263,6 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
     // Hover target must stay large enough on screen
     const hoverTargetWidth = lod < 3 ? Math.max(16, 24 * invZoom) : 16;
     const showLabels = lod >= 3;
-    const showArrow = lod >= 2 && hasArrow;
-
-    const markerId = `arrow-${connection.id.replace(/[^a-zA-Z0-9]/g, '-')}`;
 
     return (
       <g
@@ -397,22 +273,6 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
         onPointerLeave={handleMouseLeave}
         onMouseMove={handleMouseMove}
       >
-        <defs>
-          {hasArrow && (
-            <marker
-              id={markerId}
-              markerWidth="5"
-              markerHeight="3.5"
-              refX="4"
-              refY="1.75"
-              orient="auto"
-              markerUnits="strokeWidth"
-            >
-              <polygon points="0 0, 5 1.75, 0 3.5" fill={strokeColor} opacity={isHover || isActive ? 0.8 : 0.4} />
-            </marker>
-          )}
-        </defs>
-
         {/* Invisible wider path for easier hover targeting + click-to-select */}
         <path
           d={pathD}
@@ -431,14 +291,14 @@ export const SvgConnectionPath: React.FC<SvgConnectionPathProps> = memo(
           }}
         />
 
-        {/* Main bezier path */}
+        {/* Main bezier path. Arrow markers removed — line style
+            (dashed / dotted / thin) carries the connection type. */}
         <path
           d={pathD}
           stroke={pipelineActive ? '#3b82f6' : strokeColor}
           strokeWidth={pipelineActive ? 2 * (lod < 3 ? invZoom : 1) : strokeWidth}
           fill="none"
           strokeDasharray={isDashedEdge ? '6 4' : isDottedEdge ? '2 3' : undefined}
-          markerEnd={showArrow ? `url(#${markerId})` : undefined}
           strokeLinecap="round"
           opacity={pipelineActive ? 0.6 : strokeOpacity}
         />

@@ -5,6 +5,7 @@
  * Orchestrates LOD views and delegates to sub-components.
  */
 
+import { GROUP_NODE_FOLDED_HEIGHT, GROUP_NODE_MIN_WIDTH } from '@ice/constants';
 import React, { memo, useState, useCallback, useRef, useEffect } from 'react';
 import { BlockNode } from './block-node';
 import { GroupLod1 } from './group-lod1';
@@ -13,10 +14,8 @@ import { GroupLod3 } from './group-lod3';
 import { hexToTint, hexToBorder } from './helpers';
 import { getIcon, type Provider } from '../../../../../assets/icons';
 import { BLOCK_ACCENT_COLORS, GROUP_TINT_COLORS, GROUP_BORDER_COLORS } from '../../../../../config/color-palette';
+import { t } from '../../../../../i18n';
 import type { SvgGroupNodeProps } from './types';
-
-const MIN_WIDTH = 276;
-const FOLDED_HEIGHT = 36;
 
 export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
   ({
@@ -29,9 +28,9 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
     isChildExiting = false,
     isBlock = false,
     isRenaming = false,
-    onDoubleClickLabel,
-    onRenameCommit,
-    onRenameCancel,
+    onDoubleClickLabel: _onDoubleClickLabel,
+    onRenameCommit: _onRenameCommit,
+    onRenameCancel: _onRenameCancel,
     lod = 3,
     zoom = 1,
     connectionDragState = null,
@@ -49,13 +48,16 @@ export const SvgGroupNode: React.FC<SvgGroupNodeProps> = memo(
     const provider = (data?.provider as string) || 'aws';
     const blockIcon = isBlock ? getIcon(iceType, provider as Provider) : null;
 
-    const nodeWidth = Math.max(width || MIN_WIDTH, MIN_WIDTH);
-    const nodeHeight = folded ? FOLDED_HEIGHT : Math.max(height || 120, 80);
+    const nodeWidth = Math.max(width || GROUP_NODE_MIN_WIDTH, GROUP_NODE_MIN_WIDTH);
+    const nodeHeight = folded ? GROUP_NODE_FOLDED_HEIGHT : Math.max(height || 120, 80);
 
     const maxChars = Math.max(Math.floor((nodeWidth - 80) / 7), 8);
     const displayLabel =
-      (label || (isBlock ? 'Block' : 'Group')).length > maxChars
-        ? (label || (isBlock ? 'Block' : 'Group')).substring(0, maxChars) + '\u2026'
+      (label || (isBlock ? t('canvas.blocks.titles.block') : t('canvas.blocks.titles.group'))).length > maxChars
+        ? (label || (isBlock ? t('canvas.blocks.titles.block') : t('canvas.blocks.titles.group'))).substring(
+            0,
+            maxChars,
+          ) + '\u2026'
         : label || (isBlock ? 'Block' : 'Group');
 
     const handleToggleFold = useCallback(

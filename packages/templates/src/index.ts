@@ -3,6 +3,12 @@
  *
  * Central barrel file — imports all templates and exposes
  * lookup helpers + the expansion function.
+ *
+ * Slice 6 of the Concepts Palette redesign trimmed this from 22 templates
+ * (+ quick-starts) down to 11 core templates. Removed templates (healthcare,
+ * fintech, ecommerce, mobile-backend, iot, gaming, logistics, education,
+ * media, devops-platform, data-pipeline) were deleted outright — see
+ * docs/backlog/concepts-palette-implementation.md Slice 6.
  */
 
 export type {
@@ -32,36 +38,14 @@ export { backendApiTemplate, microservicesTemplate } from './backend-api';
 export { serverlessApiTemplate, eventDrivenServerlessTemplate } from './serverless-api';
 export { secureApiTemplate } from './secure-api';
 export { budgetWebAppTemplate } from './budget-webapp';
-export { healthcarePatientPortalTemplate, healthcareTelemedicineTemplate } from './healthcare';
-export { fintechPaymentGatewayTemplate, fintechTradingPlatformTemplate } from './fintech';
-export { mediaStreamingTemplate, mediaPodcastTemplate } from './media';
 export { saasMultiTenantTemplate, saasAnalyticsDashboardTemplate } from './saas-platform';
-export { iotDeviceManagementTemplate, iotSmartHomeTemplate } from './iot';
-export { gamingMultiplayerTemplate, gamingMobileGameTemplate } from './gaming';
-export { logisticsFleetTrackingTemplate, logisticsWarehouseTemplate } from './logistics';
-export { educationLmsTemplate, educationExamPlatformTemplate } from './education';
-export { etlPipelineTemplate, eventStreamingTemplate } from './data-pipeline';
-export { ecommerceStoreTemplate, ecommerceMarketplaceTemplate } from './ecommerce';
-export { mobileAppBackendTemplate, mobileSocialAppTemplate } from './mobile-backend';
-export { devopsMonitoringTemplate, devopsCiCdTemplate } from './devops-platform';
 
 import { getBlueprint } from '@ice/blocks';
 import { aiMlTemplate } from './ai-ml';
 import { backendApiTemplate, microservicesTemplate } from './backend-api';
 import { budgetWebAppTemplate } from './budget-webapp';
-import { etlPipelineTemplate, eventStreamingTemplate } from './data-pipeline';
-import { devopsMonitoringTemplate, devopsCiCdTemplate } from './devops-platform';
-import { ecommerceStoreTemplate, ecommerceMarketplaceTemplate } from './ecommerce';
-import { educationLmsTemplate, educationExamPlatformTemplate } from './education';
 import { euComplianceTemplate } from './eu-compliance';
-import { fintechPaymentGatewayTemplate, fintechTradingPlatformTemplate } from './fintech';
 import { fullStackTemplate } from './full-stack';
-import { gamingMultiplayerTemplate, gamingMobileGameTemplate } from './gaming';
-import { healthcarePatientPortalTemplate, healthcareTelemedicineTemplate } from './healthcare';
-import { iotDeviceManagementTemplate, iotSmartHomeTemplate } from './iot';
-import { logisticsFleetTrackingTemplate, logisticsWarehouseTemplate } from './logistics';
-import { mediaStreamingTemplate, mediaPodcastTemplate } from './media';
-import { mobileAppBackendTemplate, mobileSocialAppTemplate } from './mobile-backend';
 import { QUICK_STARTS } from './quick-starts';
 import { ragChatbotTemplate } from './rag-chatbot';
 import { saasMultiTenantTemplate, saasAnalyticsDashboardTemplate } from './saas-platform';
@@ -76,7 +60,10 @@ import type { Provider } from '@ice/blocks';
 // Registry
 // =============================================================================
 
-/** All composed templates (excluding quick-starts) — kept for backward compat */
+/**
+ * All composed templates (excluding quick-starts). Kept small and focused
+ * after the Slice 6 cut — 13 templates total (11 named + 2 paired variants).
+ */
 export const COMPOSED_TEMPLATES: ComposedTemplate[] = [
   fullStackTemplate,
   aiMlTemplate,
@@ -89,31 +76,8 @@ export const COMPOSED_TEMPLATES: ComposedTemplate[] = [
   eventDrivenServerlessTemplate,
   secureApiTemplate,
   budgetWebAppTemplate,
-  // Industry templates
-  healthcarePatientPortalTemplate,
-  healthcareTelemedicineTemplate,
-  fintechPaymentGatewayTemplate,
-  fintechTradingPlatformTemplate,
-  mediaStreamingTemplate,
-  mediaPodcastTemplate,
   saasMultiTenantTemplate,
   saasAnalyticsDashboardTemplate,
-  iotDeviceManagementTemplate,
-  iotSmartHomeTemplate,
-  gamingMultiplayerTemplate,
-  gamingMobileGameTemplate,
-  logisticsFleetTrackingTemplate,
-  logisticsWarehouseTemplate,
-  educationLmsTemplate,
-  educationExamPlatformTemplate,
-  etlPipelineTemplate,
-  eventStreamingTemplate,
-  ecommerceStoreTemplate,
-  ecommerceMarketplaceTemplate,
-  mobileAppBackendTemplate,
-  mobileSocialAppTemplate,
-  devopsMonitoringTemplate,
-  devopsCiCdTemplate,
 ];
 
 /** All templates — composed + quick-starts — single source of truth */
@@ -186,4 +150,18 @@ export function getProviderCompatibility(template: ComposedTemplate, provider: P
 /** Filter templates with provider compatibility info */
 export function filterByProvider(templates: ComposedTemplate[], provider: Provider): TemplateCompatibility[] {
   return templates.map((t) => getProviderCompatibility(t, provider));
+}
+
+/**
+ * Return the subset of a template's declared providers that still have at
+ * least one supported block under the active feature flags.
+ *
+ * Because `getBlueprint(iceType, provider)` honors `PROVIDER_FLAGS` and the
+ * (category × provider) gate, a provider whose blocks all fail to resolve
+ * naturally drops out of this list. Used by the gallery to hide badges /
+ * picker tiles for providers that can't actually run the template.
+ */
+export function getEnabledProvidersForTemplate(template: ComposedTemplate): Provider[] {
+  if (!template.providers) return [];
+  return template.providers.filter((p) => template.blocks.some((b) => getBlueprint(b.iceType, p) !== undefined));
 }

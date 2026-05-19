@@ -1,7 +1,15 @@
 /**
  * Main Application Component — Community Edition
  *
- * No login/signup — app loads straight to content.
+ * Trust model (findings.md #4):
+ *   This shell intentionally has NO client-side auth gate. The
+ *   community edition is single-user / local-first; every route here
+ *   renders unconditionally. Authorization is enforced server-side on
+ *   each API request (see services/iam, packages/shared/src/auth).
+ *   The only client-side redirect lives in `DynamicContent` and is a
+ *   UX hint to send users into onboarding — it is NOT a security
+ *   boundary. Cloud / multi-tenant editions ship a different shell
+ *   that wraps this one with a token gate.
  *
  * Route-based project navigation:
  *   /                         → Home (root folder view)
@@ -14,9 +22,10 @@
  */
 
 // Account components not needed in community (single user)
-import { DeployPanel } from '@ui/features/deploy/components/deploy-panel';
 import { DebugOverlay } from '@ui/features/debug/components/debug-overlay';
+import { useDeploySubscription } from '@ui/features/deploy/hooks/use-deploy-subscription';
 import { OnboardingPage, OnboardingChecklist } from '@ui/features/onboarding';
+import { TourRunner } from '@ui/features/tour/components/tour-runner';
 import { ProjectWizard } from '@ui/features/wizard';
 import { useTranslation, LocaleProvider } from '@ui/i18n';
 import { AppBar } from '@ui/shared/components/app-bar';
@@ -26,6 +35,8 @@ import { MainLayout } from '@ui/shared/components/main-layout';
 import { useMenuActions } from '@ui/shared/hooks/use-menu-actions';
 import { useResolvePath } from '@ui/shared/hooks/use-resolve-path';
 import { fetchProfile } from '@ui/store/slices/account-slice';
+import { selectActiveCard } from '@ui/store/slices/cards-slice';
+import { openDeployPanel } from '@ui/store/slices/deploy-slice';
 import { initializeGraph } from '@ui/store/slices/graph-slice';
 import { setActiveProject } from '@ui/store/slices/projects-slice';
 import React, { useEffect } from 'react';
@@ -59,6 +70,22 @@ const TemplateGalleryShell: React.FC = () => {
   );
 };
 
+// ── Helpers ─────────────────────────────────────────────────────────────────
+/**
+ * Mounted on the /deploy subpage. Dispatches openDeployPanel() so the
+ * Deploy panel appears in the right sidebar (it's mounted inside
+ * MainLayout alongside Cost / Properties). The panel itself owns
+ * close-from-inside, but navigating away from /deploy should reset
+ * the open state to keep route + panel state in sync.
+ */
+const DeployRouteOpener: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  useEffect(() => {
+    dispatch(openDeployPanel());
+  }, [dispatch]);
+  return null;
+};
+
 // ── Dynamic content resolver ────────────────────────────────────────────────
 const DynamicContent: React.FC = () => {
   const { t } = useTranslation();
@@ -68,6 +95,13 @@ const DynamicContent: React.FC = () => {
   const segments = pathname.split('/').filter(Boolean);
   const resolved = useResolvePath(segments);
   const user = useSelector((s: RootState) => s.account.user);
+  const activeCard = useSelector(selectActiveCard);
+
+  // Cross-tab deploy visibility — subscribe to the active card's deploy
+  // room and hydrate Redux with the current snapshot + persisted outputs.
+  // This replaces the subscription that used to live inside DeployPanel,
+  // which only ran when the panel was open.
+  useDeploySubscription(activeCard?.id);
 
   useEffect(() => {
     dispatch(initializeGraph());
@@ -132,12 +166,12 @@ const DynamicContent: React.FC = () => {
       <div className="h-full flex flex-col bg-background">
         <AppBar />
 
-        {(resolved.subpage === 'canvas' || resolved.subpage === 'table') && (
+        {(resolved.subpage === 'canvas' || resolved.subpage === 'table' || resolved.subpage === 'deploy') && (
           <>
             <MainLayout
               projectId={resolved.id!}
               projectName={resolved.name}
-              view={resolved.subpage as 'canvas' | 'table'}
+              view={resolved.subpage === 'table' ? 'table' : 'canvas'}
               basePath={projectBasePath}
             />
             <DebugOverlay />
@@ -145,7 +179,12 @@ const DynamicContent: React.FC = () => {
         )}
 
         {resolved.subpage === 'settings' && (
-          <MainLayout projectId={resolved.id!} projectName={resolved.name} basePath={projectBasePath} subpage="settings">
+          <MainLayout
+            projectId={resolved.id!}
+            projectName={resolved.name}
+            basePath={projectBasePath}
+            subpage="settings"
+          >
             <div className="h-full overflow-y-auto bg-ice-base">
               <ProjectSettings projectId={resolved.id!} />
             </div>
@@ -153,7 +192,12 @@ const DynamicContent: React.FC = () => {
         )}
 
         {resolved.subpage === 'deployments' && (
-          <MainLayout projectId={resolved.id!} projectName={resolved.name} basePath={projectBasePath} subpage="deployments">
+          <MainLayout
+            projectId={resolved.id!}
+            projectName={resolved.name}
+            basePath={projectBasePath}
+            subpage="deployments"
+          >
             <div className="h-full overflow-y-auto bg-ice-base">
               <ProjectDeployments projectId={resolved.id!} />
             </div>
@@ -161,18 +205,22 @@ const DynamicContent: React.FC = () => {
         )}
 
         {resolved.subpage === 'activity' && (
-          <MainLayout projectId={resolved.id!} projectName={resolved.name} basePath={projectBasePath} subpage="activity">
+          <MainLayout
+            projectId={resolved.id!}
+            projectName={resolved.name}
+            basePath={projectBasePath}
+            subpage="activity"
+          >
             <div className="h-full overflow-y-auto bg-ice-base">
               <ProjectActivity projectId={resolved.id!} />
             </div>
           </MainLayout>
         )}
 
-        {resolved.subpage === 'deploy' && (
-          <MainLayout projectId={resolved.id!} projectName={resolved.name} basePath={projectBasePath} subpage="deploy">
-            <DeployPanel isOpen={true} mode="page" />
-          </MainLayout>
-        )}
+        {/* On the /deploy subpage we just open the panel — the actual
+            DeployPanel is mounted inside MainLayout's right sidebar and
+            rendered alongside the canvas, identical to Cost / Properties. */}
+        {resolved.subpage === 'deploy' && <DeployRouteOpener />}
 
         <ProjectWizard />
       </div>
@@ -206,6 +254,12 @@ const App: React.FC = () => (
     <ErrorBoundary name="App">
       <DevAccentPicker>
         <BrowserRouter>
+          {/* TourRunner: mounted as a sibling of Routes so the popover/overlay
+              portals at document.body regardless of which route is active.
+              Inside BrowserRouter (needs useNavigate / useLocation), inside
+              LocaleProvider (popover uses i18n), inside Provider (slice
+              dispatch). See blueprint §2.1. */}
+          <TourRunner />
           <Routes>
             <Route path="/onboarding" element={<OnboardingPage />} />
             <Route

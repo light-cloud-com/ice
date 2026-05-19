@@ -5,7 +5,7 @@
  * Use Result<T, E> instead of throwing exceptions for expected errors.
  */
 
-import type { IceError } from './errors.js';
+import type { IceError } from './errors';
 
 // =============================================================================
 // Core Result Type

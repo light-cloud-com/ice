@@ -5,8 +5,8 @@
  * for accurate diffing between deployments.
  */
 
-import type { ResourceDeployResult, DeployResult } from './types.js';
-import type { Graph } from '../types/graph.js';
+import type { ResourceDeployResult, DeployResult } from './types';
+import type { Graph } from '../types/graph';
 
 // =============================================================================
 // Types

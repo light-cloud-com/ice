@@ -106,10 +106,15 @@ export async function refreshToken(
 
   const stored = await prisma.refreshToken.findUnique({ where: { token } });
   if (!stored) {
-    // BE-3: Reuse detection — if a token was already consumed (deleted), revoke all
-    // tokens for this user as a precaution (token family compromise)
-    await prisma.refreshToken.deleteMany({ where: { user_id: payload.userId } });
-    throw new AuthError('Refresh token reuse detected — all sessions revoked', 401);
+    // BE-3 (findings.md #3): a missing row used to wipe ALL of the
+    // user's refresh tokens as "reuse-detection". The bug: a stolen
+    // token replayed a moment after the legit user rotated it would
+    // log the legit user out everywhere. We can't tell "true reuse"
+    // from "row already cleaned up" without a token-family column, so
+    // we simply reject the request. A human can investigate via the
+    // security log; legit sessions stay intact.
+    console.warn(`[auth] refresh token rejected (no matching row) user=${payload.userId}`);
+    throw new AuthError('Invalid refresh token', 401);
   }
 
   if (stored.expires_at < new Date()) {

@@ -54,7 +54,12 @@ router.post('/github', async (req: Request, res: Response) => {
     if (err.code === 'P2002') {
       return res.status(200).json({ message: 'Already processed' });
     }
-    throw err;
+    // Express 4 has no default async-error handler. Re-throwing here
+    // would leave the request hanging until the client times out (see
+    // findings.md #8). Convert to a 500 response in the same shape as
+    // the lower catch arm.
+    console.error(`Webhook idempotency-write error (${event}):`, err);
+    return res.status(500).json({ error: err.message ?? 'Idempotency check failed' });
   }
 
   // ── Route by event type ──
@@ -202,7 +207,11 @@ async function handlePullRequestEvent(payload: any, _rawBody: Buffer, _signature
   // ── PR opened/synchronized → create ephemeral environment ──
   if ((action === 'opened' || action === 'synchronize') && prNumber && prBranch) {
     try {
-      const { createEnvironment, findEnvironmentByName } = await import('../services/environment.service');
+      // Dynamic cross-package import — canvas depends on deploy, so we avoid
+      // a static circular dep. Typed as any because the module is resolved at runtime.
+
+      const mod = (await import('@ice/service-canvas' as any)) as any;
+      const { createEnvironment, findEnvironmentByName } = mod;
 
       // Find projects with pr_previews_enabled that have rules for this repo
       const rules = await prisma.deploymentRule.findMany({
@@ -277,7 +286,8 @@ async function handlePullRequestEvent(payload: any, _rawBody: Buffer, _signature
   // ── PR closed → destroy ephemeral environment ──
   if (action === 'closed' && prNumber) {
     try {
-      const { closePrEnvironment } = await import('../services/environment.service');
+      const mod = (await import('@ice/service-canvas' as any)) as any;
+      const { closePrEnvironment } = mod;
       await closePrEnvironment(repo, prNumber);
     } catch (err: any) {
       console.error(`Failed to close ephemeral env for PR #${prNumber}:`, err);

@@ -1,16 +1,17 @@
 {
   "name": "@ice/core",
   "version": "0.1.0",
+  "private": true,
   "description": "ICE Engine core - Graph processing, validation, deployment, schema registry, and CLI",
   "type": "module",
   "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "types": "./src/index.ts",
   "bin": {
     "ice": "./dist/cli/bin/ice.js"
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "types": "./src/index.ts",
       "default": "./src/index.ts"
     },
     "./graph": {
@@ -45,6 +46,11 @@
       "types": "./dist/validation/index.d.ts",
       "import": "./src/validation/index.ts",
       "default": "./src/validation/index.ts"
+    },
+    "./compute": {
+      "types": "./dist/compute/index.d.ts",
+      "import": "./src/compute/index.ts",
+      "default": "./src/compute/index.ts"
     },
     "./src/*": "./src/*"
   },

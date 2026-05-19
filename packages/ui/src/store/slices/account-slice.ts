@@ -26,7 +26,7 @@ export interface UserProfile {
   defaultRegion: string | null;
 }
 
-interface AccountState {
+export interface AccountState {
   user: UserProfile | null;
   selectedOrg: Organisation | null;
   loading: boolean;

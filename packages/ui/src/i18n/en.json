@@ -207,6 +207,413 @@
       "edgeRectangular": "Rectangular",
       "unlockCanvas": "Unlock Canvas",
       "lockCanvas": "Lock Canvas"
+    },
+    "logNode": {
+      "preDeploy": "Deploy this environment to start streaming logs.",
+      "noSource": "Connect a compute or database block to start streaming logs.",
+      "ambiguous": "Multiple inbound connections — choose a source in the properties panel.",
+      "unsupported": "This source type doesn't emit Cloud Logging output.",
+      "permissionDenied": "Cloud Logging access denied. Grant roles/logging.viewer to the deploy service account.",
+      "error": "Connection error. Retrying.",
+      "connecting": "Connecting…",
+      "idle": "Waiting for environment."
+    },
+    "status": {
+      "live": "LIVE",
+      "connecting": "CONNECTING",
+      "error": "ERROR",
+      "idle": "IDLE",
+      "pipelineLive": "Live",
+      "pipelineFailed": "Failed",
+      "pipelineBuilding": "Building",
+      "pipelineDeploying": "Deploying",
+      "pipelineQueued": "Queued"
+    },
+    "deploy": {
+      "planning": "Planning deployment…",
+      "destroying": "Destroying…",
+      "deploying": "Deploying…",
+      "progress": "{{terminal}} of {{total}}"
+    },
+    "time": {
+      "secondsAgo": "{{n}}s ago",
+      "minutesAgo": "{{n}}m ago",
+      "hoursAgo": "{{n}}h ago",
+      "daysAgo": "{{n}}d ago"
+    },
+    "rejection": {
+      "noRule": "{{src}} can't connect directly to {{tgt}}",
+      "specialConflict": "Only one {{label}} can be connected to a service",
+      "logHasSource": "Log terminal already has a source — drop another Log block to watch a second service",
+      "githubRepoLabel": "GitHub Repo",
+      "envVarsLabel": "Env Variables",
+      "fallbackSrc": "This block",
+      "fallbackTgt": "that block"
+    },
+    "deployBadge": {
+      "live": "LIVE",
+      "deploy": "DEPLOY",
+      "err": "ERR",
+      "queued": "QUEUED",
+      "cancel": "CANCEL",
+      "skipped": "SKIPPED"
+    },
+    "infoModal": {
+      "tabOverview": "Overview",
+      "tabCompiles": "Compiles To",
+      "tabCode": "Code",
+      "tabLinks": "Links",
+      "close": "Close",
+      "providerLabel": "Provider:",
+      "optional": "optional",
+      "noInfrastructure": "No infrastructure — this is a canvas-only block.",
+      "noSnippets": "No code snippets available yet.",
+      "triggerTitle": "About this block"
+    },
+    "blocks": {
+      "titles": {
+        "mongodb": "MongoDB",
+        "mysql": "MySQL",
+        "postgres": "PostgreSQL",
+        "postgresShort": "Postgres",
+        "redis": "Redis",
+        "messageQueue": "Message Queue",
+        "eventStream": "Event Stream",
+        "objectStorage": "Object Storage",
+        "secretStore": "Secret Store",
+        "envConfig": "Env Config",
+        "worker": "Worker",
+        "serverlessFunction": "Serverless Function",
+        "apiGateway": "API Gateway",
+        "scheduledTask": "Scheduled Task",
+        "githubRepo": "GitHub Repository",
+        "customDomain": "Custom Domain",
+        "privateNetwork": "Private Network",
+        "staticSite": "Static Site",
+        "ssrSite": "SSR Site",
+        "llmGateway": "LLM Gateway",
+        "emailService": "Email Service",
+        "vectorDb": "Vector DB",
+        "scalableBackend": "Scalable Backend",
+        "block": "Block",
+        "group": "Group"
+      },
+      "common": {
+        "unconfigured": "unconfigured",
+        "editInProperties": "edit in properties →",
+        "ha": "HA",
+        "unnamed": "(unnamed)",
+        "deleted": "(deleted)",
+        "moreCount": "+{{n}} more"
+      },
+      "database": {
+        "shardOne": "1 shard",
+        "shardMany": "{{n}} shards",
+        "backupsDays": "{{n}}d backups"
+      },
+      "redis": {
+        "memoryMb": "{{n}} MB",
+        "memoryGb": "{{n}} GB",
+        "persistent": "persistent"
+      },
+      "queue": {
+        "queueOne": "1 queue",
+        "queueMany": "{{n}} queues",
+        "fifo": "FIFO",
+        "std": "STD"
+      },
+      "stream": {
+        "retention24h": "24 hours",
+        "retention7d": "7 days",
+        "retention30d": "30 days",
+        "retention90d": "90 days",
+        "retention365d": "365 days",
+        "partitions": "{{n}} partitions",
+        "retentionSuffix": "retention",
+        "broadcastsTo": "broadcasts to",
+        "manyConsumers": "many consumers",
+        "subtitle": "one event · many readers"
+      },
+      "storage": {
+        "classStandard": "Standard",
+        "classNearline": "Nearline",
+        "classColdline": "Coldline",
+        "classArchive": "Archive",
+        "classInfrequent": "Infrequent Access",
+        "classGlacier": "Glacier",
+        "classGlacierDeep": "Glacier Deep Archive",
+        "classHot": "Hot",
+        "classCool": "Cool",
+        "public": "public",
+        "private": "private",
+        "versioned": "versioned",
+        "publicBucket": "Public bucket",
+        "privateBucket": "Private bucket"
+      },
+      "secret": {
+        "none": "No secrets yet",
+        "one": "1 secret",
+        "many": "{{n}} secrets",
+        "autoRotate": "auto-rotate"
+      },
+      "envConfig": {
+        "none": "No variables yet",
+        "one": "1 variable",
+        "many": "{{n}} variables"
+      },
+      "worker": {
+        "scalingSuffix": "scaling",
+        "replicas": "{{n}} replicas",
+        "autoScaled": "auto-scaled"
+      },
+      "function": {
+        "triggerHttp": "HTTP",
+        "triggerSchedule": "Schedule",
+        "triggerPubsub": "Pub/Sub",
+        "triggerStorage": "Storage",
+        "triggerQueue": "Queue",
+        "memoryMb": "{{n}} MB",
+        "timeoutSeconds": "{{n}}s",
+        "trigger": "trigger",
+        "scalesToZero": "scales to zero"
+      },
+      "gateway": {
+        "protoHttpApi": "HTTP API",
+        "protoRest": "REST",
+        "protoWebsocket": "WebSocket",
+        "protoCloudApi": "Cloud API Gateway",
+        "protoAzureConsumption": "API Management (Consumption)",
+        "protoAzureStandard": "API Management (Standard v2)",
+        "routeOne": "1 route",
+        "routeMany": "{{n}} routes",
+        "noRoutes": "no routes",
+        "authRequired": "auth required",
+        "publicAccess": "public",
+        "noRoutesYet": "no routes yet — add them in properties"
+      },
+      "scheduled": {
+        "freqEveryMinute": "Every minute",
+        "freqEvery5": "Every 5 minutes",
+        "freqEvery15": "Every 15 minutes",
+        "freqEvery30": "Every 30 minutes",
+        "freqEveryHour": "Every hour",
+        "freqEvery6h": "Every 6 hours",
+        "freqEvery12h": "Every 12 hours",
+        "freqDailyMidnight": "Daily at midnight",
+        "freqDaily9": "Daily at 9 AM",
+        "freqWeekdays9": "Weekdays at 9 AM",
+        "freqWeeklyMon": "Weekly on Monday",
+        "freqMonthly1st": "Monthly on the 1st",
+        "freqCustom": "Custom",
+        "freqCustomSchedule": "Custom schedule",
+        "describeNoSchedule": "no schedule",
+        "describeEveryMinute": "every minute",
+        "describeMinAbbr": "min",
+        "describeEveryHour": "every hour",
+        "describeHours": "hours",
+        "describeCustom": "custom schedule",
+        "daySun": "Sun",
+        "dayMon": "Mon",
+        "dayTue": "Tue",
+        "dayWed": "Wed",
+        "dayThu": "Thu",
+        "dayFri": "Fri",
+        "daySat": "Sat",
+        "taskOne": "1 task",
+        "taskMany": "{{n}} tasks",
+        "noTasks": "no tasks",
+        "noTasksYet": "no tasks yet — add them in properties",
+        "unnamedTask": "Unnamed task",
+        "setActionInProperties": "· set action in properties"
+      },
+      "github": {
+        "manualDeploys": "manual deploys",
+        "autoDeploy": "auto-deploy",
+        "buildPrefix": "build: ",
+        "noRepoConnected": "no repository connected — pick one in the properties panel"
+      },
+      "customDomain": {
+        "fallbackSubtitle": "Network · CustomDomain",
+        "rootDomainPlaceholder": "(set root domain above)",
+        "rootSubdomain": "root",
+        "addSubdomain": "Add subdomain route"
+      },
+      "privateNetwork": {
+        "sealed": "Sealed · internal only",
+        "restricted": "Restricted · allowlist",
+        "open": "Open · public reachable",
+        "dropHere": "drop services here"
+      },
+      "site": {
+        "noCdn": "no CDN",
+        "globalCdn": "global CDN",
+        "framework": "framework",
+        "servedFromEdge": "served from edge"
+      },
+      "llm": {
+        "primary": "primary",
+        "fallback": "fallback",
+        "rpm": "{{n}} rpm",
+        "fallbackOn": "fallback on",
+        "noRateLimits": "no rate limits",
+        "noModelSelected": "no model selected"
+      },
+      "email": {
+        "transactional": "Transactional",
+        "from": "FROM",
+        "sender": "SENDER"
+      },
+      "vector": {
+        "metricCosine": "cosine",
+        "metricEuclidean": "euclidean",
+        "metricL2": "L2",
+        "metricDot": "dot product",
+        "metricInner": "inner product",
+        "dimSuffix": "-d"
+      },
+      "scalableBackend": {
+        "instancesRange": "instances"
+      }
+    },
+    "properties": {
+      "fields": {
+        "queueNamePlaceholder": "queue-name",
+        "queueFifoTooltip": "FIFO — ordered, exactly-once",
+        "queueStandardTooltip": "Standard — unordered, at-least-once",
+        "queueFifoBadge": "FIFO",
+        "queueStandardBadge": "Std",
+        "queueRemoveTitle": "Remove queue",
+        "queueAdd": "Add a queue",
+        "taskNamePlaceholder": "task name",
+        "taskRemoveTitle": "Remove task",
+        "taskRowWhen": "when",
+        "taskRowCron": "cron",
+        "taskRowAction": "action",
+        "taskRowBlock": "block",
+        "taskRowUrl": "url",
+        "taskRowMethod": "method",
+        "taskCronPlaceholder": "0 9 * * MON-FRI",
+        "taskUrlPlaceholder": "https://api.example.com/cron-tick",
+        "taskNoBlocks": "no blocks on canvas",
+        "taskPickBlock": "pick a block",
+        "taskBlockNotSet": "— not set —",
+        "taskAdd": "Add a task",
+        "freqEvery5": "Every 5 minutes",
+        "freqEvery15": "Every 15 minutes",
+        "freqEvery30": "Every 30 minutes",
+        "freqEveryHour": "Every hour",
+        "freqEvery6h": "Every 6 hours",
+        "freqEvery12h": "Every 12 hours",
+        "freqDailyMidnight": "Daily at midnight",
+        "freqDaily9": "Daily at 9 AM",
+        "freqWeekdays9": "Weekdays at 9 AM",
+        "freqWeeklyMon": "Weekly on Monday",
+        "freqMonthly1st": "Monthly on the 1st",
+        "freqCustom": "Custom",
+        "actionTypeBlockLabel": "Run a block",
+        "actionTypeBlockDescription": "invoke a block on the canvas",
+        "actionTypeHttpLabel": "Send HTTP request",
+        "actionTypeHttpDescription": "hit an external URL",
+        "customValuePrefix": "Custom: {{value}} {{unit}}"
+      },
+      "log": {
+        "sectionTitle": "Logs",
+        "modePolling": "Polling",
+        "modePollingHint": "Refreshes every 2 seconds (recommended).",
+        "modeTail": "Tail",
+        "modeTailHint": "Sub-second streaming via gRPC.",
+        "sourceOverride": "Source override",
+        "noSupportedSource": "No supported source connected. Connect a compute or database block to this Log terminal.",
+        "clearOverride": "Clear override",
+        "selectSource": "— Select a source —",
+        "pillLive": "Live",
+        "pillConnecting": "Connecting",
+        "pillPreDeploy": "Pre-deploy",
+        "pillNoSource": "No source",
+        "pillAmbiguous": "Ambiguous source",
+        "pillUnsupported": "Unsupported source",
+        "pillAccessDenied": "Access denied",
+        "pillError": "Error",
+        "pillIdle": "Idle"
+      },
+      "privateNetwork": {
+        "inboundTitle": "Inbound internet",
+        "outboundTitle": "Outbound internet",
+        "inboundHint": "Controls who on the public internet can reach services inside this network. Independent from the outbound policy below.",
+        "outboundHint": "Controls whether services inside this network can reach the public internet. Independent from the inbound policy above.",
+        "inboundAllLabel": "Allow all inbound (Open)",
+        "inboundAllHint": "Public reachable. Default.",
+        "inboundAllowlistLabel": "Allowlist specific sources (Restricted)",
+        "inboundAllowlistHint": "Only listed source ranges or IPs can reach in.",
+        "inboundNoneLabel": "Block all inbound (Sealed)",
+        "inboundNoneHint": "Internal only. Services inside talk east-west.",
+        "outboundAllLabel": "Allow all outbound",
+        "outboundAllHint": "Services can call any public URL. Default.",
+        "outboundAllowlistLabel": "Allowlist specific destinations",
+        "outboundAllowlistHint": "Only listed hostnames or IP ranges are reachable.",
+        "outboundNoneLabel": "Block all outbound",
+        "outboundNoneHint": "Air-gapped. No public internet access.",
+        "allowedSources": "Allowed sources",
+        "allowedDestinations": "Allowed destinations",
+        "noEntries": "No entries yet. Click + below to add one.",
+        "removeSource": "Remove source",
+        "removeDestination": "Remove destination",
+        "addSource": "+ Add source",
+        "addDestination": "+ Add destination",
+        "inboundEntryPlaceholder": "203.0.113.0/24 or 1.2.3.4",
+        "outboundEntryPlaceholder": "api.stripe.com or 10.0.0.0/8"
+      },
+      "customDomain": {
+        "rootDomainTitle": "Root domain",
+        "rootDomainPlaceholder": "example.com",
+        "rootDomainHint": "The root domain for this block. Leave blank to disable. Add a route below for each subdomain you want to expose, then drag the matching dot on the canvas block to a publicly-facing service.",
+        "routesTitle": "Routes ({{count}})",
+        "routesEmpty": "No routes yet. Click + below to add a subdomain slot.",
+        "routeUnconnected": "unconnected — drag the dot to wire up",
+        "noDomain": "(no domain)",
+        "subdomainLabel": "subdomain",
+        "subdomainPlaceholder": "api (blank = root)",
+        "deleteRouteTitle": "Delete route",
+        "addRoute": "+ Add subdomain route",
+        "dnsRecordsTitle": "DNS records",
+        "dnsRecordsTitleCount": "DNS records ({{count}})",
+        "dnsRecordsEmpty": "After deploy, the DNS records you need to add at your registrar will appear here. Verify the domain at your DNS provider, and the connected service (e.g. Firebase Hosting) will automatically provision a managed SSL certificate.",
+        "dnsHeaderType": "Type",
+        "dnsHeaderDomain": "Domain name",
+        "dnsHeaderValue": "Value",
+        "dnsAddBanner": "Add the records below at your DNS provider to verify the domain.",
+        "dnsRemoveBanner": "Remove the records below from your DNS provider — they conflict with the new configuration and block verification.",
+        "dnsCopyButton": "Copy",
+        "dnsCopyTitle": "Copy value to clipboard",
+        "dnsPropagationHint": "After the records propagate (usually a few minutes), Firebase Hosting will issue a managed SSL certificate automatically."
+      },
+      "customDomainBanner": {
+        "fallbackLabel": "Custom Domain",
+        "managedBy": "Domain managed by",
+        "disconnectHint": "Edit the route on the Custom Domain block to change this. Disconnect the edge to set a domain manually."
+      },
+      "requirements": {
+        "header": "Requirements",
+        "blocking": "{{count}} blocking",
+        "warning": "{{count}} warning",
+        "warnings": "{{count}} warnings",
+        "note": "{{count}} note",
+        "notes": "{{count}} notes",
+        "pgNoServiceTitle": "No service connected",
+        "pgNoServiceHint": "Drag an edge from a Compute block (Container, BackendAPI, SSRSite, ServerlessFunction) to this database. Without one, the database deploys but nothing reads or writes to it.",
+        "pgEditionTitle": "Will deploy as {{edition}}, tier {{tier}}",
+        "pgEditionEnterpriseHint": "Edition is auto-picked because shared-core tiers (db-f1-micro, db-g1-small) only work on ENTERPRISE. Set the `edition` field in Config to override.",
+        "pgEditionEnterprisePlusHint": "Edition is auto-picked because the chosen tier is performance-optimized (ENTERPRISE_PLUS only). Set the `edition` field in Config to override.",
+        "pnEmptyTitle": "Private network is empty",
+        "pnEmptyHint": "Drag compute or database blocks inside this network to put them on a private VPC. An empty private network deploys a VPC but no resources use it.",
+        "pnOpenIngressTitle": "Inbound traffic is unrestricted",
+        "pnOpenIngressHint": "ingress = \"all\" — anything on the public internet can reach services inside (subject to per-block ingress rules). Set ingress to \"allowlist\" to limit source IPs, or \"none\" to seal the network entirely."
+      },
+      "deployment": {
+        "sectionLabel": "Deployment",
+        "regionLabel": "Region",
+        "regionAuto": "auto"
+      }
     }
   },
 
@@ -353,6 +760,41 @@
       "linkRepo": "Link repo",
       "clear": "Unlink",
       "connectGitHub": "Connect GitHub"
+    },
+    "anthropic": {
+      "title": "Claude (Anthropic)",
+      "description": "Connect your Anthropic API key to enable the in-app AI assistant. The key is encrypted at rest and never leaves this machine.",
+      "connected": "Connected",
+      "connectedSubtitle": "AI panel and deploy diagnosis are enabled",
+      "disconnect": "Disconnect",
+      "apiKeyLabel": "API key",
+      "apiKeyPlaceholder": "sk-ant-...",
+      "apiKeyHelp": "Don't have one?",
+      "createKey": "Create a key on console.anthropic.com",
+      "connectButton": "Connect Claude",
+      "appBarTip": "Claude (Anthropic)",
+      "settingsLabel": "Claude (Anthropic)",
+      "settingsDescription": "Bring your own Anthropic API key to enable the in-app AI assistant"
+    },
+    "settings": {
+      "sectionTitle": "Integrations",
+      "sectionDescription": "Bring-your-own-key connections — GitHub for repo deploys, Claude for the AI assistant, plus your cloud provider credentials. All stored encrypted in the workspace database.",
+      "github": {
+        "label": "GitHub",
+        "description": "PAT or device flow — required for git-push pipelines"
+      },
+      "gcp": {
+        "label": "Google Cloud Platform",
+        "description": "Service account key or OAuth — primary deploy target"
+      },
+      "aws": {
+        "label": "Amazon Web Services",
+        "description": "Access keys — experimental, see docs/provider-status.md"
+      },
+      "azure": {
+        "label": "Microsoft Azure",
+        "description": "Service principal — experimental, see docs/provider-status.md"
+      }
     }
   },
 
@@ -424,7 +866,6 @@
 
   "onboarding": {
     "nav": {
-      "stepWelcome": "Welcome",
       "stepTeam": "Team",
       "stepCloud": "Cloud",
       "stepGitHub": "GitHub",
@@ -434,18 +875,6 @@
       "skip": "Skip",
       "continue": "Continue",
       "createAndStart": "Create & Start"
-    },
-    "welcome": {
-      "title": "Welcome to ICE",
-      "titleWithName": "Welcome to ICE, {{name}}",
-      "subtitle": "Design, deploy, and manage cloud infrastructure visually",
-      "featureCanvas": "Visual canvas",
-      "featureCanvasDesc": "Drag-and-drop infrastructure blocks onto a live canvas",
-      "featureMultiCloud": "Multi-cloud",
-      "featureMultiCloudDesc": "GCP, AWS, and Azure — design once, deploy anywhere",
-      "featureCiCd": "CI/CD built in",
-      "featureCiCdDesc": "Connect GitHub and deploy on every push",
-      "setupHint": "This setup takes about a minute. You can skip any step."
     },
     "team": {
       "title": "Set up your team",
@@ -514,7 +943,9 @@
       "createAccount": "Create account",
       "chooseProvider": "Choose cloud provider",
       "connectCloud": "Connect cloud credentials",
-      "connectGithub": "Connect GitHub"
+      "connectGithub": "Connect GitHub",
+      "takeCanvasTour": "Take the canvas tour",
+      "openProjectForTour": "Open a project to start the tour."
     }
   },
 
@@ -587,8 +1018,18 @@
       "deployInfra": "Deploy Infra",
       "contextDeploy": "Deploy",
       "contextPromote": "Promote to production",
+      "contextRename": "Rename",
       "contextDelete": "Delete environment",
       "envNamePlaceholder": "Environment name"
+    },
+    "renameModal": {
+      "title": "Rename Environment",
+      "nameLabel": "Name",
+      "cancelButton": "Cancel",
+      "savingButton": "Saving...",
+      "saveButton": "Save",
+      "errorNameRequired": "Name is required",
+      "errorFallback": "Failed to rename environment"
     },
     "createModal": {
       "title": "New Environment",
@@ -738,11 +1179,22 @@
       "thinking": "Thinking...",
       "undoLastAi": "Undo last AI change",
       "inputPlaceholder": "Describe what you want to build...",
+      "disconnectedPlaceholder": "Connect Claude to chat",
       "doneMessage": "Done.",
       "noChangesMessage": "No changes to apply.",
       "collapsedTitle": "AI Assistant",
       "sendMessage": "Send message",
-      "inputHint": "Enter to send · Shift+Enter for new line"
+      "inputHint": "Enter to send · Shift+Enter for new line",
+      "disconnectedBadge": "Not connected",
+      "disconnectedBadgeTooltip": "No AI provider configured — click to add your Anthropic API key",
+      "disconnectedTitle": "AI assistant not connected",
+      "disconnectedDesc": "Add your Anthropic API key to enable Claude. The key is encrypted and stored locally.",
+      "connectClaude": "Connect Claude"
+    },
+    "diagnosis": {
+      "diagnoseWithAi": "Diagnose with AI",
+      "connectToDiagnose": "Connect Claude to diagnose",
+      "connectToDiagnoseTooltip": "Add an Anthropic API key to enable AI deploy diagnosis"
     }
   },
 
@@ -1165,6 +1617,10 @@
         "clientIdLabel": "Client ID",
         "clientSecretLabel": "Client Secret"
       }
+    },
+    "help": {
+      "tooltip": "Help",
+      "showMeAround": "Show me around"
     }
   },
 
@@ -1381,7 +1837,84 @@
     "provider": "Provider",
     "behavior": "Behavior",
     "noResources": "No resources yet",
-    "noResourcesHint": "Drag blocks from the sidebar to add resources"
+    "noResourcesHint": "Drag blocks from the sidebar to add resources",
+    "search": {
+      "placeholder": "Search name, id, type, region…"
+    },
+    "filter": {
+      "clear": "Clear"
+    },
+    "groupBy": {
+      "label": "Group by",
+      "none": "None",
+      "status": "Status",
+      "provider": "Provider",
+      "family": "Family",
+      "group": "Group"
+    },
+    "density": {
+      "comfortable": "Comfortable",
+      "compact": "Compact"
+    },
+    "columns": {
+      "name": "Name",
+      "type": "Type",
+      "provider": "Provider",
+      "status": "Status",
+      "endpoints": "Endpoints",
+      "id": "ID",
+      "region": "Region",
+      "settings": "Settings",
+      "updated": "Updated"
+    },
+    "status": {
+      "idle": "Idle",
+      "queued": "Queued",
+      "building": "Building",
+      "deploying": "Deploying",
+      "live": "Live",
+      "failed": "Failed",
+      "drifted": "Drifted"
+    },
+    "endpoints": {
+      "live": "Live URL",
+      "domain": "Custom domain",
+      "repo": "Source repository",
+      "image": "Container image",
+      "console": "Provider console",
+      "copy": "Copy URL",
+      "copied": "Copied"
+    },
+    "actions": {
+      "menu": "More actions",
+      "openProperties": "Open properties",
+      "revealOnCanvas": "Reveal on canvas",
+      "copyId": "Copy ID",
+      "copyName": "Copy name",
+      "openInBrowser": "Open in browser",
+      "openInGithub": "Open in GitHub",
+      "openInConsole": "Open in provider console",
+      "delete": "Delete"
+    },
+    "expand": {
+      "show": "Show details",
+      "hide": "Hide details",
+      "noSettings": "No settings to show"
+    },
+    "group": {
+      "noProvider": "No provider",
+      "other": "Other",
+      "root": "Top level"
+    },
+    "empty": {
+      "noResults": "No matches",
+      "noResultsHint": "Try clearing filters or searching differently"
+    },
+    "footer": {
+      "total": "{{count}} resources",
+      "filtered": "{{shown}} of {{total}} resources",
+      "selected": "{{count}} selected"
+    }
   },
 
   "appSettings": {
@@ -1450,9 +1983,10 @@
     "computeSSRSite": { "name": "SSR Site", "description": "Server-rendered (Next.js, Nuxt). CDN included.", "tooltip": "Server-side rendered app (Next.js, Nuxt, Remix). Pages render on the server for fast first paint and SEO. Supports API routes, middleware, and dynamic content. CDN caches static assets." },
     "networkVPC": { "name": "VPC", "description": "Virtual Private Cloud. Isolated network.", "tooltip": "Virtual Private Cloud — an isolated private network that contains your subnets and resources. Provides network-level isolation, custom IP ranges, route tables, and security boundaries. All production workloads should run inside a VPC." },
     "networkSubnet": { "name": "Subnet", "description": "Network subdivision inside a VPC.", "tooltip": "A subdivision of a VPC that isolates resources into public or private segments. Public subnets have internet access; private subnets are shielded behind NAT. Use subnets to separate frontend, backend, and data tiers." },
-    "networkInternet": { "name": "Public Traffic", "description": "Internet entry point. People reaching your app.", "tooltip": "Represents users and external traffic coming from the public internet. Place this as the starting point of your architecture — everything flows from here into your services." },
+    "networkPublicEndpoint": { "name": "Public Endpoint", "description": "Public HTTPS entry point with managed SSL.", "tooltip": "Single block that exposes your services to the internet. Set a domain (example.com) and toggle HTTPS to auto-provision a managed SSL certificate. Connect to one or more services and set a Subdomain on each edge to route api.example.com → API service, app.example.com → static site, etc. Replaces the old separate Internet + Custom Domain blocks." },
+    "networkCustomDomain": { "name": "Custom Domain", "description": "Route a domain to publicly-facing services.", "tooltip": "Wires a root domain to one or more publicly-facing services that already have their own public URL (Firebase Hosting, Cloud Run with --allow-unauthenticated, AWS Amplify). Set a domain (example.com) and connect to one or more targets with a Subdomain on each edge — blank = root, api = api.example.com, etc. Can also be dropped INSIDE a Private Network block to act as its public ingress gateway." },
+    "networkPrivateNetwork": { "name": "Private Network", "description": "A walled VPC. Drop services inside to keep them private.", "tooltip": "A container block that puts everything inside it on a private VPC. Drop compute blocks inside to isolate them from the public internet. Toggle Open to auto-spawn a Custom Domain child that acts as the public gateway (the Custom Domain's route ports wire to sibling services inside the network). Toggle Sealed for an internal-only network. Outbound internet access (Allow all / Allowlist / Block all) is configured in the properties panel." },
     "networkGateway": { "name": "Gateway", "description": "Routes traffic, auth + rate limiting.", "tooltip": "API Gateway that sits between the internet and your backend services. Handles request routing, authentication, rate limiting, CORS, and request/response transformation. Includes WAF and TLS termination." },
-    "networkDomain": { "name": "Domain", "description": "Custom domain and SSL routing.", "tooltip": "Custom domain configuration with automatic SSL. Set a hostname like app.example.com and connect to a service to route traffic. Supports auto and manual SSL modes." },
     "databasePostgreSQL": { "name": "PostgreSQL", "description": "Relational. ACID-compliant.", "tooltip": "Managed PostgreSQL database with automatic backups, replication, and failover. Best for structured data with complex queries, joins, and transactions. Supports JSON, full-text search, and extensions like PostGIS." },
     "databaseMySQL": { "name": "MySQL", "description": "Relational. Web-scale classic.", "tooltip": "Managed MySQL database — the most widely deployed open-source relational database. Optimized for read-heavy workloads, web applications, and e-commerce. Simple, reliable, and well-understood." },
     "databaseMongoDB": { "name": "MongoDB", "description": "Document store. Schema-flexible.", "tooltip": "Managed MongoDB document database. Stores data as flexible JSON-like documents — no fixed schema required. Great for content management, catalogs, user profiles, and rapidly evolving data models." },
@@ -1486,5 +2020,84 @@
     "monitoringTerminal": { "name": "Log Terminal", "description": "Live streaming log viewer.", "tooltip": "Terminal-style log viewer with color-coded levels, auto-scroll, and click-to-copy. Streams live logs from connected services." },
     "sourceRepository": { "name": "GitHub Repo", "description": "Source code. Connect to a service to deploy.", "tooltip": "GitHub repository as a deployment source. Specify repo, branch, build command, and output directory. Connect to any service to define where its code comes from. Supports auto-deploy on push." },
     "configEnvironment": { "name": "Env Variables", "description": "Key-value environment variables.", "tooltip": "Environment variables and configuration values. Define key-value pairs like DATABASE_URL, API keys, and feature flags. Connect to services that consume them." }
+  },
+  "tour": {
+    "actions": {
+      "next": "Next",
+      "back": "Back",
+      "skip": "Skip tour",
+      "finish": "Got it",
+      "close": "Close",
+      "showMeHow": "Show me how"
+    },
+    "dashboard": {
+      "title": "Welcome to ICE",
+      "overview": {
+        "title": "Your dashboard",
+        "body": "Every project you build lives here. Folders let you group related projects."
+      },
+      "createProject": {
+        "title": "Create your first project",
+        "body": "Click here to start a project. You'll land on the canvas where you compose blocks into a deployable architecture."
+      }
+    },
+    "canvas": {
+      "title": "Tour your project",
+      "overview": {
+        "title": "Your canvas",
+        "body": "This is where you compose blocks into a deployable architecture."
+      },
+      "projects": {
+        "title": "Projects",
+        "body": "All your projects live here. Switch between them or create a new one."
+      },
+      "blocks": {
+        "title": "Blocks",
+        "body": "Drag any block onto the canvas — services, databases, networking, anything."
+      },
+      "templates": {
+        "title": "Templates",
+        "body": "Start from a pre-built architecture instead of an empty canvas."
+      },
+      "properties": {
+        "title": "Properties",
+        "body": "Click any block on the canvas to configure it here."
+      },
+      "ai": {
+        "title": "AI assistant",
+        "body": "Describe what you want — the assistant edits the canvas for you."
+      },
+      "cost": {
+        "title": "Cost estimate",
+        "body": "Live monthly cost for the architecture you're building, broken out per service."
+      },
+      "cloud": {
+        "title": "Connect a cloud",
+        "body": "Hook up GCP, AWS, or Azure here so ICE can deploy on your behalf."
+      },
+      "github": {
+        "title": "Connect GitHub",
+        "body": "Link a repository to deploy on push and review changes from PRs."
+      },
+      "deploy": {
+        "title": "Deploy",
+        "body": "When the canvas is ready, hit Deploy to provision the infrastructure."
+      }
+    },
+    "palette": {
+      "title": "Browse blocks",
+      "search": {
+        "title": "Search",
+        "body": "Filter by name to jump to a specific block."
+      },
+      "providerFilter": {
+        "title": "Provider filter",
+        "body": "Show blocks for one cloud at a time."
+      },
+      "dragHint": {
+        "title": "Drag onto the canvas",
+        "body": "Press and drag any block onto the canvas to add it to your architecture."
+      }
+    }
   }
 }

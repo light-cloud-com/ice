@@ -120,6 +120,9 @@ export * from './diff';
 // Re-export deploy module
 export * from './deploy';
 
+// Re-export computing flows engine
+export { computeDerived, diffPatches, PROPAGATION_RULES, AGGREGATE_RULES } from './compute';
+
 // Re-export export module (Terraform/Pulumi exporters)
 // Use explicit exports to avoid conflicts with importer module
 export {
@@ -153,7 +156,7 @@ export {
   create_mock_provider,
   create_mock_provider_factory,
   type MockProviderOptions,
-} from './providers/mock-provider.js';
+} from './providers/mock-provider';
 
 // Re-export high-level resources (shared between desktop and importers)
 // Use specific exports to avoid conflicts with schema module
@@ -171,7 +174,7 @@ export {
   type HighLevelCategory,
   type NodeBehavior,
   type ProviderImplementation as HighLevelProviderImplementation,
-} from './resources/high-level-resources.js';
+} from './resources/high-level-resources';
 
 // Re-export Cloud Provider Registry
 export {
@@ -181,7 +184,7 @@ export {
   getCloudProviderColor,
   getCloudProviderShortName,
   type CloudProviderMeta,
-} from './resources/cloud-providers.js';
+} from './resources/cloud-providers';
 
 // Re-export Blueprint Factory
 export {
@@ -190,7 +193,7 @@ export {
   type BlueprintProviderVariant,
   type BlueprintOverrides,
   type GeneratedBlueprint,
-} from './resources/blueprint-factory.js';
+} from './resources/blueprint-factory';
 
 // Re-export Cloud Blocks (Level 1 abstractions)
 export {
@@ -210,7 +213,7 @@ export {
   type BlockConfig,
   type BlockTemplate,
   type EnvVar,
-} from './resources/cloud-blocks.js';
+} from './resources/cloud-blocks';
 
 // Re-export Canvas Validation Engine
 export {

@@ -4,8 +4,8 @@
  * Types for deployment planning, execution, and state management.
  */
 
-import type { NodeId } from './graph.js';
-import type { ProviderName, ResourceState } from './providers.js';
+import type { NodeId } from './graph';
+import type { ProviderName, ResourceState } from './providers';
 
 // =============================================================================
 // Deployment Plan

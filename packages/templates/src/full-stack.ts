@@ -5,25 +5,23 @@
  *
  *   ┌── Public Zone ─────────────────────────────────────┐
  *   │  Internet ──► WAF ──► Static Site (CDN)            │
- *   └───────────────────────────────────────────────────-─┘
- *   ┌── VPC ─────────────────────────────────────────────────────────┐
- *   │  ┌─ Public Subnet ─┐  ┌── Private Subnet ─────────────────┐  │
- *   │  │  Gateway         │  │  Node.js     PostgreSQL           │  │
- *   │  │                  │  │  Redis       Storage               │  │
- *   │  └──────────────────┘  └───────────────────────────────────┘  │
- *   └────────────────────────────────────────────────────────────────┘
+ *   └─────────────────────────────────────────────────────┘
+ *   ┌── Private Network ─────────────────────────────────┐
+ *   │  Gateway   API Server                              │
+ *   │  PostgreSQL  Redis  Storage                        │
+ *   └─────────────────────────────────────────────────────┘
  *   ┌── Monitoring ──┐
  *   │  Logs          │
  *   └────────────────┘
- *   Secrets   Domain   Repo   Env   (ungrouped control plane)
+ *   Secrets   Repo   Env   (ungrouped control plane)
  *
- * Layout grid (CARD 240×160, PAD 20, HEADER 36, GAP 16):
- *   Row 0: Public Zone       (3c,1r → 792×236)   at (30,30)
- *   Row 1: VPC               (886×488)            at (30,296)
- *          ├ Public Subnet   (1c,1r → 280×236)   at (50,352)  parent→VPC
- *          └ Private Subnet  (2c,2r → 536×412)   at (360,352) parent→VPC
- *   Row 2: Monitoring        (1c,1r → 280×236)   at (30,814)
- *   Row 3: Ungrouped         y=1080
+ * Network design: services live inside a single `Network.PrivateNetwork`
+ * block, which compiles to an auto-mode VPC on GCP (per-region /20
+ * subnets created by the cloud automatically). Power users who need
+ * custom CIDRs can drop down to `Network.VPC` + `Network.Subnet` on a
+ * blank canvas — both still ship with their own deployers — but the
+ * stock template uses the higher-level abstraction so users don't have
+ * to think about subnet layout.
  */
 
 import type { ComposedTemplate } from './types';
@@ -32,13 +30,13 @@ export const fullStackTemplate: ComposedTemplate = {
   id: 'fullstack-webapp',
   name: 'Full-Stack Web App',
   description:
-    'Production-ready full-stack with CDN frontend, WAF, API gateway in public subnet, backend service + PostgreSQL + Redis in private subnet.',
+    'Production-ready full-stack with CDN frontend, WAF, and a private network containing the API gateway, backend service, PostgreSQL, and Redis.',
   icon: 'Rocket',
   estimatedCost: '$60-120/mo',
   category: 'full-stack',
   provider: 'gcp',
   providers: ['gcp', 'aws', 'azure'],
-  tags: ['React', 'Node.js', 'PostgreSQL', 'Redis', 'VPC', 'Subnet'],
+  tags: ['React', 'Node.js', 'PostgreSQL', 'Redis', 'Private Network'],
   securityLevel: 'standard',
   difficulty: 'intermediate',
   trust: 'official',
@@ -50,7 +48,7 @@ export const fullStackTemplate: ComposedTemplate = {
   ],
 
   groups: [
-    // [0] Public Zone — outside VPC
+    // [0] Public Zone — outside the private network
     {
       subtype: 'Frontend',
       label: 'Public Zone',
@@ -60,42 +58,21 @@ export const fullStackTemplate: ComposedTemplate = {
       blockIndices: [0, 1, 2],
       color: '#ef4444',
     },
-    // [1] VPC — contains subnets, no direct blocks
+    // [1] Private Network — single block; auto-mode VPC on GCP. Holds
+    // all backend services (gateway, app servers, databases, storage).
+    // Replaces the older VPC + Public Subnet + Private Subnet trio so
+    // users don't have to think about subnet layout.
     {
       subtype: 'Custom',
-      iceType: 'Network.VPC',
-      label: 'VPC',
+      iceType: 'Network.PrivateNetwork',
+      label: 'Private Network',
       position: { x: 30, y: 296 },
       width: 886,
       height: 488,
-      blockIndices: [],
-      color: '#22c55e',
-    },
-    // [2] Public Subnet — inside VPC
-    {
-      subtype: 'Custom',
-      iceType: 'Network.Subnet',
-      label: 'Public Subnet',
-      position: { x: 50, y: 352 },
-      width: 280,
-      height: 236,
-      blockIndices: [3],
-      color: '#3b82f6',
-      parentGroupIndex: 1,
-    },
-    // [3] Private Subnet — inside VPC
-    {
-      subtype: 'Custom',
-      iceType: 'Network.Subnet',
-      label: 'Private Subnet',
-      position: { x: 360, y: 352 },
-      width: 536,
-      height: 412,
-      blockIndices: [4, 5, 6, 7],
+      blockIndices: [3, 4, 5, 6, 7],
       color: '#6366f1',
-      parentGroupIndex: 1,
     },
-    // [4] Monitoring — outside VPC (managed service)
+    // [2] Monitoring — outside the private network (managed service)
     {
       subtype: 'Monitoring',
       label: 'Monitoring',
@@ -110,7 +87,12 @@ export const fullStackTemplate: ComposedTemplate = {
   blocks: [
     // ── Public Zone (outside VPC) ─────────────────────────────────────────
     // 0: Internet
-    { iceType: 'Network.Internet', label: 'Public Traffic', position: { x: 50, y: 86 }, data: {} },
+    {
+      iceType: 'Network.PublicEndpoint',
+      label: 'Public Traffic',
+      position: { x: 50, y: 86 },
+      data: { domain: 'app.acme.io', enableHttps: true, autoProvisionCert: true, redirectHttpToHttps: true },
+    },
     // 1: WAF
     { iceType: 'Security.WAF', label: 'WAF', position: { x: 306, y: 86 }, data: {} },
     // 2: Static Site (CDN)
@@ -121,66 +103,76 @@ export const fullStackTemplate: ComposedTemplate = {
       data: { framework: 'react', domain: 'app.acme.io' },
     },
 
-    // ── Public Subnet (inside VPC) ────────────────────────────────────────
-    // 3: Gateway
-    { iceType: 'Network.Gateway', label: 'API Gateway', position: { x: 70, y: 408 }, data: { protocol: 'http' } },
+    // ── Private Network (auto-mode VPC) ───────────────────────────────────
+    // 3: Gateway — protocol comes from the per-provider blueprint default
+    { iceType: 'Network.Gateway', label: 'API Gateway', position: { x: 70, y: 408 }, data: {} },
 
-    // ── Private Subnet (inside VPC) ───────────────────────────────────────
-    // 4: Node.js Service
+    // 4: Node.js Service — size comes from the per-provider blueprint default
     {
       iceType: 'Compute.Container',
       label: 'API Server',
       position: { x: 380, y: 408 },
-      data: { size: '1-2048', runtime: 'nodejs20', domain: 'api.acme.io', port: 8080 },
+      data: { runtime: 'nodejs20', domain: 'api.acme.io', port: 8080 },
     },
-    // 5: PostgreSQL
+    // 5: PostgreSQL — size comes from the per-provider blueprint default
     {
       iceType: 'Database.PostgreSQL',
       label: 'App Database',
       position: { x: 636, y: 408 },
-      data: { size: 'db.t3.small', storage: '50', version: '17' },
+      data: { storage: '50', version: '17' },
     },
-    // 6: Redis
+    // 6: Redis — size comes from the per-provider blueprint default
     {
       iceType: 'Database.Redis',
       label: 'Session Cache',
       position: { x: 380, y: 584 },
-      data: { size: 'cache.t3.small', port: 6379 },
+      data: { port: 6379 },
     },
-    // 7: Storage
+    // 7: Storage — storage_class comes from the per-provider blueprint default
     {
       iceType: 'Storage.Bucket',
       label: 'File Storage',
       position: { x: 636, y: 584 },
-      data: { storage_class: 'standard' },
+      data: {},
     },
 
-    // ── Monitoring (outside VPC) ──────────────────────────────────────────
+    // ── Monitoring (outside the private network) ──────────────────────────
     // 8: Logs
     { iceType: 'Monitoring.Log', label: 'App Logs', position: { x: 50, y: 870 }, data: { keep_logs: '30 days' } },
 
     // ── Ungrouped (control plane) ─────────────────────────────────────────
     // 9: Secrets
     { iceType: 'Security.Secret', label: 'App Secrets', position: { x: 50, y: 1080 }, data: {} },
-    // 10: Domain
-    { iceType: 'Network.Domain', label: 'Domain', position: { x: 306, y: 1080 }, data: { hostname: 'app.acme.io' } },
-    // 11: Repo
+    // 10: Frontend repo — feeds Static Site. Default points at a minimal
+    // HTML test repo; replace via the RepoSelector for your own.
     {
       iceType: 'Source.Repository',
-      label: 'GitHub Repo',
+      label: 'Frontend Repo',
       position: { x: 562, y: 1080 },
-      data: { repository: '', branch: 'main' },
+      data: { repository: 'light-cloud-com/ice-test-hello-static', branch: 'main' },
     },
-    // 12: Env
+    // 11: Env
     { iceType: 'Config.Environment', label: 'Env Variables', position: { x: 50, y: 1256 }, data: {} },
+    // 12: Backend repo — feeds API Server. Default points at the existing
+    // Node.js test repo in the light-cloud-com org; the API Server's
+    // Cloud Build can't compile hello-static (HTML only), so backends
+    // need their own Node.js source.
+    {
+      iceType: 'Source.Repository',
+      label: 'Backend Repo',
+      position: { x: 818, y: 1080 },
+      data: { repository: 'light-cloud-com/ice-test-hello-api', branch: 'main' },
+    },
   ],
 
   connections: [
     // Internet → WAF → Gateway (Gateway→Gateway rule)
     { fromBlock: 0, toBlock: 1, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
     { fromBlock: 1, toBlock: 3, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
-    // Internet → Static Site (Gateway→Frontend rule)
-    { fromBlock: 0, toBlock: 2, relationship: 'connects_to', protocol: 'HTTPS', port: 443 },
+    // Static Site is publicly reachable on its own — Firebase Hosting
+    // (GCP), AWS Amplify, and Azure Static Web Apps all include HTTPS,
+    // CDN, and custom domain. The `domain` field on the StaticSite
+    // block does the wiring; no Public Endpoint edge needed.
     // Gateway → Service (Gateway→Backend rule)
     { fromBlock: 3, toBlock: 4, relationship: 'connects_to', protocol: 'HTTP', port: 8080 },
     // Service → Data (Backend→Database, Backend→Cache, Backend→Storage rules)
@@ -192,10 +184,12 @@ export const fullStackTemplate: ComposedTemplate = {
     // Service → Logs (Service→Monitoring rule)
     { fromBlock: 4, toBlock: 8, relationship: 'connects_to' },
     // Domain → Static Site (Domain→Routable rule)
+    // Frontend Repo → Static Site (Repo→Service pipeline rule)
     { fromBlock: 10, toBlock: 2, relationship: 'connects_to' },
-    // Repo → Service (Repo→Service pipeline rule)
-    { fromBlock: 11, toBlock: 4, relationship: 'connects_to' },
+    // Backend Repo → API Server (Repo→Service pipeline rule). Separate
+    // from frontend so Cloud Build compiles a Node.js project, not HTML.
+    { fromBlock: 12, toBlock: 4, relationship: 'connects_to' },
     // Service → Env (Service→EnvConfig config rule)
-    { fromBlock: 4, toBlock: 12, relationship: 'depends_on' },
+    { fromBlock: 4, toBlock: 11, relationship: 'depends_on' },
   ],
 };

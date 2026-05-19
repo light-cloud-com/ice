@@ -122,13 +122,7 @@ export const CONTAINMENT_RULES: ContainmentRule[] = [
   },
   {
     parent: 'Group.Monitoring',
-    allowedChildren: [
-      'Monitoring.Log',
-      'Monitoring.Alert',
-      'Monitoring.Dashboard',
-      'Monitoring.Terminal',
-      'Monitoring.LogGroup',
-    ],
+    allowedChildren: ['Monitoring.Log', 'Monitoring.Alert', 'Monitoring.Dashboard', 'Monitoring.LogGroup'],
     description: 'Monitoring group contains observability resources',
   },
   {
@@ -186,6 +180,12 @@ for (const rule of CONTAINMENT_RULES) {
 export function canContain(parentType: string, childType: string): boolean {
   // User-created groups (Group.Custom) accept any child
   if (parentType === 'Group.Custom') return true;
+  // Private Network is a logical wrapper that accepts any deployable
+  // block — services, databases, and an optional nested Custom Domain
+  // for public ingress. Matches the "drop anything inside this walled
+  // bubble" mental model; policy (which iceTypes are actually useful
+  // inside a VPC) is enforced in the compiler, not in the canvas.
+  if (parentType === 'Network.PrivateNetwork') return true;
 
   const allowedChildren = parentToChildrenMap.get(parentType as ContainerType);
   if (!allowedChildren) return false;
@@ -234,8 +234,10 @@ export function getAllowedChildren(parentType: string): string[] {
  */
 export function isContainer(nodeType: string): boolean {
   if (parentToChildrenMap.has(nodeType as ContainerType)) return true;
-  // VPC/Subnet are always containers
-  if (nodeType === 'Network.VPC' || nodeType === 'Network.Subnet') return true;
+  // VPC/Subnet/PrivateNetwork are always containers
+  if (nodeType === 'Network.VPC' || nodeType === 'Network.Subnet' || nodeType === 'Network.PrivateNetwork') {
+    return true;
+  }
   // Groups are always containers
   if (nodeType.startsWith('Group.')) return true;
   return false;

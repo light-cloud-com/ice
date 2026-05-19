@@ -15,4 +15,4 @@ export {
   L1_VISIBLE_NETWORK_TYPES,
   TYPE_TO_CATEGORY,
   PREFIX_TO_CATEGORY,
-} from './category-classifier.js';
+} from './category-classifier';

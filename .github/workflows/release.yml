@@ -71,7 +71,7 @@ jobs:
           GH_TOKEN: ${{ (github.event_name == 'push' && !inputs.dry_run) && secrets.GITHUB_TOKEN || '' }}
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: desktop-${{ runner.os }}
           path: |
